@@ -1,7 +1,8 @@
 Briefcase
 =========
 
-Tools to support converting a Python project into a standalone native application.
+Tools to support converting a Python project into a standalone native
+application.
 
 Quickstart
 ----------

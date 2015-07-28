@@ -1,7 +1,8 @@
 Briefcase
 =========
 
-Tools to support development of Python on mobile platforms.
+Tools to support converting a Python project into a standalone native
+application.
 
 Quickstart
 ----------
