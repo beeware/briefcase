@@ -3,6 +3,7 @@ from __future__ import print_function
 import os
 import json
 import sys
+
 try:
     from urllib.request import urlopen
 except ImportError:  # Python 2 compatibility
@@ -28,6 +29,10 @@ class app(Command):
          "Template (or template repository URL) to use."),
         ('bundle', None,
          'Bundle identifier for the author organization - usually a reversed domain (e.g., "org.python")'),
+        ('icon=', None,
+         "Name of the icon file."),
+        ('splash=', None,
+         "Name of the splash screen file."),
         ('app-requires', None,
          'List of platform-specific requirements for this app.'),
         ('support-pkg=', 's',
@@ -41,6 +46,8 @@ class app(Command):
         self.formal_name = None
         self.template = None
         self.bundle = None
+        self.icon = None
+        self.splash = None
         self.app_requires = None
         self.support_pkg = None
         self.download_dir = None
@@ -81,10 +88,7 @@ class app(Command):
         if self.template is None:
             self.template = 'https://github.com/pybee/Python-%s-template.git' % self.platform
 
-        print()
-        print("==================================================")
-        print("     Writing application template...")
-        print("==================================================")
+        print(" * Writing application template...")
         print("Project template: %s" % self.template)
         cookiecutter(
             self.template,
@@ -99,10 +103,7 @@ class app(Command):
             }
         )
 
-        print()
-        print("==================================================")
-        print("     Installing requirements...")
-        print("==================================================")
+        print(" * Installing requirements...")
         if self.distribution.install_requires:
             pip.main([
                     'install',
@@ -114,10 +115,7 @@ class app(Command):
         else:
             print("No requirements.")
 
-        print()
-        print("==================================================")
-        print("     Installing plaform requirements...")
-        print("==================================================")
+        print(" * Installing plaform requirements...")
         if self.app_requires:
             pip.main([
                     'install',
@@ -129,10 +127,7 @@ class app(Command):
         else:
             print("No platform requirements.")
 
-        print()
-        print("==================================================")
-        print("     Installing project code...")
-        print("==================================================")
+        print(" * Installing project code...")
         pip.main([
                 'install',
                 '--upgrade',
@@ -142,20 +137,21 @@ class app(Command):
                 '.'
             ])
 
+        if self.icon:
+            print(" * Adding icons...")
+            self.install_icon()
+
+        if self.splash:
+            print(" * Adding splash screens...")
+            self.install_splash()
+
         if self.support_pkg is None:
-            print()
-            print("==================================================")
-            print("     Determining best support package...")
-            print("==================================================")
+            print(" * Determining best support package...")
             self.support_pkg = self.find_support_pkg()
 
         if self.support_pkg:
-            print()
-            print("==================================================")
-            print("     Installing support package...")
-            print("==================================================")
+            print(" * Installing support package...")
             print("Support package: ", self.support_pkg)
-            print()
 
             pip.download.unpack_url(
                 pip.index.Link(self.support_pkg),
@@ -177,7 +173,4 @@ class app(Command):
 
     def post_run(self):
         print()
-        print("==================================================")
-        print("     Installation complete.")
-        print("==================================================")
-        print()
+        print("Installation complete.")
