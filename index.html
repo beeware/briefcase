@@ -1,0 +1,163 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Briefcase: A distutils extension to assist in packaging Python projects as standalone applications. Part of the BeeWare suite.</title>
+
+    <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Cutive">
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <style type="text/css">
+      h1 {
+        font-family: 'Cutive', serif;
+      }
+      header h1 {
+        font-family: 'Cutive', serif;
+        font-size: 64px;
+        padding-top: 12px;
+        text-align: center;
+      }
+    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <!-- Fav and touch icons -->
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="static/images/briefcase-144.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="static/images/briefcase-114.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="static/images/briefcase-72.png">
+    <link rel="apple-touch-icon-precomposed" href="static/images/briefcase-57.png">
+    <link rel="shortcut icon" href="static/images/briefcase-32.png">
+
+    <!-- Google analytics -->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-2943925-18', 'pybee.org');
+      ga('send', 'pageview');
+
+    </script>
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <img src="static/images/briefcase-270.png" alt="bugjar logo">
+        <h1>briefcase</h1>
+        <p>A distutils extension to assist in packaging Python projects as standalone applications. Part of the <a href="http://pybee.org">BeeWare suite</a>.</p>
+
+        <p class="view"><a href="https://github.com/pybee/briefcase">View the Project on GitHub <small>pybee/briefcase</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/pybee/briefcase/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/pybee/briefcase/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/pybee/briefcase">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>
+<a name="briefcase" class="anchor" href="#briefcase"><span class="octicon octicon-link"></span></a>briefcase</h1>
+
+<p><strong>Part of the <a href="http://pybee.org"><img src="static/images/brutus-16.png" alt="BeeWare logo">BeeWare suite</a>.</strong></p>
+
+<p>A distutils extension to assist in packaging Python projects as standalone applications.</p>
+
+<h2>
+<a name="quickstart" class="anchor" href="#quickstart"><span class="octicon octicon-link"></span></a>Quickstart</h2>
+
+<p>In your virtualenv, install Briefcase, and then run it:</p>
+
+<pre><code>$ pip install briefcase
+$ briefcase
+</code></pre>
+
+In your virtualenv, install Briefcase::
+
+<pre><code>$ pip install briefcase</code></pre>
+
+Then, add extra options to your ``setup.py`` file to provide the
+app-specific properties of your app. Settings that are applicable
+to any app can be set under the ``app`` key; platform
+specific settings can be specified using a platform key::
+
+<pre><code>
+setup(
+    ...
+    options={
+        'app': {
+            'formal_name': 'My First App',
+            'bundle': 'org.example',
+        },
+        'osx': {
+            'app_requires': [
+                'toga[osx]'
+            ]
+        },
+        'ios': {
+            'app_requires': [
+                'toga[ios]'
+            ]
+        },
+        'android': {
+            'app_requires': [
+                'toga[android]'
+            ]
+        },
+    }
+)
+</code></pre>
+
+At a minimum, you must set a ``formal_name`` key (the full, formal name for the
+app) and a ``bundle`` key (the bundle identifier for the author organization -
+usually a reverse domain name).
+
+Then, you can invoke ``briefcase``, using::
+
+<pre><code>$ python setup.py osx</code></pre>
+
+to create an OS/X app, or::
+
+<pre><code>$ python setup.py ios</code></pre>
+
+to create an iOS app, or::
+
+<pre><code>$ python setup.py android</code></pre>
+
+to create an Android app.
+
+<h2>
+<a name="documentation" class="anchor" href="#documentation"><span class="octicon octicon-link"></span></a>Documentation</h2>
+
+<p>Documentation for Briefcase can be found on <a href="http://briefcase.readthedocs.org">Read The Docs</a>.</p>
+
+<h2>
+<a name="community" class="anchor" href="#community"><span class="octicon octicon-link"></span></a>Community</h2>
+
+<p>Briefcase is part of the <a href="http://pybee.org">BeeWare suite</a>. You can talk to the community through:</p>
+<ul>
+<li><p><a href="https://twitter.com/pybeeware">Twitter</a></p></li>
+<li><p>The <a href="https://groups.google.com/forum/#!forum/beeware-users">BeeWare Users Mailing list</a>, for questions about how to use the BeeWare suite.</p></li>
+<li><p>The <a href="https://groups.google.com/forum/#!forum/beeware-developers">BeeWare Developers Mailing list</a>, for discussing the development of new features in the BeeWare suite, and ideas for new tools for the suite.</p></li>
+</ul>
+
+<h2>
+<a name="contributing" class="anchor" href="#contributing"><span class="octicon octicon-link"></span></a>Contributing</h2>
+
+<p>If you experience problems with Briefcase, you can <a href="https://github.com/pybee/briefcase/issues">log them on GitHub</a>. If you want to contribute code, please <a href="https://github.com/freakboy3742/briefcase">fork the code</a> and <a href="https://github.com/pybee/briefcase/pulls">submit a pull request</a>.</p>
+
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/pybee">pybee</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+
+  </body>
+</html>
