@@ -1,3 +1,6 @@
+.. image:: http://pybee.org/briefcase/static/images/briefcase-72.png
+    :target: https://pybee.org/briefcase
+
 Briefcase
 =========
 
