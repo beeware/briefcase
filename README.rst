@@ -25,6 +25,7 @@ specific settings can be specified using a platform key::
             'app': {
                 'formal_name': 'My First App',
                 'bundle': 'org.example',
+                'icon': 'icons/app.icns',
             },
             'osx': {
                 'app_requires': [
@@ -34,7 +35,27 @@ specific settings can be specified using a platform key::
             'ios': {
                 'app_requires': [
                     'toga[ios]'
-                ]
+                ],
+                'icon': {
+                    '29': 'icons/app-29.png',
+                    '40': 'icons/app-40.png',
+                    '58': 'icons/app-58.png',
+                    '76': 'icons/app-76.png',
+                    '80': 'icons/app-80.png',
+                    '87': 'icons/app-87.png',
+                    '120': 'icons/app-120.png',
+                    '152': 'icons/app-152.png',
+                    '167': 'icons/app-167.png',
+                    '180': 'icons/app-180.png',
+                },
+                'splash': {
+                    '1024x768': 'splash/splash-1024x768.png',
+                    '1536x2048': 'splash/splash-1536x2048.png',
+                    '2048x1536': 'splash/splash-2048x1536.png',
+                    '768x1024': 'splash/splash-768x1024.png',
+                    '640x1136': 'splash/splash-640x1136.png',
+                    '640x960': 'splash/splash-640x960.png',
+                }
             },
             'android': {
                 'app_requires': [

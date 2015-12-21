@@ -27,32 +27,33 @@ class ios(app):
 
     def install_icon(self):
         last_size = None
-        for size in ['180x180', '152x152', '120x120', '80x80', '76x76', '58x58', '40x40', '29x29']:
+        for size in ['180', '167', '152', '120', '80', '87', '76', '58', '40', '29']:
             if isinstance(self.icon, dict):
                 try:
                     icon_file = self.icon[size]
                     last_size = size
                 except KeyError:
-                    print("WARING: No %sx%s icon file available; using ." % size)
                     icon_file = self.icon.get(last_size, None)
+                    if icon_file:
+                        print("WARING: No %sx%s icon file available; using %sx%s" % (size, size, last_size))
             else:
                 icon_file = self.icon
 
             if icon_file:
                 shutil.copyfile(
-                    self.icon[size],
+                    icon_file,
                     os.path.join(self.resource_dir, self.distribution.get_name(), 'Images.xcassets', 'AppIcon.appiconset', 'icon-%s' % size + os.path.splitext(icon_file)[1])
                 )
             else:
-                print("WARING: No %sx%s icon file available." % size)
+                print("WARING: No %s icon file available." % size)
 
     def install_splash(self):
         for size in ['1024x768', '1536x2048', '2048x1536', '768x1024', '640x1136', '640x960']:
             try:
-                icon_file = self.icon[size]
+                icon_file = self.splash[size]
                 shutil.copyfile(
-                    self.icon[size],
+                    self.splash[size],
                     os.path.join(self.resource_dir, self.distribution.get_name(), 'Images.xcassets', 'LaunchImage.launchimage', 'launch-%s' % size + os.path.splitext(icon_file)[1])
                 )
             except KeyError:
-                print("WARING: No %sx%s splash file available.")
+                print("WARING: No %s splash file available." % size)
