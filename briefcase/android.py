@@ -16,6 +16,7 @@ class android(app):
 
         # Set platform-specific options
         self.platform = 'Android'
+        self.support_platform = 'Android'
 
         if self.dir is None:
             self.dir = self.platform

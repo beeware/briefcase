@@ -16,6 +16,7 @@ class ios(app):
 
         # Set platform-specific options
         self.platform = 'iOS'
+        self.support_project = 'iOS'
 
         if self.dir is None:
             self.dir = self.platform

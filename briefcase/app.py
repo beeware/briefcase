@@ -69,13 +69,13 @@ class app(Command):
         pip.utils.ensure_dir(self.download_dir)
 
     def find_support_pkg(self):
-        api_url = 'https://api.github.com/repos/pybee/Python-%s-Support/releases' % self.platform
+        api_url = 'https://api.github.com/repos/pybee/Python-%s-Support/releases' % self.support_project
         releases = json.loads(urlopen(api_url).read().decode('utf8'))
         candidates = []
         for release in releases:
             if release['tag_name'].startswith("%s.%s." % (sys.version_info.major, sys.version_info.minor)):
                 for asset in release['assets']:
-                    if asset['name'].endswith('.tar.gz'):
+                    if asset['name'].endswith('.tar.gz') and self.platform in asset['name']:
                         candidates.append((release['created_at'], asset['browser_download_url']))
 
         try:
