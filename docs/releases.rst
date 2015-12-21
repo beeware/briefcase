@@ -1,6 +1,14 @@
 Release History
 ===============
 
+0.1.2
+-----
+
+Added support for having multi-target support projects. This clears the way
+for Briefcase to be used for watchOS and tvOS projects, and potentially
+for Python-OSX-support and Python-iOS-support to be merged into a single
+Python-Apple-support.
+
 0.1.1
 -----
 
