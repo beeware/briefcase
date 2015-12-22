@@ -10,7 +10,7 @@ class osx(app):
     def finalize_options(self):
         # Copy over all the options from the base 'app' command
         finalized = self.get_finalized_command('app')
-        for attr in ('formal_name', 'bundle', 'icon', 'splash', 'download_dir'):
+        for attr in ('formal_name', 'organization_name', 'bundle', 'icon', 'splash', 'download_dir'):
             if getattr(self, attr) is None:
                 setattr(self, attr, getattr(finalized, attr))
 

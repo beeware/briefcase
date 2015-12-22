@@ -25,6 +25,8 @@ class app(Command):
          "Directory to put the project in"),
         ('formal-name=', None,
          "Formal name for the project"),
+        ('organization-name=', None,
+         "Name of the organization managing the project"),
         ('template=', None,
          "Template (or template repository URL) to use."),
         ('bundle', None,
@@ -44,6 +46,7 @@ class app(Command):
     def initialize_options(self):
         self.dir = None
         self.formal_name = None
+        self.organization_name = None
         self.template = None
         self.bundle = None
         self.icon = None
@@ -55,6 +58,9 @@ class app(Command):
     def finalize_options(self):
         if self.formal_name is None:
             self.formal_name = self.distribution.get_name().title()
+
+        if self.organization_name is None:
+            self.organization_name = self.distribution.get_author().title()
 
         if self.bundle is None:
             if self.distribution.get_author_email():
@@ -84,7 +90,6 @@ class app(Command):
             return None
 
     def run(self):
-
         if self.template is None:
             self.template = 'https://github.com/pybee/Python-%s-template.git' % self.platform
 
@@ -96,6 +101,7 @@ class app(Command):
             extra_context={
                 'app_name': self.distribution.get_name(),
                 'formal_name': self.formal_name,
+                'organization_name': self.organization_name,
                 'dir_name': self.dir,
                 'bundle': self.bundle,
                 'year': date.today().strftime('%Y'),
