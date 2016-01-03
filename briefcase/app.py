@@ -75,7 +75,7 @@ class app(Command):
         pip.utils.ensure_dir(self.download_dir)
 
     def find_support_pkg(self):
-        api_url = 'https://api.github.com/repos/pybee/Python-%s-Support/releases' % self.support_project
+        api_url = 'https://api.github.com/repos/pybee/Python-%s-Support/releases' % self.support_platform
         releases = json.loads(urlopen(api_url).read().decode('utf8'))
         candidates = []
         for release in releases:

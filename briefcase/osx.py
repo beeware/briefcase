@@ -16,7 +16,7 @@ class osx(app):
 
         # Set platform-specific options
         self.platform = 'OSX'
-        self.support_project = 'OSX'
+        self.support_platform = 'OSX'
 
         if self.dir is None:
             self.dir = '.'

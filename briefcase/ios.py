@@ -16,7 +16,7 @@ class ios(app):
 
         # Set platform-specific options
         self.platform = 'iOS'
-        self.support_project = 'iOS'
+        self.support_platform = 'iOS'
 
         if self.dir is None:
             self.dir = self.platform
@@ -36,7 +36,7 @@ class ios(app):
                 except KeyError:
                     icon_file = self.icon.get(last_size, None)
                     if icon_file:
-                        print("WARING: No %sx%s icon file available; using %sx%s" % (size, size, last_size))
+                        print("WARING: No %sx%s icon file available; using %sx%s" % (size, size, last_size, last_size))
             else:
                 icon_file = self.icon
 
@@ -46,7 +46,7 @@ class ios(app):
                     os.path.join(self.resource_dir, self.distribution.get_name(), 'Images.xcassets', 'AppIcon.appiconset', 'icon-%s' % size + os.path.splitext(icon_file)[1])
                 )
             else:
-                print("WARING: No %s icon file available." % size)
+                print("WARING: No %sx%s icon file available." % (size, size))
 
     def install_splash(self):
         for size in ['1024x768', '1536x2048', '2048x1536', '768x1024', '640x1136', '640x960']:
