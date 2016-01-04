@@ -1,6 +1,11 @@
 Release History
 ===============
 
+0.1.3
+-----
+
+Added support for Android projects using VOC.
+
 0.1.2
 -----
 
