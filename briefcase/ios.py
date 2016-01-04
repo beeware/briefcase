@@ -16,34 +16,30 @@ class ios(app):
 
         # Set platform-specific options
         self.platform = 'iOS'
-        self.support_platform = 'iOS'
+        self.support_project = "pybee/Python-iOS-Support"
 
         if self.dir is None:
             self.dir = self.platform
 
         self.resource_dir = self.dir
 
-        if not isinstance(self.icon, dict):
-            raise RuntimeError('Splash image specifier must be a dictionary')
-
     def install_icon(self):
         last_size = None
-        for size in ['180', '167', '152', '120', '80', '87', '76', '58', '40', '29']:
-            if isinstance(self.icon, dict):
-                try:
-                    icon_file = self.icon[size]
-                    last_size = size
-                except KeyError:
-                    icon_file = self.icon.get(last_size, None)
-                    if icon_file:
-                        print("WARING: No %sx%s icon file available; using %sx%s" % (size, size, last_size, last_size))
+        for size in ['180', '167', '152', '120', '87', '80', '76', '58', '40', '29']:
+            icon_file = '%s-%s.png' % (self.icon, size)
+            if os.path.exists(icon_file):
+                last_size = size
             else:
-                icon_file = self.icon
+                if last_size:
+                    print("WARING: No %sx%s icon file available; using %sx%s" % (size, size, last_size, last_size))
+                    icon_file = '%s-%s.png' % (self.icon, last_size)
+                else:
+                    icon_file = None
 
             if icon_file:
                 shutil.copyfile(
                     icon_file,
-                    os.path.join(self.resource_dir, self.distribution.get_name(), 'Images.xcassets', 'AppIcon.appiconset', 'icon-%s' % size + os.path.splitext(icon_file)[1])
+                    os.path.join(self.resource_dir, self.distribution.get_name(), 'Images.xcassets', 'AppIcon.appiconset', 'icon-%s.png' % size)
                 )
             else:
                 print("WARING: No %sx%s icon file available." % (size, size))
@@ -51,10 +47,10 @@ class ios(app):
     def install_splash(self):
         for size in ['1024x768', '1536x2048', '2048x1536', '768x1024', '640x1136', '640x960']:
             try:
-                icon_file = self.splash[size]
+                splash_file = '%s-%s.png' % (self.splash, size)
                 shutil.copyfile(
-                    self.splash[size],
-                    os.path.join(self.resource_dir, self.distribution.get_name(), 'Images.xcassets', 'LaunchImage.launchimage', 'launch-%s' % size + os.path.splitext(icon_file)[1])
+                    splash_file,
+                    os.path.join(self.resource_dir, self.distribution.get_name(), 'Images.xcassets', 'LaunchImage.launchimage', 'launch-%s.png' % size)
                 )
             except KeyError:
                 print("WARING: No %s splash file available." % size)

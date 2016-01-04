@@ -75,7 +75,7 @@ class app(Command):
         pip.utils.ensure_dir(self.download_dir)
 
     def find_support_pkg(self):
-        api_url = 'https://api.github.com/repos/pybee/Python-%s-Support/releases' % self.support_platform
+        api_url = 'https://api.github.com/repos/%s/releases' % self.support_project
         releases = json.loads(urlopen(api_url).read().decode('utf8'))
         candidates = []
         for release in releases:
@@ -146,10 +146,14 @@ class app(Command):
         if self.icon:
             print(" * Adding icons...")
             self.install_icon()
+        else:
+            print(" * No icons defined - using default...")
 
         if self.splash:
             print(" * Adding splash screens...")
             self.install_splash()
+        else:
+            print(" * No splash screen defined...")
 
         if self.support_pkg is None:
             print(" * Determining best support package...")
@@ -169,7 +173,7 @@ class app(Command):
             print()
             print("No pre-built support package could be found for Python %s.%s." % (sys.version_info.major, sys.version_info.minor))
             print("You will need to compile your own. You may want to start with")
-            print("the code from https://github.com/pybee/Python-%s-support and" % self.platform)
+            print("the code from https://github.com/%s and" % self.support_project)
             print("then specify the compiled tarball with:")
             print()
             print("    python setup.py %s --support-pkg=<path to tarball>" % self.platform.lower())

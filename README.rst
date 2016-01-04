@@ -36,31 +36,14 @@ specific settings can be specified using a platform key::
                 'app_requires': [
                     'toga[ios]'
                 ],
-                'icon': {
-                    '29': 'icons/app-29.png',
-                    '40': 'icons/app-40.png',
-                    '58': 'icons/app-58.png',
-                    '76': 'icons/app-76.png',
-                    '80': 'icons/app-80.png',
-                    '87': 'icons/app-87.png',
-                    '120': 'icons/app-120.png',
-                    '152': 'icons/app-152.png',
-                    '167': 'icons/app-167.png',
-                    '180': 'icons/app-180.png',
-                },
-                'splash': {
-                    '1024x768': 'splash/splash-1024x768.png',
-                    '1536x2048': 'splash/splash-1536x2048.png',
-                    '2048x1536': 'splash/splash-2048x1536.png',
-                    '768x1024': 'splash/splash-768x1024.png',
-                    '640x1136': 'splash/splash-640x1136.png',
-                    '640x960': 'splash/splash-640x960.png',
-                }
+                'icon': 'iamges/ios_icon',
+                'splash': 'images/ios_splash'
             },
             'android': {
                 'app_requires': [
                     'toga[android]'
                 ]
+                'icon': 'iamges/android_icon',
             },
         }
     )
@@ -68,6 +51,51 @@ specific settings can be specified using a platform key::
 At a minimum, you must set a ``formal_name`` key (the full, formal name for the
 app) and a ``bundle`` key (the bundle identifier for the author organization -
 usually a reverse domain name).
+
+The ``icon`` attribute specifies the prefix of a path to a set of image files.
+The name specified will be appended with a number of suffixes to construct
+filenames for the various icon sizes needed on each platform. You should
+provide the following files:
+
+* On iOS:
+  * ``$(icon)-180.png``, a 60x60@3x image (iPhone)
+  * ``$(icon)-167.png``, an 83.5x83.5@2x image (iPad Pro)
+  * ``$(icon)-152.png``, a 76x76@2x image (iPad)
+  * ``$(icon)-120.png``, a 40x40@3x/60x60@2x image (iPad, iPhone)
+  * ``$(icon)-87.png``, a 29x29@3x image (iPad, iPhone)
+  * ``$(icon)-80.png``, a 40x40@2x image (iPad, iPhone)
+  * ``$(icon)-76.png``, a 76x76 image (iPad)
+  * ``$(icon)-58.png``, a 29x29@2x image (iPad)
+  * ``$(icon)-40.png``, a 40x40 image (iPad)
+  * ``$(icon)-29.png``, a 29x29 image (iPad)
+
+* On Android:
+  * ``$(icon)-192.png``, an xxxhdpi image (192x192)
+  * ``$(icon)-144.png``, an xxhdpi image (144x144)
+  * ``$(icon)-96.png``, an xhdpi image (96x96); this is also used as the default.
+  * ``$(icon)-72.png``, an hdpi image (72x72)
+  * ``$(icon)-48.png``, an mdpi image (48x48)
+  * ``$(icon)-36.png``, an ldpi image (36x36)
+
+* On OS X:
+    * ``$(icon).icns``, a composite ICNS file containing all the required icons.
+
+If a file cannot be found, an larger icon will be substituted (if available).
+If a file still cannot be found, the default briefcase icon will be used.
+
+The ``splash`` attribute (iOS only) specifies a launch image to display while
+the app is initially loading. It uses the same suffix approach as iOS. You should
+provide the following files:
+
+* On iOS:
+  * ``$(splash)-2048x1536.png``, a 1024x786@2x landscape image (iPad)
+  * ``$(splash)-1536x2048.png``, a 768x1024@2x portrait image (iPad)
+  * ``$(splash)-1024x768.png``, a 1024x768 landscape image (iPad)
+  * ``$(splash)-768x1024.png``, a 768x1024 landsacpe image (iPad)
+  * ``$(splash)-640x1136.png``, a 320x568@2x portrait image (new iPhone)
+  * ``$(splash)-640x960.png``, a 320x480@2x portrait image (old iPhone)
+
+If an image cannot be found, the default briefcase image will be used.
 
 Then, you can invoke ``briefcase``, using::
 
