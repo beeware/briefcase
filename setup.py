@@ -24,14 +24,15 @@ setup(
     author='Russell Keith-Magee',
     author_email='russell@keith-magee.com',
     url='http://pybee.org/briefcase',
-    keywords=['app', 'packaging', 'OS/X', 'iOS', 'android', 'mobile'],
+    keywords=['app', 'packaging', 'OS/X', 'iOS', 'android', 'tvOS', 'mobile'],
     packages=find_packages(exclude=['tests']),
     entry_points={
         'distutils.commands': [
+            'android = briefcase.android:android',
             'app = briefcase.app:app',
             'ios = briefcase.ios:ios',
             'osx = briefcase.osx:osx',
-            'android = briefcase.android:android',
+            'tvos = briefcase.tvos:tvos',
         ]
     },
     install_requires=[

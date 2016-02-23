@@ -1,6 +1,12 @@
 Release History
 ===============
 
+0.1.4
+-----
+
+Added support for tvOS projects, and moved to using branches in the
+project template repositories.
+
 0.1.3
 -----
 

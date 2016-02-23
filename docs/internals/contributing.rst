@@ -27,10 +27,5 @@ requirements for Briefcase, you have to run the following commands within your
 virutal envrionment::
 
     $ pip install -e .
-    $ pip install -r requirements_dev.txt
-
-In case you are running a python version ``< 2.7`` please use the
-``requirements_dev.py26.txt`` instead because ``unittest2`` is not part
-of the standard library for these version.
 
 Now you are ready to start hacking! Have fun!
