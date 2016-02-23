@@ -45,6 +45,11 @@ specific settings can be specified using a platform key::
                 ]
                 'icon': 'iamges/android_icon',
             },
+            'tvos': {
+                'app_requires': [
+                    'toga[tvos]'
+                ]
+            },
         }
     )
 
@@ -80,20 +85,37 @@ provide the following files:
 * On OS X:
     * ``$(icon).icns``, a composite ICNS file containing all the required icons.
 
+* On Apple TV:
+    * ``$(icon)-400-front.png``, a 400x240 image to serve as the front layer of an app icon.
+    * ``$(icon)-400-middle.png``, a 400x240 image to serve as the middle layer of an app icon.
+    * ``$(icon)-400-back.png``, a 400x240 image to serve as the back layer of an app icon.
+    * ``$(icon)-1280-front.png``, a 1280x768 image to serve as the front layer of an app icon.
+    * ``$(icon)-1280-middle.png``, a 1280x768 image to serve as the middle layer of an app icon.
+    * ``$(icon)-1280-back.png``, a 1280x768 image to serve as the back layer of an app icon.
+    * ``$(icon)-1920.png``, a 1920x720 image for the top shelf.
+
 If a file cannot be found, an larger icon will be substituted (if available).
 If a file still cannot be found, the default briefcase icon will be used.
 
-The ``splash`` attribute (iOS only) specifies a launch image to display while
-the app is initially loading. It uses the same suffix approach as iOS. You should
+On Apple TV, the three provided images will be used as three visual layers of
+a single app icon, producing a 3D effect. As an alternative to providing a
+``-front``,  ``-middle`` and ``-back`` variant, you can provide a single
+``$(icon)-(size).png``, which will be used for all three layers.
+
+The ``splash`` attribute specifies a launch image to display while the app is
+initially loading. It uses the same suffix approach as image icons. You should
 provide the following files:
 
 * On iOS:
     * ``$(splash)-2048x1536.png``, a 1024x786@2x landscape image (iPad)
     * ``$(splash)-1536x2048.png``, a 768x1024@2x portrait image (iPad)
     * ``$(splash)-1024x768.png``, a 1024x768 landscape image (iPad)
-    * ``$(splash)-768x1024.png``, a 768x1024 landsacpe image (iPad)
+    * ``$(splash)-768x1024.png``, a 768x1024 landscape image (iPad)
     * ``$(splash)-640x1136.png``, a 320x568@2x portrait image (new iPhone)
     * ``$(splash)-640x960.png``, a 320x480@2x portrait image (old iPhone)
+
+* On Apple TV:
+    * ``$(splash)-1920x1080.icns``, a 1920x1080 landscape image
 
 If an image cannot be found, the default briefcase image will be used.
 
@@ -101,15 +123,19 @@ Then, you can invoke ``briefcase``, using::
 
     $ python setup.py osx
 
-to create an OS/X app, or::
+to create an OS/X app; or::
 
     $ python setup.py ios
 
-to create an iOS app, or::
+to create an iOS app; or::
 
     $ python setup.py android
 
-to create an Android app.
+to create an Android app; or::
+
+    $ python setup.py tvos
+
+to create an tvOS app.
 
 .. Documentation
 .. -------------

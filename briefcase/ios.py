@@ -31,7 +31,7 @@ class ios(app):
                 last_size = size
             else:
                 if last_size:
-                    print("WARING: No %sx%s icon file available; using %sx%s" % (size, size, last_size, last_size))
+                    print("WARNING: No %sx%s icon file available; using %sx%s" % (size, size, last_size, last_size))
                     icon_file = '%s-%s.png' % (self.icon, last_size)
                 else:
                     icon_file = None
@@ -42,7 +42,7 @@ class ios(app):
                     os.path.join(self.resource_dir, self.distribution.get_name(), 'Images.xcassets', 'AppIcon.appiconset', 'icon-%s.png' % size)
                 )
             else:
-                print("WARING: No %sx%s icon file available." % (size, size))
+                print("WARNING: No %sx%s icon file available." % (size, size))
 
     def install_splash(self):
         for size in ['1024x768', '1536x2048', '2048x1536', '768x1024', '640x1136', '640x960']:
@@ -53,4 +53,4 @@ class ios(app):
                     os.path.join(self.resource_dir, self.distribution.get_name(), 'Images.xcassets', 'LaunchImage.launchimage', 'launch-%s.png' % size)
                 )
             except KeyError:
-                print("WARING: No %s splash file available." % size)
+                print("WARNING: No %s splash file available." % size)

@@ -98,6 +98,7 @@ class app(Command):
         cookiecutter(
             self.template,
             no_input=True,
+            checkout='%s.%s' % (sys.version_info.major, sys.version_info.minor),
             extra_context={
                 'app_name': self.distribution.get_name(),
                 'formal_name': self.formal_name,
