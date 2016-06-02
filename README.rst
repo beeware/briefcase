@@ -36,14 +36,14 @@ specific settings can be specified using a platform key::
                 'app_requires': [
                     'toga[ios]'
                 ],
-                'icon': 'iamges/ios_icon',
+                'icon': 'images/ios_icon',
                 'splash': 'images/ios_splash'
             },
             'android': {
                 'app_requires': [
                     'toga[android]'
                 ]
-                'icon': 'iamges/android_icon',
+                'icon': 'images/android_icon',
             },
             'tvos': {
                 'app_requires': [
