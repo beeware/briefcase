@@ -137,10 +137,10 @@ to create an Android app; or::
 
 to create an tvOS app.
 
-.. Documentation
-.. -------------
+Documentation
+-------------
 
-.. Documentation for Briefcase can be found on `Read The Docs`_.
+Documentation for Briefcase can be found on `Read The Docs`_.
 
 Community
 ---------
