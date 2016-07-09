@@ -4,8 +4,8 @@ import shutil
 from .app import app
 
 
-class tvos(app):
-    description = "Create a tvOS app to wrap this project"
+class watchos(app):
+    description = "Create a watchOS app to wrap this project"
 
     def finalize_options(self):
         # Copy over all the options from the base 'app' command
@@ -15,7 +15,7 @@ class tvos(app):
                 setattr(self, attr, getattr(finalized, attr))
 
         # Set platform-specific options
-        self.platform = 'tvOS'
+        self.platform = 'watchOS'
         self.support_project = "pybee/Python-Apple-Support"
 
         if self.dir is None:

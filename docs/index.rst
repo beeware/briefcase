@@ -7,7 +7,7 @@ Briefcase
 Briefcase is a tool for converting a Python project into a standalone
 native application. It supports producing binaries for:
 
-* OS X,
+* macOS,
 * iOS,
 * Android, and
 * tvOS.

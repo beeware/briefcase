@@ -24,20 +24,23 @@ setup(
     author='Russell Keith-Magee',
     author_email='russell@keith-magee.com',
     url='http://pybee.org/briefcase',
-    keywords=['app', 'packaging', 'OS/X', 'iOS', 'android', 'tvOS', 'mobile'],
+    keywords=['app', 'packaging', 'macOS', 'iOS', 'android', 'tvOS', 'mobile', 'windows'],
     packages=find_packages(exclude=['tests']),
     entry_points={
         'distutils.commands': [
             'android = briefcase.android:android',
             'app = briefcase.app:app',
             'ios = briefcase.ios:ios',
-            'osx = briefcase.osx:osx',
+            'macos = briefcase.macos:macos',
             'tvos = briefcase.tvos:tvos',
+            'watchos = briefcase.watchos:watchos',
+            'windows = briefcase.windows:windows',
         ]
     },
     install_requires=[
         'pip >= 7.0',
         'cookiecutter >= 1.0',
+        'voc',
     ],
     license='New BSD',
     classifiers=[

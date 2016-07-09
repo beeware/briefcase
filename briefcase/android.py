@@ -10,7 +10,7 @@ class android(app):
     def finalize_options(self):
         # Copy over all the options from the base 'app' command
         finalized = self.get_finalized_command('app')
-        for attr in ('formal_name', 'bundle', 'icon', 'splash', 'download_dir'):
+        for attr in ('formal_name', 'bundle', 'icon', 'download_dir', 'class_name', 'version_code'):
             if getattr(self, attr) is None:
                 setattr(self, attr, getattr(finalized, attr))
 
@@ -45,15 +45,7 @@ class android(app):
                 print("WARNING: No %sx%s icon file available." % (size, size))
 
     def install_splash(self):
-        for size in ['1024x768', '1536x2048', '2048x1536', '768x1024', '640x1136', '640x960']:
-            try:
-                splash_file = '%s-%s.png' % (self.splash, size)
-                shutil.copyfile(
-                    splash_file,
-                    os.path.join(self.resource_dir, 'res', 'drawable', splash_file)
-                )
-            except KeyError:
-                print("WARNING: No %s splash file available." % size)
+        pass
 
     def post_run(self):
         print()
@@ -65,4 +57,20 @@ class android(app):
         print("    * Ensure you have Android API Level 11 downloaded")
         print("    * Configure your device for debugging")
         print("    * Ensure the ANDROID_HOME environment variable points at your Android SDK.")
+        print()
+        print("To compile the project:")
+        print()
+        print("    $ cd android")
+        print("    $ ant debug")
+        print()
+        print("To install the project on a device:")
+        print()
+        print("    $ adb install -r bin/%s-debug.apk" % self.distribution.get_name())
+        print()
+        print("To run the project on a device:")
+        print()
+        print("    $ adb shell am start -n python.%s.app/python.%s.app.MainActivity" % (
+            self.distribution.get_name(), self.distribution.get_name())
+        )
+        print("    $ adb logcat VOC:* *:E DEBUG:*")
         print()

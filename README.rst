@@ -25,12 +25,12 @@ specific settings can be specified using a platform key::
             'app': {
                 'formal_name': 'My First App',
                 'bundle': 'org.example',
-                'icon': 'icons/app.icns',
             },
-            'osx': {
+            'macos': {
                 'app_requires': [
-                    'toga[osx]'
+                    'toga[macos]'
                 ]
+                'icon': 'icons/macos.icns',
             },
             'ios': {
                 'app_requires': [
@@ -82,7 +82,7 @@ provide the following files:
     * ``$(icon)-48.png``, an mdpi image (48x48)
     * ``$(icon)-36.png``, an ldpi image (36x36)
 
-* On OS X:
+* On macOS:
     * ``$(icon).icns``, a composite ICNS file containing all the required icons.
 
 * On Apple TV:
@@ -121,9 +121,9 @@ If an image cannot be found, the default briefcase image will be used.
 
 Then, you can invoke ``briefcase``, using::
 
-    $ python setup.py osx
+    $ python setup.py macos
 
-to create an OS/X app; or::
+to create a macOS app; or::
 
     $ python setup.py ios
 

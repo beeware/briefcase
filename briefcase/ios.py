@@ -16,7 +16,7 @@ class ios(app):
 
         # Set platform-specific options
         self.platform = 'iOS'
-        self.support_project = "pybee/Python-iOS-Support"
+        self.support_project = "pybee/Python-Apple-Support"
 
         if self.dir is None:
             self.dir = self.platform
@@ -46,11 +46,12 @@ class ios(app):
 
     def install_splash(self):
         for size in ['1024x768', '1536x2048', '2048x1536', '768x1024', '640x1136', '640x960']:
-            try:
-                splash_file = '%s-%s.png' % (self.splash, size)
+            splash_file = '%s-%s.png' % (self.splash, size)
+
+            if os.path.exists(splash_file):
                 shutil.copyfile(
                     splash_file,
                     os.path.join(self.resource_dir, self.distribution.get_name(), 'Images.xcassets', 'LaunchImage.launchimage', 'launch-%s.png' % size)
                 )
-            except KeyError:
+            else:
                 print("WARNING: No %s splash file available." % size)
