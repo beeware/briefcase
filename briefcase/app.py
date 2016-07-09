@@ -5,6 +5,7 @@ import json
 import re
 import sys
 import uuid
+from urllib.error import URLError
 
 try:
     from urllib.request import urlopen
@@ -104,7 +105,17 @@ class app(Command):
 
     def find_support_pkg(self):
         api_url = 'https://api.github.com/repos/%s/releases' % self.support_project
-        releases = json.loads(urlopen(api_url).read().decode('utf8'))
+
+        try:
+            releases = json.loads(urlopen(api_url).read().decode('utf8'))
+        except URLError:
+            print()
+            print("We had trouble connecting to Github to look for appropriate")
+            print("support packages. This can happen when you have tried too many")
+            print("times. If you are working on briefcase, please use the specified")
+            print("--support-pkg flag for development.")
+            return None
+
         candidates = []
         for release in releases:
             if release['tag_name'].startswith("%s.%s-" % (sys.version_info.major, sys.version_info.minor)):
