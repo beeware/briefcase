@@ -1,4 +1,4 @@
-.. image:: http://pybee.org/briefcase/static/images/briefcase-72.png
+.. image:: http://pybee.org/briefcase/projects/project/tools/briefcase/briefcase-72.png
     :target: https://pybee.org/briefcase
 
 Briefcase
