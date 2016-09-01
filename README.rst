@@ -29,7 +29,7 @@ specific settings can be specified using a platform key::
             'macos': {
                 'app_requires': [
                     'toga[macos]'
-                ]
+                ],
                 'icon': 'icons/macos.icns',
             },
             'ios': {
@@ -42,7 +42,7 @@ specific settings can be specified using a platform key::
             'android': {
                 'app_requires': [
                     'toga[android]'
-                ]
+                ],
                 'icon': 'images/android_icon',
             },
             'tvos': {
