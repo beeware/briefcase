@@ -72,7 +72,5 @@ Open the iOS project with Xcode
 If you the ios project in Xcode you will see a Toga application:
 
 .. image:: screenshots/tutorial-1.png
-    :height: 400 px
-    :width: 216 px
 
 If you click on the button, you should see messages appear in the console.
