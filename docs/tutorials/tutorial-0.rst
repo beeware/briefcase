@@ -75,6 +75,7 @@ Open the iOS project with Xcode
 -------------------------------
 
 There is a new folder in your project called 'iOS', which contains the Xcode project (``Hello World.xcodeproj``). Open it with Xcode and check that your application is the ``app``folder. 
+
 You can test the app by running it in Xcode. As our application only shows a message, the ios application will show only a blank screen. You can check if it is working in the console logs, which should contain something like this:
 
 .. code-block:: bash
