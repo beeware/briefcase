@@ -71,6 +71,6 @@ Open the iOS project with Xcode
 
 If you the ios project in Xcode you will see a Toga application:
 
-.. image: screenshots/tutorial-1.png
+.. image:: screenshots/tutorial-1.png
 
 If you click on the button, you should see messages appear in the console.
