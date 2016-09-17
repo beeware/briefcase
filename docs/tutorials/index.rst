@@ -8,3 +8,4 @@ These tutorials are step-by step guides for using Briefcase.
    :glob:
 
    tutorial-0
+   tutorial-1
