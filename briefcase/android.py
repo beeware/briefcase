@@ -10,7 +10,7 @@ class android(app):
     def finalize_options(self):
         # Copy over all the options from the base 'app' command
         finalized = self.get_finalized_command('app')
-        for attr in ('formal_name', 'bundle', 'icon', 'download_dir', 'class_name', 'version_code'):
+        for attr in ('formal_name', 'bundle', 'icon', 'download_dir', 'version_code'):
             if getattr(self, attr) is None:
                 setattr(self, attr, getattr(finalized, attr))
 
@@ -69,8 +69,8 @@ class android(app):
         print()
         print("To run the project on a device:")
         print()
-        print("    $ adb shell am start -n python.%s.app/python.%s.app.MainActivity" % (
-            self.distribution.get_name(), self.distribution.get_name())
+        print("    $ adb shell am start -n %s.%s/android.PythonActivity" % (
+            self.bundle, self.distribution.get_name())
         )
-        print("    $ adb logcat VOC:* *:E DEBUG:*")
+        print("    $ adb logcat Python:* *:E")
         print()
