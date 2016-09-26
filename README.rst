@@ -28,26 +28,26 @@ specific settings can be specified using a platform key::
             },
             'macos': {
                 'app_requires': [
-                    'toga[macos]'
-                ]
+                    'toga-cocoa'
+                ],
                 'icon': 'icons/macos.icns',
             },
             'ios': {
                 'app_requires': [
-                    'toga[ios]'
+                    'toga-ios'
                 ],
                 'icon': 'images/ios_icon',
                 'splash': 'images/ios_splash'
             },
             'android': {
                 'app_requires': [
-                    'toga[android]'
-                ]
+                    'toga-android'
+                ],
                 'icon': 'images/android_icon',
             },
             'tvos': {
                 'app_requires': [
-                    'toga[tvos]'
+                    'toga-ios'
                 ]
             },
         }
