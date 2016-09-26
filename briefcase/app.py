@@ -28,8 +28,6 @@ class app(Command):
          "Directory to put the project in"),
         ('formal-name=', None,
          "Formal name for the project"),
-        ('class-name=', None,
-         "Name of the class representing the app."),
         ('organization-name=', None,
          "Name of the organization managing the project"),
         ('template=', None,
@@ -53,7 +51,6 @@ class app(Command):
     def initialize_options(self):
         self.dir = None
         self.formal_name = None
-        self.class_name = None
         self.organization_name = None
         self.template = None
         self.bundle = None
@@ -68,11 +65,6 @@ class app(Command):
     def finalize_options(self):
         if self.formal_name is None:
             self.formal_name = self.distribution.get_name().title()
-
-        # The default classname for the app is a simplified version
-        # of the formal name: "My Super-App" -> "MySuperApp"
-        if self.class_name is None:
-            self.class_name = re.sub('[^a-zA-Z]', '', self.formal_name.title())
 
         if self.organization_name is None:
             self.organization_name = self.distribution.get_author().title()
@@ -148,7 +140,6 @@ class app(Command):
                 'year': date.today().strftime('%Y'),
                 'month': date.today().strftime('%B'),
                 'version': self.distribution.get_version(),
-                'class_name': self.class_name,
                 'version_code': self.version_code,
                 'guid': self.guid,
             }
