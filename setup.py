@@ -2,6 +2,10 @@
 import io
 import re
 from setuptools import setup, find_packages
+import sys
+
+if sys.version_info[:3] < (3, 4):
+    raise SystemExit("Briefcase requires Python 3.4+.")
 
 
 with io.open('./briefcase/__init__.py', encoding='utf8') as version_file:
@@ -40,7 +44,7 @@ setup(
     install_requires=[
         'pip >= 8.1',
         'cookiecutter >= 1.0',
-        'voc',
+        'voc >= 0.1.1',
         'setuptools >= 27.0',
     ],
     license='New BSD',
@@ -51,6 +55,8 @@ setup(
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3 :: Only',
         'Topic :: Software Development',
         'Topic :: Utilities',
     ],
