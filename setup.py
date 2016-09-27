@@ -38,9 +38,10 @@ setup(
         ]
     },
     install_requires=[
-        'pip >= 7.0',
+        'pip >= 8.1',
         'cookiecutter >= 1.0',
         'voc',
+        'setuptools >= 27.0',
     ],
     license='New BSD',
     classifiers=[
