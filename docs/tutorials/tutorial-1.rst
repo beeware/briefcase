@@ -43,13 +43,13 @@ found at <https://toga.readthedocs.io/en/latest/tutorial/tutorial-0.html>:
 
 
     def build(app):
-        container = toga.Container()
+        box = toga.Box()
 
         button = toga.Button('Hello world', on_press=button_handler)
         button.style.set(margin=50)
-        container.add(button)
+        box.add(button)
 
-        return container
+        return box
 
 
     if __name__ == '__main__':
