@@ -49,7 +49,7 @@ specific settings can be specified using a platform key::
                 'app_requires': [
                     'toga-cocoa'
                 ],
-                'icon': 'icons/macos.icns',
+                'icon': 'icons/macos',
             },
             'ios': {
                 'app_requires': [
