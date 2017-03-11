@@ -74,9 +74,13 @@ to create the iOS app.
 Open the iOS project with Xcode
 -------------------------------
 
-There is a new folder in your project called 'iOS', which contains the Xcode project (``Hello World.xcodeproj``). Open it with Xcode and check that your application is the ``app``folder. 
+There is a new folder in your project called 'iOS', which contains the Xcode project (``Hello World.xcodeproj``). Open it with Xcode and check that your application is the ``app`` folder. You can also open the application by running: 
 
-You can test the app by running it in Xcode. As our application only shows a message, the ios application will show only a blank screen. You can check if it is working in the console logs, which should contain something like this:
+.. code-block:: bash
+
+    open iOS/Hello\ World.xcodeproj
+
+You can test the app by running it in Xcode. As our application only shows a message, the iOS application will show only a blank screen. You can check if it is working in the console logs, which should contain something like this:
 
 .. code-block:: bash
 
@@ -84,4 +88,4 @@ You can test the app by running it in Xcode. As our application only shows a mes
     Hello World!
     2016-09-16 10:49:14.564094 Hello World[6791:4292188] subsystem: com.apple.UIKit, category: HIDEventFiltered, enable_level: 0, persist_level: 0, default_ttl: 0, info_ttl: 0, debug_ttl: 0, generate_symptoms: 0, enable_oversize: 1, privacy_setting: 2, enable_private_data: 0
 
-And that is all, you created your first ios python app!
+And that is all, you created your first iOS python app!
