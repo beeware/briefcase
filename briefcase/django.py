@@ -43,13 +43,7 @@ class django(app):
     def install_extras(self):
         # Install additional elements required for Django
         print(" * Installing extras...")
-        print(" * Installing NPM requirements...")
-        package_url = "https://raw.githubusercontent.com/pybee/toga/master/src/django/package.json"
-
-        package_json = "package.json"
-        with open(package_json,"w") as f:
-            f.write(urlopen(package_url).read().decode('utf-8'))
+        print("   - Installing NPM requirements...")
 
         npm = shutil.which("npm")
-
-        subprocess.run([npm, "install", package_json])
+        subprocess.Popen([npm, "install"], cwd=os.path.abspath(self.dir)).wait()
