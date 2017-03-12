@@ -196,6 +196,10 @@ class app(Command):
             print(" * No splash screen defined...")
 
     def install_support_package(self):
+        # Shortcut this entire step, if required
+        if self.skip_support_pkg:
+            return
+
         if self.support_pkg is None:
             print(" * Determining best support package...")
             self.support_pkg = self.find_support_pkg()
@@ -218,6 +222,10 @@ class app(Command):
             print("    python setup.py %s --support-pkg=<path to tarball>" % self.platform.lower())
             print()
 
+    def install_extras(self):
+        if self.extras:
+            self.extras()
+
     def post_run(self):
         print()
         print("Installation complete.")
@@ -229,5 +237,6 @@ class app(Command):
         self.install_code()
         self.install_resources()
         self.install_support_package()
+        self.install_extras()
 
         self.post_run()
