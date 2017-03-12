@@ -28,6 +28,8 @@ class app(Command):
          "Directory to put the project in"),
         ('formal-name=', None,
          "Formal name for the project"),
+        ('class-name=', None,
+         "Entry class name for the project"),
         ('organization-name=', None,
          "Name of the organization managing the project"),
         ('template=', None,
@@ -51,6 +53,7 @@ class app(Command):
     def initialize_options(self):
         self.dir = None
         self.formal_name = None
+        self.class_name = None
         self.organization_name = None
         self.template = None
         self.bundle = None
@@ -65,6 +68,9 @@ class app(Command):
     def finalize_options(self):
         if self.formal_name is None:
             self.formal_name = self.distribution.get_name().title()
+
+        if self.class_name is None:
+            self.class_name = self.formal_name.replace(' ', '')
 
         if self.organization_name is None:
             self.organization_name = self.distribution.get_author().title()
@@ -134,6 +140,7 @@ class app(Command):
             extra_context={
                 'app_name': self.distribution.get_name(),
                 'formal_name': self.formal_name,
+                'class_name': self.class_name,
                 'organization_name': self.organization_name,
                 'dir_name': self.dir,
                 'bundle': self.bundle,
@@ -196,10 +203,6 @@ class app(Command):
             print(" * No splash screen defined...")
 
     def install_support_package(self):
-        # Shortcut this entire step, if required
-        if self.skip_support_pkg:
-            return
-
         if self.support_pkg is None:
             print(" * Determining best support package...")
             self.support_pkg = self.find_support_pkg()
@@ -223,8 +226,7 @@ class app(Command):
             print()
 
     def install_extras(self):
-        if self.extras:
-            self.extras()
+        pass
 
     def post_run(self):
         print()

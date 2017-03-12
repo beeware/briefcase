@@ -37,7 +37,10 @@ class django(app):
     def install_splash(self):
         raise RuntimeError("Django doesn't support splash screens.")
 
-    def extras(self):
+    def install_support_package(self):
+        pass
+
+    def install_extras(self):
         # Install additional elements required for Django
         print(" * Installing extras...")
         print(" * Installing NPM requirements...")
