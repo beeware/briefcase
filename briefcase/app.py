@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import os
 import json
+import random
 import re
 import sys
 import uuid
@@ -40,6 +41,8 @@ class app(Command):
          "Name of the icon file."),
         ('guid=', None,
          "GUID identifying the app."),
+        ('secret-key=', None,
+         "Secret key for the app."),
         ('splash=', None,
          "Name of the splash screen file."),
         ('app-requires', None,
@@ -64,6 +67,7 @@ class app(Command):
         self.download_dir = None
         self.version_code = None
         self.guid = None
+        self.secret_key = None
 
     def finalize_options(self):
         if self.formal_name is None:
@@ -99,6 +103,10 @@ class app(Command):
         if self.guid is None:
             self.guid = uuid.uuid3(uuid.NAMESPACE_URL, self.distribution.get_url())
 
+        # The secret key is 40 characters of entropy
+        if self.secret_key is None:
+            self.secret_key = ''.join(random.choice("abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)") for i in range(40))
+
         pip.utils.ensure_dir(self.download_dir)
 
     def find_support_pkg(self):
@@ -126,6 +134,14 @@ class app(Command):
         except IndexError:
             return None
 
+    @property
+    def app_dir(self):
+        return os.path.join(os.getcwd(), self.resource_dir, 'app')
+
+    @property
+    def app_packages_dir(self):
+        return os.path.join(os.getcwd(), self.resource_dir, 'app_packages')
+
     def generate_app_template(self):
         print(" * Writing application template...")
 
@@ -133,6 +149,7 @@ class app(Command):
             self.template = 'https://github.com/pybee/Python-%s-template.git' % self.platform
         print("Project template: %s" % self.template)
 
+        # import pdb; pdb.set_trace()
         cookiecutter(
             self.template,
             no_input=True,
@@ -142,6 +159,8 @@ class app(Command):
                 'formal_name': self.formal_name,
                 'class_name': self.class_name,
                 'organization_name': self.organization_name,
+                'author': self.distribution.get_author(),
+                'description': self.distribution.get_description(),
                 'dir_name': self.dir,
                 'bundle': self.bundle,
                 'year': date.today().strftime('%Y'),
@@ -149,6 +168,7 @@ class app(Command):
                 'version': self.distribution.get_version(),
                 'version_code': self.version_code,
                 'guid': self.guid,
+                'secret_key': self.secret_key,
             }
         )
 
@@ -159,8 +179,8 @@ class app(Command):
                     'install',
                     '--upgrade',
                     '--force-reinstall',
-                    '--target=%s' % os.path.join(os.getcwd(), self.resource_dir, 'app_packages')
-                ] + self.distribution.install_requires
+                    '--target=%s' % self.app_packages_dir
+                ] + self.distribution.install_requires,
             )
         else:
             print("No requirements.")
@@ -172,7 +192,7 @@ class app(Command):
                     'install',
                     '--upgrade',
                     '--force-reinstall',
-                    '--target=%s' % os.path.join(os.getcwd(), self.resource_dir, 'app_packages')
+                    '--target=%s' % self.app_packages_dir,
                 ] + self.app_requires
             )
         else:
@@ -185,7 +205,7 @@ class app(Command):
                 '--upgrade',
                 '--force-reinstall',
                 '--no-dependencies',  # We just want the code, not the dependencies
-                '--target=%s' % os.path.join(os.getcwd(), self.resource_dir, 'app'),
+                '--target=%s' % self.app_dir,
                 '.'
             ])
 
