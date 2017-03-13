@@ -149,7 +149,6 @@ class app(Command):
             self.template = 'https://github.com/pybee/Python-%s-template.git' % self.platform
         print("Project template: %s" % self.template)
 
-        # import pdb; pdb.set_trace()
         cookiecutter(
             self.template,
             no_input=True,
