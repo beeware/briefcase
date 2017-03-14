@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import os
 import json
+import random
 import re
 import sys
 import uuid
@@ -28,6 +29,8 @@ class app(Command):
          "Directory to put the project in"),
         ('formal-name=', None,
          "Formal name for the project"),
+        ('class-name=', None,
+         "Entry class name for the project"),
         ('organization-name=', None,
          "Name of the organization managing the project"),
         ('template=', None,
@@ -38,6 +41,8 @@ class app(Command):
          "Name of the icon file."),
         ('guid=', None,
          "GUID identifying the app."),
+        ('secret-key=', None,
+         "Secret key for the app."),
         ('splash=', None,
          "Name of the splash screen file."),
         ('app-requires', None,
@@ -51,6 +56,7 @@ class app(Command):
     def initialize_options(self):
         self.dir = None
         self.formal_name = None
+        self.class_name = None
         self.organization_name = None
         self.template = None
         self.bundle = None
@@ -61,10 +67,14 @@ class app(Command):
         self.download_dir = None
         self.version_code = None
         self.guid = None
+        self.secret_key = None
 
     def finalize_options(self):
         if self.formal_name is None:
             self.formal_name = self.distribution.get_name().title()
+
+        if self.class_name is None:
+            self.class_name = self.formal_name.replace(' ', '')
 
         if self.organization_name is None:
             self.organization_name = self.distribution.get_author().title()
@@ -93,6 +103,10 @@ class app(Command):
         if self.guid is None:
             self.guid = uuid.uuid3(uuid.NAMESPACE_URL, self.distribution.get_url())
 
+        # The secret key is 40 characters of entropy
+        if self.secret_key is None:
+            self.secret_key = ''.join(random.choice("abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)") for i in range(40))
+
         pip.utils.ensure_dir(self.download_dir)
 
     def find_support_pkg(self):
@@ -120,6 +134,14 @@ class app(Command):
         except IndexError:
             return None
 
+    @property
+    def app_dir(self):
+        return os.path.join(os.getcwd(), self.resource_dir, 'app')
+
+    @property
+    def app_packages_dir(self):
+        return os.path.join(os.getcwd(), self.resource_dir, 'app_packages')
+
     def generate_app_template(self):
         print(" * Writing application template...")
 
@@ -134,7 +156,10 @@ class app(Command):
             extra_context={
                 'app_name': self.distribution.get_name(),
                 'formal_name': self.formal_name,
+                'class_name': self.class_name,
                 'organization_name': self.organization_name,
+                'author': self.distribution.get_author(),
+                'description': self.distribution.get_description(),
                 'dir_name': self.dir,
                 'bundle': self.bundle,
                 'year': date.today().strftime('%Y'),
@@ -142,6 +167,7 @@ class app(Command):
                 'version': self.distribution.get_version(),
                 'version_code': self.version_code,
                 'guid': self.guid,
+                'secret_key': self.secret_key,
             }
         )
 
@@ -152,8 +178,8 @@ class app(Command):
                     'install',
                     '--upgrade',
                     '--force-reinstall',
-                    '--target=%s' % os.path.join(os.getcwd(), self.resource_dir, 'app_packages')
-                ] + self.distribution.install_requires
+                    '--target=%s' % self.app_packages_dir
+                ] + self.distribution.install_requires,
             )
         else:
             print("No requirements.")
@@ -165,7 +191,7 @@ class app(Command):
                     'install',
                     '--upgrade',
                     '--force-reinstall',
-                    '--target=%s' % os.path.join(os.getcwd(), self.resource_dir, 'app_packages')
+                    '--target=%s' % self.app_packages_dir,
                 ] + self.app_requires
             )
         else:
@@ -178,7 +204,7 @@ class app(Command):
                 '--upgrade',
                 '--force-reinstall',
                 '--no-dependencies',  # We just want the code, not the dependencies
-                '--target=%s' % os.path.join(os.getcwd(), self.resource_dir, 'app'),
+                '--target=%s' % self.app_dir,
                 '.'
             ])
 
@@ -218,6 +244,9 @@ class app(Command):
             print("    python setup.py %s --support-pkg=<path to tarball>" % self.platform.lower())
             print()
 
+    def install_extras(self):
+        pass
+
     def post_run(self):
         print()
         print("Installation complete.")
@@ -229,5 +258,6 @@ class app(Command):
         self.install_code()
         self.install_resources()
         self.install_support_package()
+        self.install_extras()
 
         self.post_run()

@@ -33,7 +33,8 @@ setup(
     entry_points={
         'distutils.commands': [
             'android = briefcase.android:android',
-            'app = briefcase.app:app',
+            'app = briefcase.app:app', # Don't call directly, but registration required
+            'django = briefcase.django:django',
             'ios = briefcase.ios:ios',
             'macos = briefcase.macos:macos',
             'tvos = briefcase.tvos:tvos',
