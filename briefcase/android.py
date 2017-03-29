@@ -25,7 +25,14 @@ class android(app):
 
     def install_icon(self):
         last_size = None
-        for size, suffix in [('192', '-xxxhdpi'), ('144', '-xxhdpi'), ('96', '-xhdpi'), ('96', ''), ('72', '-hdpi'), ('48', '-mdpi'), ('36', '-ldpi')]:
+        for size, suffix in [
+                    ('192', '-xxxhdpi'),
+                    ('144', '-xxhdpi'),
+                    ('96', '-xhdpi'),
+                    ('72', '-hdpi'),
+                    ('48', '-mdpi'),
+                    ('36', '-ldpi')
+                ]:
             icon_file = '%s-%s.png' % (self.icon, size)
             if os.path.exists(icon_file):
                 last_size = size
@@ -45,7 +52,32 @@ class android(app):
                 print("WARNING: No %sx%s icon file available." % (size, size))
 
     def install_splash(self):
-        pass
+        last_size = None
+        for size, suffix in [
+                    ('1280×1920', '-xxxhdpi'),
+                    ('960×1440', '-xxhdpi'),
+                    ('640×960', '-xhdpi'),
+                    ('480x720', '-hdpi'),
+                    ('320×480', '-mdpi'),
+                    ('240×320', '-ldpi')
+                ]:
+            splash_file = '%s-%s.png' % (self.splash, size)
+            if os.path.exists(splash_file):
+                last_size = size
+            else:
+                if last_size:
+                    print("WARNING: No %s splash file available; using %s" % (size, size, last_size, last_size))
+                    splash_file = '%s-%s.png' % (self.splash, last_size)
+                else:
+                    splash_file = None
+
+            if splash_file:
+                shutil.copyfile(
+                    splash_file,
+                    os.path.join(self.resource_dir, 'res', 'drawable%s' % suffix, 'splash.png')
+                )
+            else:
+                print("WARNING: No %s splash file available." % (size, size))
 
     def post_run(self):
         print()

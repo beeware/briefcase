@@ -56,13 +56,14 @@ specific settings can be specified using a platform key::
                     'toga-ios'
                 ],
                 'icon': 'images/ios_icon',
-                'splash': 'images/ios_splash'
+                'splash': 'images/ios_splash',
             },
             'android': {
                 'app_requires': [
                     'toga-android'
                 ],
                 'icon': 'images/android_icon',
+                'splash': 'images/android_splash',
             },
             'tvos': {
                 'app_requires': [
@@ -101,8 +102,8 @@ provide the following files:
 * On Android:
     * ``$(icon)-192.png``, an xxxhdpi image (192x192)
     * ``$(icon)-144.png``, an xxhdpi image (144x144)
-    * ``$(icon)-96.png``, an xhdpi image (96x96); this is also used as the default.
-    * ``$(icon)-72.png``, an hdpi image (72x72)
+    * ``$(icon)-96.png``, an xhdpi image (96x96)
+    * ``$(icon)-72.png``, a hdpi image (72x72)
     * ``$(icon)-48.png``, an mdpi image (48x48)
     * ``$(icon)-36.png``, an ldpi image (36x36)
 
@@ -140,6 +141,14 @@ provide the following files:
 
 * On Apple TV:
     * ``$(splash)-1920x1080.icns``, a 1920x1080 landscape image
+
+* On Android:
+    * ``$(splash)-1280×1920.png``, an xxxhdpi (1280×1920) image
+    * ``$(splash)-960×1440.png``, an xxhdpi (960×1440) image
+    * ``$(splash)-640×960.png``, an xhdpi (640×960) image
+    * ``$(splash)-480x720.png``, a hdpi (480x720) image
+    * ``$(splash)-320×480.png``, an mdpi (320×480) image
+    * ``$(splash)-240×320.png``, an ldpi (240×320) image
 
 If an image cannot be found, the default briefcase image will be used.
 
