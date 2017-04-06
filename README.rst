@@ -69,6 +69,11 @@ specific settings can be specified using a platform key::
                     'toga-ios'
                 ]
             },
+            'django': {
+                'app_requires': [
+                    'toga-django'
+                ]
+            },
         }
     )
 

@@ -30,31 +30,33 @@ of ``setup.py`` script:
       }
   )
 
-And now you can update the application, using for example the Toga Hello World, 
-found at <https://toga.readthedocs.io/en/latest/tutorial/tutorial-0.html>:
+And now you can update the application, using, for example, the Toga Hello World
+found at <https://toga.readthedocs.io/en/latest/tutorial/tutorial-0.html>,
+modified to be class-based:
 
 .. code-block:: python
 
     import toga
+
+    class HelloWorld(toga.App):
+
+        def startup(self):
+            self.main_window = toga.MainWindow(self.name)
+            self.main_window.app = self
+      
+            box = toga.Box()
+
+            button = toga.Button('Hello world', on_press=button_handler)
+            button.style.set(margin=50)
+            box.add(button)
+
+            self.main_window.content = box
+            self.main_window.show()
   
-  
-    def button_handler(widget):
-        print("hello")
+        def button_handler(widget):
+            print("hello")
 
 
-    def build(app):
-        box = toga.Box()
-
-        button = toga.Button('Hello world', on_press=button_handler)
-        button.style.set(margin=50)
-        box.add(button)
-
-        return box
-
-
-    if __name__ == '__main__':
-        app = toga.App('First App', 'org.pybee.helloworld', startup=build)
-        app.main_loop()
 
 Create the iOS app
 ------------------
