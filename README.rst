@@ -158,6 +158,14 @@ Then, you can invoke ``briefcase``, using::
 
 to create a macOS app; or::
 
+    $ python setup.py windows
+
+to create an Windows app; or::
+
+    $ python setup.py linux
+
+to create an Linux app; or::
+
     $ python setup.py ios
 
 to create an iOS app; or::

@@ -64,6 +64,7 @@ class app(Command):
         self.splash = None
         self.app_requires = None
         self.support_pkg = None
+        self.support_dir = None
         self.download_dir = None
         self.version_code = None
         self.guid = None
@@ -226,12 +227,15 @@ class app(Command):
             print(" * Determining best support package...")
             self.support_pkg = self.find_support_pkg()
 
+        if self.support_dir is None:
+            self.support_dir = self.resource_dir
+
         if self.support_pkg:
             print(" * Installing support package...")
-            print("Support package: ", self.support_pkg)
+            print("Support package:", self.support_pkg)
             pip.download.unpack_url(
                 pip.index.Link(self.support_pkg),
-                os.path.join(os.getcwd(), self.resource_dir),
+                os.path.join(os.getcwd(), self.support_dir),
                 download_dir=self.download_dir,
             )
         else:

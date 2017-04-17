@@ -1,5 +1,8 @@
 import os
+import distutils.command.install_scripts as orig
+from pkg_resources import Distribution, PathMetadata
 import shutil
+import sys
 
 from .app import app
 
@@ -19,19 +22,31 @@ class windows(app):
         self.support_project = "pybee/Python-Microsoft-Support"
 
         if self.dir is None:
-            self.dir = '.'
-            self.resource_dir = os.path.join('%s' % self.formal_name, 'Tools')
-        else:
-            self.resource_dir = os.path.join(self.dir, '%s' % self.formal_name, 'Tools')
+            self.dir = 'windows'
 
-        if isinstance(self.icon, dict):
-            iconfile = self.icon['ico']
-        else:
-            iconfile = self.icon
+        self.resource_dir = self.dir
+        self.support_dir = os.path.join(self.dir, 'python')
+
+        iconfile = '%s.ico' % self.icon
         self.icon_filename = os.path.join(self.resource_dir, self.distribution.get_name() + os.path.splitext(iconfile)[1])
+
+    @property
+    def app_dir(self):
+        return self.support_dir
+
+    @property
+    def app_packages_dir(self):
+        return self.support_dir
 
     def install_icon(self):
         shutil.copyfile('%s.ico' % self.icon, self.icon_filename)
 
     def install_splash(self):
         raise RuntimeError("Windows doesn't support splash screens.")
+
+    def find_support_pkg(self):
+        version = "%s.%s.%s" % sys.version_info[:3]
+        return 'https://www.python.org/ftp/python/%s/python-%s-embed-amd64.zip' % (version, version)
+
+    # def install_extras(self):
+    #     print(" * Creating executable...")

@@ -36,6 +36,7 @@ setup(
             'app = briefcase.app:app', # Don't call directly, but registration required
             'django = briefcase.django:django',
             'ios = briefcase.ios:ios',
+            'linux = briefcase.linux:linux',
             'macos = briefcase.macos:macos',
             'tvos = briefcase.tvos:tvos',
             'watchos = briefcase.watchos:watchos',

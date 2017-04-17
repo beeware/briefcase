@@ -10,7 +10,7 @@ class android(app):
     def finalize_options(self):
         # Copy over all the options from the base 'app' command
         finalized = self.get_finalized_command('app')
-        for attr in ('formal_name', 'bundle', 'icon', 'download_dir', 'version_code'):
+        for attr in ('formal_name', 'class_name', 'bundle', 'icon', 'splash', 'download_dir', 'version_code'):
             if getattr(self, attr) is None:
                 setattr(self, attr, getattr(finalized, attr))
 
