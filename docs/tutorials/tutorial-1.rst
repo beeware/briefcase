@@ -39,7 +39,7 @@ We're going to use a version of the Toga Fahrenheit to Celsius converter tutoria
   import toga
 
 
-  class HelloWorld(toga.App):
+  class Converter(toga.App):
       def calculate(self, widget):
           try:
               self.c_input.value = (float(self.f_input.value) - 32.0) * 5.0 / 9.0
@@ -91,7 +91,7 @@ We're going to use a version of the Toga Fahrenheit to Celsius converter tutoria
 
 
   def main():
-      return HelloWorld('First App', 'org.pybee.helloworld')
+      return Converter('Converter', 'org.pybee.converter')
 
 
 Create the iOS app
@@ -110,7 +110,7 @@ Open the iOS project with Xcode
 
 If you the ios project in Xcode you will see a Toga application:
 
-.. image:: screenshots/tutorial-1.png
+.. image:: screenshots/tutorial-1-ios.png
 
 If you click on the button, you should see messages appear in the console.
 
@@ -153,5 +153,7 @@ Then, we can run the application:
   $ ./manage.py runserver
 
 If you open up ``localhost:8000`` in your browser, you should see the same application running in the web. 
+
+.. image:: screenshots/tutorial-1-django.png
 
 ✨
