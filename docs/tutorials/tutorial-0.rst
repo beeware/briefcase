@@ -44,9 +44,10 @@ Check out what the provided ``appname/app.py`` file contains:
 
 This won't do much as it is, but we can make it useful. 
 
-Add this into the ``app.py``:
+Add this into the ``app.py`` to make it useful:
 
 .. code-block:: python
+
     class MyApp:
         def main_loop(self):
             print("Hello world")
