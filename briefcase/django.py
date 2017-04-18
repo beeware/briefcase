@@ -37,6 +37,19 @@ class django(app):
     def app_dir(self):
         return os.path.join(os.getcwd(), self.dir)
 
+    @property
+    def version(self):
+        parts = self.distribution.get_version().split('.')
+
+        if len(parts) == 0:
+            return '1.0.0'
+        elif len(parts) == 1:
+            return '%s.0.0' % tuple(parts)
+        elif len(parts) == 2:
+            return '%s.%s.0' % tuple(parts)
+        else:
+            return '%s.%s.%s' % tuple(parts[:3])
+
     def install_icon(self):
         raise RuntimeError("Django doesn't support icons.")
 
@@ -69,3 +82,23 @@ class django(app):
 
         print("   - Building Webpack assets...")
         subprocess.Popen([npm, "run", "build"], cwd=os.path.abspath(self.dir)).wait()
+
+    def post_run(self):
+        print()
+        print("Installation complete.")
+        print()
+        print("Before you run this Django project, you should review the value")
+        print("of the settings in django/briefcase/settings/.env to ensure they")
+        print("are appropriate for your machine.")
+        print()
+        print("Once you've confirmed the settings are OK, you should run:")
+        print()
+        print("    $ cd django")
+        print("    $ ./manage.py migrate")
+        print("    $ ./manage.py runserver")
+        print()
+        print("This will apply the initial migration and start a test server.")
+        print()
+        print("You can then point a web browser at http://127.0.0.1:8000 to")
+        print("view your running application.")
+        print()

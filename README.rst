@@ -82,6 +82,14 @@ At a minimum, you must set a ``formal_name`` key (the full, formal name for the
 app) and a ``bundle`` key (the bundle identifier for the author organization -
 usually a reverse domain name).
 
+Alternatively, if you're starting from scratch, you can use `cookiecutter`_ to
+generate a stub project with the required content::
+
+    $ pip install cookiecutter
+    $ cookiecutter https://github.com/pybee/briefcase-template
+
+.. _cookiecutter: http://github.com/audreyr/cookiecutter
+
 The ``icon`` attribute specifies the prefix of a path to a set of image files.
 The name specified will be appended with a number of suffixes to construct
 filenames for the various icon sizes needed on each platform. You should

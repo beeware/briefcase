@@ -2,6 +2,7 @@ import os
 import distutils.command.install_scripts as orig
 from pkg_resources import Distribution, PathMetadata
 import shutil
+import subprocess
 import sys
 
 from .app import app
@@ -28,15 +29,7 @@ class windows(app):
         self.support_dir = os.path.join(self.dir, 'python')
 
         iconfile = '%s.ico' % self.icon
-        self.icon_filename = os.path.join(self.resource_dir, self.distribution.get_name() + os.path.splitext(iconfile)[1])
-
-    @property
-    def app_dir(self):
-        return self.support_dir
-
-    @property
-    def app_packages_dir(self):
-        return self.support_dir
+        self.icon_filename = os.path.join(self.app_dir, self.distribution.get_name() + os.path.splitext(iconfile)[1])
 
     def install_icon(self):
         shutil.copyfile('%s.ico' % self.icon, self.icon_filename)
@@ -48,5 +41,7 @@ class windows(app):
         version = "%s.%s.%s" % sys.version_info[:3]
         return 'https://www.python.org/ftp/python/%s/python-%s-embed-amd64.zip' % (version, version)
 
-    # def install_extras(self):
-    #     print(" * Creating executable...")
+    def install_extras(self):
+        print(" * Creating application link...")
+        subprocess.Popen(["powershell", "-File", "make_link.ps1"], cwd=os.path.abspath(self.dir)).wait()
+        os.remove(os.path.join(os.path.abspath(self.dir), 'make_link.ps1'))

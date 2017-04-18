@@ -6,11 +6,11 @@ In this tutorial you will create a simple ios application using toga framework.
 Update your ios project
 -----------------------
 
-In this step we assume that you followed the previous tutorial :doc:`/intro/tutorial-0.rst`. 
+In this step we assume that you followed the previous tutorial :doc:`/intro/tutorial-0.rst`.
 First at all, you can clean your previous app in your ``iostutorial`` folder:
 
 .. code-block:: bash
-  
+
   rm -rf iOS/
 
 We are going to use the Toga framework, so we have to include the ``toga-ios`` requirement in the ``ios`` section
@@ -43,7 +43,7 @@ modified to be class-based:
         def startup(self):
             self.main_window = toga.MainWindow(self.name)
             self.main_window.app = self
-      
+
             box = toga.Box()
 
             button = toga.Button('Hello world', on_press=button_handler)
@@ -52,10 +52,13 @@ modified to be class-based:
 
             self.main_window.content = box
             self.main_window.show()
-  
+
         def button_handler(widget):
             print("hello")
 
+
+    def main():
+        return HelloWorld('First App', 'org.pybee.helloworld')
 
 
 Create the iOS app
@@ -65,7 +68,7 @@ Now you can invoke setuptools again:
 
 .. code-block:: bash
   $ python setup.py ios
-  
+
 Notice that the ``app_packages`` is not empty after the update, and it contains toga packages and their requirements.
 
 Open the iOS project with Xcode

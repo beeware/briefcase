@@ -143,6 +143,10 @@ class app(Command):
     def app_packages_dir(self):
         return os.path.join(os.getcwd(), self.resource_dir, 'app_packages')
 
+    @property
+    def version(self):
+        return self.distribution.get_version()
+
     def generate_app_template(self):
         print(" * Writing application template...")
 
@@ -165,7 +169,7 @@ class app(Command):
                 'bundle': self.bundle,
                 'year': date.today().strftime('%Y'),
                 'month': date.today().strftime('%B'),
-                'version': self.distribution.get_version(),
+                'version': self.version,
                 'version_code': self.version_code,
                 'guid': self.guid,
                 'secret_key': self.secret_key,
