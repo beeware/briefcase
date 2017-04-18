@@ -80,7 +80,7 @@ You can test the app by running it in Xcode. As our application only shows a mes
 
 .. code-block:: bash
 
-    Hello World.app/Library/Application Support/org.example.HelloWorld/app/HelloWorld/app.py
+    App Name.app/Library/Application Support/org.example.AppName/app/AppName/app.py
     Hello World!
     2016-09-16 10:49:14.564094 Hello World[6791:4292188] subsystem: com.apple.UIKit, category: HIDEventFiltered, enable_level: 0, persist_level: 0, default_ttl: 0, info_ttl: 0, debug_ttl: 0, generate_symptoms: 0, enable_oversize: 1, privacy_setting: 2, enable_private_data: 0
 
