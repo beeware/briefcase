@@ -1,9 +1,9 @@
 Tutorial 1- Toga Hello, World
 =============================
 
-In this tutorial you will create a simple ios application using toga framework.
+In this tutorial you will create a simple application using toga framework.
 
-Update your ios project
+Update your iOS project
 -----------------------
 
 In this step we assume that you followed the :doc:`previous tutorial <tutorial-0>`. First at all, you can clean your previous app
@@ -30,35 +30,68 @@ We are going to use the Toga framework, so we have to include the
       }
   )
 
-And now you can update the application, using, for example, the Toga Hello World
-found at <https://toga.readthedocs.io/en/latest/tutorial/tutorial-0.html>,
-modified to be class-based:
+And now you can update the application.
+
+We're going to use a version of the Toga Fahrenheit to Celsius converter tutorial found at <https://toga.readthedocs.io/en/latest/tutorial/tutorial-0.html>, modified to be class-based:
 
 .. code-block:: python
 
-    import toga
-
-    class HelloWorld(toga.App):
-
-        def startup(self):
-            self.main_window = toga.MainWindow(self.name)
-            self.main_window.app = self
-
-            box = toga.Box()
-
-            button = toga.Button('Hello world', on_press=button_handler)
-            button.style.set(margin=50)
-            box.add(button)
-
-            self.main_window.content = box
-            self.main_window.show()
-
-        def button_handler(widget):
-            print("hello")
+  import toga
 
 
-    def main():
-        return HelloWorld('First App', 'org.pybee.helloworld')
+  class HelloWorld(toga.App):
+      def calculate(self, widget):
+          try:
+              self.c_input.value = (float(self.f_input.value) - 32.0) * 5.0 / 9.0
+          except Exception:
+              self.c_input.value = '???'
+
+      def startup(self):
+          self.main_window = toga.MainWindow(self.name)
+          self.main_window.app = self
+
+          # Tutorial 1
+          c_box = toga.Box()
+          f_box = toga.Box()
+          box = toga.Box()
+
+          self.c_input = toga.TextInput(readonly=True)
+          self.f_input = toga.TextInput()
+
+          c_label = toga.Label('Celcius', alignment=toga.LEFT_ALIGNED)
+          f_label = toga.Label('Fahrenheit', alignment=toga.LEFT_ALIGNED)
+          join_label = toga.Label('is equivalent to', alignment=toga.RIGHT_ALIGNED)
+
+          button = toga.Button('Calculate', on_press=self.calculate)
+
+          f_box.add(self.f_input)
+          f_box.add(f_label)
+
+          c_box.add(join_label)
+          c_box.add(self.c_input)
+          c_box.add(c_label)
+
+          box.add(f_box)
+          box.add(c_box)
+          box.add(button)
+
+          box.style.set(flex_direction='column', padding_top=10)
+          f_box.style.set(flex_direction='row', margin=5)
+          c_box.style.set(flex_direction='row', margin=5)
+
+          self.c_input.style.set(flex=1)
+          self.f_input.style.set(flex=1, margin_left=160)
+          c_label.style.set(width=100, margin_left=10)
+          f_label.style.set(width=100, margin_left=10)
+          join_label.style.set(width=150, margin_right=10)
+          button.style.set(margin=15)
+
+          self.main_window.content = box
+          self.main_window.show()
+
+
+  def main():
+      return HelloWorld('First App', 'org.pybee.helloworld')
 
 
 Create the iOS app
@@ -80,3 +113,45 @@ If you the ios project in Xcode you will see a Toga application:
 .. image:: screenshots/tutorial-1.png
 
 If you click on the button, you should see messages appear in the console.
+
+Use the *same code*, but for the web
+------------------------------------
+
+Edit the ``setup.py`` file to include a package helper for Django:
+
+
+.. code-block:: python
+
+  setup(name='HelloWorld',
+      ...
+      options = {
+          ...
+          'django': {
+              'app_requires': [
+                  'toga-django'
+              ]
+          }
+      }
+  )
+
+
+Now you can invoke setuptools again:
+
+.. code-block:: bash
+  $ python setup.py django
+
+Once this process has completed, there are a couple of steps left (that are helpfully outputted by the last command) to setup the django project:
+
+.. code-block:: bash
+  $ cd django
+  $ ./manage.py migrate
+  
+Then, we can run the application:
+
+
+.. code-block:: bash
+  $ ./manage.py runserver
+
+If you open up ``localhost:8000`` in your browser, you should see the same application running in the web. 
+
+✨

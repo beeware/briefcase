@@ -18,47 +18,42 @@ This tutorial assumes you've read and followed the instructions in
 Start a new project
 -------------------
 
-Lets start by creating a ``iostutorial`` directory:
+Let's get started by using `the handy template <https://github.com/pybee/briefcase-template>`_ ``briefcase-template``:
 
 .. code-block:: bash
 
-    $ mkdir iostutorial
-    $ cd iostutorial
+    $ pip install cookiecutter briefcase
+    $ cookiecutter https://github.com/pybee/briefcase-template
 
-Now, we create our simple "Hello, world!" application:
+This will ask a bunch of questions of you. Keep them at their default setting for now. 
+
+You'll now have a few files in this folder, including ``appname``. 
+
+Check out what the provided ``appname/app.py`` file contains:
 
 .. code-block:: bash
 
-    $ mkdir HelloWorld
-    $ touch HelloWorld/__init__.py
-    $ echo 'print("Hello, World!")' > HelloWorld/app.py
-
-.. note:: In ``ios`` the application entry point is always ``ApplicationName/app.py``
-
-Finally, we have to add the setuptools ``setup.py`` script:
+    $ cd appname
+    $ cat appname/app.py
 
 .. code-block:: python
 
-    #!/usr/bin/env python
+    def main():
+        # This needs to return an object that has a main_loop() method.
+        return None
 
-    from setuptools import setup, find_packages
+This won't do much as it is, but we can make it useful. 
 
-    setup(name='HelloWorld',
-        version = '0.1.0',
-        packages = find_packages(),
-        options = {
-            'app': {
-                'formal_name': 'Hello World',
-                'bundle': 'org.example'
-            },
-            'ios': {
-                'app_requires': [
-                ]
-            }
-        }
-    )
+Add this into the ``app.py``:
 
-In the setup script we included the basic information of our application (``name``, ``version`` and ``packages``) needed by setuptools for deploying our application. Additionally, we added in the ``options`` the required configuration for ``briefcase``.
+.. code-block:: python
+    class MyApp:
+        def main_loop(self):
+            print("Hello world")
+            
+            
+    def main():
+        return MyApp()  
 
 Create an iOS project
 ---------------------
@@ -78,7 +73,7 @@ There is a new folder in your project called 'iOS', which contains the Xcode pro
 
 .. code-block:: bash
 
-    open iOS/Hello\ World.xcodeproj
+    open iOS/App\ Name.xcodeproj
 
 You can test the app by running it in Xcode. As our application only shows a message, the iOS application will show only a blank screen. You can check if it is working in the console logs, which should contain something like this:
 
