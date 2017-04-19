@@ -1,8 +1,8 @@
 Release History
 ===============
 
-0.1.7 (in development)
-----------------------
+0.1.7
+-----
 
  * Added check for existing directories, with the option to replace
    existing content.
