@@ -4,6 +4,7 @@ import os
 import json
 import random
 import re
+import shutil
 import sys
 import uuid
 from urllib.error import URLError
@@ -261,6 +262,24 @@ class app(Command):
         print("Installation complete.")
 
     def run(self):
+        if os.path.exists(self.dir):
+            print()
+            if os.path.isdir(self.dir):
+                confirm = input("A directory named '%s' already exists. Would you like to replace it (y/N)? " % self.dir)
+            else:
+                confirm = input("A file named '%s' already exists. Would you like to delete it (y/N)? " % self.dir)
+
+            print()
+            if confirm in ['y', 'Y']:
+                print(" * Deleting existing content...")
+                if os.path.isdir(self.dir):
+                    shutil.rmtree(self.dir)
+                else:
+                    os.remove(self.dir)
+            else:
+                print("Briefcase deployment cancelled.")
+                return
+
         self.generate_app_template()
         self.install_app_requirements()
         self.install_platform_requirements()
