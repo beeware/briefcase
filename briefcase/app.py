@@ -75,7 +75,8 @@ class app(Command):
             self.formal_name = self.distribution.get_name().title()
 
         if self.class_name is None:
-            self.class_name = self.formal_name.replace(' ', '')
+            CLASS_NAME_CHARS = re.compile('[^a-zA-Z]')
+            self.class_name = CLASS_NAME_CHARS.sub('', self.formal_name.title())
 
         if self.organization_name is None:
             self.organization_name = self.distribution.get_author().title()
