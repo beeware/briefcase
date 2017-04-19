@@ -4,5 +4,5 @@
 *.egg-info
 dist
 build
-_build
+docs/_build
 distribute-*

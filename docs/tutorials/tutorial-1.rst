@@ -6,15 +6,15 @@ In this tutorial you will create a simple ios application using toga framework.
 Update your ios project
 -----------------------
 
-In this step we assume that you followed the previous tutorial :doc:`/intro/tutorial-0.rst`.
-First at all, you can clean your previous app in your ``iostutorial`` folder:
+In this step we assume that you followed the :doc:`previous tutorial <tutorial-0>`. First at all, you can clean your previous app
+in your ``iostutorial`` folder:
 
 .. code-block:: bash
 
   rm -rf iOS/
 
-We are going to use the Toga framework, so we have to include the ``toga-ios`` requirement in the ``ios`` section
-of ``setup.py`` script:
+We are going to use the Toga framework, so we have to include the
+``toga-ios`` requirement in the ``ios`` section of ``setup.py`` script:
 
 .. code-block:: python
 
@@ -67,6 +67,7 @@ Create the iOS app
 Now you can invoke setuptools again:
 
 .. code-block:: bash
+
   $ python setup.py ios
 
 Notice that the ``app_packages`` is not empty after the update, and it contains toga packages and their requirements.

@@ -40,9 +40,9 @@ Finally, we have to add the setuptools ``setup.py`` script:
 .. code-block:: python
 
     #!/usr/bin/env python
-    
+
     from setuptools import setup, find_packages
-    
+
     setup(name='HelloWorld',
         version = '0.1.0',
         packages = find_packages(),
@@ -58,7 +58,7 @@ Finally, we have to add the setuptools ``setup.py`` script:
         }
     )
 
-In the setup script we included the basic information of our application (``name``, ``version`` and ``packages``) needed by setuptools for deploying our application. Additionally, we added in the ``options`` the required configuration for ``briefcase``. 
+In the setup script we included the basic information of our application (``name``, ``version`` and ``packages``) needed by setuptools for deploying our application. Additionally, we added in the ``options`` the required configuration for ``briefcase``.
 
 Create an iOS project
 ---------------------
@@ -74,7 +74,7 @@ to create the iOS app.
 Open the iOS project with Xcode
 -------------------------------
 
-There is a new folder in your project called 'iOS', which contains the Xcode project (``Hello World.xcodeproj``). Open it with Xcode and check that your application is the ``app`` folder. You can also open the application by running: 
+There is a new folder in your project called 'iOS', which contains the Xcode project (``Hello World.xcodeproj``). Open it with Xcode and check that your application is the ``app`` folder. You can also open the application by running:
 
 .. code-block:: bash
 
