@@ -25,16 +25,17 @@ Let's get started by using `the handy template <https://github.com/pybee/briefca
     $ pip install cookiecutter briefcase
     $ cookiecutter https://github.com/pybee/briefcase-template
 
-This will ask a bunch of questions of you. Keep them at their default setting for now. 
+This will ask a bunch of questions of you. We'll use an `app_name` of "tutorial_0", and a 
+`formal_name` of "Tutorial 0". Set the other values as you like
 
-You'll now have a few files in this folder, including ``appname``. 
+You'll now have a few files in this folder, including ``tutorial_0``. 
 
-Check out what the provided ``appname/app.py`` file contains:
+Check out what the provided ``tutorial_0/app.py`` file contains:
 
 .. code-block:: bash
 
-    $ cd appname
-    $ cat appname/app.py
+    $ cd tutorial_0
+    $ cat tutorial_0/app.py
 
 .. code-block:: python
 
@@ -74,13 +75,13 @@ There is a new folder in your project called 'iOS', which contains the Xcode pro
 
 .. code-block:: bash
 
-    open iOS/App\ Name.xcodeproj
+    open iOS/Tutorial\ 0.xcodeproj
 
 You can test the app by running it in Xcode. As our application only shows a message, the iOS application will show only a blank screen. You can check if it is working in the console logs, which should contain something like this:
 
 .. code-block:: bash
 
-    App Name.app/Library/Application Support/org.example.AppName/app/AppName/app.py
+    Tutorial 0.app/Library/Application Support/com.pybee.tutorial0/tutorial_0/tutorial_0/app.py
     Hello World!
     2016-09-16 10:49:14.564094 Hello World[6791:4292188] subsystem: com.apple.UIKit, category: HIDEventFiltered, enable_level: 0, persist_level: 0, default_ttl: 0, info_ttl: 0, debug_ttl: 0, generate_symptoms: 0, enable_oversize: 1, privacy_setting: 2, enable_private_data: 0
 
