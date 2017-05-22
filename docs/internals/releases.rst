@@ -1,6 +1,10 @@
 Release History
 ===============
 
+0.1.8
+-----
+ * Modified template rollout process to avoid API limits on Github.
+
 0.1.7
 -----
 
