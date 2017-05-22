@@ -138,11 +138,13 @@ Edit the ``setup.py`` file to include a package helper for Django:
 Now you can invoke setuptools again:
 
 .. code-block:: bash
+
   $ python setup.py django
 
 Once this process has completed, there are a couple of steps left (that are helpfully outputted by the last command) to setup the django project:
 
 .. code-block:: bash
+
   $ cd django
   $ ./manage.py migrate
   
@@ -150,6 +152,7 @@ Then, we can run the application:
 
 
 .. code-block:: bash
+
   $ ./manage.py runserver
 
 If you open up ``localhost:8000`` in your browser, you should see the same application running in the web. 
