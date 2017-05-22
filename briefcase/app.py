@@ -4,6 +4,7 @@ import os
 import json
 import random
 import re
+import subprocess
 import requests
 import shutil
 import sys
@@ -148,9 +149,13 @@ class app(Command):
         print(" * Writing application template...")
 
         if self.template is None:
-            self.template = 'https://github.com/pybee/Python-%s-template.git' % self.platform
+            template_path = os.path.expanduser('~/.cookiecutters/Python-%s-template' % self.platform)
+            if os.path.exists(template_path):
+                self.template = template_path
+                self.git_pull(template_path)
+            else:
+                self.template = 'https://github.com/pybee/Python-%s-template.git' % self.platform
         print("Project template: %s" % self.template)
-
         cookiecutter(
             self.template,
             no_input=True,
@@ -172,6 +177,17 @@ class app(Command):
                 'secret_key': self.secret_key,
             }
         )
+
+    def git_pull(self, path):
+        template_name = path.split('/')[-1]
+        try:
+            subprocess.check_output(["git", "pull"], stderr=subprocess.STDOUT, cwd=path)
+            print('Template %s succesfully updated.' % template_name)
+        except subprocess.CalledProcessError as pull_error:
+            error_message = pull_error.output.decode('utf-8')
+            if 'resolve host' in error_message:
+                print('Unable to update template %s, using unpulled.' % template_name)
+            print(error_message)
 
     def install_app_requirements(self):
         print(" * Installing requirements...")
