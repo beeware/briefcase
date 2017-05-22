@@ -52,6 +52,8 @@ class app(Command):
          'URL for the support package to use'),
         ('download-dir=', None,
          "Directory where the project support packages will be cached"),
+        ('build', None,
+         "Build the project after generating")
     ]
 
     def initialize_options(self):
@@ -70,6 +72,7 @@ class app(Command):
         self.version_code = None
         self.guid = None
         self.secret_key = None
+        self.build = False
 
     def finalize_options(self):
         if self.formal_name is None:
@@ -257,6 +260,9 @@ class app(Command):
     def install_extras(self):
         pass
 
+    def build_app(self):
+        pass
+
     def post_run(self):
         print()
         print("Installation complete.")
@@ -287,5 +293,8 @@ class app(Command):
         self.install_resources()
         self.install_support_package()
         self.install_extras()
+
+        if self.build:
+            self.build_app()
 
         self.post_run()

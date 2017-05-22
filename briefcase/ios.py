@@ -1,6 +1,8 @@
 import os
 import shutil
 
+import subprocess
+
 from .app import app
 
 
@@ -55,3 +57,20 @@ class ios(app):
                 )
             else:
                 print("WARNING: No %s splash file available." % size)
+
+    def build_app(self):
+        project_file = '%s.xcodeproj' % self.formal_name
+        build_settings = [
+            ('CODE_SIGNING_REQUIRED', 'NO'),
+            ('CODE_SIGN_IDENTITY', ''),
+            ('CODE_SIGN_ENTITLEMENTS', ''),
+            ('CODE_SIGNING_ALLOWED', 'NO')
+        ]
+        build_settings_str = ['%s="%s"' % x for x in build_settings]
+
+        print(' * Building XCode project...')
+
+        subprocess.Popen([
+            'xcodebuild', '-project', project_file, *build_settings_str, '-destination',
+            'platform="iOS Simulator",name="iPhone 7",OS="latest"', '-quiet', 'build'
+        ], cwd=os.path.abspath(self.dir)).wait()
