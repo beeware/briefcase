@@ -5,15 +5,10 @@ import json
 import random
 import re
 import subprocess
+import requests
 import shutil
 import sys
 import uuid
-from urllib.error import URLError
-
-try:
-    from urllib.request import urlopen
-except ImportError:  # Python 2 compatibility
-    from urllib2 import urlopen
 
 from datetime import date
 from distutils.core import Command
@@ -114,11 +109,11 @@ class app(Command):
         pip.utils.ensure_dir(self.download_dir)
 
     def find_support_pkg(self):
-        api_url = 'https://api.github.com/repos/%s/releases' % self.support_project
+        api_url = 'https://pybee.org/static/api/%s/releases.json' % self.support_project
 
         try:
-            releases = json.loads(urlopen(api_url).read().decode('utf8'))
-        except URLError:
+            releases = requests.get(api_url).json()
+        except requests.exceptions.RequestException:
             print()
             print("We had trouble connecting to Github to look for appropriate")
             print("support packages. This can happen when you have tried too many")
@@ -128,7 +123,7 @@ class app(Command):
 
         candidates = []
         for release in releases:
-            if release['tag_name'].startswith("%s.%s-" % (sys.version_info.major, sys.version_info.minor)):
+            if release['tag_name'] and release['tag_name'].startswith("%s.%s-" % (sys.version_info.major, sys.version_info.minor)):
                 for asset in release['assets']:
                     if asset['name'].endswith('.tar.gz') and self.platform in asset['name']:
                         candidates.append((release['created_at'], asset['browser_download_url']))
