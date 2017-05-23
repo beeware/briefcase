@@ -96,16 +96,14 @@ class ios(app):
 
         device = device_list[0]
 
-        # Boot device, install app, and launch
+        # Install app and launch simulator
         print(' * Launching app...')
-
-        if device['state'] == 'Shutdown':
-            subprocess.Popen(['xcrun', 'simctl', 'boot', device['udid']])
 
         app_identifier = '.'.join([self.bundle, self.formal_name.replace(' ', '-')])
 
-        subprocess.Popen(['xcrun', 'simctl', 'uninstall', device['udid'], app_identifier], cwd=working_dir).wait()
+        subprocess.Popen(['xcrun', 'instruments', '-w', device['udid']]).wait()
 
+        subprocess.Popen(['xcrun', 'simctl', 'uninstall', device['udid'], app_identifier], cwd=working_dir).wait()
         subprocess.Popen([
             'xcrun', 'simctl', 'install', device['udid'],
             os.path.join('build', 'Debug-iphonesimulator', '%s.app' % self.formal_name)
@@ -113,4 +111,4 @@ class ios(app):
 
         subprocess.Popen([
             'xcrun', 'simctl', 'launch', device['udid'], app_identifier
-        ])
+        ]).wait()

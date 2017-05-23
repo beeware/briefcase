@@ -56,9 +56,9 @@ class app(Command):
          "Build the project after generating"),
         ('execute', None,
          "Run the application after building"),
-        ('os-version', None,
+        ('os-version=', None,
          "For iOS, the OS version to run (e.g., iOS 10.2)"),
-        ('device', None,
+        ('device=', None,
          "For iOS, the device to run (e.g., iPhone 7 Plus)")
     ]
 
