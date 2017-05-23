@@ -134,6 +134,14 @@ Edit the ``setup.py`` file to include a package helper for Django:
       }
   )
 
+Building Django has Javascript dependencies that are installed with NPM.
+Pick the appropriate command to install NPM on your OS, or visit the `NPM website <https://www.npmjs.com/>`_ and follow the instructions.
+
+.. code-block:: bash
+
+  $ brew install npm  # OSX with Homebrew (https://brew.sh)
+  $ apt-get install nodejs  # Ubuntu
+  $ pacman -S npm  # Arch Linux
 
 Now you can invoke setuptools again:
 
