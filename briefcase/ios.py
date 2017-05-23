@@ -1,5 +1,8 @@
+import json
 import os
 import shutil
+
+import subprocess
 
 from .app import app
 
@@ -22,6 +25,12 @@ class ios(app):
             self.dir = self.platform
 
         self.resource_dir = self.dir
+
+        if self.os_version is None:
+            self.os_version = 'iOS 10.2'
+
+        if self.device is None:
+            self.device = 'iPhone 7 Plus'
 
     def install_icon(self):
         last_size = None
@@ -55,3 +64,57 @@ class ios(app):
                 )
             else:
                 print("WARNING: No %s splash file available." % size)
+
+    def build_app(self):
+        project_file = '%s.xcodeproj' % self.formal_name
+        build_settings = [
+            ('AD_HOC_CODE_SIGNING_ALLOWED', 'YES'),
+            ('CODE_SIGN_IDENTITY', '-'),
+            ('VALID_ARCHS', '"i386 x86_64"'),
+            ('ARCHS', 'x86_64'),
+            ('ONLY_ACTIVE_ARCHS', 'NO')
+        ]
+        build_settings_str = ['%s=%s' % x for x in build_settings]
+
+        print(' * Building XCode project...')
+
+        subprocess.Popen([
+            'xcodebuild', ' '.join(build_settings_str), '-project', project_file, '-destination',
+            'platform="iOS Simulator,name=%s,OS=%s"' %(self.device, self.os_version), '-quiet', '-configuration',
+            'Debug', '-arch', 'x86_64', '-sdk', 'iphonesimulator%s' % (self.os_version.split(' ')[-1],), 'build'
+        ], cwd=os.path.abspath(self.dir)).wait()
+
+    def run_app(self):
+        working_dir = os.path.abspath(self.dir)
+
+        # Find an appropriate device
+        pipe = subprocess.Popen(['xcrun', 'simctl', 'list', '-j'], stdout=subprocess.PIPE)
+        pipe.wait()
+
+        data = json.loads(pipe.stdout.read().decode())
+
+        device_list = data['devices'].get(self.os_version, [])
+        device_list = [x for x in device_list if x['name'].lower() == self.device.lower()]
+
+        if not device_list:
+            print('WARNING: No devices found for OS %s and device name %s'.format(self.os_version, self.device))
+            return
+
+        device = device_list[0]
+
+        # Install app and launch simulator
+        print(' * Launching app...')
+
+        app_identifier = '.'.join([self.bundle, self.formal_name.replace(' ', '-')])
+
+        subprocess.Popen(['xcrun', 'instruments', '-w', device['udid']]).wait()
+
+        subprocess.Popen(['xcrun', 'simctl', 'uninstall', device['udid'], app_identifier], cwd=working_dir).wait()
+        subprocess.Popen([
+            'xcrun', 'simctl', 'install', device['udid'],
+            os.path.join('build', 'Debug-iphonesimulator', '%s.app' % self.formal_name)
+        ], cwd=working_dir).wait()
+
+        subprocess.Popen([
+            'xcrun', 'simctl', 'launch', device['udid'], app_identifier
+        ]).wait()

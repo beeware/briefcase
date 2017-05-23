@@ -48,6 +48,14 @@ class app(Command):
          'URL for the support package to use'),
         ('download-dir=', None,
          "Directory where the project support packages will be cached"),
+        ('build', None,
+         "Build the project after generating"),
+        ('execute', None,
+         "Run the application after building"),
+        ('os-version=', None,
+         "Set the device OS version. Currently only iOS supported (e.g., iOS 10.2)"),
+        ('device=', None,
+         "Set the device to run. Currently only iOS supported (e.g., iPhone 7 Plus)")
     ]
 
     def initialize_options(self):
@@ -66,6 +74,10 @@ class app(Command):
         self.version_code = None
         self.guid = None
         self.secret_key = None
+        self.build = False
+        self.execute = False
+        self.os_version = None
+        self.device = None
 
     def finalize_options(self):
         if self.formal_name is None:
@@ -107,6 +119,9 @@ class app(Command):
             self.secret_key = ''.join(random.choice("abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)") for i in range(40))
 
         pip.utils.ensure_dir(self.download_dir)
+
+        if self.execute:
+            self.build = True
 
     def find_support_pkg(self):
         api_url = 'https://pybee.org/static/api/%s/releases.json' % self.support_project
@@ -268,6 +283,12 @@ class app(Command):
     def install_extras(self):
         pass
 
+    def build_app(self):
+        pass
+
+    def run_app(self):
+        pass
+
     def post_run(self):
         print()
         print("Installation complete.")
@@ -298,5 +319,10 @@ class app(Command):
         self.install_resources()
         self.install_support_package()
         self.install_extras()
+
+        if self.build:
+            self.build_app()
+        if self.execute:
+            self.run_app()
 
         self.post_run()
