@@ -57,9 +57,9 @@ class app(Command):
         ('execute', None,
          "Run the application after building"),
         ('os-version=', None,
-         "For iOS, the OS version to run (e.g., iOS 10.2)"),
+         "Set the device OS version. Currently only iOS supported (e.g., iOS 10.2)"),
         ('device=', None,
-         "For iOS, the device to run (e.g., iPhone 7 Plus)")
+         "Set the device to run. Currently only iOS supported (e.g., iPhone 7 Plus)")
     ]
 
     def initialize_options(self):
@@ -80,8 +80,8 @@ class app(Command):
         self.secret_key = None
         self.build = False
         self.execute = False
-        self.os_version = 'iOS 10.2'
-        self.device = 'iPhone 7 Plus'
+        self.os_version = None
+        self.device = None
 
     def finalize_options(self):
         if self.formal_name is None:

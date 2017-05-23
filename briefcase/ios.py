@@ -26,6 +26,12 @@ class ios(app):
 
         self.resource_dir = self.dir
 
+        if self.os_version is None:
+            self.os_version = 'iOS 10.2'
+
+        if self.device is None:
+            self.device = 'iPhone 7 Plus'
+
     def install_icon(self):
         last_size = None
         for size in ['180', '167', '152', '120', '87', '80', '76', '58', '40', '29']:
