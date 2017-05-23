@@ -53,7 +53,13 @@ class app(Command):
         ('download-dir=', None,
          "Directory where the project support packages will be cached"),
         ('build', None,
-         "Build the project after generating")
+         "Build the project after generating"),
+        ('execute', None,
+         "Run the application after building"),
+        ('os-version', None,
+         "For iOS, the OS version to run (e.g., iOS 10.2)"),
+        ('device', None,
+         "For iOS, the device to run (e.g., iPhone 7 Plus)")
     ]
 
     def initialize_options(self):
@@ -73,6 +79,9 @@ class app(Command):
         self.guid = None
         self.secret_key = None
         self.build = False
+        self.execute = False
+        self.os_version = 'iOS 10.2'
+        self.device = 'iPhone 7 Plus'
 
     def finalize_options(self):
         if self.formal_name is None:
@@ -114,6 +123,9 @@ class app(Command):
             self.secret_key = ''.join(random.choice("abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)") for i in range(40))
 
         pip.utils.ensure_dir(self.download_dir)
+
+        if self.execute:
+            self.build = True
 
     def find_support_pkg(self):
         api_url = 'https://api.github.com/repos/%s/releases' % self.support_project
@@ -263,6 +275,9 @@ class app(Command):
     def build_app(self):
         pass
 
+    def run_app(self):
+        pass
+
     def post_run(self):
         print()
         print("Installation complete.")
@@ -296,5 +311,7 @@ class app(Command):
 
         if self.build:
             self.build_app()
+        if self.execute:
+            self.run_app()
 
         self.post_run()
