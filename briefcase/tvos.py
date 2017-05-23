@@ -14,6 +14,8 @@ class tvos(app):
             if getattr(self, attr) is None:
                 setattr(self, attr, getattr(finalized, attr))
 
+        super(tvos, self).finalize_options()
+
         # Set platform-specific options
         self.platform = 'tvOS'
         self.support_project = "pybee/Python-Apple-Support"

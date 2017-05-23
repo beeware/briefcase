@@ -18,6 +18,8 @@ class windows(app):
             if getattr(self, attr) is None:
                 setattr(self, attr, getattr(finalized, attr))
 
+        super(windows, self).finalize_options()
+
         # Set platform-specific options
         self.platform = 'Windows'
         self.support_project = "pybee/Python-Microsoft-Support"

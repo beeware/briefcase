@@ -14,6 +14,8 @@ class watchos(app):
             if getattr(self, attr) is None:
                 setattr(self, attr, getattr(finalized, attr))
 
+        super(watchos, self).finalize_options()
+
         # Set platform-specific options
         self.platform = 'watchOS'
         self.support_project = "pybee/Python-Apple-Support"

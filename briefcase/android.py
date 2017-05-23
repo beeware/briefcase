@@ -14,6 +14,8 @@ class android(app):
             if getattr(self, attr) is None:
                 setattr(self, attr, getattr(finalized, attr))
 
+        super(android, self).finalize_options()
+
         # Set platform-specific options
         self.platform = 'Android'
         self.support_project = "pybee/voc"
