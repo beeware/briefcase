@@ -294,6 +294,8 @@ class app(Command):
         print("Installation complete.")
 
     def run(self):
+        full_generation = True
+        #import pdb; pdb.set_trace()
         if os.path.exists(self.dir):
             print()
             if os.path.isdir(self.dir):
@@ -309,20 +311,18 @@ class app(Command):
                 else:
                     os.remove(self.dir)
             else:
-                print("Briefcase deployment cancelled.")
-                return
-
-        self.generate_app_template()
+                print("Updating user code.")
+                full_generation = False
+        if full_generation:
+            self.generate_app_template()#
+            self.install_support_package()#
         self.install_app_requirements()
         self.install_platform_requirements()
         self.install_code()
         self.install_resources()
-        self.install_support_package()
         self.install_extras()
-
         if self.build:
             self.build_app()
         if self.execute:
             self.run_app()
-
         self.post_run()
