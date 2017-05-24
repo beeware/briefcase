@@ -17,6 +17,8 @@ class linux(app):
             if getattr(self, attr) is None:
                 setattr(self, attr, getattr(finalized, attr))
 
+        super(linux, self).finalize_options()
+
         # Set platform-specific options
         self.platform = 'Linux'
 
