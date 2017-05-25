@@ -295,7 +295,6 @@ class app(Command):
 
     def run(self):
         full_generation = True
-        #import pdb; pdb.set_trace()
         if os.path.exists(self.dir):
             print()
             if os.path.isdir(self.dir):

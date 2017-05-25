@@ -1,6 +1,10 @@
 import os
+import stat
 import shutil
-import subprocess
+import subprocess, shlex
+import sys
+import requests
+import tempfile
 
 try:
     from urllib.request import urlopen
@@ -78,10 +82,48 @@ class django(app):
         # Install additional elements required for Django
         print(" * Installing extras...")
         print("   - Installing NPM requirements...")
-
-        npm = shutil.which("npm")
-        subprocess.Popen([npm, "install"], cwd=os.path.abspath(self.dir)).wait()
-
+        node_attributes = {
+            'darwin': {
+                'url':'https://nodejs.org/dist/v6.10.3/node-v6.10.3.pkg',
+                'command_prefix': 'open '
+            },
+            'linux' : '',
+            'win32' : {
+                'url' :'https://nodejs.org/dist/v6.10.3/node-v6.10.3-x86.msi',
+                'command_prefix': 'msiexec /i '
+            }
+        }
+        system_platform = sys.platform
+        node = shutil.which('node')
+        npm  = shutil.which("npm")
+        try:
+            node_version_unicode = subprocess.check_output([node, '--version'])
+            node_version = node_version_unicode.decode('utf-8')
+            print('Node version %s detected' % node_version)
+        except:
+            node_version = ''
+            print('No version of Node detected\n Installing NodeJS... \nPlease Follow the instructions.')
+        if node and node_version[1] == '6':
+            subprocess.Popen(['npm', 'install'], cwd=os.path.abspath(self.dir)).wait()
+        elif node and node_version[1] != '6':
+            err_message = ('ERROR: Cannot run with the current version of Node and Npm, please \n'
+                           'unnistall the current version and install Node version 6.x\n'
+                           'Installation cancelled.'
+            )
+            raise RuntimeError(err_message)
+        else:
+            ses = requests.Session()
+            res = ses.get(node_attributes[system_platform]['url'], stream=True)
+            _, ext = os.path.splitext(node_attributes[system_platform]['url'])
+            with tempfile.NamedTemporaryFile(suffix=ext) as outputfile:
+                outputfile.write(res.content)
+                outputfile.seek(0)
+                command = node_attributes[system_platform]['command_prefix'] + outputfile.name
+                command_args = shlex.split(command)
+                st = os.stat(outputfile.name)
+                os.chmod(outputfile.name, st.st_mode | stat.S_IEXEC)
+                subprocess.Popen(command_args)
+                npm  = shutil.which("npm")
         print("   - Building Webpack assets...")
         subprocess.Popen([npm, "run", "build"], cwd=os.path.abspath(self.dir)).wait()
 
