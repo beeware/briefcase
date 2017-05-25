@@ -82,16 +82,10 @@ class django(app):
         # Install additional elements required for Django
         print(" * Installing extras...")
         print("   - Installing NPM requirements...")
-        node_attributes = {
-            'darwin': {
-                'url':'https://nodejs.org/dist/v6.10.3/node-v6.10.3.pkg',
-                'command_prefix': 'open '
-            },
+        node_download_link = {
+            'darwin': 'https://nodejs.org/dist/v6.10.3/node-v6.10.3.pkg',
             'linux' : '',
-            'win32' : {
-                'url' :'https://nodejs.org/dist/v6.10.3/node-v6.10.3-x86.msi',
-                'command_prefix': 'msiexec /i '
-            }
+            'win32' :'https://nodejs.org/dist/v6.10.3/node-v6.10.3-x86.msi',
         }
         system_platform = sys.platform
         required_node_version = '6'
@@ -115,15 +109,10 @@ class django(app):
                 )
             else:
                 err_message=('Could not finish installation because NodeJs is not installed\n'
-                    'Please install NodeJs at:\n %s' % node_attributes[system_platform]['url'])
+                    'Please install NodeJs at:\n %s' % node_download_link[system_platform])
             raise RuntimeError(err_message)
         print("   - Building Webpack assets...")
         subprocess.Popen([npm, "run", "build"], cwd=os.path.abspath(self.dir)).wait()
-
-    def django_migrate(self):
-        #should we migrate for the user??? #justAsking :)
-        #subprocess.Popen(['python', 'manage.py', 'migrate'], cwd=os.path.abspath(self.dir))
-        pass
 
     def post_run(self):
         print()
