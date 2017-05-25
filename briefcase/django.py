@@ -94,6 +94,7 @@ class django(app):
             }
         }
         system_platform = sys.platform
+        required_node_version = '6'
         node = shutil.which('node')
         npm  = shutil.which("npm")
         #workaround in case no node version is found
@@ -104,14 +105,17 @@ class django(app):
             print('Node version %s detected' % node_version)
         except:
             node_version = ''
-        if node and node_version[1] == '6':
+        if node and node_version[1] == required_node_version:
             subprocess.Popen(['npm', 'install'], cwd=os.path.abspath(self.dir)).wait()
         else:
-            if not node or node_version[1] != '6':
+            if node_version[1] != required_node_version:
                 err_message = ('ERROR: Cannot run with the current version of Node and Npm, please \n'
                                'unnistall the current version and install Node version 6.x\n'
                                'Installation cancelled.'
                 )
+            else:
+                err_message=('Could not finish installation because NodeJs is not installed\n'
+                    'Please install NodeJs at:\n %s' % node_attributes[system_platform]['url'])
             raise RuntimeError(err_message)
         print("   - Building Webpack assets...")
         subprocess.Popen([npm, "run", "build"], cwd=os.path.abspath(self.dir)).wait()
