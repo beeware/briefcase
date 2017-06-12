@@ -4,6 +4,7 @@ import os
 import json
 import random
 import re
+import subprocess
 import requests
 import shutil
 import sys
@@ -47,6 +48,14 @@ class app(Command):
          'URL for the support package to use'),
         ('download-dir=', None,
          "Directory where the project support packages will be cached"),
+        ('build', None,
+         "Build the project after generating"),
+        ('execute', None,
+         "Run the application after building"),
+        ('os-version=', None,
+         "Set the device OS version. Currently only iOS supported (e.g., iOS 10.2)"),
+        ('device=', None,
+         "Set the device to run. Currently only iOS supported (e.g., iPhone 7 Plus)")
     ]
 
     def initialize_options(self):
@@ -65,6 +74,10 @@ class app(Command):
         self.version_code = None
         self.guid = None
         self.secret_key = None
+        self.build = False
+        self.execute = False
+        self.os_version = None
+        self.device = None
 
     def finalize_options(self):
         if self.formal_name is None:
@@ -107,6 +120,9 @@ class app(Command):
 
         pip.utils.ensure_dir(self.download_dir)
 
+        if self.execute:
+            self.build = True
+
     def find_support_pkg(self):
         api_url = 'https://pybee.org/static/api/%s/releases.json' % self.support_project
 
@@ -148,9 +164,13 @@ class app(Command):
         print(" * Writing application template...")
 
         if self.template is None:
-            self.template = 'https://github.com/pybee/Python-%s-template.git' % self.platform
+            template_path = os.path.expanduser('~/.cookiecutters/Python-%s-template' % self.platform)
+            if os.path.exists(template_path):
+                self.template = template_path
+                self.git_pull(template_path)
+            else:
+                self.template = 'https://github.com/pybee/Python-%s-template.git' % self.platform
         print("Project template: %s" % self.template)
-
         cookiecutter(
             self.template,
             no_input=True,
@@ -172,6 +192,17 @@ class app(Command):
                 'secret_key': self.secret_key,
             }
         )
+
+    def git_pull(self, path):
+        template_name = path.split('/')[-1]
+        try:
+            subprocess.check_output(["git", "pull"], stderr=subprocess.STDOUT, cwd=path)
+            print('Template %s succesfully updated.' % template_name)
+        except subprocess.CalledProcessError as pull_error:
+            error_message = pull_error.output.decode('utf-8')
+            if 'resolve host' in error_message:
+                print('Unable to update template %s, using unpulled.' % template_name)
+            print(error_message)
 
     def install_app_requirements(self):
         print(" * Installing requirements...")
@@ -252,11 +283,19 @@ class app(Command):
     def install_extras(self):
         pass
 
+    def build_app(self):
+        pass
+
+    def run_app(self):
+        pass
+
     def post_run(self):
         print()
         print("Installation complete.")
 
     def run(self):
+        full_generation = True
+        #import pdb; pdb.set_trace()
         if os.path.exists(self.dir):
             print()
             if os.path.isdir(self.dir):
@@ -272,15 +311,18 @@ class app(Command):
                 else:
                     os.remove(self.dir)
             else:
-                print("Briefcase deployment cancelled.")
-                return
-
-        self.generate_app_template()
+                print("Updating user code.")
+                full_generation = False
+        if full_generation:
+            self.generate_app_template()#
+            self.install_support_package()#
         self.install_app_requirements()
         self.install_platform_requirements()
         self.install_code()
         self.install_resources()
-        self.install_support_package()
         self.install_extras()
-
+        if self.build:
+            self.build_app()
+        if self.execute:
+            self.run_app()
         self.post_run()
