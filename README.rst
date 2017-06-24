@@ -118,6 +118,9 @@ provide the following files:
 * On macOS:
     * ``$(icon).icns``, a composite ICNS file containing all the required icons.
 
+* On Windows:
+    * ``$(icon).ico``, a 256x256 ico file.
+
 * On Apple TV:
     * ``$(icon)-400-front.png``, a 400x240 image to serve as the front layer of an app icon.
     * ``$(icon)-400-middle.png``, a 400x240 image to serve as the middle layer of an app icon.
