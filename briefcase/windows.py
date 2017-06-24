@@ -1,9 +1,11 @@
-import os
 import distutils.command.install_scripts as orig
+import os
 from pkg_resources import Distribution, PathMetadata
+import re
 import shutil
 import subprocess
 import sys
+import uuid
 
 from .app import app
 
@@ -27,8 +29,8 @@ class windows(app):
         if self.dir is None:
             self.dir = 'windows'
 
-        self.resource_dir = self.dir
-        self.support_dir = os.path.join(self.dir, 'python')
+        self.resource_dir = os.path.join(self.dir, 'content')
+        self.support_dir = os.path.join(self.dir, 'content', 'python')
 
         iconfile = '%s.ico' % self.icon
         self.icon_filename = os.path.join(self.app_dir, self.distribution.get_name() + os.path.splitext(iconfile)[1])
@@ -44,6 +46,102 @@ class windows(app):
         return 'https://www.python.org/ftp/python/%s/python-%s-embed-amd64.zip' % (version, version)
 
     def install_extras(self):
-        print(" * Creating application link...")
-        subprocess.Popen(["powershell", "-File", "make_link.ps1"], cwd=os.path.abspath(self.dir)).wait()
-        os.remove(os.path.join(os.path.abspath(self.dir), 'make_link.ps1'))
+        print(" * Finalizing application installer script...")
+
+        # Find all the files that need to be put in the installer
+        app_root = os.path.join(self.dir, 'content')
+        content = []
+        contentrefs = []
+
+        def walk_dir(path, depth=0):
+            files = []
+            parts = path[len(app_root) + 1:].split(os.path.sep)
+            for name in os.listdir(path):
+                full_path = os.path.join(path, name)
+
+                if parts[0]:
+                    full_parts = parts + [name]
+                else:
+                    full_parts = [name]
+                dir_id = '.'.join(re.sub('[^A-Za-z0-9_]', '_', p) for p in full_parts)
+
+                if os.path.isdir(full_path):
+                    content.append(
+                        '    ' * (depth + 5) + '<Directory Id="DIR_%s" Name="%s">' % (
+                            dir_id, name
+                        )
+                    )
+                    walk_dir(os.path.join(path, name), depth=depth + 1)
+
+                    content.append('    ' * (depth + 5) + '</Directory>')
+                else:
+                    files.append(name)
+
+            if files:
+                guid = uuid.uuid4()
+
+                content.append('    ' * (depth + 5) + '<Component Id="COMP_%s" Guid="%s">' % (
+                    guid.hex, guid)
+                )
+                for file in files:
+                    content.append('    ' * (depth + 6) + '<File Id="FILE_%s" Source="content/%s/%s" />' % (
+                            uuid.uuid4().hex, '/'.join(parts), file
+                        )
+                    )
+                content.append('    ' * (depth + 5) + '</Component>')
+                contentrefs.append('            <ComponentRef Id="COMP_%s"/>' % guid.hex)
+
+
+        walk_dir(app_root)
+
+        # Generate the full briefcase.wxs file
+        lines = []
+        with open(os.path.join(self.dir, 'briefcase.wxs')) as template:
+            for line in template:
+                if line.strip() == '<!-- CONTENT -->':
+                    lines.extend(content)
+                elif line.strip() == '<!-- CONTENTREFS -->':
+                    lines.extend(contentrefs)
+                else:
+                    lines.append(line.rstrip())
+
+        with open(os.path.join(self.dir, 'briefcase.wxs'), 'w') as template:
+            for line in lines:
+                template.write('%s\n' % line)
+
+        print(" * Looking for WiX Toolset...")
+        candidates = []
+        for pfile in ['C:/Program Files', 'C:/Program Files (x86)']:
+            for dirname in os.listdir(pfile):
+                full_path = os.path.abspath(os.path.join(pfile, dirname))
+                if os.path.isdir(full_path) and dirname.startswith('WiX Toolset'):
+                    candidates.append(full_path)
+        try:
+            wix_path = sorted(candidates)[-1]
+        except IndexError:
+            print("Couldn't find WiX Toolset. Please visit:")
+            print()
+            print("    http://wixtoolset.org/releases/")
+            print()
+            print("and install the latest stable release.")
+            sys.exit(-2)
+
+        print("   - Using %s" % full_path)
+        print(" * Compiling application installer...")
+        subprocess.Popen(
+            [
+                "%s/bin/candle" % wix_path,
+                "briefcase.wxs"
+            ],
+            cwd=os.path.abspath(self.dir)
+        ).wait()
+        print(" * Linking application installer...")
+        subprocess.Popen(
+            [
+                "%s/bin/light" % wix_path,
+                "-ext", "WixUIExtension",
+                "-o", "%s-%s.msi" % (self.formal_name, self.version),
+                "briefcase.wixobj"
+            ],
+            cwd=os.path.abspath(self.dir)
+        ).wait()
