@@ -110,27 +110,21 @@ class windows(app):
                 template.write('%s\n' % line)
 
         print(" * Looking for WiX Toolset...")
-        candidates = []
-        for pfile in ['C:/Program Files', 'C:/Program Files (x86)']:
-            for dirname in os.listdir(pfile):
-                full_path = os.path.abspath(os.path.join(pfile, dirname))
-                if os.path.isdir(full_path) and dirname.startswith('WiX Toolset'):
-                    candidates.append(full_path)
-        try:
-            wix_path = sorted(candidates)[-1]
-        except IndexError:
+        wix_path = os.getenv('WIX')
+        if not wix_path:
             print("Couldn't find WiX Toolset. Please visit:")
             print()
             print("    http://wixtoolset.org/releases/")
             print()
             print("and install the latest stable release.")
             sys.exit(-2)
+        else:
+            print("   - Using %s" % wix_path)
 
-        print("   - Using %s" % full_path)
         print(" * Compiling application installer...")
         subprocess.Popen(
             [
-                "%s/bin/candle" % wix_path,
+                os.path.join(wix_path, 'bin', 'candle'),
                 "briefcase.wxs"
             ],
             cwd=os.path.abspath(self.dir)
@@ -138,7 +132,7 @@ class windows(app):
         print(" * Linking application installer...")
         subprocess.Popen(
             [
-                "%s/bin/light" % wix_path,
+                os.path.join(wix_path, 'bin', 'light'),
                 "-ext", "WixUIExtension",
                 "-o", "%s-%s.msi" % (self.formal_name, self.version),
                 "briefcase.wixobj"
