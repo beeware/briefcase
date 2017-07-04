@@ -10,9 +10,9 @@ Setup
 This tutorial assumes you've read and followed the instructions in
 :doc:`/intro/getting-started`. If you've done this, you should have:
 
-* XCode installed on your Mac,
+* XCode installed on your Mac, (if linux no Xcode required)
 * A ``tutorial`` directory,
-* A activated Python 3.4 virtual environment,
+* A activated Python 3.4 virtual environment, (linux used 3.5)
 * Briefcase installed in that virtual environment,
 
 Start a new project
@@ -45,6 +45,8 @@ Check out what the provided ``tutorial_0/app.py`` file contains:
 
 This won't do much as it is, but we can make it useful. 
 
+IF LINUX import __main__ script
+
 Add this into the ``app.py`` to make it useful:
 
 .. code-block:: python
@@ -64,7 +66,7 @@ It is all ready for using ``briefcase``. You can invoke it, using:
 
 .. code-block:: bash
 
-    $ python setup.py ios
+    $ python setup.py ios OR linux
 
 to create the iOS app.
 
@@ -75,7 +77,7 @@ There is a new folder in your project called 'iOS', which contains the Xcode pro
 
 .. code-block:: bash
 
-    open iOS/Tutorial\ 0.xcodeproj
+    open iOS/Tutorial\ 0.xcodeproj OR ./linux/tutorial_0
 
 You can test the app by running it in Xcode. As our application only shows a message, the iOS application will show only a blank screen. You can check if it is working in the console logs, which should contain something like this:
 
