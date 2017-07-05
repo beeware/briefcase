@@ -46,7 +46,7 @@ This won't do much as it is, but we can make it useful.
 Add this into the ``app.py`` to make it useful:
 
 .. code-block:: python
-    import __main__
+
     class MyApp:
         def main_loop(self):
             print("Hello world")
