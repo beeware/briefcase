@@ -56,7 +56,7 @@ Add this into the ``app.py`` to make it useful:
         return MyApp()  
 
 Create an Linux Ubuntu project
----------------------
+-------------------------------
 
 It is all ready for using ``briefcase``. You can invoke it, using:
 
@@ -78,7 +78,7 @@ There is a new folder in your project called 'linux', which contains the project
 The app should run like this!
 .. code-block:: bash
 
-    (BeeWare) ry@X1Carbon:~/Native/tutorial_0$ ./linux/tutorial_0
+   $ ./linux/tutorial_0
     Hello World!
    
 And that is all, you created your first Ubuntu Linux python app!
