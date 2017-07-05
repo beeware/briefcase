@@ -1,14 +1,14 @@
-Linux Ubuntu 16.04 Tutorial 0 - Hello, world!
+Linux Tutorial 0 - Hello, world!
 ===============================================
 
 In this tutorial, you'll take a really simple "Hello, world!" program written in
-Python, convert it into a working Ubuntu Linux project.
+Python, convert it into a working Linux project.
 
 Setup
 -----
 
 This tutorial assumes you've read and followed the instructions in
-:doc:`/intro/getting-started`. This Tutorial is for Linux Users developing for Ubuntu 16.04!
+:doc:`/intro/getting-started`. This Tutorial is for Linux Users!
 * A ``tutorial`` directory,
 * An activated Python 3 virtual environment,
 * Briefcase installed in that virtual environment,
@@ -55,7 +55,7 @@ Add this into the ``app.py`` to make it useful:
     def main():
         return MyApp()  
 
-Create an Linux Ubuntu project
+Create an Linux project
 -------------------------------
 
 It is all ready for using ``briefcase``. You can invoke it, using:
@@ -64,7 +64,7 @@ It is all ready for using ``briefcase``. You can invoke it, using:
 
     $ python setup.py linux
 
-to create the Linux Ubuntu app.
+to create the Linux app.
 
 Open the project 
 -------------------------------
@@ -81,4 +81,4 @@ The app should run like this!
    $ ./linux/tutorial_0
     Hello World!
    
-And that is all, you created your first Ubuntu Linux python app!
+And that is all, you created your first Linux python app!
