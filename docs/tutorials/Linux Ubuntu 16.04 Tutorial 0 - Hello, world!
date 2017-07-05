@@ -10,7 +10,7 @@ Setup
 This tutorial assumes you've read and followed the instructions in
 :doc:`/intro/getting-started`. This Tutorial is for Linux Users developing for Ubuntu 16.04!
 * A ``tutorial`` directory,
-* A activated Python 3 virtual environment,
+* An activated Python 3 virtual environment,
 * Briefcase installed in that virtual environment,
 
 Start a new project
