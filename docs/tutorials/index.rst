@@ -4,7 +4,7 @@ Tutorials
 These tutorials are step-by step guides for using Briefcase.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :glob:
 
    tutorial-0
