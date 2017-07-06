@@ -1,5 +1,5 @@
 Linux Tutorial 0 - Hello, world!
-===============================================
+================================
 
 In this tutorial, you'll take a really simple "Hello, world!" program written in
 Python, convert it into a working Linux project.
@@ -56,7 +56,7 @@ Add this into the ``app.py`` to make it useful:
         return MyApp()  
 
 Create an Linux project
--------------------------------
+-----------------------
 
 It is all ready for using ``briefcase``. You can invoke it, using:
 
@@ -67,7 +67,7 @@ It is all ready for using ``briefcase``. You can invoke it, using:
 to create the Linux app.
 
 Open the project 
--------------------------------
+----------------
 
 There is a new folder in your project called 'linux', which contains the project (tutorial_0). You can open the application by running:
 
