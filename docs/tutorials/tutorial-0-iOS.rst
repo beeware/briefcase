@@ -1,5 +1,5 @@
-Tutorial 0 - Hello, world!
-==========================
+iOS Tutorial 0 - Hello, world!
+===============================
 
 In this tutorial, you'll take a really simple "Hello, world!" program written in
 Python, convert it into a working iOS project.
@@ -25,10 +25,10 @@ Let's get started by using `the handy template <https://github.com/pybee/briefca
     $ pip install cookiecutter briefcase
     $ cookiecutter https://github.com/pybee/briefcase-template
 
-This will ask a bunch of questions of you. We'll use an `app_name` of "tutorial_0", and a 
+This will ask a bunch of questions of you. We'll use an `app_name` of "tutorial_0", and a
 `formal_name` of "Tutorial 0". Set the other values as you like
 
-You'll now have a few files in this folder, including ``tutorial_0``. 
+You'll now have a few files in this folder, including ``tutorial_0``.
 
 Check out what the provided ``tutorial_0/app.py`` file contains:
 
@@ -43,7 +43,7 @@ Check out what the provided ``tutorial_0/app.py`` file contains:
         # This needs to return an object that has a main_loop() method.
         return None
 
-This won't do much as it is, but we can make it useful. 
+This won't do much as it is, but we can make it useful.
 
 Add this into the ``app.py`` to make it useful:
 
@@ -52,10 +52,10 @@ Add this into the ``app.py`` to make it useful:
     class MyApp:
         def main_loop(self):
             print("Hello world")
-            
-            
+
+
     def main():
-        return MyApp()  
+        return MyApp()
 
 Create an iOS project
 ---------------------
