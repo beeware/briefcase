@@ -18,7 +18,7 @@ class tvos(app):
 
         # Set platform-specific options
         self.platform = 'tvOS'
-        self.support_project = "pybee/Python-Apple-Support"
+        self.support_project = "Python-Apple-support"
 
         if self.dir is None:
             self.dir = self.platform

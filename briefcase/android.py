@@ -18,7 +18,7 @@ class android(app):
 
         # Set platform-specific options
         self.platform = 'Android'
-        self.support_project = "pybee/voc"
+        self.support_project = "Python-Android-support"
 
         if self.dir is None:
             self.dir = 'android'

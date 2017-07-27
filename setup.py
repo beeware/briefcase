@@ -49,6 +49,7 @@ setup(
         'voc >= 0.1.1',
         'setuptools >= 27.0',
         'requests < 3.0',
+        'boto3 >= 1.4.4',
     ],
     license='New BSD',
     classifiers=[

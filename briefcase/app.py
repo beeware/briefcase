@@ -2,10 +2,10 @@ from __future__ import print_function
 
 import os
 import json
+import logging
 import random
 import re
 import subprocess
-import requests
 import shutil
 import sys
 import uuid
@@ -15,6 +15,7 @@ from distutils.core import Command
 
 import pip
 
+import boto3
 from cookiecutter.main import cookiecutter
 
 
@@ -124,27 +125,25 @@ class app(Command):
             self.build = True
 
     def find_support_pkg(self):
-        api_url = 'https://pybee.org/static/api/%s/releases.json' % self.support_project
-
-        try:
-            releases = requests.get(api_url).json()
-        except requests.exceptions.RequestException:
-            print()
-            print("We had trouble connecting to Github to look for appropriate")
-            print("support packages. This can happen when you have tried too many")
-            print("times. If you are working on briefcase, please use the specified")
-            print("--support-pkg flag for development.")
-            return None
+        S3_BUCKET = 'pybee-briefcase-support'
+        S3_REGION = 'us-west-2'
+        S3_URL = 'https://%s.s3-%s.amazonaws.com/' % (S3_BUCKET, S3_REGION)
 
         candidates = []
-        for release in releases:
-            if release['tag_name'] and release['tag_name'].startswith("%s.%s-" % (sys.version_info.major, sys.version_info.minor)):
-                for asset in release['assets']:
-                    if asset['name'].endswith('.tar.gz') and self.platform in asset['name']:
-                        candidates.append((release['created_at'], asset['browser_download_url']))
-
+        s3 = boto3.client('s3', region_name=S3_REGION)
+        paginator = s3.get_paginator('list_objects')
+        for page in paginator.paginate(
+                        Bucket=S3_BUCKET,
+                        Prefix='%s/%s.%s/%s/' % (
+                            self.support_project,
+                            sys.version_info.major,
+                            sys.version_info.minor,
+                            self.platform
+                        )):
+            for item in page.get('Contents', []):
+                candidates.append(item['Key'])
         try:
-            return sorted(candidates, reverse=True)[0][1]
+            return S3_URL + sorted(candidates, reverse=True)[0]
         except IndexError:
             return None
 
@@ -265,6 +264,12 @@ class app(Command):
         if self.support_pkg:
             print(" * Installing support package...")
             print("Support package:", self.support_pkg)
+            # Set logging level to INFO on the download package
+            # to make sure we get progress indicators
+            dl_logger = logging.getLogger('pip.download')
+            dl_logger.setLevel(logging.INFO)
+
+            # Download and unpack the support package.
             pip.download.unpack_url(
                 pip.index.Link(self.support_pkg),
                 os.path.join(os.getcwd(), self.support_dir),
@@ -274,7 +279,7 @@ class app(Command):
             print()
             print("No pre-built support package could be found for Python %s.%s." % (sys.version_info.major, sys.version_info.minor))
             print("You will need to compile your own. You may want to start with")
-            print("the code from https://github.com/%s and" % self.support_project)
+            print("the code from https://github.com/pybee/%s and" % self.support_project)
             print("then specify the compiled tarball with:")
             print()
             print("    python setup.py %s --support-pkg=<path to tarball>" % self.platform.lower())
@@ -310,7 +315,7 @@ class app(Command):
                 else:
                     os.remove(self.dir)
             else:
-                print("Updating user code.")
+                print(" * Updating user code...")
                 full_generation = False
         if full_generation:
             self.generate_app_template()

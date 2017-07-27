@@ -24,7 +24,6 @@ class windows(app):
 
         # Set platform-specific options
         self.platform = 'Windows'
-        self.support_project = "pybee/Python-Microsoft-Support"
 
         if self.dir is None:
             self.dir = 'windows'

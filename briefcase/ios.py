@@ -1,6 +1,7 @@
 import json
 import os
 import shutil
+import sys
 
 import subprocess
 
@@ -21,18 +22,12 @@ class ios(app):
 
         # Set platform-specific options
         self.platform = 'iOS'
-        self.support_project = "pybee/Python-Apple-Support"
+        self.support_project = "Python-Apple-support"
 
         if self.dir is None:
             self.dir = self.platform
 
         self.resource_dir = self.dir
-
-        if self.os_version is None:
-            self.os_version = 'iOS 10.2'
-
-        if self.device is None:
-            self.device = 'iPhone 7 Plus'
 
     def install_icon(self):
         last_size = None
@@ -67,7 +62,83 @@ class ios(app):
             else:
                 print("WARNING: No %s splash file available." % size)
 
+    def set_device_target(self):
+        if self.device is None or self.os_version is None:
+            # Find an appropriate device
+            pipe = subprocess.Popen(['xcrun', 'simctl', 'list', '-j'], stdout=subprocess.PIPE)
+            pipe.wait()
+
+            data = json.loads(pipe.stdout.read().decode())
+
+            if self.os_version is None:
+                os_list = [label for label in data['devices'] if label.startswith('iOS')]
+                if len(os_list) == 0:
+                    print('No iOS device simulators found', file=sys.stderr)
+                    sys.exit(1)
+                elif len(os_list) == 1:
+                    print('Building for %s...' % os_list[0])
+                    self.os_version = os_list[0]
+                else:
+                    print()
+                    while self.os_version is None:
+                        print('Available iOS versions:')
+                        for i, label in enumerate(os_list):
+                            print('  [%s] %s' % (i+1, label))
+                        index = int(input('Which iOS version do you want to target: '))
+                        try:
+                            self.os_version = os_list[int(index) - 1]
+                        except:
+                            print("Invalid selection.")
+                            print
+
+            if self.device is None:
+                device_list = data['devices'].get(self.os_version, [])
+                if len(device_list) == 0:
+                    print('No %s devices found', file=sys.stderr)
+                    sys.exit(2)
+                elif len(device_list) == 1:
+                    print('Device ID is %s...' % device_list[0])
+                    device = device_list[0]
+                    self.device = device['name']
+                else:
+                    print()
+                    while self.device is None:
+                        print('Available devices:')
+                        for i, device in enumerate(device_list):
+                            print('  [%s] %s' % (i+1, device['name']))
+                        index = int(input('Which device do you want to target: '))
+                        try:
+                            device = device_list[int(index) - 1]
+                            self.device = device['name']
+                        except:
+                            print("Invalid selection.")
+                            print
+
+        else:
+            device_list = data['devices'].get(self.os_version, [])
+            device = [x for x in device_list if x['name'].lower() == self.device.lower()][0]
+
+        return device
+
+    def has_required_xcode_version(self):
+        pipe = subprocess.Popen(['xcrun', 'xcodebuild', '-version'], stdout=subprocess.PIPE)
+        pipe.wait()
+
+        output = pipe.stdout.read().decode()
+        version = tuple(
+            int(v)
+            for v in output.split('\n')[0].split(' ')[1].split('.')[:2]
+        )
+        if version < (8, 0):
+            print('\nAutomated builds require XCode 8.0 or later', file=sys.stderr)
+            return False
+        else:
+            return True
+
     def build_app(self):
+        if not self.has_required_xcode_version():
+            return
+
         project_file = '%s.xcodeproj' % self.formal_name
         build_settings = [
             ('AD_HOC_CODE_SIGNING_ALLOWED', 'YES'),
@@ -78,35 +149,26 @@ class ios(app):
         ]
         build_settings_str = ['%s=%s' % x for x in build_settings]
 
-        print(' * Building XCode project...')
+        self.set_device_target()
+
+        print(' * Building XCode project for %s %s...' % (self.device, self.os_version))
 
         subprocess.Popen([
             'xcodebuild', ' '.join(build_settings_str), '-project', project_file, '-destination',
-            'platform="iOS Simulator,name=%s,OS=%s"' %(self.device, self.os_version), '-quiet', '-configuration',
+            'platform="iOS Simulator,name=%s,OS=%s"' % (self.device, self.os_version), '-quiet', '-configuration',
             'Debug', '-arch', 'x86_64', '-sdk', 'iphonesimulator%s' % (self.os_version.split(' ')[-1],), 'build'
         ], cwd=os.path.abspath(self.dir)).wait()
 
     def run_app(self):
-        working_dir = os.path.abspath(self.dir)
-
-        # Find an appropriate device
-        pipe = subprocess.Popen(['xcrun', 'simctl', 'list', '-j'], stdout=subprocess.PIPE)
-        pipe.wait()
-
-        data = json.loads(pipe.stdout.read().decode())
-
-        device_list = data['devices'].get(self.os_version, [])
-        device_list = [x for x in device_list if x['name'].lower() == self.device.lower()]
-
-        if not device_list:
-            print('WARNING: No devices found for OS %s and device name %s'.format(self.os_version, self.device))
+        if not self.has_required_xcode_version():
             return
 
-        device = device_list[0]
+        working_dir = os.path.abspath(self.dir)
+
+        device = self.set_device_target()
 
         # Install app and launch simulator
-        print(' * Launching app...')
-
+        print(' * Launching app on %s %s...' % (self.device, self.os_version))
         app_identifier = '.'.join([self.bundle, self.formal_name.replace(' ', '-')])
 
         subprocess.Popen(['xcrun', 'instruments', '-w', device['udid']]).wait()
