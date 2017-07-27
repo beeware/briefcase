@@ -6,7 +6,7 @@ In this tutorial you will create a simple application using toga framework.
 Update your iOS project
 -----------------------
 
-In this step we assume that you followed the :doc:`previous tutorial <tutorial-0>`. First at all, you can clean your previous app
+In this step we assume that you followed the :doc:`previous tutorial <tutorial-0-iOS>`. First at all, you can clean your previous app
 in your ``iostutorial`` folder:
 
 .. code-block:: bash
@@ -32,7 +32,7 @@ We are going to use the Toga framework, so we have to include the
 
 And now you can update the application.
 
-We're going to use a version of the Toga Fahrenheit to Celsius converter tutorial found at <https://toga.readthedocs.io/en/latest/tutorial/tutorial-0.html>, modified to be class-based:
+We're going to use a version of the Toga Fahrenheit to Celsius converter tutorial found at <https://toga.readthedocs.io/en/latest/tutorial/tutorial-0-iOS.html>, modified to be class-based:
 
 .. code-block:: python
 
@@ -155,7 +155,7 @@ Once this process has completed, there are a couple of steps left (that are help
 
   $ cd django
   $ ./manage.py migrate
-  
+
 Then, we can run the application:
 
 
@@ -163,7 +163,7 @@ Then, we can run the application:
 
   $ ./manage.py runserver
 
-If you open up ``localhost:8000`` in your browser, you should see the same application running in the web. 
+If you open up ``localhost:8000`` in your browser, you should see the same application running in the web.
 
 .. image:: screenshots/tutorial-1-django.png
 

@@ -23,4 +23,4 @@ Next Steps
 ----------
 
 You now have a working Briefcase environment, so you can :doc:`start the first
-tutorial </tutorials/tutorial-0>`.
+tutorial </tutorials/tutorial-0-iOS>`.
