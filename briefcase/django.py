@@ -85,7 +85,7 @@ class django(app):
         print("   - Building Webpack assets...")
         subprocess.Popen([npm, "run", "build"], cwd=os.path.abspath(self.dir)).wait()
 
-    def post_run(self):
+    def post_install(self):
         print()
         print("Installation complete.")
         print()

@@ -81,7 +81,7 @@ class android(app):
             else:
                 print("WARNING: No %s splash file available." % (size, size))
 
-    def post_run(self):
+    def post_install(self):
         print()
         print("Installation complete.")
         print()

@@ -298,6 +298,10 @@ class app(Command):
     def run_app(self):
         pass
 
+    def post_install(self):
+        print()
+        print("Installation complete.")
+
     def post_build(self):
         print()
         print("Build complete.")
@@ -306,7 +310,8 @@ class app(Command):
         print("Don't know how to start %s applications." % self.platform)
 
     def post_start(self):
-        pass
+        print()
+        print("App started.")
 
     def run(self):
         full_generation = True
@@ -335,9 +340,10 @@ class app(Command):
         self.install_code()
         self.install_resources()
         self.install_extras()
+        self.post_install()
         if self.build:
             self.build_app()
-        self.post_build()
+            self.post_build()
         if self.start:
             self.start_app()
-        self.post_start()
+            self.post_start()
