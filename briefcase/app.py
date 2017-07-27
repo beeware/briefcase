@@ -46,18 +46,18 @@ class app(Command):
          "Name of the splash screen file."),
         ('app-requires', None,
          'List of platform-specific requirements for this app.'),
-        ('support-pkg=', 's',
+        ('support-pkg=', None,
          'URL for the support package to use'),
         ('download-dir=', None,
          "Directory where the project support packages will be cached"),
-        ('build', None,
+        ('build', 'b',
          "Build the project after generating"),
-        ('execute', None,
-         "Run the application after building"),
+        ('start', 's',
+         "Start the application after building"),
         ('os-version=', None,
-         "Set the device OS version. Currently only iOS supported (e.g., iOS 10.2)"),
-        ('device=', None,
-         "Set the device to run. Currently only iOS supported (e.g., iPhone 7 Plus)")
+         "Set the device OS version. (e.g., iOS 10.2)"),
+        ('device-name=', None,
+         "Set the device to run. (e.g., iPhone 7 Plus)")
     ]
 
     def initialize_options(self):
@@ -77,9 +77,9 @@ class app(Command):
         self.guid = None
         self.secret_key = None
         self.build = False
-        self.execute = False
+        self.start = False
         self.os_version = None
-        self.device = None
+        self.device_name = None
 
     def finalize_options(self):
         if self.formal_name is None:
@@ -122,7 +122,7 @@ class app(Command):
 
         pip.utils.ensure_dir(self.download_dir)
 
-        if self.execute:
+        if self.start:
             self.build = True
 
     def find_support_pkg(self):
@@ -298,9 +298,15 @@ class app(Command):
     def run_app(self):
         pass
 
-    def post_run(self):
+    def post_build(self):
         print()
-        print("Installation complete.")
+        print("Build complete.")
+
+    def start_app(self):
+        print("Don't know how to start %s applications." % self.platform)
+
+    def post_start(self):
+        pass
 
     def run(self):
         full_generation = True
@@ -331,6 +337,7 @@ class app(Command):
         self.install_extras()
         if self.build:
             self.build_app()
-        if self.execute:
-            self.run_app()
-        self.post_run()
+        self.post_build()
+        if self.start:
+            self.start_app()
+        self.post_start()

@@ -24,6 +24,8 @@ class ios(app):
         self.platform = 'iOS'
         self.support_project = "Python-Apple-support"
 
+        self.device = None
+
         if self.dir is None:
             self.dir = self.platform
 
@@ -63,7 +65,7 @@ class ios(app):
                 print("WARNING: No %s splash file available." % size)
 
     def set_device_target(self):
-        if self.device is None or self.os_version is None:
+        if self.os_version is None or self.device_name is None or self.device is None:
             # Find an appropriate device
             pipe = subprocess.Popen(['xcrun', 'simctl', 'list', '-j'], stdout=subprocess.PIPE)
             pipe.wait()
@@ -91,34 +93,32 @@ class ios(app):
                             print("Invalid selection.")
                             print
 
-            if self.device is None:
+            if self.device_name is None:
                 device_list = data['devices'].get(self.os_version, [])
                 if len(device_list) == 0:
                     print('No %s devices found', file=sys.stderr)
                     sys.exit(2)
                 elif len(device_list) == 1:
                     print('Device ID is %s...' % device_list[0])
-                    device = device_list[0]
-                    self.device = device['name']
+                    self.device = device_list[0]
+                    self.device_name = device['name']
                 else:
                     print()
-                    while self.device is None:
+                    while self.device_name is None:
                         print('Available devices:')
                         for i, device in enumerate(device_list):
                             print('  [%s] %s' % (i+1, device['name']))
                         index = int(input('Which device do you want to target: '))
                         try:
-                            device = device_list[int(index) - 1]
-                            self.device = device['name']
+                            self.device = device_list[int(index) - 1]
+                            self.device_name = device['name']
                         except:
                             print("Invalid selection.")
                             print
 
-        else:
-            device_list = data['devices'].get(self.os_version, [])
-            device = [x for x in device_list if x['name'].lower() == self.device.lower()][0]
-
-        return device
+            if self.device is None:
+                device_list = data['devices'].get(self.os_version, [])
+                self.device = [x for x in device_list if x['name'].lower() == self.device_name.lower()][0]
 
     def has_required_xcode_version(self):
         pipe = subprocess.Popen(['xcrun', 'xcodebuild', '-version'], stdout=subprocess.PIPE)
@@ -151,24 +151,24 @@ class ios(app):
 
         self.set_device_target()
 
-        print(' * Building XCode project for %s %s...' % (self.device, self.os_version))
+        print(' * Building XCode project for %s %s...' % (self.device_name, self.os_version))
 
         subprocess.Popen([
             'xcodebuild', ' '.join(build_settings_str), '-project', project_file, '-destination',
-            'platform="iOS Simulator,name=%s,OS=%s"' % (self.device, self.os_version), '-quiet', '-configuration',
+            'platform="iOS Simulator,name=%s,OS=%s"' % (self.device_name, self.os_version), '-quiet', '-configuration',
             'Debug', '-arch', 'x86_64', '-sdk', 'iphonesimulator%s' % (self.os_version.split(' ')[-1],), 'build'
         ], cwd=os.path.abspath(self.dir)).wait()
 
-    def run_app(self):
+    def start_app(self):
         if not self.has_required_xcode_version():
             return
 
         working_dir = os.path.abspath(self.dir)
 
-        device = self.set_device_target()
+        self.set_device_target()
 
         # Install app and launch simulator
-        print(' * Launching app on %s %s...' % (self.device, self.os_version))
+        print(' * Launching app on %s %s...' % (self.device_name, self.os_version))
         app_identifier = '.'.join([self.bundle, self.formal_name.replace(' ', '-')])
 
         subprocess.Popen(['xcrun', 'instruments', '-w', device['udid']]).wait()
