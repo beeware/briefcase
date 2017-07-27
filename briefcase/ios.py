@@ -168,17 +168,20 @@ class ios(app):
         self.set_device_target()
 
         # Install app and launch simulator
-        print(' * Launching app on %s %s...' % (self.device_name, self.os_version))
         app_identifier = '.'.join([self.bundle, self.formal_name.replace(' ', '-')])
 
+        print(' * Starting %s %s simulator...' % (self.device_name, self.os_version))
         subprocess.Popen(['xcrun', 'instruments', '-w', self.device['udid']]).wait()
 
+        print(' * Uninstalling old app version...' % (self.device_name, self.os_version))
         subprocess.Popen(['xcrun', 'simctl', 'uninstall', self.device['udid'], app_identifier], cwd=working_dir).wait()
+        print(' * Installing new app version...' % (self.device_name, self.os_version))
         subprocess.Popen([
             'xcrun', 'simctl', 'install', self.device['udid'],
             os.path.join('build', 'Debug-iphonesimulator', '%s.app' % self.formal_name)
         ], cwd=working_dir).wait()
 
+        print(' * Launching app...' % (self.device_name, self.os_version))
         subprocess.Popen([
             'xcrun', 'simctl', 'launch', self.device['udid'], app_identifier
         ]).wait()
