@@ -15,6 +15,7 @@ from distutils.core import Command
 
 import pip
 
+from botocore.handlers import disable_signing
 import boto3
 from cookiecutter.main import cookiecutter
 
@@ -125,12 +126,15 @@ class app(Command):
             self.build = True
 
     def find_support_pkg(self):
+        # Get an S3 client, and disable signing (so we don't need credentials)
         S3_BUCKET = 'pybee-briefcase-support'
         S3_REGION = 'us-west-2'
         S3_URL = 'https://%s.s3-%s.amazonaws.com/' % (S3_BUCKET, S3_REGION)
 
-        candidates = []
         s3 = boto3.client('s3', region_name=S3_REGION)
+        s3.meta.events.register('choose-signer.s3.*', disable_signing)
+
+        candidates = []
         paginator = s3.get_paginator('list_objects')
         for page in paginator.paginate(
                         Bucket=S3_BUCKET,
