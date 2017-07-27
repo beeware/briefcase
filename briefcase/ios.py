@@ -171,14 +171,14 @@ class ios(app):
         print(' * Launching app on %s %s...' % (self.device_name, self.os_version))
         app_identifier = '.'.join([self.bundle, self.formal_name.replace(' ', '-')])
 
-        subprocess.Popen(['xcrun', 'instruments', '-w', device['udid']]).wait()
+        subprocess.Popen(['xcrun', 'instruments', '-w', self.device['udid']]).wait()
 
-        subprocess.Popen(['xcrun', 'simctl', 'uninstall', device['udid'], app_identifier], cwd=working_dir).wait()
+        subprocess.Popen(['xcrun', 'simctl', 'uninstall', self.device['udid'], app_identifier], cwd=working_dir).wait()
         subprocess.Popen([
-            'xcrun', 'simctl', 'install', device['udid'],
+            'xcrun', 'simctl', 'install', self.device['udid'],
             os.path.join('build', 'Debug-iphonesimulator', '%s.app' % self.formal_name)
         ], cwd=working_dir).wait()
 
         subprocess.Popen([
-            'xcrun', 'simctl', 'launch', device['udid'], app_identifier
+            'xcrun', 'simctl', 'launch', self.device['udid'], app_identifier
         ]).wait()
