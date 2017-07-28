@@ -170,12 +170,19 @@ class ios(app):
         # Install app and launch simulator
         app_identifier = '.'.join([self.bundle, self.formal_name.replace(' ', '-')])
 
-        print(' * Starting %s %s simulator...' % (self.device_name, self.os_version))
-        subprocess.Popen(['open', '-a', 'Simulator', '--args', '-CurrentDeviceUDID', self.device['udid']]).wait()
+        print()
+        print("Starting app on %s %s" % (self.device_name, self.os_version))
+        print(' * Starting simulator...')
+        subprocess.Popen(
+            ['open', '-a', 'Simulator', '--args', '-CurrentDeviceUDID', self.device['udid']],
+            stderr=subprocess.PIPE
+        ).communicate()
 
         print(' * Uninstalling old app version...')
-        proc = subprocess.Popen(['xcrun', 'simctl', 'uninstall', self.device['udid'], app_identifier], cwd=working_dir)
-        proc.wait()
+        subprocess.Popen(
+            ['xcrun', 'simctl', 'uninstall', self.device['udid'], app_identifier],
+            cwd=working_dir
+        ).wait()
 
         print(' * Installing new app version...')
         subprocess.Popen([
