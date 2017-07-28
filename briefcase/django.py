@@ -1,6 +1,10 @@
 import os
+import stat
 import shutil
-import subprocess
+import subprocess, shlex
+import sys
+import requests
+import tempfile
 
 try:
     from urllib.request import urlopen
@@ -78,10 +82,35 @@ class django(app):
         # Install additional elements required for Django
         print(" * Installing extras...")
         print("   - Installing NPM requirements...")
-
-        npm = shutil.which("npm")
-        subprocess.Popen([npm, "install"], cwd=os.path.abspath(self.dir)).wait()
-
+        node_download_link = {
+            'darwin': 'https://nodejs.org/dist/v6.10.3/node-v6.10.3.pkg',
+            'linux' : '',
+            'win32' :'https://nodejs.org/dist/v6.10.3/node-v6.10.3-x86.msi',
+        }
+        system_platform = sys.platform
+        required_node_version = '6'
+        node = shutil.which('node')
+        npm  = shutil.which("npm")
+        #workaround in case no node version is found
+        node_version = 'No version'
+        try:
+            node_version_unicode = subprocess.check_output([node, '--version'])
+            node_version = node_version_unicode.decode('utf-8')
+            print('Node version %s detected' % node_version)
+        except:
+            node_version = ''
+        if node and node_version[1] == required_node_version:
+            subprocess.Popen(['npm', 'install'], cwd=os.path.abspath(self.dir)).wait()
+        else:
+            if node_version[1] != required_node_version:
+                err_message = ('ERROR: Cannot run with the current version of Node and Npm, please \n'
+                               'unnistall the current version and install Node version 6.x\n'
+                               'Installation cancelled.'
+                )
+            else:
+                err_message=('Could not finish installation because NodeJs is not installed\n'
+                    'Please install NodeJs at:\n %s' % node_download_link[system_platform])
+            raise RuntimeError(err_message)
         print("   - Building Webpack assets...")
         subprocess.Popen([npm, "run", "build"], cwd=os.path.abspath(self.dir)).wait()
 
