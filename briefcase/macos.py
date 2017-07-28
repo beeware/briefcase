@@ -1,5 +1,6 @@
 import os
 import shutil
+import subprocess
 
 from .app import app
 
@@ -33,3 +34,17 @@ class macos(app):
 
     def install_splash(self):
         raise RuntimeError("macOS doesn't support splash screens.")
+
+    def build_app(self):
+        pass
+
+    def post_build(self):
+        pass
+
+    def start_app(self):
+        print("Starting %s.app" % (self.formal_name))
+        subprocess.Popen([
+                'open', '%s.app' % self.formal_name
+            ],
+            cwd=os.path.abspath(self.dir)
+        ).wait()
