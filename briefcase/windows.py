@@ -108,6 +108,8 @@ class windows(app):
             for line in lines:
                 template.write('%s\n' % line)
 
+    def build_app(self):
+        print()
         print(" * Looking for WiX Toolset...")
         wix_path = os.getenv('WIX')
         if not wix_path:
@@ -128,6 +130,7 @@ class windows(app):
             ],
             cwd=os.path.abspath(self.dir)
         ).wait()
+
         print(" * Linking application installer...")
         subprocess.Popen(
             [
@@ -137,4 +140,15 @@ class windows(app):
                 "briefcase.wixobj"
             ],
             cwd=os.path.abspath(self.dir)
+        ).wait()
+
+    def start_app(self):
+        print()
+        print(" * Starting %s..." % self.formal_name)
+        subprocess.Popen(
+            [
+                os.path.join('pythonw'),
+                os.path.join('..', 'app', 'start.py'),
+            ],
+            cwd=os.path.join(os.path.abspath(self.dir), 'content', 'python')
         ).wait()
