@@ -2,6 +2,7 @@ import os
 import distutils.command.install_scripts as orig
 from pkg_resources import Distribution, PathMetadata
 import shutil
+import subprocess
 import sys
 
 from .app import app
@@ -36,3 +37,17 @@ class linux(app):
     def install_support_package(self):
         # No support package; we just use the system python
         pass
+
+    def build_app(self):
+        pass
+
+    def post_build(self):
+        pass
+
+    def start_app(self):
+        print("Starting %s" % (self.formal_name))
+        subprocess.Popen([
+                './%s' % self.formal_name
+            ],
+            cwd=os.path.abspath(self.dir)
+        ).wait()
