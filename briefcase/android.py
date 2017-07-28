@@ -1,5 +1,6 @@
 import os
 import shutil
+import subprocess
 
 from .app import app
 
@@ -85,19 +86,43 @@ class android(app):
         print()
         print("Installation complete.")
         print()
-        print("Before you compile this Android project, you need to do the following:")
-        print()
-        print("    * Download the Android SDK Tools")
-        print("    * Ensure you have Android API Level 15 downloaded")
-        print("    * Ensure the ANDROID_HOME environment variable points at your Android SDK.")
-        print("    * Configure your device for debugging")
-        print()
-        print("To compile, install and run the project on your phone:")
-        print()
-        print("    $ cd android")
-        print("    $ ./gradlew run")
-        print()
-        print("To view logs while the project runs:")
-        print()
+        if not self.build:
+            print("Before you compile this Android project, you need to do the following:")
+            print()
+            print("    * Download the Android SDK Tools")
+            print("    * Ensure you have Android API Level 15 downloaded")
+            print("    * Ensure the ANDROID_HOME environment variable points at your Android SDK.")
+            print("    * Configure your device for debugging")
+            print()
+            print("To compile, install and run the project on your phone:")
+            print()
+            print("    $ cd android")
+            print("    $ ./gradlew run")
+            print()
+            print("To view logs while the project runs:")
+            print()
+            print("    $ adb logcat Python:* *:E")
+            print()
+
+    def build_app(self):
+        if not self.start:
+            print(" * Building %s..." % (self.formal_name))
+            subprocess.Popen([
+                    './gradlew', 'build'
+                ],
+                cwd=os.path.abspath(self.dir)
+            ).wait()
+
+    def post_build(self):
+        if not self.start:
+            super().post_build()
+
+    def start_app(self):
+        print("Starting %s" % (self.formal_name))
+        subprocess.Popen([
+                './gradlew', 'run'
+            ],
+            cwd=os.path.abspath(self.dir)
+        ).wait()
+
         print("    $ adb logcat Python:* *:E")
-        print()
