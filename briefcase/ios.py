@@ -174,7 +174,7 @@ class ios(app):
         print("Starting app on %s %s" % (self.device_name, self.os_version))
         print(' * Starting simulator...')
         subprocess.Popen(
-            ['open', '-a', 'Simulator', '--args', '-CurrentDeviceUDID', self.device['udid']],
+            ['instruments', '-w', self.device['udid']],
             stderr=subprocess.PIPE
         ).communicate()
 
