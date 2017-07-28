@@ -1,6 +1,8 @@
 import os
 import shutil
 import subprocess
+import sys
+import webbrowser
 
 try:
     from urllib.request import urlopen
@@ -31,6 +33,10 @@ class django(app):
             self.dir = "django"
 
         self.resource_dir = self.dir
+
+        # Set the default device to be the loopback, port 8042
+        if self.device_name is None:
+            self.device_name = 'localhost:8042'
 
         # Django has no support package
         self.skip_support_pkg = True
@@ -76,31 +82,59 @@ class django(app):
 
     def install_extras(self):
         # Install additional elements required for Django
-        print(" * Installing extras...")
-        print("   - Installing NPM requirements...")
-
-        npm = shutil.which("npm")
-        subprocess.Popen([npm, "install"], cwd=os.path.abspath(self.dir)).wait()
-
-        print("   - Building Webpack assets...")
-        subprocess.Popen([npm, "run", "build"], cwd=os.path.abspath(self.dir)).wait()
+        print(" * Installing NPM requirements...")
+        subprocess.Popen(
+            [shutil.which("npm"), "install"],
+            cwd=os.path.abspath(self.dir)
+        ).wait()
 
     def post_install(self):
         print()
         print("Installation complete.")
-        print()
-        print("Before you run this Django project, you should review the value")
-        print("of the settings in django/briefcase/settings/.env to ensure they")
-        print("are appropriate for your machine.")
-        print()
-        print("Once you've confirmed the settings are OK, you should run:")
-        print()
-        print("    $ cd django")
-        print("    $ ./manage.py migrate")
-        print("    $ ./manage.py runserver")
-        print()
-        print("This will apply the initial migration and start a test server.")
-        print()
-        print("You can then point a web browser at http://127.0.0.1:8000 to")
-        print("view your running application.")
-        print()
+        if not self.build:
+            print()
+            print("Before you run this Django project, you should review the value")
+            print("of the settings in django/briefcase/settings/.env to ensure they")
+            print("are appropriate for your machine.")
+            print()
+            print("Once you've confirmed the settings are OK, you should run:")
+            print()
+            print("    $ cd django")
+            print("    $ npm run build")
+            print("    $ ./manage.py migrate")
+            print("    $ ./manage.py runserver")
+            print()
+            print("This will apply the initial migration and start a test server.")
+            print()
+            print("You can then point a web browser at http://127.0.0.1:8000 to")
+            print("view your running application.")
+            print()
+
+    def build_app(self):
+        print(" * Building Webpack assets...")
+        subprocess.Popen(
+            [shutil.which("npm"), "run", "build"],
+            cwd=os.path.abspath(self.dir)
+        ).wait()
+
+        print(' * Applying migrations...')
+        subprocess.Popen([
+                sys.executable, './manage.py', 'migrate'
+            ],
+            cwd=os.path.abspath(self.dir)
+        ).wait()
+
+    def start_app(self):
+        print(" * Starting Django server on %s" % self.device_name)
+        runserver = subprocess.Popen([
+                sys.executable, './manage.py', 'runserver',
+                '--noreload',
+                self.device_name
+            ],
+            cwd=os.path.abspath(self.dir)
+        )
+        print(" * Opening browser...")
+        webbrowser.open('http://%s' % self.device_name)
+
+        # Wait for the runserver to exit.
+        runserver.wait()
