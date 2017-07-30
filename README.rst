@@ -189,6 +189,10 @@ to create an Android app; or::
 
 to create an tvOS app.
 
+You can also use the ``-b`` (or ``--build``) argument to automatically
+perform any compilation step required; or use ``-s`` (``--start``) to
+start the application.
+
 Documentation
 -------------
 

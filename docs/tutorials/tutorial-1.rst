@@ -1,38 +1,13 @@
-Tutorial 1- Toga Hello, World
-=============================
+Tutorial 1 - Fahrenheit to Celcius
+==================================
 
-In this tutorial you will create a simple application using toga framework.
+In this tutorial we will make your application do something interesting.
 
-Update your iOS project
------------------------
+Add code to your project
+------------------------
 
-In this step we assume that you followed the :doc:`previous tutorial <tutorial-0-iOS>`. First at all, you can clean your previous app
-in your ``iostutorial`` folder:
-
-.. code-block:: bash
-
-  rm -rf iOS/
-
-We are going to use the Toga framework, so we have to include the
-``toga-ios`` requirement in the ``ios`` section of ``setup.py`` script:
-
-.. code-block:: python
-
-  setup(name='HelloWorld',
-      ...
-      options = {
-          ...
-          'ios': {
-              'app_requires': [
-                  'toga-ios'
-              ]
-          }
-      }
-  )
-
-And now you can update the application.
-
-We're going to use a version of the Toga Fahrenheit to Celsius converter tutorial found at <https://toga.readthedocs.io/en/latest/tutorial/tutorial-0-iOS.html>, modified to be class-based:
+In this step we assume that you followed the :doc:`previous tutorial <tutorial-0>`.
+Put the following code into ``helloworld\app.py``, replacing the old code:
 
 .. code-block:: python
 
@@ -94,77 +69,40 @@ We're going to use a version of the Toga Fahrenheit to Celsius converter tutoria
       return Converter('Converter', 'org.pybee.converter')
 
 
-Create the iOS app
-------------------
+Build and run the app
+---------------------
 
-Now you can invoke setuptools again:
+Now you can invoke briefcase again:
 
 .. code-block:: bash
 
-  $ python setup.py ios
+  $ python setup.py ios -s
 
-Notice that the ``app_packages`` is not empty after the update, and it contains toga packages and their requirements.
+replacing ``ios`` with your platform of choice. You will be asked if you want
+to replace the existing ``ios`` (or whatever platform you choose) directory; answer
+``y``, and a new project will be generated and started.
 
-Open the iOS project with Xcode
--------------------------------
-
-If you the ios project in Xcode you will see a Toga application:
+You should see something that looks a bit like this:
 
 .. image:: screenshots/tutorial-1-ios.png
-
-If you click on the button, you should see messages appear in the console.
 
 Use the *same code*, but for the web
 ------------------------------------
 
-Edit the ``setup.py`` file to include a package helper for Django:
-
-
-.. code-block:: python
-
-  setup(name='HelloWorld',
-      ...
-      options = {
-          ...
-          'django': {
-              'app_requires': [
-                  'toga-django'
-              ]
-          }
-      }
-  )
-
-Building Django has Javascript dependencies that are installed with NPM.
-Pick the appropriate command to install NPM on your OS, or visit the `NPM website <https://www.npmjs.com/>`_ and follow the instructions.
+Now, we're going to deploy the same code, but as a single page web
+application. Make sure you have the Django dependencies installed (see
+:doc:`/intro/getting-started`), and run the following::
 
 .. code-block:: bash
 
-  $ brew install npm  # OSX with Homebrew (https://brew.sh)
-  $ apt-get install nodejs  # Ubuntu
-  $ pacman -S npm  # Arch Linux
+  $ python setup.py django -s
 
-Now you can invoke setuptools again:
-
-.. code-block:: bash
-
-  $ python setup.py django
-
-Once this process has completed, there are a couple of steps left (that are helpfully outputted by the last command) to setup the django project:
-
-.. code-block:: bash
-
-  $ cd django
-  $ ./manage.py migrate
-
-Then, we can run the application:
-
-
-.. code-block:: bash
-
-  $ ./manage.py runserver
-
-If you open up ``localhost:8000`` in your browser, you should see the same application running in the web.
+This will gather all the Javascript dependencies, create an initial database, start a Django runserver, and launch a browser. You should see the same application running in your browser:
 
 .. image:: screenshots/tutorial-1-django.png
 
-✨
+.. note::
+
+   If you get a "Server could not be contacted" error, it's possible your web browser
+   started faster than the server; reload the page, and you should see the app.
+

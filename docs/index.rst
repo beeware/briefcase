@@ -9,8 +9,10 @@ native application. It supports producing binaries for:
 
 * macOS,
 * Windows,
+* Linux,
 * iOS,
-* Android, and
+* Android,
+* Django, and
 * tvOS.
 
 
