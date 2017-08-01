@@ -118,7 +118,7 @@ class app(Command):
 
         # The secret key is 40 characters of entropy
         if self.secret_key is None:
-            self.secret_key = ''.join(random.choice("abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)") for i in range(40))
+            self.secret_key = ''.join(random.choice("abcdefghijklmnopqrstuvwxyz0123456789") for i in range(40))
 
         pip.utils.ensure_dir(self.download_dir)
 
