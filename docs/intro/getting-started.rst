@@ -67,25 +67,28 @@ iOS
 Android
 ~~~~~~~
 
-* Install the `Android Command Line Tools
-  <https://developer.android.com/studio/index.html>`__ (*not* the full Android
-  Studio IDE)
-* Put the `tools` directory and the `tools/bin` directory are in your path.
-* Set the `ANDROID_HOME` directory
-* Install the SDKs::
+* Install `Android Studio <https://developer.android.com/studio/index.html>`__.
+  When you start Android Studio for the first time, you'll be provided a wizard
+  to configure your installation; select a "standard" installation.
+* Put the `sdk/tools`, `sdk/platform-tools` and `sdk/tools/bin` directories in your path.
+  - On macOS: `~/Library/Android/sdk/tools`, `~/Library/Android/sdk/platform-tools` and `~/Library/Android/sdk/tools/bin`
+* Set the `ANDROID_SDK_HOME` directory
+  - On macOS: `~/Library/Android/sdk`
+* Update the SDKs::
 
-    $ sdkmanager "platforms;android-26"
-    $ sdkmanager "system-images;android-26;google_apis;x86"
+    $ sdkmanager --update
 
-* Create a virtual device image::
+* Create a virtual device image, following `these instructions <https://developer.android.com/studio/run/managing-avds.html>`__.
 
-    $ avdmanager create avd --package "system-images;android-26;google_apis;x86" --name "Test"
+..    $ avdmanager create avd --package "system-images;android-22;google_apis;x86" --device "Nexus 5X" --name Nexus5X
+
+..  When prompted about creating a custom hardware profile, answer "No".
 
 * Install `Gradle <https://gradle.org/>`__.
 
 * Start the emulator::
 
-    $ emulator @Test
+    $ emulator @Nexus_5X_API_22
 
 Django
 ~~~~~~
