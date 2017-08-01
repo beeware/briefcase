@@ -111,7 +111,7 @@ class ios(app):
                         index = int(input('Which device do you want to target: '))
                         try:
                             self.device = device_list[int(index) - 1]
-                            self.device_name = device['name']
+                            self.device_name = self.device['name']
                         except:
                             print("Invalid selection.")
                             print
