@@ -288,6 +288,7 @@ class app(Command):
             print()
             print("    python setup.py %s --support-pkg=<path to tarball>" % self.platform.lower())
             print()
+            sys.exit(1)
 
     def install_extras(self):
         pass
