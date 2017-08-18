@@ -23,9 +23,6 @@ Briefcase
 .. image:: https://badges.gitter.im/pybee/general.svg
     :target: https://gitter.im/pybee/general
 
-Tools to support converting a Python project into a standalone native
-application.
-
 Briefcase is a tool for converting a Python project into a standalone native application. You can package projects for:
 
 * Mac
