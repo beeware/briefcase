@@ -36,7 +36,7 @@ class macos(app):
         raise RuntimeError("macOS doesn't support splash screens.")
 
     def build_app(self):
-        pass
+        return True
 
     def post_build(self):
         pass

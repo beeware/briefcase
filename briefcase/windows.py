@@ -123,16 +123,19 @@ class windows(app):
             print("   - Using %s" % wix_path)
 
         print(" * Compiling application installer...")
-        subprocess.Popen(
+        proc = subprocess.Popen(
             [
                 os.path.join(wix_path, 'bin', 'candle'),
                 "briefcase.wxs"
             ],
             cwd=os.path.abspath(self.dir)
-        ).wait()
+        )
+        proc.wait()
+        if proc.returncode != 0:
+            return False
 
         print(" * Linking application installer...")
-        subprocess.Popen(
+        proc = subprocess.Popen(
             [
                 os.path.join(wix_path, 'bin', 'light'),
                 "-ext", "WixUIExtension",
@@ -140,7 +143,9 @@ class windows(app):
                 "briefcase.wixobj"
             ],
             cwd=os.path.abspath(self.dir)
-        ).wait()
+        )
+        proc.wait()
+        return proc.returncode == 0
 
     def start_app(self):
         print()
