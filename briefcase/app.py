@@ -105,13 +105,13 @@ class app(Command):
         # The Version Code is a pure-string, numerically sortable
         # version number.
         match = re.match('(?P<major>\d+)(\.(?P<minor>\d+)(\.(?P<revision>\d+))?)?', self.distribution.get_version())
-        self._version_tuple = (
+        self._numeric_version_parts = (
             int(match.groups()[0]) if match.groups()[0] else 0,
             int(match.groups()[2]) if match.groups()[2] else 0,
             int(match.groups()[4]) if match.groups()[4] else 0,
         )
-        self.version_code = '%02d%02d%02d' % self._version_tuple
-        self.version = '%d.%d.%d' % self._version_tuple
+        self.version_code = '%02d%02d%02d' % self._numeric_version_parts
+        self.numeric_version = '%d.%d.%d' % self._numeric_version_parts
         if self.version != self.distribution.get_version():
             print("Installer needs version in format x.x.x where x is integer")
             print("Using version: %s" % self.version)
@@ -163,6 +163,10 @@ class app(Command):
     @property
     def app_packages_dir(self):
         return os.path.join(os.getcwd(), self.resource_dir, 'app_packages')
+
+    @property
+    def version(self):
+        return self.distribution.get_version()
 
     def generate_app_template(self):
         print(" * Writing application template...")
