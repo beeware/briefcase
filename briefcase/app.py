@@ -111,10 +111,7 @@ class app(Command):
             int(match.groups()[4]) if match.groups()[4] else 0,
         )
         self.version_code = '%02d%02d%02d' % self._numeric_version_parts
-        self.numeric_version = '%d.%d.%d' % self._numeric_version_parts
-        if self.version != self.distribution.get_version():
-            print("Installer needs version in format x.x.x where x is integer")
-            print("Using version: %s" % self.version)
+        self.version_numeric = '%d.%d.%d' % self._numeric_version_parts
 
         # The app's GUID (if not manually specified) is a namespace UUID
         # based on the URL for the app.
@@ -168,7 +165,7 @@ class app(Command):
     def version(self):
         return self.distribution.get_version()
 
-    def generate_app_template(self):
+    def generate_app_template(self, extra_context=None):
         print(" * Writing application template...")
 
         if self.template is None:
@@ -179,26 +176,29 @@ class app(Command):
             else:
                 self.template = 'https://github.com/pybee/Python-%s-template.git' % self.platform
         print("Project template: %s" % self.template)
+        _extra_context = {
+            'app_name': self.distribution.get_name(),
+            'formal_name': self.formal_name,
+            'class_name': self.class_name,
+            'organization_name': self.organization_name,
+            'author': self.distribution.get_author(),
+            'description': self.distribution.get_description(),
+            'dir_name': self.dir,
+            'bundle': self.bundle,
+            'year': date.today().strftime('%Y'),
+            'month': date.today().strftime('%B'),
+            'version': self.version,
+            'version_code': self.version_code,
+            'guid': self.guid,
+            'secret_key': self.secret_key,
+        }
+        if extra_context:
+            _extra_context.update(extra_context)
         cookiecutter(
             self.template,
             no_input=True,
             checkout='%s.%s' % (sys.version_info.major, sys.version_info.minor),
-            extra_context={
-                'app_name': self.distribution.get_name(),
-                'formal_name': self.formal_name,
-                'class_name': self.class_name,
-                'organization_name': self.organization_name,
-                'author': self.distribution.get_author(),
-                'description': self.distribution.get_description(),
-                'dir_name': self.dir,
-                'bundle': self.bundle,
-                'year': date.today().strftime('%Y'),
-                'month': date.today().strftime('%B'),
-                'version': self.version,
-                'version_code': self.version_code,
-                'guid': self.guid,
-                'secret_key': self.secret_key,
-            }
+            extra_context=_extra_context
         )
 
     def git_pull(self, path):
