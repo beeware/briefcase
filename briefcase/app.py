@@ -343,8 +343,9 @@ class app(Command):
         self.install_extras()
         self.post_install()
         if self.build:
-            self.build_app()
-            self.post_build()
+            success = self.build_app()
+            if success is None or success is True:
+                self.post_build()
         if self.start:
             self.start_app()
             self.post_start()

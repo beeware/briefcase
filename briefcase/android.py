@@ -107,11 +107,13 @@ class android(app):
     def build_app(self):
         if not self.start:
             print(" * Building %s..." % (self.formal_name))
-            subprocess.Popen([
+            proc = subprocess.Popen([
                     './gradlew', 'build'
                 ],
                 cwd=os.path.abspath(self.dir)
-            ).wait()
+            )
+            proc.wait()
+            return proc.returncode == 0
 
     def post_build(self):
         if not self.start:

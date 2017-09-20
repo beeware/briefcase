@@ -39,7 +39,7 @@ class linux(app):
         pass
 
     def build_app(self):
-        pass
+        return True
 
     def post_build(self):
         pass

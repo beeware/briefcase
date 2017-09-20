@@ -137,7 +137,7 @@ class ios(app):
 
     def build_app(self):
         if not self.has_required_xcode_version():
-            return
+            return False
 
         project_file = '%s.xcodeproj' % self.formal_name
         build_settings = [
@@ -153,11 +153,13 @@ class ios(app):
 
         print(' * Building XCode project for %s %s...' % (self.device_name, self.os_version))
 
-        subprocess.Popen([
+        proc = subprocess.Popen([
             'xcodebuild', ' '.join(build_settings_str), '-project', project_file, '-destination',
             'platform="iOS Simulator,name=%s,OS=%s"' % (self.device_name, self.os_version), '-quiet', '-configuration',
             'Debug', '-arch', 'x86_64', '-sdk', 'iphonesimulator%s' % (self.os_version.split(' ')[-1],), 'build'
-        ], cwd=os.path.abspath(self.dir)).wait()
+        ], cwd=os.path.abspath(self.dir))
+        proc.wait()
+        return proc.returncode == 0
 
     def start_app(self):
         if not self.has_required_xcode_version():

@@ -112,17 +112,22 @@ class django(app):
 
     def build_app(self):
         print(" * Building Webpack assets...")
-        subprocess.Popen(
+        proc = subprocess.Popen(
             [shutil.which("npm"), "run", "build"],
             cwd=os.path.abspath(self.dir)
-        ).wait()
+        )
+        proc.wait()
+        if proc.returncode != 0:
+            return False
 
         print(' * Applying migrations...')
-        subprocess.Popen([
+        proc = subprocess.Popen([
                 sys.executable, './manage.py', 'migrate'
             ],
             cwd=os.path.abspath(self.dir)
-        ).wait()
+        )
+        proc.wait()
+        return proc.returncode == 0
 
     def start_app(self):
         print(" * Starting Django server on %s" % self.device_name)
