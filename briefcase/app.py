@@ -57,7 +57,9 @@ class app(Command):
         ('os-version=', None,
          "Set the device OS version. (e.g., iOS 10.2)"),
         ('device-name=', None,
-         "Set the device to run. (e.g., iPhone 7 Plus)")
+         "Set the device to run. (e.g., iPhone 7 Plus)"),
+        ('sanitize-version', None,
+         "Forces installer version to only contain numbers.")
     ]
 
     def initialize_options(self):
@@ -80,6 +82,7 @@ class app(Command):
         self.start = False
         self.os_version = None
         self.device_name = None
+        self.sanitize_version = None
 
     def finalize_options(self):
         if self.formal_name is None:
@@ -167,6 +170,13 @@ class app(Command):
 
     def generate_app_template(self, extra_context=None):
         print(" * Writing application template...")
+
+        if self.sanitize_version and self.version_numeric != self.version:
+            print(" ! Version currently contains characters: %s" % self.version)
+            print(" ! Installer version sanitized to: %s" % self.version_numeric)
+
+            extra_context = extra_context or {}
+            extra_context['version'] = self.version_numeric
 
         if self.template is None:
             template_path = os.path.expanduser('~/.cookiecutters/Python-%s-template' % self.platform)

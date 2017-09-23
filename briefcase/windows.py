@@ -35,13 +35,10 @@ class windows(app):
         self.icon_filename = os.path.join(self.app_dir, self.distribution.get_name() + os.path.splitext(iconfile)[1])
 
     def generate_app_template(self, extra_context=None):
-
-        if self.version_numeric != self.version:
-            print(" ! Windows Installer version can only contain numerals.")
-            print(" ! Using version: %s" % self.version_numeric)
-
-            extra_context = extra_context or {}
-            extra_context['version'] = self.version_numeric
+        if self.version_numeric != self.version and not self.sanitize_version:
+            print(" ! Windows Installer version can only contain numerals, currently: %s" % self.version)
+            print(" ! --sanitize-version can be used to automatically filter this to %s" % self.version_numeric)
+            exit(1)
 
         super(windows, self).generate_app_template(extra_context=extra_context)
 
