@@ -57,7 +57,9 @@ class app(Command):
         ('os-version=', None,
          "Set the device OS version. (e.g., iOS 10.2)"),
         ('device-name=', None,
-         "Set the device to run. (e.g., iPhone 7 Plus)")
+         "Set the device to run. (e.g., iPhone 7 Plus)"),
+        ('sanitize-version', None,
+         "Forces installer version to only contain numbers.")
     ]
 
     def initialize_options(self):
@@ -80,6 +82,7 @@ class app(Command):
         self.start = False
         self.os_version = None
         self.device_name = None
+        self.sanitize_version = None
 
     def finalize_options(self):
         if self.formal_name is None:
@@ -105,11 +108,13 @@ class app(Command):
         # The Version Code is a pure-string, numerically sortable
         # version number.
         match = re.match('(?P<major>\d+)(\.(?P<minor>\d+)(\.(?P<revision>\d+))?)?', self.distribution.get_version())
-        self.version_code = '%02d%02d%02d' % (
+        self._numeric_version_parts = (
             int(match.groups()[0]) if match.groups()[0] else 0,
             int(match.groups()[2]) if match.groups()[2] else 0,
             int(match.groups()[4]) if match.groups()[4] else 0,
         )
+        self.version_code = '%02d%02d%02d' % self._numeric_version_parts
+        self.version_numeric = '%d.%d.%d' % self._numeric_version_parts
 
         # The app's GUID (if not manually specified) is a namespace UUID
         # based on the URL for the app.
@@ -163,8 +168,15 @@ class app(Command):
     def version(self):
         return self.distribution.get_version()
 
-    def generate_app_template(self):
+    def generate_app_template(self, extra_context=None):
         print(" * Writing application template...")
+
+        if self.sanitize_version and self.version_numeric != self.version:
+            print(" ! Version currently contains characters: %s" % self.version)
+            print(" ! Installer version sanitized to: %s" % self.version_numeric)
+
+            extra_context = extra_context or {}
+            extra_context['version'] = self.version_numeric
 
         if self.template is None:
             template_path = os.path.expanduser('~/.cookiecutters/Python-%s-template' % self.platform)
@@ -174,26 +186,29 @@ class app(Command):
             else:
                 self.template = 'https://github.com/pybee/Python-%s-template.git' % self.platform
         print("Project template: %s" % self.template)
+        _extra_context = {
+            'app_name': self.distribution.get_name(),
+            'formal_name': self.formal_name,
+            'class_name': self.class_name,
+            'organization_name': self.organization_name,
+            'author': self.distribution.get_author(),
+            'description': self.distribution.get_description(),
+            'dir_name': self.dir,
+            'bundle': self.bundle,
+            'year': date.today().strftime('%Y'),
+            'month': date.today().strftime('%B'),
+            'version': self.version,
+            'version_code': self.version_code,
+            'guid': self.guid,
+            'secret_key': self.secret_key,
+        }
+        if extra_context:
+            _extra_context.update(extra_context)
         cookiecutter(
             self.template,
             no_input=True,
             checkout='%s.%s' % (sys.version_info.major, sys.version_info.minor),
-            extra_context={
-                'app_name': self.distribution.get_name(),
-                'formal_name': self.formal_name,
-                'class_name': self.class_name,
-                'organization_name': self.organization_name,
-                'author': self.distribution.get_author(),
-                'description': self.distribution.get_description(),
-                'dir_name': self.dir,
-                'bundle': self.bundle,
-                'year': date.today().strftime('%Y'),
-                'month': date.today().strftime('%B'),
-                'version': self.version,
-                'version_code': self.version_code,
-                'guid': self.guid,
-                'secret_key': self.secret_key,
-            }
+            extra_context=_extra_context
         )
 
     def git_pull(self, path):
