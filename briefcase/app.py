@@ -8,12 +8,16 @@ import re
 import subprocess
 import shutil
 import sys
+import textwrap
 import uuid
 
 from datetime import date
 from distutils.core import Command
 
 import pip
+import pkg_resources
+from setuptools.command import easy_install
+from setuptools.dist import Distribution
 
 from botocore.handlers import disable_signing
 import boto3
@@ -239,7 +243,7 @@ class app(Command):
             print("No requirements.")
 
     def install_platform_requirements(self):
-        print(" * Installing plaform requirements...")
+        print(" * Installing platform requirements...")
         if self.app_requires:
             pip.main([
                     'install',
@@ -261,6 +265,51 @@ class app(Command):
                 '--target=%s' % self.app_dir,
                 '.'
             ])
+
+    @property
+    def launcher_header(self):
+        """
+        Override the shebang line for launcher scripts
+        This should return a suitable relative path which will find the
+        bundled python for the relevant platform
+        """
+        return None
+
+    def install_launch_scripts(self):
+        print(" * Creating launchers...")
+        pip.main([
+                     'install',
+                     '--upgrade',
+                     '--force-reinstall',
+                     '--target=%s' % self.app_packages_dir,
+                     'setuptools'
+                 ])
+
+        easy_install.ScriptWriter.template = textwrap.dedent("""
+            # EASY-INSTALL-ENTRY-SCRIPT: %(spec)r,%(group)r,%(name)r
+            __requires__ = %(spec)r
+            import re
+            import sys
+            from os.path import dirname, abspath, join
+            sys.path.insert(0, join(dirname(__file__), '..', 'app_packages'))
+            sys.path.insert(0, dirname(__file__))
+            from pkg_resources import load_entry_point
+    
+            if __name__ == '__main__':
+                sys.argv[0] = re.sub(r'(-script\.pyw?|\.exe)?$', '', sys.argv[0])
+                sys.exit(
+                    load_entry_point(%(spec)r, %(group)r, %(name)r)()
+                )
+        """).lstrip()
+
+        ei = easy_install.easy_install(self.distribution)
+        for dist in pkg_resources.find_distributions('.'):
+            ei.args = True  # To allow finalize_options to run
+            ei.finalize_options()
+            ei.script_dir = self.app_dir
+
+            for args in easy_install.ScriptWriter.best().get_args(dist, header=self.launcher_header):
+                ei.write_script(*args)
 
     def install_resources(self):
         if self.icon:
@@ -351,6 +400,7 @@ class app(Command):
         self.install_app_requirements()
         self.install_platform_requirements()
         self.install_code()
+        self.install_launch_scripts()
         self.install_resources()
         self.install_extras()
         self.post_install()
