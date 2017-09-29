@@ -59,7 +59,9 @@ class app(Command):
         ('device-name=', None,
          "Set the device to run. (e.g., iPhone 7 Plus)"),
         ('sanitize-version', None,
-         "Forces installer version to only contain numbers.")
+         "Forces installer version to only contain numbers."),
+        ('delete-existing=', None,
+         "Set whether to delete existing staging folder")
     ]
 
     def initialize_options(self):
@@ -83,6 +85,7 @@ class app(Command):
         self.os_version = None
         self.device_name = None
         self.sanitize_version = None
+        self.delete_existing = None
 
     def finalize_options(self):
         if self.formal_name is None:
@@ -333,12 +336,15 @@ class app(Command):
         full_generation = True
         if os.path.exists(self.dir):
             print()
-            if os.path.isdir(self.dir):
-                confirm = input("A directory named '%s' already exists. Would you like to replace it (y/N)? " % self.dir)
+            if self.delete_existing:
+                confirm = self.delete_existing
             else:
-                confirm = input("A file named '%s' already exists. Would you like to delete it (y/N)? " % self.dir)
+                if os.path.isdir(self.dir):
+                    confirm = input("A directory named '%s' already exists. Would you like to replace it (y/N)? " % self.dir)
+                else:
+                    confirm = input("A file named '%s' already exists. Would you like to delete it (y/N)? " % self.dir)
+                print()
 
-            print()
             if confirm in ['y', 'Y']:
                 print(" * Deleting existing content...")
                 if os.path.isdir(self.dir):
