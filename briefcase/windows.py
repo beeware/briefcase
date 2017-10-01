@@ -117,7 +117,6 @@ class windows(app):
             for entries in self.distribution.entry_points.values():
                 for entry in entries:
                     exe_name = entry.split('=')[0].strip()
-                    appdir = self.app_dir
                     description = self.distribution.get_description()
                     shortcutid = uuid.uuid4().hex
                     shortcuts.append("""\
@@ -126,8 +125,8 @@ class windows(app):
                                 Name="{exe_name}"
                                 Icon="ProductIcon"
                                 Description="{description}"
-                                Target="{appdir}\\{exe_name}.exe"
-                                WorkingDirectory="{appdir}" />""".format(**locals()))
+                                Target="[AppDir]\\app\\{exe_name}.exe"
+                                WorkingDirectory="AppDir" />""".format(**locals()))
 
         # Generate the full briefcase.wxs file
         lines = []
@@ -137,7 +136,7 @@ class windows(app):
                     lines.extend(content)
                 elif line.strip() == '<!-- CONTENTREFS -->':
                     lines.extend(contentrefs)
-                elif line.strip() == '< !-- SHORTCUTS_PROVIDED -->':
+                elif line.strip() == '<!-- SHORTCUTS_PROVIDED -->':
                     # Comment out existing shortcut in template
                     lines.append('                        <!--')
                 elif line.strip() == '<!-- SHORTCUTS -->':
