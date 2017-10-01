@@ -5,6 +5,7 @@ import re
 import shutil
 import subprocess
 import sys
+import textwrap
 import uuid
 
 from .app import app
@@ -69,6 +70,7 @@ class windows(app):
         app_root = os.path.join(self.dir, 'content')
         content = []
         contentrefs = []
+        shortcuts = []
 
         def walk_dir(path, depth=0):
             files = []
@@ -111,6 +113,22 @@ class windows(app):
 
         walk_dir(app_root)
 
+        if self.distribution.entry_points:
+            for entries in self.distribution.entry_points.values():
+                for entry in entries:
+                    exe_name = entry.split('=')[0].strip()
+                    appdir = self.app_dir
+                    description = self.distribution.get_description()
+                    shortcutid = uuid.uuid4().hex
+                    shortcuts.append("""\
+                            <Shortcut
+                                Id="AppShortcut_{shortcutid}"
+                                Name="{exe_name}"
+                                Icon="ProductIcon"
+                                Description="{description}"
+                                Target="{appdir}\\{exe_name}.exe"
+                                WorkingDirectory="{appdir}" />""".format(**locals()))
+
         # Generate the full briefcase.wxs file
         lines = []
         with open(os.path.join(self.dir, 'briefcase.wxs')) as template:
@@ -119,6 +137,12 @@ class windows(app):
                     lines.extend(content)
                 elif line.strip() == '<!-- CONTENTREFS -->':
                     lines.extend(contentrefs)
+                elif line.strip() == '< !-- SHORTCUTS_PROVIDED -->':
+                    # Comment out existing shortcut in template
+                    lines.append('                        <!--')
+                elif line.strip() == '<!-- SHORTCUTS -->':
+                    lines.append('                        -->')
+                    lines.extend(shortcuts)
                 else:
                     lines.append(line.rstrip())
 
