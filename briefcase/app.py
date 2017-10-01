@@ -275,6 +275,10 @@ class app(Command):
         """
         return None
 
+    @property
+    def launcher_script_location(self):
+        return self.app_dir
+
     def install_launch_scripts(self):
         print(" * Creating launchers...")
         pip.main([
@@ -285,14 +289,19 @@ class app(Command):
                      'setuptools'
                  ])
 
+        rel_app = os.path.relpath(self.app_dir, self.launcher_script_location)
+        rel_app_packages = os.path.relpath(self.app_packages_dir, self.launcher_script_location)
+
+        rel_app_split = ', '.join(["'%s'" % f for f in rel_app.split(os.sep)])
+        rel_app_packages = ', '.join(["'%s'" % f for f in rel_app_packages.split(os.sep)])
         easy_install.ScriptWriter.template = textwrap.dedent("""
             # EASY-INSTALL-ENTRY-SCRIPT: %(spec)r,%(group)r,%(name)r
             __requires__ = %(spec)r
             import re
             import sys
             from os.path import dirname, abspath, join
-            sys.path.insert(0, join(dirname(__file__), '..', 'app_packages'))
-            sys.path.insert(0, dirname(__file__))
+            sys.path.insert(0, join(dirname(__file__), {}))
+            sys.path.insert(0, join(dirname(__file__), {}))
             from pkg_resources import load_entry_point
     
             if __name__ == '__main__':
@@ -300,13 +309,13 @@ class app(Command):
                 sys.exit(
                     load_entry_point(%(spec)r, %(group)r, %(name)r)()
                 )
-        """).lstrip()
+        """.format(rel_app_packages, rel_app_split)).lstrip()
 
         ei = easy_install.easy_install(self.distribution)
         for dist in pkg_resources.find_distributions('.'):
             ei.args = True  # To allow finalize_options to run
             ei.finalize_options()
-            ei.script_dir = self.app_dir
+            ei.script_dir = self.launcher_script_location
 
             for args in easy_install.ScriptWriter.best().get_args(dist, header=self.launcher_header):
                 ei.write_script(*args)
