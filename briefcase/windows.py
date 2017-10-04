@@ -134,6 +134,7 @@ class windows(app):
         proc = subprocess.Popen(
             [
                 os.path.join(wix_path, 'bin', 'candle'),
+                "-ext", "WixUtilExtension",
                 "briefcase.wxs"
             ],
             cwd=os.path.abspath(self.dir)
@@ -146,6 +147,7 @@ class windows(app):
         proc = subprocess.Popen(
             [
                 os.path.join(wix_path, 'bin', 'light'),
+                "-ext", "WixUtilExtension",
                 "-ext", "WixUIExtension",
                 "-o", "%s-%s.msi" % (self.formal_name, self.version),
                 "briefcase.wixobj"
