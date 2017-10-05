@@ -8,7 +8,7 @@ Setup
 -----
 
 This tutorial assumes you've read and followed the instructions in
-:doc:`/intro/getting-started`. If you've done this, you should have:
+:doc:`/background/getting-started`. If you've done this, you should have:
 
 * A ``tutorial`` directory,
 * A activated Python 3.5 virtual environment,
@@ -140,4 +140,4 @@ application, with a native icon in your task bar (or wherever icons appear on
 your platform).
 
 You've just packaged your first app with Briefcase! Now, let's :doc:`make the
-app actually do something interesting </tutorials/tutorial-1>`.
+app actually do something interesting </tutorial/tutorial-1>`.

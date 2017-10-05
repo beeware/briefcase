@@ -91,7 +91,7 @@ Use the *same code*, but for the web
 
 Now, we're going to deploy the same code, but as a single page web
 application. Make sure you have the Django dependencies installed (see
-:doc:`/intro/getting-started`), and run the following:
+:doc:`/background/getting-started`), and run the following:
 
 .. code-block:: bash
 

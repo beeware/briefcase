@@ -1,3 +1,6 @@
+.. _background:
+
+===============
 About Briefcase
 ===============
 
@@ -8,3 +11,4 @@ About Briefcase
    community
    faq
    getting-started
+   quickstart

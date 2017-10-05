@@ -1,10 +1,12 @@
-Project Internals
+.. _project:
+
+=================
+About the project
 =================
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :glob:
 
-   contributing
    releases
    roadmap
