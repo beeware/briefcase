@@ -1,3 +1,6 @@
+.. _how-to:
+
+=============
 How-to guides
 =============
 
@@ -7,3 +10,4 @@ How-to guides are recipes that take the user through steps in key subjects. They
    :maxdepth: 1
    :glob:
 
+   Contribute to Briefcase <contribute>
