@@ -57,7 +57,7 @@ to install the following:
 
 * **Fedora 20+** ???
 
-* **Debian** ???
+* **Debian Stretch** ``apt-get install python3-gi gir1.2-webkit2-4.0``
 
 iOS
 ~~~
