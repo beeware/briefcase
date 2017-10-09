@@ -1,6 +1,7 @@
 import os
 import shutil
 import subprocess
+import sys
 
 from .app import app
 
@@ -107,11 +108,18 @@ class android(app):
     def build_app(self):
         if not self.start:
             print(" * Building %s..." % (self.formal_name))
-            proc = subprocess.Popen([
-                    './gradlew', 'build'
+            if sys.platform == 'win32':
+                proc = subprocess.Popen([
+                    'cmd.exe', '/c', 'gradlew.bat', 'build'
                 ],
-                cwd=os.path.abspath(self.dir)
-            )
+                    cwd=os.path.abspath(self.dir)
+                )
+            else:
+                proc = subprocess.Popen([
+                        '/usr/bin/env', 'sh', './gradlew', 'build'
+                    ],
+                    cwd=os.path.abspath(self.dir)
+                )
             proc.wait()
             return proc.returncode == 0
 
