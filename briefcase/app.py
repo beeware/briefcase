@@ -171,6 +171,10 @@ class app(Command):
     def version(self):
         return self.distribution.get_version()
 
+    @property
+    def _python_version(self):
+        return '%s.%s' % (sys.version_info.major, sys.version_info.minor)
+
     def generate_app_template(self, extra_context=None):
         print(" * Writing application template...")
 
@@ -185,6 +189,7 @@ class app(Command):
             template_path = os.path.expanduser('~/.cookiecutters/Python-%s-template' % self.platform)
             if os.path.exists(template_path):
                 self.template = template_path
+                self.git_checkout(template_path)
                 self.git_pull(template_path)
             else:
                 self.template = 'https://github.com/pybee/Python-%s-template.git' % self.platform
@@ -210,9 +215,16 @@ class app(Command):
         cookiecutter(
             self.template,
             no_input=True,
-            checkout='%s.%s' % (sys.version_info.major, sys.version_info.minor),
+            checkout= self._python_version,
             extra_context=_extra_context
         )
+
+    def git_checkout(self, path):
+        try:
+            subprocess.check_output(["git", "checkout", self._python_version], stderr=subprocess.STDOUT, cwd=path)
+        except subprocess.CalledProcessError as pull_error:
+            error_message = pull_error.output.decode('utf-8')
+            print (error_message)
 
     def git_pull(self, path):
         template_name = path.split('/')[-1]
