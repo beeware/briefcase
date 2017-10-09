@@ -1,4 +1,5 @@
 import os
+import sys
 import shutil
 import subprocess
 
@@ -34,6 +35,30 @@ class macos(app):
 
     def install_splash(self):
         raise RuntimeError("macOS doesn't support splash screens.")
+
+    @property
+    def launcher_header(self):
+        """
+        Override the shebang line for launcher scripts
+        """
+        # https://stackoverflow.com/a/36160331
+        pyexe = '../Resources/python/bin/python%s' % (3 if sys.version_info.major == 3 else '')
+        return '#!/bin/sh\n'\
+               '"exec" "`dirname $0`/%s" "$0" "$@"\n' % pyexe
+
+    @property
+    def launcher_script_location(self):
+        macos_dir = os.path.abspath(os.path.join(self.resource_dir, '..', 'MacOS'))
+        return macos_dir
+
+    # def install_launch_scripts(self):
+    #     exes = super(macos, self).install_launch_scripts()
+        # if self.formal_name in exes:
+        #     # If a main launcher has been created, remove template app and symlink to launcher
+        #     main_app = os.path.join(self.resource_dir, '..', 'MacOS', self.formal_name)
+        #     if os.path.exists(main_app):
+        #         os.unlink(main_app)
+        #         os.symlink(os.path.join('..', 'Resources', self.formal_name), main_app)
 
     def build_app(self):
         return True

@@ -42,8 +42,6 @@ class linux(app):
     def launcher_header(self):
         """
         Override the shebang line for launcher scripts
-        This should return a suitable relative path which will find the
-        bundled python for the relevant platform
         """
         return "#!python%s.%s\n" % (sys.version_info.major, sys.version_info.minor)
 

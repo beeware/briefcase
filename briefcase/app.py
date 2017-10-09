@@ -280,45 +280,60 @@ class app(Command):
         return self.app_dir
 
     def install_launch_scripts(self):
-        print(" * Creating launchers...")
-        pip.main([
-                     'install',
-                     '--upgrade',
-                     '--force-reinstall',
-                     '--target=%s' % self.app_packages_dir,
-                     'setuptools'
-                 ])
+        exe_names = []
+        if self.distribution.entry_points:
+            print(" * Creating launchers...")
+            pip.main([
+                         'install',
+                         '--upgrade',
+                         '--force-reinstall',
+                         '--target=%s' % self.app_packages_dir,
+                         'setuptools'
+                     ])
 
-        rel_app = os.path.relpath(self.app_dir, self.launcher_script_location)
-        rel_app_packages = os.path.relpath(self.app_packages_dir, self.launcher_script_location)
+            rel_sesources = os.path.relpath(self.resource_dir, self.launcher_script_location)
+            rel_sesources_split = ', '.join(["'%s'" % f for f in rel_sesources.split(os.sep)])
 
-        rel_app_split = ', '.join(["'%s'" % f for f in rel_app.split(os.sep)])
-        rel_app_packages = ', '.join(["'%s'" % f for f in rel_app_packages.split(os.sep)])
-        easy_install.ScriptWriter.template = textwrap.dedent("""
-            # EASY-INSTALL-ENTRY-SCRIPT: %(spec)r,%(group)r,%(name)r
-            __requires__ = %(spec)r
-            import re
-            import sys
-            from os.path import dirname, abspath, join
-            sys.path.insert(0, join(dirname(__file__), {}))
-            sys.path.insert(0, join(dirname(__file__), {}))
-            from pkg_resources import load_entry_point
-    
-            if __name__ == '__main__':
-                sys.argv[0] = re.sub(r'(-script\.pyw?|\.exe)?$', '', sys.argv[0])
-                sys.exit(
-                    load_entry_point(%(spec)r, %(group)r, %(name)r)()
-                )
-        """.format(rel_app_packages, rel_app_split)).lstrip()
+            easy_install.ScriptWriter.template = textwrap.dedent("""
+                # EASY-INSTALL-ENTRY-SCRIPT: %(spec)r,%(group)r,%(name)r
+                __requires__ = %(spec)r
+                import os
+                import re
+                import sys
+                import site
+                from os.path import dirname, abspath, join
+                resources = abspath(join(dirname(__file__), {}))
+                site.addsitedir(join(resources, 'app'))
+                site.addsitedir(join(resources, 'app_packages'))
+                os.environ['PATH'] += os.pathsep + resources
+                
+                from pkg_resources import load_entry_point
+                
+                if __name__ == '__main__':
+                    sys.argv[0] = re.sub(r'(-script\.pyw?|\.exe)?$', '', sys.argv[0])
+                    sys.exit(
+                        load_entry_point(%(spec)r, %(group)r, %(name)r)()
+                    )
+            """.format(rel_sesources_split)).lstrip()
 
-        ei = easy_install.easy_install(self.distribution)
-        for dist in pkg_resources.find_distributions('.'):
-            ei.args = True  # To allow finalize_options to run
-            ei.finalize_options()
-            ei.script_dir = self.launcher_script_location
+            ei = easy_install.easy_install(self.distribution)
+            for dist in pkg_resources.find_distributions(self.app_dir):
+                # Note: this is a different Distribution class to self.distribution
+                ei.args = True  # Needs something to run finalize_options
+                ei.finalize_options()
+                ei.script_dir = self.launcher_script_location
+                for args in easy_install.ScriptWriter.best().get_args(dist, header=self.launcher_header):
+                    ei.write_script(*args)
 
-            for args in easy_install.ScriptWriter.best().get_args(dist, header=self.launcher_header):
-                ei.write_script(*args)
+                # Grab names of launchers
+                for entry_points in dist.get_entry_map().values():
+                    exe_names.extend(entry_points.keys())
+
+            if self.formal_name not in exe_names:
+                print(" ! No entry_point matching formal_name, \n"
+                      "   template builtin script will be main launcher.")
+
+        return exe_names
 
     def install_resources(self):
         if self.icon:

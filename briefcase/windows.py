@@ -62,7 +62,6 @@ class windows(app):
         """
         return "#!.\python\python.exe\n"
 
-
     def install_extras(self):
         print(" * Finalizing application installer script...")
 
