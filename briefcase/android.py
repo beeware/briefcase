@@ -1,6 +1,7 @@
 import os
 import shutil
 import subprocess
+import sys
 
 from .app import app
 
@@ -92,12 +93,11 @@ class android(app):
             print("    * Download the Android SDK Tools")
             print("    * Ensure you have Android API Level 15 downloaded")
             print("    * Ensure the ANDROID_HOME environment variable points at your Android SDK.")
-            print("    * Configure your device for debugging")
+            print("    * Configure your device or the android simulator for debugging")
             print()
-            print("To compile, install and run the project on your phone:")
+            print("To compile, install and run the project on your phone/simulator:")
             print()
-            print("    $ cd android")
-            print("    $ ./gradlew run")
+            print("    $ python setup.py android --build --start")
             print()
             print("To view logs while the project runs:")
             print()
@@ -107,11 +107,18 @@ class android(app):
     def build_app(self):
         if not self.start:
             print(" * Building %s..." % (self.formal_name))
-            proc = subprocess.Popen([
-                    './gradlew', 'build'
+            if sys.platform == 'win32':
+                proc = subprocess.Popen([
+                    'cmd.exe', '/c', 'gradlew.bat', 'build'
                 ],
-                cwd=os.path.abspath(self.dir)
-            )
+                    cwd=os.path.abspath(self.dir)
+                )
+            else:
+                proc = subprocess.Popen([
+                        '/usr/bin/env', 'sh', './gradlew', 'build'
+                    ],
+                    cwd=os.path.abspath(self.dir)
+                )
             proc.wait()
             return proc.returncode == 0
 
