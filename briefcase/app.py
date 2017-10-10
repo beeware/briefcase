@@ -219,12 +219,19 @@ class app(Command):
             extra_context=_extra_context
         )
 
+    @property
+    def _has_cookiecutter_json(self):
+        cookiecutter_json_path = os.path.expanduser('~/.cookiecutters/Python-%s-template/cookiecutter.json' % self.platform)
+        return os.path.exists(cookiecutter_json_path)
+
     def git_checkout(self, path):
         try:
             subprocess.check_output(["git", "checkout", self._python_version], stderr=subprocess.STDOUT, cwd=path)
         except subprocess.CalledProcessError as pull_error:
             error_message = pull_error.output.decode('utf-8')
             print (error_message)
+            if not self._has_cookiecutter_json:
+                raise Exception("There is no cookiecutter_json file")
 
     def git_pull(self, path):
         template_name = path.split('/')[-1]
