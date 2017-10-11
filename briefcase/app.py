@@ -189,8 +189,11 @@ class app(Command):
             template_path = os.path.expanduser('~/.cookiecutters/Python-%s-template' % self.platform)
             if os.path.exists(template_path):
                 self.template = template_path
-                self.git_checkout(template_path)
-                self.git_pull(template_path)
+                self._git_fetch(template_path)
+                self._git_checkout(template_path)
+                if not self._has_cookiecutter_json(template_path):
+                    raise Exception("Derectory %r isn't a valid template (no cookiecutter.json found), try deleting'." % template_path)
+                self._git_pull(template_path)
             else:
                 self.template = 'https://github.com/pybee/Python-%s-template.git' % self.platform
         print("Project template: %s" % self.template)
@@ -219,21 +222,32 @@ class app(Command):
             extra_context=_extra_context
         )
 
-    @property
-    def _has_cookiecutter_json(self):
-        cookiecutter_json_path = os.path.expanduser('~/.cookiecutters/Python-%s-template/cookiecutter.json' % self.platform)
+    def _has_cookiecutter_json(self, template_path):
+        cookiecutter_json_path = os.path.expanduser('%s/cookiecutter.json' % template_path)
         return os.path.exists(cookiecutter_json_path)
 
-    def git_checkout(self, path):
+    def _get_all_branches(self, path):
+        branches = subprocess.check_output(["git", "ls-remote", "--heads"], stderr=subprocess.STDOUT, cwd=path)
+        branches = str(branches).split("\\n")
+        branches = branches[1:]
+        all_branches = []
+        for name in branches:
+            name = name.split("/")
+            if name[-1:] != ["'"]:
+                all_branches.extend(name[-1:])
+        return all_branches
+
+    def _git_fetch(self, path):
+        subprocess.check_output(["git", "fetch"], stderr=subprocess.STDOUT, cwd=path)
+
+    def _git_checkout(self, path):
         try:
             subprocess.check_output(["git", "checkout", self._python_version], stderr=subprocess.STDOUT, cwd=path)
         except subprocess.CalledProcessError as pull_error:
             error_message = pull_error.output.decode('utf-8')
-            print (error_message)
-            if not self._has_cookiecutter_json:
-                raise Exception("There is no cookiecutter_json file")
+            print("Attempted to checkout %r, but only found branches: " % self._python_version, ", ".join(self._get_all_branches(path)) + ".")
 
-    def git_pull(self, path):
+    def _git_pull(self, path):
         template_name = path.split('/')[-1]
         try:
             subprocess.check_output(["git", "pull"], stderr=subprocess.STDOUT, cwd=path)
