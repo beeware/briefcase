@@ -192,7 +192,7 @@ class app(Command):
                 self._git_fetch(template_path)
                 self._git_checkout(template_path)
                 if not self._has_cookiecutter_json(template_path):
-                    raise Exception("Derectory %r isn't a valid template (no cookiecutter.json found), try deleting'." % template_path)
+                    raise BriefcaseError("Directory %r isn't a valid template (no cookiecutter.json found), try deleting'." % template_path)
                 self._git_pull(template_path)
             else:
                 self.template = 'https://github.com/pybee/Python-%s-template.git' % self.platform
@@ -223,18 +223,14 @@ class app(Command):
         )
 
     def _has_cookiecutter_json(self, template_path):
-        cookiecutter_json_path = os.path.expanduser('%s/cookiecutter.json' % template_path)
+        cookiecutter_json_path = os.path.join(template_path, 'cookiecutter.json')
         return os.path.exists(cookiecutter_json_path)
 
     def _get_all_branches(self, path):
         branches = subprocess.check_output(["git", "ls-remote", "--heads"], stderr=subprocess.STDOUT, cwd=path)
-        branches = str(branches).split("\\n")
+        branches = branches.decode('utf-8').splitlines()
         branches = branches[1:]
-        all_branches = []
-        for name in branches:
-            name = name.split("/")
-            if name[-1:] != ["'"]:
-                all_branches.extend(name[-1:])
+        all_branches = [name.rsplit("/",1)[1] for name in branches]
         return all_branches
 
     def _git_fetch(self, path):
@@ -394,3 +390,6 @@ class app(Command):
         if self.start:
             self.start_app()
             self.post_start()
+
+class BriefcaseError(Exception):
+    """Raised when briefcase can't proceed"""
