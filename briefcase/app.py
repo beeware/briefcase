@@ -192,7 +192,8 @@ class app(Command):
                 self._git_fetch(template_path)
                 self._git_checkout(template_path)
                 if not self._has_cookiecutter_json(template_path):
-                    raise BriefcaseError("Directory %r isn't a valid template (no cookiecutter.json found), try deleting'." % template_path)
+                    print("Directory %r isn't a valid template (no cookiecutter.json found)." % template_path)
+                    sys.exit(1)
                 self._git_pull(template_path)
             else:
                 self.template = 'https://github.com/pybee/Python-%s-template.git' % self.platform
@@ -241,7 +242,7 @@ class app(Command):
             subprocess.check_output(["git", "checkout", self._python_version], stderr=subprocess.STDOUT, cwd=path)
         except subprocess.CalledProcessError as pull_error:
             error_message = pull_error.output.decode('utf-8')
-            print("Attempted to checkout %r, but only found branches: " % self._python_version, ", ".join(self._get_all_branches(path)) + ".")
+            print("There is no branch for Python version %r (existing branches: " % self._python_version, ", ".join(self._get_all_branches(path)) + ").")
 
     def _git_pull(self, path):
         template_name = path.split('/')[-1]
@@ -390,6 +391,3 @@ class app(Command):
         if self.start:
             self.start_app()
             self.post_start()
-
-class BriefcaseError(Exception):
-    """Raised when briefcase can't proceed"""
