@@ -3,10 +3,9 @@ import os
 from distutils.dist import Distribution
 from briefcase.dummy import dummy
 from briefcase.app import DevRequirementsDontExists
-from mock import patch
-from mock import Mock
-from mock import mock_open
-import mock
+from unittest.mock import patch
+from unittest.mock import Mock
+from unittest.mock import mock_open
 
 
 class TestDevMode(unittest.TestCase):
