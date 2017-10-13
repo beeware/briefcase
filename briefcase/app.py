@@ -158,21 +158,41 @@ class app(Command):
 
     def override_pkgs_with_dev_requirements(self):
         dev_options = self.parse_dev_options()
+        install_requires = self.distribution.install_requires
+        app_requires = self.app_requires
+        if install_requires is None:
+            # Turn it into a list, so it is possible to iterate and
+            # test for content (operator 'in')
+            install_requires = []
 
-        install_req = []
-        for req_pkg in self.distribution.install_requires:
-            install_req.append(dev_options.get(req_pkg, req_pkg))
-        self.distribution.install_requires = install_req
+        if app_requires is None:
+            # Turn it into a list, so it is possible to iterate and
+            # test for content (operator 'in')
+            app_requires = []
 
-        install_req = []
-        for req_pkg in self.app_requires:
-            install_req.append(dev_options.get(req_pkg, req_pkg))
-        self.app_requires = install_req
+        if install_requires is not None:
+            pkg_box = []
+            for req_pkg in install_requires:
+                pkg_box.append(dev_options.get(req_pkg, req_pkg))
+            install_requires = pkg_box
+
+        if app_requires is not None:
+            pkg_box = []
+            for req_pkg in app_requires:
+                pkg_box.append(dev_options.get(req_pkg, req_pkg))
+            app_requires = pkg_box
 
         for dev_req in dev_options.values():
-            if (dev_req not in self.distribution.install_requires) and \
-            (dev_req not in self.app_requires):
-                self.app_requires.append(dev_req)
+            # Checking the overriden requirements lists.
+            if (dev_req not in install_requires) and \
+            (dev_req not in app_requires):
+                app_requires.append(dev_req)
+
+        if len(app_requires) > 0:
+            self.app_requires = app_requires
+
+        if len(install_requires) > 0:
+            self.distribution.install_requires = install_requires
 
     def find_support_pkg(self):
         # Get an S3 client, and disable signing (so we don't need credentials)

@@ -63,6 +63,52 @@ class TestDevMode(unittest.TestCase):
         mocked_main.assert_called_once_with(arguments)
 
     @patch('briefcase.app.pip.main')
+    def test_override_install_requires_with_requirements_file(self, mocked_main):
+        parsed = {
+            'dummy': '/Users/rkm/code/toga/src/core/dummy',
+        }
+        self.app.distribution.install_requires = ['dummy']
+        self.app.dev = 'requirements.dev'
+
+        with patch.object(self.app, 'parse_dev_options', return_value = parsed):
+            with patch('briefcase.app.os.path.isfile', return_value = True):
+                self.app.finalize_options()
+
+        arguments = [
+            'install',
+            '--upgrade',
+            '--force-reinstall',
+            '--target=%s' % self.app.app_packages_dir,
+        ] + ['/Users/rkm/code/toga/src/core/dummy']
+
+        self.app.install_app_requirements()
+        mocked_main.assert_called_once_with(arguments)
+
+    @patch('briefcase.app.pip.main')
+    def test_install_requires_is_None(self, mocked_main):
+        parsed = {
+            'dummy': '/Users/rkm/code/toga/src/core/dummy',
+        }
+        self.app.distribution.install_requires = None
+        self.app.app_requires = None
+        self.app.dev = 'requirements.dev'
+
+        with patch.object(self.app, 'parse_dev_options', return_value = parsed):
+            with patch('briefcase.app.os.path.isfile', return_value = True):
+                self.app.finalize_options()
+
+        arguments = [
+            'install',
+            '--upgrade',
+            '--force-reinstall',
+            '--target=%s' % self.app.app_packages_dir,
+        ] + ['/Users/rkm/code/toga/src/core/dummy']
+
+        self.app.install_platform_requirements()
+        mocked_main.assert_called_once_with(arguments)
+
+
+    @patch('briefcase.app.pip.main')
     def test_override_dependencies_and_append_missing(self, mocked_main):
         parsed = {
             'dummy': '/Users/rkm/code/toga/src/core/dummy',
