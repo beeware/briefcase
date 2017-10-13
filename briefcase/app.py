@@ -20,6 +20,10 @@ import boto3
 from cookiecutter.main import cookiecutter
 
 
+class DevRequirementsDontExists(OSError):
+    pass
+
+
 class app(Command):
     description = "Create a native application to wrap this project"
 
@@ -46,6 +50,8 @@ class app(Command):
          "Name of the splash screen file."),
         ('app-requires', None,
          'List of platform-specific requirements for this app.'),
+        ('dev=', None,
+         'File with local development requirements used to override the list of app or plataform requirements.'),
         ('support-pkg=', None,
          'URL for the support package to use'),
         ('download-dir=', None,
@@ -74,6 +80,7 @@ class app(Command):
         self.icon = None
         self.splash = None
         self.app_requires = None
+        self.dev = None
         self.support_pkg = None
         self.support_dir = None
         self.download_dir = None
@@ -86,6 +93,13 @@ class app(Command):
         self.device_name = None
         self.sanitize_version = None
         self.clean = None
+
+    def parse_dev_options(self):
+        with open(self.dev) as dev_req_file:
+            lines = dev_req_file.readlines()
+        lines = [line.split() for line in lines]
+
+        return {line[0]: line[1] for line in lines}
 
     def finalize_options(self):
         if self.formal_name is None:
@@ -107,6 +121,15 @@ class app(Command):
 
         if self.download_dir is None:
             self.download_dir = os.path.expanduser(os.path.join('~', '.briefcase'))
+
+        if self.dev is not None:
+            if os.path.isfile(self.dev):
+                self.override_pkgs_with_dev_requirements()
+            else:
+                raise DevRequirementsDontExists(
+                    'Dev requirements file not found: '
+                    '{}'.format(self.dev)
+                )
 
         # The Version Code is a pure-string, numerically sortable
         # version number.
@@ -132,6 +155,24 @@ class app(Command):
 
         if self.start:
             self.build = True
+
+    def override_pkgs_with_dev_requirements(self):
+        dev_options = self.parse_dev_options()
+
+        install_req = []
+        for req_pkg in self.distribution.install_requires:
+            install_req.append(dev_options.get(req_pkg, req_pkg))
+        self.distribution.install_requires = install_req
+
+        install_req = []
+        for req_pkg in self.app_requires:
+            install_req.append(dev_options.get(req_pkg, req_pkg))
+        self.app_requires = install_req
+
+        for dev_req in dev_options.values():
+            if (dev_req not in self.distribution.install_requires) and \
+            (dev_req not in self.app_requires):
+                self.app_requires.append(dev_req)
 
     def find_support_pkg(self):
         # Get an S3 client, and disable signing (so we don't need credentials)
