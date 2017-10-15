@@ -102,8 +102,20 @@ class windows(app):
         walk_dir(app_root)
 
         # Generate the full briefcase.wxs file
+        briefcase_wxs = os.path.join(self.dir, 'briefcase.wxs')
+        briefcase_wxs_orig = briefcase_wxs + '.orig'
+
+        if os.path.exists(briefcase_wxs_orig):
+            try:
+                os.unlink(briefcase_wxs)
+            except OSError:
+                pass
+            shutil.copyfile(briefcase_wxs_orig, briefcase_wxs)
+        else:
+            shutil.copyfile(briefcase_wxs, briefcase_wxs_orig)
+
         lines = []
-        with open(os.path.join(self.dir, 'briefcase.wxs')) as template:
+        with open(briefcase_wxs) as template:
             for line in template:
                 if line.strip() == '<!-- CONTENT -->':
                     lines.extend(content)
@@ -112,7 +124,7 @@ class windows(app):
                 else:
                     lines.append(line.rstrip())
 
-        with open(os.path.join(self.dir, 'briefcase.wxs'), 'w') as template:
+        with open(briefcase_wxs, 'w') as template:
             for line in lines:
                 template.write('%s\n' % line)
 
