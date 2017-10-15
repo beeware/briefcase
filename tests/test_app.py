@@ -2,7 +2,7 @@ import unittest
 import os
 from distutils.dist import Distribution
 from briefcase.dummy import dummy
-from briefcase.app import DevRequirementsDontExists
+from briefcase.app import DevRequirementsDontExist
 from unittest.mock import patch
 from unittest.mock import Mock
 from unittest.mock import mock_open
@@ -36,7 +36,7 @@ class TestDevMode(unittest.TestCase):
 
         with patch('briefcase.app.os.path.isfile', return_value = False):
             self.assertRaises(
-                DevRequirementsDontExists,
+                DevRequirementsDontExist,
                 self.app.finalize_options
             )
 

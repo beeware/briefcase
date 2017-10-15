@@ -20,7 +20,7 @@ import boto3
 from cookiecutter.main import cookiecutter
 
 
-class DevRequirementsDontExists(OSError):
+class DevRequirementsDontExist(OSError):
     pass
 
 
@@ -126,7 +126,7 @@ class app(Command):
             if os.path.isfile(self.dev):
                 self.override_pkgs_with_dev_requirements()
             else:
-                raise DevRequirementsDontExists(
+                raise DevRequirementsDontExist(
                     'Dev requirements file not found: '
                     '{}'.format(self.dev)
                 )
