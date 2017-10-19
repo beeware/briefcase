@@ -76,7 +76,7 @@ You can also use the ``-b`` (or ``--build``) argument to automatically
 perform any compilation step required; or use ``-s`` (``--start``) to
 start the application.
 
-For desktop os's (macOS, Windows, Linux) the entry point(s) to your program can
+For desktop OS's (macOS, Windows, Linux) the entry point(s) to your program can
 be defined in ``setup.py`` as console and gui scripts::
 
     setup(
@@ -94,8 +94,8 @@ be defined in ``setup.py`` as console and gui scripts::
 For more details on the format see:
 http://setuptools.readthedocs.io/en/latest/setuptools.html#dynamic-discovery-of-services-and-plugins
 
-On windows and linux this allows for multiple executables to be defined.
-MacOS will use the entry point with the same name as your `formal_name` as the
+On Windows and Linux this allows for multiple executables to be defined.
+macOS will use the entry point with the same name as your `formal_name` as the
 main application, any others will be available in the Contents/MacOS folder inside the
 application bundle.
 

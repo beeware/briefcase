@@ -51,15 +51,6 @@ class macos(app):
         macos_dir = os.path.abspath(os.path.join(self.resource_dir, '..', 'MacOS'))
         return macos_dir
 
-    # def install_launch_scripts(self):
-    #     exes = super(macos, self).install_launch_scripts()
-        # if self.formal_name in exes:
-        #     # If a main launcher has been created, remove template app and symlink to launcher
-        #     main_app = os.path.join(self.resource_dir, '..', 'MacOS', self.formal_name)
-        #     if os.path.exists(main_app):
-        #         os.unlink(main_app)
-        #         os.symlink(os.path.join('..', 'Resources', self.formal_name), main_app)
-
     def build_app(self):
         return True
 

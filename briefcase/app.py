@@ -269,9 +269,10 @@ class app(Command):
     @property
     def launcher_header(self):
         """
-        Override the shebang line for launcher scripts
+        Optionally override the shebang line for launcher scripts
         This should return a suitable relative path which will find the
-        bundled python for the relevant platform
+        bundled python for the relevant platform if the setuptools default
+        is not suitable.
         """
         return None
 
