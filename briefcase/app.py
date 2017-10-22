@@ -8,12 +8,16 @@ import re
 import subprocess
 import shutil
 import sys
+import textwrap
 import uuid
 
 from datetime import date
 from distutils.core import Command
 
 import pip
+import pkg_resources
+from setuptools.command import easy_install
+from setuptools.dist import Distribution
 
 from botocore.handlers import disable_signing
 import boto3
@@ -269,7 +273,7 @@ class app(Command):
             print("No requirements.")
 
     def install_platform_requirements(self):
-        print(" * Installing plaform requirements...")
+        print(" * Installing platform requirements...")
         if self.app_requires:
             pip.main([
                     'install',
@@ -291,6 +295,76 @@ class app(Command):
                 '--target=%s' % self.app_dir,
                 '.'
             ])
+
+    @property
+    def launcher_header(self):
+        """
+        Optionally override the shebang line for launcher scripts
+        This should return a suitable relative path which will find the
+        bundled python for the relevant platform if the setuptools default
+        is not suitable.
+        """
+        return None
+
+    @property
+    def launcher_script_location(self):
+        return self.app_dir
+
+    def install_launch_scripts(self):
+        exe_names = []
+        if self.distribution.entry_points:
+            print(" * Creating launchers...")
+            pip.main([
+                         'install',
+                         '--upgrade',
+                         '--force-reinstall',
+                         '--target=%s' % self.app_packages_dir,
+                         'setuptools'
+                     ])
+
+            rel_sesources = os.path.relpath(self.resource_dir, self.launcher_script_location)
+            rel_sesources_split = ', '.join(["'%s'" % f for f in rel_sesources.split(os.sep)])
+
+            easy_install.ScriptWriter.template = textwrap.dedent("""
+                # EASY-INSTALL-ENTRY-SCRIPT: %(spec)r,%(group)r,%(name)r
+                __requires__ = %(spec)r
+                import os
+                import re
+                import sys
+                import site
+                from os.path import dirname, abspath, join
+                resources = abspath(join(dirname(__file__), {}))
+                site.addsitedir(join(resources, 'app'))
+                site.addsitedir(join(resources, 'app_packages'))
+                os.environ['PATH'] += os.pathsep + resources
+                
+                from pkg_resources import load_entry_point
+                
+                if __name__ == '__main__':
+                    sys.argv[0] = re.sub(r'(-script\.pyw?|\.exe)?$', '', sys.argv[0])
+                    sys.exit(
+                        load_entry_point(%(spec)r, %(group)r, %(name)r)()
+                    )
+            """.format(rel_sesources_split)).lstrip()
+
+            ei = easy_install.easy_install(self.distribution)
+            for dist in pkg_resources.find_distributions(self.app_dir):
+                # Note: this is a different Distribution class to self.distribution
+                ei.args = True  # Needs something to run finalize_options
+                ei.finalize_options()
+                ei.script_dir = self.launcher_script_location
+                for args in easy_install.ScriptWriter.best().get_args(dist, header=self.launcher_header):
+                    ei.write_script(*args)
+
+                # Grab names of launchers
+                for entry_points in dist.get_entry_map().values():
+                    exe_names.extend(entry_points.keys())
+
+            if self.formal_name not in exe_names:
+                print(" ! No entry_point matching formal_name, \n"
+                      "   template builtin script will be main launcher.")
+
+        return exe_names
 
     def install_resources(self):
         if self.icon:
@@ -381,6 +455,7 @@ class app(Command):
         self.install_app_requirements()
         self.install_platform_requirements()
         self.install_code()
+        self.install_launch_scripts()
         self.install_resources()
         self.install_extras()
         self.post_install()

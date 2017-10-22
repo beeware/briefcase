@@ -75,3 +75,29 @@ Then, you can invoke ``briefcase``, using:
 You can also use the ``-b`` (or ``--build``) argument to automatically
 perform any compilation step required; or use ``-s`` (``--start``) to
 start the application.
+
+For desktop OS's (macOS, Windows, Linux) the entry point(s) to your program can
+be defined in ``setup.py`` as console and gui scripts::
+
+    setup(
+        ...
+        entry_points={
+            'gui_scripts': [
+                'Example = example.gui:main [GUI]',
+            ],
+            'console_scripts': [
+                'utility = example.main:main',
+            ]
+        }
+        ...
+
+For more details on the format see:
+http://setuptools.readthedocs.io/en/latest/setuptools.html#dynamic-discovery-of-services-and-plugins
+
+On Windows and Linux this allows for multiple executables to be defined.
+macOS will use the entry point with the same name as your `formal_name` as the
+main application, any others will be available in the Contents/MacOS folder inside the
+application bundle.
+
+For other platforms the entry point is defined in the platform template, typically
+they require the __main__.py module to be defined explicitly in code.

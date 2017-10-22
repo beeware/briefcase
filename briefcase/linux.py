@@ -38,6 +38,17 @@ class linux(app):
         # No support package; we just use the system python
         pass
 
+    @property
+    def launcher_header(self):
+        """
+        Override the shebang line for launcher scripts
+        """
+        return "#!python%s.%s\n" % (sys.version_info.major, sys.version_info.minor)
+
+    @property
+    def launcher_script_location(self):
+        return self.resource_dir
+
     def build_app(self):
         return True
 
