@@ -8,21 +8,13 @@ if sys.version_info[:3] < (3, 4):
     raise SystemExit("Briefcase requires Python 3.4+.")
 
 
-with io.open('./briefcase/__init__.py', encoding='utf8') as version_file:
-    version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]", version_file.read(), re.M)
-    if version_match:
-        version = version_match.group(1)
-    else:
-        raise RuntimeError("Unable to find version string.")
-
-
 with io.open('README.rst', encoding='utf8') as readme:
     long_description = readme.read()
 
 
 setup(
     name='briefcase',
-    version=version,
+    use_scm_version=True,  # Generate version number from git commit/tags
     description='Tools to support converting a Python project into a standalone native application.',
     long_description=long_description,
     author='Russell Keith-Magee',
@@ -43,6 +35,10 @@ setup(
             'windows = briefcase.windows:windows',
         ]
     },
+    setup_requires=[
+        'setuptools_scm',
+        'setuptools_git'
+    ],
     install_requires=[
         'pip >= 8.1',
         'cookiecutter >= 1.0',
@@ -50,6 +46,8 @@ setup(
         'setuptools >= 27.0',
         'requests < 3.0',
         'boto3 >= 1.4.4',
+        'setuptools_scm',
+        'setuptools_git'
     ],
     license='New BSD',
     classifiers=[
