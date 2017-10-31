@@ -70,6 +70,7 @@ class windows(app):
         content = []
         contentrefs = []
         shortcuts = []
+        dir_ids = []
 
         def walk_dir(path, depth=0):
             files = []
@@ -81,9 +82,15 @@ class windows(app):
                     full_parts = parts + [name]
                 else:
                     full_parts = [name]
-                dir_id = '.'.join(re.sub('[^A-Za-z0-9_]', '_', p) for p in full_parts)
 
                 if os.path.isdir(full_path):
+                    dir_id = '.'.join(re.sub('[^A-Za-z0-9_]', '_', p) for p in full_parts)
+                    if len(dir_id) > 68:
+                        dir_id = '...' + dir_id[-65:]
+                    while dir_id in dir_ids:
+                        dir_id = '...' + dir_id[4:]
+                    dir_ids.append(dir_id)
+
                     content.append(
                         '    ' * (depth + 5) + '<Directory Id="DIR_%s" Name="%s">' % (
                             dir_id, name
