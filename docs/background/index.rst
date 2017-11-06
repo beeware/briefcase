@@ -12,3 +12,5 @@ About Briefcase
    faq
    getting-started
    quickstart
+   releases
+   roadmap
