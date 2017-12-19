@@ -1,5 +1,7 @@
 import distutils.command.install_scripts as orig
 import os
+import struct
+
 from pkg_resources import Distribution, PathMetadata
 import re
 import shutil
@@ -51,7 +53,8 @@ class windows(app):
 
     def find_support_pkg(self):
         version = "%s.%s.%s" % sys.version_info[:3]
-        return 'https://www.python.org/ftp/python/%s/python-%s-embed-amd64.zip' % (version, version)
+        arch = "amd64" if (struct.calcsize("P") * 8) == 64 else "win32"
+        return 'https://www.python.org/ftp/python/%s/python-%s-embed-%s.zip' % (version, version, arch)
 
     @property
     def launcher_header(self):
