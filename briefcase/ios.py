@@ -34,13 +34,13 @@ class ios(app):
     def install_icon(self):
         last_size = None
         for size in ['180', '167', '152', '120', '87', '80', '76', '58', '40', '29']:
-            icon_file = '%s-%s.png' % (self.icon, size)
+            icon_file = '{}-{}.png'.format(self.icon, size)
             if os.path.exists(icon_file):
                 last_size = size
             else:
                 if last_size:
-                    print("WARNING: No %sx%s icon file available; using %sx%s" % (size, size, last_size, last_size))
-                    icon_file = '%s-%s.png' % (self.icon, last_size)
+                    print("WARNING: No {}x{} icon file available; using {}x{}".format(size, size, last_size, last_size))
+                    icon_file = '{}-{}.png'.format(self.icon, last_size)
                 else:
                     icon_file = None
 
@@ -50,11 +50,11 @@ class ios(app):
                     os.path.join(self.resource_dir, self.distribution.get_name(), 'Images.xcassets', 'AppIcon.appiconset', 'icon-%s.png' % size)
                 )
             else:
-                print("WARNING: No %sx%s icon file available." % (size, size))
+                print("WARNING: No {}x{} icon file available.".format(size, size))
 
     def install_splash(self):
         for size in ['1024x768', '1536x2048', '2048x1536', '768x1024', '640x1136', '640x960']:
-            splash_file = '%s-%s.png' % (self.splash, size)
+            splash_file = '{}-{}.png'.format(self.splash, size)
 
             if os.path.exists(splash_file):
                 shutil.copyfile(
@@ -62,7 +62,7 @@ class ios(app):
                     os.path.join(self.resource_dir, self.distribution.get_name(), 'Images.xcassets', 'LaunchImage.launchimage', 'launch-%s.png' % size)
                 )
             else:
-                print("WARNING: No %s splash file available." % size)
+                print("WARNING: No {} splash file available.".format(size))
 
     def set_device_target(self):
         if self.os_version is None or self.device_name is None or self.device is None:
@@ -78,14 +78,14 @@ class ios(app):
                     print('No iOS device simulators found', file=sys.stderr)
                     sys.exit(1)
                 elif len(os_list) == 1:
-                    print('Building for %s...' % os_list[0])
+                    print('Building for {}...'.format(os_list[0]))
                     self.os_version = os_list[0]
                 else:
                     print()
                     while self.os_version is None:
                         print('Available iOS versions:')
                         for i, label in enumerate(os_list):
-                            print('  [%s] %s' % (i+1, label))
+                            print('  [{}] {}'.format(i+1, label))
                         index = int(input('Which iOS version do you want to target: '))
                         try:
                             self.os_version = os_list[int(index) - 1]
@@ -96,18 +96,18 @@ class ios(app):
             if self.device_name is None:
                 device_list = data['devices'].get(self.os_version, [])
                 if len(device_list) == 0:
-                    print('No %s devices found', file=sys.stderr)
+                    print('No devices found', file=sys.stderr)
                     sys.exit(2)
                 elif len(device_list) == 1:
-                    print('Device ID is %s...' % device_list[0])
+                    print('Device ID is {}...'.format(device_list[0]))
                     self.device = device_list[0]
-                    self.device_name = device['name']
+                    self.device_name = self.device['name']
                 else:
                     print()
                     while self.device_name is None:
                         print('Available devices:')
                         for i, device in enumerate(device_list):
-                            print('  [%s] %s' % (i+1, device['name']))
+                            print('  [{}] {}'.format(i+1, device['name']))
                         index = int(input('Which device do you want to target: '))
                         try:
                             self.device = device_list[int(index) - 1]
@@ -139,7 +139,7 @@ class ios(app):
         if not self.has_required_xcode_version():
             return False
 
-        project_file = '%s.xcodeproj' % self.formal_name
+        project_file = '{}.xcodeproj'.format(self.formal_name)
         build_settings = [
             ('AD_HOC_CODE_SIGNING_ALLOWED', 'YES'),
             ('CODE_SIGN_IDENTITY', '-'),
@@ -147,15 +147,15 @@ class ios(app):
             ('ARCHS', 'x86_64'),
             ('ONLY_ACTIVE_ARCHS', 'NO')
         ]
-        build_settings_str = ['%s=%s' % x for x in build_settings]
+        build_settings_str = ['{}={}'.format(x for x in build_settings)]
 
         self.set_device_target()
 
-        print(' * Building XCode project for %s %s...' % (self.device_name, self.os_version))
+        print(' * Building XCode project for {} {}...'.format(self.device_name, self.os_version))
 
         proc = subprocess.Popen([
             'xcodebuild', ' '.join(build_settings_str), '-project', project_file, '-destination',
-            'platform="iOS Simulator,name=%s,OS=%s"' % (self.device_name, self.os_version), '-quiet', '-configuration',
+            'platform="iOS Simulator,name={},OS={}"'.format(self.device_name, self.os_version), '-quiet', '-configuration',
             'Debug', '-arch', 'x86_64', '-sdk', 'iphonesimulator%s' % (self.os_version.split(' ')[-1],), 'build'
         ], cwd=os.path.abspath(self.dir))
         proc.wait()
@@ -173,7 +173,7 @@ class ios(app):
         app_identifier = '.'.join([self.bundle, self.formal_name.replace(' ', '-')])
 
         print()
-        print("Starting app on %s %s" % (self.device_name, self.os_version))
+        print("Starting app on {} {}".format(self.device_name, self.os_version))
         print(' * Starting simulator...')
         subprocess.Popen(
             ['instruments', '-w', self.device['udid']],
@@ -189,7 +189,7 @@ class ios(app):
         print(' * Installing new app version...')
         subprocess.Popen([
             'xcrun', 'simctl', 'install', self.device['udid'],
-            os.path.join('build', 'Debug-iphonesimulator', '%s.app' % self.formal_name)
+            os.path.join('build', 'Debug-iphonesimulator', '{}.app'.format(self.formal_name))
         ], cwd=working_dir).wait()
 
         print(' * Launching app...')
