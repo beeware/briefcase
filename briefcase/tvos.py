@@ -28,9 +28,9 @@ class tvos(app):
     def install_icon(self):
         for size, description in [('400', 'Small'), ('1280', 'Large')]:
             for layer in ['Front', 'Middle', 'Back']:
-                icon_file = '%s-%s-%s.png' % (self.icon, size, layer.lower())
+                icon_file = '{}-{}-{}.png'.format(self.icon, size, layer.lower())
                 if not os.path.exists(icon_file):
-                    icon_file = '%s-%s.png' % (self.icon, size)
+                    icon_file = '{}-{}.png'.format(self.icon, size)
 
                 if os.path.exists(icon_file):
                     shutil.copyfile(
@@ -40,15 +40,15 @@ class tvos(app):
                             self.distribution.get_name(),
                             'Assets.xcassets',
                             'App Icon & Top Shelf Image.brandassets',
-                            'App Icon - %s.imagestack' % description,
-                            '%s.imagestacklayer' % size,
+                            'App Icon - {}.imagestack'.format(description),
+                            '{}.imagestacklayer'.format(size),
                             'Content.imageset',
-                            '%s.png' % description.lower())
+                            '{}.png'.format(description.lower()))
                     )
                 else:
-                    print("WARNING: No %s %s icon file available" % (description.lower(), layer.lower()))
+                    print("WARNING: No {} {} icon file available".format(description.lower(), layer.lower()))
 
-        shelf_file = '%s-1920.png' % self.splash
+        shelf_file = '{}-1920.png'.format(self.splash)
         if os.path.exists(shelf_file):
             shutil.copyfile(
                 icon_file,
@@ -64,7 +64,7 @@ class tvos(app):
             print("WARING: No top shelf image available.")
 
     def install_splash(self):
-        splash_file = '%s-1920x1080.png' % self.splash
+        splash_file = '{}-1920x1080.png'.format(self.splash)
         if os.path.exists(splash_file):
             shutil.copyfile(
                 splash_file,

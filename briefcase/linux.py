@@ -43,7 +43,7 @@ class linux(app):
         """
         Override the shebang line for launcher scripts
         """
-        return "#!python%s.%s\n" % (sys.version_info.major, sys.version_info.minor)
+        return "#!python{}.{}\n".format(sys.version_info.major, sys.version_info.minor)
 
     @property
     def launcher_script_location(self):
@@ -56,9 +56,9 @@ class linux(app):
         pass
 
     def start_app(self):
-        print("Starting %s" % (self.formal_name))
+        print("Starting {}".format(self.formal_name))
         subprocess.Popen([
-                './%s' % self.formal_name
+                './{}'.format(self.formal_name)
             ],
             cwd=os.path.abspath(self.dir)
         ).wait()

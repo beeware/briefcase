@@ -39,8 +39,8 @@ class windows(app):
 
     def generate_app_template(self, extra_context=None):
         if self.version_numeric != self.version and not self.sanitize_version:
-            print(" ! Windows Installer version can only contain numerals, currently: %s" % self.version)
-            print(" ! --sanitize-version can be used to automatically filter this to %s" % self.version_numeric)
+            print(" ! Windows Installer version can only contain numerals, currently: {}".format(self.version))
+            print(" ! --sanitize-version can be used to automatically filter this to {}".format(self.version_numeric))
             exit(1)
 
         super(windows, self).generate_app_template(extra_context=extra_context)
@@ -95,7 +95,7 @@ class windows(app):
                     dir_ids.append(dir_id)
 
                     content.append(
-                        '    ' * (depth + 5) + '<Directory Id="DIR_%s" Name="%s">' % (
+                        '    ' * (depth + 5) + '<Directory Id="DIR_{}" Name="{}">'.format(
                             dir_id, name
                         )
                     )
@@ -108,16 +108,16 @@ class windows(app):
             if files:
                 guid = uuid.uuid4()
 
-                content.append('    ' * (depth + 5) + '<Component Id="COMP_%s" Guid="%s">' % (
+                content.append('    ' * (depth + 5) + '<Component Id="COMP_{}" Guid="{}">'.format(
                     guid.hex, guid)
                 )
                 for file in files:
-                    content.append('    ' * (depth + 6) + '<File Id="FILE_%s" Source="content/%s/%s" />' % (
+                    content.append('    ' * (depth + 6) + '<File Id="FILE_{}" Source="content/{}/{}" />'.format(
                             uuid.uuid4().hex, '/'.join(parts), file
                         )
                     )
                 content.append('    ' * (depth + 5) + '</Component>')
-                contentrefs.append('            <ComponentRef Id="COMP_%s"/>' % guid.hex)
+                contentrefs.append('            <ComponentRef Id="COMP_{}"/>'.format(guid.hex))
 
 
         walk_dir(app_root)
@@ -168,7 +168,7 @@ class windows(app):
 
         with open(briefcase_wxs, 'w') as template:
             for line in lines:
-                template.write('%s\n' % line)
+                template.write('{}\n'.format(line))
 
     def build_app(self):
         print()
@@ -182,7 +182,7 @@ class windows(app):
             print("and install the latest stable release.")
             sys.exit(-2)
         else:
-            print("   - Using %s" % wix_path)
+            print("   - Using {}".format(wix_path))
 
         print(" * Compiling application installer...")
         proc = subprocess.Popen(
@@ -203,7 +203,7 @@ class windows(app):
                 os.path.join(wix_path, 'bin', 'light'),
                 "-ext", "WixUtilExtension",
                 "-ext", "WixUIExtension",
-                "-o", "%s-%s.msi" % (self.formal_name, self.version),
+                "-o", "{}-{}.msi".format(self.formal_name, self.version),
                 "briefcase.wixobj"
             ],
             cwd=os.path.abspath(self.dir)
@@ -213,7 +213,7 @@ class windows(app):
 
     def start_app(self):
         print()
-        print(" * Starting %s..." % self.formal_name)
+        print(" * Starting {}...".format(self.formal_name))
         subprocess.Popen(
             [
                 os.path.join('pythonw'),

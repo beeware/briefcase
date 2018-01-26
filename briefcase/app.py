@@ -17,7 +17,6 @@ from distutils.core import Command
 import pip
 import pkg_resources
 from setuptools.command import easy_install
-from setuptools.dist import Distribution
 
 from botocore.handlers import disable_signing
 import boto3
@@ -141,7 +140,7 @@ class app(Command):
         # Get an S3 client, and disable signing (so we don't need credentials)
         S3_BUCKET = 'pybee-briefcase-support'
         S3_REGION = 'us-west-2'
-        S3_URL = 'https://%s.s3-%s.amazonaws.com/' % (S3_BUCKET, S3_REGION)
+        S3_URL = 'https://{}.s3-{}.amazonaws.com/'.format(S3_BUCKET, S3_REGION)
 
         s3 = boto3.client('s3', region_name=S3_REGION)
         s3.meta.events.register('choose-signer.s3.*', disable_signing)
@@ -150,7 +149,7 @@ class app(Command):
         paginator = s3.get_paginator('list_objects')
         for page in paginator.paginate(
                         Bucket=S3_BUCKET,
-                        Prefix='%s/%s.%s/%s/' % (
+                        Prefix='{}/{}.{}/{}/'.format(
                             self.support_project,
                             sys.version_info.major,
                             sys.version_info.minor,
@@ -177,31 +176,31 @@ class app(Command):
 
     @property
     def _python_version(self):
-        return '%s.%s' % (sys.version_info.major, sys.version_info.minor)
+        return '{}.{}'.format(sys.version_info.major, sys.version_info.minor)
 
     def generate_app_template(self, extra_context=None):
         print(" * Writing application template...")
 
         if self.sanitize_version and self.version_numeric != self.version:
-            print(" ! Version currently contains characters: %s" % self.version)
-            print(" ! Installer version sanitized to: %s" % self.version_numeric)
+            print(" ! Version currently contains characters: {}".format(self.version))
+            print(" ! Installer version sanitized to: {}".format(self.version_numeric))
 
             extra_context = extra_context or {}
             extra_context['version'] = self.version_numeric
 
         if self.template is None:
-            template_path = os.path.expanduser('~/.cookiecutters/Python-%s-template' % self.platform)
+            template_path = os.path.expanduser('~/.cookiecutters/Python-{}-template'.format(self.platform))
             if os.path.exists(template_path):
                 self.template = template_path
                 self._git_fetch(template_path)
                 self._git_checkout(template_path)
                 if not self._has_cookiecutter_json(template_path):
-                    print("Directory %r isn't a valid template (no cookiecutter.json found)." % template_path)
+                    print("Directory {} isn't a valid template (no cookiecutter.json found).".format(template_path))
                     sys.exit(1)
                 self._git_pull(template_path)
             else:
-                self.template = 'https://github.com/pybee/Python-%s-template.git' % self.platform
-        print("Project template: %s" % self.template)
+                self.template = 'https://github.com/pybee/Python-{}-template.git'.format(self.platform)
+        print("Project template: {}".format(self.template))
         _extra_context = {
             'app_name': self.distribution.get_name(),
             'formal_name': self.formal_name,
@@ -252,11 +251,11 @@ class app(Command):
         template_name = path.split('/')[-1]
         try:
             subprocess.check_output(["git", "pull"], stderr=subprocess.STDOUT, cwd=path)
-            print('Template %s succesfully updated.' % template_name)
+            print('Template {} succesfully updated.'.format(template_name))
         except subprocess.CalledProcessError as pull_error:
             error_message = pull_error.output.decode('utf-8')
             if 'resolve host' in error_message:
-                print('Unable to update template %s, using unpulled.' % template_name)
+                print('Unable to update template {}, using unpulled.'.format(template_name))
             print(error_message)
 
     def install_app_requirements(self):
@@ -266,7 +265,7 @@ class app(Command):
                     'install',
                     '--upgrade',
                     '--force-reinstall',
-                    '--target=%s' % self.app_packages_dir
+                    '--target={}'.format(self.app_packages_dir)
                 ] + self.distribution.install_requires,
             )
         else:
@@ -279,7 +278,7 @@ class app(Command):
                     'install',
                     '--upgrade',
                     '--force-reinstall',
-                    '--target=%s' % self.app_packages_dir,
+                    '--target={}'.format(self.app_packages_dir),
                 ] + self.app_requires
             )
         else:
@@ -292,7 +291,7 @@ class app(Command):
                 '--upgrade',
                 '--force-reinstall',
                 '--no-dependencies',  # We just want the code, not the dependencies
-                '--target=%s' % self.app_dir,
+                '--target={}'.format(self.app_dir),
                 '.'
             ])
 
@@ -408,7 +407,7 @@ class app(Command):
             print("the code from https://github.com/pybee/%s and" % self.support_project)
             print("then specify the compiled tarball with:")
             print()
-            print("    python setup.py %s --support-pkg=<path to tarball>" % self.platform.lower())
+            print("    python setup.py {} --support-pkg=<path to tarball>".format(self.platform.lower()))
             print()
             sys.exit(1)
 
@@ -430,7 +429,7 @@ class app(Command):
         print("Build complete.")
 
     def start_app(self):
-        print("Don't know how to start %s applications." % self.platform)
+        print("Don't know how to start {} applications.".format(self.platform))
 
     def post_start(self):
         print()
