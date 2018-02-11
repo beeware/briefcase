@@ -63,7 +63,7 @@ Add this into the ``app.py``:
 Put it in a briefcase
 ---------------------
 
-Your project is now ready to using ``briefcase``.
+Your project is now ready to use ``briefcase``.
 
 Windows
 ~~~~~~~
