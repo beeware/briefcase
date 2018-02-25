@@ -64,5 +64,11 @@ setup(
         'Topic :: Software Development',
         'Topic :: Utilities',
     ],
-    test_suite='tests'
+    test_suite='tests',
+    package_urls={
+        'Funding': 'https://pybee.org/contributing/membership/',
+        'Documentation': 'http://briefcase.readthedocs.io/en/latest/',
+        'Tracker': 'https://github.com/pybee/briefcase/issues',
+        'Source': 'https://github.com/pybee/briefcase',
+    },
 )
