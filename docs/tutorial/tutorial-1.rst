@@ -56,19 +56,19 @@ Put the following code into ``helloworld\app.py``, replacing the old code:
           f_box.style.update(direction=ROW, padding=5)
           c_box.style.update(direction=ROW, padding=5)
 
-        self.c_input.style.update(flex=1)
-        self.f_input.style.update(flex=1, padding_left=160)
-        self.c_label.style.update(width=100, padding_left=10)
-        self.f_label.style.update(width=100, padding_left=10)
-        self.join_label.style.update(width=150, padding_right=10)
+          self.c_input.style.update(flex=1)
+          self.f_input.style.update(flex=1, padding_left=160)
+          self.c_label.style.update(width=100, padding_left=10)
+          self.f_label.style.update(width=100, padding_left=10)
+          self.join_label.style.update(width=150, padding_right=10)
 
-        button.style.update(padding=15, flex=1)
+          button.style.update(padding=15, flex=1)
 
-        # Add the content on the main window
-        self.main_window.content = box
+          # Add the content on the main window
+          self.main_window.content = box
 
-        # Show the main window
-        self.main_window.show()
+          # Show the main window
+          self.main_window.show()
 
 
   def main():
