@@ -52,11 +52,11 @@ class django(app):
         if len(parts) == 0:
             return '1.0.0'
         elif len(parts) == 1:
-            return '{}.0.0'.format(tuple(parts))
+            return '{}.0.0'.format(*parts)
         elif len(parts) == 2:
-            return '{}.{}.0'.format(tuple(parts))
+            return '{}.{}.0'.format(*parts)
         else:
-            return '{}.{}.{}'.format(tuple(parts[:3]))
+            return '{}.{}.{}'.format(*parts[:3])
 
     def install_icon(self):
         raise RuntimeError("Django doesn't support icons.")
