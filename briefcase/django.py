@@ -74,7 +74,6 @@ class django(app):
             pip.main([
                     'install',
                     '--upgrade',
-                    '--force-reinstall',
                 ] + self.app_requires
             )
         else:

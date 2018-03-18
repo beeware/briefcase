@@ -258,38 +258,66 @@ class app(Command):
                 print('Unable to update template {}, using unpulled.'.format(template_name))
             print(error_message)
 
+    def _install_requirement(self, requirements, target):
+        if not requirements:
+            print("No requirements.")
+            return
+
+        class UglyHack:
+            """
+            TODO: Use a more direct way to get the information ;)
+            """
+            def __init__(self):
+                from pip.operations.freeze import freeze
+                self.freeze_lines = [line for line in freeze()]
+
+            def get(self, requirement):
+                """
+                return the 'pip freeze' line for the given requirement
+                e.g.:
+                --editable=git+https://github.com/pybee/toga.git@02a47d27d32d16b54800b658d9afd2b316924fd1#egg=toga_gtk&subdirectory=src/gtk
+                """
+                egg_name = requirement.replace("-", "_")
+                for line in self.freeze_lines:
+                    if egg_name in line:
+                        line=line.replace("-e ", "--editable=")
+                        return line
+
+        ugly = UglyHack()
+
+        final_requirements = []
+
+        for requirement in requirements:
+            print("Install %r to: %r" % (requirement, target))
+            final_requirements.append(
+                ugly.get(requirement) or requirement
+            )
+
+        pip.main([
+                'install',
+                '--upgrade',
+                '--target={}'.format(target)
+            ] + final_requirements,
+        )
+
     def install_app_requirements(self):
         print(" * Installing requirements...")
-        if self.distribution.install_requires:
-            pip.main([
-                    'install',
-                    '--upgrade',
-                    '--force-reinstall',
-                    '--target={}'.format(self.app_packages_dir)
-                ] + self.distribution.install_requires,
-            )
-        else:
-            print("No requirements.")
+        self._install_requirement(
+            self.distribution.install_requires,
+            target=self.app_packages_dir
+        )
 
     def install_platform_requirements(self):
         print(" * Installing platform requirements...")
-        if self.app_requires:
-            pip.main([
-                    'install',
-                    '--upgrade',
-                    '--force-reinstall',
-                    '--target={}'.format(self.app_packages_dir),
-                ] + self.app_requires
-            )
-        else:
-            print("No platform requirements.")
+        self._install_requirement(self.app_requires,
+            target=self.app_packages_dir
+        )
 
     def install_code(self):
         print(" * Installing project code...")
         pip.main([
                 'install',
                 '--upgrade',
-                '--force-reinstall',
                 '--no-dependencies',  # We just want the code, not the dependencies
                 '--target={}'.format(self.app_dir),
                 '.'
@@ -316,7 +344,6 @@ class app(Command):
             pip.main([
                          'install',
                          '--upgrade',
-                         '--force-reinstall',
                          '--target=%s' % self.app_packages_dir,
                          'setuptools'
                      ])
