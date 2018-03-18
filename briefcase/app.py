@@ -267,7 +267,9 @@ class app(Command):
             """
             TODO: Use a more direct way to get the information ;)
             """
-            def __init__(self):
+            def __init__(self, requirements):
+                self.requirements = requirements
+
                 from pip.operations.freeze import freeze
                 self.freeze_lines = [line for line in freeze()]
 
@@ -283,21 +285,47 @@ class app(Command):
                         line=line.replace("-e ", "--editable=")
                         return line
 
-        ugly = UglyHack()
+            def get_all_toga_req(self):
+                requirements = []
+                for line in self.freeze_lines:
+                    if "toga" in line:# and not "toga_dummy" in line:
+                        line=line.replace("-e ", "--editable=")
+                        requirements.append(line)
+                return requirements
 
-        final_requirements = []
+            def transform(self):
+                toga_used = False
+                final_requirements = []
+                for requirement in requirements:
+                    if "toga" in requirement:
+                        toga_used = True
+                    else:
+                        final_requirements.append(
+                            self.get(requirement) or requirement
+                        )
 
-        for requirement in requirements:
-            print("Install %r to: %r" % (requirement, target))
-            final_requirements.append(
-                ugly.get(requirement) or requirement
+                if toga_used:
+                    toga_requirements = self.get_all_toga_req()
+                else:
+                    toga_requirements = None
+                return toga_requirements, final_requirements
+
+        toga_requirements, requirements = UglyHack(requirements).transform()
+        if toga_requirements:
+            pip.main([
+                    'install',
+                    '--no-deps',
+                    '--force-reinstall',
+                    '--target={}'.format(target)
+                ] + toga_requirements,
             )
 
         pip.main([
                 'install',
                 '--upgrade',
+                '--force-reinstall',
                 '--target={}'.format(target)
-            ] + final_requirements,
+            ] + toga_requirements + requirements,
         )
 
     def install_app_requirements(self):
