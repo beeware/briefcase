@@ -13,7 +13,7 @@ import uuid
 from datetime import date
 from distutils.core import Command
 
-import pip
+from pip import _internal as pip
 import pkg_resources
 from setuptools.command import easy_install
 
@@ -340,9 +340,9 @@ class app(Command):
                 site.addsitedir(join(resources, 'app'))
                 site.addsitedir(join(resources, 'app_packages'))
                 os.environ['PATH'] += os.pathsep + resources
-                
+
                 from pkg_resources import load_entry_point
-                
+
                 if __name__ == '__main__':
                     sys.argv[0] = re.sub(r'(-script\.pyw?|\.exe)?$', '', sys.argv[0])
                     sys.exit(
