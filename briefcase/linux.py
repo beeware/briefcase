@@ -38,6 +38,17 @@ class linux(app):
         # No support package; we just use the system python
         pass
 
+    @property
+    def launcher_header(self):
+        """
+        Override the shebang line for launcher scripts
+        """
+        return "#!python{}.{}\n".format(sys.version_info.major, sys.version_info.minor)
+
+    @property
+    def launcher_script_location(self):
+        return self.resource_dir
+
     def build_app(self):
         return True
 
@@ -45,9 +56,9 @@ class linux(app):
         pass
 
     def start_app(self):
-        print("Starting %s" % (self.formal_name))
+        print("Starting {}".format(self.formal_name))
         subprocess.Popen([
-                './%s' % self.formal_name
+                './{}'.format(self.formal_name)
             ],
             cwd=os.path.abspath(self.dir)
         ).wait()

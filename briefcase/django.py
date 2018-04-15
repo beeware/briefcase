@@ -52,11 +52,11 @@ class django(app):
         if len(parts) == 0:
             return '1.0.0'
         elif len(parts) == 1:
-            return '%s.0.0' % tuple(parts)
+            return '{}.0.0'.format(*parts)
         elif len(parts) == 2:
-            return '%s.%s.0' % tuple(parts)
+            return '{}.{}.0'.format(*parts)
         else:
-            return '%s.%s.%s' % tuple(parts[:3])
+            return '{}.{}.{}'.format(*parts[:3])
 
     def install_icon(self):
         raise RuntimeError("Django doesn't support icons.")
@@ -130,7 +130,7 @@ class django(app):
         return proc.returncode == 0
 
     def start_app(self):
-        print(" * Starting Django server on %s" % self.device_name)
+        print(" * Starting Django server on {}".format(self.device_name))
         runserver = subprocess.Popen([
                 sys.executable, './manage.py', 'runserver',
                 '--noreload',
@@ -139,7 +139,7 @@ class django(app):
             cwd=os.path.abspath(self.dir)
         )
         print(" * Opening browser...")
-        webbrowser.open('http://%s' % self.device_name)
+        webbrowser.open('http://{}'.format(self.device_name))
 
         # Wait for the runserver to exit.
         runserver.wait()

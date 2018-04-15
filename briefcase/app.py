@@ -6,12 +6,15 @@ import re
 import subprocess
 import shutil
 import sys
+import textwrap
 import uuid
 
 from datetime import date
 from distutils.core import Command
 
 import pip
+import pkg_resources
+from setuptools.command import easy_install
 
 from botocore.handlers import disable_signing
 import boto3
@@ -140,7 +143,7 @@ class app(Command):
         # Get an S3 client, and disable signing (so we don't need credentials)
         S3_BUCKET = 'pybee-briefcase-support'
         S3_REGION = 'us-west-2'
-        S3_URL = 'https://%s.s3-%s.amazonaws.com/' % (S3_BUCKET, S3_REGION)
+        S3_URL = 'https://{}.s3-{}.amazonaws.com/'.format(S3_BUCKET, S3_REGION)
 
         s3 = boto3.client('s3', region_name=S3_REGION)
         s3.meta.events.register('choose-signer.s3.*', disable_signing)
@@ -149,7 +152,7 @@ class app(Command):
         paginator = s3.get_paginator('list_objects')
         for page in paginator.paginate(
                         Bucket=S3_BUCKET,
-                        Prefix='%s/%s.%s/%s/' % (
+                        Prefix='{}/{}.{}/{}/'.format(
                             self.support_project,
                             sys.version_info.major,
                             sys.version_info.minor,
@@ -174,24 +177,33 @@ class app(Command):
     def version(self):
         return self.distribution.get_version()
 
+    @property
+    def _python_version(self):
+        return '{}.{}'.format(sys.version_info.major, sys.version_info.minor)
+
     def generate_app_template(self, extra_context=None):
         print(" * Writing application template...")
 
         if self.sanitize_version and self.version_numeric != self.version:
-            print(" ! Version currently contains characters: %s" % self.version)
-            print(" ! Installer version sanitized to: %s" % self.version_numeric)
+            print(" ! Version currently contains characters: {}".format(self.version))
+            print(" ! Installer version sanitized to: {}".format(self.version_numeric))
 
             extra_context = extra_context or {}
             extra_context['version'] = self.version_numeric
 
         if self.template is None:
-            template_path = os.path.expanduser('~/.cookiecutters/Python-%s-template' % self.platform)
+            template_path = os.path.expanduser('~/.cookiecutters/Python-{}-template'.format(self.platform))
             if os.path.exists(template_path):
                 self.template = template_path
-                self.git_pull(template_path)
+                self._git_fetch(template_path)
+                self._git_checkout(template_path)
+                if not self._has_cookiecutter_json(template_path):
+                    print("Directory {} isn't a valid template (no cookiecutter.json found).".format(template_path))
+                    sys.exit(1)
+                self._git_pull(template_path)
             else:
-                self.template = 'https://github.com/pybee/Python-%s-template.git' % self.platform
-        print("Project template: %s" % self.template)
+                self.template = 'https://github.com/pybee/Python-{}-template.git'.format(self.platform)
+        print("Project template: {}".format(self.template))
         _extra_context = {
             'app_name': self.distribution.get_name(),
             'formal_name': self.formal_name,
@@ -213,19 +225,40 @@ class app(Command):
         cookiecutter(
             self.template,
             no_input=True,
-            checkout='%s.%s' % (sys.version_info.major, sys.version_info.minor),
+            checkout= self._python_version,
             extra_context=_extra_context
         )
 
-    def git_pull(self, path):
+    def _has_cookiecutter_json(self, template_path):
+        cookiecutter_json_path = os.path.join(template_path, 'cookiecutter.json')
+        return os.path.exists(cookiecutter_json_path)
+
+    def _get_all_branches(self, path):
+        branches = subprocess.check_output(["git", "ls-remote", "--heads"], stderr=subprocess.STDOUT, cwd=path)
+        branches = branches.decode('utf-8').splitlines()
+        branches = branches[1:]
+        all_branches = [name.rsplit("/",1)[1] for name in branches]
+        return all_branches
+
+    def _git_fetch(self, path):
+        subprocess.check_output(["git", "fetch"], stderr=subprocess.STDOUT, cwd=path)
+
+    def _git_checkout(self, path):
+        try:
+            subprocess.check_output(["git", "checkout", self._python_version], stderr=subprocess.STDOUT, cwd=path)
+        except subprocess.CalledProcessError as pull_error:
+            error_message = pull_error.output.decode('utf-8')
+            print("There is no branch for Python version %r (existing branches: " % self._python_version, ", ".join(self._get_all_branches(path)) + ").")
+
+    def _git_pull(self, path):
         template_name = path.split('/')[-1]
         try:
             subprocess.check_output(["git", "pull"], stderr=subprocess.STDOUT, cwd=path)
-            print('Template %s succesfully updated.' % template_name)
+            print('Template {} succesfully updated.'.format(template_name))
         except subprocess.CalledProcessError as pull_error:
             error_message = pull_error.output.decode('utf-8')
             if 'resolve host' in error_message:
-                print('Unable to update template %s, using unpulled.' % template_name)
+                print('Unable to update template {}, using unpulled.'.format(template_name))
             print(error_message)
 
     def install_app_requirements(self):
@@ -235,20 +268,20 @@ class app(Command):
                     'install',
                     '--upgrade',
                     '--force-reinstall',
-                    '--target=%s' % self.app_packages_dir
+                    '--target={}'.format(self.app_packages_dir)
                 ] + self.distribution.install_requires,
             )
         else:
             print("No requirements.")
 
     def install_platform_requirements(self):
-        print(" * Installing plaform requirements...")
+        print(" * Installing platform requirements...")
         if self.app_requires:
             pip.main([
                     'install',
                     '--upgrade',
                     '--force-reinstall',
-                    '--target=%s' % self.app_packages_dir,
+                    '--target={}'.format(self.app_packages_dir),
                 ] + self.app_requires
             )
         else:
@@ -261,9 +294,79 @@ class app(Command):
                 '--upgrade',
                 '--force-reinstall',
                 '--no-dependencies',  # We just want the code, not the dependencies
-                '--target=%s' % self.app_dir,
+                '--target={}'.format(self.app_dir),
                 '.'
             ])
+
+    @property
+    def launcher_header(self):
+        """
+        Optionally override the shebang line for launcher scripts
+        This should return a suitable relative path which will find the
+        bundled python for the relevant platform if the setuptools default
+        is not suitable.
+        """
+        return None
+
+    @property
+    def launcher_script_location(self):
+        return self.app_dir
+
+    def install_launch_scripts(self):
+        exe_names = []
+        if self.distribution.entry_points:
+            print(" * Creating launchers...")
+            pip.main([
+                         'install',
+                         '--upgrade',
+                         '--force-reinstall',
+                         '--target=%s' % self.app_packages_dir,
+                         'setuptools'
+                     ])
+
+            rel_sesources = os.path.relpath(self.resource_dir, self.launcher_script_location)
+            rel_sesources_split = ', '.join(["'%s'" % f for f in rel_sesources.split(os.sep)])
+
+            easy_install.ScriptWriter.template = textwrap.dedent("""
+                # EASY-INSTALL-ENTRY-SCRIPT: %(spec)r,%(group)r,%(name)r
+                __requires__ = %(spec)r
+                import os
+                import re
+                import sys
+                import site
+                from os.path import dirname, abspath, join
+                resources = abspath(join(dirname(__file__), {}))
+                site.addsitedir(join(resources, 'app'))
+                site.addsitedir(join(resources, 'app_packages'))
+                os.environ['PATH'] += os.pathsep + resources
+                
+                from pkg_resources import load_entry_point
+                
+                if __name__ == '__main__':
+                    sys.argv[0] = re.sub(r'(-script\.pyw?|\.exe)?$', '', sys.argv[0])
+                    sys.exit(
+                        load_entry_point(%(spec)r, %(group)r, %(name)r)()
+                    )
+            """.format(rel_sesources_split)).lstrip()
+
+            ei = easy_install.easy_install(self.distribution)
+            for dist in pkg_resources.find_distributions(self.app_dir):
+                # Note: this is a different Distribution class to self.distribution
+                ei.args = True  # Needs something to run finalize_options
+                ei.finalize_options()
+                ei.script_dir = self.launcher_script_location
+                for args in easy_install.ScriptWriter.best().get_args(dist, header=self.launcher_header):
+                    ei.write_script(*args)
+
+                # Grab names of launchers
+                for entry_points in dist.get_entry_map().values():
+                    exe_names.extend(entry_points.keys())
+
+            if self.formal_name not in exe_names:
+                print(" ! No entry_point matching formal_name, \n"
+                      "   template builtin script will be main launcher.")
+
+        return exe_names
 
     def install_resources(self):
         if self.icon:
@@ -307,7 +410,7 @@ class app(Command):
             print("the code from https://github.com/pybee/%s and" % self.support_project)
             print("then specify the compiled tarball with:")
             print()
-            print("    python setup.py %s --support-pkg=<path to tarball>" % self.platform.lower())
+            print("    python setup.py {} --support-pkg=<path to tarball>".format(self.platform.lower()))
             print()
             sys.exit(1)
 
@@ -329,7 +432,7 @@ class app(Command):
         print("Build complete.")
 
     def start_app(self):
-        print("Don't know how to start %s applications." % self.platform)
+        print("Don't know how to start {} applications.".format(self.platform))
 
     def post_start(self):
         print()
@@ -354,6 +457,7 @@ class app(Command):
         self.install_app_requirements()
         self.install_platform_requirements()
         self.install_code()
+        self.install_launch_scripts()
         self.install_resources()
         self.install_extras()
         self.post_install()

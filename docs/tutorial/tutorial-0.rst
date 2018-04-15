@@ -44,26 +44,34 @@ Check out what the provided ``helloworld/app.py`` file contains:
 
 .. code-block:: python
 
-    def main():
-        # This needs to return an object that has a main_loop() method.
-        return None
-
-This won't do much as it is, but we can make it useful.
-
-Add this into the ``app.py``:
-
-.. code-block:: python
-
+    
     import toga
+    from toga.style import Pack
+    from toga.style.pack import COLUMN, ROW
+
+
+    class HelloWorld(toga.App):
+        def startup(self):
+            # Create a main window with a name matching the app
+            self.main_window = toga.MainWindow(self.name)
+
+            # Create a main content box
+            main_box = toga.Box()
+
+            # Add the content on the main window
+            self.main_window.content = main_box
+
+            # Show the main window
+            self.main_window.show()
+
 
     def main():
-        return toga.App('Hello World', 'org.pybee.helloworld')
-
+        return HelloWorld('Hello World', 'com.example.helloworld')
 
 Put it in a briefcase
 ---------------------
 
-Your project is now ready to using ``briefcase``.
+Your project is now ready to use ``briefcase``.
 
 Windows
 ~~~~~~~
@@ -75,7 +83,9 @@ To create and run the application, run:
     $ python setup.py windows -s
 
 This will produce a ``windows`` subdirectory that will contain a
-``HelloWorld-0.0.1.msi`` installer.
+``HelloWorld-0.0.1.msi`` installer. If you get an error stating that 
+Wix Tools cannot be found, and you have already installed them, try restarting 
+your computer.
 
 macOS
 ~~~~~

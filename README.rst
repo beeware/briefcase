@@ -37,7 +37,7 @@ Broadly supports Python 3. Note: exact versions supported vary depending on the 
 
 Start using Briefcase with the `Getting Started`_ guide.
 
-.. _Getting Started: https://briefcase.readthedocs.io/en/latest/intro/getting-started.html
+.. _Getting Started: https://briefcase.readthedocs.io/en/latest/background/getting-started.html
 
 Quickstart
 -------------
@@ -69,7 +69,7 @@ want to contribute code, please `fork the code`_ and `submit a pull request`_.
 
 .. _BeeWare suite: http://pybee.org
 .. _Read The Docs: https://briefcase.readthedocs.io
-.. _Quickstart: https://briefcase.readthedocs.io/en/latest/intro/quickstart.html
+.. _Quickstart: https://briefcase.readthedocs.io/en/latest/background/quickstart.html
 .. _@pybeeware on Twitter: https://twitter.com/pybeeware
 .. _pybee/general: https://gitter.im/pybee/general
 .. _BeeWare Community Code of Conduct: http://pybee.org/community/behavior/
