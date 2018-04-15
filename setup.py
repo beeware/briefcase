@@ -44,10 +44,10 @@ setup(
         ]
     },
     install_requires=[
-        'pip >= 8.1',
+        'pip >= 10.0',
         'cookiecutter >= 1.0',
         'voc >= 0.1.1',
-        'setuptools >= 27.0',
+        'setuptools >= 39.0.1',
         'requests < 3.0',
         'boto3 >= 1.4.4',
     ],

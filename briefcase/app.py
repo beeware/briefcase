@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import os
 import json
 import logging
@@ -128,7 +126,12 @@ class app(Command):
         if self.secret_key is None:
             self.secret_key = ''.join(random.choice("abcdefghijklmnopqrstuvwxyz0123456789") for i in range(40))
 
-        pip.utils.ensure_dir(self.download_dir)
+        # Ensure the download directory exists
+        try:
+            os.makedirs(self.download_dir)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
 
         if self.start:
             self.build = True

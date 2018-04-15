@@ -4,6 +4,7 @@ Release History
 0.2.2 (In development)
 ----------------------
 
+ * Added compatibility with pip 10.
  * Improved Windows packaging to allow for multiple executables
  * Added a ``--clean`` command line option to force a refresh of generated code.
  * Improved error handling for bad builds
