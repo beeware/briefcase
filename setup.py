@@ -4,9 +4,6 @@ import re
 from setuptools import setup, find_packages
 import sys
 
-if sys.version_info[:3] < (3, 4):
-    raise SystemExit("Briefcase requires Python 3.4+.")
-
 
 with io.open('./briefcase/__init__.py', encoding='utf8') as version_file:
     version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]", version_file.read(), re.M)
@@ -43,6 +40,7 @@ setup(
             'windows = briefcase.windows:windows',
         ]
     },
+    python_requires='>=3.4',
     install_requires=[
         'pip >= 10.0',
         'cookiecutter >= 1.0',
