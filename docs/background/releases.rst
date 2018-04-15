@@ -1,8 +1,8 @@
 Release History
 ===============
 
-0.2.2 (In development)
-----------------------
+0.2.2
+-----
 
  * Added compatibility with pip 10.
  * Improved Windows packaging to allow for multiple executables
