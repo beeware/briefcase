@@ -1,10 +1,10 @@
 Release History
 ===============
 
-0.2.3 (In development)
-----------------------
+0.2.3
+-----
 
- * ...
+ * Bugfix release, correcting the fix for pip 10 support.
 
 0.2.2
 -----
