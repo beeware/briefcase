@@ -33,8 +33,8 @@ class ios(app):
 
     def install_icon(self):
         last_size = None
-        for size in ['1024', '180', '167', '152', '120', '87', '80', '76', '60', '58', '40', '29', '20']:
-            icon_file = '%s-%s.png' % (self.icon, size)
+        for size in ['180', '167', '152', '120', '87', '80', '76', '58', '40', '29']:
+            icon_file = '{}-{}.png'.format(self.icon, size)
             if os.path.exists(icon_file):
                 last_size = size
             else:
