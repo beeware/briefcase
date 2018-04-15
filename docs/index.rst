@@ -104,6 +104,5 @@ Rubicon is part of the `BeeWare suite`_. You can talk to the community through:
 
    tutorial/index
    how-to/index
-   reference/index
    background/index
-   project/index
+   reference/index
