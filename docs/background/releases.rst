@@ -1,8 +1,38 @@
 Release History
 ===============
 
+0.2.3 (In development)
+----------------------
+
+ * ...
+
+0.2.2
+-----
+
+ * Added compatibility with pip 10.
+ * Improved Windows packaging to allow for multiple executables
+ * Added a ``--clean`` command line option to force a refresh of generated code.
+ * Improved error handling for bad builds
+
+0.2.1
+-----
+
+ * Improved error reporting when a support package isn't available.
+
+0.2.0
+-----
+
+ * Added ``-s`` option to launch projects
+ * Switch to using AWS S3 resources rather than Github Files.
+
+0.1.9
+-----
+
+ * Added a full Windows installer backend
+
 0.1.8
 -----
+
  * Modified template rollout process to avoid API limits on Github.
 
 0.1.7

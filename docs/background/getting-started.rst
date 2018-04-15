@@ -83,7 +83,9 @@ Android
 
 ..    $ avdmanager create avd --package "system-images;android-22;google_apis;x86" --device "Nexus 5X" --name Nexus5X
 
-..  When prompted about creating a custom hardware profile, answer "No".
+..  If prompted about creating a custom hardware profile, answer "No".
+
+..  cd $ANDROID_SDK_HOME/tools
 
 * Install `Gradle <https://gradle.org/>`__.
 
