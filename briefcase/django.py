@@ -9,7 +9,7 @@ try:
 except ImportError:  # Python 2 compatibility
     from urllib2 import urlopen
 
-import pip
+from pip import _internal as pip
 
 from .app import app
 
