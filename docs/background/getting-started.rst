@@ -46,7 +46,6 @@ Mac OSX
 
 There are no additonal dependencies required to support OSX.
 
-
 Linux
 ~~~~~
 
