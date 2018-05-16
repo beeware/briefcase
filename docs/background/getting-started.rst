@@ -41,6 +41,11 @@ your machine. Select "Programs and Features" from the Start menu, then "Turn
 Windows features on or off", and ensure ".NET Framework 3.5 (Includes .NET 2.0
 and 3.0)" is enabled.
 
+Mac OSX
+~~~~~~~
+
+There are no additonal dependencies required to support OSX.
+
 Linux
 ~~~~~
 
