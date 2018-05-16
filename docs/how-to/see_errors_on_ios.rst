@@ -9,4 +9,4 @@ If you have a beeware iOS project that has a crash, it can be difficult to see t
 
 3. Your stack trace ought to appear in the 'debugger area' at the bottom of the screen. If you can't see that area, you may have to activate it with `View` > `Debug Area` > `Show Debug Area`
 
- .. image:: PyStackTraceOnXcode.png
+ .. image:: PyStackTraceOnXCode.png
