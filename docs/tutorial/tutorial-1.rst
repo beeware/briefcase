@@ -25,7 +25,7 @@ Put the following code into ``helloworld\app.py``, replacing the old code:
 
       def startup(self):
           # Create a main window with a name matching the app
-          self.main_window = toga.MainWindow(self.name)
+          self.main_window = toga.MainWindow(title=self.name)
 
           # Create a main content box
           f_box = toga.Box()

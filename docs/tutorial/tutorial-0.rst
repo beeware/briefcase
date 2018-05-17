@@ -53,7 +53,7 @@ Check out what the provided ``helloworld/app.py`` file contains:
     class HelloWorld(toga.App):
         def startup(self):
             # Create a main window with a name matching the app
-            self.main_window = toga.MainWindow(self.name)
+            self.main_window = toga.MainWindow(title=self.name)
 
             # Create a main content box
             main_box = toga.Box()
