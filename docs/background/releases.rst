@@ -1,8 +1,10 @@
 Release History
 ===============
 
-0.2.4 (In development)
-----------------------
+0.2.4
+-----
+
+ * Corrected a bug in the iOS backend that prevented iOS builds.
 
 0.2.3
 -----
