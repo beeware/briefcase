@@ -147,7 +147,7 @@ class ios(app):
             ('ARCHS', 'x86_64'),
             ('ONLY_ACTIVE_ARCHS', 'NO')
         ]
-        build_settings_str = ['{0[0]}={0[1]}'.format(x) for x in build_settings]
+        build_settings_str = ['{}={}'.format(*x) for x in build_settings]
 
         self.set_device_target()
 
