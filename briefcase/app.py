@@ -62,6 +62,8 @@ class app(Command):
          "Set the device to run. (e.g., iPhone 7 Plus)"),
         ('sanitize-version', None,
          "Forces installer version to only contain numbers."),
+        ('dmg', None,
+         'Create DMG (for macOS)'),
         ('clean', None,
          "Delete any artifacts from previous run")
     ]
@@ -87,6 +89,7 @@ class app(Command):
         self.os_version = None
         self.device_name = None
         self.sanitize_version = None
+        self.dmg = None
         self.clean = None
 
     def finalize_options(self):

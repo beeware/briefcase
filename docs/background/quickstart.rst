@@ -22,6 +22,7 @@ specific settings can be specified using a platform key::
                     'toga-cocoa'
                 ],
                 'icon': 'icons/macos',
+                'dmg': True,
             },
             'ios': {
                 'app_requires': [

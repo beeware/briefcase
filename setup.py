@@ -48,6 +48,7 @@ setup(
         'setuptools >= 39.0.1',
         'requests < 3.0',
         'boto3 >= 1.4.4',
+        'dmgbuild >= 1.3.2',
     ],
     license='New BSD',
     classifiers=[
