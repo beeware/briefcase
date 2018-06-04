@@ -1,25 +1,22 @@
 import errno
-import os
-import json
 import logging
+import os
 import random
 import re
-import subprocess
 import shutil
+import subprocess
 import sys
 import textwrap
 import uuid
-
 from datetime import date
 from distutils.core import Command
 
-from pip import _internal as pip
-import pkg_resources
-from setuptools.command import easy_install
-
-from botocore.handlers import disable_signing
 import boto3
+import pkg_resources
+from botocore.handlers import disable_signing
 from cookiecutter.main import cookiecutter
+from pip import _internal as pip
+from setuptools.command import easy_install
 
 
 class app(Command):

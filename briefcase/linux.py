@@ -1,7 +1,4 @@
 import os
-import distutils.command.install_scripts as orig
-from pkg_resources import Distribution, PathMetadata
-import shutil
 import subprocess
 import sys
 

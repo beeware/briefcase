@@ -1,13 +1,9 @@
-import distutils.command.install_scripts as orig
 import os
-import struct
-
-from pkg_resources import Distribution, PathMetadata
 import re
 import shutil
+import struct
 import subprocess
 import sys
-import textwrap
 import uuid
 
 from .app import app
