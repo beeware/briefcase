@@ -1,9 +1,8 @@
 import json
 import os
 import shutil
-import sys
-
 import subprocess
+import sys
 
 from .app import app
 

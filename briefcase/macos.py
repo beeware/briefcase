@@ -1,7 +1,7 @@
 import os
-import sys
 import shutil
 import subprocess
+import sys
 
 from .app import app
 

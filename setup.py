@@ -1,9 +1,8 @@
 #/usr/bin/env python
 import io
 import re
-from setuptools import setup, find_packages
-import sys
 
+from setuptools import setup, find_packages
 
 with io.open('./briefcase/__init__.py', encoding='utf8') as version_file:
     version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]", version_file.read(), re.M)
