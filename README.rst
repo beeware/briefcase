@@ -5,7 +5,7 @@
 Briefcase
 =========
 
-.. image:: https://img.shields.io/pypi/pyversions/briefcase.svg
+.. image:: https://img.shields.io/badge/python-3.5%2C%203.6%2C%203.7-blue.svg
     :target: https://pypi.python.org/pypi/briefcase
 
 .. image:: https://img.shields.io/pypi/v/briefcase.svg
