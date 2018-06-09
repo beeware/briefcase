@@ -69,6 +69,7 @@ iOS
 ~~~
 
 * Install XCode from the App store.
+You must also have the Xcode Command Line Tools installed
 
 Android
 ~~~~~~~
