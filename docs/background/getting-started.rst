@@ -68,8 +68,9 @@ to install the following:
 iOS
 ~~~
 
-* Install XCode from the App store.
-You must also have the Xcode Command Line Tools installed
+* Install XCode from the App store. Once you've installed XCode, you must also 
+  install the Xcode Command Line Tools. This can be done from the Preference
+  panel within XCode itself.
 
 Android
 ~~~~~~~
