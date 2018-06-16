@@ -85,8 +85,8 @@ class ios(app):
                         print('Available iOS versions:')
                         for i, label in enumerate(os_list):
                             print('  [{}] {}'.format(i+1, label))
-                        index = int(input('Which iOS version do you want to target: '))
                         try:
+                            index = int(input('Which iOS version do you want to target: '))
                             self.os_version = os_list[int(index) - 1]
                         except:
                             print("Invalid selection.")
