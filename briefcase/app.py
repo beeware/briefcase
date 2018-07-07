@@ -392,7 +392,7 @@ class app(Command):
             print("Support package:", self.support_pkg)
             # Set logging level to INFO on the download package
             # to make sure we get progress indicators
-            dl_logger = logging.getLogger('pip.download')
+            dl_logger = logging.getLogger('pip._internal.download')
             dl_logger.setLevel(logging.INFO)
 
             # Download and unpack the support package.
