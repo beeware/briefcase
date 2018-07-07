@@ -1,8 +1,10 @@
 Release History
 ===============
 
-0.2.5 (in development)
-----------------------
+0.2.5
+-----
+
+ * Restored download progress bars when downloading support packages.
 
 0.2.4
 -----
