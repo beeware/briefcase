@@ -146,7 +146,7 @@ class app(Command):
         s3 = boto3.client('s3', region_name=S3_REGION)
         s3.meta.events.register('choose-signer.s3.*', disable_signing)
 
-        top_build_number, top_build = None, 0
+        top_build_number, top_build = 0, None
         paginator = s3.get_paginator('list_objects')
         for page in paginator.paginate(
                         Bucket=S3_BUCKET,
