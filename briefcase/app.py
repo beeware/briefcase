@@ -161,10 +161,12 @@ class app(Command):
                     item['Key'].rstrip('.tar.gz').split('.')[-1].lstrip('b'))
                 if build_number > top_build_number:
                     top_build_number, top_build = build_number, item['Key']
-        try:
-            return S3_URL + top_build
-        except IndexError:
-            return None
+        if top_build:
+            try:
+                return S3_URL + top_build
+            except IndexError:
+                pass
+        return None
 
     @property
     def app_dir(self):
