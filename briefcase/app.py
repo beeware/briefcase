@@ -162,7 +162,7 @@ class app(Command):
                 if build_number > top_build_number:
                     top_build_number, top_build = build_number, item['Key']
         try:
-            return S3_URL + latest_build
+            return S3_URL + top_build
         except IndexError:
             return None
 
