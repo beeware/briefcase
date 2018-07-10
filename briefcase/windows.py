@@ -171,11 +171,11 @@ class windows(app):
         print(" * Looking for WiX Toolset...")
         wix_path = os.getenv('WIX')
         if not wix_path:
-            print("Couldn't find WiX Toolset. Please visit:")
+            print("Couldn't find WiX Toolset. Please install the latest stable release from:")
             print()
             print("    http://wixtoolset.org/releases/")
             print()
-            print("and install the latest stable release.")
+            print("If already installed, set the WIX environment variable\nto the installation path.")
             sys.exit(-2)
         else:
             print("   - Using {}".format(wix_path))
