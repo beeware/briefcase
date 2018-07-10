@@ -146,7 +146,8 @@ class app(Command):
         s3 = boto3.client('s3', region_name=S3_REGION)
         s3.meta.events.register('choose-signer.s3.*', disable_signing)
 
-        candidates = []
+        top_build_number = 0
+        top_build = None
         paginator = s3.get_paginator('list_objects')
         for page in paginator.paginate(
                         Bucket=S3_BUCKET,
@@ -157,10 +158,14 @@ class app(Command):
                             self.platform
                         )):
             for item in page.get('Contents', []):
-                candidates.append(item['Key'])
-        try:
-            return S3_URL + sorted(candidates, reverse=True)[0]
-        except IndexError:
+                build_number = int(
+                    item['Key'].rstrip('.tar.gz').split('.')[-1].lstrip('b'))
+                if build_number > top_build_number:
+                    top_build_number = build_number
+                    top_build = item['Key']
+        if top_build:
+            return S3_URL + top_build
+        else:
             return None
 
     @property
