@@ -128,9 +128,12 @@ class android(app):
 
     def start_app(self):
         print("Starting {}".format(self.formal_name))
-        subprocess.Popen([
-                './gradlew', 'run'
-            ],
+        if sys.platform == 'win32':
+            params = ['cmd.exe', '/c', 'gradlew.bat', 'run']
+        else:
+            params = ['./gradlew', 'run']
+        subprocess.Popen(
+            params,
             cwd=os.path.abspath(self.dir)
         ).wait()
 
