@@ -164,11 +164,9 @@ class app(Command):
                     top_build_number = build_number
                     top_build = item['Key']
         if top_build:
-            try:
-                return S3_URL + top_build
-            except IndexError:
-                pass
-        return None
+            return S3_URL + top_build
+        else:
+            return None
 
     @property
     def app_dir(self):
