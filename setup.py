@@ -41,10 +41,10 @@ setup(
     },
     python_requires='>=3.4',
     install_requires=[
-        'pip >= 10.0',
+        'pip >= 18.0',
         'cookiecutter >= 1.0',
         'voc >= 0.1.1',
-        'setuptools >= 39.0.1',
+        'setuptools >= 40.0',
         'requests < 3.0',
         'boto3 >= 1.4.4',
     ],
