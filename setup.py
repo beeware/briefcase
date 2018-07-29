@@ -4,7 +4,7 @@ import re
 
 from setuptools import setup, find_packages
 
-with io.open('./briefcase/__init__.py', encoding='utf8') as version_file:
+with io.open('./src/briefcase/__init__.py', encoding='utf8') as version_file:
     version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]", version_file.read(), re.M)
     if version_match:
         version = version_match.group(1)
@@ -25,7 +25,8 @@ setup(
     author_email='russell@keith-magee.com',
     url='http://pybee.org/briefcase',
     keywords=['app', 'packaging', 'macOS', 'iOS', 'android', 'tvOS', 'mobile', 'windows'],
-    packages=find_packages(exclude=['tests']),
+    packages=find_packages(where="src"),
+    package_dir={"": "src"},
     entry_points={
         'distutils.commands': [
             'android = briefcase.android:android',
