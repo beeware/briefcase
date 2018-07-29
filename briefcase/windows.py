@@ -30,9 +30,6 @@ class windows(app):
         self.resource_dir = os.path.join(self.dir, 'content')
         self.support_dir = os.path.join(self.dir, 'content', 'python')
 
-        iconfile = '%s.ico' % self.icon
-        self.icon_filename = os.path.join(self.app_dir, self.distribution.get_name() + os.path.splitext(iconfile)[1])
-
     def generate_app_template(self, extra_context=None):
         if self.version_numeric != self.version and not self.sanitize_version:
             print(" ! Windows Installer version can only contain numerals, currently: {}".format(self.version))
@@ -42,7 +39,10 @@ class windows(app):
         super(windows, self).generate_app_template(extra_context=extra_context)
 
     def install_icon(self):
-        shutil.copyfile('%s.ico' % self.icon, self.icon_filename)
+        shutil.copyfile(
+            '%s.ico' % self.icon,
+            os.path.join(self.app_dir, '%s.ico' % self.distribution.get_name())
+        )
 
     def install_splash(self):
         raise RuntimeError("Windows doesn't support splash screens.")

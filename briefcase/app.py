@@ -76,6 +76,7 @@ class app(Command):
         self.support_pkg = None
         self.support_dir = None
         self.download_dir = None
+        self.document_types = None
         self.version_code = None
         self.guid = None
         self.secret_key = None
@@ -106,6 +107,9 @@ class app(Command):
 
         if self.download_dir is None:
             self.download_dir = os.path.expanduser(os.path.join('~', '.briefcase'))
+
+        if self.document_types is None:
+            self.document_types = {}
 
         # The Version Code is a pure-string, numerically sortable
         # version number.
@@ -222,9 +226,11 @@ class app(Command):
             'version_code': self.version_code,
             'guid': self.guid,
             'secret_key': self.secret_key,
+            'document_types': self.document_types,
         }
         if extra_context:
             _extra_context.update(extra_context)
+
         cookiecutter(
             self.template,
             no_input=True,
