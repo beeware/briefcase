@@ -273,39 +273,46 @@ class app(Command):
     def install_app_requirements(self):
         print(" * Installing requirements...")
         if self.distribution.install_requires:
-            pip.main([
-                    'install',
-                    '--upgrade',
-                    '--force-reinstall',
+            print(subprocess.check_output(
+                [
+                    "pip", "install",
+                    "--upgrade",
+                    "--force-reinstall",
                     '--target={}'.format(self.app_packages_dir)
                 ] + self.distribution.install_requires,
-            )
+                stderr=subprocess.STDOUT,
+            ).decode('utf-8'))
         else:
             print("No requirements.")
 
     def install_platform_requirements(self):
         print(" * Installing platform requirements...")
         if self.app_requires:
-            pip.main([
-                    'install',
-                    '--upgrade',
-                    '--force-reinstall',
-                    '--target={}'.format(self.app_packages_dir),
-                ] + self.app_requires
-            )
+            print(subprocess.check_output(
+                [
+                    "pip", "install",
+                    "--upgrade",
+                    "--force-reinstall",
+                    '--target={}'.format(self.app_packages_dir)
+                ] + self.app_requires,
+                stderr=subprocess.STDOUT,
+            ).decode('utf-8'))
         else:
             print("No platform requirements.")
 
     def install_code(self):
         print(" * Installing project code...")
-        pip.main([
-                'install',
-                '--upgrade',
-                '--force-reinstall',
-                '--no-dependencies',  # We just want the code, not the dependencies
+        print(subprocess.check_output(
+            [
+                "pip", "install",
+                "--upgrade",
+                "--force-reinstall",
+                "--no-dependencies",
                 '--target={}'.format(self.app_dir),
                 '.'
-            ])
+            ],
+            stderr=subprocess.STDOUT,
+        ).decode('utf-8'))
 
     @property
     def launcher_header(self):
@@ -325,13 +332,16 @@ class app(Command):
         exe_names = []
         if self.distribution.entry_points:
             print(" * Creating launchers...")
-            pip.main([
-                         'install',
-                         '--upgrade',
-                         '--force-reinstall',
-                         '--target=%s' % self.app_packages_dir,
-                         'setuptools'
-                     ])
+            print(subprocess.check_output(
+                [
+                    "pip", "install",
+                    "--upgrade",
+                    "--force-reinstall",
+                    '--target={}'.format(self.app_dir),
+                    'setuptools'
+                ],
+                stderr=subprocess.STDOUT,
+            ).decode('utf-8'))
 
             rel_sesources = os.path.relpath(self.resource_dir, self.launcher_script_location)
             rel_sesources_split = ', '.join(["'%s'" % f for f in rel_sesources.split(os.sep)])
