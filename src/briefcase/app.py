@@ -250,7 +250,7 @@ class app(Command):
         return all_branches
 
     def _git_fetch(self, path):
-        subprocess.check_output(["git", "fetch"], stderr=subprocess.STDOUT, cwd=path)
+        subprocess.Popen(["git", "fetch"], cwd=path).wait()
 
     def _git_checkout(self, path):
         try:
@@ -273,36 +273,34 @@ class app(Command):
     def install_app_requirements(self):
         print(" * Installing requirements...")
         if self.distribution.install_requires:
-            print(subprocess.check_output(
+            subprocess.Popen(
                 [
                     "pip", "install",
                     "--upgrade",
                     "--force-reinstall",
                     '--target={}'.format(self.app_packages_dir)
                 ] + self.distribution.install_requires,
-                stderr=subprocess.STDOUT,
-            ).decode('utf-8'))
+            ).wait()
         else:
             print("No requirements.")
 
     def install_platform_requirements(self):
         print(" * Installing platform requirements...")
         if self.app_requires:
-            print(subprocess.check_output(
+            subprocess.Popen(
                 [
                     "pip", "install",
                     "--upgrade",
                     "--force-reinstall",
                     '--target={}'.format(self.app_packages_dir)
                 ] + self.app_requires,
-                stderr=subprocess.STDOUT,
-            ).decode('utf-8'))
+            ).wait()
         else:
             print("No platform requirements.")
 
     def install_code(self):
         print(" * Installing project code...")
-        print(subprocess.check_output(
+        subprocess.Popen(
             [
                 "pip", "install",
                 "--upgrade",
@@ -311,8 +309,7 @@ class app(Command):
                 '--target={}'.format(self.app_dir),
                 '.'
             ],
-            stderr=subprocess.STDOUT,
-        ).decode('utf-8'))
+        ).wait()
 
     @property
     def launcher_header(self):
@@ -332,7 +329,7 @@ class app(Command):
         exe_names = []
         if self.distribution.entry_points:
             print(" * Creating launchers...")
-            print(subprocess.check_output(
+            subprocess.Popen(
                 [
                     "pip", "install",
                     "--upgrade",
@@ -340,8 +337,7 @@ class app(Command):
                     '--target={}'.format(self.app_dir),
                     'setuptools'
                 ],
-                stderr=subprocess.STDOUT,
-            ).decode('utf-8'))
+            ).wait()
 
             rel_sesources = os.path.relpath(self.resource_dir, self.launcher_script_location)
             rel_sesources_split = ', '.join(["'%s'" % f for f in rel_sesources.split(os.sep)])
