@@ -1,5 +1,4 @@
 import errno
-import logging
 import os
 import random
 import re
@@ -13,10 +12,34 @@ from distutils.core import Command
 
 import boto3
 import pkg_resources
+import requests
 from botocore.handlers import disable_signing
 from cookiecutter.main import cookiecutter
-from pip import _internal as pip
 from setuptools.command import easy_install
+
+
+def download_url(url, download_dir):
+    filename = os.path.join(download_dir, os.path.basename(url))
+
+    if not os.path.exists(filename):
+        with open(filename, 'wb') as f:
+            response = requests.get(url, stream=True)
+            total = response.headers.get('content-length')
+
+            if total is None:
+                f.write(response.content)
+            else:
+                downloaded = 0
+                total = int(total)
+                for data in response.iter_content(chunk_size=max(int(total / 1000), 1024 * 1024)):
+                    downloaded += len(data)
+                    f.write(data)
+                    done = int(50 * downloaded / total)
+                    print('\r{}{} {}%'.format('█' * done, '.' * (50-done), 2*done), end='', flush=True)
+        print()
+    else:
+        print('Already downloaded')
+    return filename
 
 
 class app(Command):
@@ -407,17 +430,12 @@ class app(Command):
         if self.support_pkg:
             print(" * Installing support package...")
             print("Support package:", self.support_pkg)
-            # Set logging level to INFO on the download package
-            # to make sure we get progress indicators
-            dl_logger = logging.getLogger('pip._internal.download')
-            dl_logger.setLevel(logging.INFO)
 
             # Download and unpack the support package.
-            pip.download.unpack_url(
-                pip.index.Link(self.support_pkg),
-                os.path.join(os.getcwd(), self.support_dir),
-                download_dir=self.download_dir,
-            )
+            filename = download_url(url=self.support_pkg, download_dir=self.download_dir)
+
+            destination = os.path.join(os.getcwd(), self.support_dir)
+            shutil.unpack_archive(filename, extract_dir=destination)
         else:
             print()
             print("No pre-built support package could be found for Python %s.%s." % (sys.version_info.major, sys.version_info.minor))
