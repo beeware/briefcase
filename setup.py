@@ -45,7 +45,7 @@ setup(
         'pip >= 10.0',
         'cookiecutter >= 1.0',
         'voc >= 0.1.1',
-        'setuptools >= 39.0.1',
+        'setuptools >= 36.0.1',
         'requests < 3.0',
         'boto3 >= 1.4.4',
     ],
