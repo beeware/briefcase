@@ -9,8 +9,6 @@ try:
 except ImportError:  # Python 2 compatibility
     from urllib2 import urlopen
 
-from pip import _internal as pip
-
 from .app import app
 
 
@@ -66,19 +64,6 @@ class django(app):
 
     def install_support_package(self):
         pass
-
-    def install_platform_requirements(self):
-        print(" * Installing plaform requirements...")
-
-        if self.app_requires:
-            pip.main([
-                    'install',
-                    '--upgrade',
-                    '--force-reinstall',
-                ] + self.app_requires
-            )
-        else:
-            print("No platform requirements.")
 
     def install_extras(self):
         # Install additional elements required for Django

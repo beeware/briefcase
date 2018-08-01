@@ -8,8 +8,9 @@ About Briefcase
    :maxdepth: 1
    :glob:
 
-   community
    faq
+   community
+   success
    getting-started
    quickstart
    releases
