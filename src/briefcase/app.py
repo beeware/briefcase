@@ -1,25 +1,45 @@
 import errno
 import os
-import json
-import logging
 import random
 import re
-import subprocess
 import shutil
+import subprocess
 import sys
 import textwrap
 import uuid
-
 from datetime import date
 from distutils.core import Command
 
-from pip import _internal as pip
+import boto3
 import pkg_resources
+import requests
+from botocore.handlers import disable_signing
+from cookiecutter.main import cookiecutter
 from setuptools.command import easy_install
 
-from botocore.handlers import disable_signing
-import boto3
-from cookiecutter.main import cookiecutter
+
+def download_url(url, download_dir):
+    filename = os.path.join(download_dir, os.path.basename(url))
+
+    if not os.path.exists(filename):
+        with open(filename, 'wb') as f:
+            response = requests.get(url, stream=True)
+            total = response.headers.get('content-length')
+
+            if total is None:
+                f.write(response.content)
+            else:
+                downloaded = 0
+                total = int(total)
+                for data in response.iter_content(chunk_size=max(int(total / 1000), 1024 * 1024)):
+                    downloaded += len(data)
+                    f.write(data)
+                    done = int(50 * downloaded / total)
+                    print('\r{}{} {}%'.format('█' * done, '.' * (50-done), 2*done), end='', flush=True)
+        print()
+    else:
+        print('Already downloaded')
+    return filename
 
 
 class app(Command):
@@ -79,6 +99,7 @@ class app(Command):
         self.support_pkg = None
         self.support_dir = None
         self.download_dir = None
+        self.document_types = None
         self.version_code = None
         self.guid = None
         self.secret_key = None
@@ -109,6 +130,9 @@ class app(Command):
 
         if self.download_dir is None:
             self.download_dir = os.path.expanduser(os.path.join('~', '.briefcase'))
+
+        if self.document_types is None:
+            self.document_types = {}
 
         # The Version Code is a pure-string, numerically sortable
         # version number.
@@ -149,7 +173,8 @@ class app(Command):
         s3 = boto3.client('s3', region_name=S3_REGION)
         s3.meta.events.register('choose-signer.s3.*', disable_signing)
 
-        candidates = []
+        top_build_number = 0
+        top_build = None
         paginator = s3.get_paginator('list_objects')
         for page in paginator.paginate(
                         Bucket=S3_BUCKET,
@@ -160,10 +185,14 @@ class app(Command):
                             self.platform
                         )):
             for item in page.get('Contents', []):
-                candidates.append(item['Key'])
-        try:
-            return S3_URL + sorted(candidates, reverse=True)[0]
-        except IndexError:
+                build_number = int(
+                    item['Key'].rstrip('.tar.gz').split('.')[-1].lstrip('b'))
+                if build_number > top_build_number:
+                    top_build_number = build_number
+                    top_build = item['Key']
+        if top_build:
+            return S3_URL + top_build
+        else:
             return None
 
     @property
@@ -220,9 +249,11 @@ class app(Command):
             'version_code': self.version_code,
             'guid': self.guid,
             'secret_key': self.secret_key,
+            'document_types': self.document_types,
         }
         if extra_context:
             _extra_context.update(extra_context)
+
         cookiecutter(
             self.template,
             no_input=True,
@@ -242,7 +273,7 @@ class app(Command):
         return all_branches
 
     def _git_fetch(self, path):
-        subprocess.check_output(["git", "fetch"], stderr=subprocess.STDOUT, cwd=path)
+        subprocess.Popen(["git", "fetch"], cwd=path).wait()
 
     def _git_checkout(self, path):
         try:
@@ -265,39 +296,43 @@ class app(Command):
     def install_app_requirements(self):
         print(" * Installing requirements...")
         if self.distribution.install_requires:
-            pip.main([
-                    'install',
-                    '--upgrade',
-                    '--force-reinstall',
+            subprocess.Popen(
+                [
+                    "pip", "install",
+                    "--upgrade",
+                    "--force-reinstall",
                     '--target={}'.format(self.app_packages_dir)
                 ] + self.distribution.install_requires,
-            )
+            ).wait()
         else:
             print("No requirements.")
 
     def install_platform_requirements(self):
         print(" * Installing platform requirements...")
         if self.app_requires:
-            pip.main([
-                    'install',
-                    '--upgrade',
-                    '--force-reinstall',
-                    '--target={}'.format(self.app_packages_dir),
-                ] + self.app_requires
-            )
+            subprocess.Popen(
+                [
+                    "pip", "install",
+                    "--upgrade",
+                    "--force-reinstall",
+                    '--target={}'.format(self.app_packages_dir)
+                ] + self.app_requires,
+            ).wait()
         else:
             print("No platform requirements.")
 
     def install_code(self):
         print(" * Installing project code...")
-        pip.main([
-                'install',
-                '--upgrade',
-                '--force-reinstall',
-                '--no-dependencies',  # We just want the code, not the dependencies
+        subprocess.Popen(
+            [
+                "pip", "install",
+                "--upgrade",
+                "--force-reinstall",
+                "--no-dependencies",
                 '--target={}'.format(self.app_dir),
                 '.'
-            ])
+            ],
+        ).wait()
 
     @property
     def launcher_header(self):
@@ -317,13 +352,15 @@ class app(Command):
         exe_names = []
         if self.distribution.entry_points:
             print(" * Creating launchers...")
-            pip.main([
-                         'install',
-                         '--upgrade',
-                         '--force-reinstall',
-                         '--target=%s' % self.app_packages_dir,
-                         'setuptools'
-                     ])
+            subprocess.Popen(
+                [
+                    "pip", "install",
+                    "--upgrade",
+                    "--force-reinstall",
+                    '--target={}'.format(self.app_dir),
+                    'setuptools'
+                ],
+            ).wait()
 
             rel_sesources = os.path.relpath(self.resource_dir, self.launcher_script_location)
             rel_sesources_split = ', '.join(["'%s'" % f for f in rel_sesources.split(os.sep)])
@@ -393,17 +430,12 @@ class app(Command):
         if self.support_pkg:
             print(" * Installing support package...")
             print("Support package:", self.support_pkg)
-            # Set logging level to INFO on the download package
-            # to make sure we get progress indicators
-            dl_logger = logging.getLogger('pip.download')
-            dl_logger.setLevel(logging.INFO)
 
             # Download and unpack the support package.
-            pip.download.unpack_url(
-                pip.index.Link(self.support_pkg),
-                os.path.join(os.getcwd(), self.support_dir),
-                download_dir=self.download_dir,
-            )
+            filename = download_url(url=self.support_pkg, download_dir=self.download_dir)
+
+            destination = os.path.join(os.getcwd(), self.support_dir)
+            shutil.unpack_archive(filename, extract_dir=destination)
         else:
             print()
             print("No pre-built support package could be found for Python %s.%s." % (sys.version_info.major, sys.version_info.minor))
