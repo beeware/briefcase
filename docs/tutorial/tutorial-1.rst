@@ -1,4 +1,4 @@
-Tutorial 1 - Fahrenheit to Celcius
+Tutorial 1 - Fahrenheit to Celsius
 ==================================
 
 In this tutorial we will make your application do something interesting.
@@ -35,7 +35,7 @@ Put the following code into ``helloworld\app.py``, replacing the old code:
           self.c_input = toga.TextInput(readonly=True)
           self.f_input = toga.TextInput()
 
-          self.c_label = toga.Label('Celcius', style=Pack(text_align=LEFT))
+          self.c_label = toga.Label('Celsius', style=Pack(text_align=LEFT))
           self.f_label = toga.Label('Fahrenheit', style=Pack(text_align=LEFT))
           self.join_label = toga.Label('Is equivalent to', style=Pack(text_align=RIGHT))
 
