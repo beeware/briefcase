@@ -26,8 +26,10 @@ class macos(app):
 
         if self.dir is None:
             self.dir = 'macOS'
+        
+        self.app_location = os.path.join(self.dir, '{}.app'.format(self.formal_name)) #Location of the .app file
 
-        self.resource_dir = os.path.join(self.dir, '{}.app'.format(self.formal_name), 'Contents', 'Resources')
+        self.resource_dir = os.path.join(self.app_location, 'Contents', 'Resources')
 
     def install_icon(self):
         shutil.copyfile(
@@ -61,9 +63,12 @@ class macos(app):
 
     def build_app(self):
         print("Building DMG file...")
-        dmg_name = self.formal_name.replace(' ', '_') + '.dmg'
+        dmg_name = self.formal_name + '.dmg'
         dmg_path = os.path.join(os.path.abspath(self.dir), dmg_name)
-        dmgbuild.build_dmg(filename=dmg_path, volume_name=self.formal_name)
+        settings = {'files': [self.app_location],
+                    'symlinks': {'Applications': '/Applications'}}
+        dmgbuild.build_dmg(filename=dmg_path,
+                           volume_name=self.formal_name, settings=settings)
 
         return True
 
