@@ -14,7 +14,7 @@ class macos(app):
     def finalize_options(self):
         # Copy over all the options from the base 'app' command
         finalized = self.get_finalized_command('app')
-        for attr in ('formal_name', 'organization_name', 'bundle', 'icon', 'download_dir', 'dmg'):
+        for attr in ('formal_name', 'organization_name', 'bundle', 'icon', 'download_dir', 'document_types'):
             if getattr(self, attr) is None:
                 setattr(self, attr, getattr(finalized, attr))
 
@@ -60,11 +60,10 @@ class macos(app):
         return macos_dir
 
     def build_app(self):
-        if self.dmg:
-            print("Building DMG file...")
-            dmg_name = self.formal_name.replace(' ', '_') + '.dmg'
-            dmg_path = os.path.join(os.path.abspath(self.dir), dmg_name)
-            dmgbuild.build_dmg(filename=dmg_path, volume_name=self.formal_name)
+        print("Building DMG file...")
+        dmg_name = self.formal_name.replace(' ', '_') + '.dmg'
+        dmg_path = os.path.join(os.path.abspath(self.dir), dmg_name)
+        dmgbuild.build_dmg(filename=dmg_path, volume_name=self.formal_name)
 
         return True
 
