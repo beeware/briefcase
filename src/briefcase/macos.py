@@ -60,11 +60,10 @@ class macos(app):
         return macos_dir
 
     def build_app(self):
-        if self.dmg:
-            print("Building DMG file...")
-            dmg_name = self.formal_name.replace(' ', '_') + '.dmg'
-            dmg_path = os.path.join(os.path.abspath(self.dir), dmg_name)
-            dmgbuild.build_dmg(filename=dmg_path, volume_name=self.formal_name)
+        print("Building DMG file...")
+        dmg_name = self.formal_name.replace(' ', '_') + '.dmg'
+        dmg_path = os.path.join(os.path.abspath(self.dir), dmg_name)
+        dmgbuild.build_dmg(filename=dmg_path, volume_name=self.formal_name)
 
         return True
 
