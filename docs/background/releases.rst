@@ -1,8 +1,19 @@
 Release History
 ===============
 
-0.2.6 (in development)
-----------------------
+0.2.7
+-----
+
+* Added support for launch images for iPhone X, Xs, Xr, Xs Max and Xr Max
+* Completed removal of internal pip API dependencies.
+
+0.2.6
+-----
+
+* Added support for registering OS-level document type handlers.
+* Removed dependency on an internal pip API.
+* Corrected invocation of gradlew on Windows
+* Addressed support for support builds greater than b9.
 
 0.2.5
 -----
