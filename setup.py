@@ -49,7 +49,7 @@ setup(
         'requests < 3.0',
         'boto3 >= 1.4.4',
         # 10/18/18 - Pinning the urllib3 version to solve Boto dependency issues
-        'urllib3 = 1.22'
+        'urllib3 == 1.22'
     ],
     license='New BSD',
     classifiers=[
