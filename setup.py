@@ -48,6 +48,8 @@ setup(
         'setuptools >= 40.0',
         'requests < 3.0',
         'boto3 >= 1.4.4',
+        # 10/18/18 - Pinning the urllib3 version is a temporary fix to solve conflicting dependency issues with Boto3 & Requests
+        'urllib3 = 1.22' 
     ],
     license='New BSD',
     classifiers=[
