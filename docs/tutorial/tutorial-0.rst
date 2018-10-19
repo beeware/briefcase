@@ -11,7 +11,7 @@ This tutorial assumes you've read and followed the instructions in
 :doc:`/background/getting-started`. If you've done this, you should have:
 
 * A ``tutorial`` directory,
-* A activated Python 3.5 virtual environment,
+* An activated Python 3.5+ virtual environment,
 * Briefcase installed in that virtual environment,
 * Any platform-specific dependencies installed.
 
@@ -44,7 +44,7 @@ Check out what the provided ``helloworld/app.py`` file contains:
 
 .. code-block:: python
 
-    
+
     import toga
     from toga.style import Pack
     from toga.style.pack import COLUMN, ROW
@@ -83,8 +83,8 @@ To create and run the application, run:
     $ python setup.py windows -s
 
 This will produce a ``windows`` subdirectory that will contain a
-``HelloWorld-0.0.1.msi`` installer. If you get an error stating that 
-Wix Tools cannot be found, and you have already installed them, try restarting 
+``HelloWorld-0.0.1.msi`` installer. If you get an error stating that
+Wix Tools cannot be found, and you have already installed them, try restarting
 your computer.
 
 macOS
