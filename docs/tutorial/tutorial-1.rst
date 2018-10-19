@@ -84,9 +84,7 @@ Now you can invoke briefcase again:
 
   $ python setup.py ios -s
 
-replacing ``ios`` with your platform of choice. You will be asked if you want
-to replace the existing ``ios`` (or whatever platform you choose) directory; answer
-``y``, and a new project will be generated and started.
+replacing ``ios`` with your platform of choice.
 
 You should see something that looks a bit like this:
 
@@ -111,4 +109,3 @@ This will gather all the Javascript dependencies, create an initial database, st
 
    If you get a "Server could not be contacted" error, it's possible your web browser
    started faster than the server; reload the page, and you should see the app.
-
