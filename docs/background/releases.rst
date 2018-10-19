@@ -1,6 +1,12 @@
 Release History
 ===============
 
+0.2.8
+-----
+
+* Corrects packaging problem with urllib3, caused by inconsistency between requests and boto3.
+* Corrected problems with Start menu targets being created on Windows.
+
 0.2.7
 -----
 
