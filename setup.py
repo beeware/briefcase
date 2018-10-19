@@ -48,6 +48,13 @@ setup(
         'setuptools >= 40.0',
         'requests < 3.0',
         'boto3 >= 1.4.4',
+        # urllib3 is required by both requests and boto3. However, they both require
+        # different versions. Both versions specify acceptable ranges, but for some
+        # reason, pip is unable to resolve an acceptable version.
+        # As a workaround, pin a specific urllib3 version. At some point in the future,
+        # this will break either requests or boto3 (or possibly both), at which point
+        # the requirement can probably be dropped.
+        'urllib3<1.24',
     ],
     license='New BSD',
     classifiers=[
