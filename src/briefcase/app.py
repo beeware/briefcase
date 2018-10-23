@@ -281,8 +281,7 @@ class app(Command):
     def _git_checkout(self, path):
         try:
             subprocess.check_output(["git", "checkout", self._python_version], stderr=subprocess.STDOUT, cwd=path)
-        except subprocess.CalledProcessError as pull_error:
-            error_message = pull_error.output.decode('utf-8')
+        except subprocess.CalledProcessError:
             print("There is no branch for Python version %r (existing branches: " %
                   self._python_version, ", ".join(self._get_all_branches(path)) + ").")
 
