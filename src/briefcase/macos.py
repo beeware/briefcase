@@ -37,7 +37,7 @@ class macos(app):
     def install_icon(self):
         shutil.copyfile(
             "%s.icns" % self.icon,
-            self.icon_install_path
+            os.path.join(self.resource_dir, '%s.icns' % self.distribution.get_name())
         )
 
         for tag, doctype in self.document_types.items():
@@ -74,6 +74,7 @@ class macos(app):
         settings = {'files': [self.app_location],
                     'symlinks': {'Applications': '/Applications'},
                     'background': self.background_image,
+                    'icon': os.path.join(self.resource_dir, '%s.icns' % self.distribution.get_name()),
                     }
         dmgbuild.build_dmg(filename=dmg_path,
                            volume_name=self.formal_name,
