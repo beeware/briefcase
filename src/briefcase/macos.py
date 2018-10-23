@@ -15,7 +15,7 @@ class macos(app):
         # Copy over all the options from the base 'app' command
         finalized = self.get_finalized_command('app')
         options = ('formal_name', 'organization_name',
-                   'bundle', 'icon', 'download_dir', 'document_types')
+                   'bundle', 'icon', 'download_dir', 'document_types', 'background_image')
         for attr in options:
             if getattr(self, attr) is None:
                 setattr(self, attr, getattr(finalized, attr))
@@ -72,7 +72,8 @@ class macos(app):
         dmg_name = self.formal_name + '.dmg'
         dmg_path = os.path.join(os.path.abspath(self.dir), dmg_name)
         settings = {'files': [self.app_location],
-                    'symlinks': {'Applications': '/Applications'}
+                    'symlinks': {'Applications': '/Applications'},
+                    'background': self.background_image,
                     }
         dmgbuild.build_dmg(filename=dmg_path,
                            volume_name=self.formal_name,
