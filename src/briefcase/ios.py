@@ -33,7 +33,7 @@ class ios(app):
     def install_icon(self):
         last_size = None
         for size in [
-                    '1024',  # App Store Icon
+                    '1024', # App Store Icon
                     '180',  # iPhone @3x Icon
                     '167',  # iPad Pro @2x Icon
                     '152',  # iPad @2x Icon, iPad mini @2x Icon
@@ -165,7 +165,7 @@ class ios(app):
                             self.device_name = self.device['name']
                         except:
                             print("Invalid selection.")
-                            print
+                            print #Giving space for new process to print with a more readable format
 
             if self.device is None:
                 device_list = data['devices'].get(self.os_version, [])
