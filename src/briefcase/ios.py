@@ -33,19 +33,19 @@ class ios(app):
     def install_icon(self):
         last_size = None
         for size in [
-                    '1024', # App Store Icon
-                    '180',  # iPhone @3x Icon
-                    '167',  # iPad Pro @2x Icon
-                    '152',  # iPad @2x Icon, iPad mini @2x Icon
-                    '120',  # iPhone @2x Icon, iPhone @3x Spotlight
-                    '87',  # iPhone @3x Setting
-                    '80',  # iPhone @2x Spotlight, iPad Pro @2x Spotlight,
-                           # iPad @2x Spotlight, iPad mini @2x Spotlight
-                    '60',  # iPhone @3x Notification
-                    '58',  # iPhone @2x Setting, iPad Pro @2x Setting,
-                           # iPad @2x Setting, iPad mini Setting
-                    '40',  # iPhone @2x Notification, iPad Pro @2x Notification,
-                           # iPad @2x Notification, iPad mini @2x Notification
+                    '1024',  # App Store Icon
+                    '180',   # iPhone @3x Icon
+                    '167',   # iPad Pro @2x Icon
+                    '152',   # iPad @2x Icon, iPad mini @2x Icon
+                    '120',   # iPhone @2x Icon, iPhone @3x Spotlight
+                    '87',    # iPhone @3x Setting
+                    '80',    # iPhone @2x Spotlight, iPad Pro @2x Spotlight,
+                             # iPad @2x Spotlight, iPad mini @2x Spotlight
+                    '60',    # iPhone @3x Notification
+                    '58',    # iPhone @2x Setting, iPad Pro @2x Setting,
+                             # iPad @2x Setting, iPad mini Setting
+                    '40',    # iPhone @2x Notification, iPad Pro @2x Notification,
+                             # iPad @2x Notification, iPad mini @2x Notification
 
                     # Theoretically deprecated, but still required
                     # by the AppIcon resource file
@@ -165,7 +165,8 @@ class ios(app):
                             self.device_name = self.device['name']
                         except:
                             print("Invalid selection.")
-                            print #Giving space for new process to print with a more readable format
+                            print 
+                            #Giving space for new process to print with a more readable format
 
             if self.device is None:
                 device_list = data['devices'].get(self.os_version, [])
