@@ -39,8 +39,15 @@ Check out what the provided ``helloworld/app.py`` file contains:
 
 .. code-block:: bash
 
+    # If you are on macOS or Linux
     $ cd helloworld
     $ cat helloworld/app.py
+
+.. code-block::
+
+    # If you are on Windows command line
+    > cd helloworld
+    > type helloworld/app.py
 
 .. code-block:: python
 
@@ -76,11 +83,15 @@ Your project is now ready to use ``briefcase``.
 Windows
 ~~~~~~~
 
+You must use Windows command line (``cmd``) to run this step. In case
+you have installed MingW32, Linux compatibility layer for Windows or similar,
+make sure it doesn't interfere with ``cmd`` environment.
+
 To create and run the application, run:
 
-.. code-block:: bash
+.. code-block::
 
-    $ python setup.py windows -s
+    > python setup.py windows -s
 
 This will produce a ``windows`` subdirectory that will contain a
 ``HelloWorld-0.0.1.msi`` installer. If you get an error stating that
