@@ -55,6 +55,7 @@ setup(
         # this will break either requests or boto3 (or possibly both), at which point
         # the requirement can probably be dropped.
         'urllib3<1.24',
+        'dmgbuild >= 1.3.2',
     ],
     license='New BSD',
     classifiers=[
