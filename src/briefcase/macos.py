@@ -71,14 +71,17 @@ class macos(app):
         print("Building DMG file...")
         dmg_name = self.formal_name + '.dmg'
         dmg_path = os.path.join(os.path.abspath(self.dir), dmg_name)
-        settings = {'files': [self.app_location],
-                    'symlinks': {'Applications': '/Applications'},
-                    'background': self.background_image,
-                    'icon': os.path.join(self.resource_dir, '%s.icns' % self.distribution.get_name()),
-                    }
-        dmgbuild.build_dmg(filename=dmg_path,
-                           volume_name=self.formal_name,
-                           settings=settings)
+
+        dmgbuild.build_dmg(
+            filename=dmg_path,
+            volume_name=self.formal_name,
+            settings={
+                'files': [self.app_location],
+                'symlinks': {'Applications': '/Applications'},
+                'background': self.background_image,
+                'icon': os.path.join(self.resource_dir, '%s.icns' % self.distribution.get_name()),
+            }
+        )
         return True
 
     def post_build(self):
@@ -86,8 +89,9 @@ class macos(app):
 
     def start_app(self):
         print("Starting %s.app" % (self.formal_name))
-        subprocess.Popen([
-            'open', '%s.app' % self.formal_name
-        ],
+        subprocess.Popen(
+            [
+                'open', '%s.app' % self.formal_name
+            ],
             cwd=os.path.abspath(self.dir)
         ).wait()
