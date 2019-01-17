@@ -24,7 +24,7 @@ Let's get started by using
 
 .. code-block:: bash
 
-    $ pip install cookiecutter briefcase
+    $ pip install cookiecutter
     $ cookiecutter https://github.com/pybee/briefcase-template
 
 This will ask a bunch of questions of you. We'll use an `app_name` of
