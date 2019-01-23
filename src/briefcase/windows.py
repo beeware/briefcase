@@ -153,7 +153,11 @@ class windows(app):
                     lines.extend(content)
                 elif line.strip() == '<!-- CONTENTREFS -->':
                     lines.extend(contentrefs)
-                elif line.strip() == '<!-- SHORTCUTS -->':
+                elif len(shortcuts) and line.strip() == '<!-- SHORTCUTS_PROVIDED -->':
+                    # Comment out existing shortcut in template if setup provides own
+                    lines.append('                        <!--')
+                elif len(shortcuts) and line.strip() == '<!-- SHORTCUTS -->':
+                    lines.append('                        -->')
                     lines.extend(shortcuts)
                 else:
                     lines.append(line.rstrip())
