@@ -59,7 +59,9 @@ class windows(app):
         This should return a suitable relative path which will find the
         bundled python for the relevant platform
         """
-        return "#!.\\python\\python.exe\n"
+        # we need the specified python to be findable relative to a path entry
+        os.environ['PATH'] += os.pathsep + os.path.join(self.dir, 'content')
+        return "#!..\\python\\python.exe\n"
 
     def install_extras(self):
         print(" * Finalizing application installer script...")
@@ -131,7 +133,7 @@ class windows(app):
                                 Icon="ProductIcon"
                                 Description="{description}"
                                 Target="[AppDir]\\app\\{exe_name}.exe"
-                                WorkingDirectory="AppDir" />""".format(**locals()))
+                                WorkingDirectory="AppDir\\app" />""".format(**locals()))
 
         # Generate the full briefcase.wxs file
         briefcase_wxs = os.path.join(self.dir, 'briefcase.wxs')
