@@ -71,6 +71,7 @@ class windows(app):
         content = []
         contentrefs = []
         shortcuts = []
+        shortcuts_instance = 0
         dir_ids = []
 
         def walk_dir(path, depth=0):
@@ -125,10 +126,10 @@ class windows(app):
                 for entry in entries:
                     exe_name = entry.split('=')[0].strip()
                     description = self.distribution.get_description()
-                    shortcutid = uuid.uuid4().hex
+                    # This is used multiple times below so shortcut_id will be filled later
                     shortcuts.append("""\
                             <Shortcut
-                                Id="AppShortcut_{shortcutid}"
+                                Id="Shortcut_{{shortcut_id}}"
                                 Name="{exe_name}"
                                 Icon="ProductIcon"
                                 Description="{description}"
@@ -160,7 +161,11 @@ class windows(app):
                     lines.append('                        <!--')
                 elif len(shortcuts) and line.strip() == '<!-- SHORTCUTS -->':
                     lines.append('                        -->')
-                    lines.extend(shortcuts)
+
+                    shortcuts_instance += 1
+                    for shortcut in shortcuts:
+                        shortcut_id = uuid.uuid4().hex
+                        lines.append(shortcut.format(**locals()))
                 else:
                     lines.append(line.rstrip())
 
