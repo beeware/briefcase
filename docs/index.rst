@@ -85,7 +85,7 @@ Technical reference - commands, modules, classes, methods
 Community
 =========
 
-Rubicon is part of the `BeeWare suite`_. You can talk to the community through:
+Briefcase is part of the `BeeWare suite`_. You can talk to the community through:
 
  * `@pybeeware on Twitter`_
 
