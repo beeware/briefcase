@@ -298,6 +298,28 @@ class app(Command):
 
     def install_app_requirements(self):
         print(" * Installing requirements...")
+        # setuptools install_requires setup() argument list entries end up in
+        # two different self.distribution arguments:
+        # - Entries with no environment markers
+        #   Will be found in self.distribution.install_requires.
+        # - Entries with environment markers
+        #   Will be found under new keys in self.distribution.extras_require;
+        #   each such key is a string starting with ':' followed by the original
+        #   marker expression text itself (eg: ':python_version>"3.5"'); the
+        #   values will be lists of all the entries in the install_requires
+        #   setup() argument containing that particular marker.
+        # With this, the full requirements are:
+        # - The list in self.distribution.install_requires.
+        # - Extended with all True-evaluating marker entries in
+        #   self.distribution.extras_require.
+        requirement_list = list(self.distribution.install_requires)
+        for extra, extra_list in self.distribution.extras_require.items():
+            if not extra.startswith(":"):
+                # Discard non-environment marker entries.
+                continue
+            if pkg_resources.evaluate_marker(extra[1:]):
+                # Marker evaluates to True, bring it in.
+                requirement_list.extend(extra_list)
         if self.distribution.install_requires:
             subprocess.Popen(
                 [
@@ -305,7 +327,7 @@ class app(Command):
                     "--upgrade",
                     "--force-reinstall",
                     '--target={}'.format(self.app_packages_dir)
-                ] + self.distribution.install_requires,
+                ] + requirement_list,
             ).wait()
         else:
             print("No requirements.")
