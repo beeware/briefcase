@@ -11,7 +11,7 @@ This tutorial assumes you've read and followed the instructions in
 :doc:`/background/getting-started`. If you've done this, you should have:
 
 * A ``tutorial`` directory,
-* A activated Python 3.5 virtual environment,
+* An activated Python 3.5+ virtual environment,
 * Briefcase installed in that virtual environment,
 * Any platform-specific dependencies installed.
 
@@ -24,7 +24,7 @@ Let's get started by using
 
 .. code-block:: bash
 
-    $ pip install cookiecutter briefcase
+    $ pip install cookiecutter
     $ cookiecutter https://github.com/pybee/briefcase-template
 
 This will ask a bunch of questions of you. We'll use an `app_name` of
@@ -39,12 +39,19 @@ Check out what the provided ``helloworld/app.py`` file contains:
 
 .. code-block:: bash
 
+    # If you are on macOS or Linux
     $ cd helloworld
     $ cat helloworld/app.py
 
+.. code-block::
+
+    # If you are on Windows command line
+    > cd helloworld
+    > type helloworld/app.py
+
 .. code-block:: python
 
-    
+
     import toga
     from toga.style import Pack
     from toga.style.pack import COLUMN, ROW
@@ -76,15 +83,19 @@ Your project is now ready to use ``briefcase``.
 Windows
 ~~~~~~~
 
+You must use Windows command line (``cmd``) to run this step. In case
+you have installed MingW32, Linux compatibility layer for Windows or similar,
+make sure it doesn't interfere with ``cmd`` environment.
+
 To create and run the application, run:
 
-.. code-block:: bash
+.. code-block::
 
-    $ python setup.py windows -s
+    > python setup.py windows -s
 
 This will produce a ``windows`` subdirectory that will contain a
-``HelloWorld-0.0.1.msi`` installer. If you get an error stating that 
-Wix Tools cannot be found, and you have already installed them, try restarting 
+``HelloWorld-0.0.1.msi`` installer. If you get an error stating that
+Wix Tools cannot be found, and you have already installed them, try restarting
 your computer.
 
 macOS

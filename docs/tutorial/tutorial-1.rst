@@ -1,4 +1,4 @@
-Tutorial 1 - Fahrenheit to Celcius
+Tutorial 1 - Fahrenheit to Celsius
 ==================================
 
 In this tutorial we will make your application do something interesting.
@@ -35,7 +35,7 @@ Put the following code into ``helloworld\app.py``, replacing the old code:
           self.c_input = toga.TextInput(readonly=True)
           self.f_input = toga.TextInput()
 
-          self.c_label = toga.Label('Celcius', style=Pack(text_align=LEFT))
+          self.c_label = toga.Label('Celsius', style=Pack(text_align=LEFT))
           self.f_label = toga.Label('Fahrenheit', style=Pack(text_align=LEFT))
           self.join_label = toga.Label('Is equivalent to', style=Pack(text_align=RIGHT))
 
@@ -84,9 +84,7 @@ Now you can invoke briefcase again:
 
   $ python setup.py ios -s
 
-replacing ``ios`` with your platform of choice. You will be asked if you want
-to replace the existing ``ios`` (or whatever platform you choose) directory; answer
-``y``, and a new project will be generated and started.
+replacing ``ios`` with your platform of choice.
 
 You should see something that looks a bit like this:
 
@@ -111,4 +109,3 @@ This will gather all the Javascript dependencies, create an initial database, st
 
    If you get a "Server could not be contacted" error, it's possible your web browser
    started faster than the server; reload the page, and you should see the app.
-

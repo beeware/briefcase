@@ -32,7 +32,27 @@ class ios(app):
 
     def install_icon(self):
         last_size = None
-        for size in ['1024', '180', '167', '152', '120', '87', '80', '76', '60', '58', '40', '29', '20']:
+        for size in [
+                    '1024',  # App Store Icon
+                    '180',  # iPhone @3x Icon
+                    '167',  # iPad Pro @2x Icon
+                    '152',  # iPad @2x Icon, iPad mini @2x Icon
+                    '120',  # iPhone @2x Icon, iPhone @3x Spotlight
+                    '87',  # iPhone @3x Setting
+                    '80',  # iPhone @2x Spotlight, iPad Pro @2x Spotlight,
+                           # iPad @2x Spotlight, iPad mini @2x Spotlight
+                    '60',  # iPhone @3x Notification
+                    '58',  # iPhone @2x Setting, iPad Pro @2x Setting,
+                           # iPad @2x Setting, iPad mini Setting
+                    '40',  # iPhone @2x Notification, iPad Pro @2x Notification,
+                           # iPad @2x Notification, iPad mini @2x Notification
+
+                    # Theoretically deprecated, but still required
+                    # by the AppIcon resource file
+                    '76',  # iPad @1x Icon
+                    '29',  # iPad @1x Notification
+                    '20',  # iPhone @1x Notification
+                ]:
             icon_file = '%s-%s.png' % (self.icon, size)
             if os.path.exists(icon_file):
                 last_size = size
@@ -52,7 +72,39 @@ class ios(app):
                 print("WARNING: No {}x{} icon file available.".format(size, size))
 
     def install_splash(self):
-        for size in ['1024x768', '1536x2048', '2048x1536', '768x1024', '640x1136', '640x960']:
+        for size in [
+                    '2048×2732',  # 12.9" iPad Pro
+                    '2732×2048',  # (landscape)
+
+                    '1668×2224',  # 10.5" iPad Pro
+                    '2224×1668',  # (landscape)
+
+                    '1536×2048',  # 9.7" iPad, 7.9" iPad mini 4 (@2x)
+                    '2048×1536',  # (landscape)
+
+                    '768×1024',  # 9.7" iPad, 7.9" iPad mini 4 (@1x)
+                    '1024×768',  # (landscape)
+
+                    '1242×2688',  # iPhone XS Max
+                    '2688×1242',  # (landscape)
+
+                    '828×1792',  # iPhone XR
+                    '1792×828',  # (landscape)
+
+                    '1125×2436',  # iPhone X, iPhone XS
+                    '2436×1125',  # (landscape)
+
+                    '750×1334',  # iPhone 8, iPhone 7, iPhone 6s
+                    '1334×750',  # (landscape)
+
+                    '1242×2208',  # iPhone 8 Plus, iPhone 7 Plus, iPhone 6s Plus
+                    '2208×1242',  # (landscape)
+
+                    '640×1136',  # iPhone SE
+                    '1136×640',  # (landscape)
+
+                    '640x960',  # iPhone 6
+                ]:
             splash_file = '{}-{}.png'.format(self.splash, size)
 
             if os.path.exists(splash_file):
