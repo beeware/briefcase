@@ -175,7 +175,7 @@ class windows(app):
             print()
             print("    http://wixtoolset.org/releases/")
             print()
-            print("If already installed, set the WIX environment variable\nto the installation path.")
+            print("If already installed, set the WIX environment variable to the installation path.")
             sys.exit(-2)
         else:
             print("   - Using {}".format(wix_path))
