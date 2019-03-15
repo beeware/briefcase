@@ -28,7 +28,7 @@ class windows(app):
             self.dir = 'windows'
 
         self.resource_dir = os.path.join(self.dir, 'content')
-        self.support_dir = os.path.join(self.dir, 'content', 'python')
+        self.support_dir = os.path.join(self.resource_dir, 'python')
 
     def generate_app_template(self, extra_context=None):
         if self.version_numeric != self.version and not self.sanitize_version:
@@ -65,7 +65,7 @@ class windows(app):
         print(" * Finalizing application installer script...")
 
         # Find all the files that need to be put in the installer
-        app_root = os.path.join(self.dir, 'content')
+        app_root = self.resource_dir
         content = []
         contentrefs = []
         shortcuts = []
@@ -209,10 +209,13 @@ class windows(app):
     def start_app(self):
         print()
         print(" * Starting {}...".format(self.formal_name))
+        cwd = os.path.abspath(self.support_dir)
+        if not os.path.exists(cwd):
+            os.mkdir(cwd)
         subprocess.Popen(
             [
-                os.path.join('pythonw'),
+                'pythonw',
                 os.path.join('..', 'app', 'start.py'),
             ],
-            cwd=os.path.join(os.path.abspath(self.dir), 'content', 'python')
+            cwd=cwd
         ).wait()
