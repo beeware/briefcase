@@ -211,7 +211,7 @@ class windows(app):
         print(" * Starting {}...".format(self.formal_name))
         cwd = os.path.abspath(self.support_dir)
         if not os.path.exists(cwd):
-           os.mkdir(cwd)
+            os.mkdir(cwd)
         subprocess.Popen(
             [
                 'pythonw',
