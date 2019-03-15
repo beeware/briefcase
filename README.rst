@@ -15,7 +15,7 @@ Briefcase
     :target: https://pypi.python.org/pypi/briefcase
 
 .. image:: https://img.shields.io/pypi/l/briefcase.svg
-    :target: https://github.com/pybee/briefcase/blob/master/LICENSE
+    :target: https://github.com/pybee/briefcase/blob/master/LICENSE.txt
 
 .. image:: https://beekeeper.beeware.org/projects/pybee/briefcase/shield
     :target: https://beekeeper.beeware.org/projects/pybee/briefcase
