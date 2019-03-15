@@ -23,7 +23,7 @@ for your project, don't forget to activate it.
 
     Briefcase (and the whole BeeWare toolchain) requires Python 3. Support for
     different Python 3 minor versions varies depending on the platform you're
-    targetting; Python 3.5 will give you the best results.
+    targeting; Python 3.5+ will give you the best results.
 
 Install platform dependencies
 -----------------------------
@@ -44,7 +44,7 @@ and 3.0)" is enabled.
 Mac OSX
 ~~~~~~~
 
-There are no additonal dependencies required to support OSX.
+There are no additional dependencies required to support OSX.
 
 Linux
 ~~~~~
@@ -68,7 +68,7 @@ to install the following:
 iOS
 ~~~
 
-* Install XCode from the App store. Once you've installed XCode, you must also 
+* Install XCode from the App store. Once you've installed XCode, you must also
   install the Xcode Command Line Tools. This can be done from the Preference
   panel within XCode itself.
 
@@ -102,6 +102,8 @@ Android
 
 Django
 ~~~~~~
+
+If you are going to create a web app with Django, you need:
 
 * Install an LTS version of Node (6.9.x)
 * Install NPM 4.x or higher

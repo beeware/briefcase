@@ -30,9 +30,6 @@ class windows(app):
         self.resource_dir = os.path.join(self.dir, 'content')
         self.support_dir = os.path.join(self.resource_dir, 'python')
 
-        iconfile = '%s.ico' % self.icon
-        self.icon_filename = os.path.join(self.app_dir, self.distribution.get_name() + os.path.splitext(iconfile)[1])
-
     def generate_app_template(self, extra_context=None):
         if self.version_numeric != self.version and not self.sanitize_version:
             print(" ! Windows Installer version can only contain numerals, currently: {}".format(self.version))
@@ -42,7 +39,10 @@ class windows(app):
         super(windows, self).generate_app_template(extra_context=extra_context)
 
     def install_icon(self):
-        shutil.copyfile('%s.ico' % self.icon, self.icon_filename)
+        shutil.copyfile(
+            '%s.ico' % self.icon,
+            os.path.join(self.app_dir, '%s.ico' % self.distribution.get_name())
+        )
 
     def install_splash(self):
         raise RuntimeError("Windows doesn't support splash screens.")
@@ -153,11 +153,7 @@ class windows(app):
                     lines.extend(content)
                 elif line.strip() == '<!-- CONTENTREFS -->':
                     lines.extend(contentrefs)
-                elif line.strip() == '<!-- SHORTCUTS_PROVIDED -->':
-                    # Comment out existing shortcut in template
-                    lines.append('                        <!--')
                 elif line.strip() == '<!-- SHORTCUTS -->':
-                    lines.append('                        -->')
                     lines.extend(shortcuts)
                 else:
                     lines.append(line.rstrip())
@@ -171,11 +167,14 @@ class windows(app):
         print(" * Looking for WiX Toolset...")
         wix_path = os.getenv('WIX')
         if not wix_path:
-            print("Couldn't find WiX Toolset. Please visit:")
+            print("Couldn't find WiX Toolset. Please install the latest stable release from:")
             print()
             print("    http://wixtoolset.org/releases/")
             print()
-            print("and install the latest stable release.")
+            print(
+                "If WiX is already installed, set the WIX environment "
+                "variable to the install path."
+            )
             sys.exit(-2)
         else:
             print("   - Using {}".format(wix_path))

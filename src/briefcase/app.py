@@ -1,5 +1,4 @@
 import errno
-import logging
 import os
 import random
 import re
@@ -13,10 +12,34 @@ from distutils.core import Command
 
 import boto3
 import pkg_resources
+import requests
 from botocore.handlers import disable_signing
 from cookiecutter.main import cookiecutter
-from pip import _internal as pip
 from setuptools.command import easy_install
+
+
+def download_url(url, download_dir):
+    filename = os.path.join(download_dir, os.path.basename(url))
+
+    if not os.path.exists(filename):
+        with open(filename, 'wb') as f:
+            response = requests.get(url, stream=True)
+            total = response.headers.get('content-length')
+
+            if total is None:
+                f.write(response.content)
+            else:
+                downloaded = 0
+                total = int(total)
+                for data in response.iter_content(chunk_size=max(int(total / 1000), 1024 * 1024)):
+                    downloaded += len(data)
+                    f.write(data)
+                    done = int(50 * downloaded / total)
+                    print('\r{}{} {}%'.format('█' * done, '.' * (50-done), 2*done), end='', flush=True)
+        print()
+    else:
+        print('Already downloaded')
+    return filename
 
 
 class app(Command):
@@ -57,10 +80,12 @@ class app(Command):
          "Set the device OS version. (e.g., iOS 10.2)"),
         ('device-name=', None,
          "Set the device to run. (e.g., iPhone 7 Plus)"),
+        ('background-image=', None,
+         "Name of the background image file (macOS .dmg only)"),
         ('sanitize-version', None,
          "Forces installer version to only contain numbers."),
         ('clean', None,
-         "Delete any artifacts from previous run")
+         "Delete any artifacts from previous run"),
     ]
 
     def initialize_options(self):
@@ -76,6 +101,7 @@ class app(Command):
         self.support_pkg = None
         self.support_dir = None
         self.download_dir = None
+        self.document_types = None
         self.version_code = None
         self.guid = None
         self.secret_key = None
@@ -85,6 +111,7 @@ class app(Command):
         self.device_name = None
         self.sanitize_version = None
         self.clean = None
+        self.background_image = None
 
     def finalize_options(self):
         if self.formal_name is None:
@@ -106,6 +133,9 @@ class app(Command):
 
         if self.download_dir is None:
             self.download_dir = os.path.expanduser(os.path.join('~', '.briefcase'))
+
+        if self.document_types is None:
+            self.document_types = {}
 
         # The Version Code is a pure-string, numerically sortable
         # version number.
@@ -222,13 +252,15 @@ class app(Command):
             'version_code': self.version_code,
             'guid': self.guid,
             'secret_key': self.secret_key,
+            'document_types': self.document_types,
         }
         if extra_context:
             _extra_context.update(extra_context)
+
         cookiecutter(
             self.template,
             no_input=True,
-            checkout= self._python_version,
+            checkout=self._python_version,
             extra_context=_extra_context
         )
 
@@ -240,18 +272,18 @@ class app(Command):
         branches = subprocess.check_output(["git", "ls-remote", "--heads"], stderr=subprocess.STDOUT, cwd=path)
         branches = branches.decode('utf-8').splitlines()
         branches = branches[1:]
-        all_branches = [name.rsplit("/",1)[1] for name in branches]
+        all_branches = [name.rsplit("/", 1)[1] for name in branches]
         return all_branches
 
     def _git_fetch(self, path):
-        subprocess.check_output(["git", "fetch"], stderr=subprocess.STDOUT, cwd=path)
+        subprocess.Popen(["git", "fetch"], cwd=path).wait()
 
     def _git_checkout(self, path):
         try:
             subprocess.check_output(["git", "checkout", self._python_version], stderr=subprocess.STDOUT, cwd=path)
-        except subprocess.CalledProcessError as pull_error:
-            error_message = pull_error.output.decode('utf-8')
-            print("There is no branch for Python version %r (existing branches: " % self._python_version, ", ".join(self._get_all_branches(path)) + ").")
+        except subprocess.CalledProcessError:
+            print("There is no branch for Python version %r (existing branches: " %
+                  self._python_version, ", ".join(self._get_all_branches(path)) + ").")
 
     def _git_pull(self, path):
         template_name = path.split('/')[-1]
@@ -266,40 +298,66 @@ class app(Command):
 
     def install_app_requirements(self):
         print(" * Installing requirements...")
+        # setuptools install_requires setup() argument list entries end up in
+        # two different self.distribution arguments:
+        # - Entries with no environment markers
+        #   Will be found in self.distribution.install_requires.
+        # - Entries with environment markers
+        #   Will be found under new keys in self.distribution.extras_require;
+        #   each such key is a string starting with ':' followed by the original
+        #   marker expression text itself (eg: ':python_version>"3.5"'); the
+        #   values will be lists of all the entries in the install_requires
+        #   setup() argument containing that particular marker.
+        # With this, the full requirements are:
+        # - The list in self.distribution.install_requires.
+        # - Extended with all True-evaluating marker entries in
+        #   self.distribution.extras_require.
+        requirement_list = list(self.distribution.install_requires)
+        for extra, extra_list in self.distribution.extras_require.items():
+            if not extra.startswith(":"):
+                # Discard non-environment marker entries.
+                continue
+            if pkg_resources.evaluate_marker(extra[1:]):
+                # Marker evaluates to True, bring it in.
+                requirement_list.extend(extra_list)
         if self.distribution.install_requires:
-            pip.main([
-                    'install',
-                    '--upgrade',
-                    '--force-reinstall',
+            subprocess.Popen(
+                [
+                    "pip", "install",
+                    "--upgrade",
+                    "--force-reinstall",
                     '--target={}'.format(self.app_packages_dir)
-                ] + self.distribution.install_requires,
-            )
+                ] + requirement_list,
+            ).wait()
         else:
             print("No requirements.")
 
     def install_platform_requirements(self):
         print(" * Installing platform requirements...")
         if self.app_requires:
-            pip.main([
-                    'install',
-                    '--upgrade',
-                    '--force-reinstall',
-                    '--target={}'.format(self.app_packages_dir),
-                ] + self.app_requires
-            )
+            subprocess.Popen(
+                [
+                    "pip", "install",
+                    "--upgrade",
+                    "--force-reinstall",
+                    '--target={}'.format(self.app_packages_dir)
+                ] + self.app_requires,
+            ).wait()
         else:
             print("No platform requirements.")
 
     def install_code(self):
         print(" * Installing project code...")
-        pip.main([
-                'install',
-                '--upgrade',
-                '--force-reinstall',
-                '--no-dependencies',  # We just want the code, not the dependencies
+        subprocess.Popen(
+            [
+                "pip", "install",
+                "--upgrade",
+                "--force-reinstall",
+                "--no-dependencies",
                 '--target={}'.format(self.app_dir),
                 '.'
-            ])
+            ],
+        ).wait()
 
     @property
     def launcher_header(self):
@@ -319,13 +377,15 @@ class app(Command):
         exe_names = []
         if self.distribution.entry_points:
             print(" * Creating launchers...")
-            pip.main([
-                         'install',
-                         '--upgrade',
-                         '--force-reinstall',
-                         '--target=%s' % self.app_packages_dir,
-                         'setuptools'
-                     ])
+            subprocess.Popen(
+                [
+                    "pip", "install",
+                    "--upgrade",
+                    "--force-reinstall",
+                    '--target={}'.format(self.app_dir),
+                    'setuptools'
+                ],
+            ).wait()
 
             rel_sesources = os.path.relpath(self.resource_dir, self.launcher_script_location)
             rel_sesources_split = ', '.join(["'%s'" % f for f in rel_sesources.split(os.sep)])
@@ -395,20 +455,16 @@ class app(Command):
         if self.support_pkg:
             print(" * Installing support package...")
             print("Support package:", self.support_pkg)
-            # Set logging level to INFO on the download package
-            # to make sure we get progress indicators
-            dl_logger = logging.getLogger('pip._internal.download')
-            dl_logger.setLevel(logging.INFO)
 
             # Download and unpack the support package.
-            pip.download.unpack_url(
-                pip.index.Link(self.support_pkg),
-                os.path.join(os.getcwd(), self.support_dir),
-                download_dir=self.download_dir,
-            )
+            filename = download_url(url=self.support_pkg, download_dir=self.download_dir)
+
+            destination = os.path.join(os.getcwd(), self.support_dir)
+            shutil.unpack_archive(filename, extract_dir=destination)
         else:
             print()
-            print("No pre-built support package could be found for Python %s.%s." % (sys.version_info.major, sys.version_info.minor))
+            print("No pre-built support package could be found for Python %s.%s." %
+                  (sys.version_info.major, sys.version_info.minor))
             print("You will need to compile your own. You may want to start with")
             print("the code from https://github.com/pybee/%s and" % self.support_project)
             print("then specify the compiled tarball with:")
