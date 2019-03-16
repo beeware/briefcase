@@ -2,7 +2,7 @@ include beekeeper.yml
 include CONTRIBUTING.md
 include README.rst
 include AUTHORS
-include LICENSE
+include LICENSE.txt
 include requirements*.txt
 recursive-include briefcase *.py
 recursive-include docs *.bat
