@@ -139,7 +139,7 @@ class app(Command):
 
         # The Version Code is a pure-string, numerically sortable
         # version number.
-        match = re.match('(?P<major>\d+)(\.(?P<minor>\d+)(\.(?P<revision>\d+))?)?', self.distribution.get_version())
+        match = re.match(r'(?P<major>\d+)(\.(?P<minor>\d+)(\.(?P<revision>\d+))?)?', self.distribution.get_version())
         self._numeric_version_parts = (
             int(match.groups()[0]) if match.groups()[0] else 0,
             int(match.groups()[2]) if match.groups()[2] else 0,
@@ -406,7 +406,7 @@ class app(Command):
                 from pkg_resources import load_entry_point
 
                 if __name__ == '__main__':
-                    sys.argv[0] = re.sub(r'(-script\.pyw?|\.exe)?$', '', sys.argv[0])
+                    sys.argv[0] = re.sub(r'(-script\\.pyw?|\\.exe)?$', '', sys.argv[0])
                     sys.exit(
                         load_entry_point(%(spec)r, %(group)r, %(name)r)()
                     )
