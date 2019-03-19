@@ -1,6 +1,13 @@
 Release History
 ===============
 
+0.2.9
+-----
+
+* Updated mechanism for starting the iOS simulator
+* Added support for environment markers in ``install_requires``
+* Improved error handling when Wix isn't found
+
 0.2.8
 -----
 
