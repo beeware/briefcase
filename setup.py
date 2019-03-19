@@ -1,6 +1,7 @@
 #/usr/bin/env python
 import io
 import re
+import platform
 
 from setuptools import setup, find_packages
 
@@ -55,7 +56,8 @@ setup(
         # this will break either requests or boto3 (or possibly both), at which point
         # the requirement can probably be dropped.
         'urllib3<1.24',
-        'dmgbuild >= 1.3.2',
+        *(['dmgbuild >= 1.3.2'] if platform.system() == 'Darwin' else
+          ['pywin32-ctypes'] if platform.system() == 'Windows' else []),
     ],
     license='New BSD',
     classifiers=[

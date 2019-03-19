@@ -7,6 +7,7 @@ import sys
 import uuid
 
 from .app import app
+from .windows_icon import apply_icon
 
 
 class windows(app):
@@ -27,6 +28,7 @@ class windows(app):
         if self.dir is None:
             self.dir = 'windows'
 
+        self.iconfile = None
         self.resource_dir = os.path.join(self.dir, 'content')
         self.support_dir = os.path.join(self.resource_dir, 'python')
 
@@ -39,10 +41,8 @@ class windows(app):
         super(windows, self).generate_app_template(extra_context=extra_context)
 
     def install_icon(self):
-        shutil.copyfile(
-            '%s.ico' % self.icon,
-            os.path.join(self.app_dir, '%s.ico' % self.distribution.get_name())
-        )
+        self.iconfile = os.path.join(self.app_dir, '%s.ico' % self.distribution.get_name())
+        shutil.copyfile('%s.ico' % self.icon, self.iconfile)
 
     def install_splash(self):
         raise RuntimeError("Windows doesn't support splash screens.")
@@ -172,6 +172,16 @@ class windows(app):
         with open(briefcase_wxs, 'w') as template:
             for line in lines:
                 template.write('{}\n'.format(line))
+
+    def post_install(self):
+        if self.iconfile:
+            py_exes = [os.path.join(self.support_dir, f)
+                       for f in os.listdir(self.support_dir) if f.lower().endswith('.exe')]
+            py_exes.extend([os.path.join(self.app_dir, f)
+                            for f in os.listdir(self.app_dir) if f.lower().endswith('.exe')])
+
+            for exe in py_exes:
+                apply_icon(icon=self.iconfile, dest=exe)
 
     def build_app(self):
         print()
