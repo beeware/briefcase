@@ -83,6 +83,10 @@ class android(app):
             else:
                 print("WARNING: No {} splash file available.".format(size))
 
+    def install_launch_scripts(self):
+        # Complete bypass launch scripts for Android
+        print(" * Skipping creation of launch scripts.")
+
     def post_install(self):
         print()
         print("Installation complete.")
