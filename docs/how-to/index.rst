@@ -11,3 +11,4 @@ How-to guides are recipes that take the user through steps in key subjects. They
    :glob:
 
    Contribute to Briefcase <contribute>
+   See errors on iOS <see_errors_on_ios>
