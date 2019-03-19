@@ -40,7 +40,7 @@ setup(
             'windows = briefcase.windows:windows',
         ]
     },
-    python_requires='>=3.4',
+    python_requires='>=3.5',
     install_requires=[
         'pip >= 18.0',
         'cookiecutter >= 1.0',
@@ -64,7 +64,6 @@ setup(
         'License :: OSI Approved :: BSD License',
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
