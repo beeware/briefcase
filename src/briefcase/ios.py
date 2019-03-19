@@ -115,13 +115,19 @@ class ios(app):
             else:
                 print("WARNING: No {} splash file available.".format(size))
 
+    def install_launch_scripts(self):
+        # Complete bypass launch scripts for iOS
+        print(" * Skipping creation of launch scripts.")
+
     def set_device_target(self):
         if self.os_version is None or self.device_name is None or self.device is None:
             # Find an appropriate device
-            pipe = subprocess.Popen(['xcrun', 'simctl', 'list', '-j'], stdout=subprocess.PIPE)
-            pipe.wait()
+            output = subprocess.check_output(
+                ['xcrun', 'simctl', 'list', '-j'],
+                universal_newlines=True
+            )
 
-            data = json.loads(pipe.stdout.read().decode())
+            data = json.loads(output)
 
             if self.os_version is None:
                 os_list = [label for label in data['devices'] if label.startswith('iOS')]
@@ -172,10 +178,11 @@ class ios(app):
                 self.device = [x for x in device_list if x['name'].lower() == self.device_name.lower()][0]
 
     def has_required_xcode_version(self):
-        pipe = subprocess.Popen(['xcrun', 'xcodebuild', '-version'], stdout=subprocess.PIPE)
-        pipe.wait()
+        output = subprocess.check_output(
+            ['xcrun', 'xcodebuild', '-version'],
+            universal_newlines=True
+        )
 
-        output = pipe.stdout.read().decode()
         version = tuple(
             int(v)
             for v in output.split('\n')[0].split(' ')[1].split('.')[:2]
@@ -204,11 +211,19 @@ class ios(app):
 
         print(' * Building XCode project for {} {}...'.format(self.device_name, self.os_version))
 
-        proc = subprocess.Popen([
-            'xcodebuild', ' '.join(build_settings_str), '-project', project_file, '-destination',
-            'platform="iOS Simulator,name={},OS={}"'.format(self.device_name, self.os_version), '-quiet', '-configuration',
-            'Debug', '-arch', 'x86_64', '-sdk', 'iphonesimulator%s' % (self.os_version.split(' ')[-1],), 'build'
-        ], cwd=os.path.abspath(self.dir))
+        proc = subprocess.Popen(
+            [
+                'xcodebuild', ' '.join(build_settings_str),
+                '-project', project_file,
+                '-destination', 'platform="iOS Simulator,name={},OS={}"'.format(self.device_name, self.os_version),
+                '-quiet',
+                '-configuration', 'Debug',
+                '-arch', 'x86_64',
+                '-sdk', 'iphonesimulator%s' % (self.os_version.split(' ')[-1],),
+                'build'
+            ],
+            cwd=os.path.abspath(self.dir)
+        )
         proc.wait()
         return proc.returncode == 0
 
@@ -226,10 +241,9 @@ class ios(app):
         print()
         print("Starting app on {} {}".format(self.device_name, self.os_version))
         print(' * Starting simulator...')
-        subprocess.Popen(
-            ['instruments', '-w', self.device['udid']],
-            stderr=subprocess.PIPE
-        ).communicate()
+        subprocess.call(
+            ['open', '-a', 'Simulator', '--args', '-CurrentDeviceUDID', self.device['udid']],
+        )
 
         print(' * Uninstalling old app version...')
         subprocess.Popen(
@@ -238,10 +252,13 @@ class ios(app):
         ).wait()
 
         print(' * Installing new app version...')
-        subprocess.Popen([
-            'xcrun', 'simctl', 'install', self.device['udid'],
-            os.path.join('build', 'Debug-iphonesimulator', '{}.app'.format(self.formal_name))
-        ], cwd=working_dir).wait()
+        subprocess.Popen(
+            [
+                'xcrun', 'simctl', 'install', self.device['udid'],
+                os.path.join('build', 'Debug-iphonesimulator', '{}.app'.format(self.formal_name))
+            ],
+            cwd=working_dir
+        ).wait()
 
         print(' * Launching app...')
         subprocess.Popen([
