@@ -58,7 +58,7 @@ Alternatively, if you're starting from scratch, you can use `cookiecutter`_ to
 generate a stub project with the required content::
 
     $ pip install cookiecutter
-    $ cookiecutter https://github.com/pybee/briefcase-template
+    $ cookiecutter https://github.com/beeware/briefcase-template
 
 .. _cookiecutter: http://github.com/audreyr/cookiecutter
 

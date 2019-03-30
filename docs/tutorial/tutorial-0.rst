@@ -19,13 +19,13 @@ Start a new project
 -------------------
 
 Let's get started by using
-`the handy template <https://github.com/pybee/briefcase-template>`_
+`the handy template <https://github.com/beeware/briefcase-template>`_
 ``briefcase-template``:
 
 .. code-block:: bash
 
     $ pip install cookiecutter
-    $ cookiecutter https://github.com/pybee/briefcase-template
+    $ cookiecutter https://github.com/beeware/briefcase-template
 
 This will ask a bunch of questions of you. We'll use an `app_name` of
 "helloworld", a `formal_name` of "Hello World", using the Toga GUI toolkit.

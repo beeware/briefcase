@@ -23,7 +23,7 @@ setup(
     long_description=long_description,
     author='Russell Keith-Magee',
     author_email='russell@keith-magee.com',
-    url='http://pybee.org/briefcase',
+    url='http://beeware.org/briefcase',
     keywords=['app', 'packaging', 'macOS', 'iOS', 'android', 'tvOS', 'mobile', 'windows'],
     packages=find_packages(where="src"),
     package_dir={"": "src"},
@@ -74,9 +74,9 @@ setup(
     ],
     test_suite='tests',
     package_urls={
-        'Funding': 'https://pybee.org/contributing/membership/',
+        'Funding': 'https://beeware.org/contributing/membership/',
         'Documentation': 'http://briefcase.readthedocs.io/en/latest/',
-        'Tracker': 'https://github.com/pybee/briefcase/issues',
-        'Source': 'https://github.com/pybee/briefcase',
+        'Tracker': 'https://github.com/beeware/briefcase/issues',
+        'Source': 'https://github.com/beeware/briefcase',
     },
 )

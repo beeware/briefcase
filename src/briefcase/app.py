@@ -235,7 +235,7 @@ class app(Command):
                     sys.exit(1)
                 self._git_pull(template_path)
             else:
-                self.template = 'https://github.com/pybee/Python-{}-template.git'.format(self.platform)
+                self.template = 'https://github.com/beeware/Python-{}-template.git'.format(self.platform)
         print("Project template: {}".format(self.template))
         _extra_context = {
             'app_name': self.distribution.get_name(),
@@ -466,7 +466,7 @@ class app(Command):
             print("No pre-built support package could be found for Python %s.%s." %
                   (sys.version_info.major, sys.version_info.minor))
             print("You will need to compile your own. You may want to start with")
-            print("the code from https://github.com/pybee/%s and" % self.support_project)
+            print("the code from https://github.com/beeware/%s and" % self.support_project)
             print("then specify the compiled tarball with:")
             print()
             print("    python setup.py {} --support-pkg=<path to tarball>".format(self.platform.lower()))
