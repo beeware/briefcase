@@ -49,7 +49,7 @@ copyright = u'2013, Russell Keith-Magee'
 #
 # The full version, including alpha/beta/rc tags.
 import io, re
-with io.open('../briefcase/__init__.py', encoding='utf8') as version_file:
+with io.open('../src/briefcase/__init__.py', encoding='utf8') as version_file:
     version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]", version_file.read(), re.M)
     if version_match:
         release = version_match.group(1)
