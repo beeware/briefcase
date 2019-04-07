@@ -1,6 +1,6 @@
-.. image:: http://pybee.org/project/projects/tools/briefcase/briefcase.png
+.. image:: http://beeware.org/project/projects/tools/briefcase/briefcase.png
     :width: 72px
-    :target: https://pybee.org/briefcase
+    :target: https://beeware.org/briefcase
 
 Briefcase
 =========
@@ -15,13 +15,13 @@ Briefcase
     :target: https://pypi.python.org/pypi/briefcase
 
 .. image:: https://img.shields.io/pypi/l/briefcase.svg
-    :target: https://github.com/pybee/briefcase/blob/master/LICENSE.txt
+    :target: https://github.com/beeware/briefcase/blob/master/LICENSE.txt
 
-.. image:: https://beekeeper.beeware.org/projects/pybee/briefcase/shield
-    :target: https://beekeeper.beeware.org/projects/pybee/briefcase
+.. image:: https://beekeeper.beeware.org/projects/beeware/briefcase/shield
+    :target: https://beekeeper.beeware.org/projects/beeware/briefcase
 
-.. image:: https://badges.gitter.im/pybee/general.svg
-    :target: https://gitter.im/pybee/general
+.. image:: https://badges.gitter.im/beeware/general.svg
+    :target: https://gitter.im/beeware/general
 
 Briefcase is a tool for converting a Python project into a standalone native application. You can package projects for:
 
@@ -67,12 +67,12 @@ Contributing
 If you experience problems with Briefcase, `log them on GitHub`_. If you
 want to contribute code, please `fork the code`_ and `submit a pull request`_.
 
-.. _BeeWare suite: http://pybee.org
+.. _BeeWare suite: http://beeware.org
 .. _Read The Docs: https://briefcase.readthedocs.io
 .. _Quickstart: https://briefcase.readthedocs.io/en/latest/background/quickstart.html
 .. _@pybeeware on Twitter: https://twitter.com/pybeeware
 .. _pybee/general: https://gitter.im/pybee/general
-.. _BeeWare Community Code of Conduct: http://pybee.org/community/behavior/
-.. _log them on Github: https://github.com/pybee/briefcase/issues
-.. _fork the code: https://github.com/pybee/briefcase
-.. _submit a pull request: https://github.com/pybee/briefcase/pulls
+.. _BeeWare Community Code of Conduct: http://beeware.org/community/behavior/
+.. _log them on Github: https://github.com/beeware/briefcase/issues
+.. _fork the code: https://github.com/beeware/briefcase
+.. _submit a pull request: https://github.com/beeware/briefcase/pulls
