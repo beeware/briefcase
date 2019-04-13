@@ -48,7 +48,8 @@ copyright = u'2013, Russell Keith-Magee'
 # built documents.
 #
 # The full version, including alpha/beta/rc tags.
-import io, re
+import io
+import re
 with io.open('../src/briefcase/__init__.py', encoding='utf8') as version_file:
     version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]", version_file.read(), re.M)
     if version_match:
