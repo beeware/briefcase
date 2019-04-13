@@ -3,14 +3,14 @@ Getting Started
 
 In this guide we will walk you through setting up your Briefcase environment
 for development and testing. We will assume that you have a working Python
-install, and an existing project. If you don't have an environment set up yet, 
+install, and an existing project. If you don't have an environment set up yet,
 this `guide <https://docs.python.org/3/using/index.html>`__ will help you get started.
 
 .. note::
+
     Briefcase (and the whole BeeWare toolchain) requires Python 3. Support for
     different Python 3 minor versions varies depending on the platform you're
     targeting; Python 3.5+ will give you the best results.
-    
 
 Install Briefcase
 -----------------
@@ -27,9 +27,9 @@ for your project, don't forget to activate it.
     $ pip install briefcase
 
 .. note::
-On some versions the activate script may be in the venv/Scripts/ folder in which 
-case swap: 
-``$ . venv/bin/activate`` for ``$ . venv/Scripts/activate``
+
+  On some versions the activate script may be in the venv/Scripts/ folder in which
+  case swap: ``$ . venv/bin/activate`` for ``$ . venv/Scripts/activate``
 
 Install platform dependencies
 -----------------------------
