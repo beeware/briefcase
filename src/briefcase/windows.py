@@ -48,9 +48,26 @@ class windows(app):
         raise RuntimeError("Windows doesn't support splash screens.")
 
     def find_support_pkg(self):
+        """Gets the url to the embedded Python support package.
+
+        Python provides redistributable zip files containing the Windows builds,
+        making it easy to redistribute Python as part of another software
+        package.
+
+        Returns (string): The support package url.
+
+        """
         version = "%s.%s.%s" % sys.version_info[:3]
         arch = "amd64" if (struct.calcsize("P") * 8) == 64 else "win32"
-        return 'https://www.python.org/ftp/python/%s/python-%s-embed-%s.zip' % (version, version, arch)
+
+        # Python 3.7.2 had to be repackaged for Windows,
+        # https://bugs.python.org/issue35596. Use this repackaged link for
+        # version 3.7.2, otherwise use the standard link format
+
+        if version == "3.7.2":
+            return 'https://www.python.org/ftp/python/%s/python-%s.post1-embed-%s.zip' % (version, version, arch)
+        else:
+            return 'https://www.python.org/ftp/python/%s/python-%s-embed-%s.zip' % (version, version, arch)
 
     @property
     def launcher_header(self):
