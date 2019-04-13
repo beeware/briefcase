@@ -43,7 +43,7 @@ Check out what the provided ``helloworld/app.py`` file contains:
     $ cd helloworld
     $ cat helloworld/app.py
 
-.. code-block::
+.. code-block:: python
 
     # If you are on Windows command line
     > cd helloworld
@@ -89,7 +89,7 @@ make sure it doesn't interfere with ``cmd`` environment.
 
 To create and run the application, run:
 
-.. code-block::
+.. code-block:: python
 
     > python setup.py windows -s
 
