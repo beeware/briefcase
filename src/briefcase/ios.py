@@ -132,7 +132,7 @@ class ios(app):
             if self.os_version is None:
                 os_list = [label for label in data['devices'] if label.startswith('iOS')]
                 if len(os_list) == 0:
-                    print('No iOS device simulators found', file=sys.stderr)
+                    print('No iOS device simulators found. Build your xcodeproj file manually using XCode.', file=sys.stderr)
                     sys.exit(1)
                 elif len(os_list) == 1:
                     print('Building for {}...'.format(os_list[0]))
