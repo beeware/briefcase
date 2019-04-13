@@ -5,9 +5,9 @@ import sys
 import webbrowser
 
 try:
-    from urllib.request import urlopen
+    pass
 except ImportError:  # Python 2 compatibility
-    from urllib2 import urlopen
+    pass
 
 from .app import app
 
