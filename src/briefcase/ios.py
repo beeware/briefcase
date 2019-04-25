@@ -136,7 +136,11 @@ class ios(app):
                     return label
 
             if self.os_version is None:
-                os_list = [clean_label_output(label) for label in data['devices'] if label.startswith('iOS') or label.startswith('com.apple.CoreSimulator.SimRuntime.iOS')]
+                os_list = []
+                for label in data['devices']:
+                    if label.startswith('iOS') or label.startswith('com.apple.CoreSimulator.SimRuntime.iOS'):
+                        os_list.append(clean_label_output(label))
+
                 if len(os_list) == 0:
                     print('No iOS device simulators found', file=sys.stderr)
                     sys.exit(1)
