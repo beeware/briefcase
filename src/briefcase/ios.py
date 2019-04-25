@@ -129,8 +129,14 @@ class ios(app):
 
             data = json.loads(output)
 
+            def clean_label_output(label):
+                if label.startswith('com.apple.CoreSimulator.SimRuntime.iOS'):
+                    return label[-8:-2]
+                else:
+                    return label
+
             if self.os_version is None:
-                os_list = [label for label in data['devices'] if label.startswith('iOS') or label.startswith('com.apple.CoreSimulator.SimRuntime.iOS')]
+                os_list = [clean_label_output(label) for label in data['devices'] if label.startswith('iOS') or label.startswith('com.apple.CoreSimulator.SimRuntime.iOS')]
                 if len(os_list) == 0:
                     print('No iOS device simulators found', file=sys.stderr)
                     sys.exit(1)
