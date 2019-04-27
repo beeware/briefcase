@@ -15,8 +15,9 @@ this `guide <https://docs.python.org/3/using/index.html>`__ will help you get st
 Install Briefcase
 -----------------
 
-The first step is to install Briefcase. If you're using a virtual environment
-for your project, don't forget to activate it.
+The first step is to install Briefcase. If you're using a `virtual environment
+<https://docs.python.org/3/library/venv.html>` for your project, don't forget
+to activate it.
 
 .. code-block:: bash
 
