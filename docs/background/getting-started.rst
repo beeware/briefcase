@@ -2,9 +2,9 @@ Getting Started
 ===============
 
 In this guide we will walk you through setting up your Briefcase environment
-for development and testing. We will assume that you have a working Python
-install, and an existing project. If you don't have an environment set up yet,
-this `guide <https://docs.python.org/3/using/index.html>`__ will help you get started.
+for development and testing. We will assume that you have a working Python 3
+install. If you don't have Python 3 set up yet, this `guide
+<https://docs.python.org/3/using/index.html>`__ will help you get started.
 
 .. note::
 
@@ -16,7 +16,7 @@ Install Briefcase
 -----------------
 
 The first step is to install Briefcase. If you're using a virtual environment
-for your project, don't forget to activate it.
+for your project (which we recommend), don't forget to activate it.
 
 .. code-block:: bash
 
