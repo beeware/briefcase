@@ -84,10 +84,14 @@ Android
 * Install `Android Studio <https://developer.android.com/studio/index.html>`__.
   When you start Android Studio for the first time, you'll be provided a wizard
   to configure your installation; select a "standard" installation.
-* Put the `sdk/tools`, `sdk/platform-tools` and `sdk/tools/bin` directories in your path.
-  - On macOS: `~/Library/Android/sdk/tools`, `~/Library/Android/sdk/platform-tools` and `~/Library/Android/sdk/tools/bin`
-* Set the `ANDROID_SDK_HOME` directory
-  - On macOS: `~/Library/Android/sdk`
+* Put the ``sdk/tools``, ``sdk/platform-tools`` and ``sdk/tools/bin`` directories in your path.
+
+  - On macOS: ``~/Library/Android/sdk/tools``, ``~/Library/Android/sdk/platform-tools`` and ``~/Library/Android/sdk/tools/bin``
+
+* Set the ``ANDROID_SDK_HOME`` directory
+
+  - On macOS: ``~/Library/Android/sdk``
+
 * Update the SDKs::
 
     $ sdkmanager --update
