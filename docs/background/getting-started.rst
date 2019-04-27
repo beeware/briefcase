@@ -111,8 +111,8 @@ Django
 
 If you are going to create a web app with Django, you need:
 
-* Install an LTS version of Node (6.9.x)
-* Install NPM 4.x or higher
+* Install an LTS version of `Node <https://nodejs.org/en/download/>`__ (6.9.x)
+* Install `NPM <https://docs.npmjs.com/downloading-and-installing-node-js-and-npm>`__ 4.x or higher
 
 Next Steps
 ----------
