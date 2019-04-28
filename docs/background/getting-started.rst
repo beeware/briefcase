@@ -15,8 +15,9 @@ install. If you don't have Python 3 set up yet, this `guide
 Install Briefcase
 -----------------
 
-The first step is to install Briefcase. If you're using a virtual environment
-for your project (which we recommend), don't forget to activate it.
+The first step is to install Briefcase. If you're using a `virtual environment
+<https://docs.python.org/3/library/venv.html>` for your project (which we 
+recommend), don't forget to activate it.
 
 .. code-block:: bash
 
