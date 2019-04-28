@@ -2,9 +2,9 @@ Getting Started
 ===============
 
 In this guide we will walk you through setting up your Briefcase environment
-for development and testing. We will assume that you have a working Python
-install, and an existing project. If you don't have an environment set up yet,
-this `guide <https://docs.python.org/3/using/index.html>`__ will help you get started.
+for development and testing. We will assume that you have a working Python 3
+install. If you don't have Python 3 set up yet, this `guide
+<https://docs.python.org/3/using/index.html>`__ will help you get started.
 
 .. note::
 
@@ -16,8 +16,8 @@ Install Briefcase
 -----------------
 
 The first step is to install Briefcase. If you're using a `virtual environment
-<https://docs.python.org/3/library/venv.html>` for your project, don't forget
-to activate it.
+<https://docs.python.org/3/library/venv.html>` for your project (which we 
+recommend), don't forget to activate it.
 
 .. code-block:: bash
 
@@ -85,10 +85,14 @@ Android
 * Install `Android Studio <https://developer.android.com/studio/index.html>`__.
   When you start Android Studio for the first time, you'll be provided a wizard
   to configure your installation; select a "standard" installation.
-* Put the `sdk/tools`, `sdk/platform-tools` and `sdk/tools/bin` directories in your path.
-  - On macOS: `~/Library/Android/sdk/tools`, `~/Library/Android/sdk/platform-tools` and `~/Library/Android/sdk/tools/bin`
-* Set the `ANDROID_SDK_HOME` directory
-  - On macOS: `~/Library/Android/sdk`
+* Put the ``sdk/tools``, ``sdk/platform-tools`` and ``sdk/tools/bin`` directories in your path.
+
+  - On macOS: ``~/Library/Android/sdk/tools``, ``~/Library/Android/sdk/platform-tools`` and ``~/Library/Android/sdk/tools/bin``
+
+* Set the ``ANDROID_SDK_HOME`` directory
+
+  - On macOS: ``~/Library/Android/sdk``
+
 * Update the SDKs::
 
     $ sdkmanager --update
@@ -112,8 +116,8 @@ Django
 
 If you are going to create a web app with Django, you need:
 
-* Install an LTS version of Node (6.9.x)
-* Install NPM 4.x or higher
+* Install an LTS version of `Node <https://nodejs.org/en/download/>`__ (6.9.x)
+* Install `NPM <https://docs.npmjs.com/downloading-and-installing-node-js-and-npm>`__ 4.x or higher
 
 Next Steps
 ----------
