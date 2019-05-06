@@ -11,7 +11,9 @@ from .app import app
 class macos(app):
     description = "Create a macOS app to wrap this project"
 
-    def confirm_prerequistes(self):
+    def confirm_prerequisites(self):
+        print()
+        print(" * Confirming prerequisites...")
         # Before we start, exit if xcode is not installed
         print()
         print(" * Looking for Xcode...")
@@ -42,8 +44,6 @@ class macos(app):
             sys.exit(1)
 
     def finalize_options(self):
-        print()
-        print(" * Confirming prerequistes...")
         self.confirm_prerequistes()
 
         # Copy over all the options from the base 'app' command
