@@ -24,8 +24,8 @@ recommend), don't forget to activate it.
     $ mkdir tutorial
     $ cd tutorial
     $ python3 -m venv venv
-    $ . venv/bin/activate
-    $ pip install briefcase
+    $ . venv/bin/activate    # For Windows CMD: venv\Scripts\activate
+    (venv) $ pip install briefcase
 
 .. note::
 
