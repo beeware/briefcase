@@ -323,6 +323,7 @@ class app(Command):
         if self.distribution.install_requires:
             subprocess.Popen(
                 [
+                    sys.executable, "-m",
                     "pip", "install",
                     "--upgrade",
                     "--force-reinstall",
@@ -337,6 +338,7 @@ class app(Command):
         if self.app_requires:
             subprocess.Popen(
                 [
+                    sys.executable, "-m",
                     "pip", "install",
                     "--upgrade",
                     "--force-reinstall",
@@ -350,6 +352,7 @@ class app(Command):
         print(" * Installing project code...")
         subprocess.Popen(
             [
+                sys.executable, "-m",
                 "pip", "install",
                 "--upgrade",
                 "--force-reinstall",
@@ -379,6 +382,7 @@ class app(Command):
             print(" * Creating launchers...")
             subprocess.Popen(
                 [
+                    sys.executable, "-m",
                     "pip", "install",
                     "--upgrade",
                     "--force-reinstall",
