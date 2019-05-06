@@ -21,13 +21,13 @@ dependencies and start coding. Assuming that you are using
     $ git clone git@github.com:beeware/briefcase.git
     $ cd briefcase
     $ python3 -m venv venv
-    $ . venv/bin/activate
+    $ . venv/bin/activate  # For Windows CMD: venv\Scripts\activate
 
 Briefcase uses ``unittest`` (or ``unittest2`` for Python < 2.7) for its own test
 suite as well as additional helper modules for testing. To install all the
 requirements for Briefcase, you have to run the following commands within your
 virutal envrionment::
 
-    $ pip install -e .
+    $ (venv) pip install -e .  # for Windows CMD: pip install -e cd
 
 Now you are ready to start hacking! Have fun!
