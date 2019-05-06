@@ -11,7 +11,41 @@ from .app import app
 class macos(app):
     description = "Create a macOS app to wrap this project"
 
+    def confirm_prerequisites(self):
+        print()
+        print(" * Confirming prerequisites...")
+        # Before we start, exit if xcode is not installed
+        print()
+        print(" * Looking for Xcode...")
+        if subprocess.Popen(
+            [
+                '/usr/bin/xcodebuild', '-version'
+            ]
+        ).wait() == 1:
+            print("Briefcase requires Xcode, but it does not appear to be installed.")
+            print("Please install the latest version of Xcode using the Mac App Store:")
+            print()
+            print("    https://itunes.apple.com/us/app/xcode/id497799835")
+            sys.exit(1)
+
+        # Before we start, exit if Command Line Tools is not installed
+        # This check if gcc is installed properly, which will ensure Command Line Tools are there
+        print()
+        print(" * Looking for Command Line Tools...")
+        if subprocess.Popen(
+            [
+                'gcc', '--version'
+            ]
+        ).wait() == 1:
+            print("Briefcase requires the Xcode Command Line Tools, but they do not appear to be installed.")
+            print("Please install the command line tools by running:")
+            print()
+            print("    xcode-select --install")
+            sys.exit(1)
+
     def finalize_options(self):
+        self.confirm_prerequistes()
+
         # Copy over all the options from the base 'app' command
         finalized = self.get_finalized_command('app')
         options = ('formal_name', 'organization_name',
