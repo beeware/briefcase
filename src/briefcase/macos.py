@@ -12,6 +12,37 @@ class macos(app):
     description = "Create a macOS app to wrap this project"
 
     def finalize_options(self):
+        # Before we start, exit if xcode is not installed
+        print()
+        print(" * Looking for Xcode...")
+        if subprocess.Popen(
+            [
+                '/usr/bin/xcodebuild', '-version'
+            ]
+            ).wait() == 1:
+            # raise error
+            print("Xcode is required.  Couldn't find Xcode.")
+            print("Please install the latest stable release from:")
+            print()
+            print("    https://developer.apple.com/xcode/")
+            sys.exit(1)
+
+        # Before we start, exit if Command Line Tools is not installed
+        # This check if gcc is installed properly, which will ensure Command Line Tools are there
+
+        print()
+        print(" * Looking for Command Line Tools...")
+        if subprocess.Popen(
+            [
+                'gcc', '--version'
+            ]
+            ).wait() == 1:
+            print("Command Line Tools are required. Couldn't find Command Line Tools.")
+            print("Please install the latest stable release by running the following in your terminal:")
+            print()
+            print("    xcode-select --install")
+            sys.exit(1)
+
         # Copy over all the options from the base 'app' command
         finalized = self.get_finalized_command('app')
         options = ('formal_name', 'organization_name',
