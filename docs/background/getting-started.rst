@@ -24,7 +24,7 @@ Run these commands to create the directory for your project and set up the virtu
     $ mkdir tutorial
     $ cd tutorial
     $ python3 -m venv venv
-    $ . venv/bin/activate
+    $ . venv/bin/activate    # For Windows CMD: venv\Scripts\activate
 
 The last command activates the virtual environment, which means that any libraries you install at this point will go into this environment.  See the `Python venv documentation <https://docs.python.org/3/library/venv.html>`_ for complete documentation of virtual environments.
 
