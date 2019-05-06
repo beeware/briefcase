@@ -32,6 +32,28 @@ recommend), don't forget to activate it.
   On some versions the activate script may be in the venv/Scripts/ folder in which
   case swap: ``$ . venv/bin/activate`` for ``$ . venv/Scripts/activate``
 
+Install Toga
+-------------
+
+Next, install Toga into your virtual environment:
+
+macOS or Linux
+~~~~~~~~~~~~~~
+
+.. code-block:: bash
+
+    (venv) $ pip install --pre toga
+
+Windows
+~~~~~~~
+
+.. code-block:: bash
+
+    (venv) C:\...>pip install --pre toga
+
+(note: a pre-release version of Toga is currently in use.)
+
+
 Install platform dependencies
 -----------------------------
 
