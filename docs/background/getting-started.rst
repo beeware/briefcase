@@ -12,12 +12,12 @@ install. If you don't have Python 3 set up yet, this `guide
     different Python 3 minor versions varies depending on the platform you're
     targeting; Python 3.5+ will give you the best results.
 
-Install Briefcase
------------------
+Create a Virtual Environment
+----------------------------
 
-The first step is to install Briefcase. If you're using a `virtual environment
-<https://docs.python.org/3/library/venv.html>` for your project (which we 
-recommend), don't forget to activate it.
+We recommend creating a `virtual environment` for your project. A virtual environment is a self-contained packaging of Python where you can install the libraries needed for this project without worrying about conflicting with your other projects.
+
+Run these commands to create the directory for your project and set up the virtual environment:
 
 .. code-block:: bash
 
@@ -25,12 +25,23 @@ recommend), don't forget to activate it.
     $ cd tutorial
     $ python3 -m venv venv
     $ . venv/bin/activate
-    $ pip install briefcase
+
+The last command activates the virtual environment, which means that any libraries you install at this point will go into this environment.  See the `Python venv documentation <https://docs.python.org/3/library/venv.html>`_ for complete documentation of virtual environments.
 
 .. note::
 
   On some versions the activate script may be in the venv/Scripts/ folder in which
   case swap: ``$ . venv/bin/activate`` for ``$ . venv/Scripts/activate``
+
+
+Install Briefcase
+-----------------
+
+The next step is to install Briefcase:
+
+.. code-block:: bash
+
+    $ pip install briefcase
 
 Install Toga
 -------------
