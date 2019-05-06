@@ -19,7 +19,7 @@ class macos(app):
             [
                 '/usr/bin/xcodebuild', '-version'
             ]
-            ).wait() == 1:
+        ).wait() == 1:
             # raise error
             print("Xcode is required.  Couldn't find Xcode.")
             print("Please install the latest stable release from:")
@@ -36,7 +36,7 @@ class macos(app):
             [
                 'gcc', '--version'
             ]
-            ).wait() == 1:
+        ).wait() == 1:
             print("Command Line Tools are required. Couldn't find Command Line Tools.")
             print("Please install the latest stable release by running the following in your terminal:")
             print()
