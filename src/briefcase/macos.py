@@ -11,7 +11,7 @@ from .app import app
 class macos(app):
     description = "Create a macOS app to wrap this project"
 
-    def finalize_options(self):
+    def confirm_prerequistes(self):
         # Before we start, exit if xcode is not installed
         print()
         print(" * Looking for Xcode...")
@@ -29,7 +29,6 @@ class macos(app):
 
         # Before we start, exit if Command Line Tools is not installed
         # This check if gcc is installed properly, which will ensure Command Line Tools are there
-
         print()
         print(" * Looking for Command Line Tools...")
         if subprocess.Popen(
@@ -42,6 +41,11 @@ class macos(app):
             print()
             print("    xcode-select --install")
             sys.exit(1)
+
+    def finalize_options(self):
+        print()
+        print(" * Confirming prerequistes...")
+        self.confirm_prerequistes()
 
         # Copy over all the options from the base 'app' command
         finalized = self.get_finalized_command('app')
