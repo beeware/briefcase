@@ -20,11 +20,10 @@ class macos(app):
                 '/usr/bin/xcodebuild', '-version'
             ]
         ).wait() == 1:
-            # raise error
-            print("Xcode is required.  Couldn't find Xcode.")
-            print("Please install the latest stable release from:")
+            print("Briefcase requires Xcode, but it does not appear to be installed.")
+            print("Please install the latest version of Xcode using the Mac App Store:")
             print()
-            print("    https://developer.apple.com/xcode/")
+            print("    https://itunes.apple.com/us/app/xcode/id497799835")
             sys.exit(1)
 
         # Before we start, exit if Command Line Tools is not installed
@@ -36,8 +35,8 @@ class macos(app):
                 'gcc', '--version'
             ]
         ).wait() == 1:
-            print("Command Line Tools are required. Couldn't find Command Line Tools.")
-            print("Please install the latest stable release by running the following in your terminal:")
+            print("Briefcase requires the Xcode Command Line Tools, but they do not appear to be installed.")
+            print("Please install the command line tools by running:")
             print()
             print("    xcode-select --install")
             sys.exit(1)
