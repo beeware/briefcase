@@ -4,6 +4,8 @@
 Tutorials
 =========
 
+To prepare for the tutorials, first follow the instructions in :doc:`/background/getting-started`.
+
 These tutorials are step-by step guides for using Briefcase.
 
 .. toctree::
