@@ -101,6 +101,22 @@ application. Make sure you have the Django dependencies installed (see
 
   $ python setup.py django -s
 
+
+.. note::
+  Due to known problem (`issue 115 <https://github.com/beeware/briefcase/issues/115>`_) using ``toga-django`` development branch ``0.3.0`` with Django, you may see ``ImportError: No module named 'toga.django``. Downgrading to version ``0.2.15`` will fix it for now. Prior to re-running above command, take the following steps:
+
+  .. code-block:: bash
+
+    $ pip install toga_django
+
+  Update ``helloworld\app.py`` to code block found `here <https://toga.readthedocs.io/en/v0.2.15/tutorial/tutorial-1.html>`_.
+
+  Rerun command:
+
+  .. code-block:: bash
+
+    $ python setup.py django -s
+
 This will gather all the Javascript dependencies, create an initial database, start a Django runserver, and launch a browser. You should see the same application running in your browser:
 
 .. image:: screenshots/tutorial-1-django.png
