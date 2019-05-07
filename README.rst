@@ -31,7 +31,7 @@ Briefcase is a tool for converting a Python project into a standalone native app
 * iPhone/iPad
 * Android
 * AppleTV
-* tvOS.
+* tvOS
 
 Broadly supports Python 3. Note: exact versions supported vary depending on the platform being targeted.
 
