@@ -5,8 +5,7 @@ Briefcase is part of the `BeeWare suite`_. You can talk to the community
 through:
 
 * `@pybeeware on Twitter`_
-* The `BeeWare Users Mailing list`_, for questions about how to use the BeeWare suite.
-* The `BeeWare Developers Mailing list`_, for discussing the development of new features in the BeeWare suite, and ideas for new tools for the suite.
+* `BeeWare Getting Help page`_
 
 Code of Conduct
 ---------------
@@ -26,11 +25,9 @@ want to contribute code, please `fork the code`_ and `submit a pull request`_.
 .. _BeeWare suite: http://beeware.org
 .. _Read The Docs: https://briefcase.readthedocs.io
 .. _@pybeeware on Twitter: https://twitter.com/pybeeware
-.. _BeeWare Users Mailing list: https://groups.google.com/forum/#!forum/beeware-users
-.. _BeeWare Developers Mailing list: https://groups.google.com/forum/#!forum/beeware-developers
+.. _BeeWare Getting Help page: https://beeware.org/community/getting-help/
 .. _log them on Github: https://github.com/beeware/briefcase/issues
 .. _fork the code: https://github.com/beeware/briefcase
 .. _submit a pull request: https://github.com/beeware/briefcase/pulls
-
 .. _Code of Conduct: http://beeware.org/contributing/index.html
 .. _Russell Keith-Magee: russell@keith-magee.com
