@@ -8,7 +8,7 @@ Setup
 -----
 
 This tutorial assumes you've read and followed the instructions in
-:doc:`/background/getting-started`. If you've done this, you should have:
+:doc:`/tutorial/getting-started`. If you've done this, you should have:
 
 * A ``tutorial`` directory,
 * An activated Python 3.5+ virtual environment,
