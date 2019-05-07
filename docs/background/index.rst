@@ -11,6 +11,5 @@ About Briefcase
    faq
    community
    success
-   getting-started
    quickstart
    releases
