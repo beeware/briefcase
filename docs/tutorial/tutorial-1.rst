@@ -84,7 +84,7 @@ Now you can invoke briefcase again:
 
   $ python setup.py ios -s
 
-replacing ``ios`` with your platform of choice.
+replacing ``ios`` with your platform of choice. (Note: if you had not quit the "Hello World" app, do first before rebuilding.)
 
 You should see something that looks a bit like this:
 
