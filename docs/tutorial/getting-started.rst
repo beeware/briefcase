@@ -116,7 +116,7 @@ iOS
 
 * You'll need to sign in to XCode with your Apple ID account - the same one you'd use for iTunes.
 
-* On Mohave, the easiest way to ensure that the Xcode Command Line Tools are
+* On Mojave, the easiest way to ensure that the Xcode Command Line Tools are
   installed is to open a default project template in XCode and run for the newest version of iPhone.
 
 * You can create a free personal team by clicking on ``Preferences > Accounts`` and adding your Apple ID account.
