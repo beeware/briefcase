@@ -112,6 +112,22 @@ iOS
   install the Xcode Command Line Tools. This can be done from the Preference
   panel within XCode itself.
 
+* For first time XCode users, make sure you've installed or updated to the latest XCode version.
+
+* You'll need to sign in to XCode with your Apple ID account - the same one you'd use for iTunes.
+
+* On Mohave, the easiest way to ensure that the Xcode Command Line Tools are
+  installed is to open a default project template in XCode and run for the newest version of iPhone.
+
+* You can create a free personal team by clicking on ``Preferences > Accounts`` and adding your Apple ID account.
+
+* When you're ready to run the project, open it in XCode and double-click on Hello World.
+  The run button is on the top left of the screen.
+
+* To install on an iPhone, plug the iPhone into the computer, unclick ``Automatically
+  manage signing``, and ensure you have a unique Bundle ID. You can achieve this
+  by updating it to ``com.your-name.helloworld.toga`` in most cases.
+
 Android
 ~~~~~~~
 
