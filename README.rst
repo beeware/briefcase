@@ -37,7 +37,7 @@ Broadly supports Python 3. Note: exact versions supported vary depending on the 
 
 Start using Briefcase with the `Getting Started`_ guide.
 
-.. _Getting Started: https://briefcase.readthedocs.io/en/latest/background/getting-started.html
+.. _Getting Started: https://briefcase.readthedocs.io/en/latest/tutorial/getting-started.html
 
 Quickstart
 -------------
