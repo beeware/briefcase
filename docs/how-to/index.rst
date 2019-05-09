@@ -12,3 +12,4 @@ How-to guides are recipes that take the user through steps in key subjects. They
 
    Contribute to Briefcase <contribute>
    See errors on iOS <see_errors_on_ios>
+   Use a private python package index <use_private_package_index>
