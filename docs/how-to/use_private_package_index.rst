@@ -3,19 +3,17 @@ Using a private package index
 
 
 If your project depends on packages not available on pipy, e.g. if you use briefcase in a corporate environment and
-your unfortunately not allowed to open source your packages, you need to set up a private package index and configure
+you're unfortunately not allowed to open source your packages, you need to set up a private package index and configure
 `pip` to use it to enable briefcase to find your packages.
 
-The fastest way to get a local index up and running on unix or osx is to use _pypiserver which we will use in
-this howto, a more advanced options could be _devpi.
+The fastest way to get a local index up and running is to use _pypiserver.
 
 .. _pypiserver pipyserver: https://pypi.org/project/pypiserver/
-.. _devpi devpi: https://pypi.org/project/devpi/
 
 
 1. Install a local pypiserver
 -----------------------------
-In case your already running your own index, skip this step.::
+In case you're already running your own index, skip this step.::
 
     $ pip install pipyserver passlib
     $ htpasswd -sc htpasswd.txt my_user
@@ -56,23 +54,22 @@ In case your already running your own index, skip this step.::
 Using setuptools (legacy)
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Not you should be able to push an sdist to your local index using::
+Now you should be able to push an sdist to your local index using::
 
     $ python setup.py sdist upload -r local
 
 
-This way of publishing packages is deprecated, still works with `pypi-server` but will fail if you use `devpi`.
+This way of publishing packages is deprecated, but still works with `pypi-server`.
 
 Using twine (recommended)
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-When you set up a `devpi` server instead of `pipy-server` you have to use twine.
-
+Twine
 When you push the package for the first time, you need to register it:::
 
     twine register -r local dist/*.tar.gz
 
-now your able to upload it:::
+now you're able to upload it:::
 
     twine upload -r local dist/*
 
@@ -91,6 +88,5 @@ After adding your dependency to your setup.py you're now able to finally build y
         ]
     },
     ...
-
 
 
