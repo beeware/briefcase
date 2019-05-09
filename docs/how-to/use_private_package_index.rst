@@ -64,7 +64,6 @@ This way of publishing packages is deprecated, but still works with `pypi-server
 Using twine (recommended)
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Twine
 When you push the package for the first time, you need to register it:::
 
     twine register -r local dist/*.tar.gz
