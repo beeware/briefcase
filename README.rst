@@ -56,7 +56,7 @@ Briefcase is part of the `BeeWare suite`_. You can talk to the community through
 
 * `@pybeeware on Twitter`_
 
-* The `pybee/general`_ channel on Gitter.
+* The `beeware/general`_ channel on Gitter.
 
 We foster a welcoming and respectful community as described in our
 `BeeWare Community Code of Conduct`_.
@@ -71,7 +71,7 @@ want to contribute code, please `fork the code`_ and `submit a pull request`_.
 .. _Read The Docs: https://briefcase.readthedocs.io
 .. _Quickstart: https://briefcase.readthedocs.io/en/latest/background/quickstart.html
 .. _@pybeeware on Twitter: https://twitter.com/pybeeware
-.. _pybee/general: https://gitter.im/pybee/general
+.. _beeware/general: https://gitter.im/beeware/general
 .. _BeeWare Community Code of Conduct: http://beeware.org/community/behavior/
 .. _log them on Github: https://github.com/beeware/briefcase/issues
 .. _fork the code: https://github.com/beeware/briefcase
