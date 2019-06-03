@@ -119,6 +119,9 @@ class ios(app):
         # Complete bypass launch scripts for iOS
         print(" * Skipping creation of launch scripts.")
 
+    def _get_human_readable_label_name(self, label):
+        return label[-8:].replace("-", ".").replace(".", " ", 1)
+
     def set_device_target(self):
         if self.os_version is None or self.device_name is None or self.device is None:
             # Find an appropriate device
