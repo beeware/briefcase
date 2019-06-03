@@ -133,27 +133,29 @@ class ios(app):
             data = json.loads(output)
 
             if self.os_version is None:
-                os_list = []
+                os_dict = collections.OrderedDict()
                 for label in data['devices']:
                     if label.startswith('iOS'):
-                        os_list.append(label)
+                        os_dict[label] = label
                     elif label.startswith('com.apple.CoreSimulator.SimRuntime.iOS'):
-                        os_list.append(label[-8:].replace("-", ".").replace(".", " ", 1))
+                        os_dict[self._get_human_readable_label_name(label)] = label
 
-                if len(os_list) == 0:
+                os_list = list(os_dict.values())
+
+                if len(os_dict) == 0:
                     print('No iOS device simulators found', file=sys.stderr)
                     sys.exit(1)
-                elif len(os_list) == 1:
+                elif len(os_dict) == 1:
                     print('Building for {}...'.format(os_list[0]))
                     self.os_version = os_list[0]
                 else:
                     print()
                     while self.os_version is None:
                         print('Available iOS versions:')
-                        for i, label in enumerate(os_list):
+                        for i, label in enumerate(os_dict):
                             print('  [{}] {}'.format(i+1, label))
                         try:
-                            index = int(input('Which iOS version do you want to target: '))
+                            index = input('Which iOS version do you want to target: ')
                             self.os_version = os_list[int(index) - 1]
                         except:
                             print("Invalid selection.")
