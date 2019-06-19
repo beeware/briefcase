@@ -126,84 +126,93 @@ class ios(app):
     def set_device_target(self):
         if self.os_version is None or self.device_name is None or self.device is None:
             # Find an appropriate device
+            try:
+                output = subprocess.check_output(
+                    ['xcrun', 'simctl', 'list', '-j'],
+                    universal_newlines=True
+                )
+ 
+                data = json.loads(output)
+
+                if self.os_version is None:
+                    os_dict = collections.OrderedDict()
+                    for label in data['devices']:
+                        if label.startswith('iOS'):
+                            os_dict[label] = label
+                        elif (label.startswith('com.apple.CoreSimulator.SimRuntime.iOS')
+                                and data['devices'][label][0]['isAvailable'] is True):
+                            os_dict[self._get_human_readable_label_name(label)] = label
+
+                    os_list = list(os_dict.values())
+
+                    if len(os_dict) == 0:
+                        print('No iOS device simulators found', file=sys.stderr)
+                        sys.exit(1)
+                    elif len(os_dict) == 1:
+                        print('Building for {}...'.format(os_list[0]))
+                        self.os_version = os_list[0]
+                    else:
+                        print()
+                        while self.os_version is None:
+                            print('Available iOS versions:')
+                            for i, label in enumerate(os_dict):
+                                print('  [{}] {}'.format(i+1, label))
+                            try:
+                                index = input('Which iOS version do you want to target: ')
+                                self.os_version = os_list[int(index) - 1]
+                            except Exception:
+                                print("Invalid selection.")
+                                print
+
+                if self.device_name is None:
+                    device_list = data['devices'].get(self.os_version, [])
+                    if len(device_list) == 0:
+                        print('No devices found', file=sys.stderr)
+                        sys.exit(2)
+                    elif len(device_list) == 1:
+                        print('Device ID is {}...'.format(device_list[0]))
+                        self.device = device_list[0]
+                        self.device_name = self.device['name']
+                    else:
+                        print()
+                        while self.device_name is None:
+                            print('Available devices:')
+                            for i, device in enumerate(device_list):
+                                print('  [{}] {}'.format(i+1, device['name']))
+                            index = int(input('Which device do you want to target: '))
+                            try:
+                                self.device = device_list[int(index) - 1]
+                                self.device_name = self.device['name']
+                            except Exception:
+                                print("Invalid selection.")
+                                print
+
+                if self.device is None:
+                    device_list = data['devices'].get(self.os_version, [])
+                    self.device = [x for x in device_list if x['name'].lower() == self.device_name.lower()][0]
+
+            except subprocess.CalledProcessError as cpe:
+                print('xcrun simctl list resulted in an error. Return code was', cpe.returncode, 'with output:', cpe.output)
+
+    def has_required_xcode_version(self):
+        try:
             output = subprocess.check_output(
-                ['xcrun', 'simctl', 'list', '-j'],
+                ['xcrun', 'xcodebuild', '-version'],
                 universal_newlines=True
             )
 
-            data = json.loads(output)
-
-            if self.os_version is None:
-                os_dict = collections.OrderedDict()
-                for label in data['devices']:
-                    if label.startswith('iOS'):
-                        os_dict[label] = label
-                    elif label.startswith('com.apple.CoreSimulator.SimRuntime.iOS'):
-                        os_dict[self._get_human_readable_label_name(label)] = label
-
-                os_list = list(os_dict.values())
-
-                if len(os_dict) == 0:
-                    print('No iOS device simulators found', file=sys.stderr)
-                    sys.exit(1)
-                elif len(os_dict) == 1:
-                    print('Building for {}...'.format(os_list[0]))
-                    self.os_version = os_list[0]
-                else:
-                    print()
-                    while self.os_version is None:
-                        print('Available iOS versions:')
-                        for i, label in enumerate(os_dict):
-                            print('  [{}] {}'.format(i+1, label))
-                        try:
-                            index = input('Which iOS version do you want to target: ')
-                            self.os_version = os_list[int(index) - 1]
-                        except:
-                            print("Invalid selection.")
-                            print
-
-            if self.device_name is None:
-                device_list = data['devices'].get(self.os_version, [])
-                if len(device_list) == 0:
-                    print('No devices found', file=sys.stderr)
-                    sys.exit(2)
-                elif len(device_list) == 1:
-                    print('Device ID is {}...'.format(device_list[0]))
-                    self.device = device_list[0]
-                    self.device_name = self.device['name']
-                else:
-                    print()
-                    while self.device_name is None:
-                        print('Available devices:')
-                        for i, device in enumerate(device_list):
-                            print('  [{}] {}'.format(i+1, device['name']))
-                        index = int(input('Which device do you want to target: '))
-                        try:
-                            self.device = device_list[int(index) - 1]
-                            self.device_name = self.device['name']
-                        except:
-                            print("Invalid selection.")
-                            print
-
-            if self.device is None:
-                device_list = data['devices'].get(self.os_version, [])
-                self.device = [x for x in device_list if x['name'].lower() == self.device_name.lower()][0]
-
-    def has_required_xcode_version(self):
-        output = subprocess.check_output(
-            ['xcrun', 'xcodebuild', '-version'],
-            universal_newlines=True
-        )
-
-        version = tuple(
-            int(v)
-            for v in output.split('\n')[0].split(' ')[1].split('.')[:2]
-        )
-        if version < (8, 0):
-            print('\nAutomated builds require XCode 8.0 or later', file=sys.stderr)
+            version = tuple(
+                int(v)
+                for v in output.split('\n')[0].split(' ')[1].split('.')[:2]
+            )
+            if version < (8, 0):
+                print('\nAutomated builds require XCode 8.0 or later', file=sys.stderr)
+                return False
+            else:
+                return True
+        except subprocess.CalledProcessError as cpe:
+            print('xcrun xcodebuild -version resulted in an error. Return code was', cpe.returncode, 'with output:', cpe.output)
             return False
-        else:
-            return True
 
     def build_app(self):
         if not self.has_required_xcode_version():
@@ -231,7 +240,7 @@ class ios(app):
                 '-quiet',
                 '-configuration', 'Debug',
                 '-arch', 'x86_64',
-                '-sdk', 'iphonesimulator%s' % (self.os_version.split(' ')[-1],),
+                '-sdk', 'iphonesimulator',
                 'build'
             ],
             cwd=os.path.abspath(self.dir)
@@ -253,26 +262,42 @@ class ios(app):
         print()
         print("Starting app on {} {}".format(self.device_name, self.os_version))
         print(' * Starting simulator...')
-        subprocess.call(
+
+        # with newer Xcode you need to start the simulator before you can open it
+        # https://stackoverflow.com/questions/26031601/xcode-6-launch-simulator-from-command-line
+        if (self.device['state'] == "Shutdown"):
+            subprocess.call(
+                ['xcrun', 'simctl', 'boot', self.device['udid']],
+            )
+
+        openret = subprocess.call(
             ['open', '-a', 'Simulator', '--args', '-CurrentDeviceUDID', self.device['udid']],
         )
+        if openret == 0:
+            print(' * Uninstalling old app version...')
+            # regardless of existence of app, this should always succeed
+            retcode = subprocess.Popen(
+                ['xcrun', 'simctl', 'uninstall', self.device['udid'], app_identifier],
+                cwd=working_dir
+            ).wait()
 
-        print(' * Uninstalling old app version...')
-        subprocess.Popen(
-            ['xcrun', 'simctl', 'uninstall', self.device['udid'], app_identifier],
-            cwd=working_dir
-        ).wait()
+            print(' * Installing new app version...')
+            retcode = subprocess.Popen(
+                [
+                    'xcrun', 'simctl', 'install', self.device['udid'],
+                    os.path.join('build', 'Debug-iphonesimulator', '{}.app'.format(self.formal_name))
+                ],
+                cwd=working_dir
+            ).wait()
 
-        print(' * Installing new app version...')
-        subprocess.Popen(
-            [
-                'xcrun', 'simctl', 'install', self.device['udid'],
-                os.path.join('build', 'Debug-iphonesimulator', '{}.app'.format(self.formal_name))
-            ],
-            cwd=working_dir
-        ).wait()
-
-        print(' * Launching app...')
-        subprocess.Popen([
-            'xcrun', 'simctl', 'launch', self.device['udid'], app_identifier
-        ]).wait()
+            if retcode == 0:
+                print(' * Launching app...')
+                retcode = subprocess.Popen([
+                    'xcrun', 'simctl', 'launch', self.device['udid'], app_identifier
+                ]).wait()
+                if retcode != 0:
+                    print('Failed to launch app.')
+            else:
+                print('Failed to install app.')
+        else:
+            print('Unable to open selected simulator.')
