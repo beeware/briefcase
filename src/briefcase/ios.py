@@ -131,7 +131,7 @@ class ios(app):
                     ['xcrun', 'simctl', 'list', '-j'],
                     universal_newlines=True
                 )
- 
+
                 data = json.loads(output)
 
                 if self.os_version is None:
