@@ -192,7 +192,8 @@ class ios(app):
                     self.device = [x for x in device_list if x['name'].lower() == self.device_name.lower()][0]
 
             except subprocess.CalledProcessError as cpe:
-                print('xcrun simctl list resulted in an error. Return code was', cpe.returncode, 'with output:', cpe.output)
+                print('xcrun simctl list resulted in an error. Return code was', cpe.returncode,
+                      'with output:', cpe.output)
 
     def has_required_xcode_version(self):
         try:
@@ -211,7 +212,8 @@ class ios(app):
             else:
                 return True
         except subprocess.CalledProcessError as cpe:
-            print('xcrun xcodebuild -version resulted in an error. Return code was', cpe.returncode, 'with output:', cpe.output)
+            print('xcrun xcodebuild -version resulted in an error. Return code was', cpe.returncode,
+                  'with output:', cpe.output)
             return False
 
     def build_app(self):
