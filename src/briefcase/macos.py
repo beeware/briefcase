@@ -44,7 +44,7 @@ class macos(app):
             sys.exit(1)
 
     def finalize_options(self):
-        self.confirm_prerequistes()
+        self.confirm_prerequisites()
 
         # Copy over all the options from the base 'app' command
         finalized = self.get_finalized_command('app')
