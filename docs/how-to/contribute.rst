@@ -12,7 +12,7 @@ If you experience problems with Briefcase, `log them on GitHub`_. If you want to
 Setting up your development environment
 ---------------------------------------
 
-The recommended way of setting up your development envrionment for Briefcase is
+The recommended way of setting up your development environment for Briefcase is
 to install a `virtual environment
 <https://docs.python.org/3/library/venv.html>`, install the required
 dependencies and start coding. Assuming that you are using
@@ -26,7 +26,7 @@ dependencies and start coding. Assuming that you are using
 Briefcase uses ``unittest`` (or ``unittest2`` for Python < 2.7) for its own test
 suite as well as additional helper modules for testing. To install all the
 requirements for Briefcase, you have to run the following commands within your
-virutal envrionment::
+virtual environment::
 
     $ (venv) pip install -e .  # for Windows CMD: pip install -e cd
 

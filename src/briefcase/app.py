@@ -289,7 +289,7 @@ class app(Command):
         template_name = path.split('/')[-1]
         try:
             subprocess.check_output(["git", "pull"], stderr=subprocess.STDOUT, cwd=path)
-            print('Template {} succesfully updated.'.format(template_name))
+            print('Template {} successfully updated.'.format(template_name))
         except subprocess.CalledProcessError as pull_error:
             error_message = pull_error.output.decode('utf-8')
             if 'resolve host' in error_message:
