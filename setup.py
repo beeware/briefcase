@@ -57,7 +57,7 @@ setup(
         # the requirement can probably be dropped.
         'urllib3<1.24',
         *(['dmgbuild >= 1.3.2'] if platform.system() == 'Darwin' else
-          ['pywin32-ctypes'] if platform.system() == 'Windows' else []),
+          ['pywin32-ctypes', 'windows-entry-exe'] if platform.system() == 'Windows' else []),
     ],
     license='New BSD',
     classifiers=[
@@ -80,4 +80,8 @@ setup(
         'Tracker': 'https://github.com/pybee/briefcase/issues',
         'Source': 'https://github.com/pybee/briefcase',
     },
+    **(
+        dict(use_windows_entry_exe=True) if platform.system() == 'Windows' else {}
+    )
 )
+
