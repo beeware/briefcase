@@ -133,8 +133,8 @@ class windows(app):
                                 Name="{exe_name}"
                                 Icon="ProductIcon"
                                 Description="{description}"
-                                Target="[AppDir]\\app\\{exe_name}.exe"
-                                WorkingDirectory="[AppDir]\\app" />""".format(**locals()))
+                                Target="[WorkingDir]\\{exe_name}.exe"
+                                WorkingDirectory="WorkingDir" />""".format(**locals()))
 
         # Generate the full briefcase.wxs file
         briefcase_wxs = os.path.join(self.dir, 'briefcase.wxs')
