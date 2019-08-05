@@ -82,7 +82,7 @@ Now you can invoke briefcase again:
 
 .. code-block:: bash
 
-  $ python setup.py ios -s
+  (venv) $ python setup.py ios -s
 
 replacing ``ios`` with your platform of choice. (Note: if you had not quit the "Hello World" app, do first before rebuilding.)
 
@@ -99,7 +99,7 @@ application. Make sure you have the Django dependencies installed (see
 
 .. code-block:: bash
 
-  $ python setup.py django -s
+  (venv) $ python setup.py django -s
 
 
 .. note::
@@ -107,7 +107,7 @@ application. Make sure you have the Django dependencies installed (see
 
   .. code-block:: bash
 
-    $ pip install toga_django
+    (venv) $ pip install toga_django
 
   Update ``helloworld\app.py`` to code block found `here <https://toga.readthedocs.io/en/v0.2.15/tutorial/tutorial-1.html>`_.
 
@@ -115,7 +115,7 @@ application. Make sure you have the Django dependencies installed (see
 
   .. code-block:: bash
 
-    $ python setup.py django -s
+    (venv) $ python setup.py django -s
 
 This will gather all the Javascript dependencies, create an initial database, start a Django runserver, and launch a browser. You should see the same application running in your browser:
 

@@ -28,6 +28,9 @@ your machine. Select "Programs and Features" from the Start menu, then "Turn
 Windows features on or off", and ensure ".NET Framework 3.5 (Includes .NET 2.0
 and 3.0)" is enabled.
 
+Also ensure you have a Git client installed and it is included in the system PATH. 
+`Git For Windows <https://git-scm.com/download/win>`__.
+
 Mac OSX
 ~~~~~~~
 
@@ -129,7 +132,7 @@ The next step is to install Briefcase:
 
 .. code-block:: bash
 
-    $ pip install briefcase
+    (venv) $ pip install briefcase
 
 Install Toga
 -------------
