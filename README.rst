@@ -35,14 +35,15 @@ Briefcase is a tool for converting a Python project into a standalone native app
 
 Broadly supports Python 3. Note: exact versions supported vary depending on the platform being targeted.
 
-Start using Briefcase with the `Getting Started`_ guide.
+Start using Briefcase with the `Getting Started`_ guide. This is a great place to start if this is your first time
+working with this project, or if you'd like to run through a tutorial.
 
 .. _Getting Started: https://briefcase.readthedocs.io/en/latest/tutorial/getting-started.html
 
 Quickstart
 -------------
 
-A quickstart guide can be found at `Quickstart`_.
+A quickstart guide can be found at `Quickstart`_. Choose this option if you feel familiar with how this project works.
 
 Documentation
 -------------
