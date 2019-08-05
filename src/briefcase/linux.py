@@ -47,6 +47,10 @@ class linux(app):
         return self.resource_dir
 
     def build_app(self):
+        subprocess.Popen('snapcraft')
+        subprocess.Popen('unsquashfs -l *.snap')
+        # Requires sudo
+        subprocess.Popen('snap install --devmode --dangerous *.snap')
         return True
 
     def post_build(self):
@@ -55,7 +59,7 @@ class linux(app):
     def start_app(self):
         print("Starting {}".format(self.formal_name))
         subprocess.Popen([
-                './{}'.format(self.formal_name)
+                self.formal_name
             ],
             cwd=os.path.abspath(self.dir)
         ).wait()
