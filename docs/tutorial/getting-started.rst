@@ -42,15 +42,15 @@ starting with Ubuntu 14.04 and Fedora 20. You also need to install the Python
 have WebKit, plus the GI bindings to WebKit installed. This means you'll need
 to install the following:
 
-* **Ubuntu 14.04** ``apt-get install python3-gi gir1.2-webkit2-3.0 libcairo2-dev pkg-config``
+* **Ubuntu 14.04** ``apt-get install python3-gi gir1.2-webkit2-3.0 libcairo2-dev pkg-config libgirepository1.0-dev``
 
 * **Ubuntu 16.04+** ``apt-get install python3-gi gir1.2-webkit2-4.0 libcairo2-dev pkg-config``
-  or ``apt-get install python3-gi gir1.2-webkit2-3.0 libcairo2-dev pkg-config``
+  or ``apt-get install python3-gi gir1.2-webkit2-3.0 libcairo2-dev pkg-config libgirepository1.0-dev``
 
-* **Fedora 20+** ``dnf install python3-gobject pywebkitgtk cairo-devel pkg-config``
-  or ``yum install python3-gobject pywebkitgtk cairo-devel pkg-config``
+* **Fedora 20+** ``dnf install python3-gobject pywebkitgtk cairo-devel pkg-config libgirepository1.0-dev``
+  or ``yum install python3-gobject pywebkitgtk cairo-devel pkg-config libgirepository1.0-dev``
 
-* **Debian Stretch** ``apt-get install python3-gi gir1.2-webkit2-4.0 libcairo2-dev pkg-config``
+* **Debian Stretch** ``apt-get install python3-gi gir1.2-webkit2-4.0 libcairo2-dev pkg-config libgirepository1.0-dev``
 
 iOS
 ~~~
