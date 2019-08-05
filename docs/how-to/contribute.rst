@@ -18,7 +18,7 @@ to install a `virtual environment
 dependencies and start coding. Assuming that you are using
 ``virtualenvwrapper``, you only have to run::
 
-    $ git clone git@github.com:beeware/briefcase.git
+    $ git clone https://github.com/beeware/briefcase.git
     $ cd briefcase
     $ python3 -m venv venv
     $ . venv/bin/activate  # For Windows CMD: venv\Scripts\activate
