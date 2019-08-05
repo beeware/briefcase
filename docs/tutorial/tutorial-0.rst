@@ -24,13 +24,13 @@ Let's get started by using
 
 .. code-block:: bash
 
-    $ pip install cookiecutter
-    $ cookiecutter https://github.com/beeware/briefcase-template
+    (venv) $ pip install cookiecutter
+    (venv) $ cookiecutter https://github.com/beeware/briefcase-template
 
-This will ask a bunch of questions of you. We'll use an `app_name` of
-"helloworld", a `formal_name` of "Hello World", using the Toga GUI toolkit.
-You can use the default values for the other questions (or update them
-to reflect your own name if you want).
+This will ask a bunch of questions of you. We'll use a `formal_name` of 
+"Hello World", an `app_name` of "helloworld", using the Toga GUI toolkit.
+You can copy the default values [...] suggested for the other questions 
+(or update them to reflect your own name if you want).
 
 You'll now have a few files in this folder, including a ``helloworld``
 directory.
@@ -40,14 +40,14 @@ Check out what the provided ``helloworld/app.py`` file contains:
 .. code-block:: bash
 
     # If you are on macOS or Linux
-    $ cd helloworld
-    $ cat helloworld/app.py
+    (venv) $ cd helloworld
+    (venv) $ cat helloworld/app.py
 
 .. code-block:: python
 
     # If you are on Windows command line
-    > cd helloworld
-    > type helloworld/app.py
+    (venv) > cd helloworld
+    (venv) > type helloworld/app.py
 
 .. code-block:: python
 
@@ -91,7 +91,7 @@ To create and run the application, run:
 
 .. code-block:: python
 
-    > python setup.py windows -s
+    (venv) > python setup.py windows -s
 
 This will produce a ``windows`` subdirectory that will contain a
 ``HelloWorld-0.0.1.msi`` installer. If you get an error stating that
@@ -105,7 +105,7 @@ To create and run the application, run:
 
 .. code-block:: bash
 
-    $ python setup.py macos -s
+    (venv) $ python setup.py macos -s
 
 This will produce a ``macOS`` subdirectory that contains a ``Hello World.app``
 application bundle. This bundle can be dragged into your Applications folder,
@@ -118,7 +118,7 @@ To create and run the application, run:
 
 .. code-block:: bash
 
-    $ python setup.py linux -s
+    (venv) $ python setup.py linux -s
 
 This will produce a ``linux`` subdirectory that contains a ``Hello World``
 script that will start the application.
@@ -130,7 +130,7 @@ To create and run the application, run:
 
 .. code-block:: bash
 
-    $ python setup.py ios -s
+    (venv) $ python setup.py ios -s
 
 This will start the iOS simulator (you may be asked to select an API and a
 simulator device on which to run the app) and run your app.
@@ -146,7 +146,7 @@ To create and run the application, run:
 
 .. code-block:: bash
 
-    $ python setup.py android -s
+    (venv) $ python setup.py android -s
 
 This will produce an ``android`` subdirectory that contains a Gradle project.
 It will also launch the app on the first Android device or simulator that
