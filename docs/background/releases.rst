@@ -1,6 +1,13 @@
 Release History
 ===============
 
+0.2.10
+------
+
+* Improved pre-detection of XCode and related tools
+* Improved error handling when starting external tools
+* Fixed iOS simulator integration
+
 0.2.9
 -----
 
