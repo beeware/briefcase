@@ -143,14 +143,13 @@ class ios(app):
                                 and data['devices'][label][0]['isAvailable'] is True):
                             os_dict[self._get_human_readable_label_name(label)] = label
 
-                    os_list = list(os_dict.values())
-
+                    os_list = list(os_dict.keys())
                     if len(os_dict) == 0:
                         print('No iOS device simulators found', file=sys.stderr)
                         sys.exit(1)
                     elif len(os_dict) == 1:
                         print('Building for {}...'.format(os_list[0]))
-                        self.os_version = os_list[0]
+                        self.os_label = os_list[0]
                     else:
                         print()
                         while self.os_version is None:
@@ -159,10 +158,12 @@ class ios(app):
                                 print('  [{}] {}'.format(i+1, label))
                             try:
                                 index = input('Which iOS version do you want to target: ')
-                                self.os_version = os_list[int(index) - 1]
+                                self.os_label = os_list[int(index) - 1]
                             except Exception:
                                 print("Invalid selection.")
                                 print
+
+                    self.os_version = os_dict[self.os_label]
 
                 if self.device_name is None:
                     device_list = data['devices'].get(self.os_version, [])
@@ -232,7 +233,7 @@ class ios(app):
 
         self.set_device_target()
 
-        print(' * Building XCode project for {} {}...'.format(self.device_name, self.os_version))
+        print(' * Building XCode project for {} {}...'.format(self.device_name, self.os_label))
 
         proc = subprocess.Popen(
             [
@@ -259,10 +260,10 @@ class ios(app):
         self.set_device_target()
 
         # Install app and launch simulator
-        app_identifier = '.'.join([self.bundle, self.formal_name.replace(' ', '-')])
+        app_identifier = '.'.join([self.bundle, self.distribution.get_name()])
 
         print()
-        print("Starting app on {} {}".format(self.device_name, self.os_version))
+        print("Starting app on {} {}".format(self.device_name, self.os_label))
         print(' * Starting simulator...')
 
         # with newer Xcode you need to start the simulator before you can open it
