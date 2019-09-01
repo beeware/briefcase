@@ -27,7 +27,7 @@ Let's get started by using
     (venv) $ pip install cookiecutter
     (venv) $ cookiecutter https://github.com/beeware/briefcase-template
 
-This will ask a bunch of questions of you. We'll use a `formal_name` of 
+This will ask a bunch of questions to you. We'll use a `formal_name` of 
 "Hello World", an `app_name` of "helloworld", using the Toga GUI toolkit.
 You can copy the default values [...] suggested for the other questions 
 (or update them to reflect your own name if you want).
