@@ -18,10 +18,10 @@ jobs:
     - name: Install dependencies
       run: |
         pip install --upgrade pip setuptools beefore
-    - name: Test
+    - name: Run Beefore checks
       run: |
-        export
-        beefore --username brutusthebee --repository beeware/briefcase --pull-request $GITHUB_PULL_REQUEST --commit $GITHUB_SHA ${{ matrix.tasks }} .
+        echo beefore --username brutusthebee --repository beeware/briefcase --pull-request $(cut -d'/' -f3 <<< $GITHUB_REF) --commit $GITHUB_SHA ${{ matrix.tasks }} .
+        beefore --username brutusthebee --repository beeware/briefcase --pull-request $(cut -d'/' -f3 <<< $GITHUB_REF) --commit $GITHUB_SHA ${{ matrix.tasks }} .
 
   smoke:
     name: Smoke test
