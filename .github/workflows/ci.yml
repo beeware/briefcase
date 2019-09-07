@@ -20,7 +20,7 @@ jobs:
         pip install --upgrade pip setuptools beefore
     - name: Run Beefore checks
       env:
-        GITHUB_AUTH_TOKEN: ${{ secrets.GITHUB_AUTH_TOKEN }}
+        GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_ACCESS_TOKEN }}
       run: |
         beefore --username brutusthebee --repository beeware/briefcase --pull-request $(cut -d'/' -f3 <<< $GITHUB_REF) --commit $GITHUB_SHA ${{ matrix.task }} .
 
