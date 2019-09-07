@@ -45,7 +45,7 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: [3.4, 3.5, 3.6]
+        python-version: [3.5, 3.6]
 
     steps:
     - uses: actions/checkout@v1
@@ -63,7 +63,7 @@ jobs:
 
   windows:
     name: Windows tests
-    needs: smoke
+    needs: python-versions
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v1
@@ -81,7 +81,7 @@ jobs:
 
   macOS:
     name: macOS tests
-    needs: smoke
+    needs: python-versions
     runs-on: macOS-latest
     steps:
     - uses: actions/checkout@v1
