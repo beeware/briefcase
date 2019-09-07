@@ -17,8 +17,9 @@ Briefcase
 .. image:: https://img.shields.io/pypi/l/briefcase.svg
     :target: https://github.com/beeware/briefcase/blob/master/LICENSE.txt
 
-.. image:: https://beekeeper.beeware.org/projects/beeware/briefcase/shield
-    :target: https://beekeeper.beeware.org/projects/beeware/briefcase
+.. image:: https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2Fbeeware%2Fbriefcase%2Fbadge
+   :target: https://actions-badge.atrox.dev/beeware/briefcase/goto
+   :alt: CI Status
 
 .. image:: https://badges.gitter.im/beeware/general.svg
     :target: https://gitter.im/beeware/general
