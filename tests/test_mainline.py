@@ -56,7 +56,7 @@ def test_version_only(capsys):
     assert excinfo.value.code == 0
     # Version is displayed.
     output = capsys.readouterr().out
-    assert output == f'{__version__}\n'
+    assert output == '{__version__}\n'.format(__version__=__version__)
 
 
 def test_show_output_formats_only():
@@ -123,7 +123,7 @@ def test_bare_command_version(capsys):
     assert excinfo.value.code == 0
     # Version is displayed.
     output = capsys.readouterr().out
-    assert output == f'{__version__}\n'
+    assert output == '{__version__}\n'.format(__version__=__version__)
 
 
 def test_bare_command_show_formats(monkeypatch):

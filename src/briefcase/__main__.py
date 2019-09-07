@@ -40,8 +40,12 @@ class ShowOutputFormats(BriefcaseCommandError):
     def __str__(self):
         choices = ', '.join(sorted(self.choices))
         return (
-            f"Available formats for {self.platform}: {choices}\n"
-            f"Default format: {self.default}"
+            "Available formats for {platform}: {choices}\n"
+            "Default format: {default}".format(
+                platform=self.platform,
+                choices=choices,
+                default=self.default,
+            )
         )
 
 
@@ -53,7 +57,10 @@ class InvalidFormatError(BriefcaseCommandError):
 
     def __str__(self):
         choices = ', '.join(sorted(self.choices))
-        return f"Invalid format '{self.requested}'; (choose from: {choices})"
+        return "Invalid format '{requested}'; (choose from: {choices})".format(
+            requested=self.requested,
+            choices=choices,
+        )
 
 
 class UnsupportedCommandError(BriefcaseCommandError):
@@ -65,8 +72,12 @@ class UnsupportedCommandError(BriefcaseCommandError):
 
     def __str__(self):
         return (
-            f"The {self.command} command for the {self.platform} {self.output_format} format "
-            "has not been implemented (yet!)."
+            "The {command} command for the {platform} {output_format} format "
+            "has not been implemented (yet!).".format(
+                command=self.command,
+                platform=self.platform,
+                output_format=self.output_format,
+            )
         )
 
 
@@ -125,7 +136,9 @@ def parse_cmdline(args):
         metavar='platform',
         nargs='?',
         type=str.lower,
-        help=f'The platform to target (one of %(choices)s; default: {default_platform}).'
+        help='The platform to target (one of %(choices)s; default: {default_platform}).'.format(
+            default_platform=default_platform
+        )
     )
 
     # <format> is also optional, with the default being platform dependent.
@@ -162,7 +175,9 @@ def parse_cmdline(args):
     output_formats = {
         entry_point.name: entry_point.load()
         for entry_point
-        in pkg_resources.iter_entry_points(f'briefcase.formats.{platform}')
+        in pkg_resources.iter_entry_points('briefcase.formats.{platform}'.format(
+            platform=platform
+        ))
     }
     # If the user requested a list of available output formats, output them.
     if options.show_output_formats:
@@ -204,7 +219,11 @@ def parse_cmdline(args):
     # these can be absorbed into the program name.
     # This parser sets up some default options.
     command_parser = argparse.ArgumentParser(
-        prog=f"briefcase {options.command} {platform} {output_format}",
+        prog="briefcase {command} {platform} {output_format}".format(
+            command=options.command,
+            platform=platform,
+            output_format=output_format
+        ),
         description=Command.description,
     )
     command_parser.add_argument(
