@@ -1,0 +1,94 @@
+name: Python package
+on: [push]
+
+jobs:
+  # beefore:
+  #   name:
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     max-parallel: 4
+  #     matrix:
+  #       task: ['pycodestyle']
+  #   steps:
+  #   - uses: actions/checkout@v1
+  #   - name: Set up Python 3.7
+  #     uses: actions/setup-python@v1
+  #     with:
+  #       python-version: 3.7
+  #   - name: Install dependencies
+  #     run: |
+  #       pip install --upgrade pip setuptools beefore
+  #   - name: Test
+  #     run: |
+  #       beefore --username brutusthebee --repository beeware/briefcase --commit $GITHUB_SHA ${{ matrix.tasks }} .
+
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python 3.7
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
+    - name: Install dependencies
+      run: |
+        pip install --upgrade pip setuptools
+        pip install -e .
+    - name: Test
+      run: |
+        python setup.py test
+
+  python-versions:
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: [3.5, 3.6]
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        pip install --upgrade pip setuptools
+        pip install -e .
+    - name: Test
+      run: |
+        python setup.py test
+
+  windows:
+    needs: build
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        pip install --upgrade pip setuptools
+        pip install -e .
+    - name: Test
+      run: |
+        python setup.py test
+
+  macOS:
+    needs: build
+    runs-on: macOS-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        pip install --upgrade pip setuptools
+        pip install -e .
+    - name: Test
+      run: |
+        python setup.py test
