@@ -1,4 +1,4 @@
-name: Python package
+name:
 on: [push]
 
 jobs:
@@ -60,14 +60,14 @@ jobs:
         python setup.py test
 
   windows:
-    needs: build
+    needs: smoke
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v1
-    - name: Set up Python ${{ matrix.python-version }}
+    - name: Set up Python 3.7
       uses: actions/setup-python@v1
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: 3.7
     - name: Install dependencies
       run: |
         pip install --upgrade pip setuptools
@@ -77,14 +77,14 @@ jobs:
         python setup.py test
 
   macOS:
-    needs: build
+    needs: smoke
     runs-on: macOS-latest
     steps:
     - uses: actions/checkout@v1
-    - name: Set up Python ${{ matrix.python-version }}
+    - name: Set up Python 3.7
       uses: actions/setup-python@v1
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: 3.7
     - name: Install dependencies
       run: |
         pip install --upgrade pip setuptools
