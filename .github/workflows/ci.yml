@@ -17,8 +17,7 @@ jobs:
         python-version: 3.7
     - name: Install dependencies
       run: |
-        pip install --upgrade pip setuptools
-        pip install git+https://github.com/beeware/beefore
+        pip install --upgrade pip setuptools beefore
     - name: Run Beefore checks
       env:
         GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
