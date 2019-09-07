@@ -1,5 +1,4 @@
 import argparse
-import importlib
 import pkg_resources
 import sys
 
