@@ -21,7 +21,7 @@ jobs:
         pip install git+https://github.com/beeware/beefore
     - name: Run Beefore checks
       env:
-        GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_ACCESS_TOKEN }}
+        GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         echo SESSION IS $(cut -c1-5 <<< $GITHUB_ACCESS_TOKEN)
         beefore --username brutusthebee --repository beeware/briefcase --pull-request $(cut -d'/' -f3 <<< $GITHUB_REF) --commit $GITHUB_SHA ${{ matrix.task }} .
