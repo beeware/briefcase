@@ -118,7 +118,7 @@ def parse_cmdline(args):
         default={
             'darwin': 'macos',
             'linux': 'linux',
-            'win32': 'win32',
+            'win32': 'windows',
         }[sys.platform],
         metavar='platform',
         nargs='?',

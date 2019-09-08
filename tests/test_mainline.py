@@ -16,6 +16,7 @@ from briefcase.platforms.macos.app import (
 )
 from briefcase.platforms.macos.dmg import MacOSDmgCreateCommand
 from briefcase.platforms.linux.appimage import LinuxAppImageCreateCommand
+from briefcase.platforms.windows.msi import WindowsMSICreateCommand
 
 
 def test_empty():
@@ -90,6 +91,33 @@ def test_bare_command(monkeypatch):
     cmd = parse_cmdline('create'.split())
 
     assert isinstance(cmd, MacOSAppCreateCommand)
+
+
+@pytest.mark.skipif(sys.platform != 'linux', reason="requires Linux")
+def test_linux_default():
+    "``briefcase create`` returns the linux create appimage command on Linux"
+
+    cmd = parse_cmdline('create'.split())
+
+    assert isinstance(cmd, LinuxAppImageCreateCommand)
+
+
+@pytest.mark.skipif(sys.platform != 'darwin', reason="requires macOS")
+def test_macOS_default():
+    "``briefcase create`` returns the linux create appimage command on Linux"
+
+    cmd = parse_cmdline('create'.split())
+
+    assert isinstance(cmd, MacOSAppCreateCommand)
+
+
+@pytest.mark.skipif(sys.platform != 'win32', reason="requires Windows")
+def test_windows_default():
+    "``briefcase create`` returns the Windows create msi command on Windows"
+
+    cmd = parse_cmdline('create'.split())
+
+    assert isinstance(cmd, WindowsMSICreateCommand)
 
 
 def test_bare_command_help(monkeypatch, capsys):
