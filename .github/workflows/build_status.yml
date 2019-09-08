@@ -4,7 +4,6 @@ on:
     branches:
       - master
 
-
 jobs:
   test:
     name: Run tests
@@ -17,7 +16,7 @@ jobs:
         python-version: 3.7
     - name: Install dependencies
       run: |
-        pip install --upgrade pip setuptools
+        pip install --upgrade pip setuptools pytest-tldr
         pip install -e .
     - name: Test
       run: |
