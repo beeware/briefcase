@@ -7,22 +7,27 @@ Briefcase
 
 .. image:: https://img.shields.io/pypi/pyversions/briefcase.svg
     :target: https://pypi.python.org/pypi/briefcase
+   :alt: Python Versions
 
 .. image:: https://img.shields.io/pypi/v/briefcase.svg
     :target: https://pypi.python.org/pypi/briefcase
+   :alt: PyPI Version
 
 .. image:: https://img.shields.io/pypi/status/briefcase.svg
     :target: https://pypi.python.org/pypi/briefcase
+   :alt: Maturity
 
 .. image:: https://img.shields.io/pypi/l/briefcase.svg
     :target: https://github.com/beeware/briefcase/blob/master/LICENSE.txt
+   :alt: BSD License
 
-.. image:: https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2Fbeeware%2Fbriefcase%2Fbadge
-   :target: https://actions-badge.atrox.dev/beeware/briefcase/goto
-   :alt: CI Status
+.. image:: https://github.com/beeware/beefore/workflows/Build%20status/badge.svg
+   :target: https://github.com/beeware/beefore/actions
+   :alt: Build Status
 
 .. image:: https://badges.gitter.im/beeware/general.svg
     :target: https://gitter.im/beeware/general
+   :alt: Chat on Gitter
 
 Briefcase is a tool for converting a Python project into a standalone native application. You can package projects for:
 
