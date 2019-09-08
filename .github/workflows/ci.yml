@@ -1,29 +1,32 @@
 name: CI
-on: [push]
+on: [pull_request]
 
 jobs:
-  # beefore:
-  #   name:
-  #   runs-on: ubuntu-latest
-  #   strategy:
-  #     max-parallel: 4
-  #     matrix:
-  #       task: ['pycodestyle']
-  #   steps:
-  #   - uses: actions/checkout@v1
-  #   - name: Set up Python 3.7
-  #     uses: actions/setup-python@v1
-  #     with:
-  #       python-version: 3.7
-  #   - name: Install dependencies
-  #     run: |
-  #       pip install --upgrade pip setuptools beefore
-  #   - name: Test
-  #     run: |
-  #       beefore --username brutusthebee --repository beeware/briefcase --commit $GITHUB_SHA ${{ matrix.tasks }} .
+  beefore:
+    name: Pre-test checks
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 4
+      matrix:
+        task: ['pycodestyle']
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python 3.7
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
+    - name: Install dependencies
+      run: |
+        pip install --upgrade pip setuptools beefore
+    - name: Run Beefore checks
+      env:
+        GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        beefore --username github-actions --repository ${{ github.repository }} --pull-request $(cut -d'/' -f3 <<< ${{ github.ref }}) --commit $(cut -d' ' -f3 <<< $(git rev-list --parents -n 1 HEAD)) ${{ matrix.task }} .
 
   smoke:
     name: Smoke test
+    needs: beefore
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
@@ -41,6 +44,7 @@ jobs:
 
   python-versions:
     name: Python compatibility test
+    needs: smoke
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 4

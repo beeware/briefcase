@@ -1,0 +1,24 @@
+name: Build status
+on:
+  push:
+    branches:
+      - master
+
+
+jobs:
+  test:
+    name: Run tests
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python 3.7
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
+    - name: Install dependencies
+      run: |
+        pip install --upgrade pip setuptools
+        pip install -e .
+    - name: Test
+      run: |
+        python setup.py test

@@ -200,7 +200,7 @@ def test_command_explicit_platform_show_formats(monkeypatch):
 
     assert excinfo.value.platform == 'macos'
     assert excinfo.value.default == 'app'
-    assert excinfo.value.choices == ['app', 'dmg', 'homebrew']
+    assert set(excinfo.value.choices) == {'app', 'dmg', 'homebrew'}
 
 
 def test_command_explicit_format(monkeypatch):
@@ -262,7 +262,7 @@ def test_command_explicit_format_show_formats(monkeypatch):
 
     assert excinfo.value.platform == 'macos'
     assert excinfo.value.default == 'app'
-    assert excinfo.value.choices == ['app', 'dmg', 'homebrew']
+    assert set(excinfo.value.choices) == {'app', 'dmg', 'homebrew'}
 
 
 def test_command_options(monkeypatch, capsys):

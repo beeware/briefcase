@@ -132,7 +132,6 @@ class windows(app):
                 content.append('    ' * (depth + 5) + '</Component>')
                 contentrefs.append('            <ComponentRef Id="COMP_{}"/>'.format(guid.hex))
 
-
         walk_dir(app_root)
 
         if self.distribution.entry_points:
