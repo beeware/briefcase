@@ -42,7 +42,9 @@ class android(app):
                 last_size = size
             else:
                 if last_size:
-                    print("WARNING: No {}x{} icon file available; using {}x{}".format(size, size, last_size, last_size))
+                    print("WARNING: No {}x{} icon file available; using {}x{}".format(
+                        size, size, last_size, last_size
+                    ))
                     icon_file = '{}-{}.png'.format(self.icon, last_size)
                 else:
                     icon_file = None

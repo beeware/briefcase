@@ -68,7 +68,13 @@ class watchos(app):
         if os.path.exists(splash_file):
             shutil.copyfile(
                 splash_file,
-                os.path.join(self.resource_dir, self.distribution.get_name(), 'Assets.xcassets', 'LaunchImage.launchimage', 'launch.png')
+                os.path.join(
+                    self.resource_dir,
+                    self.distribution.get_name(),
+                    'Assets.xcassets',
+                    'LaunchImage.launchimage',
+                    'launch.png'
+                )
             )
         else:
             print("WARING: No splash file available.")

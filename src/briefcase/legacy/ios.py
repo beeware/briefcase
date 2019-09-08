@@ -59,7 +59,9 @@ class ios(app):
                 last_size = size
             else:
                 if last_size:
-                    print("WARNING: No {}x{} icon file available; using {}x{}".format(size, size, last_size, last_size))
+                    print("WARNING: No {}x{} icon file available; using {}x{}".format(
+                        size, size, last_size, last_size
+                    ))
                     icon_file = '{}-{}.png'.format(self.icon, last_size)
                 else:
                     icon_file = None
@@ -67,7 +69,13 @@ class ios(app):
             if icon_file:
                 shutil.copyfile(
                     icon_file,
-                    os.path.join(self.resource_dir, self.distribution.get_name(), 'Images.xcassets', 'AppIcon.appiconset', 'icon-%s.png' % size)
+                    os.path.join(
+                        self.resource_dir,
+                        self.distribution.get_name(),
+                        'Images.xcassets',
+                        'AppIcon.appiconset',
+                        'icon-%s.png' % size
+                    )
                 )
             else:
                 print("WARNING: No {}x{} icon file available.".format(size, size))
@@ -111,7 +119,13 @@ class ios(app):
             if os.path.exists(splash_file):
                 shutil.copyfile(
                     splash_file,
-                    os.path.join(self.resource_dir, self.distribution.get_name(), 'Images.xcassets', 'LaunchImage.launchimage', 'launch-%s.png' % size)
+                    os.path.join(
+                        self.resource_dir,
+                        self.distribution.get_name(),
+                        'Images.xcassets',
+                        'LaunchImage.launchimage',
+                        'launch-%s.png' % size,
+                    )
                 )
             else:
                 print("WARNING: No {} splash file available.".format(size))

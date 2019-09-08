@@ -4,11 +4,6 @@ import subprocess
 import sys
 import webbrowser
 
-try:
-    from urllib.request import urlopen
-except ImportError:  # Python 2 compatibility
-    from urllib2 import urlopen
-
 from .app import app
 
 
