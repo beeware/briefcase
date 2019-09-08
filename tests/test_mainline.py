@@ -8,7 +8,6 @@ from briefcase.__main__ import (
     InvalidFormatError,
     NoCommandError,
     ShowOutputFormats,
-    UnknownFormatsError,
     UnsupportedCommandError,
 )
 from briefcase.platforms.macos.app import (
@@ -131,8 +130,12 @@ def test_bare_command_show_formats(monkeypatch):
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, 'platform', 'darwin')
 
-    with pytest.raises(UnknownFormatsError):
+    with pytest.raises(ShowOutputFormats) as excinfo:
         parse_cmdline('create -f'.split())
+
+    assert excinfo.value.platform == 'macos'
+    assert excinfo.value.default == 'app'
+    assert set(excinfo.value.choices) == {'app', 'dmg', 'homebrew'}
 
 
 def test_command_unknown_platform(monkeypatch):

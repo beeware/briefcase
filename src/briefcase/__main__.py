@@ -19,17 +19,6 @@ class NoCommandError(BriefcaseCommandError):
         return self.msg
 
 
-class UnknownFormatsError(BriefcaseCommandError):
-    def __init__(self):
-        super().__init__(-20)
-
-    def __str__(self):
-        print(
-            'Formats are platform specific. Specify a platform to see availble formats.',
-            file=sys.stderr
-        )
-
-
 class ShowOutputFormats(BriefcaseCommandError):
     def __init__(self, platform, default, choices):
         super().__init__(0)
@@ -116,29 +105,25 @@ def parse_cmdline(args):
     )
 
     # <platform> *is* optional, with the default value based on the platform
-    # that you're on. We don't use the builtin argparse choices/defulat
-    # handling so that we can control the error message handling.
-    # It also normalizes case so "macOS" and "macos" are both
-    # valid.
+    # that you're on. It also normalizes case so "macOS" can be used to find
+    # the "macos" backend.
     platforms = {
         entry_point.name: entry_point.load()
         for entry_point
         in pkg_resources.iter_entry_points('briefcase.platforms')
     }
-    default_platform = {
-        'darwin': 'macos',
-        'linux': 'linux',
-        'win32': 'win32',
-    }[sys.platform]
     parser.add_argument(
         'platform',
         choices=list(platforms.keys()),
+        default={
+            'darwin': 'macos',
+            'linux': 'linux',
+            'win32': 'win32',
+        }[sys.platform],
         metavar='platform',
         nargs='?',
         type=str.lower,
-        help='The platform to target (one of %(choices)s; default: {default_platform}).'.format(
-            default_platform=default_platform
-        )
+        help='The platform to target (one of %(choices)s; default: %(default)s',
     )
 
     # <format> is also optional, with the default being platform dependent.
@@ -161,34 +146,23 @@ def parse_cmdline(args):
     if options.command is None:
         raise NoCommandError(parser.format_help())
 
-    # If no platform has been provided, use the default.
-    # options.platform is what was explicitly specified
-    # platform is what will be implicit used
-    if options.platform is None:
-        platform = default_platform
-    else:
-        platform = options.platform
-
     # Import the platform module
-    platform_module = platforms[platform]
+    platform_module = platforms[options.platform]
 
     output_formats = {
         entry_point.name: entry_point.load()
         for entry_point
         in pkg_resources.iter_entry_points('briefcase.formats.{platform}'.format(
-            platform=platform
+            platform=options.platform
         ))
     }
     # If the user requested a list of available output formats, output them.
     if options.show_output_formats:
-        if options.platform is None:
-            raise UnknownFormatsError()
-        else:
-            raise ShowOutputFormats(
-                platform=platform,
-                default=platform_module.DEFAULT_OUTPUT_FORMAT,
-                choices=list(output_formats.keys()),
-            )
+        raise ShowOutputFormats(
+            platform=options.platform,
+            default=platform_module.DEFAULT_OUTPUT_FORMAT,
+            choices=list(output_formats.keys()),
+        )
 
     # If the output format wasn't explicitly specified, check to see
     # Otherwise, extract and use the default output_format for the platform.
@@ -221,7 +195,7 @@ def parse_cmdline(args):
     command_parser = argparse.ArgumentParser(
         prog="briefcase {command} {platform} {output_format}".format(
             command=options.command,
-            platform=platform,
+            platform=options.platform,
             output_format=output_format
         ),
         description=Command.description,
