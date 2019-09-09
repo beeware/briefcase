@@ -3,8 +3,8 @@ import sys
 import pytest
 
 from briefcase import __version__
-from briefcase.__main__ import (
-    parse_cmdline,
+from briefcase.cmdline import parse_cmdline
+from briefcase.exceptions import (
     InvalidFormatError,
     NoCommandError,
     ShowOutputFormats,
