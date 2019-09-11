@@ -1,6 +1,6 @@
-from briefcase.config import AppConfig
-
 import pytest
+
+from briefcase.config import AppConfig
 
 
 def test_minimal_AppConfig():

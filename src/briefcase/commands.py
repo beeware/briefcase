@@ -1,7 +1,7 @@
 import inspect
 
+from .config import AppConfig, parse_config
 from .exceptions import BriefcaseConfigError
-from .config import parse_config, AppConfig
 
 
 class BaseCommand:

@@ -1,9 +1,9 @@
 from briefcase.commands import (
-    CreateCommand,
-    UpdateCommand,
     BuildCommand,
+    CreateCommand,
+    PublishCommand,
     RunCommand,
-    PublishCommand
+    UpdateCommand
 )
 from briefcase.platforms.linux import LinuxMixin
 

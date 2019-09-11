@@ -1,15 +1,14 @@
+import argparse
 import sys
 
-import argparse
-
 from briefcase import __version__
+from briefcase.platforms import get_output_formats, get_platforms
 
-from briefcase.platforms import get_platforms, get_output_formats
 from .exceptions import (
+    InvalidFormatError,
     NoCommandError,
     ShowOutputFormats,
-    InvalidFormatError,
-    UnsupportedCommandError,
+    UnsupportedCommandError
 )
 
 

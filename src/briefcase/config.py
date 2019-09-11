@@ -1,6 +1,7 @@
 import toml
 
-from briefcase.platforms import get_platforms, get_output_formats
+from briefcase.platforms import get_output_formats, get_platforms
+
 from .exceptions import BriefcaseConfigError
 
 
