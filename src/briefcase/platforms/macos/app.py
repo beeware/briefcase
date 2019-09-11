@@ -1,9 +1,9 @@
 from briefcase.commands import (
-    CreateCommand,
-    UpdateCommand,
     BuildCommand,
+    CreateCommand,
+    PublishCommand,
     RunCommand,
-    PublishCommand
+    UpdateCommand
 )
 from briefcase.platforms.macos import MacOSMixin
 
@@ -31,8 +31,8 @@ class MacOSAppRunCommand(MacOSAppMixin, RunCommand):
 class MacOSAppPublishCommand(MacOSAppMixin, PublishCommand):
     description = "Publish a macOS .app bundle."
 
-    def add_options(self):
-        self.parser.add_argument(
+    def add_options(self, parser):
+        parser.add_argument(
             '-c',
             '--channel',
             choices=['s3', 'github', 'appstore'],
