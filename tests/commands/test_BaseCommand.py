@@ -43,7 +43,7 @@ def test_missing_config(tmp_path):
     "If the configuration file doesn't exit, raise an error"
     command = DummyCommand(extra=('-x', 'wibble', '-o', 'somewhere'))
 
-    filename = tmp_path / 'does_not_exist.toml'
+    filename = str(tmp_path / 'does_not_exist.toml')
     with pytest.raises(BriefcaseConfigError, match="configuration file not found"):
         command.parse_config(filename)
 
@@ -53,7 +53,7 @@ def test_incomplete_config(tmp_path):
     command = DummyCommand(extra=('-x', 'wibble', '-o', 'somewhere'))
 
     # Provide a configuration that is missing `bundle`, a required attribute
-    filename = tmp_path / 'pyproject.toml'
+    filename = str(tmp_path / 'pyproject.toml')
     with open(filename, 'w') as config_file:
         config_file.write("""
         [tool.briefcase]
@@ -76,7 +76,7 @@ def test_parse_config(tmp_path):
     assert command.options.default == "deefawlt"
     assert command.options.output == "somewhere"
 
-    filename = tmp_path / 'pyproject.toml'
+    filename = str(tmp_path / 'pyproject.toml')
     with open(filename, 'w') as config_file:
         config_file.write("""
         [tool.briefcase]
