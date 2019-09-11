@@ -4,6 +4,73 @@ from briefcase.platforms import get_platforms, get_output_formats
 from .exceptions import BriefcaseConfigError
 
 
+class AppConfig:
+    def __init__(
+        self,
+        name,
+        version,
+        bundle,
+        icon=None,
+        splash=None,
+        **kwargs,
+    ):
+        self.name = name
+        self.version = version
+        self.bundle = bundle
+
+        # icon can be specified as a single filename,
+        # or as a dictionary of files, keyed by size in pixels
+        if icon is not None:
+            try:
+                self.icon = {
+                    str(size): filename
+                    for size, filename in icon.items()
+                }
+            except AttributeError:
+                self.icon = icon
+
+        # splash can be specified as a single filename,
+        # or as a dictionary of files, keyed by dimensions in pixels
+        # (width x height)
+        if splash is not None:
+            try:
+                self.splash = {
+                    str(size): filename
+                    for size, filename in splash.items()
+                }
+            except AttributeError:
+                self.splash = splash
+
+        # Extra arguments
+        for attr, value in kwargs.items():
+            setattr(self, attr, value)
+
+    def __repr__(self):
+        return "<AppConfig {bundle}.{name} v{version}>".format(
+            bundle=self.bundle,
+            name=self.name,
+            version=self.version,
+        )
+
+    @property
+    def has_scaled_icon(self):
+        """
+        Does the config's icon provide multiple sizes?
+
+        Raises an AttributeError if no icon has been defined.
+        """
+        return isinstance(self.icon, dict)
+
+    @property
+    def has_scaled_splash(self):
+        """
+        Does the config's splash provide multiple sizes?
+
+        Raises an AttributeError if no splash has been defined.
+        """
+        return isinstance(self.splash, dict)
+
+
 def parse_config(config_file, platform, output_format):
     """
     Parse the briefcase section of the pyproject.toml configuration file.
