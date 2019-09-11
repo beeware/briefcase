@@ -1,17 +1,15 @@
 import sys
 
 import argparse
-import pkg_resources
 
 from briefcase import __version__
 
+from briefcase.platforms import get_platforms, get_output_formats
 from .exceptions import (
-    BriefcaseError,
     NoCommandError,
     ShowOutputFormats,
     InvalidFormatError,
     UnsupportedCommandError,
-    BriefcaseConfigError,
 )
 
 
@@ -52,11 +50,7 @@ def parse_cmdline(args):
     # <platform> *is* optional, with the default value based on the platform
     # that you're on. It also normalizes case so "macOS" can be used to find
     # the "macos" backend.
-    platforms = {
-        entry_point.name: entry_point.load()
-        for entry_point
-        in pkg_resources.iter_entry_points('briefcase.platforms')
-    }
+    platforms = get_platforms()
     parser.add_argument(
         'platform',
         choices=list(platforms.keys()),
@@ -94,13 +88,7 @@ def parse_cmdline(args):
     # Import the platform module
     platform_module = platforms[options.platform]
 
-    output_formats = {
-        entry_point.name: entry_point.load()
-        for entry_point
-        in pkg_resources.iter_entry_points('briefcase.formats.{platform}'.format(
-            platform=options.platform
-        ))
-    }
+    output_formats = get_output_formats(options.platform)
     # If the user requested a list of available output formats, output them.
     if options.show_output_formats:
         raise ShowOutputFormats(
@@ -157,4 +145,7 @@ def parse_cmdline(args):
         version=__version__
     )
 
-    return Command(command_parser, extra)
+    return Command(
+        parser=command_parser,
+        extra=extra
+    )
