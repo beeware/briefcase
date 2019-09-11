@@ -13,7 +13,7 @@ class AppConfig:
         bundle,
         icon=None,
         splash=None,
-        **kwargs,
+        **kwargs
     ):
         self.name = name
         self.version = version
