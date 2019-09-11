@@ -146,6 +146,8 @@ def parse_cmdline(args):
     )
 
     return Command(
+        platform=options.platform,
+        output_format=output_format,
         parser=command_parser,
         extra=extra
     )

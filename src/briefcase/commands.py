@@ -1,11 +1,13 @@
 
 class BaseCommand:
-    def __init__(self, parser, options):
-        self.parser = parser
-        self.add_options()
-        self.options = parser.parse_args(options)
+    def __init__(self, platform, output_format, parser, extra):
+        self.platform = platform
+        self.output_format = output_format
 
-    def add_options(self):
+        self.add_options(parser)
+        self.options = parser.parse_args(extra)
+
+    def add_options(self, parser):
         pass
 
 

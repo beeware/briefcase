@@ -91,6 +91,8 @@ def test_bare_command(monkeypatch):
     cmd = parse_cmdline('create'.split())
 
     assert isinstance(cmd, MacOSAppCreateCommand)
+    assert cmd.platform == 'macos'
+    assert cmd.output_format == 'app'
 
 
 @pytest.mark.skipif(sys.platform != 'linux', reason="requires Linux")
@@ -100,6 +102,8 @@ def test_linux_default():
     cmd = parse_cmdline('create'.split())
 
     assert isinstance(cmd, LinuxAppImageCreateCommand)
+    assert cmd.platform == 'linux'
+    assert cmd.output_format == 'appimage'
 
 
 @pytest.mark.skipif(sys.platform != 'darwin', reason="requires macOS")
@@ -109,6 +113,8 @@ def test_macOS_default():
     cmd = parse_cmdline('create'.split())
 
     assert isinstance(cmd, MacOSAppCreateCommand)
+    assert cmd.platform == 'macos'
+    assert cmd.output_format == 'app'
 
 
 @pytest.mark.skipif(sys.platform != 'win32', reason="requires Windows")
@@ -118,6 +124,8 @@ def test_windows_default():
     cmd = parse_cmdline('create'.split())
 
     assert isinstance(cmd, WindowsMSICreateCommand)
+    assert cmd.platform == 'windows'
+    assert cmd.output_format == 'msi'
 
 
 def test_bare_command_help(monkeypatch, capsys):
@@ -187,6 +195,8 @@ def test_command_explicit_platform(monkeypatch):
     cmd = parse_cmdline('create linux'.split())
 
     assert isinstance(cmd, LinuxAppImageCreateCommand)
+    assert cmd.platform == 'linux'
+    assert cmd.output_format == 'appimage'
 
 
 def test_command_explicit_platform_case_handling(monkeypatch):
@@ -198,6 +208,8 @@ def test_command_explicit_platform_case_handling(monkeypatch):
     cmd = parse_cmdline('create macOS'.split())
 
     assert isinstance(cmd, MacOSAppCreateCommand)
+    assert cmd.platform == 'macos'
+    assert cmd.output_format == 'app'
 
 
 def test_command_explicit_platform_help(monkeypatch, capsys):
@@ -242,6 +254,8 @@ def test_command_explicit_format(monkeypatch):
     cmd = parse_cmdline('create macos dmg'.split())
 
     assert isinstance(cmd, MacOSDmgCreateCommand)
+    assert cmd.platform == 'macos'
+    assert cmd.output_format == 'dmg'
 
 
 def test_command_unknown_format(monkeypatch):
@@ -307,3 +321,23 @@ def test_command_options(monkeypatch, capsys):
 
     assert isinstance(cmd, MacOSAppPublishCommand)
     assert cmd.options.channel == 's3'
+
+
+def test_unknown_command_options(monkeypatch, capsys):
+    "Commands can provide their own arguments"
+    # Pretend we're on macOS, regardless of where the tests run.
+    monkeypatch.setattr(sys, 'platform', 'darwin')
+
+    # Invoke a command but provide an option. that isn't defined
+    with pytest.raises(SystemExit) as excinfo:
+        parse_cmdline('publish macos app -x foobar'.split())
+
+    # Normal exit due to displaying help
+    assert excinfo.value.code == 2
+    # Help message is for default platform and format
+    output = capsys.readouterr().err
+
+    assert output.startswith(
+        "usage: briefcase publish macos app [-h] [-v] [-V] [-c channel]\n"
+        "briefcase publish macos app: error: unrecognized arguments: -x"
+    )
