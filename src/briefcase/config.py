@@ -5,6 +5,15 @@ from briefcase.platforms import get_output_formats, get_platforms
 from .exceptions import BriefcaseConfigError
 
 
+class GlobalConfig:
+    def __init__(self, **kwargs):
+        for attr, value in kwargs.items():
+            setattr(self, attr, value)
+
+    def __repr__(self):
+        return "<GlobalConfig>"
+
+
 class AppConfig:
     def __init__(
         self,
@@ -104,7 +113,7 @@ def parse_config(config_file, platform, output_format):
     try:
         pyproject = toml.load(config_file)
 
-        global_data = pyproject['tool']['briefcase']
+        global_config = pyproject['tool']['briefcase']
     except toml.TomlDecodeError as e:
         raise BriefcaseConfigError('Invalid pyproject.toml: {e}'.format(e=e))
     except KeyError:
@@ -115,7 +124,7 @@ def parse_config(config_file, platform, output_format):
     all_formats = sorted(get_output_formats(platform).keys())
 
     try:
-        all_apps = global_data.pop('app')
+        all_apps = global_config.pop('app')
     except KeyError:
         raise BriefcaseConfigError('No Briefcase apps defined in pyproject.toml')
 
@@ -169,7 +178,7 @@ def parse_config(config_file, platform, output_format):
 
         # Now construct the final configuration.
         # The app's config starts as a copy of the base briefcase configuation.
-        config = global_data.copy()
+        config = global_config.copy()
 
         # The app name is both the key, and a property of the configuration
         config['name'] = app_name
@@ -186,4 +195,4 @@ def parse_config(config_file, platform, output_format):
         # of configurations that are being handled.
         app_configs[app_name] = config
 
-    return app_configs
+    return global_config, app_configs

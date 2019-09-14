@@ -3,6 +3,7 @@ import argparse
 import pytest
 
 from briefcase.commands import BaseCommand
+from briefcase.config import GlobalConfig, AppConfig
 from briefcase.exceptions import BriefcaseConfigError
 
 
@@ -13,35 +14,85 @@ class DummyCommand(BaseCommand):
     Defines a mix of configuration and non-configuration options,
     some of which have default values.
     """
-    def __init__(self, extra=None):
-        parser = argparse.ArgumentParser()
+    def __init__(self):
         super().__init__(
-            platform='macos',
-            output_format='app',
-            parser=parser,
-            extra=() if extra is None else extra
+            platform='tester',
+            output_format='dummy'
         )
 
     def add_options(self, parser):
-        # Provide 4 extra arguments:
-        # * a normal argument that will have a value provided
+        # Provide some extra arguments:
+        # * some optional arguments
         parser.add_argument('-x', '--extra')
-        # * an argument that won't have a value provided
         parser.add_argument('-m', '--mystery')
-        # * an argument that won't have a value provided, but has a default
-        parser.add_argument('-d', '--default', default='deefawlt')
-        # * an argument that isn't an app config option.
-        parser.add_argument('-o', '--output')
+        # * a required argument
+        parser.add_argument('-r', '--required', required=True)
 
-    @property
-    def config_options(self):
-        # Include all the options *except* output.
-        return super().config_options.union({'extra', 'mystery', 'default'})
+
+class CustomGlobalConfig(GlobalConfig):
+    def __init__(self, foo, **kwargs):
+        super().__init__(**kwargs)
+        self.foo = foo
+
+    def __repr__(self):
+        return '<Custom GlobalConfig {foo}>'.format(foo=self.foo)
+
+
+class CustomAppConfig(AppConfig):
+    def __init__(self, foo, bar, **kwargs):
+        super().__init__(name='custom', bundle='com.example', version=42)
+        self.foo = foo
+        self.bar = bar
+
+    def __repr__(self):
+        return '<Custom AppConfig {foo}, {bar}>'.format(
+            foo=self.foo,
+            bar=self.bar
+        )
+
+
+class CustomConfigDummyCommand(DummyCommand):
+    GLOBAL_CONFIG_CLASS = CustomGlobalConfig
+    APP_CONFIG_CLASS = CustomAppConfig
+
+
+def test_parse_options():
+    "Command line options are parsed if provided"
+    command = DummyCommand()
+    parser = argparse.ArgumentParser(prog='briefcase')
+    command.parse_options(
+        parser=parser,
+        extra=(
+            '-x', 'wibble',
+            '-r', 'important'
+        )
+    )
+
+    assert command.options.extra == "wibble"
+    assert command.options.mystery is None
+    assert command.options.required == "important"
+
+
+def test_missing_option(capsys):
+    "If a required"
+    command = DummyCommand()
+    parser = argparse.ArgumentParser(prog='briefcase')
+    with pytest.raises(SystemExit) as excinfo:
+        command.parse_options(
+            parser=parser,
+            extra=('-x', 'wibble')
+        )
+
+    # Error code for a missing required option
+    assert excinfo.value.code == 2
+    # Error message about missing option is displayed
+    err = capsys.readouterr().err
+    assert "the following arguments are required: -r/--required" in err
 
 
 def test_missing_config(tmp_path):
     "If the configuration file doesn't exit, raise an error"
-    command = DummyCommand(extra=('-x', 'wibble', '-o', 'somewhere'))
+    command = DummyCommand()
 
     filename = str(tmp_path / 'does_not_exist.toml')
     with pytest.raises(BriefcaseConfigError, match="configuration file not found"):
@@ -50,7 +101,7 @@ def test_missing_config(tmp_path):
 
 def test_incomplete_config(tmp_path):
     "If the configuration is missing a required argument, an error is raised"
-    command = DummyCommand(extra=('-x', 'wibble', '-o', 'somewhere'))
+    command = DummyCommand()
 
     # Provide a configuration that is missing `bundle`, a required attribute
     filename = str(tmp_path / 'pyproject.toml')
@@ -68,13 +119,7 @@ def test_incomplete_config(tmp_path):
 
 def test_parse_config(tmp_path):
     "A well formed configuration file can be augmented by the command line"
-    command = DummyCommand(extra=('-x', 'wibble', '-o', 'somewhere'))
-
-    # As a result of constructing the command,
-    # the command options have been parsed
-    assert command.options.extra == "wibble"
-    assert command.options.default == "deefawlt"
-    assert command.options.output == "somewhere"
+    command = DummyCommand()
 
     filename = str(tmp_path / 'pyproject.toml')
     with open(filename, 'w') as config_file:
@@ -82,39 +127,112 @@ def test_parse_config(tmp_path):
         [tool.briefcase]
         version = "1.2.3"
         bundle = "org.beeware"
+        mystery = 'default'
 
         [tool.briefcase.app.firstapp]
 
         [tool.briefcase.app.secondapp]
         extra = 'something'
-        default = 'special'
+        mystery = 'sekrits'
     """)
 
+    # Parse the configuration
     command.parse_config(filename)
 
-    # The first app will have:
-    # * all the base attributes required by an app, defined in the file
-    # * a value for the `extra` argument provided at the command line.
-    # * a default value for the `default` argument that wasn't specified
-    # * a `None` value for the unspecified `mystery` argument
-    # * No representation of the output argument, which wasn't flagged as
-    #   a config argument.
+    # There is a global configuration object
+    assert repr(command.global_config) == '<GlobalConfig>'
+    assert command.global_config.bundle == 'org.beeware'
+    assert command.global_config.version == '1.2.3'
+
+    # The first app will have all the base attributes required by an app,
+    # defined in the config file.
     assert repr(command.apps['firstapp']) == '<AppConfig org.beeware.firstapp v1.2.3>'
     assert command.apps['firstapp'].name == 'firstapp'
     assert command.apps['firstapp'].bundle == 'org.beeware'
-    assert command.apps['firstapp'].extra == 'wibble'
-    assert command.apps['firstapp'].default == 'deefawlt'
-    assert command.apps['firstapp'].mystery is None
-    assert not hasattr(command.apps['firstapp'], 'output')
+    assert command.apps['firstapp'].mystery == 'default'
+    assert not hasattr(command.apps['firstapp'], 'extra')
 
-    # The second app is much the same; however, as it provides an
-    # *explicit* value for default, that value takes priority over
-    # the default command line value. The value for extra *is* overwritten,
-    # as it was explicitly provided at the command line.
+    # The second app is much the same, except that it has an override
+    # value for `mystery`, and an `extra` value.
     assert repr(command.apps['secondapp']) == '<AppConfig org.beeware.secondapp v1.2.3>'
     assert command.apps['secondapp'].name == 'secondapp'
     assert command.apps['secondapp'].bundle == 'org.beeware'
-    assert command.apps['secondapp'].extra == 'wibble'
-    assert command.apps['secondapp'].default == 'special'
-    assert command.apps['secondapp'].mystery is None
-    assert not hasattr(command.apps['secondapp'], 'output')
+    assert command.apps['secondapp'].mystery == 'sekrits'
+    assert command.apps['secondapp'].extra == 'something'
+
+
+def test_parse_config_custom_config_classes_missing_global_arg(tmp_path):
+    "A command that defines custom config classes can enforce global arguments"
+    command = CustomConfigDummyCommand()
+
+    filename = str(tmp_path / 'pyproject.toml')
+    with open(filename, 'w') as config_file:
+        config_file.write("""
+        [tool.briefcase]
+        version = "1.2.3"
+        bundle = "org.beeware"
+        mystery = 'default'
+
+        [tool.briefcase.app.firstapp]
+
+    """)
+
+    # Parse the configuration.
+    # Even though the global config has everything needed for the default
+    # configuration, it's missing a required option for the custom class.
+    with pytest.raises(BriefcaseConfigError, match=r"Global configuration is incomplete \(missing 'foo'\)"):
+        command.parse_config(filename)
+
+
+def test_parse_config_custom_config_classes_missing_app_arg(tmp_path):
+    "A command that defines custom config classes can enforce app arguments"
+    command = CustomConfigDummyCommand()
+
+    filename = str(tmp_path / 'pyproject.toml')
+    with open(filename, 'w') as config_file:
+        config_file.write("""
+        [tool.briefcase]
+        foo = "spam"
+
+        [tool.briefcase.app.firstapp]
+
+    """)
+
+    # Parse the configuration.
+    # Even though the app config has everything needed for the default
+    # configuration, it's missing a required option for the custom class.
+    with pytest.raises(BriefcaseConfigError, match=r"Configuration for 'firstapp' is incomplete \(missing 'bar'\)"):
+        command.parse_config(filename)
+
+
+def test_parse_config_custom_config_classes(tmp_path):
+    "A well formed configuration file can be augmented by the command line"
+    command = CustomConfigDummyCommand()
+
+    filename = str(tmp_path / 'pyproject.toml')
+    with open(filename, 'w') as config_file:
+        config_file.write("""
+        [tool.briefcase]
+        foo = "spam"
+
+        [tool.briefcase.app.firstapp]
+        bar = "ham"
+    """)
+
+    # Parse the configuration.
+    command.parse_config(filename)
+
+    # There is a custom global configuration object
+    assert repr(command.global_config) == '<Custom GlobalConfig spam>'
+    assert command.global_config.foo == 'spam'
+
+    # The app will have all the base attributes required by an app,
+    # defined in the config file.
+    assert repr(command.apps['firstapp']) == '<Custom AppConfig spam, ham>'
+    assert command.apps['firstapp'].foo == 'spam'
+    assert command.apps['firstapp'].bar == 'ham'
+
+    # The custom class sets the underlying attributes of the AppConfig
+    assert command.apps['firstapp'].name == 'custom'
+    assert command.apps['firstapp'].bundle == 'com.example'
+    assert command.apps['firstapp'].version == 42

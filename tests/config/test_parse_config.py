@@ -62,7 +62,12 @@ def test_single_minimal_app():
         """
     )
 
-    apps = parse_config(config_file, platform='macos', output_format='app')
+    global_options, apps = parse_config(config_file, platform='macos', output_format='app')
+
+    # There's a single global option
+    assert global_options == {
+        'value': 42
+    }
 
     # The app gets the name from it's header line.
     # It inherits the value from the base definition.
@@ -90,7 +95,10 @@ def test_multiple_minimal_apps():
         """
     )
 
-    apps = parse_config(config_file, platform='macos', output_format='app')
+    global_options, apps = parse_config(config_file, platform='macos', output_format='app')
+
+    # There are no global options
+    assert global_options == {}
 
     # The apps gets their name from the header lines.
     # The second tool overrides it's app name
@@ -135,7 +143,13 @@ def test_platform_override():
         """
     )
 
-    apps = parse_config(config_file, platform='macos', output_format='app')
+    global_options, apps = parse_config(config_file, platform='macos', output_format='app')
+
+    # The global options are exactly as specified
+    assert global_options == {
+        'value': 0,
+        'basevalue': 'the base',
+    }
 
     # Since a macOS app has been requested, the macOS platform values
     # take priority. Linux configuration values are dropped.
@@ -189,7 +203,13 @@ def test_platform_override_ordering():
         """
     )
 
-    apps = parse_config(config_file, platform='macos', output_format='app')
+    global_options, apps = parse_config(config_file, platform='macos', output_format='app')
+
+    # The global options are exactly as specified
+    assert global_options == {
+        'value': 0,
+        'basevalue': "the base"
+    }
 
     # Since a macOS app has been requested, the macOS platform values
     # take priority. Linux configuration values are dropped.
@@ -263,7 +283,13 @@ def test_format_override():
         """
     )
 
-    apps = parse_config(config_file, platform='macos', output_format='app')
+    global_options, apps = parse_config(config_file, platform='macos', output_format='app')
+
+    # The global options are exactly as specified
+    assert global_options == {
+        'value': 0,
+        'basevalue': "the base"
+    }
 
     # Since a macOS app has been requested, the macOS app format values
     # take priority. Linux configuration values are dropped.
@@ -338,7 +364,13 @@ def test_format_override_ordering():
         """
     )
 
-    apps = parse_config(config_file, platform='macos', output_format='dmg')
+    global_options, apps = parse_config(config_file, platform='macos', output_format='dmg')
+
+    # The global options are exactly as specified
+    assert global_options == {
+        'value': 0,
+        'basevalue': "the base"
+    }
 
     # Since a macOS dmg has been requested, the macOS dmg format values
     # take priority. Linux configuration values are dropped.
