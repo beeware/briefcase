@@ -9,11 +9,19 @@ from briefcase.platforms.linux import LinuxMixin
 
 
 class AppImageMixin(LinuxMixin):
-    pass
+    def __init__(self):
+        super().__init__(output_format='appimage')
+
+    def binary_path(self):
+        raise NotImplementedError()
+
+    def bundle_path(self):
+        raise NotImplementedError()
 
 
 class LinuxAppImageCreateCommand(AppImageMixin, CreateCommand):
     description = "Create and populate a Linux AppImage."
+    template_url = 'https://github.com/beeware/Python-linux-template.git'
 
 
 class LinuxAppImageUpdateCommand(AppImageMixin, UpdateCommand):

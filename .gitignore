@@ -12,3 +12,4 @@ venv/
 .vscode/
 .eggs/
 local
+.pytest_cache

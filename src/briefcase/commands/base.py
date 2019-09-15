@@ -1,8 +1,12 @@
 import inspect
-from abc import ABC, abstractmethod
+import sys
+from abc import ABC
 
-from .config import AppConfig, GlobalConfig, parse_config
-from .exceptions import BriefcaseConfigError, BriefcaseCommandError
+import git
+from cookiecutter.main import cookiecutter
+
+from briefcase.config import AppConfig, GlobalConfig, parse_config
+from briefcase.exceptions import BriefcaseConfigError
 
 
 def create_config(klass, config, msg):
@@ -41,6 +45,24 @@ class BaseCommand(ABC):
         self.options = None
         self.global_config = None
         self.apps = {} if apps is None else apps
+
+        # External service APIs.
+        # These are abstracted to enable testing without mocks.
+        self.git = git
+        self.cookiecutter = cookiecutter
+
+    @property
+    def python_version_tag(self):
+        """
+        The major.minor of the Python version in use, as a string.
+
+        This is used as a repository label/tag to identify the appropriate
+        templates, etc to use.
+        """
+        return '{major}.{minor}'.format(
+            major=sys.version_info.major,
+            minor=sys.version_info.minor
+        )
 
     def parse_options(self, parser, extra):
         self.add_options(parser)
@@ -89,32 +111,3 @@ class BaseCommand(ABC):
 
         except FileNotFoundError:
             raise BriefcaseConfigError('configuration file not found')
-
-
-class CreateCommand(BaseCommand):
-    def __call__(self):
-        self.verify_tools()
-        print("CREATE:", self.description)
-
-    def verify_tools(self):
-        "Verify that the tools needed to run this command exist"
-
-
-class UpdateCommand(BaseCommand):
-    def __call__(self):
-        print("UPDATE:", self.description)
-
-
-class BuildCommand(BaseCommand):
-    def __call__(self):
-        print("BUILD:", self.description)
-
-
-class RunCommand(BaseCommand):
-    def __call__(self):
-        print("RUN:", self.description)
-
-
-class PublishCommand(BaseCommand):
-    def __call__(self):
-        print("PUBLISH:", self.description)

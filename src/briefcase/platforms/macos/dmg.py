@@ -9,11 +9,19 @@ from briefcase.platforms.macos import MacOSMixin
 
 
 class MacOSDmgMixin(MacOSMixin):
-    pass
+    def __init__(self):
+        super().__init__(output_format='dmg')
+
+    def binary_path(self):
+        raise NotImplementedError()
+
+    def bundle_path(self):
+        raise NotImplementedError()
 
 
 class MacOSDmgCreateCommand(MacOSDmgMixin, CreateCommand):
     description = "Create and populate a macOS .dmg bundle."
+    template_url = 'https://github.com/beeware/Python-macOS-template.git'
 
 
 class MacOSDmgUpdateCommand(MacOSDmgMixin, UpdateCommand):

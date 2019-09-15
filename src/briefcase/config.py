@@ -5,11 +5,13 @@ from briefcase.platforms import get_output_formats, get_platforms
 from .exceptions import BriefcaseConfigError
 
 
-class GlobalConfig:
+class Config:
     def __init__(self, **kwargs):
         for attr, value in kwargs.items():
             setattr(self, attr, value)
 
+
+class GlobalConfig(Config):
     def __repr__(self):
         return "<GlobalConfig>"
 
@@ -20,6 +22,7 @@ class AppConfig:
         name,
         version,
         bundle,
+        template=None,
         icon=None,
         splash=None,
         **kwargs
@@ -27,6 +30,8 @@ class AppConfig:
         self.name = name
         self.version = version
         self.bundle = bundle
+
+        self.template = template
 
         # icon can be specified as a single filename,
         # or as a dictionary of files, keyed by size in pixels

@@ -144,10 +144,7 @@ def parse_cmdline(args):
         version=__version__
     )
 
-    command = Command(
-        platform=options.platform,
-        output_format=output_format
-    )
+    command = Command()
     command.parse_options(
         parser=command_parser,
         extra=extra

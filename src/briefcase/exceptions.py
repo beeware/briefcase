@@ -68,3 +68,9 @@ class BriefcaseConfigError(BriefcaseError):
     def __init__(self, msg):
         super().__init__(100)
         self.msg = msg
+
+
+class BriefcaseCommandError(BriefcaseError):
+    def __init__(self, msg):
+        super().__init__(200)
+        self.msg = msg

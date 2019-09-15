@@ -9,11 +9,19 @@ from briefcase.platforms.windows import WindowsMixin
 
 
 class MSIMixin(WindowsMixin):
-    pass
+    def __init__(self):
+        super().__init__(output_format='msi')
+
+    def binary_path(self):
+        raise NotImplementedError()
+
+    def bundle_path(self):
+        raise NotImplementedError()
 
 
 class WindowsMSICreateCommand(MSIMixin, CreateCommand):
     description = "Create and populate a Windows MSI."
+    template_url = 'https://github.com/beeware/Python-windows-template.git'
 
 
 class WindowsMSIUpdateCommand(MSIMixin, UpdateCommand):

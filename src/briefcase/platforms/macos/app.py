@@ -9,11 +9,19 @@ from briefcase.platforms.macos import MacOSMixin
 
 
 class MacOSAppMixin(MacOSMixin):
-    pass
+    def __init__(self):
+        super().__init__(output_format='app')
+
+    def binary_path(self, app, base):
+        return base / 'macos' / '{app.formal_name}.app'
+
+    def bundle_path(self, app, base):
+        return base / 'macos' / '{app.formal_name}.app'
 
 
 class MacOSAppCreateCommand(MacOSAppMixin, CreateCommand):
     description = "Create and populate a macOS .app bundle."
+    template_url = 'https://github.com/beeware/Python-macOS-template.git'
 
 
 class MacOSAppUpdateCommand(MacOSAppMixin, UpdateCommand):

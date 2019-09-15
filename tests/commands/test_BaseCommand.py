@@ -2,7 +2,7 @@ import argparse
 
 import pytest
 
-from briefcase.commands import BaseCommand
+from briefcase.commands.base import BaseCommand
 from briefcase.config import GlobalConfig, AppConfig
 from briefcase.exceptions import BriefcaseConfigError
 
