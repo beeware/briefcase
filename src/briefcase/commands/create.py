@@ -1,12 +1,15 @@
+import shutil
 import subprocess
 from abc import abstractmethod
 from datetime import date
 from pathlib import Path
+from typing import Optional
 
 from git import exc as git_exceptions
 from cookiecutter import exceptions as cookiecutter_exceptions
 
-from briefcase.exceptions import BriefcaseCommandError
+from briefcase.config import BaseConfig
+from briefcase.exceptions import BriefcaseCommandError, NetworkFailure
 
 from .base import BaseCommand
 
@@ -19,14 +22,6 @@ class TemplateUnsupportedPythonVersion(BriefcaseCommandError):
                 version_tag=version_tag
             )
         )
-
-
-class NetworkFailure(BriefcaseCommandError):
-    def __init__(self, action):
-        self.action = action
-        super().__init__(msg="Uunable to {action}; is your computer offline?".format(
-            action=action
-        ))
 
 
 class InvalidTemplateRepository(BriefcaseCommandError):
@@ -63,29 +58,16 @@ class CreateCommand(BaseCommand):
         ...
 
     @abstractmethod
-    def bundle_path(self, app, base):
-        """
-        The path to the bundle for the app in the output format.
-
-        The bundle is the template-generated source form of the app.
-        """
-        ...
-
-    @abstractmethod
-    def binary_path(self, app, base):
-        """
-        The path to the executable artefact for the app in the output format
-
-        This *may* be the same as the bundle path, if the output format
-        requires no compilation, or if it compiles in place.
-        """
-        ...
-
-    @abstractmethod
     def verify_tools(self):
         "Verify that the tools needed to run this command exist"
 
-    def generate_app_template(self, app, path):
+    def generate_app_template(self, app: BaseConfig, bundle_path: Path):
+        """
+        Create an application bundle.
+
+        :param app: The config object for the app
+        :param bundle_path: The path where the application bundle should be created.
+        """
         # If the app config doesn't explicitly define a template,
         # use a default template.
         if app.template is None:
@@ -149,7 +131,7 @@ class CreateCommand(BaseCommand):
             self.cookiecutter(
                 template,
                 no_input=True,
-                # output_dir=path,
+                output_dir=bundle_path,
                 checkout=self.python_version_tag,
                 extra_context=extra_context
             )
@@ -164,63 +146,89 @@ class CreateCommand(BaseCommand):
             # Branch does not exist for python version
             raise TemplateUnsupportedPythonVersion(self.python_version_tag)
 
-    def install_app_support_package(self, app, path):
-        pass
+    def install_app_support_package(self, app: BaseConfig, bundle_path: Path):
+        """
+        Install the application support packge.
 
-    def install_app_dependencies(self, app, path):
-        pass
+        :param app: The config object for the app
+        :param bundle_path: The path where the application bundle should be created.
+        """
 
-    def install_app_code(self, app, path):
-        pass
+    def install_app_dependencies(self, app: BaseConfig, bundle_path: Path):
+        """
+        Install the dependencies for the app.
 
-    def install_app_extras(self, app, path):
-        pass
+        :param app: The config object for the app
+        :param bundle_path: The path where the application bundle should be created.
+        """
 
-    def create_app(self, app, path=None):
-        bundle_path = self.bundle_path(app=app, base=path)
+    def install_app_code(self, app: BaseConfig, bundle_path: Path):
+        """
+        Install the application code into the bundle.
+
+        :param app: The config object for the app
+        :param bundle_path: The path where the application bundle should be created.
+        """
+
+    def install_app_extras(self, app: BaseConfig, bundle_path: Path):
+        """
+        Install the application extras (such as icons and splash screens) into
+        the bundle.
+
+        :param app: The config object for the app
+        :param bundle_path: The path where the application bundle should be created.
+        """
+
+    def create_app(self, app: BaseConfig, bundle_path: Path):
+        """
+        Create an application bundle.
+
+        :param app: The config object for the app
+        :param bundle_path: The path where the application bundle should be created.
+        """
         if bundle_path.exists():
-            confirm = input('Application {} already exists; overwrite (y/N)? '.format(
-                app_name=app.name
+            confirm = input('Application {app.name} already exists; overwrite (y/N)? '.format(
+                app=app
             ))
             if confirm.lower() != 'y':
-                print("Aborting creation of app {app_name}".format(
-                    app_name=app.name
+                print("Aborting creation of app {app.name}".format(
+                    app=app
                 ))
                 return
-            print("[{app_name} Removing old application bundle...".format(
-                app_name=app.name
+            print("[{app.name} Removing old application bundle...".format(
+                app=app
             ))
-            bundle_path.rmdir()
+            shutil.rmtree(bundle_path)
 
-        print('[{app_name}] Generate application template...'.format(
-            app_name=app.name
+        print('[{app.name}] Generate application template...'.format(
+            app=app
         ))
-        self.generate_app_template(app=app, path=bundle_path)
-        print('[{app_name}] Install support package...'.format(
-            app_name=app.name
+        self.generate_app_template(app=app, bundle_path=bundle_path)
+        print('[{app.name}] Install support package...'.format(
+            app=app
         ))
-        self.install_app_support_package(app=app, path=bundle_path)
-        print('[{app_name}] Install dependencies...'.format(
-            app_name=app.name
+        self.install_app_support_package(app=app, bundle_path=bundle_path)
+        print('[{app.name}] Install dependencies...'.format(
+            app=app
         ))
-        self.install_app_dependencies(app=app, path=bundle_path)
-        print('[{app_name}] Install application code...'.format(
-            app_name=app.name
+        self.install_app_dependencies(app=app, bundle_path=bundle_path)
+        print('[{app.name}] Install application code...'.format(
+            app=app
         ))
-        self.install_app_code(app=app, path=bundle_path)
+        self.install_app_code(app=app, bundle_path=bundle_path)
         print('[{app_name}] Install extra resources...'.format(
             app_name=app.name
         ))
-        self.install_app_extras(app=app, path=bundle_path)
+        self.install_app_extras(app=app, bundle_path=bundle_path)
 
-    def create_project(self, app):
+    def create_collection(self, app: BaseConfig, bundle_path: Path):
         pass
 
-    def __call__(self, path=None):
+    def __call__(self, path: Optional[Path] = None):
         if path is None:
             path = Path.cwd()
 
         self.verify_tools()
 
         for app_name, app in self.apps.items():
-            self.create_app(app, path)
+            self.create_app(app, self.bundle_path(app, path))

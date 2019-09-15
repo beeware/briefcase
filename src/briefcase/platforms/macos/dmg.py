@@ -12,11 +12,11 @@ class MacOSDmgMixin(MacOSMixin):
     def __init__(self):
         super().__init__(output_format='dmg')
 
-    def binary_path(self):
-        raise NotImplementedError()
+    def binary_path(self, app, base_path):
+        return base_path / 'macOS' / '{app.formal_name}.app'
 
-    def bundle_path(self):
-        raise NotImplementedError()
+    def bundle_path(self, app, base_path):
+        return base_path / 'macOS' / '{app.formal_name}.app'
 
 
 class MacOSDmgCreateCommand(MacOSDmgMixin, CreateCommand):

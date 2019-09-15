@@ -9,18 +9,12 @@ from cookiecutter import exceptions as cookiecutter_exceptions
 
 from briefcase.commands import CreateCommand
 from briefcase.commands.create import (
-    NetworkFailure,
     InvalidTemplateRepository,
     TemplateUnsupportedPythonVersion
 )
-from briefcase.config import Config
+from briefcase.exceptions import NetworkFailure
 
-
-class SimpleAppConfig(Config):
-    def __init__(self, name, template=None, **kwargs):
-        self.name = name
-        self.template = template
-        super().__init__(**kwargs)
+from ...utils import SimpleAppConfig
 
 
 class DummyCreateCommand(CreateCommand):
@@ -35,11 +29,11 @@ class DummyCreateCommand(CreateCommand):
     def template_url(self):
         return 'https://github.com/beeware/briefcase-sample-template.git'
 
-    def binary_path(self, app, base):
-        return base / 'tester' / '{app.name}-dummy.bin'.format(app)
+    def bundle_path(self, app, base=None):
+        raise NotImplementedError()
 
-    def bundle_path(self, app, base):
-        return base / 'tester' / '{app.name}.dummy'.format(app)
+    def binary_path(self, app, base=None):
+        raise NotImplementedError()
 
     def verify_tools(self):
         pass
@@ -74,6 +68,7 @@ def test_default_template(create_command, myapp, tmp_path):
         'https://github.com/beeware/briefcase-sample-template.git',
         no_input=True,
         checkout=create_command.python_version_tag,
+        output_dir=tmp_path,
         extra_context={
             'name': 'myapp',
             'template': 'https://github.com/beeware/briefcase-sample-template.git',
@@ -102,6 +97,7 @@ def test_explicit_repo_template(create_command, myapp, tmp_path):
         'https://github.com/magic/special-template.git',
         no_input=True,
         checkout=create_command.python_version_tag,
+        output_dir=tmp_path,
         extra_context={
             'name': 'myapp',
             'template': 'https://github.com/magic/special-template.git',
@@ -130,6 +126,7 @@ def test_explicit_local_template(create_command, myapp, tmp_path):
         '/path/to/special-template',
         no_input=True,
         checkout=create_command.python_version_tag,
+        output_dir=tmp_path,
         extra_context={
             'name': 'myapp',
             'template': '/path/to/special-template',
@@ -163,6 +160,7 @@ def test_offline_repo_template(create_command, myapp, tmp_path):
         'https://github.com/beeware/briefcase-sample-template.git',
         no_input=True,
         checkout=create_command.python_version_tag,
+        output_dir=tmp_path,
         extra_context={
             'name': 'myapp',
             'template': 'https://github.com/beeware/briefcase-sample-template.git',
@@ -195,6 +193,7 @@ def test_invalid_repo_template(create_command, myapp, tmp_path):
         'https://github.com/beeware/briefcase-missing-branch-template.git',
         no_input=True,
         checkout=create_command.python_version_tag,
+        output_dir=tmp_path,
         extra_context={
             'name': 'myapp',
             'template': 'https://github.com/beeware/briefcase-missing-branch-template.git',
@@ -228,6 +227,7 @@ def test_missing_branch_template(create_command, myapp, tmp_path):
         'https://github.com/not/a-valid-url.git',
         no_input=True,
         checkout=create_command.python_version_tag,
+        output_dir=tmp_path,
         extra_context={
             'name': 'myapp',
             'template': 'https://github.com/not/a-valid-url.git',
@@ -268,6 +268,7 @@ def test_cached_template(create_command, myapp, tmp_path):
         Path.home() / '.cookiecutters' / 'briefcase-sample-template',
         no_input=True,
         checkout=create_command.python_version_tag,
+        output_dir=tmp_path,
         extra_context={
             'name': 'myapp',
             'template': 'https://github.com/beeware/briefcase-sample-template.git',
@@ -314,6 +315,7 @@ def test_cached_template_offline(create_command, myapp, tmp_path, capsys):
         Path.home() / '.cookiecutters' / 'briefcase-sample-template',
         no_input=True,
         checkout=create_command.python_version_tag,
+        output_dir=tmp_path,
         extra_context={
             'name': 'myapp',
             'template': 'https://github.com/beeware/briefcase-sample-template.git',

@@ -12,10 +12,10 @@ class MSIMixin(WindowsMixin):
     def __init__(self):
         super().__init__(output_format='msi')
 
-    def binary_path(self):
+    def binary_path(self, app, base_path):
         raise NotImplementedError()
 
-    def bundle_path(self):
+    def bundle_path(self, app, base_path):
         raise NotImplementedError()
 
 

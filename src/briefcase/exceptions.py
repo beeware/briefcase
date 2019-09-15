@@ -74,3 +74,11 @@ class BriefcaseCommandError(BriefcaseError):
     def __init__(self, msg):
         super().__init__(200)
         self.msg = msg
+
+
+class NetworkFailure(BriefcaseCommandError):
+    def __init__(self, action):
+        self.action = action
+        super().__init__(msg="Uunable to {action}; is your computer offline?".format(
+            action=action
+        ))

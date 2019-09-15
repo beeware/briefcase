@@ -5,18 +5,18 @@ from briefcase.platforms import get_output_formats, get_platforms
 from .exceptions import BriefcaseConfigError
 
 
-class Config:
+class BaseConfig:
     def __init__(self, **kwargs):
         for attr, value in kwargs.items():
             setattr(self, attr, value)
 
 
-class GlobalConfig(Config):
+class GlobalConfig(BaseConfig):
     def __repr__(self):
         return "<GlobalConfig>"
 
 
-class AppConfig:
+class AppConfig(BaseConfig):
     def __init__(
         self,
         name,
@@ -27,6 +27,8 @@ class AppConfig:
         splash=None,
         **kwargs
     ):
+        super().__init__(**kwargs)
+
         self.name = name
         self.version = version
         self.bundle = bundle
@@ -55,10 +57,6 @@ class AppConfig:
                 }
             except AttributeError:
                 self.splash = splash
-
-        # Extra arguments
-        for attr, value in kwargs.items():
-            setattr(self, attr, value)
 
     def __repr__(self):
         return "<AppConfig {bundle}.{name} v{version}>".format(

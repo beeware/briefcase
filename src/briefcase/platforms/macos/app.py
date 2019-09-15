@@ -12,11 +12,11 @@ class MacOSAppMixin(MacOSMixin):
     def __init__(self):
         super().__init__(output_format='app')
 
-    def binary_path(self, app, base):
-        return base / 'macos' / '{app.formal_name}.app'
+    def binary_path(self, app, base_path):
+        return base_path / 'macOS' / '{app.formal_name}.app'
 
-    def bundle_path(self, app, base):
-        return base / 'macos' / '{app.formal_name}.app'
+    def bundle_path(self, app, base_path):
+        return base_path / 'macOS' / '{app.formal_name}.app'
 
 
 class MacOSAppCreateCommand(MacOSAppMixin, CreateCommand):

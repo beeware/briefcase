@@ -1,6 +1,6 @@
 import inspect
 import sys
-from abc import ABC
+from abc import ABC, abstractmethod
 
 import git
 from cookiecutter.main import cookiecutter
@@ -43,6 +43,7 @@ class BaseCommand(ABC):
         self.platform = platform
         self.output_format = output_format
         self.options = None
+
         self.global_config = None
         self.apps = {} if apps is None else apps
 
@@ -50,6 +51,33 @@ class BaseCommand(ABC):
         # These are abstracted to enable testing without mocks.
         self.git = git
         self.cookiecutter = cookiecutter
+
+    @abstractmethod
+    def bundle_path(self, app, base_path):
+        """
+        The path to the bundle for the app in the output format.
+
+        The bundle is the template-generated source form of the app.
+
+        :param app: The app config
+        :param base_path: The path to use as the root for all output
+            (usually, the root of the project).
+        """
+        ...
+
+    @abstractmethod
+    def binary_path(self, app, base_path):
+        """
+        The path to the executable artefact for the app in the output format
+
+        This *may* be the same as the bundle path, if the output format
+        requires no compilation, or if it compiles in place.
+
+        :param app: The app config
+        :param base_path: The path to use as the root for all output
+            (usually, the root of the project).
+        """
+        ...
 
     @property
     def python_version_tag(self):

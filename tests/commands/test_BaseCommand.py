@@ -28,6 +28,12 @@ class DummyCommand(BaseCommand):
         # * a required argument
         parser.add_argument('-r', '--required', required=True)
 
+    def bundle_path(self, app, base=None):
+        raise NotImplementedError()
+
+    def binary_path(self, app, base=None):
+        raise NotImplementedError()
+
 
 class CustomGlobalConfig(GlobalConfig):
     def __init__(self, foo, **kwargs):
