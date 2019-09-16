@@ -7,6 +7,7 @@ from typing import Optional
 
 from git import exc as git_exceptions
 from cookiecutter import exceptions as cookiecutter_exceptions
+from requests import exceptions as requests_exceptions
 
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError, NetworkFailure
@@ -30,6 +31,16 @@ class InvalidTemplateRepository(BriefcaseCommandError):
         super().__init__(
             'Unable to clone application template; is the template path {template!r} correct?'.format(
                 template=template
+            )
+        )
+
+
+class InvalidSupportPackage(BriefcaseCommandError):
+    def __init__(self, filename):
+        self.filename = filename
+        super().__init__(
+            'Unable to unpack support package {filename!r}'.format(
+                filename=filename
             )
         )
 
@@ -60,6 +71,15 @@ class CreateCommand(BaseCommand):
     @abstractmethod
     def verify_tools(self):
         "Verify that the tools needed to run this command exist"
+
+    @property
+    @abstractmethod
+    def support_package_url(self):
+        "The URL of the support package to use for apps of this type."
+
+    @abstractmethod
+    def support_path(self, app, bundle_path):
+        "The path into which the support package should be unpacked"
 
     def generate_app_template(self, app: BaseConfig, bundle_path: Path):
         """
@@ -102,7 +122,7 @@ class CreateCommand(BaseCommand):
             try:
                 # Check out the branch for the required version tag.
                 head = repo.heads[self.python_version_tag]
-                print("Using existing template {hexsha} (updated {datestamp})".format(
+                print("Using existing template (sha {hexsha}, updated {datestamp})".format(
                     hexsha=head.commit.hexsha,
                     datestamp=head.commit.committed_datetime.strftime("%c")
                 ))
@@ -128,10 +148,11 @@ class CreateCommand(BaseCommand):
         })
 
         try:
+            bundle_path.mkdir(parents=True)
             self.cookiecutter(
-                template,
+                str(template),
                 no_input=True,
-                output_dir=bundle_path,
+                output_dir=str(bundle_path),
                 checkout=self.python_version_tag,
                 extra_context=extra_context
             )
@@ -151,10 +172,27 @@ class CreateCommand(BaseCommand):
         Install the application support packge.
 
         :param app: The config object for the app
-        :param bundle_path: The path where the application bundle should be created.
+        :param bundle_path: The path where the application bundle should be
+            created.
         """
+        try:
+            print("Using support package {self.support_package_url}".format(self=self))
+            support_filename = self.download_url(
+                url=self.support_package_url,
+                download_path=Path.home() / '.briefcase' / 'support')
+        except requests_exceptions.ConnectionError:
+            raise NetworkFailure('downloading support package')
 
-
+        try:
+            print("Unpacking support package...")
+            support_path = self.support_path(app, bundle_path)
+            support_path.mkdir(parents=True, exist_ok=True)
+            self.shutil.unpack_archive(
+                support_filename,
+                extract_dir=support_path
+            )
+        except shutil.ReadError:
+            raise InvalidSupportPackage(support_filename.name)
 
     def install_app_dependencies(self, app: BaseConfig, bundle_path: Path):
         """
@@ -189,7 +227,8 @@ class CreateCommand(BaseCommand):
         :param bundle_path: The path where the application bundle should be created.
         """
         if bundle_path.exists():
-            confirm = input('Application {app.name} already exists; overwrite (y/N)? '.format(
+            print()
+            confirm = self.input('Application {app.name} already exists; overwrite (y/N)? '.format(
                 app=app
             ))
             if confirm.lower() != 'y':
@@ -197,27 +236,36 @@ class CreateCommand(BaseCommand):
                     app=app
                 ))
                 return
-            print("[{app.name} Removing old application bundle...".format(
+            print()
+            print("[{app.name}] Removing old application bundle...".format(
                 app=app
             ))
             shutil.rmtree(bundle_path)
-
+        print()
         print('[{app.name}] Generate application template...'.format(
             app=app
         ))
         self.generate_app_template(app=app, bundle_path=bundle_path)
+
+        print()
         print('[{app.name}] Install support package...'.format(
             app=app
         ))
         self.install_app_support_package(app=app, bundle_path=bundle_path)
+
+        print()
         print('[{app.name}] Install dependencies...'.format(
             app=app
         ))
         self.install_app_dependencies(app=app, bundle_path=bundle_path)
+
+        print()
         print('[{app.name}] Install application code...'.format(
             app=app
         ))
         self.install_app_code(app=app, bundle_path=bundle_path)
+
+        print()
         print('[{app_name}] Install extra resources...'.format(
             app_name=app.name
         ))

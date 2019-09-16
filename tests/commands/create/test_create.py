@@ -1,6 +1,8 @@
-from briefcase.commands import CreateCommand
+from unittest import mock
 
 import pytest
+
+from briefcase.commands import CreateCommand
 
 from ...utils import SimpleAppConfig
 
@@ -20,6 +22,13 @@ class DummyCreateCommand(CreateCommand):
 
     def binary_path(self, app, base):
         return base / 'tester' / '{app.name}.dummy.bin'.format(app=app)
+
+    @property
+    def support_package_url(self):
+        raise NotImplementedError()
+
+    def support_path(self, app, bundle_path):
+        raise NotImplementedError()
 
     def verify_tools(self):
         self.actions.append(('verify'))
@@ -75,10 +84,10 @@ def test_create_app(create_command, tmp_path):
     assert (bundle_path / 'new').exists()
 
 
-def test_create_existing_app_overwrite(create_command, tmp_path, monkeypatch):
+def test_create_existing_app_overwrite(create_command, tmp_path):
     "An existing app can be overwritten if requested"
     # Answer yes when asked
-    monkeypatch.setattr('builtins.input', lambda prompt: 'y')
+    create_command.input = mock.MagicMock(return_value='y')
 
     bundle_path = tmp_path / 'tester' / 'first.dummy'
     bundle_path.mkdir(parents=True)
@@ -103,10 +112,10 @@ def test_create_existing_app_overwrite(create_command, tmp_path, monkeypatch):
     assert (bundle_path / 'new').exists()
 
 
-def test_create_existing_app_no_overwrite(create_command, tmp_path, monkeypatch):
+def test_create_existing_app_no_overwrite(create_command, tmp_path):
     "If you say no, the existing app won't be overwritten"
     # Answer no when asked
-    monkeypatch.setattr('builtins.input', lambda prompt: 'n')
+    create_command.input = mock.MagicMock(return_value='n')
 
     bundle_path = tmp_path / 'tester' / 'first.dummy'
     bundle_path.mkdir(parents=True)
@@ -125,10 +134,10 @@ def test_create_existing_app_no_overwrite(create_command, tmp_path, monkeypatch)
     assert not (bundle_path / 'new').exists()
 
 
-def test_create_existing_app_no_overwrite_default(create_command, tmp_path, monkeypatch):
+def test_create_existing_app_no_overwrite_default(create_command, tmp_path):
     "By default, the existing app won't be overwritten"
     # Answer '' (i.e., just press return) when asked
-    monkeypatch.setattr('builtins.input', lambda prompt: '')
+    create_command.input = mock.MagicMock(return_value='')
 
     bundle_path = tmp_path / 'tester' / 'first.dummy'
     bundle_path.mkdir(parents=True)

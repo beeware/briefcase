@@ -13,10 +13,17 @@ class MacOSAppMixin(MacOSMixin):
         super().__init__(output_format='app')
 
     def binary_path(self, app, base_path):
-        return base_path / 'macOS' / '{app.formal_name}.app'
+        return base_path / 'macOS' / '{app.formal_name}.app'.format(app=app)
 
     def bundle_path(self, app, base_path):
-        return base_path / 'macOS' / '{app.formal_name}.app'
+        return base_path / 'macOS' / '{app.formal_name}.app'.format(app=app)
+
+    @property
+    def support_package_url(self):
+        return 'https://pybee-briefcase-support.s3-us-west-2.amazonaws.com/Python-Apple-support/3.7/macOS/Python-3.7-macOS-support.b1.tar.gz'
+
+    def support_path(self, app, bundle_path):
+        return bundle_path
 
 
 class MacOSAppCreateCommand(MacOSAppMixin, CreateCommand):

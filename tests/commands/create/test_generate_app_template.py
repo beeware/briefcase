@@ -35,6 +35,13 @@ class DummyCreateCommand(CreateCommand):
     def binary_path(self, app, base=None):
         raise NotImplementedError()
 
+    @property
+    def support_package_url(self):
+        raise NotImplementedError()
+
+    def support_path(self, app, bundle_path):
+        raise NotImplementedError()
+
     def verify_tools(self):
         pass
 
@@ -58,7 +65,7 @@ def test_default_template(create_command, myapp, tmp_path):
     create_command.git.Repo.side_effect = git_exceptions.NoSuchPathError
 
     # Generate the template.
-    create_command.generate_app_template(myapp, tmp_path)
+    create_command.generate_app_template(myapp, tmp_path / 'output')
 
     # App's template has been set
     assert myapp.template == 'https://github.com/beeware/briefcase-sample-template.git'
@@ -68,7 +75,7 @@ def test_default_template(create_command, myapp, tmp_path):
         'https://github.com/beeware/briefcase-sample-template.git',
         no_input=True,
         checkout=create_command.python_version_tag,
-        output_dir=tmp_path,
+        output_dir=str(tmp_path / 'output'),
         extra_context={
             'name': 'myapp',
             'template': 'https://github.com/beeware/briefcase-sample-template.git',
@@ -87,7 +94,7 @@ def test_explicit_repo_template(create_command, myapp, tmp_path):
     create_command.git.Repo.side_effect = git_exceptions.NoSuchPathError
 
     # Generate the template.
-    create_command.generate_app_template(myapp, tmp_path)
+    create_command.generate_app_template(myapp, tmp_path / 'output')
 
     # App's template hasn't been changed
     assert myapp.template == 'https://github.com/magic/special-template.git'
@@ -97,7 +104,7 @@ def test_explicit_repo_template(create_command, myapp, tmp_path):
         'https://github.com/magic/special-template.git',
         no_input=True,
         checkout=create_command.python_version_tag,
-        output_dir=tmp_path,
+        output_dir=str(tmp_path / 'output'),
         extra_context={
             'name': 'myapp',
             'template': 'https://github.com/magic/special-template.git',
@@ -116,7 +123,7 @@ def test_explicit_local_template(create_command, myapp, tmp_path):
     create_command.git.Repo.side_effect = git_exceptions.InvalidGitRepositoryError
 
     # Generate the template.
-    create_command.generate_app_template(myapp, tmp_path)
+    create_command.generate_app_template(myapp, tmp_path / 'output')
 
     # App's template hasn't been changed
     assert myapp.template == '/path/to/special-template'
@@ -126,7 +133,7 @@ def test_explicit_local_template(create_command, myapp, tmp_path):
         '/path/to/special-template',
         no_input=True,
         checkout=create_command.python_version_tag,
-        output_dir=tmp_path,
+        output_dir=str(tmp_path / 'output'),
         extra_context={
             'name': 'myapp',
             'template': '/path/to/special-template',
@@ -150,7 +157,7 @@ def test_offline_repo_template(create_command, myapp, tmp_path):
 
     # Generating the template under there conditions raises an error
     with pytest.raises(NetworkFailure):
-        create_command.generate_app_template(myapp, tmp_path)
+        create_command.generate_app_template(myapp, tmp_path / 'output')
 
     # App's template has been set
     assert myapp.template == 'https://github.com/beeware/briefcase-sample-template.git'
@@ -160,7 +167,7 @@ def test_offline_repo_template(create_command, myapp, tmp_path):
         'https://github.com/beeware/briefcase-sample-template.git',
         no_input=True,
         checkout=create_command.python_version_tag,
-        output_dir=tmp_path,
+        output_dir=str(tmp_path / 'output'),
         extra_context={
             'name': 'myapp',
             'template': 'https://github.com/beeware/briefcase-sample-template.git',
@@ -183,7 +190,7 @@ def test_invalid_repo_template(create_command, myapp, tmp_path):
 
     # Generating the template under there conditions raises an error
     with pytest.raises(InvalidTemplateRepository):
-        create_command.generate_app_template(myapp, tmp_path)
+        create_command.generate_app_template(myapp, tmp_path / 'output')
 
     # App's template is unchanged
     assert myapp.template == 'https://github.com/beeware/briefcase-missing-branch-template.git'
@@ -193,7 +200,7 @@ def test_invalid_repo_template(create_command, myapp, tmp_path):
         'https://github.com/beeware/briefcase-missing-branch-template.git',
         no_input=True,
         checkout=create_command.python_version_tag,
-        output_dir=tmp_path,
+        output_dir=str(tmp_path / 'output'),
         extra_context={
             'name': 'myapp',
             'template': 'https://github.com/beeware/briefcase-missing-branch-template.git',
@@ -217,7 +224,7 @@ def test_missing_branch_template(create_command, myapp, tmp_path):
 
     # Generating the template under there conditions raises an error
     with pytest.raises(TemplateUnsupportedPythonVersion):
-        create_command.generate_app_template(myapp, tmp_path)
+        create_command.generate_app_template(myapp, tmp_path / 'output')
 
     # App's template is unchanged
     assert myapp.template == 'https://github.com/not/a-valid-url.git'
@@ -227,7 +234,7 @@ def test_missing_branch_template(create_command, myapp, tmp_path):
         'https://github.com/not/a-valid-url.git',
         no_input=True,
         checkout=create_command.python_version_tag,
-        output_dir=tmp_path,
+        output_dir=str(tmp_path / 'output'),
         extra_context={
             'name': 'myapp',
             'template': 'https://github.com/not/a-valid-url.git',
@@ -250,7 +257,7 @@ def test_cached_template(create_command, myapp, tmp_path):
     mock_repo.heads.__getitem__.return_value = mock_head
 
     # Generate the template.
-    create_command.generate_app_template(myapp, tmp_path)
+    create_command.generate_app_template(myapp, tmp_path / 'output')
 
     # The origin of the repo was fetched
     mock_repo.remote.assert_called_once_with(name='origin')
@@ -265,10 +272,10 @@ def test_cached_template(create_command, myapp, tmp_path):
 
     # Cookiecutter was invoked with the path to the *cached* template name
     create_command.cookiecutter.assert_called_once_with(
-        Path.home() / '.cookiecutters' / 'briefcase-sample-template',
+        str(Path.home() / '.cookiecutters' / 'briefcase-sample-template'),
         no_input=True,
         checkout=create_command.python_version_tag,
-        output_dir=tmp_path,
+        output_dir=str(tmp_path / 'output'),
         extra_context={
             'name': 'myapp',
             'template': 'https://github.com/beeware/briefcase-sample-template.git',
@@ -293,7 +300,7 @@ def test_cached_template_offline(create_command, myapp, tmp_path, capsys):
     mock_remote.fetch.side_effect = git_exceptions.GitCommandError('git', 128)
 
     # Generate the template.
-    create_command.generate_app_template(myapp, tmp_path)
+    create_command.generate_app_template(myapp, tmp_path / 'output')
 
     # An attempt to fetch the repo origin was made
     mock_repo.remote.assert_called_once_with(name='origin')
@@ -312,10 +319,10 @@ def test_cached_template_offline(create_command, myapp, tmp_path, capsys):
 
     # Cookiecutter was invoked with the path to the *cached* template name
     create_command.cookiecutter.assert_called_once_with(
-        Path.home() / '.cookiecutters' / 'briefcase-sample-template',
+        str(Path.home() / '.cookiecutters' / 'briefcase-sample-template'),
         no_input=True,
         checkout=create_command.python_version_tag,
-        output_dir=tmp_path,
+        output_dir=str(tmp_path / 'output'),
         extra_context={
             'name': 'myapp',
             'template': 'https://github.com/beeware/briefcase-sample-template.git',

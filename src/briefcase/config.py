@@ -35,6 +35,11 @@ class AppConfig(BaseConfig):
 
         self.template = template
 
+        self.app_name = name
+        self.formal_name = name
+        self.dir_name = "macOS"
+        self.document_types = {}
+
         # icon can be specified as a single filename,
         # or as a dictionary of files, keyed by size in pixels
         if icon is not None:

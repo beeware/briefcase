@@ -1,4 +1,5 @@
 import inspect
+import shutil
 import sys
 from abc import ABC, abstractmethod
 from urllib.parse import urlparse
@@ -58,6 +59,8 @@ class BaseCommand(ABC):
         self.cookiecutter = cookiecutter
         self.git = git
         self.requests = requests
+        self.input = input
+        self.shutil = shutil
 
     @abstractmethod
     def bundle_path(self, app, base_path):
@@ -166,20 +169,20 @@ class BaseCommand(ABC):
         filename = download_path / cache_name
 
         if not filename.exists():
+            response = self.requests.get(url, stream=True)
+            if response.status_code == 404:
+                raise MissingNetworkResourceError(
+                    url=url,
+                )
+            elif response.status_code != 200:
+                raise BadNetworkResourceError(
+                    url=url,
+                    status_code=response.status_code
+                )
+
+            # We have meaningful content, so save it in the requested location
             with open(filename, 'wb') as f:
-                response = self.requests.get(url, stream=True)
-                if response.status_code == 404:
-                    raise MissingNetworkResourceError(
-                        url=url,
-                    )
-                elif response.status_code != 200:
-                    raise BadNetworkResourceError(
-                        url=url,
-                        status_code=response.status_code
-                    )
-
                 total = response.headers.get('content-length')
-
                 if total is None:
                     f.write(response.content)
                 else:

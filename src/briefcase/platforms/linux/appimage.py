@@ -18,6 +18,13 @@ class AppImageMixin(LinuxMixin):
     def bundle_path(self, app, base_path):
         raise NotImplementedError()
 
+    @property
+    def support_package_url(self):
+        raise NotImplementedError()
+
+    def support_path(self, app, bundle_path):
+        raise NotImplementedError()
+
 
 class LinuxAppImageCreateCommand(AppImageMixin, CreateCommand):
     description = "Create and populate a Linux AppImage."

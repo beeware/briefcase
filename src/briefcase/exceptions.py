@@ -69,11 +69,17 @@ class BriefcaseConfigError(BriefcaseError):
         super().__init__(100)
         self.msg = msg
 
+    def __str__(self):
+        return self.msg
+
 
 class BriefcaseCommandError(BriefcaseError):
     def __init__(self, msg):
         super().__init__(200)
         self.msg = msg
+
+    def __str__(self):
+        return self.msg
 
 
 class NetworkFailure(BriefcaseCommandError):

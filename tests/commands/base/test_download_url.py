@@ -16,10 +16,10 @@ class DummyCommand(BaseCommand):
     def __init__(self):
         super().__init__(platform='tester', output_format='dummy')
 
-    def bundle_path(self, app, base=None):
+    def bundle_path(self, app, base_path):
         raise NotImplementedError()
 
-    def binary_path(self, app, base=None):
+    def binary_path(self, app, base_path):
         raise NotImplementedError()
 
 
@@ -90,7 +90,8 @@ def test_new_download_chunked(tmp_path):
     # The filename is derived from the URL
     assert filename == tmp_path / 'something.zip'
 
-    # File content is as expected
+    # The downloaded file exists, and content is as expected
+    assert filename.exists()
     with open(tmp_path / 'something.zip') as f:
         assert f.read() == 'chunk-1;chunk-2;chunk-3;'
 
@@ -115,6 +116,7 @@ def test_already_downloaded(tmp_path):
 
     # but the file existed, so the method returns
     assert filename == existing_file
+    assert filename.exists()
 
 
 def test_missing_resource(tmp_path):
@@ -140,6 +142,9 @@ def test_missing_resource(tmp_path):
     )
     response.headers.get.assert_not_called()
 
+    # The file doesn't exist as a result of the download failure
+    assert not (tmp_path / 'something.zip').exists()
+
 
 def test_bad_resource(tmp_path):
     command = DummyCommand()
@@ -163,3 +168,6 @@ def test_bad_resource(tmp_path):
         stream=True,
     )
     response.headers.get.assert_not_called()
+
+    # The file doesn't exist as a result of the download failure
+    assert not (tmp_path / 'something.zip').exists()
