@@ -154,6 +154,8 @@ class CreateCommand(BaseCommand):
         :param bundle_path: The path where the application bundle should be created.
         """
 
+
+
     def install_app_dependencies(self, app: BaseConfig, bundle_path: Path):
         """
         Install the dependencies for the app.

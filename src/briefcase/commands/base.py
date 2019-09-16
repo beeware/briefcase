@@ -1,12 +1,18 @@
 import inspect
 import sys
 from abc import ABC, abstractmethod
+from urllib.parse import urlparse
 
 import git
+import requests
 from cookiecutter.main import cookiecutter
 
 from briefcase.config import AppConfig, GlobalConfig, parse_config
-from briefcase.exceptions import BriefcaseConfigError
+from briefcase.exceptions import (
+    BadNetworkResourceError,
+    BriefcaseConfigError,
+    MissingNetworkResourceError,
+)
 
 
 def create_config(klass, config, msg):
@@ -49,8 +55,9 @@ class BaseCommand(ABC):
 
         # External service APIs.
         # These are abstracted to enable testing without mocks.
-        self.git = git
         self.cookiecutter = cookiecutter
+        self.git = git
+        self.requests = requests
 
     @abstractmethod
     def bundle_path(self, app, base_path):
@@ -139,3 +146,51 @@ class BaseCommand(ABC):
 
         except FileNotFoundError:
             raise BriefcaseConfigError('configuration file not found')
+
+    def download_url(self, url, download_path):
+        """
+        Download a given URL, caching it. If it has already been downloaded,
+        return the value that has been cached.
+
+        This is a utility method used to obtain assets used by the
+        install process. The cached filename will be the filename portion of
+        the URL, appended to the download path.
+
+        :param url: The URL to download
+        :param download_path: The path to the download cache folder. This path
+            will be created if it doesn't exist.
+        :returns: The filename of the downloaded (or cached) file.
+        """
+        cache_name = urlparse(url).path.split('/')[-1]
+        download_path.mkdir(parents=True, exist_ok=True)
+        filename = download_path / cache_name
+
+        if not filename.exists():
+            with open(filename, 'wb') as f:
+                response = self.requests.get(url, stream=True)
+                if response.status_code == 404:
+                    raise MissingNetworkResourceError(
+                        url=url,
+                    )
+                elif response.status_code != 200:
+                    raise BadNetworkResourceError(
+                        url=url,
+                        status_code=response.status_code
+                    )
+
+                total = response.headers.get('content-length')
+
+                if total is None:
+                    f.write(response.content)
+                else:
+                    downloaded = 0
+                    total = int(total)
+                    for data in response.iter_content(chunk_size=1024 * 1024):
+                        downloaded += len(data)
+                        f.write(data)
+                        done = int(50 * downloaded / total)
+                        print('\r{}{} {}%'.format('█' * done, '.' * (50-done), 2*done), end='', flush=True)
+            print()
+        else:
+            print('{cache_name} already downloaded'.format(cache_name=cache_name))
+        return filename

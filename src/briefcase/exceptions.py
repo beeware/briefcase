@@ -79,6 +79,24 @@ class BriefcaseCommandError(BriefcaseError):
 class NetworkFailure(BriefcaseCommandError):
     def __init__(self, action):
         self.action = action
-        super().__init__(msg="Uunable to {action}; is your computer offline?".format(
+        super().__init__(msg="Unable to {action}; is your computer offline?".format(
             action=action
+        ))
+
+
+class MissingNetworkResourceError(BriefcaseCommandError):
+    def __init__(self, url):
+        self.url = url
+        super().__init__(msg="Unable to download {url}; is the URL correct?".format(
+            url=url
+        ))
+
+
+class BadNetworkResourceError(BriefcaseCommandError):
+    def __init__(self, url, status_code):
+        self.url = url
+        self.status_code = status_code
+        super().__init__(msg="Unable to download {url} (status code {status_code})".format(
+            url=url,
+            status_code=status_code,
         ))
