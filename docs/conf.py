@@ -11,11 +11,6 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-# The version info for the project you're documenting, acts as replacement for
-# |version| and |release|, also used in various other places throughout the
-# built documents.
-#
-# The full version, including alpha/beta/rc tags.
 import io
 import os
 import re
@@ -212,6 +207,12 @@ latex_documents = [
   ('index', 'briefcase.tex', u'Briefcase Documentation',
    u'Russell Keith-Magee', 'manual'),
 ]
+
+# The version info for the project you're documenting, acts as replacement for
+# |version| and |release|, also used in various other places throughout the
+# built documents.
+#
+# The full version, including alpha/beta/rc tags.
 
 # The name of an image file (relative to this directory) to place at the top of
 # the title page.
