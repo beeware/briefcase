@@ -46,6 +46,13 @@ master_doc = 'index'
 project = u'Briefcase'
 copyright = u'2013, Russell Keith-Magee'
 
+# The version info for the project you're documenting, acts as replacement for
+# |version| and |release|, also used in various other places throughout the
+# built documents.
+#
+# The full version, including alpha/beta/rc tags.
+
+
 with io.open('../src/briefcase/__init__.py', encoding='utf8') as version_file:
     version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]", version_file.read(), re.M)
     if version_match:
@@ -207,12 +214,6 @@ latex_documents = [
   ('index', 'briefcase.tex', u'Briefcase Documentation',
    u'Russell Keith-Magee', 'manual'),
 ]
-
-# The version info for the project you're documenting, acts as replacement for
-# |version| and |release|, also used in various other places throughout the
-# built documents.
-#
-# The full version, including alpha/beta/rc tags.
 
 # The name of an image file (relative to this directory) to place at the top of
 # the title page.
