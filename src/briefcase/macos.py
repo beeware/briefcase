@@ -108,7 +108,7 @@ class macos(app):
 
         dmgbuild.build_dmg(
             filename=dmg_path,
-            volume_name=self.formal_name,
+            volume_name=self.formal_name + ' ' + self.version,
             settings={
                 'files': [self.app_location],
                 'symlinks': {'Applications': '/Applications'},
