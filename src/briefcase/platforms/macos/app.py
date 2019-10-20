@@ -1,3 +1,7 @@
+import subprocess
+from pathlib import Path
+
+from briefcase.config import BaseConfig
 from briefcase.commands import (
     BuildCommand,
     CreateCommand,
@@ -5,30 +9,23 @@ from briefcase.commands import (
     RunCommand,
     UpdateCommand
 )
+from briefcase.exceptions import BriefcaseCommandError
 from briefcase.platforms.macos import MacOSMixin
 
 
 class MacOSAppMixin(MacOSMixin):
-    def __init__(self):
-        super().__init__(output_format='app')
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, output_format='app', **kwargs)
 
     def binary_path(self, app, base_path):
-        return base_path / 'macOS' / '{app.formal_name}.app'.format(app=app)
+        return self.platform_path(base_path) / '{app.formal_name}.app'.format(app=app)
 
     def bundle_path(self, app, base_path):
-        return base_path / 'macOS' / '{app.formal_name}.app'.format(app=app)
-
-    @property
-    def support_package_url(self):
-        return 'https://pybee-briefcase-support.s3-us-west-2.amazonaws.com/Python-Apple-support/3.7/macOS/Python-3.7-macOS-support.b1.tar.gz'
-
-    def support_path(self, app, bundle_path):
-        return bundle_path
+        return self.platform_path(base_path) / '{app.formal_name}.app'.format(app=app)
 
 
 class MacOSAppCreateCommand(MacOSAppMixin, CreateCommand):
     description = "Create and populate a macOS .app bundle."
-    template_url = 'https://github.com/beeware/Python-macOS-template.git'
 
 
 class MacOSAppUpdateCommand(MacOSAppMixin, UpdateCommand):
@@ -41,6 +38,32 @@ class MacOSAppBuildCommand(MacOSAppMixin, BuildCommand):
 
 class MacOSAppRunCommand(MacOSAppMixin, RunCommand):
     description = "Run a macOS .app bundle."
+
+    def run_app(self, app: BaseConfig, base_path: Path):
+        """
+        Start the application.
+
+        :param app: The config object for the app
+        :param base_path: The path to the project directory.
+        """
+        print()
+        print('[{app.name}] Starting app...'.format(
+            app=app
+        ))
+        try:
+            print()
+            self.subprocess.run(
+                [
+                    'open',
+                    self.binary_path(app, base_path),
+                ],
+                check=True,
+            )
+        except subprocess.CalledProcessError:
+            print()
+            raise BriefcaseCommandError(
+                "Unable to start app {app.name}.".format(app=app)
+            )
 
 
 class MacOSAppPublishCommand(MacOSAppMixin, PublishCommand):

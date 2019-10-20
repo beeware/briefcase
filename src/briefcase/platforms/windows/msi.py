@@ -18,17 +18,9 @@ class MSIMixin(WindowsMixin):
     def bundle_path(self, app, base_path):
         raise NotImplementedError()
 
-    @property
-    def support_package_url(self):
-        raise NotImplementedError()
-
-    def support_path(self, app, bundle_path):
-        raise NotImplementedError()
-
 
 class WindowsMSICreateCommand(MSIMixin, CreateCommand):
     description = "Create and populate a Windows MSI."
-    template_url = 'https://github.com/beeware/Python-windows-template.git'
 
 
 class WindowsMSIUpdateCommand(MSIMixin, UpdateCommand):

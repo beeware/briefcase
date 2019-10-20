@@ -13,22 +13,14 @@ class MacOSDmgMixin(MacOSMixin):
         super().__init__(output_format='dmg')
 
     def binary_path(self, app, base_path):
-        return base_path / 'macOS' / '{app.formal_name}.app'
+        return base_path / 'macOS' / '{app.formal_name}.dmg'
 
     def bundle_path(self, app, base_path):
         return base_path / 'macOS' / '{app.formal_name}.app'
 
-    @property
-    def support_package_url(self):
-        raise NotImplementedError()
-
-    def support_path(self, app, bundle_path):
-        raise NotImplementedError()
-
 
 class MacOSDmgCreateCommand(MacOSDmgMixin, CreateCommand):
     description = "Create and populate a macOS .dmg bundle."
-    template_url = 'https://github.com/beeware/Python-macOS-template.git'
 
 
 class MacOSDmgUpdateCommand(MacOSDmgMixin, UpdateCommand):

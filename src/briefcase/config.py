@@ -1,3 +1,4 @@
+import copy
 import toml
 
 from briefcase.platforms import get_output_formats, get_platforms
@@ -22,7 +23,11 @@ class AppConfig(BaseConfig):
         name,
         version,
         bundle,
+        description,
+        formal_name=None,
         template=None,
+        requires=None,
+        document_type=None,
         icon=None,
         splash=None,
         **kwargs
@@ -32,13 +37,12 @@ class AppConfig(BaseConfig):
         self.name = name
         self.version = version
         self.bundle = bundle
+        self.description = description
 
         self.template = template
-
-        self.app_name = name
-        self.formal_name = name
-        self.dir_name = "macOS"
-        self.document_types = {}
+        self.requires = requires
+        self.formal_name = name if formal_name is None else formal_name
+        self.document_types = {} if document_type is None else document_type
 
         # icon can be specified as a single filename,
         # or as a dictionary of files, keyed by size in pixels
@@ -71,6 +75,26 @@ class AppConfig(BaseConfig):
         )
 
     @property
+    def module_name(self):
+        """
+        The module name for the app.
+
+        This is derived from the name, but:
+        * all `-` have been replaced with `_`.
+        """
+        return self.name.replace('-', '_')
+
+    @property
+    def class_name(self):
+        """
+        The class name for the app.
+
+        This is derived from the formal name, but:
+        * all spaces are removed.
+        """
+        return self.formal_name.replace(' ', '')
+
+    @property
     def has_scaled_icon(self):
         """
         Does the config's icon provide multiple sizes?
@@ -87,6 +111,23 @@ class AppConfig(BaseConfig):
         Raises an AttributeError if no splash has been defined.
         """
         return isinstance(self.splash, dict)
+
+
+def merge_config(config, data):
+    """
+    Merge a new set of configuration requirements into a base configuration.
+
+    :param config: the base configuration to update. This configuration
+        is modified in-situ.
+    :param data: The new configuration data to merge into the configuration.
+    """
+    for option in ['requires', 'sources']:
+        value = data.pop(option, [])
+
+        if value:
+            config.setdefault(option, []).extend(value)
+
+    config.update(data)
 
 
 def parse_config(config_file, platform, output_format):
@@ -154,6 +195,7 @@ def parse_config(config_file, platform, output_format):
                     # If the platform matches the requested format, preserve
                     # it for later use.
                     platform_data = platform_block
+                    merge_config(platform_data, platform_data)
 
                     # The platform configuration will contain a section
                     # for each configured output format. Iterate over all
@@ -179,25 +221,29 @@ def parse_config(config_file, platform, output_format):
                     # overwriting any platform-level settings with format-level
                     # values.
                     if format_data:
-                        platform_data.update(format_data)
+                        merge_config(platform_data, format_data)
 
             except KeyError:
                 pass
 
         # Now construct the final configuration.
+        # First, convert the requirement definition at the global level
+        merge_config(global_config, global_config)
+
         # The app's config starts as a copy of the base briefcase configuation.
-        config = global_config.copy()
+        config = copy.deepcopy(global_config)
 
         # The app name is both the key, and a property of the configuration
         config['name'] = app_name
 
-        # Then overwrite the explicit app-specific configuration data
-        config.update(app_data)
+        # Merge the app-specific requirements
+        merge_config(config, app_data)
 
-        # If there is platform-specific configuration, overwrite those values.
+        # If there is platform-specific configuration, merge the requirements,
+        # the overwrite the platform-specific values.
         # This will already include any format-specific configuration.
         if platform_data:
-            config.update(platform_data)
+            merge_config(config, platform_data)
 
         # Construct a configuration object, and add it to the list
         # of configurations that are being handled.

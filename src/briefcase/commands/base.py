@@ -1,6 +1,8 @@
 import inspect
+import importlib
 import shutil
 import sys
+import subprocess
 from abc import ABC, abstractmethod
 from urllib.parse import urlparse
 
@@ -55,12 +57,44 @@ class BaseCommand(ABC):
         self.apps = {} if apps is None else apps
 
         # External service APIs.
-        # These are abstracted to enable testing without mocks.
+        # These are abstracted to enable testing without patching.
         self.cookiecutter = cookiecutter
         self.git = git
         self.requests = requests
         self.input = input
         self.shutil = shutil
+        self.subprocess = subprocess
+
+    @property
+    def CreateCommand(self):
+        format_module = importlib.import_module(self.__module__)
+        return format_module.create(apps=self.apps)
+
+    @property
+    def UpdateCommand(self):
+        format_module = importlib.import_module(self.__module__)
+        return format_module.update(apps=self.apps)
+
+    @property
+    def BuildCommand(self):
+        format_module = importlib.import_module(self.__module__)
+        return format_module.build(apps=self.apps)
+
+    @property
+    def RunCommand(self):
+        format_module = importlib.import_module(self.__module__)
+        return format_module.run(apps=self.apps)
+
+    @property
+    def PublishCommand(self):
+        format_module = importlib.import_module(self.__module__)
+        return format_module.publish(apps=self.apps)
+
+    def platform_path(self, base_path):
+        """
+        The path for all applications for this command's platform
+        """
+        return base_path / self.platform
 
     @abstractmethod
     def bundle_path(self, app, base_path):
@@ -101,6 +135,14 @@ class BaseCommand(ABC):
             major=sys.version_info.major,
             minor=sys.version_info.minor
         )
+
+    def verify_tools(self):
+        """
+        Verify that the tools needed to run this command exist
+
+        Raises MissingToolException if a required system tool is missing.
+        """
+        ...
 
     def parse_options(self, parser, extra):
         self.add_options(parser)

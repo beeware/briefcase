@@ -7,55 +7,34 @@ import pytest
 from git import exc as git_exceptions
 from cookiecutter import exceptions as cookiecutter_exceptions
 
-from briefcase.commands import CreateCommand
 from briefcase.commands.create import (
     InvalidTemplateRepository,
     TemplateUnsupportedPythonVersion
 )
 from briefcase.exceptions import NetworkFailure
 
-from ...utils import SimpleAppConfig
 
+def full_context(extra):
+    "The full context associated with myapp"
+    context = {
+        'name': 'my-app',
+        'formal_name': 'My App',
+        'bundle': 'com.example',
+        'version': '1.2.3',
+        'description': "This is a simple app",
+        'requires': None,
+        'document_types': {},
 
-class DummyCreateCommand(CreateCommand):
-    def __init__(self):
-        super().__init__(platform='tester', output_format='dummy')
+        # Fields generated from other properties
+        'module_name': 'my_app',
+        'class_name': 'MyApp',
 
-        # Mock the two external services
-        self.git = mock.MagicMock()
-        self.cookiecutter = mock.MagicMock()
-
-    @property
-    def template_url(self):
-        return 'https://github.com/beeware/briefcase-sample-template.git'
-
-    def bundle_path(self, app, base=None):
-        raise NotImplementedError()
-
-    def binary_path(self, app, base=None):
-        raise NotImplementedError()
-
-    @property
-    def support_package_url(self):
-        raise NotImplementedError()
-
-    def support_path(self, app, bundle_path):
-        raise NotImplementedError()
-
-    def verify_tools(self):
-        pass
-
-
-@pytest.fixture
-def create_command():
-    return DummyCreateCommand()
-
-
-@pytest.fixture
-def myapp():
-    return SimpleAppConfig(
-        name='myapp',
-    )
+        # Date-based fields added at time of generation
+        'year': date.today().strftime('%Y'),
+        'month': date.today().strftime('%B'),
+    }
+    context.update(extra)
+    return context
 
 
 def test_default_template(create_command, myapp, tmp_path):
@@ -68,26 +47,50 @@ def test_default_template(create_command, myapp, tmp_path):
     create_command.generate_app_template(myapp, tmp_path / 'output')
 
     # App's template has been set
-    assert myapp.template == 'https://github.com/beeware/briefcase-sample-template.git'
+    assert myapp.template == 'https://github.com/beeware/briefcase-tester-dummy-template.git'
 
     # Cookiecutter was invoked with the expected template name and context.
     create_command.cookiecutter.assert_called_once_with(
-        'https://github.com/beeware/briefcase-sample-template.git',
+        'https://github.com/beeware/briefcase-tester-dummy-template.git',
         no_input=True,
         checkout=create_command.python_version_tag,
-        output_dir=str(tmp_path / 'output'),
-        extra_context={
-            'name': 'myapp',
-            'template': 'https://github.com/beeware/briefcase-sample-template.git',
-            'year': date.today().strftime('%Y'),
-            'month': date.today().strftime('%B'),
-        }
+        output_dir=str(tmp_path / 'output' / 'tester'),
+        extra_context=full_context({
+            'template': 'https://github.com/beeware/briefcase-tester-dummy-template.git',
+        })
+    )
+
+
+def test_platform_exists(create_command, myapp, tmp_path):
+    "If the platform directory already exists, it's ok"
+    # There won't be a cookiecutter cache, so there won't be
+    # a cache path (yet).
+    create_command.git.Repo.side_effect = git_exceptions.NoSuchPathError
+
+    # Create the platform directory
+    (tmp_path / 'output' / 'tester').mkdir(parents=True)
+
+    # Generate the template.
+    create_command.generate_app_template(myapp, tmp_path / 'output')
+
+    # App's template has been set
+    assert myapp.template == 'https://github.com/beeware/briefcase-tester-dummy-template.git'
+
+    # Cookiecutter was invoked with the expected template name and context.
+    create_command.cookiecutter.assert_called_once_with(
+        'https://github.com/beeware/briefcase-tester-dummy-template.git',
+        no_input=True,
+        checkout=create_command.python_version_tag,
+        output_dir=str(tmp_path / 'output' / 'tester'),
+        extra_context=full_context({
+            'template': 'https://github.com/beeware/briefcase-tester-dummy-template.git',
+        })
     )
 
 
 def test_explicit_repo_template(create_command, myapp, tmp_path):
     "If a template is specified in the app config, it is used"
-    myapp.template = 'https://github.com/magic/special-template.git'
+    myapp.template = 'https://example.com/magic/special-template.git'
 
     # There won't be a cookiecutter cache, so there won't be
     # a repo path (yet).
@@ -97,20 +100,17 @@ def test_explicit_repo_template(create_command, myapp, tmp_path):
     create_command.generate_app_template(myapp, tmp_path / 'output')
 
     # App's template hasn't been changed
-    assert myapp.template == 'https://github.com/magic/special-template.git'
+    assert myapp.template == 'https://example.com/magic/special-template.git'
 
     # Cookiecutter was invoked with the expected template name and context.
     create_command.cookiecutter.assert_called_once_with(
-        'https://github.com/magic/special-template.git',
+        'https://example.com/magic/special-template.git',
         no_input=True,
         checkout=create_command.python_version_tag,
-        output_dir=str(tmp_path / 'output'),
-        extra_context={
-            'name': 'myapp',
-            'template': 'https://github.com/magic/special-template.git',
-            'year': date.today().strftime('%Y'),
-            'month': date.today().strftime('%B'),
-        }
+        output_dir=str(tmp_path / 'output' / 'tester'),
+        extra_context=full_context({
+            'template': 'https://example.com/magic/special-template.git',
+        })
     )
 
 
@@ -133,13 +133,10 @@ def test_explicit_local_template(create_command, myapp, tmp_path):
         '/path/to/special-template',
         no_input=True,
         checkout=create_command.python_version_tag,
-        output_dir=str(tmp_path / 'output'),
-        extra_context={
-            'name': 'myapp',
+        output_dir=str(tmp_path / 'output' / 'tester'),
+        extra_context=full_context({
             'template': '/path/to/special-template',
-            'year': date.today().strftime('%Y'),
-            'month': date.today().strftime('%B'),
-        }
+        })
     )
 
 
@@ -151,35 +148,32 @@ def test_offline_repo_template(create_command, myapp, tmp_path):
 
     # Calling cookiecutter on a repository while offline causes a CalledProcessError
     create_command.cookiecutter.side_effect = subprocess.CalledProcessError(
-        cmd=['git', 'clone', 'https://github.com/beeware/briefcase-sample-template.git'],
+        cmd=['git', 'clone', 'https://github.com/beeware/briefcase-tester-dummy-template.git'],
         returncode=128
     )
 
-    # Generating the template under there conditions raises an error
+    # Generating the template under these conditions raises an error
     with pytest.raises(NetworkFailure):
         create_command.generate_app_template(myapp, tmp_path / 'output')
 
     # App's template has been set
-    assert myapp.template == 'https://github.com/beeware/briefcase-sample-template.git'
+    assert myapp.template == 'https://github.com/beeware/briefcase-tester-dummy-template.git'
 
     # Cookiecutter was invoked with the expected template name and context.
     create_command.cookiecutter.assert_called_once_with(
-        'https://github.com/beeware/briefcase-sample-template.git',
+        'https://github.com/beeware/briefcase-tester-dummy-template.git',
         no_input=True,
         checkout=create_command.python_version_tag,
-        output_dir=str(tmp_path / 'output'),
-        extra_context={
-            'name': 'myapp',
-            'template': 'https://github.com/beeware/briefcase-sample-template.git',
-            'year': date.today().strftime('%Y'),
-            'month': date.today().strftime('%B'),
-        }
+        output_dir=str(tmp_path / 'output' / 'tester'),
+        extra_context=full_context({
+            'template': 'https://github.com/beeware/briefcase-tester-dummy-template.git',
+        })
     )
 
 
 def test_invalid_repo_template(create_command, myapp, tmp_path):
     "If the provided template URL isn't valid, an error is raised"
-    myapp.template = 'https://github.com/beeware/briefcase-missing-branch-template.git'
+    myapp.template = 'https://example.com/somewhere/not-a-repo.git'
 
     # There won't be a cookiecutter cache, so there won't be
     # a repo path (yet).
@@ -193,26 +187,23 @@ def test_invalid_repo_template(create_command, myapp, tmp_path):
         create_command.generate_app_template(myapp, tmp_path / 'output')
 
     # App's template is unchanged
-    assert myapp.template == 'https://github.com/beeware/briefcase-missing-branch-template.git'
+    assert myapp.template == 'https://example.com/somewhere/not-a-repo.git'
 
     # Cookiecutter was invoked with the expected template name and context.
     create_command.cookiecutter.assert_called_once_with(
-        'https://github.com/beeware/briefcase-missing-branch-template.git',
+        'https://example.com/somewhere/not-a-repo.git',
         no_input=True,
         checkout=create_command.python_version_tag,
-        output_dir=str(tmp_path / 'output'),
-        extra_context={
-            'name': 'myapp',
-            'template': 'https://github.com/beeware/briefcase-missing-branch-template.git',
-            'year': date.today().strftime('%Y'),
-            'month': date.today().strftime('%B'),
-        }
+        output_dir=str(tmp_path / 'output' / 'tester'),
+        extra_context=full_context({
+            'template': 'https://example.com/somewhere/not-a-repo.git',
+        })
     )
 
 
 def test_missing_branch_template(create_command, myapp, tmp_path):
     "If the repo at the provided template URL doesn't have a branch for this Python version, an error is raised"
-    myapp.template = 'https://github.com/not/a-valid-url.git'
+    myapp.template = 'https://example.com/somewhere/missing-branch.git'
 
     # There won't be a cookiecutter cache, so there won't be
     # a repo path (yet).
@@ -227,20 +218,17 @@ def test_missing_branch_template(create_command, myapp, tmp_path):
         create_command.generate_app_template(myapp, tmp_path / 'output')
 
     # App's template is unchanged
-    assert myapp.template == 'https://github.com/not/a-valid-url.git'
+    assert myapp.template == 'https://example.com/somewhere/missing-branch.git'
 
     # Cookiecutter was invoked with the expected template name and context.
     create_command.cookiecutter.assert_called_once_with(
-        'https://github.com/not/a-valid-url.git',
+        'https://example.com/somewhere/missing-branch.git',
         no_input=True,
         checkout=create_command.python_version_tag,
-        output_dir=str(tmp_path / 'output'),
-        extra_context={
-            'name': 'myapp',
-            'template': 'https://github.com/not/a-valid-url.git',
-            'year': date.today().strftime('%Y'),
-            'month': date.today().strftime('%B'),
-        }
+        output_dir=str(tmp_path / 'output' / 'tester'),
+        extra_context=full_context({
+            'template': 'https://example.com/somewhere/missing-branch.git',
+        })
     )
 
 
@@ -249,12 +237,14 @@ def test_cached_template(create_command, myapp, tmp_path):
     mock_repo = mock.MagicMock()
     mock_remote = mock.MagicMock()
     mock_head = mock.MagicMock()
+    mock_remote_head = mock.MagicMock()
 
     # Git returns a Repo, that repo can return a remote, and it has
     # heads that can be accessed.
     create_command.git.Repo.return_value = mock_repo
     mock_repo.remote.return_value = mock_remote
-    mock_repo.heads.__getitem__.return_value = mock_head
+    mock_remote.refs.__getitem__.return_value = mock_remote_head
+    mock_repo.create_head.return_value = mock_head
 
     # Generate the template.
     create_command.generate_app_template(myapp, tmp_path / 'output')
@@ -264,24 +254,24 @@ def test_cached_template(create_command, myapp, tmp_path):
     mock_remote.fetch.assert_called_once()
 
     # The head was changed to the python version
-    mock_repo.heads.__getitem__.assert_called_once_with(create_command.python_version_tag)
+    mock_repo.create_head.assert_called_once_with(
+        create_command.python_version_tag,
+        mock_remote_head,
+    )
     mock_head.checkout.assert_called_once()
 
     # App's config template hasn't changed
-    assert myapp.template == 'https://github.com/beeware/briefcase-sample-template.git'
+    assert myapp.template == 'https://github.com/beeware/briefcase-tester-dummy-template.git'
 
     # Cookiecutter was invoked with the path to the *cached* template name
     create_command.cookiecutter.assert_called_once_with(
-        str(Path.home() / '.cookiecutters' / 'briefcase-sample-template'),
+        str(Path.home() / '.cookiecutters' / 'briefcase-tester-dummy-template'),
         no_input=True,
         checkout=create_command.python_version_tag,
-        output_dir=str(tmp_path / 'output'),
-        extra_context={
-            'name': 'myapp',
-            'template': 'https://github.com/beeware/briefcase-sample-template.git',
-            'year': date.today().strftime('%Y'),
-            'month': date.today().strftime('%B'),
-        }
+        output_dir=str(tmp_path / 'output' / 'tester'),
+        extra_context=full_context({
+            'template': 'https://github.com/beeware/briefcase-tester-dummy-template.git',
+        })
     )
 
 
@@ -290,13 +280,15 @@ def test_cached_template_offline(create_command, myapp, tmp_path, capsys):
     mock_repo = mock.MagicMock()
     mock_remote = mock.MagicMock()
     mock_head = mock.MagicMock()
+    mock_remote_head = mock.MagicMock()
 
     # Git returns a Repo, that repo can return a remote, and it has
     # heads that can be accessed. However, calling fetch on the remote
     # will cause a git error (error code 128).
     create_command.git.Repo.return_value = mock_repo
     mock_repo.remote.return_value = mock_remote
-    mock_repo.heads.__getitem__.return_value = mock_head
+    mock_remote.refs.__getitem__.return_value = mock_remote_head
+    mock_repo.create_head.return_value = mock_head
     mock_remote.fetch.side_effect = git_exceptions.GitCommandError('git', 128)
 
     # Generate the template.
@@ -311,24 +303,24 @@ def test_cached_template_offline(create_command, myapp, tmp_path, capsys):
     assert "WARNING: Unable to update application template (is your computer offline?)" in output
 
     # The head was changed to the python version
-    mock_repo.heads.__getitem__.assert_called_once_with(create_command.python_version_tag)
+    mock_repo.create_head.assert_called_once_with(
+        create_command.python_version_tag,
+        mock_remote_head,
+    )
     mock_head.checkout.assert_called_once()
 
     # App's config template hasn't changed
-    assert myapp.template == 'https://github.com/beeware/briefcase-sample-template.git'
+    assert myapp.template == 'https://github.com/beeware/briefcase-tester-dummy-template.git'
 
     # Cookiecutter was invoked with the path to the *cached* template name
     create_command.cookiecutter.assert_called_once_with(
-        str(Path.home() / '.cookiecutters' / 'briefcase-sample-template'),
+        str(Path.home() / '.cookiecutters' / 'briefcase-tester-dummy-template'),
         no_input=True,
         checkout=create_command.python_version_tag,
-        output_dir=str(tmp_path / 'output'),
-        extra_context={
-            'name': 'myapp',
-            'template': 'https://github.com/beeware/briefcase-sample-template.git',
-            'year': date.today().strftime('%Y'),
-            'month': date.today().strftime('%B'),
-        }
+        output_dir=str(tmp_path / 'output' / 'tester'),
+        extra_context=full_context({
+            'template': 'https://github.com/beeware/briefcase-tester-dummy-template.git',
+        })
     )
 
 
@@ -342,7 +334,7 @@ def test_cached_missing_branch_template(create_command, myapp, tmp_path):
     # raises an IndexError
     create_command.git.Repo.return_value = mock_repo
     mock_repo.remote.return_value = mock_remote
-    mock_repo.heads.__getitem__.side_effect = IndexError
+    mock_remote.refs.__getitem__.side_effect = IndexError
 
     # Generating the template under there conditions raises an error
     with pytest.raises(TemplateUnsupportedPythonVersion):

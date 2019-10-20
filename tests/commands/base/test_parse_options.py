@@ -2,38 +2,11 @@ import argparse
 
 import pytest
 
-from briefcase.commands.base import BaseCommand
 
-
-class DummyCommand(BaseCommand):
-    """
-    A dummy command to test the BaseCommand interface.
-
-    Defines a mix of configuration options.
-    """
-    def __init__(self):
-        super().__init__(platform='tester', output_format='dummy')
-
-    def add_options(self, parser):
-        # Provide some extra arguments:
-        # * some optional arguments
-        parser.add_argument('-x', '--extra')
-        parser.add_argument('-m', '--mystery')
-        # * a required argument
-        parser.add_argument('-r', '--required', required=True)
-
-    def bundle_path(self, app, base=None):
-        raise NotImplementedError()
-
-    def binary_path(self, app, base=None):
-        raise NotImplementedError()
-
-
-def test_parse_options():
+def test_parse_options(base_command):
     "Command line options are parsed if provided"
-    command = DummyCommand()
     parser = argparse.ArgumentParser(prog='briefcase')
-    command.parse_options(
+    base_command.parse_options(
         parser=parser,
         extra=(
             '-x', 'wibble',
@@ -41,17 +14,16 @@ def test_parse_options():
         )
     )
 
-    assert command.options.extra == "wibble"
-    assert command.options.mystery is None
-    assert command.options.required == "important"
+    assert base_command.options.extra == "wibble"
+    assert base_command.options.mystery is None
+    assert base_command.options.required == "important"
 
 
-def test_missing_option(capsys):
-    "If a required"
-    command = DummyCommand()
+def test_missing_option(base_command, capsys):
+    "If a required option isn't provided, an error is raised"
     parser = argparse.ArgumentParser(prog='briefcase')
     with pytest.raises(SystemExit) as excinfo:
-        command.parse_options(
+        base_command.parse_options(
             parser=parser,
             extra=('-x', 'wibble')
         )
@@ -61,3 +33,35 @@ def test_missing_option(capsys):
     # Error message about missing option is displayed
     err = capsys.readouterr().err
     assert "the following arguments are required: -r/--required" in err
+
+
+def test_unknown_option(other_command, capsys):
+    "If an unknown command is provided, it rasises an error"
+    parser = argparse.ArgumentParser(prog='briefcase')
+    with pytest.raises(SystemExit) as excinfo:
+        other_command.parse_options(
+            parser=parser,
+            extra=('-y', 'because')
+        )
+
+    # Error code for a unknown option
+    assert excinfo.value.code == 2
+    # Error message about unknown option is displayed
+    err = capsys.readouterr().err
+    assert "unrecognized arguments: -y because" in err
+
+
+def test_no_options(other_command, capsys):
+    "If a command doesn't define options, any option is an error"
+    parser = argparse.ArgumentParser(prog='briefcase')
+    with pytest.raises(SystemExit) as excinfo:
+        other_command.parse_options(
+            parser=parser,
+            extra=('-x', 'wibble')
+        )
+
+    # Error code for a unknown option
+    assert excinfo.value.code == 2
+    # Error message about unknown option is displayed
+    err = capsys.readouterr().err
+    assert "unrecognized arguments: -x wibble" in err

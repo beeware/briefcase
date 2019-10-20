@@ -23,11 +23,10 @@ class ShowOutputFormats(BriefcaseError):
     def __str__(self):
         choices = ', '.join(sorted(self.choices))
         return (
-            "Available formats for {platform}: {choices}\n"
-            "Default format: {default}".format(
-                platform=self.platform,
+            "Available formats for {self.platform}: {choices}\n"
+            "Default format: {self.default}".format(
+                self=self,
                 choices=choices,
-                default=self.default,
             )
         )
 
@@ -40,8 +39,8 @@ class InvalidFormatError(BriefcaseError):
 
     def __str__(self):
         choices = ', '.join(sorted(self.choices))
-        return "Invalid format '{requested}'; (choose from: {choices})".format(
-            requested=self.requested,
+        return "Invalid format '{self.requested}'; (choose from: {choices})".format(
+            self=self,
             choices=choices,
         )
 
@@ -55,11 +54,9 @@ class UnsupportedCommandError(BriefcaseError):
 
     def __str__(self):
         return (
-            "The {command} command for the {platform} {output_format} format "
+            "The {self.command} command for the {self.platform} {self.output_format} format "
             "has not been implemented (yet!).".format(
-                command=self.command,
-                platform=self.platform,
-                output_format=self.output_format,
+                self=self,
             )
         )
 
@@ -93,16 +90,30 @@ class NetworkFailure(BriefcaseCommandError):
 class MissingNetworkResourceError(BriefcaseCommandError):
     def __init__(self, url):
         self.url = url
-        super().__init__(msg="Unable to download {url}; is the URL correct?".format(
-            url=url
-        ))
+        super().__init__(
+            msg="Unable to download {url}; is the URL correct?".format(
+                url=url
+            )
+        )
 
 
 class BadNetworkResourceError(BriefcaseCommandError):
     def __init__(self, url, status_code):
         self.url = url
         self.status_code = status_code
-        super().__init__(msg="Unable to download {url} (status code {status_code})".format(
-            url=url,
-            status_code=status_code,
-        ))
+        super().__init__(
+            msg="Unable to download {url} (status code {status_code})".format(
+                url=url,
+                status_code=status_code,
+            )
+        )
+
+
+class MissingToolError(BriefcaseCommandError):
+    def __init__(self, tool):
+        self.tool = tool
+        super().__init__(
+            msg="Unable to locate {tool!r}. Has it been installed?".format(
+                tool=tool,
+            )
+        )

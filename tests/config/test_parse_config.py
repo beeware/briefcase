@@ -393,3 +393,184 @@ def test_format_override_ordering():
             "basevalue": "the base",
         }
     }
+
+
+def test_requires():
+    "Requirements can be specified"
+    config_file = StringIO(
+        """
+        [build-system]
+        requires = ["briefcase"]
+
+        [tool.briefcase]
+        value = 0
+        requires = ["base value"]
+
+        [tool.briefcase.app.my_app]
+        requires = ["my_app value"]
+
+        [tool.briefcase.app.my_app.macos]
+        requires = ["macos value"]
+
+        [tool.briefcase.app.my_app.macos.app]
+        requires = ["app value"]
+
+        [tool.briefcase.app.my_app.macos.dmg]
+        requires = ["dmg value"]
+
+        [tool.briefcase.app.my_app.linux]
+        requires = ["linux value"]
+
+        [tool.briefcase.app.my_app.linux.appimage]
+        requires = ["appimage value"]
+
+        [tool.briefcase.app.other_app]
+        """
+    )
+
+    # Request a macOS app
+    global_options, apps = parse_config(config_file, platform='macos', output_format='app')
+
+    # The global options are exactly as specified
+    assert global_options == {
+        'value': 0,
+        'requires': ["base value"],
+    }
+
+    # The macOS my_app app specifies a full inherited chain.
+    # The other_app app doesn't specify any options.
+    assert apps == {
+        'my_app': {
+            "name": "my_app",
+            "requires": [
+                "base value",
+                "my_app value",
+                "macos value",
+                "app value",
+            ],
+            "value": 0,
+        },
+        'other_app': {
+            "name": "other_app",
+            "requires": [
+                "base value",
+            ],
+            "value": 0,
+        }
+    }
+
+    # Request a macOS dmg
+    config_file.seek(0)
+    global_options, apps = parse_config(config_file, platform='macos', output_format='dmg')
+
+    # The global options are exactly as specified
+    assert global_options == {
+        'value': 0,
+        'requires': ["base value"]
+    }
+
+    # The macOS my_app dmg specifies a full inherited chain.
+    # The other_app dmg doesn't specify any options.
+    assert apps == {
+        'my_app': {
+            "name": "my_app",
+            "requires": [
+                "base value",
+                "my_app value",
+                "macos value",
+                "dmg value",
+            ],
+            "value": 0,
+        },
+        'other_app': {
+            "name": "other_app",
+            "requires": [
+                "base value",
+            ],
+            "value": 0,
+        }
+    }
+
+    config_file.seek(0)
+    global_options, apps = parse_config(config_file, platform='linux', output_format='appimage')
+
+    # The global options are exactly as specified
+    assert global_options == {
+        'value': 0,
+        'requires': ["base value"]
+    }
+
+    # The linux my_app appimage overrides the *base* value, but extends for linux.
+    assert apps == {
+        'my_app': {
+            "name": "my_app",
+            "requires": [
+                "base value",
+                "my_app value",
+                "linux value",
+                "appimage value",
+            ],
+            "value": 0,
+        },
+        'other_app': {
+            "name": "other_app",
+            "requires": [
+                "base value",
+            ],
+            "value": 0,
+        }
+    }
+
+
+def test_document_types():
+    "Document types can be specified"
+    config_file = StringIO(
+        """
+        [build-system]
+        requires = ["briefcase"]
+
+        [tool.briefcase]
+        value = 0
+
+        [tool.briefcase.app.my_app]
+
+        [tool.briefcase.app.my_app.macos]
+
+        [tool.briefcase.app.my_app.macos.document_type.document]
+        extension = "doc"
+        description = "A document"
+
+        [tool.briefcase.app.my_app.macos.document_type.image]
+        extension = "img"
+        description = "An image"
+
+        [tool.briefcase.app.other_app]
+
+        """
+    )
+
+    # Request a macOS app
+    global_options, apps = parse_config(config_file, platform='macos', output_format='app')
+
+    # The macOS my_app app specifies a full inherited chain.
+    # The other_app app doesn't specify any options.
+    assert apps == {
+        'my_app': {
+            "name": "my_app",
+            "document_type": {
+                'document': {
+                    'extension': 'doc',
+                    'description': 'A document',
+                },
+                'image': {
+                    'extension': 'img',
+                    'description': 'An image',
+                }
+            },
+            "value": 0,
+        },
+        'other_app': {
+            "name": "other_app",
+            "value": 0,
+        }
+    }

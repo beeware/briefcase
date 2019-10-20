@@ -2,12 +2,15 @@ from unittest import mock
 
 import pytest
 
+from briefcase.config import AppConfig
 from briefcase.commands import CreateCommand
-
-from ...utils import SimpleAppConfig
 
 
 class DummyCreateCommand(CreateCommand):
+    """
+    A dummy creation command that doesn't actually do anything.
+    It only serves to track which actions would be performend.
+    """
     def __init__(self, apps):
         super().__init__(platform='tester', output_format='dummy', apps=apps)
 
@@ -23,65 +26,68 @@ class DummyCreateCommand(CreateCommand):
     def binary_path(self, app, base):
         return base / 'tester' / '{app.name}.dummy.bin'.format(app=app)
 
-    @property
-    def support_package_url(self):
-        raise NotImplementedError()
-
-    def support_path(self, app, bundle_path):
-        raise NotImplementedError()
-
     def verify_tools(self):
         self.actions.append(('verify'))
 
     # Override all the body methods of a CreateCommand
     # with versions that we can use to track actions performed.
-    def generate_app_template(self, app, bundle_path):
-        self.actions.append(('generate', app, bundle_path))
+    def generate_app_template(self, app, base_path):
+        self.actions.append(('generate', app, base_path))
 
-        bundle_path.mkdir(parents=True)
+        # A mock version of template generation.
+        bundle_path = base_path / 'tester' / '{app.name}.dummy'.format(app=app)
+        bundle_path.mkdir(parents=True, exist_ok=True)
         with open(bundle_path / 'new', 'w') as f:
             f.write('new template!')
 
-    def install_app_support_package(self, app, bundle_path):
-        self.actions.append(('support', app, bundle_path))
+    def install_app_support_package(self, app, base_path):
+        self.actions.append(('support', app, base_path))
 
-    def install_app_dependencies(self, app, bundle_path):
-        self.actions.append(('dependencies', app, bundle_path))
+    def install_app_dependencies(self, app, base_path):
+        self.actions.append(('dependencies', app, base_path))
 
-    def install_app_code(self, app, bundle_path):
-        self.actions.append(('code', app, bundle_path))
+    def install_app_code(self, app, base_path):
+        self.actions.append(('code', app, base_path))
 
-    def install_app_extras(self, app, bundle_path):
-        self.actions.append(('extras', app, bundle_path))
+    def install_app_extras(self, app, base_path):
+        self.actions.append(('extras', app, base_path))
 
 
 @pytest.fixture
 def create_command():
     return DummyCreateCommand(
         apps={
-            'first': SimpleAppConfig(name='first'),
-            'second': SimpleAppConfig(name='second'),
+            'first': AppConfig(
+                name='first',
+                bundle='com.example',
+                version='0.0.1',
+                description='The first simple app',
+            ),
+            'second': AppConfig(
+                name='second',
+                bundle='com.example',
+                version='0.0.2',
+                description='The second simple app',
+            ),
         }
     )
 
 
 def test_create_app(create_command, tmp_path):
     "If the app doesn't already exist, it will be created"
-    bundle_path = tmp_path / 'tester' / 'first.dummy'
-
-    create_command.create_app(create_command.apps['first'], bundle_path)
+    create_command.create_app(create_command.apps['first'], tmp_path)
 
     # The right sequence of things will be done
     assert create_command.actions == [
-        ('generate', create_command.apps['first'], bundle_path),
-        ('support', create_command.apps['first'], bundle_path),
-        ('dependencies', create_command.apps['first'], bundle_path),
-        ('code', create_command.apps['first'], bundle_path),
-        ('extras', create_command.apps['first'], bundle_path),
+        ('generate', create_command.apps['first'], tmp_path),
+        ('support', create_command.apps['first'], tmp_path),
+        ('dependencies', create_command.apps['first'], tmp_path),
+        ('code', create_command.apps['first'], tmp_path),
+        ('extras', create_command.apps['first'], tmp_path),
     ]
 
     # New app content has been created
-    assert (bundle_path / 'new').exists()
+    assert (tmp_path / 'tester' / 'first.dummy' / 'new').exists()
 
 
 def test_create_existing_app_overwrite(create_command, tmp_path):
@@ -89,20 +95,21 @@ def test_create_existing_app_overwrite(create_command, tmp_path):
     # Answer yes when asked
     create_command.input = mock.MagicMock(return_value='y')
 
+    # Generate an app in the location.
     bundle_path = tmp_path / 'tester' / 'first.dummy'
     bundle_path.mkdir(parents=True)
     with open(bundle_path / 'original', 'w') as f:
         f.write('original template!')
 
-    create_command.create_app(create_command.apps['first'], bundle_path)
+    create_command.create_app(create_command.apps['first'], tmp_path)
 
     # The right sequence of things will be done
     assert create_command.actions == [
-        ('generate', create_command.apps['first'], bundle_path),
-        ('support', create_command.apps['first'], bundle_path),
-        ('dependencies', create_command.apps['first'], bundle_path),
-        ('code', create_command.apps['first'], bundle_path),
-        ('extras', create_command.apps['first'], bundle_path),
+        ('generate', create_command.apps['first'], tmp_path),
+        ('support', create_command.apps['first'], tmp_path),
+        ('dependencies', create_command.apps['first'], tmp_path),
+        ('code', create_command.apps['first'], tmp_path),
+        ('extras', create_command.apps['first'], tmp_path),
     ]
 
     # Original content has been deleted
@@ -122,7 +129,7 @@ def test_create_existing_app_no_overwrite(create_command, tmp_path):
     with open(bundle_path / 'original', 'w') as f:
         f.write('original template!')
 
-    create_command.create_app(create_command.apps['first'], bundle_path)
+    create_command.create_app(create_command.apps['first'], tmp_path)
 
     # No app creation actions will be performed
     assert create_command.actions == []
@@ -153,35 +160,3 @@ def test_create_existing_app_no_overwrite_default(create_command, tmp_path):
 
     # New app content has not been created
     assert not (bundle_path / 'new').exists()
-
-
-# def test_create_app(create_command, tmp_path):
-#     create_command.create_app(, tmp_path)
-
-
-def test_create(create_command, tmp_path):
-    bundle_path = tmp_path / 'tester'
-
-    create_command(path=tmp_path)
-
-    # The right sequence of things will be done
-    assert create_command.actions == [
-        ('verify'),
-
-        # Create the first app
-        ('generate', create_command.apps['first'], bundle_path / 'first.dummy'),
-        ('support', create_command.apps['first'], bundle_path / 'first.dummy'),
-        ('dependencies', create_command.apps['first'], bundle_path / 'first.dummy'),
-        ('code', create_command.apps['first'], bundle_path / 'first.dummy'),
-        ('extras', create_command.apps['first'], bundle_path / 'first.dummy'),
-        # Create the second app
-        ('generate', create_command.apps['second'], bundle_path / 'second.dummy'),
-        ('support', create_command.apps['second'], bundle_path / 'second.dummy'),
-        ('dependencies', create_command.apps['second'], bundle_path / 'second.dummy'),
-        ('code', create_command.apps['second'], bundle_path / 'second.dummy'),
-        ('extras', create_command.apps['second'], bundle_path / 'second.dummy'),
-    ]
-
-    # New app content has been created
-    assert (bundle_path / 'first.dummy' / 'new').exists()
-    assert (bundle_path / 'second.dummy' / 'new').exists()
