@@ -6,32 +6,31 @@ import pytest
 from briefcase.commands.create import DependencyInstallError
 
 
-
-def test_no_requires(create_command, myapp, tmp_path, app_packages_path):
+def test_no_requires(create_command, myapp, app_packages_path):
     "If an app has no requirements, install_app_dependencies is a no-op."
     myapp.requires = None
 
-    create_command.install_app_dependencies(myapp, tmp_path)
+    create_command.install_app_dependencies(myapp)
 
     # No request was made to install dependencies
     create_command.subprocess.run.assert_not_called()
 
 
-def test_empty_requires(create_command, myapp, tmp_path, app_packages_path):
+def test_empty_requires(create_command, myapp, app_packages_path):
     "If an app has an empty requirements list, install_app_dependencies is a no-op."
     myapp.requires = []
 
-    create_command.install_app_dependencies(myapp, tmp_path)
+    create_command.install_app_dependencies(myapp)
 
     # No request was made to install dependencies
     create_command.subprocess.run.assert_not_called()
 
 
-def test_valid_requires(create_command, myapp, tmp_path, app_packages_path):
+def test_valid_requires(create_command, myapp, app_packages_path):
     "If an app has an valid list of requirements, pip is invoked."
     myapp.requires = ['first', 'second', 'third']
 
-    create_command.install_app_dependencies(myapp, tmp_path)
+    create_command.install_app_dependencies(myapp)
 
     # No request was made to install dependencies
     create_command.subprocess.run.assert_called_with(
@@ -49,7 +48,7 @@ def test_valid_requires(create_command, myapp, tmp_path, app_packages_path):
     )
 
 
-def test_invalid_requires(create_command, myapp, tmp_path, app_packages_path):
+def test_invalid_requires(create_command, myapp, app_packages_path):
     "If an app has an valid list of requirements, pip is invoked."
     myapp.requires = ['does-not-exist']
 
@@ -62,7 +61,7 @@ def test_invalid_requires(create_command, myapp, tmp_path, app_packages_path):
     )
 
     with pytest.raises(DependencyInstallError):
-        create_command.install_app_dependencies(myapp, tmp_path)
+        create_command.install_app_dependencies(myapp)
 
     # But the request to install was still made
     create_command.subprocess.run.assert_called_with(
@@ -78,7 +77,7 @@ def test_invalid_requires(create_command, myapp, tmp_path, app_packages_path):
     )
 
 
-def test_offline(create_command, myapp, tmp_path, app_packages_path):
+def test_offline(create_command, myapp, app_packages_path):
     "If user is offline, pip fails."
     myapp.requires = ['first', 'second', 'third']
 
@@ -91,7 +90,7 @@ def test_offline(create_command, myapp, tmp_path, app_packages_path):
     )
 
     with pytest.raises(DependencyInstallError):
-        create_command.install_app_dependencies(myapp, tmp_path)
+        create_command.install_app_dependencies(myapp)
 
     # But the request to install was still made
     create_command.subprocess.run.assert_called_with(

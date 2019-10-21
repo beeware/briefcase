@@ -17,11 +17,11 @@ class MacOSAppMixin(MacOSMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, output_format='app', **kwargs)
 
-    def binary_path(self, app, base_path):
-        return self.platform_path(base_path) / '{app.formal_name}.app'.format(app=app)
+    def binary_path(self, app):
+        return self.platform_path / '{app.formal_name}.app'.format(app=app)
 
-    def bundle_path(self, app, base_path):
-        return self.platform_path(base_path) / '{app.formal_name}.app'.format(app=app)
+    def bundle_path(self, app):
+        return self.platform_path / '{app.formal_name}.app'.format(app=app)
 
 
 class MacOSAppCreateCommand(MacOSAppMixin, CreateCommand):
@@ -39,7 +39,7 @@ class MacOSAppBuildCommand(MacOSAppMixin, BuildCommand):
 class MacOSAppRunCommand(MacOSAppMixin, RunCommand):
     description = "Run a macOS .app bundle."
 
-    def run_app(self, app: BaseConfig, base_path: Path):
+    def run_app(self, app: BaseConfig):
         """
         Start the application.
 
@@ -55,7 +55,7 @@ class MacOSAppRunCommand(MacOSAppMixin, RunCommand):
             self.subprocess.run(
                 [
                     'open',
-                    self.binary_path(app, base_path),
+                    self.binary_path(app),
                 ],
                 check=True,
             )

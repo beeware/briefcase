@@ -9,14 +9,14 @@ from briefcase.platforms.macos import MacOSMixin
 
 
 class MacOSDmgMixin(MacOSMixin):
-    def __init__(self):
-        super().__init__(output_format='dmg')
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, output_format='dmg', **kwargs)
 
-    def binary_path(self, app, base_path):
-        return base_path / 'macOS' / '{app.formal_name}.dmg'
+    def binary_path(self, app):
+        return self.platform_path / '{app.formal_name}.app'.format(app=app)
 
-    def bundle_path(self, app, base_path):
-        return base_path / 'macOS' / '{app.formal_name}.app'
+    def bundle_path(self, app):
+        return self.platform_path / '{app.formal_name}.app'.format(app=app)
 
 
 class MacOSDmgCreateCommand(MacOSDmgMixin, CreateCommand):

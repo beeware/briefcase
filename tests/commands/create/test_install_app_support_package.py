@@ -23,7 +23,7 @@ def test_install_app_support_package(create_command, myapp, tmp_path, support_pa
     create_command.download_url = mock.MagicMock(return_value=support_file)
 
     # Install the support package
-    create_command.install_app_support_package(myapp, tmp_path)
+    create_command.install_app_support_package(myapp)
 
     # Confirm the right URL was used
     create_command.download_url.assert_called_with(
@@ -53,7 +53,7 @@ def test_install_custom_app_support_package(create_command, myapp, tmp_path, sup
     create_command.download_url = mock.MagicMock(return_value=support_file)
 
     # Install the support package
-    create_command.install_app_support_package(myapp, tmp_path)
+    create_command.install_app_support_package(myapp)
 
     # Confirm the right URL was used
     create_command.download_url.assert_called_with(
@@ -66,7 +66,7 @@ def test_install_custom_app_support_package(create_command, myapp, tmp_path, sup
     assert (support_path / 'internal' / 'file.txt').exists()
 
 
-def test_offline_install(create_command, myapp, tmp_path, support_path):
+def test_offline_install(create_command, myapp, support_path):
     "If the computer is offline, an error is raised"
     # Hardcode the support package URL for test purposes
     create_command._support_package_url = 'https://example.com/path/to/support.zip'
@@ -77,7 +77,7 @@ def test_offline_install(create_command, myapp, tmp_path, support_path):
 
     # Installing while offline raises an error
     with pytest.raises(NetworkFailure):
-        create_command.install_app_support_package(myapp, tmp_path)
+        create_command.install_app_support_package(myapp)
 
 
 def test_invalid_support_package(create_command, myapp, tmp_path, support_path):
@@ -95,4 +95,4 @@ def test_invalid_support_package(create_command, myapp, tmp_path, support_path):
 
     # Installing the bad support package raises an error
     with pytest.raises(InvalidSupportPackage):
-        create_command.install_app_support_package(myapp, tmp_path)
+        create_command.install_app_support_package(myapp)

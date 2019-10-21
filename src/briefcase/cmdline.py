@@ -1,5 +1,6 @@
 import argparse
 import sys
+from pathlib import Path
 
 from briefcase import __version__
 from briefcase.platforms import get_output_formats, get_platforms
@@ -144,7 +145,7 @@ def parse_cmdline(args):
         version=__version__
     )
 
-    command = Command()
+    command = Command(base_path=Path.cwd())
     command.parse_options(
         parser=command_parser,
         extra=extra

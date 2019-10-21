@@ -1,3 +1,5 @@
+from briefcase.exceptions import BriefcaseCommandError
+
 from .base import BaseCommand
 
 

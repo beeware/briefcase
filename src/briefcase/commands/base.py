@@ -48,7 +48,8 @@ class BaseCommand(ABC):
     GLOBAL_CONFIG_CLASS = GlobalConfig
     APP_CONFIG_CLASS = AppConfig
 
-    def __init__(self, platform, output_format, apps=None):
+    def __init__(self, base_path, platform, output_format, apps=None):
+        self.base_path = base_path
         self.platform = platform
         self.output_format = output_format
         self.options = None
@@ -68,49 +69,48 @@ class BaseCommand(ABC):
     @property
     def CreateCommand(self):
         format_module = importlib.import_module(self.__module__)
-        return format_module.create(apps=self.apps)
+        return format_module.create(base_path=self.base_path, apps=self.apps)
 
     @property
     def UpdateCommand(self):
         format_module = importlib.import_module(self.__module__)
-        return format_module.update(apps=self.apps)
+        return format_module.update(base_path=self.base_path, apps=self.apps)
 
     @property
     def BuildCommand(self):
         format_module = importlib.import_module(self.__module__)
-        return format_module.build(apps=self.apps)
+        return format_module.build(base_path=self.base_path, apps=self.apps)
 
     @property
     def RunCommand(self):
         format_module = importlib.import_module(self.__module__)
-        return format_module.run(apps=self.apps)
+        return format_module.run(base_path=self.base_path, apps=self.apps)
 
     @property
     def PublishCommand(self):
         format_module = importlib.import_module(self.__module__)
-        return format_module.publish(apps=self.apps)
+        return format_module.publish(base_path=self.base_path, apps=self.apps)
 
-    def platform_path(self, base_path):
+    @property
+    def platform_path(self):
         """
         The path for all applications for this command's platform
         """
-        return base_path / self.platform
+        return self.base_path / self.platform
 
     @abstractmethod
-    def bundle_path(self, app, base_path):
+    def bundle_path(self, app):
         """
         The path to the bundle for the app in the output format.
 
         The bundle is the template-generated source form of the app.
 
         :param app: The app config
-        :param base_path: The path to use as the root for all output
-            (usually, the root of the project).
         """
         ...
 
     @abstractmethod
-    def binary_path(self, app, base_path):
+    def binary_path(self, app):
         """
         The path to the executable artefact for the app in the output format
 
@@ -118,8 +118,6 @@ class BaseCommand(ABC):
         requires no compilation, or if it compiles in place.
 
         :param app: The app config
-        :param base_path: The path to use as the root for all output
-            (usually, the root of the project).
         """
         ...
 

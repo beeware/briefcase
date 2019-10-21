@@ -19,16 +19,16 @@ class DummyCommand(BaseCommand):
         # * a required argument
         parser.add_argument('-r', '--required', required=True)
 
-    def bundle_path(self, app, base_path):
+    def bundle_path(self, app):
         raise NotImplementedError()
 
-    def binary_path(self, app, base_path):
+    def binary_path(self, app):
         raise NotImplementedError()
 
 
 @pytest.fixture
-def base_command():
-    return DummyCommand()
+def base_command(tmp_path):
+    return DummyCommand(base_path=tmp_path)
 
 
 # Define some stub command classes
@@ -93,16 +93,16 @@ class OtherDummyCommand(BaseCommand):
     GLOBAL_CONFIG_CLASS = CustomGlobalConfig
     APP_CONFIG_CLASS = CustomAppConfig
 
-    def __init__(self):
-        super().__init__(platform='tester', output_format='dummy')
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, platform='tester', output_format='dummy', **kwargs)
 
-    def bundle_path(self, app, base=None):
+    def bundle_path(self, app):
         raise NotImplementedError()
 
-    def binary_path(self, app, base=None):
+    def binary_path(self, app):
         raise NotImplementedError()
 
 
 @pytest.fixture
-def other_command():
-    return OtherDummyCommand()
+def other_command(tmp_path):
+    return OtherDummyCommand(base_path=tmp_path)

@@ -37,14 +37,14 @@ def full_context(extra):
     return context
 
 
-def test_default_template(create_command, myapp, tmp_path):
+def test_default_template(create_command, myapp):
     "Absent of other information, the default template is used"
     # There won't be a cookiecutter cache, so there won't be
     # a cache path (yet).
     create_command.git.Repo.side_effect = git_exceptions.NoSuchPathError
 
     # Generate the template.
-    create_command.generate_app_template(myapp, tmp_path / 'output')
+    create_command.generate_app_template(myapp)
 
     # App's template has been set
     assert myapp.template == 'https://github.com/beeware/briefcase-tester-dummy-template.git'
@@ -54,24 +54,24 @@ def test_default_template(create_command, myapp, tmp_path):
         'https://github.com/beeware/briefcase-tester-dummy-template.git',
         no_input=True,
         checkout=create_command.python_version_tag,
-        output_dir=str(tmp_path / 'output' / 'tester'),
+        output_dir=str(create_command.platform_path),
         extra_context=full_context({
             'template': 'https://github.com/beeware/briefcase-tester-dummy-template.git',
         })
     )
 
 
-def test_platform_exists(create_command, myapp, tmp_path):
+def test_platform_exists(create_command, myapp):
     "If the platform directory already exists, it's ok"
     # There won't be a cookiecutter cache, so there won't be
     # a cache path (yet).
     create_command.git.Repo.side_effect = git_exceptions.NoSuchPathError
 
     # Create the platform directory
-    (tmp_path / 'output' / 'tester').mkdir(parents=True)
+    create_command.platform_path.mkdir(parents=True)
 
     # Generate the template.
-    create_command.generate_app_template(myapp, tmp_path / 'output')
+    create_command.generate_app_template(myapp)
 
     # App's template has been set
     assert myapp.template == 'https://github.com/beeware/briefcase-tester-dummy-template.git'
@@ -81,14 +81,14 @@ def test_platform_exists(create_command, myapp, tmp_path):
         'https://github.com/beeware/briefcase-tester-dummy-template.git',
         no_input=True,
         checkout=create_command.python_version_tag,
-        output_dir=str(tmp_path / 'output' / 'tester'),
+        output_dir=str(create_command.platform_path),
         extra_context=full_context({
             'template': 'https://github.com/beeware/briefcase-tester-dummy-template.git',
         })
     )
 
 
-def test_explicit_repo_template(create_command, myapp, tmp_path):
+def test_explicit_repo_template(create_command, myapp):
     "If a template is specified in the app config, it is used"
     myapp.template = 'https://example.com/magic/special-template.git'
 
@@ -97,7 +97,7 @@ def test_explicit_repo_template(create_command, myapp, tmp_path):
     create_command.git.Repo.side_effect = git_exceptions.NoSuchPathError
 
     # Generate the template.
-    create_command.generate_app_template(myapp, tmp_path / 'output')
+    create_command.generate_app_template(myapp)
 
     # App's template hasn't been changed
     assert myapp.template == 'https://example.com/magic/special-template.git'
@@ -107,14 +107,14 @@ def test_explicit_repo_template(create_command, myapp, tmp_path):
         'https://example.com/magic/special-template.git',
         no_input=True,
         checkout=create_command.python_version_tag,
-        output_dir=str(tmp_path / 'output' / 'tester'),
+        output_dir=str(create_command.platform_path),
         extra_context=full_context({
             'template': 'https://example.com/magic/special-template.git',
         })
     )
 
 
-def test_explicit_local_template(create_command, myapp, tmp_path):
+def test_explicit_local_template(create_command, myapp):
     "If a local template path is specified in the app config, it is used"
     myapp.template = '/path/to/special-template'
 
@@ -123,7 +123,7 @@ def test_explicit_local_template(create_command, myapp, tmp_path):
     create_command.git.Repo.side_effect = git_exceptions.InvalidGitRepositoryError
 
     # Generate the template.
-    create_command.generate_app_template(myapp, tmp_path / 'output')
+    create_command.generate_app_template(myapp)
 
     # App's template hasn't been changed
     assert myapp.template == '/path/to/special-template'
@@ -133,14 +133,14 @@ def test_explicit_local_template(create_command, myapp, tmp_path):
         '/path/to/special-template',
         no_input=True,
         checkout=create_command.python_version_tag,
-        output_dir=str(tmp_path / 'output' / 'tester'),
+        output_dir=str(create_command.platform_path),
         extra_context=full_context({
             'template': '/path/to/special-template',
         })
     )
 
 
-def test_offline_repo_template(create_command, myapp, tmp_path):
+def test_offline_repo_template(create_command, myapp):
     "If the user is offline the first time a repo template is requested, an error is raised"
     # There won't be a cookiecutter cache, so there won't be
     # a repo path (yet).
@@ -154,7 +154,7 @@ def test_offline_repo_template(create_command, myapp, tmp_path):
 
     # Generating the template under these conditions raises an error
     with pytest.raises(NetworkFailure):
-        create_command.generate_app_template(myapp, tmp_path / 'output')
+        create_command.generate_app_template(myapp)
 
     # App's template has been set
     assert myapp.template == 'https://github.com/beeware/briefcase-tester-dummy-template.git'
@@ -164,14 +164,14 @@ def test_offline_repo_template(create_command, myapp, tmp_path):
         'https://github.com/beeware/briefcase-tester-dummy-template.git',
         no_input=True,
         checkout=create_command.python_version_tag,
-        output_dir=str(tmp_path / 'output' / 'tester'),
+        output_dir=str(create_command.platform_path),
         extra_context=full_context({
             'template': 'https://github.com/beeware/briefcase-tester-dummy-template.git',
         })
     )
 
 
-def test_invalid_repo_template(create_command, myapp, tmp_path):
+def test_invalid_repo_template(create_command, myapp):
     "If the provided template URL isn't valid, an error is raised"
     myapp.template = 'https://example.com/somewhere/not-a-repo.git'
 
@@ -184,7 +184,7 @@ def test_invalid_repo_template(create_command, myapp, tmp_path):
 
     # Generating the template under there conditions raises an error
     with pytest.raises(InvalidTemplateRepository):
-        create_command.generate_app_template(myapp, tmp_path / 'output')
+        create_command.generate_app_template(myapp)
 
     # App's template is unchanged
     assert myapp.template == 'https://example.com/somewhere/not-a-repo.git'
@@ -194,14 +194,14 @@ def test_invalid_repo_template(create_command, myapp, tmp_path):
         'https://example.com/somewhere/not-a-repo.git',
         no_input=True,
         checkout=create_command.python_version_tag,
-        output_dir=str(tmp_path / 'output' / 'tester'),
+        output_dir=str(create_command.platform_path),
         extra_context=full_context({
             'template': 'https://example.com/somewhere/not-a-repo.git',
         })
     )
 
 
-def test_missing_branch_template(create_command, myapp, tmp_path):
+def test_missing_branch_template(create_command, myapp):
     "If the repo at the provided template URL doesn't have a branch for this Python version, an error is raised"
     myapp.template = 'https://example.com/somewhere/missing-branch.git'
 
@@ -215,7 +215,7 @@ def test_missing_branch_template(create_command, myapp, tmp_path):
 
     # Generating the template under there conditions raises an error
     with pytest.raises(TemplateUnsupportedPythonVersion):
-        create_command.generate_app_template(myapp, tmp_path / 'output')
+        create_command.generate_app_template(myapp)
 
     # App's template is unchanged
     assert myapp.template == 'https://example.com/somewhere/missing-branch.git'
@@ -225,14 +225,14 @@ def test_missing_branch_template(create_command, myapp, tmp_path):
         'https://example.com/somewhere/missing-branch.git',
         no_input=True,
         checkout=create_command.python_version_tag,
-        output_dir=str(tmp_path / 'output' / 'tester'),
+        output_dir=str(create_command.platform_path),
         extra_context=full_context({
             'template': 'https://example.com/somewhere/missing-branch.git',
         })
     )
 
 
-def test_cached_template(create_command, myapp, tmp_path):
+def test_cached_template(create_command, myapp):
     "If a template has already been used, the cached version will be used"
     mock_repo = mock.MagicMock()
     mock_remote = mock.MagicMock()
@@ -247,7 +247,7 @@ def test_cached_template(create_command, myapp, tmp_path):
     mock_repo.create_head.return_value = mock_head
 
     # Generate the template.
-    create_command.generate_app_template(myapp, tmp_path / 'output')
+    create_command.generate_app_template(myapp)
 
     # The origin of the repo was fetched
     mock_repo.remote.assert_called_once_with(name='origin')
@@ -268,14 +268,14 @@ def test_cached_template(create_command, myapp, tmp_path):
         str(Path.home() / '.cookiecutters' / 'briefcase-tester-dummy-template'),
         no_input=True,
         checkout=create_command.python_version_tag,
-        output_dir=str(tmp_path / 'output' / 'tester'),
+        output_dir=str(create_command.platform_path),
         extra_context=full_context({
             'template': 'https://github.com/beeware/briefcase-tester-dummy-template.git',
         })
     )
 
 
-def test_cached_template_offline(create_command, myapp, tmp_path, capsys):
+def test_cached_template_offline(create_command, myapp, capsys):
     "If the user is offline, a cached template won't be updated, but will still work"
     mock_repo = mock.MagicMock()
     mock_remote = mock.MagicMock()
@@ -292,7 +292,7 @@ def test_cached_template_offline(create_command, myapp, tmp_path, capsys):
     mock_remote.fetch.side_effect = git_exceptions.GitCommandError('git', 128)
 
     # Generate the template.
-    create_command.generate_app_template(myapp, tmp_path / 'output')
+    create_command.generate_app_template(myapp)
 
     # An attempt to fetch the repo origin was made
     mock_repo.remote.assert_called_once_with(name='origin')
@@ -317,14 +317,14 @@ def test_cached_template_offline(create_command, myapp, tmp_path, capsys):
         str(Path.home() / '.cookiecutters' / 'briefcase-tester-dummy-template'),
         no_input=True,
         checkout=create_command.python_version_tag,
-        output_dir=str(tmp_path / 'output' / 'tester'),
+        output_dir=str(create_command.platform_path),
         extra_context=full_context({
             'template': 'https://github.com/beeware/briefcase-tester-dummy-template.git',
         })
     )
 
 
-def test_cached_missing_branch_template(create_command, myapp, tmp_path):
+def test_cached_missing_branch_template(create_command, myapp):
     "If the cached repo doesn't have a branch for this Python version, an error is raised"
     mock_repo = mock.MagicMock()
     mock_remote = mock.MagicMock()
@@ -338,4 +338,4 @@ def test_cached_missing_branch_template(create_command, myapp, tmp_path):
 
     # Generating the template under there conditions raises an error
     with pytest.raises(TemplateUnsupportedPythonVersion):
-        create_command.generate_app_template(myapp, tmp_path)
+        create_command.generate_app_template(myapp)

@@ -4,17 +4,17 @@ import pytest
 from briefcase.exceptions import BriefcaseConfigError
 
 
-def test_missing_config(base_command, tmp_path):
+def test_missing_config(base_command):
     "If the configuration file doesn't exit, raise an error"
-    filename = str(tmp_path / 'does_not_exist.toml')
+    filename = str(base_command.base_path / 'does_not_exist.toml')
     with pytest.raises(BriefcaseConfigError, match="configuration file not found"):
         base_command.parse_config(filename)
 
 
-def test_incomplete_config(base_command, tmp_path):
+def test_incomplete_config(base_command):
     "If the configuration is missing a required argument, an error is raised"
     # Provide a configuration that is missing `bundle`, a required attribute
-    filename = str(tmp_path / 'pyproject.toml')
+    filename = str(base_command.base_path / 'pyproject.toml')
     with open(filename, 'w') as config_file:
         config_file.write("""
         [tool.briefcase]
@@ -28,9 +28,9 @@ def test_incomplete_config(base_command, tmp_path):
         base_command.parse_config(filename)
 
 
-def test_parse_config(base_command, tmp_path):
+def test_parse_config(base_command):
     "A well formed configuration file can be augmented by the command line"
-    filename = str(tmp_path / 'pyproject.toml')
+    filename = str(base_command.base_path / 'pyproject.toml')
     with open(filename, 'w') as config_file:
         config_file.write("""
         [tool.briefcase]
@@ -71,9 +71,9 @@ def test_parse_config(base_command, tmp_path):
     assert base_command.apps['secondapp'].extra == 'something'
 
 
-def test_parse_config_custom_config_classes_missing_global_arg(other_command, tmp_path):
+def test_parse_config_custom_config_classes_missing_global_arg(other_command):
     "A command that defines custom config classes can enforce global arguments"
-    filename = str(tmp_path / 'pyproject.toml')
+    filename = str(other_command.base_path / 'pyproject.toml')
     with open(filename, 'w') as config_file:
         config_file.write("""
         [tool.briefcase]
@@ -93,9 +93,9 @@ def test_parse_config_custom_config_classes_missing_global_arg(other_command, tm
         other_command.parse_config(filename)
 
 
-def test_parse_config_custom_config_classes_missing_app_arg(other_command, tmp_path):
+def test_parse_config_custom_config_classes_missing_app_arg(other_command):
     "A command that defines custom config classes can enforce app arguments"
-    filename = str(tmp_path / 'pyproject.toml')
+    filename = str(other_command.base_path / 'pyproject.toml')
     with open(filename, 'w') as config_file:
         config_file.write("""
         [tool.briefcase]
@@ -112,9 +112,9 @@ def test_parse_config_custom_config_classes_missing_app_arg(other_command, tmp_p
         other_command.parse_config(filename)
 
 
-def test_parse_config_custom_config_classes(other_command, tmp_path):
+def test_parse_config_custom_config_classes(other_command):
     "A well formed configuration file can be augmented by the command line"
-    filename = str(tmp_path / 'pyproject.toml')
+    filename = str(other_command.base_path / 'pyproject.toml')
     with open(filename, 'w') as config_file:
         config_file.write("""
         [tool.briefcase]

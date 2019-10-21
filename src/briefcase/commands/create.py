@@ -158,45 +158,44 @@ class CreateCommand(BaseCommand):
 
         return self._support_package_url
 
-    def _load_path_index(self, app: BaseConfig, base_path: Path):
+    def _load_path_index(self, app: BaseConfig):
         "Load the path index from the index file provided by the app template"
-        with open(self.bundle_path(app, base_path) / 'briefcase.toml') as f:
+        with open(self.bundle_path(app) / 'briefcase.toml') as f:
             self._path_index[app] = toml.load(f)['paths']
         return self._path_index[app]
 
-    def support_path(self, app: BaseConfig, base_path: Path):
+    def support_path(self, app: BaseConfig):
         "The path into which the support package should be unpacked"
         # If the index file hasn't been loaded for this app, load it.
         try:
             path_index = self._path_index[app]
         except KeyError:
-            path_index = self._load_path_index(app, base_path)
-        return self.bundle_path(app, base_path) / path_index['support_path']
+            path_index = self._load_path_index(app)
+        return self.bundle_path(app) / path_index['support_path']
 
-    def app_packages_path(self, app: BaseConfig, base_path: Path):
+    def app_packages_path(self, app: BaseConfig):
         "The path into which dependencies should be installed"
         # If the index file hasn't been loaded for this app, load it.
         try:
             path_index = self._path_index[app]
         except KeyError:
-            path_index = self._load_path_index(app, base_path)
-        return self.bundle_path(app, base_path) / path_index['app_packages_path']
+            path_index = self._load_path_index(app)
+        return self.bundle_path(app) / path_index['app_packages_path']
 
-    def app_path(self, app: BaseConfig, base_path: Path):
+    def app_path(self, app: BaseConfig):
         "The path into which the application should be installed"
         # If the index file hasn't been loaded for this app, load it.
         try:
             path_index = self._path_index[app]
         except KeyError:
-            path_index = self._load_path_index(app, base_path)
-        return self.bundle_path(app, base_path) / path_index['app_path']
+            path_index = self._load_path_index(app)
+        return self.bundle_path(app) / path_index['app_path']
 
-    def generate_app_template(self, app: BaseConfig, base_path: Path):
+    def generate_app_template(self, app: BaseConfig):
         """
         Create an application bundle.
 
         :param app: The config object for the app
-        :param base_path: The path to the project directory.
         """
         # If the app config doesn't explicitly define a template,
         # use a default template.
@@ -264,12 +263,12 @@ class CreateCommand(BaseCommand):
 
         try:
             # Create the platform directory (if it doesn't already exist)
-            self.platform_path(base_path).mkdir(parents=True, exist_ok=True)
+            self.platform_path.mkdir(parents=True, exist_ok=True)
             # Unroll the template
             self.cookiecutter(
                 str(template),
                 no_input=True,
-                output_dir=str(self.platform_path(base_path)),
+                output_dir=str(self.platform_path),
                 checkout=self.python_version_tag,
                 extra_context=extra_context
             )
@@ -284,12 +283,11 @@ class CreateCommand(BaseCommand):
             # Branch does not exist for python version
             raise TemplateUnsupportedPythonVersion(self.python_version_tag)
 
-    def install_app_support_package(self, app: BaseConfig, base_path: Path):
+    def install_app_support_package(self, app: BaseConfig):
         """
         Install the application support packge.
 
         :param app: The config object for the app
-        :param base_path: The path to the project directory.
         """
         try:
             # Work out if the app defines a custom override for
@@ -316,7 +314,7 @@ class CreateCommand(BaseCommand):
 
         try:
             print("Unpacking support package...")
-            support_path = self.support_path(app, base_path)
+            support_path = self.support_path(app)
             support_path.mkdir(parents=True, exist_ok=True)
             self.shutil.unpack_archive(
                 str(support_filename),
@@ -325,12 +323,11 @@ class CreateCommand(BaseCommand):
         except shutil.ReadError:
             raise InvalidSupportPackage(support_filename.name)
 
-    def install_app_dependencies(self, app: BaseConfig, base_path: Path):
+    def install_app_dependencies(self, app: BaseConfig):
         """
         Install the dependencies for the app.
 
         :param app: The config object for the app
-        :param base_path: The path to the project directory.
         """
         if app.requires:
             try:
@@ -339,7 +336,7 @@ class CreateCommand(BaseCommand):
                         sys.executable, "-m",
                         "pip", "install",
                         "--upgrade",
-                        '--target={}'.format(self.app_packages_path(app, base_path)),
+                        '--target={}'.format(self.app_packages_path(app)),
                     ] + app.requires,
                     check=True,
                 )
@@ -348,18 +345,17 @@ class CreateCommand(BaseCommand):
         else:
             print("No application dependencies.")
 
-    def install_app_code(self, app: BaseConfig, base_path: Path):
+    def install_app_code(self, app: BaseConfig):
         """
         Install the application code into the bundle.
 
         :param app: The config object for the app
-        :param base_path: The path to the project directory.
         """
         if app.sources:
             for src in app.sources:
                 print("Installing {src}...".format(src=src))
-                original = base_path / src
-                target = self.app_path(app, base_path) / original.name
+                original = self.base_path / src
+                target = self.app_path(app) / original.name
 
                 # Remove existing versions of the code
                 if target.exists():
@@ -379,7 +375,7 @@ class CreateCommand(BaseCommand):
             print("No sources defined for {app.name}.".format(app=app))
 
         # Create dist-info folder, and write a minimal metadata collection.
-        dist_info_path = self.app_path(app, base_path) / '{app.module_name}-{app.version}.dist-info'.format(
+        dist_info_path = self.app_path(app) / '{app.module_name}-{app.version}.dist-info'.format(
             app=app,
         )
         dist_info_path.mkdir(exist_ok=True)
@@ -399,17 +395,16 @@ class CreateCommand(BaseCommand):
             # f.write('Maintainer-email:  {}\n'.format(app=app))
             f.write('Summary: {app.description}\n'.format(app=app))
 
-    def install_app_extras(self, app: BaseConfig, base_path: Path):
+    def install_app_extras(self, app: BaseConfig):
         """
         Install the application extras (such as icons and splash screens) into
         the bundle.
 
         :param app: The config object for the app
-        :param base_path: The path to the project directory.
         :param bundle_path: The path where the application bundle should be created.
         """
         # if app.icon:
-        #     self.install_icon(app, base_path)
+        #     self.install_icon(app)
         # else:
         #     print("No icon defined for {app.name}; using default".format(app=app))
 
@@ -426,14 +421,13 @@ class CreateCommand(BaseCommand):
     #                          (self.distribution.get_name(), tag))
     #         )
 
-    def create_app(self, app: BaseConfig, base_path: Path):
+    def create_app(self, app: BaseConfig):
         """
         Create an application bundle.
 
         :param app: The config object for the app
-        :param base_path: The path to the project directory.
         """
-        bundle_path = self.bundle_path(app, base_path)
+        bundle_path = self.bundle_path(app)
         if bundle_path.exists():
             print()
             confirm = self.input('Application {app.name} already exists; overwrite (y/N)? '.format(
@@ -453,40 +447,37 @@ class CreateCommand(BaseCommand):
         print('[{app.name}] Generate application template...'.format(
             app=app
         ))
-        self.generate_app_template(app=app, base_path=base_path)
+        self.generate_app_template(app=app)
 
         print()
         print('[{app.name}] Install support package...'.format(
             app=app
         ))
-        self.install_app_support_package(app=app, base_path=base_path)
+        self.install_app_support_package(app=app)
 
         print()
         print('[{app.name}] Install dependencies...'.format(
             app=app
         ))
-        self.install_app_dependencies(app=app, base_path=base_path)
+        self.install_app_dependencies(app=app)
 
         print()
         print('[{app.name}] Install application code...'.format(
             app=app
         ))
-        self.install_app_code(app=app, base_path=base_path)
+        self.install_app_code(app=app)
 
         print()
         print('[{app_name}] Install extra application resources...'.format(
             app_name=app.name
         ))
-        self.install_app_extras(app=app, base_path=base_path)
+        self.install_app_extras(app=app)
 
-    def __call__(self, app: Optional[BaseConfig] = None, path: Optional[Path] = None):
-        if path is None:
-            path = Path.cwd()
-
+    def __call__(self, app: Optional[BaseConfig] = None):
         self.verify_tools()
 
         if app:
-            self.create_app(app, path)
+            self.create_app(app)
         else:
             for app_name, app in self.apps.items():
-                self.create_app(app, path)
+                self.create_app(app)

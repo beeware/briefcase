@@ -8,7 +8,7 @@ from briefcase.exceptions import (
 )
 
 
-def test_new_download_oneshot(base_command, tmp_path):
+def test_new_download_oneshot(base_command):
     base_command.requests = mock.MagicMock()
     response = mock.MagicMock()
     response.status_code = 200
@@ -21,7 +21,7 @@ def test_new_download_oneshot(base_command, tmp_path):
     # Download the file
     filename = base_command.download_url(
         url='https://example.com/path/to/something.zip',
-        download_path=tmp_path / 'downloads',
+        download_path=base_command.base_path / 'downloads',
     )
 
     # requests.get has been invoked, but content isn't iterated
@@ -33,14 +33,14 @@ def test_new_download_oneshot(base_command, tmp_path):
     response.iter_content.assert_not_called()
 
     # The filename is derived from the URL
-    assert filename == tmp_path / 'downloads' / 'something.zip'
+    assert filename == base_command.base_path / 'downloads' / 'something.zip'
 
     # File content is as expected
-    with open(tmp_path / 'downloads' / 'something.zip') as f:
+    with open(base_command.base_path / 'downloads' / 'something.zip') as f:
         assert f.read() == 'all content'
 
 
-def test_new_download_chunked(base_command, tmp_path):
+def test_new_download_chunked(base_command):
     base_command.requests = mock.MagicMock()
     response = mock.MagicMock()
     response.status_code = 200
@@ -57,7 +57,7 @@ def test_new_download_chunked(base_command, tmp_path):
     # Download the file
     filename = base_command.download_url(
         url='https://example.com/path/to/something.zip',
-        download_path=tmp_path
+        download_path=base_command.base_path
     )
 
     # requests.get has been invoked, and content is chunked.
@@ -69,17 +69,17 @@ def test_new_download_chunked(base_command, tmp_path):
     response.iter_content.assert_called_once_with(chunk_size=1048576)
 
     # The filename is derived from the URL
-    assert filename == tmp_path / 'something.zip'
+    assert filename == base_command.base_path / 'something.zip'
 
     # The downloaded file exists, and content is as expected
     assert filename.exists()
-    with open(tmp_path / 'something.zip') as f:
+    with open(base_command.base_path / 'something.zip') as f:
         assert f.read() == 'chunk-1;chunk-2;chunk-3;'
 
 
-def test_already_downloaded(base_command, tmp_path):
+def test_already_downloaded(base_command):
     # Create an existing file
-    existing_file = tmp_path / 'something.zip'
+    existing_file = base_command.base_path / 'something.zip'
     with open(existing_file, 'w') as f:
         f.write('existing content')
     base_command.requests = mock.MagicMock()
@@ -87,7 +87,7 @@ def test_already_downloaded(base_command, tmp_path):
     # Download the file
     filename = base_command.download_url(
         url='https://example.com/path/to/something.zip',
-        download_path=tmp_path
+        download_path=base_command.base_path
     )
 
     # Nothing was downloaded
@@ -98,7 +98,7 @@ def test_already_downloaded(base_command, tmp_path):
     assert filename.exists()
 
 
-def test_missing_resource(base_command, tmp_path):
+def test_missing_resource(base_command):
     base_command.requests = mock.MagicMock()
     response = mock.MagicMock()
     response.status_code = 404
@@ -109,7 +109,7 @@ def test_missing_resource(base_command, tmp_path):
     with pytest.raises(MissingNetworkResourceError):
         base_command.download_url(
             url='https://example.com/path/to/something.zip',
-            download_path=tmp_path
+            download_path=base_command.base_path
         )
 
     # requests.get has been invoked, but nothing else.
@@ -120,10 +120,10 @@ def test_missing_resource(base_command, tmp_path):
     response.headers.get.assert_not_called()
 
     # The file doesn't exist as a result of the download failure
-    assert not (tmp_path / 'something.zip').exists()
+    assert not (base_command.base_path / 'something.zip').exists()
 
 
-def test_bad_resource(base_command, tmp_path):
+def test_bad_resource(base_command):
     base_command.requests = mock.MagicMock()
     response = mock.MagicMock()
     response.status_code = 500
@@ -134,7 +134,7 @@ def test_bad_resource(base_command, tmp_path):
     with pytest.raises(BadNetworkResourceError):
         base_command.download_url(
             url='https://example.com/path/to/something.zip',
-            download_path=tmp_path
+            download_path=base_command.base_path
         )
 
     # requests.get has been invoked, but nothing else.
@@ -145,4 +145,4 @@ def test_bad_resource(base_command, tmp_path):
     response.headers.get.assert_not_called()
 
     # The file doesn't exist as a result of the download failure
-    assert not (tmp_path / 'something.zip').exists()
+    assert not (base_command.base_path / 'something.zip').exists()

@@ -10,8 +10,8 @@ def test_template_url(create_command):
     assert create_command.template_url == 'https://github.com/beeware/briefcase-tester-dummy-template.git'
 
 
-def test_app_path(create_command, myapp, tmp_path):
-    bundle_path = create_command.bundle_path(myapp, tmp_path)
+def test_app_path(create_command, myapp):
+    bundle_path = create_command.bundle_path(myapp)
     bundle_path.mkdir(parents=True)
     with open(bundle_path / 'briefcase.toml', 'w') as f:
         index = {
@@ -23,17 +23,17 @@ def test_app_path(create_command, myapp, tmp_path):
         }
         toml.dump(index, f)
 
-    assert create_command.app_path(myapp, tmp_path) == bundle_path / 'path' / 'to' / 'app'
+    assert create_command.app_path(myapp) == bundle_path / 'path' / 'to' / 'app'
 
     # Requesting a second time should hit the cache,
     # so the briefcase file won't be needed.
     # Delete it to make sure the cache is used.
     (bundle_path / 'briefcase.toml').unlink()
-    assert create_command.app_path(myapp, tmp_path) == bundle_path / 'path' / 'to' / 'app'
+    assert create_command.app_path(myapp) == bundle_path / 'path' / 'to' / 'app'
 
 
-def test_app_packages_path(create_command, myapp, tmp_path):
-    bundle_path = create_command.bundle_path(myapp, tmp_path)
+def test_app_packages_path(create_command, myapp):
+    bundle_path = create_command.bundle_path(myapp)
     bundle_path.mkdir(parents=True)
     with open(bundle_path / 'briefcase.toml', 'w') as f:
         index = {
@@ -45,17 +45,17 @@ def test_app_packages_path(create_command, myapp, tmp_path):
         }
         toml.dump(index, f)
 
-    assert create_command.app_packages_path(myapp, tmp_path) == bundle_path / 'path' / 'to' / 'app_packages'
+    assert create_command.app_packages_path(myapp) == bundle_path / 'path' / 'to' / 'app_packages'
 
     # Requesting a second time should hit the cache,
     # so the briefcase file won't be needed.
     # Delete it to make sure the cache is used.
     (bundle_path / 'briefcase.toml').unlink()
-    assert create_command.app_packages_path(myapp, tmp_path) == bundle_path / 'path' / 'to' / 'app_packages'
+    assert create_command.app_packages_path(myapp) == bundle_path / 'path' / 'to' / 'app_packages'
 
 
-def test_support_path(create_command, myapp, tmp_path):
-    bundle_path = create_command.bundle_path(myapp, tmp_path)
+def test_support_path(create_command, myapp):
+    bundle_path = create_command.bundle_path(myapp)
     bundle_path.mkdir(parents=True)
     with open(bundle_path / 'briefcase.toml', 'w') as f:
         index = {
@@ -67,13 +67,13 @@ def test_support_path(create_command, myapp, tmp_path):
         }
         toml.dump(index, f)
 
-    assert create_command.support_path(myapp, tmp_path) == bundle_path / 'path' / 'to' / 'support'
+    assert create_command.support_path(myapp) == bundle_path / 'path' / 'to' / 'support'
 
     # Requesting a second time should hit the cache,
     # so the briefcase file won't be needed.
     # Delete it to make sure the cache is used.
     (bundle_path / 'briefcase.toml').unlink()
-    assert create_command.support_path(myapp, tmp_path) == bundle_path / 'path' / 'to' / 'support'
+    assert create_command.support_path(myapp) == bundle_path / 'path' / 'to' / 'support'
 
 
 def test_support_package_url_single_match(create_command):

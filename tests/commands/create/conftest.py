@@ -12,8 +12,8 @@ class DummyCreateCommand(CreateCommand):
     A dummy create command that stubs out all the required interfaces
     of the Create command.
     """
-    def __init__(self, support_file=None):
-        super().__init__(platform='tester', output_format='dummy')
+    def __init__(self, *args, support_file=None, **kwargs):
+        super().__init__(*args, platform='tester', output_format='dummy', **kwargs)
 
         # If a test sets this property, the tool verification step will
         # fail.
@@ -25,11 +25,11 @@ class DummyCreateCommand(CreateCommand):
         self.subprocess = mock.MagicMock()
         self.support_file = support_file
 
-    def bundle_path(self, app, base_path):
-        return self.platform_path(base_path) / '{app.name}.bundle'.format(app=app)
+    def bundle_path(self, app):
+        return self.platform_path / '{app.name}.bundle'.format(app=app)
 
-    def binary_path(self, app, base_path):
-        return self.platform_path(base_path) / '{app.name}.binary'.format(app=app)
+    def binary_path(self, app):
+        return self.platform_path / '{app.name}.binary'.format(app=app)
 
     # Hard code the python version to make testing easier.
     @property
@@ -38,8 +38,8 @@ class DummyCreateCommand(CreateCommand):
 
 
 @pytest.fixture
-def create_command():
-    return DummyCreateCommand()
+def create_command(tmp_path):
+    return DummyCreateCommand(base_path=tmp_path)
 
 
 @pytest.fixture

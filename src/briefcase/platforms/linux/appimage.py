@@ -9,13 +9,13 @@ from briefcase.platforms.linux import LinuxMixin
 
 
 class AppImageMixin(LinuxMixin):
-    def __init__(self):
-        super().__init__(output_format='appimage')
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, output_format='appimage', **kwargs)
 
-    def binary_path(self, app, base_path):
+    def binary_path(self, app):
         raise NotImplementedError()
 
-    def bundle_path(self, app, base_path):
+    def bundle_path(self, app):
         raise NotImplementedError()
 
 

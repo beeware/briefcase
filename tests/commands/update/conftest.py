@@ -9,36 +9,37 @@ class DummyUpdateCommand(UpdateCommand):
     A dummy creation command that doesn't actually do anything.
     It only serves to track which actions would be performend.
     """
-    def __init__(self, apps):
-        super().__init__(platform='tester', output_format='dummy', apps=apps)
+    def __init__(self, *args, apps, **kwargs):
+        super().__init__(*args, platform='tester', output_format='dummy', apps=apps, **kwargs)
 
         self.actions = []
 
-    def bundle_path(self, app, base):
-        return base / 'tester' / '{app.name}.dummy'.format(app=app)
+    def bundle_path(self, app):
+        return self.platform_path / '{app.name}.dummy'.format(app=app)
 
-    def binary_path(self, app, base):
-        return base / 'tester' / '{app.name}.dummy.bin'.format(app=app)
+    def binary_path(self, app):
+        return self.platform_path / '{app.name}.dummy.bin'.format(app=app)
 
     def verify_tools(self):
         self.actions.append(('verify'))
 
     # Override all the body methods of a UpdateCommand
     # with versions that we can use to track actions performed.
-    def install_app_dependencies(self, app, base_path):
-        self.actions.append(('dependencies', app, base_path))
-        with open(self.bundle_path(app, base_path) / 'dependencies', 'w') as f:
+    def install_app_dependencies(self, app):
+        self.actions.append(('dependencies', app))
+        with open(self.bundle_path(app) / 'dependencies', 'w') as f:
             f.write("first app dependencies")
 
-    def install_app_code(self, app, base_path):
-        self.actions.append(('code', app, base_path))
-        with open(self.bundle_path(app, base_path) / 'code.py', 'w') as f:
+    def install_app_code(self, app):
+        self.actions.append(('code', app))
+        with open(self.bundle_path(app) / 'code.py', 'w') as f:
             f.write("print('first app')")
 
 
 @pytest.fixture
-def update_command():
+def update_command(tmp_path):
     return DummyUpdateCommand(
+        base_path=tmp_path,
         apps={
             'first': AppConfig(
                 name='first',
