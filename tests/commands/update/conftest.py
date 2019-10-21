@@ -58,6 +58,7 @@ def update_command():
 
 @pytest.fixture
 def first_app(tmp_path):
+    "Populate skeleton app content for the first app"
     bundle_dir = tmp_path / "tester" / "first.dummy"
     bundle_dir.mkdir(parents=True)
     with open(bundle_dir / 'Content', 'w') as f:
@@ -66,6 +67,7 @@ def first_app(tmp_path):
 
 @pytest.fixture
 def second_app(tmp_path):
+    "Populate skeleton app content for the second app"
     bundle_dir = tmp_path / "tester" / "second.dummy"
     bundle_dir.mkdir(parents=True)
     with open(bundle_dir / 'Content', 'w') as f:

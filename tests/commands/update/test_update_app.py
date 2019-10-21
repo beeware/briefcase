@@ -12,6 +12,8 @@ def test_update_app(update_command, tmp_path, first_app):
     # App content has been updated
     assert (tmp_path / 'tester' / 'first.dummy' / 'dependencies').exists()
     assert (tmp_path / 'tester' / 'first.dummy' / 'code.py').exists()
+    # ... and the app still exists
+    assert (tmp_path / 'tester' / 'first.dummy' / 'Content').exists()
 
 
 def test_update_non_existing_app(update_command, tmp_path):
