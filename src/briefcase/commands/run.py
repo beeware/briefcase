@@ -1,3 +1,6 @@
+from abc import abstractmethod
+
+from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError
 
 from .base import BaseCommand
@@ -20,6 +23,15 @@ class RunCommand(BaseCommand):
             help='Update the payload of the app be updated before execution'
         )
 
+    @abstractmethod
+    def run_app(self, app: BaseConfig):
+        """
+        Start an application.
+
+        :param app: The application to start
+        """
+        ...
+
     def __call__(self):
         # Which app should we run? If there's only one defined
         # in pyproject.toml, then we can use it as a default;
@@ -34,11 +46,18 @@ class RunCommand(BaseCommand):
                     "Project doesn't define an application named '{appname}'".format(
                         appname=self.options.app
                     ))
+        else:
+            raise BriefcaseCommandError(
+                "Project specifies more than one application; "
+                "use --app to specify which one to start."
+            )
 
-        target_file = self.target(app)
+        target_file = self.binary_path(app)
         if not target_file.exists():
-            self.create(app)
+            self.create_command(app)
+            self.build_command(app)
         elif self.options.update:
-            self.update(app)
+            self.update_command(app)
+            self.build_command(app)
 
-        print("RUN:", self.description)
+        self.run_app(app)

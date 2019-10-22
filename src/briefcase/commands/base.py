@@ -67,27 +67,32 @@ class BaseCommand(ABC):
         self.subprocess = subprocess
 
     @property
-    def CreateCommand(self):
+    def create_command(self):
+        "Factory property; return an instance of a create command for the same format"
         format_module = importlib.import_module(self.__module__)
         return format_module.create(base_path=self.base_path, apps=self.apps)
 
     @property
-    def UpdateCommand(self):
+    def update_command(self):
+        "Factory property; return an instance of an update command for the same format"
         format_module = importlib.import_module(self.__module__)
         return format_module.update(base_path=self.base_path, apps=self.apps)
 
     @property
-    def BuildCommand(self):
+    def build_command(self):
+        "Factory property; return an instance of a build command for the same format"
         format_module = importlib.import_module(self.__module__)
         return format_module.build(base_path=self.base_path, apps=self.apps)
 
     @property
-    def RunCommand(self):
+    def run_command(self):
+        "Factory property; return an instance of a run command for the same format"
         format_module = importlib.import_module(self.__module__)
         return format_module.run(base_path=self.base_path, apps=self.apps)
 
     @property
-    def PublishCommand(self):
+    def publish_command(self):
+        "Factory property; return an instance of a publish command for the same format"
         format_module = importlib.import_module(self.__module__)
         return format_module.publish(base_path=self.base_path, apps=self.apps)
 
