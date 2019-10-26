@@ -69,16 +69,6 @@ class MacOSAppRunCommand(MacOSAppMixin, RunCommand):
 class MacOSAppPublishCommand(MacOSAppMixin, PublishCommand):
     description = "Publish a macOS .app bundle."
 
-    def add_options(self, parser):
-        parser.add_argument(
-            '-c',
-            '--channel',
-            choices=['s3', 'github', 'appstore'],
-            default='s3',
-            metavar='channel',
-            help='The channel to publish to'
-        )
-
 
 # Declare the briefcase command bindings
 create = MacOSAppCreateCommand  # noqa

@@ -338,6 +338,6 @@ def test_unknown_command_options(monkeypatch, capsys):
     output = capsys.readouterr().err
 
     assert output.startswith(
-        "usage: briefcase publish macos app [-h] [-v] [-V] [-c channel]\n"
+        "usage: briefcase publish macos app [-h] [-v] [-V] [-c {s3}]\n"
         "briefcase publish macos app: error: unrecognized arguments: -x"
     )

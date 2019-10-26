@@ -39,15 +39,6 @@ class LinuxAppImageRunCommand(AppImageMixin, RunCommand):
 class LinuxAppImagePublishCommand(AppImageMixin, PublishCommand):
     description = "Publish a Linux AppImage."
 
-    def add_options(self):
-        self.parser.add_argument(
-            '-c',
-            '--channel',
-            choices=['s3', 'github', 'appstore'],
-            default='s3',
-            help='The channel to publish to'
-        )
-
 
 # Declare the briefcase command bindings
 create = LinuxAppImageCreateCommand  # noqa
