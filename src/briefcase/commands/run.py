@@ -7,9 +7,6 @@ from .base import BaseCommand
 
 
 class RunCommand(BaseCommand):
-    # requires build
-    # causes update && build on flag
-
     def add_options(self, parser):
         parser.add_argument(
             '-a',
@@ -20,7 +17,7 @@ class RunCommand(BaseCommand):
             '-u',
             '--update',
             action="store_true",
-            help='Update the payload of the app be updated before execution'
+            help='Update the app before execution'
         )
 
     @abstractmethod

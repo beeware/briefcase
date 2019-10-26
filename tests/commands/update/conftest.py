@@ -6,7 +6,7 @@ from briefcase.commands import UpdateCommand
 
 class DummyUpdateCommand(UpdateCommand):
     """
-    A dummy creation command that doesn't actually do anything.
+    A dummy update command that doesn't actually do anything.
     It only serves to track which actions would be performend.
     """
     def __init__(self, *args, apps, **kwargs):
@@ -63,7 +63,7 @@ def first_app(tmp_path):
     bundle_dir = tmp_path / "tester" / "first.dummy"
     bundle_dir.mkdir(parents=True)
     with open(bundle_dir / 'Content', 'w') as f:
-        f.write("first app.exe")
+        f.write("first app.bundle")
 
 
 @pytest.fixture
@@ -72,4 +72,4 @@ def second_app(tmp_path):
     bundle_dir = tmp_path / "tester" / "second.dummy"
     bundle_dir.mkdir(parents=True)
     with open(bundle_dir / 'Content', 'w') as f:
-        f.write("second app.exe")
+        f.write("second app.bundle")
