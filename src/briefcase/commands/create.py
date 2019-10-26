@@ -444,31 +444,31 @@ class CreateCommand(BaseCommand):
             ))
             shutil.rmtree(bundle_path)
         print()
-        print('[{app.name}] Generate application template...'.format(
+        print('[{app.name}] Generating application template...'.format(
             app=app
         ))
         self.generate_app_template(app=app)
 
         print()
-        print('[{app.name}] Install support package...'.format(
+        print('[{app.name}] Installing support package...'.format(
             app=app
         ))
         self.install_app_support_package(app=app)
 
         print()
-        print('[{app.name}] Install dependencies...'.format(
+        print('[{app.name}] Installing dependencies...'.format(
             app=app
         ))
         self.install_app_dependencies(app=app)
 
         print()
-        print('[{app.name}] Install application code...'.format(
+        print('[{app.name}] Installing application code...'.format(
             app=app
         ))
         self.install_app_code(app=app)
 
         print()
-        print('[{app_name}] Install extra application resources...'.format(
+        print('[{app_name}] Installing extra application resources...'.format(
             app_name=app.name
         ))
         self.install_app_extras(app=app)

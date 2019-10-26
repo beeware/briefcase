@@ -6,37 +6,69 @@ from .create import CreateCommand
 
 
 class UpdateCommand(CreateCommand):
-    def update_app(self, app: BaseConfig):
+    def add_options(self, parser):
+        parser.add_argument(
+            '-d',
+            '--update_dependencies',
+            action="store_true",
+            help='Update dependencies for app'
+        )
+        parser.add_argument(
+            '-e',
+            '--update_extra',
+            action="store_true",
+            help='Update extra app resources'
+        )
+
+    def update_app(self, app: BaseConfig, update_dependencies=False, update_extras=False):
         """
         Update an existing application bundle.
 
         :param app: The config object for the app
-        :param base_path: The path to the project directory.
+        :param update_dependencies: Should dependencies be updated? (default: False)
+        :param update_extras: Should extra resources be updated? (default: False)
         """
         bundle_path = self.bundle_path(app)
         if not bundle_path.exists():
-            print("{app.name} does not exist; call create first!".format(
+            print()
+            print("[{app.name}] Application does not exist; call create first!".format(
                 app=app
             ))
             return
 
-        print()
-        print('[{app.name}] Update dependencies...'.format(
-            app=app
-        ))
-        self.install_app_dependencies(app=app)
+        if update_dependencies:
+            print()
+            print('[{app.name}] Updating dependencies...'.format(
+                app=app
+            ))
+            self.install_app_dependencies(app=app)
 
         print()
-        print('[{app.name}] Update application code...'.format(
+        print('[{app.name}] Updating application code...'.format(
             app=app
         ))
         self.install_app_code(app=app)
+
+        if update_extras:
+            print()
+            print('[{app_name}] Updating extra application resources...'.format(
+                app_name=app.name
+            ))
+            self.install_app_extras(app=app)
 
     def __call__(self, app: Optional[BaseConfig] = None):
         self.verify_tools()
 
         if app:
-            self.update_app(app)
+            self.update_app(
+                app,
+                update_dependencies=self.options.update_dependencies,
+                update_extras=self.options.update_extra,
+            )
         else:
             for app_name, app in self.apps.items():
-                self.update_app(app)
+                self.update_app(
+                    app,
+                    update_dependencies=self.options.update_dependencies,
+                    update_extras=self.options.update_extra,
+                )

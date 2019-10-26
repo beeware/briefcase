@@ -35,6 +35,11 @@ class DummyUpdateCommand(UpdateCommand):
         with open(self.bundle_path(app) / 'code.py', 'w') as f:
             f.write("print('first app')")
 
+    def install_app_extras(self, app):
+        self.actions.append(('extras', app))
+        with open(self.bundle_path(app) / 'extras', 'w') as f:
+            f.write("first app extras")
+
 
 @pytest.fixture
 def update_command(tmp_path):

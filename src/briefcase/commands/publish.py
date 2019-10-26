@@ -31,7 +31,7 @@ class PublishCommand(BaseCommand):
         :param app: The application to publish
         :param str: The publication channel to use
         """
-        print("Publish {app.name} to {channel}".format(
+        print("TODO: Publish {app.name} to {channel}".format(
             app=app,
             channel=channel,
         ))
