@@ -159,13 +159,23 @@ class CreateCommand(BaseCommand):
         return self._support_package_url
 
     def _load_path_index(self, app: BaseConfig):
-        "Load the path index from the index file provided by the app template"
+        """
+        Load the path index from the index file provided by the app template
+
+        :param app: The config object for the app
+        :return: The contents of the application path index.
+        """
         with open(self.bundle_path(app) / 'briefcase.toml') as f:
             self._path_index[app] = toml.load(f)['paths']
         return self._path_index[app]
 
     def support_path(self, app: BaseConfig):
-        "The path into which the support package should be unpacked"
+        """
+        Obtain the path into which the support package should be unpacked
+
+        :param app: The config object for the app
+        :return: The full path where the support package should be unpacked.
+        """
         # If the index file hasn't been loaded for this app, load it.
         try:
             path_index = self._path_index[app]
@@ -174,7 +184,12 @@ class CreateCommand(BaseCommand):
         return self.bundle_path(app) / path_index['support_path']
 
     def app_packages_path(self, app: BaseConfig):
-        "The path into which dependencies should be installed"
+        """
+        Obtain the path into which dependencies should be installed
+
+        :param app: The config object for the app
+        :return: The full path where application dependencies should be installed.
+        """
         # If the index file hasn't been loaded for this app, load it.
         try:
             path_index = self._path_index[app]
@@ -183,13 +198,113 @@ class CreateCommand(BaseCommand):
         return self.bundle_path(app) / path_index['app_packages_path']
 
     def app_path(self, app: BaseConfig):
-        "The path into which the application should be installed"
+        """
+        Obtain the path into which the application should be installed.
+
+        :param app: The config object for the app
+        :return: The full path where application code should be installed.
+        """
         # If the index file hasn't been loaded for this app, load it.
         try:
             path_index = self._path_index[app]
         except KeyError:
             path_index = self._load_path_index(app)
         return self.bundle_path(app) / path_index['app_path']
+
+    def icon_targets(self, app: BaseConfig):
+        """
+        Obtain the dictionary of icon targets that the template requires.
+
+        :param app: The config object for the app
+        :return: A dictionary of icons that the template supports. The keys
+            of the dictionary are the size of the icons.
+        """
+        # If the index file hasn't been loaded for this app, load it.
+        try:
+            path_index = self._path_index[app]
+        except KeyError:
+            path_index = self._load_path_index(app)
+
+        # If the template specifies no icons, return an empty dictionary.
+        # If the template specifies a single icon without a size specification,
+        #   return a dictionary with a single ``None`` key.
+        # Otherwise, return the full size-keyed dictionary.
+        try:
+            icon_targets = path_index['icon']
+            # Convert string-specified icons into an "unknown size" icon form
+            if isinstance(icon_targets, str):
+                icon_targets = {
+                    None: icon_targets
+                }
+        except KeyError:
+            icon_targets = {}
+
+        return icon_targets
+
+    def splash_image_targets(self, app: BaseConfig):
+        """
+        Obtain the dictionary of splash image targets that the template requires.
+
+        :param app: The config object for the app
+        :return: A dictionary of splash images that the template supports. The keys
+            of the dictionary are the size of the splash images.
+        """
+        # If the index file hasn't been loaded for this app, load it.
+        try:
+            path_index = self._path_index[app]
+        except KeyError:
+            path_index = self._load_path_index(app)
+
+        # If the template specifies no splash images, return an empty dictionary.
+        # If the template specifies a single splash image without a size specification,
+        #   return a dictionary with a single ``None`` key.
+        # Otherwise, return the full size-keyed dictionary.
+        try:
+            splash_targets = path_index['splash']
+            # Convert string-specified splash images into an "unknown size" icon form
+            if isinstance(splash_targets, str):
+                splash_targets = {
+                    None: splash_targets
+                }
+        except KeyError:
+            splash_targets = {}
+
+        return splash_targets
+
+    def document_type_icon_targets(self, app: BaseConfig):
+        """
+        Obtain the dictionary of document type icon targets that the template requires.
+
+        :param app: The config object for the app
+        :return: A dictionary of document types, with the values being dictionaries
+            describing the icon sizes that the template supports. The inner dictionary
+            describes the path fragments (relative to the bundle path) for the images
+            that are required; the keys are the size of the splash images.
+        """
+        # If the index file hasn't been loaded for this app, load it.
+        try:
+            path_index = self._path_index[app]
+        except KeyError:
+            path_index = self._load_path_index(app)
+
+        # If the template specifies no document types, return an empty dictionary.
+        # Then, for each document type; If the template specifies a single icon
+        #   without a size specification, return a dictionary with a single
+        #   ``None`` key. Otherwise, return the full size-keyed dictionary.
+        try:
+            document_type_icon_targets = {}
+            for extension, targets in path_index['document_type_icon'].items():
+                # Convert string-specified icons into an "unknown size" icon form
+                if isinstance(targets, str):
+                    document_type_icon_targets[extension] = {
+                        None: targets
+                    }
+                else:
+                    document_type_icon_targets[extension] = targets
+
+            return document_type_icon_targets
+        except KeyError:
+            return {}
 
     def generate_app_template(self, app: BaseConfig):
         """
@@ -395,31 +510,132 @@ class CreateCommand(BaseCommand):
             # f.write('Maintainer-email:  {}\n'.format(app=app))
             f.write('Summary: {app.description}\n'.format(app=app))
 
+    def install_image(self, role, size, sources, target):
+        """
+        Install an icon/image of the requested size at a target location, using
+        the source images defined by the app config.
+
+        :param role: A string describing the role the of the image.
+        :param size: The requested size for the image. A size of
+            ``None`` means the largest available size should be used.
+        :param target: The full path where the image should be installed.
+        """
+        if sources is None:
+            print("No {role} defined in app config; using default".format(role=role))
+        elif isinstance(sources, str):
+            # A single image source has been provided
+            source = self.base_path / sources
+            if size is None:
+                # There's no specifically requested size.
+                # As long as the image formats match, copy the file to the target.
+                if source.suffix == target.suffix:
+                    print("Installing {role}...".format(role=role))
+                    try:
+                        # Make sure the target directory exists
+                        target.parent.mkdir(parents=True, exist_ok=True)
+                        # Copy the source image to the target location
+                        self.shutil.copy(source, target)
+                    except FileNotFoundError:
+                        print(
+                            "Unable to find {source} specified for {role}; using default".format(
+                                role=role,
+                                source=sources,
+                            )
+                        )
+
+                else:
+                    print(
+                        "{role} requires a {target.suffix} ({source.suffix} provided); using default".format(
+                            role=role.capitalize(),
+                            source=source,
+                            target=target,
+                        )
+                    )
+            else:
+                # A specific size has been requested
+                print(
+                    "{role} requires a {size}px {target.suffix}; using default".format(
+                        role=role.capitalize(),
+                        size=size,
+                        target=target,
+                    )
+                )
+
+        else:
+            # A size map of image sources has been provided
+            try:
+                source = self.base_path / sources[size]
+
+                # There is an exact match for the requested size
+                if source.suffix == target.suffix:
+                    print("Installing {size}px {role}...".format(
+                        size=size,
+                        role=role,
+                    ))
+                    try:
+                        # Make sure the target directory exists
+                        target.parent.mkdir(parents=True, exist_ok=True)
+                        # Copy the source image to the target location
+                        self.shutil.copy(source, target)
+                    except FileNotFoundError:
+                        print(
+                            "Unable to find {source} specified for {size}px {role}; using default".format(
+                                role=role,
+                                size=size,
+                                source=sources[size],
+                            )
+                        )
+
+                else:
+                    print(
+                        "{role} requires a {size}px {target.suffix} ({source.suffix} provided); using default".format(
+                            role=role.capitalize(),
+                            size=size,
+                            source=source,
+                            target=target,
+                        )
+                    )
+            except KeyError:
+                # There's no exact size match.
+                print(
+                    "{role} requires a {size}px {target.suffix}; using default".format(
+                        role=role.capitalize(),
+                        size=size,
+                        target=target,
+                    )
+                )
+
     def install_app_extras(self, app: BaseConfig):
         """
         Install the application extras (such as icons and splash screens) into
         the bundle.
 
         :param app: The config object for the app
-        :param bundle_path: The path where the application bundle should be created.
         """
-        # if app.icon:
-        #     self.install_icon(app)
-        # else:
-        #     print("No icon defined for {app.name}; using default".format(app=app))
+        for size, target in self.icon_targets(app).items():
+            self.install_image(
+                'application icon',
+                size=size,
+                sources=app.icon,
+                target=self.bundle_path(app) / target
+            )
 
-    # def install_icon(self):
-    #     shutil.copyfile(
-    #         "%s.icns" % self.icon,
-    #         os.path.join(self.resource_dir, '%s.icns' % self.distribution.get_name())
-    #     )
+        for size, target in self.splash_image_targets(app).items():
+            self.install_image(
+                'splash image',
+                size=size,
+                sources=app.splash,
+                target=self.bundle_path(app) / target
+            )
 
-    #     for tag, doctype in self.document_types.items():
-    #         shutil.copyfile(
-    #             "%s.icns" % doctype['icon'],
-    #             os.path.join(self.resource_dir, "%s-%s.icns" %
-    #                          (self.distribution.get_name(), tag))
-    #         )
+        for extension, doctype in self.document_type_icon_targets(app).items():
+            for size, target in doctype.items():
+                self.install_image(
+                    'icon for .{extension} documents'.format(extension=extension),
+                    size=size,
+                    sources=app.document_types[extension]['icon'],
+                    target=self.bundle_path(app) / target,
+                )
 
     def create_app(self, app: BaseConfig):
         """
@@ -468,10 +684,15 @@ class CreateCommand(BaseCommand):
         self.install_app_code(app=app)
 
         print()
-        print('[{app_name}] Installing extra application resources...'.format(
-            app_name=app.name
+        print('[{app.name}] Installing extra application resources...'.format(
+            app=app
         ))
         self.install_app_extras(app=app)
+        print()
+
+        print('[{app.name}] Application created.'.format(
+            app=app
+        ))
 
     def __call__(self, app: Optional[BaseConfig] = None):
         self.verify_tools()

@@ -46,26 +46,24 @@ class AppConfig(BaseConfig):
 
         # icon can be specified as a single filename,
         # or as a dictionary of files, keyed by size in pixels
-        if icon is not None:
-            try:
-                self.icon = {
-                    str(size): filename
-                    for size, filename in icon.items()
-                }
-            except AttributeError:
-                self.icon = icon
+        try:
+            self.icon = {
+                str(size): filename
+                for size, filename in icon.items()
+            }
+        except AttributeError:
+            self.icon = icon
 
         # splash can be specified as a single filename,
         # or as a dictionary of files, keyed by dimensions in pixels
         # (width x height)
-        if splash is not None:
-            try:
-                self.splash = {
-                    str(size): filename
-                    for size, filename in splash.items()
-                }
-            except AttributeError:
-                self.splash = splash
+        try:
+            self.splash = {
+                str(size): filename
+                for size, filename in splash.items()
+            }
+        except AttributeError:
+            self.splash = splash
 
     def __repr__(self):
         return "<AppConfig {bundle}.{name} v{version}>".format(

@@ -24,18 +24,12 @@ def test_minimal_AppConfig():
     assert config.formal_name == 'myapp'
     assert config.document_types == {}
 
-    # Requests for an icon or splash raises an attribute error
-    with pytest.raises(AttributeError, match="'AppConfig' object has no attribute 'icon'"):
-        config.icon
+    # There is no icon or splash of any kind
+    assert config.icon is None
+    assert not config.has_scaled_icon
 
-    with pytest.raises(AttributeError, match="'AppConfig' object has no attribute 'icon'"):
-        config.has_scaled_icon
-
-    with pytest.raises(AttributeError, match="'AppConfig' object has no attribute 'splash'"):
-        config.splash
-
-    with pytest.raises(AttributeError, match="'AppConfig' object has no attribute 'splash'"):
-        config.has_scaled_splash
+    assert config.splash is None
+    assert not config.has_scaled_splash
 
     assert repr(config) == "<AppConfig org.beeware.myapp v1.2.3>"
 

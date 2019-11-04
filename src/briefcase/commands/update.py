@@ -51,10 +51,15 @@ class UpdateCommand(CreateCommand):
 
         if update_extras:
             print()
-            print('[{app_name}] Updating extra application resources...'.format(
-                app_name=app.name
+            print('[{app.name}] Updating extra application resources...'.format(
+                app=app
             ))
             self.install_app_extras(app=app)
+
+        print()
+        print('[{app.name}] Application updated.'.format(
+            app=app
+        ))
 
     def __call__(self, app: Optional[BaseConfig] = None):
         self.verify_tools()

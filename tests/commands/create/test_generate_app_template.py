@@ -23,6 +23,8 @@ def full_context(extra):
         'version': '1.2.3',
         'description': "This is a simple app",
         'requires': None,
+        'icon': None,
+        'splash': None,
         'document_types': {},
 
         # Fields generated from other properties
