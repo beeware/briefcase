@@ -11,11 +11,11 @@ from briefcase.exceptions import (
     UnsupportedCommandError
 )
 from briefcase.platforms.linux.appimage import LinuxAppImageCreateCommand
-from briefcase.platforms.macos.app import (
-    MacOSAppCreateCommand,
-    MacOSAppPublishCommand
+from briefcase.platforms.macOS.app import (
+    macOSAppCreateCommand,
+    macOSAppPublishCommand
 )
-from briefcase.platforms.macos.dmg import MacOSDmgCreateCommand
+from briefcase.platforms.macOS.dmg import macOSDmgCreateCommand
 from briefcase.platforms.windows.msi import WindowsMSICreateCommand
 
 
@@ -90,8 +90,8 @@ def test_bare_command(monkeypatch):
 
     cmd = parse_cmdline('create'.split())
 
-    assert isinstance(cmd, MacOSAppCreateCommand)
-    assert cmd.platform == 'macos'
+    assert isinstance(cmd, macOSAppCreateCommand)
+    assert cmd.platform == 'macOS'
     assert cmd.output_format == 'app'
 
 
@@ -112,8 +112,8 @@ def test_macOS_default():
 
     cmd = parse_cmdline('create'.split())
 
-    assert isinstance(cmd, MacOSAppCreateCommand)
-    assert cmd.platform == 'macos'
+    assert isinstance(cmd, macOSAppCreateCommand)
+    assert cmd.platform == 'macOS'
     assert cmd.output_format == 'app'
 
 
@@ -141,7 +141,7 @@ def test_bare_command_help(monkeypatch, capsys):
     # Help message is for default platform and format
     output = capsys.readouterr().out
     assert output.startswith(
-        "usage: briefcase create macos app [-h] [-v] [-V]\n"
+        "usage: briefcase create macOS app [-h] [-v] [-V]\n"
         "\n"
         "Create and populate a macOS .app bundle.\n"
         "\n"
@@ -169,7 +169,7 @@ def test_bare_command_show_formats(monkeypatch):
     with pytest.raises(ShowOutputFormats) as excinfo:
         parse_cmdline('create -f'.split())
 
-    assert excinfo.value.platform == 'macos'
+    assert excinfo.value.platform == 'macOS'
     assert excinfo.value.default == 'app'
     assert set(excinfo.value.choices) == {'app', 'dmg', 'homebrew'}
 
@@ -200,32 +200,32 @@ def test_command_explicit_platform(monkeypatch):
 
 
 def test_command_explicit_platform_case_handling(monkeypatch):
-    "``briefcase create macOS`` returns macOs create app command"
+    "``briefcase create macOS`` returns macOS create app command"
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, 'platform', 'darwin')
 
-    # This is all lower case; the command normalizes to macos
+    # This is all lower case; the command normalizes to macOS
     cmd = parse_cmdline('create macOS'.split())
 
-    assert isinstance(cmd, MacOSAppCreateCommand)
-    assert cmd.platform == 'macos'
+    assert isinstance(cmd, macOSAppCreateCommand)
+    assert cmd.platform == 'macOS'
     assert cmd.output_format == 'app'
 
 
 def test_command_explicit_platform_help(monkeypatch, capsys):
-    "``briefcase create macos -h`` returns the macOS create app command help"
+    "``briefcase create macOS -h`` returns the macOS create app command help"
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, 'platform', 'darwin')
 
     with pytest.raises(SystemExit) as excinfo:
-        parse_cmdline('create macos -h'.split())
+        parse_cmdline('create macOS -h'.split())
 
     # Normal exit due to displaying help
     assert excinfo.value.code == 0
     # Help message is for default platform and format
     output = capsys.readouterr().out
     assert output.startswith(
-        "usage: briefcase create macos app [-h] [-v] [-V]\n"
+        "usage: briefcase create macOS app [-h] [-v] [-V]\n"
         "\n"
         "Create and populate a macOS .app bundle.\n"
         "\n"
@@ -234,37 +234,37 @@ def test_command_explicit_platform_help(monkeypatch, capsys):
 
 
 def test_command_explicit_platform_show_formats(monkeypatch):
-    "``briefcase create macos -f`` shows formats for the platform"
+    "``briefcase create macOS -f`` shows formats for the platform"
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, 'platform', 'darwin')
 
     with pytest.raises(ShowOutputFormats) as excinfo:
-        parse_cmdline('create macos -f'.split())
+        parse_cmdline('create macOS -f'.split())
 
-    assert excinfo.value.platform == 'macos'
+    assert excinfo.value.platform == 'macOS'
     assert excinfo.value.default == 'app'
     assert set(excinfo.value.choices) == {'app', 'dmg', 'homebrew'}
 
 
 def test_command_explicit_format(monkeypatch):
-    "``briefcase create macos dmg`` returns the macOS create dmg command"
+    "``briefcase create macOS dmg`` returns the macOS create dmg command"
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, 'platform', 'darwin')
 
-    cmd = parse_cmdline('create macos dmg'.split())
+    cmd = parse_cmdline('create macOS dmg'.split())
 
-    assert isinstance(cmd, MacOSDmgCreateCommand)
-    assert cmd.platform == 'macos'
+    assert isinstance(cmd, macOSDmgCreateCommand)
+    assert cmd.platform == 'macOS'
     assert cmd.output_format == 'dmg'
 
 
 def test_command_unknown_format(monkeypatch):
-    "``briefcase create macos foobar`` returns an invalid format error"
+    "``briefcase create macOS foobar`` returns an invalid format error"
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, 'platform', 'darwin')
 
     with pytest.raises(InvalidFormatError):
-        parse_cmdline('create macos foobar'.split())
+        parse_cmdline('create macOS foobar'.split())
 
 
 def test_command_explicit_unsupported_format(monkeypatch):
@@ -277,19 +277,19 @@ def test_command_explicit_unsupported_format(monkeypatch):
 
 
 def test_command_explicit_format_help(monkeypatch, capsys):
-    "``briefcase create macos dmg -h`` returns the macOS create dmg help"
+    "``briefcase create macOS dmg -h`` returns the macOS create dmg help"
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, 'platform', 'darwin')
 
     with pytest.raises(SystemExit) as excinfo:
-        parse_cmdline('create macos dmg -h'.split())
+        parse_cmdline('create macOS dmg -h'.split())
 
     # Normal exit due to displaying help
     assert excinfo.value.code == 0
     # Help message is for default platform, but dmg format
     output = capsys.readouterr().out
     assert output.startswith(
-        "usage: briefcase create macos dmg [-h] [-v] [-V]\n"
+        "usage: briefcase create macOS dmg [-h] [-v] [-V]\n"
         "\n"
         "Create and populate a macOS .dmg bundle.\n"
         "\n"
@@ -298,14 +298,14 @@ def test_command_explicit_format_help(monkeypatch, capsys):
 
 
 def test_command_explicit_format_show_formats(monkeypatch):
-    "``briefcase create macos dmg -f`` shows formats for the platform"
+    "``briefcase create macOS dmg -f`` shows formats for the platform"
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, 'platform', 'darwin')
 
     with pytest.raises(ShowOutputFormats) as excinfo:
-        parse_cmdline('create macos dmg -f'.split())
+        parse_cmdline('create macOS dmg -f'.split())
 
-    assert excinfo.value.platform == 'macos'
+    assert excinfo.value.platform == 'macOS'
     assert excinfo.value.default == 'app'
     assert set(excinfo.value.choices) == {'app', 'dmg', 'homebrew'}
 
@@ -319,7 +319,7 @@ def test_command_options(monkeypatch, capsys):
     # (In this case, the channel argument for publication)
     cmd = parse_cmdline('publish macos app -c s3'.split())
 
-    assert isinstance(cmd, MacOSAppPublishCommand)
+    assert isinstance(cmd, macOSAppPublishCommand)
     assert cmd.options.channel == 's3'
 
 
@@ -330,7 +330,7 @@ def test_unknown_command_options(monkeypatch, capsys):
 
     # Invoke a command but provide an option. that isn't defined
     with pytest.raises(SystemExit) as excinfo:
-        parse_cmdline('publish macos app -x foobar'.split())
+        parse_cmdline('publish macOS app -x foobar'.split())
 
     # Normal exit due to displaying help
     assert excinfo.value.code == 2
@@ -338,6 +338,6 @@ def test_unknown_command_options(monkeypatch, capsys):
     output = capsys.readouterr().err
 
     assert output.startswith(
-        "usage: briefcase publish macos app [-h] [-v] [-V] [-c {s3}]\n"
-        "briefcase publish macos app: error: unrecognized arguments: -x"
+        "usage: briefcase publish macOS app [-h] [-v] [-V] [-c {s3}]\n"
+        "briefcase publish macOS app: error: unrecognized arguments: -x"
     )

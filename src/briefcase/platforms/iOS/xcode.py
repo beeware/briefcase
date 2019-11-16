@@ -1,5 +1,4 @@
 import subprocess
-from pathlib import Path
 
 from briefcase.config import BaseConfig
 from briefcase.commands import (
@@ -10,34 +9,34 @@ from briefcase.commands import (
     UpdateCommand
 )
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.platforms.macos import MacOSMixin
+from briefcase.platforms.iOS import iOSMixin
 
 
-class MacOSAppMixin(MacOSMixin):
+class iOSAppMixin(iOSMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, output_format='app', **kwargs)
 
     def binary_path(self, app):
-        return self.platform_path / '{app.formal_name}.app'.format(app=app)
+        return self.platform_path / '{app.formal_name} / {app.formal_name}.xcodeproj'.format(app=app)
 
     def bundle_path(self, app):
-        return self.platform_path / '{app.formal_name}.app'.format(app=app)
+        return self.platform_path / '{app.formal_name}'.format(app=app)
 
 
-class MacOSAppCreateCommand(MacOSAppMixin, CreateCommand):
-    description = "Create and populate a macOS .app bundle."
+class iOSAppCreateCommand(iOSAppMixin, CreateCommand):
+    description = "Create and populate a iOS Xcode project."
 
 
-class MacOSAppUpdateCommand(MacOSAppMixin, UpdateCommand):
-    description = "Update an existing macOS .app bundle."
+class iOSAppUpdateCommand(iOSAppMixin, UpdateCommand):
+    description = "Update an existing iOS Xcode project."
 
 
-class MacOSAppBuildCommand(MacOSAppMixin, BuildCommand):
-    description = "Build a macOS .app bundle."
+class iOSAppBuildCommand(iOSAppMixin, BuildCommand):
+    description = "Build an iOS Xcode project."
 
 
-class MacOSAppRunCommand(MacOSAppMixin, RunCommand):
-    description = "Run a macOS .app bundle."
+class iOSAppRunCommand(iOSAppMixin, RunCommand):
+    description = "Run an iOS Xcode project."
 
     def run_app(self, app: BaseConfig):
         """
@@ -66,13 +65,15 @@ class MacOSAppRunCommand(MacOSAppMixin, RunCommand):
             )
 
 
-class MacOSAppPublishCommand(MacOSAppMixin, PublishCommand):
-    description = "Publish a macOS .app bundle."
+class iOSAppPublishCommand(iOSAppMixin, PublishCommand):
+    description = "Publish an iOS app."
+    publication_channels = ['ios_appstore']
+    default_publication_channel = 'ios_appstore'
 
 
 # Declare the briefcase command bindings
-create = MacOSAppCreateCommand  # noqa
-update = MacOSAppUpdateCommand  # noqa
-build = MacOSAppBuildCommand  # noqa
-run = MacOSAppRunCommand  # noqa
-publish = MacOSAppPublishCommand  # noqa
+create = iOSAppCreateCommand  # noqa
+update = iOSAppUpdateCommand  # noqa
+build = iOSAppBuildCommand  # noqa
+run = iOSAppRunCommand  # noqa
+publish = iOSAppPublishCommand  # noqa

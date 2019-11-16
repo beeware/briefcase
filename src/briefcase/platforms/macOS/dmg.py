@@ -5,10 +5,10 @@ from briefcase.commands import (
     RunCommand,
     UpdateCommand
 )
-from briefcase.platforms.macos import MacOSMixin
+from briefcase.platforms.macOS import macOSMixin
 
 
-class MacOSDmgMixin(MacOSMixin):
+class macOSDmgMixin(macOSMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, output_format='dmg', **kwargs)
 
@@ -19,23 +19,23 @@ class MacOSDmgMixin(MacOSMixin):
         return self.platform_path / '{app.formal_name}.app'.format(app=app)
 
 
-class MacOSDmgCreateCommand(MacOSDmgMixin, CreateCommand):
+class macOSDmgCreateCommand(macOSDmgMixin, CreateCommand):
     description = "Create and populate a macOS .dmg bundle."
 
 
-class MacOSDmgUpdateCommand(MacOSDmgMixin, UpdateCommand):
+class macOSDmgUpdateCommand(macOSDmgMixin, UpdateCommand):
     description = "Update an existing macOS .dmg bundle."
 
 
-class MacOSDmgBuildCommand(MacOSDmgMixin, BuildCommand):
+class macOSDmgBuildCommand(macOSDmgMixin, BuildCommand):
     description = "Build a macOS .dmg bundle."
 
 
-class MacOSDmgRunCommand(MacOSDmgMixin, RunCommand):
+class macOSDmgRunCommand(macOSDmgMixin, RunCommand):
     description = "Run a macOS .dmg bundle."
 
 
-class MacOSDmgPublishCommand(MacOSDmgMixin, PublishCommand):
+class macOSDmgPublishCommand(macOSDmgMixin, PublishCommand):
     description = "Publish a macOS .dmg bundle."
 
     def add_options(self):
@@ -50,8 +50,8 @@ class MacOSDmgPublishCommand(MacOSDmgMixin, PublishCommand):
 
 
 # Declare the briefcase command bindings
-create = MacOSDmgCreateCommand  # noqa
-update = MacOSDmgUpdateCommand  # noqa
-build = MacOSDmgBuildCommand  # noqa
-run = MacOSDmgRunCommand  # noqa
-publish = MacOSDmgPublishCommand  # noqa
+create = macOSDmgCreateCommand  # noqa
+update = macOSDmgUpdateCommand  # noqa
+build = macOSDmgBuildCommand  # noqa
+run = macOSDmgRunCommand  # noqa
+publish = macOSDmgPublishCommand  # noqa

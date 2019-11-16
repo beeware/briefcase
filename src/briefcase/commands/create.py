@@ -659,6 +659,7 @@ class CreateCommand(BaseCommand):
                 app=app
             ))
             shutil.rmtree(bundle_path)
+
         print()
         print('[{app.name}] Generating application template...'.format(
             app=app

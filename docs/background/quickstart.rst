@@ -96,7 +96,7 @@ http://setuptools.readthedocs.io/en/latest/setuptools.html#dynamic-discovery-of-
 
 On Windows and Linux this allows for multiple executables to be defined.
 macOS will use the entry point with the same name as your `formal_name` as the
-main application, any others will be available in the Contents/MacOS folder inside the
+main application, any others will be available in the Contents/macOS folder inside the
 application bundle.
 
 For other platforms the entry point is defined in the platform template, typically

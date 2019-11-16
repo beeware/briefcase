@@ -48,20 +48,29 @@ def parse_cmdline(args):
     )
 
     # <platform> *is* optional, with the default value based on the platform
-    # that you're on. It also normalizes case so "macOS" can be used to find
-    # the "macos" backend.
+    # that you're on.
     platforms = get_platforms()
+
+    # To make the UX a little forgiving, we normalize *any* case to the case
+    # actually used to register the platform. This function maps the lower-case
+    # version of the registered name to the actual registered name.
+    def normalize(name):
+        return {
+            n.lower(): n
+            for n in platforms.keys()
+        }.get(name.lower(), name)
+
     parser.add_argument(
         'platform',
         choices=list(platforms.keys()),
         default={
-            'darwin': 'macos',
+            'darwin': 'macOS',
             'linux': 'linux',
             'win32': 'windows',
         }[sys.platform],
         metavar='platform',
         nargs='?',
-        type=str.lower,
+        type=normalize,
         help='The platform to target (one of %(choices)s; default: %(default)s',
     )
 
