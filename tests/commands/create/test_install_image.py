@@ -21,6 +21,26 @@ def test_no_sources(create_command, tmp_path, capsys):
     create_command.shutil.copy.assert_not_called()
 
 
+def test_no_sources_with_size(create_command, tmp_path, capsys):
+    "If the app doesn't define any sources, and a size is requested, no image is installed"
+    create_command.shutil = mock.MagicMock()
+
+    # Try to install the image from no source.
+    out_path = tmp_path / 'output.png'
+    create_command.install_image(
+        'sample image',
+        size='3742',
+        sources=None,
+        target=out_path
+    )
+
+    # The right message was written to output
+    assert capsys.readouterr().out == "No 3742px sample image defined in app config; using default\n"
+
+    # No file was installed.
+    create_command.shutil.copy.assert_not_called()
+
+
 def test_simple_source_no_requested_size(create_command, tmp_path, capsys):
     "If the app specifies a single image, but no size, the image is used as-is."
     create_command.shutil = mock.MagicMock()

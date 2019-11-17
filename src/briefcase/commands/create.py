@@ -524,7 +524,15 @@ class CreateCommand(BaseCommand):
         :param target: The full path where the image should be installed.
         """
         if sources is None:
-            print("No {role} defined in app config; using default".format(role=role))
+            if size is None:
+                print("No {role} defined in app config; using default".format(
+                    role=role,
+                ))
+            else:
+                print("No {size}px {role} defined in app config; using default".format(
+                    role=role,
+                    size=size,
+                ))
         elif isinstance(sources, str):
             # A single image source has been provided
             source = self.base_path / sources
