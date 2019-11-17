@@ -408,7 +408,7 @@ class CreateCommand(BaseCommand):
             # Work out if the app defines a custom override for
             # the support package URL.
             try:
-                support_package_url = app.support_package_url
+                support_package_url = app.support_package
                 print("Using custom support package {support_package_url}".format(
                     support_package_url=support_package_url
                 ))
@@ -418,12 +418,15 @@ class CreateCommand(BaseCommand):
                     support_package_url=support_package_url
                 ))
 
-            # Download the support file, caching the result
-            # in the user's briefcase support cache directory.
-            support_filename = self.download_url(
-                url=support_package_url,
-                download_path=Path.home() / '.briefcase' / 'support'
-            )
+            if support_package_url.startswith('https://') or support_package_url.startswith('http://'):
+                # Download the support file, caching the result
+                # in the user's briefcase support cache directory.
+                support_filename = self.download_url(
+                    url=support_package_url,
+                    download_path=Path.home() / '.briefcase' / 'support'
+                )
+            else:
+                support_filename = support_package_url
         except requests_exceptions.ConnectionError:
             raise NetworkFailure('downloading support package')
 
