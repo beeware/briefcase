@@ -103,12 +103,12 @@ class macos(app):
 
     def build_app(self):
         print("Building DMG file...")
-        dmg_name = self.formal_name + '.dmg'
+        dmg_name = self.formal_name + '-' + self.version + '.dmg'
         dmg_path = os.path.join(os.path.abspath(self.dir), dmg_name)
 
         dmgbuild.build_dmg(
             filename=dmg_path,
-            volume_name=self.formal_name,
+            volume_name=self.formal_name + ' ' + self.version,
             settings={
                 'files': [self.app_location],
                 'symlinks': {'Applications': '/Applications'},
