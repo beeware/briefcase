@@ -12,9 +12,9 @@ from briefcase.exceptions import BriefcaseCommandError
 from briefcase.platforms.iOS import iOSMixin
 
 
-class iOSAppMixin(iOSMixin):
+class iOSXcodeMixin(iOSMixin):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, output_format='app', **kwargs)
+        super().__init__(*args, output_format='Xcode', **kwargs)
 
     def binary_path(self, app):
         return self.platform_path / '{app.formal_name} / {app.formal_name}.xcodeproj'.format(app=app)
@@ -23,19 +23,19 @@ class iOSAppMixin(iOSMixin):
         return self.platform_path / '{app.formal_name}'.format(app=app)
 
 
-class iOSAppCreateCommand(iOSAppMixin, CreateCommand):
+class iOSXcodeCreateCommand(iOSXcodeMixin, CreateCommand):
     description = "Create and populate a iOS Xcode project."
 
 
-class iOSAppUpdateCommand(iOSAppMixin, UpdateCommand):
+class iOSXcodeUpdateCommand(iOSXcodeMixin, UpdateCommand):
     description = "Update an existing iOS Xcode project."
 
 
-class iOSAppBuildCommand(iOSAppMixin, BuildCommand):
+class iOSXcodeBuildCommand(iOSXcodeMixin, BuildCommand):
     description = "Build an iOS Xcode project."
 
 
-class iOSAppRunCommand(iOSAppMixin, RunCommand):
+class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
     description = "Run an iOS Xcode project."
 
     def run_app(self, app: BaseConfig):
@@ -65,15 +65,15 @@ class iOSAppRunCommand(iOSAppMixin, RunCommand):
             )
 
 
-class iOSAppPublishCommand(iOSAppMixin, PublishCommand):
+class iOSXcodePublishCommand(iOSXcodeMixin, PublishCommand):
     description = "Publish an iOS app."
     publication_channels = ['ios_appstore']
     default_publication_channel = 'ios_appstore'
 
 
 # Declare the briefcase command bindings
-create = iOSAppCreateCommand  # noqa
-update = iOSAppUpdateCommand  # noqa
-build = iOSAppBuildCommand  # noqa
-run = iOSAppRunCommand  # noqa
-publish = iOSAppPublishCommand  # noqa
+create = iOSXcodeCreateCommand  # noqa
+update = iOSXcodeUpdateCommand  # noqa
+build = iOSXcodeBuildCommand  # noqa
+run = iOSXcodeRunCommand  # noqa
+publish = iOSXcodePublishCommand  # noqa
