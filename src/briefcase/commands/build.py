@@ -22,10 +22,11 @@ class BuildCommand(BaseCommand):
         """
         # Default implementation; nothing to build.
 
-    def build_single_app(self, app: BaseConfig):
+    def _build_app(self, app: BaseConfig):
         """
         Internal method to invoke a build on a single app.
-        Ensures the app exists, and has been updated (if requested)
+        Ensures the app exists, and has been updated (if requested) before
+        attempting to issue the actual build command.
 
         :param app: The application to build
         """
@@ -41,7 +42,7 @@ class BuildCommand(BaseCommand):
         self.verify_tools()
 
         if app:
-            self.build_single_app(app)
+            self._build_app(app)
         else:
             for app_name, app in self.apps.items():
-                self.build_single_app(app)
+                self._build_app(app)
