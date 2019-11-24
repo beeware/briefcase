@@ -48,11 +48,12 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
         parser.add_argument(
             '-d',
             '--device',
+            dest='udid',
             help='The device UDID to target',
             required=False,
         )
 
-    def select_target_device(self):
+    def select_target_device(self, udid=None):
         """
         Select the target device to use for iOS builds.
 
@@ -66,15 +67,19 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
 
         If the user has specified a device at the command line, it will be
         used in preference to any
+
+        :param udid: The device UDID to target. If ``None``, the user will
+            be asked to select a device at runtime.
+        :returns: A tuple containing the udid, iOS version, and device name
+            for the selected device.
         """
         simulators = self.get_simulators('iOS', sub=self.subprocess)
-
-        if self.options.device:
+        if udid:
             # User has provided a UDID at the command line; look for it.
             for iOS_version, devices in simulators.items():
                 try:
-                    device = devices[self.options.device]
-                    return self.options.device, iOS_version, device
+                    device = devices[udid]
+                    return udid, iOS_version, device
                 except KeyError:
                     # UDID doesn't exist in this iOS version; try another.
                     pass
@@ -83,7 +88,7 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
             # found no match; return an error.
             raise BriefcaseCommandError(
                 "Invalid simulator UDID {udid}".format(
-                    udid=self.options.device
+                    udid=udid
                 )
             )
 
@@ -134,13 +139,15 @@ class iOSXcodeUpdateCommand(iOSXcodePassiveMixin, UpdateCommand):
 class iOSXcodeBuildCommand(iOSXcodeMixin, BuildCommand):
     description = "Build an iOS Xcode project."
 
-    def build_app(self, app: BaseConfig):
+    def build_app(self, app: BaseConfig, udid=None):
         """
         Build the Xcode project for the application.
 
         :param app: The application to build
+        :param udid: The device UDID to target. If ``None``, the user will
+            be asked to select a device at runtime.
         """
-        udid, iOS_version, device = self.select_target_device()
+        udid, iOS_version, device = self.select_target_device(udid=udid)
 
         print()
         print("Targeting an {device} running iOS {iOS_version} (device UDID {udid})".format(
@@ -201,14 +208,16 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         self.get_device_state = get_device_state
         self.sleep = time.sleep
 
-    def run_app(self, app: BaseConfig):
+    def run_app(self, app: BaseConfig, udid=None, **kwargs):
         """
         Start the application.
 
         :param app: The config object for the app
+        :param udid: The device UDID to target. If ``None``, the user will
+            be asked to select a device at runtime.
         :param base_path: The path to the project directory.
         """
-        udid, iOS_version, device = self.select_target_device()
+        udid, iOS_version, device = self.select_target_device(udid=udid)
         print()
         print("Targeting an {device} running iOS {iOS_version} (device UDID {udid})".format(
             device=device,

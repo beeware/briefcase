@@ -11,10 +11,10 @@ def test_specific_app(build_command, first_app, second_app):
 
     # Configure no command line options
     parser = argparse.ArgumentParser(prog='briefcase')
-    build_command.parse_options(parser, [])
+    options = build_command.parse_options(parser, [])
 
     # Run the build command
-    build_command(first_app)
+    build_command(first_app, **options)
 
     # The right sequence of things will be done
     assert build_command.actions == [
@@ -33,10 +33,10 @@ def test_multiple_apps(build_command, first_app, second_app):
 
     # Configure no command line options
     parser = argparse.ArgumentParser(prog='briefcase')
-    build_command.parse_options(parser, [])
+    options = build_command.parse_options(parser, [])
 
     # Run the build command
-    build_command()
+    build_command(**options)
 
     # The right sequence of things will be done
     assert build_command.actions == [
@@ -58,10 +58,10 @@ def test_non_existent(build_command, first_app_config, second_app):
 
     # Configure no command line options
     parser = argparse.ArgumentParser(prog='briefcase')
-    build_command.parse_options(parser, [])
+    options = build_command.parse_options(parser, [])
 
     # Run the build command
-    build_command()
+    build_command(**options)
 
     # The right sequence of things will be done
     assert build_command.actions == [
@@ -84,10 +84,10 @@ def test_unbuilt(build_command, first_app_unbuilt, second_app):
 
     # Configure no command line options
     parser = argparse.ArgumentParser(prog='briefcase')
-    build_command.parse_options(parser, [])
+    options = build_command.parse_options(parser, [])
 
     # Run the build command
-    build_command()
+    build_command(**options)
 
     # The right sequence of things will be done
     assert build_command.actions == [
@@ -109,10 +109,10 @@ def test_update_app(build_command, first_app, second_app):
 
     # Configure a -a command line option
     parser = argparse.ArgumentParser(prog='briefcase')
-    build_command.parse_options(parser, ['-u'])
+    options = build_command.parse_options(parser, ['-u'])
 
     # Run the build command
-    build_command()
+    build_command(**options)
 
     # The right sequence of things will be done
     assert build_command.actions == [
@@ -136,10 +136,10 @@ def test_update_non_existent(build_command, first_app_config, second_app):
 
     # Configure no command line options
     parser = argparse.ArgumentParser(prog='briefcase')
-    build_command.parse_options(parser, ['-u'])
+    options = build_command.parse_options(parser, ['-u'])
 
     # Run the build command
-    build_command()
+    build_command(**options)
 
     # The right sequence of things will be done
     assert build_command.actions == [
@@ -163,10 +163,10 @@ def test_update_unbuilt(build_command, first_app_unbuilt, second_app):
 
     # Configure no command line options
     parser = argparse.ArgumentParser(prog='briefcase')
-    build_command.parse_options(parser, ['-u'])
+    options = build_command.parse_options(parser, ['-u'])
 
     # Run the build command
-    build_command()
+    build_command(**options)
 
     # The right sequence of things will be done
     assert build_command.actions == [

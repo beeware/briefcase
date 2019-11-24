@@ -11,6 +11,7 @@ class RunCommand(BaseCommand):
         parser.add_argument(
             '-a',
             '--app',
+            dest='appname',
             help='The app to run'
         )
         parser.add_argument(
@@ -29,19 +30,19 @@ class RunCommand(BaseCommand):
         """
         ...
 
-    def __call__(self):
+    def __call__(self, appname: str = None, update=False, **kwargs):
         # Which app should we run? If there's only one defined
         # in pyproject.toml, then we can use it as a default;
         # otherwise look for a -a/--app option.
         if len(self.apps) == 1:
             app = list(self.apps.values())[0]
-        elif self.options.app:
+        elif appname:
             try:
-                app = self.apps[self.options.app]
+                app = self.apps[appname]
             except KeyError:
                 raise BriefcaseCommandError(
                     "Project doesn't define an application named '{appname}'".format(
-                        appname=self.options.app
+                        appname=appname
                     ))
         else:
             raise BriefcaseCommandError(
@@ -52,12 +53,12 @@ class RunCommand(BaseCommand):
         template_file = self.bundle_path(app)
         binary_file = self.binary_path(app)
         if not template_file.exists():
-            self.create_command(app)
-            self.build_command(app)
-        elif self.options.update:
-            self.update_command(app)
-            self.build_command(app)
+            self.create_command(app, **kwargs)
+            self.build_command(app, **kwargs)
+        elif update:
+            self.update_command(app, **kwargs)
+            self.build_command(app, **kwargs)
         elif not binary_file.exists():
-            self.build_command(app)
+            self.build_command(app, **kwargs)
 
-        self.run_app(app)
+        self.run_app(app, **kwargs)

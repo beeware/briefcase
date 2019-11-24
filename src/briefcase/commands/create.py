@@ -706,7 +706,7 @@ class CreateCommand(BaseCommand):
             app=app
         ))
 
-    def __call__(self, app: Optional[BaseConfig] = None):
+    def __call__(self, app: Optional[BaseConfig] = None, **kwargs):
         self.verify_tools()
 
         if app:

@@ -36,7 +36,7 @@ class PublishCommand(BaseCommand):
             channel=channel,
         ))
 
-    def __call__(self):
+    def __call__(self, channel=None, **kwargs):
         self.verify_tools()
 
         # Check the apps have been built first.
@@ -52,4 +52,4 @@ class PublishCommand(BaseCommand):
 
         # Then publish them all to the selected channel.
         for app_name, app in sorted(self.apps.items()):
-            self.publish_app(app, channel=self.options.channel)
+            self.publish_app(app, channel=channel)

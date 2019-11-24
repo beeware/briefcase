@@ -6,7 +6,7 @@ import pytest
 def test_parse_options(base_command):
     "Command line options are parsed if provided"
     parser = argparse.ArgumentParser(prog='briefcase')
-    base_command.parse_options(
+    options = base_command.parse_options(
         parser=parser,
         extra=(
             '-x', 'wibble',
@@ -14,9 +14,11 @@ def test_parse_options(base_command):
         )
     )
 
-    assert base_command.options.extra == "wibble"
-    assert base_command.options.mystery is None
-    assert base_command.options.required == "important"
+    assert options == {
+        'extra': "wibble",
+        'mystery':  None,
+        'required': "important",
+    }
 
 
 def test_missing_option(base_command, capsys):

@@ -88,44 +88,48 @@ def test_bare_command(monkeypatch):
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, 'platform', 'darwin')
 
-    cmd = parse_cmdline('create'.split())
+    cmd, options = parse_cmdline('create'.split())
 
     assert isinstance(cmd, macOSAppCreateCommand)
     assert cmd.platform == 'macOS'
     assert cmd.output_format == 'app'
+    assert options == {'verbosity': 1}
 
 
 @pytest.mark.skipif(sys.platform != 'linux', reason="requires Linux")
 def test_linux_default():
     "``briefcase create`` returns the linux create appimage command on Linux"
 
-    cmd = parse_cmdline('create'.split())
+    cmd, options = parse_cmdline('create'.split())
 
     assert isinstance(cmd, LinuxAppImageCreateCommand)
     assert cmd.platform == 'linux'
     assert cmd.output_format == 'appimage'
+    assert options == {'verbosity': 1}
 
 
 @pytest.mark.skipif(sys.platform != 'darwin', reason="requires macOS")
 def test_macOS_default():
     "``briefcase create`` returns the linux create appimage command on Linux"
 
-    cmd = parse_cmdline('create'.split())
+    cmd, options = parse_cmdline('create'.split())
 
     assert isinstance(cmd, macOSAppCreateCommand)
     assert cmd.platform == 'macOS'
     assert cmd.output_format == 'app'
+    assert options == {'verbosity': 1}
 
 
 @pytest.mark.skipif(sys.platform != 'win32', reason="requires Windows")
 def test_windows_default():
     "``briefcase create`` returns the Windows create msi command on Windows"
 
-    cmd = parse_cmdline('create'.split())
+    cmd, options = parse_cmdline('create'.split())
 
     assert isinstance(cmd, WindowsMSICreateCommand)
     assert cmd.platform == 'windows'
     assert cmd.output_format == 'msi'
+    assert options == {'verbosity': 1}
 
 
 def test_bare_command_help(monkeypatch, capsys):
@@ -192,11 +196,12 @@ def test_command_explicit_platform(monkeypatch):
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, 'platform', 'darwin')
 
-    cmd = parse_cmdline('create linux'.split())
+    cmd, options = parse_cmdline('create linux'.split())
 
     assert isinstance(cmd, LinuxAppImageCreateCommand)
     assert cmd.platform == 'linux'
     assert cmd.output_format == 'appimage'
+    assert options == {'verbosity': 1}
 
 
 def test_command_explicit_platform_case_handling(monkeypatch):
@@ -205,11 +210,12 @@ def test_command_explicit_platform_case_handling(monkeypatch):
     monkeypatch.setattr(sys, 'platform', 'darwin')
 
     # This is all lower case; the command normalizes to macOS
-    cmd = parse_cmdline('create macOS'.split())
+    cmd, options = parse_cmdline('create macOS'.split())
 
     assert isinstance(cmd, macOSAppCreateCommand)
     assert cmd.platform == 'macOS'
     assert cmd.output_format == 'app'
+    assert options == {'verbosity': 1}
 
 
 def test_command_explicit_platform_help(monkeypatch, capsys):
@@ -251,11 +257,12 @@ def test_command_explicit_format(monkeypatch):
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, 'platform', 'darwin')
 
-    cmd = parse_cmdline('create macOS dmg'.split())
+    cmd, options = parse_cmdline('create macOS dmg'.split())
 
     assert isinstance(cmd, macOSDmgCreateCommand)
     assert cmd.platform == 'macOS'
     assert cmd.output_format == 'dmg'
+    assert options == {'verbosity': 1}
 
 
 def test_command_unknown_format(monkeypatch):
@@ -317,10 +324,13 @@ def test_command_options(monkeypatch, capsys):
 
     # Invoke a command that is known to have it's own custom arguments
     # (In this case, the channel argument for publication)
-    cmd = parse_cmdline('publish macos app -c s3'.split())
+    cmd, options = parse_cmdline('publish macos app -c s3'.split())
 
     assert isinstance(cmd, macOSAppPublishCommand)
-    assert cmd.options.channel == 's3'
+    assert options == {
+        'verbosity': 1,
+        'channel': 's3'
+    }
 
 
 def test_unknown_command_options(monkeypatch, capsys):

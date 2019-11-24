@@ -20,7 +20,7 @@ class UpdateCommand(CreateCommand):
             help='Update extra app resources'
         )
 
-    def update_app(self, app: BaseConfig, update_dependencies=False, update_extras=False):
+    def update_app(self, app: BaseConfig, update_dependencies=False, update_extras=False, **kwargs):
         """
         Update an existing application bundle.
 
@@ -61,19 +61,27 @@ class UpdateCommand(CreateCommand):
             app=app
         ))
 
-    def __call__(self, app: Optional[BaseConfig] = None):
+    def __call__(
+        self,
+        app: Optional[BaseConfig] = None,
+        update_dependencies: bool = False,
+        update_extra: bool = False,
+        **kwargs
+    ):
         self.verify_tools()
 
         if app:
             self.update_app(
                 app,
-                update_dependencies=self.options.update_dependencies,
-                update_extras=self.options.update_extra,
+                update_dependencies=update_dependencies,
+                update_extras=update_extra,
+                **kwargs,
             )
         else:
             for app_name, app in sorted(self.apps.items()):
                 self.update_app(
                     app,
-                    update_dependencies=self.options.update_dependencies,
-                    update_extras=self.options.update_extra,
+                    update_dependencies=update_dependencies,
+                    update_extras=update_extra,
+                    **kwargs,
                 )

@@ -14,10 +14,10 @@ def test_no_args_one_app(run_command, first_app):
 
     # Configure no command line options
     parser = argparse.ArgumentParser(prog='briefcase')
-    run_command.parse_options(parser, [])
+    options = run_command.parse_options(parser, [])
 
     # Run the run command
-    run_command()
+    run_command(**options)
 
     # The right sequence of things will be done
     assert run_command.actions == [
@@ -36,11 +36,11 @@ def test_no_args_two_apps(run_command, first_app, second_app):
 
     # Configure no command line options
     parser = argparse.ArgumentParser(prog='briefcase')
-    run_command.parse_options(parser, [])
+    options = run_command.parse_options(parser, [])
 
     # Invoking the run command raises an error
     with pytest.raises(BriefcaseCommandError):
-        run_command()
+        run_command(**options)
 
     # No actions will be performed
     assert run_command.actions == []
@@ -55,10 +55,10 @@ def test_with_arg_one_app(run_command, first_app):
 
     # Configure a -a command line option
     parser = argparse.ArgumentParser(prog='briefcase')
-    run_command.parse_options(parser, ['-a', 'first'])
+    options = run_command.parse_options(parser, ['-a', 'first'])
 
     # Run the run command
-    run_command()
+    run_command(**options)
 
     # The right sequence of things will be done
     assert run_command.actions == [
@@ -77,10 +77,10 @@ def test_with_arg_two_apps(run_command, first_app, second_app):
 
     # Configure a --app command line option
     parser = argparse.ArgumentParser(prog='briefcase')
-    run_command.parse_options(parser, ['--app', 'second'])
+    options = run_command.parse_options(parser, ['--app', 'second'])
 
     # Run the run command
-    run_command()
+    run_command(**options)
 
     # The right sequence of things will be done
     assert run_command.actions == [
@@ -99,11 +99,11 @@ def test_bad_app_reference(run_command, first_app, second_app):
 
     # Configure a --app command line option
     parser = argparse.ArgumentParser(prog='briefcase')
-    run_command.parse_options(parser, ['--app', 'does-not-exist'])
+    options = run_command.parse_options(parser, ['--app', 'does-not-exist'])
 
     # Invoking the run command raises an error
     with pytest.raises(BriefcaseCommandError):
-        run_command()
+        run_command(**options)
 
     # No actions will be performed
     assert run_command.actions == []
@@ -118,10 +118,10 @@ def test_create_app_before_start(run_command, first_app_config):
 
     # Configure no command line options
     parser = argparse.ArgumentParser(prog='briefcase')
-    run_command.parse_options(parser, [])
+    options = run_command.parse_options(parser, [])
 
     # Run the run command
-    run_command()
+    run_command(**options)
 
     # The right sequence of things will be done
     assert run_command.actions == [
@@ -143,10 +143,10 @@ def test_update_app(run_command, first_app):
 
     # Configure no command line options
     parser = argparse.ArgumentParser(prog='briefcase')
-    run_command.parse_options(parser, ['-u'])
+    options = run_command.parse_options(parser, ['-u'])
 
     # Run the run command
-    run_command()
+    run_command(**options)
 
     # The right sequence of things will be done
     assert run_command.actions == [
@@ -168,10 +168,10 @@ def test_update_uncompiled_app(run_command, first_app_uncompiled):
 
     # Configure no command line options
     parser = argparse.ArgumentParser(prog='briefcase')
-    run_command.parse_options(parser, ['-u'])
+    options = run_command.parse_options(parser, ['-u'])
 
     # Run the run command
-    run_command()
+    run_command(**options)
 
     # The right sequence of things will be done
     assert run_command.actions == [
@@ -193,10 +193,10 @@ def test_update_non_existent(run_command, first_app_config):
 
     # Configure no command line options
     parser = argparse.ArgumentParser(prog='briefcase')
-    run_command.parse_options(parser, ['-u'])
+    options = run_command.parse_options(parser, ['-u'])
 
     # Run the run command
-    run_command()
+    run_command(**options)
 
     # The right sequence of things will be done
     assert run_command.actions == [

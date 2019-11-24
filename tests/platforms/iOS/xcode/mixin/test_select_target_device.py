@@ -45,11 +45,10 @@ def test_explicit_device(dummy_command):
             'EEEBA06C-81F9-407C-885A-2261306DB2BE': 'iPhone 11 Pro Max',
         }
     }
-    # The user nominates a specific device
-    dummy_command.options.device = '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D'
 
     # The target device will be the one the user specified as an option.
-    udid, iOS_version, device = dummy_command.select_target_device()
+    result = dummy_command.select_target_device('2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D')
+    udid, iOS_version, device = result
 
     assert udid == '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D'
     assert iOS_version == '13.2'
@@ -66,11 +65,10 @@ def test_invalid_explcit_device(dummy_command):
             'EEEBA06C-81F9-407C-885A-2261306DB2BE': 'iPhone 11 Pro Max',
         }
     }
-    # The user nominates a specific device that doesn't exist
-    dummy_command.options.device = 'deadbeef-dead-beef-cafe-deadbeefdead'
 
+    # The user nominates a specific device that doesn't exist
     with pytest.raises(BriefcaseCommandError):
-        dummy_command.select_target_device()
+        dummy_command.select_target_device('deadbeef-dead-beef-cafe-deadbeefdead')
 
 
 def test_implied_device(dummy_command):

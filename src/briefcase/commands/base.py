@@ -52,7 +52,6 @@ class BaseCommand(ABC):
         self.base_path = base_path
         self.platform = platform
         self.output_format = output_format
-        self.options = None
 
         self.global_config = None
         self.apps = {} if apps is None else apps
@@ -157,7 +156,7 @@ class BaseCommand(ABC):
         # Parse the full set of command line options from the content
         # remaining after the basic command/platform/output format
         # has been extracted.
-        self.options = parser.parse_args(extra)
+        return vars(parser.parse_args(extra))
 
     def add_options(self, parser):
         """

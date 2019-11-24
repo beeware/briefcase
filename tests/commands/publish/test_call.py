@@ -15,10 +15,10 @@ def test_publish(publish_command, first_app, second_app):
 
     # Configure no command line options
     parser = argparse.ArgumentParser(prog='briefcase')
-    publish_command.parse_options(parser, [])
+    options = publish_command.parse_options(parser, [])
 
     # Run the publish command
-    publish_command()
+    publish_command(**options)
 
     # The right sequence of things will be done
     assert publish_command.actions == [
@@ -40,10 +40,10 @@ def test_publish_alternative_channel(publish_command, first_app, second_app):
 
     # Configure no command line options
     parser = argparse.ArgumentParser(prog='briefcase')
-    publish_command.parse_options(parser, ['-c', 'alternative'])
+    options = publish_command.parse_options(parser, ['-c', 'alternative'])
 
     # Run the publish command
-    publish_command()
+    publish_command(**options)
 
     # The right sequence of things will be done
     assert publish_command.actions == [
@@ -65,11 +65,11 @@ def test_non_existent(publish_command, first_app_config, second_app):
 
     # Configure no command line options
     parser = argparse.ArgumentParser(prog='briefcase')
-    publish_command.parse_options(parser, [])
+    options = publish_command.parse_options(parser, [])
 
     # Invoking the publish command raises an error
     with pytest.raises(BriefcaseCommandError):
-        publish_command()
+        publish_command(**options)
 
     # The right sequence of things will be done
     assert publish_command.actions == []
@@ -85,11 +85,11 @@ def test_unbuilt(publish_command, first_app_unbuilt, second_app):
 
     # Configure no command line options
     parser = argparse.ArgumentParser(prog='briefcase')
-    publish_command.parse_options(parser, [])
+    options = publish_command.parse_options(parser, [])
 
     # Invoking the publish command raises an error
     with pytest.raises(BriefcaseCommandError):
-        publish_command()
+        publish_command(**options)
 
     # The right sequence of things will be done
     assert publish_command.actions == []

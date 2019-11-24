@@ -155,8 +155,8 @@ def parse_cmdline(args):
     )
 
     command = Command(base_path=Path.cwd())
-    command.parse_options(
+    options = command.parse_options(
         parser=command_parser,
         extra=extra
     )
-    return command
+    return command, options

@@ -56,7 +56,7 @@ def first_app_uncompiled(first_app_config, tmp_path):
     # The same fixture as first_app_config,
     # but ensures that the bundle for the app exists
     (tmp_path / 'tester' / 'first').mkdir(parents=True, exist_ok=True)
-    with open(tmp_path / 'tester' / 'first' / 'first.dummy', 'w') as f:
+    with (tmp_path / 'tester' / 'first' / 'first.dummy').open('w') as f:
         f.write('first.dummy')
 
     return first_app_config
