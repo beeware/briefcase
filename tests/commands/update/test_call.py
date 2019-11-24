@@ -27,7 +27,7 @@ def test_update_single(update_command, first_app, second_app):
     parser = argparse.ArgumentParser(prog='briefcase')
     options = update_command.parse_options(parser, [])
 
-    update_command(app=update_command.apps['first'])
+    update_command(app=update_command.apps['first'], **options)
 
     # The right sequence of things will be done
     assert update_command.actions == [
