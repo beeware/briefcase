@@ -67,7 +67,7 @@ def test_icon_target(create_command, tmp_path):
             sources='images/icon.png',
             target=tmp_path / 'tester/my-app.bundle/path/to/icon-20.png'
         ),
-    ])
+    ], any_order=True)
 
 
 def test_splash_target(create_command, tmp_path):
@@ -111,7 +111,7 @@ def test_splash_target(create_command, tmp_path):
             sources='images/splash.png',
             target=tmp_path / 'tester/my-app.bundle/path/to/splash-20x30.png'
         ),
-    ])
+    ], any_order=True)
 
 
 def test_doctype_icon_target(create_command, tmp_path):
@@ -182,4 +182,4 @@ def test_doctype_icon_target(create_command, tmp_path):
             },
             target=tmp_path / 'tester/my-app.bundle/path/to/other-icon-20.png'
         ),
-    ])
+    ], any_order=True)

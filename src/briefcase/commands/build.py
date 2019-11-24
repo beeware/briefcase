@@ -44,5 +44,5 @@ class BuildCommand(BaseCommand):
         if app:
             self._build_app(app)
         else:
-            for app_name, app in self.apps.items():
+            for app_name, app in sorted(self.apps.items()):
                 self._build_app(app)

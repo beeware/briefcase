@@ -12,10 +12,10 @@ def assert_dist_info(app_path):
     assert (dist_info_path / 'INSTALLER').exists()
     assert (dist_info_path / 'METADATA').exists()
 
-    with open(dist_info_path / 'INSTALLER') as f:
+    with (dist_info_path / 'INSTALLER').open() as f:
         assert f.read() == 'briefcase\n'
 
-    with open(dist_info_path / 'METADATA') as f:
+    with (dist_info_path / 'METADATA').open() as f:
         assert f.read() == """Metadata-Version: 2.1
 Name: my-app
 Formal-Name: My App
@@ -86,15 +86,15 @@ def test_source_dir(create_command, myapp, tmp_path, app_path):
     #       deeper.py
     first_src = tmp_path / 'src' / 'first' / 'demo.py'
     first_src.parent.mkdir(parents=True)
-    with open(first_src, 'w') as f:
+    with (first_src).open('w') as f:
         f.write("print('hello first')\n")
 
     second_shallow_src = tmp_path / 'src' / 'second' / 'shallow.py'
     second_deep_src = tmp_path / 'src' / 'second' / 'submodule' / 'deeper.py'
     second_deep_src.parent.mkdir(parents=True)
-    with open(second_shallow_src, 'w') as f:
+    with (second_shallow_src).open('w') as f:
         f.write("print('hello shallow second')\n")
-    with open(second_deep_src, 'w') as f:
+    with (second_deep_src).open('w') as f:
         f.write("print('hello deep second')\n")
 
     # Set the app definition, and install sources
@@ -125,11 +125,11 @@ def test_source_file(create_command, myapp, tmp_path, app_path):
     #   other.py
     first_src = tmp_path / 'src' / 'first' / 'demo.py'
     first_src.parent.mkdir(parents=True)
-    with open(first_src, 'w') as f:
+    with (first_src).open('w') as f:
         f.write("print('hello first')\n")
 
     second_src = tmp_path / 'src' / 'other.py'
-    with open(second_src, 'w') as f:
+    with (second_src).open('w') as f:
         f.write("print('hello second')\n")
 
     # Set the app definition, and install sources
@@ -157,15 +157,15 @@ def test_replace_sources(create_command, myapp, tmp_path, app_path):
     #       deeper.py
     first_src = tmp_path / 'src' / 'first' / 'demo.py'
     first_src.parent.mkdir(parents=True)
-    with open(first_src, 'w') as f:
+    with (first_src).open('w') as f:
         f.write("print('hello first')\n")
 
     second_shallow_src = tmp_path / 'src' / 'second' / 'shallow.py'
     second_deep_src = tmp_path / 'src' / 'second' / 'submodule' / 'deeper.py'
     second_deep_src.parent.mkdir(parents=True)
-    with open(second_shallow_src, 'w') as f:
+    with (second_shallow_src).open('w') as f:
         f.write("print('hello shallow second')\n")
-    with open(second_deep_src, 'w') as f:
+    with (second_deep_src).open('w') as f:
         f.write("print('hello deep second')\n")
 
     # Also create some existing sources:
@@ -180,7 +180,7 @@ def test_replace_sources(create_command, myapp, tmp_path, app_path):
     #       other.py
 
     old_first_src = app_path / 'demo.py'
-    with open(old_first_src, 'w') as f:
+    with (old_first_src).open('w') as f:
         f.write("print('old hello first')\n")
 
     old_second_shallow_src = app_path / 'src' / 'second' / 'shallow.py'
@@ -189,13 +189,13 @@ def test_replace_sources(create_command, myapp, tmp_path, app_path):
     old_second_broken_src = app_path / 'src' / 'second' / 'broken' / 'other.py'
     old_second_deep_src.parent.mkdir(parents=True)
     old_second_broken_src.parent.mkdir(parents=True)
-    with open(old_second_shallow_src, 'w') as f:
+    with (old_second_shallow_src).open('w') as f:
         f.write("print('old hello shallow second')\n")
-    with open(old_second_stale_src, 'w') as f:
+    with (old_second_stale_src).open('w') as f:
         f.write("print('hello second stale')\n")
-    with open(old_second_deep_src, 'w') as f:
+    with (old_second_deep_src).open('w') as f:
         f.write("print('old hello deep second')\n")
-    with open(old_second_broken_src, 'w') as f:
+    with (old_second_broken_src).open('w') as f:
         f.write("print('hello second deep broken')\n")
 
     # Set the app definition, and install sources
@@ -205,17 +205,17 @@ def test_replace_sources(create_command, myapp, tmp_path, app_path):
 
     # All the new sources exist, and contain the new content.
     assert (app_path / 'demo.py').exists()
-    with open(app_path / 'demo.py') as f:
+    with (app_path / 'demo.py').open() as f:
         assert f.read() == "print('hello first')\n"
 
     assert (app_path / 'second').exists()
     assert (app_path / 'second' / 'shallow.py').exists()
-    with open(app_path / 'second' / 'shallow.py') as f:
+    with (app_path / 'second' / 'shallow.py').open() as f:
         assert f.read() == "print('hello shallow second')\n"
 
     assert (app_path / 'second' / 'submodule').exists()
     assert (app_path / 'second' / 'submodule' / 'deeper.py').exists()
-    with open(app_path / 'second' / 'submodule' / 'deeper.py') as f:
+    with (app_path / 'second' / 'submodule' / 'deeper.py').open() as f:
         assert f.read() == "print('hello deep second')\n"
 
     # The stale/broken modules have been removed.

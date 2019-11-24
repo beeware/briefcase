@@ -165,7 +165,7 @@ class CreateCommand(BaseCommand):
         :param app: The config object for the app
         :return: The contents of the application path index.
         """
-        with open(self.bundle_path(app) / 'briefcase.toml') as f:
+        with (self.bundle_path(app) / 'briefcase.toml').open() as f:
             self._path_index[app] = toml.load(f)['paths']
         return self._path_index[app]
 
@@ -486,9 +486,9 @@ class CreateCommand(BaseCommand):
                 if not original.exists():
                     raise MissingAppSources(src)
                 elif original.is_dir():
-                    self.shutil.copytree(original, target)
+                    self.shutil.copytree(str(original), str(target))
                 else:
-                    self.shutil.copy(original, target)
+                    self.shutil.copy(str(original), str(target))
         else:
             print("No sources defined for {app.name}.".format(app=app))
 
@@ -497,9 +497,9 @@ class CreateCommand(BaseCommand):
             app=app,
         )
         dist_info_path.mkdir(exist_ok=True)
-        with open(dist_info_path / 'INSTALLER', 'w') as f:
+        with (dist_info_path / 'INSTALLER').open('w') as f:
             f.write('briefcase\n')
-        with open(dist_info_path / 'METADATA', 'w') as f:
+        with (dist_info_path / 'METADATA').open('w') as f:
             f.write('Metadata-Version: 2.1\n')
             f.write('Name: {app.name}\n'.format(app=app))
             f.write('Formal-Name: {app.formal_name}\n'.format(app=app))
@@ -669,7 +669,7 @@ class CreateCommand(BaseCommand):
             print("[{app.name}] Removing old application bundle...".format(
                 app=app
             ))
-            shutil.rmtree(bundle_path)
+            self.shutil.rmtree(str(bundle_path))
 
         print()
         print('[{app.name}] Generating application template...'.format(
@@ -712,5 +712,5 @@ class CreateCommand(BaseCommand):
         if app:
             self.create_app(app)
         else:
-            for app_name, app in self.apps.items():
+            for app_name, app in sorted(self.apps.items()):
                 self.create_app(app)

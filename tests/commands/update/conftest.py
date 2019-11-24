@@ -27,17 +27,17 @@ class DummyUpdateCommand(UpdateCommand):
     # with versions that we can use to track actions performed.
     def install_app_dependencies(self, app):
         self.actions.append(('dependencies', app))
-        with open(self.bundle_path(app) / 'dependencies', 'w') as f:
+        with (self.bundle_path(app) / 'dependencies').open('w') as f:
             f.write("first app dependencies")
 
     def install_app_code(self, app):
         self.actions.append(('code', app))
-        with open(self.bundle_path(app) / 'code.py', 'w') as f:
+        with (self.bundle_path(app) / 'code.py').open('w') as f:
             f.write("print('first app')")
 
     def install_app_extras(self, app):
         self.actions.append(('extras', app))
-        with open(self.bundle_path(app) / 'extras', 'w') as f:
+        with (self.bundle_path(app) / 'extras').open('w') as f:
             f.write("first app extras")
 
 
@@ -67,7 +67,7 @@ def first_app(tmp_path):
     "Populate skeleton app content for the first app"
     bundle_dir = tmp_path / "tester" / "first.dummy"
     bundle_dir.mkdir(parents=True)
-    with open(bundle_dir / 'Content', 'w') as f:
+    with (bundle_dir / 'Content').open('w') as f:
         f.write("first app.bundle")
 
 
@@ -76,5 +76,5 @@ def second_app(tmp_path):
     "Populate skeleton app content for the second app"
     bundle_dir = tmp_path / "tester" / "second.dummy"
     bundle_dir.mkdir(parents=True)
-    with open(bundle_dir / 'Content', 'w') as f:
+    with (bundle_dir / 'Content').open('w') as f:
         f.write("second app.bundle")

@@ -11,7 +11,7 @@ from briefcase.integrations.xcode import get_simulators
 def simctl_result(name):
     """Load a simctl result file from the sample directory, and return the content"""
     filename = Path(__file__).parent / 'simctl' / '{name}.json'.format(name=name)
-    with open(filename) as f:
+    with filename.open() as f:
         return f.read()
 
 

@@ -56,7 +56,7 @@ def first_app(first_app_config, tmp_path):
     # The same fixture as first_app_config,
     # but ensures that the binary for the app exists
     (tmp_path / 'tester').mkdir(parents=True, exist_ok=True)
-    with open(tmp_path / 'tester' / 'first.dummy.bin', 'w') as f:
+    with (tmp_path / 'tester' / 'first.dummy.bin').open('w') as f:
         f.write('first.bundle')
 
     return first_app_config
@@ -77,7 +77,7 @@ def second_app(second_app_config, tmp_path):
     # The same fixture as second_app_config,
     # but ensures that the binary for the app exists
     (tmp_path / 'tester').mkdir(parents=True, exist_ok=True)
-    with open(tmp_path / 'tester' / 'second.dummy.bin', 'w') as f:
+    with (tmp_path / 'tester' / 'second.dummy.bin').open('w') as f:
         f.write('second.bundle')
 
     return second_app_config

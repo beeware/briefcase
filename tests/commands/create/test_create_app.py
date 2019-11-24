@@ -26,7 +26,7 @@ def test_create_existing_app_overwrite(tracking_create_command):
     # Generate an app in the location.
     bundle_path = tracking_create_command.platform_path / 'first.bundle'
     bundle_path.mkdir(parents=True)
-    with open(bundle_path / 'original', 'w') as f:
+    with (bundle_path / 'original').open('w') as f:
         f.write('original template!')
 
     tracking_create_command.create_app(tracking_create_command.apps['first'])
@@ -54,7 +54,7 @@ def test_create_existing_app_no_overwrite(tracking_create_command):
 
     bundle_path = tracking_create_command.platform_path / 'first.bundle'
     bundle_path.mkdir(parents=True)
-    with open(bundle_path / 'original', 'w') as f:
+    with (bundle_path / 'original').open('w') as f:
         f.write('original template!')
 
     tracking_create_command.create_app(tracking_create_command.apps['first'])
@@ -76,7 +76,7 @@ def test_create_existing_app_no_overwrite_default(tracking_create_command):
 
     bundle_path = tracking_create_command.platform_path / 'first.bundle'
     bundle_path.mkdir(parents=True)
-    with open(bundle_path / 'original', 'w') as f:
+    with (bundle_path / 'original').open('w') as f:
         f.write('original template!')
 
     tracking_create_command.create_app(tracking_create_command.apps['first'])

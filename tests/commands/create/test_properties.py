@@ -13,7 +13,7 @@ def test_template_url(create_command):
 def test_app_path(create_command, myapp):
     bundle_path = create_command.bundle_path(myapp)
     bundle_path.mkdir(parents=True)
-    with open(bundle_path / 'briefcase.toml', 'w') as f:
+    with (bundle_path / 'briefcase.toml').open('w') as f:
         index = {
             'paths': {
                 'app_path': 'path/to/app',
@@ -35,7 +35,7 @@ def test_app_path(create_command, myapp):
 def test_app_packages_path(create_command, myapp):
     bundle_path = create_command.bundle_path(myapp)
     bundle_path.mkdir(parents=True)
-    with open(bundle_path / 'briefcase.toml', 'w') as f:
+    with (bundle_path / 'briefcase.toml').open('w') as f:
         index = {
             'paths': {
                 'app_path': 'path/to/app',
@@ -57,7 +57,7 @@ def test_app_packages_path(create_command, myapp):
 def test_support_path(create_command, myapp):
     bundle_path = create_command.bundle_path(myapp)
     bundle_path.mkdir(parents=True)
-    with open(bundle_path / 'briefcase.toml', 'w') as f:
+    with (bundle_path / 'briefcase.toml').open('w') as f:
         index = {
             'paths': {
                 'app_path': 'path/to/app',
@@ -175,7 +175,7 @@ def test_no_icon(create_command, myapp):
     "If no icon target is specified, the icon list is empty"
     bundle_path = create_command.bundle_path(myapp)
     bundle_path.mkdir(parents=True)
-    with open(bundle_path / 'briefcase.toml', 'w') as f:
+    with (bundle_path / 'briefcase.toml').open('w') as f:
         index = {
             'paths': {
                 'app_path': 'path/to/app',
@@ -190,7 +190,7 @@ def test_single_icon(create_command, myapp):
     "If the icon target is specified as a single string, the icon list has one unsized entry"
     bundle_path = create_command.bundle_path(myapp)
     bundle_path.mkdir(parents=True)
-    with open(bundle_path / 'briefcase.toml', 'w') as f:
+    with (bundle_path / 'briefcase.toml').open('w') as f:
         index = {
             'paths': {
                 'app_path': 'path/to/app',
@@ -208,7 +208,7 @@ def test_multiple_icon(create_command, myapp):
     "If there are multiple icon targets, they're all in the target list"
     bundle_path = create_command.bundle_path(myapp)
     bundle_path.mkdir(parents=True)
-    with open(bundle_path / 'briefcase.toml', 'w') as f:
+    with (bundle_path / 'briefcase.toml').open('w') as f:
         index = {
             'paths': {
                 'app_path': 'path/to/app',
@@ -230,7 +230,7 @@ def test_no_splash(create_command, myapp):
     "If no splash target is specified, the splash list is empty"
     bundle_path = create_command.bundle_path(myapp)
     bundle_path.mkdir(parents=True)
-    with open(bundle_path / 'briefcase.toml', 'w') as f:
+    with (bundle_path / 'briefcase.toml').open('w') as f:
         index = {
             'paths': {
                 'app_path': 'path/to/app',
@@ -245,7 +245,7 @@ def test_single_splash(create_command, myapp):
     "If the splash target is specified as a single string, the splash list has one unsized entry"
     bundle_path = create_command.bundle_path(myapp)
     bundle_path.mkdir(parents=True)
-    with open(bundle_path / 'briefcase.toml', 'w') as f:
+    with (bundle_path / 'briefcase.toml').open('w') as f:
         index = {
             'paths': {
                 'app_path': 'path/to/app',
@@ -263,7 +263,7 @@ def test_multiple_splash(create_command, myapp):
     "If there are multiple splash targets, they're all in the target list"
     bundle_path = create_command.bundle_path(myapp)
     bundle_path.mkdir(parents=True)
-    with open(bundle_path / 'briefcase.toml', 'w') as f:
+    with (bundle_path / 'briefcase.toml').open('w') as f:
         index = {
             'paths': {
                 'app_path': 'path/to/app',
@@ -285,7 +285,7 @@ def test_no_document_types(create_command, myapp):
     "If no document type targets are specified, the document_type_icons list is empty"
     bundle_path = create_command.bundle_path(myapp)
     bundle_path.mkdir(parents=True)
-    with open(bundle_path / 'briefcase.toml', 'w') as f:
+    with (bundle_path / 'briefcase.toml').open('w') as f:
         index = {
             'paths': {
                 'app_path': 'path/to/app',
@@ -300,7 +300,7 @@ def test_document_type_single_icon(create_command, myapp):
     "If a doctype icon target is specified as a single string, the document_type_icons list has one unsized entry"
     bundle_path = create_command.bundle_path(myapp)
     bundle_path.mkdir(parents=True)
-    with open(bundle_path / 'briefcase.toml', 'w') as f:
+    with (bundle_path / 'briefcase.toml').open('w') as f:
         index = {
             'paths': {
                 'app_path': 'path/to/app',
@@ -326,7 +326,7 @@ def test_document_type_multiple_icons(create_command, myapp):
     "If there are multiple document_type_icons targets, they're all in the target list"
     bundle_path = create_command.bundle_path(myapp)
     bundle_path.mkdir(parents=True)
-    with open(bundle_path / 'briefcase.toml', 'w') as f:
+    with (bundle_path / 'briefcase.toml').open('w') as f:
         index = {
             'paths': {
                 'app_path': 'path/to/app',

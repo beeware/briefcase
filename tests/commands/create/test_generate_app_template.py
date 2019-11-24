@@ -253,14 +253,14 @@ def test_cached_template(create_command, myapp):
 
     # The origin of the repo was fetched
     mock_repo.remote.assert_called_once_with(name='origin')
-    mock_remote.fetch.assert_called_once()
+    mock_remote.fetch.assert_called_once_with()
 
     # The head was changed to the python version
     mock_repo.create_head.assert_called_once_with(
         create_command.python_version_tag,
         mock_remote_head,
     )
-    mock_head.checkout.assert_called_once()
+    mock_head.checkout.assert_called_once_with()
 
     # App's config template hasn't changed
     assert myapp.template == 'https://github.com/beeware/briefcase-tester-dummy-template.git'
@@ -298,7 +298,7 @@ def test_cached_template_offline(create_command, myapp, capsys):
 
     # An attempt to fetch the repo origin was made
     mock_repo.remote.assert_called_once_with(name='origin')
-    mock_remote.fetch.assert_called_once()
+    mock_remote.fetch.assert_called_once_with()
 
     # A warning was raised to the user about the fetch problem
     output = capsys.readouterr().out
@@ -309,7 +309,7 @@ def test_cached_template_offline(create_command, myapp, capsys):
         create_command.python_version_tag,
         mock_remote_head,
     )
-    mock_head.checkout.assert_called_once()
+    mock_head.checkout.assert_called_once_with()
 
     # App's config template hasn't changed
     assert myapp.template == 'https://github.com/beeware/briefcase-tester-dummy-template.git'

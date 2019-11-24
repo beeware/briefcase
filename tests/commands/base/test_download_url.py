@@ -36,7 +36,7 @@ def test_new_download_oneshot(base_command):
     assert filename == base_command.base_path / 'downloads' / 'something.zip'
 
     # File content is as expected
-    with open(base_command.base_path / 'downloads' / 'something.zip') as f:
+    with (base_command.base_path / 'downloads' / 'something.zip').open() as f:
         assert f.read() == 'all content'
 
 
@@ -73,14 +73,14 @@ def test_new_download_chunked(base_command):
 
     # The downloaded file exists, and content is as expected
     assert filename.exists()
-    with open(base_command.base_path / 'something.zip') as f:
+    with (base_command.base_path / 'something.zip').open() as f:
         assert f.read() == 'chunk-1;chunk-2;chunk-3;'
 
 
 def test_already_downloaded(base_command):
     # Create an existing file
     existing_file = base_command.base_path / 'something.zip'
-    with open(existing_file, 'w') as f:
+    with (existing_file).open('w') as f:
         f.write('existing content')
     base_command.requests = mock.MagicMock()
 

@@ -57,7 +57,7 @@ class TrackingCreateCommand(DummyCreateCommand):
 
         # A mock version of template generation.
         self.bundle_path(app).mkdir(parents=True, exist_ok=True)
-        with open(self.bundle_path(app) / 'new', 'w') as f:
+        with (self.bundle_path(app) / 'new').open('w') as f:
             f.write('new template!')
 
     def install_app_support_package(self, app):
@@ -119,7 +119,7 @@ def bundle_path(myapp, tmp_path):
     (bundle_path / 'path' / 'to' / 'app').mkdir(parents=True, exist_ok=True)
     (bundle_path / 'path' / 'to' / 'app_packages').mkdir(parents=True, exist_ok=True)
     (bundle_path / 'path' / 'to' / 'support').mkdir(parents=True, exist_ok=True)
-    with open(bundle_path / 'briefcase.toml', 'w') as f:
+    with (bundle_path / 'briefcase.toml').open('w') as f:
         index = {
             'paths': {
                 'app_path': 'path/to/app',

@@ -230,7 +230,7 @@ class BaseCommand(ABC):
                 )
 
             # We have meaningful content, so save it in the requested location
-            with open(filename, 'wb') as f:
+            with filename.open('wb') as f:
                 total = response.headers.get('content-length')
                 if total is None:
                     f.write(response.content)

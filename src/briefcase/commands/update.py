@@ -71,7 +71,7 @@ class UpdateCommand(CreateCommand):
                 update_extras=self.options.update_extra,
             )
         else:
-            for app_name, app in self.apps.items():
+            for app_name, app in sorted(self.apps.items()):
                 self.update_app(
                     app,
                     update_dependencies=self.options.update_dependencies,
