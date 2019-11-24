@@ -32,6 +32,13 @@ class iOSXcodePassiveMixin(iOSMixin):
 
 
 class iOSXcodeMixin(iOSXcodePassiveMixin):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # External service APIs.
+        # These are abstracted to enable testing without patching.
+        self.get_simulators = get_simulators
+
     def add_options(self, parser):
         super().add_options(parser)
         parser.add_argument(
@@ -56,7 +63,7 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
         If the user has specified a device at the command line, it will be
         used in preference to any
         """
-        simulators = get_simulators('iOS', sub=self.subprocess)
+        simulators = self.get_simulators('iOS', sub=self.subprocess)
 
         if self.options.device:
             # User has provided a UDID at the command line; look for it.
@@ -182,6 +189,14 @@ class iOSXcodeBuildCommand(iOSXcodeMixin, BuildCommand):
 class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
     description = "Run an iOS Xcode project."
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # External service APIs.
+        # These are abstracted to enable testing without patching.
+        self.get_device_state = get_device_state
+        self.sleep = time.sleep
+
     def run_app(self, app: BaseConfig):
         """
         Start the application.
@@ -200,14 +215,16 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         # The simulator needs to be booted before being started.
         # If it's shut down, we can boot it again; but if it's currently
         # shutting down, we need to wait for it to shut down before restarting.
-        device_state = get_device_state(udid, sub=self.subprocess)
+        device_state = self.get_device_state(udid, sub=self.subprocess)
         if device_state not in {DeviceState.SHUTDOWN, DeviceState.BOOTED}:
             print('Waiting for simulator...', flush=True, end='')
             while device_state not in {DeviceState.SHUTDOWN, DeviceState.BOOTED}:
-                time.sleep(2)
+                self.sleep(2)
                 print('.', flush=True, end='')
-                device_state = get_device_state(udid, sub=self.subprocess)
+                device_state = self.get_device_state(udid, sub=self.subprocess)
 
+        # We now know the simulator is either shut down or booted;
+        # if it's shut down, start it again.
         if device_state == DeviceState.SHUTDOWN:
             try:
                 print("Booting {device} simulator running iOS {iOS_version}...".format(

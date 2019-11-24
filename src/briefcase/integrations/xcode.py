@@ -1,5 +1,6 @@
 import enum
 import json
+import re
 import subprocess
 
 from briefcase.exceptions import BriefcaseCommandError
@@ -10,6 +11,68 @@ class DeviceState(enum.Enum):
     BOOTED = 1
     SHUTTING_DOWN = 10
     UNKNOWN = 99
+
+
+def ensure_xcode_is_installed(min_version=None, sub=subprocess):
+    """
+    Determine if an appropriate version of Xcode is installed.
+
+    Raises an exception if Xcode is not installed, or if the version that is
+    installed doesn't meet the minimum requirement.
+
+    :param min_version: The minimum allowed version of Xcode, specified as a
+        tuple of integers (e.g., (11, 2, 1)). Default: ``None``, meaning there
+        is no minimum version.
+    :param sub: the module for starting subprocesses. Defaults to
+        Python's builtin; used for testing purposes.
+    """
+
+    try:
+        output = sub.check_output(
+            ['xcodebuild', '-version'],
+            universal_newlines=True
+        )
+
+        if min_version is not None:
+            match = re.match(r"Xcode (\d+)\.(\d+)\.(\d+)", output)
+            if match:
+                version = tuple(int(g) for g in match.groups())
+                if version < min_version:
+                    raise BriefcaseCommandError(
+                        "Xcode {min_version} is required; {version} is installed. Please update Xcode.".format(
+                            min_version='.'.join(str(v) for v in min_version),
+                            version='.'.join(str(v) for v in version),
+                        )
+                    )
+            else:
+                print("""
+*************************************************************************
+** WARNING: Unable to determine the version of Xcode that is installed **
+*************************************************************************
+
+   Briefcase will proceed assume everything is OK, but if you
+   experience problems, this is almost certainly the cause of those
+   problems.
+
+   Please report this as a bug at:
+
+     https://github.com/beeware/briefcase/issues/
+
+   In your report, please including the output from running:
+
+     xcodebuild -version
+
+   from the command prompt.
+
+*************************************************************************
+
+""")
+
+    except subprocess.CalledProcessError:
+        raise BriefcaseCommandError(
+            "Xcode is not installed."
+        )
+
 
 
 def get_simulators(os_name, sub=subprocess):
@@ -35,15 +98,17 @@ def get_simulators(os_name, sub=subprocess):
         )
 
         os_versions = {
-            runtime['name'][4:]: runtime['identifier']
+            runtime['name'].split(' ', 1)[1]: runtime['identifier']
             for runtime in simctl_data['runtimes']
             if runtime['name'].startswith('{os_name} '.format(os_name=os_name))
+            and runtime['isAvailable']
         }
 
         simulators = {
             version: {
-                simulator['udid']: simulator['name']
-                for simulator in simctl_data['devices'][identifier]
+                device['udid']: device['name']
+                for device in simctl_data['devices'][identifier]
+                if device['isAvailable']
             }
             for version, identifier in os_versions.items()
         }
