@@ -51,5 +51,5 @@ class PublishCommand(BaseCommand):
                 )
 
         # Then publish them all to the selected channel.
-        for app_name, app in self.apps.items():
+        for app_name, app in sorted(self.apps.items()):
             self.publish_app(app, channel=self.options.channel)
