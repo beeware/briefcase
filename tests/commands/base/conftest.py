@@ -1,7 +1,7 @@
 import pytest
 
 from briefcase.commands.base import BaseCommand
-from briefcase.config import GlobalConfig, AppConfig
+from briefcase.config import AppConfig, GlobalConfig
 
 
 class DummyCommand(BaseCommand):

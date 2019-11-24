@@ -1,5 +1,3 @@
-from .test_create_app import create_command
-
 
 def test_create(create_command):
     "The create command can be called"

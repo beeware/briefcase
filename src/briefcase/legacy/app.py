@@ -10,13 +10,12 @@ import uuid
 from datetime import date
 from distutils.core import Command
 
+import boto3
 import pkg_resources
 import requests
+from botocore.handlers import disable_signing
 from cookiecutter.main import cookiecutter
 from setuptools.command import easy_install
-
-import boto3
-from botocore.handlers import disable_signing
 
 
 def download_url(url, download_dir):

@@ -1,4 +1,5 @@
 from briefcase.integrations.xcode import ensure_xcode_is_installed
+
 DEFAULT_OUTPUT_FORMAT = 'xcode'
 
 

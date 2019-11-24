@@ -8,8 +8,8 @@ from typing import Optional
 import boto3
 import toml
 from botocore.handlers import disable_signing
-from git import exc as git_exceptions
 from cookiecutter import exceptions as cookiecutter_exceptions
+from git import exc as git_exceptions
 from requests import exceptions as requests_exceptions
 
 from briefcase.config import BaseConfig

@@ -100,7 +100,8 @@ def test_support_package_url_single_match(create_command):
     stub_s3.activate()
 
     # Retrieve the property, retrieving the support package URL.
-    assert create_command.support_package_url == 'https://briefcase-support.s3-us-west-2.amazonaws.com/python/3.X/tester/Python-3.X-tester-support.b1.tar.gz'
+    url = 'https://briefcase-support.s3-us-west-2.amazonaws.com/python/3.X/tester/Python-3.X-tester-support.b1.tar.gz'
+    assert create_command.support_package_url == url
 
     # Check the S3 calls have been exhausted
     stub_s3.assert_no_pending_responses()
@@ -134,7 +135,8 @@ def test_support_package_url_multiple_match(create_command):
     stub_s3.activate()
 
     # Retrieve the property, retrieving the support package URL.
-    assert create_command.support_package_url == 'https://briefcase-support.s3-us-west-2.amazonaws.com/python/3.X/tester/Python-3.X-tester-support.b11.tar.gz'
+    url = 'https://briefcase-support.s3-us-west-2.amazonaws.com/python/3.X/tester/Python-3.X-tester-support.b11.tar.gz'
+    assert create_command.support_package_url == url
 
     # Check the S3 calls have been exhausted
     stub_s3.assert_no_pending_responses()

@@ -1,4 +1,5 @@
 import copy
+
 import toml
 
 from briefcase.platforms import get_output_formats, get_platforms

@@ -1,8 +1,8 @@
-import inspect
 import importlib
+import inspect
 import shutil
-import sys
 import subprocess
+import sys
 from abc import ABC, abstractmethod
 from urllib.parse import urlparse
 
@@ -14,7 +14,7 @@ from briefcase.config import AppConfig, GlobalConfig, parse_config
 from briefcase.exceptions import (
     BadNetworkResourceError,
     BriefcaseConfigError,
-    MissingNetworkResourceError,
+    MissingNetworkResourceError
 )
 
 

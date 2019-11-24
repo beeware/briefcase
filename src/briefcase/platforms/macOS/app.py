@@ -1,6 +1,5 @@
 import subprocess
 
-from briefcase.config import BaseConfig
 from briefcase.commands import (
     BuildCommand,
     CreateCommand,
@@ -8,6 +7,7 @@ from briefcase.commands import (
     RunCommand,
     UpdateCommand
 )
+from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.platforms.macOS import macOSMixin
 

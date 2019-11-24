@@ -2,8 +2,8 @@ from unittest import mock
 
 import pytest
 
-from briefcase.config import AppConfig
 from briefcase.commands import CreateCommand
+from briefcase.config import AppConfig
 
 
 class DummyCreateCommand(CreateCommand):

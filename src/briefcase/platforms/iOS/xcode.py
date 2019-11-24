@@ -1,8 +1,6 @@
 import subprocess
 import time
 
-from briefcase.config import BaseConfig
-from briefcase.console import select_option
 from briefcase.commands import (
     BuildCommand,
     CreateCommand,
@@ -10,9 +8,15 @@ from briefcase.commands import (
     RunCommand,
     UpdateCommand
 )
+from briefcase.config import BaseConfig
+from briefcase.console import select_option
 from briefcase.exceptions import BriefcaseCommandError
+from briefcase.integrations.xcode import (
+    DeviceState,
+    get_device_state,
+    get_simulators
+)
 from briefcase.platforms.iOS import iOSMixin
-from briefcase.integrations.xcode import get_simulators, get_device_state, DeviceState
 
 
 class iOSXcodePassiveMixin(iOSMixin):

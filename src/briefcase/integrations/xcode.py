@@ -74,7 +74,6 @@ def ensure_xcode_is_installed(min_version=None, sub=subprocess):
         )
 
 
-
 def get_simulators(os_name, sub=subprocess):
     """
     Obtain the simulators available on this machine.

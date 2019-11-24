@@ -4,8 +4,8 @@ from pathlib import Path
 from unittest import mock
 
 import pytest
-from git import exc as git_exceptions
 from cookiecutter import exceptions as cookiecutter_exceptions
+from git import exc as git_exceptions
 
 from briefcase.commands.create import (
     InvalidTemplateRepository,

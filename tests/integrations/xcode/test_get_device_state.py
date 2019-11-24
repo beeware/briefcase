@@ -5,7 +5,7 @@ from unittest import mock
 import pytest
 
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.integrations.xcode import get_device_state, DeviceState
+from briefcase.integrations.xcode import DeviceState, get_device_state
 
 
 def simctl_result(name):

@@ -1,6 +1,6 @@
+import zipfile
 from pathlib import Path
 from unittest import mock
-import zipfile
 
 import pytest
 from requests import exceptions as requests_exceptions
