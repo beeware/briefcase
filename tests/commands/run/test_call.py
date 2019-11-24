@@ -159,6 +159,31 @@ def test_update_app(run_command, first_app):
     ]
 
 
+def test_update_uncompiled_app(run_command, first_app_uncompiled):
+    "The run command can request that an uncompiled app is updated first"
+    # Add a single app
+    run_command.apps = {
+        'first': first_app_uncompiled,
+    }
+
+    # Configure no command line options
+    parser = argparse.ArgumentParser(prog='briefcase')
+    run_command.parse_options(parser, ['-u'])
+
+    # Run the run command
+    run_command()
+
+    # The right sequence of things will be done
+    assert run_command.actions == [
+        # An update was requested
+        ('update', 'first'),
+        ('build', 'first'),
+
+        # Then, it will be started
+        ('run', 'first'),
+    ]
+
+
 def test_update_non_existent(run_command, first_app_config):
     "Requesting an update of a non-existent app causes a create"
     # Add a single app, using the 'config only' fixture

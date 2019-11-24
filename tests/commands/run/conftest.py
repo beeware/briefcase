@@ -15,10 +15,10 @@ class DummyRunCommand(RunCommand):
         self.actions = []
 
     def bundle_path(self, app):
-        return self.platform_path / '{app.name}.dummy'.format(app=app)
+        return self.platform_path / app.name
 
     def binary_path(self, app):
-        return self.platform_path / '{app.name}.dummy.bin'.format(app=app)
+        return self.platform_path / app.name / '{app.name}.bin'.format(app=app)
 
     def run_app(self, app):
         self.actions.append(('run', app.name))
@@ -52,14 +52,24 @@ def first_app_config():
 
 
 @pytest.fixture
-def first_app(first_app_config, tmp_path):
+def first_app_uncompiled(first_app_config, tmp_path):
     # The same fixture as first_app_config,
-    # but ensures that the binary for the app exists
-    (tmp_path / 'tester').mkdir(parents=True, exist_ok=True)
-    with (tmp_path / 'tester' / 'first.dummy.bin').open('w') as f:
-        f.write('first.bundle')
+    # but ensures that the bundle for the app exists
+    (tmp_path / 'tester' / 'first').mkdir(parents=True, exist_ok=True)
+    with open(tmp_path / 'tester' / 'first' / 'first.dummy', 'w') as f:
+        f.write('first.dummy')
 
     return first_app_config
+
+
+@pytest.fixture
+def first_app(first_app_uncompiled, tmp_path):
+    # The same fixture as first_app_uncompiled,
+    # but ensures that the binary for the app exists
+    with (tmp_path / 'tester' / 'first' / 'first.bin').open('w') as f:
+        f.write('first.bin')
+
+    return first_app_uncompiled
 
 
 @pytest.fixture
@@ -73,11 +83,22 @@ def second_app_config():
 
 
 @pytest.fixture
-def second_app(second_app_config, tmp_path):
+def second_app_uncompiled(second_app_config, tmp_path):
     # The same fixture as second_app_config,
-    # but ensures that the binary for the app exists
-    (tmp_path / 'tester').mkdir(parents=True, exist_ok=True)
-    with (tmp_path / 'tester' / 'second.dummy.bin').open('w') as f:
-        f.write('second.bundle')
+    # but ensures that the bundle for the app exists
+    (tmp_path / 'tester' / 'second').mkdir(parents=True, exist_ok=True)
+    with (tmp_path / 'tester' / 'second' / 'second.dummy').open('w') as f:
+        f.write('second.dummy')
 
     return second_app_config
+
+
+@pytest.fixture
+def second_app(second_app_uncompiled, tmp_path):
+    # The same fixture as second_app_uncompiled,
+    # but ensures that the binary for the app exists
+    (tmp_path / 'tester').mkdir(parents=True, exist_ok=True)
+    with (tmp_path / 'tester' / 'second' / 'second.bin').open('w') as f:
+        f.write('second.bin')
+
+    return second_app_uncompiled

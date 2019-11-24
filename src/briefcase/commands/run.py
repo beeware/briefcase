@@ -49,12 +49,15 @@ class RunCommand(BaseCommand):
                 "use --app to specify which one to start."
             )
 
-        target_file = self.binary_path(app)
-        if not target_file.exists():
+        template_file = self.bundle_path(app)
+        binary_file = self.binary_path(app)
+        if not template_file.exists():
             self.create_command(app)
             self.build_command(app)
         elif self.options.update:
             self.update_command(app)
+            self.build_command(app)
+        elif not binary_file.exists():
             self.build_command(app)
 
         self.run_app(app)
