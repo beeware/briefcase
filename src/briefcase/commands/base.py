@@ -109,6 +109,8 @@ class BaseCommand(ABC):
         The path to the bundle for the app in the output format.
 
         The bundle is the template-generated source form of the app.
+        The path will usually be a directory, the existence of which is
+        indicative that the template has been rolled out for an app.
 
         :param app: The app config
         """
@@ -119,8 +121,10 @@ class BaseCommand(ABC):
         """
         The path to the executable artefact for the app in the output format
 
-        This *may* be the same as the bundle path, if the output format
-        requires no compilation, or if it compiles in place.
+        This may be a binary file produced by compilation; however, if
+        the output format doesn't require compilation, it may be the same
+        as the bundle path (assuming the bundle path is inherently
+        "executable").
 
         :param app: The app config
         """

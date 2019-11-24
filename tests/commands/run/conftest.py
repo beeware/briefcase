@@ -1,7 +1,7 @@
 import pytest
 
-from briefcase.config import AppConfig
 from briefcase.commands import RunCommand
+from briefcase.config import AppConfig
 
 
 class DummyRunCommand(RunCommand):

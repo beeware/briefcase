@@ -37,9 +37,66 @@ class DummyCreateCommand(CreateCommand):
         return '3.X'
 
 
+class TrackingCreateCommand(DummyCreateCommand):
+    """
+    A dummy creation command that doesn't actually do anything.
+    It only serves to track which actions would be performend.
+    """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.actions = []
+
+    def verify_tools(self):
+        self.actions.append(('verify'))
+
+    # Override all the body methods of a CreateCommand
+    # with versions that we can use to track actions performed.
+    def generate_app_template(self, app):
+        self.actions.append(('generate', app))
+
+        # A mock version of template generation.
+        self.bundle_path(app).mkdir(parents=True, exist_ok=True)
+        with open(self.bundle_path(app) / 'new', 'w') as f:
+            f.write('new template!')
+
+    def install_app_support_package(self, app):
+        self.actions.append(('support', app))
+
+    def install_app_dependencies(self, app):
+        self.actions.append(('dependencies', app))
+
+    def install_app_code(self, app):
+        self.actions.append(('code', app))
+
+    def install_app_extras(self, app):
+        self.actions.append(('extras', app))
+
+
 @pytest.fixture
 def create_command(tmp_path):
     return DummyCreateCommand(base_path=tmp_path)
+
+
+@pytest.fixture
+def tracking_create_command(tmp_path):
+    return TrackingCreateCommand(
+        base_path=tmp_path,
+        apps={
+            'first': AppConfig(
+                name='first',
+                bundle='com.example',
+                version='0.0.1',
+                description='The first simple app',
+            ),
+            'second': AppConfig(
+                name='second',
+                bundle='com.example',
+                version='0.0.2',
+                description='The second simple app',
+            ),
+        }
+    )
 
 
 @pytest.fixture

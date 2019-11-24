@@ -1,48 +1,48 @@
 
-def test_create(create_command):
+def test_create(tracking_create_command):
     "The create command can be called"
-    create_command()
+    tracking_create_command()
 
     # The right sequence of things will be done
-    assert create_command.actions == [
+    assert tracking_create_command.actions == [
         ('verify'),
 
         # Create the first app
-        ('generate', create_command.apps['first']),
-        ('support', create_command.apps['first']),
-        ('dependencies', create_command.apps['first']),
-        ('code', create_command.apps['first']),
-        ('extras', create_command.apps['first']),
+        ('generate', tracking_create_command.apps['first']),
+        ('support', tracking_create_command.apps['first']),
+        ('dependencies', tracking_create_command.apps['first']),
+        ('code', tracking_create_command.apps['first']),
+        ('extras', tracking_create_command.apps['first']),
 
         # Create the second app
-        ('generate', create_command.apps['second']),
-        ('support', create_command.apps['second']),
-        ('dependencies', create_command.apps['second']),
-        ('code', create_command.apps['second']),
-        ('extras', create_command.apps['second']),
+        ('generate', tracking_create_command.apps['second']),
+        ('support', tracking_create_command.apps['second']),
+        ('dependencies', tracking_create_command.apps['second']),
+        ('code', tracking_create_command.apps['second']),
+        ('extras', tracking_create_command.apps['second']),
     ]
 
     # New app content has been created
-    assert (create_command.platform_path / 'first.dummy' / 'new').exists()
-    assert (create_command.platform_path / 'second.dummy' / 'new').exists()
+    assert (tracking_create_command.platform_path / 'first.bundle' / 'new').exists()
+    assert (tracking_create_command.platform_path / 'second.bundle' / 'new').exists()
 
 
-def test_create_single(create_command):
+def test_create_single(tracking_create_command):
     "The create command can be called to create a single app from the config"
-    create_command(app=create_command.apps['first'])
+    tracking_create_command(app=tracking_create_command.apps['first'])
 
     # The right sequence of things will be done
-    assert create_command.actions == [
+    assert tracking_create_command.actions == [
         ('verify'),
 
         # Create the first app
-        ('generate', create_command.apps['first']),
-        ('support', create_command.apps['first']),
-        ('dependencies', create_command.apps['first']),
-        ('code', create_command.apps['first']),
-        ('extras', create_command.apps['first']),
+        ('generate', tracking_create_command.apps['first']),
+        ('support', tracking_create_command.apps['first']),
+        ('dependencies', tracking_create_command.apps['first']),
+        ('code', tracking_create_command.apps['first']),
+        ('extras', tracking_create_command.apps['first']),
     ]
 
     # New app content has been created
-    assert (create_command.platform_path / 'first.dummy' / 'new').exists()
-    assert not (create_command.platform_path / 'second.dummy' / 'new').exists()
+    assert (tracking_create_command.platform_path / 'first.bundle' / 'new').exists()
+    assert not (tracking_create_command.platform_path / 'second.bundle' / 'new').exists()
