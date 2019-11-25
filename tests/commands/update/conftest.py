@@ -9,8 +9,11 @@ class DummyUpdateCommand(UpdateCommand):
     A dummy update command that doesn't actually do anything.
     It only serves to track which actions would be performend.
     """
+    platform='tester'
+    output_format='dummy'
+
     def __init__(self, *args, apps, **kwargs):
-        super().__init__(*args, platform='tester', output_format='dummy', apps=apps, **kwargs)
+        super().__init__(*args, apps=apps, **kwargs)
 
         self.actions = []
 
@@ -19,6 +22,9 @@ class DummyUpdateCommand(UpdateCommand):
 
     def binary_path(self, app):
         return self.platform_path / '{app.name}.dummy.bin'.format(app=app)
+
+    def distribution_path(self, app):
+        return self.platform_path / '{app.name}.dummy.dist'.format(app=app)
 
     def verify_tools(self):
         self.actions.append(('verify'))

@@ -9,8 +9,7 @@ from briefcase.platforms.windows import WindowsMixin
 
 
 class MSIMixin(WindowsMixin):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, output_format='msi', **kwargs)
+    output_format = 'msi'
 
     def binary_path(self, app):
         raise NotImplementedError()

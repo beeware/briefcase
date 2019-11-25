@@ -13,14 +13,16 @@ from briefcase.platforms.macOS import macOSMixin
 
 
 class macOSAppMixin(macOSMixin):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, output_format='app', **kwargs)
-
-    def binary_path(self, app):
-        return self.platform_path / '{app.formal_name}.app'.format(app=app)
+    output_format = 'app'
 
     def bundle_path(self, app):
         return self.platform_path / '{app.formal_name}.app'.format(app=app)
+
+    def binary_path(self, app):
+        return self.bundle_path(app)
+
+    def distribution_path(self, app):
+        return self.bundle_path(app)
 
 
 class macOSAppCreateCommand(macOSAppMixin, CreateCommand):

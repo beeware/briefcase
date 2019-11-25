@@ -9,8 +9,11 @@ class DummyPublishCommand(PublishCommand):
     A dummy publish command that doesn't actually do anything.
     It only serves to track which actions would be performend.
     """
+    platform='tester'
+    output_format='dummy'
+
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, platform='tester', output_format='dummy', apps=[], **kwargs)
+        super().__init__(*args, apps=[], **kwargs)
 
         self.actions = []
 
@@ -19,6 +22,9 @@ class DummyPublishCommand(PublishCommand):
 
     def binary_path(self, app):
         return self.platform_path / '{app.name}.dummy.bin'.format(app=app)
+
+    def distribution_path(self, app):
+        return self.platform_path / '{app.name}.dummy.dist'.format(app=app)
 
     @property
     def publication_channels(self):

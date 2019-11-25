@@ -4,8 +4,7 @@ DEFAULT_OUTPUT_FORMAT = 'xcode'
 
 
 class iOSMixin:
-    def __init__(self, output_format, *args, **kwargs):
-        super().__init__(*args, platform='iOS', output_format=output_format, **kwargs)
+    platform = 'iOS'
 
     def verify_tools(self):
         # Require XCode 10.0.0. There's no particular reason for this

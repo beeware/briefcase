@@ -12,8 +12,11 @@ class DummyCreateCommand(CreateCommand):
     A dummy create command that stubs out all the required interfaces
     of the Create command.
     """
+    platform='tester'
+    output_format='dummy'
+
     def __init__(self, *args, support_file=None, **kwargs):
-        super().__init__(*args, platform='tester', output_format='dummy', **kwargs)
+        super().__init__(*args, **kwargs)
 
         # If a test sets this property, the tool verification step will
         # fail.
@@ -30,6 +33,9 @@ class DummyCreateCommand(CreateCommand):
 
     def binary_path(self, app):
         return self.platform_path / '{app.name}.binary'.format(app=app)
+
+    def distribution_path(self, app):
+        return self.platform_path / '{app.name}.dist'.format(app=app)
 
     # Hard code the python version to make testing easier.
     @property

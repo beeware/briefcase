@@ -48,10 +48,8 @@ class BaseCommand(ABC):
     GLOBAL_CONFIG_CLASS = GlobalConfig
     APP_CONFIG_CLASS = AppConfig
 
-    def __init__(self, base_path, platform, output_format, apps=None):
+    def __init__(self, base_path, apps=None):
         self.base_path = base_path
-        self.platform = platform
-        self.output_format = output_format
 
         self.global_config = None
         self.apps = {} if apps is None else apps
@@ -118,12 +116,26 @@ class BaseCommand(ABC):
     @abstractmethod
     def binary_path(self, app):
         """
-        The path to the executable artefact for the app in the output format
+        The path to the executable artefact for the app in the output format.
 
         This may be a binary file produced by compilation; however, if
         the output format doesn't require compilation, it may be the same
         as the bundle path (assuming the bundle path is inherently
         "executable").
+
+        :param app: The app config
+        """
+        ...
+
+    @abstractmethod
+    def distribution_path(self, app):
+        """
+        The path to the distributable artefact for the app in the output format.
+
+        This is the single file that should be uploaded for distribution.
+        This may be the binary (if the binary is a self contained executable);
+        however, if the output format produces an installer, it will be the
+        path to the installer.
 
         :param app: The app config
         """

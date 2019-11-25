@@ -20,14 +20,21 @@ from briefcase.platforms.iOS import iOSMixin
 
 
 class iOSXcodePassiveMixin(iOSMixin):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, output_format='Xcode', **kwargs)
+    output_format = 'Xcode'
 
     def binary_path(self, app):
         return (
             self.platform_path
             / '{app.formal_name}'.format(app=app)
             / 'build' / 'Debug-iphonesimulator'
+            / '{app.formal_name}.app'.format(app=app)
+        )
+
+    def distribution_path(self, app):
+        return (
+            self.platform_path
+            / '{app.formal_name}'.format(app=app)
+            / 'build' / 'Release-iphone'
             / '{app.formal_name}.app'.format(app=app)
         )
 

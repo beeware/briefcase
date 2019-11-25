@@ -1,41 +1,41 @@
-from briefcase.commands import (
-    BuildCommand,
-    CreateCommand,
-    PublishCommand,
-    RunCommand,
-    UpdateCommand
+from briefcase.config import BaseConfig
+from briefcase.platforms.macOS.app import (
+    macOSAppMixin,
+    macOSAppCreateCommand,
+    macOSAppUpdateCommand,
+    macOSAppBuildCommand,
+    macOSAppRunCommand,
+    macOSAppPublishCommand
 )
-from briefcase.platforms.macOS import macOSMixin
 
 
-class macOSDmgMixin(macOSMixin):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, output_format='dmg', **kwargs)
+class macOSDmgMixin(macOSAppMixin):
+    output_format = 'app'
 
-    def binary_path(self, app):
-        return self.platform_path / '{app.formal_name}.app'.format(app=app)
-
-    def bundle_path(self, app):
-        return self.platform_path / '{app.formal_name}.app'.format(app=app)
+    def distribution_path(self, app):
+        return self.platform_path / '{app.formal_name}.dmg'.format(app=app)
 
 
-class macOSDmgCreateCommand(macOSDmgMixin, CreateCommand):
+class macOSDmgCreateCommand(macOSDmgMixin, macOSAppCreateCommand):
     description = "Create and populate a macOS .dmg bundle."
 
 
-class macOSDmgUpdateCommand(macOSDmgMixin, UpdateCommand):
+class macOSDmgUpdateCommand(macOSDmgMixin, macOSAppUpdateCommand):
     description = "Update an existing macOS .dmg bundle."
 
 
-class macOSDmgBuildCommand(macOSDmgMixin, BuildCommand):
+class macOSDmgBuildCommand(macOSDmgMixin, macOSAppBuildCommand):
     description = "Build a macOS .dmg bundle."
 
+    def build_app(self, app: BaseConfig):
+        print("MAKE A DMG")
 
-class macOSDmgRunCommand(macOSDmgMixin, RunCommand):
+
+class macOSDmgRunCommand(macOSDmgMixin, macOSAppRunCommand):
     description = "Run a macOS .dmg bundle."
 
 
-class macOSDmgPublishCommand(macOSDmgMixin, PublishCommand):
+class macOSDmgPublishCommand(macOSDmgMixin, macOSAppPublishCommand):
     description = "Publish a macOS .dmg bundle."
 
     def add_options(self):
