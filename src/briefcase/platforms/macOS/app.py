@@ -40,7 +40,7 @@ class macOSAppBuildCommand(macOSAppMixin, BuildCommand):
 class macOSAppRunCommand(macOSAppMixin, RunCommand):
     description = "Run a macOS .app bundle."
 
-    def run_app(self, app: BaseConfig):
+    def run_app(self, app: BaseConfig, **kwargs):
         """
         Start the application.
 

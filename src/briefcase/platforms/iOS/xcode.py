@@ -146,7 +146,7 @@ class iOSXcodeUpdateCommand(iOSXcodePassiveMixin, UpdateCommand):
 class iOSXcodeBuildCommand(iOSXcodeMixin, BuildCommand):
     description = "Build an iOS Xcode project."
 
-    def build_app(self, app: BaseConfig, udid=None):
+    def build_app(self, app: BaseConfig, udid=None, **kwargs):
         """
         Build the Xcode project for the application.
 
