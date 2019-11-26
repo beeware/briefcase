@@ -12,8 +12,8 @@ class DummyCreateCommand(CreateCommand):
     A dummy create command that stubs out all the required interfaces
     of the Create command.
     """
-    platform='tester'
-    output_format='dummy'
+    platform = 'tester'
+    output_format = 'dummy'
 
     def __init__(self, *args, support_file=None, **kwargs):
         super().__init__(*args, **kwargs)

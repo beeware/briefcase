@@ -9,8 +9,8 @@ class DummyUpdateCommand(UpdateCommand):
     A dummy update command that doesn't actually do anything.
     It only serves to track which actions would be performend.
     """
-    platform='tester'
-    output_format='dummy'
+    platform = 'tester'
+    output_format = 'dummy'
 
     def __init__(self, *args, apps, **kwargs):
         super().__init__(*args, apps=apps, **kwargs)
