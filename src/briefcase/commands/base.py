@@ -6,16 +6,27 @@ import sys
 from abc import ABC, abstractmethod
 from urllib.parse import urlparse
 
-import git
 import requests
 from cookiecutter.main import cookiecutter
 
 from briefcase.config import AppConfig, GlobalConfig, parse_config
 from briefcase.exceptions import (
     BadNetworkResourceError,
+    BriefcaseCommandError,
     BriefcaseConfigError,
     MissingNetworkResourceError
 )
+
+try:
+    import git
+except ImportError:
+    raise BriefcaseCommandError("""
+Briefcase requires git, but it is not installed (or is not on your PATH). Visit:
+
+    https://git-scm.com/
+
+to download and install git. If you have installed git recently and are still
+getting this error, you may need to restart your terminal session.""")
 
 
 def create_config(klass, config, msg):
