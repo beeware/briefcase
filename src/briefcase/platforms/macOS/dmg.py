@@ -1,14 +1,20 @@
-import dmgbuild
-
 from briefcase.config import BaseConfig
+from briefcase.exceptions import BriefcaseCommandError
 from briefcase.platforms.macOS.app import (
-    macOSAppMixin,
-    macOSAppCreateCommand,
-    macOSAppUpdateCommand,
     macOSAppBuildCommand,
+    macOSAppCreateCommand,
+    macOSAppMixin,
+    macOSAppPublishCommand,
     macOSAppRunCommand,
-    macOSAppPublishCommand
+    macOSAppUpdateCommand
 )
+
+try:
+    import dmgbuild
+except ImportError:
+    # On non-macOS platforms, dmgbuild won't be installed.
+    # Allow the plugin to be loaded; raise an error when tools are verified.
+    dmgbuild = None
 
 
 class macOSDmgMixin(macOSAppMixin):
@@ -16,6 +22,13 @@ class macOSDmgMixin(macOSAppMixin):
 
     def distribution_path(self, app):
         return self.platform_path / '{app.formal_name}-{app.version}.dmg'.format(app=app)
+
+    def verify_tools(self):
+        super().verify_tools()
+        if dmgbuild is None:
+            raise BriefcaseCommandError(
+                "DMG files require macOS-specific tools."
+            )
 
 
 class macOSDmgCreateCommand(macOSDmgMixin, macOSAppCreateCommand):

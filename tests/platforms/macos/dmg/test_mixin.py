@@ -1,4 +1,11 @@
+import sys
+
+import pytest
+
 from briefcase.platforms.macOS.dmg import macOSDmgCreateCommand
+
+if sys.platform != 'darwin':
+    pytest.skip("requires macOS")
 
 
 def test_bundle_path(first_app_config, tmp_path):
