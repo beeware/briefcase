@@ -34,7 +34,7 @@ def test_icon_target(create_command, tmp_path):
         bundle='com.example',
         version='1.2.3',
         description='This is a simple app',
-        icon='images/icon.png'
+        icon='images/icon'
     )
 
     # Prime the path index with 2 icon targets
@@ -58,13 +58,13 @@ def test_icon_target(create_command, tmp_path):
         mock.call(
             'application icon',
             size='10',
-            sources='images/icon.png',
+            source='images/icon',
             target=tmp_path / 'tester/my-app.bundle/path/to/icon-10.png'
         ),
         mock.call(
             'application icon',
             size='20',
-            sources='images/icon.png',
+            source='images/icon',
             target=tmp_path / 'tester/my-app.bundle/path/to/icon-20.png'
         ),
     ], any_order=True)
@@ -78,7 +78,7 @@ def test_splash_target(create_command, tmp_path):
         bundle='com.example',
         version='1.2.3',
         description='This is a simple app',
-        splash='images/splash.png'
+        splash='images/splash'
     )
 
     # Prime the path index with 2 splash targets
@@ -102,13 +102,13 @@ def test_splash_target(create_command, tmp_path):
         mock.call(
             'splash image',
             size='10x20',
-            sources='images/splash.png',
+            source='images/splash',
             target=tmp_path / 'tester/my-app.bundle/path/to/splash-10x20.png'
         ),
         mock.call(
             'splash image',
             size='20x30',
-            sources='images/splash.png',
+            source='images/splash',
             target=tmp_path / 'tester/my-app.bundle/path/to/splash-20x30.png'
         ),
     ], any_order=True)
@@ -124,13 +124,10 @@ def test_doctype_icon_target(create_command, tmp_path):
         description='This is a simple app',
         document_type={
             'mydoc': {
-                'icon': 'images/mydoc-icon.png'
+                'icon': 'images/mydoc-icon'
             },
             'other': {
-                'icon': {
-                    '10': 'images/other-icon-10.png',
-                    '20': 'images/other-icon-20.png',
-                }
+                'icon': 'images/other-icon',
             }
         }
     )
@@ -161,25 +158,19 @@ def test_doctype_icon_target(create_command, tmp_path):
         mock.call(
             'icon for .mydoc documents',
             size=None,
-            sources='images/mydoc-icon.png',
+            source='images/mydoc-icon',
             target=tmp_path / 'tester/my-app.bundle/path/to/mydoc-icon.png'
         ),
         mock.call(
             'icon for .other documents',
             size='10',
-            sources={
-                '10': 'images/other-icon-10.png',
-                '20': 'images/other-icon-20.png',
-            },
+            source='images/other-icon',
             target=tmp_path / 'tester/my-app.bundle/path/to/other-icon-10.png'
         ),
         mock.call(
             'icon for .other documents',
             size='20',
-            sources={
-                '10': 'images/other-icon-10.png',
-                '20': 'images/other-icon-20.png',
-            },
+            source='images/other-icon',
             target=tmp_path / 'tester/my-app.bundle/path/to/other-icon-20.png'
         ),
     ], any_order=True)

@@ -39,32 +39,12 @@ class AppConfig(BaseConfig):
         self.version = version
         self.bundle = bundle
         self.description = description
-
+        self.icon = icon
+        self.splash = splash
         self.template = template
         self.requires = requires
         self.formal_name = name if formal_name is None else formal_name
         self.document_types = {} if document_type is None else document_type
-
-        # icon can be specified as a single filename,
-        # or as a dictionary of files, keyed by size in pixels
-        try:
-            self.icon = {
-                str(size): filename
-                for size, filename in icon.items()
-            }
-        except AttributeError:
-            self.icon = icon
-
-        # splash can be specified as a single filename,
-        # or as a dictionary of files, keyed by dimensions in pixels
-        # (width x height)
-        try:
-            self.splash = {
-                str(size): filename
-                for size, filename in splash.items()
-            }
-        except AttributeError:
-            self.splash = splash
 
     def __repr__(self):
         return "<AppConfig {bundle}.{name} v{version}>".format(
@@ -92,24 +72,6 @@ class AppConfig(BaseConfig):
         * all spaces are removed.
         """
         return self.formal_name.replace(' ', '')
-
-    @property
-    def has_scaled_icon(self):
-        """
-        Does the config's icon provide multiple sizes?
-
-        Raises an AttributeError if no icon has been defined.
-        """
-        return isinstance(self.icon, dict)
-
-    @property
-    def has_scaled_splash(self):
-        """
-        Does the config's splash provide multiple sizes?
-
-        Raises an AttributeError if no splash has been defined.
-        """
-        return isinstance(self.splash, dict)
 
 
 def merge_config(config, data):

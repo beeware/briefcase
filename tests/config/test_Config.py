@@ -26,10 +26,7 @@ def test_minimal_AppConfig():
 
     # There is no icon or splash of any kind
     assert config.icon is None
-    assert not config.has_scaled_icon
-
     assert config.splash is None
-    assert not config.has_scaled_splash
 
     assert repr(config) == "<AppConfig org.beeware.myapp v1.2.3>"
 
@@ -115,79 +112,3 @@ def test_class_name(formal_name, class_name):
     )
 
     assert config.class_name == class_name
-
-
-def test_config_with_simple_icon():
-    "A config can specify a single icon file"
-    config = AppConfig(
-        name="myapp",
-        version="1.2.3",
-        bundle="org.beeware",
-        description="A simple app",
-        icon='myicon.png',
-    )
-
-    assert not config.has_scaled_icon
-    assert config.icon == 'myicon.png'
-
-
-def test_config_with_sized_icon():
-    "A config can specify multiple icon sizes (using int or str)"
-    config = AppConfig(
-        name="myapp",
-        version="1.2.3",
-        bundle="org.beeware",
-        description="A simple app",
-        icon={
-            72: 'myicon-72.png',
-            '144': 'myicon-144.png',
-        }
-    )
-
-    assert config.has_scaled_icon
-
-    # Icons can be retrieved using a size
-    assert config.icon['72'] == 'myicon-72.png'
-    assert config.icon['144'] == 'myicon-144.png'
-
-    # An unknown icon size raises an error
-    with pytest.raises(KeyError):
-        config.icon['512']
-
-
-def test_config_with_simple_splash():
-    "A config can specify a single splash file"
-    config = AppConfig(
-        name="myapp",
-        version="1.2.3",
-        bundle="org.beeware",
-        description="A simple app",
-        splash='mysplash.png',
-    )
-
-    assert not config.has_scaled_splash
-    assert config.splash == 'mysplash.png'
-
-
-def test_config_with_sized_splash():
-    "A config can specify multiple splash sizes (using int or str)"
-    config = AppConfig(
-        name="myapp",
-        version="1.2.3",
-        bundle="org.beeware",
-        description="A simple app",
-        splash={
-            '640x1136': 'portrait.png',
-            '1136x640': 'landscape.png',
-        }
-    )
-
-    assert config.has_scaled_splash
-
-    # The splash can be retrieved using a size
-    assert config.splash['640x1136'] == 'portrait.png'
-    assert config.splash['1136x640'] == 'landscape.png'
-
-    # An unknown splash size raises an error
-    with pytest.raises(KeyError):
-        config.splash['1234x4321']

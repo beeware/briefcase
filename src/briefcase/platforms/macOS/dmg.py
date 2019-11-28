@@ -70,26 +70,45 @@ class macOSDmgBuildCommand(macOSDmgMixin, macOSAppBuildCommand):
         }
 
         try:
-            icon = app.installer_icon
-            if isinstance(icon, str) and icon.endswith('.icns'):
-                dmg_settings['icon'] = self.base_path / icon
+            icon_filename = self.base_path / '{icon}.icns'.format(
+                icon=app.installer_icon
+            )
+            if not icon_filename.exists():
+                print("Can't find {filename}.icns for DMG installer icon".format(
+                    filename=app.installer_icon
+                ))
+                raise AttributeError()
         except AttributeError:
-            # No installer icon provided.
-            # If a single .icns file has been provided as an app icon,
-            # use that instead.
+            # No installer icon specified. Fall back to the app icon
             try:
-                icon = app.icon
-                if isinstance(icon, str) and icon.endswith('.icns'):
-                    dmg_settings['icon'] = self.base_path / icon
+                icon_filename = self.base_path / '{icon}.icns'.format(
+                    icon=app.icon
+                )
+                if not icon_filename.exists():
+                    print("Can't find {filename}.icns for fallback DMG installer icon".format(
+                        filename=app.icon
+                    ))
+                    raise AttributeError()
             except AttributeError:
+                icon_filename = None
 
-                pass
+        if icon_filename:
+            dmg_settings['icon'] = icon_filename
 
         try:
-            dmg_settings['background'] = self.base_path / app.installer_background
+            image_filename = self.base_path / '{image}.png'.format(
+                image=app.installer_background
+            )
+            if image_filename.exists():
+                dmg_settings['background'] = image_filename
+            else:
+                print("Can't find {filename}.png for DMG background".format(
+                    filename=app.installer_background
+                ))
         except AttributeError:
             # No installer background image provided
             pass
+
 
         self.dmgbuild.build_dmg(
             filename=self.distribution_path(app),

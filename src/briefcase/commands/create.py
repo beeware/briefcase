@@ -514,7 +514,7 @@ class CreateCommand(BaseCommand):
             # f.write('Maintainer-email:  {}\n'.format(app=app))
             f.write('Summary: {app.description}\n'.format(app=app))
 
-    def install_image(self, role, size, sources, target):
+    def install_image(self, role, size, source, target):
         """
         Install an icon/image of the requested size at a target location, using
         the source images defined by the app config.
@@ -522,98 +522,44 @@ class CreateCommand(BaseCommand):
         :param role: A string describing the role the of the image.
         :param size: The requested size for the image. A size of
             ``None`` means the largest available size should be used.
+        :param source: The image source. This will *not* include any extension
+            or size modifier; these will be added based on the requested target.
         :param target: The full path where the image should be installed.
         """
-        if sources is None:
+        if source is not None:
             if size is None:
-                print("No {role} defined in app config; using default".format(
-                    role=role,
-                ))
+                source_filename = '{source}{ext}'.format(
+                    source=source,
+                    ext=target.suffix
+                )
+                full_role = role
             else:
-                print("No {size}px {role} defined in app config; using default".format(
-                    role=role,
+                source_filename = '{source}-{size}{ext}'.format(
+                    source=source,
                     size=size,
-                ))
-        elif isinstance(sources, str):
-            # A single image source has been provided
-            source = self.base_path / sources
-            if size is None:
-                # There's no specifically requested size.
-                # As long as the image formats match, copy the file to the target.
-                if source.suffix == target.suffix:
-                    print("Installing {role}...".format(role=role))
-                    try:
-                        # Make sure the target directory exists
-                        target.parent.mkdir(parents=True, exist_ok=True)
-                        # Copy the source image to the target location
-                        self.shutil.copy(source, target)
-                    except FileNotFoundError:
-                        print(
-                            "Unable to find {source} specified for {role}; using default".format(
-                                role=role,
-                                source=sources,
-                            )
-                        )
-
-                else:
-                    print(
-                        "{role} requires a {target.suffix} ({source.suffix} provided); using default".format(
-                            role=role.capitalize(),
-                            source=source,
-                            target=target,
-                        )
-                    )
-            else:
-                # A specific size has been requested
-                print(
-                    "{role} requires a {size}px {target.suffix}; using default".format(
-                        role=role.capitalize(),
-                        size=size,
-                        target=target,
-                    )
+                    ext=target.suffix
+                )
+                full_role = '{size}px {role}'.format(
+                    size=size,
+                    role=role,
                 )
 
-        else:
-            # A size map of image sources has been provided
-            try:
-                source = self.base_path / sources[size]
+            full_source = self.base_path / source_filename
+            if full_source.exists():
+                print("Installing {source_filename} as {full_role}...".format(
+                    source_filename=source_filename,
+                    full_role=full_role,
+                ))
 
-                # There is an exact match for the requested size
-                if source.suffix == target.suffix:
-                    print("Installing {size}px {role}...".format(
-                        size=size,
-                        role=role,
-                    ))
-                    try:
-                        # Make sure the target directory exists
-                        target.parent.mkdir(parents=True, exist_ok=True)
-                        # Copy the source image to the target location
-                        self.shutil.copy(source, target)
-                    except FileNotFoundError:
-                        print(
-                            "Unable to find {source} specified for {size}px {role}; using default".format(
-                                role=role,
-                                size=size,
-                                source=sources[size],
-                            )
-                        )
-
-                else:
-                    print(
-                        "{role} requires a {size}px {target.suffix} ({source.suffix} provided); using default".format(
-                            role=role.capitalize(),
-                            size=size,
-                            source=source,
-                            target=target,
-                        )
-                    )
-            except KeyError:
-                # There's no exact size match.
+                # Make sure the target directory exists
+                target.parent.mkdir(parents=True, exist_ok=True)
+                # Copy the source image to the target location
+                self.shutil.copy(full_source, target)
+            else:
                 print(
-                    "{role} requires a {size}px {target.suffix}; using default".format(
-                        role=role.capitalize(),
-                        size=size,
-                        target=target,
+                    "Unable to find {source_filename} for {full_role}; using default".format(
+                        full_role=full_role,
+                        source_filename=source_filename,
                     )
                 )
 
@@ -628,7 +574,7 @@ class CreateCommand(BaseCommand):
             self.install_image(
                 'application icon',
                 size=size,
-                sources=app.icon,
+                source=app.icon,
                 target=self.bundle_path(app) / target
             )
 
@@ -636,7 +582,7 @@ class CreateCommand(BaseCommand):
             self.install_image(
                 'splash image',
                 size=size,
-                sources=app.splash,
+                source=app.splash,
                 target=self.bundle_path(app) / target
             )
 
@@ -645,7 +591,7 @@ class CreateCommand(BaseCommand):
                 self.install_image(
                     'icon for .{extension} documents'.format(extension=extension),
                     size=size,
-                    sources=app.document_types[extension]['icon'],
+                    source=app.document_types[extension]['icon'],
                     target=self.bundle_path(app) / target,
                 )
 
