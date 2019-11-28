@@ -39,7 +39,7 @@ def test_update_single(update_command, first_app, second_app):
 
 
 def test_update_with_dependencies(update_command, first_app, second_app):
-    "The update command can be called"
+    "The update command can be called, requesting a dependencies update"
     # Configure no command line options
     parser = argparse.ArgumentParser(prog='briefcase')
     options = update_command.parse_options(parser, ['-d'])
@@ -60,11 +60,11 @@ def test_update_with_dependencies(update_command, first_app, second_app):
     ]
 
 
-def test_update_with_extras(update_command, first_app, second_app):
-    "The update command can be called"
+def test_update_with_resources(update_command, first_app, second_app):
+    "The update command can be called, requesting a resources update"
     # Configure no command line options
     parser = argparse.ArgumentParser(prog='briefcase')
-    options = update_command.parse_options(parser, ['-e'])
+    options = update_command.parse_options(parser, ['-r'])
 
     update_command(**options)
 
@@ -74,9 +74,9 @@ def test_update_with_extras(update_command, first_app, second_app):
 
         # Update the first app
         ('code', update_command.apps['first']),
-        ('extras', update_command.apps['first']),
+        ('resources', update_command.apps['first']),
 
         # Update the second app
         ('code', update_command.apps['second']),
-        ('extras', update_command.apps['second']),
+        ('resources', update_command.apps['second']),
     ]

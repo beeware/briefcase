@@ -34,17 +34,17 @@ class DummyUpdateCommand(UpdateCommand):
     def install_app_dependencies(self, app):
         self.actions.append(('dependencies', app))
         with (self.bundle_path(app) / 'dependencies').open('w') as f:
-            f.write("first app dependencies")
+            f.write("app dependencies")
 
     def install_app_code(self, app):
         self.actions.append(('code', app))
         with (self.bundle_path(app) / 'code.py').open('w') as f:
-            f.write("print('first app')")
+            f.write("print('app')")
 
-    def install_app_extras(self, app):
-        self.actions.append(('extras', app))
-        with (self.bundle_path(app) / 'extras').open('w') as f:
-            f.write("first app extras")
+    def install_app_resources(self, app):
+        self.actions.append(('resources', app))
+        with (self.bundle_path(app) / 'resources').open('w') as f:
+            f.write("app resources")
 
 
 @pytest.fixture

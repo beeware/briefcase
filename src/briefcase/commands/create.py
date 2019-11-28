@@ -617,9 +617,9 @@ class CreateCommand(BaseCommand):
                     )
                 )
 
-    def install_app_extras(self, app: BaseConfig):
+    def install_app_resources(self, app: BaseConfig):
         """
-        Install the application extras (such as icons and splash screens) into
+        Install the application resources (such as icons and splash screens) into
         the bundle.
 
         :param app: The config object for the app
@@ -697,10 +697,10 @@ class CreateCommand(BaseCommand):
         self.install_app_code(app=app)
 
         print()
-        print('[{app.name}] Installing extra application resources...'.format(
+        print('[{app.name}] Installing application resources...'.format(
             app=app
         ))
-        self.install_app_extras(app=app)
+        self.install_app_resources(app=app)
         print()
 
         print('[{app.name}] Application created.'.format(

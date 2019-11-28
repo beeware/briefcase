@@ -8,11 +8,11 @@ def test_update_app(update_command, first_app):
         ('code', update_command.apps['first']),
     ]
 
-    # App content and extras have been updated
+    # App content and resources have been updated
     assert (update_command.platform_path / 'first.dummy' / 'code.py').exists()
-    # Dependencies and extras haven't been updated
+    # Dependencies and resources haven't been updated
     assert not (update_command.platform_path / 'first.dummy' / 'dependencies').exists()
-    assert not (update_command.platform_path / 'first.dummy' / 'extras').exists()
+    assert not (update_command.platform_path / 'first.dummy' / 'resources').exists()
     # ... and the app still exists
     assert (update_command.platform_path / 'first.dummy' / 'Content').exists()
 
@@ -47,27 +47,27 @@ def test_update_app_with_dependencies(update_command, first_app):
     assert (update_command.platform_path / 'first.dummy' / 'dependencies').exists()
     assert (update_command.platform_path / 'first.dummy' / 'code.py').exists()
     # Extras haven't been updated
-    assert not (update_command.platform_path / 'first.dummy' / 'extras').exists()
+    assert not (update_command.platform_path / 'first.dummy' / 'resources').exists()
     # ... and the app still exists
     assert (update_command.platform_path / 'first.dummy' / 'Content').exists()
 
 
-def test_update_app_with_extras(update_command, first_app):
-    "If the user requests an extras update, they are updated"
+def test_update_app_with_resources(update_command, first_app):
+    "If the user requests a resources update, they are updated"
     update_command.update_app(
         update_command.apps['first'],
-        update_extras=True,
+        update_resources=True,
     )
 
     # The right sequence of things will be done
     assert update_command.actions == [
         ('code', update_command.apps['first']),
-        ('extras', update_command.apps['first']),
+        ('resources', update_command.apps['first']),
     ]
 
-    # App content and extras have been updated
+    # App content and resources have been updated
     assert (update_command.platform_path / 'first.dummy' / 'code.py').exists()
-    assert (update_command.platform_path / 'first.dummy' / 'extras').exists()
+    assert (update_command.platform_path / 'first.dummy' / 'resources').exists()
     # Dependencies haven't been updated
     assert not (update_command.platform_path / 'first.dummy' / 'dependencies').exists()
     # ... and the app still exists

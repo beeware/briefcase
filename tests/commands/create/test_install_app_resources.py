@@ -3,7 +3,7 @@ from unittest import mock
 from briefcase.config import AppConfig
 
 
-def test_no_extras(create_command):
+def test_no_resources(create_command):
     "If the template defines no extra targets, none are installed"
     myapp = AppConfig(
         name='my-app',
@@ -19,8 +19,8 @@ def test_no_extras(create_command):
     install_image = mock.MagicMock()
     create_command.install_image = install_image
 
-    # Install app extras
-    create_command.install_app_extras(myapp)
+    # Install app resources
+    create_command.install_app_resources(myapp)
 
     # No icons, splash image or document types, so no calls to install images
     install_image.assert_not_called()
@@ -50,8 +50,8 @@ def test_icon_target(create_command, tmp_path):
     install_image = mock.MagicMock()
     create_command.install_image = install_image
 
-    # Install app extras
-    create_command.install_app_extras(myapp)
+    # Install app resources
+    create_command.install_app_resources(myapp)
 
     # 2 calls to install icons will be made
     install_image.assert_has_calls([
@@ -94,8 +94,8 @@ def test_splash_target(create_command, tmp_path):
     install_image = mock.MagicMock()
     create_command.install_image = install_image
 
-    # Install app extras
-    create_command.install_app_extras(myapp)
+    # Install app resources
+    create_command.install_app_resources(myapp)
 
     # 2 calls to install splash images will be made
     install_image.assert_has_calls([
@@ -153,8 +153,8 @@ def test_doctype_icon_target(create_command, tmp_path):
     install_image = mock.MagicMock()
     create_command.install_image = install_image
 
-    # Install app extras
-    create_command.install_app_extras(myapp)
+    # Install app resources
+    create_command.install_app_resources(myapp)
 
     # 2 calls to install doctype icon images will be made
     install_image.assert_has_calls([

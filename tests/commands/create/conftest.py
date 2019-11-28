@@ -75,8 +75,8 @@ class TrackingCreateCommand(DummyCreateCommand):
     def install_app_code(self, app):
         self.actions.append(('code', app))
 
-    def install_app_extras(self, app):
-        self.actions.append(('extras', app))
+    def install_app_resources(self, app):
+        self.actions.append(('resources', app))
 
 
 @pytest.fixture

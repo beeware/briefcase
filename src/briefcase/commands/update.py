@@ -14,19 +14,19 @@ class UpdateCommand(CreateCommand):
             help='Update dependencies for app'
         )
         parser.add_argument(
-            '-e',
-            '--update_extra',
+            '-r',
+            '--update_resources',
             action="store_true",
-            help='Update extra app resources'
+            help='Update app resources (icons, splash screens, etc)'
         )
 
-    def update_app(self, app: BaseConfig, update_dependencies=False, update_extras=False, **kwargs):
+    def update_app(self, app: BaseConfig, update_dependencies=False, update_resources=False, **kwargs):
         """
         Update an existing application bundle.
 
         :param app: The config object for the app
         :param update_dependencies: Should dependencies be updated? (default: False)
-        :param update_extras: Should extra resources be updated? (default: False)
+        :param update_resources: Should extra resources be updated? (default: False)
         """
         bundle_path = self.bundle_path(app)
         if not bundle_path.exists():
@@ -49,12 +49,12 @@ class UpdateCommand(CreateCommand):
         ))
         self.install_app_code(app=app)
 
-        if update_extras:
+        if update_resources:
             print()
             print('[{app.name}] Updating extra application resources...'.format(
                 app=app
             ))
-            self.install_app_extras(app=app)
+            self.install_app_resources(app=app)
 
         print()
         print('[{app.name}] Application updated.'.format(
@@ -65,7 +65,7 @@ class UpdateCommand(CreateCommand):
         self,
         app: Optional[BaseConfig] = None,
         update_dependencies: bool = False,
-        update_extra: bool = False,
+        update_resources: bool = False,
         **kwargs
     ):
         self.verify_tools()
@@ -74,7 +74,7 @@ class UpdateCommand(CreateCommand):
             self.update_app(
                 app,
                 update_dependencies=update_dependencies,
-                update_extras=update_extra,
+                update_resources=update_resources,
                 **kwargs,
             )
         else:
@@ -82,6 +82,6 @@ class UpdateCommand(CreateCommand):
                 self.update_app(
                     app,
                     update_dependencies=update_dependencies,
-                    update_extras=update_extra,
+                    update_resources=update_resources,
                     **kwargs,
                 )
