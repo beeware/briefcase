@@ -345,7 +345,8 @@ class CreateCommand(BaseCommand):
                 print("***************************************************************************")
             try:
                 # Check out the branch for the required version tag.
-                head = repo.create_head(self.python_version_tag, remote.refs[self.python_version_tag])
+                head = remote.refs[self.python_version_tag]
+
                 print("Using existing template (sha {hexsha}, updated {datestamp})".format(
                     hexsha=head.commit.hexsha,
                     datestamp=head.commit.committed_datetime.strftime("%c")

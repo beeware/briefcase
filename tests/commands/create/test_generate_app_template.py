@@ -238,7 +238,6 @@ def test_cached_template(create_command, myapp):
     "If a template has already been used, the cached version will be used"
     mock_repo = mock.MagicMock()
     mock_remote = mock.MagicMock()
-    mock_head = mock.MagicMock()
     mock_remote_head = mock.MagicMock()
 
     # Git returns a Repo, that repo can return a remote, and it has
@@ -246,7 +245,6 @@ def test_cached_template(create_command, myapp):
     create_command.git.Repo.return_value = mock_repo
     mock_repo.remote.return_value = mock_remote
     mock_remote.refs.__getitem__.return_value = mock_remote_head
-    mock_repo.create_head.return_value = mock_head
 
     # Generate the template.
     create_command.generate_app_template(myapp)
@@ -255,12 +253,8 @@ def test_cached_template(create_command, myapp):
     mock_repo.remote.assert_called_once_with(name='origin')
     mock_remote.fetch.assert_called_once_with()
 
-    # The head was changed to the python version
-    mock_repo.create_head.assert_called_once_with(
-        create_command.python_version_tag,
-        mock_remote_head,
-    )
-    mock_head.checkout.assert_called_once_with()
+    # The remote head was checked out.
+    mock_remote_head.checkout.assert_called_once_with()
 
     # App's config template hasn't changed
     assert myapp.template == 'https://github.com/beeware/briefcase-tester-dummy-template.git'
@@ -281,7 +275,6 @@ def test_cached_template_offline(create_command, myapp, capsys):
     "If the user is offline, a cached template won't be updated, but will still work"
     mock_repo = mock.MagicMock()
     mock_remote = mock.MagicMock()
-    mock_head = mock.MagicMock()
     mock_remote_head = mock.MagicMock()
 
     # Git returns a Repo, that repo can return a remote, and it has
@@ -290,7 +283,6 @@ def test_cached_template_offline(create_command, myapp, capsys):
     create_command.git.Repo.return_value = mock_repo
     mock_repo.remote.return_value = mock_remote
     mock_remote.refs.__getitem__.return_value = mock_remote_head
-    mock_repo.create_head.return_value = mock_head
     mock_remote.fetch.side_effect = git_exceptions.GitCommandError('git', 128)
 
     # Generate the template.
@@ -304,12 +296,8 @@ def test_cached_template_offline(create_command, myapp, capsys):
     output = capsys.readouterr().out
     assert "WARNING: Unable to update application template (is your computer offline?)" in output
 
-    # The head was changed to the python version
-    mock_repo.create_head.assert_called_once_with(
-        create_command.python_version_tag,
-        mock_remote_head,
-    )
-    mock_head.checkout.assert_called_once_with()
+    # The remote head was checked out.
+    mock_remote_head.checkout.assert_called_once_with()
 
     # App's config template hasn't changed
     assert myapp.template == 'https://github.com/beeware/briefcase-tester-dummy-template.git'
