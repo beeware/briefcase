@@ -5,99 +5,70 @@ In your virtualenv, install Briefcase::
 
     $ pip install briefcase
 
-Then, add extra options to your ``setup.py`` file to provide the
-app-specific properties of your app. Settings that are applicable
-to any app can be set under the ``app`` key; platform
-specific settings can be specified using a platform key::
+Then, add a ``pyproject.toml`` file to the root of your project (if you
+don't already have one), and add the following content::
 
-    setup(
-        ...
-        options={
-            'app': {
-                'formal_name': 'My First App',
-                'bundle': 'org.example',
-            },
-            'macos': {
-                'app_requires': [
-                    'toga-cocoa'
-                ],
-                'icon': 'icons/macos',
-            },
-            'ios': {
-                'app_requires': [
-                    'toga-ios'
-                ],
-                'icon': 'images/ios_icon',
-                'splash': 'images/ios_splash',
-            },
-            'android': {
-                'app_requires': [
-                    'toga-android'
-                ],
-                'icon': 'images/android_icon',
-                'splash': 'images/android_splash',
-            },
-            'tvos': {
-                'app_requires': [
-                    'toga-ios'
-                ]
-            },
-            'django': {
-                'app_requires': [
-                    'toga-django'
-                ]
-            },
-        }
-    )
+    [build-system]
+    requires = ["briefcase"]
 
-At a minimum, you must set a ``formal_name`` key (the full, formal name for the
-app) and a ``bundle`` key (the bundle identifier for the author organization -
-usually a reverse domain name).
+    [tool.briefcase]
+    version = "0.1"
 
-Alternatively, if you're starting from scratch, you can use `cookiecutter`_ to
-generate a stub project with the required content::
+    [tool.briefcase.app.myapp]
+    formal_name = "My App"
+    description = "My first Briefcase App"
+    bundle = "com.example.myapp"
+    sources = ['src/myapp']
+    requires = ['...']
 
-    $ pip install cookiecutter
-    $ cookiecutter https://github.com/beeware/briefcase-template
+Replace the references to "myapp" with your own app name, update `sources`
+to point at the locations that contain your code, and add any dependencies
+to the ``requires`` list.
 
-.. _cookiecutter: http://github.com/audreyr/cookiecutter
+Your first build
+----------------
 
-Then, you can invoke ``briefcase``, using:
+Then, you can invoke ``briefcase``::
 
-* macOS: ``$ python setup.py macos``
-* Windows: ``$ python setup.py windows``
-* Linux: ``$ python setup.py linux``
-* iOS: ``$ python setup.py ios``
-* Android: ``$ python setup.py android``
-* tvOS: ``$ python setup.py tvos``
+    $ briefcase create
+    $ briefcase build
+    $ briefcase run
 
+This will create the default output format for your current computer's operating
+system, build the app, and run the application.
 
-You can also use the ``-b`` (or ``--build``) argument to automatically
-perform any compilation step required; or use ``-s`` (``--start``) to
-start the application.
+Building for another platform
+-----------------------------
 
-For desktop OS's (macOS, Windows, Linux) the entry point(s) to your program can
-be defined in ``setup.py`` as console and gui scripts::
+If you want to target a different platform, you can pass that platform name
+as an argument. For example, to create an iOS app, run::
 
-    setup(
-        ...
-        entry_points={
-            'gui_scripts': [
-                'Example = example.gui:main [GUI]',
-            ],
-            'console_scripts': [
-                'utility = example.main:main',
-            ]
-        }
-        ...
+    $ briefcase create iOS
+    $ briefcase build iOS
+    $ briefcase run iOS
 
-For more details on the format see:
-http://setuptools.readthedocs.io/en/latest/setuptools.html#dynamic-discovery-of-services-and-plugins
+.. admonition:: Build tool dependencies
 
-On Windows and Linux this allows for multiple executables to be defined.
-macOS will use the entry point with the same name as your `formal_name` as the
-main application, any others will be available in the Contents/macOS folder inside the
-application bundle.
+    Building for other platforms depends on the build tools for the platform
+    you're targetting being available on the platform you're using. For
+    example, you will only be able to create iOS applications on macOS.
+    Briefcase will check for any required tools, and will report an error if
+    the platform you're targetting is not supported.
 
-For other platforms the entry point is defined in the platform template, typically
-they require the __main__.py module to be defined explicitly in code.
+Updating your code
+------------------
+
+While you're developing an application, you may need to rapidly iterate on the
+code, making small changes and then re-building. To repackage the code in your
+application, run::
+
+    $ briefcase update
+
+then rebuild your app. The ``update`` command also accepts a `-d` command if
+you need to update your dependencies, and a ``-r`` if you need to update
+application resources (such as icons and splash images).
+
+ Alternatively, if you want to repackage your application's code and
+ immediately re-run the app, you can pass ``-u`` to the ``run`` command::
+
+    $ briefcase run -u
