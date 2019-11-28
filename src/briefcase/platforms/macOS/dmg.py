@@ -34,6 +34,13 @@ class macOSDmgMixin(macOSAppMixin):
 class macOSDmgCreateCommand(macOSDmgMixin, macOSAppCreateCommand):
     description = "Create and populate a macOS .dmg bundle."
 
+    @property
+    def template_url(self):
+        "The URL for a cookiecutter repository to use when creating apps"
+        return 'https://github.com/beeware/briefcase-{self.platform}-app-template.git'.format(
+            self=self
+        )
+
 
 class macOSDmgUpdateCommand(macOSDmgMixin, macOSAppUpdateCommand):
     description = "Update an existing macOS .dmg bundle."
