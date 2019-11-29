@@ -109,7 +109,6 @@ class macOSDmgBuildCommand(macOSDmgMixin, macOSAppBuildCommand):
             # No installer background image provided
             pass
 
-
         self.dmgbuild.build_dmg(
             filename=self.distribution_path(app),
             volume_name='{app.formal_name} {app.version}'.format(app=app),
