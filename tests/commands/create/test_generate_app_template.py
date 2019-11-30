@@ -22,6 +22,7 @@ def full_context(extra):
         'bundle': 'com.example',
         'version': '1.2.3',
         'description': "This is a simple app",
+        'sources': ['src/my_app'],
         'requires': None,
         'icon': None,
         'splash': None,

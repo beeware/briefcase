@@ -67,7 +67,7 @@ class BriefcaseConfigError(BriefcaseError):
         self.msg = msg
 
     def __str__(self):
-        return self.msg
+        return "Briefcase configuration error: {self.msg}".format(self=self)
 
 
 class BriefcaseCommandError(BriefcaseError):

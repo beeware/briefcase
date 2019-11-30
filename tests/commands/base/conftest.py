@@ -83,7 +83,8 @@ class CustomAppConfig(AppConfig):
             name='custom',
             bundle='com.example',
             description='Custom app',
-            version="37.42"
+            version="37.42",
+            sources=['src/custom'],
         )
         self.foo = foo
         self.bar = bar

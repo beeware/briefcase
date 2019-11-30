@@ -24,7 +24,10 @@ def test_incomplete_config(base_command):
         [tool.briefcase.app.myapp]
     """)
 
-    with pytest.raises(BriefcaseConfigError, match=r"Configuration for 'myapp' is incomplete \(missing 'bundle'\)"):
+    with pytest.raises(
+        BriefcaseConfigError,
+        match=r"Configuration for 'myapp' is incomplete \(missing 'bundle', 'sources'\)"
+    ):
         base_command.parse_config(filename)
 
 
@@ -40,8 +43,10 @@ def test_parse_config(base_command):
         mystery = 'default'
 
         [tool.briefcase.app.firstapp]
+        sources = ['src/firstapp']
 
         [tool.briefcase.app.secondapp]
+        sources = ['src/secondapp']
         extra = 'something'
         mystery = 'sekrits'
     """)
@@ -83,6 +88,7 @@ def test_parse_config_custom_config_classes_missing_global_arg(other_command):
         mystery = 'default'
 
         [tool.briefcase.app.firstapp]
+        sources = ['src/firstapp']
 
     """)
 

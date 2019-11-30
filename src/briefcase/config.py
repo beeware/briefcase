@@ -1,10 +1,17 @@
 import copy
+import re
 
 import toml
 
 from briefcase.platforms import get_output_formats, get_platforms
 
 from .exceptions import BriefcaseConfigError
+
+# The restriction on application naming comes from PEP508
+PEP508_NAME_RE = re.compile(
+    r'^([A-Z0-9]|[A-Z0-9][A-Z0-9._-]*[A-Z0-9])$',
+    re.IGNORECASE
+)
 
 
 class BaseConfig:
@@ -25,12 +32,13 @@ class AppConfig(BaseConfig):
         version,
         bundle,
         description,
+        sources,
         formal_name=None,
-        template=None,
         requires=None,
-        document_type=None,
         icon=None,
         splash=None,
+        document_type=None,
+        template=None,
         **kwargs
     ):
         super().__init__(**kwargs)
@@ -39,12 +47,37 @@ class AppConfig(BaseConfig):
         self.version = version
         self.bundle = bundle
         self.description = description
+        self.sources = sources
+        self.formal_name = name if formal_name is None else formal_name
+        self.requires = requires
         self.icon = icon
         self.splash = splash
-        self.template = template
-        self.requires = requires
-        self.formal_name = name if formal_name is None else formal_name
         self.document_types = {} if document_type is None else document_type
+        self.template = template
+
+        # Validate that the app name is valid.
+        if not PEP508_NAME_RE.match(self.name):
+            raise BriefcaseConfigError(
+                "'{self.name}' is not a valid app name.\n\n"
+                "App names must be PEP508 compliant (i.e., they can only "
+                "include letters, numbers, '-' and '_'; must start with a "
+                "letter; and cannot end with '-' or '_'.".format(self=self)
+            )
+
+        # Sources list doesn't include any duplicates
+        source_modules = {source.rsplit('/', 1)[-1] for source in self.sources}
+        if len(self.sources) != len(source_modules):
+            raise BriefcaseConfigError(
+                "The `sources` list for {self.name} contains duplicated "
+                "package names.".format(self=self)
+            )
+
+        # There is, at least, a source for the app module
+        if self.module_name not in source_modules:
+            raise BriefcaseConfigError(
+                "The `sources` list for {self.name} does not include a "
+                "package named '{self.module_name}'.".format(self=self)
+            )
 
     def __repr__(self):
         return "<AppConfig {bundle}.{name} v{version}>".format(

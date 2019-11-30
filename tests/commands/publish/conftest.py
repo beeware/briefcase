@@ -75,6 +75,7 @@ def first_app_config():
         bundle='com.example',
         version='0.0.1',
         description='The first simple app',
+        sources=['src/first'],
     )
 
 
@@ -106,6 +107,7 @@ def second_app_config():
         bundle='com.example',
         version='0.0.2',
         description='The second simple app',
+        sources=['src/second'],
     )
 
 

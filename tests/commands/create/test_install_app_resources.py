@@ -11,6 +11,7 @@ def test_no_resources(create_command):
         bundle='com.example',
         version='1.2.3',
         description='This is a simple app',
+        sources=['src/my_app'],
     )
 
     # Prime the path index with no targets
@@ -34,6 +35,7 @@ def test_icon_target(create_command, tmp_path):
         bundle='com.example',
         version='1.2.3',
         description='This is a simple app',
+        sources=['src/my_app'],
         icon='images/icon'
     )
 
@@ -78,6 +80,7 @@ def test_splash_target(create_command, tmp_path):
         bundle='com.example',
         version='1.2.3',
         description='This is a simple app',
+        sources=['src/my_app'],
         splash='images/splash'
     )
 
@@ -122,6 +125,7 @@ def test_doctype_icon_target(create_command, tmp_path):
         bundle='com.example',
         version='1.2.3',
         description='This is a simple app',
+        sources=['src/my_app'],
         document_type={
             'mydoc': {
                 'icon': 'images/mydoc-icon'

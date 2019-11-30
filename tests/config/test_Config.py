@@ -1,6 +1,7 @@
 import pytest
 
 from briefcase.config import AppConfig
+from briefcase.exceptions import BriefcaseConfigError
 
 
 def test_minimal_AppConfig():
@@ -10,6 +11,7 @@ def test_minimal_AppConfig():
         version="1.2.3",
         bundle="org.beeware",
         description="A simple app",
+        sources=['src/myapp'],
     )
 
     # The basic properties have been set.
@@ -17,7 +19,6 @@ def test_minimal_AppConfig():
     assert config.version == '1.2.3'
     assert config.bundle == 'org.beeware'
     assert config.description == 'A simple app'
-    assert config.template is None
     assert config.requires is None
 
     # Derived properties have been set.
@@ -40,6 +41,7 @@ def test_extra_attrs():
         bundle="org.beeware",
         description="A simple app",
         template='/path/to/template',
+        sources=['src/myapp'],
         requires=['first', 'second', 'third'],
         document_type={
             'document': {
@@ -78,6 +80,57 @@ def test_extra_attrs():
 
 
 @pytest.mark.parametrize(
+    'name',
+    [
+        'myapp',  # lowercase
+        'myApp',  # contains uppercase
+        'MyApp',  # initial uppercase
+        'MyAPP',  # ends in uppercase
+        'my-app',  # contains hyphen
+        'my_app',  # contains underscore
+        'myapp2',  # ends with digit
+        'my2app',  # contains digit
+    ]
+)
+def test_valid_app_name(name):
+    try:
+        AppConfig(
+            name=name,
+            version="1.2.3",
+            bundle="org.beeware",
+            description="A simple app",
+            sources=['src/' + name.replace('-', '_')]
+        )
+    except BriefcaseConfigError:
+        pytest.fail('{name} should be valid'.format(name=name))
+
+
+@pytest.mark.parametrize(
+    'name',
+    [
+        '!myapp',  # initial punctuation
+        'my!app',  # contains punctuation
+        'myapp!',  # end punctuation
+        'my$app',  # other punctuation
+        '-myApp',  # initial hyphen
+        'myApp-',  # end hyphen
+        '_myApp',  # initial underscore
+        'myApp_',  # end underscore
+    ]
+)
+def test_invalid_app_name(name):
+    with pytest.raises(BriefcaseConfigError, match=r"is not a valid app name\."):
+        AppConfig(
+            name=name,
+            version="1.2.3",
+            bundle="org.beeware",
+            description="A simple app",
+            sources=['src/invalid']
+        )
+        pytest.fail('{name} should be in invalid'.format(name=name))
+
+
+@pytest.mark.parametrize(
     'name, module_name',
     [
         ('myapp', 'myapp'),
@@ -90,6 +143,7 @@ def test_module_name(name, module_name):
         version="1.2.3",
         bundle="org.beeware",
         description="A simple app",
+        sources=['src/' + module_name]
     )
 
     assert config.module_name == module_name
@@ -109,6 +163,38 @@ def test_class_name(formal_name, class_name):
         version="1.2.3",
         bundle="org.beeware",
         description="A simple app",
+        sources=['src/myapp']
     )
 
     assert config.class_name == class_name
+
+
+@pytest.mark.parametrize(
+    'sources',
+    [
+        ['src/dupe', 'src/dupe'],
+        ['src/dupe', 'src/other', 'src/dupe'],
+        ['src/dupe', 'somewhere/dupe', 'src/other'],
+        ['src/dupe', 'src/deep/dupe', 'src/other'],
+    ]
+)
+def test_duplicated_source(sources):
+    with pytest.raises(BriefcaseConfigError, match=r"contains duplicated package names\."):
+        AppConfig(
+            name='dupe',
+            version="1.2.3",
+            bundle="org.beeware",
+            description="A simple app",
+            sources=sources
+        )
+
+
+def test_no_source_for_app():
+    with pytest.raises(BriefcaseConfigError, match=r" does not include a package named 'my_app'\."):
+        AppConfig(
+            name='my-app',
+            version="1.2.3",
+            bundle="org.beeware",
+            description="A simple app",
+            sources=['src/something', 'src/other']
+        )

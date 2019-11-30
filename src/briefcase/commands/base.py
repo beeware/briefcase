@@ -45,7 +45,7 @@ def create_config(klass, config, msg):
         missing_args = required_args - config.keys()
         missing = ', '.join(
             "'{arg}'".format(arg=arg)
-            for arg in missing_args
+            for arg in sorted(missing_args)
         )
         raise BriefcaseConfigError(
             "{msg} is incomplete (missing {missing})".format(
