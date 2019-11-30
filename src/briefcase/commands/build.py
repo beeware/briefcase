@@ -14,7 +14,7 @@ class BuildCommand(BaseCommand):
             help='Update the app before building'
         )
 
-    def build_app(self, app: BaseConfig):
+    def build_app(self, app: BaseConfig, **kwargs):
         """
         Build an application.
 
