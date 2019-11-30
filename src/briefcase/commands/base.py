@@ -55,6 +55,26 @@ def create_config(klass, config, msg):
         )
 
 
+def full_kwargs(state, kwargs):
+    """
+    Merge command state with keyword arguments.
+
+    Command state takes precedence over any keyword argument.
+
+    :param state: The current command state. Can be ``None``.
+    :param kwargs: The base keyword arguments.
+    :returns: A dictionary containing all of ``kwargs``, with any values
+        provided in ``state`` overriding the base ``kwargs`` values.
+    """
+    if state is not None:
+        full = kwargs.copy()
+        full.update(state)
+    else:
+        full = kwargs
+
+    return full
+
+
 class BaseCommand(ABC):
     GLOBAL_CONFIG_CLASS = GlobalConfig
     APP_CONFIG_CLASS = AppConfig

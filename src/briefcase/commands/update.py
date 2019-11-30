@@ -2,6 +2,7 @@ from typing import Optional
 
 from briefcase.config import BaseConfig
 
+from .base import full_kwargs
 from .create import CreateCommand
 
 
@@ -71,17 +72,20 @@ class UpdateCommand(CreateCommand):
         self.verify_tools()
 
         if app:
-            self.update_app(
+            state = self.update_app(
                 app,
                 update_dependencies=update_dependencies,
                 update_resources=update_resources,
                 **kwargs,
             )
         else:
+            state = None
             for app_name, app in sorted(self.apps.items()):
-                self.update_app(
+                state = self.update_app(
                     app,
                     update_dependencies=update_dependencies,
                     update_resources=update_resources,
-                    **kwargs,
+                    **full_kwargs(state, kwargs),
                 )
+
+        return state

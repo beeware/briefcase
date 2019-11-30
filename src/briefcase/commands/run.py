@@ -3,7 +3,7 @@ from abc import abstractmethod
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError
 
-from .base import BaseCommand
+from .base import BaseCommand, full_kwargs
 
 
 class RunCommand(BaseCommand):
@@ -22,7 +22,7 @@ class RunCommand(BaseCommand):
         )
 
     @abstractmethod
-    def run_app(self, app: BaseConfig):
+    def run_app(self, app: BaseConfig, **kwargs):
         """
         Start an application.
 
@@ -53,12 +53,16 @@ class RunCommand(BaseCommand):
         template_file = self.bundle_path(app)
         binary_file = self.binary_path(app)
         if not template_file.exists():
-            self.create_command(app, **kwargs)
-            self.build_command(app, **kwargs)
+            state = self.create_command(app, **kwargs)
+            state = self.build_command(app, **full_kwargs(state, kwargs))
         elif update:
-            self.update_command(app, **kwargs)
-            self.build_command(app, **kwargs)
+            state = self.update_command(app, **kwargs)
+            state = self.build_command(app, **full_kwargs(state, kwargs))
         elif not binary_file.exists():
-            self.build_command(app, **kwargs)
+            state = self.build_command(app, **kwargs)
+        else:
+            state = None
 
-        self.run_app(app, **kwargs)
+        state = self.run_app(app, **full_kwargs(state, kwargs))
+
+        return state

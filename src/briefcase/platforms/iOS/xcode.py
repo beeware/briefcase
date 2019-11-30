@@ -203,6 +203,11 @@ class iOSXcodeBuildCommand(iOSXcodeMixin, BuildCommand):
                 "Unable to build app {app.name}.".format(app=app)
             )
 
+        # Preserve the device selection as state.
+        return {
+            'udid': udid
+        }
+
 
 class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
     description = "Run an iOS Xcode project."
@@ -331,6 +336,11 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                     app=app
                 )
             )
+
+        # Preserve the device selection as state.
+        return {
+            'udid': udid
+        }
 
 
 class iOSXcodePublishCommand(iOSXcodeMixin, PublishCommand):

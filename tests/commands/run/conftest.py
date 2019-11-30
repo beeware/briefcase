@@ -1,6 +1,7 @@
 import pytest
 
 from briefcase.commands import RunCommand
+from briefcase.commands.base import full_kwargs
 from briefcase.config import AppConfig
 
 
@@ -26,20 +27,32 @@ class DummyRunCommand(RunCommand):
     def distribution_path(self, app):
         return self.platform_path / app.name / '{app.name}.dummy.dist'.format(app=app)
 
-    def run_app(self, app):
-        self.actions.append(('run', app.name))
+    def run_app(self, app, **kwargs):
+        self.actions.append(('run', app.name, kwargs))
+        return full_kwargs({
+            'run_state': app.name
+        }, kwargs)
 
     # These commands override the default behavior, simply tracking that
     # they were invoked, rather than instantiating a Create/Update/Build command.
     # This is for testing purposes.
-    def create_command(self, app):
-        self.actions.append(('create', app.name))
+    def create_command(self, app, **kwargs):
+        self.actions.append(('create', app.name, kwargs))
+        return full_kwargs({
+            'create_state': app.name
+        }, kwargs)
 
-    def update_command(self, app):
-        self.actions.append(('update', app.name))
+    def update_command(self, app, **kwargs):
+        self.actions.append(('update', app.name, kwargs))
+        return full_kwargs({
+            'update_state': app.name
+        }, kwargs)
 
-    def build_command(self, app):
-        self.actions.append(('build', app.name))
+    def build_command(self, app, **kwargs):
+        self.actions.append(('build', app.name, kwargs))
+        return full_kwargs({
+            'build_state': app.name
+        }, kwargs)
 
 
 @pytest.fixture

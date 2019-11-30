@@ -2,7 +2,7 @@ from typing import Optional
 
 from briefcase.config import BaseConfig
 
-from .base import BaseCommand
+from .base import BaseCommand, full_kwargs
 
 
 class BuildCommand(BaseCommand):
@@ -33,11 +33,15 @@ class BuildCommand(BaseCommand):
         """
         target_file = self.bundle_path(app)
         if not target_file.exists():
-            self.create_command(app, **kwargs)
+            state = self.create_command(app, **kwargs)
         elif update:
-            self.update_command(app, **kwargs)
+            state = self.update_command(app, **kwargs)
+        else:
+            state = None
 
-        self.build_app(app)
+        state = self.build_app(app, **full_kwargs(state, kwargs))
+
+        return state
 
     def __call__(
         self,
@@ -48,7 +52,10 @@ class BuildCommand(BaseCommand):
         self.verify_tools()
 
         if app:
-            self._build_app(app, update=update, **kwargs)
+            state = self._build_app(app, update=update, **kwargs)
         else:
+            state = None
             for app_name, app in sorted(self.apps.items()):
-                self._build_app(app, update=update, **kwargs)
+                state = self._build_app(app, update=update, **full_kwargs(state, kwargs))
+
+        return state

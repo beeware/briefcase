@@ -15,7 +15,7 @@ from requests import exceptions as requests_exceptions
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError, NetworkFailure
 
-from .base import BaseCommand
+from .base import BaseCommand, full_kwargs
 
 
 class TemplateUnsupportedPythonVersion(BriefcaseCommandError):
@@ -595,7 +595,7 @@ class CreateCommand(BaseCommand):
                     target=self.bundle_path(app) / target,
                 )
 
-    def create_app(self, app: BaseConfig):
+    def create_app(self, app: BaseConfig, **kwargs):
         """
         Create an application bundle.
 
@@ -657,7 +657,10 @@ class CreateCommand(BaseCommand):
         self.verify_tools()
 
         if app:
-            self.create_app(app)
+            state = self.create_app(app, **kwargs)
         else:
+            state = None
             for app_name, app in sorted(self.apps.items()):
-                self.create_app(app)
+                state = self.create_app(app, **full_kwargs(state, kwargs))
+
+        return state
