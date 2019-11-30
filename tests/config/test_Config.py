@@ -150,26 +150,6 @@ def test_module_name(name, module_name):
 
 
 @pytest.mark.parametrize(
-    'formal_name, class_name',
-    [
-        ('MyApp', 'MyApp'),
-        ('My App', 'MyApp'),
-    ]
-)
-def test_class_name(formal_name, class_name):
-    config = AppConfig(
-        name='myapp',
-        formal_name=formal_name,
-        version="1.2.3",
-        bundle="org.beeware",
-        description="A simple app",
-        sources=['src/myapp']
-    )
-
-    assert config.class_name == class_name
-
-
-@pytest.mark.parametrize(
     'sources',
     [
         ['src/dupe', 'src/dupe'],

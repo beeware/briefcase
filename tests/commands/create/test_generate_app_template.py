@@ -30,7 +30,6 @@ def full_context(extra):
 
         # Fields generated from other properties
         'module_name': 'my_app',
-        'class_name': 'MyApp',
 
         # Date-based fields added at time of generation
         'year': date.today().strftime('%Y'),

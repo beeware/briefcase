@@ -96,16 +96,6 @@ class AppConfig(BaseConfig):
         """
         return self.name.replace('-', '_')
 
-    @property
-    def class_name(self):
-        """
-        The class name for the app.
-
-        This is derived from the formal name, but:
-        * all spaces are removed.
-        """
-        return self.formal_name.replace(' ', '')
-
 
 def merge_config(config, data):
     """

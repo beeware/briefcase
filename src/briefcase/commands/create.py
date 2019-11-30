@@ -370,7 +370,6 @@ class CreateCommand(BaseCommand):
         extra_context.update({
             # Transformations of explicit properties into useful forms
             'module_name': app.module_name,
-            'class_name': app.class_name,
 
             # Properties that are a function of the execution
             'year': date.today().strftime('%Y'),
