@@ -9,11 +9,21 @@ from briefcase.platforms.linux import LinuxMixin
 
 
 class AppImageMixin(LinuxMixin):
-    pass
+    output_format = 'appimage'
+
+    def binary_path(self, app):
+        raise NotImplementedError()
+
+    def bundle_path(self, app):
+        raise NotImplementedError()
+
+    def distribution_path(self, app):
+        raise NotImplementedError()
 
 
 class LinuxAppImageCreateCommand(AppImageMixin, CreateCommand):
     description = "Create and populate a Linux AppImage."
+    template_url = 'https://github.com/beeware/Python-linux-template.git'
 
 
 class LinuxAppImageUpdateCommand(AppImageMixin, UpdateCommand):
@@ -30,15 +40,6 @@ class LinuxAppImageRunCommand(AppImageMixin, RunCommand):
 
 class LinuxAppImagePublishCommand(AppImageMixin, PublishCommand):
     description = "Publish a Linux AppImage."
-
-    def add_options(self):
-        self.parser.add_argument(
-            '-c',
-            '--channel',
-            choices=['s3', 'github', 'appstore'],
-            default='s3',
-            help='The channel to publish to'
-        )
 
 
 # Declare the briefcase command bindings

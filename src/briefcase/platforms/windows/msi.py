@@ -9,7 +9,16 @@ from briefcase.platforms.windows import WindowsMixin
 
 
 class MSIMixin(WindowsMixin):
-    pass
+    output_format = 'msi'
+
+    def bundle_path(self, app):
+        raise NotImplementedError()
+
+    def binary_path(self, app):
+        raise NotImplementedError()
+
+    def distribution_path(self, app):
+        raise NotImplementedError()
 
 
 class WindowsMSICreateCommand(MSIMixin, CreateCommand):
@@ -30,15 +39,6 @@ class WindowsMSIRunCommand(MSIMixin, RunCommand):
 
 class WindowsMSIPublishCommand(MSIMixin, PublishCommand):
     description = "Publish a Windows MSI."
-
-    def add_options(self):
-        self.parser.add_argument(
-            '-c',
-            '--channel',
-            choices=['s3', 'github', 'appstore'],
-            default='s3',
-            help='The channel to publish to'
-        )
 
 
 # Declare the briefcase command bindings

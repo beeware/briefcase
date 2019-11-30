@@ -1,0 +1,18 @@
+{
+  "devices" : {
+    "com.apple.CoreSimulator.SimRuntime.tvOS-13-2" : [
+
+    ],
+    "com.apple.CoreSimulator.SimRuntime.watchOS-6-1" : [
+
+    ],
+    "com.apple.CoreSimulator.SimRuntime.iOS-13-2" : [
+      {
+        "state" : "Shutting Down",
+        "isAvailable" : true,
+        "name" : "iPhone 11",
+        "udid" : "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D"
+      }
+    ]
+  }
+}

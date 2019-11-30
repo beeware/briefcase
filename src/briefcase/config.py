@@ -1,50 +1,83 @@
+import copy
+import re
+
 import toml
 
 from briefcase.platforms import get_output_formats, get_platforms
 
 from .exceptions import BriefcaseConfigError
 
+# The restriction on application naming comes from PEP508
+PEP508_NAME_RE = re.compile(
+    r'^([A-Z0-9]|[A-Z0-9][A-Z0-9._-]*[A-Z0-9])$',
+    re.IGNORECASE
+)
 
-class AppConfig:
+
+class BaseConfig:
+    def __init__(self, **kwargs):
+        for attr, value in kwargs.items():
+            setattr(self, attr, value)
+
+
+class GlobalConfig(BaseConfig):
+    def __repr__(self):
+        return "<GlobalConfig>"
+
+
+class AppConfig(BaseConfig):
     def __init__(
         self,
         name,
         version,
         bundle,
+        description,
+        sources,
+        formal_name=None,
+        requires=None,
         icon=None,
         splash=None,
+        document_type=None,
+        template=None,
         **kwargs
     ):
+        super().__init__(**kwargs)
+
         self.name = name
         self.version = version
         self.bundle = bundle
+        self.description = description
+        self.sources = sources
+        self.formal_name = name if formal_name is None else formal_name
+        self.requires = requires
+        self.icon = icon
+        self.splash = splash
+        self.document_types = {} if document_type is None else document_type
+        self.template = template
 
-        # icon can be specified as a single filename,
-        # or as a dictionary of files, keyed by size in pixels
-        if icon is not None:
-            try:
-                self.icon = {
-                    str(size): filename
-                    for size, filename in icon.items()
-                }
-            except AttributeError:
-                self.icon = icon
+        # Validate that the app name is valid.
+        if not PEP508_NAME_RE.match(self.name):
+            raise BriefcaseConfigError(
+                "'{self.name}' is not a valid app name.\n\n"
+                "App names must be PEP508 compliant (i.e., they can only "
+                "include letters, numbers, '-' and '_'; must start with a "
+                "letter; and cannot end with '-' or '_'.".format(self=self)
+            )
 
-        # splash can be specified as a single filename,
-        # or as a dictionary of files, keyed by dimensions in pixels
-        # (width x height)
-        if splash is not None:
-            try:
-                self.splash = {
-                    str(size): filename
-                    for size, filename in splash.items()
-                }
-            except AttributeError:
-                self.splash = splash
+        # Sources list doesn't include any duplicates
+        source_modules = {source.rsplit('/', 1)[-1] for source in self.sources}
+        if len(self.sources) != len(source_modules):
+            raise BriefcaseConfigError(
+                "The `sources` list for {self.name} contains duplicated "
+                "package names.".format(self=self)
+            )
 
-        # Extra arguments
-        for attr, value in kwargs.items():
-            setattr(self, attr, value)
+        # There is, at least, a source for the app module
+        if self.module_name not in source_modules:
+            raise BriefcaseConfigError(
+                "The `sources` list for {self.name} does not include a "
+                "package named '{self.module_name}'.".format(self=self)
+            )
 
     def __repr__(self):
         return "<AppConfig {bundle}.{name} v{version}>".format(
@@ -54,22 +87,31 @@ class AppConfig:
         )
 
     @property
-    def has_scaled_icon(self):
+    def module_name(self):
         """
-        Does the config's icon provide multiple sizes?
+        The module name for the app.
 
-        Raises an AttributeError if no icon has been defined.
+        This is derived from the name, but:
+        * all `-` have been replaced with `_`.
         """
-        return isinstance(self.icon, dict)
+        return self.name.replace('-', '_')
 
-    @property
-    def has_scaled_splash(self):
-        """
-        Does the config's splash provide multiple sizes?
 
-        Raises an AttributeError if no splash has been defined.
-        """
-        return isinstance(self.splash, dict)
+def merge_config(config, data):
+    """
+    Merge a new set of configuration requirements into a base configuration.
+
+    :param config: the base configuration to update. This configuration
+        is modified in-situ.
+    :param data: The new configuration data to merge into the configuration.
+    """
+    for option in ['requires', 'sources']:
+        value = data.pop(option, [])
+
+        if value:
+            config.setdefault(option, []).extend(value)
+
+    config.update(data)
 
 
 def parse_config(config_file, platform, output_format):
@@ -104,7 +146,7 @@ def parse_config(config_file, platform, output_format):
     try:
         pyproject = toml.load(config_file)
 
-        global_data = pyproject['tool']['briefcase']
+        global_config = pyproject['tool']['briefcase']
     except toml.TomlDecodeError as e:
         raise BriefcaseConfigError('Invalid pyproject.toml: {e}'.format(e=e))
     except KeyError:
@@ -115,7 +157,7 @@ def parse_config(config_file, platform, output_format):
     all_formats = sorted(get_output_formats(platform).keys())
 
     try:
-        all_apps = global_data.pop('app')
+        all_apps = global_config.pop('app')
     except KeyError:
         raise BriefcaseConfigError('No Briefcase apps defined in pyproject.toml')
 
@@ -137,6 +179,7 @@ def parse_config(config_file, platform, output_format):
                     # If the platform matches the requested format, preserve
                     # it for later use.
                     platform_data = platform_block
+                    merge_config(platform_data, platform_data)
 
                     # The platform configuration will contain a section
                     # for each configured output format. Iterate over all
@@ -162,28 +205,32 @@ def parse_config(config_file, platform, output_format):
                     # overwriting any platform-level settings with format-level
                     # values.
                     if format_data:
-                        platform_data.update(format_data)
+                        merge_config(platform_data, format_data)
 
             except KeyError:
                 pass
 
         # Now construct the final configuration.
+        # First, convert the requirement definition at the global level
+        merge_config(global_config, global_config)
+
         # The app's config starts as a copy of the base briefcase configuation.
-        config = global_data.copy()
+        config = copy.deepcopy(global_config)
 
         # The app name is both the key, and a property of the configuration
         config['name'] = app_name
 
-        # Then overwrite the explicit app-specific configuration data
-        config.update(app_data)
+        # Merge the app-specific requirements
+        merge_config(config, app_data)
 
-        # If there is platform-specific configuration, overwrite those values.
+        # If there is platform-specific configuration, merge the requirements,
+        # the overwrite the platform-specific values.
         # This will already include any format-specific configuration.
         if platform_data:
-            config.update(platform_data)
+            merge_config(config, platform_data)
 
         # Construct a configuration object, and add it to the list
         # of configurations that are being handled.
         app_configs[app_name] = config
 
-    return app_configs
+    return global_config, app_configs

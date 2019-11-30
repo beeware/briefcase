@@ -1,6 +1,15 @@
 Release History
 ===============
 
+0.3.0 (In development)
+----------------------
+
+Complete ground up-rewrite.
+
+* New PEP518 compliant configuration format
+* Adds support for different output formats on each platform
+* Full test suite!
+
 0.2.10
 ------
 

@@ -1,6 +1,7 @@
 import pytest
 
 from briefcase.config import AppConfig
+from briefcase.exceptions import BriefcaseConfigError
 
 
 def test_minimal_AppConfig():
@@ -9,20 +10,24 @@ def test_minimal_AppConfig():
         name="myapp",
         version="1.2.3",
         bundle="org.beeware",
+        description="A simple app",
+        sources=['src/myapp'],
     )
 
-    # Requests for an icon or splash raises an attribute error
-    with pytest.raises(AttributeError, match="'AppConfig' object has no attribute 'icon'"):
-        config.icon
+    # The basic properties have been set.
+    assert config.name == "myapp"
+    assert config.version == '1.2.3'
+    assert config.bundle == 'org.beeware'
+    assert config.description == 'A simple app'
+    assert config.requires is None
 
-    with pytest.raises(AttributeError, match="'AppConfig' object has no attribute 'icon'"):
-        config.has_scaled_icon
+    # Derived properties have been set.
+    assert config.formal_name == 'myapp'
+    assert config.document_types == {}
 
-    with pytest.raises(AttributeError, match="'AppConfig' object has no attribute 'splash'"):
-        config.splash
-
-    with pytest.raises(AttributeError, match="'AppConfig' object has no attribute 'splash'"):
-        config.has_scaled_splash
+    # There is no icon or splash of any kind
+    assert config.icon is None
+    assert config.splash is None
 
     assert repr(config) == "<AppConfig org.beeware.myapp v1.2.3>"
 
@@ -31,12 +36,41 @@ def test_extra_attrs():
     "A config can contain attributes in addition to those required"
     config = AppConfig(
         name="myapp",
+        formal_name="My App",
         version="1.2.3",
         bundle="org.beeware",
+        description="A simple app",
+        template='/path/to/template',
+        sources=['src/myapp'],
+        requires=['first', 'second', 'third'],
+        document_type={
+            'document': {
+                'extension': 'doc',
+                'description': 'A document',
+            }
+        },
         first="value 1",
         second=42,
     )
 
+    # The basic properties have been set.
+    assert config.name == "myapp"
+    assert config.version == '1.2.3'
+    assert config.bundle == 'org.beeware'
+    assert config.description == 'A simple app'
+    assert config.template == '/path/to/template'
+    assert config.requires == ['first', 'second', 'third']
+
+    # Properties that are derived by default have been set explicitly
+    assert config.formal_name == 'My App'
+    assert config.document_types == {
+        'document': {
+            'extension': 'doc',
+            'description': 'A document',
+        }
+    }
+
+    # Explicit additional properties have been set
     assert config.first == "value 1"
     assert config.second == 42
 
@@ -45,73 +79,102 @@ def test_extra_attrs():
         config.unknown
 
 
-def test_config_with_simple_icon():
-    "A config can specify a single icon file"
+@pytest.mark.parametrize(
+    'name',
+    [
+        'myapp',  # lowercase
+        'myApp',  # contains uppercase
+        'MyApp',  # initial uppercase
+        'MyAPP',  # ends in uppercase
+        'my-app',  # contains hyphen
+        'my_app',  # contains underscore
+        'myapp2',  # ends with digit
+        'my2app',  # contains digit
+    ]
+)
+def test_valid_app_name(name):
+    try:
+        AppConfig(
+            name=name,
+            version="1.2.3",
+            bundle="org.beeware",
+            description="A simple app",
+            sources=['src/' + name.replace('-', '_')]
+        )
+    except BriefcaseConfigError:
+        pytest.fail('{name} should be valid'.format(name=name))
+
+
+@pytest.mark.parametrize(
+    'name',
+    [
+        '!myapp',  # initial punctuation
+        'my!app',  # contains punctuation
+        'myapp!',  # end punctuation
+        'my$app',  # other punctuation
+        '-myApp',  # initial hyphen
+        'myApp-',  # end hyphen
+        '_myApp',  # initial underscore
+        'myApp_',  # end underscore
+    ]
+)
+def test_invalid_app_name(name):
+    with pytest.raises(BriefcaseConfigError, match=r"is not a valid app name\."):
+        AppConfig(
+            name=name,
+            version="1.2.3",
+            bundle="org.beeware",
+            description="A simple app",
+            sources=['src/invalid']
+        )
+        pytest.fail('{name} should be in invalid'.format(name=name))
+
+
+@pytest.mark.parametrize(
+    'name, module_name',
+    [
+        ('myapp', 'myapp'),
+        ('my-app', 'my_app'),
+    ]
+)
+def test_module_name(name, module_name):
     config = AppConfig(
-        name="myapp",
+        name=name,
         version="1.2.3",
         bundle="org.beeware",
-        icon='myicon.png',
+        description="A simple app",
+        sources=['src/' + module_name]
     )
 
-    assert not config.has_scaled_icon
-    assert config.icon == 'myicon.png'
+    assert config.module_name == module_name
 
 
-def test_config_with_sized_icon():
-    "A config can specify multiple icon sizes (using int or str)"
-    config = AppConfig(
-        name="myapp",
-        version="1.2.3",
-        bundle="org.beeware",
-        icon={
-            72: 'myicon-72.png',
-            '144': 'myicon-144.png',
-        }
-    )
-
-    assert config.has_scaled_icon
-
-    # Icons can be retrieved using a size
-    assert config.icon['72'] == 'myicon-72.png'
-    assert config.icon['144'] == 'myicon-144.png'
-
-    # An unknown icon size raises an error
-    with pytest.raises(KeyError):
-        config.icon['512']
+@pytest.mark.parametrize(
+    'sources',
+    [
+        ['src/dupe', 'src/dupe'],
+        ['src/dupe', 'src/other', 'src/dupe'],
+        ['src/dupe', 'somewhere/dupe', 'src/other'],
+        ['src/dupe', 'src/deep/dupe', 'src/other'],
+    ]
+)
+def test_duplicated_source(sources):
+    with pytest.raises(BriefcaseConfigError, match=r"contains duplicated package names\."):
+        AppConfig(
+            name='dupe',
+            version="1.2.3",
+            bundle="org.beeware",
+            description="A simple app",
+            sources=sources
+        )
 
 
-def test_config_with_simple_splash():
-    "A config can specify a single splash file"
-    config = AppConfig(
-        name="myapp",
-        version="1.2.3",
-        bundle="org.beeware",
-        splash='mysplash.png',
-    )
-
-    assert not config.has_scaled_splash
-    assert config.splash == 'mysplash.png'
-
-
-def test_config_with_sized_splash():
-    "A config can specify multiple splash sizes (using int or str)"
-    config = AppConfig(
-        name="myapp",
-        version="1.2.3",
-        bundle="org.beeware",
-        splash={
-            '640x1136': 'portrait.png',
-            '1136x640': 'landscape.png',
-        }
-    )
-
-    assert config.has_scaled_splash
-
-    # The splash can be retrieved using a size
-    assert config.splash['640x1136'] == 'portrait.png'
-    assert config.splash['1136x640'] == 'landscape.png'
-
-    # An unknown splash size raises an error
-    with pytest.raises(KeyError):
-        config.splash['1234x4321']
+def test_no_source_for_app():
+    with pytest.raises(BriefcaseConfigError, match=r" does not include a package named 'my_app'\."):
+        AppConfig(
+            name='my-app',
+            version="1.2.3",
+            bundle="org.beeware",
+            description="A simple app",
+            sources=['src/something', 'src/other']
+        )

@@ -3,4 +3,7 @@ DEFAULT_OUTPUT_FORMAT = 'msi'
 
 
 class WindowsMixin:
-    pass
+    platform = 'windows'
+
+    def verify_tools(self):
+        pass
