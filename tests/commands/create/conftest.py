@@ -42,6 +42,12 @@ class DummyCreateCommand(CreateCommand):
     def python_version_tag(self):
         return '3.X'
 
+    # Define output format-specific template context.
+    def output_format_template_context(self, app):
+        return {
+            'output_format': 'dummy'
+        }
+
 
 class TrackingCreateCommand(DummyCreateCommand):
     """

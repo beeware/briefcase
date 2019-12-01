@@ -23,6 +23,9 @@ def full_context(extra):
         'version': '1.2.3',
         'description': "This is a simple app",
         'sources': ['src/my_app'],
+        'url': None,
+        'author': None,
+        'author_email': None,
         'requires': None,
         'icon': None,
         'splash': None,
@@ -34,6 +37,9 @@ def full_context(extra):
         # Date-based fields added at time of generation
         'year': date.today().strftime('%Y'),
         'month': date.today().strftime('%B'),
+
+        # Fields added by the output format.
+        'output_format': 'dummy',
     }
     context.update(extra)
     return context

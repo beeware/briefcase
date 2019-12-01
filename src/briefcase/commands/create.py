@@ -307,6 +307,14 @@ class CreateCommand(BaseCommand):
         except KeyError:
             return {}
 
+    def output_format_template_context(self, app: BaseConfig):
+        """
+        Additional template context required by the output format.
+
+        :param app: The config object for the app
+        """
+        return {}
+
     def generate_app_template(self, app: BaseConfig):
         """
         Create an application bundle.
@@ -382,6 +390,9 @@ class CreateCommand(BaseCommand):
             'year': date.today().strftime('%Y'),
             'month': date.today().strftime('%B'),
         })
+
+        # Add in any extra template context required by the output format.
+        extra_context.update(self.output_format_template_context(app))
 
         try:
             # Create the platform directory (if it doesn't already exist)
@@ -512,12 +523,12 @@ class CreateCommand(BaseCommand):
             f.write('Formal-Name: {app.formal_name}\n'.format(app=app))
             f.write('Bundle: {app.bundle}\n'.format(app=app))
             f.write('Version: {app.version}\n'.format(app=app))
-            # f.write('License: {}\n'.format(app=app))
-            # f.write('Home-page: {}\n'.format(app=app))
-            # f.write('Author: {}\n'.format(app=app))
-            # f.write('Author-email: {}\n'.format(app=app))
-            # f.write('Maintainer: {}\n'.format(app=app))
-            # f.write('Maintainer-email:  {}\n'.format(app=app))
+            if app.url:
+                f.write('Home-page: {app.url}\n'.format(app=app))
+            if app.author:
+                f.write('Author: {app.author}\n'.format(app=app))
+            if app.author_email:
+                f.write('Author-email: {app.author_email}\n'.format(app=app))
             f.write('Summary: {app.description}\n'.format(app=app))
 
     def install_image(self, role, size, source, target):

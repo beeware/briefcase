@@ -34,6 +34,9 @@ class AppConfig(BaseConfig):
         description,
         sources,
         formal_name=None,
+        url=None,
+        author=None,
+        author_email=None,
         requires=None,
         icon=None,
         splash=None,
@@ -49,6 +52,9 @@ class AppConfig(BaseConfig):
         self.description = description
         self.sources = sources
         self.formal_name = name if formal_name is None else formal_name
+        self.url = url
+        self.author = author
+        self.author_email = author_email
         self.requires = requires
         self.icon = icon
         self.splash = splash

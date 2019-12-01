@@ -1,7 +1,9 @@
 import os
+import re
 import struct
 import subprocess
 import sys
+import uuid
 from pathlib import Path
 
 from briefcase.commands import (
@@ -84,6 +86,44 @@ class WindowsMSICreateCommand(WindowsMSIMixin, CreateCommand):
             return 'https://www.python.org/ftp/python/%s/python-%s.post1-embed-%s.zip' % (version, version, arch)
         else:
             return 'https://www.python.org/ftp/python/%s/python-%s-embed-%s.zip' % (version, version, arch)
+
+    def output_format_template_context(self, app: BaseConfig):
+        """
+        Additional template context required by the output format.
+
+        :param app: The config object for the app
+        """
+        # WiX requires a 3-element, integer-only version number. If a version
+        # triple isn't explicitly provided, generate one by stripping any
+        # non-numeric portions from the version number.
+        # If there are less than 3 numeric parts, 0s will be appended.
+        try:
+            version_triple = app.version_triple
+        except AttributeError:
+            version_triple = '.'.join(
+                (re.findall(r'\d+', app.version) + ['0', '0'])[:3]
+            )
+
+        # The application needs a unique GUID.
+        # This is used to track the application, even if the application
+        # name changes. We can generate a default GUID using the bundle
+        # and the formal name; but you'll need to manually set this value
+        # if you ever change those two keys.
+        try:
+            guid = app.guid
+        except AttributeError:
+            # Create a DNS domain by reversing the bundle identifier
+            domain = '.'.join(app.bundle.split('.')[::-1])
+            guid = uuid.uuid5(uuid.NAMESPACE_DNS, domain)
+            print("Assigning {app.name} an application GUID of {guid}".format(
+                app=app,
+                guid=guid,
+            ))
+
+        return {
+            'version_triple': version_triple,
+            'guid': str(guid),
+        }
 
     def install_app_support_package(self, app: BaseConfig):
         """
