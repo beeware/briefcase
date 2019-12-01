@@ -21,6 +21,24 @@ class BaseConfig:
 
 
 class GlobalConfig(BaseConfig):
+    def __init__(
+        self,
+        project_name,
+        version,
+        bundle,
+        url=None,
+        author=None,
+        author_email=None,
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.project_name = project_name
+        self.version = version
+        self.bundle = bundle
+        self.url = url
+        self.author = author
+        self.author_email = author_email
+
     def __repr__(self):
         return "<GlobalConfig>"
 

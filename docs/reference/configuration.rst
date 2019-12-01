@@ -13,6 +13,7 @@ file would be::
     requires = ["briefcase"]
 
     [tool.briefcase]
+    project_name = "My Project"
     version = "0.1"
 
     [tool.briefcase.app.myapp]
@@ -86,6 +87,15 @@ example, ``macOS`` applications can be generated in ``app`` or ``dmg`` format.
 Configuration options
 ---------------------
 
+``project_name``
+~~~~~~~~~~~~~~~
+
+**Required**
+
+The project is the collection of all applications that are described by the
+briefcase configuration. For projects with a single app, this may be the same
+as the formal name of the solitary packaged app.
+
 ``formal_name``
 ~~~~~~~~~~~~~~~
 
@@ -95,6 +105,8 @@ used.
 
 ``version``
 ~~~~~~~~~~~
+
+**Required**
 
 A `PEP440 <https://www.python.org/dev/peps/pep-0440/>`__ compliant version
 string.
@@ -123,6 +135,17 @@ A short, one-line description of the purpose of the application.
 
 A reverse-domain name that can be used to identify resources for the
 application e.g., ``com.example.myapp``.
+
+``author``
+~~~~~~~~~~
+
+The person or organization responsible for the application.
+
+``author_email``
+~~~~~~~~~~
+
+The contact email address for the person or organization responsible for the
+application.
 
 ``icon``
 ~~~~~~~~
@@ -222,6 +245,11 @@ format.
 
 If this setting is not provided, Briefcase will use a default template for
 the output format and Python version.
+
+``url``
+~~~~~~~
+
+A URL where more details about the application can be found.
 
 Document types
 --------------

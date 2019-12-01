@@ -1,7 +1,7 @@
 import pytest
 
 from briefcase.commands.base import BaseCommand
-from briefcase.config import AppConfig, GlobalConfig
+from briefcase.config import AppConfig, BaseConfig, GlobalConfig
 
 
 class DummyCommand(BaseCommand):
@@ -68,7 +68,7 @@ publish = DummyPublishCommand
 
 
 # Define a command that defines a custom config class, and has no options.
-class CustomGlobalConfig(GlobalConfig):
+class CustomGlobalConfig(BaseConfig):
     def __init__(self, foo, **kwargs):
         super().__init__(**kwargs)
         self.foo = foo
