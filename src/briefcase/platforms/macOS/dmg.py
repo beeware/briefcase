@@ -57,6 +57,11 @@ class macOSDmgBuildCommand(macOSDmgMixin, macOSAppBuildCommand):
         self.dmgbuild = dmgbuild
 
     def build_app(self, app: BaseConfig, **kwargs):
+        """
+        Build a DMG application.
+
+        :param app: The application to build
+        """
         print()
         print("[{app.name}] Building DMG...".format(app=app))
 
