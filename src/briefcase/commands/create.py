@@ -9,6 +9,7 @@ import boto3
 import toml
 from botocore.handlers import disable_signing
 from cookiecutter import exceptions as cookiecutter_exceptions
+from cookiecutter.repository import is_repo_url
 from git import exc as git_exceptions
 from requests import exceptions as requests_exceptions
 
@@ -321,47 +322,53 @@ class CreateCommand(BaseCommand):
             app_template=app.template,
         ))
 
-        # When in `no_input=True` mode, cookiecutter deletes and reclones
-        # a template directory, rather than updating the existing repo.
-
-        # Look for a cookiecutter cache of the template; if one exists,
-        # try to update it using git. If no cache exists, or if the cache
-        # directory isn't a git directory, or git fails for some reason,
-        # fall back to using the specified template directly.
-        try:
-            template = cookiecutter_cache_path(app.template)
-            repo = self.git.Repo(template)
+        if is_repo_url(app.template):
+            # The app template is a repository URL.
+            #
+            # When in `no_input=True` mode, cookiecutter deletes and reclones
+            # a template directory, rather than updating the existing repo.
+            #
+            # Look for a cookiecutter cache of the template; if one exists,
+            # try to update it using git. If no cache exists, or if the cache
+            # directory isn't a git directory, or git fails for some reason,
+            # fall back to using the specified template directly.
             try:
-                # Attempt to update the repository
-                remote = repo.remote(name='origin')
-                remote.fetch()
-            except git_exceptions.GitCommandError:
-                # We are offline, or otherwise unable to contact
-                # the origin git repo. It's OK to continue; but warn
-                # the user that the template may be stale.
-                print("***************************************************************************")
-                print("WARNING: Unable to update application template (is your computer offline?)")
-                print("WARNING: Briefcase will use existing template without updating.")
-                print("***************************************************************************")
-            try:
-                # Check out the branch for the required version tag.
-                head = remote.refs[self.python_version_tag]
+                template = cookiecutter_cache_path(app.template)
+                repo = self.git.Repo(template)
+                try:
+                    # Attempt to update the repository
+                    remote = repo.remote(name='origin')
+                    remote.fetch()
+                except git_exceptions.GitCommandError:
+                    # We are offline, or otherwise unable to contact
+                    # the origin git repo. It's OK to continue; but warn
+                    # the user that the template may be stale.
+                    print("***************************************************************************")
+                    print("WARNING: Unable to update application template (is your computer offline?)")
+                    print("WARNING: Briefcase will use existing template without updating.")
+                    print("***************************************************************************")
+                try:
+                    # Check out the branch for the required version tag.
+                    head = remote.refs[self.python_version_tag]
 
-                print("Using existing template (sha {hexsha}, updated {datestamp})".format(
-                    hexsha=head.commit.hexsha,
-                    datestamp=head.commit.committed_datetime.strftime("%c")
-                ))
-                head.checkout()
-            except IndexError:
-                # No branch exists for the requested version.
-                raise TemplateUnsupportedPythonVersion(self.python_version_tag)
-        except git_exceptions.NoSuchPathError:
-            # Template cache path doesn't exist.
-            # Just use the template directly, rather than attempting an update.
-            template = app.template
-        except git_exceptions.InvalidGitRepositoryError:
-            # Template cache path exists, but isn't a git repository
-            # Just use the template directly, rather than attempting an update.
+                    print("Using existing template (sha {hexsha}, updated {datestamp})".format(
+                        hexsha=head.commit.hexsha,
+                        datestamp=head.commit.committed_datetime.strftime("%c")
+                    ))
+                    head.checkout()
+                except IndexError:
+                    # No branch exists for the requested version.
+                    raise TemplateUnsupportedPythonVersion(self.python_version_tag)
+            except git_exceptions.NoSuchPathError:
+                # Template cache path doesn't exist.
+                # Just use the template directly, rather than attempting an update.
+                template = app.template
+            except git_exceptions.InvalidGitRepositoryError:
+                # Template cache path exists, but isn't a git repository
+                # Just use the template directly, rather than attempting an update.
+                template = app.template
+        else:
+            # If this isn't a repository URL, treat it as a local directory
             template = app.template
 
         # Construct a template context from the app configuration.

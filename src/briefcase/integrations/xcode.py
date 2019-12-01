@@ -69,9 +69,11 @@ def ensure_xcode_is_installed(min_version=None, sub=subprocess):
 """)
 
     except subprocess.CalledProcessError:
-        raise BriefcaseCommandError(
-            "Xcode is not installed."
-        )
+        raise BriefcaseCommandError("""
+Xcode is not installed.
+
+You can install Xcode from the macOS App Store.
+""")
 
 
 def get_simulators(os_name, sub=subprocess):
