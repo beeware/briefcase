@@ -22,6 +22,9 @@ from briefcase.platforms.iOS import iOSMixin
 class iOSXcodePassiveMixin(iOSMixin):
     output_format = 'Xcode'
 
+    def bundle_path(self, app):
+        return self.platform_path / '{app.formal_name}'.format(app=app)
+
     def binary_path(self, app):
         return (
             self.platform_path
@@ -31,15 +34,7 @@ class iOSXcodePassiveMixin(iOSMixin):
         )
 
     def distribution_path(self, app):
-        return (
-            self.platform_path
-            / '{app.formal_name}'.format(app=app)
-            / 'build' / 'Release-iphone'
-            / '{app.formal_name}.app'.format(app=app)
-        )
-
-    def bundle_path(self, app):
-        return self.platform_path / '{app.formal_name}'.format(app=app)
+        return self.binary_path(app)
 
 
 class iOSXcodeMixin(iOSXcodePassiveMixin):
