@@ -113,7 +113,7 @@ class WindowsMSICreateCommand(WindowsMSIMixin, CreateCommand):
             guid = app.guid
         except AttributeError:
             # Create a DNS domain by reversing the bundle identifier
-            domain = '.'.join(app.bundle.split('.')[::-1])
+            domain = '.'.join([app.name] + app.bundle.split('.')[::-1])
             guid = uuid.uuid5(uuid.NAMESPACE_DNS, domain)
             print("Assigning {app.name} an application GUID of {guid}".format(
                 app=app,
