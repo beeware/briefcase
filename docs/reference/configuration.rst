@@ -142,7 +142,7 @@ application e.g., ``com.example.myapp``.
 The person or organization responsible for the application.
 
 ``author_email``
-~~~~~~~~~~
+~~~~~~~~~~~~~~~~
 
 The contact email address for the person or organization responsible for the
 application.

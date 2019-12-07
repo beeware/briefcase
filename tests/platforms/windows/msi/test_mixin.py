@@ -5,14 +5,14 @@ def test_bundle_path(first_app_config, tmp_path):
     command = WindowsMSICreateCommand(base_path=tmp_path)
     bundle_path = command.bundle_path(first_app_config)
 
-    assert bundle_path == tmp_path / 'windows' / 'first'
+    assert bundle_path == tmp_path / 'windows' / 'apps' / 'first'
 
 
 def test_binary_path(first_app_config, tmp_path):
     command = WindowsMSICreateCommand(base_path=tmp_path)
     binary_path = command.binary_path(first_app_config)
 
-    assert binary_path == tmp_path / 'windows' / 'first' / 'SourceDir' / 'python' / 'pythonw.exe'
+    assert binary_path == tmp_path / 'windows' / 'apps' / 'first' / 'src' / 'python' / 'pythonw.exe'
 
 
 def test_distribution_path(first_app_config, tmp_path):

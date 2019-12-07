@@ -23,7 +23,6 @@ class AppImageMixin(LinuxMixin):
 
 class LinuxAppImageCreateCommand(AppImageMixin, CreateCommand):
     description = "Create and populate a Linux AppImage."
-    template_url = 'https://github.com/beeware/Python-linux-template.git'
 
 
 class LinuxAppImageUpdateCommand(AppImageMixin, UpdateCommand):

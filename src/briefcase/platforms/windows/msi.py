@@ -22,10 +22,10 @@ class WindowsMSIMixin(WindowsMixin):
     output_format = 'msi'
 
     def bundle_path(self, app):
-        return self.platform_path / app.name
+        return self.platform_path / 'apps' / app.name
 
     def binary_path(self, app):
-        return self.platform_path / app.name / 'SourceDir' / 'python' / 'pythonw.exe'
+        return self.platform_path / 'apps' / app.name / 'src' / 'python' / 'pythonw.exe'
 
     def distribution_path(self, app):
         return self.platform_path / '{app.formal_name}-{app.version}.msi'.format(app=app)
@@ -38,12 +38,7 @@ class WindowsMSIMixin(WindowsMixin):
         self.heat_exe = wix_path / 'bin' / 'heat.exe'
         self.light_exe = wix_path / 'bin' / 'light.exe'
         self.candle_exe = wix_path / 'bin' / 'candle.exe'
-        if not (
-            wix_path
-            and self.heat_exe.exists()
-            and self.light_exe.exists()
-            and self.candle_exe.exists()
-        ):
+        if not wix_path:
             raise BriefcaseCommandError("""
 WiX Toolset is not installed.
 
@@ -51,14 +46,23 @@ Please install the latest stable release from:
 
     http://wixtoolset.org/
 
-If WiX is already installed, set the WIX environment variable to the
-install path.
+If WiX is already installed, ensure the WIX environment variable has been set,
+and that it point to the installed location.
 
 If you're using Windows 10, you may need to enable the .NET 3.5 framework
 before installing WiX. Open the Control Panel, select "Programs and Features",
 then "Turn Windows features on or off". Ensure ".NET Framework 3.5 (Includes
 .NET 2.0 and 3.0)" is enabled.
 """)
+        elif not (
+            self.heat_exe.exists()
+            and self.light_exe.exists()
+            and self.candle_exe.exists()
+        ):
+            raise BriefcaseCommandError("""
+The WIX environment variable does not point to an install of the WiX Toolset.
+Current value: {wix_path!r}
+""".format(wix_path=wix_path))
 
 
 class WindowsMSICreateCommand(WindowsMSIMixin, CreateCommand):
@@ -171,15 +175,16 @@ class WindowsMSIBuildCommand(WindowsMSIMixin, BuildCommand):
                 [
                     str(self.heat_exe),
                     "dir",
-                    "SourceDir",
+                    "src",
                     "-nologo",  # Don't display startup text
                     "-gg",  # Generate GUIDs
                     "-sfrag",  # Suppress fragment generation for directories
                     "-sreg",  # Suppress registry harvesting
                     "-srd",  # Suppress harvesting the root directory
                     "-scom",  # Suppress harvesting COM components
-                    "-dr", "BRIEFCASE_CONTENT",  # Root directory reference name
-                    "-cg", "BRIEFCASE_COMPONENTS",  # Root component group name
+                    "-dr", "{app.name}_ROOTDIR".format(app=app),  # Root directory reference name
+                    "-cg", "{app.name}_COMPONENTS".format(app=app),  # Root component group name
+                    "-var", "var.SourceDir",  # variable to use as the source dir
                     "-out", "{app.name}-manifest.wxs".format(app=app),
                 ],
                 check=True,
@@ -199,6 +204,7 @@ class WindowsMSIBuildCommand(WindowsMSIMixin, BuildCommand):
                     "-nologo",  # Don't display startup text
                     "-ext", "WixUtilExtension",
                     "-ext", "WixUIExtension",
+                    "-dSourceDir=src",
                     "{app.name}.wxs".format(app=app),
                     "{app.name}-manifest.wxs".format(app=app),
                 ],

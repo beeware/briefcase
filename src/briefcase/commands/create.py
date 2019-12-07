@@ -102,7 +102,7 @@ class CreateCommand(BaseCommand):
         self._support_package_url = None
 
     @property
-    def template_url(self):
+    def app_template_url(self):
         "The URL for a cookiecutter repository to use when creating apps"
         return 'https://github.com/beeware/briefcase-{self.platform}-{self.output_format}-template.git'.format(
             self=self
@@ -324,7 +324,7 @@ class CreateCommand(BaseCommand):
         # If the app config doesn't explicitly define a template,
         # use a default template.
         if app.template is None:
-            app.template = self.template_url
+            app.template = self.app_template_url
 
         print("Using app template: {app_template}".format(
             app_template=app.template,
@@ -396,12 +396,13 @@ class CreateCommand(BaseCommand):
 
         try:
             # Create the platform directory (if it doesn't already exist)
-            self.platform_path.mkdir(parents=True, exist_ok=True)
+            output_path = self.bundle_path(app).parent
+            output_path.mkdir(parents=True, exist_ok=True)
             # Unroll the template
             self.cookiecutter(
                 str(template),
                 no_input=True,
-                output_dir=str(self.platform_path),
+                output_dir=str(output_path),
                 checkout=self.python_version_tag,
                 extra_context=extra_context
             )

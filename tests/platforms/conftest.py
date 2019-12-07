@@ -7,6 +7,7 @@ from briefcase.config import AppConfig
 def first_app_config():
     return AppConfig(
         name='first',
+        project_name='First Project',
         formal_name='First App',
         bundle='com.example',
         version='0.0.1',

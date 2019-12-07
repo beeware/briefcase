@@ -7,7 +7,7 @@ from briefcase.commands.create import NoSupportPackage
 
 def test_template_url(create_command):
     "The template URL is a simple construction of the platform and format"
-    assert create_command.template_url == 'https://github.com/beeware/briefcase-tester-dummy-template.git'
+    assert create_command.app_template_url == 'https://github.com/beeware/briefcase-tester-dummy-template.git'
 
 
 def test_app_path(create_command, myapp):

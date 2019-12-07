@@ -27,19 +27,20 @@ def test_build_msi(build_command, first_app_config, tmp_path):
             [
                 str(tmp_path / 'wix' / 'bin' / 'heat.exe'),
                 "dir",
-                "SourceDir",
+                "src",
                 "-nologo",
                 "-gg",
                 "-sfrag",
                 "-sreg",
                 "-srd",
                 "-scom",
-                "-dr", "BRIEFCASE_CONTENT",
-                "-cg", "BRIEFCASE_COMPONENTS",
+                "-dr", "first_ROOTDIR",
+                "-cg", "first_COMPONENTS",
+                "-var", "var.SourceDir",
                 "-out", "first-manifest.wxs",
             ],
             check=True,
-            cwd=str(tmp_path / 'windows' / 'first'),
+            cwd=str(tmp_path / 'windows' / 'apps' / 'first'),
         ),
         # Compile MSI
         mock.call(
@@ -48,11 +49,12 @@ def test_build_msi(build_command, first_app_config, tmp_path):
                 "-nologo",
                 "-ext", "WixUtilExtension",
                 "-ext", "WixUIExtension",
+                "-dSourceDir=src",
                 "first.wxs",
                 "first-manifest.wxs",
             ],
             check=True,
-            cwd=str(tmp_path / 'windows' / 'first'),
+            cwd=str(tmp_path / 'windows' / 'apps' / 'first'),
         ),
 
         # Link MSI
@@ -67,6 +69,6 @@ def test_build_msi(build_command, first_app_config, tmp_path):
                 "first-manifest.wixobj",
             ],
             check=True,
-            cwd=str(tmp_path / 'windows' / 'first'),
+            cwd=str(tmp_path / 'windows' / 'apps' / 'first'),
         ),
     ])
