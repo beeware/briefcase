@@ -22,10 +22,10 @@ class WindowsMSIMixin(WindowsMixin):
     output_format = 'msi'
 
     def bundle_path(self, app):
-        return self.platform_path / 'apps' / app.name
+        return self.platform_path / app.formal_name
 
     def binary_path(self, app):
-        return self.platform_path / 'apps' / app.name / 'src' / 'python' / 'pythonw.exe'
+        return self.platform_path / app.formal_name / 'src' / 'python' / 'pythonw.exe'
 
     def distribution_path(self, app):
         return self.platform_path / '{app.formal_name}-{app.version}.msi'.format(app=app)
