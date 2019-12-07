@@ -29,7 +29,7 @@ def test_minimal_AppConfig():
     assert config.icon is None
     assert config.splash is None
 
-    assert repr(config) == "<AppConfig org.beeware.myapp v1.2.3>"
+    assert repr(config) == "<org.beeware.myapp v1.2.3 AppConfig>"
 
 
 def test_extra_attrs():
@@ -127,7 +127,30 @@ def test_invalid_app_name(name):
             description="A simple app",
             sources=['src/invalid']
         )
-        pytest.fail('{name} should be in invalid'.format(name=name))
+
+
+def test_valid_app_version():
+    try:
+        AppConfig(
+            name="myapp",
+            version="1.2.3",
+            bundle="org.beeware",
+            description="A simple app",
+            sources=['src/myapp']
+        )
+    except BriefcaseConfigError:
+        pytest.fail('1.2.3 should be a valid version number')
+
+
+def test_invalid_app_version():
+    with pytest.raises(BriefcaseConfigError, match=r"Version number for myapp.*is not valid\."):
+        AppConfig(
+            name="myapp",
+            version="foobar",
+            bundle="org.beeware",
+            description="A simple app",
+            sources=['src/invalid']
+        )
 
 
 @pytest.mark.parametrize(

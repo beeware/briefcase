@@ -23,6 +23,9 @@ def full_context(extra):
         'version': '1.2.3',
         'description': "This is a simple app",
         'sources': ['src/my_app'],
+        'url': None,
+        'author': None,
+        'author_email': None,
         'requires': None,
         'icon': None,
         'splash': None,
@@ -34,6 +37,9 @@ def full_context(extra):
         # Date-based fields added at time of generation
         'year': date.today().strftime('%Y'),
         'month': date.today().strftime('%B'),
+
+        # Fields added by the output format.
+        'output_format': 'dummy',
     }
     context.update(extra)
     return context
@@ -120,10 +126,6 @@ def test_explicit_local_template(create_command, myapp):
     "If a local template path is specified in the app config, it is used"
     myapp.template = '/path/to/special-template'
 
-    # The template is a local directory, so there won't
-    # ever be a cookiecutter cache;
-    create_command.git.Repo.side_effect = git_exceptions.InvalidGitRepositoryError
-
     # Generate the template.
     create_command.generate_app_template(myapp)
 
@@ -140,6 +142,9 @@ def test_explicit_local_template(create_command, myapp):
             'template': '/path/to/special-template',
         })
     )
+
+    # The template is a local directory, so there won't be any calls on git.
+    assert create_command.git.Repo.call_count == 0
 
 
 def test_offline_repo_template(create_command, myapp):

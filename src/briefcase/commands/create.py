@@ -9,6 +9,7 @@ import boto3
 import toml
 from botocore.handlers import disable_signing
 from cookiecutter import exceptions as cookiecutter_exceptions
+from cookiecutter.repository import is_repo_url
 from git import exc as git_exceptions
 from requests import exceptions as requests_exceptions
 
@@ -101,7 +102,7 @@ class CreateCommand(BaseCommand):
         self._support_package_url = None
 
     @property
-    def template_url(self):
+    def app_template_url(self):
         "The URL for a cookiecutter repository to use when creating apps"
         return 'https://github.com/beeware/briefcase-{self.platform}-{self.output_format}-template.git'.format(
             self=self
@@ -306,6 +307,14 @@ class CreateCommand(BaseCommand):
         except KeyError:
             return {}
 
+    def output_format_template_context(self, app: BaseConfig):
+        """
+        Additional template context required by the output format.
+
+        :param app: The config object for the app
+        """
+        return {}
+
     def generate_app_template(self, app: BaseConfig):
         """
         Create an application bundle.
@@ -315,53 +324,59 @@ class CreateCommand(BaseCommand):
         # If the app config doesn't explicitly define a template,
         # use a default template.
         if app.template is None:
-            app.template = self.template_url
+            app.template = self.app_template_url
 
         print("Using app template: {app_template}".format(
             app_template=app.template,
         ))
 
-        # When in `no_input=True` mode, cookiecutter deletes and reclones
-        # a template directory, rather than updating the existing repo.
-
-        # Look for a cookiecutter cache of the template; if one exists,
-        # try to update it using git. If no cache exists, or if the cache
-        # directory isn't a git directory, or git fails for some reason,
-        # fall back to using the specified template directly.
-        try:
-            template = cookiecutter_cache_path(app.template)
-            repo = self.git.Repo(template)
+        if is_repo_url(app.template):
+            # The app template is a repository URL.
+            #
+            # When in `no_input=True` mode, cookiecutter deletes and reclones
+            # a template directory, rather than updating the existing repo.
+            #
+            # Look for a cookiecutter cache of the template; if one exists,
+            # try to update it using git. If no cache exists, or if the cache
+            # directory isn't a git directory, or git fails for some reason,
+            # fall back to using the specified template directly.
             try:
-                # Attempt to update the repository
-                remote = repo.remote(name='origin')
-                remote.fetch()
-            except git_exceptions.GitCommandError:
-                # We are offline, or otherwise unable to contact
-                # the origin git repo. It's OK to continue; but warn
-                # the user that the template may be stale.
-                print("***************************************************************************")
-                print("WARNING: Unable to update application template (is your computer offline?)")
-                print("WARNING: Briefcase will use existing template without updating.")
-                print("***************************************************************************")
-            try:
-                # Check out the branch for the required version tag.
-                head = remote.refs[self.python_version_tag]
+                template = cookiecutter_cache_path(app.template)
+                repo = self.git.Repo(template)
+                try:
+                    # Attempt to update the repository
+                    remote = repo.remote(name='origin')
+                    remote.fetch()
+                except git_exceptions.GitCommandError:
+                    # We are offline, or otherwise unable to contact
+                    # the origin git repo. It's OK to continue; but warn
+                    # the user that the template may be stale.
+                    print("***************************************************************************")
+                    print("WARNING: Unable to update application template (is your computer offline?)")
+                    print("WARNING: Briefcase will use existing template without updating.")
+                    print("***************************************************************************")
+                try:
+                    # Check out the branch for the required version tag.
+                    head = remote.refs[self.python_version_tag]
 
-                print("Using existing template (sha {hexsha}, updated {datestamp})".format(
-                    hexsha=head.commit.hexsha,
-                    datestamp=head.commit.committed_datetime.strftime("%c")
-                ))
-                head.checkout()
-            except IndexError:
-                # No branch exists for the requested version.
-                raise TemplateUnsupportedPythonVersion(self.python_version_tag)
-        except git_exceptions.NoSuchPathError:
-            # Template cache path doesn't exist.
-            # Just use the template directly, rather than attempting an update.
-            template = app.template
-        except git_exceptions.InvalidGitRepositoryError:
-            # Template cache path exists, but isn't a git repository
-            # Just use the template directly, rather than attempting an update.
+                    print("Using existing template (sha {hexsha}, updated {datestamp})".format(
+                        hexsha=head.commit.hexsha,
+                        datestamp=head.commit.committed_datetime.strftime("%c")
+                    ))
+                    head.checkout()
+                except IndexError:
+                    # No branch exists for the requested version.
+                    raise TemplateUnsupportedPythonVersion(self.python_version_tag)
+            except git_exceptions.NoSuchPathError:
+                # Template cache path doesn't exist.
+                # Just use the template directly, rather than attempting an update.
+                template = app.template
+            except git_exceptions.InvalidGitRepositoryError:
+                # Template cache path exists, but isn't a git repository
+                # Just use the template directly, rather than attempting an update.
+                template = app.template
+        else:
+            # If this isn't a repository URL, treat it as a local directory
             template = app.template
 
         # Construct a template context from the app configuration.
@@ -376,14 +391,18 @@ class CreateCommand(BaseCommand):
             'month': date.today().strftime('%B'),
         })
 
+        # Add in any extra template context required by the output format.
+        extra_context.update(self.output_format_template_context(app))
+
         try:
             # Create the platform directory (if it doesn't already exist)
-            self.platform_path.mkdir(parents=True, exist_ok=True)
+            output_path = self.bundle_path(app).parent
+            output_path.mkdir(parents=True, exist_ok=True)
             # Unroll the template
             self.cookiecutter(
                 str(template),
                 no_input=True,
-                output_dir=str(self.platform_path),
+                output_dir=str(output_path),
                 checkout=self.python_version_tag,
                 extra_context=extra_context
             )
@@ -505,12 +524,12 @@ class CreateCommand(BaseCommand):
             f.write('Formal-Name: {app.formal_name}\n'.format(app=app))
             f.write('Bundle: {app.bundle}\n'.format(app=app))
             f.write('Version: {app.version}\n'.format(app=app))
-            # f.write('License: {}\n'.format(app=app))
-            # f.write('Home-page: {}\n'.format(app=app))
-            # f.write('Author: {}\n'.format(app=app))
-            # f.write('Author-email: {}\n'.format(app=app))
-            # f.write('Maintainer: {}\n'.format(app=app))
-            # f.write('Maintainer-email:  {}\n'.format(app=app))
+            if app.url:
+                f.write('Home-page: {app.url}\n'.format(app=app))
+            if app.author:
+                f.write('Author: {app.author}\n'.format(app=app))
+            if app.author_email:
+                f.write('Author-email: {app.author_email}\n'.format(app=app))
             f.write('Summary: {app.description}\n'.format(app=app))
 
     def install_image(self, role, size, source, target):

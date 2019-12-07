@@ -275,12 +275,12 @@ def test_command_unknown_format(monkeypatch):
 
 
 def test_command_explicit_unsupported_format(monkeypatch):
-    "``briefcase create wearos apk`` raises an error because the platform isn't supported yet"
+    "``briefcase create macOS homebrew`` raises an error because the format isn't supported (yet)"
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, 'platform', 'darwin')
 
     with pytest.raises(UnsupportedCommandError):
-        parse_cmdline('create wearos apk'.split())
+        parse_cmdline('create macOS homebrew'.split())
 
 
 def test_command_explicit_format_help(monkeypatch, capsys):

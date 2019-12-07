@@ -25,7 +25,7 @@ class DummyRunCommand(RunCommand):
         return self.platform_path / app.name / '{app.name}.bin'.format(app=app)
 
     def distribution_path(self, app):
-        return self.platform_path / app.name / '{app.name}.dummy.dist'.format(app=app)
+        return self.platform_path / app.name / '{app.name}.dist'.format(app=app)
 
     def run_app(self, app, **kwargs):
         self.actions.append(('run', app.name, kwargs))
