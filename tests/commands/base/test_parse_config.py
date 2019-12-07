@@ -78,14 +78,14 @@ def test_parse_config(base_command):
     base_command.parse_config(filename)
 
     # There is a global configuration object
-    assert repr(base_command.global_config) == '<GlobalConfig>'
+    assert repr(base_command.global_config) == '<Sample project v1.2.3 GlobalConfig>'
     assert base_command.global_config.project_name == 'Sample project'
     assert base_command.global_config.bundle == 'org.beeware'
     assert base_command.global_config.version == '1.2.3'
 
     # The first app will have all the base attributes required by an app,
     # defined in the config file.
-    assert repr(base_command.apps['firstapp']) == '<AppConfig org.beeware.firstapp v1.2.3>'
+    assert repr(base_command.apps['firstapp']) == '<org.beeware.firstapp v1.2.3 AppConfig>'
     assert base_command.apps['firstapp'].project_name == 'Sample project'
     assert base_command.apps['firstapp'].name == 'firstapp'
     assert base_command.apps['firstapp'].bundle == 'org.beeware'
@@ -94,7 +94,7 @@ def test_parse_config(base_command):
 
     # The second app is much the same, except that it has an override
     # value for `mystery`, and an `extra` value.
-    assert repr(base_command.apps['secondapp']) == '<AppConfig org.beeware.secondapp v1.2.3>'
+    assert repr(base_command.apps['secondapp']) == '<org.beeware.secondapp v1.2.3 AppConfig>'
     assert base_command.apps['secondapp'].project_name == 'Sample project'
     assert base_command.apps['secondapp'].name == 'secondapp'
     assert base_command.apps['secondapp'].bundle == 'org.beeware'

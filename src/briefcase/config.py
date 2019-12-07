@@ -47,7 +47,7 @@ class GlobalConfig(BaseConfig):
         url=None,
         author=None,
         author_email=None,
-        **kwargs,
+        **kwargs
     ):
         super().__init__(**kwargs)
         self.project_name = project_name
