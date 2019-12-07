@@ -14,6 +14,24 @@ PEP508_NAME_RE = re.compile(
 )
 
 
+def is_pep440_canonical_version(version):
+    """
+    Determine if the string describes a valid PEP440 canonical version specifier.
+
+    This implementation comes directly from PEP440 itself.
+
+    :returns: True if the version string is valid; false otherwise.
+    """
+    return re.match(
+        (
+            r'^([1-9][0-9]*!)?'
+            r'(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*))*((a|b|rc)(0|[1-9][0-9]*))?'
+            r'(\.post(0|[1-9][0-9]*))?(\.dev(0|[1-9][0-9]*))?$'
+        ),
+        version
+    ) is not None
+
+
 class BaseConfig:
     def __init__(self, **kwargs):
         for attr, value in kwargs.items():
@@ -39,8 +57,18 @@ class GlobalConfig(BaseConfig):
         self.author = author
         self.author_email = author_email
 
+        # Version number is PEP440 compliant:
+        if not is_pep440_canonical_version(self.version):
+            raise BriefcaseConfigError(
+                "Version number ({self.version}) is not valid.\n\n"
+                "Version numbers must be PEP440 compliant; "
+                "see https://www.python.org/dev/peps/pep-0440/ for details.".format(
+                    self=self
+                )
+            )
+
     def __repr__(self):
-        return "<GlobalConfig>"
+        return "<{self.project_name} v{self.version} GlobalConfig>".format(self=self)
 
 
 class AppConfig(BaseConfig):
@@ -82,10 +110,20 @@ class AppConfig(BaseConfig):
         # Validate that the app name is valid.
         if not PEP508_NAME_RE.match(self.name):
             raise BriefcaseConfigError(
-                "'{self.name}' is not a valid app name.\n\n"
+                "{self.name!r} is not a valid app name.\n\n"
                 "App names must be PEP508 compliant (i.e., they can only "
                 "include letters, numbers, '-' and '_'; must start with a "
                 "letter; and cannot end with '-' or '_'.".format(self=self)
+            )
+
+        # Version number is PEP440 compliant:
+        if not is_pep440_canonical_version(self.version):
+            raise BriefcaseConfigError(
+                "Version number for {self.name} ({self.version}) is not valid.\n\n"
+                "Version numbers must be PEP440 compliant; "
+                "see https://www.python.org/dev/peps/pep-0440/ for details.".format(
+                    self=self
+                )
             )
 
         # Sources list doesn't include any duplicates
@@ -104,10 +142,8 @@ class AppConfig(BaseConfig):
             )
 
     def __repr__(self):
-        return "<AppConfig {bundle}.{name} v{version}>".format(
-            bundle=self.bundle,
-            name=self.name,
-            version=self.version,
+        return "<{self.bundle}.{self.name} v{self.version} AppConfig>".format(
+            self=self,
         )
 
     @property
