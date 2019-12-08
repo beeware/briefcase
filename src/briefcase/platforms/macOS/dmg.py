@@ -26,9 +26,9 @@ class macOSDmgMixin(macOSAppMixin):
     def verify_tools(self):
         super().verify_tools()
         if dmgbuild is None:
-            raise BriefcaseCommandError(
-                "DMG files require macOS-specific tools."
-            )
+            raise BriefcaseCommandError("""
+A macOS DMG can only be created on macOS.
+""")
 
 
 class macOSDmgCreateCommand(macOSDmgMixin, macOSAppCreateCommand):

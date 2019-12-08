@@ -1,4 +1,5 @@
 import os
+import platform
 import re
 import struct
 import subprocess
@@ -31,6 +32,12 @@ class WindowsMSIMixin(WindowsMixin):
         return self.platform_path / '{app.formal_name}-{app.version}.msi'.format(app=app)
 
     def verify_tools(self):
+        super().verify_tools()
+        if self.host_os != 'Windows':
+            raise BriefcaseCommandError("""
+A Windows MSI installer can only be created on Windows.
+""")
+
         # Look for the WiX environment variable
         wix_path = Path(os.getenv('WIX', ''))
 
