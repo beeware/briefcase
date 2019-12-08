@@ -1,5 +1,6 @@
 import importlib
 import inspect
+import os
 import platform
 import shutil
 import subprocess
@@ -96,6 +97,7 @@ class BaseCommand(ABC):
         self.git = git
         self.requests = requests
         self.input = input
+        self.os = os
         self.shutil = shutil
         self.subprocess = subprocess
 
