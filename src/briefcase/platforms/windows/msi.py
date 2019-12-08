@@ -22,15 +22,21 @@ class WindowsMSIMixin(WindowsMixin):
     output_format = 'msi'
 
     def bundle_path(self, app):
-        return self.platform_path / 'apps' / app.name
+        return self.platform_path / app.formal_name
 
     def binary_path(self, app):
-        return self.platform_path / 'apps' / app.name / 'src' / 'python' / 'pythonw.exe'
+        return self.platform_path / app.formal_name / 'src' / 'python' / 'pythonw.exe'
 
     def distribution_path(self, app):
         return self.platform_path / '{app.formal_name}-{app.version}.msi'.format(app=app)
 
     def verify_tools(self):
+        super().verify_tools()
+        if self.host_os != 'Windows':
+            raise BriefcaseCommandError("""
+A Windows MSI installer can only be created on Windows.
+""")
+
         # Look for the WiX environment variable
         wix_path = Path(os.getenv('WIX', ''))
 
@@ -44,7 +50,7 @@ WiX Toolset is not installed.
 
 Please install the latest stable release from:
 
-    http://wixtoolset.org/
+    https://wixtoolset.org/
 
 If WiX is already installed, ensure the WIX environment variable has been set,
 and that it point to the installed location.

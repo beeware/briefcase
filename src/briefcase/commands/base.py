@@ -1,5 +1,7 @@
 import importlib
 import inspect
+import os
+import platform
 import shutil
 import subprocess
 import sys
@@ -85,12 +87,17 @@ class BaseCommand(ABC):
         self.global_config = None
         self.apps = {} if apps is None else apps
 
+        # Some details about the host machine
+        self.host_arch = platform.machine()
+        self.host_os = platform.system()
+
         # External service APIs.
         # These are abstracted to enable testing without patching.
         self.cookiecutter = cookiecutter
         self.git = git
         self.requests = requests
         self.input = input
+        self.os = os
         self.shutil = shutil
         self.subprocess = subprocess
 

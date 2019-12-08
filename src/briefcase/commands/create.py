@@ -122,6 +122,12 @@ class CreateCommand(BaseCommand):
         return self._s3
 
     @property
+    def support_package_key_prefix(self):
+        return 'python/{self.python_version_tag}/{self.platform}/'.format(
+            self=self,
+        )
+
+    @property
     def support_package_url(self):
         "The URL of the support package to use for apps of this type."
         if self._support_package_url is None:
@@ -135,16 +141,14 @@ class CreateCommand(BaseCommand):
             top_build_number = 0
             top_build = None
             paginator = s3.get_paginator('list_objects_v2')
+
             for page in paginator.paginate(
                 Bucket=S3_BUCKET,
-                Prefix='python/{}/{}/'.format(
-                    self.python_version_tag,
-                    self.platform
-                )
+                Prefix=self.support_package_key_prefix
             ):
                 for item in page.get('Contents', []):
                     build_number = int(
-                        item['Key'].rstrip('.tar.gz').split('.')[-1].lstrip('b')
+                        item['Key'].split('.')[-3].lstrip('b')
                     )
                     if build_number > top_build_number:
                         top_build_number = build_number
@@ -497,7 +501,7 @@ class CreateCommand(BaseCommand):
                 # Remove existing versions of the code
                 if target.exists():
                     if target.is_dir():
-                        self.shutil.rmtree(target)
+                        self.shutil.rmtree(str(target))
                     else:
                         target.unlink()
 
@@ -572,7 +576,7 @@ class CreateCommand(BaseCommand):
                 # Make sure the target directory exists
                 target.parent.mkdir(parents=True, exist_ok=True)
                 # Copy the source image to the target location
-                self.shutil.copy(full_source, target)
+                self.shutil.copy(str(full_source), str(target))
             else:
                 print(
                     "Unable to find {source_filename} for {full_role}; using default".format(

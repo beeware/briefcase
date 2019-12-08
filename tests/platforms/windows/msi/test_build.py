@@ -40,7 +40,7 @@ def test_build_msi(build_command, first_app_config, tmp_path):
                 "-out", "first-manifest.wxs",
             ],
             check=True,
-            cwd=str(tmp_path / 'windows' / 'apps' / 'first'),
+            cwd=str(tmp_path / 'windows' / 'First App'),
         ),
         # Compile MSI
         mock.call(
@@ -54,7 +54,7 @@ def test_build_msi(build_command, first_app_config, tmp_path):
                 "first-manifest.wxs",
             ],
             check=True,
-            cwd=str(tmp_path / 'windows' / 'apps' / 'first'),
+            cwd=str(tmp_path / 'windows' / 'First App'),
         ),
 
         # Link MSI
@@ -69,6 +69,6 @@ def test_build_msi(build_command, first_app_config, tmp_path):
                 "first-manifest.wixobj",
             ],
             check=True,
-            cwd=str(tmp_path / 'windows' / 'apps' / 'first'),
+            cwd=str(tmp_path / 'windows' / 'First App'),
         ),
     ])
