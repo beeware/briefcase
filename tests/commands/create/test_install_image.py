@@ -59,8 +59,8 @@ def test_no_requested_size(create_command, tmp_path, capsys):
 
     # The file was copied into position
     create_command.shutil.copy.assert_called_with(
-        create_command.base_path / 'input' / 'original.png',
-        out_path,
+        str(create_command.base_path / 'input' / 'original.png'),
+        str(out_path),
     )
 
 
@@ -111,8 +111,8 @@ def test_requested_size(create_command, tmp_path, capsys):
 
     # The file was copied into position
     create_command.shutil.copy.assert_called_with(
-        create_command.base_path / 'input' / 'original-3742.png',
-        out_path,
+        str(create_command.base_path / 'input' / 'original-3742.png'),
+        str(out_path),
     )
 
 

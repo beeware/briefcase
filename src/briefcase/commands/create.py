@@ -497,7 +497,7 @@ class CreateCommand(BaseCommand):
                 # Remove existing versions of the code
                 if target.exists():
                     if target.is_dir():
-                        self.shutil.rmtree(target)
+                        self.shutil.rmtree(str(target))
                     else:
                         target.unlink()
 
@@ -572,7 +572,7 @@ class CreateCommand(BaseCommand):
                 # Make sure the target directory exists
                 target.parent.mkdir(parents=True, exist_ok=True)
                 # Copy the source image to the target location
-                self.shutil.copy(full_source, target)
+                self.shutil.copy(str(full_source), str(target))
             else:
                 print(
                     "Unable to find {source_filename} for {full_role}; using default".format(
