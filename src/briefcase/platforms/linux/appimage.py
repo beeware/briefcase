@@ -22,9 +22,11 @@ class LinuxAppImageMixin(LinuxMixin):
         return self.platform_path / '{app.formal_name}.AppDir'.format(app=app)
 
     def binary_path(self, app):
-        return self.platform_path / '{app.formal_name}-{app.version}-{self.host_arch}.AppImage'.format(
+        binary_name = app.formal_name.replace(' ', '_')
+        return self.platform_path / '{binary_name}-{app.version}-{self.host_arch}.AppImage'.format(
             app=app,
             self=self,
+            binary_name=binary_name,
         )
 
     def distribution_path(self, app):
