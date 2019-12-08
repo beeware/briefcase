@@ -44,7 +44,7 @@ WiX Toolset is not installed.
 
 Please install the latest stable release from:
 
-    http://wixtoolset.org/
+    https://wixtoolset.org/
 
 If WiX is already installed, ensure the WIX environment variable has been set,
 and that it point to the installed location.
