@@ -131,7 +131,7 @@ def test_build_appimage(build_command, first_app_config, tmp_path):
     )
     # Binary is marked executable
     build_command.os.chmod.assert_called_with(
-        str(tmp_path / 'linux' / 'First App-0.0.1-wonky.AppImage'),
+        str(tmp_path / 'linux' / 'First_App-0.0.1-wonky.AppImage'),
         0o755
     )
 
