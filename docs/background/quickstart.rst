@@ -1,7 +1,7 @@
 Quickstart
 ==========
 
-In your virtualenv, install Briefcase::
+To install Briefcase, run::
 
     $ pip install briefcase
 
@@ -12,12 +12,13 @@ don't already have one), and add the following content::
     requires = ["briefcase"]
 
     [tool.briefcase]
+    project_name = "My project"
+    bundle = "com.example"
     version = "0.1"
 
     [tool.briefcase.app.myapp]
     formal_name = "My App"
     description = "My first Briefcase App"
-    bundle = "com.example.myapp"
     sources = ['src/myapp']
     requires = ['...']
 
@@ -49,7 +50,7 @@ as an argument. For example, to create an iOS app, run::
 
 .. admonition:: Build tool dependencies
 
-    Building for other platforms depends on the build tools for the platform
+    Building for some platforms depends on the build tools for the platform
     you're targetting being available on the platform you're using. For
     example, you will only be able to create iOS applications on macOS.
     Briefcase will check for any required tools, and will report an error if
@@ -68,7 +69,7 @@ then rebuild your app. The ``update`` command also accepts a `-d` command if
 you need to update your dependencies, and a ``-r`` if you need to update
 application resources (such as icons and splash images).
 
- Alternatively, if you want to repackage your application's code and
- immediately re-run the app, you can pass ``-u`` to the ``run`` command::
+Alternatively, if you want to repackage your application's code and
+immediately re-run the app, you can pass ``-u`` to the ``run`` command::
 
     $ briefcase run -u
