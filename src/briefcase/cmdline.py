@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 
 from briefcase import __version__
-from briefcase.commands import NewCommand, LocalCommand
+from briefcase.commands import NewCommand, DevCommand
 from briefcase.platforms import get_output_formats, get_platforms
 
 from .exceptions import (
@@ -42,7 +42,7 @@ def parse_cmdline(args):
     # usage string so that the instructions displayed are correct
     parser.add_argument(
         'command',
-        choices=['new', 'local', 'create', 'update', 'build', 'run', 'publish'],
+        choices=['new', 'dev', 'create', 'update', 'build', 'run', 'publish'],
         metavar='command',
         nargs='?',
         help='the command to execute (one of: %(choices)s)',
@@ -100,8 +100,8 @@ def parse_cmdline(args):
             extra=extra
         )
         return command, options
-    elif options.command == 'local':
-        command = LocalCommand(base_path=Path.cwd())
+    elif options.command == 'dev':
+        command = DevCommand(base_path=Path.cwd())
         options = command.parse_options(
             extra=extra
         )

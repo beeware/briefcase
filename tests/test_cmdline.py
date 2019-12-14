@@ -4,7 +4,7 @@ import pytest
 
 from briefcase import __version__
 from briefcase.cmdline import parse_cmdline
-from briefcase.commands import LocalCommand, NewCommand
+from briefcase.commands import DevCommand, NewCommand
 from briefcase.exceptions import (
     InvalidFormatError,
     NoCommandError,
@@ -94,14 +94,14 @@ def test_new_command():
     assert options == {'verbosity': 1}
 
 
-def test_local_command(monkeypatch):
-    "``briefcase local`` returns the Local command"
+def test_dev_command(monkeypatch):
+    "``briefcase dev`` returns the Dev command"
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, 'platform', 'darwin')
 
-    cmd, options = parse_cmdline('local'.split())
+    cmd, options = parse_cmdline('dev'.split())
 
-    assert isinstance(cmd, LocalCommand)
+    assert isinstance(cmd, DevCommand)
     assert cmd.platform == 'macOS'
     assert cmd.output_format is None
     assert options == {

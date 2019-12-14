@@ -1,7 +1,6 @@
 import os
 import subprocess
 import sys
-from pathlib import Path
 from typing import Optional
 
 from briefcase.config import BaseConfig
@@ -11,15 +10,15 @@ from .base import BaseCommand
 from .create import DependencyInstallError, write_dist_info
 
 
-class LocalCommand(BaseCommand):
-    cmd_line = 'briefcase local'
-    command = 'local'
+class DevCommand(BaseCommand):
+    cmd_line = 'briefcase dev'
+    command = 'dev'
     output_format = None
-    description = 'Run a briefcase project in the local environment'
+    description = 'Run a briefcase project in the dev environment'
 
     @property
     def platform(self):
-        """The local command always reports as the local platform."""
+        """The dev command always reports as the local platform."""
         return {
             'darwin': 'macOS',
             'linux': 'linux',
@@ -27,15 +26,15 @@ class LocalCommand(BaseCommand):
         }[sys.platform]
 
     def bundle_path(self, app):
-        "A placeholder; Local command doesn't have a bundle path"
+        "A placeholder; Dev command doesn't have a bundle path"
         raise NotImplementedError()
 
     def binary_path(self, app):
-        "A placeholder; Local command doesn't have a binary path"
+        "A placeholder; Dev command doesn't have a binary path"
         raise NotImplementedError()
 
     def distribution_path(self, app):
-        "A placeholder; Local command doesn't have a distribution path"
+        "A placeholder; Dev command doesn't have a distribution path"
         raise NotImplementedError()
 
     def add_options(self, parser):
@@ -52,9 +51,9 @@ class LocalCommand(BaseCommand):
             help='Update dependencies for app'
         )
 
-    def install_local_dependencies(self, app: BaseConfig, **kwargs):
+    def install_dev_dependencies(self, app: BaseConfig, **kwargs):
         """
-        Install the dependencies for the app locally.
+        Install the dependencies for the app devly.
 
         :param app: The config object for the app
         """
@@ -73,9 +72,9 @@ class LocalCommand(BaseCommand):
         else:
             print("No application dependencies.")
 
-    def run_local_app(self, app: BaseConfig, **kwargs):
+    def run_dev_app(self, app: BaseConfig, **kwargs):
         """
-        Run the app in the local environment.
+        Run the app in the dev environment.
 
         :param app: The config object for the app
         """
@@ -132,8 +131,16 @@ class LocalCommand(BaseCommand):
         # do it regardless.
         dist_info_path = self.app_module_path(app).parent / '{app.module_name}.dist-info'.format(app=app)
         if update_dependencies or not dist_info_path.exists():
-            self.install_local_dependencies(app, **kwargs)
+            print()
+            print('[{app.name}] Installing dependencies...'.format(
+                app=app
+            ))
+            self.install_dev_dependencies(app, **kwargs)
             write_dist_info(app, dist_info_path)
 
-        state = self.run_local_app(app, **kwargs)
+        print()
+        print('[{app.name}] Starting in dev mode...'.format(
+            app=app
+        ))
+        state = self.run_dev_app(app, **kwargs)
         return state

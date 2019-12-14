@@ -1,37 +1,37 @@
 import pytest
 
-from briefcase.commands import LocalCommand
+from briefcase.commands import DevCommand
 from briefcase.commands.base import full_kwargs
 from briefcase.config import AppConfig
 
 
-class DummyLocalCommand(LocalCommand):
+class DummyDevCommand(DevCommand):
     """
-    A dummy Local command that doesn't actually do anything.
+    A dummy Dev command that doesn't actually do anything.
     It only serves to track which actions would be performend.
     """
     platform = 'tester'
     output_format = 'dummy'
-    description = 'Dummy local command'
+    description = 'Dummy dev command'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, apps=[], **kwargs)
 
         self.actions = []
 
-    def install_local_dependencies(self, app, **kwargs):
-        self.actions.append(('local_dependencies', app.name, kwargs))
+    def install_dev_dependencies(self, app, **kwargs):
+        self.actions.append(('dev_dependencies', app.name, kwargs))
 
-    def run_local_app(self, app, **kwargs):
-        self.actions.append(('run_local', app.name, kwargs))
+    def run_dev_app(self, app, **kwargs):
+        self.actions.append(('run_dev', app.name, kwargs))
         return full_kwargs({
-            'run_local_state': app.name
+            'run_dev_state': app.name
         }, kwargs)
 
 
 @pytest.fixture
-def local_command(tmp_path):
-    return DummyLocalCommand(base_path=tmp_path)
+def dev_command(tmp_path):
+    return DummyDevCommand(base_path=tmp_path)
 
 
 @pytest.fixture
