@@ -84,7 +84,7 @@ def test_unknown_command():
     assert excinfo.value.__context__.message.startswith("invalid choice: 'foobar' (choose from")
 
 
-def test_new_command(monkeypatch):
+def test_new_command():
     "``briefcase new`` returns the New command"
     cmd, options = parse_cmdline('new'.split())
 
@@ -96,10 +96,13 @@ def test_new_command(monkeypatch):
 
 def test_local_command(monkeypatch):
     "``briefcase local`` returns the Local command"
+    # Pretend we're on macOS, regardless of where the tests run.
+    monkeypatch.setattr(sys, 'platform', 'darwin')
+
     cmd, options = parse_cmdline('local'.split())
 
     assert isinstance(cmd, LocalCommand)
-    assert cmd.platform == 'all'
+    assert cmd.platform == 'macOS'
     assert cmd.output_format is None
     assert options == {
         'verbosity': 1,

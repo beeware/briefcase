@@ -1,6 +1,7 @@
 import os
 import subprocess
 import sys
+from pathlib import Path
 from typing import Optional
 
 from briefcase.config import BaseConfig
@@ -13,9 +14,17 @@ from .create import DependencyInstallError, write_dist_info
 class LocalCommand(BaseCommand):
     cmd_line = 'briefcase local'
     command = 'local'
-    platform = 'all'
     output_format = None
     description = 'Run a briefcase project in the local environment'
+
+    @property
+    def platform(self):
+        """The local command always reports as the local platform."""
+        return {
+            'darwin': 'macOS',
+            'linux': 'linux',
+            'win32': 'windows',
+        }[sys.platform]
 
     def bundle_path(self, app):
         "A placeholder; Local command doesn't have a bundle path"
@@ -43,7 +52,7 @@ class LocalCommand(BaseCommand):
             help='Update dependencies for app'
         )
 
-    def install_local_dependencies(self, app: BaseConfig):
+    def install_local_dependencies(self, app: BaseConfig, **kwargs):
         """
         Install the dependencies for the app locally.
 
@@ -117,10 +126,14 @@ class LocalCommand(BaseCommand):
                 "use --app to specify which one to start."
             )
 
-        # egg_file = Path.cwd() / '{app.name}.egg_info'
-        # if update_dependencies or not_locally_installed:
-        #     self.install_local_dependencies(app)
-        #     write_dist_info(app, Path.cwd())
+        # Look for the existence of a dist-info file.
+        # If one exists, assume that the dependencies have already been
+        # installed. If a dependency update has been manually requested,
+        # do it regardless.
+        dist_info_path = self.app_module_path(app).parent / '{app.module_name}.dist-info'.format(app=app)
+        if update_dependencies or not dist_info_path.exists():
+            self.install_local_dependencies(app, **kwargs)
+            write_dist_info(app, dist_info_path)
 
         state = self.run_local_app(app, **kwargs)
         return state

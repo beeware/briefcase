@@ -7,6 +7,7 @@ import shutil
 import subprocess
 import sys
 from abc import ABC, abstractmethod
+from pathlib import Path
 from urllib.parse import urlparse
 
 import requests
@@ -181,6 +182,32 @@ class BaseCommand(ABC):
         :param app: The app config
         """
         ...
+
+    def app_module_path(self, app):
+        """
+        Find the path for the application module for an app.
+
+        :param app: The config object for the app
+        :returns: The Path to the dist-info folder.
+        """
+        app_home = [
+            path.split('/')
+            for path in app.sources
+            if path.rsplit('/', 1)[1] == app.module_name
+        ]
+        try:
+            if len(app_home) == 1:
+                path = Path(self.base_path, *app_home[0])
+            else:
+                raise BriefcaseCommandError(
+                    "Multiple paths in sources found for application '{app.name}'".format(app=app)
+                )
+        except IndexError:
+            raise BriefcaseCommandError(
+                "Unable to find code for application '{app.name}'".format(app=app)
+            )
+
+        return path
 
     @property
     def python_version_tag(self):

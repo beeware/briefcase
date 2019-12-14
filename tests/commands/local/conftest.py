@@ -19,8 +19,8 @@ class DummyLocalCommand(LocalCommand):
 
         self.actions = []
 
-    def install_local_app_dependencies(self, app, **kwargs):
-        self.actions.append(('local_app_dependencies', app.name, kwargs))
+    def install_local_dependencies(self, app, **kwargs):
+        self.actions.append(('local_dependencies', app.name, kwargs))
 
     def run_local_app(self, app, **kwargs):
         self.actions.append(('run_local', app.name, kwargs))
@@ -35,7 +35,7 @@ def local_command(tmp_path):
 
 
 @pytest.fixture
-def first_app(tmp_path):
+def first_app_uninstalled(tmp_path):
     # Make sure the source code exists
     (tmp_path / 'src' / 'first').mkdir(parents=True, exist_ok=True)
     with (tmp_path / 'src' / 'first' / '__init__.py').open('w') as f:
@@ -51,11 +51,22 @@ def first_app(tmp_path):
 
 
 @pytest.fixture
+def first_app(tmp_path, first_app_uninstalled):
+    # The same fixture as first_app_uninstalled,
+    # but ensures that the .dist-info folder for the app exists
+    (tmp_path / 'src' / 'first.dist-info').mkdir(exist_ok=True)
+    return first_app_uninstalled
+
+
+@pytest.fixture
 def second_app(tmp_path):
     # Make sure the source code exists
     (tmp_path / 'src' / 'second').mkdir(parents=True, exist_ok=True)
     with (tmp_path / 'src' / 'second' / '__init__.py').open('w') as f:
         f.write('print("Hello world")')
+
+    # Create the dist-info folder
+    (tmp_path / 'src' / 'second.dist-info').mkdir(exist_ok=True)
 
     return AppConfig(
         name='second',

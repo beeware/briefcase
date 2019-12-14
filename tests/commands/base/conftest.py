@@ -123,3 +123,15 @@ class OtherDummyCommand(BaseCommand):
 @pytest.fixture
 def other_command(tmp_path):
     return OtherDummyCommand(base_path=tmp_path)
+
+
+@pytest.fixture
+def myapp():
+    return AppConfig(
+        name='my-app',
+        formal_name='My App',
+        bundle='com.example',
+        version='1.2.3',
+        description='This is a simple app',
+        sources=['src/my_app'],
+    )

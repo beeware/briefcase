@@ -4,7 +4,7 @@ from briefcase.exceptions import BriefcaseCommandError
 
 
 def test_no_args_one_app(local_command, first_app):
-    "If there is one app, run starts that app by default"
+    "If there is one app, local starts that app by default"
     # Add a single app
     local_command.apps = {
         'first': first_app,
@@ -24,7 +24,7 @@ def test_no_args_one_app(local_command, first_app):
 
 
 def test_no_args_two_apps(local_command, first_app, second_app):
-    "If there are one app, run starts that app by default"
+    "If there are one app, local starts that app by default"
     # Add two apps
     local_command.apps = {
         'first': first_app,
@@ -43,7 +43,7 @@ def test_no_args_two_apps(local_command, first_app, second_app):
 
 
 def test_with_arg_one_app(local_command, first_app):
-    "If there is one app, and a -a argument, run starts that app"
+    "If there is one app, and a -a argument, local starts that app"
     # Add a single app
     local_command.apps = {
         'first': first_app,
@@ -103,7 +103,7 @@ def test_bad_app_reference(local_command, first_app, second_app):
 
 
 def test_update_dependencies(local_command, first_app):
-    "The run command can request that the app is updated first"
+    "The local command can request that the app is updated first"
     # Add a single app
     local_command.apps = {
         'first': first_app,
@@ -118,7 +118,53 @@ def test_update_dependencies(local_command, first_app):
     # The right sequence of things will be done
     assert local_command.actions == [
         # An update was requested
-        # ('install_local_app_dependencies', 'first', {'verbosity': 1}),
+        ('local_dependencies', 'first', {'verbosity': 1}),
+
+        # Then, it will be started
+        ('run_local', 'first', {'verbosity': 1}),
+    ]
+
+
+def test_run_uninstalled(local_command, first_app_uninstalled):
+    "The local command will install first if the app hasn't been installed"
+    # Add a single app
+    local_command.apps = {
+        'first': first_app_uninstalled,
+    }
+
+    # Configure no command line options
+    options = local_command.parse_options([])
+
+    # Run the run command
+    local_command(**options)
+
+    # The right sequence of things will be done
+    assert local_command.actions == [
+        # The app will be installed
+        ('local_dependencies', 'first', {'verbosity': 1}),
+
+        # Then, it will be started
+        ('run_local', 'first', {'verbosity': 1}),
+    ]
+
+
+def test_update_uninstalled(local_command, first_app_uninstalled):
+    "A request to update dependencies is redundant if the app hasn't been installed"
+    # Add a single app
+    local_command.apps = {
+        'first': first_app_uninstalled,
+    }
+
+    # Configure no command line options
+    options = local_command.parse_options(['-d'])
+
+    # Run the run command
+    local_command(**options)
+
+    # The right sequence of things will be done
+    assert local_command.actions == [
+        # An update was requested
+        ('local_dependencies', 'first', {'verbosity': 1}),
 
         # Then, it will be started
         ('run_local', 'first', {'verbosity': 1}),
