@@ -6,6 +6,8 @@ from .base import BaseCommand, full_kwargs
 
 
 class BuildCommand(BaseCommand):
+    command = 'build'
+
     def add_options(self, parser):
         parser.add_argument(
             '-u',

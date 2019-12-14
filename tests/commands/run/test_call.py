@@ -1,5 +1,3 @@
-import argparse
-
 import pytest
 
 from briefcase.exceptions import BriefcaseCommandError
@@ -13,8 +11,7 @@ def test_no_args_one_app(run_command, first_app):
     }
 
     # Configure no command line options
-    parser = argparse.ArgumentParser(prog='briefcase')
-    options = run_command.parse_options(parser, [])
+    options = run_command.parse_options([])
 
     # Run the run command
     run_command(**options)
@@ -22,7 +19,7 @@ def test_no_args_one_app(run_command, first_app):
     # The right sequence of things will be done
     assert run_command.actions == [
         # Run the first app
-        ('run', 'first', {}),
+        ('run', 'first', {'verbosity': 1}),
     ]
 
 
@@ -35,8 +32,7 @@ def test_no_args_two_apps(run_command, first_app, second_app):
     }
 
     # Configure no command line options
-    parser = argparse.ArgumentParser(prog='briefcase')
-    options = run_command.parse_options(parser, [])
+    options = run_command.parse_options([])
 
     # Invoking the run command raises an error
     with pytest.raises(BriefcaseCommandError):
@@ -54,8 +50,7 @@ def test_with_arg_one_app(run_command, first_app):
     }
 
     # Configure a -a command line option
-    parser = argparse.ArgumentParser(prog='briefcase')
-    options = run_command.parse_options(parser, ['-a', 'first'])
+    options = run_command.parse_options(['-a', 'first'])
 
     # Run the run command
     run_command(**options)
@@ -63,7 +58,7 @@ def test_with_arg_one_app(run_command, first_app):
     # The right sequence of things will be done
     assert run_command.actions == [
         # Run the first app
-        ('run', 'first', {}),
+        ('run', 'first', {'verbosity': 1}),
     ]
 
 
@@ -76,8 +71,7 @@ def test_with_arg_two_apps(run_command, first_app, second_app):
     }
 
     # Configure a --app command line option
-    parser = argparse.ArgumentParser(prog='briefcase')
-    options = run_command.parse_options(parser, ['--app', 'second'])
+    options = run_command.parse_options(['--app', 'second'])
 
     # Run the run command
     run_command(**options)
@@ -85,7 +79,7 @@ def test_with_arg_two_apps(run_command, first_app, second_app):
     # The right sequence of things will be done
     assert run_command.actions == [
         # Run the second app
-        ('run', 'second', {}),
+        ('run', 'second', {'verbosity': 1}),
     ]
 
 
@@ -98,8 +92,7 @@ def test_bad_app_reference(run_command, first_app, second_app):
     }
 
     # Configure a --app command line option
-    parser = argparse.ArgumentParser(prog='briefcase')
-    options = run_command.parse_options(parser, ['--app', 'does-not-exist'])
+    options = run_command.parse_options(['--app', 'does-not-exist'])
 
     # Invoking the run command raises an error
     with pytest.raises(BriefcaseCommandError):
@@ -117,8 +110,7 @@ def test_create_app_before_start(run_command, first_app_config):
     }
 
     # Configure no command line options
-    parser = argparse.ArgumentParser(prog='briefcase')
-    options = run_command.parse_options(parser, [])
+    options = run_command.parse_options([])
 
     # Run the run command
     run_command(**options)
@@ -126,11 +118,11 @@ def test_create_app_before_start(run_command, first_app_config):
     # The right sequence of things will be done
     assert run_command.actions == [
         # App doesn't exist, so it will be created and built
-        ('create', 'first', {}),
-        ('build', 'first', {'create_state': 'first'}),
+        ('create', 'first', {'verbosity': 1}),
+        ('build', 'first', {'verbosity': 1, 'create_state': 'first'}),
 
         # Then, it will be started
-        ('run', 'first', {'create_state': 'first', 'build_state': 'first'}),
+        ('run', 'first', {'verbosity': 1, 'create_state': 'first', 'build_state': 'first'}),
     ]
 
 
@@ -142,8 +134,7 @@ def test_update_app(run_command, first_app):
     }
 
     # Configure no command line options
-    parser = argparse.ArgumentParser(prog='briefcase')
-    options = run_command.parse_options(parser, ['-u'])
+    options = run_command.parse_options(['-u'])
 
     # Run the run command
     run_command(**options)
@@ -151,11 +142,11 @@ def test_update_app(run_command, first_app):
     # The right sequence of things will be done
     assert run_command.actions == [
         # An update was requested
-        ('update', 'first', {}),
-        ('build', 'first', {'update_state': 'first'}),
+        ('update', 'first', {'verbosity': 1}),
+        ('build', 'first', {'verbosity': 1, 'update_state': 'first'}),
 
         # Then, it will be started
-        ('run', 'first', {'update_state': 'first', 'build_state': 'first'}),
+        ('run', 'first', {'verbosity': 1, 'update_state': 'first', 'build_state': 'first'}),
     ]
 
 
@@ -167,8 +158,7 @@ def test_update_uncompiled_app(run_command, first_app_uncompiled):
     }
 
     # Configure no command line options
-    parser = argparse.ArgumentParser(prog='briefcase')
-    options = run_command.parse_options(parser, ['-u'])
+    options = run_command.parse_options(['-u'])
 
     # Run the run command
     run_command(**options)
@@ -176,11 +166,11 @@ def test_update_uncompiled_app(run_command, first_app_uncompiled):
     # The right sequence of things will be done
     assert run_command.actions == [
         # An update was requested
-        ('update', 'first', {}),
-        ('build', 'first', {'update_state': 'first'}),
+        ('update', 'first', {'verbosity': 1}),
+        ('build', 'first', {'verbosity': 1, 'update_state': 'first'}),
 
         # Then, it will be started
-        ('run', 'first', {'update_state': 'first', 'build_state': 'first'}),
+        ('run', 'first', {'verbosity': 1, 'update_state': 'first', 'build_state': 'first'}),
     ]
 
 
@@ -192,8 +182,7 @@ def test_update_non_existent(run_command, first_app_config):
     }
 
     # Configure no command line options
-    parser = argparse.ArgumentParser(prog='briefcase')
-    options = run_command.parse_options(parser, ['-u'])
+    options = run_command.parse_options(['-u'])
 
     # Run the run command
     run_command(**options)
@@ -201,9 +190,9 @@ def test_update_non_existent(run_command, first_app_config):
     # The right sequence of things will be done
     assert run_command.actions == [
         # App doesn't exist, so it will be created and built
-        ('create', 'first', {}),
-        ('build', 'first', {'create_state': 'first'}),
+        ('create', 'first', {'verbosity': 1}),
+        ('build', 'first', {'verbosity': 1, 'create_state': 'first'}),
 
         # Then, it will be started
-        ('run', 'first', {'create_state': 'first', 'build_state': 'first'}),
+        ('run', 'first', {'verbosity': 1, 'create_state': 'first', 'build_state': 'first'}),
     ]

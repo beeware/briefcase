@@ -11,6 +11,7 @@ class DummyUpdateCommand(UpdateCommand):
     """
     platform = 'tester'
     output_format = 'dummy'
+    description = 'Dummy update command'
 
     def __init__(self, *args, apps, **kwargs):
         super().__init__(*args, apps=apps, **kwargs)

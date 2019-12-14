@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 
 from briefcase import __version__
+from briefcase.commands import NewCommand, LocalCommand
 from briefcase.platforms import get_output_formats, get_platforms
 
 from .exceptions import (
@@ -41,10 +42,10 @@ def parse_cmdline(args):
     # usage string so that the instructions displayed are correct
     parser.add_argument(
         'command',
-        choices=['create', 'update', 'build', 'run', 'publish'],
+        choices=['new', 'local', 'create', 'update', 'build', 'run', 'publish'],
         metavar='command',
         nargs='?',
-        help='the command to run create/update run (one of: %(choices)s)',
+        help='the command to execute (one of: %(choices)s)',
     )
 
     # <platform> *is* optional, with the default value based on the platform
@@ -93,6 +94,19 @@ def parse_cmdline(args):
     # If no command has been provided, display top-level help.
     if options.command is None:
         raise NoCommandError(parser.format_help())
+    elif options.command == 'new':
+        command = NewCommand(base_path=Path.cwd())
+        options = command.parse_options(
+            extra=extra
+        )
+        return command, options
+    elif options.command == 'local':
+        command = LocalCommand(base_path=Path.cwd())
+        options = command.parse_options(
+            extra=extra
+        )
+        return command, options
+
 
     # Import the platform module
     platform_module = platforms[options.platform]
@@ -130,33 +144,9 @@ def parse_cmdline(args):
             command=options.command
         )
 
-    # Construct a parser for the remaining arguments.
-    # This parser has already consumed the command, platform and format, so
-    # these can be absorbed into the program name.
-    # This parser sets up some default options.
-    command_parser = argparse.ArgumentParser(
-        prog="briefcase {command} {platform} {output_format}".format(
-            command=options.command,
-            platform=options.platform,
-            output_format=output_format
-        ),
-        description=Command.description,
-    )
-    command_parser.add_argument(
-        '-v', '--verbosity',
-        action='count',
-        default=1,
-        help="set the verbosity of output"
-    )
-    command_parser.add_argument(
-        '-V', '--version',
-        action='version',
-        version=__version__
-    )
-
+    # Construct a command, and parse the remaining arguments.
     command = Command(base_path=Path.cwd())
     options = command.parse_options(
-        parser=command_parser,
         extra=extra
     )
     return command, options

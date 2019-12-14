@@ -8,8 +8,10 @@ class DummyCommand(BaseCommand):
     """
     A dummy command to test the BaseCommand interface.
     """
+    command = 'dummy',
     platform = 'tester'
-    output_format = 'dummy'
+    output_format = 'dumdum'
+    description = 'Dummy base command'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -100,8 +102,10 @@ class OtherDummyCommand(BaseCommand):
     GLOBAL_CONFIG_CLASS = CustomGlobalConfig
     APP_CONFIG_CLASS = CustomAppConfig
 
+    command = 'other',
     platform = 'tester'
-    output_format = 'dummy'
+    output_format = 'dumdum'
+    description = 'Another dummy command'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

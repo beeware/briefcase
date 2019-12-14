@@ -12,6 +12,7 @@ class DummyBuildCommand(BuildCommand):
     """
     platform = 'tester'
     output_format = 'dummy'
+    description = 'Dummy build command'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, apps=[], **kwargs)

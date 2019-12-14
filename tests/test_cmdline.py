@@ -4,6 +4,7 @@ import pytest
 
 from briefcase import __version__
 from briefcase.cmdline import parse_cmdline
+from briefcase.commands import LocalCommand, NewCommand
 from briefcase.exceptions import (
     InvalidFormatError,
     NoCommandError,
@@ -81,6 +82,30 @@ def test_unknown_command():
     assert excinfo.value.code == 2
     assert excinfo.value.__context__.argument_name == 'command'
     assert excinfo.value.__context__.message.startswith("invalid choice: 'foobar' (choose from")
+
+
+def test_new_command(monkeypatch):
+    "``briefcase new`` returns the New command"
+    cmd, options = parse_cmdline('new'.split())
+
+    assert isinstance(cmd, NewCommand)
+    assert cmd.platform == 'all'
+    assert cmd.output_format is None
+    assert options == {'verbosity': 1}
+
+
+def test_local_command(monkeypatch):
+    "``briefcase local`` returns the Local command"
+    cmd, options = parse_cmdline('local'.split())
+
+    assert isinstance(cmd, LocalCommand)
+    assert cmd.platform == 'all'
+    assert cmd.output_format is None
+    assert options == {
+        'verbosity': 1,
+        'appname': None,
+        'update_dependencies': False
+    }
 
 
 def test_bare_command(monkeypatch):

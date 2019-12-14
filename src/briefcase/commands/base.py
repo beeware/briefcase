@@ -1,3 +1,4 @@
+import argparse
 import importlib
 import inspect
 import os
@@ -11,6 +12,7 @@ from urllib.parse import urlparse
 import requests
 from cookiecutter.main import cookiecutter
 
+from briefcase import __version__
 from briefcase.config import AppConfig, GlobalConfig, parse_config
 from briefcase.exceptions import (
     BadNetworkResourceError,
@@ -78,6 +80,7 @@ def full_kwargs(state, kwargs):
 
 
 class BaseCommand(ABC):
+    cmd_line = "briefcase {command} {platform} {output_format}"
     GLOBAL_CONFIG_CLASS = GlobalConfig
     APP_CONFIG_CLASS = AppConfig
 
@@ -200,13 +203,41 @@ class BaseCommand(ABC):
         """
         ...
 
-    def parse_options(self, parser, extra):
+    def parse_options(self, extra):
+        parser = argparse.ArgumentParser(
+            prog=self.cmd_line.format(
+                command=self.command,
+                platform=self.platform,
+                output_format=self.output_format
+            ),
+            description=self.description,
+        )
+
+        self.add_default_options(parser)
         self.add_options(parser)
 
         # Parse the full set of command line options from the content
         # remaining after the basic command/platform/output format
         # has been extracted.
         return vars(parser.parse_args(extra))
+
+    def add_default_options(self, parser):
+        """
+        Add the default options that exist on *all* commands
+
+        :param parser: a stub argparse parser for the command.
+        """
+        parser.add_argument(
+            '-v', '--verbosity',
+            action='count',
+            default=1,
+            help="set the verbosity of output"
+        )
+        parser.add_argument(
+            '-V', '--version',
+            action='version',
+            version=__version__
+        )
 
     def add_options(self, parser):
         """

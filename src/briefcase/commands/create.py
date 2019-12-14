@@ -94,7 +94,38 @@ def cookiecutter_cache_path(template):
     return Path.home() / '.cookiecutters' / cache_name
 
 
+def write_dist_info(app: BaseConfig, path: Path):
+    """
+    Install the dist-info folder for the application.
+
+    :param app: The config object for the app
+    :param path: The path into which the dist-info folder should be written.
+    """
+    # Create dist-info folder, and write a minimal metadata collection.
+    dist_info_path = path / '{app.module_name}-{app.version}.dist-info'.format(
+        app=app,
+    )
+    dist_info_path.mkdir(exist_ok=True)
+    with (dist_info_path / 'INSTALLER').open('w') as f:
+        f.write('briefcase\n')
+    with (dist_info_path / 'METADATA').open('w') as f:
+        f.write('Metadata-Version: 2.1\n')
+        f.write('Name: {app.name}\n'.format(app=app))
+        f.write('Formal-Name: {app.formal_name}\n'.format(app=app))
+        f.write('Bundle: {app.bundle}\n'.format(app=app))
+        f.write('Version: {app.version}\n'.format(app=app))
+        if app.url:
+            f.write('Home-page: {app.url}\n'.format(app=app))
+        if app.author:
+            f.write('Author: {app.author}\n'.format(app=app))
+        if app.author_email:
+            f.write('Author-email: {app.author_email}\n'.format(app=app))
+        f.write('Summary: {app.description}\n'.format(app=app))
+
+
 class CreateCommand(BaseCommand):
+    command = 'create'
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._path_index = {}
@@ -412,6 +443,7 @@ class CreateCommand(BaseCommand):
             )
         except subprocess.CalledProcessError:
             # Computer is offline
+            # status code == 128 - certificate validation error.
             raise NetworkFailure("clone template repository")
         except cookiecutter_exceptions.RepositoryNotFound:
             # Either the template path is invalid,
@@ -515,26 +547,8 @@ class CreateCommand(BaseCommand):
         else:
             print("No sources defined for {app.name}.".format(app=app))
 
-        # Create dist-info folder, and write a minimal metadata collection.
-        dist_info_path = self.app_path(app) / '{app.module_name}-{app.version}.dist-info'.format(
-            app=app,
-        )
-        dist_info_path.mkdir(exist_ok=True)
-        with (dist_info_path / 'INSTALLER').open('w') as f:
-            f.write('briefcase\n')
-        with (dist_info_path / 'METADATA').open('w') as f:
-            f.write('Metadata-Version: 2.1\n')
-            f.write('Name: {app.name}\n'.format(app=app))
-            f.write('Formal-Name: {app.formal_name}\n'.format(app=app))
-            f.write('Bundle: {app.bundle}\n'.format(app=app))
-            f.write('Version: {app.version}\n'.format(app=app))
-            if app.url:
-                f.write('Home-page: {app.url}\n'.format(app=app))
-            if app.author:
-                f.write('Author: {app.author}\n'.format(app=app))
-            if app.author_email:
-                f.write('Author-email: {app.author_email}\n'.format(app=app))
-            f.write('Summary: {app.description}\n'.format(app=app))
+        # Write the dist-info folder for the application.
+        write_dist_info(app, self.app_path(app))
 
     def install_image(self, role, size, source, target):
         """
