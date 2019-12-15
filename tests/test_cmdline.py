@@ -120,7 +120,7 @@ def test_bare_command(monkeypatch):
 
     assert isinstance(cmd, macOSAppCreateCommand)
     assert cmd.platform == 'macOS'
-    assert cmd.output_format == 'app'
+    assert cmd.output_format == 'dmg'
     assert options == {'verbosity': 1}
 
 
@@ -144,7 +144,7 @@ def test_macOS_default():
 
     assert isinstance(cmd, macOSAppCreateCommand)
     assert cmd.platform == 'macOS'
-    assert cmd.output_format == 'app'
+    assert cmd.output_format == 'dmg'
     assert options == {'verbosity': 1}
 
 
@@ -173,9 +173,9 @@ def test_bare_command_help(monkeypatch, capsys):
     # Help message is for default platform and format
     output = capsys.readouterr().out
     assert output.startswith(
-        "usage: briefcase create macOS app [-h] [-v] [-V]\n"
+        "usage: briefcase create macOS dmg [-h] [-v] [-V]\n"
         "\n"
-        "Create and populate a macOS .app bundle.\n"
+        "Create and populate a macOS DMG.\n"
         "\n"
         "optional arguments:"
     )
@@ -202,7 +202,7 @@ def test_bare_command_show_formats(monkeypatch):
         parse_cmdline('create -f'.split())
 
     assert excinfo.value.platform == 'macOS'
-    assert excinfo.value.default == 'app'
+    assert excinfo.value.default == 'dmg'
     assert set(excinfo.value.choices) == {'app', 'dmg', 'homebrew'}
 
 
@@ -242,7 +242,7 @@ def test_command_explicit_platform_case_handling(monkeypatch):
 
     assert isinstance(cmd, macOSAppCreateCommand)
     assert cmd.platform == 'macOS'
-    assert cmd.output_format == 'app'
+    assert cmd.output_format == 'dmg'
     assert options == {'verbosity': 1}
 
 
@@ -259,9 +259,9 @@ def test_command_explicit_platform_help(monkeypatch, capsys):
     # Help message is for default platform and format
     output = capsys.readouterr().out
     assert output.startswith(
-        "usage: briefcase create macOS app [-h] [-v] [-V]\n"
+        "usage: briefcase create macOS dmg [-h] [-v] [-V]\n"
         "\n"
-        "Create and populate a macOS .app bundle.\n"
+        "Create and populate a macOS DMG.\n"
         "\n"
         "optional arguments:"
     )
@@ -276,7 +276,7 @@ def test_command_explicit_platform_show_formats(monkeypatch):
         parse_cmdline('create macOS -f'.split())
 
     assert excinfo.value.platform == 'macOS'
-    assert excinfo.value.default == 'app'
+    assert excinfo.value.default == 'dmg'
     assert set(excinfo.value.choices) == {'app', 'dmg', 'homebrew'}
 
 
@@ -326,7 +326,7 @@ def test_command_explicit_format_help(monkeypatch, capsys):
     assert output.startswith(
         "usage: briefcase create macOS dmg [-h] [-v] [-V]\n"
         "\n"
-        "Create and populate a macOS .dmg bundle.\n"
+        "Create and populate a macOS DMG.\n"
         "\n"
         "optional arguments:"
     )
@@ -341,7 +341,7 @@ def test_command_explicit_format_show_formats(monkeypatch):
         parse_cmdline('create macOS dmg -f'.split())
 
     assert excinfo.value.platform == 'macOS'
-    assert excinfo.value.default == 'app'
+    assert excinfo.value.default == 'dmg'
     assert set(excinfo.value.choices) == {'app', 'dmg', 'homebrew'}
 
 

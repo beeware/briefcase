@@ -32,7 +32,7 @@ A macOS DMG can only be created on macOS.
 
 
 class macOSDmgCreateCommand(macOSDmgMixin, macOSAppCreateCommand):
-    description = "Create and populate a macOS .dmg bundle."
+    description = "Create and populate a macOS DMG."
 
     @property
     def app_template_url(self):
@@ -43,11 +43,11 @@ class macOSDmgCreateCommand(macOSDmgMixin, macOSAppCreateCommand):
 
 
 class macOSDmgUpdateCommand(macOSDmgMixin, macOSAppUpdateCommand):
-    description = "Update an existing macOS .dmg bundle."
+    description = "Update an existing macOS DMG."
 
 
 class macOSDmgBuildCommand(macOSDmgMixin, macOSAppBuildCommand):
-    description = "Build a macOS .dmg bundle."
+    description = "Build a macOS DMG."
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -122,11 +122,11 @@ class macOSDmgBuildCommand(macOSDmgMixin, macOSAppBuildCommand):
 
 
 class macOSDmgRunCommand(macOSDmgMixin, macOSAppRunCommand):
-    description = "Run a macOS .dmg bundle."
+    description = "Run a macOS DMG."
 
 
 class macOSDmgPublishCommand(macOSDmgMixin, macOSAppPublishCommand):
-    description = "Publish a macOS .dmg bundle."
+    description = "Publish a macOS DMG."
 
     def add_options(self):
         self.parser.add_argument(
