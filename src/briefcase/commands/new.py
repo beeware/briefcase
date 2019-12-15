@@ -2,7 +2,6 @@ import re
 import subprocess
 from email.utils import parseaddr
 from urllib.parse import urlparse
-from pathlib import Path
 from typing import Optional
 
 from cookiecutter import exceptions as cookiecutter_exceptions
