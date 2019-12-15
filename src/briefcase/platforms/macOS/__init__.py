@@ -1,5 +1,5 @@
 
-DEFAULT_OUTPUT_FORMAT = 'app'
+DEFAULT_OUTPUT_FORMAT = 'dmg'
 
 
 class macOSMixin:
