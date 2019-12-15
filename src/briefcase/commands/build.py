@@ -43,6 +43,11 @@ class BuildCommand(BaseCommand):
 
         state = self.build_app(app, **full_kwargs(state, kwargs))
 
+        print()
+        print("[{app.name}] Created {filename}.".format(
+            app=app,
+            filename=self.distribution_path(app).name,
+        ))
         return state
 
     def __call__(
