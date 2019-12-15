@@ -226,7 +226,7 @@ class BaseCommand(ABC):
         ]
         try:
             if len(app_home) == 1:
-                path = Path(self.base_path, *app_home[0])
+                path = Path(str(self.base_path), *app_home[0])
             else:
                 raise BriefcaseCommandError(
                     "Multiple paths in sources found for application '{app.name}'".format(app=app)
