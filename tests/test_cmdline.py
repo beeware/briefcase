@@ -91,7 +91,7 @@ def test_new_command():
     assert isinstance(cmd, NewCommand)
     assert cmd.platform == 'all'
     assert cmd.output_format is None
-    assert options == {'verbosity': 1}
+    assert options == {'template': None, 'verbosity': 1}
 
 
 def test_dev_command(monkeypatch):

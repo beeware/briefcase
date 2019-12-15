@@ -11,5 +11,5 @@ def test_new_app(new_command):
     # The right sequence of things will be done
     assert new_command.actions == [
         # Run the first app
-        ('new', {'verbosity': 1}),
+        ('new', {'template': None, 'verbosity': 1}),
     ]

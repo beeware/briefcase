@@ -107,7 +107,6 @@ def parse_cmdline(args):
         )
         return command, options
 
-
     # Import the platform module
     platform_module = platforms[options.platform]
 

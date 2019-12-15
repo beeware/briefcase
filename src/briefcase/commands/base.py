@@ -1,3 +1,4 @@
+
 import argparse
 import importlib
 import inspect
@@ -12,6 +13,8 @@ from urllib.parse import urlparse
 
 import requests
 from cookiecutter.main import cookiecutter
+from cookiecutter.repository import is_repo_url
+from git import exc as git_exceptions
 
 from briefcase import __version__
 from briefcase.config import AppConfig, GlobalConfig, parse_config
@@ -32,6 +35,16 @@ Briefcase requires git, but it is not installed (or is not on your PATH). Visit:
 
 to download and install git. If you have installed git recently and are still
 getting this error, you may need to restart your terminal session.""")
+
+
+class TemplateUnsupportedVersion(BriefcaseCommandError):
+    def __init__(self, version_tag):
+        self.version_tag = version_tag
+        super().__init__(
+            msg='Template does not support {version_tag}'.format(
+                version_tag=version_tag
+            )
+        )
 
 
 def create_config(klass, config, msg):
@@ -58,6 +71,22 @@ def create_config(klass, config, msg):
                 missing=missing
             )
         )
+
+
+def cookiecutter_cache_path(template):
+    """
+    Determine the cookiecutter template cache directory given a template URL.
+
+    This will return a valid path, regardless of whether `template`
+
+    :param template: The template to use. This can be a filesystem path or
+        a URL.
+    :returns: The path that cookiecutter would use for the given template name.
+    """
+    template = template.rstrip('/')
+    tail = template.split('/')[-1]
+    cache_name = tail.rsplit('.git')[0]
+    return Path.home() / '.cookiecutters' / cache_name
 
 
 def full_kwargs(state, kwargs):
@@ -353,3 +382,68 @@ class BaseCommand(ABC):
         else:
             print('{cache_name} already downloaded'.format(cache_name=cache_name))
         return filename
+
+    def update_cookiecutter_cache(self, template: str, branch='master'):
+        """
+        Ensure that we have a current checkout of a template path.
+
+        If the path is a local path, use the path as is.
+
+        If the path is a URL, look for a local cache; if one exists, update it,
+        including checking out the required branch.
+
+        :param template: The template URL or path.
+        :param branch: The template branch to use. Default: ``master``
+        :return: The path to the cached template. This may be the originally
+            provided path if the template was a file path.
+        """
+        if is_repo_url(template):
+            # The app template is a repository URL.
+            #
+            # When in `no_input=True` mode, cookiecutter deletes and reclones
+            # a template directory, rather than updating the existing repo.
+            #
+            # Look for a cookiecutter cache of the template; if one exists,
+            # try to update it using git. If no cache exists, or if the cache
+            # directory isn't a git directory, or git fails for some reason,
+            # fall back to using the specified template directly.
+            try:
+                cached_template = cookiecutter_cache_path(template)
+                repo = self.git.Repo(cached_template)
+                try:
+                    # Attempt to update the repository
+                    remote = repo.remote(name='origin')
+                    remote.fetch()
+                except git_exceptions.GitCommandError:
+                    # We are offline, or otherwise unable to contact
+                    # the origin git repo. It's OK to continue; but warn
+                    # the user that the template may be stale.
+                    print("***************************************************************************")
+                    print("WARNING: Unable to update template (is your computer offline?)")
+                    print("WARNING: Briefcase will use existing template without updating.")
+                    print("***************************************************************************")
+                try:
+                    # Check out the branch for the required version tag.
+                    head = remote.refs[branch]
+
+                    print("Using existing template (sha {hexsha}, updated {datestamp})".format(
+                        hexsha=head.commit.hexsha,
+                        datestamp=head.commit.committed_datetime.strftime("%c")
+                    ))
+                    head.checkout()
+                except IndexError:
+                    # No branch exists for the requested version.
+                    raise TemplateUnsupportedVersion(branch)
+            except git_exceptions.NoSuchPathError:
+                # Template cache path doesn't exist.
+                # Just use the template directly, rather than attempting an update.
+                cached_template = template
+            except git_exceptions.InvalidGitRepositoryError:
+                # Template cache path exists, but isn't a git repository
+                # Just use the template directly, rather than attempting an update.
+                cached_template = template
+        else:
+            # If this isn't a repository URL, treat it as a local directory
+            cached_template = template
+
+        return cached_template

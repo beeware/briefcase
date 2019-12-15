@@ -89,7 +89,7 @@ class DevCommand(BaseCommand):
 
             # Invoke the app.
             self.subprocess.run(
-                [sys.executable, "-m", app.name],
+                [sys.executable, "-m", app.module_name],
                 env=env,
                 check=True,
             )

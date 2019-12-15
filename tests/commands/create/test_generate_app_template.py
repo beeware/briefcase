@@ -7,10 +7,8 @@ import pytest
 from cookiecutter import exceptions as cookiecutter_exceptions
 from git import exc as git_exceptions
 
-from briefcase.commands.create import (
-    InvalidTemplateRepository,
-    TemplateUnsupportedPythonVersion
-)
+from briefcase.commands.base import TemplateUnsupportedVersion
+from briefcase.commands.create import InvalidTemplateRepository
 from briefcase.exceptions import NetworkFailure
 
 
@@ -221,7 +219,7 @@ def test_missing_branch_template(create_command, myapp):
     create_command.cookiecutter.side_effect = cookiecutter_exceptions.RepositoryCloneFailed
 
     # Generating the template under there conditions raises an error
-    with pytest.raises(TemplateUnsupportedPythonVersion):
+    with pytest.raises(TemplateUnsupportedVersion):
         create_command.generate_app_template(myapp)
 
     # App's template is unchanged
@@ -299,7 +297,7 @@ def test_cached_template_offline(create_command, myapp, capsys):
 
     # A warning was raised to the user about the fetch problem
     output = capsys.readouterr().out
-    assert "WARNING: Unable to update application template (is your computer offline?)" in output
+    assert "WARNING: Unable to update template (is your computer offline?)" in output
 
     # The remote head was checked out.
     mock_remote_head.checkout.assert_called_once_with()
@@ -332,5 +330,5 @@ def test_cached_missing_branch_template(create_command, myapp):
     mock_remote.refs.__getitem__.side_effect = IndexError
 
     # Generating the template under there conditions raises an error
-    with pytest.raises(TemplateUnsupportedPythonVersion):
+    with pytest.raises(TemplateUnsupportedVersion):
         create_command.generate_app_template(myapp)

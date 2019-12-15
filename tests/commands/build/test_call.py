@@ -141,7 +141,12 @@ def test_update_non_existent(build_command, first_app_config, second_app):
 
         # Second app *does* exist, so it will be updated, then built
         ('update', 'second', {'verbosity': 1, 'create_state': 'first', 'build_state': 'first'}),
-        ('build', 'second', {'verbosity': 1, 'create_state': 'first', 'build_state': 'first', 'update_state': 'second'}),
+        ('build', 'second', {
+            'verbosity': 1,
+            'create_state': 'first',
+            'build_state': 'first',
+            'update_state': 'second'
+        }),
     ]
 
 
