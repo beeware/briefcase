@@ -466,6 +466,13 @@ What GUI toolkit do you want to use for this project?""",
             # or it isn't a cookiecutter template (i.e., no cookiecutter.json)
             raise InvalidTemplateRepository(template)
 
+        print("""
+Application '{formal_name}' has been generated. To run your application, type:
+
+    cd {app_name}
+    briefcase dev
+""".format(**context))
+
     def __call__(
         self,
         template: Optional[str] = None,
