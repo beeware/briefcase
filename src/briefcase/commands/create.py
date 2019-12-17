@@ -14,7 +14,7 @@ from requests import exceptions as requests_exceptions
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError, NetworkFailure
 
-from .base import BaseCommand, full_kwargs, TemplateUnsupportedVersion
+from .base import BaseCommand, TemplateUnsupportedVersion, full_kwargs
 
 
 class InvalidTemplateRepository(BriefcaseCommandError):

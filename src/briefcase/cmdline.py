@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 
 from briefcase import __version__
-from briefcase.commands import NewCommand, DevCommand
+from briefcase.commands import DevCommand, NewCommand
 from briefcase.platforms import get_output_formats, get_platforms
 
 from .exceptions import (

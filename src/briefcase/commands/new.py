@@ -1,8 +1,8 @@
 import re
 import subprocess
 from email.utils import parseaddr
-from urllib.parse import urlparse
 from typing import Optional
+from urllib.parse import urlparse
 
 from cookiecutter import exceptions as cookiecutter_exceptions
 
@@ -11,7 +11,6 @@ from briefcase.exceptions import NetworkFailure
 
 from .base import BaseCommand, BriefcaseCommandError
 from .create import InvalidTemplateRepository
-
 
 VALID_BUNDLE_RE = re.compile(r'[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$')
 

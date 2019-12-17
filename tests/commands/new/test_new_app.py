@@ -1,6 +1,7 @@
 from unittest import mock
 
 import pytest
+
 from briefcase.commands import NewCommand
 from briefcase.exceptions import BriefcaseCommandError
 
