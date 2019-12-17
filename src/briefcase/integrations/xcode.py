@@ -1,6 +1,5 @@
 import enum
 import json
-import re
 import subprocess
 
 from briefcase.exceptions import BriefcaseCommandError
@@ -34,18 +33,30 @@ def ensure_xcode_is_installed(min_version=None, sub=subprocess):
         )
 
         if min_version is not None:
-            match = re.match(r"Xcode (\d+)\.(\d+)\.(\d+)", output)
-            if match:
-                version = tuple(int(g) for g in match.groups())
-                if version < min_version:
-                    raise BriefcaseCommandError(
-                        "Xcode {min_version} is required; {version} is installed. Please update Xcode.".format(
-                            min_version='.'.join(str(v) for v in min_version),
-                            version='.'.join(str(v) for v in version),
+            if output.startswith('Xcode '):
+                try:
+                    # Split content up to the first \n
+                    # then split the content after the first space
+                    # and split that content on the dots.
+                    # Append 0's to fill any gaps caused by
+                    # version numbers that don't have a minor version.
+                    version = tuple(
+                        int(v)
+                        for v in output.split('\n')[0].split(' ')[1].split('.')
+                    ) + (0, 0)
+
+                    if version < min_version:
+                        raise BriefcaseCommandError(
+                            "Xcode {min_version} is required; {version} is installed. Please update Xcode.".format(
+                                min_version='.'.join(str(v) for v in min_version),
+                                version='.'.join(str(v) for v in version),
+                            )
                         )
-                    )
-            else:
-                print("""
+                    return
+                except IndexError:
+                    pass
+
+            print("""
 *************************************************************************
 ** WARNING: Unable to determine the version of Xcode that is installed **
 *************************************************************************

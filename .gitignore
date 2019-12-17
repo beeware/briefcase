@@ -12,4 +12,4 @@ distribute-*
 venv/
 .vscode/
 .eggs/
-local
+/local

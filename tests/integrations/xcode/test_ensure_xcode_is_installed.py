@@ -53,9 +53,20 @@ def test_installed_no_minimum_version():
         ((11, ), '11.2.5'),  # Exceeds implied revision requirement
         ((11, ), '11.3.0'),  # Exceeds implied minor requirement
         ((11, ), '12.0.0'),  # Exceeds major requirement
+
+        # 2 digit version number
+        # exact match
+        ((11, 2, 0), '11.2'),  # Exact match.
+        ((11, 2), '11.2'),  # Exact match, implied revision.
+        ((11, ), '11.2'),  # Exact match, implied minor version.
+
+        # exceeds version
+        ((11, 1, 1), '11.2'),  # Exact match.
+        ((11, 1), '11.2'),  # Exact match, implied revision.
+        ((11, ), '11.2'),  # Exact match, implied minor version.
     ]
 )
-def test_installed_with_minimum_version_success(min_version, version):
+def test_installed_with_minimum_version_success(min_version, version, capsys):
     "Check XCode can meet a minimum version requirement."
     sub = mock.MagicMock()
     sub.check_output.return_value = "Xcode {version}\nBuild version 11B500\n".format(
@@ -64,6 +75,10 @@ def test_installed_with_minimum_version_success(min_version, version):
 
     # Check passes without an error.
     ensure_xcode_is_installed(min_version=min_version, sub=sub)
+
+    # Make sure the warning wasn't displayed.
+    out = capsys.readouterr().out
+    assert "WARNING" not in out
 
 
 @pytest.mark.parametrize(

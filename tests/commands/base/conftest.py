@@ -8,8 +8,10 @@ class DummyCommand(BaseCommand):
     """
     A dummy command to test the BaseCommand interface.
     """
+    command = 'dummy',
     platform = 'tester'
-    output_format = 'dummy'
+    output_format = 'dumdum'
+    description = 'Dummy base command'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -100,8 +102,10 @@ class OtherDummyCommand(BaseCommand):
     GLOBAL_CONFIG_CLASS = CustomGlobalConfig
     APP_CONFIG_CLASS = CustomAppConfig
 
+    command = 'other',
     platform = 'tester'
-    output_format = 'dummy'
+    output_format = 'dumdum'
+    description = 'Another dummy command'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -119,3 +123,15 @@ class OtherDummyCommand(BaseCommand):
 @pytest.fixture
 def other_command(tmp_path):
     return OtherDummyCommand(base_path=tmp_path)
+
+
+@pytest.fixture
+def myapp():
+    return AppConfig(
+        name='my-app',
+        formal_name='My App',
+        bundle='com.example',
+        version='1.2.3',
+        description='This is a simple app',
+        sources=['src/my_app'],
+    )

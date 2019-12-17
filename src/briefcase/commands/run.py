@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from typing import Optional
 
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError
@@ -7,6 +8,8 @@ from .base import BaseCommand, full_kwargs
 
 
 class RunCommand(BaseCommand):
+    command = 'run'
+
     def add_options(self, parser):
         parser.add_argument(
             '-a',
@@ -30,7 +33,12 @@ class RunCommand(BaseCommand):
         """
         ...
 
-    def __call__(self, appname: str = None, update=False, **kwargs):
+    def __call__(
+        self,
+        appname: Optional[str] = None,
+        update: Optional[bool] = False,
+        **kwargs
+    ):
         # Which app should we run? If there's only one defined
         # in pyproject.toml, then we can use it as a default;
         # otherwise look for a -a/--app option.

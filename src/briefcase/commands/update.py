@@ -7,6 +7,8 @@ from .create import CreateCommand
 
 
 class UpdateCommand(CreateCommand):
+    command = 'update'
+
     def add_options(self, parser):
         parser.add_argument(
             '-d',

@@ -14,6 +14,7 @@ class DummyCreateCommand(CreateCommand):
     """
     platform = 'tester'
     output_format = 'dummy'
+    description = 'Dummy create command'
 
     def __init__(self, *args, support_file=None, **kwargs):
         super().__init__(*args, **kwargs)

@@ -12,6 +12,7 @@ class DummyPublishCommand(PublishCommand):
     """
     platform = 'tester'
     output_format = 'dummy'
+    description = 'Dummy publish command'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, apps=[], **kwargs)

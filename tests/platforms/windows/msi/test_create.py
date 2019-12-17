@@ -43,7 +43,7 @@ def test_guid(first_app_config, tmp_path):
 
     context = command.output_format_template_context(first_app_config)
 
-    assert context['guid'] == '984b6b88-52a8-5921-ae0c-a42afcfcab5f'
+    assert context['guid'] == 'd666a4f1-c7b7-52cc-888a-3a35a7cc97e5'
 
 
 def test_explicit_guid(first_app_config, tmp_path):

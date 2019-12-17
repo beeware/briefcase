@@ -1,13 +1,9 @@
-import argparse
-
 import pytest
 
 
 def test_parse_options(base_command):
     "Command line options are parsed if provided"
-    parser = argparse.ArgumentParser(prog='briefcase')
     options = base_command.parse_options(
-        parser=parser,
         extra=(
             '-x', 'wibble',
             '-r', 'important'
@@ -15,6 +11,7 @@ def test_parse_options(base_command):
     )
 
     assert options == {
+        'verbosity': 1,
         'extra': "wibble",
         'mystery':  None,
         'required': "important",
@@ -23,10 +20,8 @@ def test_parse_options(base_command):
 
 def test_missing_option(base_command, capsys):
     "If a required option isn't provided, an error is raised"
-    parser = argparse.ArgumentParser(prog='briefcase')
     with pytest.raises(SystemExit) as excinfo:
         base_command.parse_options(
-            parser=parser,
             extra=('-x', 'wibble')
         )
 
@@ -39,10 +34,8 @@ def test_missing_option(base_command, capsys):
 
 def test_unknown_option(other_command, capsys):
     "If an unknown command is provided, it rasises an error"
-    parser = argparse.ArgumentParser(prog='briefcase')
     with pytest.raises(SystemExit) as excinfo:
         other_command.parse_options(
-            parser=parser,
             extra=('-y', 'because')
         )
 
@@ -55,10 +48,8 @@ def test_unknown_option(other_command, capsys):
 
 def test_no_options(other_command, capsys):
     "If a command doesn't define options, any option is an error"
-    parser = argparse.ArgumentParser(prog='briefcase')
     with pytest.raises(SystemExit) as excinfo:
         other_command.parse_options(
-            parser=parser,
             extra=('-x', 'wibble')
         )
 

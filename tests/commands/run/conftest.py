@@ -7,11 +7,12 @@ from briefcase.config import AppConfig
 
 class DummyRunCommand(RunCommand):
     """
-    A dummy creation command that doesn't actually do anything.
+    A dummy run command that doesn't actually do anything.
     It only serves to track which actions would be performend.
     """
     platform = 'tester'
     output_format = 'dummy'
+    description = 'Dummy run command'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, apps=[], **kwargs)

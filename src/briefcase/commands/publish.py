@@ -5,6 +5,8 @@ from .base import BaseCommand, full_kwargs
 
 
 class PublishCommand(BaseCommand):
+    command = 'publish'
+
     @property
     def publication_channels(self):
         "The list of publication channel backends that are available for this format"

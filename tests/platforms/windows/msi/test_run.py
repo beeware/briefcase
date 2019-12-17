@@ -16,7 +16,7 @@ def test_run_app(first_app_config, tmp_path):
     command.subprocess.run.assert_called_with(
         [
             str(tmp_path / 'windows' / 'First App' / 'src' / 'python' / 'pythonw.exe'),
-            "-m", "first"
+            "-m", "first_app"
         ],
         check=True
     )
@@ -35,7 +35,7 @@ def test_run_app_failed(first_app_config, tmp_path):
     command.subprocess.run.assert_called_with(
         [
             str(tmp_path / 'windows' / 'First App' / 'src' / 'python' / 'pythonw.exe'),
-            "-m", "first"
+            "-m", "first_app"
         ],
         check=True
     )

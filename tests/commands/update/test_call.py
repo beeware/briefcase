@@ -1,11 +1,8 @@
-import argparse
-
 
 def test_update(update_command, first_app, second_app):
     "The update command can be called"
     # Configure no command line options
-    parser = argparse.ArgumentParser(prog='briefcase')
-    options = update_command.parse_options(parser, [])
+    options = update_command.parse_options([])
 
     update_command(**options)
 
@@ -24,8 +21,7 @@ def test_update(update_command, first_app, second_app):
 def test_update_single(update_command, first_app, second_app):
     "The update command can be called to update a single app from the config"
     # Configure no command line options
-    parser = argparse.ArgumentParser(prog='briefcase')
-    options = update_command.parse_options(parser, [])
+    options = update_command.parse_options([])
 
     update_command(app=update_command.apps['first'], **options)
 
@@ -41,8 +37,7 @@ def test_update_single(update_command, first_app, second_app):
 def test_update_with_dependencies(update_command, first_app, second_app):
     "The update command can be called, requesting a dependencies update"
     # Configure no command line options
-    parser = argparse.ArgumentParser(prog='briefcase')
-    options = update_command.parse_options(parser, ['-d'])
+    options = update_command.parse_options(['-d'])
 
     update_command(**options)
 
@@ -63,8 +58,7 @@ def test_update_with_dependencies(update_command, first_app, second_app):
 def test_update_with_resources(update_command, first_app, second_app):
     "The update command can be called, requesting a resources update"
     # Configure no command line options
-    parser = argparse.ArgumentParser(prog='briefcase')
-    options = update_command.parse_options(parser, ['-r'])
+    options = update_command.parse_options(['-r'])
 
     update_command(**options)
 

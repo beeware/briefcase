@@ -9,24 +9,12 @@ import boto3
 import toml
 from botocore.handlers import disable_signing
 from cookiecutter import exceptions as cookiecutter_exceptions
-from cookiecutter.repository import is_repo_url
-from git import exc as git_exceptions
 from requests import exceptions as requests_exceptions
 
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError, NetworkFailure
 
-from .base import BaseCommand, full_kwargs
-
-
-class TemplateUnsupportedPythonVersion(BriefcaseCommandError):
-    def __init__(self, version_tag):
-        self.version_tag = version_tag
-        super().__init__(
-            msg='Template does not support Python version {version_tag}'.format(
-                version_tag=version_tag
-            )
-        )
+from .base import BaseCommand, TemplateUnsupportedVersion, full_kwargs
 
 
 class InvalidTemplateRepository(BriefcaseCommandError):
@@ -94,7 +82,35 @@ def cookiecutter_cache_path(template):
     return Path.home() / '.cookiecutters' / cache_name
 
 
+def write_dist_info(app: BaseConfig, dist_info_path: Path):
+    """
+    Install the dist-info folder for the application.
+
+    :param app: The config object for the app
+    :param path: The path into which the dist-info folder should be written.
+    """
+    # Create dist-info folder, and write a minimal metadata collection.
+    dist_info_path.mkdir(exist_ok=True)
+    with (dist_info_path / 'INSTALLER').open('w') as f:
+        f.write('briefcase\n')
+    with (dist_info_path / 'METADATA').open('w') as f:
+        f.write('Metadata-Version: 2.1\n')
+        f.write('Name: {app.name}\n'.format(app=app))
+        f.write('Formal-Name: {app.formal_name}\n'.format(app=app))
+        f.write('Bundle: {app.bundle}\n'.format(app=app))
+        f.write('Version: {app.version}\n'.format(app=app))
+        if app.url:
+            f.write('Home-page: {app.url}\n'.format(app=app))
+        if app.author:
+            f.write('Author: {app.author}\n'.format(app=app))
+        if app.author_email:
+            f.write('Author-email: {app.author_email}\n'.format(app=app))
+        f.write('Summary: {app.description}\n'.format(app=app))
+
+
 class CreateCommand(BaseCommand):
+    command = 'create'
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._path_index = {}
@@ -334,54 +350,12 @@ class CreateCommand(BaseCommand):
             app_template=app.template,
         ))
 
-        if is_repo_url(app.template):
-            # The app template is a repository URL.
-            #
-            # When in `no_input=True` mode, cookiecutter deletes and reclones
-            # a template directory, rather than updating the existing repo.
-            #
-            # Look for a cookiecutter cache of the template; if one exists,
-            # try to update it using git. If no cache exists, or if the cache
-            # directory isn't a git directory, or git fails for some reason,
-            # fall back to using the specified template directly.
-            try:
-                template = cookiecutter_cache_path(app.template)
-                repo = self.git.Repo(template)
-                try:
-                    # Attempt to update the repository
-                    remote = repo.remote(name='origin')
-                    remote.fetch()
-                except git_exceptions.GitCommandError:
-                    # We are offline, or otherwise unable to contact
-                    # the origin git repo. It's OK to continue; but warn
-                    # the user that the template may be stale.
-                    print("***************************************************************************")
-                    print("WARNING: Unable to update application template (is your computer offline?)")
-                    print("WARNING: Briefcase will use existing template without updating.")
-                    print("***************************************************************************")
-                try:
-                    # Check out the branch for the required version tag.
-                    head = remote.refs[self.python_version_tag]
-
-                    print("Using existing template (sha {hexsha}, updated {datestamp})".format(
-                        hexsha=head.commit.hexsha,
-                        datestamp=head.commit.committed_datetime.strftime("%c")
-                    ))
-                    head.checkout()
-                except IndexError:
-                    # No branch exists for the requested version.
-                    raise TemplateUnsupportedPythonVersion(self.python_version_tag)
-            except git_exceptions.NoSuchPathError:
-                # Template cache path doesn't exist.
-                # Just use the template directly, rather than attempting an update.
-                template = app.template
-            except git_exceptions.InvalidGitRepositoryError:
-                # Template cache path exists, but isn't a git repository
-                # Just use the template directly, rather than attempting an update.
-                template = app.template
-        else:
-            # If this isn't a repository URL, treat it as a local directory
-            template = app.template
+        # Make sure we have an updated cookiecutter template,
+        # checked out to the right branch
+        cached_template = self.update_cookiecutter_cache(
+            template=app.template,
+            branch=self.python_version_tag
+        )
 
         # Construct a template context from the app configuration.
         extra_context = app.__dict__.copy()
@@ -404,7 +378,7 @@ class CreateCommand(BaseCommand):
             output_path.mkdir(parents=True, exist_ok=True)
             # Unroll the template
             self.cookiecutter(
-                str(template),
+                str(cached_template),
                 no_input=True,
                 output_dir=str(output_path),
                 checkout=self.python_version_tag,
@@ -412,6 +386,7 @@ class CreateCommand(BaseCommand):
             )
         except subprocess.CalledProcessError:
             # Computer is offline
+            # status code == 128 - certificate validation error.
             raise NetworkFailure("clone template repository")
         except cookiecutter_exceptions.RepositoryNotFound:
             # Either the template path is invalid,
@@ -419,7 +394,7 @@ class CreateCommand(BaseCommand):
             raise InvalidTemplateRepository(app.template)
         except cookiecutter_exceptions.RepositoryCloneFailed:
             # Branch does not exist for python version
-            raise TemplateUnsupportedPythonVersion(self.python_version_tag)
+            raise TemplateUnsupportedVersion(self.python_version_tag)
 
     def install_app_support_package(self, app: BaseConfig):
         """
@@ -515,26 +490,13 @@ class CreateCommand(BaseCommand):
         else:
             print("No sources defined for {app.name}.".format(app=app))
 
-        # Create dist-info folder, and write a minimal metadata collection.
-        dist_info_path = self.app_path(app) / '{app.module_name}-{app.version}.dist-info'.format(
+        # Write the dist-info folder for the application.
+        write_dist_info(
             app=app,
+            dist_info_path=self.app_path(app) / '{app.module_name}-{app.version}.dist-info'.format(
+                app=app,
+            )
         )
-        dist_info_path.mkdir(exist_ok=True)
-        with (dist_info_path / 'INSTALLER').open('w') as f:
-            f.write('briefcase\n')
-        with (dist_info_path / 'METADATA').open('w') as f:
-            f.write('Metadata-Version: 2.1\n')
-            f.write('Name: {app.name}\n'.format(app=app))
-            f.write('Formal-Name: {app.formal_name}\n'.format(app=app))
-            f.write('Bundle: {app.bundle}\n'.format(app=app))
-            f.write('Version: {app.version}\n'.format(app=app))
-            if app.url:
-                f.write('Home-page: {app.url}\n'.format(app=app))
-            if app.author:
-                f.write('Author: {app.author}\n'.format(app=app))
-            if app.author_email:
-                f.write('Author-email: {app.author_email}\n'.format(app=app))
-            f.write('Summary: {app.description}\n'.format(app=app))
 
     def install_image(self, role, size, source, target):
         """

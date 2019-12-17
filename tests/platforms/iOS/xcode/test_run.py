@@ -44,7 +44,7 @@ def test_run_app_simulator_booted(first_app_config, tmp_path):
             [
                 'xcrun', 'simctl', 'uninstall',
                 '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-                'com.example.first'
+                'com.example.first-app'
             ],
             check=True
         ),
@@ -62,7 +62,7 @@ def test_run_app_simulator_booted(first_app_config, tmp_path):
             [
                 'xcrun', 'simctl', 'launch',
                 '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-                'com.example.first'
+                'com.example.first-app'
             ],
             check=True
         )
@@ -110,7 +110,7 @@ def test_run_app_simulator_shut_down(first_app_config, tmp_path):
             [
                 'xcrun', 'simctl', 'uninstall',
                 '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-                'com.example.first'
+                'com.example.first-app'
             ],
             check=True
         ),
@@ -128,7 +128,7 @@ def test_run_app_simulator_shut_down(first_app_config, tmp_path):
             [
                 'xcrun', 'simctl', 'launch',
                 '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-                'com.example.first'
+                'com.example.first-app'
             ],
             check=True
         )
@@ -189,7 +189,7 @@ def test_run_app_simulator_shutting_down(first_app_config, tmp_path):
             [
                 'xcrun', 'simctl', 'uninstall',
                 '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-                'com.example.first'
+                'com.example.first-app'
             ],
             check=True
         ),
@@ -207,7 +207,7 @@ def test_run_app_simulator_shutting_down(first_app_config, tmp_path):
             [
                 'xcrun', 'simctl', 'launch',
                 '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-                'com.example.first'
+                'com.example.first-app'
             ],
             check=True
         )
@@ -347,7 +347,7 @@ def test_run_app_simulator_uninstall_failure(first_app_config, tmp_path):
             [
                 'xcrun', 'simctl', 'uninstall',
                 '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-                'com.example.first'
+                'com.example.first-app'
             ],
             check=True
         ),
@@ -406,7 +406,7 @@ def test_run_app_simulator_install_failure(first_app_config, tmp_path):
             [
                 'xcrun', 'simctl', 'uninstall',
                 '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-                'com.example.first'
+                'com.example.first-app'
             ],
             check=True
         ),
@@ -475,7 +475,7 @@ def test_run_app_simulator_launch_failure(first_app_config, tmp_path):
             [
                 'xcrun', 'simctl', 'uninstall',
                 '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-                'com.example.first'
+                'com.example.first-app'
             ],
             check=True
         ),
@@ -493,7 +493,7 @@ def test_run_app_simulator_launch_failure(first_app_config, tmp_path):
             [
                 'xcrun', 'simctl', 'launch',
                 '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-                'com.example.first'
+                'com.example.first-app'
             ],
             check=True
         )
