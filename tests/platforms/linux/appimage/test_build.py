@@ -119,7 +119,7 @@ def test_build_appimage(build_command, first_app_config, tmp_path):
         [
             str(build_command.linuxdeploy_appimage),
             "--appdir={appdir}".format(appdir=tmp_path / 'linux' / 'First App.AppDir'),
-            "-d", str(tmp_path / 'linux' / 'First App.AppDir' / "com.example.first.desktop"),
+            "-d", str(tmp_path / 'linux' / 'First App.AppDir' / "com.example.first-app.desktop"),
             "-o", "appimage",
         ],
         env={
@@ -154,7 +154,7 @@ def test_build_failure(build_command, first_app_config, tmp_path):
         [
             str(build_command.linuxdeploy_appimage),
             "--appdir={appdir}".format(appdir=tmp_path / 'linux' / 'First App.AppDir'),
-            "-d", str(tmp_path / 'linux' / 'First App.AppDir' / "com.example.first.desktop"),
+            "-d", str(tmp_path / 'linux' / 'First App.AppDir' / "com.example.first-app.desktop"),
             "-o", "appimage",
         ],
         env={
