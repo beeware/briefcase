@@ -188,8 +188,8 @@ class WindowsMSIBuildCommand(WindowsMSIMixin, BuildCommand):
                     "-sreg",  # Suppress registry harvesting
                     "-srd",  # Suppress harvesting the root directory
                     "-scom",  # Suppress harvesting COM components
-                    "-dr", "{app.name}_ROOTDIR".format(app=app),  # Root directory reference name
-                    "-cg", "{app.name}_COMPONENTS".format(app=app),  # Root component group name
+                    "-dr", "{app.module_name}_ROOTDIR".format(app=app),  # Root directory reference name
+                    "-cg", "{app.module_name}_COMPONENTS".format(app=app),  # Root component group name
                     "-var", "var.SourceDir",  # variable to use as the source dir
                     "-out", "{app.name}-manifest.wxs".format(app=app),
                 ],
