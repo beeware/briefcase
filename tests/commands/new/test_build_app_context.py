@@ -22,6 +22,7 @@ def test_question_sequence(new_command):
         'formal_name': 'My Application',
         'class_name': 'MyApplication',
         'app_name': 'myapplication',
+        'module_name': 'myapplication',
         'bundle': 'org.beeware',
         'class_name': 'MyApplication',
         'project_name': 'My Project',

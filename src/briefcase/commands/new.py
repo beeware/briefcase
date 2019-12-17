@@ -81,8 +81,8 @@ class NewCommand(BaseCommand):
         """
         if not PEP508_NAME_RE.match(candidate):
             raise ValueError(
-                "App name may only contain letters, numbers and underscores, "
-                "and may not start with an underscore."
+                "App name may only contain letters, numbers, hypens and "
+                "underscores, and may not start with a hyphen or underscore."
             )
         if (self.base_path / candidate).exists():
             raise ValueError(
@@ -92,6 +92,16 @@ class NewCommand(BaseCommand):
             )
 
         return True
+
+    def make_module_name(self, app_name):
+        """
+        Construct a valid module name from an app name.
+
+        :param app_name: The app name
+        :returns: The app's module name.
+        """
+        module_name = app_name.replace('-', '_')
+        return module_name
 
     def is_valid_bundle(self, candidate):
         """
@@ -303,6 +313,9 @@ if you want.""".format(
             is_valid=self.is_valid_app_name,
         )
 
+        # The module name can be completely derived from the app name.
+        module_name = self.make_module_name(app_name)
+
         bundle = self.input_text(
             intro="""
 Now we need a bundle identifier for your application. App stores need to
@@ -395,6 +408,7 @@ What GUI toolkit do you want to use for this project?""",
             "formal_name": formal_name,
             "app_name": app_name,
             "class_name": class_name,
+            "module_name": module_name,
             "project_name": project_name,
             "description": description,
             "author": author,
