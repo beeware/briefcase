@@ -282,7 +282,6 @@ Select one of the following:
         :returns: A context dictionary to be used in the cookiecutter project
             template.
         """
-        print()
         formal_name = self.input_text(
             intro="""
 First, we need a formal name for your application. This is the name that will
@@ -299,12 +298,13 @@ used as you type it.""",
         default_app_name = self.make_app_name(formal_name)
         app_name = self.input_text(
             intro="""
-Next, we need a name that can serve as a Python package name for your
-application. This name must be PEP508-compliant - that means the name may only
-contain letters, numbers and underscores; it can't contain spaces or
-punctuation, and it can't start with an underscore. Based on your formal name,
-we suggest an app name of '{default_app_name}', but you can use another name
-if you want.""".format(
+Next, we need a name that can serve as a machine-readable Python package name
+for your application. This name must be PEP508-compliant - that means the name
+may only contain letters, numbers, hypehns and underscores; it can't contain
+spaces or punctuation, and it can't start with a hyphen or underscore.
+
+Based on your formal name, we suggest an app name of '{default_app_name}',
+but you can use another name if you want.""".format(
                 default_app_name=default_app_name
             ),
             variable="app name",
@@ -325,8 +325,10 @@ project, in reverse order.
 
 For example, if you are writing an application for Example Corp, whose website
 is example.com, your bundle would be ``com.example``. The bundle will be
-combined with your applications machine readable name to form a complete
-application identifier.""",
+combined with your application's machine readable name to form a complete
+application identifier (e.g., com.example.{app_name}).""".format(
+                app_name=app_name,
+            ),
             variable="bundle identifier",
             default='com.example',
             is_valid=self.is_valid_bundle,
@@ -425,6 +427,10 @@ What GUI toolkit do you want to use for this project?""",
         """
         if template is None:
             template = 'https://github.com/beeware/briefcase-template'
+
+        print()
+        print("Let's build a new Briefcase app!")
+        print()
 
         context = self.build_app_context()
 
