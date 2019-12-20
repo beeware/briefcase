@@ -1,3 +1,4 @@
+=====================
 Configuration options
 =====================
 
@@ -14,12 +15,12 @@ file would be::
 
     [tool.briefcase]
     project_name = "My Project"
+    bundle = "com.example"
     version = "0.1"
 
     [tool.briefcase.app.myapp]
     formal_name = "My App"
     description = "My first Briefcase App"
-    bundle = "com.example.myapp"
     sources = ['src/myapp']
 
 The ``[build-system]`` section is preamble required by PEP518, declaring the
@@ -29,12 +30,12 @@ The remaining sections are tool specific, and start with `tool.briefcase`.
 
 The location of the ``pyproject.toml`` file is treated as the root of the
 project definition. Briefcase should be invoked in a directory that contains a
-``pyproject.toml`` file, and all file path references contained in the
+``pyproject.toml`` file, and all relative file path references contained in the
 ``pyproject.toml`` file will be interpreted as relative to the directory that
 contains the ``pyproject.toml`` file.
 
 Configuration sections
-----------------------
+======================
 
 A project that is packaged by Briefcase can declare multiple *applications*.
 Each application is a distributable product of the build process. A simple
@@ -56,13 +57,13 @@ an application called ``myapp``, Briefcase will look for macOS DMG settings for
 then for project-level settings.
 
 ``[tool.briefcase]``
-~~~~~~~~~~~~~~~~~~~~
+--------------------
 
 The base `[tool.briefcase]` section declares settings that project specific,
 or are are common to all applications in this repository.
 
 ``[tool.briefcase.app.<app name>]``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------------------
 
 Configuration options for a specific application.
 
@@ -70,7 +71,7 @@ Configuration options for a specific application.
 specified in `PEP508 <https://www.python.org/dev/peps/pep-0508/#names>`__.
 
 ``[tool.briefcase.app.<app name>.<platform>]``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------------------------
 
 Configuration options for an application that are platform specific. The
 platform must match a name for a platform supported by Briefcase (e.g.,
@@ -79,16 +80,16 @@ be obtained by running ``briefcase -h``, and inspecting the help for the
 ``platform`` option
 
 ``[tool.briefcase.app.<app name>.<platform>.<output format>]``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------------------------------------------
 
 Configuration options that are specific to a particular output format. For
 example, ``macOS`` applications can be generated in ``app`` or ``dmg`` format.
 
 Configuration options
----------------------
+=====================
 
 ``project_name``
-~~~~~~~~~~~~~~~
+----------------
 
 **Required**
 
@@ -97,14 +98,14 @@ briefcase configuration. For projects with a single app, this may be the same
 as the formal name of the solitary packaged app.
 
 ``formal_name``
-~~~~~~~~~~~~~~~
+---------------
 
 The application name as it should be displayed to humans. This name may contain
 capitalization and punctuation. If it is not specified, the ``name`` will be
 used.
 
 ``version``
-~~~~~~~~~~~
+-----------
 
 **Required**
 
@@ -122,33 +123,36 @@ Examples of valid version strings:
 * ``1.2.3.post8`` - A post-release
 
 ``description``
-~~~~~~~~~~~~~~~
+---------------
 
 **Required**
 
 A short, one-line description of the purpose of the application.
 
 ``bundle``
-~~~~~~~~~~
+----------
 
 **Required**
 
 A reverse-domain name that can be used to identify resources for the
-application e.g., ``com.example.myapp``.
+application e.g., ``com.example``. The bundle identifier will be combined with
+the app name to produce a unique application identifier - e.g., if the bundle
+identifier is ``com.example`` and the app name is ``myapp`, the application
+will be identified as ``com.example.myapp`.
 
 ``author``
-~~~~~~~~~~
+----------
 
 The person or organization responsible for the application.
 
 ``author_email``
-~~~~~~~~~~~~~~~~
+----------------
 
 The contact email address for the person or organization responsible for the
 application.
 
 ``icon``
-~~~~~~~~
+--------
 
 A path, relative to the directory where the ``pyproject.toml`` file is located,
 to an image to use as the icon for the application. The path should *exclude*
@@ -164,7 +168,7 @@ look for ``resources/icon-20.png``, ``resources/icon-1024.png``, and so on. The
 sizes that are required are determined by the platform template.
 
 ``installer_icon``
-~~~~~~~~~~~~~~~~~~
+------------------
 
 A path, relative to the directory where the ``pyproject.toml`` file is located,
 to an image to use as the icon for the installer. As with ``icon``, the
@@ -172,7 +176,7 @@ path should *exclude* the extension, and a platform-appropriate extension will
 be appended when the application is built.
 
 ``installer_background``
-~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------
 
 A path, relative to the directory where the ``pyproject.toml`` file is located,
 to an image to use as the background for the installer. As with ``splash``, the
@@ -180,7 +184,7 @@ path should *exclude* the extension, and a platform-appropriate extension will
 be appended when the application is built.
 
 ``requires``
-~~~~~~~~~~~~
+------------
 
 A list of packages that must be packaged with this application.
 
@@ -191,7 +195,7 @@ the *concatenation* of requirements from all levels, starting from least to
 most specific.
 
 ``sources``
-~~~~~~~~~~~
+-----------
 
 **Required**
 
@@ -209,7 +213,7 @@ level, *and* platform level, the final set of sources will be the
 specific.
 
 ``splash``
-~~~~~~~~~~
+----------
 
 A path, relative to the directory where the ``pyproject.toml`` file is located,
 to an image to use as the splash screen for the application. The path should
@@ -228,7 +232,7 @@ If the platform output format does not use a splash screen, the ``splash``
 setting is ignored.
 
 ``support_package``
-~~~~~~~~~~~~~~~~~~~
+-------------------
 
 A file path or URL pointing at a tarball containing a Python support package.
 (i.e., a precompiled, embeddable Python interpreter for the platform)
@@ -237,7 +241,7 @@ If this setting is not provided, Briefcase will use the default support
 package for the platform.
 
 ``template``
-~~~~~~~~~~~~
+------------
 
 A file path or URL pointing at a `cookiecutter
 <https://github.com/cookiecutter/cookiecutter>`__ template for the output
@@ -247,12 +251,12 @@ If this setting is not provided, Briefcase will use a default template for
 the output format and Python version.
 
 ``url``
-~~~~~~~
+-------
 
 A URL where more details about the application can be found.
 
 Document types
---------------
+==============
 
 Applications can register themselves with the operating system as handlers for
 specific document types by adding a `document_type` section to an application.
@@ -272,12 +276,12 @@ section ``[tool.briefcase.app.myapp.document_type.png]``.
 The document type declaration requires the following settings:
 
 ``description``
-~~~~~~~~~~~~~~~
+---------------
 
 A short, one-line description of the document format.
 
 ``icon``
-~~~~~~~~
+--------
 
 A path, relative to the directory where the ``pyproject.toml`` file is located,
 to an image for an icon to register for use with documents of this type. The
@@ -297,6 +301,6 @@ look for ``resources/icon-20.png``, ``resources/icon-1024.png``, and so on. The
 sizes that are required are determined by the platform template.
 
 ``url``
-~~~~~~~
+-------
 
 A URL for help related to the document format.
