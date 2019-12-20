@@ -138,7 +138,7 @@ A reverse-domain name that can be used to identify resources for the
 application e.g., ``com.example``. The bundle identifier will be combined with
 the app name to produce a unique application identifier - e.g., if the bundle
 identifier is ``com.example`` and the app name is ``myapp`, the application
-will be identified as ``com.example.myapp`.
+will be identified as ``com.example.myapp``.
 
 ``author``
 ----------
