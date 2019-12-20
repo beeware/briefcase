@@ -1,5 +1,6 @@
 import subprocess
 import time
+from uuid import UUID
 
 from briefcase.commands import (
     BuildCommand,
@@ -51,11 +52,13 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
             '-d',
             '--device',
             dest='udid',
-            help='The device UDID to target',
+            help='The device to target; either a UDID, '
+                 'a device name ("iPhone 11"), '
+                 'or a device name and OS version ("iPhone 11::13.3")',
             required=False,
         )
 
-    def select_target_device(self, udid=None):
+    def select_target_device(self, udid_or_device=None):
         """
         Select the target device to use for iOS builds.
 
@@ -70,13 +73,19 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
         If the user has specified a device at the command line, it will be
         used in preference to any
 
-        :param udid: The device UDID to target. If ``None``, the user will
-            be asked to select a device at runtime.
+        :param udid_or_device: The device to target. Can be a device UUID, a
+            device name ("iPhone 11"), or a device name and OS version
+            ("iPhone 11::13.3"). If ``None``, the user will be asked to select
+            a device at runtime.
         :returns: A tuple containing the udid, iOS version, and device name
             for the selected device.
         """
         simulators = self.get_simulators('iOS', sub=self.subprocess)
-        if udid:
+
+        try:
+            # Try to convert to a UDID. If this succeeds, then the argument
+            # is a UDID.
+            udid = str(UUID(udid_or_device)).upper()
             # User has provided a UDID at the command line; look for it.
             for iOS_version, devices in simulators.items():
                 try:
@@ -90,9 +99,69 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
             # found no match; return an error.
             raise BriefcaseCommandError(
                 "Invalid simulator UDID {udid}".format(
-                    udid=udid
+                    udid=udid_or_device
                 )
             )
+        except (ValueError, TypeError):
+            # Provided value wasn't a UDID.
+            # It must be a device or device+version
+            if udid_or_device and '::' in udid_or_device:
+                # A device name::version.
+                device, iOS_version = udid_or_device.split('::')
+                try:
+                    devices = simulators[iOS_version]
+                    try:
+                        # Do a reverse lookup for UDID, based on a
+                        # case-insensitive name lookup.
+                        udid = {
+                            name.lower(): udid
+                            for udid, name in devices.items()
+                        }[device.lower()]
+
+                        # Found a match;
+                        # normalize back to the official name and return.
+                        device = devices[udid]
+                        return udid, iOS_version, device
+                    except KeyError:
+                        raise BriefcaseCommandError(
+                            "Invalid device name '{device}'".format(
+                                    device=device
+                                )
+                            )
+                except KeyError:
+                    raise BriefcaseCommandError(
+                       "Invalid OS Version '{iOS_version}'".format(
+                            iOS_version=iOS_version
+                        )
+                    )
+            elif udid_or_device:
+                # Just a device name
+                device = udid_or_device
+
+                # Search iOS versions, looking for most recent version first.
+                for iOS_version, devices in sorted(
+                    simulators.items(),
+                    key=lambda item: tuple(int(v) for v in item[0].split('.')),
+                    reverse=True
+                ):
+                    try:
+                        udid = {
+                            name.lower(): udid
+                            for udid, name in devices.items()
+                        }[device.lower()]
+
+                        # Found a match;
+                        # normalize back to the official name and return.
+                        device = devices[udid]
+                        return udid, iOS_version, device
+                    except KeyError:
+                        # UDID doesn't exist in this iOS version; try another.
+                        pass
+                raise BriefcaseCommandError(
+                    "Invalid device name '{device}'".format(
+                            device=device
+                        )
+                    )
 
         if len(simulators) == 0:
             raise BriefcaseCommandError(
@@ -149,7 +218,7 @@ class iOSXcodeBuildCommand(iOSXcodeMixin, BuildCommand):
         :param udid: The device UDID to target. If ``None``, the user will
             be asked to select a device at runtime.
         """
-        udid, iOS_version, device = self.select_target_device(udid=udid)
+        udid, iOS_version, device = self.select_target_device(udid)
 
         print()
         print("Targeting an {device} running iOS {iOS_version} (device UDID {udid})".format(
@@ -224,7 +293,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
             be asked to select a device at runtime.
         :param base_path: The path to the project directory.
         """
-        udid, iOS_version, device = self.select_target_device(udid=udid)
+        udid, iOS_version, device = self.select_target_device(udid)
         print()
         print("Targeting an {device} running iOS {iOS_version} (device UDID {udid})".format(
             device=device,
