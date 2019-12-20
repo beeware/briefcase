@@ -18,8 +18,8 @@ import re
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 import sys
-
-#sys.path.insert(0, os.path.abspath('.'))
+import os
+sys.path.insert(0, os.path.abspath('../src'))
 
 # -- General configuration -----------------------------------------------------
 
@@ -28,7 +28,7 @@ import sys
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx_tabs.tabs']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.todo', 'sphinx_tabs.tabs']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -44,7 +44,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Briefcase'
-copyright = u'2013, Russell Keith-Magee'
+copyright = u'2019, Russell Keith-Magee'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -283,3 +283,14 @@ spelling_lang = 'en_US'
 spelling_word_list_filename = 'spelling_wordlist'
 
 spelling_ignore_pypi_package_names = True
+
+# -- Options for Todos -------------------------------------------
+
+# If this is True, todo and todolist produce output, else they produce nothing. The default is False.
+todo_include_todos = True
+
+# If this is True, todo emits a warning for each TODO entries. The default is False.
+# todo_emit_warnings = False
+
+# If this is True, todolist produce output without file path and line, The default is False.
+# todo_link_only = False

@@ -4,7 +4,11 @@
 Reference
 =========
 
-.. toctree::
-   :maxdepth: 1
-
 This is the technical reference for public APIs provided by Briefcase.
+
+.. toctree::
+   :maxdepth: 2
+
+   configuration
+   commands/index
+   platforms/index

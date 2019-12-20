@@ -1,0 +1,2 @@
+
+DEFAULT_OUTPUT_FORMAT = 'apk'

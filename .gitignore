@@ -3,10 +3,13 @@
 .*.sw[op]
 *.egg-info
 dist
-build
+./build
 docs/_build/
 distribute-*
 .DS_Store
 .python-version
-venv
-.vscode
+.pytest_cache
+venv/
+.vscode/
+.eggs/
+/local

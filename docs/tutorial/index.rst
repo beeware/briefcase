@@ -1,15 +1,15 @@
 .. _tutorial:
 
-=========
-Tutorials
-=========
+========
+Tutorial
+========
 
-These tutorials are step-by step guides for using Briefcase.
+Briefcase is a packaging tool - but first you need something to package. The
+best way to learn about Briefcase is to see it working with the rest of the
+BeeWare suite of tools.
 
-.. toctree::
-   :maxdepth: 1
-   :titlesonly:
+`The BeeWare tutorial <https://beeware.readthedocs.io/en/latest/>`__ walks you
+through the process of building a native Python application from scratch.
 
-   getting-started
-   tutorial-0
-   tutorial-1
+Once you've done that tutorial, the :doc:`Briefcase How-To Guides
+<../how-to/index>` provide details on performing specific tasks with Briefcase.

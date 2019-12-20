@@ -1,5 +1,3 @@
-from __future__ import print_function, unicode_literals, absolute_import, division
-
 __all__ = [
     '__version__',
 ]
@@ -12,4 +10,4 @@ __all__ = [
 # __version__ = '1.2.3'       # Final Release
 # __version__ = '1.2.3.post1' # Post Release 1
 
-__version__ = '0.2.10'
+__version__ = '0.3.0.dev1'
