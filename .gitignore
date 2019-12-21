@@ -2,8 +2,8 @@
 *~
 .*.sw[op]
 *.egg-info
-dist
-./build
+/dist
+/build
 docs/_build/
 distribute-*
 .DS_Store
