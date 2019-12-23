@@ -15,8 +15,8 @@ To run your application, type::
 Options
 =======
 
-``-u``
-------
+``-u`` / ``--update``
+---------------------
 
 Update the application's source code before running. Equivalent to running::
 

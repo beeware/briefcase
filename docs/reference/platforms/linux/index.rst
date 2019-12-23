@@ -2,6 +2,8 @@
 Linux platform support
 ======================
 
+The default output format for Linux is :doc:`AppImage <./appimage>`.
+
 .. toctree::
    :maxdepth: 1
 

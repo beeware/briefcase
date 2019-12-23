@@ -16,12 +16,12 @@ To repackage the code in your run::
 Options
 =======
 
-``-d``
-------
+``-d`` / ``--update-dependencies``
+----------------------------------
 
-Update dependencies.
+Update application dependencies.
 
-``-r``
-------
+``-r`` / ``--update-resources``
+-------------------------------
 
-Update resources.
+Update application resources (e.g., icons and splash screens).

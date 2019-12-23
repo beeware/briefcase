@@ -18,7 +18,7 @@ the current environment.
 Options
 =======
 
-``-d``
-------
+``-d`` / ``--update_dependencies``
+----------------------------------
 
-Update dependencies
+Update application dependencies.

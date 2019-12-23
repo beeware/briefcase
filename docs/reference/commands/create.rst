@@ -10,12 +10,15 @@ Usage
 
 To create a scaffold for the default output format for the current platform::
 
-    $ briefcase build
+    $ briefcase create
 
 To create a scaffold for a different platform::
 
-    $ briefcase build <platform>
+    $ briefcase create <platform>
 
 To create a scaffold for a specific output format::
 
-    $ briefcase build <platform> <output format>
+    $ briefcase create <platform> <output format>
+
+If a scaffold for the nominated platform already exists, you'll be prompted
+to delete and regenerate the app.

@@ -1,5 +1,5 @@
 ========================
-Windows Platform support
+Windows platform support
 ========================
 
 .. toctree::
