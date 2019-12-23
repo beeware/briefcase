@@ -1,5 +1,5 @@
-Contributing to Briefcase
-=========================
+Contributing code to Briefcase
+==============================
 
 If you experience problems with Briefcase, `log them on GitHub`_. If you want
 to contribute code, please `fork the code`_ and `submit a pull request`_.
