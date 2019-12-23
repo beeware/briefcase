@@ -222,7 +222,7 @@ class BaseCommand(ABC):
         app_home = [
             path.split('/')
             for path in app.sources
-            if path.rsplit('/', 1)[1] == app.module_name
+            if path.rsplit('/', 1)[-1] == app.module_name
         ]
         try:
             if len(app_home) == 1:
