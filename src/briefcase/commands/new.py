@@ -209,7 +209,7 @@ class NewCommand(BaseCommand):
         while True:
             print()
             answer = self.input("{variable} [{default}]: ".format(
-                variable=variable.title(),
+                variable=variable.capitalize(),
                 default=default,
             ))
 
