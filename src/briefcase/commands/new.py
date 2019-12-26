@@ -233,7 +233,7 @@ class NewCommand(BaseCommand):
         while True:
             print()
             answer = self.input("{variable} [{default}]: ".format(
-                variable=variable.capitalize(),
+                variable=titlecase(variable),
                 default=default,
             ))
 
