@@ -15,6 +15,30 @@ from .create import InvalidTemplateRepository
 VALID_BUNDLE_RE = re.compile(r'[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$')
 
 
+def titlecase(s):
+    """
+    Convert a string to titlecase.
+
+    Follow Chicago Manual of Style rules for capitalization (roughly).
+
+    * Capitalize *only* the first letter of each word
+    * ... unless the word is an acronym (e.g., URL)
+    * ... or the word is on the exclude list ('of', 'and', 'the)
+    :param s: The input string
+    :returns: A capitalized string.
+    """
+    return ' '.join(
+        word if (
+            word.isupper()
+            or word in {
+                'a', 'an', 'and', 'as', 'at', 'but', 'by', 'en', 'for',
+                'if', 'in', 'of', 'on', 'or', 'the', 'to', 'via', 'vs'
+            }
+        ) else word.capitalize()
+        for word in s.split(' ')
+    )
+
+
 class NewCommand(BaseCommand):
     cmd_line = 'briefcase new'
     command = 'new'
@@ -209,7 +233,7 @@ class NewCommand(BaseCommand):
         while True:
             print()
             answer = self.input("{variable} [{default}]: ".format(
-                variable=variable.title(),
+                variable=titlecase(variable),
                 default=default,
             ))
 
@@ -260,7 +284,7 @@ Select one of the following:
 
 {variable} [1]: """.format(
                     display_options=display_options,
-                    variable=variable.title()
+                    variable=titlecase(variable)
                 )
             )
 
