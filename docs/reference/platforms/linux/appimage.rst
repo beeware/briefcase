@@ -1,6 +1,6 @@
-======================
-Linux AppImage Support
-======================
+==============
+Linux AppImage
+==============
 
 `AppImage <https://appimage.org>`__ provides a way for developers to provide
 "native" binaries for Linux users. It allow packaging applications for any

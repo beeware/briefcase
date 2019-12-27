@@ -1,6 +1,6 @@
-==========
-macOS DMGs
-==========
+=========
+macOS DMG
+=========
 
 A macOS DMG (Disk iMaGe) is a common format for distributing macOS content.
 It presents itself to the operating system a disk that can be mounted; the

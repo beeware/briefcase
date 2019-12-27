@@ -1,6 +1,6 @@
-====================
-iOS platform support
-====================
+===
+iOS
+===
 
 When generating an iOS project, Briefcase produces an Xcode project.
 

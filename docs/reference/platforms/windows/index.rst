@@ -1,6 +1,6 @@
-========================
-Windows platform support
-========================
+=======
+Windows
+=======
 
 The default output format for Windows is an :doc:`MSI Installer <./msi>`.
 

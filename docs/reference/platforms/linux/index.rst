@@ -1,6 +1,6 @@
-======================
-Linux platform support
-======================
+=====
+Linux
+=====
 
 The default output format for Linux is :doc:`AppImage <./appimage>`.
 

@@ -1,6 +1,6 @@
-============
-.app bundles
-============
+===========
+.app bundle
+===========
 
 A macOS ``.app`` bundle is a collection of directory with a specific layout,
 and with some key metadata. If this structure and metadata exists, macOS treats

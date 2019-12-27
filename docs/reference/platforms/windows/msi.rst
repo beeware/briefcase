@@ -1,6 +1,6 @@
-==============
-MSI Installers
-==============
+=============
+MSI Installer
+=============
 
 An MSI installer is a common format used for the installation, maintenance,
 and removal of Windows software. It contains the files to be distributed, along

@@ -1,6 +1,6 @@
-======================
-macOS platform support
-======================
+=====
+macOS
+=====
 
 The default output format for macOS is a :doc:`DMG <./dmg>`.
 
