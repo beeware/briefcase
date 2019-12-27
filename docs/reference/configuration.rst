@@ -26,12 +26,13 @@ file would be::
 The ``[build-system]`` section is preamble required by PEP518, declaring the
 dependency on Briefcase.
 
-The remaining sections are tool specific, and start with `tool.briefcase`.
+The remaining sections are tool specific, and start with the prefix
+``tool.briefcase``.
 
 The location of the ``pyproject.toml`` file is treated as the root of the
 project definition. Briefcase should be invoked in a directory that contains a
 ``pyproject.toml`` file, and all relative file path references contained in the
-``pyproject.toml`` file will be interpreted as relative to the directory that
+``pyproject.toml`` file will be interpreted relative to the directory that
 contains the ``pyproject.toml`` file.
 
 Configuration sections
@@ -42,7 +43,7 @@ Each application is a distributable product of the build process. A simple
 project will only have a single application. However, a complex project may
 contain multiple applications with shared code.
 
-Settings can be specified:
+Each setting can be specified:
 
 * At the level of an output format (e.g., settings specific to building macOS
   DMGs);
@@ -85,29 +86,30 @@ be obtained by running ``briefcase -h``, and inspecting the help for the
 Configuration options that are specific to a particular output format. For
 example, ``macOS`` applications can be generated in ``app`` or ``dmg`` format.
 
-Configuration options
+Project configuration
 =====================
 
-``project_name``
-----------------
+Required values
+---------------
 
-**Required**
+``bundle``
+~~~~~~~~~~
+
+A reverse-domain name that can be used to identify resources for the
+application e.g., ``com.example``. The bundle identifier will be combined with
+the app name to produce a unique application identifier - e.g., if the bundle
+identifier is ``com.example`` and the app name is ``myapp`, the application
+will be identified as ``com.example.myapp``.
+
+``project_name``
+~~~~~~~~~~~~~~~~
 
 The project is the collection of all applications that are described by the
 briefcase configuration. For projects with a single app, this may be the same
 as the formal name of the solitary packaged app.
 
-``formal_name``
----------------
-
-The application name as it should be displayed to humans. This name may contain
-capitalization and punctuation. If it is not specified, the ``name`` will be
-used.
-
 ``version``
------------
-
-**Required**
+~~~~~~~~~~~
 
 A `PEP440 <https://www.python.org/dev/peps/pep-0440/>`__ compliant version
 string.
@@ -122,37 +124,75 @@ Examples of valid version strings:
 * ``1.2.3rc7`` - A release candidate
 * ``1.2.3.post8`` - A post-release
 
-``description``
+Optional values
 ---------------
 
-**Required**
+``author``
+~~~~~~~~~~
+
+The person or organization responsible for the project.
+
+``author_email``
+~~~~~~~~~~~~~~~~
+
+The contact email address for the person or organization responsible for the
+project.
+
+``url``
+~~~~~~~
+
+A URL where more details about the project can be found.
+
+Application configuration
+=========================
+
+Required
+--------
+
+``description``
+~~~~~~~~~~~~~~~
 
 A short, one-line description of the purpose of the application.
 
-``bundle``
-----------
+``sources``
+~~~~~~~~~~~
 
-**Required**
+A list of paths, relative to the pyproject.toml file, where source code for the
+application can be found. The contents of any named files or folders will be
+copied into the application bundle. Parent directories in any named path will
+not be included. For example, if you specify ``src/myapp`` as a source, the
+contents of the `myapp` folder will be copied into the application bundle; the
+src directory will not be reproduced.
 
-A reverse-domain name that can be used to identify resources for the
-application e.g., ``com.example``. The bundle identifier will be combined with
-the app name to produce a unique application identifier - e.g., if the bundle
-identifier is ``com.example`` and the app name is ``myapp`, the application
-will be identified as ``com.example.myapp``.
+Unlike most other keys in a configuration file, ``sources`` is *cumlative*
+setting. If an application defines sources at the global level, application
+level, *and* platform level, the final set of sources will be the
+*concatenation* of sources from all levels, starting from least to most
+specific.
+
+Optional values
+---------------
 
 ``author``
-----------
+~~~~~~~~~~
 
 The person or organization responsible for the application.
 
 ``author_email``
-----------------
+~~~~~~~~~~~~~~~~
 
 The contact email address for the person or organization responsible for the
 application.
 
+``formal_name``
+~~~~~~~~~~~~~~~
+
+The application name as it should be displayed to humans. This name may contain
+capitalization and punctuation. If it is not specified, the ``name`` will be
+used.
+
 ``icon``
---------
+~~~~~~~~
 
 A path, relative to the directory where the ``pyproject.toml`` file is located,
 to an image to use as the icon for the application. The path should *exclude*
@@ -168,7 +208,7 @@ look for ``resources/icon-20.png``, ``resources/icon-1024.png``, and so on. The
 sizes that are required are determined by the platform template.
 
 ``installer_icon``
-------------------
+~~~~~~~~~~~~~~~~~~
 
 A path, relative to the directory where the ``pyproject.toml`` file is located,
 to an image to use as the icon for the installer. As with ``icon``, the
@@ -176,7 +216,7 @@ path should *exclude* the extension, and a platform-appropriate extension will
 be appended when the application is built.
 
 ``installer_background``
-------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 A path, relative to the directory where the ``pyproject.toml`` file is located,
 to an image to use as the background for the installer. As with ``splash``, the
@@ -184,7 +224,7 @@ path should *exclude* the extension, and a platform-appropriate extension will
 be appended when the application is built.
 
 ``requires``
-------------
+~~~~~~~~~~~~
 
 A list of packages that must be packaged with this application.
 
@@ -194,26 +234,8 @@ application level, *and* platform level, the final set of requirements will be
 the *concatenation* of requirements from all levels, starting from least to
 most specific.
 
-``sources``
------------
-
-**Required**
-
-A list of paths, relative to the pyproject.toml file, where source code for the
-application can be found. The contents of any named files or folders will be
-copied into the application bundle. Parent directories in any named path will
-not be included. For example, if you specify ``src/myapp`` as a source, the
-contents of the `myapp` folder will be copied into the application bundle; the
-src directory will not be reproduced.
-
-Unlike most other keys in a configuration file, ``sources`` is *cumlative*
-setting. If an application defines sources at the global level, application
-level, *and* platform level, the final set of sources will be the
-*concatenation* of sources from all levels, starting from least to most
-specific.
-
 ``splash``
-----------
+~~~~~~~~~~
 
 A path, relative to the directory where the ``pyproject.toml`` file is located,
 to an image to use as the splash screen for the application. The path should
@@ -232,7 +254,7 @@ If the platform output format does not use a splash screen, the ``splash``
 setting is ignored.
 
 ``support_package``
--------------------
+~~~~~~~~~~~~~~~~~~~
 
 A file path or URL pointing at a tarball containing a Python support package.
 (i.e., a precompiled, embeddable Python interpreter for the platform)
@@ -241,7 +263,7 @@ If this setting is not provided, Briefcase will use the default support
 package for the platform.
 
 ``template``
-------------
+~~~~~~~~~~~~
 
 A file path or URL pointing at a `cookiecutter
 <https://github.com/cookiecutter/cookiecutter>`__ template for the output
@@ -251,17 +273,17 @@ If this setting is not provided, Briefcase will use a default template for
 the output format and Python version.
 
 ``url``
--------
+~~~~~~~
 
 A URL where more details about the application can be found.
 
 Document types
 ==============
 
-Applications can register themselves with the operating system as handlers for
-specific document types by adding a `document_type` section to an application.
-This is acheived by adding a ``document_type`` configuration section for each
-document type the application can support. This section follows the format:
+Applications in a project can register themselves with the operating system as
+handlers for specific document types by adding a ``document_type``
+configuration section for each document type the application can support. This
+section follows the format:
 
     ``[tool.briefcase.app.<app name>.document_type.<extension>]``
 
@@ -269,7 +291,7 @@ or, for a platform specific definition:
 
     ``[tool.briefcase.app.<app name>.<platform>.document_type.<extension>]``
 
-where `extension` is the file extension to register. For example, `myapp`
+where ``extension`` is the file extension to register. For example, ``myapp``
 could register as a handler for PNG image files by defining the configuration
 section ``[tool.briefcase.app.myapp.document_type.png]``.
 
