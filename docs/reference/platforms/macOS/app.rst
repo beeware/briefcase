@@ -9,20 +9,12 @@ the folder as an executable file, giving it an icon.
 ``.app`` bundles can be copied around as if they are a single file. They can
 also be compressed to reduce their size for transport.
 
-Creating a .app bundle
-======================
+Icon format
+===========
 
-To create a .app bundle, run::
+``.app`` bundles use ``.icns`` format icons.
 
-    $ briefcase create macOS app
+Image format
+============
 
-Options
-=======
-
-The following options can be used in ``pyproject.toml`` to configure an
-application's ``.app`` bundle.
-
-``icon``
---------
-
-An icon for the application, in ``.icns`` format.
+``.app`` bundles do not support splash screens or installer images.
