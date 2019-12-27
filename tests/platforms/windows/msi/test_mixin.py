@@ -12,7 +12,7 @@ def test_binary_path(first_app_config, tmp_path):
     command = WindowsMSICreateCommand(base_path=tmp_path)
     binary_path = command.binary_path(first_app_config)
 
-    assert binary_path == tmp_path / 'windows' / 'First App' / 'src' / 'python' / 'pythonw.exe'
+    assert binary_path == tmp_path / 'windows' / 'First App'
 
 
 def test_distribution_path(first_app_config, tmp_path):

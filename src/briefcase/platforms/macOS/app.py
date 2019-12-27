@@ -3,6 +3,7 @@ import subprocess
 from briefcase.commands import (
     BuildCommand,
     CreateCommand,
+    PackageCommand,
     PublishCommand,
     RunCommand,
     UpdateCommand
@@ -26,19 +27,19 @@ class macOSAppMixin(macOSMixin):
 
 
 class macOSAppCreateCommand(macOSAppMixin, CreateCommand):
-    description = "Create and populate a macOS .app bundle."
+    description = "Create and populate a macOS app."
 
 
 class macOSAppUpdateCommand(macOSAppMixin, UpdateCommand):
-    description = "Update an existing macOS .app bundle."
+    description = "Update an existing macOS app."
 
 
 class macOSAppBuildCommand(macOSAppMixin, BuildCommand):
-    description = "Build a macOS .app bundle."
+    description = "Build a macOS app."
 
 
 class macOSAppRunCommand(macOSAppMixin, RunCommand):
-    description = "Run a macOS .app bundle."
+    description = "Run a macOS app."
 
     def run_app(self, app: BaseConfig, **kwargs):
         """
@@ -67,8 +68,12 @@ class macOSAppRunCommand(macOSAppMixin, RunCommand):
             )
 
 
+class macOSAppPackageCommand(macOSAppMixin, PackageCommand):
+    description = "Package a macOS app for distribution."
+
+
 class macOSAppPublishCommand(macOSAppMixin, PublishCommand):
-    description = "Publish a macOS .app bundle."
+    description = "Publish a macOS app."
 
 
 # Declare the briefcase command bindings
@@ -76,4 +81,5 @@ create = macOSAppCreateCommand  # noqa
 update = macOSAppUpdateCommand  # noqa
 build = macOSAppBuildCommand  # noqa
 run = macOSAppRunCommand  # noqa
+package = macOSAppPackageCommand  # noqa
 publish = macOSAppPublishCommand  # noqa

@@ -11,4 +11,5 @@ Command reference
    update
    build
    run
+   package
    publish

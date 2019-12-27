@@ -19,6 +19,11 @@ def test_run_command(base_command):
     assert base_command.run_command.description == "Test Run"
 
 
+def test_package_command(base_command):
+    # Check for a property of the created command class.
+    assert base_command.package_command.description == "Test Package"
+
+
 def test_publish_command(base_command):
     # Check for a property of the created command class.
     assert base_command.publish_command.description == "Test Publish"

@@ -6,6 +6,7 @@ from requests import exceptions as requests_exceptions
 from briefcase.commands import (
     BuildCommand,
     CreateCommand,
+    PackageCommand,
     PublishCommand,
     RunCommand,
     UpdateCommand
@@ -152,6 +153,10 @@ class LinuxAppImageRunCommand(LinuxAppImageMixin, RunCommand):
             )
 
 
+class LinuxAppImagePackageCommand(LinuxAppImageMixin, PackageCommand):
+    description = "Publish a Linux AppImage."
+
+
 class LinuxAppImagePublishCommand(LinuxAppImageMixin, PublishCommand):
     description = "Publish a Linux AppImage."
 
@@ -161,4 +166,5 @@ create = LinuxAppImageCreateCommand  # noqa
 update = LinuxAppImageUpdateCommand  # noqa
 build = LinuxAppImageBuildCommand  # noqa
 run = LinuxAppImageRunCommand  # noqa
+package = LinuxAppImagePackageCommand  # noqa
 publish = LinuxAppImagePublishCommand  # noqa

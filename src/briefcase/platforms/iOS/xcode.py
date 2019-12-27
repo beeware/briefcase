@@ -5,6 +5,7 @@ from uuid import UUID
 from briefcase.commands import (
     BuildCommand,
     CreateCommand,
+    PackageCommand,
     PublishCommand,
     RunCommand,
     UpdateCommand
@@ -407,6 +408,10 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         }
 
 
+class iOSXcodePackageCommand(iOSXcodeMixin, PackageCommand):
+    description = "Package an iOS app."
+
+
 class iOSXcodePublishCommand(iOSXcodeMixin, PublishCommand):
     description = "Publish an iOS app."
     publication_channels = ['ios_appstore']
@@ -418,4 +423,5 @@ create = iOSXcodeCreateCommand  # noqa
 update = iOSXcodeUpdateCommand  # noqa
 build = iOSXcodeBuildCommand  # noqa
 run = iOSXcodeRunCommand  # noqa
+package = iOSXcodePackageCommand  # noqa
 publish = iOSXcodePublishCommand  # noqa

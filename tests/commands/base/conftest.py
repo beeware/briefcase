@@ -57,6 +57,10 @@ class DummyRunCommand(DummyCommand):
     description = "Test Run"
 
 
+class DummyPackageCommand(DummyCommand):
+    description = "Test Package"
+
+
 class DummyPublishCommand(DummyCommand):
     description = "Test Publish"
 
@@ -66,6 +70,7 @@ create = DummyCreateCommand
 update = DummyUpdateCommand
 build = DummyBuildCommand
 run = DummyRunCommand
+package = DummyPackageCommand
 publish = DummyPublishCommand
 
 

@@ -46,7 +46,7 @@ class BuildCommand(BaseCommand):
         print()
         print("[{app.name}] Created {filename}.".format(
             app=app,
-            filename=self.distribution_path(app).name,
+            filename=self.binary_path(app).name,
         ))
         return state
 
