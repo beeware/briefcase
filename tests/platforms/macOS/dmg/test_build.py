@@ -17,7 +17,7 @@ def test_build_dmg(first_app_config, tmp_path):
     command.build_app(first_app_config)
 
     command.dmgbuild.build_dmg.assert_called_with(
-        filename=tmp_path / 'macOS' / 'First App-0.0.1.dmg',
+        filename=str(tmp_path / 'macOS' / 'First App-0.0.1.dmg'),
         volume_name='First App 0.0.1',
         settings={
             'files': [str(tmp_path / 'macOS' / 'First App.app')],
@@ -44,7 +44,7 @@ def test_installer_icon(first_app_config, tmp_path):
     command.build_app(first_app_config)
 
     command.dmgbuild.build_dmg.assert_called_with(
-        filename=tmp_path / 'macOS' / 'First App-0.0.1.dmg',
+        filename=str(tmp_path / 'macOS' / 'First App-0.0.1.dmg'),
         volume_name='First App 0.0.1',
         settings={
             'files': [str(tmp_path / 'macOS' / 'First App.app')],
@@ -53,7 +53,7 @@ def test_installer_icon(first_app_config, tmp_path):
                 'First App.app': (100, 100),
                 'Applications': (300, 100),
             },
-            'icon': tmp_path / 'resources' / 'installer_icon.icns'
+            'icon': str(tmp_path / 'resources' / 'installer_icon.icns')
         }
     )
 
@@ -69,7 +69,7 @@ def test_installer_icon_missing(first_app_config, tmp_path):
     command.build_app(first_app_config)
 
     command.dmgbuild.build_dmg.assert_called_with(
-        filename=tmp_path / 'macOS' / 'First App-0.0.1.dmg',
+        filename=str(tmp_path / 'macOS' / 'First App-0.0.1.dmg'),
         volume_name='First App 0.0.1',
         settings={
             'files': [str(tmp_path / 'macOS' / 'First App.app')],
@@ -96,7 +96,7 @@ def test_app_icon(first_app_config, tmp_path):
     command.build_app(first_app_config)
 
     command.dmgbuild.build_dmg.assert_called_with(
-        filename=tmp_path / 'macOS' / 'First App-0.0.1.dmg',
+        filename=str(tmp_path / 'macOS' / 'First App-0.0.1.dmg'),
         volume_name='First App 0.0.1',
         settings={
             'files': [str(tmp_path / 'macOS' / 'First App.app')],
@@ -105,7 +105,7 @@ def test_app_icon(first_app_config, tmp_path):
                 'First App.app': (100, 100),
                 'Applications': (300, 100),
             },
-            'icon': tmp_path / 'resources' / 'icon.icns'
+            'icon': str(tmp_path / 'resources' / 'icon.icns')
         }
     )
 
@@ -121,7 +121,7 @@ def test_app_icon_missing(first_app_config, tmp_path):
     command.build_app(first_app_config)
 
     command.dmgbuild.build_dmg.assert_called_with(
-        filename=tmp_path / 'macOS' / 'First App-0.0.1.dmg',
+        filename=str(tmp_path / 'macOS' / 'First App-0.0.1.dmg'),
         volume_name='First App 0.0.1',
         settings={
             'files': [str(tmp_path / 'macOS' / 'First App.app')],
@@ -148,7 +148,7 @@ def test_build_with_background(first_app_config, tmp_path):
     command.build_app(first_app_config)
 
     command.dmgbuild.build_dmg.assert_called_with(
-        filename=tmp_path / 'macOS' / 'First App-0.0.1.dmg',
+        filename=str(tmp_path / 'macOS' / 'First App-0.0.1.dmg'),
         volume_name='First App 0.0.1',
         settings={
             'files': [str(tmp_path / 'macOS' / 'First App.app')],
@@ -157,7 +157,7 @@ def test_build_with_background(first_app_config, tmp_path):
                 'First App.app': (100, 100),
                 'Applications': (300, 100),
             },
-            'background': tmp_path / 'resources' / 'background.png'
+            'background': str(tmp_path / 'resources' / 'background.png')
         }
     )
 
@@ -173,7 +173,7 @@ def test_build_with_background_missing(first_app_config, tmp_path):
     command.build_app(first_app_config)
 
     command.dmgbuild.build_dmg.assert_called_with(
-        filename=tmp_path / 'macOS' / 'First App-0.0.1.dmg',
+        filename=str(tmp_path / 'macOS' / 'First App-0.0.1.dmg'),
         volume_name='First App 0.0.1',
         settings={
             'files': [str(tmp_path / 'macOS' / 'First App.app')],

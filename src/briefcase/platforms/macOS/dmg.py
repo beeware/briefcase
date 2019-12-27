@@ -98,14 +98,14 @@ class macOSDmgBuildCommand(macOSDmgMixin, macOSAppBuildCommand):
                 icon_filename = None
 
         if icon_filename:
-            dmg_settings['icon'] = icon_filename
+            dmg_settings['icon'] = str(icon_filename)
 
         try:
             image_filename = self.base_path / '{image}.png'.format(
                 image=app.installer_background
             )
             if image_filename.exists():
-                dmg_settings['background'] = image_filename
+                dmg_settings['background'] = str(image_filename)
             else:
                 print("Can't find {filename}.png for DMG background".format(
                     filename=app.installer_background
@@ -115,7 +115,7 @@ class macOSDmgBuildCommand(macOSDmgMixin, macOSAppBuildCommand):
             pass
 
         self.dmgbuild.build_dmg(
-            filename=self.distribution_path(app),
+            filename=str(self.distribution_path(app)),
             volume_name='{app.formal_name} {app.version}'.format(app=app),
             settings=dmg_settings
         )
