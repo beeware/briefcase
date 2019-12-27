@@ -22,3 +22,8 @@ To create a scaffold for a specific output format::
 
 If a scaffold for the nominated platform already exists, you'll be prompted
 to delete and regenerate the app.
+
+Options
+=======
+
+There are no additional command line options.

@@ -28,3 +28,16 @@ To build the application for a specific output format::
     example, you will only be able to create iOS applications on macOS.
     Briefcase will check for any required tools, and will report an error if
     the platform you're targetting is not supported.
+
+Options
+=======
+
+The following options can be provided at the command line.
+
+``-u`` / ``--update``
+---------------------
+
+Update the application's source code before running. Equivalent to running::
+
+    $ briefcase update
+    $ briefcase run
