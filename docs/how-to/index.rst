@@ -10,9 +10,10 @@ already knows than tutorials do, and unlike documents in the tutorial they can
 stand alone.
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :glob:
 
    contribute-code
    contribute-docs
    See errors on iOS <see_errors_on_ios>
+   internal/index

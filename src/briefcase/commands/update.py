@@ -12,13 +12,13 @@ class UpdateCommand(CreateCommand):
     def add_options(self, parser):
         parser.add_argument(
             '-d',
-            '--update_dependencies',
+            '--update-dependencies',
             action="store_true",
             help='Update dependencies for app'
         )
         parser.add_argument(
             '-r',
-            '--update_resources',
+            '--update-resources',
             action="store_true",
             help='Update app resources (icons, splash screens, etc)'
         )

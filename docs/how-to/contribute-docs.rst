@@ -20,11 +20,11 @@ the other index files for clues.
 Build documentation locally
 ---------------------------
 
-Go to the documentation folder: ::
+Go to the documentation folder::
 
     $ cd docs
 
-Install Sphinx with the helpers and extensions we use: ::
+Install Sphinx with the helpers and extensions we use::
 
     $ pip install -r requirements_rtd.txt
 
