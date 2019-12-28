@@ -1,3 +1,4 @@
+import itertools
 import subprocess
 
 from briefcase.commands import (
@@ -16,14 +17,11 @@ from briefcase.platforms.macOS import macOSMixin
 class macOSAppMixin(macOSMixin):
     output_format = 'app'
 
-    def bundle_path(self, app):
-        return self.platform_path / '{app.formal_name}.app'.format(app=app)
-
     def binary_path(self, app):
-        return self.bundle_path(app)
+        return self.bundle_path(app) / '{app.formal_name}.app'.format(app=app)
 
     def distribution_path(self, app):
-        return self.bundle_path(app)
+        return self.binary_path(app)
 
 
 class macOSAppCreateCommand(macOSAppMixin, CreateCommand):

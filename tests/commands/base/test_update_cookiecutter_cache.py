@@ -126,7 +126,7 @@ def test_offline_repo_template(base_command):
     assert cached_template == cached_path
 
 
-def test_cached_missing_branch_template(base_command, myapp):
+def test_cached_missing_branch_template(base_command):
     "If the cached repo doesn't have the requested branch, an error is raised"
     base_command.git = mock.MagicMock()
 

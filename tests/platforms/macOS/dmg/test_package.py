@@ -20,7 +20,7 @@ def test_build_dmg(first_app_config, tmp_path):
         filename=str(tmp_path / 'macOS' / 'First App-0.0.1.dmg'),
         volume_name='First App 0.0.1',
         settings={
-            'files': [str(tmp_path / 'macOS' / 'First App.app')],
+            'files': [str(tmp_path / 'macOS' / 'First App' / 'First App.app')],
             'symlinks': {'Applications': '/Applications'},
             'icon_locations': {
                 'First App.app': (100, 100),
@@ -47,7 +47,7 @@ def test_installer_icon(first_app_config, tmp_path):
         filename=str(tmp_path / 'macOS' / 'First App-0.0.1.dmg'),
         volume_name='First App 0.0.1',
         settings={
-            'files': [str(tmp_path / 'macOS' / 'First App.app')],
+            'files': [str(tmp_path / 'macOS' / 'First App' / 'First App.app')],
             'symlinks': {'Applications': '/Applications'},
             'icon_locations': {
                 'First App.app': (100, 100),
@@ -72,7 +72,7 @@ def test_installer_icon_missing(first_app_config, tmp_path):
         filename=str(tmp_path / 'macOS' / 'First App-0.0.1.dmg'),
         volume_name='First App 0.0.1',
         settings={
-            'files': [str(tmp_path / 'macOS' / 'First App.app')],
+            'files': [str(tmp_path / 'macOS' / 'First App' / 'First App.app')],
             'symlinks': {'Applications': '/Applications'},
             'icon_locations': {
                 'First App.app': (100, 100),
@@ -99,7 +99,7 @@ def test_app_icon(first_app_config, tmp_path):
         filename=str(tmp_path / 'macOS' / 'First App-0.0.1.dmg'),
         volume_name='First App 0.0.1',
         settings={
-            'files': [str(tmp_path / 'macOS' / 'First App.app')],
+            'files': [str(tmp_path / 'macOS' / 'First App' / 'First App.app')],
             'symlinks': {'Applications': '/Applications'},
             'icon_locations': {
                 'First App.app': (100, 100),
@@ -124,7 +124,7 @@ def test_app_icon_missing(first_app_config, tmp_path):
         filename=str(tmp_path / 'macOS' / 'First App-0.0.1.dmg'),
         volume_name='First App 0.0.1',
         settings={
-            'files': [str(tmp_path / 'macOS' / 'First App.app')],
+            'files': [str(tmp_path / 'macOS' / 'First App' / 'First App.app')],
             'symlinks': {'Applications': '/Applications'},
             'icon_locations': {
                 'First App.app': (100, 100),
@@ -151,7 +151,7 @@ def test_build_with_background(first_app_config, tmp_path):
         filename=str(tmp_path / 'macOS' / 'First App-0.0.1.dmg'),
         volume_name='First App 0.0.1',
         settings={
-            'files': [str(tmp_path / 'macOS' / 'First App.app')],
+            'files': [str(tmp_path / 'macOS' / 'First App' / 'First App.app')],
             'symlinks': {'Applications': '/Applications'},
             'icon_locations': {
                 'First App.app': (100, 100),
@@ -176,7 +176,7 @@ def test_build_with_background_missing(first_app_config, tmp_path):
         filename=str(tmp_path / 'macOS' / 'First App-0.0.1.dmg'),
         volume_name='First App 0.0.1',
         settings={
-            'files': [str(tmp_path / 'macOS' / 'First App.app')],
+            'files': [str(tmp_path / 'macOS' / 'First App' / 'First App.app')],
             'symlinks': {'Applications': '/Applications'},
             'icon_locations': {
                 'First App.app': (100, 100),

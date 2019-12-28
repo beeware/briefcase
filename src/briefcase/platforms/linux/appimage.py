@@ -19,9 +19,6 @@ from briefcase.platforms.linux import LinuxMixin
 class LinuxAppImageMixin(LinuxMixin):
     output_format = 'appimage'
 
-    def bundle_path(self, app):
-        return self.platform_path / '{app.formal_name}.AppDir'.format(app=app)
-
     def binary_path(self, app):
         binary_name = app.formal_name.replace(' ', '_')
         return self.platform_path / '{binary_name}-{app.version}-{self.host_arch}.AppImage'.format(
@@ -99,12 +96,15 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
             # environment variable, *not* in the configuration...
             env = self.os.environ.copy()
             env['VERSION'] = app.version
+            appdir_path = self.bundle_path(app) / "{app.formal_name}.AppDir".format(
+                app=app
+            )
             self.subprocess.run(
                 [
                     str(self.linuxdeploy_appimage),
-                    "--appdir={appdir}".format(appdir=self.bundle_path(app)),
+                    "--appdir={appdir_path}".format(appdir_path=appdir_path),
                     "-d", str(
-                        self.bundle_path(app) / "{app.bundle}.{app.name}.desktop".format(
+                        appdir_path / "{app.bundle}.{app.name}.desktop".format(
                             app=app,
                         )
                     ),

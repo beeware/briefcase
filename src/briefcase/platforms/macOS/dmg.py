@@ -65,15 +65,17 @@ class macOSDmgPackageCommand(macOSDmgMixin, macOSAppPackageCommand):
 
     def package_app(self, app: BaseConfig, **kwargs):
         """
-        Build a DMG application.
+        Build a DMG.
 
-        :param app: The application to build
+        :param app: The application to package
         """
+        super().package_app(app, **kwargs)
+
         print()
         print("[{app.name}] Building DMG...".format(app=app))
 
         dmg_settings = {
-            'files': [str(self.bundle_path(app))],
+            'files': [str(self.binary_path(app))],
             'symlinks': {'Applications': '/Applications'},
             'icon_locations': {
                 '{app.formal_name}.app'.format(app=app): (100, 100),

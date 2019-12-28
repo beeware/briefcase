@@ -177,7 +177,6 @@ class BaseCommand(ABC):
         """
         return self.base_path / self.platform
 
-    @abstractmethod
     def bundle_path(self, app):
         """
         The path to the bundle for the app in the output format.
@@ -188,7 +187,7 @@ class BaseCommand(ABC):
 
         :param app: The app config
         """
-        ...
+        return self.platform_path / app.formal_name
 
     @abstractmethod
     def binary_path(self, app):

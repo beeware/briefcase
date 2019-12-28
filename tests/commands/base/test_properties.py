@@ -1,4 +1,11 @@
 
+
+def test_bundle_path(base_command, my_app, tmp_path):
+    bundle_path = base_command.bundle_path(my_app)
+
+    assert bundle_path == tmp_path / 'tester' / 'My App'
+
+
 def test_create_command(base_command):
     # Check for a property of the created command class.
     assert base_command.create_command.description == "Test Create"

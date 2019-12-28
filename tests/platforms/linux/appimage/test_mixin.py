@@ -1,13 +1,6 @@
 from briefcase.platforms.linux.appimage import LinuxAppImageCreateCommand
 
 
-def test_bundle_path(first_app_config, tmp_path):
-    command = LinuxAppImageCreateCommand(base_path=tmp_path)
-    bundle_path = command.bundle_path(first_app_config)
-
-    assert bundle_path == tmp_path / 'linux' / 'First App.AppDir'
-
-
 def test_binary_path(first_app_config, tmp_path):
     command = LinuxAppImageCreateCommand(base_path=tmp_path)
     # Force the architecture to x86_64 for test purposes.

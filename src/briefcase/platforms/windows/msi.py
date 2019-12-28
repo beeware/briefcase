@@ -22,9 +22,6 @@ from briefcase.platforms.windows import WindowsMixin
 class WindowsMSIMixin(WindowsMixin):
     output_format = 'msi'
 
-    def bundle_path(self, app):
-        return self.platform_path / app.formal_name
-
     def binary_path(self, app):
         return self.platform_path / app.formal_name
 
