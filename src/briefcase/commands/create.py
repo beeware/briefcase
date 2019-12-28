@@ -633,8 +633,9 @@ class CreateCommand(BaseCommand):
         self.install_app_resources(app=app)
         print()
 
-        print('[{app.name}] Application created.'.format(
-            app=app
+        print("[{app.name}] Created {filename}".format(
+            app=app,
+            filename=self.bundle_path(app).relative_to(self.base_path),
         ))
 
     def __call__(self, app: Optional[BaseConfig] = None, **kwargs):

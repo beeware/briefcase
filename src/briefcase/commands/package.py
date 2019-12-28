@@ -41,9 +41,9 @@ class PackageCommand(BaseCommand):
         state = self.package_app(app, **full_kwargs(state, kwargs))
 
         print()
-        print("[{app.name}] Packaged {filename}.".format(
+        print("[{app.name}] Packaged {filename}".format(
             app=app,
-            filename=self.distribution_path(app).name,
+            filename=self.distribution_path(app).relative_to(self.base_path),
         ))
         return state
 
