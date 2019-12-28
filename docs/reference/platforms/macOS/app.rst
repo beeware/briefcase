@@ -18,3 +18,22 @@ Image format
 ============
 
 ``.app`` bundles do not support splash screens or installer images.
+
+Additional options
+==================
+
+The following options can be provided at the command line when producing
+``.app`` bundles.
+
+publish
+-------
+
+``--no-sign``
+~~~~~~~~~~~~~
+
+Don't perform code signing on the ``.app`` bundles.
+
+``-i <identity>`` / ``--identity <identity>``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The code signing identity to use when signing the ``.app`` bundles.
