@@ -42,7 +42,9 @@ def parse_cmdline(args):
     # usage string so that the instructions displayed are correct
     parser.add_argument(
         'command',
-        choices=['new', 'dev', 'create', 'update', 'build', 'run', 'publish'],
+        choices=[
+            'new', 'dev', 'create', 'update', 'build', 'run', 'package', 'publish'
+        ],
         metavar='command',
         nargs='?',
         help='the command to execute (one of: %(choices)s)',

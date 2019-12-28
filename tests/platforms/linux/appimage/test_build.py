@@ -43,7 +43,7 @@ def test_verify_tools(build_command, first_app_config, tmp_path):
     build_command.download_url = mock.MagicMock(return_value='new-downloaded-file')
 
     # Make it look like the template has been generated
-    (tmp_path / 'linux' / 'First App.AppDir').mkdir(parents=True, exist_ok=True)
+    (tmp_path / 'linux' / 'First App').mkdir(parents=True, exist_ok=True)
 
     # Invoke the full build.
     build_command()
@@ -115,11 +115,12 @@ def test_build_appimage(build_command, first_app_config, tmp_path):
     build_command.build_app(first_app_config)
 
     # linuxdeploy was invoked
+    app_dir = tmp_path / 'linux' / 'First App' / 'First App.AppDir'
     build_command.subprocess.run.assert_called_with(
         [
             str(build_command.linuxdeploy_appimage),
-            "--appdir={appdir}".format(appdir=tmp_path / 'linux' / 'First App.AppDir'),
-            "-d", str(tmp_path / 'linux' / 'First App.AppDir' / "com.example.first-app.desktop"),
+            "--appdir={appdir}".format(appdir=app_dir),
+            "-d", str(app_dir / "com.example.first-app.desktop"),
             "-o", "appimage",
         ],
         env={
@@ -150,11 +151,12 @@ def test_build_failure(build_command, first_app_config, tmp_path):
         build_command.build_app(first_app_config)
 
     # linuxdeploy was invoked
+    app_dir = tmp_path / 'linux' / 'First App' / 'First App.AppDir'
     build_command.subprocess.run.assert_called_with(
         [
             str(build_command.linuxdeploy_appimage),
-            "--appdir={appdir}".format(appdir=tmp_path / 'linux' / 'First App.AppDir'),
-            "-d", str(tmp_path / 'linux' / 'First App.AppDir' / "com.example.first-app.desktop"),
+            "--appdir={appdir}".format(appdir=app_dir),
+            "-d", str(app_dir / "com.example.first-app.desktop"),
             "-o", "appimage",
         ],
         env={

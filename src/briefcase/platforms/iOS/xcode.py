@@ -5,6 +5,7 @@ from uuid import UUID
 from briefcase.commands import (
     BuildCommand,
     CreateCommand,
+    PackageCommand,
     PublishCommand,
     RunCommand,
     UpdateCommand
@@ -22,9 +23,6 @@ from briefcase.platforms.iOS import iOSMixin
 
 class iOSXcodePassiveMixin(iOSMixin):
     output_format = 'Xcode'
-
-    def bundle_path(self, app):
-        return self.platform_path / '{app.formal_name}'.format(app=app)
 
     def binary_path(self, app):
         return (
@@ -407,6 +405,10 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         }
 
 
+class iOSXcodePackageCommand(iOSXcodeMixin, PackageCommand):
+    description = "Package an iOS app."
+
+
 class iOSXcodePublishCommand(iOSXcodeMixin, PublishCommand):
     description = "Publish an iOS app."
     publication_channels = ['ios_appstore']
@@ -418,4 +420,5 @@ create = iOSXcodeCreateCommand  # noqa
 update = iOSXcodeUpdateCommand  # noqa
 build = iOSXcodeBuildCommand  # noqa
 run = iOSXcodeRunCommand  # noqa
+package = iOSXcodePackageCommand  # noqa
 publish = iOSXcodePublishCommand  # noqa

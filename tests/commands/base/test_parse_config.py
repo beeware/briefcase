@@ -21,7 +21,7 @@ def test_incomplete_global_config(base_command):
         version = "1.2.3"
         description = "A sample app"
 
-        [tool.briefcase.app.myapp]
+        [tool.briefcase.app.my-app]
     """)
 
     with pytest.raises(
@@ -43,12 +43,12 @@ def test_incomplete_config(base_command):
         bundle = "com.example"
         description = "A sample app"
 
-        [tool.briefcase.app.myapp]
+        [tool.briefcase.app.my-app]
     """)
 
     with pytest.raises(
         BriefcaseConfigError,
-        match=r"Configuration for 'myapp' is incomplete \(missing 'sources'\)"
+        match=r"Configuration for 'my-app' is incomplete \(missing 'sources'\)"
     ):
         base_command.parse_config(filename)
 

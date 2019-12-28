@@ -175,7 +175,7 @@ def test_bare_command_help(monkeypatch, capsys):
     assert output.startswith(
         "usage: briefcase create macOS dmg [-h] [-v] [-V]\n"
         "\n"
-        "Create and populate a macOS DMG.\n"
+        "Create and populate a macOS app.\n"
         "\n"
         "optional arguments:"
     )
@@ -261,7 +261,7 @@ def test_command_explicit_platform_help(monkeypatch, capsys):
     assert output.startswith(
         "usage: briefcase create macOS dmg [-h] [-v] [-V]\n"
         "\n"
-        "Create and populate a macOS DMG.\n"
+        "Create and populate a macOS app.\n"
         "\n"
         "optional arguments:"
     )
@@ -326,7 +326,7 @@ def test_command_explicit_format_help(monkeypatch, capsys):
     assert output.startswith(
         "usage: briefcase create macOS dmg [-h] [-v] [-V]\n"
         "\n"
-        "Create and populate a macOS DMG.\n"
+        "Create and populate a macOS app.\n"
         "\n"
         "optional arguments:"
     )

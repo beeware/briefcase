@@ -24,9 +24,6 @@ class DummyCommand(BaseCommand):
         # * a required argument
         parser.add_argument('-r', '--required', required=True)
 
-    def bundle_path(self, app):
-        raise NotImplementedError()
-
     def binary_path(self, app):
         raise NotImplementedError()
 
@@ -57,6 +54,10 @@ class DummyRunCommand(DummyCommand):
     description = "Test Run"
 
 
+class DummyPackageCommand(DummyCommand):
+    description = "Test Package"
+
+
 class DummyPublishCommand(DummyCommand):
     description = "Test Publish"
 
@@ -66,6 +67,7 @@ create = DummyCreateCommand
 update = DummyUpdateCommand
 build = DummyBuildCommand
 run = DummyRunCommand
+package = DummyPackageCommand
 publish = DummyPublishCommand
 
 
@@ -110,9 +112,6 @@ class OtherDummyCommand(BaseCommand):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def bundle_path(self, app):
-        raise NotImplementedError()
-
     def binary_path(self, app):
         raise NotImplementedError()
 
@@ -126,7 +125,7 @@ def other_command(tmp_path):
 
 
 @pytest.fixture
-def myapp():
+def my_app():
     return AppConfig(
         name='my-app',
         formal_name='My App',

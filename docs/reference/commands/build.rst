@@ -2,8 +2,11 @@
 build
 =====
 
-Compile/build an application installer. By default, targets the current
-platform's default output format.
+Compile/build an application. By default, targets the current platform's
+default output format.
+
+This will only compile the components necessary to *run* the application. It
+won't necessarily result in the generation of an installable artefact.
 
 Usage
 =====
@@ -40,4 +43,4 @@ The following options can be provided at the command line.
 Update the application's source code before running. Equivalent to running::
 
     $ briefcase update
-    $ briefcase run
+    $ briefcase build

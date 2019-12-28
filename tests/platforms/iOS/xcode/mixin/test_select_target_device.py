@@ -113,7 +113,7 @@ def test_explicit_device_name_and_version(dummy_command):
     assert dummy_command.input.call_count == 0
 
 
-def test_invalid_explcit_device_udid(dummy_command):
+def test_invalid_explicit_device_udid(dummy_command):
     "If the user nominates an invalid device UDID, an error is raised"
     # get_simulators will some options.
     dummy_command.get_simulators.return_value = {
@@ -132,7 +132,7 @@ def test_invalid_explcit_device_udid(dummy_command):
     assert dummy_command.input.call_count == 0
 
 
-def test_invalid_explcit_device_name(dummy_command):
+def test_invalid_explicit_device_name(dummy_command):
     "If the user nominates an invalid device name, an error is raised"
     # get_simulators will some options.
     dummy_command.get_simulators.return_value = {
@@ -151,7 +151,7 @@ def test_invalid_explcit_device_name(dummy_command):
     assert dummy_command.input.call_count == 0
 
 
-def test_invalid_explcit_device_name_and_version(dummy_command):
+def test_invalid_explicit_device_name_and_version(dummy_command):
     "If the user nominates an invalid device name and version, an error is raised"
     # get_simulators will some options.
     dummy_command.get_simulators.return_value = {

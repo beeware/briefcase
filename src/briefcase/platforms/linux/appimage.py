@@ -6,6 +6,7 @@ from requests import exceptions as requests_exceptions
 from briefcase.commands import (
     BuildCommand,
     CreateCommand,
+    PackageCommand,
     PublishCommand,
     RunCommand,
     UpdateCommand
@@ -17,9 +18,6 @@ from briefcase.platforms.linux import LinuxMixin
 
 class LinuxAppImageMixin(LinuxMixin):
     output_format = 'appimage'
-
-    def bundle_path(self, app):
-        return self.platform_path / '{app.formal_name}.AppDir'.format(app=app)
 
     def binary_path(self, app):
         binary_name = app.formal_name.replace(' ', '_')
@@ -98,12 +96,15 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
             # environment variable, *not* in the configuration...
             env = self.os.environ.copy()
             env['VERSION'] = app.version
+            appdir_path = self.bundle_path(app) / "{app.formal_name}.AppDir".format(
+                app=app
+            )
             self.subprocess.run(
                 [
                     str(self.linuxdeploy_appimage),
-                    "--appdir={appdir}".format(appdir=self.bundle_path(app)),
+                    "--appdir={appdir_path}".format(appdir_path=appdir_path),
                     "-d", str(
-                        self.bundle_path(app) / "{app.bundle}.{app.name}.desktop".format(
+                        appdir_path / "{app.bundle}.{app.name}.desktop".format(
                             app=app,
                         )
                     ),
@@ -152,6 +153,10 @@ class LinuxAppImageRunCommand(LinuxAppImageMixin, RunCommand):
             )
 
 
+class LinuxAppImagePackageCommand(LinuxAppImageMixin, PackageCommand):
+    description = "Publish a Linux AppImage."
+
+
 class LinuxAppImagePublishCommand(LinuxAppImageMixin, PublishCommand):
     description = "Publish a Linux AppImage."
 
@@ -161,4 +166,5 @@ create = LinuxAppImageCreateCommand  # noqa
 update = LinuxAppImageUpdateCommand  # noqa
 build = LinuxAppImageBuildCommand  # noqa
 run = LinuxAppImageRunCommand  # noqa
+package = LinuxAppImagePackageCommand  # noqa
 publish = LinuxAppImagePublishCommand  # noqa

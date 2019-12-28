@@ -1,5 +1,6 @@
 import enum
 import json
+import re
 import subprocess
 
 from briefcase.exceptions import BriefcaseCommandError
@@ -166,6 +167,35 @@ def get_device_state(udid, sub=subprocess):
                 udid=udid
             )
         )
+    except subprocess.CalledProcessError:
+        raise BriefcaseCommandError(
+            "Unable to run xcrun simctl."
+        )
+
+
+# A regex pattern that matches the content returned by `security find-identity`
+IDENTITY_RE = re.compile(r'\s*\d+\) ([0-9A-F]{40}) \"(.*)\"')
+
+
+def get_identities(policy, sub=subprocess):
+    """
+    Obtain a set of valid identities for the given policy
+
+    :param policy: The identity policy to evaluate (e.g., ``codesigning``)
+    """
+    try:
+        output = sub.check_output(
+            ['security', 'find-identity', '-v', '-p', policy],
+            universal_newlines=True
+        )
+
+        identities = dict(
+            IDENTITY_RE.match(line).groups()
+            for line in output.split('\n')
+            if IDENTITY_RE.match(line)
+        )
+
+        return identities
     except subprocess.CalledProcessError:
         raise BriefcaseCommandError(
             "Unable to run xcrun simctl."

@@ -4,6 +4,7 @@ from briefcase.platforms.macOS.app import (
     macOSAppBuildCommand,
     macOSAppCreateCommand,
     macOSAppMixin,
+    macOSAppPackageCommand,
     macOSAppPublishCommand,
     macOSAppRunCommand,
     macOSAppUpdateCommand
@@ -32,8 +33,6 @@ A macOS DMG can only be created on macOS.
 
 
 class macOSDmgCreateCommand(macOSDmgMixin, macOSAppCreateCommand):
-    description = "Create and populate a macOS DMG."
-
     @property
     def app_template_url(self):
         "The URL for a cookiecutter repository to use when creating apps"
@@ -43,11 +42,19 @@ class macOSDmgCreateCommand(macOSDmgMixin, macOSAppCreateCommand):
 
 
 class macOSDmgUpdateCommand(macOSDmgMixin, macOSAppUpdateCommand):
-    description = "Update an existing macOS DMG."
+    description = "Update an existing macOS app."
 
 
 class macOSDmgBuildCommand(macOSDmgMixin, macOSAppBuildCommand):
-    description = "Build a macOS DMG."
+    description = "Build a macOS app."
+
+
+class macOSDmgRunCommand(macOSDmgMixin, macOSAppRunCommand):
+    description = "Run a macOS app."
+
+
+class macOSDmgPackageCommand(macOSDmgMixin, macOSAppPackageCommand):
+    description = "Package a macOS app as a DMG."
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -56,17 +63,19 @@ class macOSDmgBuildCommand(macOSDmgMixin, macOSAppBuildCommand):
         # These are abstracted to enable testing without patching.
         self.dmgbuild = dmgbuild
 
-    def build_app(self, app: BaseConfig, **kwargs):
+    def package_app(self, app: BaseConfig, **kwargs):
         """
-        Build a DMG application.
+        Build a DMG.
 
-        :param app: The application to build
+        :param app: The application to package
         """
+        super().package_app(app, **kwargs)
+
         print()
         print("[{app.name}] Building DMG...".format(app=app))
 
         dmg_settings = {
-            'files': [str(self.bundle_path(app))],
+            'files': [str(self.binary_path(app))],
             'symlinks': {'Applications': '/Applications'},
             'icon_locations': {
                 '{app.formal_name}.app'.format(app=app): (100, 100),
@@ -121,10 +130,6 @@ class macOSDmgBuildCommand(macOSDmgMixin, macOSAppBuildCommand):
         )
 
 
-class macOSDmgRunCommand(macOSDmgMixin, macOSAppRunCommand):
-    description = "Run a macOS DMG."
-
-
 class macOSDmgPublishCommand(macOSDmgMixin, macOSAppPublishCommand):
     description = "Publish a macOS DMG."
 
@@ -144,4 +149,5 @@ create = macOSDmgCreateCommand  # noqa
 update = macOSDmgUpdateCommand  # noqa
 build = macOSDmgBuildCommand  # noqa
 run = macOSDmgRunCommand  # noqa
+package = macOSDmgPackageCommand  # noqa
 publish = macOSDmgPublishCommand  # noqa

@@ -9,6 +9,7 @@ from pathlib import Path
 from briefcase.commands import (
     BuildCommand,
     CreateCommand,
+    PackageCommand,
     PublishCommand,
     RunCommand,
     UpdateCommand
@@ -21,11 +22,8 @@ from briefcase.platforms.windows import WindowsMixin
 class WindowsMSIMixin(WindowsMixin):
     output_format = 'msi'
 
-    def bundle_path(self, app):
-        return self.platform_path / app.formal_name
-
     def binary_path(self, app):
-        return self.platform_path / app.formal_name / 'src' / 'python' / 'pythonw.exe'
+        return self.platform_path / app.formal_name
 
     def distribution_path(self, app):
         return self.platform_path / '{app.formal_name}-{app.version}.msi'.format(app=app)
@@ -72,7 +70,7 @@ Current value: {wix_path!r}
 
 
 class WindowsMSICreateCommand(WindowsMSIMixin, CreateCommand):
-    description = "Create and populate a Windows app packaged as an MSI."
+    description = "Create and populate a Windows app."
 
     @property
     def support_package_url(self):
@@ -159,13 +157,47 @@ class WindowsMSICreateCommand(WindowsMSIMixin, CreateCommand):
 
 
 class WindowsMSIUpdateCommand(WindowsMSIMixin, UpdateCommand):
-    description = "Update an existing Windows app packaged as an MSI."
+    description = "Update an existing Windows app."
 
 
 class WindowsMSIBuildCommand(WindowsMSIMixin, BuildCommand):
-    description = "Build an MSI for a Windows app."
+    description = "Build a Windows app."
 
-    def build_app(self, app: BaseConfig, **kwargs):
+
+class WindowsMSIRunCommand(WindowsMSIMixin, RunCommand):
+    description = "Run a Windows app."
+
+    def run_app(self, app: BaseConfig, **kwargs):
+        """
+        Start the application.
+
+        :param app: The config object for the app
+        :param base_path: The path to the project directory.
+        """
+        print()
+        print('[{app.name}] Starting app...'.format(
+            app=app
+        ))
+        try:
+            print()
+            self.subprocess.run(
+                [
+                    str(self.binary_path(app) / 'src' / 'python' / 'pythonw.exe'),
+                    "-m", app.module_name
+                ],
+                check=True,
+            )
+        except subprocess.CalledProcessError:
+            print()
+            raise BriefcaseCommandError(
+                "Unable to start app {app.name}.".format(app=app)
+            )
+
+
+class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
+    description = "Package an MSI for a Windows app."
+
+    def package_app(self, app: BaseConfig, **kwargs):
         """
         Build an application.
 
@@ -245,36 +277,6 @@ class WindowsMSIBuildCommand(WindowsMSIMixin, BuildCommand):
             )
 
 
-class WindowsMSIRunCommand(WindowsMSIMixin, RunCommand):
-    description = "Run a Windows app packaged as an MSI."
-
-    def run_app(self, app: BaseConfig, **kwargs):
-        """
-        Start the application.
-
-        :param app: The config object for the app
-        :param base_path: The path to the project directory.
-        """
-        print()
-        print('[{app.name}] Starting app...'.format(
-            app=app
-        ))
-        try:
-            print()
-            self.subprocess.run(
-                [
-                    str(self.binary_path(app)),
-                    "-m", app.module_name
-                ],
-                check=True,
-            )
-        except subprocess.CalledProcessError:
-            print()
-            raise BriefcaseCommandError(
-                "Unable to start app {app.name}.".format(app=app)
-            )
-
-
 class WindowsMSIPublishCommand(WindowsMSIMixin, PublishCommand):
     description = "Publish a Windows MSI."
 
@@ -284,4 +286,5 @@ create = WindowsMSICreateCommand  # noqa
 update = WindowsMSIUpdateCommand  # noqa
 build = WindowsMSIBuildCommand  # noqa
 run = WindowsMSIRunCommand  # noqa
+package = WindowsMSIPackageCommand  # noqa
 publish = WindowsMSIPublishCommand  # noqa

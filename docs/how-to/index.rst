@@ -15,5 +15,6 @@ stand alone.
 
    contribute-code
    contribute-docs
+   code-signing/index
    See errors on iOS <see_errors_on_ios>
    internal/index

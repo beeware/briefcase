@@ -159,6 +159,12 @@ class BaseCommand(ABC):
         return format_module.run(base_path=self.base_path, apps=self.apps)
 
     @property
+    def package_command(self):
+        "Factory property; return an instance of a package command for the same format"
+        format_module = importlib.import_module(self.__module__)
+        return format_module.package(base_path=self.base_path, apps=self.apps)
+
+    @property
     def publish_command(self):
         "Factory property; return an instance of a publish command for the same format"
         format_module = importlib.import_module(self.__module__)
@@ -171,7 +177,6 @@ class BaseCommand(ABC):
         """
         return self.base_path / self.platform
 
-    @abstractmethod
     def bundle_path(self, app):
         """
         The path to the bundle for the app in the output format.
@@ -182,7 +187,7 @@ class BaseCommand(ABC):
 
         :param app: The app config
         """
-        ...
+        return self.platform_path / app.formal_name
 
     @abstractmethod
     def binary_path(self, app):
@@ -192,7 +197,8 @@ class BaseCommand(ABC):
         This may be a binary file produced by compilation; however, if
         the output format doesn't require compilation, it may be the same
         as the bundle path (assuming the bundle path is inherently
-        "executable").
+        "executable"), or a path that reasonably represents the thing that can
+        be executed.
 
         :param app: The app config
         """

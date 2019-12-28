@@ -3,12 +3,12 @@ from unittest import mock
 
 import pytest
 
-from briefcase.platforms.windows.msi import WindowsMSIBuildCommand
+from briefcase.platforms.windows.msi import WindowsMSIPackageCommand
 
 
 @pytest.fixture
-def build_command(tmp_path):
-    command = WindowsMSIBuildCommand(base_path=tmp_path)
+def package_command(tmp_path):
+    command = WindowsMSIPackageCommand(base_path=tmp_path)
     command.subprocess = mock.MagicMock()
     command.candle_exe = tmp_path / 'wix' / 'bin' / 'candle.exe'
     command.light_exe = tmp_path / 'wix' / 'bin' / 'light.exe'
@@ -16,12 +16,12 @@ def build_command(tmp_path):
     return command
 
 
-def test_build_msi(build_command, first_app_config, tmp_path):
+def test_package_msi(package_command, first_app_config, tmp_path):
     "A Wwindows app can be packaged as an MSI"
 
-    build_command.build_app(first_app_config)
+    package_command.package_app(first_app_config)
 
-    build_command.subprocess.run.assert_has_calls([
+    package_command.subprocess.run.assert_has_calls([
         # Collect manifest
         mock.call(
             [
