@@ -81,6 +81,12 @@ class macOSAppPackageCommand(macOSAppMixin, PackageCommand):
     def add_options(self, parser):
         super().add_options(parser)
         parser.add_argument(
+            '--no-sign',
+            dest='sign_app',
+            help='Disable code signing of .app bundles.',
+            action='store_false',
+        )
+        parser.add_argument(
             '-i',
             '--identity',
             dest='identity',
@@ -161,36 +167,38 @@ class macOSAppPackageCommand(macOSAppMixin, PackageCommand):
                 "Unable to code sign {path}.".format(path=path)
             )
 
-    def package_app(self, app: BaseConfig, identity=None, **kwargs):
+    def package_app(self, app: BaseConfig, sign_app=True, identity=None, **kwargs):
         """
         Prepare the .app bundle for distribution.
 
         This involves code signing.
 
         :param app: The application to package
+        :param sign_app: Should the application be signed?
         :param identity: The code signing identity to use. This can be either
             the 40-digit hex checksum, or the string name of the identity.
             If unspecified, the user will be prompted for a code signing
-            identity.
+            identity. Ignored if ``sign_app`` is False.
         """
-        identity = self.select_identity(identity=identity)
+        if sign_app:
+            identity = self.select_identity(identity=identity)
 
-        print()
-        print("[{app.name}] Signing app with identity {identity}...".format(
-            app=app,
-            identity=identity
-        ))
+            print()
+            print("[{app.name}] Signing app with identity {identity}...".format(
+                app=app,
+                identity=identity
+            ))
 
-        for path in itertools.chain(
-            self.binary_path(app).glob('**/*.so'),
-            self.binary_path(app).glob('**/*.dylib'),
-            [self.binary_path(app)],
-        ):
-            self.sign(
-                path,
-                entitlements=self.bundle_path(app) / 'Entitlements.plist',
-                identity=identity,
-            )
+            for path in itertools.chain(
+                self.binary_path(app).glob('**/*.so'),
+                self.binary_path(app).glob('**/*.dylib'),
+                [self.binary_path(app)],
+            ):
+                self.sign(
+                    path,
+                    entitlements=self.bundle_path(app) / 'Entitlements.plist',
+                    identity=identity,
+                )
 
 
 class macOSAppPublishCommand(macOSAppMixin, PublishCommand):

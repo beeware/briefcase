@@ -1,10 +1,12 @@
 from unittest import mock
 
+import pytest
+
 from briefcase.platforms.macOS.app import macOSAppPackageCommand
 
 
-def test_package_app(first_app_config, tmp_path):
-    "A macOS App can be packaged"
+@pytest.fixture
+def first_app_with_binaries(first_app_config, tmp_path):
     # Create some libraries that need to be signed.
     app_path = tmp_path / 'macOS' / 'First App' / 'First App.app'
     lib_path = app_path / 'Contents' / 'Resources'
@@ -24,12 +26,18 @@ def test_package_app(first_app_config, tmp_path):
     with (app_path / 'Contents' / 'second.other').open('w') as f:
         f.write('other')
 
+    return first_app_config
+
+
+def test_package_app(first_app_with_binaries, tmp_path):
+    "A macOS App can be packaged"
+
     command = macOSAppPackageCommand(base_path=tmp_path)
     command.subprocess = mock.MagicMock()
 
     command.select_identity = mock.MagicMock(return_value='Sekrit identity (DEADBEEF)')
 
-    command.package_app(first_app_config)
+    command.package_app(first_app_with_binaries)
 
     def sign_call(filepath):
         return mock.call(
@@ -46,6 +54,8 @@ def test_package_app(first_app_config, tmp_path):
 
     # A request has been made to sign all the so and dylib files, plus the
     # app bundle itself.
+    app_path = tmp_path / 'macOS' / 'First App' / 'First App.app'
+    lib_path = app_path / 'Contents' / 'Resources'
     command.subprocess.run.assert_has_calls(
         [
             sign_call(lib_path / 'first_so.so'),
@@ -56,3 +66,18 @@ def test_package_app(first_app_config, tmp_path):
         ],
         any_order=True
     )
+
+
+def test_package_app_no_sign(first_app_with_binaries, tmp_path):
+    "A macOS App can be packaged without signing"
+
+    command = macOSAppPackageCommand(base_path=tmp_path)
+    command.subprocess = mock.MagicMock()
+
+    command.select_identity = mock.MagicMock(return_value='Sekrit identity (DEADBEEF)')
+
+    command.package_app(first_app_with_binaries, sign_app=False)
+
+    # No code signing has been performed.
+    assert command.select_identity.call_count == 0
+    assert command.subprocess.run.call_count == 0
