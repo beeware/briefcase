@@ -97,7 +97,7 @@ def write_dist_info(app: BaseConfig, dist_info_path: Path):
         f.write('Metadata-Version: 2.1\n')
         f.write('Name: {app.name}\n'.format(app=app))
         f.write('Formal-Name: {app.formal_name}\n'.format(app=app))
-        f.write('Bundle: {app.bundle}\n'.format(app=app))
+        f.write('App-ID: {app.bundle}.{app.name}\n'.format(app=app))
         f.write('Version: {app.version}\n'.format(app=app))
         if app.url:
             f.write('Home-page: {app.url}\n'.format(app=app))

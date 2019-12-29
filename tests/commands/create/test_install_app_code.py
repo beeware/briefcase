@@ -19,7 +19,7 @@ def assert_dist_info(app_path):
         assert f.read() == """Metadata-Version: 2.1
 Name: my-app
 Formal-Name: My App
-Bundle: com.example
+App-ID: com.example.my-app
 Version: 1.2.3
 Summary: This is a simple app
 """
