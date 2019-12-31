@@ -20,12 +20,12 @@ class DummyDevCommand(DevCommand):
         self.actions = []
 
     def install_dev_dependencies(self, app, **kwargs):
-        self.actions.append(('dev_dependencies', app.name, kwargs))
+        self.actions.append(('dev_dependencies', app.app_name, kwargs))
 
     def run_dev_app(self, app, **kwargs):
-        self.actions.append(('run_dev', app.name, kwargs))
+        self.actions.append(('run_dev', app.app_name, kwargs))
         return full_kwargs({
-            'run_dev_state': app.name
+            'run_dev_state': app.app_name
         }, kwargs)
 
 
@@ -42,7 +42,7 @@ def first_app_uninstalled(tmp_path):
         f.write('print("Hello world")')
 
     return AppConfig(
-        name='first',
+        app_name='first',
         bundle='com.example',
         version='0.0.1',
         description='The first simple app',
@@ -69,7 +69,7 @@ def second_app(tmp_path):
     (tmp_path / 'src' / 'second.dist-info').mkdir(exist_ok=True)
 
     return AppConfig(
-        name='second',
+        app_name='second',
         bundle='com.example',
         version='0.0.2',
         description='The second simple app',

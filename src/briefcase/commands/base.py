@@ -235,11 +235,11 @@ class BaseCommand(ABC):
                 path = Path(str(self.base_path), *app_home[0])
             else:
                 raise BriefcaseCommandError(
-                    "Multiple paths in sources found for application '{app.name}'".format(app=app)
+                    "Multiple paths in sources found for application '{app.app_name}'".format(app=app)
                 )
         except IndexError:
             raise BriefcaseCommandError(
-                "Unable to find code for application '{app.name}'".format(app=app)
+                "Unable to find code for application '{app.app_name}'".format(app=app)
             )
 
         return path

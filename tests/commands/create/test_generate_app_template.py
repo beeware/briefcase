@@ -15,7 +15,7 @@ from briefcase.exceptions import NetworkFailure
 def full_context(extra):
     "The full context associated with myapp"
     context = {
-        'name': 'my-app',
+        'app_name': 'my-app',
         'formal_name': 'My App',
         'bundle': 'com.example',
         'version': '1.2.3',

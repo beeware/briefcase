@@ -6,7 +6,7 @@ from briefcase.config import AppConfig
 def test_no_resources(create_command):
     "If the template defines no extra targets, none are installed"
     myapp = AppConfig(
-        name='my-app',
+        app_name='my-app',
         formal_name='My App',
         bundle='com.example',
         version='1.2.3',
@@ -30,7 +30,7 @@ def test_no_resources(create_command):
 def test_icon_target(create_command, tmp_path):
     "If the template defines an icon target, it will be installed"
     myapp = AppConfig(
-        name='my-app',
+        app_name='my-app',
         formal_name='My App',
         bundle='com.example',
         version='1.2.3',
@@ -75,7 +75,7 @@ def test_icon_target(create_command, tmp_path):
 def test_splash_target(create_command, tmp_path):
     "If the template defines an splash target, it will be installed"
     myapp = AppConfig(
-        name='my-app',
+        app_name='my-app',
         formal_name='My App',
         bundle='com.example',
         version='1.2.3',
@@ -120,7 +120,7 @@ def test_splash_target(create_command, tmp_path):
 def test_doctype_icon_target(create_command, tmp_path):
     "If the template defines document types, their icons will be installed"
     myapp = AppConfig(
-        name='my-app',
+        app_name='my-app',
         formal_name='My App',
         bundle='com.example',
         version='1.2.3',

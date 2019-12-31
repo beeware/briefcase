@@ -74,7 +74,7 @@ class GlobalConfig(BaseConfig):
 class AppConfig(BaseConfig):
     def __init__(
         self,
-        name,
+        app_name,
         version,
         bundle,
         description,
@@ -92,12 +92,12 @@ class AppConfig(BaseConfig):
     ):
         super().__init__(**kwargs)
 
-        self.name = name
+        self.app_name = app_name
         self.version = version
         self.bundle = bundle
         self.description = description
         self.sources = sources
-        self.formal_name = name if formal_name is None else formal_name
+        self.formal_name = app_name if formal_name is None else formal_name
         self.url = url
         self.author = author
         self.author_email = author_email
@@ -108,9 +108,9 @@ class AppConfig(BaseConfig):
         self.template = template
 
         # Validate that the app name is valid.
-        if not PEP508_NAME_RE.match(self.name):
+        if not PEP508_NAME_RE.match(self.app_name):
             raise BriefcaseConfigError(
-                "{self.name!r} is not a valid app name.\n\n"
+                "{self.app_name!r} is not a valid app name.\n\n"
                 "App names must be PEP508 compliant (i.e., they can only "
                 "include letters, numbers, '-' and '_'; must start with a "
                 "letter; and cannot end with '-' or '_'.".format(self=self)
@@ -119,7 +119,7 @@ class AppConfig(BaseConfig):
         # Version number is PEP440 compliant:
         if not is_pep440_canonical_version(self.version):
             raise BriefcaseConfigError(
-                "Version number for {self.name} ({self.version}) is not valid.\n\n"
+                "Version number for {self.app_name} ({self.version}) is not valid.\n\n"
                 "Version numbers must be PEP440 compliant; "
                 "see https://www.python.org/dev/peps/pep-0440/ for details.".format(
                     self=self
@@ -130,19 +130,19 @@ class AppConfig(BaseConfig):
         source_modules = {source.rsplit('/', 1)[-1] for source in self.sources}
         if len(self.sources) != len(source_modules):
             raise BriefcaseConfigError(
-                "The `sources` list for {self.name} contains duplicated "
+                "The `sources` list for {self.app_name} contains duplicated "
                 "package names.".format(self=self)
             )
 
         # There is, at least, a source for the app module
         if self.module_name not in source_modules:
             raise BriefcaseConfigError(
-                "The `sources` list for {self.name} does not include a "
+                "The `sources` list for {self.app_name} does not include a "
                 "package named '{self.module_name}'.".format(self=self)
             )
 
     def __repr__(self):
-        return "<{self.bundle}.{self.name} v{self.version} AppConfig>".format(
+        return "<{self.bundle}.{self.app_name} v{self.version} AppConfig>".format(
             self=self,
         )
 
@@ -154,7 +154,7 @@ class AppConfig(BaseConfig):
         This is derived from the name, but:
         * all `-` have been replaced with `_`.
         """
-        return self.name.replace('-', '_')
+        return self.app_name.replace('-', '_')
 
 
 def merge_config(config, data):
@@ -278,7 +278,7 @@ def parse_config(config_file, platform, output_format):
         config = copy.deepcopy(global_config)
 
         # The app name is both the key, and a property of the configuration
-        config['name'] = app_name
+        config['app_name'] = app_name
 
         # Merge the app-specific requirements
         merge_config(config, app_data)

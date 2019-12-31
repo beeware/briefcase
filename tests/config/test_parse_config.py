@@ -73,7 +73,7 @@ def test_single_minimal_app():
     # It inherits the value from the base definition.
     assert apps == {
         'my_app': {
-            "name": "my_app",
+            "app_name": "my_app",
             "value": 42
         }
     }
@@ -90,7 +90,7 @@ def test_multiple_minimal_apps():
         number=37
 
         [tool.briefcase.app.second]
-        name="my_app"
+        app_name="my_app"
         number=42
         """
     )
@@ -104,11 +104,11 @@ def test_multiple_minimal_apps():
     # The second tool overrides it's app name
     assert apps == {
         'first': {
-            "name": "first",
+            "app_name": "first",
             "number": 37,
         },
         'second': {
-            "name": "my_app",
+            "app_name": "my_app",
             "number": 42,
         },
     }
@@ -159,14 +159,14 @@ def test_platform_override():
     # will be processed before macos.
     assert apps == {
         'my_app': {
-            "name": "my_app",
+            "app_name": "my_app",
             "value": 2,
             "basevalue": "the base",
             "appvalue": "the app",
             "platformvalue": "macos platform",
         },
         'other_app': {
-            "name": "other_app",
+            "app_name": "other_app",
             "value": 4,
             "basevalue": "the base",
             "platformvalue": "other macos platform",
@@ -219,14 +219,14 @@ def test_platform_override_ordering():
     # will be processed after macos.
     assert apps == {
         'my_app': {
-            "name": "my_app",
+            "app_name": "my_app",
             "value": 2,
             "basevalue": "the base",
             "appvalue": "the app",
             "platformvalue": "macos platform",
         },
         'other_app': {
-            "name": "other_app",
+            "app_name": "other_app",
             "value": 4,
             "basevalue": "the base",
             "platformvalue": "other macos platform",
@@ -299,7 +299,7 @@ def test_format_override():
     # will be processed before dmg and homebrew.
     assert apps == {
         'my_app': {
-            "name": "my_app",
+            "app_name": "my_app",
             "value": 21,
             "basevalue": "the base",
             "appvalue": "the app",
@@ -307,7 +307,7 @@ def test_format_override():
             "formatvalue": "app format",
         },
         'other_app': {
-            "name": "other_app",
+            "app_name": "other_app",
             "value": 41,
             "basevalue": "the base",
             "formatvalue": "other macos app format",
@@ -380,7 +380,7 @@ def test_format_override_ordering():
     # will be processed after app, but before homebrew.
     assert apps == {
         'my_app': {
-            "name": "my_app",
+            "app_name": "my_app",
             "value": 22,
             "basevalue": "the base",
             "appvalue": "the app",
@@ -388,7 +388,7 @@ def test_format_override_ordering():
             "formatvalue": "dmg format",
         },
         'other_app': {
-            "name": "other_app",
+            "app_name": "other_app",
             "value": 0,
             "basevalue": "the base",
         }
@@ -441,7 +441,7 @@ def test_requires():
     # The other_app app doesn't specify any options.
     assert apps == {
         'my_app': {
-            "name": "my_app",
+            "app_name": "my_app",
             "requires": [
                 "base value",
                 "my_app value",
@@ -451,7 +451,7 @@ def test_requires():
             "value": 0,
         },
         'other_app': {
-            "name": "other_app",
+            "app_name": "other_app",
             "requires": [
                 "base value",
             ],
@@ -473,7 +473,7 @@ def test_requires():
     # The other_app dmg doesn't specify any options.
     assert apps == {
         'my_app': {
-            "name": "my_app",
+            "app_name": "my_app",
             "requires": [
                 "base value",
                 "my_app value",
@@ -483,7 +483,7 @@ def test_requires():
             "value": 0,
         },
         'other_app': {
-            "name": "other_app",
+            "app_name": "other_app",
             "requires": [
                 "base value",
             ],
@@ -503,7 +503,7 @@ def test_requires():
     # The linux my_app appimage overrides the *base* value, but extends for linux.
     assert apps == {
         'my_app': {
-            "name": "my_app",
+            "app_name": "my_app",
             "requires": [
                 "base value",
                 "my_app value",
@@ -513,7 +513,7 @@ def test_requires():
             "value": 0,
         },
         'other_app': {
-            "name": "other_app",
+            "app_name": "other_app",
             "requires": [
                 "base value",
             ],
@@ -556,7 +556,7 @@ def test_document_types():
     # The other_app app doesn't specify any options.
     assert apps == {
         'my_app': {
-            "name": "my_app",
+            "app_name": "my_app",
             "document_type": {
                 'document': {
                     'extension': 'doc',
@@ -570,7 +570,7 @@ def test_document_types():
             "value": 0,
         },
         'other_app': {
-            "name": "other_app",
+            "app_name": "other_app",
             "value": 0,
         }
     }

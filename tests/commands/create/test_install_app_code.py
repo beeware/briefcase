@@ -17,7 +17,7 @@ def assert_dist_info(app_path):
 
     with (dist_info_path / 'METADATA').open() as f:
         assert f.read() == """Metadata-Version: 2.1
-Name: my-app
+App-Name: my-app
 Formal-Name: My App
 App-ID: com.example.my-app
 Version: 1.2.3

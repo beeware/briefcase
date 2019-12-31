@@ -84,7 +84,7 @@ class CustomGlobalConfig(BaseConfig):
 class CustomAppConfig(AppConfig):
     def __init__(self, foo, bar, **kwargs):
         super().__init__(
-            name='custom',
+            app_name='custom',
             bundle='com.example',
             description='Custom app',
             version="37.42",
@@ -127,7 +127,7 @@ def other_command(tmp_path):
 @pytest.fixture
 def my_app():
     return AppConfig(
-        name='my-app',
+        app_name='my-app',
         formal_name='My App',
         bundle='com.example',
         version='1.2.3',

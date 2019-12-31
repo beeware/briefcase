@@ -87,7 +87,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
         :param app: The application to build
         """
         print()
-        print("[{app.name}] Building AppImage...".format(app=app))
+        print("[{app.app_name}] Building AppImage...".format(app=app))
 
         try:
             print()
@@ -104,7 +104,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
                     str(self.linuxdeploy_appimage),
                     "--appdir={appdir_path}".format(appdir_path=appdir_path),
                     "-d", str(
-                        appdir_path / "{app.bundle}.{app.name}.desktop".format(
+                        appdir_path / "{app.bundle}.{app.app_name}.desktop".format(
                             app=app,
                         )
                     ),
@@ -120,7 +120,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
         except subprocess.CalledProcessError:
             print()
             raise BriefcaseCommandError(
-                "Error while building app {app.name}.".format(app=app)
+                "Error while building app {app.app_name}.".format(app=app)
             )
 
 
@@ -135,7 +135,7 @@ class LinuxAppImageRunCommand(LinuxAppImageMixin, RunCommand):
         :param base_path: The path to the project directory.
         """
         print()
-        print('[{app.name}] Starting app...'.format(
+        print('[{app.app_name}] Starting app...'.format(
             app=app
         ))
         try:
@@ -149,7 +149,7 @@ class LinuxAppImageRunCommand(LinuxAppImageMixin, RunCommand):
         except subprocess.CalledProcessError:
             print()
             raise BriefcaseCommandError(
-                "Unable to start app {app.name}.".format(app=app)
+                "Unable to start app {app.app_name}.".format(app=app)
             )
 
 

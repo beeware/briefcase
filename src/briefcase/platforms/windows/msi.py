@@ -121,9 +121,9 @@ class WindowsMSICreateCommand(WindowsMSIMixin, CreateCommand):
             guid = app.guid
         except AttributeError:
             # Create a DNS domain by reversing the bundle identifier
-            domain = '.'.join([app.name] + app.bundle.split('.')[::-1])
+            domain = '.'.join([app.app_name] + app.bundle.split('.')[::-1])
             guid = uuid.uuid5(uuid.NAMESPACE_DNS, domain)
-            print("Assigning {app.name} an application GUID of {guid}".format(
+            print("Assigning {app.app_name} an application GUID of {guid}".format(
                 app=app,
                 guid=guid,
             ))
@@ -175,7 +175,7 @@ class WindowsMSIRunCommand(WindowsMSIMixin, RunCommand):
         :param base_path: The path to the project directory.
         """
         print()
-        print('[{app.name}] Starting app...'.format(
+        print('[{app.app_name}] Starting app...'.format(
             app=app
         ))
         try:
@@ -190,7 +190,7 @@ class WindowsMSIRunCommand(WindowsMSIMixin, RunCommand):
         except subprocess.CalledProcessError:
             print()
             raise BriefcaseCommandError(
-                "Unable to start app {app.name}.".format(app=app)
+                "Unable to start app {app.app_name}.".format(app=app)
             )
 
 
@@ -204,7 +204,7 @@ class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
         :param app: The application to build
         """
         print()
-        print("[{app.name}] Building MSI...".format(app=app))
+        print("[{app.app_name}] Building MSI...".format(app=app))
 
         try:
             print()
@@ -223,14 +223,14 @@ class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
                     "-dr", "{app.module_name}_ROOTDIR".format(app=app),  # Root directory reference name
                     "-cg", "{app.module_name}_COMPONENTS".format(app=app),  # Root component group name
                     "-var", "var.SourceDir",  # variable to use as the source dir
-                    "-out", "{app.name}-manifest.wxs".format(app=app),
+                    "-out", "{app.app_name}-manifest.wxs".format(app=app),
                 ],
                 check=True,
                 cwd=str(self.bundle_path(app))
             )
         except subprocess.CalledProcessError:
             raise BriefcaseCommandError(
-                "Unable to generate manifest for app {app.name}.".format(app=app)
+                "Unable to generate manifest for app {app.app_name}.".format(app=app)
             )
 
         try:
@@ -243,15 +243,15 @@ class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
                     "-ext", "WixUtilExtension",
                     "-ext", "WixUIExtension",
                     "-dSourceDir=src",
-                    "{app.name}.wxs".format(app=app),
-                    "{app.name}-manifest.wxs".format(app=app),
+                    "{app.app_name}.wxs".format(app=app),
+                    "{app.app_name}-manifest.wxs".format(app=app),
                 ],
                 check=True,
                 cwd=str(self.bundle_path(app))
             )
         except subprocess.CalledProcessError:
             raise BriefcaseCommandError(
-                "Unable to compile app {app.name}.".format(app=app)
+                "Unable to compile app {app.app_name}.".format(app=app)
             )
 
         try:
@@ -264,8 +264,8 @@ class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
                     "-ext", "WixUtilExtension",
                     "-ext", "WixUIExtension",
                     "-o", str(self.distribution_path(app)),
-                    "{app.name}.wixobj".format(app=app),
-                    "{app.name}-manifest.wixobj".format(app=app),
+                    "{app.app_name}.wixobj".format(app=app),
+                    "{app.app_name}-manifest.wixobj".format(app=app),
                 ],
                 check=True,
                 cwd=str(self.bundle_path(app))
@@ -273,7 +273,7 @@ class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
         except subprocess.CalledProcessError:
             print()
             raise BriefcaseCommandError(
-                "Unable to link app {app.name}.".format(app=app)
+                "Unable to link app {app.app_name}.".format(app=app)
             )
 
 

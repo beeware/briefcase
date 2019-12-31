@@ -226,7 +226,7 @@ class iOSXcodeBuildCommand(iOSXcodeMixin, BuildCommand):
         ))
 
         print()
-        print('[{app.name}] Building XCode project...'.format(
+        print('[{app.app_name}] Building XCode project...'.format(
             app=app
         ))
 
@@ -262,7 +262,7 @@ class iOSXcodeBuildCommand(iOSXcodeMixin, BuildCommand):
         except subprocess.CalledProcessError:
             print()
             raise BriefcaseCommandError(
-                "Unable to build app {app.name}.".format(app=app)
+                "Unable to build app {app.app_name}.".format(app=app)
             )
 
         # Preserve the device selection as state.
@@ -352,8 +352,8 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
 
         # Try to uninstall the app first. If the app hasn't been installed
         # before, this will still succeed.
-        app_identifier = '.'.join([app.bundle, app.name])
-        print('[{app.name}] Uninstalling old app version...'.format(
+        app_identifier = '.'.join([app.bundle, app.app_name])
+        print('[{app.app_name}] Uninstalling old app version...'.format(
             app=app
         ))
         try:
@@ -363,13 +363,13 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
             )
         except subprocess.CalledProcessError:
             raise BriefcaseCommandError(
-                "Unable to uninstall old version of app {app.name}.".format(
+                "Unable to uninstall old version of app {app.app_name}.".format(
                     app=app
                 )
             )
 
         # Install the app.
-        print('[{app.name}] Installing new app version...'.format(
+        print('[{app.app_name}] Installing new app version...'.format(
             app=app
         ))
         try:
@@ -379,12 +379,12 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
             )
         except subprocess.CalledProcessError:
             raise BriefcaseCommandError(
-                "Unable to install new version of app {app.name}.".format(
+                "Unable to install new version of app {app.app_name}.".format(
                     app=app
                 )
             )
 
-        print('[{app.name}] Starting app...'.format(
+        print('[{app.app_name}] Starting app...'.format(
             app=app
         ))
         try:
@@ -394,7 +394,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
             )
         except subprocess.CalledProcessError:
             raise BriefcaseCommandError(
-                "Unable to launch app {app.name}.".format(
+                "Unable to launch app {app.app_name}.".format(
                     app=app
                 )
             )

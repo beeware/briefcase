@@ -49,7 +49,7 @@ class macOSAppRunCommand(macOSAppMixin, RunCommand):
         :param base_path: The path to the project directory.
         """
         print()
-        print('[{app.name}] Starting app...'.format(
+        print('[{app.app_name}] Starting app...'.format(
             app=app
         ))
         try:
@@ -64,7 +64,7 @@ class macOSAppRunCommand(macOSAppMixin, RunCommand):
         except subprocess.CalledProcessError:
             print()
             raise BriefcaseCommandError(
-                "Unable to start app {app.name}.".format(app=app)
+                "Unable to start app {app.app_name}.".format(app=app)
             )
 
 
@@ -184,7 +184,7 @@ class macOSAppPackageCommand(macOSAppMixin, PackageCommand):
             identity = self.select_identity(identity=identity)
 
             print()
-            print("[{app.name}] Signing app with identity {identity}...".format(
+            print("[{app.app_name}] Signing app with identity {identity}...".format(
                 app=app,
                 identity=identity
             ))

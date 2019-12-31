@@ -19,13 +19,13 @@ class DummyUpdateCommand(UpdateCommand):
         self.actions = []
 
     def bundle_path(self, app):
-        return self.platform_path / '{app.name}.dummy'.format(app=app)
+        return self.platform_path / '{app.app_name}.dummy'.format(app=app)
 
     def binary_path(self, app):
-        return self.platform_path / '{app.name}.dummy.bin'.format(app=app)
+        return self.platform_path / '{app.app_name}.dummy.bin'.format(app=app)
 
     def distribution_path(self, app):
-        return self.platform_path / '{app.name}.dummy.dist'.format(app=app)
+        return self.platform_path / '{app.app_name}.dummy.dist'.format(app=app)
 
     def verify_tools(self):
         self.actions.append(('verify'))
@@ -54,14 +54,14 @@ def update_command(tmp_path):
         base_path=tmp_path,
         apps={
             'first': AppConfig(
-                name='first',
+                app_name='first',
                 bundle='com.example',
                 version='0.0.1',
                 description='The first simple app',
                 sources=['src/first'],
             ),
             'second': AppConfig(
-                name='second',
+                app_name='second',
                 bundle='com.example',
                 version='0.0.2',
                 description='The second simple app',

@@ -20,33 +20,33 @@ class DummyBuildCommand(BuildCommand):
         self.actions = []
 
     def bundle_path(self, app):
-        return self.platform_path / '{app.name}.dummy'.format(app=app)
+        return self.platform_path / '{app.app_name}.dummy'.format(app=app)
 
     def binary_path(self, app):
-        return self.platform_path / '{app.name}.dummy.bin'.format(app=app)
+        return self.platform_path / '{app.app_name}.dummy.bin'.format(app=app)
 
     def distribution_path(self, app):
-        return self.platform_path / '{app.name}.dummy.dist'.format(app=app)
+        return self.platform_path / '{app.app_name}.dummy.dist'.format(app=app)
 
     def build_app(self, app, **kwargs):
-        self.actions.append(('build', app.name, kwargs))
+        self.actions.append(('build', app.app_name, kwargs))
         return full_kwargs({
-            'build_state': app.name
+            'build_state': app.app_name
         }, kwargs)
 
     # These commands override the default behavior, simply tracking that
     # they were invoked, rather than instantiating a Create/Update command.
     # This is for testing purposes.
     def create_command(self, app, **kwargs):
-        self.actions.append(('create', app.name, kwargs))
+        self.actions.append(('create', app.app_name, kwargs))
         return full_kwargs({
-            'create_state': app.name
+            'create_state': app.app_name
         }, kwargs)
 
     def update_command(self, app, **kwargs):
-        self.actions.append(('update', app.name, kwargs))
+        self.actions.append(('update', app.app_name, kwargs))
         return full_kwargs({
-            'update_state': app.name
+            'update_state': app.app_name
         }, kwargs)
 
 
@@ -58,7 +58,7 @@ def build_command(tmp_path):
 @pytest.fixture
 def first_app_config():
     return AppConfig(
-        name='first',
+        app_name='first',
         bundle='com.example',
         version='0.0.1',
         description='The first simple app',
@@ -90,7 +90,7 @@ def first_app(first_app_unbuilt, tmp_path):
 @pytest.fixture
 def second_app_config():
     return AppConfig(
-        name='second',
+        app_name='second',
         bundle='com.example',
         version='0.0.2',
         description='The second simple app',

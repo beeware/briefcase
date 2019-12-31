@@ -72,7 +72,7 @@ class macOSDmgPackageCommand(macOSDmgMixin, macOSAppPackageCommand):
         super().package_app(app, **kwargs)
 
         print()
-        print("[{app.name}] Building DMG...".format(app=app))
+        print("[{app.app_name}] Building DMG...".format(app=app))
 
         dmg_settings = {
             'files': [str(self.binary_path(app))],
