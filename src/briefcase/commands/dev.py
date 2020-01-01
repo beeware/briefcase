@@ -96,7 +96,7 @@ class DevCommand(BaseCommand):
         except subprocess.CalledProcessError:
             print()
             raise BriefcaseCommandError(
-                "Unable to start application '{app.name}'".format(
+                "Unable to start application '{app.app_name}'".format(
                     app=app
                 ))
 
@@ -132,14 +132,14 @@ class DevCommand(BaseCommand):
         dist_info_path = self.app_module_path(app).parent / '{app.module_name}.dist-info'.format(app=app)
         if update_dependencies or not dist_info_path.exists():
             print()
-            print('[{app.name}] Installing dependencies...'.format(
+            print('[{app.app_name}] Installing dependencies...'.format(
                 app=app
             ))
             self.install_dev_dependencies(app, **kwargs)
             write_dist_info(app, dist_info_path)
 
         print()
-        print('[{app.name}] Starting in dev mode...'.format(
+        print('[{app.app_name}] Starting in dev mode...'.format(
             app=app
         ))
         state = self.run_dev_app(app, **kwargs)

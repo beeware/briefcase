@@ -95,9 +95,9 @@ def write_dist_info(app: BaseConfig, dist_info_path: Path):
         f.write('briefcase\n')
     with (dist_info_path / 'METADATA').open('w') as f:
         f.write('Metadata-Version: 2.1\n')
-        f.write('Name: {app.name}\n'.format(app=app))
+        f.write('Name: {app.app_name}\n'.format(app=app))
         f.write('Formal-Name: {app.formal_name}\n'.format(app=app))
-        f.write('Bundle: {app.bundle}\n'.format(app=app))
+        f.write('App-ID: {app.bundle}.{app.app_name}\n'.format(app=app))
         f.write('Version: {app.version}\n'.format(app=app))
         if app.url:
             f.write('Home-page: {app.url}\n'.format(app=app))
@@ -488,7 +488,7 @@ class CreateCommand(BaseCommand):
                 else:
                     self.shutil.copy(str(original), str(target))
         else:
-            print("No sources defined for {app.name}.".format(app=app))
+            print("No sources defined for {app.app_name}.".format(app=app))
 
         # Write the dist-info folder for the application.
         write_dist_info(
@@ -588,52 +588,52 @@ class CreateCommand(BaseCommand):
         bundle_path = self.bundle_path(app)
         if bundle_path.exists():
             print()
-            confirm = self.input('Application {app.name} already exists; overwrite (y/N)? '.format(
+            confirm = self.input('Application {app.app_name} already exists; overwrite (y/N)? '.format(
                 app=app
             ))
             if confirm.lower() != 'y':
-                print("Aborting creation of app {app.name}".format(
+                print("Aborting creation of app {app.app_name}".format(
                     app=app
                 ))
                 return
             print()
-            print("[{app.name}] Removing old application bundle...".format(
+            print("[{app.app_name}] Removing old application bundle...".format(
                 app=app
             ))
             self.shutil.rmtree(str(bundle_path))
 
         print()
-        print('[{app.name}] Generating application template...'.format(
+        print('[{app.app_name}] Generating application template...'.format(
             app=app
         ))
         self.generate_app_template(app=app)
 
         print()
-        print('[{app.name}] Installing support package...'.format(
+        print('[{app.app_name}] Installing support package...'.format(
             app=app
         ))
         self.install_app_support_package(app=app)
 
         print()
-        print('[{app.name}] Installing dependencies...'.format(
+        print('[{app.app_name}] Installing dependencies...'.format(
             app=app
         ))
         self.install_app_dependencies(app=app)
 
         print()
-        print('[{app.name}] Installing application code...'.format(
+        print('[{app.app_name}] Installing application code...'.format(
             app=app
         ))
         self.install_app_code(app=app)
 
         print()
-        print('[{app.name}] Installing application resources...'.format(
+        print('[{app.app_name}] Installing application resources...'.format(
             app=app
         ))
         self.install_app_resources(app=app)
         print()
 
-        print("[{app.name}] Created {filename}".format(
+        print("[{app.app_name}] Created {filename}".format(
             app=app,
             filename=self.bundle_path(app).relative_to(self.base_path),
         ))

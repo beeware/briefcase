@@ -7,7 +7,7 @@ from briefcase.exceptions import BriefcaseConfigError
 def test_minimal_AppConfig():
     "A simple config can be defined"
     config = AppConfig(
-        name="myapp",
+        app_name="myapp",
         version="1.2.3",
         bundle="org.beeware",
         description="A simple app",
@@ -15,7 +15,7 @@ def test_minimal_AppConfig():
     )
 
     # The basic properties have been set.
-    assert config.name == "myapp"
+    assert config.app_name == "myapp"
     assert config.version == '1.2.3'
     assert config.bundle == 'org.beeware'
     assert config.description == 'A simple app'
@@ -35,7 +35,7 @@ def test_minimal_AppConfig():
 def test_extra_attrs():
     "A config can contain attributes in addition to those required"
     config = AppConfig(
-        name="myapp",
+        app_name="myapp",
         formal_name="My App",
         version="1.2.3",
         bundle="org.beeware",
@@ -54,7 +54,7 @@ def test_extra_attrs():
     )
 
     # The basic properties have been set.
-    assert config.name == "myapp"
+    assert config.app_name == "myapp"
     assert config.version == '1.2.3'
     assert config.bundle == 'org.beeware'
     assert config.description == 'A simple app'
@@ -95,7 +95,7 @@ def test_extra_attrs():
 def test_valid_app_name(name):
     try:
         AppConfig(
-            name=name,
+            app_name=name,
             version="1.2.3",
             bundle="org.beeware",
             description="A simple app",
@@ -121,7 +121,7 @@ def test_valid_app_name(name):
 def test_invalid_app_name(name):
     with pytest.raises(BriefcaseConfigError, match=r"is not a valid app name\."):
         AppConfig(
-            name=name,
+            app_name=name,
             version="1.2.3",
             bundle="org.beeware",
             description="A simple app",
@@ -132,7 +132,7 @@ def test_invalid_app_name(name):
 def test_valid_app_version():
     try:
         AppConfig(
-            name="myapp",
+            app_name="myapp",
             version="1.2.3",
             bundle="org.beeware",
             description="A simple app",
@@ -145,7 +145,7 @@ def test_valid_app_version():
 def test_invalid_app_version():
     with pytest.raises(BriefcaseConfigError, match=r"Version number for myapp.*is not valid\."):
         AppConfig(
-            name="myapp",
+            app_name="myapp",
             version="foobar",
             bundle="org.beeware",
             description="A simple app",
@@ -162,7 +162,7 @@ def test_invalid_app_version():
 )
 def test_module_name(name, module_name):
     config = AppConfig(
-        name=name,
+        app_name=name,
         version="1.2.3",
         bundle="org.beeware",
         description="A simple app",
@@ -184,7 +184,7 @@ def test_module_name(name, module_name):
 def test_duplicated_source(sources):
     with pytest.raises(BriefcaseConfigError, match=r"contains duplicated package names\."):
         AppConfig(
-            name='dupe',
+            app_name='dupe',
             version="1.2.3",
             bundle="org.beeware",
             description="A simple app",
@@ -195,7 +195,7 @@ def test_duplicated_source(sources):
 def test_no_source_for_app():
     with pytest.raises(BriefcaseConfigError, match=r" does not include a package named 'my_app'\."):
         AppConfig(
-            name='my-app',
+            app_name='my-app',
             version="1.2.3",
             bundle="org.beeware",
             description="A simple app",

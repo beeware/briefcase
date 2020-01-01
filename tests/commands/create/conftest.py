@@ -30,13 +30,13 @@ class DummyCreateCommand(CreateCommand):
         self.support_file = support_file
 
     def bundle_path(self, app):
-        return self.platform_path / '{app.name}.bundle'.format(app=app)
+        return self.platform_path / '{app.app_name}.bundle'.format(app=app)
 
     def binary_path(self, app):
-        return self.platform_path / '{app.name}.binary'.format(app=app)
+        return self.platform_path / '{app.app_name}.binary'.format(app=app)
 
     def distribution_path(self, app):
-        return self.platform_path / '{app.name}.dist'.format(app=app)
+        return self.platform_path / '{app.app_name}.dist'.format(app=app)
 
     # Hard code the python version to make testing easier.
     @property
@@ -97,14 +97,14 @@ def tracking_create_command(tmp_path):
         base_path=tmp_path,
         apps={
             'first': AppConfig(
-                name='first',
+                app_name='first',
                 bundle='com.example',
                 version='0.0.1',
                 description='The first simple app',
                 sources=['src/first'],
             ),
             'second': AppConfig(
-                name='second',
+                app_name='second',
                 bundle='com.example',
                 version='0.0.2',
                 description='The second simple app',
@@ -117,7 +117,7 @@ def tracking_create_command(tmp_path):
 @pytest.fixture
 def myapp():
     return AppConfig(
-        name='my-app',
+        app_name='my-app',
         formal_name='My App',
         bundle='com.example',
         version='1.2.3',
@@ -131,7 +131,7 @@ def bundle_path(myapp, tmp_path):
     # Return the bundle path for the app; however, as a side effect,
     # ensure that the app, app_packages and support target directories
     # exist, and the briefcase index file has been created.
-    bundle_path = tmp_path / 'tester' / '{myapp.name}.bundle'.format(myapp=myapp)
+    bundle_path = tmp_path / 'tester' / '{myapp.app_name}.bundle'.format(myapp=myapp)
     (bundle_path / 'path' / 'to' / 'app').mkdir(parents=True, exist_ok=True)
     (bundle_path / 'path' / 'to' / 'app_packages').mkdir(parents=True, exist_ok=True)
     (bundle_path / 'path' / 'to' / 'support').mkdir(parents=True, exist_ok=True)

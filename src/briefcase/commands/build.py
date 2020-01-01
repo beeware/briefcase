@@ -44,7 +44,7 @@ class BuildCommand(BaseCommand):
         state = self.build_app(app, **full_kwargs(state, kwargs))
 
         print()
-        print("[{app.name}] Built {filename}".format(
+        print("[{app.app_name}] Built {filename}".format(
             app=app,
             filename=self.binary_path(app).relative_to(self.base_path),
         ))

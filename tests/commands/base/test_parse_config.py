@@ -87,7 +87,7 @@ def test_parse_config(base_command):
     # defined in the config file.
     assert repr(base_command.apps['firstapp']) == '<org.beeware.firstapp v1.2.3 AppConfig>'
     assert base_command.apps['firstapp'].project_name == 'Sample project'
-    assert base_command.apps['firstapp'].name == 'firstapp'
+    assert base_command.apps['firstapp'].app_name == 'firstapp'
     assert base_command.apps['firstapp'].bundle == 'org.beeware'
     assert base_command.apps['firstapp'].mystery == 'default'
     assert not hasattr(base_command.apps['firstapp'], 'extra')
@@ -96,7 +96,7 @@ def test_parse_config(base_command):
     # value for `mystery`, and an `extra` value.
     assert repr(base_command.apps['secondapp']) == '<org.beeware.secondapp v1.2.3 AppConfig>'
     assert base_command.apps['secondapp'].project_name == 'Sample project'
-    assert base_command.apps['secondapp'].name == 'secondapp'
+    assert base_command.apps['secondapp'].app_name == 'secondapp'
     assert base_command.apps['secondapp'].bundle == 'org.beeware'
     assert base_command.apps['secondapp'].mystery == 'sekrits'
     assert base_command.apps['secondapp'].extra == 'something'
@@ -173,6 +173,6 @@ def test_parse_config_custom_config_classes(other_command):
     assert other_command.apps['firstapp'].bar == 'ham'
 
     # The custom class sets the underlying attributes of the AppConfig
-    assert other_command.apps['firstapp'].name == 'custom'
+    assert other_command.apps['firstapp'].app_name == 'custom'
     assert other_command.apps['firstapp'].bundle == 'com.example'
     assert other_command.apps['firstapp'].version == "37.42"

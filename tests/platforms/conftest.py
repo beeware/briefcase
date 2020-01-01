@@ -6,7 +6,7 @@ from briefcase.config import AppConfig
 @pytest.fixture
 def first_app_config():
     return AppConfig(
-        name='first-app',
+        app_name='first-app',
         project_name='First Project',
         formal_name='First App',
         bundle='com.example',
