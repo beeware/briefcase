@@ -34,7 +34,7 @@ native application. It supports producing binaries for:
 
 * macOS, as a standalone .app;
 * Windows, as an MSI installer;
-* Linux, as a flatpak;
+* Linux, as an AppImage;
 * iOS, as an XCode project; and
 * Android, as a Gradle project.
 
