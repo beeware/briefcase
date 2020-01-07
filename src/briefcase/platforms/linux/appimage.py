@@ -48,11 +48,11 @@ class LinuxAppImageCreateCommand(LinuxAppImageMixin, CreateCommand):
         """
         The query arguments to use in a support package query request.
         """
-        return {
-            'platform': self.platform,
-            'version': self.python_version_tag,
-            'arch': self.host_arch,
-        }
+        return [
+            ('platform', self.platform),
+            ('version', self.python_version_tag),
+            ('arch', self.host_arch),
+        ]
 
 
 class LinuxAppImageUpdateCommand(LinuxAppImageMixin, UpdateCommand):

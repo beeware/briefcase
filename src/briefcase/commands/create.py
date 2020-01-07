@@ -128,10 +128,10 @@ class CreateCommand(BaseCommand):
         """
         The query arguments to use in a support package query request.
         """
-        return {
-            'platform': self.platform,
-            'version': self.python_version_tag,
-        }
+        return [
+            ('platform', self.platform),
+            ('version', self.python_version_tag),
+        ]
 
     @property
     def support_package_url(self):

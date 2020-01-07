@@ -10,8 +10,8 @@ def test_support_package_url(first_app_config, tmp_path):
     command.host_arch = 'wonky'
     command.platform = 'tester'
 
-    assert command.support_package_url_query == {
-        'platform': 'tester',
-        'version': '3.{minor}'.format(minor=sys.version_info.minor),
-        'arch': 'wonky',
-    }
+    assert command.support_package_url_query == [
+        ('platform', 'tester'),
+        ('version', '3.{minor}'.format(minor=sys.version_info.minor)),
+        ('arch', 'wonky'),
+    ]
