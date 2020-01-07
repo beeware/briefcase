@@ -6,9 +6,7 @@ from pathlib import Path
 from typing import Optional
 from urllib.parse import urlencode
 
-import boto3
 import toml
-from botocore.handlers import disable_signing
 from cookiecutter import exceptions as cookiecutter_exceptions
 from requests import exceptions as requests_exceptions
 
@@ -124,19 +122,6 @@ class CreateCommand(BaseCommand):
         return 'https://github.com/beeware/briefcase-{self.platform}-{self.output_format}-template.git'.format(
             self=self
         )
-
-    def _anonymous_s3_client(self, region):
-        """
-        Set up an anonymous S3 client.
-
-        :param region: The AWS region name
-        :return: An S3 boto client, with request signing disabled.
-        """
-        if self._s3 is None:
-            self._s3 = boto3.client('s3', region_name=region)
-            self._s3.meta.events.register('choose-signer.s3.*', disable_signing)
-
-        return self._s3
 
     @property
     def support_package_url_query(self):
