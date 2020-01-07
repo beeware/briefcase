@@ -11,9 +11,6 @@ from briefcase.exceptions import NetworkFailure
 
 def test_install_app_support_package(create_command, myapp, tmp_path, support_path):
     "A support package can be unpacked where it is needed"
-    # Hardcode the support package URL for test purposes
-    create_command._support_package_url = 'https://example.com/path/to/support.zip'
-
     # Write a temporary support zip file
     support_file = tmp_path / 'out.zip'
     with zipfile.ZipFile(str(support_file), 'w') as support_zip:
@@ -28,7 +25,7 @@ def test_install_app_support_package(create_command, myapp, tmp_path, support_pa
     # Confirm the right URL was used
     create_command.download_url.assert_called_with(
         download_path=Path.home() / '.briefcase' / 'support',
-        url='https://example.com/path/to/support.zip',
+        url='https://briefcase-support.org/python?platform=tester&version=3.X',
     )
 
     # Confirm that the full path to the support file
