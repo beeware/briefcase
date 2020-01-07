@@ -1,4 +1,5 @@
 import sys
+
 import pytest
 
 from briefcase.platforms.windows.msi import WindowsMSICreateCommand

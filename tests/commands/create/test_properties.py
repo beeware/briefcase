@@ -1,7 +1,4 @@
-import pytest
 import toml
-
-from briefcase.commands.create import NoSupportPackage
 
 
 def test_template_url(create_command):
