@@ -355,23 +355,28 @@ class BaseCommand(ABC):
             will be created if it doesn't exist.
         :returns: The filename of the downloaded (or cached) file.
         """
-        cache_name = urlparse(url).path.split('/')[-1]
         download_path.mkdir(parents=True, exist_ok=True)
+
+        response = self.requests.get(url, stream=True)
+        if response.status_code == 404:
+            raise MissingNetworkResourceError(
+                url=url,
+            )
+        elif response.status_code != 200:
+            raise BadNetworkResourceError(
+                url=url,
+                status_code=response.status_code
+            )
+
+        # The initial URL might (read: will) go through URL redirects, so
+        # we need the *final* URL name, from which we can extract the cache
+        # filename.
+        cache_name = urlparse(response.url).path.split('/')[-1]
         filename = download_path / cache_name
-
         if not filename.exists():
-            response = self.requests.get(url, stream=True)
-            if response.status_code == 404:
-                raise MissingNetworkResourceError(
-                    url=url,
-                )
-            elif response.status_code != 200:
-                raise BadNetworkResourceError(
-                    url=url,
-                    status_code=response.status_code
-                )
-
-            # We have meaningful content, so save it in the requested location
+            # We have meaningful content, and it hasn't been cached previously,
+            # so save it in the requested location
+            print('Downloading {cache_name}...'.format(cache_name=cache_name))
             with filename.open('wb') as f:
                 total = response.headers.get('content-length')
                 if total is None:

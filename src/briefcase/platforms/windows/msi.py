@@ -73,27 +73,15 @@ class WindowsMSICreateCommand(WindowsMSIMixin, CreateCommand):
     description = "Create and populate a Windows app."
 
     @property
-    def support_package_url(self):
+    def support_package_url_query(self):
         """
-        Gets the URL to the embedded Python support package.
-
-        Python provides redistributable zip files containing the Windows builds,
-        making it easy to redistribute Python as part of another software
-        package.
-
-        :returns: The support package URL.
+        The query arguments to use in a support package query request.
         """
-        version = "%s.%s.%s" % sys.version_info[:3]
-        arch = "amd64" if (struct.calcsize("P") * 8) == 64 else "win32"
-
-        # Python 3.7.2 had to be repackaged for Windows,
-        # https://bugs.python.org/issue35596. Use this repackaged link for
-        # version 3.7.2, otherwise use the standard link format
-
-        if version == "3.7.2":
-            return 'https://www.python.org/ftp/python/%s/python-%s.post1-embed-%s.zip' % (version, version, arch)
-        else:
-            return 'https://www.python.org/ftp/python/%s/python-%s-embed-%s.zip' % (version, version, arch)
+        return {
+            'platform': self.platform,
+            'version': self.python_version_tag,
+            'arch': "amd64" if (struct.calcsize("P") * 8) == 64 else "win32",
+        }
 
     def output_format_template_context(self, app: BaseConfig):
         """

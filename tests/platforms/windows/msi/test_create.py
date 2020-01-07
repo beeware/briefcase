@@ -1,3 +1,4 @@
+import sys
 import pytest
 
 from briefcase.platforms.windows.msi import WindowsMSICreateCommand
@@ -55,3 +56,19 @@ def test_explicit_guid(first_app_config, tmp_path):
 
     # Explicitly provided GUID is used.
     assert context['guid'] == 'e822176f-b755-589f-849c-6c6600f7efb1'
+
+
+def test_support_package_url(first_app_config, tmp_path):
+    command = WindowsMSICreateCommand(base_path=tmp_path)
+
+    # Set some properties of the host system for test purposes.
+    command.host_arch = 'wonky'
+    command.platform = 'tester'
+
+    # This test result assumes we're on ARM64. However, we will be
+    # on almost every Windows box (and definite will be in CI)
+    assert command.support_package_url_query == {
+        'platform': 'tester',
+        'version': '3.{minor}'.format(minor=sys.version_info.minor),
+        'arch': 'amd64',
+    }

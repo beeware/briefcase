@@ -4,6 +4,7 @@ import sys
 from datetime import date
 from pathlib import Path
 from typing import Optional
+from urllib.parse import urlencode
 
 import boto3
 import toml
@@ -138,46 +139,21 @@ class CreateCommand(BaseCommand):
         return self._s3
 
     @property
-    def support_package_key_prefix(self):
-        return 'python/{self.python_version_tag}/{self.platform}/'.format(
-            self=self,
-        )
+    def support_package_url_query(self):
+        """
+        The query arguments to use in a support package query request.
+        """
+        return {
+            'platform': self.platform,
+            'version': self.python_version_tag,
+        }
 
     @property
     def support_package_url(self):
         "The URL of the support package to use for apps of this type."
-        if self._support_package_url is None:
-            # Get an S3 client, and disable signing (so we don't need credentials)
-            S3_BUCKET = 'briefcase-support'
-            S3_REGION = 'us-west-2'
-            S3_URL = 'https://{}.s3-{}.amazonaws.com/'.format(S3_BUCKET, S3_REGION)
-
-            s3 = self._anonymous_s3_client(region=S3_REGION)
-
-            top_build_number = 0
-            top_build = None
-            paginator = s3.get_paginator('list_objects_v2')
-
-            for page in paginator.paginate(
-                Bucket=S3_BUCKET,
-                Prefix=self.support_package_key_prefix
-            ):
-                for item in page.get('Contents', []):
-                    build_number = int(
-                        item['Key'].split('.')[-3].lstrip('b')
-                    )
-                    if build_number > top_build_number:
-                        top_build_number = build_number
-                        top_build = item['Key']
-
-            if top_build is None:
-                raise NoSupportPackage(
-                    platform=self.platform,
-                    python_version=self.python_version_tag
-                )
-            self._support_package_url = S3_URL + top_build
-
-        return self._support_package_url
+        return "https://briefcase-support.org/python?{query}".format(
+            query=urlencode(self.support_package_url_query)
+        )
 
     def _load_path_index(self, app: BaseConfig):
         """

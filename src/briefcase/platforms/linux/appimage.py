@@ -44,10 +44,15 @@ class LinuxAppImageCreateCommand(LinuxAppImageMixin, CreateCommand):
     description = "Create and populate a Linux AppImage."
 
     @property
-    def support_package_key_prefix(self):
-        return 'python/{self.python_version_tag}/{self.platform}/{self.host_arch}/'.format(
-            self=self,
-        )
+    def support_package_url_query(self):
+        """
+        The query arguments to use in a support package query request.
+        """
+        return {
+            'platform': self.platform,
+            'version': self.python_version_tag,
+            'arch': self.host_arch,
+        }
 
 
 class LinuxAppImageUpdateCommand(LinuxAppImageMixin, UpdateCommand):
