@@ -1,6 +1,5 @@
 import pytest
 import toml
-from botocore.stub import Stubber
 
 from briefcase.commands.create import NoSupportPackage
 
