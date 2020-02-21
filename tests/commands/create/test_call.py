@@ -2,6 +2,7 @@ import pytest
 
 from briefcase.exceptions import BriefcaseCommandError
 
+
 def test_no_git(tracking_create_command):
     "If Git is not installed, an error is raised"
     # Mock a non-existent git
