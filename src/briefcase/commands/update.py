@@ -71,6 +71,7 @@ class UpdateCommand(CreateCommand):
         update_resources: bool = False,
         **kwargs
     ):
+        # Confirm all required tools are available
         self.verify_tools()
 
         if app:

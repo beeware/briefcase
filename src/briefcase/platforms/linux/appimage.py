@@ -34,6 +34,7 @@ class LinuxAppImageMixin(LinuxMixin):
         """
         Verify that we're on Linux.
         """
+        super().verify_tools()
         if self.host_os != 'Linux':
             raise BriefcaseCommandError("""
 Linux AppImages can only be generated on Linux.

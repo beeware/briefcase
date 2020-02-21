@@ -28,6 +28,7 @@ class DummyUpdateCommand(UpdateCommand):
         return self.platform_path / '{app.app_name}.dummy.dist'.format(app=app)
 
     def verify_tools(self):
+        super().verify_tools()
         self.actions.append(('verify'))
 
     # Override all the body methods of a UpdateCommand

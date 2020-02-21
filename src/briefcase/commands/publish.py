@@ -39,6 +39,7 @@ class PublishCommand(BaseCommand):
         ))
 
     def __call__(self, channel=None, **kwargs):
+        # Confirm all required tools are available
         self.verify_tools()
 
         # Check the apps have been built first.

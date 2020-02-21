@@ -507,5 +507,8 @@ Application '{formal_name}' has been generated. To run your application, type:
         template: Optional[str] = None,
         **kwargs
     ):
+        # Confirm all required tools are available
+        self.verify_tools()
+
         state = self.new_app(template=template, **kwargs)
         return state
