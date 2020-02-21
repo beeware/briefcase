@@ -39,6 +39,9 @@ class RunCommand(BaseCommand):
         update: Optional[bool] = False,
         **kwargs
     ):
+        # Confirm all required tools are available
+        self.verify_tools()
+
         # Which app should we run? If there's only one defined
         # in pyproject.toml, then we can use it as a default;
         # otherwise look for a -a/--app option.

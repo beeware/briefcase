@@ -600,6 +600,7 @@ class CreateCommand(BaseCommand):
         ))
 
     def __call__(self, app: Optional[BaseConfig] = None, **kwargs):
+        # Confirm all required tools are available
         self.verify_tools()
 
         if app:

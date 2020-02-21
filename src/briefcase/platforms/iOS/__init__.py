@@ -8,6 +8,7 @@ class iOSMixin:
     platform = 'iOS'
 
     def verify_tools(self):
+        super().verify_tools()
         if self.host_os != 'Darwin':
             raise BriefcaseCommandError("""
 iOS applications require Xcode, which is only available on macOS.

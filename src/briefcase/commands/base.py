@@ -14,7 +14,6 @@ from urllib.parse import urlparse
 import requests
 from cookiecutter.main import cookiecutter
 from cookiecutter.repository import is_repo_url
-from git import exc as git_exceptions
 
 from briefcase import __version__
 from briefcase.config import AppConfig, GlobalConfig, parse_config
@@ -28,13 +27,10 @@ from briefcase.exceptions import (
 try:
     import git
 except ImportError:
-    raise BriefcaseCommandError("""
-Briefcase requires git, but it is not installed (or is not on your PATH). Visit:
-
-    https://git-scm.com/
-
-to download and install git. If you have installed git recently and are still
-getting this error, you may need to restart your terminal session.""")
+    # If git isn't installed, importing `git` will fail. Catch the error
+    # and replace the git module with a dummy; raise an error when tools
+    # are verified.
+    git = None
 
 
 class TemplateUnsupportedVersion(BriefcaseCommandError):
@@ -263,7 +259,16 @@ class BaseCommand(ABC):
 
         Raises MissingToolException if a required system tool is missing.
         """
-        ...
+        # Check whether the git executable could be imported.
+        if self.git is None:
+            raise BriefcaseCommandError("""
+Briefcase requires git, but it is not installed (or is not on your PATH). Visit:
+
+    https://git-scm.com/
+
+to download and install git. If you have installed git recently and are still
+getting this error, you may need to restart your terminal session.
+""")
 
     def parse_options(self, extra):
         parser = argparse.ArgumentParser(
@@ -425,7 +430,7 @@ class BaseCommand(ABC):
                     # Attempt to update the repository
                     remote = repo.remote(name='origin')
                     remote.fetch()
-                except git_exceptions.GitCommandError:
+                except git.exc.GitCommandError:
                     # We are offline, or otherwise unable to contact
                     # the origin git repo. It's OK to continue; but warn
                     # the user that the template may be stale.
@@ -445,11 +450,11 @@ class BaseCommand(ABC):
                 except IndexError:
                     # No branch exists for the requested version.
                     raise TemplateUnsupportedVersion(branch)
-            except git_exceptions.NoSuchPathError:
+            except git.exc.NoSuchPathError:
                 # Template cache path doesn't exist.
                 # Just use the template directly, rather than attempting an update.
                 cached_template = template
-            except git_exceptions.InvalidGitRepositoryError:
+            except git.exc.InvalidGitRepositoryError:
                 # Template cache path exists, but isn't a git repository
                 # Just use the template directly, rather than attempting an update.
                 cached_template = template

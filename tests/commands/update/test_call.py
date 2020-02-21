@@ -1,3 +1,20 @@
+import pytest
+
+from briefcase.exceptions import BriefcaseCommandError
+
+
+def test_no_git(update_command):
+    "If Git is not installed, an error is raised"
+    # Mock a non-existent git
+    update_command.git = None
+
+    # The command will fail tool verification.
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Briefcase requires git, but it is not installed"
+    ):
+        update_command()
+
 
 def test_update(update_command, first_app, second_app):
     "The update command can be called"

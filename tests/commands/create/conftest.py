@@ -61,6 +61,7 @@ class TrackingCreateCommand(DummyCreateCommand):
         self.actions = []
 
     def verify_tools(self):
+        super().verify_tools()
         self.actions.append(('verify'))
 
     # Override all the body methods of a CreateCommand
