@@ -1,3 +1,19 @@
+import pytest
+
+from briefcase.exceptions import BriefcaseCommandError
+
+def test_no_git(tracking_create_command):
+    "If Git is not installed, an error is raised"
+    # Mock a non-existent git
+    tracking_create_command.git = None
+
+    # The command will fail tool verification.
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Briefcase requires git, but it is not installed"
+    ):
+        tracking_create_command()
+
 
 def test_create(tracking_create_command):
     "The create command can be called"

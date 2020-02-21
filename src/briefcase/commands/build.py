@@ -56,6 +56,7 @@ class BuildCommand(BaseCommand):
         update: bool = False,
         **kwargs
     ):
+        # Confirm all required tools are available
         self.verify_tools()
 
         if app:
