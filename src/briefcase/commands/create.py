@@ -20,7 +20,7 @@ class InvalidTemplateRepository(BriefcaseCommandError):
     def __init__(self, template):
         self.template = template
         super().__init__(
-            'Unable to clone application template; is the template path {template!r} correct?'.format(
+            "Unable to clone application template; is the template path {template!r} correct?".format(
                 template=template
             )
         )
@@ -30,9 +30,7 @@ class InvalidSupportPackage(BriefcaseCommandError):
     def __init__(self, filename):
         self.filename = filename
         super().__init__(
-            'Unable to unpack support package {filename!r}'.format(
-                filename=filename
-            )
+            "Unable to unpack support package {filename!r}".format(filename=filename)
         )
 
 
@@ -41,9 +39,8 @@ class NoSupportPackage(BriefcaseCommandError):
         self.platform = platform
         self.python_version = python_version
         super().__init__(
-            'Unable to locate a support package for Python {python_version} on {platform}'.format(
-                python_version=python_version,
-                platform=platform,
+            "Unable to locate a support package for Python {python_version} on {platform}".format(
+                python_version=python_version, platform=platform,
             )
         )
 
@@ -51,18 +48,16 @@ class NoSupportPackage(BriefcaseCommandError):
 class DependencyInstallError(BriefcaseCommandError):
     def __init__(self):
         super().__init__(
-            'Unable to install dependencies. This may be because one of your '
-            'dependencies is invalid, or because pip was unable to connect '
-            'to the PyPI server.'
+            "Unable to install dependencies. This may be because one of your "
+            "dependencies is invalid, or because pip was unable to connect "
+            "to the PyPI server."
         )
 
 
 class MissingAppSources(BriefcaseCommandError):
     def __init__(self, src):
         self.src = src
-        super().__init__(
-            'Application source {src!r} does not exist.'.format(src=src)
-        )
+        super().__init__("Application source {src!r} does not exist.".format(src=src))
 
 
 def cookiecutter_cache_path(template):
@@ -75,10 +70,10 @@ def cookiecutter_cache_path(template):
         a URL.
     :returns: The path that cookiecutter would use for the given template name.
     """
-    template = template.rstrip('/')
-    tail = template.split('/')[-1]
-    cache_name = tail.rsplit('.git')[0]
-    return Path.home() / '.cookiecutters' / cache_name
+    template = template.rstrip("/")
+    tail = template.split("/")[-1]
+    cache_name = tail.rsplit(".git")[0]
+    return Path.home() / ".cookiecutters" / cache_name
 
 
 def write_dist_info(app: BaseConfig, dist_info_path: Path):
@@ -90,25 +85,25 @@ def write_dist_info(app: BaseConfig, dist_info_path: Path):
     """
     # Create dist-info folder, and write a minimal metadata collection.
     dist_info_path.mkdir(exist_ok=True)
-    with (dist_info_path / 'INSTALLER').open('w') as f:
-        f.write('briefcase\n')
-    with (dist_info_path / 'METADATA').open('w') as f:
-        f.write('Metadata-Version: 2.1\n')
-        f.write('Name: {app.app_name}\n'.format(app=app))
-        f.write('Formal-Name: {app.formal_name}\n'.format(app=app))
-        f.write('App-ID: {app.bundle}.{app.app_name}\n'.format(app=app))
-        f.write('Version: {app.version}\n'.format(app=app))
+    with (dist_info_path / "INSTALLER").open("w") as f:
+        f.write("briefcase\n")
+    with (dist_info_path / "METADATA").open("w") as f:
+        f.write("Metadata-Version: 2.1\n")
+        f.write("Name: {app.app_name}\n".format(app=app))
+        f.write("Formal-Name: {app.formal_name}\n".format(app=app))
+        f.write("App-ID: {app.bundle}.{app.app_name}\n".format(app=app))
+        f.write("Version: {app.version}\n".format(app=app))
         if app.url:
-            f.write('Home-page: {app.url}\n'.format(app=app))
+            f.write("Home-page: {app.url}\n".format(app=app))
         if app.author:
-            f.write('Author: {app.author}\n'.format(app=app))
+            f.write("Author: {app.author}\n".format(app=app))
         if app.author_email:
-            f.write('Author-email: {app.author_email}\n'.format(app=app))
-        f.write('Summary: {app.description}\n'.format(app=app))
+            f.write("Author-email: {app.author_email}\n".format(app=app))
+        f.write("Summary: {app.description}\n".format(app=app))
 
 
 class CreateCommand(BaseCommand):
-    command = 'create'
+    command = "create"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -119,7 +114,7 @@ class CreateCommand(BaseCommand):
     @property
     def app_template_url(self):
         "The URL for a cookiecutter repository to use when creating apps"
-        return 'https://github.com/beeware/briefcase-{self.platform}-{self.output_format}-template.git'.format(
+        return "https://github.com/beeware/briefcase-{self.platform}-{self.output_format}-template.git".format(
             self=self
         )
 
@@ -129,8 +124,8 @@ class CreateCommand(BaseCommand):
         The query arguments to use in a support package query request.
         """
         return [
-            ('platform', self.platform),
-            ('version', self.python_version_tag),
+            ("platform", self.platform),
+            ("version", self.python_version_tag),
         ]
 
     @property
@@ -147,8 +142,8 @@ class CreateCommand(BaseCommand):
         :param app: The config object for the app
         :return: The contents of the application path index.
         """
-        with (self.bundle_path(app) / 'briefcase.toml').open() as f:
-            self._path_index[app] = toml.load(f)['paths']
+        with (self.bundle_path(app) / "briefcase.toml").open() as f:
+            self._path_index[app] = toml.load(f)["paths"]
         return self._path_index[app]
 
     def support_path(self, app: BaseConfig):
@@ -163,7 +158,7 @@ class CreateCommand(BaseCommand):
             path_index = self._path_index[app]
         except KeyError:
             path_index = self._load_path_index(app)
-        return self.bundle_path(app) / path_index['support_path']
+        return self.bundle_path(app) / path_index["support_path"]
 
     def app_packages_path(self, app: BaseConfig):
         """
@@ -177,7 +172,7 @@ class CreateCommand(BaseCommand):
             path_index = self._path_index[app]
         except KeyError:
             path_index = self._load_path_index(app)
-        return self.bundle_path(app) / path_index['app_packages_path']
+        return self.bundle_path(app) / path_index["app_packages_path"]
 
     def app_path(self, app: BaseConfig):
         """
@@ -191,7 +186,7 @@ class CreateCommand(BaseCommand):
             path_index = self._path_index[app]
         except KeyError:
             path_index = self._load_path_index(app)
-        return self.bundle_path(app) / path_index['app_path']
+        return self.bundle_path(app) / path_index["app_path"]
 
     def icon_targets(self, app: BaseConfig):
         """
@@ -212,12 +207,10 @@ class CreateCommand(BaseCommand):
         #   return a dictionary with a single ``None`` key.
         # Otherwise, return the full size-keyed dictionary.
         try:
-            icon_targets = path_index['icon']
+            icon_targets = path_index["icon"]
             # Convert string-specified icons into an "unknown size" icon form
             if isinstance(icon_targets, str):
-                icon_targets = {
-                    None: icon_targets
-                }
+                icon_targets = {None: icon_targets}
         except KeyError:
             icon_targets = {}
 
@@ -242,12 +235,10 @@ class CreateCommand(BaseCommand):
         #   return a dictionary with a single ``None`` key.
         # Otherwise, return the full size-keyed dictionary.
         try:
-            splash_targets = path_index['splash']
+            splash_targets = path_index["splash"]
             # Convert string-specified splash images into an "unknown size" icon form
             if isinstance(splash_targets, str):
-                splash_targets = {
-                    None: splash_targets
-                }
+                splash_targets = {None: splash_targets}
         except KeyError:
             splash_targets = {}
 
@@ -275,12 +266,10 @@ class CreateCommand(BaseCommand):
         #   ``None`` key. Otherwise, return the full size-keyed dictionary.
         try:
             document_type_icon_targets = {}
-            for extension, targets in path_index['document_type_icon'].items():
+            for extension, targets in path_index["document_type_icon"].items():
                 # Convert string-specified icons into an "unknown size" icon form
                 if isinstance(targets, str):
-                    document_type_icon_targets[extension] = {
-                        None: targets
-                    }
+                    document_type_icon_targets[extension] = {None: targets}
                 else:
                     document_type_icon_targets[extension] = targets
 
@@ -307,28 +296,26 @@ class CreateCommand(BaseCommand):
         if app.template is None:
             app.template = self.app_template_url
 
-        print("Using app template: {app_template}".format(
-            app_template=app.template,
-        ))
+        print("Using app template: {app_template}".format(app_template=app.template,))
 
         # Make sure we have an updated cookiecutter template,
         # checked out to the right branch
         cached_template = self.update_cookiecutter_cache(
-            template=app.template,
-            branch=self.python_version_tag
+            template=app.template, branch=self.python_version_tag
         )
 
         # Construct a template context from the app configuration.
         extra_context = app.__dict__.copy()
         # Augment with some extra fields.
-        extra_context.update({
-            # Transformations of explicit properties into useful forms
-            'module_name': app.module_name,
-
-            # Properties that are a function of the execution
-            'year': date.today().strftime('%Y'),
-            'month': date.today().strftime('%B'),
-        })
+        extra_context.update(
+            {
+                # Transformations of explicit properties into useful forms
+                "module_name": app.module_name,
+                # Properties that are a function of the execution
+                "year": date.today().strftime("%Y"),
+                "month": date.today().strftime("%B"),
+            }
+        )
 
         # Add in any extra template context required by the output format.
         extra_context.update(self.output_format_template_context(app))
@@ -343,7 +330,7 @@ class CreateCommand(BaseCommand):
                 no_input=True,
                 output_dir=str(output_path),
                 checkout=self.python_version_tag,
-                extra_context=extra_context
+                extra_context=extra_context,
             )
         except subprocess.CalledProcessError:
             # Computer is offline
@@ -368,34 +355,39 @@ class CreateCommand(BaseCommand):
             # the support package URL.
             try:
                 support_package_url = app.support_package
-                print("Using custom support package {support_package_url}".format(
-                    support_package_url=support_package_url
-                ))
+                print(
+                    "Using custom support package {support_package_url}".format(
+                        support_package_url=support_package_url
+                    )
+                )
             except AttributeError:
                 support_package_url = self.support_package_url
-                print("Using support package {support_package_url}".format(
-                    support_package_url=support_package_url
-                ))
+                print(
+                    "Using support package {support_package_url}".format(
+                        support_package_url=support_package_url
+                    )
+                )
 
-            if support_package_url.startswith('https://') or support_package_url.startswith('http://'):
+            if support_package_url.startswith(
+                "https://"
+            ) or support_package_url.startswith("http://"):
                 # Download the support file, caching the result
                 # in the user's briefcase support cache directory.
                 support_filename = self.download_url(
                     url=support_package_url,
-                    download_path=Path.home() / '.briefcase' / 'support'
+                    download_path=Path.home() / ".briefcase" / "support",
                 )
             else:
                 support_filename = support_package_url
         except requests_exceptions.ConnectionError:
-            raise NetworkFailure('downloading support package')
+            raise NetworkFailure("downloading support package")
 
         try:
             print("Unpacking support package...")
             support_path = self.support_path(app)
             support_path.mkdir(parents=True, exist_ok=True)
             self.shutil.unpack_archive(
-                str(support_filename),
-                extract_dir=str(support_path)
+                str(support_filename), extract_dir=str(support_path), format="zip"
             )
         except shutil.ReadError:
             raise InvalidSupportPackage(support_filename.name)
@@ -410,11 +402,14 @@ class CreateCommand(BaseCommand):
             try:
                 self.subprocess.run(
                     [
-                        sys.executable, "-m",
-                        "pip", "install",
+                        sys.executable,
+                        "-m",
+                        "pip",
+                        "install",
                         "--upgrade",
-                        '--target={}'.format(self.app_packages_path(app)),
-                    ] + app.requires,
+                        "--target={}".format(self.app_packages_path(app)),
+                    ]
+                    + app.requires,
                     check=True,
                 )
             except subprocess.CalledProcessError:
@@ -454,9 +449,8 @@ class CreateCommand(BaseCommand):
         # Write the dist-info folder for the application.
         write_dist_info(
             app=app,
-            dist_info_path=self.app_path(app) / '{app.module_name}-{app.version}.dist-info'.format(
-                app=app,
-            )
+            dist_info_path=self.app_path(app)
+            / "{app.module_name}-{app.version}.dist-info".format(app=app,),
         )
 
     def install_image(self, role, size, source, target):
@@ -473,28 +467,23 @@ class CreateCommand(BaseCommand):
         """
         if source is not None:
             if size is None:
-                source_filename = '{source}{ext}'.format(
-                    source=source,
-                    ext=target.suffix
+                source_filename = "{source}{ext}".format(
+                    source=source, ext=target.suffix
                 )
                 full_role = role
             else:
-                source_filename = '{source}-{size}{ext}'.format(
-                    source=source,
-                    size=size,
-                    ext=target.suffix
+                source_filename = "{source}-{size}{ext}".format(
+                    source=source, size=size, ext=target.suffix
                 )
-                full_role = '{size}px {role}'.format(
-                    size=size,
-                    role=role,
-                )
+                full_role = "{size}px {role}".format(size=size, role=role,)
 
             full_source = self.base_path / source_filename
             if full_source.exists():
-                print("Installing {source_filename} as {full_role}...".format(
-                    source_filename=source_filename,
-                    full_role=full_role,
-                ))
+                print(
+                    "Installing {source_filename} as {full_role}...".format(
+                        source_filename=source_filename, full_role=full_role,
+                    )
+                )
 
                 # Make sure the target directory exists
                 target.parent.mkdir(parents=True, exist_ok=True)
@@ -503,8 +492,7 @@ class CreateCommand(BaseCommand):
             else:
                 print(
                     "Unable to find {source_filename} for {full_role}; using default".format(
-                        full_role=full_role,
-                        source_filename=source_filename,
+                        full_role=full_role, source_filename=source_filename,
                     )
                 )
 
@@ -517,26 +505,26 @@ class CreateCommand(BaseCommand):
         """
         for size, target in self.icon_targets(app).items():
             self.install_image(
-                'application icon',
+                "application icon",
                 size=size,
                 source=app.icon,
-                target=self.bundle_path(app) / target
+                target=self.bundle_path(app) / target,
             )
 
         for size, target in self.splash_image_targets(app).items():
             self.install_image(
-                'splash image',
+                "splash image",
                 size=size,
                 source=app.splash,
-                target=self.bundle_path(app) / target
+                target=self.bundle_path(app) / target,
             )
 
         for extension, doctype in self.document_type_icon_targets(app).items():
             for size, target in doctype.items():
                 self.install_image(
-                    'icon for .{extension} documents'.format(extension=extension),
+                    "icon for .{extension} documents".format(extension=extension),
                     size=size,
-                    source=app.document_types[extension]['icon'],
+                    source=app.document_types[extension]["icon"],
                     target=self.bundle_path(app) / target,
                 )
 
@@ -549,55 +537,44 @@ class CreateCommand(BaseCommand):
         bundle_path = self.bundle_path(app)
         if bundle_path.exists():
             print()
-            confirm = self.input('Application {app.app_name} already exists; overwrite (y/N)? '.format(
-                app=app
-            ))
-            if confirm.lower() != 'y':
-                print("Aborting creation of app {app.app_name}".format(
+            confirm = self.input(
+                "Application {app.app_name} already exists; overwrite (y/N)? ".format(
                     app=app
-                ))
+                )
+            )
+            if confirm.lower() != "y":
+                print("Aborting creation of app {app.app_name}".format(app=app))
                 return
             print()
-            print("[{app.app_name}] Removing old application bundle...".format(
-                app=app
-            ))
+            print("[{app.app_name}] Removing old application bundle...".format(app=app))
             self.shutil.rmtree(str(bundle_path))
 
         print()
-        print('[{app.app_name}] Generating application template...'.format(
-            app=app
-        ))
+        print("[{app.app_name}] Generating application template...".format(app=app))
         self.generate_app_template(app=app)
 
         print()
-        print('[{app.app_name}] Installing support package...'.format(
-            app=app
-        ))
+        print("[{app.app_name}] Installing support package...".format(app=app))
         self.install_app_support_package(app=app)
 
         print()
-        print('[{app.app_name}] Installing dependencies...'.format(
-            app=app
-        ))
+        print("[{app.app_name}] Installing dependencies...".format(app=app))
         self.install_app_dependencies(app=app)
 
         print()
-        print('[{app.app_name}] Installing application code...'.format(
-            app=app
-        ))
+        print("[{app.app_name}] Installing application code...".format(app=app))
         self.install_app_code(app=app)
 
         print()
-        print('[{app.app_name}] Installing application resources...'.format(
-            app=app
-        ))
+        print("[{app.app_name}] Installing application resources...".format(app=app))
         self.install_app_resources(app=app)
         print()
 
-        print("[{app.app_name}] Created {filename}".format(
-            app=app,
-            filename=self.bundle_path(app).relative_to(self.base_path),
-        ))
+        print(
+            "[{app.app_name}] Created {filename}".format(
+                app=app, filename=self.bundle_path(app).relative_to(self.base_path),
+            )
+        )
 
     def __call__(self, app: Optional[BaseConfig] = None, **kwargs):
         # Confirm all required tools are available
