@@ -18,12 +18,14 @@ class DummyDevCommand(DevCommand):
         super().__init__(*args, apps=[], **kwargs)
 
         self.actions = []
+        self.env = dict()
 
     def install_dev_dependencies(self, app, **kwargs):
         self.actions.append(('dev_dependencies', app.app_name, kwargs))
 
-    def run_dev_app(self, app, **kwargs):
+    def run_dev_app(self, app, env, **kwargs):
         self.actions.append(('run_dev', app.app_name, kwargs))
+        self.env.update(env)
         return full_kwargs({
             'run_dev_state': app.app_name
         }, kwargs)
@@ -32,6 +34,22 @@ class DummyDevCommand(DevCommand):
 @pytest.fixture
 def dev_command(tmp_path):
     return DummyDevCommand(base_path=tmp_path)
+
+
+@pytest.fixture
+def linux_environment(monkeypatch):
+    env = dict(a="a", b="b", c="c")
+    monkeypatch.setattr("os.pathsep", ":")
+    monkeypatch.setattr("os.environ", env)
+    return env
+
+
+@pytest.fixture
+def windows_environment(monkeypatch):
+    env = dict(a="a", b="b", c="c")
+    monkeypatch.setattr("os.pathsep", ";")
+    monkeypatch.setattr("os.environ", env)
+    return env
 
 
 @pytest.fixture
@@ -74,4 +92,23 @@ def second_app(tmp_path):
         version='0.0.2',
         description='The second simple app',
         sources=['src/second'],
+    )
+
+
+@pytest.fixture
+def third_app(tmp_path):
+    # Make sure the source code exists
+    (tmp_path / 'src' / 'third').mkdir(parents=True, exist_ok=True)
+    with (tmp_path / 'src' / 'third' / '__init__.py').open('w') as f:
+        f.write('print("Hello world")')
+
+    # Create the dist-info folder
+    (tmp_path / 'src' / 'third.dist-info').mkdir(exist_ok=True)
+
+    return AppConfig(
+        app_name='third',
+        bundle='com.example',
+        version='0.0.2',
+        description='The third simple app',
+        sources=['src/third', 'src2/b'],
     )

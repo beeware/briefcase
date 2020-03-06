@@ -72,21 +72,14 @@ class DevCommand(BaseCommand):
         else:
             print("No application dependencies.")
 
-    def run_dev_app(self, app: BaseConfig, **kwargs):
+    def run_dev_app(self, app: BaseConfig, env: dict, **kwargs):
         """
         Run the app in the dev environment.
 
         :param app: The config object for the app
+        :param env: environment dictionary for sub command
         """
         try:
-            # Create a shell environment where PYTHONPATH points to the source
-            # directories described by the app config.
-            env = os.environ.copy()
-            env['PYTHONPATH'] = ':'.join(
-                app.rsplit('/', 1)[0]
-                for app in app.sources
-            )
-
             # Invoke the app.
             self.subprocess.run(
                 [sys.executable, "-m", app.module_name],
@@ -99,6 +92,16 @@ class DevCommand(BaseCommand):
                 "Unable to start application '{app.app_name}'".format(
                     app=app
                 ))
+
+    def get_environment(self, app):
+        # Create a shell environment where PYTHONPATH points to the source
+        # directories described by the app config.
+        env = os.environ.copy()
+        env['PYTHONPATH'] = os.pathsep.join(
+            app.rsplit('/', 1)[0]
+            for app in app.sources
+        )
+        return env
 
     def __call__(
         self,
@@ -145,5 +148,6 @@ class DevCommand(BaseCommand):
         print('[{app.app_name}] Starting in dev mode...'.format(
             app=app
         ))
-        state = self.run_dev_app(app, **kwargs)
+        env = self.get_environment(app)
+        state = self.run_dev_app(app, env, **kwargs)
         return state
