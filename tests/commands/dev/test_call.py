@@ -1,3 +1,6 @@
+import sys
+from unittest.mock import call
+
 import pytest
 
 from briefcase.exceptions import BriefcaseCommandError
@@ -16,11 +19,10 @@ def test_no_git(dev_command, first_app):
         dev_command()
 
     # No apps will be launched
-    assert dev_command.actions == []
-    assert dev_command.env == {}
+    assert dev_command.subprocess.run.call_args_list == []
 
 
-def test_no_args_one_app(dev_command, first_app, linux_environment):
+def test_no_args_one_app(dev_command, first_app, environment):
     "If there is one app, dev starts that app by default"
     # Add a single app
     dev_command.apps = {
@@ -33,14 +35,10 @@ def test_no_args_one_app(dev_command, first_app, linux_environment):
     # Run the run command
     dev_command(**options)
 
-    # The right sequence of things will be done
-    assert dev_command.actions == [
-        # Run the first app devly
-        ('run_dev', 'first', {'verbosity': 1}),
+    environment["PYTHONPATH"] = "src"
+    assert dev_command.subprocess.run.call_args_list == [
+        call([sys.executable, '-m', 'first'], check=True, env=environment)
     ]
-
-    linux_environment["PYTHONPATH"] = "src"
-    assert dev_command.env == linux_environment
 
 
 def test_no_args_two_apps(dev_command, first_app, second_app):
@@ -59,11 +57,10 @@ def test_no_args_two_apps(dev_command, first_app, second_app):
         dev_command(**options)
 
     # No apps will be launched
-    assert dev_command.actions == []
-    assert dev_command.env == {}
+    assert dev_command.subprocess.run.call_args_list == []
 
 
-def test_with_arg_one_app(dev_command, first_app, linux_environment):
+def test_with_arg_one_app(dev_command, first_app, environment):
     "If there is one app, and a -a argument, dev starts that app"
     # Add a single app
     dev_command.apps = {
@@ -76,16 +73,13 @@ def test_with_arg_one_app(dev_command, first_app, linux_environment):
     # Run the run command
     dev_command(**options)
 
-    # The right sequence of things will be done
-    assert dev_command.actions == [
-        # Run the first app devly
-        ('run_dev', 'first', {'verbosity': 1}),
+    environment["PYTHONPATH"] = "src"
+    assert dev_command.subprocess.run.call_args_list == [
+        call([sys.executable, '-m', 'first'], check=True, env=environment)
     ]
-    linux_environment["PYTHONPATH"] = "src"
-    assert dev_command.env == linux_environment
 
 
-def test_with_arg_two_apps(dev_command, first_app, second_app, linux_environment):
+def test_with_arg_two_apps(dev_command, first_app, second_app, environment):
     "If there are multiple apps, the --app argument starts app nominated"
     # Add two apps
     dev_command.apps = {
@@ -99,13 +93,10 @@ def test_with_arg_two_apps(dev_command, first_app, second_app, linux_environment
     # Run the run command
     dev_command(**options)
 
-    # The right sequence of things will be done
-    assert dev_command.actions == [
-        # Run the second app devly
-        ('run_dev', 'second', {'verbosity': 1}),
+    environment["PYTHONPATH"] = "src"
+    assert dev_command.subprocess.run.call_args_list == [
+        call([sys.executable, '-m', 'second'], check=True, env=environment)
     ]
-    linux_environment["PYTHONPATH"] = "src"
-    assert dev_command.env == linux_environment
 
 
 def test_bad_app_reference(dev_command, first_app, second_app):
@@ -124,11 +115,10 @@ def test_bad_app_reference(dev_command, first_app, second_app):
         dev_command(**options)
 
     # No apps will be launched
-    assert dev_command.actions == []
-    assert dev_command.env == {}
+    assert dev_command.subprocess.run.call_args_list == []
 
 
-def test_update_dependencies(dev_command, first_app, linux_environment):
+def test_update_dependencies(dev_command, first_app, environment):
     "The dev command can request that the app is updated first"
     # Add a single app
     dev_command.apps = {
@@ -141,19 +131,13 @@ def test_update_dependencies(dev_command, first_app, linux_environment):
     # Run the run command
     dev_command(**options)
 
-    # The right sequence of things will be done
-    assert dev_command.actions == [
-        # An update was requested
-        ('dev_dependencies', 'first', {'verbosity': 1}),
-
-        # Then, it will be started
-        ('run_dev', 'first', {'verbosity': 1}),
+    environment["PYTHONPATH"] = "src"
+    assert dev_command.subprocess.run.call_args_list == [
+        call([sys.executable, '-m', 'first'], check=True, env=environment)
     ]
-    linux_environment["PYTHONPATH"] = "src"
-    assert dev_command.env == linux_environment
 
 
-def test_run_uninstalled(dev_command, first_app_uninstalled, linux_environment):
+def test_run_uninstalled(dev_command, first_app_uninstalled, environment):
     "The dev command will install first if the app hasn't been installed"
     # Add a single app
     dev_command.apps = {
@@ -166,19 +150,13 @@ def test_run_uninstalled(dev_command, first_app_uninstalled, linux_environment):
     # Run the run command
     dev_command(**options)
 
-    # The right sequence of things will be done
-    assert dev_command.actions == [
-        # The app will be installed
-        ('dev_dependencies', 'first', {'verbosity': 1}),
-
-        # Then, it will be started
-        ('run_dev', 'first', {'verbosity': 1}),
+    environment["PYTHONPATH"] = "src"
+    assert dev_command.subprocess.run.call_args_list == [
+        call([sys.executable, '-m', 'first'], check=True, env=environment)
     ]
-    linux_environment["PYTHONPATH"] = "src"
-    assert dev_command.env == linux_environment
 
 
-def test_update_uninstalled(dev_command, first_app_uninstalled, linux_environment):
+def test_update_uninstalled(dev_command, first_app_uninstalled, environment):
     "A request to update dependencies is redundant if the app hasn't been installed"
     # Add a single app
     dev_command.apps = {
@@ -191,20 +169,16 @@ def test_update_uninstalled(dev_command, first_app_uninstalled, linux_environmen
     # Run the run command
     dev_command(**options)
 
-    # The right sequence of things will be done
-    assert dev_command.actions == [
-        # An update was requested
-        ('dev_dependencies', 'first', {'verbosity': 1}),
-
-        # Then, it will be started
-        ('run_dev', 'first', {'verbosity': 1}),
+    environment["PYTHONPATH"] = "src"
+    assert dev_command.subprocess.run.call_args_list == [
+        call([sys.executable, '-m', 'first'], check=True, env=environment)
     ]
-    linux_environment["PYTHONPATH"] = "src"
-    assert dev_command.env == linux_environment
 
 
-def test_no_args_one_app_with_two_sources_on_linux(dev_command, third_app, linux_environment):
-    "If there is one app, dev starts that app by default"
+@pytest.mark.skipif(sys.platform != "windows", reason="separator does not fit with windows syntax")
+def test_no_args_one_app_with_two_sources_on_non_windows(dev_command, third_app, environment):
+    "when running test with 2 sources on linux or mac, it adds them in PYTHONPATH with : separtor"
+
     # Add a single app
     dev_command.apps = {
         'third': third_app,
@@ -216,18 +190,15 @@ def test_no_args_one_app_with_two_sources_on_linux(dev_command, third_app, linux
     # Run the run command
     dev_command(**options)
 
-    # The right sequence of things will be done
-    assert dev_command.actions == [
-        # Run the first app devly
-        ('run_dev', 'third', {'verbosity': 1}),
+    environment["PYTHONPATH"] = "src:src2"
+    assert dev_command.subprocess.run.call_args_list == [
+        call([sys.executable, '-m', 'third'], check=True, env=environment)
     ]
 
-    linux_environment["PYTHONPATH"] = "src:src2"
-    assert dev_command.env == linux_environment
 
-
-def test_no_args_one_app_with_two_sources_on_windows(dev_command, third_app, windows_environment):
-    "If there is one app, dev starts that app by default"
+@pytest.mark.skipif(sys.platform == "windows", reason="separator only fits with windows syntax")
+def test_no_args_one_app_with_two_sources_on_windows(dev_command, third_app, environment):
+    "when running test with 2 sources on linux or mac, it adds them in PYTHONPATH with ; separtor"
     # Add a single app
     dev_command.apps = {
         'third': third_app,
@@ -239,11 +210,7 @@ def test_no_args_one_app_with_two_sources_on_windows(dev_command, third_app, win
     # Run the run command
     dev_command(**options)
 
-    # The right sequence of things will be done
-    assert dev_command.actions == [
-        # Run the first app devly
-        ('run_dev', 'third', {'verbosity': 1}),
+    environment["PYTHONPATH"] = "src;src2"
+    assert dev_command.subprocess.run.call_args_list == [
+        call([sys.executable, '-m', 'third'], check=True, env=environment)
     ]
-
-    windows_environment["PYTHONPATH"] = "src;src2"
-    assert dev_command.env == windows_environment

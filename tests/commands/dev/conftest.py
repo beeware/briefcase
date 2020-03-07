@@ -1,4 +1,5 @@
 import pytest
+from unittest import mock
 
 from briefcase.commands import DevCommand
 from briefcase.commands.base import full_kwargs
@@ -17,18 +18,7 @@ class DummyDevCommand(DevCommand):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, apps=[], **kwargs)
 
-        self.actions = []
-        self.env = dict()
-
-    def install_dev_dependencies(self, app, **kwargs):
-        self.actions.append(('dev_dependencies', app.app_name, kwargs))
-
-    def run_dev_app(self, app, env, **kwargs):
-        self.actions.append(('run_dev', app.app_name, kwargs))
-        self.env.update(env)
-        return full_kwargs({
-            'run_dev_state': app.app_name
-        }, kwargs)
+        self.subprocess = mock.MagicMock()
 
 
 @pytest.fixture
@@ -37,17 +27,8 @@ def dev_command(tmp_path):
 
 
 @pytest.fixture
-def linux_environment(monkeypatch):
+def environment(monkeypatch):
     env = dict(a="a", b="b", c="c")
-    monkeypatch.setattr("os.pathsep", ":")
-    monkeypatch.setattr("os.environ", env)
-    return env
-
-
-@pytest.fixture
-def windows_environment(monkeypatch):
-    env = dict(a="a", b="b", c="c")
-    monkeypatch.setattr("os.pathsep", ";")
     monkeypatch.setattr("os.environ", env)
     return env
 
