@@ -2,7 +2,6 @@ import pytest
 from unittest import mock
 
 from briefcase.commands import DevCommand
-from briefcase.commands.base import full_kwargs
 from briefcase.config import AppConfig
 
 
