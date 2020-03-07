@@ -175,7 +175,7 @@ def test_update_uninstalled(dev_command, first_app_uninstalled, environment):
     ]
 
 
-@pytest.mark.skipif(sys.platform == "windows", reason="separator does not fit with windows syntax")
+@pytest.mark.skipif(sys.platform == 'win32', reason="separator does not fit with windows syntax")
 def test_no_args_one_app_with_two_sources_on_non_windows(dev_command, third_app, environment):
     "when running test with 2 sources on linux or mac, it adds them in PYTHONPATH with : separtor"
 
@@ -196,7 +196,7 @@ def test_no_args_one_app_with_two_sources_on_non_windows(dev_command, third_app,
     ]
 
 
-@pytest.mark.skipif(sys.platform != "windows", reason="separator only fits with windows syntax")
+@pytest.mark.skipif(sys.platform != 'win32', reason="separator only fits with windows syntax")
 def test_no_args_one_app_with_two_sources_on_windows(dev_command, third_app, environment):
     "when running test with 2 sources on linux or mac, it adds them in PYTHONPATH with ; separtor"
     # Add a single app
