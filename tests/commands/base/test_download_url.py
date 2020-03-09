@@ -132,8 +132,7 @@ def test_already_downloaded(base_command):
     # The request's Content-Disposition header is consumed to
     # examine the filename; the request is abandoned before
     # any other headers are read.
-    response.headers.get.assert_called_with('Content-Disposition')
-    response.headers.get.assert_called_once()
+    response.headers.get.assert_called_once_with('Content-Disposition')
 
     # but the file existed, so the method returns
     assert filename == existing_file
