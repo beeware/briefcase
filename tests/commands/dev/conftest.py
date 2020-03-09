@@ -28,7 +28,7 @@ class DummyDevCommand(DevCommand):
         return self.env
 
     def run_dev_app(self, app, env, **kwargs):
-        self.actions.append(('run_dev', app.app_name, kwargs))
+        self.actions.append(('run_dev', app.app_name, kwargs, env))
         self.env.update(env)
         return full_kwargs({
             'run_dev_state': app.app_name,

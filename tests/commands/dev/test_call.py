@@ -35,7 +35,7 @@ def test_no_args_one_app(dummy_dev_command, first_app):
     # The right sequence of things will be done
     assert dummy_dev_command.actions == [
         # Run the first app devly
-        ('run_dev', 'first', {'verbosity': 1}),
+        ('run_dev', 'first', {'verbosity': 1}, dummy_dev_command.env),
     ]
 
 
@@ -74,7 +74,7 @@ def test_with_arg_one_app(dummy_dev_command, first_app):
     # The right sequence of things will be done
     assert dummy_dev_command.actions == [
         # Run the first app devly
-        ('run_dev', 'first', {'verbosity': 1}),
+        ('run_dev', 'first', {'verbosity': 1}, dummy_dev_command.env),
     ]
 
 
@@ -95,7 +95,7 @@ def test_with_arg_two_apps(dummy_dev_command, first_app, second_app):
     # The right sequence of things will be done
     assert dummy_dev_command.actions == [
         # Run the second app devly
-        ('run_dev', 'second', {'verbosity': 1}),
+        ('run_dev', 'second', {'verbosity': 1}, dummy_dev_command.env),
     ]
 
 
@@ -137,7 +137,7 @@ def test_update_dependencies(dummy_dev_command, first_app):
         ('dev_dependencies', 'first', {'verbosity': 1}),
 
         # Then, it will be started
-        ('run_dev', 'first', {'verbosity': 1}),
+        ('run_dev', 'first', {'verbosity': 1}, dummy_dev_command.env),
     ]
 
 
@@ -160,7 +160,7 @@ def test_run_uninstalled(dummy_dev_command, first_app_uninstalled):
         ('dev_dependencies', 'first', {'verbosity': 1}),
 
         # Then, it will be started
-        ('run_dev', 'first', {'verbosity': 1}),
+        ('run_dev', 'first', {'verbosity': 1}, dummy_dev_command.env),
     ]
 
 
@@ -183,5 +183,5 @@ def test_update_uninstalled(dummy_dev_command, first_app_uninstalled):
         ('dev_dependencies', 'first', {'verbosity': 1}),
 
         # Then, it will be started
-        ('run_dev', 'first', {'verbosity': 1}),
+        ('run_dev', 'first', {'verbosity': 1}, dummy_dev_command.env),
     ]
