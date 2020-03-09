@@ -1,4 +1,5 @@
 import pytest
+import mock
 
 from briefcase.commands import DevCommand
 from briefcase.commands.base import full_kwargs
@@ -38,7 +39,9 @@ def dummy_dev_command(tmp_path):
 
 @pytest.fixture
 def dev_command(tmp_path):
-    return DevCommand(base_path=tmp_path)
+    command = DevCommand(base_path=tmp_path)
+    command.subprocess = mock.MagicMock()
+    return command
 
 
 @pytest.fixture
