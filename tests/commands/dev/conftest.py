@@ -19,16 +19,20 @@ class DummyDevCommand(DevCommand):
         super().__init__(*args, apps=[], **kwargs)
 
         self.actions = []
-        self.env = dict()
+        self.env = dict(a=1, b=2, c=3)
 
     def install_dev_dependencies(self, app, **kwargs):
         self.actions.append(('dev_dependencies', app.app_name, kwargs))
+
+    def get_environment(self, app):
+        return self.env
 
     def run_dev_app(self, app, env, **kwargs):
         self.actions.append(('run_dev', app.app_name, kwargs))
         self.env.update(env)
         return full_kwargs({
-            'run_dev_state': app.app_name
+            'run_dev_state': app.app_name,
+            'env': env
         }, kwargs)
 
 
@@ -42,22 +46,6 @@ def dev_command(tmp_path):
     command = DevCommand(base_path=tmp_path)
     command.subprocess = mock.MagicMock()
     return command
-
-
-@pytest.fixture
-def linux_environment(monkeypatch):
-    env = dict(a="a", b="b", c="c")
-    monkeypatch.setattr("os.pathsep", ":")
-    monkeypatch.setattr("os.environ", env)
-    return env
-
-
-@pytest.fixture
-def windows_environment(monkeypatch):
-    env = dict(a="a", b="b", c="c")
-    monkeypatch.setattr("os.pathsep", ";")
-    monkeypatch.setattr("os.environ", env)
-    return env
 
 
 @pytest.fixture

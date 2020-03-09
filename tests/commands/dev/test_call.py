@@ -17,10 +17,9 @@ def test_no_git(dummy_dev_command, first_app):
 
     # No apps will be launched
     assert dummy_dev_command.actions == []
-    assert dummy_dev_command.env == {}
 
 
-def test_no_args_one_app(dummy_dev_command, first_app, linux_environment):
+def test_no_args_one_app(dummy_dev_command, first_app):
     "If there is one app, dev starts that app by default"
     # Add a single app
     dummy_dev_command.apps = {
@@ -38,9 +37,6 @@ def test_no_args_one_app(dummy_dev_command, first_app, linux_environment):
         # Run the first app devly
         ('run_dev', 'first', {'verbosity': 1}),
     ]
-
-    linux_environment["PYTHONPATH"] = "src"
-    assert dummy_dev_command.env == linux_environment
 
 
 def test_no_args_two_apps(dummy_dev_command, first_app, second_app):
@@ -60,10 +56,9 @@ def test_no_args_two_apps(dummy_dev_command, first_app, second_app):
 
     # No apps will be launched
     assert dummy_dev_command.actions == []
-    assert dummy_dev_command.env == {}
 
 
-def test_with_arg_one_app(dummy_dev_command, first_app, linux_environment):
+def test_with_arg_one_app(dummy_dev_command, first_app):
     "If there is one app, and a -a argument, dev starts that app"
     # Add a single app
     dummy_dev_command.apps = {
@@ -81,11 +76,9 @@ def test_with_arg_one_app(dummy_dev_command, first_app, linux_environment):
         # Run the first app devly
         ('run_dev', 'first', {'verbosity': 1}),
     ]
-    linux_environment["PYTHONPATH"] = "src"
-    assert dummy_dev_command.env == linux_environment
 
 
-def test_with_arg_two_apps(dummy_dev_command, first_app, second_app, linux_environment):
+def test_with_arg_two_apps(dummy_dev_command, first_app, second_app):
     "If there are multiple apps, the --app argument starts app nominated"
     # Add two apps
     dummy_dev_command.apps = {
@@ -104,8 +97,6 @@ def test_with_arg_two_apps(dummy_dev_command, first_app, second_app, linux_envir
         # Run the second app devly
         ('run_dev', 'second', {'verbosity': 1}),
     ]
-    linux_environment["PYTHONPATH"] = "src"
-    assert dummy_dev_command.env == linux_environment
 
 
 def test_bad_app_reference(dummy_dev_command, first_app, second_app):
@@ -125,10 +116,9 @@ def test_bad_app_reference(dummy_dev_command, first_app, second_app):
 
     # No apps will be launched
     assert dummy_dev_command.actions == []
-    assert dummy_dev_command.env == {}
 
 
-def test_update_dependencies(dummy_dev_command, first_app, linux_environment):
+def test_update_dependencies(dummy_dev_command, first_app):
     "The dev command can request that the app is updated first"
     # Add a single app
     dummy_dev_command.apps = {
@@ -149,11 +139,9 @@ def test_update_dependencies(dummy_dev_command, first_app, linux_environment):
         # Then, it will be started
         ('run_dev', 'first', {'verbosity': 1}),
     ]
-    linux_environment["PYTHONPATH"] = "src"
-    assert dummy_dev_command.env == linux_environment
 
 
-def test_run_uninstalled(dummy_dev_command, first_app_uninstalled, linux_environment):
+def test_run_uninstalled(dummy_dev_command, first_app_uninstalled):
     "The dev command will install first if the app hasn't been installed"
     # Add a single app
     dummy_dev_command.apps = {
@@ -174,11 +162,9 @@ def test_run_uninstalled(dummy_dev_command, first_app_uninstalled, linux_environ
         # Then, it will be started
         ('run_dev', 'first', {'verbosity': 1}),
     ]
-    linux_environment["PYTHONPATH"] = "src"
-    assert dummy_dev_command.env == linux_environment
 
 
-def test_update_uninstalled(dummy_dev_command, first_app_uninstalled, linux_environment):
+def test_update_uninstalled(dummy_dev_command, first_app_uninstalled):
     "A request to update dependencies is redundant if the app hasn't been installed"
     # Add a single app
     dummy_dev_command.apps = {
@@ -199,51 +185,3 @@ def test_update_uninstalled(dummy_dev_command, first_app_uninstalled, linux_envi
         # Then, it will be started
         ('run_dev', 'first', {'verbosity': 1}),
     ]
-    linux_environment["PYTHONPATH"] = "src"
-    assert dummy_dev_command.env == linux_environment
-
-
-def test_no_args_one_app_with_two_sources_on_linux(dummy_dev_command, third_app, linux_environment):
-    "If there is one app, dev starts that app by default"
-    # Add a single app
-    dummy_dev_command.apps = {
-        'third': third_app,
-    }
-
-    # Configure no command line options
-    options = dummy_dev_command.parse_options([])
-
-    # Run the run command
-    dummy_dev_command(**options)
-
-    # The right sequence of things will be done
-    assert dummy_dev_command.actions == [
-        # Run the first app devly
-        ('run_dev', 'third', {'verbosity': 1}),
-    ]
-
-    linux_environment["PYTHONPATH"] = "src:src2"
-    assert dummy_dev_command.env == linux_environment
-
-
-def test_no_args_one_app_with_two_sources_on_windows(dummy_dev_command, third_app, windows_environment):
-    "If there is one app, dev starts that app by default"
-    # Add a single app
-    dummy_dev_command.apps = {
-        'third': third_app,
-    }
-
-    # Configure no command line options
-    options = dummy_dev_command.parse_options([])
-
-    # Run the run command
-    dummy_dev_command(**options)
-
-    # The right sequence of things will be done
-    assert dummy_dev_command.actions == [
-        # Run the first app devly
-        ('run_dev', 'third', {'verbosity': 1}),
-    ]
-
-    windows_environment["PYTHONPATH"] = "src;src2"
-    assert dummy_dev_command.env == windows_environment
