@@ -378,14 +378,12 @@ getting this error, you may need to restart your terminal session.
         # we need the *final* response. We look at either the `Content-Disposition`
         # header, or the final URL, to extract the cache filename.
         cache_full_name = urlparse(response.url).path
-        if 'Content-Disposition' in response.headers:
+        header_value = response.headers.get('Content-Disposition')
+        if header_value:
             # See also https://tools.ietf.org/html/rfc6266
-            header_value = response.headers['Content-Disposition']
             value, parameters = parse_header(header_value)
-            if value.split(':', 1)[-1].strip().lower() == 'attachment':
-                # We only the `filename=` parameter. RFC 6266 defines a more complicated
-                # `filename*=` parameter, which we don't support for now.
-                cache_full_name = parameters.get('filename')
+            if (value.split(':', 1)[-1].strip().lower() == 'attachment' and parameters.get('filename')):
+                cache_full_name = parameters['filename']
         cache_name = cache_full_name.split('/')[-1]
         filename = download_path / cache_name
         if not filename.exists():

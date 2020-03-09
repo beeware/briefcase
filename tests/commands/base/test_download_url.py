@@ -9,12 +9,40 @@ from briefcase.exceptions import (
 )
 
 
-def test_new_download_oneshot(base_command):
+@pytest.mark.parametrize(
+    'url,content_disposition',
+    [
+        # A `None` value for `content_disposition` means we skip the header.
+        # Other values are passed through as HTTP header values.
+        ('https://example.com/path/to/something.zip', None),
+        # Ensure empty header is ignored.
+        ('https://example.com/path/to/something.zip', ''),
+        # Paradigmatic case for Content-Disposition: attachment.
+        ('https://example.com/path/to/irrelevant.zip',
+            'attachment; filename=something.zip'),
+        # Ensure extra parameters are ignored.
+        ('https://example.com/path/to/irrelevant.zip',
+            'attachment; filename=something.zip; ignored=okay'),
+        # Ensure garbage headers are ignored.
+        ('https://example.com/path/to/something.zip',
+            'garbage'),
+        # Ensure we respect unusual quoting & case permitted by RFC 6266.
+        ('https://example.com/path/to/irrelevant.zip',
+            'ATTACHment; filename=    "something.zip"'),
+        # Ensure we use filename=, even if filename*= is provided. This makes us a
+        # "legacy user agent" in the terms of RFC 6266, for our own simplicity.
+        ('https://example.com/path/to/irrelevant.zip',
+            'attachment; filename="something.zip"; filename*=utf-8' "''%e2%82%ac%20rates"),
+    ]
+)
+def test_new_download_oneshot(base_command, url, content_disposition):
     base_command.requests = mock.MagicMock()
     response = mock.MagicMock()
-    response.url = 'https://example.com/path/to/something.zip'
+    response.url = url
     response.status_code = 200
-    response.headers.get.return_value = None
+    response.headers = mock.Mock(wraps=HTTPHeaderDict({
+            'content-disposition': content_disposition,
+        } if content_disposition is not None else {}))
     response.content = b'all content'
     base_command.requests.get.return_value = response
 
@@ -29,44 +57,15 @@ def test_new_download_oneshot(base_command):
         'https://example.com/support?useful=Yes',
         stream=True,
     )
-    response.headers.get.assert_called_once_with('content-length')
+    response.headers.get.assert_called_with('content-length')
     response.iter_content.assert_not_called()
 
-    # The filename is derived from the URL
+    # The filename is derived from the URL or header
     assert filename == base_command.base_path / 'downloads' / 'something.zip'
 
     # File content is as expected
     with (base_command.base_path / 'downloads' / 'something.zip').open() as f:
         assert f.read() == 'all content'
-
-
-def test_new_download_content_disposition(base_command):
-    base_command.requests = mock.MagicMock()
-    response = mock.MagicMock()
-    response.url = 'https://example.com/path/to/irrelevant.zip'
-    response.content = b'content'
-    response.iter_content.return_value = iter([response.content])
-    # We use strange case & whitespace in this sample header to ensure we're lenient in what we accept.
-    # https://tools.ietf.org/html/rfc6266 permits spaces, quotes, and strange case in these places.
-    response.headers = HTTPHeaderDict({
-        'content-disposition': 'Content-Disposition: ATTACHment; filename=    "something.zip"',
-        'content-length': str(len(response.content)),
-    })
-    response.status_code = 200
-    base_command.requests.get.return_value = response
-
-    # Download the file
-    filename = base_command.download_url(
-        url='https://example.com/support?useful=Yes',
-        download_path=base_command.base_path / 'downloads',
-    )
-
-    # The filename is derived from the Content-Disposition header
-    assert filename == base_command.base_path / 'downloads' / 'something.zip'
-
-    # File content is as expected
-    with (base_command.base_path / 'downloads' / 'something.zip').open() as f:
-        assert f.read() == 'content'
 
 
 def test_new_download_chunked(base_command):
@@ -93,7 +92,7 @@ def test_new_download_chunked(base_command):
         'https://example.com/support?useful=Yes',
         stream=True,
     )
-    response.headers.get.assert_called_once_with('content-length')
+    response.headers.get.assert_called_with('content-length')
     response.iter_content.assert_called_once_with(chunk_size=1048576)
 
     # The filename is derived from the URL
@@ -113,6 +112,7 @@ def test_already_downloaded(base_command):
 
     base_command.requests = mock.MagicMock()
     response = mock.MagicMock()
+    response.headers.get.return_value = ''
     response.url = 'https://example.com/path/to/something.zip'
     response.status_code = 200
     base_command.requests.get.return_value = response
@@ -129,8 +129,11 @@ def test_already_downloaded(base_command):
         stream=True,
     )
 
-    # But the request will be abandoned without reading.
-    response.headers.get.assert_not_called()
+    # The request's Content-Disposition header is consumed to
+    # examine the filename; the request is abandoned before
+    # any other headers are read.
+    response.headers.get.assert_called_with('Content-Disposition')
+    response.headers.get.assert_called_once()
 
     # but the file existed, so the method returns
     assert filename == existing_file
