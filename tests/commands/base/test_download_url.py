@@ -1,6 +1,7 @@
 from unittest import mock
 
 import pytest
+from urllib3.response import HTTPHeaderDict
 
 from briefcase.exceptions import (
     BadNetworkResourceError,
@@ -37,6 +38,35 @@ def test_new_download_oneshot(base_command):
     # File content is as expected
     with (base_command.base_path / 'downloads' / 'something.zip').open() as f:
         assert f.read() == 'all content'
+
+
+def test_new_download_content_disposition(base_command):
+    base_command.requests = mock.MagicMock()
+    response = mock.MagicMock()
+    response.url = 'https://example.com/path/to/irrelevant.zip'
+    response.content = b'content'
+    response.iter_content.return_value = iter([response.content])
+    # We use strange case & whitespace in this sample header to ensure we're lenient in what we accept.
+    # https://tools.ietf.org/html/rfc6266 permits spaces, quotes, and strange case in these places.
+    response.headers = HTTPHeaderDict({
+        'content-disposition': 'Content-Disposition: ATTACHment; filename=    "something.zip"',
+        'content-length': str(len(response.content)),
+    })
+    response.status_code = 200
+    base_command.requests.get.return_value = response
+
+    # Download the file
+    filename = base_command.download_url(
+        url='https://example.com/support?useful=Yes',
+        download_path=base_command.base_path / 'downloads',
+    )
+
+    # The filename is derived from the Content-Disposition header
+    assert filename == base_command.base_path / 'downloads' / 'something.zip'
+
+    # File content is as expected
+    with (base_command.base_path / 'downloads' / 'something.zip').open() as f:
+        assert f.read() == 'content'
 
 
 def test_new_download_chunked(base_command):
