@@ -1,8 +1,6 @@
 import sys
 import pytest
 
-from briefcase.commands import DevCommand
-
 PYTHONPATH = "PYTHONPATH"
 
 
