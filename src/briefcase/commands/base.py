@@ -1,5 +1,6 @@
 
 import argparse
+from cgi import parse_header
 import importlib
 import inspect
 import os
@@ -374,9 +375,16 @@ getting this error, you may need to restart your terminal session.
             )
 
         # The initial URL might (read: will) go through URL redirects, so
-        # we need the *final* URL name, from which we can extract the cache
-        # filename.
-        cache_name = urlparse(response.url).path.split('/')[-1]
+        # we need the *final* response. We look at either the `Content-Disposition`
+        # header, or the final URL, to extract the cache filename.
+        cache_full_name = urlparse(response.url).path
+        header_value = response.headers.get('Content-Disposition')
+        if header_value:
+            # See also https://tools.ietf.org/html/rfc6266
+            value, parameters = parse_header(header_value)
+            if (value.split(':', 1)[-1].strip().lower() == 'attachment' and parameters.get('filename')):
+                cache_full_name = parameters['filename']
+        cache_name = cache_full_name.split('/')[-1]
         filename = download_path / cache_name
         if not filename.exists():
             # We have meaningful content, and it hasn't been cached previously,
