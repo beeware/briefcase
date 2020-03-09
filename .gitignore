@@ -9,7 +9,17 @@ distribute-*
 .DS_Store
 .python-version
 .pytest_cache
+.coverage
 venv/
 .vscode/
 .eggs/
 /local
+
+# IntelliJ Idea family of suites
+.idea
+*.iml
+## File-based project format:
+*.ipr
+*.iws
+## mpeltonen/sbt-idea plugin
+.idea_modules/
