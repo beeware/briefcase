@@ -32,8 +32,13 @@ class DummyDevCommand(DevCommand):
 
 
 @pytest.fixture
-def dev_command(tmp_path):
+def dummy_dev_command(tmp_path):
     return DummyDevCommand(base_path=tmp_path)
+
+
+@pytest.fixture
+def dev_command(tmp_path):
+    return DevCommand(base_path=tmp_path)
 
 
 @pytest.fixture
