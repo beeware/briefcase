@@ -1,5 +1,5 @@
 import pytest
-import mock
+from unittest import mock
 
 from briefcase.commands import DevCommand
 from briefcase.commands.base import full_kwargs
