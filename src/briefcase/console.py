@@ -13,7 +13,8 @@ def select_option(options, input=input, prompt='> ', error="Invalid selection"):
     This method does *not* print a question or any leading text;
     it only prints the list of options, and prompts the user
     for their choice. If the user chooses an invalid selection (either
-    provides non-integer input, or an invalid integer),
+    provides non-integer input, or an invalid integer), it prints an
+    error message and prompts the user again.
 
     :param options: A dictionary of options to present to the user.
     :param input: The function to use to retrieve the user's input. This
