@@ -133,16 +133,6 @@ class macOSDmgPackageCommand(macOSDmgMixin, macOSAppPackageCommand):
 class macOSDmgPublishCommand(macOSDmgMixin, macOSAppPublishCommand):
     description = "Publish a macOS DMG."
 
-    def add_options(self):
-        self.parser.add_argument(
-            '-c',
-            '--channel',
-            choices=['s3', 'github', 'appstore'],
-            default='s3',
-            metavar='channel',
-            help='The channel to publish to'
-        )
-
 
 # Declare the briefcase command bindings
 create = macOSDmgCreateCommand  # noqa
