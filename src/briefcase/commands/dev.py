@@ -97,10 +97,13 @@ class DevCommand(BaseCommand):
         # Create a shell environment where PYTHONPATH points to the source
         # directories described by the app config.
         env = os.environ.copy()
-        env['PYTHONPATH'] = os.pathsep.join(
-            app.rsplit('/', 1)[0]
-            for app in app.sources
-        )
+        paths = []
+        for app in app.sources:
+            path = app.rsplit('/', 1)[0]
+            if path not in paths:
+                paths.append(path)
+
+        env['PYTHONPATH'] = os.pathsep.join(paths)
         return env
 
     def __call__(

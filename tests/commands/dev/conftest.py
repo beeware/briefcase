@@ -70,5 +70,5 @@ def third_app(tmp_path):
         bundle="com.example",
         version="0.0.2",
         description="The third simple app",
-        sources=["src/third", "src2/b"],
+        sources=["src/third", "src/common", "other"],
     )
