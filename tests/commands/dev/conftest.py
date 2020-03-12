@@ -6,7 +6,7 @@ from briefcase.config import AppConfig
 
 
 @pytest.fixture
-def dev_command_with_dummy_subprocess(tmp_path):
+def dev_command(tmp_path):
     command = DevCommand(base_path=tmp_path)
     command.subprocess = mock.MagicMock()
     return command
