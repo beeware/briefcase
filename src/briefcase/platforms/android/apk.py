@@ -41,6 +41,17 @@ class ApkMixin:
     def distribution_path(self, app):
         return self.binary_path(app)
 
+    @property
+    def android_sdk_url(self):
+        # TODO: Add test validating that, if this is mocked out for a sentinel
+        # ZIP file, we surely unpack it into android_sdk_path.
+        """The Android SDK URL appropriate to this operating system."""
+        # The URLs described by the pattern below have existed since
+        # approximately 2017, and the code they download has a built-in
+        # updater. I hope they will work for many years.
+        return "https://dl.google.com/android/repository/" + (
+            "sdk-tools-{os}-4333796.zip".format(os=self.host_os.lower()))
+
     def verify_tools(self):
         """
         Verify that we can download a support package for this Python version,
@@ -89,17 +100,6 @@ class ApkUpdateCommand(ApkMixin, UpdateCommand):
 
 class ApkBuildCommand(ApkMixin, BuildCommand):
     description = "Build an Android APK."
-
-    @property
-    def android_sdk_url(self):
-        # TODO: Add test validating that, if this is mocked out for a sentinel
-        # ZIP file, we surely unpack it into android_sdk_path.
-        """The Android SDK URL appropriate to this operating system."""
-        # The URLs described by the pattern below have existed since
-        # approximately 2017, and the code they download has a built-in
-        # updater. I hope they will work for many years.
-        return "https://dl.google.com/android/repository/" + (
-            "sdk-tools-{os}-4333796.zip".format(os=self.host_os.lower()))
 
     def build_app(self, app: BaseConfig, **kwargs):
         """
