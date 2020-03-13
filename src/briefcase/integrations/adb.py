@@ -4,11 +4,31 @@ import re
 from briefcase.exceptions import BriefcaseCommandError
 
 
-class DeviceNotFound(Exception):
-    pass
-
-
 DEVICE_NOT_FOUND = re.compile(r"^error: device '[^']*' not found")
+
+
+NO_OR_WRONG_DEVICE_MESSAGE = """\
+You can get a list of valid devices by running this command and looking in the
+first column of output.
+
+$ {sdk_path / "platform-tools" / "adb"} devices -l
+
+If you do not see any devices, you can create one by running these commands:
+
+$ {sdk_path / "tools" / "bin" / "sdkmanager"} "platforms;android-28" \
+    "system-images;android-28;default;x86" "emulator" "platform-tools"
+
+$ {sdk_path / "tools" / "bin" / "avdmanager"} --verbose create avd \
+    --name robotfriend --abi x86 \
+    --package 'system-images;android-28;default;x86' --device pixel
+
+$ {sdk_path / "emulator" / "emulator"} -avd robotfriend &
+
+Then use adb find out the device name by running this command and looking
+in the first column of output.
+
+$ {adb} devices -l
+"""
 
 
 def run_adb(sdk_path, device, arguments, sub=subprocess):
@@ -21,7 +41,7 @@ def run_adb(sdk_path, device, arguments, sub=subprocess):
     :param device: The name of the device in a format usable by `adb -s`.
     :param arguments: List of strings to pass to `adb` as arguments.
 
-    Returns `None` on success; raises an exception on failure.
+    Returns bytes of `adb` output on success; raises an exception on failure.
     """
     # The ADB integration operates on the basis of running commands before
     # checking that they are valid, then parsing output to notice errors.
@@ -29,7 +49,7 @@ def run_adb(sdk_path, device, arguments, sub=subprocess):
     try:
         # Capture `stderr` so that if the process exits with failure, the
         # stderr data is in `e.output`.
-        sub.check_output(
+        return sub.check_output(
             [str(sdk_path / 'platform-tools' / 'adb')] + ['-s', device] +
             arguments,
             stderr=sub.STDOUT)
@@ -39,7 +59,8 @@ def run_adb(sdk_path, device, arguments, sub=subprocess):
         # error message.
         output = e.output.decode('ascii', 'replace')
         if any((DEVICE_NOT_FOUND.match(line) for line in output.split('\n'))):
-            raise DeviceNotFound()
+            raise BriefcaseCommandError(NO_OR_WRONG_DEVICE_MESSAGE.format(
+                sdk_path=sdk_path))
         raise BriefcaseCommandError("""\
 Unable to run command on device. Received this output from `adb`
 {output}""".format(output=output))
@@ -72,9 +93,12 @@ def force_stop_app(sdk_path, device, package, sub=subprocess):
     # In my testing, `force-stop` exits with status code 0 (success) so long
     # as you pass a package name, even if the package does not exist, or the
     # package is not running.
-    # TODO: Think about output and error cases.
     print("Stopping app if running...")
-    return run_adb(sdk_path, device, ['shell', 'am', 'force-stop', package])
+    run_adb(sdk_path, device, ['shell', 'am', 'force-stop', package])
+
+
+ACTIVITY_CLASS_DOES_NOT_EXIST = re.compile(
+    r"^Error: Activity class [{][^}*][}] does not exist.$")
 
 
 def start_app(sdk_path, device, package, activity, sub=subprocess):
@@ -93,10 +117,20 @@ def start_app(sdk_path, device, package, activity, sub=subprocess):
     for "package" and "launchable-activity" in the output.
     """
     print("Launching app...")
-    return run_adb(
+    # `adb shell am start` always exits with status zero. We look for error
+    # messages in the output.
+    output = run_adb(
         sdk_path, device, [
             'shell', 'am', 'start',
             "{package}/{activity}".format(package=package, activity=activity),
             '-a', 'android.intent.action.MAIN', '-c',
             'android.intent.category.LAUNCHER'
-        ])
+        ]).decode('ascii', 'replace')
+    if any((ACTIVITY_CLASS_DOES_NOT_EXIST.match(line)
+                for line in output.split('\n'))):
+            raise BriefcaseCommandError("""\
+Activity class not found while starting app.
+
+`adb` output:
+
+{output}""".format(output))

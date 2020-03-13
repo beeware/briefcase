@@ -14,8 +14,7 @@ from briefcase.commands import (
 )
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError, NetworkFailure
-from briefcase.integrations.adb import (
-    DeviceNotFound, force_stop_app, install_apk, start_app)
+from briefcase.integrations.adb import force_stop_app, install_apk, start_app
 
 
 class ApkMixin:
@@ -89,11 +88,11 @@ requires Python 3.7.""".format(self=self))
                     check=True,
                     cwd=self.android_sdk_path,
                 )
-        except subprocess.CalledProcessError:
-            # TODO: Capture and print sdkmanager log, in case of error.
-            raise BriefcaseCommandError(
-                "Error while reviewing Android SDK licenses"
-            )
+            except subprocess.CalledProcessError:
+                # TODO: Capture and print sdkmanager log, in case of error.
+                raise BriefcaseCommandError(
+                    "Error while reviewing Android SDK licenses"
+                )
 
 
 class ApkCreateCommand(ApkMixin, CreateCommand):
@@ -128,29 +127,6 @@ class ApkBuildCommand(ApkMixin, BuildCommand):
             raise BriefcaseCommandError(
                 "Error while building app {app.app_name}.".format(app=app)
             )
-
-
-NO_OR_WRONG_DEVICE_MESSAGE = """\
-You can get a list of valid devices by running this command and looking in the
-first column of output.
-
-$ {adb} devices -l
-
-If you do not see any devices, you can create one by running these commands:
-
-$ {tools_bin}/sdkmanager "platforms;android-28" \
-    "system-images;android-28;default;x86" "emulator" "platform-tools"
-
-$ {tools_bin}/avdmanager --verbose create avd --name robotfriend \
-    --abi x86 --package 'system-images;android-28;default;x86' --device pixel
-
-$ {emulator} -avd robotfriend &
-
-Then use adb find out the device name by running this command and looking
-in the first column of output.
-
-$ {adb} devices -l
-"""
 
 
 class ApkRunCommand(ApkMixin, RunCommand):
@@ -194,21 +170,11 @@ Please specify a specific device on which to run the app by passing
 `-d device_name`.""".lstrip().format(
                 adb=self.android_sdk_path / "platform-tools" / "adb",
                 emulator=self.android_sdk_path / "emulator" / "emulator",
-                tools_bin=self.android_sdk_path / "tools" / "bin",
+                tools_bin=self.android_sdk_path ,
             ))
 
         # Install the latest APK file onto the device.
-        try:
-            # TODO: Decide how to handle general BriefcaseCommandError.
-            install_apk(self.android_sdk_path, device, self.binary_path(app))
-        except DeviceNotFound:
-            print("Device {device} not found.".format(device=device))
-            print("")
-            raise BriefcaseCommandError(NO_OR_WRONG_DEVICE_MESSAGE.format(
-                adb=self.android_sdk_path / "platform-tools" / "adb",
-                emulator=self.android_sdk_path / "emulator" / "emulator",
-                tools_bin=self.android_sdk_path / "tools" / "bin",
-            ))
+        install_apk(self.android_sdk_path, device, self.binary_path(app))
 
         # Compute Android package name based on beeware `bundle` and `app_name`
         # app properties, similar to iOS.
