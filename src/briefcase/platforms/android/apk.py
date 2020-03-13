@@ -83,10 +83,16 @@ requires Python 3.7.""".format(self=self))
                 binpath.chmod(0o755)
 
             print("Ensuring all Android SDK licenses are accepted...")
-            self.subprocess.run(
-                [tools_bin / "sdkmanager", "--licenses"],
-                check=True,
-                cwd=self.android_sdk_path,
+            try:
+                self.subprocess.run(
+                    [tools_bin / "sdkmanager", "--licenses"],
+                    check=True,
+                    cwd=self.android_sdk_path,
+                )
+        except subprocess.CalledProcessError:
+            # TODO: Capture and print sdkmanager log, in case of error.
+            raise BriefcaseCommandError(
+                "Error while reviewing Android SDK licenses"
             )
 
 
