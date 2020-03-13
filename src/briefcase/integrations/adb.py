@@ -4,31 +4,38 @@ import re
 from briefcase.exceptions import BriefcaseCommandError
 
 
-DEVICE_NOT_FOUND = re.compile(r"^error: device '[^']*' not found")
-
-
-NO_OR_WRONG_DEVICE_MESSAGE = """\
+def no_or_wrong_device_message(sdk_path):
+    adb = sdk_path / "platform-tools" / "adb"
+    avdmanager = sdk_path / "tools" / "bin" / "avdmanager"
+    emulator = sdk_path / "emulator" / "emulator"
+    sdkmanager = sdk_path / "tools" / "bin" / "sdkmanager"
+    return """\
 You can get a list of valid devices by running this command and looking in the
 first column of output.
 
-$ {sdk_path / "platform-tools" / "adb"} devices -l
+$ {adb} devices -l
 
 If you do not see any devices, you can create one by running these commands:
 
-$ {sdk_path / "tools" / "bin" / "sdkmanager"} "platforms;android-28" \
-    "system-images;android-28;default;x86" "emulator" "platform-tools"
+$ {sdkmanager} "platforms;android-28" \
+ "system-images;android-28;default;x86" "emulator" "platform-tools"
 
-$ {sdk_path / "tools" / "bin" / "avdmanager"} --verbose create avd \
-    --name robotfriend --abi x86 \
-    --package 'system-images;android-28;default;x86' --device pixel
+$ {avdmanager} --verbose create avd \
+ --name robotfriend --abi x86 \
+ --package 'system-images;android-28;default;x86' --device pixel
 
-$ {sdk_path / "emulator" / "emulator"} -avd robotfriend &
+$ {emulator} -avd robotfriend &
 
 Then use adb find out the device name by running this command and looking
 in the first column of output.
 
 $ {adb} devices -l
-"""
+""".format(
+        adb=adb, avdmanager=avdmanager, emulator=emulator,
+        sdkmanager=sdkmanager)
+
+
+DEVICE_NOT_FOUND = re.compile(r"^error: device '[^']*' not found")
 
 
 def run_adb(sdk_path, device, arguments, sub=subprocess):
@@ -59,8 +66,7 @@ def run_adb(sdk_path, device, arguments, sub=subprocess):
         # error message.
         output = e.output.decode('ascii', 'replace')
         if any((DEVICE_NOT_FOUND.match(line) for line in output.split('\n'))):
-            raise BriefcaseCommandError(NO_OR_WRONG_DEVICE_MESSAGE.format(
-                sdk_path=sdk_path))
+            raise BriefcaseCommandError(no_or_wrong_device_message(sdk_path))
         raise BriefcaseCommandError("""\
 Unable to run command on device. Received this output from `adb`
 {output}""".format(output=output))
@@ -97,7 +103,7 @@ def force_stop_app(sdk_path, device, package, sub=subprocess):
     run_adb(sdk_path, device, ['shell', 'am', 'force-stop', package])
 
 
-ACTIVITY_CLASS_DOES_NOT_EXIST = re.compile(
+ACTIVITY_DOES_NOT_EXIST = re.compile(
     r"^Error: Activity class [{][^}*][}] does not exist.$")
 
 
@@ -119,16 +125,15 @@ def start_app(sdk_path, device, package, activity, sub=subprocess):
     print("Launching app...")
     # `adb shell am start` always exits with status zero. We look for error
     # messages in the output.
-    output = run_adb(
+    output_lines = run_adb(
         sdk_path, device, [
             'shell', 'am', 'start',
             "{package}/{activity}".format(package=package, activity=activity),
             '-a', 'android.intent.action.MAIN', '-c',
             'android.intent.category.LAUNCHER'
-        ]).decode('ascii', 'replace')
-    if any((ACTIVITY_CLASS_DOES_NOT_EXIST.match(line)
-                for line in output.split('\n'))):
-            raise BriefcaseCommandError("""\
+        ]).decode('ascii', 'replace').split('\n')
+    if any(ACTIVITY_DOES_NOT_EXIST.match(line) for line in output_lines):
+        raise BriefcaseCommandError("""\
 Activity class not found while starting app.
 
 `adb` output:

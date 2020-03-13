@@ -14,7 +14,8 @@ from briefcase.commands import (
 )
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError, NetworkFailure
-from briefcase.integrations.adb import force_stop_app, install_apk, start_app
+from briefcase.integrations.adb import (
+    no_or_wrong_device_message, force_stop_app, install_apk, start_app)
 
 
 class ApkMixin:
@@ -167,11 +168,7 @@ class ApkRunCommand(ApkMixin, RunCommand):
         if device is None:
             raise BriefcaseCommandError("""\
 Please specify a specific device on which to run the app by passing
-`-d device_name`.""".lstrip().format(
-                adb=self.android_sdk_path / "platform-tools" / "adb",
-                emulator=self.android_sdk_path / "emulator" / "emulator",
-                tools_bin=self.android_sdk_path ,
-            ))
+`-d device_name`.\n\n""" + no_or_wrong_device_message(self.android_sdk_path))
 
         # Install the latest APK file onto the device.
         install_apk(self.android_sdk_path, device, self.binary_path(app))
