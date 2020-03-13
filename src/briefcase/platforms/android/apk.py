@@ -144,20 +144,18 @@ class ApkBuildCommand(ApkMixin, BuildCommand):
         :param app: The application to build
         """
         print("[{app.app_name}] Building Android APK...".format(app=app))
-
         try:
-            self.subprocess.run(
+            self.subprocess.check_output(
                 ["./gradlew", "assembleDebug"],
-                env=dict(list(self.os.environ.items()) + [
-                    ('ANDROID_SDK_ROOT', str(self.sdk_path))]),
-                check=True,
+                env=dict(list(
+                    self.os.environ.items()) +
+                    [('ANDROID_SDK_ROOT', str(self.sdk_path))]),
                 cwd=str(self.bundle_path(app)),
-            )
-        except subprocess.CalledProcessError:
-            # TODO: Capture and print gradle log, in case of error.
+                stderr=self.subprocess.STDOUT)
+        except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(
-                "Error while building app {app.app_name}.".format(app=app)
-            )
+                "Error while building. Full gradle output:\n\n" +
+                e.output.decode('ascii', 'replace'))
 
 
 class ApkRunCommand(ApkMixin, RunCommand):
