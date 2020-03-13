@@ -79,10 +79,6 @@ requires Python 3.7.""".format(self=self))
             )
 
 
-# The way to split this up is that you might start with more
-# stuff externally specified.
-
-
 class ApkCreateCommand(ApkMixin, CreateCommand):
     description = "Create and populate an Android APK."
 
