@@ -163,16 +163,22 @@ class ApkRunCommand(ApkMixin, RunCommand):
 
     def verify_tools(self):
         super().verify_tools()
-        if not (self.sdk_path / "emulator").exists():
-            print("Ensuring we have the Android emulator and system image...")
-            # TODO: Error handling.
-            self.subprocess.run([
-                self.sdk_path / "tools" / "bin" / "sdkmanager",
-                "platforms;android-28",
-                "system-images;android-28;default;x86",
-                "emulator",
-                "platform-tools",
-            ])
+        if (self.sdk_path / "emulator").exists():
+            return
+
+        print("Ensuring we have the Android emulator and system image...")
+        self.subprocess.check_output([
+            self.sdk_path / "tools" / "bin" / "sdkmanager",
+            "platforms;android-28",
+            "system-images;android-28;default;x86",
+            "emulator",
+            "platform-tools"],
+            stderr=self.subprocess.STDOUT)
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(
+                """\
+Error while installing Android platform tools. Full gradle output:\n\n""" +
+                e.output.decode('ascii', 'replace'))
 
     def add_options(self, parser):
         super().add_options(parser)
