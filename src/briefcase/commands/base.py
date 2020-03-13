@@ -128,6 +128,7 @@ class BaseCommand(ABC):
         self.requests = requests
         self.input = input
         self.os = os
+        self.sys = sys
         self.shutil = shutil
         self.subprocess = subprocess
 
@@ -250,8 +251,8 @@ class BaseCommand(ABC):
         templates, etc to use.
         """
         return '{major}.{minor}'.format(
-            major=sys.version_info.major,
-            minor=sys.version_info.minor
+            major=self.sys.version_info.major,
+            minor=self.sys.version_info.minor
         )
 
     def verify_tools(self):
