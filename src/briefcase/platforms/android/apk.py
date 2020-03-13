@@ -1,6 +1,7 @@
 import subprocess
 from pathlib import Path
-from zipfile import ZipFile
+from stat import S_IMODE
+from zipfile import BadZipFile, ZipFile
 
 from requests import exceptions as requests_exceptions
 
@@ -22,10 +23,6 @@ class ApkMixin:
     output_format = "apk"
     platform = "android"
 
-    @property
-    def android_sdk_path(self):
-        return Path.home() / ".briefcase" / "tools" / "android_sdk"
-
     def binary_path(self, app):
         return (
             self.platform_path
@@ -42,9 +39,13 @@ class ApkMixin:
         return self.binary_path(app)
 
     @property
-    def android_sdk_url(self):
+    def sdk_path(self):
+        return Path.home() / ".briefcase" / "tools" / "android_sdk"
+
+    @property
+    def sdk_url(self):
         # TODO: Add test validating that, if this is mocked out for a sentinel
-        # ZIP file, we surely unpack it into android_sdk_path.
+        # ZIP file, we surely unpack it into sdk_path.
         """The Android SDK URL appropriate to this operating system."""
         # The URLs described by the pattern below have existed since
         # approximately 2017, and the code they download has a built-in
@@ -52,48 +53,77 @@ class ApkMixin:
         return "https://dl.google.com/android/repository/" + (
             "sdk-tools-{os}-4333796.zip".format(os=self.host_os.lower()))
 
-    def verify_tools(self):
-        """
-        Verify that we can download a support package for this Python version,
-        then ensure the Android development tools are installed.
-        """
+    def _verify_python_version(self):
         if self.python_version_tag != "3.7":
             raise BriefcaseCommandError("""\
 Found Python version {self.python_version_tag}. Android packaging currently
 requires Python 3.7.""".format(self=self))
 
-        if not self.android_sdk_path.exists():
-            print("Setting up Android SDK...")
-            try:
-                android_sdk_zip_path = self.download_url(
-                    url=self.android_sdk_url,
-                    download_path=Path.home() / ".briefcase" / "tools",
-                )
-            except requests_exceptions.ConnectionError:
-                raise NetworkFailure("downloading Android SDK")
-            with ZipFile(android_sdk_zip_path) as android_sdk_zip:
-                android_sdk_zip.extractall(path=self.android_sdk_path)
-            # Remove the ZIP file; it has no purpose now that it is extracted.
-            android_sdk_zip_path.unlink()
-            # Set executable permissions. The ZipFile module does not extract
-            # these permissions, but Linux & macOS need them.
-            # TODO: Test this on Windows.
-            tools_bin = self.android_sdk_path_tmp / "tools" / "bin"
-            for binpath in tools_bin.glob('*'):
-                binpath.chmod(0o755)
+    def _verify_sdk(self):
+        # If the SDK tools don't exist or aren't executable, install the SDK.
+        # TODO: Reconsider this for Windows.
+        tools_path = self.sdk_path / "tools" / "bin"
+        tools_ok = tools_path.exists() and all([
+            S_IMODE(tool.stat().st_mode) == 0o755
+            for tool in tools_path.glob('*')])
+        if tools_ok:
+            return
 
-            print("Ensuring all Android SDK licenses are accepted...")
-            try:
-                self.subprocess.run(
-                    [tools_bin / "sdkmanager", "--licenses"],
-                    check=True,
-                    cwd=self.android_sdk_path,
-                )
-            except subprocess.CalledProcessError:
-                # TODO: Capture and print sdkmanager log, in case of error.
-                raise BriefcaseCommandError(
-                    "Error while reviewing Android SDK licenses"
-                )
+        print("Setting up Android SDK...")
+        try:
+            sdk_zip_path = self.download_url(
+                url=self.sdk_url,
+                download_path=Path.home() / ".briefcase" / "tools",
+            )
+        except requests_exceptions.ConnectionError:
+            raise NetworkFailure("download Android SDK")
+        try:
+            with ZipFile(sdk_zip_path) as sdk_zip:
+                sdk_zip.extractall(path=self.sdk_path)
+        except BadZipFile:
+            raise BriefcaseCommandError("""\
+Invalid ZIP file found at {sdk_zip_path}
+
+Partial download? Remove it, then try again.""".format(
+                sdk_zip_path=sdk_zip_path))
+        sdk_zip_path.unlink()  # Zip file no longer needed once unpacked.
+        for binpath in tools_path.glob('*'):
+            binpath.chmod(0o755)
+
+    def _verify_license(self):
+        license_path = self.sdk_path / "licenses" / "android-sdk-license"
+        if license_path.exists():
+            return
+
+        print("\nPlease accept `android-sdk-license` when prompted.\n")
+        sdkmanager = self.sdk_path / "tools" / "bin" / "sdkmanager"
+        try:
+            self.subprocess.run(
+                [str(sdkmanager), "--licenses"],
+                check=True,
+                cwd=self.sdk_path,
+            )
+        except subprocess.CalledProcessError:
+            raise BriefcaseCommandError("""\
+Error while reviewing Android SDK licenses. Please run this command and examine
+its output for errors.
+
+$ {sdkmanager} --licenses""".format(sdkmanager=sdkmanager))
+
+        if not license_path.exists():
+            raise BriefcaseCommandError("""\
+You did not accept the Android SDK license. Please re-run the briefcase command
+and accept the Android SDK license when prompted. You may need an Internet
+connection.""")
+
+    def verify_tools(self):
+        """
+        Verify that we the Android APK tools in `briefcase` will operate on
+        this system, downloading tools as needed.
+        """
+        self._verify_python_version()
+        self._verify_sdk()
+        self._verify_license()
 
 
 class ApkCreateCommand(ApkMixin, CreateCommand):
@@ -119,7 +149,7 @@ class ApkBuildCommand(ApkMixin, BuildCommand):
             self.subprocess.run(
                 ["./gradlew", "assembleDebug"],
                 env=dict(list(self.os.environ.items()) + [
-                    ('ANDROID_SDK_ROOT', str(self.android_sdk_path))]),
+                    ('ANDROID_SDK_ROOT', str(self.sdk_path))]),
                 check=True,
                 cwd=str(self.bundle_path(app)),
             )
@@ -135,11 +165,11 @@ class ApkRunCommand(ApkMixin, RunCommand):
 
     def verify_tools(self):
         super().verify_tools()
-        if not (self.android_sdk_path / "emulator").exists():
+        if not (self.sdk_path / "emulator").exists():
             print("Ensuring we have the Android emulator and system image...")
             # TODO: Error handling.
             self.subprocess.run([
-                self.android_sdk_path / "tools" / "bin" / "sdkmanager",
+                self.sdk_path / "tools" / "bin" / "sdkmanager",
                 "platforms;android-28",
                 "system-images;android-28;default;x86",
                 "emulator",
@@ -168,23 +198,21 @@ class ApkRunCommand(ApkMixin, RunCommand):
         if device is None:
             raise BriefcaseCommandError("""\
 Please specify a specific device on which to run the app by passing
-`-d device_name`.\n\n""" + no_or_wrong_device_message(self.android_sdk_path))
+`-d device_name`.\n\n""" + no_or_wrong_device_message(self.sdk_path))
 
         # Install the latest APK file onto the device.
-        install_apk(self.android_sdk_path, device, self.binary_path(app))
+        install_apk(self.sdk_path, device, self.binary_path(app))
 
         # Compute Android package name based on beeware `bundle` and `app_name`
         # app properties, similar to iOS.
         package = "{app.bundle}.{app.app_name}".format(app=app)
 
         # We force-stop the app to ensure the activity launches freshly.
-        force_stop_app(self.android_sdk_path, device, package)
+        force_stop_app(self.sdk_path, device, package)
 
         # To start the app, we launch `org.beeware.android.MainActivity`.
         start_app(
-            self.android_sdk_path, device, package,
-            "org.beeware.android.MainActivity"
-        )
+            self.sdk_path, device, package, "org.beeware.android.MainActivity")
 
 
 class ApkPackageCommand(ApkMixin, PackageCommand):
