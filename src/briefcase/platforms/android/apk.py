@@ -117,9 +117,6 @@ class ApkBuildCommand(ApkMixin, BuildCommand):
                 check=True,
                 cwd=str(self.bundle_path(app)),
             )
-
-            # Make the binary executable.
-            self.os.chmod(str(self.binary_path(app)), 0o755)
         except subprocess.CalledProcessError:
             # TODO: Capture and print gradle log, in case of error.
             raise BriefcaseCommandError(
