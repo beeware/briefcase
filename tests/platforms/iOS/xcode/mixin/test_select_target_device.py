@@ -11,6 +11,7 @@ class DummyCommand(iOSXcodeMixin, BaseCommand):
     """
     A dummy command that includes the iOS XCode mixin.
     """
+    command = 'dummy'
 
     def __init__(self, base_path, **kwargs):
         super().__init__(base_path=base_path, **kwargs)
