@@ -52,7 +52,7 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
             dest='udid',
             help='The device to target; either a UDID, '
                  'a device name ("iPhone 11"), '
-                 'or a device name and OS version ("iPhone 11::13.3")',
+                 'or a device name and OS version ("iPhone 11::iOS 13.3")',
             required=False,
         )
 
@@ -194,6 +194,17 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
 
         device = devices[udid]
 
+        print("In future, you could specify this device by running:")
+        print()
+        print('    briefcase {self.command} iOS -d "{device}::{iOS_version}"'.format(
+            self=self,
+            device=device,
+            iOS_version=iOS_version
+        ))
+        print()
+        print('or:')
+        print()
+        print("    briefcase {self.command} iOS -d {udid}".format(self=self, udid=udid))
         return udid, iOS_version, device
 
 
