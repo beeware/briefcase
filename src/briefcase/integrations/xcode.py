@@ -111,20 +111,39 @@ def get_simulators(os_name, sub=subprocess):
         )
 
         os_versions = {
-            runtime['name'].split(' ', 1)[1]: runtime['identifier']
+            runtime['name']: runtime['identifier']
             for runtime in simctl_data['runtimes']
             if runtime['name'].startswith('{os_name} '.format(os_name=os_name))
             and runtime['isAvailable']
         }
 
+        # For some reason, simctl varies the style of key that is used to
+        # identify device versions. The first format is OS identifier (e.g.,
+        # 'com.apple.CoreSimulator.SimRuntime.iOS-12-0'). The second is a
+        # "human readable" name ('iOS 12.0'). We presume (but can't verify)
+        # that any given OS version only exists with a single key.
+        # SO - Look for an identifier first; then look for the OS name. If
+        # neither exist, return an empty list.
         simulators = {
             version: {
                 device['udid']: device['name']
-                for device in simctl_data['devices'][identifier]
+                for device in simctl_data['devices'].get(
+                    identifier,
+                    simctl_data['devices'].get(version, [])
+                )
                 if device['isAvailable']
             }
             for version, identifier in os_versions.items()
         }
+
+        # Purge any versions with no devices
+        versions_with_no_devices = [
+            version
+            for version, devices in simulators.items()
+            if len(devices) == 0
+        ]
+        for version in versions_with_no_devices:
+            simulators.pop(version)
 
         return simulators
 
