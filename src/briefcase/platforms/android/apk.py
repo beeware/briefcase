@@ -26,7 +26,6 @@ from briefcase.integrations.adb import (
 class ApkMixin:
     output_format = "apk"
     platform = "android"
-    dot_briefcase = Path.home() / ".briefcase"
 
     def binary_path(self, app):
         return (
@@ -45,7 +44,7 @@ class ApkMixin:
 
     @property
     def sdk_path(self):
-        return self.dot_briefcase / "tools" / "android_sdk"
+        return self.dot_briefcase_path / "tools" / "android_sdk"
 
     @property
     def sdk_url(self):
@@ -68,9 +67,13 @@ requires Python 3.7.""".format(
             )
 
     def verify_sdk(self):
-        # If the SDK tools don't exist or aren't executable, install the SDK.
-        # TODO: Reconsider this for Windows.
+        '''
+        Install the Android SDK if needed.
+        '''
         tools_path = self.sdk_path / "tools" / "bin"
+        # This method marks some files as executable, so `tools_ok` checks for
+        # that as well.
+        # TODO: Reconsider this for Windows.
         tools_ok = (
             tools_path.exists()
             and all(
@@ -88,7 +91,7 @@ requires Python 3.7.""".format(
         try:
             sdk_zip_path = self.download_url(
                 url=self.sdk_url,
-                download_path=self.dot_briefcase / "tools",
+                download_path=self.dot_briefcase_path / "tools",
             )
         except requests_exceptions.ConnectionError:
             raise NetworkFailure("download Android SDK")
@@ -98,13 +101,16 @@ requires Python 3.7.""".format(
         except BadZipFile:
             raise BriefcaseCommandError(
                 """\
-Invalid ZIP file found at {sdk_zip_path}
+Unable to unpack Android SDK ZIP file. The download may have been interrupted
+or corrupted.
 
-Partial download? Remove it, then try again.""".format(
+Delete {sdk_zip_path} and run briefcase again.""".format(
                     sdk_zip_path=sdk_zip_path
                 )
             )
         sdk_zip_path.unlink()  # Zip file no longer needed once unpacked.
+        # `ZipFile` ignores the permission metadata in the Android SDK ZIP
+        # file, so we manually fix permissions.
         for binpath in tools_path.glob("*"):
             binpath.chmod(0o755)
 
@@ -113,8 +119,14 @@ Partial download? Remove it, then try again.""".format(
         if license_path.exists():
             return
 
-        print("\nPlease accept `android-sdk-license` when prompted.\n")
+        print("\n" + """\
+To use briefcase with the Android SDK provided by Google, you must accept
+`android-sdk-license`.
+
+Running the Android SDK license tool...\n""")
         try:
+            # Using subprocess.run() with no I/O redirection so the user sees
+            # the full output and can send input.
             self.subprocess.run(
                 ["./sdkmanager", "--licenses"],
                 check=True,
@@ -190,8 +202,10 @@ class ApkRunCommand(ApkMixin, RunCommand):
         if (self.sdk_path / "emulator").exists():
             return
 
-        print("Ensuring we have the Android emulator and system image...")
+        print("Downloading the Android emulator and system image...")
         try:
+            # Using `check_output` and `stderr=STDOUT` so we buffer output,
+            # displaying it only if an exception occurs.
             self.subprocess.check_output(
                 [
                     self.sdk_path / "tools" / "bin" / "sdkmanager",
@@ -205,9 +219,15 @@ class ApkRunCommand(ApkMixin, RunCommand):
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(
                 """\
-Error while installing Android platform tools. Full gradle output:\n\n"""
-                + e.output.decode("ascii", "replace")
-            )
+Error while installing Android emulator and system image.
+
+`sdkmanager` exited with {e.returncode}.
+
+Full `sdkmanager` output:
+
+{output}
+"""
+                .format(output=e.output.decode("ascii", "replace"), e=e))
 
     def add_options(self, parser):
         super().add_options(parser)
