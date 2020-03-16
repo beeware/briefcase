@@ -116,7 +116,7 @@ class BaseCommand(ABC):
             base_path,
             dot_briefcase_path=Path.home() / ".briefcase",
             apps=None,
-        ):
+            ):
         self.base_path = base_path
         self.dot_briefcase_path = dot_briefcase_path
 
