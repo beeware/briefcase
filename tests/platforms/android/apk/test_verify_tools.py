@@ -1,6 +1,6 @@
 import subprocess
 from io import BytesIO
-from stat import S_IMODE
+from os import X_OK, access
 from unittest import mock
 from zipfile import ZipFile
 
@@ -11,11 +11,11 @@ from briefcase.exceptions import BriefcaseCommandError, NetworkFailure
 from briefcase.platforms.android.apk import ApkBuildCommand
 
 
-def create_sentinel_zipfile():
+def create_mock_android_sdk_zip(sdkmanager_name):
     """Create ZIP file data similar to the Android SDK."""
     out = BytesIO()
     with ZipFile(out, "w") as zipfile:
-        zipfile.writestr("tools/bin/sdkmanager", "")
+        zipfile.writestr("tools/bin/" + sdkmanager_name, "")
     return out.getvalue()
 
 
@@ -44,7 +44,7 @@ def test_sdk_url(build_command):
 
 
 def test_permit_python_37(build_command):
-    "Validate that Python 3.7 is accepted."""
+    "Validate that Python 3.7 is accepted." ""
     # Mock out the currently-running Python version to be 3.7.
     build_command.sys.version_info.major = 3
     build_command.sys.version_info.minor = 7
@@ -87,40 +87,42 @@ def test_verify_tools_succeeds_immediately_in_happy_path(build_command):
     build_command.subprocess.check_output.assert_not_called()
 
 
-@pytest.fixture
-def sdk_response():
+def sdk_response(sdkmanager_name):
     response = mock.MagicMock()
     response.status_code = 200
-    response.content = create_sentinel_zipfile()
+    response.content = create_mock_android_sdk_zip(sdkmanager_name)
     response.headers = {}
     response.url = "http://example.com/sdk.zip"
     return response
 
 
-def test_verify_sdk_downloads_sdk(build_command, sdk_response, tmp_path):
+@pytest.mark.parametrize("sdkmanager_name", ("sdkmanager", "sdkmanager.exe"))
+def test_verify_sdk_downloads_sdk(build_command, sdkmanager_name, tmp_path):
     """Validate that verify_sdk() downloads & unpacks the SDK ZIP file,
     including setting permissions on `tools/bin/*` files."""
     sdkmanager = build_command.sdk_path / "tools" / "bin" / "sdkmanager"
+    sdkmanagerexe = build_command.sdk_path / "tools" / "bin" / "sdkmanager.exe"
     # Assert that the file does not exist yet. We assert that it is created
     # below, which allows us to validate that the call to `verify_sdk()`
     # created it.
-    assert not sdkmanager.exists()
-    build_command.requests.get.return_value = sdk_response
+    assert not sdkmanager.exists() and not sdkmanagerexe.exists()
+    build_command.requests.get.return_value = sdk_response(sdkmanager_name)
     build_command.verify_sdk()
     build_command.requests.get.assert_called_once_with(
         build_command.sdk_url, stream=True
     )
-    assert sdkmanager.exists()
-    assert S_IMODE(sdkmanager.stat().st_mode) == 0o755
+    assert sdkmanager.exists() or sdkmanagerexe.exists()
+    assert access(str(sdkmanager), X_OK) or access(str(sdkmanagerexe), X_OK)
 
 
+@pytest.mark.parametrize("sdkmanager_name", ("sdkmanager", "sdkmanager.exe"))
 def test_verify_sdk_downloads_sdk_if_sdkmanager_not_executable(
-    build_command, sdk_response
+    build_command, sdkmanager_name
 ):
     """Validate that verify_sdk() downloads & unpacks the SDK ZIP file
     in the case that `tools/bin/sdkmanager` exists but does not have its
     permissions set properly."""
-    build_command.requests.get.return_value = sdk_response
+    build_command.requests.get.return_value = sdk_response(sdkmanager_name)
     (build_command.sdk_path / "tools" / "bin").mkdir(parents=True)
     (build_command.sdk_path / "tools" / "bin" / "sdkmanager").touch(mode=0o644)
     build_command.verify_sdk()
@@ -129,15 +131,15 @@ def test_verify_sdk_downloads_sdk_if_sdkmanager_not_executable(
     )
 
 
+@pytest.mark.parametrize("sdkmanager_name", ("sdkmanager", "sdkmanager.exe"))
 def test_verify_sdk_no_download_if_sdkmanager_executable(
-        build_command,
-        sdk_response
+    build_command, sdkmanager_name
 ):
     """Validate that verify_sdk() successfully does nothing in its happy path.
 
     If `tools/bin/sdkmanager` exists with executable permissions, we expect
     verify_sdk() not to download the Android SDK."""
-    build_command.requests.get.return_value = sdk_response
+    build_command.requests.get.return_value = sdk_response(sdkmanager_name)
     (build_command.sdk_path / "tools" / "bin").mkdir(parents=True)
     (build_command.sdk_path / "tools" / "bin" / "sdkmanager").touch(mode=0o755)
     build_command.verify_sdk()
@@ -167,10 +169,7 @@ def bad_zipfile_sdk_response():
     return response
 
 
-def test_verify_sdk_detects_badzipfile(
-        build_command,
-        bad_zipfile_sdk_response
-):
+def test_verify_sdk_detects_badzipfile(build_command, bad_zipfile_sdk_response):
     """Validate that verify_sdk() raises a briefcase exception if somehow a
     bad ZIP file was downloaded, or is found in its cache."""
     build_command.requests.get.return_value = bad_zipfile_sdk_response
@@ -195,10 +194,11 @@ def test_verify_license_passes_quickly_if_license_present(build_command):
 
 
 def test_verify_license_prompts_for_licenses_and_exits_if_you_agree(
-        build_command
+    build_command,
 ):
     """Validate that if verify_license() succeeds if you agree to the Android
     SDK license."""
+
     def accept_license(*args, **kwargs):
         license_dir = build_command.sdk_path / "licenses"
         license_dir.mkdir(parents=True)
@@ -217,8 +217,7 @@ def test_verify_license_handles_sdkmanager_crash(build_command,):
     """Validate that if verify_license() raises a briefcase exception if it
     fails to launch `sdkmanager`."""
     build_command.subprocess.run.side_effect = subprocess.CalledProcessError(
-        1,
-        ""
+        1, ""
     )
     with pytest.raises(BriefcaseCommandError):
         build_command.verify_license()

@@ -1,6 +1,6 @@
 import subprocess
 from pathlib import Path
-from stat import S_IMODE
+from os import X_OK, access
 from zipfile import BadZipFile, ZipFile
 
 from requests import exceptions as requests_exceptions
@@ -67,22 +67,19 @@ requires Python 3.7.""".format(
             )
 
     def verify_sdk(self):
-        '''
+        """
         Install the Android SDK if needed.
-        '''
+        """
         tools_path = self.sdk_path / "tools" / "bin"
         # This method marks some files as executable, so `tools_ok` checks for
-        # that as well.
-        # TODO: Reconsider this for Windows.
+        # that as well. On Windows, all generated files are executable.
         tools_ok = (
             tools_path.exists()
-            and all(
-                [
-                    S_IMODE(tool.stat().st_mode) == 0o755
-                    for tool in tools_path.glob("*")
-                ]
+            and all([access(str(tool), X_OK) for tool in tools_path.glob("*")])
+            and (
+                (tools_path / "sdkmanager").exists()
+                or (tools_path / "sdkmanager.exe").exists()
             )
-            and (tools_path / "sdkmanager").exists()
         )
         if tools_ok:
             return
@@ -112,18 +109,22 @@ Delete {sdk_zip_path} and run briefcase again.""".format(
         # `ZipFile` ignores the permission metadata in the Android SDK ZIP
         # file, so we manually fix permissions.
         for binpath in tools_path.glob("*"):
-            binpath.chmod(0o755)
+            if not access(str(binpath), X_OK):
+                binpath.chmod(0o755)
 
     def verify_license(self):
         license_path = self.sdk_path / "licenses" / "android-sdk-license"
         if license_path.exists():
             return
 
-        print("\n" + """\
+        print(
+            "\n"
+            + """\
 To use briefcase with the Android SDK provided by Google, you must accept
 `android-sdk-license`.
 
-Running the Android SDK license tool...\n""")
+Running the Android SDK license tool...\n"""
+        )
         try:
             # Using subprocess.run() with no I/O redirection so the user sees
             # the full output and can send input.
@@ -226,8 +227,10 @@ Error while installing Android emulator and system image.
 Full `sdkmanager` output:
 
 {output}
-"""
-                .format(output=e.output.decode("ascii", "replace"), e=e))
+""".format(
+                    output=e.output.decode("ascii", "replace"), e=e
+                )
+            )
 
     def add_options(self, parser):
         super().add_options(parser)
