@@ -13,6 +13,9 @@ from briefcase.platforms.linux.appimage import LinuxAppImageBuildCommand
 def build_command(tmp_path, first_app_config):
     command = LinuxAppImageBuildCommand(
         base_path=tmp_path,
+        # `dot-briefcase` below makes it easy to find references to literal
+        # `.briefcase` when grepping the source.
+        dot_briefcase_path=tmp_path / "dot-briefcase",
         apps={'first': first_app_config}
     )
     command.host_os = 'Linux'
@@ -96,7 +99,7 @@ def test_verify_tools_download_failure(build_command):
     # The download was attempted
     build_command.download_url.assert_called_with(
         url='https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-wonky.AppImage',
-        download_path=Path.home() / '.briefcase' / 'tools'
+        download_path=build_command.dot_briefcase_path / 'tools'
     )
 
     # But it failed, so the file won't be made executable...

@@ -80,7 +80,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
             print("Ensure we have the linuxdeploy AppImage...")
             self.linuxdeploy_appimage = self.download_url(
                 url=self.linuxdeploy_download_url,
-                download_path=Path.home() / '.briefcase' / 'tools'
+                download_path=self.dot_briefcase_path / 'tools'
             )
             self.os.chmod(str(self.linuxdeploy_appimage), 0o755)
         except requests_exceptions.ConnectionError:

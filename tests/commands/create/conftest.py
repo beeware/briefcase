@@ -89,7 +89,10 @@ class TrackingCreateCommand(DummyCreateCommand):
 
 @pytest.fixture
 def create_command(tmp_path):
-    return DummyCreateCommand(base_path=tmp_path)
+    return DummyCreateCommand(
+        base_path=tmp_path,
+        dot_briefcase_path=tmp_path / "dot-briefcase",
+    )
 
 
 @pytest.fixture

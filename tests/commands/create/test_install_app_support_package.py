@@ -24,7 +24,7 @@ def test_install_app_support_package(create_command, myapp, tmp_path, support_pa
 
     # Confirm the right URL was used
     create_command.download_url.assert_called_with(
-        download_path=Path.home() / '.briefcase' / 'support',
+        download_path=create_command.dot_briefcase_path / 'support',
         url='https://briefcase-support.org/python?platform=tester&version=3.X',
     )
 
@@ -83,7 +83,7 @@ def test_install_custom_app_support_package_url(create_command, myapp, tmp_path,
 
     # Confirm the right URL was used
     create_command.download_url.assert_called_with(
-        download_path=Path.home() / '.briefcase' / 'support',
+        download_path=create_command.dot_briefcase_path / 'support',
         url='https://example.com/custom/support.zip',
     )
 

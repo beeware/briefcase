@@ -111,8 +111,14 @@ class BaseCommand(ABC):
     GLOBAL_CONFIG_CLASS = GlobalConfig
     APP_CONFIG_CLASS = AppConfig
 
-    def __init__(self, base_path, apps=None):
+    def __init__(
+            self,
+            base_path,
+            dot_briefcase_path=Path.home() / ".briefcase",
+            apps=None,
+            ):
         self.base_path = base_path
+        self.dot_briefcase_path = dot_briefcase_path
 
         self.global_config = None
         self.apps = {} if apps is None else apps
