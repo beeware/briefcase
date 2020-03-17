@@ -2,6 +2,7 @@ import subprocess
 from io import BytesIO
 from os import X_OK, access
 from unittest import mock
+from sys import platform
 from zipfile import ZipFile
 
 import pytest
@@ -115,6 +116,9 @@ def test_verify_sdk_downloads_sdk(build_command, sdkmanager_name, tmp_path):
     assert access(str(sdkmanager), X_OK) or access(str(sdkmanagerexe), X_OK)
 
 
+@pytest.mark.skipif(
+    platform == "win32", reason="files are always executable on Windows"
+)
 @pytest.mark.parametrize("sdkmanager_name", ("sdkmanager", "sdkmanager.exe"))
 def test_verify_sdk_downloads_sdk_if_sdkmanager_not_executable(
     build_command, sdkmanager_name
