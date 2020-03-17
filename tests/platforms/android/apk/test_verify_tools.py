@@ -21,12 +21,10 @@ def create_sentinel_zipfile():
 
 @pytest.fixture
 def build_command(tmp_path, first_app_config):
-    class TestableApkBuildCommand(ApkBuildCommand):
-        dot_briefcase_path = tmp_path / ".briefcase" / "tools"
-
-    command = TestableApkBuildCommand(
+    command = ApkBuildCommand(
         base_path=tmp_path / "base_path", apps={"first": first_app_config},
     )
+    command.dot_briefcase_path = tmp_path / ".briefcase" / "tools"
     command.os = mock.MagicMock()
     command.os.environ = {}
     command.sys = mock.MagicMock()
