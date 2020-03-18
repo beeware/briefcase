@@ -1,5 +1,4 @@
 import subprocess
-from pathlib import Path
 from os import X_OK, access
 from zipfile import BadZipFile, ZipFile
 
@@ -15,17 +14,14 @@ from briefcase.commands import (
 )
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError, NetworkFailure
-from briefcase.integrations.adb import (
-    no_or_wrong_device_message,
-    force_stop_app,
-    install_apk,
-    start_app,
-)
+from briefcase.integrations import adb
 
 
 class ApkMixin:
     output_format = "apk"
     platform = "android"
+    # Storing this here so instances can override it for testing.
+    adb = adb
 
     def binary_path(self, app):
         return (
@@ -87,8 +83,7 @@ requires Python 3.7.""".format(
         print("Setting up Android SDK...")
         try:
             sdk_zip_path = self.download_url(
-                url=self.sdk_url,
-                download_path=self.dot_briefcase_path / "tools",
+                url=self.sdk_url, download_path=self.dot_briefcase_path / "tools",
             )
         except requests_exceptions.ConnectionError:
             raise NetworkFailure("download Android SDK")
@@ -200,6 +195,9 @@ class ApkRunCommand(ApkMixin, RunCommand):
 
     def verify_tools(self):
         super().verify_tools()
+        self.verify_emulator()
+
+    def verify_emulator(self):
         if (self.sdk_path / "emulator").exists():
             return
 
@@ -209,7 +207,7 @@ class ApkRunCommand(ApkMixin, RunCommand):
             # displaying it only if an exception occurs.
             self.subprocess.check_output(
                 [
-                    self.sdk_path / "tools" / "bin" / "sdkmanager",
+                    str(self.sdk_path / "tools" / "bin" / "sdkmanager"),
                     "platforms;android-28",
                     "system-images;android-28;default;x86",
                     "emulator",
@@ -255,21 +253,21 @@ Full `sdkmanager` output:
                 """\
 Please specify a specific device on which to run the app by passing
 `-d device_name`.\n\n"""
-                + no_or_wrong_device_message(self.sdk_path)
+                + self.adb.no_or_wrong_device_message(self.sdk_path)
             )
 
         # Install the latest APK file onto the device.
-        install_apk(self.sdk_path, device, self.binary_path(app))
+        self.adb.install_apk(self.sdk_path, device, self.binary_path(app))
 
         # Compute Android package name based on beeware `bundle` and `app_name`
         # app properties, similar to iOS.
         package = "{app.bundle}.{app.app_name}".format(app=app)
 
         # We force-stop the app to ensure the activity launches freshly.
-        force_stop_app(self.sdk_path, device, package)
+        self.adb.force_stop_app(self.sdk_path, device, package)
 
         # To start the app, we launch `org.beeware.android.MainActivity`.
-        start_app(
+        self.adb.start_app(
             self.sdk_path, device, package, "org.beeware.android.MainActivity"
         )
 

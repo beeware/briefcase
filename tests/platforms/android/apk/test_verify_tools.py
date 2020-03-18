@@ -153,9 +153,7 @@ def test_verify_sdk_no_download_if_sdkmanager_executable(
 def test_verify_sdk_raises_networkfailure_on_connectionerror(build_command):
     """Validate that verify_sdk() raises the appropriate briefcase exception if
     an error occurs while downloading the ZIP file."""
-    build_command.requests.get.side_effect = (
-        requests_exceptions.ConnectionError()
-    )
+    build_command.requests.get.side_effect = requests_exceptions.ConnectionError()
     with pytest.raises(NetworkFailure):
         build_command.verify_sdk()
     build_command.requests.get.assert_called_once_with(
@@ -197,9 +195,7 @@ def test_verify_license_passes_quickly_if_license_present(build_command):
     build_command.subprocess.run.assert_not_called()
 
 
-def test_verify_license_prompts_for_licenses_and_exits_if_you_agree(
-    build_command,
-):
+def test_verify_license_prompts_for_licenses_and_exits_if_you_agree(build_command):
     """Validate that if verify_license() succeeds if you agree to the Android
     SDK license."""
 
@@ -217,12 +213,10 @@ def test_verify_license_prompts_for_licenses_and_exits_if_you_agree(
     )
 
 
-def test_verify_license_handles_sdkmanager_crash(build_command,):
+def test_verify_license_handles_sdkmanager_crash(build_command):
     """Validate that if verify_license() raises a briefcase exception if it
     fails to launch `sdkmanager`."""
-    build_command.subprocess.run.side_effect = subprocess.CalledProcessError(
-        1, ""
-    )
+    build_command.subprocess.run.side_effect = subprocess.CalledProcessError(1, "")
     with pytest.raises(BriefcaseCommandError):
         build_command.verify_license()
 
