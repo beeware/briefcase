@@ -22,8 +22,8 @@ def build_command(tmp_path, first_app_config):
 def test_execute_gradle(build_command, first_app_config):
     """Validate that build_app() will launch `gradle assembleDebug` with the
     appropriate environment & cwd."""
-    # Add two example properties to `environ` so we can detect the SDK is
-    # added correctly.
+    # Create mock environment with `key`, which we expect to be preserved, and
+    # `ANDROID_SDK_ROOT`, which we expect to be overwritten.
     build_command.os.environ = {"ANDROID_SDK_ROOT": "somewhere", "key": "value"}
     build_command.build_app(first_app_config)
     build_command.subprocess.check_output.assert_called_once_with(

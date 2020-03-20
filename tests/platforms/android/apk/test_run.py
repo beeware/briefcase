@@ -73,7 +73,6 @@ def test_run_app_launches_app_properly(run_command, first_app_config):
     """Validate that `run_app()` calls the appropriate `adb` integration
     commands.
 
-
     Tests for the `adb` integration are done elsewhere."""
     run_command.run_app(first_app_config, "exampleDevice")
     run_command.adb.install_apk.assert_called_once_with(

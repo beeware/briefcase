@@ -1,5 +1,4 @@
 import subprocess
-from os import X_OK, access
 from zipfile import BadZipFile, ZipFile
 
 from requests import exceptions as requests_exceptions
@@ -20,8 +19,10 @@ from briefcase.integrations import adb
 class ApkMixin:
     output_format = "apk"
     platform = "android"
-    # Storing this here so instances can override it for testing.
-    adb = adb
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.adb = adb  # Storing for easy override by unit tests.
 
     def binary_path(self, app):
         return (
@@ -67,15 +68,18 @@ requires Python 3.7.""".format(
         Install the Android SDK if needed.
         """
         tools_path = self.sdk_path / "tools" / "bin"
+        sdkmanager_exe = "sdkmanager.exe" if self.host_os == "Windows" else "sdkmanager"
         # This method marks some files as executable, so `tools_ok` checks for
         # that as well. On Windows, all generated files are executable.
         tools_ok = (
             tools_path.exists()
-            and all([access(str(tool), X_OK) for tool in tools_path.glob("*")])
-            and (
-                (tools_path / "sdkmanager").exists()
-                or (tools_path / "sdkmanager.exe").exists()
+            and all(
+                [
+                    self.os.access(str(tool), self.os.X_OK)
+                    for tool in tools_path.glob("*")
+                ]
             )
+            and (tools_path / sdkmanager_exe).exists()
         )
         if tools_ok:
             return
@@ -104,7 +108,7 @@ Delete {sdk_zip_path} and run briefcase again.""".format(
         # `ZipFile` ignores the permission metadata in the Android SDK ZIP
         # file, so we manually fix permissions.
         for binpath in tools_path.glob("*"):
-            if not access(str(binpath), X_OK):
+            if not self.os.access(str(binpath), self.os.X_OK):
                 binpath.chmod(0o755)
 
     def verify_license(self):

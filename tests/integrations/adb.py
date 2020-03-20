@@ -7,8 +7,6 @@ import pytest
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.adb import force_stop_app, install_apk, run_adb, start_app
 
-# TODO: Extract fixture for mock_run_adb.
-
 
 def test_run_adb_runs_adb(tmp_path):
     """Validate that `run_adb()` calls adb with the expected parameters."""
@@ -57,11 +55,13 @@ def test_run_adb_handles_errors(tmp_path, name, exception_text):
 
 @pytest.fixture
 def mock_run_adb():
-    # `run_adb` validation can rely on `.assert_called_...()` calls.
-    return MagicMock()
+    """Create a mock `run_adb()` function.
+
+    This allows other tests to make assertions about how `run_adb()` was called."""
+    return MagicMock(return_value=b"example normal adb output")
 
 
-def test_install_apk(mock_run_adb, tmp_path):
+def test_install_apk(mock_run_adb, capsys, tmp_path):
     "Validate that `install_apk()` calls `run_adb` with the appropriate parameters."
     install_apk(
         tmp_path / "example_sdk_path",
@@ -73,9 +73,12 @@ def test_install_apk(mock_run_adb, tmp_path):
     mock_run_adb.assert_called_once_with(
         tmp_path / "example_sdk_path", "exampleDevice", ["install", "example.apk"]
     )
+    # Validate that the normal output of the command was not printed (since there
+    # was no error).
+    assert "normal adb output" not in capsys.readouterr()
 
 
-def test_force_stop_app(mock_run_adb, tmp_path):
+def test_force_stop_app(mock_run_adb, capsys, tmp_path):
     "Validate that `force_stop_app()` calls `run_adb` with the appropriate parameters."
     force_stop_app(
         tmp_path / "example_sdk_path",
@@ -89,9 +92,12 @@ def test_force_stop_app(mock_run_adb, tmp_path):
         "exampleDevice",
         ["shell", "am", "force-stop", "com.example.sample.package"],
     )
+    # Validate that the normal output of the command was not printed (since there
+    # was no error).
+    assert "normal adb output" not in capsys.readouterr()
 
 
-def test_start_app_launches_app(mock_run_adb, tmp_path):
+def test_start_app_launches_app(mock_run_adb, capsys, tmp_path):
     "Validate that `start_app()` passes the right parameters to `run_adb()`."
     start_app(
         tmp_path / "example_sdk_path",
@@ -115,6 +121,9 @@ def test_start_app_launches_app(mock_run_adb, tmp_path):
             "android.intent.category.LAUNCHER",
         ],
     )
+    # Validate that the normal output of the command was not printed (since there
+    # was no error).
+    assert "normal adb output" not in capsys.readouterr()
 
 
 def test_start_app_detects_missing_activity(mock_run_adb, tmp_path):

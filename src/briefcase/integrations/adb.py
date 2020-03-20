@@ -76,11 +76,6 @@ def force_stop_app(sdk_path, device, package, run_adb=run_adb):
     run_adb(sdk_path, device, ["shell", "am", "force-stop", package])
 
 
-ACTIVITY_DOES_NOT_EXIST = re.compile(
-    r"^Error: Activity class [{][^}*][}] does not exist.$"
-)
-
-
 def start_app(sdk_path, device, package, activity, run_adb=run_adb):
     """
     Start an app, specified as a package name & activity name.
