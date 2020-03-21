@@ -385,7 +385,7 @@ class CreateCommand(BaseCommand):
                     download_path=self.dot_briefcase_path / 'support'
                 )
             else:
-                support_filename = support_package_url
+                support_filename = Path(support_package_url)
         except requests_exceptions.ConnectionError:
             raise NetworkFailure('downloading support package')
 
@@ -398,7 +398,8 @@ class CreateCommand(BaseCommand):
                 extract_dir=str(support_path)
             )
         except shutil.ReadError:
-            raise InvalidSupportPackage(support_filename.name)
+            print()
+            raise InvalidSupportPackage(support_package_url)
 
     def install_app_dependencies(self, app: BaseConfig):
         """
