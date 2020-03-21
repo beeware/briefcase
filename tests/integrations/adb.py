@@ -5,7 +5,12 @@ from unittest.mock import MagicMock
 import pytest
 
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.integrations.adb import force_stop_app, install_apk, run_adb, start_app
+from briefcase.integrations.adb import (
+    force_stop_app,
+    install_apk,
+    run_adb,
+    start_app
+)
 
 
 def test_run_adb_runs_adb(tmp_path):

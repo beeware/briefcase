@@ -1,8 +1,8 @@
+import os
 import subprocess
 from io import BytesIO
-import os
-from unittest import mock
 from sys import platform
+from unittest import mock
 from zipfile import ZipFile
 
 import pytest

@@ -1,6 +1,5 @@
 
 import argparse
-from cgi import parse_header
 import importlib
 import inspect
 import os
@@ -9,6 +8,7 @@ import shutil
 import subprocess
 import sys
 from abc import ABC, abstractmethod
+from cgi import parse_header
 from pathlib import Path
 from urllib.parse import urlparse
 
