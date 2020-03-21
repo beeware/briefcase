@@ -55,7 +55,6 @@ def install_apk(sdk_path, device, apk_path, run_adb=run_adb):
 
     Returns `None` on success; raises an exception on failure.
     """
-    print("Installing app on device...")
     return run_adb(sdk_path, device, ["install", str(apk_path)])
 
 
@@ -72,7 +71,6 @@ def force_stop_app(sdk_path, device, package, run_adb=run_adb):
     # In my testing, `force-stop` exits with status code 0 (success) so long
     # as you pass a package name, even if the package does not exist, or the
     # package is not running.
-    print("Stopping app if running...")
     run_adb(sdk_path, device, ["shell", "am", "force-stop", package])
 
 
@@ -91,7 +89,6 @@ def start_app(sdk_path, device, package, activity, run_adb=run_adb):
     name, you can find it using `aapt dump badging filename.apk` and looking
     for "package" and "launchable-activity" in the output.
     """
-    print("Launching app...")
     # `adb shell am start` always exits with status zero. We look for error
     # messages in the output.
     output = run_adb(
@@ -133,26 +130,23 @@ def no_or_wrong_device_message(sdk_path):
     emulator = sdk_path / "emulator" / "emulator"
     sdkmanager = sdk_path / "tools" / "bin" / "sdkmanager"
     return """\
-You can get a list of valid devices by running this command and looking in the
-first column of output.
+You can get a list of valid devices by running this command:
 
-$ {adb} devices -l
+    $ {adb} devices -l
 
-If you do not see any devices, you can create one by running these commands:
+The device ID is the value in the first column of output - it will be either:
 
-$ {sdkmanager} "platforms;android-28" \
-"system-images;android-28;default;x86" "emulator" "platform-tools"
+  * a ~12-16 character alphanumeric string (for a physical device); or
+  * a value like `emulator-5554` (for an emulator).
 
-$ {avdmanager} --verbose create avd \
---name robotfriend --abi x86 \
---package 'system-images;android-28;default;x86' --device pixel
+If you do not see any devices, you can create and start an emulator by running:
 
-$ {emulator} -avd robotfriend &
+    $ {sdkmanager} "platforms;android-28" "system-images;android-28;default;x86" "emulator" "platform-tools"
 
-Then use adb find out the device name by running this command and looking
-in the first column of output.
+    $ {avdmanager} --verbose create avd --name robotfriend --abi x86 --package 'system-images;android-28;default;x86' --device pixel
 
-$ {adb} devices -l
+    $ {emulator} -avd robotfriend &
+
 """.format(
         adb=adb, avdmanager=avdmanager, emulator=emulator, sdkmanager=sdkmanager
     )

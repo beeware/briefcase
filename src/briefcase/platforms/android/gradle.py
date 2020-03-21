@@ -18,7 +18,7 @@ from briefcase.integrations import adb
 
 class GradleMixin:
     output_format = "gradle"
-    platform = "Android"
+    platform = "android"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -119,10 +119,9 @@ Delete {sdk_zip_path} and run briefcase again.""".format(
         print(
             "\n"
             + """\
-To use briefcase with the Android SDK provided by Google, you must accept
-`android-sdk-license`.
-
-Running the Android SDK license tool...\n"""
+The Android tools provided by Google have license terms that you must accept
+before you may use those tools.
+"""
         )
         try:
             # Using subprocess.run() with no I/O redirection so the user sees
@@ -146,7 +145,7 @@ $ {sdkmanager} --licenses""".format(
         if not license_path.exists():
             raise BriefcaseCommandError(
                 """\
-You did not accept the Android SDK license. Please re-run the briefcase command
+You did not accept the Android SDK licenses. Please re-run the briefcase command
 and accept the Android SDK license when prompted. You may need an Internet
 connection."""
             )
@@ -181,11 +180,12 @@ class GradleBuildCommand(GradleMixin, BuildCommand):
         print("[{app.app_name}] Building Android APK...".format(app=app))
         try:
             env = {**self.os.environ, "ANDROID_SDK_ROOT": str(self.sdk_path)}
-            self.subprocess.check_output(
+            self.subprocess.run(
                 ["./gradlew", "assembleDebug"],
                 env=env,
                 cwd=str(self.bundle_path(app)),
                 stderr=self.subprocess.STDOUT,
+                check=True
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(
@@ -209,7 +209,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
         try:
             # Using `check_output` and `stderr=STDOUT` so we buffer output,
             # displaying it only if an exception occurs.
-            self.subprocess.check_output(
+            self.subprocess.run(
                 [
                     str(self.sdk_path / "tools" / "bin" / "sdkmanager"),
                     "platforms;android-28",
@@ -218,6 +218,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
                     "platform-tools",
                 ],
                 stderr=self.subprocess.STDOUT,
+                check=True
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(
@@ -252,15 +253,22 @@ Full `sdkmanager` output:
         :param device: The device to target. If ``None``, the user will
             be asked to re-run the command selecting a specific device.
         """
+        print()
         if device is None:
             raise BriefcaseCommandError(
                 """\
-Please specify a specific device on which to run the app by passing
-`-d device_name`.\n\n"""
+No Android device was specified. Please specify a specific device on which
+to run the app by passing `-d <device_id>`.
+
+"""
                 + self.adb.no_or_wrong_device_message(self.sdk_path)
             )
 
         # Install the latest APK file onto the device.
+        print("[{app.app_name}] Installing app (Device ID {device})...".format(
+            app=app,
+            device=device,
+        ))
         self.adb.install_apk(self.sdk_path, device, self.binary_path(app))
 
         # Compute Android package name based on beeware `bundle` and `app_name`
@@ -268,9 +276,11 @@ Please specify a specific device on which to run the app by passing
         package = "{app.bundle}.{app.app_name}".format(app=app)
 
         # We force-stop the app to ensure the activity launches freshly.
+        print("[{app.app_name}] Stopping app...".format(app=app))
         self.adb.force_stop_app(self.sdk_path, device, package)
 
         # To start the app, we launch `org.beeware.android.MainActivity`.
+        print("[{app.app_name}] Launching app...".format(app=app))
         self.adb.start_app(
             self.sdk_path, device, package, "org.beeware.android.MainActivity"
         )

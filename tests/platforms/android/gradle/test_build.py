@@ -26,11 +26,12 @@ def test_execute_gradle(build_command, first_app_config):
     # `ANDROID_SDK_ROOT`, which we expect to be overwritten.
     build_command.os.environ = {"ANDROID_SDK_ROOT": "somewhere", "key": "value"}
     build_command.build_app(first_app_config)
-    build_command.subprocess.check_output.assert_called_once_with(
+    build_command.subprocess.run.assert_called_once_with(
         ["./gradlew", "assembleDebug"],
         cwd=str(build_command.bundle_path(first_app_config)),
         env={"ANDROID_SDK_ROOT": str(build_command.sdk_path), "key": "value"},
         stderr=build_command.subprocess.STDOUT,
+        check=True,
     )
 
 
@@ -38,7 +39,7 @@ def test_print_gradle_errors(build_command, first_app_config):
     """Validate that build_app() will convert stderr/stdout from the process
     into exception text."""
     # Create a mock subprocess that crashes, printing text partly in non-ASCII.
-    build_command.subprocess.check_output.side_effect = CalledProcessError(
+    build_command.subprocess.run.side_effect = CalledProcessError(
         returncode=1, cmd=["ignored"], output=b"process output \xc3",
     )
     with pytest.raises(BriefcaseCommandError) as exc_info:

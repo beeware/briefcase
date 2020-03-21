@@ -26,7 +26,6 @@ def test_verify_emulator_succeeds_immediately_if_emulator_installed(run_command)
     # Create `emulator` within `sdk_path`.
     (run_command.sdk_path / "emulator").mkdir(parents=True)
     run_command.verify_emulator()
-    run_command.subprocess.check_output.assert_not_called()
     run_command.subprocess.run.assert_not_called()
     run_command.requests.get.assert_not_called()
 
@@ -35,7 +34,7 @@ def test_verify_emulator_installs_android_emulator(run_command):
     """Validate that the verify_emulator() method calls `subprocess.check_output`
     with the parameters needed to install the Android emulator."""
     run_command.verify_emulator()
-    run_command.subprocess.check_output.assert_called_once_with(
+    run_command.subprocess.run.assert_called_once_with(
         [
             str(run_command.sdk_path / "tools" / "bin" / "sdkmanager"),
             "platforms;android-28",
@@ -44,13 +43,14 @@ def test_verify_emulator_installs_android_emulator(run_command):
             "platform-tools",
         ],
         stderr=run_command.subprocess.STDOUT,
+        check=True,
     )
 
 
 def test_verify_emulator_install_problems_are_reported(run_command):
     "If the Android `sdkmanager` fails to properly install the Android emulator, an exception with its output is raised."
     # Configure `subprocess` module to crash as though it were a sad sdkmanager.
-    run_command.subprocess.check_output.side_effect = CalledProcessError(
+    run_command.subprocess.run.side_effect = CalledProcessError(
         returncode=1,
         cmd=["ignored"],
         # `output` is non-ASCII to allow validation of Unicode errors.
