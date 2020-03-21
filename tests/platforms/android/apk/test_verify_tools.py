@@ -139,7 +139,7 @@ def test_verify_sdk_downloads_sdk(build_command, tmp_path):
 
 
 @pytest.mark.skipif(
-    platform == "win32", reason="files are always executable on Windows"
+    platform == "win32", reason="executable permission doesn't make sense on Windows"
 )
 def test_verify_sdk_downloads_sdk_if_sdkmanager_not_executable(build_command):
     """Validate that verify_sdk() downloads & unpacks the SDK ZIP file
@@ -162,6 +162,9 @@ def test_verify_sdk_downloads_sdk_if_sdkmanager_not_executable(build_command):
     )
 
 
+@pytest.mark.skipif(
+    platform == "win32", reason="executable permission doesn't make sense on Windows"
+)
 def test_verify_sdk_no_download_if_sdkmanager_executable(build_command):
     """Validate that verify_sdk() successfully does nothing in its happy path.
 
