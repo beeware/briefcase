@@ -1,8 +1,7 @@
-import subprocess
 import re
+import subprocess
 
 from briefcase.exceptions import BriefcaseCommandError
-
 
 DEVICE_NOT_FOUND = re.compile(r"^error: device '[^']*' not found")
 
@@ -141,9 +140,12 @@ The device ID is the value in the first column of output - it will be either:
 
 If you do not see any devices, you can create and start an emulator by running:
 
-    $ {sdkmanager} "platforms;android-28" "system-images;android-28;default;x86" "emulator" "platform-tools"
+    $ {sdkmanager} "platforms;android-28" \
+"system-images;android-28;default;x86" "emulator" "platform-tools"
 
-    $ {avdmanager} --verbose create avd --name robotfriend --abi x86 --package 'system-images;android-28;default;x86' --device pixel
+    $ {avdmanager} --verbose create avd \
+--name robotfriend --abi x86 \
+--package 'system-images;android-28;default;x86' --device pixel
 
     $ {emulator} -avd robotfriend &
 

@@ -1,5 +1,5 @@
-from unittest.mock import MagicMock
 from subprocess import CalledProcessError
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -48,7 +48,7 @@ def test_verify_emulator_installs_android_emulator(run_command):
 
 
 def test_verify_emulator_install_problems_are_reported(run_command):
-    "If the Android `sdkmanager` fails to properly install the Android emulator, an exception with its output is raised."
+    "If the sdkmanager fails to properly install the Android emulator, an exception is raised."
     # Configure `subprocess` module to crash as though it were a sad sdkmanager.
     run_command.subprocess.run.side_effect = CalledProcessError(
         returncode=1,
