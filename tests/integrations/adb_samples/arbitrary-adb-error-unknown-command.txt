@@ -1,0 +1,1 @@
+adb: unknown command bad-command

@@ -122,3 +122,13 @@ def test_invalid_support_package(create_command, myapp, tmp_path, support_path):
     # Installing the bad support package raises an error
     with pytest.raises(InvalidSupportPackage):
         create_command.install_app_support_package(myapp)
+
+
+def test_missing_support_package(create_command, myapp, tmp_path, support_path):
+    "If the path provided for the support package is bad, an error is raised"
+    # Set a custom support package that doesn't exist
+    myapp.support_package = '/path/does/not/exist.zip'
+
+    # Installing the bad support package raises an error
+    with pytest.raises(InvalidSupportPackage):
+        create_command.install_app_support_package(myapp)

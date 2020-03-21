@@ -304,11 +304,15 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         """
         udid, iOS_version, device = self.select_target_device(udid)
         print()
-        print("Targeting an {device} running iOS {iOS_version} (device UDID {udid})".format(
-            device=device,
-            iOS_version=iOS_version,
-            udid=udid,
-        ))
+        print(
+            "[{app.app_name}] Starting app on an {device} running "
+            "iOS {iOS_version} (device UDID {udid})".format(
+                app=app,
+                device=device,
+                iOS_version=iOS_version,
+                udid=udid,
+            )
+        )
 
         # The simulator needs to be booted before being started.
         # If it's shut down, we can boot it again; but if it's currently

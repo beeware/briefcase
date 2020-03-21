@@ -1,5 +1,6 @@
 import sys
 from subprocess import CalledProcessError
+
 import pytest
 
 from briefcase.exceptions import BriefcaseCommandError

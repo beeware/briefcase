@@ -1,5 +1,6 @@
-import pytest
 from unittest import mock
+
+import pytest
 
 from briefcase.commands import DevCommand
 from briefcase.config import AppConfig
