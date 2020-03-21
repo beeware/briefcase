@@ -4,12 +4,12 @@ from subprocess import CalledProcessError
 import pytest
 
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.platforms.android.apk import ApkRunCommand
+from briefcase.platforms.android.gradle import GradleRunCommand
 
 
 @pytest.fixture
 def run_command(tmp_path, first_app_config):
-    command = ApkRunCommand(base_path=tmp_path / "base_path")
+    command = GradleRunCommand(base_path=tmp_path / "base_path")
     command.dot_briefcase_path = tmp_path / ".briefcase" / "tools"
     command.adb = MagicMock()
     command.os = MagicMock()
@@ -48,8 +48,7 @@ def test_verify_emulator_installs_android_emulator(run_command):
 
 
 def test_verify_emulator_install_problems_are_reported(run_command):
-    """Validate that if the Android `sdkmanager` fails to properly install the
-    Android emulator, that we raise an appropriate exception with its output."""
+    "If the Android `sdkmanager` fails to properly install the Android emulator, an exception with its output is raised."
     # Configure `subprocess` module to crash as though it were a sad sdkmanager.
     run_command.subprocess.check_output.side_effect = CalledProcessError(
         returncode=1,
@@ -59,7 +58,8 @@ def test_verify_emulator_install_problems_are_reported(run_command):
     )
     with pytest.raises(BriefcaseCommandError) as exc_info:
         run_command.verify_emulator()
-    assert "process output �" in str(exc_info)
+
+    assert "process output �" in str(exc_info.value)
 
 
 def test_run_app_requires_device_name(run_command, first_app_config):

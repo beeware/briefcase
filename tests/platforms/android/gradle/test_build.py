@@ -4,12 +4,12 @@ from unittest.mock import MagicMock
 import pytest
 
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.platforms.android.apk import ApkBuildCommand
+from briefcase.platforms.android.gradle import GradleBuildCommand
 
 
 @pytest.fixture
 def build_command(tmp_path, first_app_config):
-    command = ApkBuildCommand(base_path=tmp_path / "base_path")
+    command = GradleBuildCommand(base_path=tmp_path / "base_path")
     command.dot_briefcase_path = tmp_path / ".briefcase" / "tools"
     command.os = MagicMock()
     command.os.environ = {}
@@ -43,4 +43,5 @@ def test_print_gradle_errors(build_command, first_app_config):
     )
     with pytest.raises(BriefcaseCommandError) as exc_info:
         build_command.build_app(first_app_config)
-    assert "process output �" in str(exc_info)
+
+    assert "process output �" in str(exc_info.value)

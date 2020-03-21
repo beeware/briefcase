@@ -9,12 +9,12 @@ import pytest
 from requests import exceptions as requests_exceptions
 
 from briefcase.exceptions import BriefcaseCommandError, NetworkFailure
-from briefcase.platforms.android.apk import ApkBuildCommand
+from briefcase.platforms.android.gradle import GradleBuildCommand
 
 
 @pytest.fixture
 def build_command(tmp_path, first_app_config):
-    command = ApkBuildCommand(
+    command = GradleBuildCommand(
         base_path=tmp_path / "base_path", apps={"first": first_app_config},
     )
     # Mock-out the `sys` module so we can mock out the Python version in some tests.

@@ -16,9 +16,9 @@ from briefcase.exceptions import BriefcaseCommandError, NetworkFailure
 from briefcase.integrations import adb
 
 
-class ApkMixin:
-    output_format = "apk"
-    platform = "android"
+class GradleMixin:
+    output_format = "gradle"
+    platform = "Android"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -161,15 +161,15 @@ connection."""
         self.verify_license()
 
 
-class ApkCreateCommand(ApkMixin, CreateCommand):
+class GradleCreateCommand(GradleMixin, CreateCommand):
     description = "Create and populate an Android APK."
 
 
-class ApkUpdateCommand(ApkMixin, UpdateCommand):
+class GradleUpdateCommand(GradleMixin, UpdateCommand):
     description = "Update an existing Android APK."
 
 
-class ApkBuildCommand(ApkMixin, BuildCommand):
+class GradleBuildCommand(GradleMixin, BuildCommand):
     description = "Build an Android APK."
 
     def build_app(self, app: BaseConfig, **kwargs):
@@ -194,7 +194,7 @@ class ApkBuildCommand(ApkMixin, BuildCommand):
             )
 
 
-class ApkRunCommand(ApkMixin, RunCommand):
+class GradleRunCommand(GradleMixin, RunCommand):
     description = "Run an Android APK."
 
     def verify_tools(self):
@@ -276,18 +276,18 @@ Please specify a specific device on which to run the app by passing
         )
 
 
-class ApkPackageCommand(ApkMixin, PackageCommand):
+class GradlePackageCommand(GradleMixin, PackageCommand):
     description = "Package an Android APK."
 
 
-class ApkPublishCommand(ApkMixin, PublishCommand):
+class GradlePublishCommand(GradleMixin, PublishCommand):
     description = "Publish an Android APK."
 
 
 # Declare the briefcase command bindings
-create = ApkCreateCommand  # noqa
-update = ApkUpdateCommand  # noqa
-build = ApkBuildCommand  # noqa
-run = ApkRunCommand  # noqa
-package = ApkPackageCommand  # noqa
-publish = ApkPublishCommand  # noqa
+create = GradleCreateCommand  # noqa
+update = GradleUpdateCommand  # noqa
+build = GradleBuildCommand  # noqa
+run = GradleRunCommand  # noqa
+package = GradlePackageCommand  # noqa
+publish = GradlePublishCommand  # noqa
