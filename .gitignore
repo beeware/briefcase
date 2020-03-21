@@ -15,6 +15,7 @@ venv/
 .eggs/
 /local
 
+/pip-wheel-metadata
 # IntelliJ Idea family of suites
 .idea
 *.iml
