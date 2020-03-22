@@ -460,35 +460,102 @@ class CreateCommand(BaseCommand):
             )
         )
 
-    def install_image(self, role, size, source, target):
+    def install_image(self, role, variant, size, source, target):
         """
         Install an icon/image of the requested size at a target location, using
         the source images defined by the app config.
 
         :param role: A string describing the role the of the image.
+        :param variant: The image variant. A variant of ``None`` means the image
+            has no variants
         :param size: The requested size for the image. A size of
             ``None`` means the largest available size should be used.
-        :param source: The image source. This will *not* include any extension
-            or size modifier; these will be added based on the requested target.
+        :param source: The image source; or a dictionary of sources for each
+            variant. The sources will *not* include any extension or size
+            modifier; these will be added based on the requested target and
+            variant.
         :param target: The full path where the image should be installed.
         """
         if source is not None:
             if size is None:
-                source_filename = '{source}{ext}'.format(
-                    source=source,
-                    ext=target.suffix
-                )
-                full_role = role
+                if variant is None:
+                    source_filename = '{source}{target.suffix}'.format(
+                        source=source,
+                        target=target,
+                    )
+                    full_role = role
+                else:
+                    try:
+                        source_filename = '{source}{target.suffix}'.format(
+                            source=source[variant],
+                            variant=variant,
+                            target=target,
+                        )
+                        full_role = '{variant} {role}'.format(
+                            variant=variant,
+                            role=role,
+                        )
+                    except (TypeError, KeyError):
+                        print(
+                            "Unable to find {variant} variant for {role}; "
+                            "using default".format(
+                                variant=variant,
+                                role=role,
+                            )
+                        )
+                        return
             else:
-                source_filename = '{source}-{size}{ext}'.format(
-                    source=source,
-                    size=size,
-                    ext=target.suffix
-                )
-                full_role = '{size}px {role}'.format(
-                    size=size,
-                    role=role,
-                )
+                if variant is None:
+                    # An annoying edge case is the case of an unsized variant.
+                    # In that case, `size` is actually the variant, and the
+                    # source is a dictionary keyed by variant. Try that
+                    # lookup; if it fails, we have a sized image with no
+                    # variant.
+                    try:
+                        source_filename = '{source}{target.suffix}'.format(
+                            source=source[size],
+                            target=target,
+                        )
+                        full_role = '{size} {role}'.format(
+                            size=size,
+                            role=role,
+                        )
+                    except TypeError:
+                        # The lookup on the source failed; that means we
+                        # have an sized image without variants.
+                        source_filename = '{source}-{size}{target.suffix}'.format(
+                            source=source,
+                            size=size,
+                            target=target,
+                        )
+                        full_role = '{size}px {role}'.format(
+                            size=size,
+                            role=role,
+                        )
+
+                else:
+                    try:
+                        source_filename = '{source}-{size}{target.suffix}'.format(
+                            source=source[variant],
+                            variant=variant,
+                            size=size,
+                            target=target,
+                        )
+                        full_role = '{size}px {variant} {role}'.format(
+                            size=size,
+                            variant=variant,
+                            role=role,
+                        )
+                    except (TypeError, KeyError):
+                        print(
+                            "Unable to find {size}px {variant} variant for {role}; "
+                            "using default".format(
+                                size=size,
+                                variant=variant,
+                                role=role,
+                            )
+                        )
+                        return
 
             full_source = self.base_path / source_filename
             if full_source.exists():
@@ -516,21 +583,49 @@ class CreateCommand(BaseCommand):
 
         :param app: The config object for the app
         """
-        for size, target in self.icon_targets(app).items():
-            self.install_image(
-                'application icon',
-                size=size,
-                source=app.icon,
-                target=self.bundle_path(app) / target
-            )
+        for variant_or_size, targets in self.icon_targets(app).items():
+            try:
+                # Treat the targets as a dictionary of sizes;
+                # if there's no `items`, then it's an icon without variants.
+                for size, target in targets.items():
+                    self.install_image(
+                        'application icon',
+                        source=app.icon,
+                        variant=variant_or_size,
+                        size=size,
+                        target=self.bundle_path(app) / target
+                    )
+            except AttributeError:
+                # Either a single variant, or a single size.
+                self.install_image(
+                    'application icon',
+                    source=app.icon,
+                    variant=None,
+                    size=variant_or_size,
+                    target=self.bundle_path(app) / targets
+                )
 
-        for size, target in self.splash_image_targets(app).items():
-            self.install_image(
-                'splash image',
-                size=size,
-                source=app.splash,
-                target=self.bundle_path(app) / target
-            )
+        for variant_or_size, targets in self.splash_image_targets(app).items():
+            try:
+                # Treat the targets as a dictionary of sizes;
+                # if there's no `items`, then it's a splash without variants
+                for size, target in targets.items():
+                    self.install_image(
+                        'splash image',
+                        source=app.splash,
+                        variant=variant_or_size,
+                        size=size,
+                        target=self.bundle_path(app) / target
+                    )
+            except AttributeError:
+                # Either a single variant, or a single size.
+                self.install_image(
+                    'splash image',
+                    source=app.splash,
+                    variant=None,
+                    size=variant_or_size,
+                    target=self.bundle_path(app) / targets
+                )
 
         for extension, doctype in self.document_type_icon_targets(app).items():
             for size, target in doctype.items():
@@ -538,6 +633,7 @@ class CreateCommand(BaseCommand):
                     'icon for .{extension} documents'.format(extension=extension),
                     size=size,
                     source=app.document_types[extension]['icon'],
+                    variant=None,
                     target=self.bundle_path(app) / target,
                 )
 

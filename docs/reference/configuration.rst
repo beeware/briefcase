@@ -250,8 +250,16 @@ example, iOS requires multiple splash screens, (including 1024x768px,
 ``resources/splash-2048x1536.png``, and so on. The sizes that are required are
 determined by the platform template.
 
+Some platforms also require different *variants* (e.g., both portrait and
+landscape splash screens). These variants can be specified by qualifying the
+splash specification:
+
+    splash.portrait = "resource/portrait-splash"
+    splash.landscape = "resource/landscape-splash"
+
 If the platform output format does not use a splash screen, the ``splash``
-setting is ignored.
+setting is ignored. If the platform requires both variants *and* sizes, the
+handling will be combined.
 
 ``support_package``
 ~~~~~~~~~~~~~~~~~~~
@@ -316,11 +324,23 @@ specification of::
 will use ``resources/icon.icns`` on macOS, and ``resources/icon.ico`` on
 Windows.
 
+Some platforms also require different *variants* (e.g., both square and round
+icons). These variants can be specified by qualifying the icon specification:
+
+    icon.round = "resource/round-icon"
+    icon.square = "resource/square-icon"
+
 Some platforms require multiple icons, at different sizes; these will be
 handled by appending the required size to the provided icon name. For example,
 iOS requires multiple icon sizes (ranging from 20px to 1024px); Briefcase will
 look for ``resources/icon-20.png``, ``resources/icon-1024.png``, and so on. The
 sizes that are required are determined by the platform template.
+
+If a platform requires both different sizes *and* variants, the variant
+handling and size handling will be combined. For example, Android requires
+round and square icons, in sizes ranging from 48px to 192px; Briefcase will
+look for ``resource/round-icon-42.png``, ``resource/square-icon-42.png``,
+``resource/round-icon-192.png``, and so on.
 
 ``url``
 -------
