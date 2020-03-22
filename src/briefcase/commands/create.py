@@ -383,9 +383,14 @@ class CreateCommand(BaseCommand):
                     ))
                     # If a revision has been specified, add the revision
                     # as an query argument in the support package URL.
+                    # This is a lot more painful than "add arg to query" should
+                    # be because (a) url splits aren't appendable, and
+                    # (b) Python 3.5 doesn't guarantee dictionary order.
                     url_parts = list(urlsplit(support_package_url))
-                    query = dict(parse_qsl(url_parts[3]))
-                    query['revision'] = app.support_revision
+                    query = []
+                    for key, value in parse_qsl(url_parts[3]):
+                        query.append((key, value))
+                    query.append(('revision', app.support_revision))
                     url_parts[3] = urlencode(query)
                     support_package_url = urlunsplit(url_parts)
 
