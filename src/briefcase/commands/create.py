@@ -114,7 +114,6 @@ class CreateCommand(BaseCommand):
         super().__init__(*args, **kwargs)
         self._path_index = {}
         self._s3 = None
-        self._support_package_url = None
 
     @property
     def app_template_url(self):

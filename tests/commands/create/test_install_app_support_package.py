@@ -35,9 +35,6 @@ def test_install_app_support_package(create_command, myapp, tmp_path, support_pa
 
 def test_install_custom_app_support_package_file(create_command, myapp, tmp_path, support_path):
     "A custom support package can be specified as a local file"
-    # Hardcode the support package URL for test purposes
-    create_command._support_package_url = 'https://example.com/path/to/support.zip'
-
     # Provide an app-specific override of the package URL
     myapp.support_package = str(tmp_path / 'custom' / 'support.zip')
 
@@ -64,9 +61,6 @@ def test_install_custom_app_support_package_file(create_command, myapp, tmp_path
 
 def test_install_custom_app_support_package_url(create_command, myapp, tmp_path, support_path):
     "A custom support package can be specified as URL"
-    # Hardcode the support package URL for test purposes
-    create_command._support_package_url = 'https://example.com/path/to/support.zip'
-
     # Provide an app-specific override of the package URL
     myapp.support_package = 'https://example.com/custom/support.zip'
 
@@ -94,9 +88,6 @@ def test_install_custom_app_support_package_url(create_command, myapp, tmp_path,
 
 def test_offline_install(create_command, myapp, support_path):
     "If the computer is offline, an error is raised"
-    # Hardcode the support package URL for test purposes
-    create_command._support_package_url = 'https://example.com/path/to/support.zip'
-
     create_command.download_url = mock.MagicMock(
         side_effect=requests_exceptions.ConnectionError
     )
@@ -108,9 +99,6 @@ def test_offline_install(create_command, myapp, support_path):
 
 def test_invalid_support_package(create_command, myapp, tmp_path, support_path):
     "If the support package isn't a valid zipfile, an error is raised"
-    # Hardcode the support package URL for test purposes
-    create_command._support_package_url = 'https://example.com/path/to/support.zip'
-
     # Create a support package that isn't a zipfile
     support_file = tmp_path / 'out.zip'
     with open(str(support_file), 'w') as bad_support_zip:
