@@ -133,6 +133,34 @@ def test_multiple_icon(create_command, myapp):
     }
 
 
+def test_icon_variants(create_command, myapp):
+    "If there are icon variants, they are returned"
+    bundle_path = create_command.bundle_path(myapp)
+    bundle_path.mkdir(parents=True)
+    with (bundle_path / 'briefcase.toml').open('w') as f:
+        index = {
+            'paths': {
+                'app_path': 'path/to/app',
+                'icon': {
+                    'single': 'path/to/icon.png',
+                    'multi': {
+                        '10': 'path/to/icon-10.png',
+                        '20': 'path/to/icon-20.png',
+                    }
+                },
+            }
+        }
+        toml.dump(index, f)
+
+    assert create_command.icon_targets(myapp) == {
+        'single': 'path/to/icon.png',
+        'multi': {
+            '10': 'path/to/icon-10.png',
+            '20': 'path/to/icon-20.png',
+        },
+    }
+
+
 def test_no_splash(create_command, myapp):
     "If no splash target is specified, the splash list is empty"
     bundle_path = create_command.bundle_path(myapp)
