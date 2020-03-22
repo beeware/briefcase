@@ -534,17 +534,28 @@ class CreateCommand(BaseCommand):
                         )
 
                 else:
-                    source_filename = '{source}-{size}{target.suffix}'.format(
-                        source=source[variant],
-                        variant=variant,
-                        size=size,
-                        target=target,
-                    )
-                    full_role = '{size}px {variant} {role}'.format(
-                        size=size,
-                        variant=variant,
-                        role=role,
-                    )
+                    try:
+                        source_filename = '{source}-{size}{target.suffix}'.format(
+                            source=source[variant],
+                            variant=variant,
+                            size=size,
+                            target=target,
+                        )
+                        full_role = '{size}px {variant} {role}'.format(
+                            size=size,
+                            variant=variant,
+                            role=role,
+                        )
+                    except (TypeError, KeyError):
+                        print(
+                            "Unable to find {size}px {variant} variant for {role}; "
+                            "using default".format(
+                                size=size,
+                                variant=variant,
+                                role=role,
+                            )
+                        )
+                        return
 
             full_source = self.base_path / source_filename
             if full_source.exists():

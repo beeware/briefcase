@@ -145,9 +145,6 @@ def test_requested_size_invalid_path(create_command, tmp_path, capsys):
     assert create_command.shutil.copy.call_count == 0
 
 
-# ====
-
-
 def test_variant_with_no_requested_size(create_command, tmp_path, capsys):
     "If the app specifies a variant with no size, the variant is used unsized."
     create_command.shutil = mock.MagicMock()
@@ -236,6 +233,7 @@ def test_unknown_variant_with_no_requested_size(create_command, tmp_path, capsys
     # No file was installed.
     create_command.shutil.copy.assert_not_called()
 
+
 def test_variant_with_size(create_command, tmp_path, capsys):
     "If the app specifies a variant with a size, the sized variant is used."
     create_command.shutil = mock.MagicMock()
@@ -269,6 +267,37 @@ def test_variant_with_size(create_command, tmp_path, capsys):
         str(create_command.base_path / 'input' / 'original-3742.png'),
         str(out_path),
     )
+
+
+def test_variant_with_size_without_variants(create_command, tmp_path, capsys):
+    """If the app specifies a variant with a size, but no variants are specified,
+    a message is output."""
+    create_command.shutil = mock.MagicMock()
+
+    # Create the source image
+    source_file = tmp_path / 'input' / 'original-3742.png'
+    source_file.parent.mkdir(parents=True, exist_ok=True)
+    with source_file.open('w') as f:
+        f.write('image')
+
+    # Try to install the image
+    out_path = tmp_path / 'output.png'
+    create_command.install_image(
+        'sample image',
+        source='input/original',
+        variant='round',
+        size='3742',
+        target=out_path
+    )
+
+    # The right message was written to output
+    assert (
+        capsys.readouterr().out
+        == "Unable to find 3742px round variant for sample image; using default\n"
+    )
+
+    # No file was installed.
+    create_command.shutil.copy.assert_not_called()
 
 
 def test_unsized_variant(create_command, tmp_path, capsys):
