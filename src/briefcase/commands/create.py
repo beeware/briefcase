@@ -4,7 +4,7 @@ import sys
 from datetime import date
 from pathlib import Path
 from typing import Optional
-from urllib.parse import urlencode
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 import toml
 from cookiecutter import exceptions as cookiecutter_exceptions
@@ -377,6 +377,22 @@ class CreateCommand(BaseCommand):
                 ))
 
             if support_package_url.startswith('https://') or support_package_url.startswith('http://'):
+                try:
+                    print("... pinned to revision {app.support_revision}".format(
+                        app=app
+                    ))
+                    # If a revision has been specified, add the revision
+                    # as an query argument in the support package URL.
+                    url_parts = list(urlsplit(support_package_url))
+                    query = dict(parse_qsl(url_parts[3]))
+                    query['revision'] = app.support_revision
+                    url_parts[3] = urlencode(query)
+                    support_package_url = urlunsplit(url_parts)
+
+                except AttributeError:
+                    # No support revision specified.
+                    print("... using most recent revision")
+
                 # Download the support file, caching the result
                 # in the user's briefcase support cache directory.
                 support_filename = self.download_url(

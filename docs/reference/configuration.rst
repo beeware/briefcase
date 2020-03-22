@@ -270,6 +270,20 @@ A file path or URL pointing at a tarball containing a Python support package.
 If this setting is not provided, Briefcase will use the default support
 package for the platform.
 
+``support_revision``
+~~~~~~~~~~~~~~~~~~~~
+
+The specific revision of a support package that should be used. By default,
+Briefcase will always use the most recently released support package; if you
+specify a support revision, the support package will be pinned to that version
+for your app.
+
+If the support package is a URL, a query argument of
+``revision=<support_revision>`` will be added to the support package URL when
+it is downloaded.
+
+If the support package is a file path, this argument is ignored.
+
 ``template``
 ~~~~~~~~~~~~
 
