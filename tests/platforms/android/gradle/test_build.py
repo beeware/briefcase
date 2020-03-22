@@ -30,7 +30,6 @@ def test_execute_gradle(build_command, first_app_config):
         ["./gradlew", "assembleDebug"],
         cwd=str(build_command.bundle_path(first_app_config)),
         env={"ANDROID_SDK_ROOT": str(build_command.sdk_path), "key": "value"},
-        stderr=build_command.subprocess.STDOUT,
         check=True,
     )
 
@@ -40,9 +39,7 @@ def test_print_gradle_errors(build_command, first_app_config):
     into exception text."""
     # Create a mock subprocess that crashes, printing text partly in non-ASCII.
     build_command.subprocess.run.side_effect = CalledProcessError(
-        returncode=1, cmd=["ignored"], output=b"process output \xc3",
+        returncode=1, cmd=["ignored"],
     )
-    with pytest.raises(BriefcaseCommandError) as exc_info:
+    with pytest.raises(BriefcaseCommandError):
         build_command.build_app(first_app_config)
-
-    assert "process output �" in str(exc_info.value)

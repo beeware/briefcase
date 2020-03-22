@@ -13,7 +13,7 @@ from briefcase.commands import (
 )
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError, NetworkFailure
-from briefcase.integrations import adb
+from briefcase.integrations.adb import ADB, no_or_wrong_device_message
 
 
 class GradleMixin:
@@ -22,7 +22,7 @@ class GradleMixin:
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.adb = adb  # Storing for easy override by unit tests.
+        self.ADB = ADB  # Storing for easy override by unit tests.
 
     def binary_path(self, app):
         return (
@@ -184,14 +184,11 @@ class GradleBuildCommand(GradleMixin, BuildCommand):
                 ["./gradlew", "assembleDebug"],
                 env=env,
                 cwd=str(self.bundle_path(app)),
-                stderr=self.subprocess.STDOUT,
                 check=True
             )
-        except subprocess.CalledProcessError as e:
-            raise BriefcaseCommandError(
-                "Error while building. Full gradle output:\n\n"
-                + e.output.decode("ascii", "replace")
-            )
+        except subprocess.CalledProcessError:
+            print()
+            raise BriefcaseCommandError("Error while building project.")
 
 
 class GradleRunCommand(GradleMixin, RunCommand):
@@ -217,22 +214,11 @@ class GradleRunCommand(GradleMixin, RunCommand):
                     "emulator",
                     "platform-tools",
                 ],
-                stderr=self.subprocess.STDOUT,
                 check=True
             )
-        except subprocess.CalledProcessError as e:
+        except subprocess.CalledProcessError:
             raise BriefcaseCommandError(
-                """\
-Error while installing Android emulator and system image.
-
-`sdkmanager` exited with {e.returncode}.
-
-Full `sdkmanager` output:
-
-{output}
-""".format(
-                    output=e.output.decode("ascii", "replace"), e=e
-                )
+                "Error while installing Android emulator and system image."
             )
 
     def add_options(self, parser):
@@ -261,15 +247,18 @@ No Android device was specified. Please specify a specific device on which
 to run the app by passing `-d <device_id>`.
 
 """
-                + self.adb.no_or_wrong_device_message(self.sdk_path)
+                + no_or_wrong_device_message(self.sdk_path)
             )
+
+        # Create an ADB wrapper for the selected device
+        adb = self.ADB(sdk_path=self.sdk_path, device=device)
 
         # Install the latest APK file onto the device.
         print("[{app.app_name}] Installing app (Device ID {device})...".format(
             app=app,
             device=device,
         ))
-        self.adb.install_apk(self.sdk_path, device, self.binary_path(app))
+        adb.install_apk(self.binary_path(app))
 
         # Compute Android package name based on beeware `bundle` and `app_name`
         # app properties, similar to iOS.
@@ -277,13 +266,11 @@ to run the app by passing `-d <device_id>`.
 
         # We force-stop the app to ensure the activity launches freshly.
         print("[{app.app_name}] Stopping app...".format(app=app))
-        self.adb.force_stop_app(self.sdk_path, device, package)
+        adb.force_stop_app(package)
 
         # To start the app, we launch `org.beeware.android.MainActivity`.
         print("[{app.app_name}] Launching app...".format(app=app))
-        self.adb.start_app(
-            self.sdk_path, device, package, "org.beeware.android.MainActivity"
-        )
+        adb.start_app(package, "org.beeware.android.MainActivity")
 
 
 class GradlePackageCommand(GradleMixin, PackageCommand):
