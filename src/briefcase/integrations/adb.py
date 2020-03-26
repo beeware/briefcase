@@ -146,6 +146,8 @@ If you do not see any devices, you can create and start an emulator by running:
 --name robotfriend --abi x86 \
 --package 'system-images;android-28;default;x86' --device pixel
 
+    $ echo 'disk.dataPartition.size=4096M' >> $HOME/.android/avd/robotfriend.avd/config.ini
+
     $ {emulator_path} -avd robotfriend &
 
 """.format(
