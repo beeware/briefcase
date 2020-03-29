@@ -4,7 +4,9 @@ from unittest import mock
 import pytest
 
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.integrations.xcode import ensure_command_line_tools_are_installed
+from briefcase.integrations.xcode import (
+    ensure_command_line_tools_are_installed
+)
 
 
 def test_not_installed():
