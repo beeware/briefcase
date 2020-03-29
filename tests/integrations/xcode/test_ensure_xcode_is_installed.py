@@ -1,5 +1,4 @@
 import subprocess
-from pathlib import Path
 from unittest import mock
 
 import pytest
@@ -10,9 +9,10 @@ from briefcase.integrations.xcode import ensure_xcode_is_installed
 
 @pytest.fixture
 def xcode(tmp_path):
-    xcode_location = str(tmp_path / 'Xcode.app')
-    Path(xcode_location).mkdir(parents=True, exist_ok=True)
-    return xcode_location
+    "Create a dummy location for Xcode"
+    xcode_location = tmp_path / 'Xcode.app'
+    xcode_location.mkdir(parents=True, exist_ok=True)
+    return str(xcode_location)
 
 
 def test_not_installed(tmp_path):

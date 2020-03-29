@@ -10,9 +10,10 @@ from briefcase.integrations.xcode import get_simulators
 
 @pytest.fixture
 def simulator(tmp_path):
-    simulator_location = str(tmp_path / 'CoreSimulator.framework')
-    Path(simulator_location).mkdir(parents=True, exist_ok=True)
-    return simulator_location
+    "Create a dummy location for the simulator"
+    simulator_location = tmp_path / 'CoreSimulator.framework'
+    simulator_location.mkdir(parents=True, exist_ok=True)
+    return str(simulator_location)
 
 
 def simctl_result(name):
