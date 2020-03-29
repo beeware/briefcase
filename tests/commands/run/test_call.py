@@ -1,5 +1,3 @@
-from unittest import mock
-
 import pytest
 
 from briefcase.exceptions import BriefcaseCommandError

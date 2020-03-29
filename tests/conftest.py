@@ -1,7 +1,6 @@
 from unittest import mock
 
 import pytest
-
 from git import exc as git_exceptions
 
 

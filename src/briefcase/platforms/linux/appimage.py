@@ -1,5 +1,4 @@
 import subprocess
-from pathlib import Path
 
 from requests import exceptions as requests_exceptions
 

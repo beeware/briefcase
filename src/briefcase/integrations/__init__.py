@@ -1,5 +1,3 @@
-from . import adb
-from . import git
-from . import xcode
+from . import adb, git, xcode
 
 __all__ = ['adb', 'git', 'xcode']
