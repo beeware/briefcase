@@ -2,7 +2,6 @@ from unittest import mock
 
 import pytest
 import toml
-from git import exc as git_exceptions
 
 from briefcase.commands import CreateCommand
 from briefcase.config import AppConfig
@@ -17,7 +16,7 @@ class DummyCreateCommand(CreateCommand):
     output_format = 'dummy'
     description = 'Dummy create command'
 
-    def __init__(self, *args, support_file=None, **kwargs):
+    def __init__(self, *args, support_file=None, git=None, **kwargs):
         super().__init__(*args, **kwargs)
 
         # If a test sets this property, the tool verification step will
@@ -25,8 +24,7 @@ class DummyCreateCommand(CreateCommand):
         self._missing_tool = None
 
         # Mock the external services
-        self.git = mock.MagicMock()
-        self.git.exc = git_exceptions
+        self.git = git
         self.cookiecutter = mock.MagicMock()
         self.subprocess = mock.MagicMock()
         self.support_file = support_file
@@ -90,16 +88,18 @@ class TrackingCreateCommand(DummyCreateCommand):
 
 
 @pytest.fixture
-def create_command(tmp_path):
+def create_command(tmp_path, mock_git):
     return DummyCreateCommand(
         base_path=tmp_path,
         dot_briefcase_path=tmp_path / "dot-briefcase",
+        git=mock_git,
     )
 
 
 @pytest.fixture
-def tracking_create_command(tmp_path):
+def tracking_create_command(tmp_path, mock_git):
     return TrackingCreateCommand(
+        git=mock_git,
         base_path=tmp_path,
         apps={
             'first': AppConfig(

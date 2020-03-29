@@ -9,9 +9,9 @@ from briefcase.commands.base import (
 )
 
 
-def test_non_url(base_command):
+def test_non_url(base_command, mock_git):
     "If the provided template isn't a URL, don't try to update."
-    base_command.git = mock.MagicMock()
+    base_command.git = mock_git
 
     cached_template = base_command.update_cookiecutter_cache(
         template='/path/to/template',
@@ -23,9 +23,9 @@ def test_non_url(base_command):
     assert base_command.git.Repo.call_count == 0
 
 
-def test_explicit_new_repo_template(base_command):
+def test_explicit_new_repo_template(base_command, mock_git):
     "If a previously unknown URL template is specified it is used"
-    base_command.git = mock.MagicMock()
+    base_command.git = mock_git
 
     # There won't be a cookiecutter cache, so there won't be
     # a repo path (yet).
@@ -46,9 +46,9 @@ def test_explicit_new_repo_template(base_command):
     base_command.git.Repo.assert_called_once_with(cached_path)
 
 
-def test_explicit_cached_repo_template(base_command):
+def test_explicit_cached_repo_template(base_command, mock_git):
     "If a previously known URL template is specified it is used"
-    base_command.git = mock.MagicMock()
+    base_command.git = mock_git
 
     mock_repo = mock.MagicMock()
     mock_remote = mock.MagicMock()
@@ -85,9 +85,9 @@ def test_explicit_cached_repo_template(base_command):
     assert cached_template == cached_path
 
 
-def test_offline_repo_template(base_command):
+def test_offline_repo_template(base_command, mock_git):
     "If the user is offline the first time a repo template is requested, an error is raised"
-    base_command.git = mock.MagicMock()
+    base_command.git = mock_git
 
     mock_repo = mock.MagicMock()
     mock_remote = mock.MagicMock()
@@ -126,9 +126,9 @@ def test_offline_repo_template(base_command):
     assert cached_template == cached_path
 
 
-def test_cached_missing_branch_template(base_command):
+def test_cached_missing_branch_template(base_command, mock_git):
     "If the cached repo doesn't have the requested branch, an error is raised"
-    base_command.git = mock.MagicMock()
+    base_command.git = mock_git
 
     mock_repo = mock.MagicMock()
     mock_remote = mock.MagicMock()

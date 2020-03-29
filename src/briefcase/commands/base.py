@@ -261,7 +261,7 @@ class BaseCommand(ABC):
 
         Raises MissingToolException if a required system tool is missing.
         """
-        self.git = self.integrations.git.verify_git_is_installed()
+        pass
 
     def parse_options(self, extra):
         parser = argparse.ArgumentParser(

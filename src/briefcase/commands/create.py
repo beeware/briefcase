@@ -716,6 +716,14 @@ class CreateCommand(BaseCommand):
             filename=self.bundle_path(app).relative_to(self.base_path),
         ))
 
+    def verify_tools(self):
+        """
+        Verify that the tools needed to run this command exist
+
+        Raises MissingToolException if a required system tool is missing.
+        """
+        self.git = self.integrations.git.verify_git_is_installed()
+
     def __call__(self, app: Optional[BaseConfig] = None, **kwargs):
         # Confirm all required tools are available
         self.verify_tools()

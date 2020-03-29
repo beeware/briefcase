@@ -502,6 +502,14 @@ Application '{formal_name}' has been generated. To run your application, type:
     briefcase dev
 """.format(**context))
 
+    def verify_tools(self):
+        """
+        Verify that the tools needed to run this command exist
+
+        Raises MissingToolException if a required system tool is missing.
+        """
+        self.git = self.integrations.git.verify_git_is_installed()
+
     def __call__(
         self,
         template: Optional[str] = None,

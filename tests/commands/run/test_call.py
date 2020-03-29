@@ -5,23 +5,6 @@ import pytest
 from briefcase.exceptions import BriefcaseCommandError
 
 
-def test_no_git(run_command):
-    "If Git is not installed, an error is raised"
-    # Mock a non-existent git
-    integrations = mock.MagicMock()
-    integrations.git.verify_git_is_installed.side_effect = BriefcaseCommandError(
-        "Briefcase requires git, but it is not installed"
-    )
-    run_command.integrations = integrations
-
-    # The command will fail tool verification.
-    with pytest.raises(
-        BriefcaseCommandError,
-        match=r"Briefcase requires git, but it is not installed"
-    ):
-        run_command()
-
-
 def test_no_args_one_app(run_command, first_app):
     "If there is one app, run starts that app by default"
     # Add a single app

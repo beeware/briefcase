@@ -1,5 +1,3 @@
-from unittest import mock
-
 import pytest
 
 from briefcase.commands import DevCommand
@@ -37,25 +35,6 @@ class DummyDevCommand(DevCommand):
 @pytest.fixture
 def dev_command(tmp_path):
     return DummyDevCommand(base_path=tmp_path)
-
-
-def test_no_git(dev_command, first_app):
-    "If Git is not installed, an error is raised"
-    # Mock a non-existent git
-    integrations = mock.MagicMock()
-    integrations.git.verify_git_is_installed.side_effect = BriefcaseCommandError(
-        "Briefcase requires git, but it is not installed"
-    )
-    dev_command.integrations = integrations
-
-    # The command will fail tool verification.
-    with pytest.raises(
-        BriefcaseCommandError, match=r"Briefcase requires git, but it is not installed"
-    ):
-        dev_command()
-
-    # No apps will be launched
-    assert dev_command.actions == []
 
 
 def test_no_args_one_app(dev_command, first_app):
