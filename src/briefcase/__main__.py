@@ -13,6 +13,11 @@ def main():
     except BriefcaseError as e:
         print(e, file=sys.stdout if e.error_code == 0 else sys.stderr)
         result = e.error_code
+    except KeyboardInterrupt:
+        print()
+        print("Aborted by user.")
+        print()
+        result = -42
 
     sys.exit(result)
 
