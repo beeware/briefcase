@@ -2,6 +2,7 @@ from unittest import mock
 
 import pytest
 import toml
+from git import exc as git_exceptions
 
 from briefcase.commands import CreateCommand
 from briefcase.config import AppConfig
@@ -25,6 +26,7 @@ class DummyCreateCommand(CreateCommand):
 
         # Mock the external services
         self.git = mock.MagicMock()
+        self.git.exc = git_exceptions
         self.cookiecutter = mock.MagicMock()
         self.subprocess = mock.MagicMock()
         self.support_file = support_file

@@ -1,3 +1,5 @@
+from unittest import mock
+
 import pytest
 
 from briefcase.commands import DevCommand
@@ -40,7 +42,11 @@ def dev_command(tmp_path):
 def test_no_git(dev_command, first_app):
     "If Git is not installed, an error is raised"
     # Mock a non-existent git
-    dev_command.git = None
+    integrations = mock.MagicMock()
+    integrations.git.verify_git_is_installed.side_effect = BriefcaseCommandError(
+        "Briefcase requires git, but it is not installed"
+    )
+    dev_command.integrations = integrations
 
     # The command will fail tool verification.
     with pytest.raises(

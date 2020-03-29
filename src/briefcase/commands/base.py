@@ -16,7 +16,7 @@ import requests
 from cookiecutter.main import cookiecutter
 from cookiecutter.repository import is_repo_url
 
-from briefcase import __version__
+from briefcase import __version__, integrations
 from briefcase.config import AppConfig, GlobalConfig, parse_config
 from briefcase.exceptions import (
     BadNetworkResourceError,
@@ -24,14 +24,6 @@ from briefcase.exceptions import (
     BriefcaseConfigError,
     MissingNetworkResourceError
 )
-
-try:
-    import git
-except ImportError:
-    # If git isn't installed, importing `git` will fail. Catch the error
-    # and replace the git module with a dummy; raise an error when tools
-    # are verified.
-    git = None
 
 
 class TemplateUnsupportedVersion(BriefcaseCommandError):
@@ -130,13 +122,15 @@ class BaseCommand(ABC):
         # External service APIs.
         # These are abstracted to enable testing without patching.
         self.cookiecutter = cookiecutter
-        self.git = git
         self.requests = requests
         self.input = input
         self.os = os
         self.sys = sys
         self.shutil = shutil
         self.subprocess = subprocess
+
+        # The internal Briefcase integrations API.
+        self.integrations = integrations
 
     @property
     def create_command(self):
@@ -267,16 +261,7 @@ class BaseCommand(ABC):
 
         Raises MissingToolException if a required system tool is missing.
         """
-        # Check whether the git executable could be imported.
-        if self.git is None:
-            raise BriefcaseCommandError("""
-Briefcase requires git, but it is not installed (or is not on your PATH). Visit:
-
-    https://git-scm.com/
-
-to download and install git. If you have installed git recently and are still
-getting this error, you may need to restart your terminal session.
-""")
+        self.git = self.integrations.git.verify_git_is_installed()
 
     def parse_options(self, extra):
         parser = argparse.ArgumentParser(
@@ -445,7 +430,7 @@ getting this error, you may need to restart your terminal session.
                     # Attempt to update the repository
                     remote = repo.remote(name='origin')
                     remote.fetch()
-                except git.exc.GitCommandError:
+                except self.git.exc.GitCommandError:
                     # We are offline, or otherwise unable to contact
                     # the origin git repo. It's OK to continue; but warn
                     # the user that the template may be stale.
@@ -465,11 +450,11 @@ getting this error, you may need to restart your terminal session.
                 except IndexError:
                     # No branch exists for the requested version.
                     raise TemplateUnsupportedVersion(branch)
-            except git.exc.NoSuchPathError:
+            except self.git.exc.NoSuchPathError:
                 # Template cache path doesn't exist.
                 # Just use the template directly, rather than attempting an update.
                 cached_template = template
-            except git.exc.InvalidGitRepositoryError:
+            except self.git.exc.InvalidGitRepositoryError:
                 # Template cache path exists, but isn't a git repository
                 # Just use the template directly, rather than attempting an update.
                 cached_template = template
