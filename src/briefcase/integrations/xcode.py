@@ -41,7 +41,9 @@ def verify_xcode_install(min_version=None, sub=subprocess):
 
     We also need to ensure that an adequate version of Xcode is available.
 
-    Lastly, there is a license that needs to be accepted.
+    Then, there is a license that needs to be accepted.
+
+    Lastly, we ensure that the iOS simulator is installed.
 
     :param min_version: The minimum allowed version of Xcode, specified as a
         tuple of integers (e.g., (11, 2, 1)). Default: ``None``, meaning there
@@ -49,7 +51,7 @@ def verify_xcode_install(min_version=None, sub=subprocess):
     :param sub: the module for starting subprocesses. Defaults to
         Python's builtin; used for testing purposes.
     """
-    ensure_xcode_is_installed(min_version, sub=sub)
+    ensure_xcode_is_installed(min_version=min_version, sub=sub)
     ensure_command_line_tools_are_installed(sub=sub)
     confirm_xcode_license_accepted(sub=sub)
 
@@ -81,7 +83,7 @@ def ensure_command_line_tools_are_installed(sub=subprocess):
     try:
         sub.check_output(
             ['xcode-select', '--install'],
-            stderr=sub.STDOUT
+            stderr=subprocess.STDOUT
         )
         raise BriefcaseCommandError("""
 Xcode command line developer tools are not installed.
@@ -92,7 +94,7 @@ tools.
 
 Re-run Briefcase once that installation is complete.
 """)
-    except sub.CalledProcessError as e:
+    except subprocess.CalledProcessError as e:
         if e.returncode != 1:
             print("""
 *************************************************************************
@@ -117,7 +119,11 @@ Re-run Briefcase once that installation is complete.
 """)
 
 
-def ensure_xcode_is_installed(min_version=None, sub=subprocess):
+def ensure_xcode_is_installed(
+    install_location='/Applications/Xcode.app',
+    min_version=None,
+    sub=subprocess
+):
     """
     Determine if Xcode is installed; and if so, that it meets minimum version
     requirements.
@@ -125,6 +131,9 @@ def ensure_xcode_is_installed(min_version=None, sub=subprocess):
     Raises an exception if XCode isn't installed, or if the version of Xcode
     that is installed doesn't meet the minimum requirement.
 
+    :param install_location: The location where Xcode should be installed.
+        Default is `/Applications/Xcode.app`, which is where the App Store
+        installs Xcode.
     :param min_version: The minimum allowed version of Xcode, specified as a
         tuple of integers (e.g., (11, 2, 1)). Default: ``None``, meaning there
         is no minimum version.
@@ -133,7 +142,7 @@ def ensure_xcode_is_installed(min_version=None, sub=subprocess):
     """
     # Try the direct approach. Look for the Xcode folder that is created
     # when you install from the App store.
-    if not Path('/Applications/Xcode.app').exists():
+    if not Path(install_location).exists():
         raise BriefcaseCommandError("""
 Xcode is not installed.
 
@@ -196,7 +205,7 @@ Re-run Briefcase once that installation is complete.
 
 """)
 
-    except sub.CalledProcessError:
+    except subprocess.CalledProcessError:
         raise BriefcaseCommandError("""
 Xcode is not installed.
 
@@ -214,8 +223,11 @@ def confirm_xcode_license_accepted(sub=subprocess):
     # tools return a status code of 69 (nice...) if the license has not been
     # accepted. In this case, we can prompt the user to accept the license.
     try:
-        sub.check_output(['/usr/bin/clang', '--version'])
-    except sub.CalledProcessError as e:
+        sub.check_output(
+            ['/usr/bin/clang', '--version'],
+            stderr=subprocess.STDOUT
+        )
+    except subprocess.CalledProcessError as e:
         if e.returncode == 69:
             print("""
 Use of Xcode and the iOS developer tools are covered by a license that must be
@@ -232,8 +244,11 @@ Briefcase will try the command line version of this command now. You will need
 to enter your password (Briefcase will not store this password anywhere).
 """)
             try:
-                sub.run(['sudo', 'xcodebuild', '-license'])
-            except sub.CalledProcessError as e:
+                sub.run(
+                    ['sudo', 'xcodebuild', '-license'],
+                    check=True,
+                )
+            except subprocess.CalledProcessError as e:
                 # status code 1 - sudo fail
                 # status code 69 - license not accepted.
                 if e.returncode == 1:
@@ -298,7 +313,12 @@ You need to accept the Xcode license before Briefcase can package your app.
 """)
 
 
-def get_simulators(os_name, sub=subprocess):
+def get_simulators(
+    os_name,
+    simulator_location='/Library/Developer/PrivateFrameworks/CoreSimulator.framework/',
+    sub=subprocess,
+    prompt=input,
+):
     """
     Obtain the simulators available on this machine.
 
@@ -308,10 +328,25 @@ def get_simulators(os_name, sub=subprocess):
 
     :param os_name: The OS that we want to simulate.
         One of `"iOS"`, `"watchOS"`, or `"tvOS"`.
+    :param simulator_location: The filesystem path where the simulator
+        frameworks are installed.
     :param sub: the module for starting subprocesses. Defaults to
         Python's builtin; used for testing purposes.
+    :param prompt: the method to use to prompt the user.
     :returns: A dictionary of available simulators.
     """
+    # If the simulator frameworks don't exist, they will be downloaded
+    # and installed. This should only occur on first execution.
+    if not Path(simulator_location).exists():
+        prompt(f"""
+It looks like the {os_name} Simulator is not installed. The {os_name} Simulator
+must be installed with administrator priviliges.
+
+xcodebuild will prompt you for your admin password so that it can download
+and install the simulator.
+
+Press enter to continue: """)
+
     try:
         simctl_data = json.loads(
             sub.check_output(
@@ -357,7 +392,7 @@ def get_simulators(os_name, sub=subprocess):
 
         return simulators
 
-    except sub.CalledProcessError:
+    except subprocess.CalledProcessError:
         raise BriefcaseCommandError(
             "Unable to run xcrun simctl."
         )
@@ -396,7 +431,7 @@ def get_device_state(udid, sub=subprocess):
                 udid=udid
             )
         )
-    except sub.CalledProcessError:
+    except subprocess.CalledProcessError:
         raise BriefcaseCommandError(
             "Unable to run xcrun simctl."
         )
@@ -425,7 +460,7 @@ def get_identities(policy, sub=subprocess):
         )
 
         return identities
-    except sub.CalledProcessError:
+    except subprocess.CalledProcessError:
         raise BriefcaseCommandError(
             "Unable to run xcrun simctl."
         )

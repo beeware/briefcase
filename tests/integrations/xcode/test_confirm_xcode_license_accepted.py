@@ -15,7 +15,10 @@ def test_license_accepted(capsys):
     confirm_xcode_license_accepted(sub=sub)
 
     # ... clang was invoked ...
-    sub.check_output.assert_called_once_with(['/usr/bin/clang', '--version'])
+    sub.check_output.assert_called_once_with(
+        ['/usr/bin/clang', '--version'],
+        stderr=subprocess.STDOUT,
+    )
 
     # ... and the user is none the wiser
     out = capsys.readouterr().out
@@ -34,7 +37,10 @@ def test_unknown_error(capsys):
     confirm_xcode_license_accepted(sub=sub)
 
     # ... clang was invoked ...
-    sub.check_output.assert_called_once_with(['/usr/bin/clang', '--version'])
+    sub.check_output.assert_called_once_with(
+        ['/usr/bin/clang', '--version'],
+        stderr=subprocess.STDOUT,
+    )
 
     # ...but stdout contains a warning
     out = capsys.readouterr().out
@@ -53,8 +59,14 @@ def test_accept_license():
     confirm_xcode_license_accepted(sub=sub)
 
     # ... clang *and* xcodebuild were invoked ...
-    sub.check_output.assert_called_once_with(['/usr/bin/clang', '--version'])
-    sub.run.assert_called_once_with(['sudo', 'xcodebuild', '-license'])
+    sub.check_output.assert_called_once_with(
+        ['/usr/bin/clang', '--version'],
+        stderr=subprocess.STDOUT,
+    )
+    sub.run.assert_called_once_with(
+        ['sudo', 'xcodebuild', '-license'],
+        check=True,
+    )
 
 
 def test_sudo_fail():
@@ -77,8 +89,14 @@ def test_sudo_fail():
         confirm_xcode_license_accepted(sub=sub)
 
     # ... clang *and* xcodebuild were invoked ...
-    sub.check_output.assert_called_once_with(['/usr/bin/clang', '--version'])
-    sub.run.assert_called_once_with(['sudo', 'xcodebuild', '-license'])
+    sub.check_output.assert_called_once_with(
+        ['/usr/bin/clang', '--version'],
+        stderr=subprocess.STDOUT,
+    )
+    sub.run.assert_called_once_with(
+        ['sudo', 'xcodebuild', '-license'],
+        check=True,
+    )
 
 
 def test_license_not_accepted():
@@ -101,8 +119,14 @@ def test_license_not_accepted():
         confirm_xcode_license_accepted(sub=sub)
 
     # ... clang *and* xcodebuild were invoked ...
-    sub.check_output.assert_called_once_with(['/usr/bin/clang', '--version'])
-    sub.run.assert_called_once_with(['sudo', 'xcodebuild', '-license'])
+    sub.check_output.assert_called_once_with(
+        ['/usr/bin/clang', '--version'],
+        stderr=subprocess.STDOUT,
+    )
+    sub.run.assert_called_once_with(
+        ['sudo', 'xcodebuild', '-license'],
+        check=True,
+    )
 
 
 def test_license_status_unknown(capsys):
@@ -121,8 +145,14 @@ def test_license_status_unknown(capsys):
     confirm_xcode_license_accepted(sub=sub)
 
     # ... clang *and* xcodebuild were invoked ...
-    sub.check_output.assert_called_once_with(['/usr/bin/clang', '--version'])
-    sub.run.assert_called_once_with(['sudo', 'xcodebuild', '-license'])
+    sub.check_output.assert_called_once_with(
+        ['/usr/bin/clang', '--version'],
+        stderr=subprocess.STDOUT,
+    )
+    sub.run.assert_called_once_with(
+        ['sudo', 'xcodebuild', '-license'],
+        check=True,
+    )
 
     # ...but stdout contains a warning
     out = capsys.readouterr().out
