@@ -18,4 +18,6 @@ iOS applications require Xcode, which is only available on macOS.
         # not *that* old at time of writing.
         verify_xcode_install(min_version=(10, 0, 0))
 
+        # Verify superclass tools *after* xcode. This ensures we get the
+        # git check *after* the xcode check.
         super().verify_tools()
