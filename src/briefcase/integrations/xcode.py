@@ -120,7 +120,7 @@ Re-run Briefcase once that installation is complete.
 
 
 def ensure_xcode_is_installed(
-    install_location='/Applications/Xcode.app',
+    xcode_location='/Applications/Xcode.app',
     min_version=None,
     sub=subprocess
 ):
@@ -131,7 +131,7 @@ def ensure_xcode_is_installed(
     Raises an exception if XCode isn't installed, or if the version of Xcode
     that is installed doesn't meet the minimum requirement.
 
-    :param install_location: The location where Xcode should be installed.
+    :param xcode_location: The location where Xcode should be installed.
         Default is `/Applications/Xcode.app`, which is where the App Store
         installs Xcode.
     :param min_version: The minimum allowed version of Xcode, specified as a
@@ -142,7 +142,7 @@ def ensure_xcode_is_installed(
     """
     # Try the direct approach. Look for the Xcode folder that is created
     # when you install from the App store.
-    if not Path(install_location).exists():
+    if not Path(xcode_location).exists():
         raise BriefcaseCommandError("""
 Xcode is not installed.
 

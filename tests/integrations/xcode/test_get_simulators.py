@@ -8,6 +8,13 @@ from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.xcode import get_simulators
 
 
+@pytest.fixture
+def simulator(tmp_path):
+    simulator_location = str(tmp_path / 'CoreSimulator.framework')
+    Path(simulator_location).mkdir(parents=True, exist_ok=True)
+    return simulator_location
+
+
 def simctl_result(name):
     """Load a simctl result file from the sample directory, and return the content"""
     filename = Path(__file__).parent / 'simctl' / '{name}.json'.format(name=name)
@@ -24,19 +31,19 @@ def test_simulator_is_missing(tmp_path):
 
     simulators = get_simulators(
         'iOS',
-        install_location=tmp_path / 'CoreSimuator.framework',
+        simulator_location=str(tmp_path / 'CoreSimulator.framework'),
         sub=sub,
         prompt=mock_input,
     )
 
     # The prompt was displayed
-    mock_input.assert_called_once()
+    assert mock_input.call_count == 1
 
     # The call returned without error.
     assert simulators == {}
 
 
-def test_simctl_missing():
+def test_simctl_missing(simulator):
     "If simctl is missing or fails to start, an exception is raised."
     sub = mock.MagicMock()
     sub.check_output.side_effect = subprocess.CalledProcessError(
@@ -45,17 +52,22 @@ def test_simctl_missing():
     )
 
     with pytest.raises(BriefcaseCommandError):
-        get_simulators('iOS', sub=sub)
+        get_simulators('iOS', simulator_location=simulator, sub=sub)
 
 
-def test_no_runtimes():
+def test_no_runtimes(simulator):
     "If there are no runtimes available, no simulators will be found"
     mock_input = mock.MagicMock()
 
     sub = mock.MagicMock()
     sub.check_output.return_value = simctl_result('no-runtimes')
 
-    simulators = get_simulators('iOS', sub=sub, prompt=mock_input)
+    simulators = get_simulators(
+        'iOS',
+        simulator_location=simulator,
+        sub=sub,
+        prompt=mock_input
+    )
 
     assert simulators == {}
 
@@ -63,14 +75,19 @@ def test_no_runtimes():
     mock_input.assert_not_called()
 
 
-def test_single_iOS_runtime():
+def test_single_iOS_runtime(simulator):
     "If an iOS version is installed, devices can be found"
     mock_input = mock.MagicMock()
 
     sub = mock.MagicMock()
     sub.check_output.return_value = simctl_result('iOS-13.2-only')
 
-    simulators = get_simulators('iOS', sub=sub, prompt=mock_input)
+    simulators = get_simulators(
+        'iOS',
+        simulator_location=simulator,
+        sub=sub,
+        prompt=mock_input
+    )
 
     assert simulators == {
         'iOS 13.2': {
@@ -91,14 +108,19 @@ def test_single_iOS_runtime():
     mock_input.assert_not_called()
 
 
-def test_watchOS_runtime():
+def test_watchOS_runtime(simulator):
     "Runtimes other than iOS can be requested."
     mock_input = mock.MagicMock()
 
     sub = mock.MagicMock()
     sub.check_output.return_value = simctl_result('iOS-13.2-only')
 
-    simulators = get_simulators('watchOS', sub=sub, prompt=mock_input)
+    simulators = get_simulators(
+        'watchOS',
+        simulator_location=simulator,
+        sub=sub,
+        prompt=mock_input
+    )
 
     assert simulators == {
         'watchOS 6.1': {
@@ -113,14 +135,19 @@ def test_watchOS_runtime():
     mock_input.assert_not_called()
 
 
-def test_multiple_iOS_runtime():
+def test_multiple_iOS_runtime(simulator):
     "If multiple iOS versions are installed, this will be reflected in results"
     mock_input = mock.MagicMock()
 
     sub = mock.MagicMock()
     sub.check_output.return_value = simctl_result('multiple-iOS-versions')
 
-    simulators = get_simulators('iOS', sub=sub, prompt=mock_input)
+    simulators = get_simulators(
+        'iOS',
+        simulator_location=simulator,
+        sub=sub,
+        prompt=mock_input
+    )
 
     assert simulators == {
         'iOS 13.2': {
@@ -159,14 +186,19 @@ def test_multiple_iOS_runtime():
     mock_input.assert_not_called()
 
 
-def test_unknown_runtime():
+def test_unknown_runtime(simulator):
     "If an unknown runtime is requested, no devices will be found"
     mock_input = mock.MagicMock()
 
     sub = mock.MagicMock()
     sub.check_output.return_value = simctl_result('multiple-iOS-versions')
 
-    simulators = get_simulators('whizzOS', sub=sub, prompt=mock_input)
+    simulators = get_simulators(
+        'whizzOS',
+        simulator_location=simulator,
+        sub=sub,
+        prompt=mock_input
+    )
 
     assert simulators == {}
 
@@ -174,14 +206,19 @@ def test_unknown_runtime():
     mock_input.assert_not_called()
 
 
-def test_alternate_format():
+def test_alternate_format(simulator):
     "The alternate format for device versions can be parsed"
     mock_input = mock.MagicMock()
 
     sub = mock.MagicMock()
     sub.check_output.return_value = simctl_result('alternate-format')
 
-    simulators = get_simulators('iOS', sub=sub, prompt=mock_input)
+    simulators = get_simulators(
+        'iOS',
+        simulator_location=simulator,
+        sub=sub,
+        prompt=mock_input
+    )
 
     assert simulators == {
         'iOS 12.0': {

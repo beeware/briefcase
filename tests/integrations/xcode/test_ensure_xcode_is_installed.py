@@ -1,10 +1,18 @@
 import subprocess
+from pathlib import Path
 from unittest import mock
 
 import pytest
 
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.xcode import ensure_xcode_is_installed
+
+
+@pytest.fixture
+def xcode(tmp_path):
+    xcode_location = str(tmp_path / 'Xcode.app')
+    Path(xcode_location).mkdir(parents=True, exist_ok=True)
+    return xcode_location
 
 
 def test_not_installed(tmp_path):
@@ -18,7 +26,7 @@ def test_not_installed(tmp_path):
     # Test a location where Xcode *won't* be installed
     with pytest.raises(BriefcaseCommandError):
         ensure_xcode_is_installed(
-            install_location=tmp_path / 'Xcode.app',
+            xcode_location=str(tmp_path / 'Xcode.app'),
             sub=sub
         )
 
@@ -26,7 +34,7 @@ def test_not_installed(tmp_path):
     sub.check_output.assert_not_called()
 
 
-def test_exists_but_not_installed():
+def test_exists_but_not_installed(xcode):
     "If the Xcode folder exists, but xcodebuild breaks, raise an error."
     sub = mock.MagicMock()
     sub.check_output.side_effect = subprocess.CalledProcessError(
@@ -35,7 +43,7 @@ def test_exists_but_not_installed():
     )
 
     with pytest.raises(BriefcaseCommandError):
-        ensure_xcode_is_installed(sub=sub)
+        ensure_xcode_is_installed(xcode_location=xcode, sub=sub)
 
     # xcode-select was invoked
     sub.check_output.assert_called_once_with(
@@ -44,13 +52,13 @@ def test_exists_but_not_installed():
     )
 
 
-def test_installed_no_minimum_version():
+def test_installed_no_minimum_version(xcode):
     "If Xcode is installed, but there's no minimum version, check is satisfied."
     sub = mock.MagicMock()
     sub.check_output.return_value = "Xcode 11.2.1\nBuild version 11B500\n"
 
     # Check passes without an error.
-    ensure_xcode_is_installed(sub=sub)
+    ensure_xcode_is_installed(xcode_location=xcode, sub=sub)
 
     # xcode-select was invoked
     sub.check_output.assert_called_once_with(
@@ -97,7 +105,7 @@ def test_installed_no_minimum_version():
         ((11, ), '11.2'),  # Exact match, implied minor version.
     ]
 )
-def test_installed_with_minimum_version_success(min_version, version, capsys):
+def test_installed_with_minimum_version_success(min_version, version, capsys, xcode):
     "Check XCode can meet a minimum version requirement."
     sub = mock.MagicMock()
     sub.check_output.return_value = "Xcode {version}\nBuild version 11B500\n".format(
@@ -105,7 +113,11 @@ def test_installed_with_minimum_version_success(min_version, version, capsys):
     )
 
     # Check passes without an error.
-    ensure_xcode_is_installed(min_version=min_version, sub=sub)
+    ensure_xcode_is_installed(
+        min_version=min_version,
+        xcode_location=xcode,
+        sub=sub
+    )
 
     # xcode-select was invoked
     sub.check_output.assert_called_once_with(
@@ -130,7 +142,7 @@ def test_installed_with_minimum_version_success(min_version, version, capsys):
         ((9, ), '8.2.1'),  # Insufficient major version
     ]
 )
-def test_installed_with_minimum_version_failure(min_version, version):
+def test_installed_with_minimum_version_failure(min_version, version, xcode):
     "Check XCode fail to meet a minimum version requirement."
     sub = mock.MagicMock()
     sub.check_output.return_value = "Xcode {version}\nBuild version 11B500\n".format(
@@ -139,7 +151,11 @@ def test_installed_with_minimum_version_failure(min_version, version):
 
     # Check raises an error.
     with pytest.raises(BriefcaseCommandError):
-        ensure_xcode_is_installed(min_version=min_version, sub=sub)
+        ensure_xcode_is_installed(
+            min_version=min_version,
+            xcode_location=xcode,
+            sub=sub
+        )
 
     # xcode-select was invoked
     sub.check_output.assert_called_once_with(
@@ -148,13 +164,17 @@ def test_installed_with_minimum_version_failure(min_version, version):
     )
 
 
-def test_unexpected_version_output(capsys):
+def test_unexpected_version_output(capsys, xcode):
     "If xcodebuild returns unexpected output, assume it's ok..."
     sub = mock.MagicMock()
     sub.check_output.return_value = "Wibble Wibble Wibble\n"
 
     # Check passes without an error...
-    ensure_xcode_is_installed(min_version=(11, 2, 1), sub=sub)
+    ensure_xcode_is_installed(
+        min_version=(11, 2, 1),
+        xcode_location=xcode,
+        sub=sub
+    )
 
     # xcode-select was invoked
     sub.check_output.assert_called_once_with(
