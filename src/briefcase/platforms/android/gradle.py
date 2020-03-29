@@ -155,6 +155,7 @@ connection."""
         Verify that we the Android APK tools in `briefcase` will operate on
         this system, downloading tools as needed.
         """
+        super().verify_tools()
         self.verify_python_version()
         self.verify_sdk()
         self.verify_license()
