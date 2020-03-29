@@ -338,14 +338,14 @@ def get_simulators(
     # If the simulator frameworks don't exist, they will be downloaded
     # and installed. This should only occur on first execution.
     if not Path(simulator_location).exists():
-        prompt(""""
+        prompt("""
 It looks like the {os_name} Simulator is not installed. The {os_name} Simulator
 must be installed with administrator priviliges.
 
 xcodebuild will prompt you for your admin password so that it can download
 and install the simulator.
 
-Press enter to continue: """.format(os_name=os_name))
+Press Return to continue: """.format(os_name=os_name))
 
     try:
         simctl_data = json.loads(
