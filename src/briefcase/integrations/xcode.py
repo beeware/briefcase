@@ -13,12 +13,16 @@ class DeviceState(enum.Enum):
     UNKNOWN = 99
 
 
-def ensure_xcode_is_installed(min_version=None, sub=subprocess):
-    """
-    Determine if an appropriate version of Xcode is installed.
+def verify_xcode_install(min_version=None, sub=subprocess):
+    """Verify that Xcode and the developer tools are installed and ready for use.
 
-    Raises an exception if Xcode is not installed, or if the version that is
-    installed doesn't meet the minimum requirement.
+    We need Xcode, and the Xcode Command Line Tools. A completely clean
+    machine will have neither Xcode *or* the Command Line Tools. However,
+    it's possible to install Xcode and *not* install the command line tools.
+
+    We also need to ensure that an adequate version of xcode is available.
+
+    Lastly, there is a license that needs to be accepted.
 
     :param min_version: The minimum allowed version of Xcode, specified as a
         tuple of integers (e.g., (11, 2, 1)). Default: ``None``, meaning there
@@ -26,7 +30,85 @@ def ensure_xcode_is_installed(min_version=None, sub=subprocess):
     :param sub: the module for starting subprocesses. Defaults to
         Python's builtin; used for testing purposes.
     """
+    ensure_xcode_is_installed(sub=sub)
+    check_xcode_version(min_version, sub=sub)
+    confirm_xcode_license_accepted(sub=sub)
 
+
+def ensure_xcode_is_installed(min_version=None, sub=subprocess):
+    """
+    Determine if Xcode and the command line tools are installed.
+
+    If Xcode is not installed, an exception is raised; in addition, a OS dialog
+    will be displayed prompting the user to install Xcode.
+
+    :param min_version: The minimum allowed version of Xcode, specified as a
+        tuple of integers (e.g., (11, 2, 1)). Default: ``None``, meaning there
+        is no minimum version.
+    :param sub: the module for starting subprocesses. Defaults to
+        Python's builtin; used for testing purposes.
+    """
+    # We determine if Xcode and the command line tools are installed
+    # by running:
+    #
+    #   xcode-select --install
+    #
+    # If that command exits with status 0, it means Xcode is *not* installed;
+    # but a dialog will be displayed prompting the installation of Xcode.
+    # If it returns a status code of 1, Xcode is already installed
+    # and outputs the message "command line tools are already installed"
+    # Any other status code is a problem.
+    try:
+        sub.check_output(
+            ['xcode-select', '--install'],
+            stderr=subprocess.STDOUT
+        )
+        raise BriefcaseCommandError("""
+Xcode and the Xcode Command Line tools are not installed.
+
+You should be shown a dialog prompting you to install Xcode and the
+command line tools. Select "Get XCode"
+
+Re-run Briefcase once that installation is complete.
+""")
+    except subprocess.CalledProcessError as e:
+        if e.returncode != 1:
+            print("""
+*************************************************************************
+** WARNING: Unable to determine if Xcode is installed                  **
+*************************************************************************
+
+   Briefcase will proceed assume everything is OK, but if you
+   experience problems, this is almost certainly the cause of those
+   problems.
+
+   Please report this as a bug at:
+
+     https://github.com/beeware/briefcase/issues/
+
+   In your report, please including the output from running:
+
+     xcode-select --install
+
+   from the command prompt.
+
+*************************************************************************
+""")
+
+
+def check_xcode_version(min_version=None, sub=subprocess):
+    """
+    Determine if the installed version of Xcode meets requirements.
+
+    Raises an exception if the version of Xcode that is installed doesn't
+    meet the minimum requirement.
+
+    :param min_version: The minimum allowed version of Xcode, specified as a
+        tuple of integers (e.g., (11, 2, 1)). Default: ``None``, meaning there
+        is no minimum version.
+    :param sub: the module for starting subprocesses. Defaults to
+        Python's builtin; used for testing purposes.
+    """
     try:
         output = sub.check_output(
             ['xcodebuild', '-version'],
@@ -53,7 +135,9 @@ def ensure_xcode_is_installed(min_version=None, sub=subprocess):
                                 version='.'.join(str(v) for v in version),
                             )
                         )
-                    return
+                    else:
+                        # Version number is acceptable
+                        return
                 except IndexError:
                     pass
 
@@ -85,6 +169,95 @@ def ensure_xcode_is_installed(min_version=None, sub=subprocess):
 Xcode is not installed.
 
 You can install Xcode from the macOS App Store.
+""")
+
+
+def confirm_xcode_license_accepted(sub=subprocess):
+    # Lastly, check if the XCode license has been accepted. The command line
+    # tools return a status code of 69 (nice...) if the license has not been
+    # accepted. In this case, we can prompt the user to accept the license.
+    try:
+        sub.check_output(['/usr/bin/clang', '--version'])
+    except subprocess.CalledProcessError as e:
+        if e.returncode == 69:
+            print("""
+Use of Xcode and the iOS developer tools are covered by a license that must be
+accepted before you can use those tools.
+
+You can accept these licenses by starting Xcode and clicking "Accept"; or, you
+can run:
+
+    sudo xcodebuild -license
+
+at the command line and accepting the license there.
+
+Briefcase will try the command line version of this command now. You will need
+to enter your password (Briefcase will not store this password anywhere).
+""")
+            try:
+                sub.run(['sudo', 'xcodebuild', '-license'])
+            except subprocess.CalledProcessError as e:
+                # status code 1 - sudo fail
+                # status code 69 - license not accepted.
+                if e.returncode == 1:
+                    raise BriefcaseCommandError("""
+Briefcase was unable to run the Xcode licensing tool. This may be because you
+did not enter your password correctly, or because your account does not have
+administrator priviliges on this computer.
+
+You need to accept the Xcode license before Briefcase can package your app.
+""")
+                elif e.returncode == 69:
+                    raise BriefcaseCommandError("""
+Xcode license has not been accepted. Briefcase cannot continue.
+
+You need to accept the Xcode license before Briefcase can package your app.
+""")
+                else:
+                    print("""
+*************************************************************************
+** WARNING: Unable to determine if the Xcode license has been accepted **
+*************************************************************************
+
+   Briefcase will proceed assume everything is OK, but if you
+   experience problems, this is almost certainly the cause of those
+   problems.
+
+   Please report this as a bug at:
+
+     https://github.com/beeware/briefcase/issues/
+
+   In your report, please including the output from running:
+
+     sudo xcodebuild -license
+
+   from the command prompt.
+
+*************************************************************************
+
+""")
+        else:
+            print("""
+*************************************************************************
+** WARNING: Unable to determine if the Xcode license has been accepted **
+*************************************************************************
+
+   Briefcase will proceed assume everything is OK, but if you
+   experience problems, this is almost certainly the cause of those
+   problems.
+
+   Please report this as a bug at:
+
+     https://github.com/beeware/briefcase/issues/
+
+   In your report, please including the output from running:
+
+     /usr/bin/clang --version
+
+   from the command prompt.
+
+*************************************************************************
+
 """)
 
 
