@@ -21,7 +21,7 @@ def build_command(tmp_path, first_app_config):
     command.sys = mock.MagicMock()
     # Use the `tmp_path` in `dot_briefcase_path` to ensure tests don't interfere
     # with each other.
-    command.dot_briefcase_path = tmp_path / ".briefcase" / "tools"
+    command.dot_briefcase_path = tmp_path / ".briefcase"
     # Override the `os` module so the app has an empty environment.
     command.os = mock.MagicMock(environ={})
     # Override the requests` and `subprocess` modules so we can test side-effects.
@@ -67,14 +67,14 @@ def test_verify_tools_succeeds_immediately_in_happy_path(build_command, host_os)
     permissions, and `android-sdk-license` exists, verify_tools() should
     succeed, create no subprocesses, and make no requests.
 
-    On Windows, this requires `sdkmanager.exe`; on non-Windows, it requires
+    On Windows, this requires `sdkmanager.bat`; on non-Windows, it requires
     `sdkmanager`.
     """
     # Create `sdkmanager` and the license file.
     tools_bin = build_command.sdk_path / "tools" / "bin"
     tools_bin.mkdir(parents=True, mode=0o755)
     if host_os == "Windows":
-        (tools_bin / "sdkmanager.exe").touch(mode=0o755)
+        (tools_bin / "sdkmanager.bat").touch()
     else:
         (tools_bin / "sdkmanager").touch(mode=0o755)
     licenses = build_command.sdk_path / "licenses"
@@ -113,9 +113,12 @@ def create_zip(filename=None):
     return out.getvalue()
 
 
-def test_verify_sdk_downloads_sdk(build_command, tmp_path):
+@pytest.mark.parametrize("host_os", ("ArbitraryNotWindows", "Windows"))
+def test_verify_sdk_downloads_sdk(build_command, tmp_path, host_os):
     """Validate that verify_sdk() downloads & unpacks the SDK ZIP file,
-    including setting permissions on `tools/bin/*` files."""
+    including setting permissions on `tools/bin/*` files on non-Windows."""
+    # Mock-out `host_os` so we only do our permission check on non-Windows.
+    build_command.host_os = host_os
     # Assert that the file does not exist yet. We assert that it is created
     # below, which allows us to validate that the call to `verify_sdk()`
     # created it.
@@ -124,9 +127,10 @@ def test_verify_sdk_downloads_sdk(build_command, tmp_path):
     build_command.requests.get.return_value = sdk_response(
         create_zip("tools/bin/exampletool")
     )
-    # Enable the command to use `os.access()` and `os.X_OK`.
-    build_command.os.access = os.access
-    build_command.os.X_OK = os.X_OK
+    if host_os != 'Windows':
+        # Enable the command to use `os.access()` and `os.X_OK`.
+        build_command.os.access = os.access
+        build_command.os.X_OK = os.X_OK
     # Call `verify_sdk()` and validate that it made one HTTP request, which created
     # `exampletool` and marked it executable.
     build_command.verify_sdk()
@@ -135,7 +139,8 @@ def test_verify_sdk_downloads_sdk(build_command, tmp_path):
     )
     # Validate that it exists and is executable.
     assert example_tool.exists()
-    assert os.access(str(example_tool), os.X_OK)
+    if host_os != 'Windows':
+        assert os.access(str(example_tool), os.X_OK)
 
 
 @pytest.mark.skipif(
@@ -212,6 +217,20 @@ def test_verify_license_passes_quickly_if_license_present(build_command):
     build_command.subprocess.run.assert_not_called()
 
 
+@pytest.mark.parametrize(
+    "host_os,sdkmanager_name",
+    [("Windows", "sdkmanager.bat"), ("NonWindows", "sdkmanager")],
+)
+def test_sdkmanager_path(build_command, host_os, sdkmanager_name):
+    """Validate that if the user is on Windows, we run `sdkmanager.bat`,
+    otherwise, `sdkmanager`."""
+    # Mock out `host_os` so we can test Windows when not on Windows.
+    build_command.host_os = host_os
+    assert build_command.sdkmanager_path == (
+        build_command.sdk_path / "tools" / "bin" / sdkmanager_name
+    )
+
+
 def test_verify_license_prompts_for_licenses_and_exits_if_you_agree(build_command):
     """Validate that if verify_license() succeeds if you agree to the Android
     SDK license."""
@@ -224,9 +243,8 @@ def test_verify_license_prompts_for_licenses_and_exits_if_you_agree(build_comman
     build_command.subprocess.run.side_effect = accept_license
     build_command.verify_license()
     build_command.subprocess.run.assert_called_once_with(
-        ["./sdkmanager", "--licenses"],
+        [str(build_command.sdkmanager_path), "--licenses"],
         check=True,
-        cwd=str(build_command.sdk_path / "tools" / "bin"),
     )
 
 

@@ -44,6 +44,15 @@ class GradleMixin:
         return self.dot_briefcase_path / "tools" / "android_sdk"
 
     @property
+    def sdkmanager_path(self):
+        sdkmanager = "sdkmanager.bat" if self.host_os == "Windows" else "sdkmanager"
+        return self.sdk_path / "tools" / "bin" / sdkmanager
+
+    def gradlew_path(self, app):
+        gradlew = "gradlew.bat" if self.host_os == "Windows" else "gradlew"
+        return self.bundle_path(app) / gradlew
+
+    @property
     def sdk_url(self):
         """The Android SDK URL appropriate to the current operating system."""
         # The URLs described by the pattern below have existed since
@@ -67,21 +76,19 @@ requires Python 3.7.""".format(
         """
         Install the Android SDK if needed.
         """
-        tools_path = self.sdk_path / "tools" / "bin"
-        sdkmanager_exe = "sdkmanager.exe" if self.host_os == "Windows" else "sdkmanager"
-        # This method marks some files as executable, so `tools_ok` checks for
-        # that as well. On Windows, all generated files are executable.
-        tools_ok = (
-            tools_path.exists()
-            and all(
-                [
-                    self.os.access(str(tool), self.os.X_OK)
-                    for tool in tools_path.glob("*")
-                ]
-            )
-            and (tools_path / sdkmanager_exe).exists()
-        )
-        if tools_ok:
+        # On Windows, the Android SDK makes some files executable by adding `.bat` to
+        # the end of their filenames.
+        #
+        # On macOS & Linux, `verify_sdk()` takes care to chmod some files so that
+        # they are marked executable.
+        #
+        # On all platforms, we need to unpack the Android SDK ZIP file.
+        #
+        # If we've already done this, we can exit early.
+        if self.sdkmanager_path.exists() and (
+            self.host_os == "Windows"
+            or self.os.access(str(self.sdkmanager_path), self.os.X_OK)
+        ):
             return
 
         print("Setting up Android SDK...")
@@ -106,8 +113,10 @@ Delete {sdk_zip_path} and run briefcase again.""".format(
             )
         sdk_zip_path.unlink()  # Zip file no longer needed once unpacked.
         # `ZipFile` ignores the permission metadata in the Android SDK ZIP
-        # file, so we manually fix permissions.
-        for binpath in tools_path.glob("*"):
+        # file, so on non-Windows, we manually fix permissions.
+        if self.host_os == "Windows":
+            return
+        for binpath in (self.sdk_path / "tools" / "bin").glob("*"):
             if not self.os.access(str(binpath), self.os.X_OK):
                 binpath.chmod(0o755)
 
@@ -127,9 +136,8 @@ before you may use those tools.
             # Using subprocess.run() with no I/O redirection so the user sees
             # the full output and can send input.
             self.subprocess.run(
-                ["./sdkmanager", "--licenses"],
+                [str(self.sdkmanager_path), "--licenses"],
                 check=True,
-                cwd=str(self.sdk_path / "tools" / "bin"),
             )
         except subprocess.CalledProcessError:
             raise BriefcaseCommandError(
@@ -182,7 +190,7 @@ class GradleBuildCommand(GradleMixin, BuildCommand):
         try:
             env = {**self.os.environ, "ANDROID_SDK_ROOT": str(self.sdk_path)}
             self.subprocess.run(
-                ["./gradlew", "assembleDebug"],
+                [str(self.gradlew_path(app)), "assembleDebug"],
                 env=env,
                 cwd=str(self.bundle_path(app)),
                 check=True
@@ -209,7 +217,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
             # displaying it only if an exception occurs.
             self.subprocess.run(
                 [
-                    str(self.sdk_path / "tools" / "bin" / "sdkmanager"),
+                    str(self.sdkmanager_path),
                     "platforms;android-28",
                     "system-images;android-28;default;x86",
                     "emulator",

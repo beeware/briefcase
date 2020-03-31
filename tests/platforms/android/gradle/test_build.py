@@ -19,15 +19,24 @@ def build_command(tmp_path, first_app_config):
     return command
 
 
-def test_execute_gradle(build_command, first_app_config):
-    """Validate that build_app() will launch `gradle assembleDebug` with the
-    appropriate environment & cwd."""
+@pytest.mark.parametrize(
+    "host_os,gradlew_name", [("Windows", "gradlew.bat"), ("NonWindows", "gradlew")],
+)
+def test_execute_gradle(build_command, first_app_config, host_os, gradlew_name):
+    """Validate that build_app() will launch `gradlew assembleDebug` with the
+    appropriate environment & cwd, and that it will use `gradlew.bat` on Windows
+    but `gradlew` elsewhere."""
+    # Mock out `host_os` so we can validate which name is used for gradlew.
+    build_command.host_os = host_os
     # Create mock environment with `key`, which we expect to be preserved, and
     # `ANDROID_SDK_ROOT`, which we expect to be overwritten.
     build_command.os.environ = {"ANDROID_SDK_ROOT": "somewhere", "key": "value"}
     build_command.build_app(first_app_config)
     build_command.subprocess.run.assert_called_once_with(
-        ["./gradlew", "assembleDebug"],
+        [
+            str(build_command.bundle_path(first_app_config) / gradlew_name),
+            "assembleDebug",
+        ],
         cwd=str(build_command.bundle_path(first_app_config)),
         env={"ANDROID_SDK_ROOT": str(build_command.sdk_path), "key": "value"},
         check=True,
