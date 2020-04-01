@@ -10,7 +10,7 @@ from briefcase.platforms.android.gradle import GradleBuildCommand
 @pytest.fixture
 def build_command(tmp_path, first_app_config):
     command = GradleBuildCommand(base_path=tmp_path / "base_path")
-    command.dot_briefcase_path = tmp_path / ".briefcase" / "tools"
+    command.dot_briefcase_path = tmp_path / ".briefcase"
     command.os = MagicMock()
     command.os.environ = {}
     command.sys = MagicMock()
