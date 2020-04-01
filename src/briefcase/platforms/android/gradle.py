@@ -190,6 +190,9 @@ class GradleBuildCommand(GradleMixin, BuildCommand):
         try:
             env = {**self.os.environ, "ANDROID_SDK_ROOT": str(self.sdk_path)}
             self.subprocess.run(
+                # Windows needs the full path to `gradlew`; macOS & Linux can find it
+                # via `./gradlew`. For simplicity of implementation, we always provide
+                # the full path.
                 [str(self.gradlew_path(app)), "assembleDebug"],
                 env=env,
                 # Set working directory so gradle can use the app bundle path as its
