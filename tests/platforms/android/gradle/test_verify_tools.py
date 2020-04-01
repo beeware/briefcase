@@ -21,7 +21,7 @@ def build_command(tmp_path, first_app_config):
     command.sys = mock.MagicMock()
     # Use the `tmp_path` in `dot_briefcase_path` to ensure tests don't interfere
     # with each other.
-    command.dot_briefcase_path = tmp_path / ".briefcase"
+    command.dot_briefcase_path = tmp_path / ".briefcase" / "tools"
     # Override the `os` module so the app has an empty environment.
     command.os = mock.MagicMock(environ={})
     # Override the requests` and `subprocess` modules so we can test side-effects.
