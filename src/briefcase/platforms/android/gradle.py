@@ -192,6 +192,8 @@ class GradleBuildCommand(GradleMixin, BuildCommand):
             self.subprocess.run(
                 [str(self.gradlew_path(app)), "assembleDebug"],
                 env=env,
+                # Set working directory so gradle can use the app bundle path as its
+                # project root, i.e., to avoid 'Task assembleDebug not found'.
                 cwd=str(self.bundle_path(app)),
                 check=True
             )
