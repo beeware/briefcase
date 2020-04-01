@@ -38,7 +38,7 @@ def test_verify_emulator_installs_android_emulator(run_command):
     run_command.verify_emulator()
     run_command.subprocess.run.assert_called_once_with(
         [
-            str(run_command.sdk_path / "tools" / "bin" / "sdkmanager"),
+            str(run_command.sdkmanager_path),
             "platforms;android-28",
             "system-images;android-28;default;x86",
             "emulator",
