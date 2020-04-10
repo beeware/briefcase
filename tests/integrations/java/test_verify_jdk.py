@@ -47,7 +47,7 @@ def test_macos_tool_java_home(test_command):
         ),
         # Second is a call to verify a valid Java version
         mock.call(
-            ['/path/to/java/bin/javac', '-version'],
+            [str(Path('/path/to/java/bin/javac')), '-version'],
             universal_newlines=True,
             stderr=subprocess.STDOUT,
         ),
@@ -105,7 +105,7 @@ def test_macos_provided_overrides_tool_java_home(test_command):
 
     # A single call to check output
     test_command.subprocess.check_output.assert_called_once_with(
-        ['/path/to/java/bin/javac', '-version'],
+        [str(Path('/path/to/java/bin/javac')), '-version'],
         universal_newlines=True,
         stderr=subprocess.STDOUT,
     ),
@@ -127,7 +127,7 @@ def test_valid_provided_java_home(test_command):
 
     # A single call to check output
     test_command.subprocess.check_output.assert_called_once_with(
-        ['/path/to/java/bin/javac', '-version'],
+        [str(Path('/path/to/java/bin/javac')), '-version'],
         universal_newlines=True,
         stderr=subprocess.STDOUT,
     ),
@@ -152,7 +152,7 @@ def test_invalid_jdk_version(test_command, tmp_path):
 
     # A single call was made to check javac
     test_command.subprocess.check_output.assert_called_once_with(
-        ['/path/to/java/bin/javac', '-version'],
+        [str(Path('/path/to/java/bin/javac')), '-version'],
         universal_newlines=True,
         stderr=subprocess.STDOUT,
     ),
@@ -177,7 +177,7 @@ def test_no_javac(test_command, tmp_path):
 
     # A single call was made to check javac
     test_command.subprocess.check_output.assert_called_once_with(
-        ['/path/to/nowhere/bin/javac', '-version'],
+        [str(Path('/path/to/nowhere/bin/javac')), '-version'],
         universal_newlines=True,
         stderr=subprocess.STDOUT,
     ),
@@ -204,7 +204,7 @@ def test_javac_error(test_command, tmp_path):
 
     # A single call was made to check javac
     test_command.subprocess.check_output.assert_called_once_with(
-        ['/path/to/java/bin/javac', '-version'],
+        [str(Path('/path/to/java/bin/javac')), '-version'],
         universal_newlines=True,
         stderr=subprocess.STDOUT,
     ),
@@ -229,7 +229,7 @@ def test_unparseable_javac_version(test_command, tmp_path):
 
     # A single call was made to check javac
     test_command.subprocess.check_output.assert_called_once_with(
-        ['/path/to/java/bin/javac', '-version'],
+        [str(Path('/path/to/java/bin/javac')), '-version'],
         universal_newlines=True,
         stderr=subprocess.STDOUT,
     ),
