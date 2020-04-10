@@ -417,7 +417,7 @@ class CreateCommand(BaseCommand):
                 str(support_filename),
                 extract_dir=str(support_path)
             )
-        except shutil.ReadError:
+        except (shutil.ReadError, EOFError):
             print()
             raise InvalidSupportPackage(support_package_url)
 
