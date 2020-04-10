@@ -290,7 +290,7 @@ def test_successful_jdk_download(test_command, tmp_path, host_os, jdk_url, jhome
         extract_dir=str(tmp_path / "tools")
     )
     # The original archive was deleted
-    archive.unlink.assert_called_once()
+    archive.unlink.assert_called_once_with()
 
 
 def test_jdk_download_failure(test_command, tmp_path):
