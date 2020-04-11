@@ -28,9 +28,10 @@ def build_command(tmp_path, first_app_config):
     # Use a dummy JAVA HOME
     command.java_home_path = tmp_path / "java"
 
-    # Override the `os` module so the app has an empty environment.
-    getenv = mock.MagicMock(return_value=str(command.java_home_path))
-    command.os = mock.MagicMock(environ={}, getenv=getenv)
+    # Override the `os` module so the app has an environment with JAVA_HOME
+    command.os = mock.MagicMock(environ={
+        'JAVA_HOME': str(command.java_home_path)
+    })
     # Enable the command to use `os.access()` and `os.X_OK`.
     command.os.access = os.access
     command.os.X_OK = os.X_OK

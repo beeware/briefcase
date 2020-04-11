@@ -12,16 +12,16 @@ from briefcase.integrations.java import verify_jdk
 
 @pytest.fixture
 def test_command(tmp_path):
-    cmd = mock.MagicMock()
-    cmd.dot_briefcase_path = tmp_path
+    command = mock.MagicMock()
+    command.dot_briefcase_path = tmp_path
 
-    # Mock getenv returning no explicit JAVA_HOME
-    cmd.os.getenv = mock.MagicMock(return_value='')
+    # Mock environ.get returning no explicit JAVA_HOME
+    command.os.environ.get = mock.MagicMock(return_value='')
 
-    return cmd
+    return command
 
 
-def test_macos_tool_java_home(test_command):
+def test_macos_tool_java_home(test_command, capsys):
     "On macOS, the /usr/libexec/java_home utility is checked"
     # Mock being on macOS
     test_command.host_os = 'Darwin'
@@ -33,7 +33,7 @@ def test_macos_tool_java_home(test_command):
     ]
 
     # Invoke verify_jdk
-    java_home = verify_jdk(cmd=test_command)
+    java_home = verify_jdk(command=test_command)
 
     # The JDK should have the path returned by the tool
     assert java_home == Path('/path/to/java')
@@ -53,14 +53,16 @@ def test_macos_tool_java_home(test_command):
         ),
     ])
 
+    # No console output
+    output = capsys.readouterr()
+    assert output.out == ''
+    assert output.err == ''
 
-def test_macos_tool_failure(test_command, tmp_path):
+
+def test_macos_tool_failure(test_command, tmp_path, capsys):
     "On macOS, if the libexec tool fails, the Briefcase JDK is used"
     # Mock being on macOS
     test_command.host_os = 'Darwin'
-
-    # Mock getenv returning no explicit JAVA_HOME
-    test_command.os.getenv = mock.MagicMock(return_value='')
 
     # Mock a failed call on the libexec tool
     test_command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
@@ -71,7 +73,7 @@ def test_macos_tool_failure(test_command, tmp_path):
     (tmp_path / 'tools' / 'java' / 'Contents' / 'Home' / 'bin').mkdir(parents=True)
 
     # Invoke verify_jdk
-    java_home = verify_jdk(cmd=test_command)
+    java_home = verify_jdk(command=test_command)
 
     # The JDK should have the briefcase JAVA_HOME
     assert java_home == tmp_path / 'tools' / 'java' / 'Contents' / 'Home'
@@ -85,20 +87,25 @@ def test_macos_tool_failure(test_command, tmp_path):
         ),
     ])
 
+    # No console output
+    output = capsys.readouterr()
+    assert output.out == ''
+    assert output.err == ''
 
-def test_macos_provided_overrides_tool_java_home(test_command):
+
+def test_macos_provided_overrides_tool_java_home(test_command, capsys):
     "On macOS, an explicit JAVA_HOME overrides /usr/libexec/java_home"
     # Mock being on macOS
     test_command.host_os = 'Darwin'
 
-    # Mock getenv returning an explicit JAVA_HOME
-    test_command.os.getenv = mock.MagicMock(return_value='/path/to/java')
+    # Mock environ.get returning an explicit JAVA_HOME
+    test_command.os.environ.get = mock.MagicMock(return_value='/path/to/java')
 
     # Mock return value from javac. libexec won't be invoked.
     test_command.subprocess.check_output.return_value = 'javac 1.8.0_144\n'
 
     # Invoke verify_jdk
-    java_home = verify_jdk(cmd=test_command)
+    java_home = verify_jdk(command=test_command)
 
     # The JDK should have the path returned by the tool
     assert java_home == Path('/path/to/java')
@@ -110,17 +117,22 @@ def test_macos_provided_overrides_tool_java_home(test_command):
         stderr=subprocess.STDOUT,
     ),
 
+    # No console output
+    output = capsys.readouterr()
+    assert output.out == ''
+    assert output.err == ''
 
-def test_valid_provided_java_home(test_command):
+
+def test_valid_provided_java_home(test_command, capsys):
     "If a valid JAVA_HOME is provided, it is used."
-    # Mock getenv returning an explicit JAVA_HOME
-    test_command.os.getenv = mock.MagicMock(return_value='/path/to/java')
+    # Mock environ.get returning an explicit JAVA_HOME
+    test_command.os.environ.get = mock.MagicMock(return_value='/path/to/java')
 
     # Mock return value from javac.
     test_command.subprocess.check_output.return_value = 'javac 1.8.0_144\n'
 
     # Invoke verify_jdk
-    java_home = verify_jdk(cmd=test_command)
+    java_home = verify_jdk(command=test_command)
 
     # The JDK should have the path returned by the tool
     assert java_home == Path('/path/to/java')
@@ -132,11 +144,16 @@ def test_valid_provided_java_home(test_command):
         stderr=subprocess.STDOUT,
     ),
 
+    # No console output
+    output = capsys.readouterr()
+    assert output.out == ''
+    assert output.err == ''
 
-def test_invalid_jdk_version(test_command, tmp_path):
+
+def test_invalid_jdk_version(test_command, tmp_path, capsys):
     "If the JDK pointed to by JAVA_HOME isn't a Java 8 JDK, the briefcase JDK is used"
-    # Mock getenv returning an explicit JAVA_HOME
-    test_command.os.getenv = mock.MagicMock(return_value='/path/to/java')
+    # Mock environ.get returning an explicit JAVA_HOME
+    test_command.os.environ.get = mock.MagicMock(return_value='/path/to/java')
 
     # Mock return value from javac.
     test_command.subprocess.check_output.return_value = 'javac 14\n'
@@ -145,7 +162,7 @@ def test_invalid_jdk_version(test_command, tmp_path):
     (tmp_path / 'tools' / 'java' / 'bin').mkdir(parents=True)
 
     # Invoke verify_jdk
-    java_home = verify_jdk(cmd=test_command)
+    java_home = verify_jdk(command=test_command)
 
     # The JDK should have the briefcase JAVA_HOME
     assert java_home == tmp_path / 'tools' / 'java'
@@ -157,11 +174,16 @@ def test_invalid_jdk_version(test_command, tmp_path):
         stderr=subprocess.STDOUT,
     ),
 
+    # No console output (because Briefcase JDK exists)
+    output = capsys.readouterr()
+    assert output.out == ''
+    assert output.err == ''
 
-def test_no_javac(test_command, tmp_path):
+
+def test_no_javac(test_command, tmp_path, capsys):
     "If the JAVA_HOME doesn't point to a location with a bin/javac, the briefcase JDK is used"
-    # Mock getenv returning an explicit JAVA_HOME
-    test_command.os.getenv = mock.MagicMock(return_value='/path/to/nowhere')
+    # Mock environ.get returning an explicit JAVA_HOME
+    test_command.os.environ.get = mock.MagicMock(return_value='/path/to/nowhere')
 
     # Mock return value from javac failing because executable doesn't exist
     test_command.subprocess.check_output.side_effect = FileNotFoundError
@@ -170,9 +192,9 @@ def test_no_javac(test_command, tmp_path):
     (tmp_path / 'tools' / 'java' / 'bin').mkdir(parents=True)
 
     # Invoke verify_jdk
-    java_home = verify_jdk(cmd=test_command)
+    java_home = verify_jdk(command=test_command)
 
-    # The JDK should have the briefcase JAVA_HOME
+    # The JAVA_HOME should point at the Briefcase-provided JDK
     assert java_home == tmp_path / 'tools' / 'java'
 
     # A single call was made to check javac
@@ -182,11 +204,16 @@ def test_no_javac(test_command, tmp_path):
         stderr=subprocess.STDOUT,
     ),
 
+    # No console output (because Briefcase JDK exists)
+    output = capsys.readouterr()
+    assert output.out == ''
+    assert output.err == ''
 
-def test_javac_error(test_command, tmp_path):
+
+def test_javac_error(test_command, tmp_path, capsys):
     "If javac can't be executed, the briefcase JDK is used"
-    # Mock getenv returning an explicit JAVA_HOME
-    test_command.os.getenv = mock.MagicMock(return_value='/path/to/java')
+    # Mock environ.get returning an explicit JAVA_HOME
+    test_command.os.environ.get = mock.MagicMock(return_value='/path/to/java')
 
     # Mock return value from javac failing because executable doesn't exist
     test_command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
@@ -197,7 +224,7 @@ def test_javac_error(test_command, tmp_path):
     (tmp_path / 'tools' / 'java' / 'bin').mkdir(parents=True)
 
     # Invoke verify_jdk
-    java_home = verify_jdk(cmd=test_command)
+    java_home = verify_jdk(command=test_command)
 
     # The JDK should have the briefcase JAVA_HOME
     assert java_home == tmp_path / 'tools' / 'java'
@@ -209,11 +236,16 @@ def test_javac_error(test_command, tmp_path):
         stderr=subprocess.STDOUT,
     ),
 
+    # No console output (because Briefcase JDK exists)
+    output = capsys.readouterr()
+    assert output.out == ''
+    assert output.err == ''
 
-def test_unparseable_javac_version(test_command, tmp_path):
+
+def test_unparseable_javac_version(test_command, tmp_path, capsys):
     "If the javac version can't be parsed, the briefcase JDK is used"
-    # Mock getenv returning an explicit JAVA_HOME
-    test_command.os.getenv = mock.MagicMock(return_value='/path/to/java')
+    # Mock environ.get returning an explicit JAVA_HOME
+    test_command.os.environ.get = mock.MagicMock(return_value='/path/to/java')
 
     # Mock return value from javac.
     test_command.subprocess.check_output.return_value = 'NONSENSE\n'
@@ -222,7 +254,7 @@ def test_unparseable_javac_version(test_command, tmp_path):
     (tmp_path / 'tools' / 'java' / 'bin').mkdir(parents=True)
 
     # Invoke verify_jdk
-    java_home = verify_jdk(cmd=test_command)
+    java_home = verify_jdk(command=test_command)
 
     # The JDK should have the briefcase JAVA_HOME
     assert java_home == tmp_path / 'tools' / 'java'
@@ -233,6 +265,11 @@ def test_unparseable_javac_version(test_command, tmp_path):
         universal_newlines=True,
         stderr=subprocess.STDOUT,
     ),
+
+    # No console output (because Briefcase JDK exists)
+    output = capsys.readouterr()
+    assert output.out == ''
+    assert output.err == ''
 
 
 @pytest.mark.parametrize(
@@ -257,14 +294,14 @@ def test_unparseable_javac_version(test_command, tmp_path):
         ),
     ]
 )
-def test_successful_jdk_download(test_command, tmp_path, host_os, jdk_url, jhome):
+def test_successful_jdk_download(test_command, tmp_path, capsys, host_os, jdk_url, jhome):
     "If needed, a JDK can be downloaded."
     # Mock host OS
     test_command.host_os = host_os
 
     # Mock a JAVA_HOME that won't exist
     # This is only needed to make macOS *not* run /usr/libexec/java_home
-    test_command.os.getenv = mock.MagicMock(return_value='/does/not/exist')
+    test_command.os.environ.get = mock.MagicMock(return_value='/does/not/exist')
 
     # Mock the cached download path
     archive = mock.MagicMock()
@@ -275,9 +312,14 @@ def test_successful_jdk_download(test_command, tmp_path, host_os, jdk_url, jhome
     (tmp_path / 'tools' / 'jdk8u242-b08').mkdir(parents=True)
 
     # Invoke the verify call
-    java_home = verify_jdk(cmd=test_command)
+    java_home = verify_jdk(command=test_command)
 
     assert java_home == tmp_path / 'tools' / jhome
+
+    # Console output contains a warning about the bad JDK location
+    output = capsys.readouterr()
+    assert output.err == ''
+    assert "** WARNING: JAVA_HOME does not point to a Java 8 JDK" in output.out
 
     # Download was invoked
     test_command.download_url.assert_called_with(
@@ -303,7 +345,7 @@ def test_jdk_download_failure(test_command, tmp_path):
 
     # Invoking verify_jdk causes a network failure.
     with pytest.raises(NetworkFailure):
-        verify_jdk(cmd=test_command)
+        verify_jdk(command=test_command)
 
     # That download was attempted
     test_command.download_url.assert_called_with(
@@ -329,7 +371,7 @@ def test_invalid_jdk_archive(test_command, tmp_path):
     test_command.shutil.unpack_archive.side_effect = shutil.ReadError
 
     with pytest.raises(BriefcaseCommandError):
-        verify_jdk(cmd=test_command)
+        verify_jdk(command=test_command)
 
     # The download occurred
     test_command.download_url.assert_called_with(
