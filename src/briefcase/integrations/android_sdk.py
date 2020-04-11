@@ -1,6 +1,7 @@
 import re
 import shutil
 import subprocess
+from pathlib import Path
 
 from requests import exceptions as requests_exceptions
 
@@ -11,31 +12,50 @@ DEVICE_NOT_FOUND = re.compile(r"^error: device '[^']*' not found")
 
 def verify_android_sdk(command):
     """
-    Verify the Android SDK is available.
+    Verify an Android SDK is available.
 
-    If no Android SDK is available, the base SDK is downloaded.
+    If the ANDROID_SDK_ROOT environment variable is set, that location will
+    be checked for a valid SDK.
+
+    If the location provided doesn't contain an SDK, or no location is provided,
+    an SDK is downloaded.
 
     :param command: The command making the verification request.
     :returns: An AndroidSDK instance, bound to command.
     """
-    # On Windows, the Android SDK makes some files executable by adding `.bat` to
-    # the end of their filenames.
-    #
-    # On macOS & Linux, `verify_android_sdk()` takes care to chmod some files so that
-    # they are marked executable.
-    #
-    # On all platforms, we need to unpack the Android SDK ZIP file.
-    #
-    # If we've already done this, we can exit early.
+    sdk_root = command.os.environ.get('ANDROID_SDK_ROOT')
+    if sdk_root:
+        sdk = AndroidSDK(command=command, root_path=Path(sdk_root))
+
+        if sdk.exists():
+            # Ensure licenses have been accepted
+            sdk.verify_license()
+            return sdk
+        else:
+            print("""
+*************************************************************************
+** WARNING: ANDROID_SDK_ROOT does not point to an Android SDK          **
+*************************************************************************
+
+    The location pointed to by the ANDROID_SDK_ROOT environment variable:
+
+     {sdk_root}
+
+    doesn't appear to contain an Android SDK.
+
+    Briefcase will use its own SDK instance.
+
+*************************************************************************
+
+""".format(sdk_root=sdk_root))
+
+    # Build an SDK wrapper for the Briefcase SDK instance.
     sdk = AndroidSDK(
         command=command,
         root_path=command.dot_briefcase_path / "tools" / "android_sdk"
     )
 
-    if sdk.sdkmanager_path.exists() and (
-        command.host_os == "Windows"
-        or command.os.access(str(sdk.sdkmanager_path), command.os.X_OK)
-    ):
+    if sdk.exists():
         # Ensure licenses have been accepted
         sdk.verify_license()
         return sdk
@@ -108,10 +128,31 @@ class AndroidSDK:
             "sdk-tools-{os}-4333796.zip".format(os=self.command.host_os.lower())
         )
 
+    def exists(self):
+        """Confirm that the SDK actually exists.
+
+        Look for the sdkmanager; and, if necessary, confirm that it is
+        executable.
+        """
+        return self.sdkmanager_path.exists() and (
+            self.command.host_os == "Windows"
+            or self.command.os.access(str(self.sdkmanager_path), self.command.os.X_OK)
+        )
+
     def adb(self, device):
+        """Obtain an ADB instance for managing a specific device.
+
+        :param device: The device ID to manage.
+        """
         return ADB(self.sdk, device=device)
 
     def verify_license(self):
+        """Verify that all necessary licenses have been accepted.
+
+        If they haven't, prompt the user to do so.
+
+        Raises an error if licenses are not.
+        """
         license_path = self.root_path / "licenses" / "android-sdk-license"
         if license_path.exists():
             return
@@ -151,6 +192,10 @@ class AndroidSDK:
             )
 
     def verify_emulator(self):
+        """Verify that Android emulator has been installed.
+
+        Raises an error if the emulator can't be installed.
+        """
         if (self.root_path / "emulator").exists():
             return
 

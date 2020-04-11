@@ -84,8 +84,68 @@ def test_succeeds_immediately_in_happy_path(mock_command, host_os, tmp_path):
     assert sdk.root_path == root_path
 
 
+def test_user_provided_sdk(mock_command, tmp_path):
+    "If the user specifies a valid ANDROID_SDK_ROOT, it is used"
+    # Create `sdkmanager` and the license file.
+    root_path = tmp_path / "other_sdk"
+    tools_bin = root_path / "tools" / "bin"
+    tools_bin.mkdir(parents=True, mode=0o755)
+    (tools_bin / "sdkmanager").touch(mode=0o755)
+    licenses = root_path / "licenses"
+    licenses.mkdir(parents=True, mode=0o755)
+    (licenses / "android-sdk-license").touch()
+
+    # Set the environment to specify ANDROID_SDK_ROOT
+    mock_command.os.environ = {
+        'ANDROID_SDK_ROOT': str(root_path)
+    }
+
+    # Expect verify_android_sdk() to succeed
+    sdk = verify_android_sdk(mock_command)
+
+    # No calls to download, run or unpack anything.
+    mock_command.download_url.assert_not_called()
+    mock_command.subprocess.run.assert_not_called()
+    mock_command.subprocess.check_output.assert_not_called()
+    mock_command.shutil.unpack_archive.assert_not_called()
+
+    # The returned SDK has the expected root path.
+    assert sdk.root_path == root_path
+
+
+def test_invalid_user_provided_sdk(mock_command, tmp_path):
+    "If the user specifies an invalid ANDROID_SDK_ROOT, it is ignored"
+
+    # Create `sdkmanager` and the license file
+    # for the *briefcase* SDK.
+    root_path = tmp_path / ".briefcase" / "tools" / "android_sdk"
+    tools_bin = root_path / "tools" / "bin"
+    tools_bin.mkdir(parents=True, mode=0o755)
+    (tools_bin / "sdkmanager").touch(mode=0o755)
+    licenses = root_path / "licenses"
+    licenses.mkdir(parents=True, mode=0o755)
+    (licenses / "android-sdk-license").touch()
+
+    # Set the environment to specify an ANDROID_SDK_ROOT that doesn't exist
+    mock_command.os.environ = {
+        'ANDROID_SDK_ROOT': str(tmp_path / "other_sdk")
+    }
+
+    # Expect verify_android_sdk() to succeed
+    sdk = verify_android_sdk(mock_command)
+
+    # No calls to download, run or unpack anything.
+    mock_command.download_url.assert_not_called()
+    mock_command.subprocess.run.assert_not_called()
+    mock_command.subprocess.check_output.assert_not_called()
+    mock_command.shutil.unpack_archive.assert_not_called()
+
+    # The returned SDK has the expected root path.
+    assert sdk.root_path == root_path
+
+
 @pytest.mark.parametrize("host_os", ("ArbitraryNotWindows", "Windows"))
-def test_verify_android_sdk_downloads_sdk(mock_command, tmp_path, host_os):
+def test_download_sdk(mock_command, tmp_path, host_os):
     "If an SDK is not available, one will be downloaded"
     root_path = tmp_path / ".briefcase" / "tools" / "android_sdk"
 
@@ -138,7 +198,7 @@ def test_verify_android_sdk_downloads_sdk(mock_command, tmp_path, host_os):
 @pytest.mark.skipif(
     sys.platform == "win32", reason="executable permission doesn't make sense on Windows"
 )
-def test_verify_android_sdk_downloads_sdk_if_sdkmanager_not_executable(mock_command, tmp_path):
+def test_download_sdk_if_sdkmanager_not_executable(mock_command, tmp_path):
     """An SDK will be downloaded and unpackged if `tools/bin/sdkmanager` exists
     but does not have its permissions set properly."""
     root_path = tmp_path / ".briefcase" / "tools" / "android_sdk"
@@ -179,7 +239,7 @@ def test_verify_android_sdk_downloads_sdk_if_sdkmanager_not_executable(mock_comm
     assert sdk.root_path == root_path
 
 
-def test_verify_android_sdk_raises_networkfailure_on_connectionerror(mock_command):
+def test_raises_networkfailure_on_connectionerror(mock_command):
     "If an error occurs downloading the ZIP file, and error is raised."
     mock_command.download_url.side_effect = requests_exceptions.ConnectionError()
 
@@ -195,7 +255,7 @@ def test_verify_android_sdk_raises_networkfailure_on_connectionerror(mock_comman
     assert mock_command.shutil.unpack_archive.call_count == 0
 
 
-def test_verify_android_sdk_detects_badzipfile(mock_command, tmp_path):
+def test_detects_bad_zipfile(mock_command, tmp_path):
     "If the ZIP file is corrupted, an error is raised."
     root_path = tmp_path / ".briefcase" / "tools" / "android_sdk"
 
