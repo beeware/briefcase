@@ -17,19 +17,28 @@ def build_command(tmp_path, first_app_config):
     command = GradleBuildCommand(
         base_path=tmp_path / "base_path", apps={"first": first_app_config},
     )
+
     # Mock-out the `sys` module so we can mock out the Python version in some tests.
     command.sys = mock.MagicMock()
+
     # Use the `tmp_path` in `dot_briefcase_path` to ensure tests don't interfere
     # with each other.
     command.dot_briefcase_path = tmp_path / ".briefcase"
+
     # Use a dummy JAVA HOME
     command.java_home_path = tmp_path / "java"
+
     # Override the `os` module so the app has an empty environment.
     getenv = mock.MagicMock(return_value=str(command.java_home_path))
     command.os = mock.MagicMock(environ={}, getenv=getenv)
+    # Enable the command to use `os.access()` and `os.X_OK`.
+    command.os.access = os.access
+    command.os.X_OK = os.X_OK
+
     # Override the requests` and `subprocess` modules so we can test side-effects.
     command.requests = mock.MagicMock()
     command.subprocess = mock.MagicMock()
+
     return command
 
 
@@ -146,8 +155,11 @@ def test_verify_sdk_downloads_sdk(build_command, tmp_path, host_os):
     build_command.requests.get.assert_called_once_with(
         build_command.sdk_url, stream=True
     )
-    # Validate that it exists.
+
+    # Validate that it exists, and is executable (if relevant)
     assert example_tool.exists()
+    if host_os != 'Windows':
+        assert os.access(str(example_tool), os.X_OK)
 
 
 @pytest.mark.skipif(

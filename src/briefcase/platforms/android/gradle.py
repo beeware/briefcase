@@ -123,6 +123,13 @@ Delete {sdk_zip_path} and run briefcase again.""".format(
                 )
             )
         sdk_zip_path.unlink()  # Zip file no longer needed once unpacked.
+        # Python zip unpacking ignores permission metadata.
+        # On non-Windows, we manually fix permissions.
+        if self.host_os == "Windows":
+            return
+        for binpath in (self.sdk_path / "tools" / "bin").glob("*"):
+            if not self.os.access(str(binpath), self.os.X_OK):
+                binpath.chmod(0o755)
 
     def verify_license(self):
         license_path = self.sdk_path / "licenses" / "android-sdk-license"
