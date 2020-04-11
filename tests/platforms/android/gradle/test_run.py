@@ -1,4 +1,3 @@
-from subprocess import CalledProcessError
 from unittest.mock import MagicMock
 
 import pytest
@@ -14,7 +13,8 @@ def run_command(tmp_path, first_app_config):
     command.java_home_path = tmp_path / "java"
 
     command.mock_adb = MagicMock()
-    command.ADB = MagicMock(return_value=command.mock_adb)
+    command.android_sdk = MagicMock()
+    command.android_sdk.adb.return_value = command.mock_adb
 
     command.os = MagicMock()
     command.os.environ = {}
@@ -24,43 +24,6 @@ def run_command(tmp_path, first_app_config):
     return command
 
 
-def test_verify_emulator_succeeds_immediately_if_emulator_installed(run_command):
-    """`verify_emulator()` exits early if the emulator exists in its android_sdk_home_path."""
-    # Create `emulator` within `android_sdk_home_path`.
-    (run_command.android_sdk_home_path / "emulator").mkdir(parents=True)
-    run_command.verify_emulator()
-    run_command.subprocess.run.assert_not_called()
-    run_command.requests.get.assert_not_called()
-
-
-def test_verify_emulator_installs_android_emulator(run_command):
-    """`verify_emulator()` calls `subprocess.run` with the parameters needed
-    to install the Android emulator."""
-    run_command.verify_emulator()
-    run_command.subprocess.run.assert_called_once_with(
-        [
-            str(run_command.sdkmanager_path),
-            "platforms;android-28",
-            "system-images;android-28;default;x86",
-            "emulator",
-            "platform-tools",
-        ],
-        env=run_command.android_env,
-        check=True,
-    )
-
-
-def test_verify_emulator_install_problems_are_reported(run_command):
-    "If the sdkmanager fails to properly install the Android emulator, an exception is raised."
-    # Configure `subprocess` module to crash as though it were a sad sdkmanager.
-    run_command.subprocess.run.side_effect = CalledProcessError(
-        returncode=1,
-        cmd=["ignored"],
-    )
-    with pytest.raises(BriefcaseCommandError):
-        run_command.verify_emulator()
-
-
 def test_run_app_requires_device_name(run_command, first_app_config):
     """`run_app()` raises an exception if the user does not specify an Android device."""
 
@@ -68,7 +31,7 @@ def test_run_app_requires_device_name(run_command, first_app_config):
         run_command.run_app(first_app_config)
 
     # The ADB wrapper wasn't even created
-    run_command.ADB.assert_not_called()
+    run_command.mock_adb.assert_not_called()
 
 
 def test_run_app_launches_app_properly(run_command, first_app_config):
@@ -77,7 +40,7 @@ def test_run_app_launches_app_properly(run_command, first_app_config):
     run_command.run_app(first_app_config, "exampleDevice")
 
     # The ADB wrapper is created
-    run_command.ADB.assert_called_once_with(run_command, device="exampleDevice")
+    run_command.android_sdk.adb.assert_called_once_with(run_command, device="exampleDevice")
 
     # The adb wrapper is invoked with the expected arguments
     run_command.mock_adb.install_apk.assert_called_once_with(
