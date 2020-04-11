@@ -12,7 +12,6 @@ def test_sdk_url(mock_sdk):
     )
 
 
-
 @pytest.mark.parametrize(
     "host_os, sdkmanager_name",
     [
@@ -29,3 +28,26 @@ def test_sdkmanager_path(mock_sdk, host_os, sdkmanager_name):
     assert mock_sdk.sdkmanager_path == (
         mock_sdk.root_path / "tools" / "bin" / sdkmanager_name
     )
+
+
+def test_simple_env(mock_sdk, tmp_path):
+    "The SDK Environment can be constructed"
+    assert mock_sdk.env == {
+        'JAVA_HOME': '/path/to/jdk',
+        'ANDROID_SDK_ROOT': str(tmp_path / 'sdk')
+    }
+
+
+def test_override_env(mock_sdk, tmp_path):
+    "The existing environment is preserved, but overwritten by SDK variables"
+    mock_sdk.command.os.environ = {
+        'other': 'stuff',
+        'JAVA_HOME': '/other/jdk',
+        'ANDROID_SDK_ROOT': '/other/android_sdk',
+    }
+
+    assert mock_sdk.env == {
+        'other': 'stuff',
+        'JAVA_HOME': '/path/to/jdk',
+        'ANDROID_SDK_ROOT': str(tmp_path / 'sdk')
+    }
