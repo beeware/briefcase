@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 
 
@@ -33,7 +35,7 @@ def test_sdkmanager_path(mock_sdk, host_os, sdkmanager_name):
 def test_simple_env(mock_sdk, tmp_path):
     "The SDK Environment can be constructed"
     assert mock_sdk.env == {
-        'JAVA_HOME': '/path/to/jdk',
+        'JAVA_HOME': str(Path('/path/to/jdk')),
         'ANDROID_SDK_ROOT': str(tmp_path / 'sdk')
     }
 
@@ -48,6 +50,6 @@ def test_override_env(mock_sdk, tmp_path):
 
     assert mock_sdk.env == {
         'other': 'stuff',
-        'JAVA_HOME': '/path/to/jdk',
+        'JAVA_HOME': str(Path('/path/to/jdk')),
         'ANDROID_SDK_ROOT': str(tmp_path / 'sdk')
     }
