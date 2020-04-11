@@ -17,16 +17,29 @@ def build_command(tmp_path, first_app_config):
     command = GradleBuildCommand(
         base_path=tmp_path / "base_path", apps={"first": first_app_config},
     )
+
     # Mock-out the `sys` module so we can mock out the Python version in some tests.
     command.sys = mock.MagicMock()
+
     # Use the `tmp_path` in `dot_briefcase_path` to ensure tests don't interfere
     # with each other.
     command.dot_briefcase_path = tmp_path / ".briefcase"
-    # Override the `os` module so the app has an empty environment.
-    command.os = mock.MagicMock(environ={})
+
+    # Use a dummy JAVA HOME
+    command.java_home_path = tmp_path / "java"
+
+    # Override the `os` module so the app has an environment with JAVA_HOME
+    command.os = mock.MagicMock(environ={
+        'JAVA_HOME': str(command.java_home_path)
+    })
+    # Enable the command to use `os.access()` and `os.X_OK`.
+    command.os.access = os.access
+    command.os.X_OK = os.X_OK
+
     # Override the requests` and `subprocess` modules so we can test side-effects.
     command.requests = mock.MagicMock()
     command.subprocess = mock.MagicMock()
+
     return command
 
 
@@ -59,7 +72,7 @@ def test_require_python_37(build_command, major, minor):
 
 
 @pytest.mark.parametrize("host_os", ("ArbitraryNotWindows", "Windows"))
-def test_verify_tools_succeeds_immediately_in_happy_path(build_command, host_os):
+def test_verify_tools_succeeds_immediately_in_happy_path(build_command, host_os, tmp_path):
     """Validate that verify_tools() successfully does nothing in its happy
     path.
 
@@ -88,11 +101,20 @@ def test_verify_tools_succeeds_immediately_in_happy_path(build_command, host_os)
     # Configure `build_command` to assume the `host_os` we parameterized with.
     build_command.host_os = host_os
 
+    # Configure subprocess to return a good Java version
+    build_command.subprocess.check_output = mock.MagicMock(
+        return_value='javac 1.8.0_144\n'
+    )
+
     # Expect verify_tools() to succeed and not call requests or subprocess.
     build_command.verify_tools()
     build_command.requests.get.assert_not_called()
     build_command.subprocess.run.assert_not_called()
-    build_command.subprocess.check_output.assert_not_called()
+    build_command.subprocess.check_output.assert_called_once_with(
+        [str(tmp_path / 'java' / 'bin' / 'javac'), '-version'],
+        universal_newlines=True,
+        stderr=subprocess.STDOUT
+    )
 
 
 def sdk_response(content):
@@ -127,17 +149,15 @@ def test_verify_sdk_downloads_sdk(build_command, tmp_path, host_os):
     build_command.requests.get.return_value = sdk_response(
         create_zip("tools/bin/exampletool")
     )
-    if host_os != 'Windows':
-        # Enable the command to use `os.access()` and `os.X_OK`.
-        build_command.os.access = os.access
-        build_command.os.X_OK = os.X_OK
+
     # Call `verify_sdk()` and validate that it made one HTTP request, which created
     # `exampletool` and marked it executable.
     build_command.verify_sdk()
     build_command.requests.get.assert_called_once_with(
         build_command.sdk_url, stream=True
     )
-    # Validate that it exists and is executable.
+
+    # Validate that it exists, and is executable (if relevant)
     assert example_tool.exists()
     if host_os != 'Windows':
         assert os.access(str(example_tool), os.X_OK)
@@ -244,6 +264,7 @@ def test_verify_license_prompts_for_licenses_and_exits_if_you_agree(build_comman
     build_command.verify_license()
     build_command.subprocess.run.assert_called_once_with(
         [str(build_command.sdkmanager_path), "--licenses"],
+        env=build_command.android_env,
         check=True,
     )
 

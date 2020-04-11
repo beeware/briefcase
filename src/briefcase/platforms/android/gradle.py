@@ -1,5 +1,5 @@
+import shutil
 import subprocess
-from zipfile import BadZipFile, ZipFile
 
 from requests import exceptions as requests_exceptions
 
@@ -14,6 +14,7 @@ from briefcase.commands import (
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError, NetworkFailure
 from briefcase.integrations.adb import ADB, no_or_wrong_device_message
+from briefcase.integrations.java import verify_jdk
 
 
 class GradleMixin:
@@ -47,6 +48,14 @@ class GradleMixin:
     def sdkmanager_path(self):
         sdkmanager = "sdkmanager.bat" if self.host_os == "Windows" else "sdkmanager"
         return self.sdk_path / "tools" / "bin" / sdkmanager
+
+    @property
+    def android_env(self):
+        return {
+            **self.os.environ,
+            "ANDROID_SDK_ROOT": str(self.sdk_path),
+            "JAVA_HOME": str(self.java_home_path),
+        }
 
     def gradlew_path(self, app):
         gradlew = "gradlew.bat" if self.host_os == "Windows" else "gradlew"
@@ -99,9 +108,11 @@ requires Python 3.7.""".format(
         except requests_exceptions.ConnectionError:
             raise NetworkFailure("download Android SDK")
         try:
-            with ZipFile(str(sdk_zip_path)) as sdk_zip:
-                sdk_zip.extractall(path=str(self.sdk_path))
-        except BadZipFile:
+            self.shutil.unpack_archive(
+                str(sdk_zip_path),
+                extract_dir=str(self.sdk_path)
+            )
+        except (shutil.ReadError, EOFError):
             raise BriefcaseCommandError(
                 """\
 Unable to unpack Android SDK ZIP file. The download may have been interrupted
@@ -112,8 +123,8 @@ Delete {sdk_zip_path} and run briefcase again.""".format(
                 )
             )
         sdk_zip_path.unlink()  # Zip file no longer needed once unpacked.
-        # `ZipFile` ignores the permission metadata in the Android SDK ZIP
-        # file, so on non-Windows, we manually fix permissions.
+        # Python zip unpacking ignores permission metadata.
+        # On non-Windows, we manually fix permissions.
         if self.host_os == "Windows":
             return
         for binpath in (self.sdk_path / "tools" / "bin").glob("*"):
@@ -137,6 +148,7 @@ before you may use those tools.
             # the full output and can send input.
             self.subprocess.run(
                 [str(self.sdkmanager_path), "--licenses"],
+                env=self.android_env,
                 check=True,
             )
         except subprocess.CalledProcessError:
@@ -165,6 +177,7 @@ connection."""
         """
         super().verify_tools()
         self.verify_python_version()
+        self.java_home_path = verify_jdk(self)
         self.verify_sdk()
         self.verify_license()
 
@@ -188,13 +201,12 @@ class GradleBuildCommand(GradleMixin, BuildCommand):
         """
         print("[{app.app_name}] Building Android APK...".format(app=app))
         try:
-            env = {**self.os.environ, "ANDROID_SDK_ROOT": str(self.sdk_path)}
             self.subprocess.run(
                 # Windows needs the full path to `gradlew`; macOS & Linux can find it
                 # via `./gradlew`. For simplicity of implementation, we always provide
                 # the full path.
                 [str(self.gradlew_path(app)), "assembleDebug"],
-                env=env,
+                env=self.android_env,
                 # Set working directory so gradle can use the app bundle path as its
                 # project root, i.e., to avoid 'Task assembleDebug not found'.
                 cwd=str(self.bundle_path(app)),
@@ -228,6 +240,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
                     "emulator",
                     "platform-tools",
                 ],
+                env=self.android_env,
                 check=True
             )
         except subprocess.CalledProcessError:

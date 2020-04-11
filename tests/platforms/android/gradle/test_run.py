@@ -11,6 +11,7 @@ from briefcase.platforms.android.gradle import GradleRunCommand
 def run_command(tmp_path, first_app_config):
     command = GradleRunCommand(base_path=tmp_path / "base_path")
     command.dot_briefcase_path = tmp_path / ".briefcase"
+    command.java_home_path = tmp_path / "java"
 
     command.mock_adb = MagicMock()
     command.ADB = MagicMock(return_value=command.mock_adb)
@@ -44,6 +45,7 @@ def test_verify_emulator_installs_android_emulator(run_command):
             "emulator",
             "platform-tools",
         ],
+        env=run_command.android_env,
         check=True,
     )
 

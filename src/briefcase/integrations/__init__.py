@@ -1,3 +1,3 @@
-from . import adb, git, xcode
+from . import adb, git, java, xcode
 
-__all__ = ['adb', 'git', 'xcode']
+__all__ = ['adb', 'git', 'java', 'xcode']

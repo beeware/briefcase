@@ -107,7 +107,7 @@ Re-run Briefcase once that installation is complete.
 
    Please report this as a bug at:
 
-     https://github.com/beeware/briefcase/issues/
+     https://github.com/beeware/briefcase/issues/new
 
    In your report, please including the output from running:
 
@@ -193,7 +193,7 @@ Re-run Briefcase once that installation is complete.
 
    Please report this as a bug at:
 
-     https://github.com/beeware/briefcase/issues/
+     https://github.com/beeware/briefcase/issues/new
 
    In your report, please including the output from running:
 
@@ -277,7 +277,7 @@ You need to accept the Xcode license before Briefcase can package your app.
 
    Please report this as a bug at:
 
-     https://github.com/beeware/briefcase/issues/
+     https://github.com/beeware/briefcase/issues/new
 
    In your report, please including the output from running:
 
@@ -300,7 +300,7 @@ You need to accept the Xcode license before Briefcase can package your app.
 
    Please report this as a bug at:
 
-     https://github.com/beeware/briefcase/issues/
+     https://github.com/beeware/briefcase/issues/new
 
    In your report, please including the output from running:
 
