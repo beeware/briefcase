@@ -254,6 +254,52 @@ If you do not see any devices, you can create and start an emulator by running:
             sdkmanager_path=sdkmanager_path,
         )
 
+    def devices(self):
+        """Find the devices that are attached and available to ADB
+
+        """
+        try:
+            # Capture `stderr` so that if the process exits with failure, the
+            # stderr data is in `e.output`.
+            output = self.command.subprocess.check_output(
+                [
+                    str(self.root_path / "platform-tools" / "adb"),
+                    "devices",
+                    "-l",
+                ],
+                stderr=subprocess.STDOUT,
+            )
+
+            # Process the output of `adb devices -l`.
+            # The first line is header information.
+            # Each subsequent line is a single device descriptor:
+            #
+            # Emulator:
+            # emulator-5554          device product:sdk_phone_x86 model:Android_SDK_built_for_x86 device:generic_x86 transport_id:4
+            #
+            # Physical Device
+            # KABCDABCDA1513         device usb:336675584X product:Kogan_Agora_9 model:Kogan_Agora_9 device:Kogan_Agora_9 transport_id:1
+            #
+            # Physical device, not authorized for development
+            # 04ea55ee8292009a       unauthorized usb:336675328X transport_id:2
+            devices = {}
+            for line in output.split('\n')[1:]:
+                if line:
+                    parts = re.sub('\s+', ' ', line).split(' ')
+
+                    details = {}
+                    for part in parts[2:]:
+                        key, value = part.split(':')
+                        details[key] = value
+                    try:
+                        devices[parts[0]] = details['device']
+                    except KeyError:
+                        devices[parts[0]] = "Unknown device (not authorized for development)"
+
+            return devices
+        except subprocess.CalledProcessError:
+            raise BriefcaseCommandError("Unable to obtain Android device list")
+
 
 class ADB:
     def __init__(self, android_sdk, device):
