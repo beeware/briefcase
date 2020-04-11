@@ -1,14 +1,9 @@
 import os
-import subprocess
-from io import BytesIO
-from sys import platform
 from unittest import mock
-from zipfile import ZipFile
 
 import pytest
-from requests import exceptions as requests_exceptions
 
-from briefcase.exceptions import BriefcaseCommandError, NetworkFailure
+from briefcase.exceptions import BriefcaseCommandError
 from briefcase.platforms.android.gradle import GradleBuildCommand
 
 
