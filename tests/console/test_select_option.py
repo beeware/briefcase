@@ -22,6 +22,26 @@ def test_select_option():
     assert result == 'second'
 
 
+def test_select_option_list():
+    "If select_option is given a list of tuples, they're presented as provided"
+    # Return '3' when prompted
+    mock_input = mock.MagicMock(return_value='3')
+
+    options = [
+        ('first', 'The first option'),
+        ('second', 'The second option'),
+        ('third', 'The third option'),
+        ('fourth', 'The fourth option'),
+    ]
+    result = select_option(options, input=mock_input)
+
+    # Input is requested once
+    assert mock_input.call_count == 1
+
+    # The third option is the third option :-)
+    assert result == 'third'
+
+
 def test_select_option_bad_input():
     # In order, return:
     #     blank

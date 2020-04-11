@@ -16,7 +16,8 @@ def select_option(options, input=input, prompt='> ', error="Invalid selection"):
     provides non-integer input, or an invalid integer), it prints an
     error message and prompts the user again.
 
-    :param options: A dictionary of options to present to the user.
+    :param options: A dictionary, or list of tuples, of options to present to
+        the user.
     :param input: The function to use to retrieve the user's input. This
         exists so that the user's input can be easily mocked during testing.
     :param prompt: The prompt to display to the user.
@@ -24,12 +25,15 @@ def select_option(options, input=input, prompt='> ', error="Invalid selection"):
         input.
     :returns: The key corresponding to the user's chosen option.
     """
-    ordered = list(
-        sorted(
-            options.items(),
-            key=operator.itemgetter(1)
+    if isinstance(options, dict):
+        ordered = list(
+            sorted(
+                options.items(),
+                key=operator.itemgetter(1)
+            )
         )
-    )
+    else:
+        ordered = options
 
     for i, (key, value) in enumerate(ordered, start=1):
         print('  {i}) {label}'.format(i=i, label=value))
