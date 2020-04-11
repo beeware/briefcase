@@ -110,7 +110,7 @@ def test_user_provided_sdk(mock_command, tmp_path):
     mock_command.shutil.unpack_archive.assert_not_called()
 
     # The returned SDK has the expected root path.
-    assert sdk.root_path == root_path
+    assert str(sdk.root_path) == str(root_path)
 
 
 def test_invalid_user_provided_sdk(mock_command, tmp_path):
