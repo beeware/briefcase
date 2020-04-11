@@ -7,17 +7,15 @@ DEVICE_NOT_FOUND = re.compile(r"^error: device '[^']*' not found")
 
 
 class ADB:
-    def __init__(self, sdk_path, device, sub=subprocess):
+    def __init__(self, cmd, device):
         """
         An API integration for the Android Debug Bridge (ADB).
 
-        :param sdk_path: The path to the Android SDK.
+        :param cmd: The command invoking the Android SDK.
         :param device: The ID of the device to target (in a format usable by`adb -s`)
-        :param sub: For testing purposes: the subprocess module to use.
         """
-        self.sdk_path = sdk_path
+        self.cmd = cmd
         self.device = device
-        self.subprocess = sub
 
     def command(self, *arguments):
         """
@@ -35,13 +33,13 @@ class ADB:
         try:
             # Capture `stderr` so that if the process exits with failure, the
             # stderr data is in `e.output`.
-            return self.subprocess.check_output(
+            return self.cmd.subprocess.check_output(
                 [
-                    str(self.sdk_path / "platform-tools" / "adb"),
+                    str(self.cmd.android_sdk_home_path / "platform-tools" / "adb"),
                     "-s",
                     self.device
                 ] + list(arguments),
-                stderr=self.subprocess.STDOUT,
+                stderr=self.cmd.subprocess.STDOUT,
             )
         except subprocess.CalledProcessError as e:
             # Decode the output as ASCII. If it contains data in another
@@ -49,7 +47,7 @@ class ADB:
             # error message.
             output = e.output.decode("ascii", "replace")
             if any((DEVICE_NOT_FOUND.match(line) for line in output.split("\n"))):
-                raise BriefcaseCommandError(no_or_wrong_device_message(self.sdk_path))
+                raise BriefcaseCommandError(no_or_wrong_device_message(self.cmd.android_sdk_home_path))
             raise BriefcaseCommandError(
                 """\
     Unable to run command on device. Received this output from `adb`

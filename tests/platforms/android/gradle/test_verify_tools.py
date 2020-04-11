@@ -84,13 +84,13 @@ def test_verify_tools_succeeds_immediately_in_happy_path(build_command, host_os,
     `sdkmanager`.
     """
     # Create `sdkmanager` and the license file.
-    tools_bin = build_command.sdk_path / "tools" / "bin"
+    tools_bin = build_command.android_sdk_home_path / "tools" / "bin"
     tools_bin.mkdir(parents=True, mode=0o755)
     if host_os == "Windows":
         (tools_bin / "sdkmanager.bat").touch()
     else:
         (tools_bin / "sdkmanager").touch(mode=0o755)
-    licenses = build_command.sdk_path / "licenses"
+    licenses = build_command.android_sdk_home_path / "licenses"
     licenses.mkdir(parents=True, mode=0o755)
     (licenses / "android-sdk-license").touch()
 
@@ -136,23 +136,23 @@ def create_zip(filename=None):
 
 
 @pytest.mark.parametrize("host_os", ("ArbitraryNotWindows", "Windows"))
-def test_verify_sdk_downloads_sdk(build_command, tmp_path, host_os):
-    """Validate that verify_sdk() downloads & unpacks the SDK ZIP file,
+def test_verify_android_sdk_downloads_sdk(build_command, tmp_path, host_os):
+    """Validate that verify_android_sdk() downloads & unpacks the SDK ZIP file,
     including setting permissions on `tools/bin/*` files on non-Windows."""
     # Mock-out `host_os` so we only do our permission check on non-Windows.
     build_command.host_os = host_os
     # Assert that the file does not exist yet. We assert that it is created
-    # below, which allows us to validate that the call to `verify_sdk()`
+    # below, which allows us to validate that the call to `verify_android_sdk()`
     # created it.
-    example_tool = build_command.sdk_path / "tools" / "bin" / "exampletool"
+    example_tool = build_command.android_sdk_home_path / "tools" / "bin" / "exampletool"
     assert not example_tool.exists()
     build_command.requests.get.return_value = sdk_response(
         create_zip("tools/bin/exampletool")
     )
 
-    # Call `verify_sdk()` and validate that it made one HTTP request, which created
+    # Call `verify_android_sdk()` and validate that it made one HTTP request, which created
     # `exampletool` and marked it executable.
-    build_command.verify_sdk()
+    build_command.verify_android_sdk()
     build_command.requests.get.assert_called_once_with(
         build_command.sdk_url, stream=True
     )
@@ -166,13 +166,13 @@ def test_verify_sdk_downloads_sdk(build_command, tmp_path, host_os):
 @pytest.mark.skipif(
     platform == "win32", reason="executable permission doesn't make sense on Windows"
 )
-def test_verify_sdk_downloads_sdk_if_sdkmanager_not_executable(build_command):
-    """Validate that verify_sdk() downloads & unpacks the SDK ZIP file
+def test_verify_android_sdk_downloads_sdk_if_sdkmanager_not_executable(build_command):
+    """Validate that verify_android_sdk() downloads & unpacks the SDK ZIP file
     in the case that `tools/bin/sdkmanager` exists but does not have its
     permissions set properly."""
     # Create non-executable `sdkmanager`.
-    (build_command.sdk_path / "tools" / "bin").mkdir(parents=True)
-    (build_command.sdk_path / "tools" / "bin" / "sdkmanager").touch(mode=0o644)
+    (build_command.android_sdk_home_path / "tools" / "bin").mkdir(parents=True)
+    (build_command.android_sdk_home_path / "tools" / "bin" / "sdkmanager").touch(mode=0o644)
     # Create mock download result.
     build_command.requests.get.return_value = sdk_response(
         create_zip("tools/bin/sdkmanager")
@@ -180,8 +180,8 @@ def test_verify_sdk_downloads_sdk_if_sdkmanager_not_executable(build_command):
     # Enable the command to use `os.access()` and `os.X_OK`.
     build_command.os.access = os.access
     build_command.os.X_OK = os.X_OK
-    # Call `verify_sdk()` and ensure it did the download.
-    build_command.verify_sdk()
+    # Call `verify_android_sdk()` and ensure it did the download.
+    build_command.verify_android_sdk()
     build_command.requests.get.assert_called_once_with(
         build_command.sdk_url, stream=True
     )
@@ -190,35 +190,35 @@ def test_verify_sdk_downloads_sdk_if_sdkmanager_not_executable(build_command):
 @pytest.mark.skipif(
     platform == "win32", reason="executable permission doesn't make sense on Windows"
 )
-def test_verify_sdk_no_download_if_sdkmanager_executable(build_command):
-    """Validate that verify_sdk() successfully does nothing in its happy path.
+def test_verify_android_sdk_no_download_if_sdkmanager_executable(build_command):
+    """Validate that verify_android_sdk() successfully does nothing in its happy path.
 
     If `tools/bin/sdkmanager` exists with executable permissions, we expect
-    verify_sdk() not to download the Android SDK."""
+    verify_android_sdk() not to download the Android SDK."""
     build_command.requests.get.return_value = sdk_response(create_zip())
-    (build_command.sdk_path / "tools" / "bin").mkdir(parents=True)
-    (build_command.sdk_path / "tools" / "bin" / "sdkmanager").touch(mode=0o755)
-    build_command.verify_sdk()
+    (build_command.android_sdk_home_path / "tools" / "bin").mkdir(parents=True)
+    (build_command.android_sdk_home_path / "tools" / "bin" / "sdkmanager").touch(mode=0o755)
+    build_command.verify_android_sdk()
     build_command.requests.get.assert_not_called()
 
 
-def test_verify_sdk_raises_networkfailure_on_connectionerror(build_command):
-    """Validate that verify_sdk() raises the appropriate briefcase exception if
+def test_verify_android_sdk_raises_networkfailure_on_connectionerror(build_command):
+    """Validate that verify_android_sdk() raises the appropriate briefcase exception if
     an error occurs while downloading the ZIP file."""
     build_command.requests.get.side_effect = requests_exceptions.ConnectionError()
     with pytest.raises(NetworkFailure):
-        build_command.verify_sdk()
+        build_command.verify_android_sdk()
     build_command.requests.get.assert_called_once_with(
         build_command.sdk_url, stream=True
     )
 
 
-def test_verify_sdk_detects_badzipfile(build_command):
-    """Validate that verify_sdk() raises a briefcase exception if somehow a
+def test_verify_android_sdk_detects_badzipfile(build_command):
+    """Validate that verify_android_sdk() raises a briefcase exception if somehow a
     bad ZIP file was downloaded, or is found in its cache."""
     build_command.requests.get.return_value = sdk_response(b"invalid zip file")
     with pytest.raises(BriefcaseCommandError):
-        build_command.verify_sdk()
+        build_command.verify_android_sdk()
     build_command.requests.get.assert_called_once_with(
         build_command.sdk_url, stream=True
     )
@@ -230,7 +230,7 @@ def test_verify_license_passes_quickly_if_license_present(build_command):
 
     If `android-sdk-license` exists in the right place, we expect
     verify_license() to run no subprocesses."""
-    license_path = build_command.sdk_path / "licenses" / "android-sdk-license"
+    license_path = build_command.android_sdk_home_path / "licenses" / "android-sdk-license"
     license_path.parent.mkdir(parents=True)
     license_path.touch()
     build_command.verify_license()
@@ -247,7 +247,7 @@ def test_sdkmanager_path(build_command, host_os, sdkmanager_name):
     # Mock out `host_os` so we can test Windows when not on Windows.
     build_command.host_os = host_os
     assert build_command.sdkmanager_path == (
-        build_command.sdk_path / "tools" / "bin" / sdkmanager_name
+        build_command.android_sdk_home_path / "tools" / "bin" / sdkmanager_name
     )
 
 
@@ -256,7 +256,7 @@ def test_verify_license_prompts_for_licenses_and_exits_if_you_agree(build_comman
     SDK license."""
 
     def accept_license(*args, **kwargs):
-        license_dir = build_command.sdk_path / "licenses"
+        license_dir = build_command.android_sdk_home_path / "licenses"
         license_dir.mkdir(parents=True)
         (license_dir / "android-sdk-license").touch()
 

@@ -40,7 +40,7 @@ def test_execute_gradle(build_command, first_app_config, host_os, gradlew_name):
         ],
         cwd=str(build_command.bundle_path(first_app_config)),
         env={
-            "ANDROID_SDK_ROOT": str(build_command.sdk_path),
+            "ANDROID_SDK_ROOT": str(build_command.android_sdk_home_path),
             "JAVA_HOME": str(build_command.java_home_path),
             "key": "value",
         },

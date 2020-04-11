@@ -25,9 +25,9 @@ def run_command(tmp_path, first_app_config):
 
 
 def test_verify_emulator_succeeds_immediately_if_emulator_installed(run_command):
-    """`verify_emulator()` exits early if the emulator exists in its sdk_path."""
-    # Create `emulator` within `sdk_path`.
-    (run_command.sdk_path / "emulator").mkdir(parents=True)
+    """`verify_emulator()` exits early if the emulator exists in its android_sdk_home_path."""
+    # Create `emulator` within `android_sdk_home_path`.
+    (run_command.android_sdk_home_path / "emulator").mkdir(parents=True)
     run_command.verify_emulator()
     run_command.subprocess.run.assert_not_called()
     run_command.requests.get.assert_not_called()
@@ -77,10 +77,7 @@ def test_run_app_launches_app_properly(run_command, first_app_config):
     run_command.run_app(first_app_config, "exampleDevice")
 
     # The ADB wrapper is created
-    run_command.ADB.assert_called_once_with(
-        sdk_path=run_command.sdk_path,
-        device="exampleDevice",
-    )
+    run_command.ADB.assert_called_once_with(run_command, device="exampleDevice")
 
     # The adb wrapper is invoked with the expected arguments
     run_command.mock_adb.install_apk.assert_called_once_with(

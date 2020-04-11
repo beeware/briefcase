@@ -10,14 +10,16 @@ from briefcase.integrations.adb import ADB
 
 def test_simple_command(tmp_path):
     """ADB.command() invokes adb with the provided arguments."""
-    mock_subprocess = MagicMock()
+    cmd = MagicMock()
+    cmd.subprocess = MagicMock()
+    cmd.android_sdk_home_path = tmp_path
 
     # Create an ADB instance and invoke command()
-    adb = ADB(tmp_path, "exampleDevice", sub=mock_subprocess)
+    adb = ADB(cmd, "exampleDevice")
     adb.command("example", "command")
 
     # Check that adb was invoked with the expected commands
-    mock_subprocess.check_output.assert_called_once_with(
+    cmd.subprocess.check_output.assert_called_once_with(
         [
             str(tmp_path / "platform-tools" / "adb"),
             "-s",
@@ -25,7 +27,7 @@ def test_simple_command(tmp_path):
             "example",
             "command",
         ],
-        stderr=mock_subprocess.STDOUT,
+        stderr=cmd.subprocess.STDOUT,
     )
 
 
@@ -42,24 +44,27 @@ def test_simple_command(tmp_path):
 )
 def test_error_handling(tmp_path, name, exception_text):
     "ADB.command() can parse errors returned by adb."
-    # Set up a mock subprocess module with sample data loaded, then run `command()`.
-    mock_subprocess = MagicMock()
+    # Set up a mock command with a subprocess module that has with sample data loaded.
+    cmd = MagicMock()
+    cmd.subprocess = MagicMock()
+    cmd.android_sdk_home_path = tmp_path
+
     adb_samples = Path(__file__).parent / "adb_errors"
     with (adb_samples / (name + ".txt")).open("rb") as adb_output_file:
         with (adb_samples / (name + ".returncode")).open() as returncode_file:
-            mock_subprocess.check_output.side_effect = CalledProcessError(
+            cmd.subprocess.check_output.side_effect = CalledProcessError(
                 returncode=int(returncode_file.read().strip()),
                 cmd=["ignored"],
                 output=adb_output_file.read(),
             )
 
     # Create an ADB instance and invoke run()
-    adb = ADB(tmp_path, "exampleDevice", sub=mock_subprocess)
+    adb = ADB(cmd, "exampleDevice")
     with pytest.raises(BriefcaseCommandError) as exc_info:
         adb.command("example", "command")
 
     # Check that adb was invoked as expected
-    mock_subprocess.check_output.assert_called_once_with(
+    cmd.subprocess.check_output.assert_called_once_with(
         [
             str(tmp_path / "platform-tools" / "adb"),
             "-s",
@@ -67,7 +72,7 @@ def test_error_handling(tmp_path, name, exception_text):
             "example",
             "command",
         ],
-        stderr=mock_subprocess.STDOUT,
+        stderr=cmd.subprocess.STDOUT,
     )
 
     # Look for the expected exception text.

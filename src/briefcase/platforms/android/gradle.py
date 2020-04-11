@@ -41,19 +41,19 @@ class GradleMixin:
         return self.binary_path(app)
 
     @property
-    def sdk_path(self):
+    def android_sdk_home_path(self):
         return self.dot_briefcase_path / "tools" / "android_sdk"
 
     @property
     def sdkmanager_path(self):
         sdkmanager = "sdkmanager.bat" if self.host_os == "Windows" else "sdkmanager"
-        return self.sdk_path / "tools" / "bin" / sdkmanager
+        return self.android_sdk_home_path / "tools" / "bin" / sdkmanager
 
     @property
     def android_env(self):
         return {
             **self.os.environ,
-            "ANDROID_SDK_ROOT": str(self.sdk_path),
+            "ANDROID_SDK_ROOT": str(self.android_sdk_home_path),
             "JAVA_HOME": str(self.java_home_path),
         }
 
@@ -81,14 +81,14 @@ requires Python 3.7.""".format(
                 )
             )
 
-    def verify_sdk(self):
+    def verify_android_sdk(self):
         """
         Install the Android SDK if needed.
         """
         # On Windows, the Android SDK makes some files executable by adding `.bat` to
         # the end of their filenames.
         #
-        # On macOS & Linux, `verify_sdk()` takes care to chmod some files so that
+        # On macOS & Linux, `verify_android_sdk()` takes care to chmod some files so that
         # they are marked executable.
         #
         # On all platforms, we need to unpack the Android SDK ZIP file.
@@ -110,7 +110,7 @@ requires Python 3.7.""".format(
         try:
             self.shutil.unpack_archive(
                 str(sdk_zip_path),
-                extract_dir=str(self.sdk_path)
+                extract_dir=str(self.android_sdk_home_path)
             )
         except (shutil.ReadError, EOFError):
             raise BriefcaseCommandError(
@@ -132,7 +132,7 @@ Delete {sdk_zip_path} and run briefcase again.""".format(
                 binpath.chmod(0o755)
 
     def verify_license(self):
-        license_path = self.sdk_path / "licenses" / "android-sdk-license"
+        license_path = self.android_sdk_home_path / "licenses" / "android-sdk-license"
         if license_path.exists():
             return
 
@@ -158,7 +158,7 @@ Error while reviewing Android SDK licenses. Please run this command and examine
 its output for errors.
 
 $ {sdkmanager} --licenses""".format(
-                    sdkmanager=self.sdk_path / "tools" / "bin" / "sdkmanager"
+                    sdkmanager=self.android_sdk_home_path / "tools" / "bin" / "sdkmanager"
                 )
             )
 
@@ -178,7 +178,7 @@ connection."""
         super().verify_tools()
         self.verify_python_version()
         self.java_home_path = verify_jdk(self)
-        self.verify_sdk()
+        self.verify_android_sdk()
         self.verify_license()
 
 
@@ -225,7 +225,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
         self.verify_emulator()
 
     def verify_emulator(self):
-        if (self.sdk_path / "emulator").exists():
+        if (self.android_sdk_home_path / "emulator").exists():
             return
 
         print("Downloading the Android emulator and system image...")
@@ -274,11 +274,11 @@ No Android device was specified. Please specify a specific device on which
 to run the app by passing `-d <device_id>`.
 
 """
-                + no_or_wrong_device_message(self.sdk_path)
+                + no_or_wrong_device_message(self.android_sdk_home_path)
             )
 
         # Create an ADB wrapper for the selected device
-        adb = self.ADB(sdk_path=self.sdk_path, device=device)
+        adb = self.ADB(self, device=device)
 
         # Install the latest APK file onto the device.
         print("[{app.app_name}] Installing app (Device ID {device})...".format(
