@@ -1,7 +1,6 @@
 import re
 import shutil
 import subprocess
-import time
 from pathlib import Path
 
 from requests import exceptions as requests_exceptions
