@@ -129,7 +129,7 @@ class AndroidSDK:
     def __init__(self, command, root_path):
         self.command = command
         self.root_path = root_path
-        self.dot_android_path = Path.home() / ".android"
+        self.dot_android_path = self.command.home_path / ".android"
 
     @property
     def sdkmanager_path(self):

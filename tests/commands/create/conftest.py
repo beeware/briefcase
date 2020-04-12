@@ -91,7 +91,7 @@ class TrackingCreateCommand(DummyCreateCommand):
 def create_command(tmp_path, mock_git):
     return DummyCreateCommand(
         base_path=tmp_path,
-        dot_briefcase_path=tmp_path / "dot-briefcase",
+        home_path=tmp_path,
         git=mock_git,
     )
 

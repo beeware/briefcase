@@ -11,12 +11,10 @@ from briefcase.integrations.android_sdk import AndroidSDK
 @pytest.fixture
 def mock_sdk(tmp_path):
     command = MagicMock()
+    command.home_path = tmp_path
     command.host_platform = 'unknown'
 
     sdk = AndroidSDK(command, root_path=tmp_path)
-
-    # Set an alternate .android location.
-    sdk.dot_android_path = tmp_path / '.android'
 
     # Mock some existing emulators
     sdk.emulators = MagicMock(return_value=[
