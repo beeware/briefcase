@@ -10,7 +10,7 @@ from briefcase.console import select_option
 from briefcase.exceptions import (
     BriefcaseCommandError,
     InvalidDeviceError,
-    NetworkFailure,
+    NetworkFailure
 )
 
 DEVICE_NOT_FOUND = re.compile(r"^error: device '[^']*' not found")
