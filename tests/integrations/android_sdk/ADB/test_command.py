@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from briefcase.exceptions import BriefcaseCommandError, InvalidDeviceError
+from briefcase.exceptions import InvalidDeviceError
 from briefcase.integrations.android_sdk import ADB
 
 
