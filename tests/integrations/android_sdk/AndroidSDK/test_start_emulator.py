@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, call
 import pytest
 
 from briefcase.exceptions import InvalidDeviceError
-from briefcase.integrations.android_sdk import AndroidSDK, ADB
+from briefcase.integrations.android_sdk import ADB, AndroidSDK
 
 
 @pytest.fixture
