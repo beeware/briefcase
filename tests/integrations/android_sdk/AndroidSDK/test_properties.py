@@ -86,6 +86,10 @@ def test_emulator_path(mock_sdk, host_os, emulator_name):
     )
 
 
+def test_avd_path(mock_sdk):
+    assert mock_sdk.avd_path == Path.home() / ".android" / "avd"
+
+
 def test_simple_env(mock_sdk, tmp_path):
     "The SDK Environment can be constructed"
     assert mock_sdk.env == {
