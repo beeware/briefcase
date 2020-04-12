@@ -305,6 +305,26 @@ class ADB:
         self.command = android_sdk.command
         self.device = device
 
+    def avd_name(self):
+        """Get the AVD name for the device.
+
+        :returns: The AVD name for the device; or ``None`` if the device isn't
+            an emulator
+        """
+        try:
+            output = self.run('emu', 'avd', 'name')
+            return output.split('\n')[0]
+        except subprocess.CalledProcessError as e:
+            # Status code 1 is a normal "it's not an emulator" error response
+            if e.returncode == 1:
+                return None
+            else:
+                raise BriefcaseCommandError(
+                    "Unable to interrogate AVD name of device {device}".format(
+                        device=self.device
+                    )
+                )
+
     def run(self, *arguments):
         """
         Run a command on a device using Android debug bridge, `adb`. The device
