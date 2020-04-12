@@ -108,12 +108,13 @@ class GradleRunCommand(GradleMixin, RunCommand):
         parser.add_argument(
             "-d",
             "--device",
-            dest="device",
-            help="The device to target, formatted for `adb`",
+            dest="device_or_avd",
+            help="The device to target; either a device ID for a physical device, "
+                 " or an AVD name ('@emulatorName') ",
             required=False,
         )
 
-    def run_app(self, app: BaseConfig, device=None, **kwargs):
+    def run_app(self, app: BaseConfig, device_or_avd=None, **kwargs):
         """
         Start the application.
 
@@ -121,24 +122,35 @@ class GradleRunCommand(GradleMixin, RunCommand):
         :param device: The device to target. If ``None``, the user will
             be asked to re-run the command selecting a specific device.
         """
-        print()
-        if device is None:
-            raise BriefcaseCommandError(
-                """\
-No Android device was specified. Please specify a specific device on which
-to run the app by passing `-d <device_id>`.
+        device, name, avd = self.android_sdk.select_target_device(
+            device_or_avd=device_or_avd
+        )
 
-"""
-                + self.android_sdk.no_or_wrong_device_message()
+        # If there's no device ID, that means the emulator isn't running.
+        # If there's no AVD either, it means the user has chosen to create
+        # an entirely new emulator. Create the emulator (if necessary),
+        # then start it.
+        if device is None:
+            if avd is None:
+                avd = self.android_sdk.create_emulator()
+
+            device, name = self.android_sdk.start_emulator(avd)
+
+        print()
+        print(
+            "[{app.app_name}] Starting app on {name} (device ID {device})".format(
+                app=app,
+                name=name,
+                device=device,
             )
+        )
 
         # Create an ADB wrapper for the selected device
-        adb = self.android_sdk.adb(self, device=device)
+        adb = self.android_sdk.adb(device=device)
 
         # Install the latest APK file onto the device.
-        print("[{app.app_name}] Installing app (Device ID {device})...".format(
+        print("[{app.app_name}] Installing app...".format(
             app=app,
-            device=device,
         ))
         adb.install_apk(self.binary_path(app))
 

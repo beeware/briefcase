@@ -5,6 +5,7 @@ from pathlib import Path
 
 from requests import exceptions as requests_exceptions
 
+from briefcase.console import select_option
 from briefcase.exceptions import (
     BriefcaseCommandError,
     InvalidDeviceError,
@@ -12,6 +13,22 @@ from briefcase.exceptions import (
 )
 
 DEVICE_NOT_FOUND = re.compile(r"^error: device '[^']*' not found")
+
+
+class AndroidDeviceNotAuthorized(BriefcaseCommandError):
+    def __init__(self, device):
+        self.device = device
+        super().__init__("""
+The device you have selected ({device}) has not had Developer Options
+enabled. These options must be enabled before a device can be used as a
+target for deployment. For details on how to enable Developer Options, visit:
+
+    https://developer.android.com/studio/debug/dev-options#enable
+
+Once you have enabled these options on your device, you will be able to select
+this device as a deployment target.
+
+""".format(device=device))
 
 
 def verify_android_sdk(command):
@@ -113,6 +130,16 @@ class AndroidSDK:
     def sdkmanager_path(self):
         sdkmanager = "sdkmanager.bat" if self.command.host_os == "Windows" else "sdkmanager"
         return self.root_path / "tools" / "bin" / sdkmanager
+
+    @property
+    def avdmanager_path(self):
+        avdmanager = "avdmanager.bat" if self.command.host_os == "Windows" else "avdmanager"
+        return self.root_path / "tools" / "bin" / avdmanager
+
+    @property
+    def emulator_path(self):
+        emulator = "emulator.bat" if self.command.host_os == "Windows" else "emulator"
+        return self.root_path / "tools" / "bin" / emulator
 
     @property
     def env(self):
@@ -290,6 +317,201 @@ class AndroidSDK:
             return devices
         except subprocess.CalledProcessError:
             raise BriefcaseCommandError("Unable to obtain Android device list")
+
+    def select_target_device(self, device_or_avd):
+        """
+        Select a device to be the target for actions
+
+        Interrogates the system to get the list of available devices
+
+        If the user has specified a device at the command line, that device
+        will be validated, and then automatically selected
+
+        :param device_or_avd: The device or AVD to target. Can be a physical
+            device id (a hex string), an emulator id ("emulator-5554"), or
+            an emulator AVD name ("@robotfriend"). If ``None``, the user will
+            be asked to select a device from the list available.
+        :returns: A tuple containing ``(device, name, avd)``. ``avd``
+            will only be provided if an emulator with that AVD is not currently
+            running. If ``device`` is null, a new emulator should be created.
+        """
+        # Get the list of attached devices (includes running emulators)
+        running_devices = self.devices()
+
+        # Choices is an ordered list of options that can be shown to the user.
+        # Each device should appear only once, and be keyed by AVD only if
+        # a device ID isn't available.
+        choices = []
+        # Device choices is the full lookup list. Devices can be looked up
+        # by any valid key - ID *or* AVD.
+        device_choices = {}
+
+        # Iterate over all the running devices.
+        # If the device has an AVD, use ADB to get the emulator AVD name.
+        # If it is a physical device, use the device name.
+        # Keep a log of all running AVDs
+        running_avds = {}
+        for d, details in sorted(
+            running_devices.items(),
+            key=lambda d: d[1]['name']
+        ):
+            name = details['name']
+            avd = self.adb(d).avd_name()
+            if avd:
+                # It's a running emulator
+                running_avds[avd] = d
+                full_name = "@{avd} (running {name} emulator)".format(
+                    avd=avd,
+                    name=name,
+                )
+                choices.append((d, full_name))
+
+                # Save the AVD as a device detail.
+                details['avd'] = avd
+
+                # Device can be looked up by device ID or AVD
+                device_choices[d] = full_name
+                device_choices['@' + avd] = full_name
+            else:
+                # It's a physical device (might be disabled)
+                choices.append((d, name))
+                device_choices[d] = name
+
+        # Add any non-running emulator AVDs to the list of candidate devices
+        for avd in self.emulators():
+            if avd not in running_avds:
+                name = "@{avd} (emulator)".format(avd=avd)
+                choices.append(('@' + avd, name))
+                device_choices['@' + avd] = name
+
+        # If a device or AVD has been provided, check it against the available
+        # device list.
+        if device_or_avd:
+            try:
+                name = device_choices[device_or_avd]
+
+                if device_or_avd.startswith('@'):
+                    # specifier is an AVD
+                    try:
+                        avd = device_or_avd[1:]
+                        device = running_avds[avd]
+                    except KeyError:
+                        # device_or_avd isn't in the list of running avds;
+                        # it must be a non-running emulator.
+                        return None, name, avd
+                else:
+                    # Specifier is a direct device ID
+                    avd = None
+                    device = device_or_avd
+
+                details = running_devices[device]
+                avd = details.get('avd')
+                if details['authorized']:
+                    # An authorized, running device (emulator or physical)
+                    return device, name, avd
+                else:
+                    # An unauthorized physical device
+                    raise AndroidDeviceNotAuthorized(device)
+
+            except KeyError:
+                # Provided device_or_id isn't a valid device identifier.
+                if device_or_avd.startswith('@'):
+                    id_type = 'emulator AVD'
+                else:
+                    id_type = 'device ID'
+                raise InvalidDeviceError(id_type, device_or_avd)
+
+        # We weren't given a device/AVD; we have to select from the list.
+        # If we're selecting from a list, there's always one last choice
+        choices.append((None, 'Create a new Android emulator'))
+
+        # Show the choices to the user.
+        print()
+        print("Select device:")
+        print()
+        choice = select_option(choices, input=self.command.input)
+
+        # Proces the user's choice
+        if choice is None:
+            # Create a new emulator. No device ID or AVD.
+            device = None
+            avd = None
+            name = None
+        elif choice.startswith('@'):
+            # A non-running emulator. We have an AVD, but no device ID.
+            device = None
+            name = device_choices[choice]
+            avd = choice[1:]
+        else:
+            # Either a running emulator, or a physical device. Regardless,
+            # we need to check if the device is developer enabled
+            try:
+                details = running_devices[choice]
+                if not details['authorized']:
+                    # An unauthorized physical device
+                    raise AndroidDeviceNotAuthorized(choice)
+
+                # Return the device ID and name.
+                device = choice
+                name = device_choices[choice]
+                avd = details.get('avd')
+            except KeyError:
+                raise InvalidDeviceError('device ID', choice)
+
+        if avd:
+            print()
+            print("In future, you could specify this device by running:")
+            print()
+            print('    briefcase run android -d @{avd}'.format(avd=avd))
+        elif device:
+            print()
+            print("In future, you could specify this device by running:")
+            print()
+            print('    briefcase run android -d {device}'.format(device=device))
+
+        return device, name, avd
+
+    def create_emulator(self):
+        """Create a new Android emulator.
+
+        """
+        print()
+        name = self.command.input('Emulator name: ')
+
+        raise BriefcaseCommandError("""
+You can create an emulator by running:
+
+    $ {sdkmanager_path} "platforms;android-28" \
+"system-images;android-28;default;x86" "emulator" "platform-tools"
+
+    $ {avdmanager_path} --verbose create avd \
+--name {name} --abi x86 \
+--package 'system-images;android-28;default;x86' --device pixel
+
+    $ echo 'disk.dataPartition.size=4096M' >> $HOME/.android/avd/{name}.avd/config.ini
+
+""".format(
+    sdkmanager_path=self.sdkmanager_path,
+    avdmanager_path=self.avdmanager_path,
+    name=name
+))
+
+    def start_emulator(self, avd):
+        """Start an existing Android emulator.
+
+        Returns when the emulator is booted and ready to accept apps.
+
+        :param avd: The AVD of the device.
+        """
+        if avd in set(self.emulators()):
+            raise BriefcaseCommandError("""
+You can start the emulator by running:
+
+    $ {emulator_path} -avd {avd} &
+
+""".format(emulator_path=self.emulator_path, avd=avd))
+        else:
+            raise InvalidDeviceError('emulator AVD', avd)
 
 
 class ADB:
