@@ -263,7 +263,7 @@ class AndroidSDK:
             # Capture `stderr` so that if the process exits with failure, the
             # stderr data is in `e.output`.
             output = self.command.subprocess.check_output(
-                [str(self.root_path / "emulator" / "emulator"), "-list-avds",],
+                [str(self.root_path / "emulator" / "emulator"), "-list-avds"],
                 universal_newlines=True,
                 stderr=subprocess.STDOUT,
             ).strip()
@@ -283,7 +283,7 @@ class AndroidSDK:
             # Capture `stderr` so that if the process exits with failure, the
             # stderr data is in `e.output`.
             output = self.command.subprocess.check_output(
-                [str(self.root_path / "platform-tools" / "adb"), "devices", "-l",],
+                [str(self.root_path / "platform-tools" / "adb"), "devices", "-l"],
                 universal_newlines=True,
                 stderr=subprocess.STDOUT,
             ).strip()
