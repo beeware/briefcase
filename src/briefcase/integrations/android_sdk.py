@@ -137,6 +137,11 @@ class AndroidSDK:
         return self.root_path / "tools" / "bin" / sdkmanager
 
     @property
+    def adb_path(self):
+        adb = "adb.exe" if self.command.host_os == "Windows" else "adb"
+        return self.root_path / "platform-tools" / adb
+
+    @property
     def avdmanager_path(self):
         avdmanager = (
             "avdmanager.bat" if self.command.host_os == "Windows" else "avdmanager"
@@ -145,8 +150,8 @@ class AndroidSDK:
 
     @property
     def emulator_path(self):
-        emulator = "emulator.bat" if self.command.host_os == "Windows" else "emulator"
-        return self.root_path / "tools" / "bin" / emulator
+        emulator = "emulator.exe" if self.command.host_os == "Windows" else "emulator"
+        return self.root_path / "emulator" / emulator
 
     @property
     def env(self):
@@ -263,7 +268,7 @@ class AndroidSDK:
             # Capture `stderr` so that if the process exits with failure, the
             # stderr data is in `e.output`.
             output = self.command.subprocess.check_output(
-                [str(self.root_path / "emulator" / "emulator"), "-list-avds"],
+                [str(self.emulator_path), "-list-avds"],
                 universal_newlines=True,
                 stderr=subprocess.STDOUT,
             ).strip()
@@ -283,7 +288,7 @@ class AndroidSDK:
             # Capture `stderr` so that if the process exits with failure, the
             # stderr data is in `e.output`.
             output = self.command.subprocess.check_output(
-                [str(self.root_path / "platform-tools" / "adb"), "devices", "-l"],
+                [str(self.adb_path), "devices", "-l"],
                 universal_newlines=True,
                 stderr=subprocess.STDOUT,
             ).strip()
@@ -293,24 +298,25 @@ class AndroidSDK:
             # Each subsequent line is a single device descriptor.
             devices = {}
             for line in output.split("\n")[1:]:
-                parts = re.sub(r"\s+", " ", line).split(" ")
+                if line:
+                    parts = re.sub(r"\s+", " ", line).split(" ")
 
-                details = {}
-                for part in parts[2:]:
-                    key, value = part.split(":")
-                    details[key] = value
+                    details = {}
+                    for part in parts[2:]:
+                        key, value = part.split(":")
+                        details[key] = value
 
-                if parts[1] == "device":
-                    name = details["device"]
-                    authorized = True
-                else:
-                    name = "Unknown device (not authorized for development)"
-                    authorized = False
+                    if parts[1] == "device":
+                        name = details["device"]
+                        authorized = True
+                    else:
+                        name = "Unknown device (not authorized for development)"
+                        authorized = False
 
-                devices[parts[0]] = {
-                    "name": name,
-                    "authorized": authorized,
-                }
+                    devices[parts[0]] = {
+                        "name": name,
+                        "authorized": authorized,
+                    }
 
             return devices
         except subprocess.CalledProcessError:
@@ -565,7 +571,7 @@ class ADB:
             # stderr data is in `e.output`.
             return self.command.subprocess.check_output(
                 [
-                    str(self.android_sdk.root_path / "platform-tools" / "adb"),
+                    str(self.android_sdk.adb_path),
                     "-s",
                     self.device,
                 ]
