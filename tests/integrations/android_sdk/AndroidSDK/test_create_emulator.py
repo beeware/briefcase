@@ -54,7 +54,7 @@ def test_create_emulator(mock_sdk, tmp_path):
     # Create the emulator
     avd = mock_sdk.create_emulator()
 
-    # The expected name was created.
+    # The expected device AVD was created.
     assert avd == 'new-emulator'
 
     # avdmanager was invoked
@@ -117,7 +117,7 @@ def test_create_preexisting_skins(mock_sdk, tmp_path):
     # Create the emulator
     avd = mock_sdk.create_emulator()
 
-    # The expected name was created.
+    # The expected device AVD was created.
     assert avd == 'new-emulator'
 
     # avdmanager was invoked
@@ -266,3 +266,51 @@ def test_unpack_failure(mock_sdk, tmp_path):
 
     # Original file wasn't deleted.
     assert skin_tgz_path.unlink.call_count == 0
+
+
+def test_default_name(mock_sdk, tmp_path):
+    "A new emulator can be created with the default name."
+    # This test doesn't validate most of the test process;
+    # it only checks that the emulator is created with the default name.
+
+    # User provides no input; default name will be used
+    mock_sdk.command.input.return_value = ''
+
+    # Mock the initial output of an AVD config file.
+    avd_config_path = tmp_path / ".android" / "avd" / 'beePhone.avd' / 'config.ini'
+    avd_config_path.parent.mkdir(parents=True)
+    with avd_config_path.open('w') as f:
+        f.write('hw.device.name=pixel\n')
+
+    # Create the emulator
+    avd = mock_sdk.create_emulator()
+
+    # The expected device AVD was created.
+    assert avd == 'beePhone'
+
+
+def test_default_name_with_collisions(mock_sdk, tmp_path):
+    "The default name will avoid collisions with existing emulators."
+    # This test doesn't validate most of the test process;
+    # it only checks that the emulator is created with the default name.
+
+    # Create some existing emulators that will collide with the default name.
+    mock_sdk.emulators = MagicMock(return_value=[
+        'beePhone2',
+        'runningEmulator',
+        'beePhone',
+    ])
+    # User provides no input; default name will be used
+    mock_sdk.command.input.return_value = ''
+
+    # Mock the initial output of an AVD config file.
+    avd_config_path = tmp_path / ".android" / "avd" / 'beePhone3.avd' / 'config.ini'
+    avd_config_path.parent.mkdir(parents=True)
+    with avd_config_path.open('w') as f:
+        f.write('hw.device.name=pixel\n')
+
+    # Create the emulator
+    avd = mock_sdk.create_emulator()
+
+    # The expected device AVD was created.
+    assert avd == 'beePhone3'

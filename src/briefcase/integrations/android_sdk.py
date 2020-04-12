@@ -1,6 +1,7 @@
 import re
 import shutil
 import subprocess
+import time
 from pathlib import Path
 
 from requests import exceptions as requests_exceptions
@@ -489,17 +490,31 @@ In future, you can specify this device by running:")
         # Get the list of existing emulators
         emulators = set(self.emulators())
 
+        default_avd = 'beePhone'
+        i = 1
+        # Make sure the default name is unique
+        while default_avd in emulators:
+            i += 1
+            default_avd = 'beePhone{i}'.format(i=i)
+
         # Prompt for a device avd until a valid one is provided.
         print("""
 You need to select a name for your new emulator. This is an identifier that
 can be used to start the emulator in future. It should follow the same naming
 conventions as a Python package (i.e., it may only contain letters, numbers,
-hyphens and underscores).
+hyphens and underscores). If you don't provide a name, Briefcase will use the
+a default name '{default_avd}'.
 
-""")
+""".format(default_avd=default_avd))
         avd_is_invalid = True
         while avd_is_invalid:
-            avd = self.command.input("Emulator name: ")
+            avd = self.command.input("Emulator name [{default_avd}]: ".format(
+                default_avd=default_avd
+            ))
+            # If the user doesn't provide a name, use the default.
+            if avd == '':
+                avd = default_avd
+
             if not PEP508_NAME_RE.match(avd):
                 print("""
 '{avd}' is not a valid emulator name. An emulator name may only contain
