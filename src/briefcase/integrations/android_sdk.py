@@ -482,9 +482,6 @@ class AndroidSDK:
             """
 You can create an emulator by running:
 
-    $ {sdkmanager_path} "platforms;android-28" \
-"system-images;android-28;default;x86" "emulator" "platform-tools"
-
     $ {avdmanager_path} --verbose create avd \
 --name {name} --abi x86 \
 --package 'system-images;android-28;default;x86' --device pixel
@@ -492,7 +489,6 @@ You can create an emulator by running:
     $ echo 'disk.dataPartition.size=4096M' >> $HOME/.android/avd/{name}.avd/config.ini
 
 """.format(
-                sdkmanager_path=self.sdkmanager_path,
                 avdmanager_path=self.avdmanager_path,
                 name=name,
             )
