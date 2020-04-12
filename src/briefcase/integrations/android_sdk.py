@@ -5,7 +5,11 @@ from pathlib import Path
 
 from requests import exceptions as requests_exceptions
 
-from briefcase.exceptions import BriefcaseCommandError, NetworkFailure
+from briefcase.exceptions import (
+    BriefcaseCommandError,
+    InvalidDeviceError,
+    NetworkFailure
+)
 
 DEVICE_NOT_FOUND = re.compile(r"^error: device '[^']*' not found")
 
@@ -144,7 +148,7 @@ class AndroidSDK:
 
         :param device: The device ID to manage.
         """
-        return ADB(self.sdk, device=device)
+        return ADB(self, device=device)
 
     def verify_license(self):
         """Verify that all necessary licenses have been accepted.
@@ -219,40 +223,28 @@ class AndroidSDK:
                 "Error while installing Android emulator and system image."
             )
 
-    def no_or_wrong_device_message(self):
-        adb_path = self.root_path / "platform-tools" / "adb"
-        avdmanager_path = self.root_path / "tools" / "bin" / "avdmanager"
-        emulator_path = self.root_path / "emulator" / "emulator"
-        sdkmanager_path = self.root_path / "tools" / "bin" / "sdkmanager"
-        return """\
-You can get a list of valid devices by running this command:
+    def emulators(self):
+        """Find the list of emulators that are available
 
-    $ {adb_path} devices -l
+        """
+        try:
+            # Capture `stderr` so that if the process exits with failure, the
+            # stderr data is in `e.output`.
+            output = self.command.subprocess.check_output(
+                [
+                    str(self.root_path / "emulator" / "emulator"),
+                    "-list-avds",
+                ],
+                universal_newlines=True,
+                stderr=subprocess.STDOUT,
+            ).strip()
 
-The device ID is the value in the first column of output - it will be either:
-
-  * a ~12-16 character alphanumeric string (for a physical device); or
-  * a value like `emulator-5554` (for an emulator).
-
-If you do not see any devices, you can create and start an emulator by running:
-
-    $ {sdkmanager_path} "platforms;android-28" \
-"system-images;android-28;default;x86" "emulator" "platform-tools"
-
-    $ {avdmanager_path} --verbose create avd \
---name robotfriend --abi x86 \
---package 'system-images;android-28;default;x86' --device pixel
-
-    $ echo 'disk.dataPartition.size=4096M' >> $HOME/.android/avd/robotfriend.avd/config.ini
-
-    $ {emulator_path} -avd robotfriend &
-
-""".format(
-            adb_path=adb_path,
-            avdmanager_path=avdmanager_path,
-            emulator_path=emulator_path,
-            sdkmanager_path=sdkmanager_path,
-        )
+            # AVD names are returned one per line.
+            if len(output) == 0:
+                return []
+            return output.split('\n')
+        except subprocess.CalledProcessError:
+            raise BriefcaseCommandError("Unable to obtain Android emulator list")
 
     def devices(self):
         """Find the devices that are attached and available to ADB
@@ -267,34 +259,33 @@ If you do not see any devices, you can create and start an emulator by running:
                     "devices",
                     "-l",
                 ],
+                universal_newlines=True,
                 stderr=subprocess.STDOUT,
-            )
+            ).strip()
 
             # Process the output of `adb devices -l`.
             # The first line is header information.
-            # Each subsequent line is a single device descriptor:
-            #
-            # Emulator:
-            # emulator-5554          device product:sdk_phone_x86 model:Android_SDK_built_for_x86 device:generic_x86 transport_id:4
-            #
-            # Physical Device
-            # KABCDABCDA1513         device usb:336675584X product:Kogan_Agora_9 model:Kogan_Agora_9 device:Kogan_Agora_9 transport_id:1
-            #
-            # Physical device, not authorized for development
-            # 04ea55ee8292009a       unauthorized usb:336675328X transport_id:2
+            # Each subsequent line is a single device descriptor.
             devices = {}
             for line in output.split('\n')[1:]:
-                if line:
-                    parts = re.sub('\s+', ' ', line).split(' ')
+                parts = re.sub(r'\s+', ' ', line).split(' ')
 
-                    details = {}
-                    for part in parts[2:]:
-                        key, value = part.split(':')
-                        details[key] = value
-                    try:
-                        devices[parts[0]] = details['device']
-                    except KeyError:
-                        devices[parts[0]] = "Unknown device (not authorized for development)"
+                details = {}
+                for part in parts[2:]:
+                    key, value = part.split(':')
+                    details[key] = value
+
+                if parts[1] == 'device':
+                    name = details['device']
+                    authorized = True
+                else:
+                    name = "Unknown device (not authorized for development)"
+                    authorized = False
+
+                devices[parts[0]] = {
+                    'name': name,
+                    'authorized': authorized,
+                }
 
             return devices
         except subprocess.CalledProcessError:
@@ -307,7 +298,8 @@ class ADB:
         An API integration for the Android Debug Bridge (ADB).
 
         :param android_sdk: The Android SDK providing ADB.
-        :param device: The ID of the device to target (in a format usable by`adb -s`)
+        :param device: The ID of the device to target (in a format usable by
+            `adb -s`)
         """
         self.android_sdk = android_sdk
         self.command = android_sdk.command
@@ -335,22 +327,13 @@ class ADB:
                     "-s",
                     self.device
                 ] + list(arguments),
+                universal_newlines=True,
                 stderr=subprocess.STDOUT,
             )
         except subprocess.CalledProcessError as e:
-            # Decode the output as ASCII. If it contains data in another
-            # character set, ignore that issue. We're looking for a ASCII-only
-            # error message.
-            output = e.output.decode("ascii", "replace")
-            if any((DEVICE_NOT_FOUND.match(line) for line in output.split("\n"))):
-                raise BriefcaseCommandError(self.android_sdk.no_or_wrong_device_message())
-            raise BriefcaseCommandError(
-                """\
-    Unable to run command on device. Received this output from `adb`
-    {output}""".format(
-                    output=output
-                )
-            )
+            if any((DEVICE_NOT_FOUND.match(line) for line in e.output.split("\n"))):
+                raise InvalidDeviceError('device id', self.device)
+            raise
 
     def install_apk(self, apk_path):
         """
@@ -360,7 +343,15 @@ class ADB:
 
         Returns `None` on success; raises an exception on failure.
         """
-        return self.run("install", str(apk_path))
+        try:
+            self.run("install", str(apk_path))
+        except subprocess.CalledProcessError:
+            raise BriefcaseCommandError(
+                "Unable to install APK {apk_path} on {device}".format(
+                    apk_path=apk_path,
+                    device=self.device,
+                )
+            )
 
     def force_stop_app(self, package):
         """
@@ -373,7 +364,15 @@ class ADB:
         # In my testing, `force-stop` exits with status code 0 (success) so long
         # as you pass a package name, even if the package does not exist, or the
         # package is not running.
-        self.run("shell", "am", "force-stop", package)
+        try:
+            self.run("shell", "am", "force-stop", package)
+        except subprocess.CalledProcessError:
+            raise BriefcaseCommandError(
+                "Unable to force stop app {package} on {device}".format(
+                    package=package,
+                    device=self.device,
+                )
+            )
 
     def start_app(self, package, activity):
         """
@@ -388,29 +387,38 @@ class ADB:
         name, you can find it using `aapt dump badging filename.apk` and looking
         for "package" and "launchable-activity" in the output.
         """
-        # `adb shell am start` always exits with status zero. We look for error
-        # messages in the output.
-        output = self.run(
-            "shell",
-            "am",
-            "start",
-            "{package}/{activity}".format(package=package, activity=activity),
-            "-a",
-            "android.intent.action.MAIN",
-            "-c",
-            "android.intent.category.LAUNCHER",
-        ).decode("ascii", "replace")
-
-        if any(
-            (
-                line.startswith("Error: Activity class ")
-                and line.endswith("does not exist.")
-                for line in output.split("\n")
+        try:
+            # `adb shell am start` always exits with status zero. We look for error
+            # messages in the output.
+            output = self.run(
+                "shell",
+                "am",
+                "start",
+                "{package}/{activity}".format(package=package, activity=activity),
+                "-a",
+                "android.intent.action.MAIN",
+                "-c",
+                "android.intent.category.LAUNCHER",
             )
-        ):
-            raise BriefcaseCommandError("""\
+
+            if any(
+                (
+                    line.startswith("Error: Activity class ")
+                    and line.endswith("does not exist.")
+                    for line in output.split("\n")
+                )
+            ):
+                raise BriefcaseCommandError("""\
     Activity class not found while starting app.
 
     `adb` output:
 
     {output}""".format(output=output))
+        except subprocess.CalledProcessError:
+            raise BriefcaseCommandError(
+                "Unable to start {package}/{activity} on {device}".format(
+                    package=package,
+                    activity=activity,
+                    device=self.device,
+                )
+            )

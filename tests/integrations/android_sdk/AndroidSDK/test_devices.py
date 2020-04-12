@@ -22,7 +22,10 @@ def test_one_emulator(mock_sdk):
         mock_sdk.command.subprocess.check_output.return_value = adb_output_file.read()
 
     assert mock_sdk.devices() == {
-        'emulator-5554': 'generic_x86'
+        'emulator-5554': {
+            'name': 'generic_x86',
+            'authorized': True,
+        },
     }
 
 
@@ -33,9 +36,18 @@ def test_multiple_devices(mock_sdk):
         mock_sdk.command.subprocess.check_output.return_value = adb_output_file.read()
 
     assert mock_sdk.devices() == {
-        '041234567892009a': 'Unknown device (not authorized for development)',
-        'KABCDABCDA1513': 'Kogan_Agora_9',
-        'emulator-5554': 'generic_x86'
+        '041234567892009a': {
+            'name': 'Unknown device (not authorized for development)',
+            'authorized': False,
+        },
+        'KABCDABCDA1513': {
+            'name': 'Kogan_Agora_9',
+            'authorized': True,
+        },
+        'emulator-5554': {
+            'name': 'generic_x86',
+            'authorized': True,
+        },
     }
 
 

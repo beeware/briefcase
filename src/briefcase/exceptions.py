@@ -117,3 +117,15 @@ class MissingToolError(BriefcaseCommandError):
                 tool=tool,
             )
         )
+
+
+class InvalidDeviceError(BriefcaseCommandError):
+    def __init__(self, id_type, device):
+        self.id_type = id_type
+        self.device = device
+        super().__init__(
+            "Invalid device {id_type} '{device}'".format(
+                id_type=id_type,
+                device=device,
+            )
+        )
