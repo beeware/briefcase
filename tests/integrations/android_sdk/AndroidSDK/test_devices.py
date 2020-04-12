@@ -48,6 +48,10 @@ def test_multiple_devices(mock_sdk):
             'name': 'generic_x86',
             'authorized': True,
         },
+        'emulator-5556': {
+            'name': 'Unknown device (offline)',
+            'authorized': False,
+        },
     }
 
 

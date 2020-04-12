@@ -315,6 +315,9 @@ class AndroidSDK:
                     if parts[1] == "device":
                         name = details["device"]
                         authorized = True
+                    elif parts[1] == "offline":
+                        name = "Unknown device (offline)"
+                        authorized = False
                     else:
                         name = "Unknown device (not authorized for development)"
                         authorized = False
