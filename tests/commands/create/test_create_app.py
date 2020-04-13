@@ -42,7 +42,9 @@ def test_create_existing_app_override_from_user_input(tracking_create_command):
         ('resources', tracking_create_command.apps['first']),
     ]
 
-    tracking_create_command.input.assert_called_once()
+    tracking_create_command.input.assert_called_once_with(
+        'Application first already exists; overwrite (y/N)? '
+    )
 
     # Original content has been deleted
     assert not (bundle_path / 'original').exists()
@@ -101,7 +103,9 @@ def test_create_existing_app_no_override_from_user_input(tracking_create_command
         ('check_bundle_path_existence', tracking_create_command.apps['first'], None)
     ]
 
-    tracking_create_command.input.assert_called_once()
+    tracking_create_command.input.assert_called_once_with(
+        'Application first already exists; overwrite (y/N)? '
+    )
 
     # Original content still exists
     assert (bundle_path / 'original').exists()
