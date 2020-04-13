@@ -60,6 +60,13 @@ class TrackingCreateCommand(DummyCreateCommand):
 
         self.actions = []
 
+    def check_bundle_path_existence(self, bundle_path, app, override=None, **kwargs):
+        status = super().check_bundle_path_existence(
+            bundle_path, app, override=override, **kwargs
+        )
+        self.actions.append(('check_bundle_path_existence', app, override))
+        return status
+
     def verify_tools(self):
         super().verify_tools()
         self.actions.append(('verify'))

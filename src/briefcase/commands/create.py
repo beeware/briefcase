@@ -139,6 +139,20 @@ class CreateCommand(BaseCommand):
             query=urlencode(self.support_package_url_query)
         )
 
+    def add_options(self, parser):
+        parser.add_argument(
+            '--override',
+            const=True,
+            dest='override',
+            help='Remove existing output directory if already exists'
+        )
+        parser.add_argument(
+            '--no-override',
+            const=False,
+            dest='override',
+            help='Do not remove existing output directory if already exists'
+        )
+
     def _load_path_index(self, app: BaseConfig):
         """
         Load the path index from the index file provided by the app template
@@ -657,6 +671,31 @@ class CreateCommand(BaseCommand):
                     target=self.bundle_path(app) / target,
                 )
 
+    def check_bundle_path_existence(self, bundle_path, app, override=None, **kwargs):
+        if not bundle_path.exists():
+            return True
+
+        if override is None:
+            print()
+            confirm = self.input(
+                'Application {app.app_name} already exists; overwrite (y/N)? '.format(
+                    app=app
+                )
+            )
+            override = (confirm.lower() == 'y')
+            print()
+        if override:
+            print("[{app.app_name}] Removing old application bundle...".format(
+                app=app
+            ))
+            self.shutil.rmtree(str(bundle_path))
+            return True
+        else:
+            print("Aborting creation of app {app.app_name}".format(
+                app=app
+            ))
+            return False
+
     def create_app(self, app: BaseConfig, **kwargs):
         """
         Create an application bundle.
@@ -664,21 +703,11 @@ class CreateCommand(BaseCommand):
         :param app: The config object for the app
         """
         bundle_path = self.bundle_path(app)
-        if bundle_path.exists():
-            print()
-            confirm = self.input('Application {app.app_name} already exists; overwrite (y/N)? '.format(
-                app=app
-            ))
-            if confirm.lower() != 'y':
-                print("Aborting creation of app {app.app_name}".format(
-                    app=app
-                ))
-                return
-            print()
-            print("[{app.app_name}] Removing old application bundle...".format(
-                app=app
-            ))
-            self.shutil.rmtree(str(bundle_path))
+        status = self.check_bundle_path_existence(
+            bundle_path=bundle_path, app=app, **kwargs
+        )
+        if status is False:
+            return
 
         print()
         print('[{app.app_name}] Generating application template...'.format(

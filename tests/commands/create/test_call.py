@@ -27,22 +27,26 @@ def test_create(tracking_create_command):
     tracking_create_command()
 
     # The right sequence of things will be done
+    first_app = tracking_create_command.apps['first']
+    second_app = tracking_create_command.apps['second']
     assert tracking_create_command.actions == [
         ('verify'),
 
         # Create the first app
-        ('generate', tracking_create_command.apps['first']),
-        ('support', tracking_create_command.apps['first']),
-        ('dependencies', tracking_create_command.apps['first']),
-        ('code', tracking_create_command.apps['first']),
-        ('resources', tracking_create_command.apps['first']),
+        ('check_bundle_path_existence', first_app, None),
+        ('generate', first_app),
+        ('support', first_app),
+        ('dependencies', first_app),
+        ('code', first_app),
+        ('resources', first_app),
 
         # Create the second app
-        ('generate', tracking_create_command.apps['second']),
-        ('support', tracking_create_command.apps['second']),
-        ('dependencies', tracking_create_command.apps['second']),
-        ('code', tracking_create_command.apps['second']),
-        ('resources', tracking_create_command.apps['second']),
+        ('check_bundle_path_existence', second_app, None),
+        ('generate', second_app),
+        ('support', second_app),
+        ('dependencies', second_app),
+        ('code', second_app),
+        ('resources', second_app),
     ]
 
     # New app content has been created
@@ -52,18 +56,70 @@ def test_create(tracking_create_command):
 
 def test_create_single(tracking_create_command):
     "The create command can be called to create a single app from the config"
-    tracking_create_command(app=tracking_create_command.apps['first'])
+    first_app = tracking_create_command.apps['first']
+    tracking_create_command(app=first_app)
 
     # The right sequence of things will be done
     assert tracking_create_command.actions == [
         ('verify'),
 
         # Create the first app
-        ('generate', tracking_create_command.apps['first']),
-        ('support', tracking_create_command.apps['first']),
-        ('dependencies', tracking_create_command.apps['first']),
-        ('code', tracking_create_command.apps['first']),
-        ('resources', tracking_create_command.apps['first']),
+        ('check_bundle_path_existence', first_app, None),
+        ('generate', first_app),
+        ('support', first_app),
+        ('dependencies', first_app),
+        ('code', first_app),
+        ('resources', first_app),
+    ]
+
+    # New app content has been created
+    assert (tracking_create_command.platform_path / 'first.bundle' / 'new').exists()
+    assert not (tracking_create_command.platform_path / 'second.bundle' / 'new').exists()
+
+
+def test_create_single_with_override_true(tracking_create_command):
+    """The create command can be called with "override" flag that indicates that
+     output directory will be override if it already exists
+     """
+    first_app = tracking_create_command.apps['first']
+    tracking_create_command(app=first_app, override=True)
+
+    # The right sequence of things will be done
+    assert tracking_create_command.actions == [
+        ('verify'),
+
+        # Create the first app
+        ('check_bundle_path_existence', first_app, True),
+        ('generate', first_app),
+        ('support', first_app),
+        ('dependencies', first_app),
+        ('code', first_app),
+        ('resources', first_app),
+    ]
+
+    # New app content has been created
+    assert (tracking_create_command.platform_path / 'first.bundle' / 'new').exists()
+    assert not (tracking_create_command.platform_path / 'second.bundle' / 'new').exists()
+
+
+def test_create_single_with_override_false(tracking_create_command):
+    """The create command can be called with "no-override" flag that indicates that
+     command should be aborted output directory already exists
+     """
+    first_app = tracking_create_command.apps['first']
+    tracking_create_command(app=first_app, override=False)
+
+    # The right sequence of things will be done
+    assert tracking_create_command.actions == [
+        ('verify'),
+
+        # Create the first app
+        ('check_bundle_path_existence', first_app, False),
+        ('generate', first_app),
+        ('support', first_app),
+        ('dependencies', first_app),
+        ('code', first_app),
+        ('resources', first_app),
     ]
 
     # New app content has been created
