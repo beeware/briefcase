@@ -111,7 +111,7 @@ def test_dev_command(monkeypatch):
     }
 
 
-def test_bare_command(monkeypatch):
+def test_bare_create_command(monkeypatch):
     "``briefcase create`` returns the macOS create app command"
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, 'platform', 'darwin')
@@ -121,7 +121,33 @@ def test_bare_command(monkeypatch):
     assert isinstance(cmd, macOSAppCreateCommand)
     assert cmd.platform == 'macOS'
     assert cmd.output_format == 'dmg'
-    assert options == {'verbosity': 1}
+    assert options == {'override': None, 'verbosity': 1}
+
+
+def test_create_command_with_override(monkeypatch):
+    "``briefcase create`` returns the macOS create app command"
+    # Pretend we're on macOS, regardless of where the tests run.
+    monkeypatch.setattr(sys, 'platform', 'darwin')
+
+    cmd, options = parse_cmdline('create --override'.split())
+
+    assert isinstance(cmd, macOSAppCreateCommand)
+    assert cmd.platform == 'macOS'
+    assert cmd.output_format == 'dmg'
+    assert options == {'override': True, 'verbosity': 1}
+
+
+def test_create_command_with_no_override(monkeypatch):
+    "``briefcase create`` returns the macOS create app command"
+    # Pretend we're on macOS, regardless of where the tests run.
+    monkeypatch.setattr(sys, 'platform', 'darwin')
+
+    cmd, options = parse_cmdline('create --no-override'.split())
+
+    assert isinstance(cmd, macOSAppCreateCommand)
+    assert cmd.platform == 'macOS'
+    assert cmd.output_format == 'dmg'
+    assert options == {'override': False, 'verbosity': 1}
 
 
 @pytest.mark.skipif(sys.platform != 'linux', reason="requires Linux")
@@ -133,7 +159,7 @@ def test_linux_default():
     assert isinstance(cmd, LinuxAppImageCreateCommand)
     assert cmd.platform == 'linux'
     assert cmd.output_format == 'appimage'
-    assert options == {'verbosity': 1}
+    assert options == {'override': None, 'verbosity': 1}
 
 
 @pytest.mark.skipif(sys.platform != 'darwin', reason="requires macOS")
@@ -145,7 +171,7 @@ def test_macOS_default():
     assert isinstance(cmd, macOSAppCreateCommand)
     assert cmd.platform == 'macOS'
     assert cmd.output_format == 'dmg'
-    assert options == {'verbosity': 1}
+    assert options == {'override': None, 'verbosity': 1}
 
 
 @pytest.mark.skipif(sys.platform != 'win32', reason="requires Windows")
@@ -157,7 +183,7 @@ def test_windows_default():
     assert isinstance(cmd, WindowsMSICreateCommand)
     assert cmd.platform == 'windows'
     assert cmd.output_format == 'msi'
-    assert options == {'verbosity': 1}
+    assert options == {'override': None, 'verbosity': 1}
 
 
 def test_bare_command_help(monkeypatch, capsys):
@@ -173,7 +199,7 @@ def test_bare_command_help(monkeypatch, capsys):
     # Help message is for default platform and format
     output = capsys.readouterr().out
     assert output.startswith(
-        "usage: briefcase create macOS dmg [-h] [-v] [-V]\n"
+        "usage: briefcase create macOS dmg [-h] [-v] [-V] [--override] [--no-override]\n"
         "\n"
         "Create and populate a macOS app.\n"
         "\n"
@@ -229,7 +255,7 @@ def test_command_explicit_platform(monkeypatch):
     assert isinstance(cmd, LinuxAppImageCreateCommand)
     assert cmd.platform == 'linux'
     assert cmd.output_format == 'appimage'
-    assert options == {'verbosity': 1}
+    assert options == {'override': None, 'verbosity': 1}
 
 
 def test_command_explicit_platform_case_handling(monkeypatch):
@@ -243,7 +269,7 @@ def test_command_explicit_platform_case_handling(monkeypatch):
     assert isinstance(cmd, macOSAppCreateCommand)
     assert cmd.platform == 'macOS'
     assert cmd.output_format == 'dmg'
-    assert options == {'verbosity': 1}
+    assert options == {'override': None, 'verbosity': 1}
 
 
 def test_command_explicit_platform_help(monkeypatch, capsys):
@@ -259,7 +285,7 @@ def test_command_explicit_platform_help(monkeypatch, capsys):
     # Help message is for default platform and format
     output = capsys.readouterr().out
     assert output.startswith(
-        "usage: briefcase create macOS dmg [-h] [-v] [-V]\n"
+        "usage: briefcase create macOS dmg [-h] [-v] [-V] [--override] [--no-override]\n"
         "\n"
         "Create and populate a macOS app.\n"
         "\n"
@@ -290,7 +316,7 @@ def test_command_explicit_format(monkeypatch):
     assert isinstance(cmd, macOSDmgCreateCommand)
     assert cmd.platform == 'macOS'
     assert cmd.output_format == 'dmg'
-    assert options == {'verbosity': 1}
+    assert options == {'override': None, 'verbosity': 1}
 
 
 def test_command_unknown_format(monkeypatch):
@@ -324,7 +350,7 @@ def test_command_explicit_format_help(monkeypatch, capsys):
     # Help message is for default platform, but dmg format
     output = capsys.readouterr().out
     assert output.startswith(
-        "usage: briefcase create macOS dmg [-h] [-v] [-V]\n"
+        "usage: briefcase create macOS dmg [-h] [-v] [-V] [--override] [--no-override]\n"
         "\n"
         "Create and populate a macOS app.\n"
         "\n"

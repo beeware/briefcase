@@ -142,13 +142,14 @@ class CreateCommand(BaseCommand):
     def add_options(self, parser):
         parser.add_argument(
             '--override',
-            const=True,
+            action="store_true",
+            default=None,
             dest='override',
             help='Remove existing output directory if already exists'
         )
         parser.add_argument(
             '--no-override',
-            const=False,
+            action="store_false",
             dest='override',
             help='Do not remove existing output directory if already exists'
         )
