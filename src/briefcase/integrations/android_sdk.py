@@ -630,7 +630,7 @@ In future, you can specify this device by running:
         """
         if avd in set(self.emulators()):
             print("Starting emulator {avd}...".format(avd=avd))
-            self.command.subprocess.Popen(
+            emulator_popen = self.command.subprocess.Popen(
                 [
                     self.emulator_path,
                     '@' + avd,
@@ -654,12 +654,26 @@ In future, you can specify this device by running:
             known_devices = set()
             while adb is None:
                 print('.', flush=True, end='')
+                if emulator_popen.poll() is not None:
+                    raise BriefcaseCommandError("""
+Android emulator was unable to start!
+
+Try starting the emulator manually by running:
+
+    {cmdline}
+
+Resolve any problems you discover, then try running your app again. You may
+find this page helpful in diagnosing emulator problems.
+
+    https://developer.android.com/studio/run/emulator-acceleration#accel-vm
+""".format(cmdline=' '.join(str(arg) for arg in emulator_popen.args)))
+
                 for device, details in sorted(self.devices().items()):
                     # Only process authorized devices that we haven't seen.
                     if details['authorized'] and device not in known_devices:
                         adb = self.adb(device)
                         device_avd = adb.avd_name()
-                        print("CHECK", device, device_avd)
+
                         if device_avd == avd:
                             # Found an active device that matches
                             # the AVD we are starting.
@@ -672,7 +686,7 @@ In future, you can specify this device by running:
                             # Not the one. Zathras knows.
                             adb = None
                             known_devices.add(device)
-                            print("IGNORE", device)
+
                 # Try again in 2 seconds...
                 self.sleep(2)
 
@@ -681,6 +695,20 @@ In future, you can specify this device by running:
 
             # Phase 2: Wait for the boot process to complete
             while not adb.has_booted():
+                if emulator_popen.poll() is not None:
+                    raise BriefcaseCommandError("""
+Android emulator was unable to boot!
+
+Try starting the emulator manually by running:
+
+    {cmdline}
+
+Resolve any problems you discover, then try running your app again. You may
+find this page helpful in diagnosing emulator problems.
+
+    https://developer.android.com/studio/run/emulator-acceleration#accel-vm
+""".format(cmdline=' '.join(str(arg) for arg in emulator_popen.args)))
+
                 # Try again in 2 seconds...
                 self.sleep(2)
                 print('.', flush=True, end='')
