@@ -63,3 +63,12 @@ def test_adb_error(mock_sdk):
 
     with pytest.raises(BriefcaseCommandError):
         mock_sdk.devices()
+
+
+def test_daemon_start(mock_sdk):
+    "If ADB outputs the daemon startup message, ignore those messages"
+    adb_samples = Path(__file__).parent / "devices"
+    with (adb_samples / ("daemon_start")).open("r") as adb_output_file:
+        mock_sdk.command.subprocess.check_output.return_value = adb_output_file.read()
+
+    assert mock_sdk.devices() == {}

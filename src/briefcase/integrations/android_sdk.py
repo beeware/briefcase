@@ -307,8 +307,11 @@ class AndroidSDK:
             # The first line is header information.
             # Each subsequent line is a single device descriptor.
             devices = {}
-            for line in output.split("\n")[1:]:
-                if line:
+            header_found = False
+            for line in output.split("\n"):
+                if line == 'List of devices attached':
+                    header_found = True
+                elif header_found and line:
                     parts = re.sub(r"\s+", " ", line).split(" ")
 
                     details = {}
