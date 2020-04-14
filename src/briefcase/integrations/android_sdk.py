@@ -20,8 +20,8 @@ class AndroidDeviceNotAuthorized(BriefcaseCommandError):
         self.device = device
         super().__init__(
             """
-The device you have selected ({device}) has not had Developer Options
-enabled. These options must be enabled before a device can be used as a
+The device you have selected ({device}) has not had developer options and
+USB debugging enabled. These must be enabled before a device can be used  as a
 target for deployment. For details on how to enable Developer Options, visit:
 
     https://developer.android.com/studio/debug/dev-options#enable
@@ -324,12 +324,12 @@ class AndroidSDK:
 
     def select_target_device(self, device_or_avd):
         """
-        Select a device to be the target for actions
+        Select a device to be the target for actions.
 
-        Interrogates the system to get the list of available devices
+        Interrogates the system to get the list of available devices.
 
         If the user has specified a device at the command line, that device
-        will be validated, and then automatically selected
+        will be validated, and then automatically selected.
 
         :param device_or_avd: The device or AVD to target. Can be a physical
             device id (a hex string), an emulator id ("emulator-5554"), or
@@ -351,7 +351,7 @@ class AndroidSDK:
         device_choices = {}
 
         # Iterate over all the running devices.
-        # If the device has an AVD, use ADB to get the emulator AVD name.
+        # If the device is a virtual device, use ADB to get the emulator AVD name.
         # If it is a physical device, use the device name.
         # Keep a log of all running AVDs
         running_avds = {}
