@@ -35,10 +35,10 @@ def mock_command(tmp_path):
     return command
 
 
-def accept_license(root_path):
+def accept_license(android_sdk_root_path):
     "Generate a side effect method that will accept a license."
     def _side_effect(*args, **kwargs):
-        license_dir = root_path / "licenses"
+        license_dir = android_sdk_root_path / "licenses"
         license_dir.mkdir(parents=True)
         (license_dir / "android-sdk-license").touch()
 
@@ -47,8 +47,8 @@ def accept_license(root_path):
 
 @pytest.mark.parametrize("host_os", ("ArbitraryNotWindows", "Windows"))
 def test_succeeds_immediately_in_happy_path(mock_command, host_os, tmp_path):
-    "If verify_android_sdk is invoked on a valid path, it does nothing."
-    # `sdkmanager` exists and has the right permissions, and
+    "If verify_android_sdk is invoked on a path containing an Android SDK, it does nothing."
+    # If `sdkmanager` exists and has the right permissions, and
     # `android-sdk-license` exists, verify_android_sdk() should
     # succeed, create no subprocesses, make no requests, and return a
     # SDK wrapper.
@@ -57,16 +57,16 @@ def test_succeeds_immediately_in_happy_path(mock_command, host_os, tmp_path):
     # `sdkmanager`.
 
     # Create `sdkmanager` and the license file.
-    root_path = tmp_path / ".briefcase" / "tools" / "android_sdk"
-    tools_bin = root_path / "tools" / "bin"
+    android_sdk_root_path = tmp_path / ".briefcase" / "tools" / "android_sdk"
+    tools_bin = android_sdk_root_path / "tools" / "bin"
     tools_bin.mkdir(parents=True, mode=0o755)
     if host_os == "Windows":
         (tools_bin / "sdkmanager.bat").touch()
     else:
         (tools_bin / "sdkmanager").touch(mode=0o755)
-    licenses = root_path / "licenses"
-    licenses.mkdir(parents=True, mode=0o755)
-    (licenses / "android-sdk-license").touch()
+
+    # Pre-accept the license
+    accept_license(android_sdk_root_path)()
 
     # Configure `mock_command` to assume the `host_os` we parameterized with.
     mock_command.host_os = host_os
@@ -81,23 +81,23 @@ def test_succeeds_immediately_in_happy_path(mock_command, host_os, tmp_path):
     mock_command.shutil.unpack_archive.assert_not_called()
 
     # The returned SDK has the expected root path.
-    assert sdk.root_path == root_path
+    assert sdk.root_path == android_sdk_root_path
 
 
 def test_user_provided_sdk(mock_command, tmp_path):
     "If the user specifies a valid ANDROID_SDK_ROOT, it is used"
     # Create `sdkmanager` and the license file.
-    root_path = tmp_path / "other_sdk"
-    tools_bin = root_path / "tools" / "bin"
+    existing_android_sdk_root_path = tmp_path / "other_sdk"
+    tools_bin = existing_android_sdk_root_path / "tools" / "bin"
     tools_bin.mkdir(parents=True, mode=0o755)
     (tools_bin / "sdkmanager").touch(mode=0o755)
-    licenses = root_path / "licenses"
-    licenses.mkdir(parents=True, mode=0o755)
-    (licenses / "android-sdk-license").touch()
+
+    # Pre-accept the license
+    accept_license(existing_android_sdk_root_path)()
 
     # Set the environment to specify ANDROID_SDK_ROOT
     mock_command.os.environ = {
-        'ANDROID_SDK_ROOT': str(root_path)
+        'ANDROID_SDK_ROOT': str(existing_android_sdk_root_path)
     }
 
     # Expect verify_android_sdk() to succeed
@@ -110,7 +110,8 @@ def test_user_provided_sdk(mock_command, tmp_path):
     mock_command.shutil.unpack_archive.assert_not_called()
 
     # The returned SDK has the expected root path.
-    assert str(sdk.root_path) == str(root_path)
+    # FIXME: The conversion to str is needed for Python 3.5 compatibility.
+    assert str(sdk.root_path) == str(existing_android_sdk_root_path)
 
 
 def test_invalid_user_provided_sdk(mock_command, tmp_path):
@@ -118,13 +119,13 @@ def test_invalid_user_provided_sdk(mock_command, tmp_path):
 
     # Create `sdkmanager` and the license file
     # for the *briefcase* SDK.
-    root_path = tmp_path / ".briefcase" / "tools" / "android_sdk"
-    tools_bin = root_path / "tools" / "bin"
+    android_sdk_root_path = tmp_path / ".briefcase" / "tools" / "android_sdk"
+    tools_bin = android_sdk_root_path / "tools" / "bin"
     tools_bin.mkdir(parents=True, mode=0o755)
     (tools_bin / "sdkmanager").touch(mode=0o755)
-    licenses = root_path / "licenses"
-    licenses.mkdir(parents=True, mode=0o755)
-    (licenses / "android-sdk-license").touch()
+
+    # Pre-accept the license
+    accept_license(android_sdk_root_path)()
 
     # Set the environment to specify an ANDROID_SDK_ROOT that doesn't exist
     mock_command.os.environ = {
@@ -141,13 +142,13 @@ def test_invalid_user_provided_sdk(mock_command, tmp_path):
     mock_command.shutil.unpack_archive.assert_not_called()
 
     # The returned SDK has the expected root path.
-    assert sdk.root_path == root_path
+    assert sdk.root_path == android_sdk_root_path
 
 
 @pytest.mark.parametrize("host_os", ("ArbitraryNotWindows", "Windows"))
 def test_download_sdk(mock_command, tmp_path, host_os):
     "If an SDK is not available, one will be downloaded"
-    root_path = tmp_path / ".briefcase" / "tools" / "android_sdk"
+    android_sdk_root_path = tmp_path / ".briefcase" / "tools" / "android_sdk"
 
     # Mock-out `host_os` so we only do our permission check on non-Windows.
     mock_command.host_os = host_os
@@ -158,12 +159,12 @@ def test_download_sdk(mock_command, tmp_path, host_os):
     mock_command.download_url.return_value = cache_file
 
     # Create a file that would have been created by unpacking the archive
-    example_tool = root_path / "tools" / "bin" / "exampletool"
+    example_tool = android_sdk_root_path / "tools" / "bin" / "exampletool"
     example_tool.parent.mkdir(parents=True)
     example_tool.touch(0o644)
 
     # Set up a side effect for accepting the license
-    mock_command.subprocess.run.side_effect = accept_license(root_path)
+    mock_command.subprocess.run.side_effect = accept_license(android_sdk_root_path)
 
     # Call `verify_android_sdk()`
     sdk = verify_android_sdk(mock_command)
@@ -178,21 +179,21 @@ def test_download_sdk(mock_command, tmp_path, host_os):
     )
     mock_command.shutil.unpack_archive.assert_called_once_with(
         "/path/to/download.zip",
-        extract_dir=str(root_path)
+        extract_dir=str(android_sdk_root_path)
     )
 
     # The cached file will be deleeted
     cache_file.unlink.assert_called_once_with()
 
-    # On non-Windows, ensure the mocked binary was made executabley
+    # On non-Windows, ensure the unpacked binary was made executable
     if host_os != 'Windows':
         assert os.access(str(example_tool), os.X_OK)
 
     # The license has been accepted
-    assert (root_path / "licenses" / "android-sdk-license").exists()
+    assert (android_sdk_root_path / "licenses" / "android-sdk-license").exists()
 
     # The returned SDK has the expected root path.
-    assert sdk.root_path == root_path
+    assert sdk.root_path == android_sdk_root_path
 
 
 @pytest.mark.skipif(
@@ -201,12 +202,12 @@ def test_download_sdk(mock_command, tmp_path, host_os):
 def test_download_sdk_if_sdkmanager_not_executable(mock_command, tmp_path):
     """An SDK will be downloaded and unpackged if `tools/bin/sdkmanager` exists
     but does not have its permissions set properly."""
-    root_path = tmp_path / ".briefcase" / "tools" / "android_sdk"
+    android_sdk_root_path = tmp_path / ".briefcase" / "tools" / "android_sdk"
 
     # Create non-executable `sdkmanager`.
-    root_path = tmp_path / ".briefcase" / "tools" / "android_sdk"
-    (root_path / "tools" / "bin").mkdir(parents=True)
-    (root_path / "tools" / "bin" / "sdkmanager").touch(mode=0o644)
+    android_sdk_root_path = tmp_path / ".briefcase" / "tools" / "android_sdk"
+    (android_sdk_root_path / "tools" / "bin").mkdir(parents=True)
+    (android_sdk_root_path / "tools" / "bin" / "sdkmanager").touch(mode=0o644)
 
     # The download will produce a cached file
     cache_file = MagicMock()
@@ -214,7 +215,7 @@ def test_download_sdk_if_sdkmanager_not_executable(mock_command, tmp_path):
     mock_command.download_url.return_value = cache_file
 
     # Set up a side effect for accepting the license
-    mock_command.subprocess.run.side_effect = accept_license(root_path)
+    mock_command.subprocess.run.side_effect = accept_license(android_sdk_root_path)
 
     # Call `verify_android_sdk()`
     sdk = verify_android_sdk(mock_command)
@@ -226,17 +227,17 @@ def test_download_sdk_if_sdkmanager_not_executable(mock_command, tmp_path):
     )
     mock_command.shutil.unpack_archive.assert_called_once_with(
         "/path/to/download.zip",
-        extract_dir=str(root_path)
+        extract_dir=str(android_sdk_root_path)
     )
 
-    # The cached file will be deleeted
+    # The cached file will be deleted
     cache_file.unlink.assert_called_once_with()
 
     # The license has been accepted
-    assert (root_path / "licenses" / "android-sdk-license").exists()
+    assert (android_sdk_root_path / "licenses" / "android-sdk-license").exists()
 
     # The returned SDK has the expected root path.
-    assert sdk.root_path == root_path
+    assert sdk.root_path == android_sdk_root_path
 
 
 def test_raises_networkfailure_on_connectionerror(mock_command):
@@ -257,7 +258,7 @@ def test_raises_networkfailure_on_connectionerror(mock_command):
 
 def test_detects_bad_zipfile(mock_command, tmp_path):
     "If the ZIP file is corrupted, an error is raised."
-    root_path = tmp_path / ".briefcase" / "tools" / "android_sdk"
+    android_sdk_root_path = tmp_path / ".briefcase" / "tools" / "android_sdk"
 
     # The download will produce a cached file
     cache_file = MagicMock()
@@ -277,5 +278,5 @@ def test_detects_bad_zipfile(mock_command, tmp_path):
     )
     mock_command.shutil.unpack_archive.assert_called_once_with(
         "/path/to/download.zip",
-        extract_dir=str(root_path)
+        extract_dir=str(android_sdk_root_path)
     )
