@@ -70,6 +70,5 @@ class InputWrapper:
             return default
         return user_input
 
-
     def __call__(self, prompt):
         return input(prompt)
