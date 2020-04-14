@@ -1,5 +1,3 @@
-from unittest import mock
-
 from briefcase.console import select_option
 from tests.commands.dummy_input_wrapper import DummyInputWrapper
 
