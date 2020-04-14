@@ -6,20 +6,23 @@ import pytest
 from briefcase.exceptions import BriefcaseCommandError
 
 
+def devices_result(name):
+    "Load a adb devices result file from the sample directory, and return the content"
+    adb_samples = Path(__file__).parent / "devices"
+    with (adb_samples / (name)).open(encoding='utf-8') as adb_output_file:
+        return adb_output_file.read()
+
+
 def test_no_devices(mock_sdk):
     "If there are no devices, an empty list is returned"
-    adb_samples = Path(__file__).parent / "devices"
-    with (adb_samples / ("no_devices")).open("r") as adb_output_file:
-        mock_sdk.command.subprocess.check_output.return_value = adb_output_file.read()
+    mock_sdk.command.subprocess.check_output.return_value = devices_result("no_devices")
 
     assert mock_sdk.devices() == {}
 
 
 def test_one_emulator(mock_sdk):
     "If there is a single emulator, it is returned"
-    adb_samples = Path(__file__).parent / "devices"
-    with (adb_samples / ("one_emulator")).open("r") as adb_output_file:
-        mock_sdk.command.subprocess.check_output.return_value = adb_output_file.read()
+    mock_sdk.command.subprocess.check_output.return_value = devices_result("one_emulator")
 
     assert mock_sdk.devices() == {
         'emulator-5554': {
@@ -31,9 +34,7 @@ def test_one_emulator(mock_sdk):
 
 def test_multiple_devices(mock_sdk):
     "If there are multiple devices, they are all returned"
-    adb_samples = Path(__file__).parent / "devices"
-    with (adb_samples / ("multiple_devices")).open("r") as adb_output_file:
-        mock_sdk.command.subprocess.check_output.return_value = adb_output_file.read()
+    mock_sdk.command.subprocess.check_output.return_value = devices_result("multiple_devices")
 
     assert mock_sdk.devices() == {
         '041234567892009a': {
@@ -67,8 +68,6 @@ def test_adb_error(mock_sdk):
 
 def test_daemon_start(mock_sdk):
     "If ADB outputs the daemon startup message, ignore those messages"
-    adb_samples = Path(__file__).parent / "devices"
-    with (adb_samples / ("daemon_start")).open("r") as adb_output_file:
-        mock_sdk.command.subprocess.check_output.return_value = adb_output_file.read()
+    mock_sdk.command.subprocess.check_output.return_value = devices_result("daemon_start")
 
     assert mock_sdk.devices() == {}
