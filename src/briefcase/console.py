@@ -1,7 +1,7 @@
 import operator
 
 
-def select_option(options, input=input, prompt='> ', error="Invalid selection"):
+def select_option(options, input, prompt='> ', error="Invalid selection"):
     """
     Prompt the user for a choice from a list of options.
 
@@ -35,9 +35,8 @@ def select_option(options, input=input, prompt='> ', error="Invalid selection"):
         print('  {i}) {label}'.format(i=i, label=value))
 
     print()
-    while True:
-        try:
-            selection = int(input(prompt))
-            return ordered[selection - 1][0]
-        except (ValueError, IndexError):
-            print(error)
+    choices = [str(index) for index in range(1, len(ordered) + 1)]
+    index = input.selection_input(
+        prompt=prompt, choices=choices, default=None, error_message=error
+    )
+    return ordered[int(index) - 1][0]

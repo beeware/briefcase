@@ -5,6 +5,7 @@ import pytest
 from briefcase.commands.base import BaseCommand
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.platforms.iOS.xcode import iOSXcodeMixin
+from tests.commands.dummy_input_wrapper import DummyInputWrapper
 
 
 class DummyCommand(iOSXcodeMixin, BaseCommand):
@@ -15,6 +16,7 @@ class DummyCommand(iOSXcodeMixin, BaseCommand):
 
     def __init__(self, base_path, **kwargs):
         super().__init__(base_path=base_path, **kwargs)
+        self.input = DummyInputWrapper()
 
 
 @pytest.fixture
@@ -28,10 +30,6 @@ def dummy_command(tmp_path):
     # Mock get_simulators
     mock_get_simulators = mock.MagicMock()
     cmd.get_simulators = mock_get_simulators
-
-    # Mock user input
-    mock_input = mock.MagicMock()
-    cmd.input = mock_input
 
     return cmd
 
@@ -82,7 +80,7 @@ def test_explicit_device_name(dummy_command):
     assert device == 'iPhone 8'
 
     # User input was not solicited
-    assert dummy_command.input.call_count == 0
+    assert dummy_command.input.prompts == []
 
 
 def test_explicit_device_name_and_version(dummy_command):
@@ -111,7 +109,7 @@ def test_explicit_device_name_and_version(dummy_command):
     assert device == 'iPhone 8'
 
     # User input was not solicited
-    assert dummy_command.input.call_count == 0
+    assert dummy_command.input.prompts == []
 
 
 def test_invalid_explicit_device_udid(dummy_command):
@@ -130,7 +128,7 @@ def test_invalid_explicit_device_udid(dummy_command):
         dummy_command.select_target_device('deadbeef-dead-beef-cafe-deadbeefdead')
 
     # User input was not solicited
-    assert dummy_command.input.call_count == 0
+    assert dummy_command.input.prompts == []
 
 
 def test_invalid_explicit_device_name(dummy_command):
@@ -149,7 +147,7 @@ def test_invalid_explicit_device_name(dummy_command):
         dummy_command.select_target_device('iphone 99')
 
     # User input was not solicited
-    assert dummy_command.input.call_count == 0
+    assert dummy_command.input.prompts == []
 
 
 def test_invalid_explicit_device_name_and_version(dummy_command):
@@ -185,7 +183,7 @@ def test_implied_device(dummy_command):
     assert device == 'iPhone 11'
 
     # No user input was solicited
-    dummy_command.input.assert_not_called()
+    assert dummy_command.input.prompts == []
 
 
 def test_implied_os(dummy_command):
@@ -200,7 +198,7 @@ def test_implied_os(dummy_command):
     }
 
     # Return option 2 (iPhone 11)
-    dummy_command.input.return_value = '2'
+    dummy_command.input.set_values('2')
 
     udid, iOS_version, device = dummy_command.select_target_device()
 
@@ -209,7 +207,7 @@ def test_implied_os(dummy_command):
     assert device == 'iPhone 11 Pro Max'
 
     # User input was solicited once
-    assert dummy_command.input.call_count == 1
+    assert dummy_command.input.prompts == ['> ']
 
 
 def test_multiple_os_implied_device(dummy_command):
@@ -227,7 +225,7 @@ def test_multiple_os_implied_device(dummy_command):
     }
 
     # Return option 1 (13.2)
-    dummy_command.input.return_value = '2'
+    dummy_command.input.set_values('2')
 
     # Device for iOS 13.2 is implied.
     udid, iOS_version, device = dummy_command.select_target_device()
@@ -237,7 +235,7 @@ def test_multiple_os_implied_device(dummy_command):
     assert device == 'iPhone 11'
 
     # User input was solicited once
-    assert dummy_command.input.call_count == 1
+    assert dummy_command.input.prompts == ['> ']
 
 
 def test_os_and_device_options(dummy_command):
@@ -257,7 +255,7 @@ def test_os_and_device_options(dummy_command):
     }
 
     # Return option 2 (13.2), then option 1 (iPhone 11)
-    dummy_command.input.side_effect = ['2', '1']
+    dummy_command.input.set_values('2', '1')
 
     udid, iOS_version, device = dummy_command.select_target_device()
 
@@ -266,7 +264,7 @@ def test_os_and_device_options(dummy_command):
     assert device == 'iPhone 11'
 
     # User input was solicited twice
-    assert dummy_command.input.call_count == 2
+    assert dummy_command.input.prompts == ['> '] * 2
 
 
 def test_no_os_versions(dummy_command):
