@@ -24,6 +24,7 @@ from briefcase.exceptions import (
     BriefcaseConfigError,
     MissingNetworkResourceError
 )
+from briefcase.input_wrapper import InputWrapper
 
 
 class TemplateUnsupportedVersion(BriefcaseCommandError):
@@ -123,7 +124,7 @@ class BaseCommand(ABC):
         # These are abstracted to enable testing without patching.
         self.cookiecutter = cookiecutter
         self.requests = requests
-        self.input = input
+        self.input = InputWrapper()
         self.os = os
         self.sys = sys
         self.shutil = shutil
