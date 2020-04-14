@@ -5,6 +5,9 @@ def test_create_app(tracking_create_command):
     "If the app doesn't already exist, it will be created"
     tracking_create_command.create_app(tracking_create_command.apps['first'])
 
+    # Input wasn't required by the user
+    assert tracking_create_command.input.prompts == []
+
     # The right sequence of things will be done
     assert tracking_create_command.actions == [
         ('generate', tracking_create_command.apps['first']),
@@ -21,7 +24,7 @@ def test_create_app(tracking_create_command):
 def test_create_existing_app_overwrite(tracking_create_command):
     "An existing app can be overwritten if requested"
     # Answer yes when asked
-    tracking_create_command.input = mock.MagicMock(return_value='y')
+    tracking_create_command.input.set_value('y')
 
     # Generate an app in the location.
     bundle_path = tracking_create_command.platform_path / 'first.bundle'
@@ -30,6 +33,11 @@ def test_create_existing_app_overwrite(tracking_create_command):
         f.write('original template!')
 
     tracking_create_command.create_app(tracking_create_command.apps['first'])
+
+    # Input was required by the user
+    assert tracking_create_command.input.prompts == [
+        'Application first already exists; overwrite? [y,N]'
+    ]
 
     # The right sequence of things will be done
     assert tracking_create_command.actions == [
@@ -50,14 +58,18 @@ def test_create_existing_app_overwrite(tracking_create_command):
 def test_create_existing_app_no_overwrite(tracking_create_command):
     "If you say no, the existing app won't be overwritten"
     # Answer no when asked
-    tracking_create_command.input = mock.MagicMock(return_value='n')
+    tracking_create_command.input.set_value('n')
 
     bundle_path = tracking_create_command.platform_path / 'first.bundle'
     bundle_path.mkdir(parents=True)
     with (bundle_path / 'original').open('w') as f:
         f.write('original template!')
-
     tracking_create_command.create_app(tracking_create_command.apps['first'])
+
+    # Input was required by the user
+    assert tracking_create_command.input.prompts == [
+        'Application first already exists; overwrite? [y,N]'
+    ]
 
     # No app creation actions will be performed
     assert tracking_create_command.actions == []
@@ -72,7 +84,7 @@ def test_create_existing_app_no_overwrite(tracking_create_command):
 def test_create_existing_app_no_overwrite_default(tracking_create_command):
     "By default, the existing app won't be overwritten"
     # Answer '' (i.e., just press return) when asked
-    tracking_create_command.input = mock.MagicMock(return_value='')
+    tracking_create_command.input.set_value('')
 
     bundle_path = tracking_create_command.platform_path / 'first.bundle'
     bundle_path.mkdir(parents=True)
@@ -81,6 +93,38 @@ def test_create_existing_app_no_overwrite_default(tracking_create_command):
 
     tracking_create_command.create_app(tracking_create_command.apps['first'])
 
+    # Input was required by the user
+    assert tracking_create_command.input.prompts == [
+        'Application first already exists; overwrite? [y,N]'
+    ]
+
+    # And no actions were necessary
+    assert tracking_create_command.actions == []
+
+    # Original content still exists
+    assert (bundle_path / 'original').exists()
+
+    # New app content has not been created
+    assert not (bundle_path / 'new').exists()
+
+
+def test_create_existing_app_input_disabled(tracking_create_command):
+    "If input is disabled, fallback to default without get input from user"
+    # Answer '' (i.e., just press return) when asked
+    tracking_create_command.input.disable()
+    tracking_create_command.input.set_value('y')
+
+    bundle_path = tracking_create_command.platform_path / 'first.bundle'
+    bundle_path.mkdir(parents=True)
+    with (bundle_path / 'original').open('w') as f:
+        f.write('original template!')
+
+    tracking_create_command.create_app(tracking_create_command.apps['first'])
+
+    # Input wasn't required by the user
+    assert tracking_create_command.input.prompts == []
+
+    # And no actions were necessary
     assert tracking_create_command.actions == []
 
     # Original content still exists

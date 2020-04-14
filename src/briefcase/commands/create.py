@@ -666,10 +666,11 @@ class CreateCommand(BaseCommand):
         bundle_path = self.bundle_path(app)
         if bundle_path.exists():
             print()
-            confirm = self.input('Application {app.app_name} already exists; overwrite (y/N)? '.format(
-                app=app
-            ))
-            if confirm.lower() != 'y':
+            confirm = self.input.boolean_input(
+                'Application {app.app_name} already exists; overwrite?'.format(app=app),
+                default=False
+            )
+            if not confirm:
                 print("Aborting creation of app {app.app_name}".format(
                     app=app
                 ))
