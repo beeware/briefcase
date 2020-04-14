@@ -632,7 +632,7 @@ In future, you can specify this device by running:
             print("Starting emulator {avd}...".format(avd=avd))
             emulator_popen = self.command.subprocess.Popen(
                 [
-                    self.emulator_path,
+                    str(self.emulator_path),
                     '@' + avd,
                     '-dns-server', '8.8.8.8'
                 ],
