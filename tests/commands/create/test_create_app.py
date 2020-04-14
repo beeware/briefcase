@@ -24,7 +24,7 @@ def test_create_app(tracking_create_command):
 def test_create_existing_app_overwrite(tracking_create_command):
     "An existing app can be overwritten if requested"
     # Answer yes when asked
-    tracking_create_command.input.set_value('y')
+    tracking_create_command.input.set_values('y')
 
     # Generate an app in the location.
     bundle_path = tracking_create_command.platform_path / 'first.bundle'
@@ -58,7 +58,7 @@ def test_create_existing_app_overwrite(tracking_create_command):
 def test_create_existing_app_no_overwrite(tracking_create_command):
     "If you say no, the existing app won't be overwritten"
     # Answer no when asked
-    tracking_create_command.input.set_value('n')
+    tracking_create_command.input.set_values('n')
 
     bundle_path = tracking_create_command.platform_path / 'first.bundle'
     bundle_path.mkdir(parents=True)
@@ -84,7 +84,7 @@ def test_create_existing_app_no_overwrite(tracking_create_command):
 def test_create_existing_app_no_overwrite_default(tracking_create_command):
     "By default, the existing app won't be overwritten"
     # Answer '' (i.e., just press return) when asked
-    tracking_create_command.input.set_value('')
+    tracking_create_command.input.set_values('')
 
     bundle_path = tracking_create_command.platform_path / 'first.bundle'
     bundle_path.mkdir(parents=True)
@@ -112,7 +112,7 @@ def test_create_existing_app_input_disabled(tracking_create_command):
     "If input is disabled, fallback to default without get input from user"
     # Answer '' (i.e., just press return) when asked
     tracking_create_command.input.disable()
-    tracking_create_command.input.set_value('y')
+    tracking_create_command.input.set_values('y')
 
     bundle_path = tracking_create_command.platform_path / 'first.bundle'
     bundle_path.mkdir(parents=True)

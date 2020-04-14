@@ -232,13 +232,13 @@ class NewCommand(BaseCommand):
         print(intro)
         while True:
             print()
-            answer = self.input("{variable} [{default}]: ".format(
-                variable=titlecase(variable),
-                default=default,
-            ))
-
-            if answer == '' and default is not None:
-                answer = default
+            answer = self.input.text_input(
+                "{variable} [{default}]: ".format(
+                    variable=titlecase(variable),
+                    default=default,
+                ),
+                default=default
+            )
 
             if is_valid is None:
                 return answer
@@ -263,41 +263,32 @@ class NewCommand(BaseCommand):
             options.
         :returns: The string content of the selected option.
         """
-        choices = {
-            index: option
-            for index, option in enumerate(options, start=1)
-        }
-
         print(intro)
-        while True:
-            display_options = '\n'.join(
-                "    [{index}] {option}".format(
-                    index=index, option=option
-                )
-                for index, option in sorted(choices.items())
+
+        index_choices = [str(key) for key in range(1, len(options) + 1)]
+        display_options = '\n'.join(
+            "    [{index}] {option}".format(
+                index=index, option=option
             )
-            selection = self.input(
-                """
+            for index, option in zip(index_choices, options)
+        )
+        error_message = "Invalid selection; please enter a number between 1 and {n}".format(
+            n=len(options)
+        )
+        prompt = """
 Select one of the following:
 
 {display_options}
 
-{variable} [1]: """.format(
-                    display_options=display_options,
-                    variable=titlecase(variable)
-                )
-            )
-
-            if selection == '':
-                selection = '1'
-
-            try:
-                return choices[int(selection)]
-            except (KeyError, ValueError):
-                print()
-                print("Invalid selection; please enter a number between 1 and {n}".format(
-                    n=len(options)
-                ))
+{variable} [1]: """.format(display_options=display_options,
+                           variable=titlecase(variable))
+        selection = self.input.selection_input(
+            prompt=prompt,
+            choices=index_choices,
+            default="1",
+            error_message=error_message
+        )
+        return options[int(selection) - 1]
 
     def build_app_context(self):
         """

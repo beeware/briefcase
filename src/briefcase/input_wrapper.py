@@ -1,4 +1,8 @@
+
+
 class InputWrapper:
+    YES = "y"
+    NO = "n"
 
     def __init__(self, enabled=True):
         self.__enabled = enabled
@@ -30,15 +34,42 @@ class InputWrapper:
         :return:
             True or False, based on user input or default value
         """
-        if not self.enabled:
-            return default
         yes_no = "[Y,n]" if default else "[y,N]"
-        result = self("{question} {yes_no}".format(question=question, yes_no=yes_no))
-        if result.lower() == "y":
+        default_text = self.YES if default else self.NO
+        result = self.text_input(
+            "{question} {yes_no}".format(question=question, yes_no=yes_no),
+            default=default_text
+        )
+        if result.lower() == self.YES:
             return True
-        if result.lower() == "n":
+        if result.lower() == self.NO:
             return False
         return default
+
+    def selection_input(
+            self,
+            prompt,
+            choices,
+            default,
+            error_message="Invalid Selection"
+    ):
+        while True:
+            result = self.text_input(prompt, default)
+
+            if result in choices:
+                return result
+
+            print()
+            print(error_message)
+
+    def text_input(self, prompt, default):
+        if not self.enabled:
+            return default
+        user_input = self(prompt)
+        if user_input == "":
+            return default
+        return user_input
+
 
     def __call__(self, prompt):
         return input(prompt)

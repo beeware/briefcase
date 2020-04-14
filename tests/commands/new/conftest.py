@@ -2,6 +2,7 @@ import pytest
 
 from briefcase.commands import NewCommand
 from briefcase.commands.base import full_kwargs
+from tests.commands.dummy_input_wrapper import DummyInputWrapper
 
 
 class DummyNewCommand(NewCommand):
@@ -15,6 +16,7 @@ class DummyNewCommand(NewCommand):
         super().__init__(*args, apps=[], **kwargs)
 
         self.actions = []
+        self.input = DummyInputWrapper()
 
     def new_app(self, **kwargs):
         self.actions.append(('new', kwargs))
