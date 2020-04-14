@@ -298,6 +298,14 @@ class BaseCommand(ABC):
             action='version',
             version=__version__
         )
+        parser.add_argument(
+            '--no-input',
+            action='store_false',
+            default=True,
+            dest="input_enabled",
+            help="Ignore user input while running the command. "
+                 "Fallback to default answers"
+        )
 
     def add_options(self, parser):
         """

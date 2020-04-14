@@ -91,7 +91,7 @@ def test_new_command():
     assert isinstance(cmd, NewCommand)
     assert cmd.platform == 'all'
     assert cmd.output_format is None
-    assert options == {'template': None, 'verbosity': 1}
+    assert options == {'input_enabled': True, 'template': None, 'verbosity': 1}
 
 
 def test_dev_command(monkeypatch):
@@ -105,6 +105,7 @@ def test_dev_command(monkeypatch):
     assert cmd.platform == 'macOS'
     assert cmd.output_format is None
     assert options == {
+        'input_enabled': True,
         'verbosity': 1,
         'appname': None,
         'update_dependencies': False
@@ -121,7 +122,7 @@ def test_bare_command(monkeypatch):
     assert isinstance(cmd, macOSAppCreateCommand)
     assert cmd.platform == 'macOS'
     assert cmd.output_format == 'dmg'
-    assert options == {'verbosity': 1}
+    assert options == {'input_enabled': True, 'verbosity': 1}
 
 
 @pytest.mark.skipif(sys.platform != 'linux', reason="requires Linux")
@@ -133,7 +134,7 @@ def test_linux_default():
     assert isinstance(cmd, LinuxAppImageCreateCommand)
     assert cmd.platform == 'linux'
     assert cmd.output_format == 'appimage'
-    assert options == {'verbosity': 1}
+    assert options == {'input_enabled': True, 'verbosity': 1}
 
 
 @pytest.mark.skipif(sys.platform != 'darwin', reason="requires macOS")
@@ -145,7 +146,7 @@ def test_macOS_default():
     assert isinstance(cmd, macOSAppCreateCommand)
     assert cmd.platform == 'macOS'
     assert cmd.output_format == 'dmg'
-    assert options == {'verbosity': 1}
+    assert options == {'input_enabled': True, 'verbosity': 1}
 
 
 @pytest.mark.skipif(sys.platform != 'win32', reason="requires Windows")
@@ -157,7 +158,7 @@ def test_windows_default():
     assert isinstance(cmd, WindowsMSICreateCommand)
     assert cmd.platform == 'windows'
     assert cmd.output_format == 'msi'
-    assert options == {'verbosity': 1}
+    assert options == {'input_enabled': True, 'verbosity': 1}
 
 
 def test_bare_command_help(monkeypatch, capsys):
@@ -173,7 +174,7 @@ def test_bare_command_help(monkeypatch, capsys):
     # Help message is for default platform and format
     output = capsys.readouterr().out
     assert output.startswith(
-        "usage: briefcase create macOS dmg [-h] [-v] [-V]\n"
+        "usage: briefcase create macOS dmg [-h] [-v] [-V] [--no-input]\n"
         "\n"
         "Create and populate a macOS app.\n"
         "\n"
@@ -229,7 +230,7 @@ def test_command_explicit_platform(monkeypatch):
     assert isinstance(cmd, LinuxAppImageCreateCommand)
     assert cmd.platform == 'linux'
     assert cmd.output_format == 'appimage'
-    assert options == {'verbosity': 1}
+    assert options == {'input_enabled': True, 'verbosity': 1}
 
 
 def test_command_explicit_platform_case_handling(monkeypatch):
@@ -243,7 +244,7 @@ def test_command_explicit_platform_case_handling(monkeypatch):
     assert isinstance(cmd, macOSAppCreateCommand)
     assert cmd.platform == 'macOS'
     assert cmd.output_format == 'dmg'
-    assert options == {'verbosity': 1}
+    assert options == {'input_enabled': True, 'verbosity': 1}
 
 
 def test_command_explicit_platform_help(monkeypatch, capsys):
@@ -259,7 +260,7 @@ def test_command_explicit_platform_help(monkeypatch, capsys):
     # Help message is for default platform and format
     output = capsys.readouterr().out
     assert output.startswith(
-        "usage: briefcase create macOS dmg [-h] [-v] [-V]\n"
+        "usage: briefcase create macOS dmg [-h] [-v] [-V] [--no-input]\n"
         "\n"
         "Create and populate a macOS app.\n"
         "\n"
@@ -290,7 +291,7 @@ def test_command_explicit_format(monkeypatch):
     assert isinstance(cmd, macOSDmgCreateCommand)
     assert cmd.platform == 'macOS'
     assert cmd.output_format == 'dmg'
-    assert options == {'verbosity': 1}
+    assert options == {'input_enabled': True, 'verbosity': 1}
 
 
 def test_command_unknown_format(monkeypatch):
@@ -324,7 +325,7 @@ def test_command_explicit_format_help(monkeypatch, capsys):
     # Help message is for default platform, but dmg format
     output = capsys.readouterr().out
     assert output.startswith(
-        "usage: briefcase create macOS dmg [-h] [-v] [-V]\n"
+        "usage: briefcase create macOS dmg [-h] [-v] [-V] [--no-input]\n"
         "\n"
         "Create and populate a macOS app.\n"
         "\n"
@@ -356,6 +357,7 @@ def test_command_options(monkeypatch, capsys):
 
     assert isinstance(cmd, macOSAppPublishCommand)
     assert options == {
+        'input_enabled': True,
         'verbosity': 1,
         'channel': 's3'
     }
@@ -376,6 +378,6 @@ def test_unknown_command_options(monkeypatch, capsys):
     output = capsys.readouterr().err
 
     assert output.startswith(
-        "usage: briefcase publish macOS app [-h] [-v] [-V] [-c {s3}]\n"
+        "usage: briefcase publish macOS app [-h] [-v] [-V] [--no-input] [-c {s3}]\n"
         "briefcase publish macOS app: error: unrecognized arguments: -x"
     )
