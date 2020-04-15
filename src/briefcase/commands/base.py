@@ -24,7 +24,7 @@ from briefcase.exceptions import (
     BriefcaseConfigError,
     MissingNetworkResourceError
 )
-from briefcase.input_wrapper import InputWrapper
+from briefcase.console import InputWrapper
 
 
 class TemplateUnsupportedVersion(BriefcaseCommandError):

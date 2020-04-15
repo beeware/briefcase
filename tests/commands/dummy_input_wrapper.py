@@ -1,5 +1,5 @@
 from collections import deque
-from briefcase.input_wrapper import InputWrapper
+from briefcase.console import InputWrapper
 
 
 class DummyInputWrapper(InputWrapper):
