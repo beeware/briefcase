@@ -49,9 +49,12 @@ class InputWrapper:
         default_text = self.YES_DEFAULT if default else self.NO_DEFAULT
         prompt = "{question} {yes_no}: ".format(question=question, yes_no=yes_no)
         error_message = (
-            "Invalid Input; please enter one of the followings: "
-            f"{', '.join(self.ALL_OPTIONS)}"
+            "Invalid Input; "
+            "please enter one of the followings: {options}".format(
+                options=', '.join(self.ALL_OPTIONS)
+            )
         )
+
         result = self.selection_input(
             prompt=prompt,
             choices=self.ALL_OPTIONS,
