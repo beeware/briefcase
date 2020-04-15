@@ -89,6 +89,9 @@ class InputWrapper:
     def __call__(self, prompt):
         if not self.enabled:
             raise InputWrapperDisabledError()
+        return self._actual_input(prompt)
+
+    def _actual_input(self, prompt):
         return input(prompt)
 
 
