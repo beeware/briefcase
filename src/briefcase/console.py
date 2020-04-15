@@ -1,9 +1,19 @@
 import operator
 
 
+class InputWrapperDisabledError(Exception):
+    def __init__(self):
+        super(InputWrapperDisabledError, self).__init__(
+            "Cannot call input __call__ method when it is disabled"
+        )
+
+
 class InputWrapper:
-    YES = "y"
-    NO = "n"
+    YES_DEFAULT = "y"
+    NO_DEFAULT = "n"
+    YES_OPTIONS = ["y", "yes"]
+    NO_OPTIONS = ["n", "no"]
+    ALL_OPTIONS = YES_OPTIONS + NO_OPTIONS
 
     def __init__(self, enabled=True):
         self.__enabled = enabled
@@ -36,16 +46,21 @@ class InputWrapper:
             True or False, based on user input or default value
         """
         yes_no = "[Y,n]" if default else "[y,N]"
-        default_text = self.YES if default else self.NO
-        result = self.text_input(
-            "{question} {yes_no}".format(question=question, yes_no=yes_no),
-            default=default_text
+        default_text = self.YES_DEFAULT if default else self.NO_DEFAULT
+        prompt = "{question} {yes_no}: ".format(question=question, yes_no=yes_no)
+        error_message = (
+            "Invalid Input; please enter one of the followings: "
+            f"{', '.join(self.ALL_OPTIONS)}"
         )
-        if result.lower() == self.YES:
+        result = self.selection_input(
+            prompt=prompt,
+            choices=self.ALL_OPTIONS,
+            default=default_text,
+            error_message=error_message
+        )
+        if result.lower() in self.YES_OPTIONS:
             return True
-        if result.lower() == self.NO:
-            return False
-        return default
+        return False
 
     def selection_input(
             self,
@@ -72,6 +87,8 @@ class InputWrapper:
         return user_input
 
     def __call__(self, prompt):
+        if not self.enabled:
+            raise InputWrapperDisabledError()
         return input(prompt)
 
 
