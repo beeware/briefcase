@@ -112,7 +112,6 @@ def test_create_existing_app_input_disabled(tracking_create_command):
     "If input is disabled, fallback to default without get input from user"
     # Answer '' (i.e., just press return) when asked
     tracking_create_command.input.disable()
-    tracking_create_command.input.set_values('y')
 
     bundle_path = tracking_create_command.platform_path / 'first.bundle'
     bundle_path.mkdir(parents=True)
