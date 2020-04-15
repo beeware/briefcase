@@ -56,7 +56,8 @@ class InputWrapper:
             prompt=prompt,
             choices=self.ALL_OPTIONS,
             default=default_text,
-            error_message=error_message
+            error_message=error_message,
+            transform=str.lower
         )
         if result.lower() in self.YES_OPTIONS:
             return True
@@ -66,11 +67,15 @@ class InputWrapper:
             self,
             prompt,
             choices,
-            default,
-            error_message="Invalid Selection"
+            default=None,
+            error_message="Invalid Selection",
+            transform=None
     ):
         while True:
             result = self.text_input(prompt, default)
+
+            if transform is not None:
+                result = transform(result)
 
             if result in choices:
                 return result
@@ -130,7 +135,5 @@ def select_option(options, input, prompt='> ', error="Invalid selection"):
 
     print()
     choices = [str(index) for index in range(1, len(ordered) + 1)]
-    index = input.selection_input(
-        prompt=prompt, choices=choices, default=None, error_message=error
-    )
+    index = input.selection_input(prompt=prompt, choices=choices, error_message=error)
     return ordered[int(index) - 1][0]
