@@ -38,7 +38,6 @@ def test_question_sequence(new_command):
 def test_question_sequence_with_no_user_input(new_command):
     "If no user input is provided, all user inputs are taken as default"
 
-    # Prime answers for all the questions.
     new_command.input.disable()
 
     assert new_command.build_app_context() == {
