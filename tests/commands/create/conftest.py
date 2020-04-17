@@ -5,6 +5,7 @@ import toml
 
 from briefcase.commands import CreateCommand
 from briefcase.config import AppConfig
+from tests.commands.utils import DummyConsole
 
 
 class DummyCreateCommand(CreateCommand):
@@ -28,6 +29,7 @@ class DummyCreateCommand(CreateCommand):
         self.cookiecutter = mock.MagicMock()
         self.subprocess = mock.MagicMock()
         self.support_file = support_file
+        self.input = DummyConsole()
 
     def bundle_path(self, app):
         return self.platform_path / '{app.app_name}.bundle'.format(app=app)

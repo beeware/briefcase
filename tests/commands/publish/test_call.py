@@ -20,10 +20,15 @@ def test_publish(publish_command, first_app, second_app):
     # The right sequence of things will be done
     assert publish_command.actions == [
         # Publish the first app to s3
-        ('publish', 'first', 's3', {'verbosity': 1}),
+        ('publish', 'first', 's3', {'input_enabled': True, 'verbosity': 1}),
 
         # Publish the second app to s3
-        ('publish', 'second', 's3', {'verbosity': 1, 'publish_state': 'first'}),
+        (
+            'publish',
+            'second',
+            's3',
+            {'input_enabled': True, 'verbosity': 1, 'publish_state': 'first'}
+        ),
     ]
 
 
@@ -44,10 +49,15 @@ def test_publish_alternative_channel(publish_command, first_app, second_app):
     # The right sequence of things will be done
     assert publish_command.actions == [
         # Publish the first app to the alternative channel
-        ('publish', 'first', 'alternative', {'verbosity': 1}),
+        ('publish', 'first', 'alternative', {'input_enabled': True, 'verbosity': 1}),
 
         # Publish the second app to the alternative channel
-        ('publish', 'second', 'alternative', {'verbosity': 1, 'publish_state': 'first'}),
+        (
+            'publish',
+            'second',
+            'alternative',
+            {'input_enabled': True, 'verbosity': 1, 'publish_state': 'first'}
+        ),
     ]
 
 

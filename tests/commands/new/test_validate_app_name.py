@@ -14,7 +14,7 @@ import pytest
 )
 def test_valid_app_name(new_command, name):
     "Test that valid app names are accepted"
-    assert new_command.is_valid_app_name(name)
+    assert new_command.validate_app_name(name)
 
 
 @pytest.mark.parametrize(
@@ -32,4 +32,4 @@ def test_invalid_app_name(new_command, name, tmp_path):
     (tmp_path / 'existing').mkdir()
 
     with pytest.raises(ValueError):
-        new_command.is_valid_app_name(name)
+        new_command.validate_app_name(name)

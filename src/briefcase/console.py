@@ -1,7 +1,127 @@
 import operator
 
 
-def select_option(options, input=input, prompt='> ', error="Invalid selection"):
+class InputDisabled(Exception):
+    def __init__(self):
+        super().__init__(
+            "Input is disabled; cannot request user input without a default"
+        )
+
+
+class Console:
+    def __init__(self, enabled=True):
+        self._enabled = enabled
+        self._input = input
+
+    @property
+    def enabled(self):
+        return self._enabled
+
+    @enabled.setter
+    def enabled(self, enabled):
+        self._enabled = enabled
+
+    def boolean_input(self, question, default=False):
+        """
+        Get a boolean input from user, in the form of y/n.
+
+        The user might press "y" for true or "n" for false.
+        If input is disabled, returns default. If input is disabled and default
+        is *not* defined, InputDisabled is raised.
+
+        :param question: A string message specifying the question to be
+            answered by the user.
+        :param default: (optional) Default response (True/False)
+        :returns: True if the user selected "y", or False if they selected "n".
+        """
+        if default is None:
+            yes_no = "y/n"
+            default_text = None
+        elif default:
+            yes_no = "[Y/n]"
+            default_text = 'y'
+        else:
+            yes_no = "[y/N]"
+            default_text = 'n'
+
+        prompt = "{question} {yes_no}? ".format(question=question, yes_no=yes_no)
+
+        result = self.selection_input(
+            prompt=prompt,
+            choices=['y', 'n'],
+            default=default_text,
+            error_message="Please enter Y or N",
+            transform=lambda s: s.lower()[:1],
+        )
+        if result == 'y':
+            return True
+
+        return False
+
+    def selection_input(
+        self,
+        prompt,
+        choices,
+        default=None,
+        error_message="Invalid Selection",
+        transform=None
+    ):
+        """
+        Prompt the user to select an option from a list of choices.
+
+        :param prompt: The text prompt to display
+        :param choices: The list of available choices
+        :param default: The default choice to select. If None,
+        :param error_message: The error message to display to the user.
+        :param transform: The text transform to apply to any user input before
+            performing any validity checks.
+        """
+        while True:
+            result = self.text_input(prompt, default)
+
+            if transform is not None and result is not None:
+                result = transform(result)
+
+            if result in choices:
+                return result
+
+            print()
+            print(error_message)
+
+    def text_input(self, prompt, default=None):
+        """
+        Prompt the user for text input.
+
+        If no default is specified, the input will be returned as entered.
+
+        The default will also be returned if input is disabled. If input is
+        disabled, and there is no default, InputDisabled will be raised.
+
+        :param prompt: The prompt to display to the user.
+        :param default: (optional) The response to return if the user provides
+            no input.
+        :returns: The content entered by the user.
+        """
+        try:
+            user_input = self(prompt)
+            if default is not None and user_input == "":
+                return default
+        except InputDisabled:
+            if default is not None:
+                return default
+            raise
+
+        return user_input
+
+    def __call__(self, prompt):
+        "Make Console present the same interface as input()"
+        if not self.enabled:
+            raise InputDisabled()
+
+        return self._input(prompt)
+
+
+def select_option(options, input, prompt='> ', error="Invalid selection"):
     """
     Prompt the user for a choice from a list of options.
 
@@ -35,9 +155,6 @@ def select_option(options, input=input, prompt='> ', error="Invalid selection"):
         print('  {i}) {label}'.format(i=i, label=value))
 
     print()
-    while True:
-        try:
-            selection = int(input(prompt))
-            return ordered[selection - 1][0]
-        except (ValueError, IndexError):
-            print(error)
+    choices = [str(index) for index in range(1, len(ordered) + 1)]
+    index = input.selection_input(prompt=prompt, choices=choices, error_message=error)
+    return ordered[int(index) - 1][0]

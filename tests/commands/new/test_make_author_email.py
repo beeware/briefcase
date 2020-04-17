@@ -14,4 +14,4 @@ def test_make_author_email(new_command, name, bundle, candidate):
     email = new_command.make_author_email(name, bundle)
     assert email == candidate
     # Double check - the app name passes the validity check.
-    assert new_command.is_valid_email(email)
+    assert new_command.validate_email(email)
