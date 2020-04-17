@@ -1,5 +1,9 @@
 name: CI
-on: [pull_request]
+on:
+  pull_request:
+  push:
+    branches:
+      - master
 
 jobs:
   beefore:
@@ -8,7 +12,7 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        task: ['pycodestyle']
+        task: ['flake8', 'package', 'docs']
     steps:
     - uses: actions/checkout@v1
     - name: Set up Python 3.8
@@ -17,12 +21,12 @@ jobs:
         python-version: 3.8
     - name: Install dependencies
       run: |
-        pip install --upgrade pip setuptools beefore
-    - name: Run Beefore checks
-      env:
-        GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        pip install --upgrade pip
+        pip install --upgrade setuptools
+        pip install tox
+    - name: Run pre-test check
       run: |
-        beefore --username github-actions --repository ${{ github.repository }} --pull-request ${{ github.event.number }} --commit ${{ github.event.pull_request.head.sha }} ${{ matrix.task }} .
+        tox -e ${{ matrix.task }}
 
   smoke:
     name: Smoke test (3.5)
@@ -36,13 +40,16 @@ jobs:
         python-version: 3.5
     - name: Install dependencies
       run: |
-        pip install --upgrade pip setuptools pytest-tldr
-        pip install -e .
+        pip install --upgrade pip
+        pip install --upgrade setuptools
+        pip install tox
     - name: Test
       run: |
-        python setup.py test
+        tox -e py
 
   python-versions:
+    # Only run this and subsequent steps on branches.
+    if: github.ref != "master"
     name: Python compatibility test
     needs: smoke
     runs-on: ubuntu-latest
@@ -58,11 +65,12 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
-        pip install --upgrade pip setuptools pytest-tldr
-        pip install -e .
+        pip install --upgrade pip
+        pip install --upgrade setuptools
+        pip install tox
     - name: Test
       run: |
-        python setup.py test
+        tox -e py
 
   windows:
     name: Windows tests
@@ -76,11 +84,12 @@ jobs:
         python-version: 3.8
     - name: Install dependencies
       run: |
-        pip install --upgrade pip setuptools pytest-tldr
-        pip install -e .
+        pip install --upgrade pip
+        pip install --upgrade setuptools
+        pip install tox
     - name: Test
       run: |
-        python setup.py test
+        tox -e py
 
   macOS:
     name: macOS tests
@@ -94,8 +103,9 @@ jobs:
         python-version: 3.8
     - name: Install dependencies
       run: |
-        pip install --upgrade pip setuptools pytest-tldr
-        pip install -e .
+        pip install --upgrade pip
+        pip install --upgrade setuptools
+        pip install tox
     - name: Test
       run: |
-        python setup.py test
+        tox -e py
