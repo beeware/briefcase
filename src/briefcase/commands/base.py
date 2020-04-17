@@ -104,7 +104,7 @@ class BaseCommand(ABC):
     GLOBAL_CONFIG_CLASS = GlobalConfig
     APP_CONFIG_CLASS = AppConfig
 
-    def __init__(self, base_path, home_path=Path.home(), apps=None):
+    def __init__(self, base_path, home_path=Path.home(), apps=None, input_enabled=True):
         self.base_path = base_path
         self.home_path = home_path
         self.dot_briefcase_path = home_path / ".briefcase"
@@ -120,7 +120,7 @@ class BaseCommand(ABC):
         # These are abstracted to enable testing without patching.
         self.cookiecutter = cookiecutter
         self.requests = requests
-        self.input = Console()
+        self.input = Console(enabled=input_enabled)
         self.os = os
         self.sys = sys
         self.shutil = shutil
@@ -133,37 +133,61 @@ class BaseCommand(ABC):
     def create_command(self):
         "Factory property; return an instance of a create command for the same format"
         format_module = importlib.import_module(self.__module__)
-        return format_module.create(base_path=self.base_path, apps=self.apps)
+        return format_module.create(
+            base_path=self.base_path,
+            apps=self.apps,
+            input_enabled=self.input.enabled,
+        )
 
     @property
     def update_command(self):
         "Factory property; return an instance of an update command for the same format"
         format_module = importlib.import_module(self.__module__)
-        return format_module.update(base_path=self.base_path, apps=self.apps)
+        return format_module.update(
+            base_path=self.base_path,
+            apps=self.apps,
+            input_enabled=self.input.enabled,
+        )
 
     @property
     def build_command(self):
         "Factory property; return an instance of a build command for the same format"
         format_module = importlib.import_module(self.__module__)
-        return format_module.build(base_path=self.base_path, apps=self.apps)
+        return format_module.build(
+            base_path=self.base_path,
+            apps=self.apps,
+            input_enabled=self.input.enabled,
+        )
 
     @property
     def run_command(self):
         "Factory property; return an instance of a run command for the same format"
         format_module = importlib.import_module(self.__module__)
-        return format_module.run(base_path=self.base_path, apps=self.apps)
+        return format_module.run(
+            base_path=self.base_path,
+            apps=self.apps,
+            input_enabled=self.input.enabled,
+        )
 
     @property
     def package_command(self):
         "Factory property; return an instance of a package command for the same format"
         format_module = importlib.import_module(self.__module__)
-        return format_module.package(base_path=self.base_path, apps=self.apps)
+        return format_module.package(
+            base_path=self.base_path,
+            apps=self.apps,
+            input_enabled=self.input.enabled,
+        )
 
     @property
     def publish_command(self):
         "Factory property; return an instance of a publish command for the same format"
         format_module = importlib.import_module(self.__module__)
-        return format_module.publish(base_path=self.base_path, apps=self.apps)
+        return format_module.publish(
+            base_path=self.base_path,
+            apps=self.apps,
+            input_enabled=self.input.enabled,
+        )
 
     @property
     def platform_path(self):
