@@ -701,7 +701,7 @@ find this page helpful in diagnosing emulator problems.
                 self.sleep(2)
 
             # Print a marker so we can see the phase change
-            print('@', flush=True, end='')
+            print(' booting...', flush=True, end='')
 
             # Phase 2: Wait for the boot process to complete
             while not adb.has_booted():
