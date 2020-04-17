@@ -155,10 +155,12 @@ def select_option(options, input, prompt='> ', error="Invalid selection"):
     else:
         ordered = options
 
-    for i, (key, value) in enumerate(ordered, start=1):
-        print('  {i}) {label}'.format(i=i, label=value))
+    if input.enabled:
+        for i, (key, value) in enumerate(ordered, start=1):
+            print('  {i}) {label}'.format(i=i, label=value))
 
-    print()
+        print()
+
     choices = [str(index) for index in range(1, len(ordered) + 1)]
     index = input.selection_input(prompt=prompt, choices=choices, error_message=error)
     return ordered[int(index) - 1][0]
