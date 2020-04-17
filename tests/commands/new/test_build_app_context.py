@@ -1,11 +1,9 @@
-from unittest import mock
-
 
 def test_question_sequence(new_command):
     "Questions are asked, a context is constructed."
 
     # Prime answers for all the questions.
-    new_command.input = mock.MagicMock(side_effect=[
+    new_command.input.values = [
         'My Application',  # formal name
         '',  # app name - accept the default
         'org.beeware',  # bundle ID
@@ -16,7 +14,7 @@ def test_question_sequence(new_command):
         'https://navy.mil/myapplication',  # URL
         '4',  # license
         '1',  # GUI toolkit
-    ])
+    ]
 
     assert new_command.build_app_context() == {
         'formal_name': 'My Application',
@@ -32,4 +30,25 @@ def test_question_sequence(new_command):
         'url': 'https://navy.mil/myapplication',
         'license': 'GNU General Public License v2 (GPLv2)',
         'gui_framework': 'Toga',
+    }
+
+
+def test_question_sequence_with_no_user_input(new_command):
+    "If no user input is provided, all user inputs are taken as default"
+
+    new_command.input.enabled = False
+
+    assert new_command.build_app_context() == {
+        'app_name': 'helloworld',
+        'author': 'Jane Developer',
+        'author_email': 'jane@example.com',
+        'bundle': 'com.example',
+        'class_name': 'HelloWorld',
+        'description': 'My first application',
+        'formal_name': 'Hello World',
+        'gui_framework': 'Toga',
+        'license': 'BSD license',
+        'module_name': 'helloworld',
+        'project_name': 'Hello World',
+        'url': 'https://example.com/helloworld'
     }

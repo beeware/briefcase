@@ -8,6 +8,8 @@ def main():
     try:
         command, options = parse_cmdline(sys.argv[1:])
         command.parse_config('pyproject.toml')
+        if not options['input_enabled']:
+            command.input.enabled = False
         command(**options)
         result = 0
     except BriefcaseError as e:

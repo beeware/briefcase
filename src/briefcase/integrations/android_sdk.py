@@ -7,7 +7,7 @@ from pathlib import Path
 from requests import exceptions as requests_exceptions
 
 from briefcase.config import PEP508_NAME_RE
-from briefcase.console import select_option
+from briefcase.console import select_option, InputDisabled
 from briefcase.exceptions import (
     BriefcaseCommandError,
     InvalidDeviceError,
@@ -445,7 +445,17 @@ class AndroidSDK:
         print()
         print("Select device:")
         print()
-        choice = select_option(choices, input=self.command.input)
+        try:
+            choice = select_option(choices, input=self.command.input)
+        except InputDisabled:
+            # If input is disabled, and there's only one actual simulator,
+            # select it. If there are no simulators, select "Create simulator"
+            if len(choices) <= 2:
+                choice = choices[0][0]
+            else:
+                raise BriefcaseCommandError(
+                    "Input has been disabled; can't select a device to target."
+                )
 
         # Proces the user's choice
         if choice is None:

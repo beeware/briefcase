@@ -15,4 +15,4 @@ def test_make_app_name(new_command, formal_name, candidate):
     app_name = new_command.make_app_name(formal_name)
     assert app_name == candidate
     # Double check - the app name passes the validity check.
-    assert new_command.is_valid_app_name(app_name)
+    assert new_command.validate_app_name(app_name)

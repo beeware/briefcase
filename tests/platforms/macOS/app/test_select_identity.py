@@ -4,6 +4,7 @@ import pytest
 
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.platforms.macOS.app import macOSAppPackageCommand
+from tests.utils import DummyConsole
 
 
 class DummyPublishCommand(macOSAppPackageCommand):
@@ -13,6 +14,7 @@ class DummyPublishCommand(macOSAppPackageCommand):
 
     def __init__(self, base_path, **kwargs):
         super().__init__(base_path=base_path, **kwargs)
+        self.input = DummyConsole()
 
 
 @pytest.fixture
@@ -26,10 +28,6 @@ def dummy_command(tmp_path):
     # Mock get_identities
     mock_get_identities = mock.MagicMock()
     cmd.get_identities = mock_get_identities
-
-    # Mock user input
-    mock_input = mock.MagicMock()
-    cmd.input = mock_input
 
     return cmd
 
@@ -48,7 +46,7 @@ def test_explicit_identity_checksum(dummy_command):
     assert result == "iPhone Developer: Jane Smith (BXAH5H869S)"
 
     # User input was not solicited
-    assert dummy_command.input.call_count == 0
+    assert dummy_command.input.prompts == []
 
 
 def test_explicit_identity_name(dummy_command):
@@ -65,7 +63,7 @@ def test_explicit_identity_name(dummy_command):
     assert result == "iPhone Developer: Jane Smith (BXAH5H869S)"
 
     # User input was not solicited
-    assert dummy_command.input.call_count == 0
+    assert dummy_command.input.prompts == []
 
 
 def test_invalid_identity_name(dummy_command):
@@ -81,7 +79,7 @@ def test_invalid_identity_name(dummy_command):
         dummy_command.select_identity("not-an-identity")
 
     # User input was not solicited
-    assert dummy_command.input.call_count == 0
+    assert dummy_command.input.prompts == []
 
 
 def test_implied_identity(dummy_command):
@@ -97,7 +95,7 @@ def test_implied_identity(dummy_command):
     assert result == "iPhone Developer: Jane Smith (BXAH5H869S)"
 
     # User input was not solicited
-    assert dummy_command.input.call_count == 0
+    assert dummy_command.input.prompts == []
 
 
 def test_selected_identity(dummy_command):
@@ -109,7 +107,7 @@ def test_selected_identity(dummy_command):
     }
 
     # Return option 2
-    dummy_command.input.side_effect = ['2']
+    dummy_command.input.values = ['2']
 
     result = dummy_command.select_identity()
 
@@ -117,4 +115,4 @@ def test_selected_identity(dummy_command):
     assert result == "iPhone Developer: Jane Smith (BXAH5H869S)"
 
     # User input was solicited once
-    assert dummy_command.input.call_count == 1
+    assert dummy_command.input.prompts == ['> ']

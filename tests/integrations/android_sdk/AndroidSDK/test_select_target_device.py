@@ -2,16 +2,19 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from briefcase.exceptions import InvalidDeviceError
+from briefcase.exceptions import BriefcaseCommandError, InvalidDeviceError
 from briefcase.integrations.android_sdk import (
     AndroidDeviceNotAuthorized,
     AndroidSDK
 )
+from tests.utils import DummyConsole
 
 
 @pytest.fixture
 def mock_sdk(tmp_path):
     command = MagicMock()
+    command.input = DummyConsole()
+
     sdk = AndroidSDK(command, root_path=tmp_path)
 
     sdk.devices = MagicMock(return_value={
@@ -60,7 +63,7 @@ def test_explicit_device(mock_sdk):
     assert avd is None
 
     # No input was requested
-    assert mock_sdk.command.input.call_count == 0
+    assert mock_sdk.command.input.prompts == []
 
 
 def test_explicit_unauthorized_device(mock_sdk):
@@ -71,7 +74,7 @@ def test_explicit_unauthorized_device(mock_sdk):
         mock_sdk.select_target_device('041234567892009a')
 
     # No input was requested
-    assert mock_sdk.command.input.call_count == 0
+    assert mock_sdk.command.input.prompts == []
 
 
 def test_explicit_running_emulator_by_id(mock_sdk):
@@ -86,7 +89,7 @@ def test_explicit_running_emulator_by_id(mock_sdk):
     assert avd == "runningEmulator"
 
     # No input was requested
-    assert mock_sdk.command.input.call_count == 0
+    assert mock_sdk.command.input.prompts == []
 
 
 def test_explicit_running_emulator_by_avd(mock_sdk):
@@ -101,7 +104,7 @@ def test_explicit_running_emulator_by_avd(mock_sdk):
     assert avd == "runningEmulator"
 
     # No input was requested
-    assert mock_sdk.command.input.call_count == 0
+    assert mock_sdk.command.input.prompts == []
 
 
 def test_explicit_idle_emulator(mock_sdk):
@@ -116,7 +119,7 @@ def test_explicit_idle_emulator(mock_sdk):
     assert avd == 'idleEmulator'
 
     # No input was requested
-    assert mock_sdk.command.input.call_count == 0
+    assert mock_sdk.command.input.prompts == []
 
 
 def test_explicit_invalid_device(mock_sdk):
@@ -127,7 +130,7 @@ def test_explicit_invalid_device(mock_sdk):
         device, name, avd = mock_sdk.select_target_device('deadbeefcafe')
 
     # No input was requested
-    assert mock_sdk.command.input.call_count == 0
+    assert mock_sdk.command.input.prompts == []
 
 
 def test_explicit_invalid_avd(mock_sdk):
@@ -138,13 +141,13 @@ def test_explicit_invalid_avd(mock_sdk):
         device, name, avd = mock_sdk.select_target_device('@invalidEmulator')
 
     # No input was requested
-    assert mock_sdk.command.input.call_count == 0
+    assert mock_sdk.command.input.prompts == []
 
 
 def test_select_device(mock_sdk, capsys):
     "If the user manually selects a physical device, details are returned"
     # Mock the user input
-    mock_sdk.command.input.return_value = 1
+    mock_sdk.command.input.values = ["1"]
 
     # Run the selection with no pre-existing choice
     device, name, avd = mock_sdk.select_target_device(None)
@@ -154,6 +157,9 @@ def test_select_device(mock_sdk, capsys):
     assert name == 'Kogan_Agora_9'
     assert avd is None
 
+    # The user was asked to select a device
+    assert len(mock_sdk.command.input.prompts) == 1
+
     # A re-run prompt has been provided
     out = capsys.readouterr().out
     assert "briefcase run android -d KABCDABCDA1513" in out
@@ -162,7 +168,7 @@ def test_select_device(mock_sdk, capsys):
 def test_select_unauthorized_device(mock_sdk):
     "If the user manually selects an unauthorized running device, an error is raised"
     # Mock the user input
-    mock_sdk.command.input.return_value = 2
+    mock_sdk.command.input.values = ['2']
 
     # Run the selection with no pre-existing choice
     with pytest.raises(AndroidDeviceNotAuthorized):
@@ -172,7 +178,7 @@ def test_select_unauthorized_device(mock_sdk):
 def test_select_running_emulator(mock_sdk, capsys):
     "If the user manually selects a running emulator, details are returned"
     # Mock the user input
-    mock_sdk.command.input.return_value = 3
+    mock_sdk.command.input.values = ['3']
 
     # Run the selection with no pre-existing choice
     device, name, avd = mock_sdk.select_target_device(None)
@@ -190,7 +196,7 @@ def test_select_running_emulator(mock_sdk, capsys):
 def test_select_idle_emulator(mock_sdk, capsys):
     "If the user manually selects a running device, details are returned"
     # Mock the user input
-    mock_sdk.command.input.return_value = 4
+    mock_sdk.command.input.values = ['4']
 
     # Run the selection with no pre-existing choice
     device, name, avd = mock_sdk.select_target_device(None)
@@ -208,7 +214,7 @@ def test_select_idle_emulator(mock_sdk, capsys):
 def test_select_create_emulator(mock_sdk, capsys):
     "If the user manually selects a running device, details are returned"
     # Mock the user input
-    mock_sdk.command.input.return_value = 5
+    mock_sdk.command.input.values = ['5']
 
     # Run the selection with no pre-existing choice
     device, name, avd = mock_sdk.select_target_device(None)
@@ -221,3 +227,60 @@ def test_select_create_emulator(mock_sdk, capsys):
     # A re-run prompt has *not* been provided
     out = capsys.readouterr().out
     assert "In future, you could specify this device" not in out
+
+
+def test_input_disabled(mock_sdk):
+    "If input has been disabled, and there are multiple simulators, an error is raised"
+    mock_sdk.command.input.enabled = False
+
+    # Run the selection with no pre-existing choice
+    with pytest.raises(BriefcaseCommandError):
+        mock_sdk.select_target_device(None)
+
+    # No input was requested
+    assert mock_sdk.command.input.prompts == []
+
+
+def test_input_disabled_no_simulators(mock_sdk):
+    "If input has been disabled, and there are no simulators, 'create' is selected"
+    mock_sdk.command.input.enabled = False
+
+    # Remove all the devices and emulators
+    mock_sdk.devices = MagicMock(return_value={})
+    mock_sdk.emulators = MagicMock(return_value=[])
+
+    # Run the selection with no pre-existing choice
+    device, name, avd = mock_sdk.select_target_device(None)
+
+    # No device details
+    assert device is None
+    assert name is None
+    assert avd is None
+
+    # No input was requested
+    assert mock_sdk.command.input.prompts == []
+
+
+def test_input_disabled_one_device(mock_sdk):
+    "If input has been disabled, and there is a single device, it is selected"
+    mock_sdk.command.input.enabled = False
+
+    # Set up a single device.
+    mock_sdk.devices = MagicMock(return_value={
+        'KABCDABCDA1513': {
+            'name': 'Kogan_Agora_9',
+            'authorized': True,
+        },
+    })
+    mock_sdk.emulators = MagicMock(return_value=[])
+
+    # Run the selection with no pre-existing choice
+    device, name, avd = mock_sdk.select_target_device(None)
+
+    # The only device is returned
+    assert device == 'KABCDABCDA1513'
+    assert name == "Kogan_Agora_9"
+    assert avd is None
+
+    # No input was requested
+    assert mock_sdk.command.input.prompts == []

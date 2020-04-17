@@ -19,7 +19,7 @@ def test_no_args_one_app(run_command, first_app):
     # The right sequence of things will be done
     assert run_command.actions == [
         # Run the first app
-        ('run', 'first', {'verbosity': 1}),
+        ('run', 'first', {'input_enabled': True, 'verbosity': 1}),
     ]
 
 
@@ -58,7 +58,7 @@ def test_with_arg_one_app(run_command, first_app):
     # The right sequence of things will be done
     assert run_command.actions == [
         # Run the first app
-        ('run', 'first', {'verbosity': 1}),
+        ('run', 'first', {'input_enabled': True, 'verbosity': 1}),
     ]
 
 
@@ -79,7 +79,7 @@ def test_with_arg_two_apps(run_command, first_app, second_app):
     # The right sequence of things will be done
     assert run_command.actions == [
         # Run the second app
-        ('run', 'second', {'verbosity': 1}),
+        ('run', 'second', {'input_enabled': True, 'verbosity': 1}),
     ]
 
 
@@ -118,11 +118,28 @@ def test_create_app_before_start(run_command, first_app_config):
     # The right sequence of things will be done
     assert run_command.actions == [
         # App doesn't exist, so it will be created and built
-        ('create', 'first', {'verbosity': 1}),
-        ('build', 'first', {'verbosity': 1, 'create_state': 'first'}),
+        ('create', 'first', {'input_enabled': True, 'verbosity': 1}),
+        (
+            'build',
+            'first',
+            {
+                'input_enabled': True,
+                'verbosity': 1,
+                'create_state': 'first'
+            }
+        ),
 
         # Then, it will be started
-        ('run', 'first', {'verbosity': 1, 'create_state': 'first', 'build_state': 'first'}),
+        (
+            'run',
+            'first',
+            {
+                'input_enabled': True,
+                'verbosity': 1,
+                'create_state': 'first',
+                'build_state': 'first'
+            }
+        ),
     ]
 
 
@@ -142,11 +159,24 @@ def test_update_app(run_command, first_app):
     # The right sequence of things will be done
     assert run_command.actions == [
         # An update was requested
-        ('update', 'first', {'verbosity': 1}),
-        ('build', 'first', {'verbosity': 1, 'update_state': 'first'}),
+        ('update', 'first', {'input_enabled': True, 'verbosity': 1}),
+        (
+            'build',
+            'first',
+            {'input_enabled': True, 'verbosity': 1, 'update_state': 'first'}
+        ),
 
         # Then, it will be started
-        ('run', 'first', {'verbosity': 1, 'update_state': 'first', 'build_state': 'first'}),
+        (
+            'run',
+            'first',
+            {
+                'input_enabled': True,
+                'verbosity': 1,
+                'update_state': 'first',
+                'build_state': 'first'
+            }
+        ),
     ]
 
 
@@ -166,11 +196,24 @@ def test_update_uncompiled_app(run_command, first_app_uncompiled):
     # The right sequence of things will be done
     assert run_command.actions == [
         # An update was requested
-        ('update', 'first', {'verbosity': 1}),
-        ('build', 'first', {'verbosity': 1, 'update_state': 'first'}),
+        ('update', 'first', {'input_enabled': True, 'verbosity': 1}),
+        (
+            'build',
+            'first',
+            {'input_enabled': True, 'verbosity': 1, 'update_state': 'first'}
+        ),
 
         # Then, it will be started
-        ('run', 'first', {'verbosity': 1, 'update_state': 'first', 'build_state': 'first'}),
+        (
+            'run',
+            'first',
+            {
+                'input_enabled': True,
+                'verbosity': 1,
+                'update_state': 'first',
+                'build_state': 'first'
+            }
+        ),
     ]
 
 
@@ -190,9 +233,22 @@ def test_update_non_existent(run_command, first_app_config):
     # The right sequence of things will be done
     assert run_command.actions == [
         # App doesn't exist, so it will be created and built
-        ('create', 'first', {'verbosity': 1}),
-        ('build', 'first', {'verbosity': 1, 'create_state': 'first'}),
+        ('create', 'first', {'input_enabled': True, 'verbosity': 1}),
+        (
+            'build',
+            'first',
+            {'input_enabled': True, 'verbosity': 1, 'create_state': 'first'}
+        ),
 
         # Then, it will be started
-        ('run', 'first', {'verbosity': 1, 'create_state': 'first', 'build_state': 'first'}),
+        (
+            'run',
+            'first',
+            {
+                'input_enabled': True,
+                'verbosity': 1,
+                'create_state': 'first',
+                'build_state': 'first'
+            }
+        ),
     ]

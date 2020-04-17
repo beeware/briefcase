@@ -18,6 +18,7 @@ from cookiecutter.repository import is_repo_url
 
 from briefcase import __version__, integrations
 from briefcase.config import AppConfig, GlobalConfig, parse_config
+from briefcase.console import Console
 from briefcase.exceptions import (
     BadNetworkResourceError,
     BriefcaseCommandError,
@@ -119,7 +120,7 @@ class BaseCommand(ABC):
         # These are abstracted to enable testing without patching.
         self.cookiecutter = cookiecutter
         self.requests = requests
-        self.input = input
+        self.input = Console()
         self.os = os
         self.sys = sys
         self.shutil = shutil
@@ -293,6 +294,15 @@ class BaseCommand(ABC):
             '-V', '--version',
             action='version',
             version=__version__
+        )
+        parser.add_argument(
+            '--no-input',
+            action='store_false',
+            default=True,
+            dest="input_enabled",
+            help="Don't ask for user input. If any action would be destructive, "
+                 "an error will be raised; otherwise, default answers will be "
+                 "assumed."
         )
 
     def add_options(self, parser):

@@ -14,4 +14,4 @@ def test_make_project_url(new_command, app_name, bundle, candidate):
     url = new_command.make_project_url(bundle, app_name)
     assert url == candidate
     # Double check - the app name passes the validity check.
-    assert new_command.is_valid_url(url)
+    assert new_command.validate_url(url)
