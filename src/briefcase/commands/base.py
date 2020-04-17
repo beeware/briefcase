@@ -18,13 +18,13 @@ from cookiecutter.repository import is_repo_url
 
 from briefcase import __version__, integrations
 from briefcase.config import AppConfig, GlobalConfig, parse_config
+from briefcase.console import Console
 from briefcase.exceptions import (
     BadNetworkResourceError,
     BriefcaseCommandError,
     BriefcaseConfigError,
     MissingNetworkResourceError
 )
-from briefcase.console import Console
 
 
 class TemplateUnsupportedVersion(BriefcaseCommandError):

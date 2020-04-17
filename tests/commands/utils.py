@@ -1,4 +1,4 @@
-from briefcase.console import InputDisabled, Console
+from briefcase.console import Console, InputDisabled
 
 
 class DummyConsole(Console):

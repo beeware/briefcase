@@ -1,5 +1,3 @@
-from unittest import mock
-
 
 def test_create_app(tracking_create_command):
     "If the app doesn't already exist, it will be created"

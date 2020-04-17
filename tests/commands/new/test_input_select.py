@@ -1,5 +1,3 @@
-from unittest import mock
-
 
 def test_valid_selection(new_command):
     "If the user picks a valid selection, it is returned"

@@ -1,5 +1,3 @@
-from unittest import mock
-
 
 def test_question_sequence(new_command):
     "Questions are asked, a context is constructed."
