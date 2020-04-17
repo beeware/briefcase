@@ -148,21 +148,24 @@ class GradleRunCommand(GradleMixin, RunCommand):
         # Create an ADB wrapper for the selected device
         adb = self.android_sdk.adb(device=device)
 
-        # Install the latest APK file onto the device.
-        print("[{app.app_name}] Installing app...".format(
-            app=app,
-        ))
-        adb.install_apk(self.binary_path(app))
-
         # Compute Android package name based on beeware `bundle` and `app_name`
         # app properties, similar to iOS.
         package = "{app.bundle}.{app.app_name}".format(app=app)
 
         # We force-stop the app to ensure the activity launches freshly.
-        print("[{app.app_name}] Stopping app...".format(app=app))
+        print()
+        print("[{app.app_name}] Stopping old versions of the app...".format(app=app))
         adb.force_stop_app(package)
 
+        # Install the latest APK file onto the device.
+        print()
+        print("[{app.app_name}] Installing app...".format(
+            app=app,
+        ))
+        adb.install_apk(self.binary_path(app))
+
         # To start the app, we launch `org.beeware.android.MainActivity`.
+        print()
         print("[{app.app_name}] Launching app...".format(app=app))
         adb.start_app(package, "org.beeware.android.MainActivity")
 

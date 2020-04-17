@@ -1,6 +1,7 @@
 import re
 import shutil
 import subprocess
+import time
 from pathlib import Path
 
 from requests import exceptions as requests_exceptions
@@ -130,6 +131,9 @@ class AndroidSDK:
         self.command = command
         self.root_path = root_path
         self.dot_android_path = self.command.home_path / ".android"
+
+        # A wrapper for testing purposes
+        self.sleep = time.sleep
 
     @property
     def sdkmanager_path(self):
@@ -303,8 +307,11 @@ class AndroidSDK:
             # The first line is header information.
             # Each subsequent line is a single device descriptor.
             devices = {}
-            for line in output.split("\n")[1:]:
-                if line:
+            header_found = False
+            for line in output.split("\n"):
+                if line == 'List of devices attached':
+                    header_found = True
+                elif header_found and line:
                     parts = re.sub(r"\s+", " ", line).split(" ")
 
                     details = {}
@@ -315,6 +322,9 @@ class AndroidSDK:
                     if parts[1] == "device":
                         name = details["device"]
                         authorized = True
+                    elif parts[1] == "offline":
+                        name = "Unknown device (offline)"
+                        authorized = False
                     else:
                         name = "Unknown device (not authorized for development)"
                         authorized = False
@@ -619,16 +629,93 @@ In future, you can specify this device by running:
         :param avd: The AVD of the device.
         """
         if avd in set(self.emulators()):
-            raise BriefcaseCommandError(
-                """
-You can start the emulator by running:
-
-    $ {emulator_path} @{avd} -dns-server 8.8.8.8 &
-
-""".format(
-                    emulator_path=self.emulator_path, avd=avd
-                )
+            print("Starting emulator {avd}...".format(avd=avd))
+            emulator_popen = self.command.subprocess.Popen(
+                [
+                    str(self.emulator_path),
+                    '@' + avd,
+                    '-dns-server', '8.8.8.8'
+                ],
+                env=self.env,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
             )
+
+            # The boot process happens in 2 phases.
+            # First, the emulator appears in the device list. However, it's
+            # not ready until the boot process has finished. To determine
+            # the boot status, we need the device ID, and an ADB connection.
+
+            # Step 1: Wait for the device to appear so we can get an
+            # ADB instance for the new device.
+            print()
+            print('Waiting for emulator to start...', flush=True, end='')
+            adb = None
+            known_devices = set()
+            while adb is None:
+                print('.', flush=True, end='')
+                if emulator_popen.poll() is not None:
+                    raise BriefcaseCommandError("""
+Android emulator was unable to start!
+
+Try starting the emulator manually by running:
+
+    {cmdline}
+
+Resolve any problems you discover, then try running your app again. You may
+find this page helpful in diagnosing emulator problems.
+
+    https://developer.android.com/studio/run/emulator-acceleration#accel-vm
+""".format(cmdline=' '.join(str(arg) for arg in emulator_popen.args)))
+
+                for device, details in sorted(self.devices().items()):
+                    # Only process authorized devices that we haven't seen.
+                    if details['authorized'] and device not in known_devices:
+                        adb = self.adb(device)
+                        device_avd = adb.avd_name()
+
+                        if device_avd == avd:
+                            # Found an active device that matches
+                            # the AVD we are starting.
+                            name = details["name"]
+                            full_name = "@{avd} ({name} emulator)".format(
+                                avd=avd, name=name,
+                            )
+                            break
+                        else:
+                            # Not the one. Zathras knows.
+                            adb = None
+                            known_devices.add(device)
+
+                # Try again in 2 seconds...
+                self.sleep(2)
+
+            # Print a marker so we can see the phase change
+            print('@', flush=True, end='')
+
+            # Phase 2: Wait for the boot process to complete
+            while not adb.has_booted():
+                if emulator_popen.poll() is not None:
+                    raise BriefcaseCommandError("""
+Android emulator was unable to boot!
+
+Try starting the emulator manually by running:
+
+    {cmdline}
+
+Resolve any problems you discover, then try running your app again. You may
+find this page helpful in diagnosing emulator problems.
+
+    https://developer.android.com/studio/run/emulator-acceleration#accel-vm
+""".format(cmdline=' '.join(str(arg) for arg in emulator_popen.args)))
+
+                # Try again in 2 seconds...
+                self.sleep(2)
+                print('.', flush=True, end='')
+
+            print()
+            # Return the device ID and full name.
+            return device, full_name
         else:
             raise InvalidDeviceError("emulator AVD", avd)
 
@@ -665,6 +752,24 @@ class ADB:
                         device=self.device
                     )
                 )
+
+    def has_booted(self):
+        """Determine if the device has completed booting.
+
+        :returns True if it has booted; False otherwise.
+        """
+        try:
+            # When the sys.boot_completed property of the device
+            # returns '1', the boot is complete. Any other response indicates
+            # booting is underway.
+            output = self.run('shell', 'getprop', 'sys.boot_completed')
+            return output.strip() == '1'
+        except subprocess.CalledProcessError:
+            raise BriefcaseCommandError(
+                "Unable to determine if emulator {device} has booted.".format(
+                    device=self.device
+                )
+            )
 
     def run(self, *arguments):
         """
