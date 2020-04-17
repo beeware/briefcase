@@ -12,7 +12,7 @@ from briefcase.commands import (
 )
 from briefcase.config import BaseConfig
 from briefcase.console import select_option
-from briefcase.exceptions import BriefcaseCommandError
+from briefcase.exceptions import BriefcaseCommandError, InvalidDeviceError
 from briefcase.integrations.xcode import (
     DeviceState,
     get_device_state,
@@ -95,11 +95,8 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
 
             # We've iterated through all available iOS versions and
             # found no match; return an error.
-            raise BriefcaseCommandError(
-                "Invalid simulator UDID {udid}".format(
-                    udid=udid_or_device
-                )
-            )
+            raise InvalidDeviceError('device UDID', udid)
+
         except (ValueError, TypeError):
             # Provided value wasn't a UDID.
             # It must be a device or device+version
@@ -121,17 +118,9 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
                         device = devices[udid]
                         return udid, iOS_version, device
                     except KeyError:
-                        raise BriefcaseCommandError(
-                            "Invalid device name '{device}'".format(
-                                    device=device
-                                )
-                            )
+                        raise InvalidDeviceError('device name', device)
                 except KeyError:
-                    raise BriefcaseCommandError(
-                       "Invalid OS Version '{iOS_version}'".format(
-                            iOS_version=iOS_version
-                        )
-                    )
+                    raise InvalidDeviceError('iOS Version', iOS_version)
             elif udid_or_device:
                 # Just a device name
                 device = udid_or_device
@@ -155,11 +144,7 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
                     except KeyError:
                         # UDID doesn't exist in this iOS version; try another.
                         pass
-                raise BriefcaseCommandError(
-                    "Invalid device name '{device}'".format(
-                            device=device
-                        )
-                    )
+                raise InvalidDeviceError('device name', device)
 
         if len(simulators) == 0:
             raise BriefcaseCommandError(

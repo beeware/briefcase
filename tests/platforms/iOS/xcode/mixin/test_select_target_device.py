@@ -3,7 +3,7 @@ from unittest import mock
 import pytest
 
 from briefcase.commands.base import BaseCommand
-from briefcase.exceptions import BriefcaseCommandError
+from briefcase.exceptions import BriefcaseCommandError, InvalidDeviceError
 from briefcase.platforms.iOS.xcode import iOSXcodeMixin
 
 
@@ -126,7 +126,7 @@ def test_invalid_explicit_device_udid(dummy_command):
     }
 
     # The user nominates a specific device that doesn't exist
-    with pytest.raises(BriefcaseCommandError):
+    with pytest.raises(InvalidDeviceError):
         dummy_command.select_target_device('deadbeef-dead-beef-cafe-deadbeefdead')
 
     # User input was not solicited
@@ -145,7 +145,7 @@ def test_invalid_explicit_device_name(dummy_command):
     }
 
     # The user nominates a specific device name that doesn't exist
-    with pytest.raises(BriefcaseCommandError):
+    with pytest.raises(InvalidDeviceError):
         dummy_command.select_target_device('iphone 99')
 
     # User input was not solicited
@@ -165,7 +165,7 @@ def test_invalid_explicit_device_name_and_version(dummy_command):
 
     # The user nominates a valid device name, but on a version that
     # doesn't exist.
-    with pytest.raises(BriefcaseCommandError):
+    with pytest.raises(InvalidDeviceError):
         dummy_command.select_target_device('iphone 11::37.42')
 
 
