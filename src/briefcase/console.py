@@ -1,83 +1,85 @@
 import operator
 
 
-class InputWrapperDisabledError(Exception):
+class InputDisabled(Exception):
     def __init__(self):
-        super(InputWrapperDisabledError, self).__init__(
-            "Cannot call input __call__ method when it is disabled"
+        super().__init__(
+            "Input is disabled; cannot request user input without a default"
         )
 
 
-class InputWrapper:
-    YES_DEFAULT = "y"
-    NO_DEFAULT = "n"
-    YES_OPTIONS = ["y", "yes"]
-    NO_OPTIONS = ["n", "no"]
-    ALL_OPTIONS = YES_OPTIONS + NO_OPTIONS
-
+class Console:
     def __init__(self, enabled=True):
-        self.__enabled = enabled
+        self._enabled = enabled
+        self._input = input
 
     @property
     def enabled(self):
-        return self.__enabled
+        return self._enabled
 
     @enabled.setter
     def enabled(self, enabled):
-        self.__enabled = enabled
-
-    def enable(self):
-        self.enabled = True
-
-    def disable(self):
-        self.enabled = False
+        self._enabled = enabled
 
     def boolean_input(self, question, default=False):
         """
-        Get a boolean input from user.
-        The user might press "y" for true or "n" for false.
-        If input is disabled, returns default.
+        Get a boolean input from user, in the form of y/n.
 
-        :param question:
-            a string message specifying the question to be answered by the user.
-        :param default:
-            default answer
-        :return:
-            True or False, based on user input or default value
+        The user might press "y" for true or "n" for false.
+        If input is disabled, returns default. If input is disabled and default
+        is *not* defined, InputDisabled is raised.
+
+        :param question: A string message specifying the question to be
+            answered by the user.
+        :param default: (optional) Default response (True/False)
+        :returns: True if the user selected "y", or False if they selected "n".
         """
-        yes_no = "[Y,n]" if default else "[y,N]"
-        default_text = self.YES_DEFAULT if default else self.NO_DEFAULT
-        prompt = "{question} {yes_no}: ".format(question=question, yes_no=yes_no)
-        error_message = (
-            "Invalid Input; "
-            "please enter one of the followings: {options}".format(
-                options=', '.join(self.ALL_OPTIONS)
-            )
-        )
+        if default is None:
+            yes_no = "y/n"
+            default_text = None
+        elif default:
+            yes_no = "[Y/n]"
+            default_text = 'y'
+        else:
+            yes_no = "[y/N]"
+            default_text = 'n'
+
+        prompt = "{question} {yes_no}? ".format(question=question, yes_no=yes_no)
 
         result = self.selection_input(
             prompt=prompt,
-            choices=self.ALL_OPTIONS,
+            choices=['y', 'n'],
             default=default_text,
-            error_message=error_message,
-            transform=str.lower
+            error_message="Please enter Y or N",
+            transform=lambda s: s.lower()[:1],
         )
-        if result.lower() in self.YES_OPTIONS:
+        if result == 'y':
             return True
+
         return False
 
     def selection_input(
-            self,
-            prompt,
-            choices,
-            default=None,
-            error_message="Invalid Selection",
-            transform=None
+        self,
+        prompt,
+        choices,
+        default=None,
+        error_message="Invalid Selection",
+        transform=None
     ):
+        """
+        Prompt the user to select an option from a list of choices.
+
+        :param prompt: The text prompt to display
+        :param choices: The list of available choices
+        :param default: The default choice to select. If None,
+        :param error_message: The error message to display to the user.
+        :param transform: The text transform to apply to any user input before
+            performing any validity checks.
+        """
         while True:
             result = self.text_input(prompt, default)
 
-            if transform is not None:
+            if transform is not None and result is not None:
                 result = transform(result)
 
             if result in choices:
@@ -86,21 +88,37 @@ class InputWrapper:
             print()
             print(error_message)
 
-    def text_input(self, prompt, default):
-        if not self.enabled:
-            return default
-        user_input = self(prompt)
-        if user_input == "":
-            return default
+    def text_input(self, prompt, default=None):
+        """
+        Prompt the user for text input.
+
+        If no default is specified, the input will be returned as entered.
+
+        The default will also be returned if input is disabled. If input is
+        disabled, and there is no default, InputDisabled will be raised.
+
+        :param prompt: The prompt to display to the user.
+        :param default: (optional) The response to return if the user provides
+            no input.
+        :returns: The content entered by the user.
+        """
+        try:
+            user_input = self(prompt)
+            if default is not None and user_input == "":
+                return default
+        except InputDisabled:
+            if default is not None:
+                return default
+            raise
+
         return user_input
 
     def __call__(self, prompt):
+        "Make Console present the same interface as input()"
         if not self.enabled:
-            raise InputWrapperDisabledError()
-        return self._actual_input(prompt)
+            raise InputDisabled()
 
-    def _actual_input(self, prompt):
-        return input(prompt)
+        return self._input(prompt)
 
 
 def select_option(options, input, prompt='> ', error="Invalid selection"):

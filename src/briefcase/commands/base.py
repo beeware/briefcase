@@ -24,7 +24,7 @@ from briefcase.exceptions import (
     BriefcaseConfigError,
     MissingNetworkResourceError
 )
-from briefcase.console import InputWrapper
+from briefcase.console import Console
 
 
 class TemplateUnsupportedVersion(BriefcaseCommandError):
@@ -124,7 +124,7 @@ class BaseCommand(ABC):
         # These are abstracted to enable testing without patching.
         self.cookiecutter = cookiecutter
         self.requests = requests
-        self.input = InputWrapper()
+        self.input = Console()
         self.os = os
         self.sys = sys
         self.shutil = shutil
@@ -304,8 +304,9 @@ class BaseCommand(ABC):
             action='store_false',
             default=True,
             dest="input_enabled",
-            help="Ignore user input while running the command. "
-                 "Fallback to default answers"
+            help="Don't ask for user input. If any action would be destructive, "
+                 "an error will be raised; otherwise, default answers will be "
+                 "assumed."
         )
 
     def add_options(self, parser):

@@ -3,7 +3,7 @@ from unittest import mock
 
 def test_valid_selection(new_command):
     "If the user picks a valid selection, it is returned"
-    new_command.input.set_values('2')
+    new_command.input.values = ['2']
 
     value = new_command.input_select(
         intro="Some introduction",
@@ -30,7 +30,7 @@ My Variable [1]: """
 
 def test_invalid_selection(new_command):
     "If the user picks a valid selection, it is returned"
-    new_command.input.set_values('4', '0', 'asdf', '3')
+    new_command.input.values = ['4', '0', 'asdf', '3']
 
     value = new_command.input_select(
         intro="Some introduction",
@@ -55,7 +55,7 @@ My Variable [1]: """] * 4
 
 def test_default_selection(new_command):
     "If the user picks a valid selection, it is returned"
-    new_command.input.set_values('')
+    new_command.input.values = ['']
 
     value = new_command.input_select(
         intro="Some introduction",
@@ -80,7 +80,7 @@ My Variable [1]: """]
 
 def test_prompt_capitalization(new_command):
     "The prompt is correctly capitalized"
-    new_command.input.set_values('2')
+    new_command.input.values = ['2']
 
     new_command.input_select(
         intro="Some introduction",

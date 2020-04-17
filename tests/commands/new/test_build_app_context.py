@@ -5,7 +5,7 @@ def test_question_sequence(new_command):
     "Questions are asked, a context is constructed."
 
     # Prime answers for all the questions.
-    new_command.input.set_values(
+    new_command.input.values = [
         'My Application',  # formal name
         '',  # app name - accept the default
         'org.beeware',  # bundle ID
@@ -16,7 +16,7 @@ def test_question_sequence(new_command):
         'https://navy.mil/myapplication',  # URL
         '4',  # license
         '1',  # GUI toolkit
-    )
+    ]
 
     assert new_command.build_app_context() == {
         'formal_name': 'My Application',
@@ -38,7 +38,7 @@ def test_question_sequence(new_command):
 def test_question_sequence_with_no_user_input(new_command):
     "If no user input is provided, all user inputs are taken as default"
 
-    new_command.input.disable()
+    new_command.input.enabled = False
 
     assert new_command.build_app_context() == {
         'app_name': 'helloworld',

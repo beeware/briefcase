@@ -346,6 +346,19 @@ def test_command_explicit_format_show_formats(monkeypatch):
     assert set(excinfo.value.choices) == {'app', 'dmg', 'homebrew'}
 
 
+def test_command_disable_input(monkeypatch):
+    "``briefcase create --no-input`` disables console input"
+    # Pretend we're on macOS, regardless of where the tests run.
+    monkeypatch.setattr(sys, 'platform', 'darwin')
+
+    cmd, options = parse_cmdline('create --no-input'.split())
+
+    assert isinstance(cmd, macOSAppCreateCommand)
+    assert cmd.platform == 'macOS'
+    assert cmd.output_format == 'dmg'
+    assert options == {'input_enabled': False, 'verbosity': 1}
+
+
 def test_command_options(monkeypatch, capsys):
     "Commands can provide their own arguments"
     # Pretend we're on macOS, regardless of where the tests run.

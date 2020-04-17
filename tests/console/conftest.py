@@ -2,18 +2,18 @@ from unittest import mock
 
 import pytest
 
-from briefcase.console import InputWrapper
+from briefcase.console import Console
 
 
 @pytest.fixture
-def input_wrapper():
-    input_wrapper = InputWrapper()
-    input_wrapper._actual_input = mock.MagicMock()
-    return input_wrapper
+def console():
+    console = Console()
+    console._input = mock.MagicMock()
+    return console
 
 
 @pytest.fixture
-def disabled_input_wrapper():
-    input_wrapper = InputWrapper(enabled=False)
-    input_wrapper._actual_input = mock.MagicMock()
-    return input_wrapper
+def disabled_console():
+    console = Console(enabled=False)
+    console._input = mock.MagicMock()
+    return console

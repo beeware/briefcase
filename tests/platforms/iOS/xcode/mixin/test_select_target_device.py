@@ -5,7 +5,7 @@ import pytest
 from briefcase.commands.base import BaseCommand
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.platforms.iOS.xcode import iOSXcodeMixin
-from tests.commands.dummy_input_wrapper import DummyInputWrapper
+from tests.commands.utils import DummyConsole
 
 
 class DummyCommand(iOSXcodeMixin, BaseCommand):
@@ -16,7 +16,7 @@ class DummyCommand(iOSXcodeMixin, BaseCommand):
 
     def __init__(self, base_path, **kwargs):
         super().__init__(base_path=base_path, **kwargs)
-        self.input = DummyInputWrapper()
+        self.input = DummyConsole()
 
 
 @pytest.fixture
@@ -198,7 +198,7 @@ def test_implied_os(dummy_command):
     }
 
     # Return option 2 (iPhone 11)
-    dummy_command.input.set_values('2')
+    dummy_command.input.values = ['2']
 
     udid, iOS_version, device = dummy_command.select_target_device()
 
@@ -225,7 +225,7 @@ def test_multiple_os_implied_device(dummy_command):
     }
 
     # Return option 1 (13.2)
-    dummy_command.input.set_values('2')
+    dummy_command.input.values = ['2']
 
     # Device for iOS 13.2 is implied.
     udid, iOS_version, device = dummy_command.select_target_device()
@@ -255,7 +255,7 @@ def test_os_and_device_options(dummy_command):
     }
 
     # Return option 2 (13.2), then option 1 (iPhone 11)
-    dummy_command.input.set_values('2', '1')
+    dummy_command.input.values = ['2', '1']
 
     udid, iOS_version, device = dummy_command.select_target_device()
 

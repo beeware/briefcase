@@ -94,7 +94,7 @@ class NewCommand(BaseCommand):
         """
         return re.sub('[^0-9a-zA-Z_]+', '', formal_name).lstrip('_').lower()
 
-    def is_valid_app_name(self, candidate):
+    def validate_app_name(self, candidate):
         """
         Determine if the app name is valid.
 
@@ -126,7 +126,7 @@ class NewCommand(BaseCommand):
         module_name = app_name.replace('-', '_')
         return module_name
 
-    def is_valid_bundle(self, candidate):
+    def validate_bundle(self, candidate):
         """
         Determine if the bundle identifier is valid.
 
@@ -172,7 +172,7 @@ class NewCommand(BaseCommand):
             domain=self.make_domain(bundle),
         )
 
-    def is_valid_email(self, candidate):
+    def validate_email(self, candidate):
         """
         Determine if the email address is valid.
 
@@ -200,7 +200,7 @@ class NewCommand(BaseCommand):
             app_name=app_name
         )
 
-    def is_valid_url(self, candidate):
+    def validate_url(self, candidate):
         """
         Determine if the URL is valid.
 
@@ -213,7 +213,7 @@ class NewCommand(BaseCommand):
             raise ValueError('Not a valid URL!')
         return True
 
-    def input_text(self, intro, variable, default, is_valid=None):
+    def input_text(self, intro, variable, default, validator=None):
         """
         Read a text answer from the user.
 
@@ -222,16 +222,19 @@ class NewCommand(BaseCommand):
         :param variable: The name of the variable being entered.
         :param default: The default value if the user hits enter without typing
             anything.
-        :param is_valid: (optional) A validator function; accepts a single
+        :param validator: (optional) A validator function; accepts a single
             input (the candidate response), returns True if the answer is
             valid, or raises ValueError() with a debugging message if the
             candidate value isn't valid.
         :returns: a string, guaranteed to meet the validation criteria of
-            ``is_valid``.
+            ``validator``.
         """
-        print(intro)
+        if self.input.enabled:
+            print(intro)
         while True:
-            print()
+            if self.input.enabled:
+                print()
+
             answer = self.input.text_input(
                 "{variable} [{default}]: ".format(
                     variable=titlecase(variable),
@@ -240,13 +243,16 @@ class NewCommand(BaseCommand):
                 default=default
             )
 
-            if is_valid is None:
+            if validator is None:
                 return answer
 
             try:
-                if is_valid(answer):
-                    return answer
+                validator(answer)
+                return answer
             except ValueError as e:
+                if not self.input.enabled:
+                    raise BriefcaseCommandError(str(e))
+
                 print()
                 print("Invalid value; {e}".format(e=e))
 
@@ -263,7 +269,8 @@ class NewCommand(BaseCommand):
             options.
         :returns: The string content of the selected option.
         """
-        print(intro)
+        if self.input.enabled:
+            print(intro)
 
         index_choices = [str(key) for key in range(1, len(options) + 1)]
         display_options = '\n'.join(
@@ -280,8 +287,10 @@ Select one of the following:
 
 {display_options}
 
-{variable} [1]: """.format(display_options=display_options,
-                           variable=titlecase(variable))
+{variable} [1]: """.format(
+            display_options=display_options,
+            variable=titlecase(variable)
+        )
         selection = self.input.selection_input(
             prompt=prompt,
             choices=index_choices,
@@ -324,7 +333,7 @@ but you can use another name if you want.""".format(
             ),
             variable="app name",
             default=default_app_name,
-            is_valid=self.is_valid_app_name,
+            validator=self.validate_app_name,
         )
 
         # The module name can be completely derived from the app name.
@@ -346,7 +355,7 @@ application identifier (e.g., com.example.{app_name}).""".format(
             ),
             variable="bundle identifier",
             default='com.example',
-            is_valid=self.is_valid_bundle,
+            validator=self.validate_bundle,
         )
 
         project_name = self.input_text(
@@ -380,7 +389,7 @@ application? This might be your own email address, or a generic contact address
 you set up specifically for this application.""",
             variable="author's email",
             default=self.make_author_email(author, bundle),
-            is_valid=self.is_valid_email
+            validator=self.validate_email
         )
 
         url = self.input_text(
@@ -389,7 +398,7 @@ What is the website URL for this application? If you don't have a website set
 up yet, you can put in a dummy URL.""",
             variable="application URL",
             default=self.make_project_url(bundle, app_name),
-            is_valid=self.is_valid_url
+            validator=self.validate_url
         )
 
         project_license = self.input_select(
@@ -443,9 +452,10 @@ What GUI toolkit do you want to use for this project?""",
         if template is None:
             template = 'https://github.com/beeware/briefcase-template'
 
-        print()
-        print("Let's build a new Briefcase app!")
-        print()
+        if self.input.enabled:
+            print()
+            print("Let's build a new Briefcase app!")
+            print()
 
         context = self.build_app_context()
 

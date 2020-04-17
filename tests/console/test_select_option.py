@@ -1,10 +1,10 @@
 from briefcase.console import select_option
-from tests.commands.dummy_input_wrapper import DummyInputWrapper
+from tests.commands.utils import DummyConsole
 
 
 def test_select_option():
     # Return '3' when prompted
-    input_wrapper = DummyInputWrapper('3')
+    input_wrapper = DummyConsole('3')
 
     options = {
         'first': 'The first option',
@@ -27,7 +27,7 @@ def test_select_option_bad_input():
     #     'asdf'
     #     '10'
     #     '3'
-    input_wrapper = DummyInputWrapper('', 'asdf', '10', '3')
+    input_wrapper = DummyConsole('', 'asdf', '10', '3')
 
     options = {
         'first': 'The first option',

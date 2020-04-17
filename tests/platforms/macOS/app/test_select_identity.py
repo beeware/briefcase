@@ -4,7 +4,7 @@ import pytest
 
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.platforms.macOS.app import macOSAppPackageCommand
-from tests.commands.dummy_input_wrapper import DummyInputWrapper
+from tests.commands.utils import DummyConsole
 
 
 class DummyPublishCommand(macOSAppPackageCommand):
@@ -14,7 +14,7 @@ class DummyPublishCommand(macOSAppPackageCommand):
 
     def __init__(self, base_path, **kwargs):
         super().__init__(base_path=base_path, **kwargs)
-        self.input = DummyInputWrapper()
+        self.input = DummyConsole()
 
 
 @pytest.fixture
@@ -107,7 +107,7 @@ def test_selected_identity(dummy_command):
     }
 
     # Return option 2
-    dummy_command.input.set_values('2')
+    dummy_command.input.values = ['2']
 
     result = dummy_command.select_identity()
 
