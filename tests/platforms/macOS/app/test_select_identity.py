@@ -4,7 +4,7 @@ import pytest
 
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.platforms.macOS.app import macOSAppPackageCommand
-from tests.commands.utils import DummyConsole
+from tests.utils import DummyConsole
 
 
 class DummyPublishCommand(macOSAppPackageCommand):

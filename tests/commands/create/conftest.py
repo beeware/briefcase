@@ -5,7 +5,7 @@ import toml
 
 from briefcase.commands import CreateCommand
 from briefcase.config import AppConfig
-from tests.commands.utils import DummyConsole
+from tests.utils import DummyConsole
 
 
 class DummyCreateCommand(CreateCommand):
@@ -93,7 +93,7 @@ class TrackingCreateCommand(DummyCreateCommand):
 def create_command(tmp_path, mock_git):
     return DummyCreateCommand(
         base_path=tmp_path,
-        dot_briefcase_path=tmp_path / "dot-briefcase",
+        home_path=tmp_path,
         git=mock_git,
     )
 

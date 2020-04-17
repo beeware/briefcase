@@ -12,9 +12,7 @@ from briefcase.platforms.linux.appimage import LinuxAppImageBuildCommand
 def build_command(tmp_path, first_app_config):
     command = LinuxAppImageBuildCommand(
         base_path=tmp_path,
-        # `dot-briefcase` below makes it easy to find references to literal
-        # `.briefcase` when grepping the source.
-        dot_briefcase_path=tmp_path / "dot-briefcase",
+        home_path=tmp_path / "home",
         apps={'first': first_app_config}
     )
     command.host_os = 'Linux'

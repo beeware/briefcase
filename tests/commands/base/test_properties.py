@@ -1,3 +1,4 @@
+from .conftest import DummyCommand
 
 
 def test_bundle_path(base_command, my_app, tmp_path):
@@ -34,3 +35,16 @@ def test_package_command(base_command):
 def test_publish_command(base_command):
     # Check for a property of the created command class.
     assert base_command.publish_command.description == "Test Publish"
+
+
+def test_input_state_transferred(tmp_path):
+    "If input is disabled, that status is transferred to created subcommands"
+    command = DummyCommand(base_path=tmp_path, input_enabled=False)
+
+    # Check the enabled state of subcommands
+    assert not command.create_command.input.enabled
+    assert not command.update_command.input.enabled
+    assert not command.build_command.input.enabled
+    assert not command.run_command.input.enabled
+    assert not command.package_command.input.enabled
+    assert not command.publish_command.input.enabled

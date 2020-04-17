@@ -2,7 +2,7 @@ import pytest
 
 from briefcase.commands import NewCommand
 from briefcase.commands.base import full_kwargs
-from tests.commands.utils import DummyConsole
+from tests.utils import DummyConsole
 
 
 class DummyNewCommand(NewCommand):
