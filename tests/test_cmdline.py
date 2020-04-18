@@ -4,7 +4,7 @@ import pytest
 
 from briefcase import __version__
 from briefcase.cmdline import parse_cmdline
-from briefcase.commands import DevCommand, NewCommand, UpdateCommand
+from briefcase.commands import DevCommand, NewCommand
 from briefcase.exceptions import (
     InvalidFormatError,
     NoCommandError,
