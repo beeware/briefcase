@@ -521,3 +521,6 @@ Application '{formal_name}' has been generated. To run your application, type:
 
         state = self.new_app(template=template, **kwargs)
         return state
+
+
+NewCommand.add_command()

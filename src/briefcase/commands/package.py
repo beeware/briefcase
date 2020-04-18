@@ -64,3 +64,6 @@ class PackageCommand(BaseCommand):
                 state = self._package_app(app, update=update, **full_kwargs(state, kwargs))
 
         return state
+
+
+PackageCommand.add_command()

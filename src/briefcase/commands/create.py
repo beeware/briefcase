@@ -737,3 +737,6 @@ class CreateCommand(BaseCommand):
                 state = self.create_app(app, **full_kwargs(state, kwargs))
 
         return state
+
+
+CreateCommand.add_command()

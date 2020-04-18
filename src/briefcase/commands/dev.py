@@ -154,3 +154,6 @@ class DevCommand(BaseCommand):
         env = self.get_environment(app)
         state = self.run_dev_app(app, env, **kwargs)
         return state
+
+
+DevCommand.add_command()

@@ -1,3 +1,4 @@
+from .base import BaseCommand  # noqa
 from .build import BuildCommand  # noqa
 from .create import CreateCommand  # noqa
 from .dev import DevCommand  # noqa

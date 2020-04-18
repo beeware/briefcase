@@ -92,3 +92,6 @@ class UpdateCommand(CreateCommand):
                 )
 
         return state
+
+
+UpdateCommand.add_command()

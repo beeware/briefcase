@@ -100,6 +100,7 @@ def full_kwargs(state, kwargs):
 
 
 class BaseCommand(ABC):
+    commands = []
     cmd_line = "briefcase {command} {platform} {output_format}"
     GLOBAL_CONFIG_CLASS = GlobalConfig
     APP_CONFIG_CLASS = AppConfig
@@ -493,3 +494,7 @@ class BaseCommand(ABC):
             cached_template = template
 
         return cached_template
+
+    @classmethod
+    def add_command(cls):
+        cls.commands.append(cls.command)

@@ -77,3 +77,6 @@ class RunCommand(BaseCommand):
         state = self.run_app(app, **full_kwargs(state, kwargs))
 
         return state
+
+
+RunCommand.add_command()

@@ -59,3 +59,6 @@ class PublishCommand(BaseCommand):
             state = self.publish_app(app, channel=channel, **full_kwargs(state, kwargs))
 
         return state
+
+
+PublishCommand.add_command()

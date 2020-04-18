@@ -67,3 +67,6 @@ class BuildCommand(BaseCommand):
                 state = self._build_app(app, update=update, **full_kwargs(state, kwargs))
 
         return state
+
+
+BuildCommand.add_command()
