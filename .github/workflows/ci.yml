@@ -49,7 +49,7 @@ jobs:
 
   python-versions:
     # Only run this and subsequent steps on branches.
-    if: github.ref != "master"
+    if: github.ref != 'master'
     name: Python compatibility test
     needs: smoke
     runs-on: ubuntu-latest
