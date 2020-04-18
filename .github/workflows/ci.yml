@@ -40,6 +40,12 @@ jobs:
         python-version: 3.5
     - name: Install dependencies
       run: |
+        echo "GITHUB: ${{ github }}"
+        echo "REF: ${{ github.ref }}"
+        echo "EVENT: ${{ github.event }}"
+        echo "EVENT PATH: ${{ github.event_path }}"
+        echo "HEAD REF: ${{ github.head_ref }}"
+        export
         pip install --upgrade pip
         pip install --upgrade setuptools
         pip install tox
@@ -49,7 +55,7 @@ jobs:
 
   python-versions:
     # Only run this and subsequent steps on branches.
-    if: github.ref != 'master'
+    if: github.head_ref
     name: Python compatibility test
     needs: smoke
     runs-on: ubuntu-latest
