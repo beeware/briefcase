@@ -21,8 +21,8 @@ Briefcase
    :target: https://github.com/beeware/briefcase/blob/master/LICENSE
    :alt: BSD License
 
-.. image:: https://github.com/beeware/beefore/workflows/CI/badge.svg?branch=master
-   :target: https://github.com/beeware/beefore/actions
+.. image:: https://github.com/beeware/briefcase/workflows/CI/badge.svg?branch=master
+   :target: https://github.com/beeware/briefcase/actions
    :alt: Build Status
 
 .. image:: https://badges.gitter.im/beeware/general.svg
