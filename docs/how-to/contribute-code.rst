@@ -8,6 +8,8 @@ to contribute code, please `fork the code`_ and `submit a pull request`_.
 .. _fork the code: https://github.com/beeware/briefcase
 .. _submit a pull request: https://github.com/beeware/briefcase/pulls
 
+.. _setup-dev-environment:
+
 Setting up your development environment
 ---------------------------------------
 
@@ -69,8 +71,9 @@ requirements, run the following commands within your virtual environment:
 
 Now you are ready to start hacking! Have fun!
 
-Briefcase uses `PyTest <https://pytest.org>`__ for its own test suite. To run
-the test suite, install PyTest, and run the test suite.
+Briefcase uses `PyTest <https://pytest.org>`__ for its own test suite. It uses
+`tox <https://tox.readthedocs.io/en/latest/>`__ to manage the testing process.
+To set up a testing environment and run the full test suite:
 
 .. tabs::
 
@@ -78,19 +81,70 @@ the test suite, install PyTest, and run the test suite.
 
     .. code-block:: bash
 
-      $ (venv) pip install pytest
-      $ (venv) pytest
+      $ (venv) pip install tox
+      $ (venv) tox
 
   .. group-tab:: Linux
 
     .. code-block:: bash
 
-      $ (venv) pip install pytest
-      $ (venv) pytest
+      $ (venv) pip install tox
+      $ (venv) tox
 
   .. group-tab:: Windows
 
     .. code-block:: doscon
 
-      C:\...>pip install pytest
-      C:\...>pytest
+      C:\...>pip install tox
+      C:\...>tox
+
+By default this will run the test suite multiple times, once on each Python
+version supported by Briefcase, as well as running some pre-commit checks of
+code style and validity. This can take a while, so if you want to speed up
+the process while developing, you can run the tests on one Python version only:
+
+.. tabs::
+
+  .. group-tab:: macOS
+
+    .. code-block:: bash
+
+      (venv) $ tox -e py
+
+  .. group-tab:: Linux
+
+    .. code-block:: bash
+
+      (venv) $ tox -e py
+
+  .. group-tab:: Windows
+
+    .. code-block:: bash
+
+      C:\...>tox -e py
+
+Or, to run using a specific version of Python:
+
+.. tabs::
+
+  .. group-tab:: macOS
+
+    .. code-block:: bash
+
+      (venv) $ tox -e py
+
+  .. group-tab:: Linux
+
+    .. code-block:: bash
+
+      (venv) $ tox -e py
+
+  .. group-tab:: Windows
+
+    .. code-block:: bash
+
+      C:\...>tox -e py
+
+substituting the version number that you want to target. You can also specify
+one of the pre-commit checks `flake8`, `docs` or `package` to check code
+formatting, documentation syntax and packaging metadata, respectively.

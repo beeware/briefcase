@@ -16,12 +16,14 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install --upgrade setuptools wheel twine
-    - name: Build and publish
+        python -m pip install --upgrade setuptools
+        python -m pip install tox
+    - name: Build release artefacts
+      run: |
+        tox -e package
+    - name: Publish release
       env:
         TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
       run: |
-        python setup.py sdist bdist_wheel
-        twine check dist/*
-        twine upload dist/*
+        tox -e publish

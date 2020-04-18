@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-#
 # Briefcase documentation build configuration file, created by
 # sphinx-quickstart on Sat Jul 27 14:58:42 2013.
 #
@@ -11,14 +9,13 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import io
 import os
 import re
+import sys
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-import sys
-import os
 sys.path.insert(0, os.path.abspath('../src'))
 
 # -- General configuration -----------------------------------------------------
@@ -51,9 +48,7 @@ copyright = u'2019, Russell Keith-Magee'
 # built documents.
 #
 # The full version, including alpha/beta/rc tags.
-
-
-with io.open('../src/briefcase/__init__.py', encoding='utf8') as version_file:
+with open('../src/briefcase/__init__.py', encoding='utf8') as version_file:
     version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]", version_file.read(), re.M)
     if version_match:
         release = version_match.group(1)
@@ -108,7 +103,7 @@ on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 if not on_rtd:  # only import and set the theme if we're building docs locally
     try:
         import sphinx_rtd_theme
-    except ModuleNotFoundError:
+    except ImportError:
         html_theme = 'default'
     else:
         html_theme = 'sphinx_rtd_theme'
