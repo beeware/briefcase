@@ -4,6 +4,14 @@ Release History
 
 .. towncrier release notes start
 
+0.3.0 (2020-04-18)
+==================
+Features
+--------
+
+* Converted Briefcase to be a PEP518 tool, rather than a setuptools extension. (#266)
+
+
 0.2.10
 ======
 
