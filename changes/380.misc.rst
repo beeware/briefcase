@@ -1,0 +1,1 @@
+Added CI checks for MANIFEST.in and news snippets.
