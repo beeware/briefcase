@@ -9,7 +9,7 @@ from briefcase.exceptions import BriefcaseCommandError
 def devices_result(name):
     "Load a adb devices result file from the sample directory, and return the content"
     adb_samples = Path(__file__).parent / "devices"
-    with (adb_samples / (name)).open(encoding='utf-8') as adb_output_file:
+    with (adb_samples / (name + '.out')).open(encoding='utf-8') as adb_output_file:
         return adb_output_file.read()
 
 
