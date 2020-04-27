@@ -1,0 +1,1 @@
+Simplified Tox configuration for packaging.
