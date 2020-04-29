@@ -1,0 +1,3 @@
+Windows MSI reference:
+updated templates produce per-user installable MSI installers,
+while still supporting per-maching installs, via the CLI.

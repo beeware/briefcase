@@ -26,3 +26,16 @@ Image format
 ============
 
 MSI installers do not support splash screens or installer images.
+
+
+Features
+========
+
+Briefcase produced MSI installers do not require elevated privileges for installation:
+they default to *per-user* installs.
+*Per-machine* installs can still be obtained, via the CLI, with:
+
+.. code-block::
+
+    > msiexec.exe /i <msi-filename> MSIINSTALLPERUSER=""
+
