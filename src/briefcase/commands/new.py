@@ -509,7 +509,7 @@ Application '{formal_name}' has been generated. To run your application, type:
 
         Raises MissingToolException if a required system tool is missing.
         """
-        self.git = self.integrations.git.verify_git_is_installed(self.host_os)
+        self.git = self.integrations.git.verify_git_is_installed(self)
 
     def __call__(
         self,

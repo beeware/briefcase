@@ -723,7 +723,7 @@ class CreateCommand(BaseCommand):
 
         Raises MissingToolException if a required system tool is missing.
         """
-        self.git = self.integrations.git.verify_git_is_installed(self.host_os)
+        self.git = self.integrations.git.verify_git_is_installed(self)
 
     def __call__(self, app: Optional[BaseConfig] = None, **options):
         # Confirm all required tools are available

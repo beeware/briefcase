@@ -9,13 +9,13 @@ from briefcase.integrations.xcode import confirm_xcode_license_accepted
 
 def test_license_accepted(capsys):
     "If the Xcode license has been accepted, pass without comment."
-    sub = mock.MagicMock()
+    command = mock.MagicMock()
 
     # Check passes without an error...
-    confirm_xcode_license_accepted(sub=sub)
+    confirm_xcode_license_accepted(command)
 
     # ... clang was invoked ...
-    sub.check_output.assert_called_once_with(
+    command.subprocess.check_output.assert_called_once_with(
         ['/usr/bin/clang', '--version'],
         stderr=subprocess.STDOUT,
     )
@@ -27,17 +27,17 @@ def test_license_accepted(capsys):
 
 def test_unknown_error(capsys):
     "If an unexpected problem occurred accepting the license, warn the user."
-    sub = mock.MagicMock()
-    sub.check_output.side_effect = subprocess.CalledProcessError(
+    command = mock.MagicMock()
+    command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
         cmd=['/usr/bin/clang', '--version'],
         returncode=1
     )
 
     # Check passes without an error...
-    confirm_xcode_license_accepted(sub=sub)
+    confirm_xcode_license_accepted(command)
 
     # ... clang was invoked ...
-    sub.check_output.assert_called_once_with(
+    command.subprocess.check_output.assert_called_once_with(
         ['/usr/bin/clang', '--version'],
         stderr=subprocess.STDOUT,
     )
@@ -49,21 +49,21 @@ def test_unknown_error(capsys):
 
 def test_accept_license():
     "If the user accepts the license, continue without error"
-    sub = mock.MagicMock()
-    sub.check_output.side_effect = subprocess.CalledProcessError(
+    command = mock.MagicMock()
+    command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
         cmd=['/usr/bin/clang', '--version'],
         returncode=69
     )
 
     # Check passes without an error...
-    confirm_xcode_license_accepted(sub=sub)
+    confirm_xcode_license_accepted(command)
 
     # ... clang *and* xcodebuild were invoked ...
-    sub.check_output.assert_called_once_with(
+    command.subprocess.check_output.assert_called_once_with(
         ['/usr/bin/clang', '--version'],
         stderr=subprocess.STDOUT,
     )
-    sub.run.assert_called_once_with(
+    command.subprocess.run.assert_called_once_with(
         ['sudo', 'xcodebuild', '-license'],
         check=True,
     )
@@ -71,12 +71,12 @@ def test_accept_license():
 
 def test_sudo_fail():
     "If the sudo call fails, an exception is raised."
-    sub = mock.MagicMock()
-    sub.check_output.side_effect = subprocess.CalledProcessError(
+    command = mock.MagicMock()
+    command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
         cmd=['/usr/bin/clang', '--version'],
         returncode=69
     )
-    sub.run.side_effect = subprocess.CalledProcessError(
+    command.subprocess.run.side_effect = subprocess.CalledProcessError(
         cmd=['sudo', 'xcodebuild', '-license'],
         returncode=1
     )
@@ -86,14 +86,14 @@ def test_sudo_fail():
         BriefcaseCommandError,
         match=r'Briefcase was unable to run the Xcode licensing tool.'
     ):
-        confirm_xcode_license_accepted(sub=sub)
+        confirm_xcode_license_accepted(command)
 
     # ... clang *and* xcodebuild were invoked ...
-    sub.check_output.assert_called_once_with(
+    command.subprocess.check_output.assert_called_once_with(
         ['/usr/bin/clang', '--version'],
         stderr=subprocess.STDOUT,
     )
-    sub.run.assert_called_once_with(
+    command.subprocess.run.assert_called_once_with(
         ['sudo', 'xcodebuild', '-license'],
         check=True,
     )
@@ -101,12 +101,12 @@ def test_sudo_fail():
 
 def test_license_not_accepted():
     "If the sudo call fails, an exception is raised."
-    sub = mock.MagicMock()
-    sub.check_output.side_effect = subprocess.CalledProcessError(
+    command = mock.MagicMock()
+    command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
         cmd=['/usr/bin/clang', '--version'],
         returncode=69
     )
-    sub.run.side_effect = subprocess.CalledProcessError(
+    command.subprocess.run.side_effect = subprocess.CalledProcessError(
         cmd=['sudo', 'xcodebuild', '-license'],
         returncode=69
     )
@@ -116,14 +116,14 @@ def test_license_not_accepted():
         BriefcaseCommandError,
         match=r'Xcode license has not been accepted.'
     ):
-        confirm_xcode_license_accepted(sub=sub)
+        confirm_xcode_license_accepted(command)
 
     # ... clang *and* xcodebuild were invoked ...
-    sub.check_output.assert_called_once_with(
+    command.subprocess.check_output.assert_called_once_with(
         ['/usr/bin/clang', '--version'],
         stderr=subprocess.STDOUT,
     )
-    sub.run.assert_called_once_with(
+    command.subprocess.run.assert_called_once_with(
         ['sudo', 'xcodebuild', '-license'],
         check=True,
     )
@@ -131,25 +131,25 @@ def test_license_not_accepted():
 
 def test_license_status_unknown(capsys):
     "If we get an unusual response from the license, warn but continue."
-    sub = mock.MagicMock()
-    sub.check_output.side_effect = subprocess.CalledProcessError(
+    command = mock.MagicMock()
+    command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
         cmd=['/usr/bin/clang', '--version'],
         returncode=69
     )
-    sub.run.side_effect = subprocess.CalledProcessError(
+    command.subprocess.run.side_effect = subprocess.CalledProcessError(
         cmd=['sudo', 'xcodebuild', '-license'],
         returncode=42
     )
 
     # Check passes without error...
-    confirm_xcode_license_accepted(sub=sub)
+    confirm_xcode_license_accepted(command)
 
     # ... clang *and* xcodebuild were invoked ...
-    sub.check_output.assert_called_once_with(
+    command.subprocess.check_output.assert_called_once_with(
         ['/usr/bin/clang', '--version'],
         stderr=subprocess.STDOUT,
     )
-    sub.run.assert_called_once_with(
+    command.subprocess.run.assert_called_once_with(
         ['sudo', 'xcodebuild', '-license'],
         check=True,
     )

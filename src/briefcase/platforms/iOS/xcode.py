@@ -78,7 +78,7 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
         :returns: A tuple containing the udid, iOS version, and device name
             for the selected device.
         """
-        simulators = self.get_simulators('iOS', sub=self.subprocess)
+        simulators = self.get_simulators(self, 'iOS')
 
         try:
             # Try to convert to a UDID. If this succeeds, then the argument
