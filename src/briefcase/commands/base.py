@@ -79,22 +79,22 @@ def cookiecutter_cache_path(template):
     return Path.home() / '.cookiecutters' / cache_name
 
 
-def full_kwargs(state, kwargs):
+def full_options(state, options):
     """
     Merge command state with keyword arguments.
 
     Command state takes precedence over any keyword argument.
 
     :param state: The current command state. Can be ``None``.
-    :param kwargs: The base keyword arguments.
-    :returns: A dictionary containing all of ``kwargs``, with any values
-        provided in ``state`` overriding the base ``kwargs`` values.
+    :param options: The base options.
+    :returns: A dictionary containing all of ``options``, with any values
+        provided in ``state`` overriding the base ``options`` values.
     """
     if state is not None:
-        full = kwargs.copy()
+        full = options.copy()
         full.update(state)
     else:
-        full = kwargs
+        full = options
 
     return full
 
@@ -276,7 +276,7 @@ class BaseCommand(ABC):
             minor=self.sys.version_info.minor
         )
 
-    def verify_tools(self):
+    def verify_tools(self, **options):
         """
         Verify that the tools needed to run this command exist
 

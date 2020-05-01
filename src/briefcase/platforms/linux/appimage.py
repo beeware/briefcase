@@ -29,11 +29,12 @@ class LinuxAppImageMixin(LinuxMixin):
     def distribution_path(self, app):
         return self.binary_path(app)
 
-    def verify_tools(self):
+    def verify_tools(self, **options):
         """
         Verify that we're on Linux.
         """
-        super().verify_tools()
+        super().verify_tools(**options)
+
         if self.host_os != 'Linux':
             raise BriefcaseCommandError("""
 Linux AppImages can only be generated on Linux.
@@ -71,8 +72,8 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
             )
         )
 
-    def verify_tools(self):
-        super().verify_tools()
+    def verify_tools(self, **options):
+        super().verify_tools(**options)
 
         try:
             print()

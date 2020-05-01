@@ -51,7 +51,7 @@ class DevCommand(BaseCommand):
             help='Update dependencies for app'
         )
 
-    def install_dev_dependencies(self, app: BaseConfig, **kwargs):
+    def install_dev_dependencies(self, app: BaseConfig, **options):
         """
         Install the dependencies for the app devly.
 
@@ -72,7 +72,7 @@ class DevCommand(BaseCommand):
         else:
             print("No application dependencies.")
 
-    def run_dev_app(self, app: BaseConfig, env: dict, **kwargs):
+    def run_dev_app(self, app: BaseConfig, env: dict, **options):
         """
         Run the app in the dev environment.
 
@@ -110,10 +110,10 @@ class DevCommand(BaseCommand):
         self,
         appname: Optional[str] = None,
         update_dependencies: Optional[bool] = False,
-        **kwargs
+        **options
     ):
         # Confirm all required tools are available
-        self.verify_tools()
+        self.verify_tools(**options)
 
         # Which app should we run? If there's only one defined
         # in pyproject.toml, then we can use it as a default;
@@ -144,7 +144,7 @@ class DevCommand(BaseCommand):
             print('[{app.app_name}] Installing dependencies...'.format(
                 app=app
             ))
-            self.install_dev_dependencies(app, **kwargs)
+            self.install_dev_dependencies(app, **options)
             write_dist_info(app, dist_info_path)
 
         print()
@@ -152,5 +152,5 @@ class DevCommand(BaseCommand):
             app=app
         ))
         env = self.get_environment(app)
-        state = self.run_dev_app(app, env, **kwargs)
+        state = self.run_dev_app(app, env, **options)
         return state

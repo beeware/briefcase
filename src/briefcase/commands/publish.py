@@ -1,7 +1,7 @@
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError
 
-from .base import BaseCommand, full_kwargs
+from .base import BaseCommand, full_options
 
 
 class PublishCommand(BaseCommand):
@@ -26,7 +26,7 @@ class PublishCommand(BaseCommand):
             help='The channel to publish to'
         )
 
-    def publish_app(self, app: BaseConfig, channel: str, **kwargs):
+    def publish_app(self, app: BaseConfig, channel: str, **options):
         """
         Publish an application.
 
@@ -38,9 +38,9 @@ class PublishCommand(BaseCommand):
             channel=channel,
         ))
 
-    def __call__(self, channel=None, **kwargs):
+    def __call__(self, channel=None, **options):
         # Confirm all required tools are available
-        self.verify_tools()
+        self.verify_tools(**options)
 
         # Check the apps have been built first.
         for app_name, app in self.apps.items():
@@ -56,6 +56,6 @@ class PublishCommand(BaseCommand):
         # Then publish them all to the selected channel.
         state = None
         for app_name, app in sorted(self.apps.items()):
-            state = self.publish_app(app, channel=channel, **full_kwargs(state, kwargs))
+            state = self.publish_app(app, channel=channel, **full_options(state, options))
 
         return state

@@ -1,7 +1,7 @@
 import pytest
 
 from briefcase.commands import NewCommand
-from briefcase.commands.base import full_kwargs
+from briefcase.commands.base import full_options
 from tests.utils import DummyConsole
 
 
@@ -18,9 +18,13 @@ class DummyNewCommand(NewCommand):
         self.actions = []
         self.input = DummyConsole()
 
+    def verify_tools(self, **options):
+        super().verify_tools(**options)
+        self.actions.append(('verify', options))
+
     def new_app(self, **kwargs):
         self.actions.append(('new', kwargs))
-        return full_kwargs({
+        return full_options({
             'new_state': 'done'
         }, kwargs)
 

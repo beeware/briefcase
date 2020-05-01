@@ -18,6 +18,9 @@ def test_no_args_one_app(run_command, first_app):
 
     # The right sequence of things will be done
     assert run_command.actions == [
+        # Tools are verified
+        ('verify', {'verbosity': 1, 'input_enabled': True}),
+
         # Run the first app
         ('run', 'first', {'input_enabled': True, 'verbosity': 1}),
     ]
@@ -38,8 +41,10 @@ def test_no_args_two_apps(run_command, first_app, second_app):
     with pytest.raises(BriefcaseCommandError):
         run_command(**options)
 
-    # No actions will be performed
-    assert run_command.actions == []
+    # Only verification actions will be performed
+    assert run_command.actions == [
+        ('verify', {'verbosity': 1, 'input_enabled': True}),
+    ]
 
 
 def test_with_arg_one_app(run_command, first_app):
@@ -57,6 +62,9 @@ def test_with_arg_one_app(run_command, first_app):
 
     # The right sequence of things will be done
     assert run_command.actions == [
+        # Tools are verified
+        ('verify', {'verbosity': 1, 'input_enabled': True}),
+
         # Run the first app
         ('run', 'first', {'input_enabled': True, 'verbosity': 1}),
     ]
@@ -78,6 +86,9 @@ def test_with_arg_two_apps(run_command, first_app, second_app):
 
     # The right sequence of things will be done
     assert run_command.actions == [
+        # Tools are verified
+        ('verify', {'verbosity': 1, 'input_enabled': True}),
+
         # Run the second app
         ('run', 'second', {'input_enabled': True, 'verbosity': 1}),
     ]
@@ -98,8 +109,10 @@ def test_bad_app_reference(run_command, first_app, second_app):
     with pytest.raises(BriefcaseCommandError):
         run_command(**options)
 
-    # No actions will be performed
-    assert run_command.actions == []
+    # Only verification actions will be performed
+    assert run_command.actions == [
+        ('verify', {'verbosity': 1, 'input_enabled': True}),
+    ]
 
 
 def test_create_app_before_start(run_command, first_app_config):
@@ -117,6 +130,9 @@ def test_create_app_before_start(run_command, first_app_config):
 
     # The right sequence of things will be done
     assert run_command.actions == [
+        # Tools are verified
+        ('verify', {'verbosity': 1, 'input_enabled': True}),
+
         # App doesn't exist, so it will be created and built
         ('create', 'first', {'input_enabled': True, 'verbosity': 1}),
         (
@@ -158,6 +174,9 @@ def test_update_app(run_command, first_app):
 
     # The right sequence of things will be done
     assert run_command.actions == [
+        # Tools are verified
+        ('verify', {'verbosity': 1, 'input_enabled': True}),
+
         # An update was requested
         ('update', 'first', {'input_enabled': True, 'verbosity': 1}),
         (
@@ -195,6 +214,9 @@ def test_update_uncompiled_app(run_command, first_app_uncompiled):
 
     # The right sequence of things will be done
     assert run_command.actions == [
+        # Tools are verified
+        ('verify', {'verbosity': 1, 'input_enabled': True}),
+
         # An update was requested
         ('update', 'first', {'input_enabled': True, 'verbosity': 1}),
         (
@@ -232,6 +254,9 @@ def test_update_non_existent(run_command, first_app_config):
 
     # The right sequence of things will be done
     assert run_command.actions == [
+        # Tools are verified
+        ('verify', {'verbosity': 1, 'input_enabled': True}),
+
         # App doesn't exist, so it will be created and built
         ('create', 'first', {'input_enabled': True, 'verbosity': 1}),
         (

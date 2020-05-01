@@ -28,8 +28,9 @@ class WindowsMSIMixin(WindowsMixin):
     def distribution_path(self, app):
         return self.platform_path / '{app.formal_name}-{app.version}.msi'.format(app=app)
 
-    def verify_tools(self):
-        super().verify_tools()
+    def verify_tools(self, **options):
+        super().verify_tools(**options)
+
         if self.host_os != 'Windows':
             raise BriefcaseCommandError("""
 A Windows MSI installer can only be created on Windows.

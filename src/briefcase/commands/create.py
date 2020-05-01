@@ -13,7 +13,7 @@ from requests import exceptions as requests_exceptions
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError, NetworkFailure
 
-from .base import BaseCommand, TemplateUnsupportedVersion, full_kwargs
+from .base import BaseCommand, TemplateUnsupportedVersion, full_options
 
 
 class InvalidTemplateRepository(BriefcaseCommandError):
@@ -110,8 +110,8 @@ def write_dist_info(app: BaseConfig, dist_info_path: Path):
 class CreateCommand(BaseCommand):
     command = 'create'
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args, **options):
+        super().__init__(*args, **options)
         self._path_index = {}
         self._s3 = None
 
@@ -657,7 +657,7 @@ class CreateCommand(BaseCommand):
                     target=self.bundle_path(app) / target,
                 )
 
-    def create_app(self, app: BaseConfig, **kwargs):
+    def create_app(self, app: BaseConfig, **options):
         """
         Create an application bundle.
 
@@ -717,7 +717,7 @@ class CreateCommand(BaseCommand):
             filename=self.bundle_path(app).relative_to(self.base_path),
         ))
 
-    def verify_tools(self):
+    def verify_tools(self, **options):
         """
         Verify that the tools needed to run this command exist
 
@@ -725,15 +725,15 @@ class CreateCommand(BaseCommand):
         """
         self.git = self.integrations.git.verify_git_is_installed(self.host_os)
 
-    def __call__(self, app: Optional[BaseConfig] = None, **kwargs):
+    def __call__(self, app: Optional[BaseConfig] = None, **options):
         # Confirm all required tools are available
-        self.verify_tools()
+        self.verify_tools(**options)
 
         if app:
-            state = self.create_app(app, **kwargs)
+            state = self.create_app(app, **options)
         else:
             state = None
             for app_name, app in sorted(self.apps.items()):
-                state = self.create_app(app, **full_kwargs(state, kwargs))
+                state = self.create_app(app, **full_options(state, options))
 
         return state

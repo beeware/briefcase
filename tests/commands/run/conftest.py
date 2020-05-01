@@ -1,7 +1,7 @@
 import pytest
 
 from briefcase.commands import RunCommand
-from briefcase.commands.base import full_kwargs
+from briefcase.commands.base import full_options
 from briefcase.config import AppConfig
 
 
@@ -28,9 +28,13 @@ class DummyRunCommand(RunCommand):
     def distribution_path(self, app):
         return self.platform_path / app.app_name / '{app.app_name}.dist'.format(app=app)
 
+    def verify_tools(self, **options):
+        super().verify_tools(**options)
+        self.actions.append(('verify', options))
+
     def run_app(self, app, **kwargs):
         self.actions.append(('run', app.app_name, kwargs))
-        return full_kwargs({
+        return full_options({
             'run_state': app.app_name
         }, kwargs)
 
@@ -39,19 +43,19 @@ class DummyRunCommand(RunCommand):
     # This is for testing purposes.
     def create_command(self, app, **kwargs):
         self.actions.append(('create', app.app_name, kwargs))
-        return full_kwargs({
+        return full_options({
             'create_state': app.app_name
         }, kwargs)
 
     def update_command(self, app, **kwargs):
         self.actions.append(('update', app.app_name, kwargs))
-        return full_kwargs({
+        return full_options({
             'update_state': app.app_name
         }, kwargs)
 
     def build_command(self, app, **kwargs):
         self.actions.append(('build', app.app_name, kwargs))
-        return full_kwargs({
+        return full_options({
             'build_state': app.app_name
         }, kwargs)
 

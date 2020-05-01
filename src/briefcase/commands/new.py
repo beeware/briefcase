@@ -444,7 +444,7 @@ What GUI toolkit do you want to use for this project?""",
             "gui_framework": gui_framework,
         }
 
-    def new_app(self, template: Optional[str] = None, **kwargs):
+    def new_app(self, template: Optional[str] = None, **options):
         """
         Ask questions to generate a new application, and generate a stub
         project from the briefcase-template.
@@ -503,7 +503,7 @@ Application '{formal_name}' has been generated. To run your application, type:
     briefcase dev
 """.format(**context))
 
-    def verify_tools(self):
+    def verify_tools(self, **options):
         """
         Verify that the tools needed to run this command exist
 
@@ -514,10 +514,10 @@ Application '{formal_name}' has been generated. To run your application, type:
     def __call__(
         self,
         template: Optional[str] = None,
-        **kwargs
+        **options
     ):
         # Confirm all required tools are available
-        self.verify_tools()
+        self.verify_tools(**options)
 
-        state = self.new_app(template=template, **kwargs)
+        state = self.new_app(template=template, **options)
         return state

@@ -19,6 +19,9 @@ def test_publish(publish_command, first_app, second_app):
 
     # The right sequence of things will be done
     assert publish_command.actions == [
+        # Tools are verified
+        ('verify', {'verbosity': 1, 'input_enabled': True}),
+
         # Publish the first app to s3
         ('publish', 'first', 's3', {'input_enabled': True, 'verbosity': 1}),
 
@@ -48,6 +51,9 @@ def test_publish_alternative_channel(publish_command, first_app, second_app):
 
     # The right sequence of things will be done
     assert publish_command.actions == [
+        # Tools are verified
+        ('verify', {'verbosity': 1, 'input_enabled': True}),
+
         # Publish the first app to the alternative channel
         ('publish', 'first', 'alternative', {'input_enabled': True, 'verbosity': 1}),
 
@@ -76,8 +82,10 @@ def test_non_existent(publish_command, first_app_config, second_app):
     with pytest.raises(BriefcaseCommandError):
         publish_command(**options)
 
-    # The right sequence of things will be done
-    assert publish_command.actions == []
+    # Only verification will be performed
+    assert publish_command.actions == [
+        ('verify', {'verbosity': 1, 'input_enabled': True}),
+    ]
 
 
 def test_unbuilt(publish_command, first_app_unbuilt, second_app):
@@ -95,5 +103,7 @@ def test_unbuilt(publish_command, first_app_unbuilt, second_app):
     with pytest.raises(BriefcaseCommandError):
         publish_command(**options)
 
-    # The right sequence of things will be done
-    assert publish_command.actions == []
+    # Only verification will be performed
+    assert publish_command.actions == [
+        ('verify', {'verbosity': 1, 'input_enabled': True}),
+    ]

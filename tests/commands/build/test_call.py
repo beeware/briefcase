@@ -14,6 +14,9 @@ def test_specific_app(build_command, first_app, second_app):
 
     # The right sequence of things will be done
     assert build_command.actions == [
+        # Tools are verified
+        ('verify', {'verbosity': 1, 'input_enabled': True}),
+
         # Build the first app; no state
         ('build', 'first', {'input_enabled': True, 'verbosity': 1}),
     ]
@@ -35,6 +38,9 @@ def test_multiple_apps(build_command, first_app, second_app):
 
     # The right sequence of things will be done
     assert build_command.actions == [
+        # Tools are verified
+        ('verify', {'verbosity': 1, 'input_enabled': True}),
+
         # Build the first app; no state
         ('build', 'first', {'input_enabled': True, 'verbosity': 1}),
 
@@ -63,6 +69,9 @@ def test_non_existent(build_command, first_app_config, second_app):
 
     # The right sequence of things will be done
     assert build_command.actions == [
+        # Tools are verified
+        ('verify', {'verbosity': 1, 'input_enabled': True}),
+
         # First App doesn't exist, so it will be created, then built
         ('create', 'first', {'input_enabled': True, 'verbosity': 1}),
         (
@@ -101,6 +110,9 @@ def test_unbuilt(build_command, first_app_unbuilt, second_app):
 
     # The right sequence of things will be done
     assert build_command.actions == [
+        # Tools are verified
+        ('verify', {'verbosity': 1, 'input_enabled': True}),
+
         # First App exists, but hasn't been built; it will be built.
         ('build', 'first', {'input_enabled': True, 'verbosity': 1}),
 
@@ -129,6 +141,9 @@ def test_update_app(build_command, first_app, second_app):
 
     # The right sequence of things will be done
     assert build_command.actions == [
+        # Tools are verified
+        ('verify', {'verbosity': 1, 'input_enabled': True}),
+
         # Update then build the first app
         (
             'update',
@@ -181,6 +196,9 @@ def test_update_non_existent(build_command, first_app_config, second_app):
 
     # The right sequence of things will be done
     assert build_command.actions == [
+        # Tools are verified
+        ('verify', {'verbosity': 1, 'input_enabled': True}),
+
         # First App doesn't exist, so it will be created, then built
         ('create', 'first', {'input_enabled': True, 'verbosity': 1}),
         (
@@ -226,6 +244,9 @@ def test_update_unbuilt(build_command, first_app_unbuilt, second_app):
 
     # The right sequence of things will be done
     assert build_command.actions == [
+        # Tools are verified
+        ('verify', {'verbosity': 1, 'input_enabled': True}),
+
         # First App exists, but hasn't been built; it will updated then built.
         ('update', 'first', {'input_enabled': True, 'verbosity': 1}),
         (
