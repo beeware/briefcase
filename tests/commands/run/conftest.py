@@ -28,9 +28,9 @@ class DummyRunCommand(RunCommand):
     def distribution_path(self, app):
         return self.platform_path / app.app_name / '{app.app_name}.dist'.format(app=app)
 
-    def verify_tools(self, **options):
-        super().verify_tools(**options)
-        self.actions.append(('verify', options))
+    def verify_tools(self):
+        super().verify_tools()
+        self.actions.append(('verify',))
 
     def run_app(self, app, **kwargs):
         self.actions.append(('run', app.app_name, kwargs))

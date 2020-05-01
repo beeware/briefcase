@@ -72,7 +72,7 @@ class UpdateCommand(CreateCommand):
         **options
     ):
         # Confirm all required tools are available
-        self.verify_tools(**options)
+        self.verify_tools()
 
         if app:
             state = self.update_app(

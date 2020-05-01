@@ -503,7 +503,7 @@ Application '{formal_name}' has been generated. To run your application, type:
     briefcase dev
 """.format(**context))
 
-    def verify_tools(self, **options):
+    def verify_tools(self):
         """
         Verify that the tools needed to run this command exist
 
@@ -517,7 +517,7 @@ Application '{formal_name}' has been generated. To run your application, type:
         **options
     ):
         # Confirm all required tools are available
-        self.verify_tools(**options)
+        self.verify_tools()
 
         state = self.new_app(template=template, **options)
         return state

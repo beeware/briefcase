@@ -18,9 +18,9 @@ class DummyNewCommand(NewCommand):
         self.actions = []
         self.input = DummyConsole()
 
-    def verify_tools(self, **options):
-        super().verify_tools(**options)
-        self.actions.append(('verify', options))
+    def verify_tools(self):
+        super().verify_tools()
+        self.actions.append(('verify',))
 
     def new_app(self, **kwargs):
         self.actions.append(('new', kwargs))

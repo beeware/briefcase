@@ -21,9 +21,9 @@ class DummyDevCommand(DevCommand):
         self.actions = []
         self.env = dict(a=1, b=2, c=3)
 
-    def verify_tools(self, **options):
-        super().verify_tools(**options)
-        self.actions.append(('verify', options))
+    def verify_tools(self):
+        super().verify_tools()
+        self.actions.append(('verify',))
 
     def install_dev_dependencies(self, app, **kwargs):
         self.actions.append(("dev_dependencies", app.app_name, kwargs))
@@ -57,7 +57,7 @@ def test_no_args_one_app(dev_command, first_app):
     # The right sequence of things will be done
     assert dev_command.actions == [
         # Tools are verified
-        ('verify', {}),
+        ('verify', ),
 
         # Run the first app devly
         ("run_dev", "first", {}, dev_command.env),
@@ -82,7 +82,7 @@ def test_no_args_two_apps(dev_command, first_app, second_app):
     # No apps will be launched
     assert dev_command.actions == [
         # Tools are verified
-        ('verify', {}),
+        ('verify', ),
     ]
 
 
@@ -102,7 +102,7 @@ def test_with_arg_one_app(dev_command, first_app):
     # The right sequence of things will be done
     assert dev_command.actions == [
         # Tools are verified
-        ('verify', {}),
+        ('verify', ),
 
         # Run the first app devly
         ("run_dev", "first", {}, dev_command.env),
@@ -126,7 +126,7 @@ def test_with_arg_two_apps(dev_command, first_app, second_app):
     # The right sequence of things will be done
     assert dev_command.actions == [
         # Tools are verified
-        ('verify', {}),
+        ('verify', ),
 
         # Run the second app devly
         ("run_dev", "second", {}, dev_command.env),
@@ -151,7 +151,7 @@ def test_bad_app_reference(dev_command, first_app, second_app):
     # No apps will be launched
     assert dev_command.actions == [
         # Tools are verified
-        ('verify', {}),
+        ('verify', ),
     ]
 
 
@@ -171,7 +171,7 @@ def test_update_dependencies(dev_command, first_app):
     # The right sequence of things will be done
     assert dev_command.actions == [
         # Tools are verified
-        ('verify', {}),
+        ('verify', ),
 
         # An update was requested
         ("dev_dependencies", "first", {}),
@@ -197,7 +197,7 @@ def test_run_uninstalled(dev_command, first_app_uninstalled):
     # The right sequence of things will be done
     assert dev_command.actions == [
         # Tools are verified
-        ('verify', {}),
+        ('verify', ),
 
         # The app will be installed
         ("dev_dependencies", "first", {}),
@@ -223,7 +223,7 @@ def test_update_uninstalled(dev_command, first_app_uninstalled):
     # The right sequence of things will be done
     assert dev_command.actions == [
         # Tools are verified
-        ('verify', {}),
+        ('verify', ),
 
         # An update was requested
         ("dev_dependencies", "first", {}),

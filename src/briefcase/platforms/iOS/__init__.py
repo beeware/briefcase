@@ -7,7 +7,7 @@ DEFAULT_OUTPUT_FORMAT = 'xcode'
 class iOSMixin:
     platform = 'iOS'
 
-    def verify_tools(self, **options):
+    def verify_tools(self):
         if self.host_os != 'Darwin':
             raise BriefcaseCommandError("""
 iOS applications require Xcode, which is only available on macOS.
@@ -19,4 +19,4 @@ iOS applications require Xcode, which is only available on macOS.
 
         # Verify superclass tools *after* xcode. This ensures we get the
         # git check *after* the xcode check.
-        super().verify_tools(**options)
+        super().verify_tools()

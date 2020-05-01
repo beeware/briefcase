@@ -113,7 +113,7 @@ class DevCommand(BaseCommand):
         **options
     ):
         # Confirm all required tools are available
-        self.verify_tools(**options)
+        self.verify_tools()
 
         # Which app should we run? If there's only one defined
         # in pyproject.toml, then we can use it as a default;

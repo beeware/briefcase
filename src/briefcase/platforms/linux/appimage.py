@@ -58,11 +58,11 @@ class LinuxAppImageMixin(LinuxMixin):
             self=self,
         )
 
-    def verify_tools(self, **options):
+    def verify_tools(self):
         """
         Verify that Docker is availble; and if it isn't that we're on Linux.
         """
-        super().verify_tools(**options)
+        super().verify_tools()
         if self.use_docker:
             self.Docker = verify_docker(self)
         else:
@@ -147,8 +147,8 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
             )
         )
 
-    def verify_tools(self, **options):
-        super().verify_tools(**options)
+    def verify_tools(self):
+        super().verify_tools()
 
         try:
             print()

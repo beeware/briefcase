@@ -31,7 +31,7 @@ def test_update(update_command, first_app, second_app):
 
     # The right sequence of things will be done
     assert update_command.actions == [
-        ('verify', {}),
+        ('verify',),
 
         # Update the first app
         ('code', update_command.apps['first']),
@@ -50,7 +50,7 @@ def test_update_single(update_command, first_app, second_app):
 
     # The right sequence of things will be done
     assert update_command.actions == [
-        ('verify', {}),
+        ('verify',),
 
         # update the first app
         ('code', update_command.apps['first']),
@@ -66,7 +66,7 @@ def test_update_with_dependencies(update_command, first_app, second_app):
 
     # The right sequence of things will be done
     assert update_command.actions == [
-        ('verify', {}),
+        ('verify',),
 
         # Update the first app
         ('dependencies', update_command.apps['first']),
@@ -87,7 +87,7 @@ def test_update_with_resources(update_command, first_app, second_app):
 
     # The right sequence of things will be done
     assert update_command.actions == [
-        ('verify', {}),
+        ('verify',),
 
         # Update the first app
         ('code', update_command.apps['first']),

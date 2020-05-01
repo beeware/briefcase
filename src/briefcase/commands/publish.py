@@ -40,7 +40,7 @@ class PublishCommand(BaseCommand):
 
     def __call__(self, channel=None, **options):
         # Confirm all required tools are available
-        self.verify_tools(**options)
+        self.verify_tools()
 
         # Check the apps have been built first.
         for app_name, app in self.apps.items():

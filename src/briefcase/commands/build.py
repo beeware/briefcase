@@ -57,7 +57,7 @@ class BuildCommand(BaseCommand):
         **options
     ):
         # Confirm all required tools are available
-        self.verify_tools(**options)
+        self.verify_tools()
 
         if app:
             state = self._build_app(app, update=update, **options)

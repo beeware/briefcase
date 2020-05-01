@@ -717,7 +717,7 @@ class CreateCommand(BaseCommand):
             filename=self.bundle_path(app).relative_to(self.base_path),
         ))
 
-    def verify_tools(self, **options):
+    def verify_tools(self):
         """
         Verify that the tools needed to run this command exist
 
@@ -727,7 +727,7 @@ class CreateCommand(BaseCommand):
 
     def __call__(self, app: Optional[BaseConfig] = None, **options):
         # Confirm all required tools are available
-        self.verify_tools(**options)
+        self.verify_tools()
 
         if app:
             state = self.create_app(app, **options)

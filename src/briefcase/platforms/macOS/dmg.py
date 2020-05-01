@@ -24,8 +24,8 @@ class macOSDmgMixin(macOSAppMixin):
     def distribution_path(self, app):
         return self.platform_path / '{app.formal_name}-{app.version}.dmg'.format(app=app)
 
-    def verify_tools(self, **options):
-        super().verify_tools(**options)
+    def verify_tools(self):
+        super().verify_tools()
         if dmgbuild is None:
             raise BriefcaseCommandError("""
 A macOS DMG can only be created on macOS.

@@ -276,7 +276,7 @@ class BaseCommand(ABC):
             minor=self.sys.version_info.minor
         )
 
-    def verify_tools(self, **options):
+    def verify_tools(self):
         """
         Verify that the tools needed to run this command exist
 

@@ -50,12 +50,12 @@ requires Python 3.7.""".format(
                 )
             )
 
-    def verify_tools(self, **options):
+    def verify_tools(self):
         """
         Verify that we the Android APK tools in `briefcase` will operate on
         this system, downloading tools as needed.
         """
-        super().verify_tools(**options)
+        super().verify_tools()
         self.verify_python_version()
         self.java_home_path = verify_jdk(self)
         self.android_sdk = verify_android_sdk(self)
@@ -99,8 +99,8 @@ class GradleBuildCommand(GradleMixin, BuildCommand):
 class GradleRunCommand(GradleMixin, RunCommand):
     description = "Run an Android APK."
 
-    def verify_tools(self, **options):
-        super().verify_tools(**options)
+    def verify_tools(self):
+        super().verify_tools()
         self.android_sdk.verify_emulator()
 
     def add_options(self, parser):

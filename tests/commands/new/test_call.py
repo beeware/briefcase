@@ -34,7 +34,7 @@ def test_new_app(new_command):
     # The right sequence of things will be done
     assert new_command.actions == [
         # Tools are verified
-        ('verify', {}),
+        ('verify', ),
 
         # Run the first app
         ('new', {'template': None}),
