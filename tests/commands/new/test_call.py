@@ -34,8 +34,8 @@ def test_new_app(new_command):
     # The right sequence of things will be done
     assert new_command.actions == [
         # Tools are verified
-        ('verify', {'verbosity': 1, 'input_enabled': True}),
+        ('verify', {}),
 
         # Run the first app
-        ('new', {'template': None, 'input_enabled': True, 'verbosity': 1}),
+        ('new', {'template': None}),
     ]

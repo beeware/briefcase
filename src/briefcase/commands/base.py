@@ -300,7 +300,13 @@ class BaseCommand(ABC):
         # Parse the full set of command line options from the content
         # remaining after the basic command/platform/output format
         # has been extracted.
-        return vars(parser.parse_args(extra))
+        options = vars(parser.parse_args(extra))
+
+        # Extract the base default options onto the command
+        self.input.enabled = options.pop('input_enabled')
+        self.verbosity = options.pop('verbosity')
+
+        return options
 
     def add_default_options(self, parser):
         """
