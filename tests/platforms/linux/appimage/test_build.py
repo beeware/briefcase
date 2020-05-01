@@ -17,13 +17,15 @@ def build_command(tmp_path, first_app_config):
     )
     command.host_os = 'Linux'
     command.host_arch = 'wonky'
+    command.verbosity = 0
+    command.use_docker = False
 
     command.os = mock.MagicMock()
     command.os.environ.copy.return_value = {
         'PATH': '/usr/local/bin:/usr/bin'
     }
 
-    command.subprocess = mock.MagicMock()
+    command.subprocess._subprocess = mock.MagicMock()
 
     command.linuxdeploy_appimage = tmp_path / 'tools' / 'linuxdeploy-wonky.AppImage'
     return command
@@ -116,9 +118,10 @@ def test_build_appimage(build_command, first_app_config, tmp_path):
 
     # linuxdeploy was invoked
     app_dir = tmp_path / 'linux' / 'First App' / 'First App.AppDir'
-    build_command.subprocess.run.assert_called_with(
+    build_command.subprocess._subprocess.run.assert_called_with(
         [
             str(build_command.linuxdeploy_appimage),
+            "--appimage-extract-and-run",
             "--appdir={appdir}".format(appdir=app_dir),
             "-d", str(app_dir / "com.example.first-app.desktop"),
             "-o", "appimage",
@@ -141,7 +144,7 @@ def test_build_failure(build_command, first_app_config, tmp_path):
     "If linuxdeploy fails, the build is stopped."
 
     # Mock a failure in the build
-    build_command.subprocess.run.side_effect = subprocess.CalledProcessError(
+    build_command.subprocess._subprocess.run.side_effect = subprocess.CalledProcessError(
         cmd=['linuxdeploy-x86_64.AppImage', '...'],
         returncode=1
     )
@@ -152,9 +155,10 @@ def test_build_failure(build_command, first_app_config, tmp_path):
 
     # linuxdeploy was invoked
     app_dir = tmp_path / 'linux' / 'First App' / 'First App.AppDir'
-    build_command.subprocess.run.assert_called_with(
+    build_command.subprocess._subprocess.run.assert_called_with(
         [
             str(build_command.linuxdeploy_appimage),
+            "--appimage-extract-and-run",
             "--appdir={appdir}".format(appdir=app_dir),
             "-d", str(app_dir / "com.example.first-app.desktop"),
             "-o", "appimage",
