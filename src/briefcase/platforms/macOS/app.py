@@ -106,7 +106,7 @@ class macOSAppPackageCommand(macOSAppMixin, PackageCommand):
         :returns: The final identity to use
         """
         # Obtain the valid codesigning identities.
-        identities = self.get_identities('codesigning')
+        identities = self.get_identities(self, 'codesigning')
 
         if identity:
             try:

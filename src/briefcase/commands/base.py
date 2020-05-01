@@ -5,7 +5,6 @@ import inspect
 import os
 import platform
 import shutil
-import subprocess
 import sys
 from abc import ABC, abstractmethod
 from cgi import parse_header
@@ -25,6 +24,7 @@ from briefcase.exceptions import (
     BriefcaseConfigError,
     MissingNetworkResourceError
 )
+from briefcase.subprocess import Subprocess
 
 
 class TemplateUnsupportedVersion(BriefcaseCommandError):
@@ -124,7 +124,7 @@ class BaseCommand(ABC):
         self.os = os
         self.sys = sys
         self.shutil = shutil
-        self.subprocess = subprocess
+        self.subprocess = Subprocess(self)
 
         # The internal Briefcase integrations API.
         self.integrations = integrations
