@@ -11,12 +11,12 @@ def test_parse_options(base_command):
     )
 
     assert options == {
-        'input_enabled': True,
-        'verbosity': 1,
         'extra': "wibble",
         'mystery':  None,
         'required': "important",
     }
+    assert base_command.input.enabled
+    assert base_command.verbosity
 
 
 def test_missing_option(base_command, capsys):

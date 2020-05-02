@@ -444,7 +444,7 @@ What GUI toolkit do you want to use for this project?""",
             "gui_framework": gui_framework,
         }
 
-    def new_app(self, template: Optional[str] = None, **kwargs):
+    def new_app(self, template: Optional[str] = None, **options):
         """
         Ask questions to generate a new application, and generate a stub
         project from the briefcase-template.
@@ -509,15 +509,15 @@ Application '{formal_name}' has been generated. To run your application, type:
 
         Raises MissingToolException if a required system tool is missing.
         """
-        self.git = self.integrations.git.verify_git_is_installed(self.host_os)
+        self.git = self.integrations.git.verify_git_is_installed(self)
 
     def __call__(
         self,
         template: Optional[str] = None,
-        **kwargs
+        **options
     ):
         # Confirm all required tools are available
         self.verify_tools()
 
-        state = self.new_app(template=template, **kwargs)
+        state = self.new_app(template=template, **options)
         return state

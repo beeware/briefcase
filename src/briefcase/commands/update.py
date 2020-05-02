@@ -2,7 +2,7 @@ from typing import Optional
 
 from briefcase.config import BaseConfig
 
-from .base import full_kwargs
+from .base import full_options
 from .create import CreateCommand
 
 
@@ -23,7 +23,7 @@ class UpdateCommand(CreateCommand):
             help='Update app resources (icons, splash screens, etc)'
         )
 
-    def update_app(self, app: BaseConfig, update_dependencies=False, update_resources=False, **kwargs):
+    def update_app(self, app: BaseConfig, update_dependencies=False, update_resources=False, **options):
         """
         Update an existing application bundle.
 
@@ -69,7 +69,7 @@ class UpdateCommand(CreateCommand):
         app: Optional[BaseConfig] = None,
         update_dependencies: bool = False,
         update_resources: bool = False,
-        **kwargs
+        **options
     ):
         # Confirm all required tools are available
         self.verify_tools()
@@ -79,7 +79,7 @@ class UpdateCommand(CreateCommand):
                 app,
                 update_dependencies=update_dependencies,
                 update_resources=update_resources,
-                **kwargs,
+                **options,
             )
         else:
             state = None
@@ -88,7 +88,7 @@ class UpdateCommand(CreateCommand):
                     app,
                     update_dependencies=update_dependencies,
                     update_resources=update_resources,
-                    **full_kwargs(state, kwargs),
+                    **full_options(state, options),
                 )
 
         return state

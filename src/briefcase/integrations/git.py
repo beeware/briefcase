@@ -1,7 +1,7 @@
 from briefcase.exceptions import BriefcaseCommandError
 
 
-def verify_git_is_installed(host_os=None):
+def verify_git_is_installed(command):
     """
     Verify if git is installed.
 
@@ -16,6 +16,7 @@ def verify_git_is_installed(host_os=None):
     macOS workflows, and ensures that "briefcase --help" works on other
     platforms without raising an error.
 
+    :param command: The command that needs to perform the verification check.
     :returns: The git module, if `git` is installed and available.
     """
     # Check whether the git executable could be imported.
@@ -27,7 +28,7 @@ def verify_git_is_installed(host_os=None):
         # and also hijacks /usr/bin/git with a trigger that prompts the
         # installation of those tools. Customize the message to account
         # for this.
-        if host_os == 'Darwin':
+        if command.host_os == 'Darwin':
             raise BriefcaseCommandError("""
 Briefcase requires git, but it is not installed. Xcode provides git; you should
 be shown a dialog prompting you to install Xcode and the Command Line Developer

@@ -2,7 +2,7 @@ from typing import Optional
 
 from briefcase.config import BaseConfig
 
-from .base import BaseCommand, full_kwargs
+from .base import BaseCommand, full_options
 
 
 class BuildCommand(BaseCommand):
@@ -16,7 +16,7 @@ class BuildCommand(BaseCommand):
             help='Update the app before building'
         )
 
-    def build_app(self, app: BaseConfig, **kwargs):
+    def build_app(self, app: BaseConfig, **options):
         """
         Build an application.
 
@@ -24,7 +24,7 @@ class BuildCommand(BaseCommand):
         """
         # Default implementation; nothing to build.
 
-    def _build_app(self, app: BaseConfig, update: bool, **kwargs):
+    def _build_app(self, app: BaseConfig, update: bool, **options):
         """
         Internal method to invoke a build on a single app.
         Ensures the app exists, and has been updated (if requested) before
@@ -35,13 +35,13 @@ class BuildCommand(BaseCommand):
         """
         target_file = self.bundle_path(app)
         if not target_file.exists():
-            state = self.create_command(app, **kwargs)
+            state = self.create_command(app, **options)
         elif update:
-            state = self.update_command(app, **kwargs)
+            state = self.update_command(app, **options)
         else:
             state = None
 
-        state = self.build_app(app, **full_kwargs(state, kwargs))
+        state = self.build_app(app, **full_options(state, options))
 
         print()
         print("[{app.app_name}] Built {filename}".format(
@@ -54,16 +54,16 @@ class BuildCommand(BaseCommand):
         self,
         app: Optional[BaseConfig] = None,
         update: bool = False,
-        **kwargs
+        **options
     ):
         # Confirm all required tools are available
         self.verify_tools()
 
         if app:
-            state = self._build_app(app, update=update, **kwargs)
+            state = self._build_app(app, update=update, **options)
         else:
             state = None
             for app_name, app in sorted(self.apps.items()):
-                state = self._build_app(app, update=update, **full_kwargs(state, kwargs))
+                state = self._build_app(app, update=update, **full_options(state, options))
 
         return state
