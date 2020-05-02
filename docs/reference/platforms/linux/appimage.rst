@@ -23,36 +23,16 @@ about the same age or newer - but those AppImages *must* be compiled on Ubuntu
 This means you have four options for using Briefcase to compile a Linux
 AppImage:
 
-1. Install Ubuntu 16.04 on your own machine.
+1. Run the version-sensitive parts of the build process inside Docker. This is
+   the default behavior of Briefcase. This also means that it is possible to
+   build Linux binaries on macOS and Windows.
 
-2. Find a cloud or CI provider that can provide you an Ubuntu 16.04
+2. Install Ubuntu 16.04 on your own machine.
+
+3. Find a cloud or CI provider that can provide you an Ubuntu 16.04
    machine for build purposes. Github Actions, for example, provides Ubuntu
-   16.04 as a build option.
-
-3. Run Briefcase inside a Docker container. Once you have `installed
-   Docker <https://docs.docker.com/install/>`__, the command::
-
-        $ docker run -it -v /path/to/project:/project ubuntu:16.04 /bin/bash
-
-   will start a Docker container running Ubuntu 16.04, mounting your
-   local project directory (``/path/to/project``) as the ``/project``
-   directory in the container. You can then install the requirements
-   necessary to run Briefcase inside the container::
-
-        $ apt-get update
-        $ apt-get install python3-dev
-        $ pip install briefcase
-
-   Depending on the application you're packaging, you may need to install
-   additional system libraries (e.g., graphics libraries to support the GUI
-   toolkit). For example, if you're intending to use BeeWare's `Toga
-   <https://beeware.org/toga>`__ GUI toolkit, you'll need the following
-   system libraries::
-
-        $ apt-get install libgirepository1.0-dev libcairo2-dev libpango1.0-dev libwebkitgtk-3.0-0 gir1.2-webkit-3.0
-
-   As an aside, using Docker will also allow you to create Linux packages on
-   Windows or macOS.
+   16.04 as a build option. Again, you'll need to use the ``--no-docker``
+   command line option.
 
 4. Build your own version of the BeeWare `Python support libraries
    <https://github.com/beeware/Python-Linux-support>`__. If you take this
@@ -70,3 +50,14 @@ Image format
 ============
 
 AppImages do not support splash screens or installer images.
+
+Additional options
+==================
+
+The following options can be provided at the command line when producing
+AppImages.
+
+``--no-docker``
+~~~~~~~~~~~~~
+
+Use native execution, rather than using Docker to start a container.
