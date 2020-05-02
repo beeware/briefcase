@@ -24,7 +24,7 @@ from briefcase.exceptions import (
     BriefcaseConfigError,
     MissingNetworkResourceError
 )
-from briefcase.subprocess import Subprocess
+from briefcase.integrations.subprocess import Subprocess
 
 
 class TemplateUnsupportedVersion(BriefcaseCommandError):

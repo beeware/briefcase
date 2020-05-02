@@ -98,9 +98,8 @@ Re-run Briefcase once that installation is complete.
 ** WARNING: Unable to determine if Xcode is installed                  **
 *************************************************************************
 
-   Briefcase will proceed assume everything is OK, but if you
-   experience problems, this is almost certainly the cause of those
-   problems.
+   Briefcase will proceed, assuming everything is OK. If you experience
+   problems, this is almost certainly the cause of those problems.
 
    Please report this as a bug at:
 
@@ -183,9 +182,8 @@ Re-run Briefcase once that installation is complete.
 ** WARNING: Unable to determine the version of Xcode that is installed **
 *************************************************************************
 
-   Briefcase will proceed assume everything is OK, but if you
-   experience problems, this is almost certainly the cause of those
-   problems.
+   Briefcase will proceed, assuming everything is OK. If you experience
+   problems, this is almost certainly the cause of those problems.
 
    Please report this as a bug at:
 
@@ -198,7 +196,6 @@ Re-run Briefcase once that installation is complete.
    from the command prompt.
 
 *************************************************************************
-
 """)
 
     except subprocess.CalledProcessError:
@@ -272,9 +269,8 @@ You need to accept the Xcode license before Briefcase can package your app.
 ** WARNING: Unable to determine if the Xcode license has been accepted **
 *************************************************************************
 
-   Briefcase will proceed assume everything is OK, but if you
-   experience problems, this is almost certainly the cause of those
-   problems.
+   Briefcase will proceed, assuming everything is OK. If you experience
+   problems, this is almost certainly the cause of those problems.
 
    Please report this as a bug at:
 
@@ -287,7 +283,6 @@ You need to accept the Xcode license before Briefcase can package your app.
    from the command prompt.
 
 *************************************************************************
-
 """)
         else:
             print("""
@@ -295,9 +290,8 @@ You need to accept the Xcode license before Briefcase can package your app.
 ** WARNING: Unable to determine if the Xcode license has been accepted **
 *************************************************************************
 
-   Briefcase will proceed assume everything is OK, but if you
-   experience problems, this is almost certainly the cause of those
-   problems.
+   Briefcase will proceed, assuming everything is OK. If you experience
+   problems, this is almost certainly the cause of those problems.
 
    Please report this as a bug at:
 
@@ -310,7 +304,6 @@ You need to accept the Xcode license before Briefcase can package your app.
    from the command prompt.
 
 *************************************************************************
-
 """)
 
 

@@ -8,10 +8,11 @@ from briefcase.exceptions import BriefcaseCommandError
 def verify_docker(command):
     """
     Verify that docker is available.
+
+    :param command: The command that needs to perform the verification check.
     """
     try:
-        # If no JRE/JDK is installed, /usr/libexec/java_home
-        # raises an error.
+        # Try to get the version of docker that is installed.
         output = command.subprocess.check_output(
             ['docker', '--version'],
             universal_newlines=True,
@@ -20,13 +21,50 @@ def verify_docker(command):
 
         # Do a simple check that the docker that was invoked
         # actually looks like the real deal. If it is,
-        #
         if not output.startswith('Docker version '):
-            raise BriefcaseCommandError("""
-""")
+            print("""
+*************************************************************************
+** WARNING: Unable to determine the version of Docker                  **
+*************************************************************************
 
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        # Couldn't invoke docker.
+   Briefcase will proceed, assuming everything is OK. If you experience
+   problems, this is almost certainly the cause of those problems.
+
+   Please report this as a bug at:
+
+     https://github.com/beeware/briefcase/issues/new
+
+   In your report, please including the output from running:
+
+     docker --version
+
+   from the command prompt.
+
+*************************************************************************
+""")
+    except subprocess.CalledProcessError:
+        print("""
+*************************************************************************
+** WARNING: Unable to determine if Docker is installed                 **
+*************************************************************************
+
+   Briefcase will proceed, assuming everything is OK. If you experience
+   problems, this is almost certainly the cause of those problems.
+
+   Please report this as a bug at:
+
+     https://github.com/beeware/briefcase/issues/new
+
+   In your report, please including the output from running:
+
+     docker --version
+
+   from the command prompt.
+
+*************************************************************************
+""")
+    except FileNotFoundError:
+        # Docker executable doesn't exist.
         if command.host_os == 'Windows':
             install_url = "https://docs.docker.com/docker-for-windows/install/"
             extra_content = ""
@@ -47,14 +85,14 @@ Visit:
 
 to download and install git manually.
 {extra_content}
-If you have installed docker recently and are still getting this error, you may
+If you have installed Docker recently and are still getting this error, you may
 need to restart your terminal session.
 """.format(
             install_url=install_url,
             extra_content=extra_content,
         ))
 
-    # Return the docker wrapper
+    # Return the Docker wrapper
     return Docker
 
 
@@ -64,7 +102,7 @@ class Docker:
         self._subprocess = command.subprocess
         self.app = app
 
-    def build_image(self):
+    def prepare(self):
         try:
             print()
             print("[{app.app_name}] Building Docker container image...".format(app=self.app))
@@ -77,15 +115,15 @@ class Docker:
             self._subprocess.run(
                 [
                     "docker", "build",
-                    "-t", self.command.docker_image_tag(self.app),
-                    "-f", self.command.bundle_path(self.app) / 'Dockerfile',
+                    "--tag", self.command.docker_image_tag(self.app),
+                    "--file", self.command.bundle_path(self.app) / 'Dockerfile',
                     "--build-arg", "PY_VERSION={command.python_version_tag}".format(
                         command=self.command
                     ),
                     "--build-arg", "SYSTEM_REQUIRES={system_requires}".format(
                         system_requires=system_requires
                     ),
-                    str(Path.cwd() / "src")
+                    Path(str(self.command.base_path), *self.app.sources[0].split('/')[:-1])
                 ],
                 check=True,
             )

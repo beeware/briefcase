@@ -88,3 +88,26 @@ class Subprocess:
             ],
             **self.final_kwargs(**kwargs)
         )
+
+    def Popen(self, args, **kwargs):
+        """A wrapper for subprocess.Popen()
+
+        If verbosity >= 2, the executed command will be printed to the console.
+
+        The behavior of this method is identical to subprocess.Popen(),
+        except for the `env` argument. If provided, the current system
+        environment will be copied, and the contents of env overwritten
+        into that environment.
+        """
+        # Invoke subprocess.check_output
+        if self.command.verbosity >= 2:
+            print(">>> {cmdline}".format(
+                cmdline=' '.join(shlex.quote(arg) for arg in args)
+            ))
+
+        return self._subprocess.Popen(
+            [
+                str(arg) for arg in args
+            ],
+            **self.final_kwargs(**kwargs)
+        )
