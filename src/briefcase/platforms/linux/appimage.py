@@ -65,7 +65,7 @@ class LinuxAppImageMixin(LinuxMixin):
 
     def verify_tools(self):
         """
-        Verify that Docker is availble; and if it isn't that we're on Linux.
+        Verify that Docker is available; and if it isn't that we're on Linux.
         """
         super().verify_tools()
         if self.use_docker:
@@ -132,7 +132,6 @@ class LinuxAppImageCreateCommand(LinuxAppImageMixin, CreateCommand):
         binary versions are installed.
         """
         with self.dockerize(app=app) as docker:
-            print("Build Docker container...")
             docker.prepare()
 
             # Install dependencies. This will run inside a Docker container.
