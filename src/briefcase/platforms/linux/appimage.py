@@ -66,7 +66,10 @@ class LinuxAppImageMixin(LinuxMixin):
         if self.use_docker:
             self.Docker = verify_docker(self)
         else:
-            if self.host_os != 'Linux':
+            if self.host_os == 'Linux':
+                # Use subprocess natively. No Docker wrapper is needed
+                self.Docker = None
+            else:
                 raise BriefcaseCommandError("""
 Linux AppImages can only be generated on Linux.
 """)
@@ -124,8 +127,8 @@ class LinuxAppImageCreateCommand(LinuxAppImageMixin, CreateCommand):
         binary versions are installed.
         """
         with self.dockerize(app=app) as docker:
-            print("Build docker container...")
-            docker.build_image()
+            print("Build Docker container...")
+            docker.prepare()
 
             # Install dependencies. This will run inside a Docker container.
             super().install_app_dependencies(app=app)
@@ -210,6 +213,16 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
 
 class LinuxAppImageRunCommand(LinuxAppImageMixin, RunCommand):
     description = "Run a Linux AppImage."
+
+    def verify_tools(self):
+        """
+        Verify that we're on Linux.
+        """
+        super().verify_tools()
+        if self.host_os != 'Linux':
+            raise BriefcaseCommandError(
+                "AppImages can only be executed on Linux."
+            )
 
     def run_app(self, app: BaseConfig, **kwargs):
         """
