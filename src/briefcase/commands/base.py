@@ -169,7 +169,7 @@ class BaseCommand(ABC):
     def run_command(self):
         "Factory property; return an instance of a run command for the same format"
         format_module = importlib.import_module(self.__module__)
-        return format_module.run(
+        command = format_module.run(
             base_path=self.base_path,
             apps=self.apps,
             input_enabled=self.input.enabled,

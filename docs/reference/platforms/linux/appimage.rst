@@ -58,6 +58,6 @@ The following options can be provided at the command line when producing
 AppImages.
 
 ``--no-docker``
-~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~
 
 Use native execution, rather than using Docker to start a container.
