@@ -33,7 +33,9 @@ class DummyCommand(BaseCommand):
 
 @pytest.fixture
 def base_command(tmp_path):
-    return DummyCommand(base_path=tmp_path)
+    command = DummyCommand(base_path=tmp_path)
+    command.parse_options(['-r', 'default'])
+    return command
 
 
 # Define some stub command classes

@@ -133,31 +133,37 @@ class BaseCommand(ABC):
     def create_command(self):
         "Factory property; return an instance of a create command for the same format"
         format_module = importlib.import_module(self.__module__)
-        return format_module.create(
+        command = format_module.create(
             base_path=self.base_path,
             apps=self.apps,
             input_enabled=self.input.enabled,
         )
+        command.clone_options(self)
+        return command
 
     @property
     def update_command(self):
         "Factory property; return an instance of an update command for the same format"
         format_module = importlib.import_module(self.__module__)
-        return format_module.update(
+        command = format_module.update(
             base_path=self.base_path,
             apps=self.apps,
             input_enabled=self.input.enabled,
         )
+        command.clone_options(self)
+        return command
 
     @property
     def build_command(self):
         "Factory property; return an instance of a build command for the same format"
         format_module = importlib.import_module(self.__module__)
-        return format_module.build(
+        command = format_module.build(
             base_path=self.base_path,
             apps=self.apps,
             input_enabled=self.input.enabled,
         )
+        command.clone_options(self)
+        return command
 
     @property
     def run_command(self):
@@ -168,26 +174,32 @@ class BaseCommand(ABC):
             apps=self.apps,
             input_enabled=self.input.enabled,
         )
+        command.clone_options(self)
+        return command
 
     @property
     def package_command(self):
         "Factory property; return an instance of a package command for the same format"
         format_module = importlib.import_module(self.__module__)
-        return format_module.package(
+        command = format_module.package(
             base_path=self.base_path,
             apps=self.apps,
             input_enabled=self.input.enabled,
         )
+        command.clone_options(self)
+        return command
 
     @property
     def publish_command(self):
         "Factory property; return an instance of a publish command for the same format"
         format_module = importlib.import_module(self.__module__)
-        return format_module.publish(
+        command = format_module.publish(
             base_path=self.base_path,
             apps=self.apps,
             input_enabled=self.input.enabled,
         )
+        command.clone_options(self)
+        return command
 
     @property
     def platform_path(self):
@@ -307,6 +319,15 @@ class BaseCommand(ABC):
         self.verbosity = options.pop('verbosity')
 
         return options
+
+    def clone_options(self, command):
+        """
+        Clone options from one command to this one.
+
+        :param command: The command whose options are to be cloned
+        """
+        self.input.enabled = command.input.enabled
+        self.verbosity = command.verbosity
 
     def add_default_options(self, parser):
         """

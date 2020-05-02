@@ -51,6 +51,11 @@ class LinuxAppImageMixin(LinuxMixin):
 
         return options
 
+    def clone_options(self, command):
+        """Clone the use_docker option"""
+        super().clone_options(command)
+        self.use_docker = command.use_docker
+
     def docker_image_tag(self, app):
         "The Docker image tag for an app"
         return 'briefcase/{app.bundle}.{app.app_name}:py{self.python_version_tag}'.format(
