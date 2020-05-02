@@ -61,3 +61,18 @@ AppImages.
 ~~~~~~~~~~~~~~~
 
 Use native execution, rather than using Docker to start a container.
+
+Application configuration
+=========================
+
+The following options can be added to the
+``tool.briefcase.app.<appname>.linux`` section of your ``pyproject.toml``
+file.
+
+``system_requires``
+~~~~~~~~~~~~~~~~~~~
+
+A list of operating system packages that must be installed for the AppImage
+build to succeed. If a Docker build is requested, this list will be passed to
+the Docker context when building the container for the app build. By default,
+entries should be Ubuntu 16.04 `apt` package requirements.
