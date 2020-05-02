@@ -315,13 +315,13 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         # The simulator needs to be booted before being started.
         # If it's shut down, we can boot it again; but if it's currently
         # shutting down, we need to wait for it to shut down before restarting.
-        device_state = self.get_device_state(udid, sub=self.subprocess)
+        device_state = self.get_device_state(self, udid)
         if device_state not in {DeviceState.SHUTDOWN, DeviceState.BOOTED}:
             print('Waiting for simulator...', flush=True, end='')
             while device_state not in {DeviceState.SHUTDOWN, DeviceState.BOOTED}:
                 self.sleep(2)
                 print('.', flush=True, end='')
-                device_state = self.get_device_state(udid, sub=self.subprocess)
+                device_state = self.get_device_state(self, udid)
 
         # We now know the simulator is either shut down or booted;
         # if it's shut down, start it again.
