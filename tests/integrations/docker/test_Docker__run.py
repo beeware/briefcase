@@ -1,3 +1,7 @@
+import sys
+
+import pytest
+
 
 def test_simple_call(mock_docker, tmp_path, capsys):
     "A simple call will be invoked"
@@ -70,6 +74,10 @@ def test_simple_call_with_path_arg(mock_docker, tmp_path, capsys):
     assert capsys.readouterr().out == ""
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="Windows paths aren't converted in Docker context"
+)
 def test_simple_verbose_call(mock_docker, tmp_path, capsys):
     "If verbosity is turned out, there is output"
     mock_docker.command.verbosity = 2

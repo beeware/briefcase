@@ -25,7 +25,7 @@ AppImage:
 
 1. Run the version-sensitive parts of the build process inside Docker. This is
    the default behavior of Briefcase. This also means that it is possible to
-   build Linux binaries on macOS and Windows.
+   build Linux binaries on any platform that can run Docker.
 
 2. Install Ubuntu 16.04 on your own machine.
 

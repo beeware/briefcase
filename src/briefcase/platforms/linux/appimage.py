@@ -69,7 +69,12 @@ class LinuxAppImageMixin(LinuxMixin):
         """
         super().verify_tools()
         if self.use_docker:
-            self.Docker = verify_docker(self)
+            if self.host_os == 'Windows':
+                raise BriefcaseCommandError("""
+Linux AppImages cannot be generated on Windows.
+""")
+            else:
+                self.Docker = verify_docker(self)
         else:
             if self.host_os == 'Linux':
                 # Use subprocess natively. No Docker wrapper is needed

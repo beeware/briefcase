@@ -127,3 +127,15 @@ def test_verify_non_linux_docker(tmp_path):
 
     # The Docker wrapper is set.
     assert command.Docker == Docker
+
+
+def test_verify_windows_docker(tmp_path):
+    "Docker cannot currently be used on Windows due to path issues"
+    command = LinuxAppImageCreateCommand(base_path=tmp_path)
+    command.host_os = "Windows"
+    command.use_docker = True
+    command.verbosity = 0
+
+    # Verify the tools
+    with pytest.raises(BriefcaseCommandError):
+        command.verify_tools()

@@ -182,6 +182,10 @@ def test_build_failure(build_command, first_app_config, tmp_path):
     assert build_command.os.chmod.call_count == 0
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="Windows paths aren't converted in Docker context"
+)
 def test_build_appimage_with_docker(build_command, first_app_config, tmp_path):
     "A Linux app can be packaged as an AppImage"
     # Enable docker, and move to a non-Linux OS.

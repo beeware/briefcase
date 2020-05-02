@@ -1,6 +1,8 @@
 from unittest.mock import MagicMock
 import sys
 
+import pytest
+
 from briefcase.platforms.linux.appimage import LinuxAppImageCreateCommand
 
 
@@ -18,6 +20,10 @@ def test_support_package_url(first_app_config, tmp_path):
     ]
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="Windows paths aren't converted in Docker context"
+)
 def test_install_app_dependencies(first_app_config, tmp_path):
     "If Docker is in use, a docker context is used to invoke pip"
     first_app_config.requires = ['foo==1.2.3', 'bar>=4.5']
@@ -58,6 +64,10 @@ def test_install_app_dependencies(first_app_config, tmp_path):
     )
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="Windows paths aren't converted in Docker context"
+)
 def test_install_app_dependencies_no_docker(first_app_config, tmp_path):
     "If docker is *not* in use, calls are made on raw subprocess"
     first_app_config.requires = ['foo==1.2.3', 'bar>=4.5']
