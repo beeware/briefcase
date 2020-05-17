@@ -25,3 +25,5 @@ venv/
 *.iws
 ## mpeltonen/sbt-idea plugin
 .idea_modules/
+# direnv
+.envrc
