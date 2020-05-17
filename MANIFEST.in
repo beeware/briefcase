@@ -1,3 +1,4 @@
+exclude labels.toml
 include beekeeper.yml
 include CONTRIBUTING.md
 include README.rst
