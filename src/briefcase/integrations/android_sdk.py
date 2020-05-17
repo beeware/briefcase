@@ -486,14 +486,14 @@ class AndroidSDK:
 
         if avd:
             print("""
-In future, you can specify this device by running:")
+In future, you can specify this device by running:
 
     briefcase run android -d @{avd}
 
 """.format(avd=avd))
         elif device:
             print("""
-In future, you can specify this device by running:")
+In future, you can specify this device by running:
 
     briefcase run android -d {device}
 
