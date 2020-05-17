@@ -508,7 +508,6 @@ class CreateCommand(BaseCommand):
                     try:
                         source_filename = '{source}{target.suffix}'.format(
                             source=source[variant],
-                            variant=variant,
                             target=target,
                         )
                         full_role = '{variant} {role}'.format(
@@ -557,7 +556,6 @@ class CreateCommand(BaseCommand):
                     try:
                         source_filename = '{source}-{size}{target.suffix}'.format(
                             source=source[variant],
-                            variant=variant,
                             size=size,
                             target=target,
                         )
