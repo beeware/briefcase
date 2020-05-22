@@ -1,1 +1,1 @@
-Update CONTRIBUTING to link to Briefcase-specific docs
+Updated CONTRIBUTING to link to Briefcase-specific docs
