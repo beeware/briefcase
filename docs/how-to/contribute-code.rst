@@ -148,3 +148,12 @@ Or, to run using a specific version of Python:
 substituting the version number that you want to target. You can also specify
 one of the pre-commit checks `flake8`, `docs` or `package` to check code
 formatting, documentation syntax and packaging metadata, respectively.
+
+.. _towncrier:
+
+Add change information for release notes
+----------------------------------------
+
+This repository uses `towncrier <https://pypi.org/project/towncrier/>`_ for building
+release notes. Any Pull Request of sufficient change needs to have a file 
+with ``changes/`` with a short description of the change. See `News Fragments <https://pypi.org/project/towncrier/#news-fragments>`_ for types, and existing examples in ``changes/``
