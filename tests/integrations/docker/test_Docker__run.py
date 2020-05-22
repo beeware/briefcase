@@ -15,7 +15,7 @@ def test_simple_call(mock_docker, tmp_path, capsys):
             '--volume', '{platform_path}:/app'.format(
                 platform_path=tmp_path / 'platform'
             ),
-            '--volume', '{dot_briefcase_path}:/root/.briefcase'.format(
+            '--volume', '{dot_briefcase_path}:/home/brutus/.briefcase'.format(
                 dot_briefcase_path=tmp_path / '.briefcase'
             ),
             'briefcase/com.example.myapp:py3.X',
@@ -38,7 +38,7 @@ def test_simple_call_with_arg(mock_docker, tmp_path, capsys):
             '--volume', '{platform_path}:/app'.format(
                 platform_path=tmp_path / 'platform'
             ),
-            '--volume', '{dot_briefcase_path}:/root/.briefcase'.format(
+            '--volume', '{dot_briefcase_path}:/home/brutus/.briefcase'.format(
                 dot_briefcase_path=tmp_path / '.briefcase'
             ),
             'briefcase/com.example.myapp:py3.X',
@@ -62,7 +62,7 @@ def test_simple_call_with_path_arg(mock_docker, tmp_path, capsys):
             '--volume', '{platform_path}:/app'.format(
                 platform_path=tmp_path / 'platform'
             ),
-            '--volume', '{dot_briefcase_path}:/root/.briefcase'.format(
+            '--volume', '{dot_briefcase_path}:/home/brutus/.briefcase'.format(
                 dot_briefcase_path=tmp_path / '.briefcase'
             ),
             'briefcase/com.example.myapp:py3.X',
@@ -91,7 +91,7 @@ def test_simple_verbose_call(mock_docker, tmp_path, capsys):
             '--volume', '{platform_path}:/app'.format(
                 platform_path=tmp_path / 'platform'
             ),
-            '--volume', '{dot_briefcase_path}:/root/.briefcase'.format(
+            '--volume', '{dot_briefcase_path}:/home/brutus/.briefcase'.format(
                 dot_briefcase_path=tmp_path / '.briefcase'
             ),
             'briefcase/com.example.myapp:py3.X',
@@ -102,7 +102,7 @@ def test_simple_verbose_call(mock_docker, tmp_path, capsys):
     assert capsys.readouterr().out == (
         ">>> docker run --interactive --tty "
         "--volume {platform_path}:/app "
-        "--volume {dot_briefcase_path}:/root/.briefcase "
+        "--volume {dot_briefcase_path}:/home/brutus/.briefcase "
         "briefcase/com.example.myapp:py3.X "
         "hello world\n"
     ).format(

@@ -16,6 +16,8 @@ def mock_docker(tmp_path):
     command.dot_briefcase_path = tmp_path / '.briefcase'
     command.docker_image_tag.return_value = 'briefcase/com.example.myapp:py3.X'
     command.python_version_tag = "3.X"
+    command.os.getuid.return_value = "37"
+    command.os.getgid.return_value = "42"
 
     command.subprocess = Subprocess(command)
     command.subprocess._subprocess = MagicMock()
