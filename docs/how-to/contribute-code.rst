@@ -152,8 +152,16 @@ formatting, documentation syntax and packaging metadata, respectively.
 Add change information for release notes
 ----------------------------------------
 
-This repository uses `towncrier <https://pypi.org/project/towncrier/>`__ for
-building release notes. Every Pull Request of sufficient change needs to have a
-file with ``changes/`` with a short description of the change. See `News
-Fragments <https://pypi.org/project/towncrier/#news-fragments>`__ for types,
-and existing examples in ``changes/``
+Briefcase uses `towncrier <https://pypi.org/project/towncrier/>`__ to automate
+building release notes. To support this, every pull request needs to have a 
+corresponding file in the ``changes/`` directory that provides a short 
+description of the change implemented by the pull request.
+
+This description should be a high level summary of the change from the 
+perspective of the user, not a deep technical description or implementation 
+detail. It should also be written in past tense (i.e., "Added an option to
+enable X" or "Fixed handling of Y").
+
+See `News Fragments <https://pypi.org/project/towncrier/#news-fragments>`__ 
+for more details on the types of news fragments you can add. You can also see
+existing examples of news fragments in the ``changes/`` folder.
