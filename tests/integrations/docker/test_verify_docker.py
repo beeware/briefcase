@@ -82,6 +82,19 @@ def test_docker_failure(test_command, capsys):
 def test_docker_bad_version(test_command, capsys):
     "If docker exists but the version string doesn't make sense, the Docker wrapper is returned with a warning."
     # Mock a bad return value of `docker --version`
+    test_command.subprocess.check_output.return_value = "Docker version 17.2\n"
+
+    # Invoke verify_docker
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r'Briefcase requires Docker 19 or higher'
+    ):
+        verify_docker(command=test_command)
+
+
+def test_docker_unknown_version(test_command, capsys):
+    "If docker exists but the version string doesn't make sense, the Docker wrapper is returned with a warning."
+    # Mock a bad return value of `docker --version`
     test_command.subprocess.check_output.return_value = "ceci nest pas un Docker\n"
 
     # Invoke verify_docker
