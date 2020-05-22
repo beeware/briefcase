@@ -5,6 +5,31 @@ from pathlib import Path
 from briefcase.exceptions import BriefcaseCommandError
 
 
+def docker_install_details(host_os):
+    """
+    Obtain a platform-specific template context dictionary for Docker
+    installation details.
+
+    :param host_os: The host OS for which installation details are required.
+    :returns: a context dictionary containing Docker installation details.
+    """
+    if host_os == 'Windows':
+        install_url = "https://docs.docker.com/docker-for-windows/install/"
+        extra_content = ""
+    elif host_os == 'Darwin':
+        install_url = "https://docs.docker.com/docker-for-mac/install/"
+        extra_content = ""
+    else:
+        install_url = "https://docs.docker.com/engine/install/#server"
+        extra_content = """Alternatively, to run briefcase natively (i.e. without Docker), use the
+`--no-docker` command-line argument.
+"""
+    return {
+        'install_url': install_url,
+        'extra_content': extra_content,
+    }
+
+
 def verify_docker(command):
     """
     Verify that docker is available.
@@ -20,8 +45,26 @@ def verify_docker(command):
         ).strip('\n')
 
         # Do a simple check that the docker that was invoked
-        # actually looks like the real deal. If it is,
-        if not output.startswith('Docker version '):
+        # actually looks like the real deal, and is a version that
+        # meets our requirements.
+        if output.startswith('Docker version '):
+            docker_version = output[15:]
+            version = docker_version.split('.')
+            if int(version[0]) < 19:
+                # Docker version isn't compatible.
+                raise BriefcaseCommandError("""
+Briefcase requires Docker 19 or higher, but you are currently running
+version {docker_version}. Visit:
+
+    {install_url}
+
+to download and install an updated version of Docker.
+{extra_content}""".format(
+                    docker_version=docker_version,
+                    **docker_install_details(command.host_os)
+                ))
+
+        else:
             print("""
 *************************************************************************
 ** WARNING: Unable to determine the version of Docker                  **
@@ -65,18 +108,6 @@ def verify_docker(command):
 """)
     except FileNotFoundError:
         # Docker executable doesn't exist.
-        if command.host_os == 'Windows':
-            install_url = "https://docs.docker.com/docker-for-windows/install/"
-            extra_content = ""
-        elif command.host_os == 'Darwin':
-            install_url = "https://docs.docker.com/docker-for-mac/install/"
-            extra_content = ""
-        else:
-            install_url = "https://docs.docker.com/engine/install/#server"
-            extra_content = """
-Alternatively, to run briefcase natively (i.e. without Docker), use the
-`--no-docker` command-line argument.
-"""
         raise BriefcaseCommandError("""
 Briefcase requires Docker, but it is not installed (or is not on your PATH).
 Visit:
@@ -87,10 +118,7 @@ to download and install git manually.
 {extra_content}
 If you have installed Docker recently and are still getting this error, you may
 need to restart your terminal session.
-""".format(
-            install_url=install_url,
-            extra_content=extra_content,
-        ))
+""".format(**docker_install_details(command.host_os)))
 
     # Return the Docker wrapper
     return Docker
