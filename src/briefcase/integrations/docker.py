@@ -151,6 +151,8 @@ class Docker:
                     "--build-arg", "SYSTEM_REQUIRES={system_requires}".format(
                         system_requires=system_requires
                     ),
+                    "--build-arg", "HOST_UID={uid}".format(uid=self.command.os.getuid()),
+                    "--build-arg", "HOST_GID={gid}".format(gid=self.command.os.getgid()),
                     Path(str(self.command.base_path), *self.app.sources[0].split('/')[:-1])
                 ],
                 check=True,
@@ -173,7 +175,7 @@ class Docker:
             "--volume", "{self.command.platform_path}:/app".format(
                 self=self
             ),
-            "--volume", "{self.command.dot_briefcase_path}:/root/.briefcase".format(
+            "--volume", "{self.command.dot_briefcase_path}:/home/brutus/.briefcase".format(
                 self=self
             ),
         ]
@@ -205,7 +207,7 @@ class Docker:
             elif str(self.command.dot_briefcase_path) in arg:
                 docker_args.append(
                     arg.replace(
-                        str(self.command.dot_briefcase_path), '/root/.briefcase'
+                        str(self.command.dot_briefcase_path), '/home/brutus/.briefcase'
                     )
                 )
             else:
