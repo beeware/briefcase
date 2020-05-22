@@ -18,8 +18,8 @@ def test_prepare(mock_docker, tmp_path):
             '--file', str(tmp_path / 'bundle' / 'Dockerfile'),
             '--build-arg', "PY_VERSION=3.X",
             '--build-arg', "SYSTEM_REQUIRES=things==1.2 stuff>=3.4",
-            '--build-arg', "HOST_UID=1",
-            '--build-arg', "HOST_GID=1",
+            '--build-arg', "HOST_UID=37",
+            '--build-arg', "HOST_GID=42",
             str(tmp_path / "base" / "path" / "to" / "src")
         ],
         check=True,
@@ -44,8 +44,8 @@ def test_prepare_failure(mock_docker, tmp_path):
             '--file', str(tmp_path / 'bundle' / 'Dockerfile'),
             '--build-arg', "PY_VERSION=3.X",
             '--build-arg', "SYSTEM_REQUIRES=things==1.2 stuff>=3.4",
-            '--build-arg', "HOST_UID=1",
-            '--build-arg', "HOST_GID=1",
+            '--build-arg', "HOST_UID=37",
+            '--build-arg', "HOST_GID=42",
             str(tmp_path / "base" / "path" / "to" / "src")
         ],
         check=True,
