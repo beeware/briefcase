@@ -11,7 +11,7 @@ def test_minimal_AppConfig():
         version="1.2.3",
         bundle="org.beeware",
         description="A simple app",
-        sources=['src/myapp'],
+        sources=['src/myapp', 'somewhere/else/interesting'],
     )
 
     # The basic properties have been set.
@@ -29,6 +29,10 @@ def test_minimal_AppConfig():
     assert config.icon is None
     assert config.splash is None
 
+    # The PYTHONPATH is derived correctly
+    assert config.PYTHONPATH == ['src', 'somewhere/else']
+
+    # The object has a meaningful REPL
     assert repr(config) == "<org.beeware.myapp v1.2.3 AppConfig>"
 
 

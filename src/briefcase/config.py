@@ -156,6 +156,16 @@ class AppConfig(BaseConfig):
         """
         return self.app_name.replace('-', '_')
 
+    @property
+    def PYTHONPATH(self):
+        "The PYTHONPATH modifications needed to run this app."
+        paths = []
+        for source in self.sources:
+            path = source.rsplit('/', 1)[0]
+            if path not in paths:
+                paths.append(path)
+        return paths
+
 
 def merge_config(config, data):
     """
