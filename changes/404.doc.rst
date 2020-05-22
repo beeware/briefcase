@@ -1,0 +1,1 @@
+Updated CONTRIBUTING to link to Briefcase-specific docs
