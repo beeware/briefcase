@@ -105,6 +105,10 @@ class macOSAppPackageCommand(macOSAppMixin, PackageCommand):
             confirm that it is a valid codesigning identity.
         :returns: The final identity to use
         """
+        # ad-hoc code signing
+        if identity == "-":
+            return "-"
+        
         # Obtain the valid codesigning identities.
         identities = self.get_identities(self, 'codesigning')
 
