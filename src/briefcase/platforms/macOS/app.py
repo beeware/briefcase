@@ -108,7 +108,7 @@ class macOSAppPackageCommand(macOSAppMixin, PackageCommand):
         # ad-hoc code signing
         if identity == "-":
             return "-"
-        
+
         # Obtain the valid codesigning identities.
         identities = self.get_identities(self, 'codesigning')
 
