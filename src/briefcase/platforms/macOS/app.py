@@ -87,17 +87,17 @@ class macOSAppPackageCommand(macOSAppMixin, PackageCommand):
             action='store_false',
         )
         parser.add_argument(
+            '--adhoc-sign',
+            help='Sign .app bundles with adhoc identity.',
+            action='store_true',
+        )
+        parser.add_argument(
             '-i',
             '--identity',
             dest='identity',
             help='The code signing identity to use; either the 40-digit hex '
                  'checksum, or the full name of the identity.',
             required=False,
-        )
-        parser.add_argument(
-            '--adhoc-sign',
-            help='Sign .app bundles with adhoc identity',
-            action='store_true',
         )
 
     def select_identity(self, identity=None):
@@ -173,8 +173,8 @@ class macOSAppPackageCommand(macOSAppMixin, PackageCommand):
             )
 
     def package_app(
-            self, app: BaseConfig, sign_app=True, identity=None, adhoc_sign=False, **kwargs
-        ):
+        self, app: BaseConfig, sign_app=True, identity=None, adhoc_sign=False, **kwargs
+    ):
         """
         Prepare the .app bundle for distribution.
 
