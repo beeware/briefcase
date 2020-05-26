@@ -18,9 +18,6 @@ def test_no_briefcase_section():
     "If the config file doesn't contain a briefcase tool section, raise an error"
     config_file = StringIO(
         """
-        [build-system]
-        requires = ["briefcase"]
-
         [tool.section]
         name="value"
         number=42
@@ -35,9 +32,6 @@ def test_no_apps():
     "If the config file doesn't contain at least one briefcase app, raise an error"
     config_file = StringIO(
         """
-        [build-system]
-        requires = ["briefcase"]
-
         [tool.briefcase]
         name="value"
         number=42
@@ -52,9 +46,6 @@ def test_single_minimal_app():
     "A single app can be defined, but can exist without any app attributes"
     config_file = StringIO(
         """
-        [build-system]
-        requires = ["briefcase"]
-
         [tool.briefcase]
         value = 42
 
@@ -83,9 +74,6 @@ def test_multiple_minimal_apps():
     "The configuration can contain multiple apps without an explicit tool header"
     config_file = StringIO(
         """
-        [build-system]
-        requires = ["briefcase"]
-
         [tool.briefcase.app.first]
         number=37
 
@@ -118,9 +106,6 @@ def test_platform_override():
     "An app can define platform settings that override base settings"
     config_file = StringIO(
         """
-        [build-system]
-        requires = ["briefcase"]
-
         [tool.briefcase]
         value = 0
         basevalue = "the base"
@@ -178,9 +163,6 @@ def test_platform_override_ordering():
     "The order of platform processing doesn't affect output"
     config_file = StringIO(
         """
-        [build-system]
-        requires = ["briefcase"]
-
         [tool.briefcase]
         value = 0
         basevalue = "the base"
@@ -238,9 +220,6 @@ def test_format_override():
     "An app can define format settings that override base and platform settings"
     config_file = StringIO(
         """
-        [build-system]
-        requires = ["briefcase"]
-
         [tool.briefcase]
         value = 0
         basevalue = "the base"
@@ -319,9 +298,6 @@ def test_format_override_ordering():
     "The order of format processing doesn't affect output"
     config_file = StringIO(
         """
-        [build-system]
-        requires = ["briefcase"]
-
         [tool.briefcase]
         value = 0
         basevalue = "the base"
@@ -399,9 +375,6 @@ def test_requires():
     "Requirements can be specified"
     config_file = StringIO(
         """
-        [build-system]
-        requires = ["briefcase"]
-
         [tool.briefcase]
         value = 0
         requires = ["base value"]
@@ -526,9 +499,6 @@ def test_document_types():
     "Document types can be specified"
     config_file = StringIO(
         """
-        [build-system]
-        requires = ["briefcase"]
-
         [tool.briefcase]
         value = 0
 

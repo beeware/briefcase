@@ -10,9 +10,6 @@ If you have an application called "My App", with source code in the `src/myapp`
 directory, the simplest possible ``pyproject.toml`` Briefcase configuration
 file would be::
 
-    [build-system]
-    requires = ["briefcase"]
-
     [tool.briefcase]
     project_name = "My Project"
     bundle = "com.example"
@@ -23,10 +20,7 @@ file would be::
     description = "My first Briefcase App"
     sources = ['src/myapp']
 
-The ``[build-system]`` section is preamble required by PEP518, declaring the
-dependency on Briefcase.
-
-The remaining sections are tool specific, and start with the prefix
+The configuration sections are tool specific, and start with the prefix
 ``tool.briefcase``.
 
 The location of the ``pyproject.toml`` file is treated as the root of the
