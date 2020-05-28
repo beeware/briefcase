@@ -33,6 +33,11 @@ publish
 
 Don't perform code signing on the ``.app`` bundles.
 
+``--adhoc-sign``
+~~~~~~~~~~~~~
+
+Sign ``.app`` bundles with adhoc identity.
+
 ``-i <identity>`` / ``--identity <identity>``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
