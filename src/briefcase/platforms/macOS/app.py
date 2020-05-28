@@ -87,6 +87,11 @@ class macOSAppPackageCommand(macOSAppMixin, PackageCommand):
             action='store_false',
         )
         parser.add_argument(
+            '--adhoc-sign',
+            help='Sign .app bundles with adhoc identity.',
+            action='store_true',
+        )
+        parser.add_argument(
             '-i',
             '--identity',
             dest='identity',
@@ -167,7 +172,9 @@ class macOSAppPackageCommand(macOSAppMixin, PackageCommand):
                 "Unable to code sign {path}.".format(path=path)
             )
 
-    def package_app(self, app: BaseConfig, sign_app=True, identity=None, **kwargs):
+    def package_app(
+        self, app: BaseConfig, sign_app=True, identity=None, adhoc_sign=False, **kwargs
+    ):
         """
         Prepare the .app bundle for distribution.
 
@@ -179,15 +186,22 @@ class macOSAppPackageCommand(macOSAppMixin, PackageCommand):
             the 40-digit hex checksum, or the string name of the identity.
             If unspecified, the user will be prompted for a code signing
             identity. Ignored if ``sign_app`` is False.
+        :param adhoc_sign: If true, code will be signed with adhoc identity of "-"
         """
         if sign_app:
-            identity = self.select_identity(identity=identity)
+            if adhoc_sign:
+                identity = "-"
 
-            print()
-            print("[{app.app_name}] Signing app with identity {identity}...".format(
-                app=app,
-                identity=identity
-            ))
+                print()
+                print("[{app.app_name}] Signing app with adhoc identity...".format(app=app))
+            else:
+                identity = self.select_identity(identity=identity)
+
+                print()
+                print("[{app.app_name}] Signing app with identity {identity}...".format(
+                    app=app,
+                    identity=identity
+                ))
 
             for path in itertools.chain(
                 self.binary_path(app).glob('**/*.so'),
