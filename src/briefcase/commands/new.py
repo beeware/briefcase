@@ -117,14 +117,13 @@ class NewCommand(BaseCommand):
 
         return True
 
-    def make_module_name(self, formal_name):
+    def make_module_name(self, app_name):
         """
         Construct a valid module name from an app name.
 
         :param formal_name: The app name
         :returns: The app's module name.
         """
-        app_name = self.make_app_name(formal_name)
         module_name = app_name.replace('-', '_')
         return module_name
 
