@@ -5,6 +5,7 @@ from typing import Optional
 from urllib.parse import urlparse
 
 from cookiecutter import exceptions as cookiecutter_exceptions
+import json
 
 from briefcase.config import PEP508_NAME_RE
 from briefcase.exceptions import NetworkFailure
@@ -116,13 +117,14 @@ class NewCommand(BaseCommand):
 
         return True
 
-    def make_module_name(self, app_name):
+    def make_module_name(self, formal_name):
         """
         Construct a valid module name from an app name.
 
-        :param app_name: The app name
+        :param formal_name: The app name
         :returns: The app's module name.
         """
+        app_name = self.make_app_name(formal_name)
         module_name = app_name.replace('-', '_')
         return module_name
 
@@ -230,7 +232,7 @@ class NewCommand(BaseCommand):
             ``validator``.
         """
         if self.input.enabled:
-            print(intro)
+            print(intro or "")
         while True:
             if self.input.enabled:
                 print()
@@ -299,150 +301,59 @@ Select one of the following:
         )
         return options[int(selection) - 1]
 
-    def build_app_context(self):
+    def build_app_context(self, template):
         """
         Ask the user for details about the app to be created.
 
         :returns: A context dictionary to be used in the cookiecutter project
             template.
         """
-        formal_name = self.input_text(
-            intro="""
-First, we need a formal name for your application. This is the name that will
-be displayed to humans whenever the name of the application is displayed. It
-can have spaces and punctuation if you like, and any capitalization will be
-used as you type it.""",
-            variable="formal name",
-            default='Hello World',
-        )
+        user_args = {}
 
-        # The class name can be completely derived from the formal name.
-        class_name = self.make_class_name(formal_name)
+        with open(template/'cookiecutter.json') as f:
+            content = f.read()
+        defaults = json.loads(content)
 
-        default_app_name = self.make_app_name(formal_name)
-        app_name = self.input_text(
-            intro="""
-Next, we need a name that can serve as a machine-readable Python package name
-for your application. This name must be PEP508-compliant - that means the name
-may only contain letters, numbers, hypehns and underscores; it can't contain
-spaces or punctuation, and it can't start with a hyphen or underscore.
+        with open(template/'cookiecutter_context.json') as f:
+            content = f.read()
+        explanation = json.loads(content)
+        # Join JSON multiline arrays into single strings
+        for key in explanation:
+            explanation[key] = "".join(explanation[key])
 
-Based on your formal name, we suggest an app name of '{default_app_name}',
-but you can use another name if you want.""".format(
-                default_app_name=default_app_name
-            ),
-            variable="app name",
-            default=default_app_name,
-            validator=self.validate_app_name,
-        )
-
-        # The module name can be completely derived from the app name.
-        module_name = self.make_module_name(app_name)
-
-        bundle = self.input_text(
-            intro="""
-Now we need a bundle identifier for your application. App stores need to
-protect against having multiple applications with the same name; the bundle
-identifier is the namespace they use to identify applications that come from
-you. The bundle identifier is usually the domain name of your company or
-project, in reverse order.
-
-For example, if you are writing an application for Example Corp, whose website
-is example.com, your bundle would be ``com.example``. The bundle will be
-combined with your application's machine readable name to form a complete
-application identifier (e.g., com.example.{app_name}).""".format(
-                app_name=app_name,
-            ),
-            variable="bundle identifier",
-            default='com.example',
-            validator=self.validate_bundle,
-        )
-
-        project_name = self.input_text(
-            intro="""
-Briefcase can manage projects that contain multiple applications, so we need a
-Project name. If you're only planning to have one application in this
-project, you can use the formal name as the project name.""",
-            variable="project name",
-            default=formal_name
-        )
-
-        description = self.input_text(
-            intro="""
-Now, we need a one line description for your application.""",
-            variable="description",
-            default="My first application"
-        )
-
-        author = self.input_text(
-            intro="""
-Who do you want to be credited as the author of this application? This could be
-your own name, or the name of your company you work for.""",
-            variable="author",
-            default="Jane Developer",
-        )
-
-        author_email = self.input_text(
-            intro="""
-What email address should people use to contact the developers of this
-application? This might be your own email address, or a generic contact address
-you set up specifically for this application.""",
-            variable="author's email",
-            default=self.make_author_email(author, bundle),
-            validator=self.validate_email
-        )
-
-        url = self.input_text(
-            intro="""
-What is the website URL for this application? If you don't have a website set
-up yet, you can put in a dummy URL.""",
-            variable="application URL",
-            default=self.make_project_url(bundle, app_name),
-            validator=self.validate_url
-        )
-
-        project_license = self.input_select(
-            intro="""
-What license do you want to use for this project's code?""",
-            variable="project license""",
-            options=[
-                "BSD license",
-                "MIT license",
-                "Apache Software License",
-                "GNU General Public License v2 (GPLv2)",
-                "GNU General Public License v2 or later (GPLv2+)",
-                "GNU General Public License v3 (GPLv3)",
-                "GNU General Public License v3 or later (GPLv3+)",
-                "Proprietary",
-                "Other"
-            ],
-        )
-
-        gui_framework = self.input_select(
-            intro="""
-What GUI toolkit do you want to use for this project?""",
-            variable="GUI framework",
-            options=[
-                'Toga',
-                'PySide2',
-                'None',
-            ],
-        )
-
-        return {
-            "formal_name": formal_name,
-            "app_name": app_name,
-            "class_name": class_name,
-            "module_name": module_name,
-            "project_name": project_name,
-            "description": description,
-            "author": author,
-            "author_email": author_email,
-            "bundle": bundle,
-            "url": url,
-            "license": project_license,
-            "gui_framework": gui_framework,
+        validators = {
+            'bundle': self.validate_bundle,
+            'author_email': self.validate_email,
+            'url': self.validate_url,
         }
+
+        special_cases = {
+            'app_name': self.make_app_name,
+            'class_name': self.make_class_name,
+            'module_name': self.make_module_name,
+        }
+
+        for key in defaults:
+            if key in special_cases:
+                special_case_function = special_cases[key]
+                defaults[key] = special_case_function(user_args.get('formal_name'))
+            if isinstance(defaults[key], list):
+                user_input = self.input_select(
+                    intro=explanation.get(key),
+                    variable=key,
+                    options=defaults.get(key),
+                )
+            else:
+                user_input = self.input_text(
+                    intro=explanation.get(key),
+                    variable=key,
+                    default=defaults.get(key),
+                    validator=validators.get(key),
+                )
+
+            user_args[key] = user_input
+
+        return user_args
 
     def new_app(self, template: Optional[str] = None, **options):
         """
@@ -462,7 +373,7 @@ What GUI toolkit do you want to use for this project?""",
             print("Let's build a new Briefcase app!")
             print()
 
-        context = self.build_app_context()
+        context = self.build_app_context(template=cached_template)
 
         print()
         print("Generating a new application '{formal_name}'".format(
