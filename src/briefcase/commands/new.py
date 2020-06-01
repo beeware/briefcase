@@ -313,12 +313,15 @@ Select one of the following:
             content = f.read()
         defaults = json.loads(content)
 
-        with open(template/'cookiecutter_context.json') as f:
-            content = f.read()
-        explanation = json.loads(content)
-        # Join JSON multiline arrays into single strings
-        for key in explanation:
-            explanation[key] = "".join(explanation[key])
+        if (template/'cookiecutter_context.json').is_file():
+            with open(template/'cookiecutter_context.json') as f:
+                content = f.read()
+            explanation = json.loads(content)
+            # Join JSON multiline arrays into single strings
+            for key in explanation:
+                explanation[key] = "".join(explanation[key])
+        else:
+            explanation = {}
 
         validators = {
             'bundle': self.validate_bundle,
