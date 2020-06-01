@@ -452,6 +452,11 @@ What GUI toolkit do you want to use for this project?""",
         if template is None:
             template = 'https://github.com/beeware/briefcase-template'
 
+        cached_template = self.update_cookiecutter_cache(
+            template=template,
+            branch='v0.3'
+        )
+
         if self.input.enabled:
             print()
             print("Let's build a new Briefcase app!")
@@ -463,11 +468,6 @@ What GUI toolkit do you want to use for this project?""",
         print("Generating a new application '{formal_name}'".format(
             **context
         ))
-
-        cached_template = self.update_cookiecutter_cache(
-            template=template,
-            branch='v0.3'
-        )
 
         # Make extra sure we won't clobber an existing application.
         if (self.base_path / context['app_name']).exists():
