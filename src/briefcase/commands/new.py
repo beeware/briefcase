@@ -1,6 +1,7 @@
 import re
 import subprocess
 from email.utils import parseaddr
+from pathlib import Path
 from typing import Optional
 from urllib.parse import urlparse
 
@@ -121,10 +122,21 @@ class NewCommand(BaseCommand):
         """
         Construct a valid module name from an app name.
 
-        :param formal_name: The app name
+        :param app_name: The app name
         :returns: The app's module name.
         """
-        module_name = app_name.replace('-', '_')
+        module_name = app_name.replace("-", "_")
+        return module_name
+
+    def make_module_from_formal_name(self, formal_name):
+        """
+        Construct a valid module name from app formal name.
+
+        :param formal_name: The formal application name
+        :returns: The app's module name.
+        """
+        app_name = self.make_app_name(formal_name)
+        module_name = self.make_module_name(app_name)
         return module_name
 
     def validate_bundle(self, candidate):
@@ -300,45 +312,33 @@ Select one of the following:
         )
         return options[int(selection) - 1]
 
-    def build_app_context(self, template):
+    def build_app_context(self, defaults, explanation={}):
         """
         Ask the user for details about the app to be created.
+
+        :param defaults: Dictionary of keys/values for default cookiecutter.
+        :param explanation: Optional, more detailed context for user questions.
 
         :returns: A context dictionary to be used in the cookiecutter project
             template.
         """
-        user_args = {}
-
-        with open(template/'cookiecutter.json') as f:
-            content = f.read()
-        defaults = json.loads(content)
-
-        if (template/'cookiecutter_context.json').is_file():
-            with open(template/'cookiecutter_context.json') as f:
-                content = f.read()
-            explanation = json.loads(content)
-            # Join JSON multiline arrays into single strings
-            for key in explanation:
-                explanation[key] = "".join(explanation[key])
-        else:
-            explanation = {}
-
         validators = {
-            'bundle': self.validate_bundle,
-            'author_email': self.validate_email,
-            'url': self.validate_url,
+            "bundle": self.validate_bundle,
+            "author_email": self.validate_email,
+            "url": self.validate_url,
         }
 
         special_cases = {
-            'app_name': self.make_app_name,
-            'class_name': self.make_class_name,
-            'module_name': self.make_module_name,
+            "app_name": self.make_app_name,
+            "class_name": self.make_class_name,
+            "module_name": self.make_module_from_formal_name,
         }
 
+        user_args = {}
         for key in defaults:
             if key in special_cases:
                 special_case_function = special_cases[key]
-                defaults[key] = special_case_function(user_args.get('formal_name'))
+                defaults[key] = special_case_function(user_args.get("formal_name"))
             if isinstance(defaults[key], list):
                 user_input = self.input_select(
                     intro=explanation.get(key),
@@ -357,25 +357,51 @@ Select one of the following:
 
         return user_args
 
+    def default_dictionary(self, cached_template):
+        """
+        Construct dictionaries of cookiecutter defaults plus extra explanation.
+
+        :param cached_template: File location of cached cookiecutter template.
+
+        :returns:
+            Default dictionary of keys/values for cookiecutter,
+            Optional dictionary 
+        """
+        # Make a dictionary of default cookicutter values
+        with open(Path(cached_template) / "cookiecutter.json") as f:
+            defaults = json.loads(f.read())
+
+        # Some cookiecutter options have additional explanation we can display
+        if (Path(cached_template) / "cookiecutter_context.json").is_file():
+            with open(Path(cached_template) / "cookiecutter_context.json") as f:
+                explanation = json.loads(f.read())
+            # Join JSON multiline arrays into single strings
+            for key in explanation:
+                explanation[key] = "".join(explanation[key])
+        else:
+            explanation = {}
+
+        return defaults, explanation
+
     def new_app(self, template: Optional[str] = None, **options):
         """
         Ask questions to generate a new application, and generate a stub
         project from the briefcase-template.
         """
-        if template is None:
-            template = 'https://github.com/beeware/briefcase-template'
-
-        cached_template = self.update_cookiecutter_cache(
-            template=template,
-            branch='v0.3'
-        )
-
         if self.input.enabled:
             print()
             print("Let's build a new Briefcase app!")
             print()
 
-        context = self.build_app_context(template=cached_template)
+        if template is None:
+            template = "https://github.com/beeware/briefcase-template"
+
+        cached_template = self.update_cookiecutter_cache(
+            template=template, branch="v0.3"
+        )
+
+        defaults, explanation = self.default_dictionary(cached_template)
+        context = self.build_app_context(defaults=defaults, explanation=explanation)
 
         print()
         print("Generating a new application '{formal_name}'".format(
