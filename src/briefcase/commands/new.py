@@ -11,7 +11,7 @@ import json
 from briefcase.config import PEP508_NAME_RE
 from briefcase.exceptions import NetworkFailure
 
-from .base import BaseCommand, BriefcaseCommandError
+from .base import BaseCommand, BriefcaseCommandError, cookiecutter_cache_path
 from .create import InvalidTemplateRepository
 
 VALID_BUNDLE_RE = re.compile(r'[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$')
@@ -365,8 +365,9 @@ Select one of the following:
 
         :returns:
             Default dictionary of keys/values for cookiecutter,
-            Optional dictionary 
+            plus dictionary of extra explanation for cookiecutter parameters.
         """
+        cached_template = cookiecutter_cache_path(cached_template)
         # Make a dictionary of default cookicutter values
         with open(Path(cached_template) / "cookiecutter.json") as f:
             defaults = json.loads(f.read())
