@@ -157,6 +157,15 @@ class AppConfig(BaseConfig):
         return self.app_name.replace('-', '_')
 
     @property
+    def package_name(self):
+        """
+        The bundle name of the app, with `-` replaced with `_` to create
+        something that can be used a namespace identifier on Python or Java,
+        similar to `module_name`.
+        """
+        return self.bundle.replace('-', '_')
+
+    @property
     def PYTHONPATH(self):
         "The PYTHONPATH modifications needed to run this app."
         paths = []

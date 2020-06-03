@@ -148,9 +148,9 @@ class GradleRunCommand(GradleMixin, RunCommand):
         # Create an ADB wrapper for the selected device
         adb = self.android_sdk.adb(device=device)
 
-        # Compute Android package name based on beeware `bundle` and `app_name`
-        # app properties, similar to iOS.
-        package = "{app.bundle}.{app.app_name}".format(app=app)
+        # Compute Android package name. The Android template uses
+        # `package_name` and `module_name`, so we use those here as well.
+        package = "{app.package_name}.{app.module_name}".format(app=app)
 
         # We force-stop the app to ensure the activity launches freshly.
         print()
