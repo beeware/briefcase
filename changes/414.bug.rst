@@ -1,0 +1,1 @@
+The new app wizard now uses the cookiecutter template to generate questions for user input.
