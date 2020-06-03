@@ -31,7 +31,7 @@ def full_context(extra):
 
         # Fields generated from other properties
         'module_name': 'my_app',
-        'bundle_as_identifier': 'com.example',
+        'package_name': 'com.example',
 
         # Date-based fields added at time of generation
         'year': date.today().strftime('%Y'),

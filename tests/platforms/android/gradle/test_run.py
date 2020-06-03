@@ -32,7 +32,7 @@ def test_run_existing_device(run_command, first_app_config):
         return_value=("exampleDevice", 'ExampleDevice', None)
     )
     # Set up app config to have a `-` in the `bundle`, to ensure it gets
-    # normalized into a `_` via `bundle_as_identifier`.
+    # normalized into a `_` via `package_name`.
     first_app_config.bundle = 'com.ex-ample'
 
     # Invoke run_app
@@ -51,12 +51,12 @@ def test_run_existing_device(run_command, first_app_config):
         run_command.binary_path(first_app_config)
     )
     run_command.mock_adb.force_stop_app.assert_called_once_with(
-        "{first_app_config.bundle_as_identifier}.{first_app_config.module_name}".format(
+        "{first_app_config.package_name}.{first_app_config.module_name}".format(
             first_app_config=first_app_config
         ),
     )
     run_command.mock_adb.start_app.assert_called_once_with(
-        "{first_app_config.bundle_as_identifier}.{first_app_config.module_name}".format(
+        "{first_app_config.package_name}.{first_app_config.module_name}".format(
             first_app_config=first_app_config
         ),
         "org.beeware.android.MainActivity",

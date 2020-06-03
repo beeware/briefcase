@@ -149,8 +149,8 @@ class GradleRunCommand(GradleMixin, RunCommand):
         adb = self.android_sdk.adb(device=device)
 
         # Compute Android package name. The Android template uses
-        # `bundle_as_identifier` and `module_name`, so we use those here as well.
-        package = "{app.bundle_as_identifier}.{app.module_name}".format(app=app)
+        # `package_name` and `module_name`, so we use those here as well.
+        package = "{app.package_name}.{app.module_name}".format(app=app)
 
         # We force-stop the app to ensure the activity launches freshly.
         print()

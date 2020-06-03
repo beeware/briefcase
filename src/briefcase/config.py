@@ -157,7 +157,7 @@ class AppConfig(BaseConfig):
         return self.app_name.replace('-', '_')
 
     @property
-    def bundle_as_identifier(self):
+    def package_name(self):
         """
         The bundle name of the app, with `-` replaced with `_` to create
         something that can be used a namespace identifier on Python or Java,
