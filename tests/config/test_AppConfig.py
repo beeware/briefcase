@@ -177,6 +177,25 @@ def test_module_name(name, module_name):
 
 
 @pytest.mark.parametrize(
+    'bundle, bundle_as_identifier',
+    [
+        ('com.example', 'com.example'),
+        ('com.ex-ample', 'com.ex_ample'),
+    ]
+)
+def test_bundle_as_identifier(bundle, bundle_as_identifier):
+    config = AppConfig(
+        app_name="myapp",
+        version="1.2.3",
+        bundle=bundle,
+        description="A simple app",
+        sources=['src/myapp']
+    )
+
+    assert config.bundle_as_identifier == bundle_as_identifier
+
+
+@pytest.mark.parametrize(
     'sources',
     [
         ['src/dupe', 'src/dupe'],
