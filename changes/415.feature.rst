@@ -1,0 +1,1 @@
+Allow Android apps to use ``-`` in their bundle name; we now convert those to ``_`` in the resulting Android package identifier and Java package name.
