@@ -9,6 +9,7 @@ include docs/spelling_wordlist
 include tests/integrations/xcode/simctl/README
 include pyproject.toml
 include tox.ini
+include .coveragerc
 recursive-include changes *.rst
 recursive-include src *.py
 recursive-include docs *.bat
