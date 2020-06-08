@@ -14,6 +14,7 @@ from urllib.parse import urlparse
 import requests
 from cookiecutter.main import cookiecutter
 from cookiecutter.repository import is_repo_url
+from cookiecutter.vcs import clone
 
 from briefcase import __version__, integrations
 from briefcase.config import AppConfig, GlobalConfig, parse_config
@@ -482,6 +483,10 @@ class BaseCommand(ABC):
             # fall back to using the specified template directly.
             try:
                 cached_template = cookiecutter_cache_path(template)
+                if not cached_template.exists():
+                    print('Fetching the template...')
+                    clone(template, checkout=branch,
+                          clone_to_dir=cached_template.parent)
                 repo = self.git.Repo(cached_template)
                 try:
                     # Attempt to update the repository
