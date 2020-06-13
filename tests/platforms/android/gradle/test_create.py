@@ -1,9 +1,5 @@
-from subprocess import CalledProcessError
-from unittest.mock import MagicMock
-
 import pytest
 
-from briefcase.exceptions import BriefcaseCommandError
 from briefcase.platforms.android.gradle import GradleCreateCommand
 
 
