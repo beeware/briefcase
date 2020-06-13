@@ -8,7 +8,7 @@ from briefcase.commands import (
     RunCommand,
     UpdateCommand
 )
-from briefcase.config import BaseConfig
+from briefcase.config import BaseConfig, parsed_version
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.android_sdk import verify_android_sdk
 from briefcase.integrations.java import verify_jdk
@@ -63,6 +63,30 @@ requires Python 3.7.""".format(
 
 class GradleCreateCommand(GradleMixin, CreateCommand):
     description = "Create and populate an Android APK."
+
+    def output_format_template_context(self, app: BaseConfig):
+        """
+        Additional template context required by the output format.
+
+        :param app: The config object for the app
+        """
+        # Android requires an integer "version code". If a version code
+        # isn't explicitly provided, generate one from the version number.
+        # The build number will also be appended, if provided.
+        try:
+            version_code = app.version_code
+        except AttributeError:
+            parsed = parsed_version(app.version)
+
+            version_triple = (list(parsed.release) + [0, 0])[:3]
+            version_code = '{v[0]:d}{v[1]:02d}{v[2]:02d}{build:02d}'.format(
+                v=version_triple,
+                build=getattr(app, 'build', 0)
+            ).lstrip('0')
+
+        return {
+            'version_code': version_code,
+        }
 
 
 class GradleUpdateCommand(GradleMixin, UpdateCommand):
