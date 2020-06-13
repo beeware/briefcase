@@ -1,0 +1,2 @@
+Android now has a ``package`` command that produces the release APK. After
+manually signing this APK, it can be published to the Google Play Store.
