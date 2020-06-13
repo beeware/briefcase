@@ -1,1 +1,1 @@
-Simplified Tox configuration for packaging.
+The ``tox`` configuration for packaging has been simplified.

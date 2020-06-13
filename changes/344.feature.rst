@@ -1,5 +1,5 @@
-Modified the Linux AppImage backend to use Docker.
-This ensures that the AppImage is always built in an environment that is
-compatible with the support package. It also enables Linux AppImages to be
-built on macOS and Windows. "Native" builds (i.e., builds that *don't* use
-Docker) can be invoked using the ``--no-docker`` argument.
+The Linux AppImage backend has been modified to use Docker. This ensures that
+the AppImage is always built in an environment that is compatible with the
+support package. It also enables Linux AppImages to be built on macOS and
+Windows. "Native" builds (i.e., builds that *don't* use Docker) can be invoked
+using the ``--no-docker`` argument.

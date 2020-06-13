@@ -1,1 +1,2 @@
-Updated CONTRIBUTING to link to Briefcase-specific docs
+``CONTRIBUTING.md`` has been updated to link to Briefcase-specific
+documentation.
