@@ -46,8 +46,8 @@ Icon format
 
 AppImages use ``.png`` format icons.
 
-Image format
-============
+Splash Image format
+===================
 
 AppImages do not support splash screens or installer images.
 

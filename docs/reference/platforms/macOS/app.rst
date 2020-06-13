@@ -14,8 +14,8 @@ Icon format
 
 ``.app`` bundles use ``.icns`` format icons.
 
-Image format
-============
+Splash Image format
+===================
 
 ``.app`` bundles do not support splash screens or installer images.
 
