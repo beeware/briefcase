@@ -4,42 +4,6 @@ Release History
 
 .. towncrier release notes start
 
-0.3.0 (2020-06-13)
-==================
-Features
---------
-
-* Modified the Linux AppImage backend to use Docker.
-  This ensures that the AppImage is always built in an environment that is
-  compatible with the support package. It also enables Linux AppImages to be
-  built on macOS and Windows. "Native" builds (i.e., builds that *don't* use
-  Docker) can be invoked using the ``--no-docker`` argument. (#344)
-* Added a ``PYTHONPATH`` property on ``AppConfig`` that describes the ``sys.path``changes needed to run the app (#401)
-* Allow ad-hoc code signing on macOS with ``briefcase package --adhoc-sign`` (#409)
-* Allow Android apps to use ``-`` in their bundle name; we now convert those to ``_`` in the resulting Android package identifier and Java package name. (#415)
-
-Bugfixes
---------
-
-* Corrected some stray punctuation in the Android device helper output. (#396)
-* Added an explicit version check for Docker. (#402)
-* Ensure Dockerfile user matches uid/gid of host user (#403)
-* Briefcase now ensures that the Python installation ecosystem tools (``pip``,
-  ``setuptools``, and ``wheel``), are all present and up to date. (#421)
-
-Improved Documentation
-----------------------
-
-* Documented that Windows MSI builds produce per-user installable MSI installers, while still supporting per-maching installs via the CLI. (#382)
-* Updated CONTRIBUTING to link to Briefcase-specific docs (#404)
-* Removed references to the ``build-system`` table in ``pyproject.toml``. (#410)
-
-Misc
-----
-
-* #380, #384
-
-
 0.3.0 (2020-04-18)
 ==================
 Features
