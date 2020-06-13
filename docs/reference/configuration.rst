@@ -178,6 +178,12 @@ The person or organization responsible for the application.
 The contact email address for the person or organization responsible for the
 application.
 
+``build``
+~~~~~~~~~
+
+A build identifier. An integer, used in addition to the version specifier,
+to identify a specific compiled version of an application.
+
 ``formal_name``
 ~~~~~~~~~~~~~~~
 
@@ -238,22 +244,40 @@ when configuring the application.
 
 Some platforms require multiple splash images, at different sizes; these will
 be handled by appending the required size to the provided icon name. For
-example, iOS requires multiple splash screens, (including 1024x768px,
-768x1024px, 2048x1536px, and more); Briefcase will look for
-``resources/splash-1024x768.png``, ``resources/splash-768x1024.png``,
-``resources/splash-2048x1536.png``, and so on. The sizes that are required are
-determined by the platform template.
+example, iOS requires multiple splash images, (1024px, 2048px and 3072px);
+with a ``splash`` setting of ``resources/my_splash``, Briefcase will look for
+``resources/my_splash-1024.png``, ``resources/my_splash-2045.png``, and
+``resources/my_splash-3072.png``. The sizes that are required are determined
+by the platform template.
 
-Some platforms also require different *variants* (e.g., both portrait and
-landscape splash screens). These variants can be specified by qualifying the
-splash specification:
+Some platforms also require different *variants*. For example, Android requires
+splash screens for "normal", "large" and "xlarge" devices. These variants can
+be specified by qualifying the splash specification:
 
-    splash.portrait = "resource/portrait-splash"
-    splash.landscape = "resource/landscape-splash"
+    splash.normal = "resource/normal-splash"
+    splash.large = "resource/large-splash"
+    splash.xlarge = "resource/xlarge-splash"
+
+These settings can, if you wish, all use the same prefix.
+
+If the platform requires different sizes for each variant (as Android does),
+those size will be appended to path provided by the variant specifier. For
+example, using the previous example, Android would look for
+``resource/normal-splash-320.png``,  ``resource/normal-splash-480.png``,
+``resource/large-splash.480.png``, ``resource/xlarge-splash-720.png``, amongst
+others.
 
 If the platform output format does not use a splash screen, the ``splash``
-setting is ignored. If the platform requires both variants *and* sizes, the
-handling will be combined.
+setting is ignored.
+
+``splash_background_color``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A hexidecimal RGB color value (e.g., ``#6495ED``) to use as the background
+color for splash screens.
+
+If the platform output format does not use a splash screen, this setting is
+ignored.
 
 ``support_package``
 ~~~~~~~~~~~~~~~~~~~

@@ -1,1 +1,0 @@
-Removed references to the ``build-system`` table in ``pyproject.toml``.
