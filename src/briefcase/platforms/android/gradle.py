@@ -34,7 +34,16 @@ class GradleMixin:
         )
 
     def distribution_path(self, app):
-        return self.binary_path(app)
+        return (
+            self.platform_path
+            / app.formal_name
+            / "app"
+            / "build"
+            / "outputs"
+            / "apk"
+            / "release"
+            / "app-release-unsigned.apk"
+        )
 
     def gradlew_path(self, app):
         gradlew = "gradlew.bat" if self.host_os == "Windows" else "gradlew"
@@ -196,6 +205,31 @@ class GradleRunCommand(GradleMixin, RunCommand):
 
 class GradlePackageCommand(GradleMixin, PackageCommand):
     description = "Package an Android APK."
+
+    def package_app(self, app: BaseConfig, **kwargs):
+        """
+        Package the app for distribution.
+
+        This involves building the release APK.
+
+        :param app: The application to build
+        """
+        print("[{app.app_name}] Building Android release APK...".format(app=app))
+        try:
+            self.subprocess.run(
+                # Windows needs the full path to `gradlew`; macOS & Linux can find it
+                # via `./gradlew`. For simplicity of implementation, we always provide
+                # the full path.
+                [str(self.gradlew_path(app)), "assembleRelease"],
+                env=self.android_sdk.env,
+                # Set working directory so gradle can use the app bundle path as its
+                # project root, i.e., to avoid 'Task assembleRelease not found'.
+                cwd=str(self.bundle_path(app)),
+                check=True
+            )
+        except subprocess.CalledProcessError:
+            print()
+            raise BriefcaseCommandError("Error while building project.")
 
 
 class GradlePublishCommand(GradleMixin, PublishCommand):
