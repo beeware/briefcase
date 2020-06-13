@@ -81,7 +81,7 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
             version_triple = (list(parsed.release) + [0, 0])[:3]
             version_code = '{v[0]:d}{v[1]:02d}{v[2]:02d}{build:02d}'.format(
                 v=version_triple,
-                build=getattr(app, 'build', 0)
+                build=int(getattr(app, 'build', '0'))
             ).lstrip('0')
 
         return {
