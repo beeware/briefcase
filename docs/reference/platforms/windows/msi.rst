@@ -35,7 +35,7 @@ The following options can be added to the
 file.
 
 ``version_triple``
-~~~~~~~~~~~~~~~~~~
+------------------
 
 Python and Briefcase allow any valid `PEP440 version number
 <https://www.python.org/dev/peps/pep-0440/>`_ as a ``version`` specifier.

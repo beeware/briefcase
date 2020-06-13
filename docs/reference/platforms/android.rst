@@ -75,7 +75,7 @@ The following options can be added to the
 file.
 
 ``version_code``
-~~~~~~~~~~~~~~~~
+----------------
 
 In addition to a version number, Android projects require a version "code".
 This code is an integer version of your version number that *must* increase
