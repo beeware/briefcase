@@ -1,2 +1,0 @@
-A ``PYTHONPATH`` property has been added to ``AppConfig`` that describes the
-``sys.path`` changes needed to run the app.

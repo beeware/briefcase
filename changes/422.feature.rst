@@ -1,2 +1,0 @@
-Mobile applications now support setting the background color of the splash
-screen, and setting a build identifier.

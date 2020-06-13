@@ -1,2 +1,0 @@
-Ad-hoc code signing is now possible on macOS with ``briefcase package
---adhoc-sign``.

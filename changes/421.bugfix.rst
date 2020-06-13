@@ -1,2 +1,0 @@
-Briefcase now ensures that the Python installation ecosystem tools (``pip``,
-``setuptools``, and ``wheel``), are all present and up to date.

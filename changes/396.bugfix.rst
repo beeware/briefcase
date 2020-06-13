@@ -1,1 +1,0 @@
-Some stray punctuation in the Android device helper output has been removed.

@@ -1,2 +1,0 @@
-The Linux build process ensures the Docker user matches the UID/GID of the host
-user.
