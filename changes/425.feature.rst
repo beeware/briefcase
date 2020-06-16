@@ -1,0 +1,1 @@
+Added a Briefcase-Version flag to dist-info metadata.
