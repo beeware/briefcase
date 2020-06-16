@@ -1,0 +1,8 @@
+[run]
+source = src/briefcase
+omit =
+    src/**/__init__.py
+    src/briefcase/__main__.py
+
+[report]
+show_missing = True
