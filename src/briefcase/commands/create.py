@@ -12,6 +12,7 @@ from requests import exceptions as requests_exceptions
 
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError, NetworkFailure
+import briefcase
 
 from .base import BaseCommand, TemplateUnsupportedVersion, full_options
 
@@ -94,6 +95,7 @@ def write_dist_info(app: BaseConfig, dist_info_path: Path):
         f.write('briefcase\n')
     with (dist_info_path / 'METADATA').open('w') as f:
         f.write('Metadata-Version: 2.1\n')
+        f.write('Briefcase-Version: {}\n'.format(briefcase.__version__))
         f.write('Name: {app.app_name}\n'.format(app=app))
         f.write('Formal-Name: {app.formal_name}\n'.format(app=app))
         f.write('App-ID: {app.bundle}.{app.app_name}\n'.format(app=app))
