@@ -27,3 +27,6 @@ venv/
 .idea_modules/
 # direnv
 .envrc
+
+# Wing IDE
+*.wp[ur]
