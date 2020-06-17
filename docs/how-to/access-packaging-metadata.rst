@@ -1,3 +1,5 @@
+.. _access-packaging-metadata:
+
 =================================================
 Accessing Briefcase packaging metadata at runtime
 =================================================
