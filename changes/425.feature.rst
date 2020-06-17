@@ -1,1 +1,1 @@
-Added a Briefcase-Version flag to dist-info metadata.
+Application metadata now contains a ``Briefcase-Version`` indicator.

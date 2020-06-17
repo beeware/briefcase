@@ -29,8 +29,10 @@ How do I detect if my app is running in a Briefcase-packaged container?
 -----------------------------------------------------------------------
 
 Briefcase adds a `PEP566 <https://www.python.org/dev/peps/pep-0566/>`_
-metadata file when it installs your app. The metadata can be retrieved at
-runtime as described in the :ref:`Accessing Briefcase packaging metadata at
-runtime <access-packaging-metadata>` how-to. You can then determine if your app was packaged with Briefcase by testing for the existence of the ``Briefcase-Version`` tag::
+metadata file when it installs your app's code. The metadata can be retrieved
+at runtime as described in the :ref:`Accessing Briefcase packaging metadata at
+runtime <access-packaging-metadata>` how-to. You can determine if your
+app was packaged with Briefcase by testing for the existence of
+the ``Briefcase-Version`` tag::
 
-	in_briefcase = 'Briefcase-Version' in metadata
+	  in_briefcase = 'Briefcase-Version' in metadata
