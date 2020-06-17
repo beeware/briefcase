@@ -2,6 +2,7 @@ from unittest import mock
 
 import pytest
 
+import briefcase
 from briefcase.commands.create import MissingAppSources
 
 
@@ -17,12 +18,13 @@ def assert_dist_info(app_path):
 
     with (dist_info_path / 'METADATA').open() as f:
         assert f.read() == """Metadata-Version: 2.1
+Briefcase-Version: {version}
 Name: my-app
 Formal-Name: My App
 App-ID: com.example.my-app
 Version: 1.2.3
 Summary: This is a simple app
-"""
+""".format(version=briefcase.__version__)
 
 
 def test_no_code(create_command, myapp, app_path):
