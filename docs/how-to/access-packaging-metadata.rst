@@ -2,7 +2,8 @@
 Accessing Briefcase packaging metadata at runtime
 =================================================
 
-When Briefcase installs your app, it adds a PEP566 metadata file containing
+When Briefcase installs your app, it adds a `PEP566
+<https://www.python.org/dev/peps/pep-0566/>`_ metadata file containing
 information about your app, and Briefcase itself. You can retrieve this
 information at runtime using importlib::
 
@@ -37,6 +38,7 @@ Most of these tags display information about your app, corresponding to the
 values in the app's ``pyproject.toml`` file. In addition:
 
     * **Metadata-Version** - Indicates the syntax version of the metadata file
-      itself.
+      itself (as defined in `PEP566
+      <https://www.python.org/dev/peps/pep-0566/>`_).
     * **Briefcase-Version** - Indicates the version of Briefcase used to
       install it.
