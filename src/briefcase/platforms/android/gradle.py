@@ -50,11 +50,11 @@ class GradleMixin:
         return self.bundle_path(app) / gradlew
 
     def verify_python_version(self):
-        if self.python_version_tag != "3.7":
+        if self.python_version_tag not in ["3.6", "3.7"]:
             raise BriefcaseCommandError(
                 """\
 Found Python version {self.python_version_tag}. Android packaging currently
-requires Python 3.7.""".format(
+requires Python 3.6 or 3.7.""".format(
                     self=self
                 )
             )
