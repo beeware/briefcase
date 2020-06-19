@@ -3,7 +3,6 @@ from unittest import mock
 
 import pytest
 
-from briefcase.exceptions import BriefcaseCommandError
 from briefcase.platforms.android.gradle import GradleBuildCommand
 
 
