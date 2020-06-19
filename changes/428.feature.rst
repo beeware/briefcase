@@ -1,1 +1,0 @@
-Permit Python 3.6 to be used when building Android apps

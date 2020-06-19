@@ -1,0 +1,1 @@
+For Android Python version compatibility check, rely on briefcase template existence rather than hard-coded list
