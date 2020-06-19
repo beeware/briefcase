@@ -49,23 +49,12 @@ class GradleMixin:
         gradlew = "gradlew.bat" if self.host_os == "Windows" else "gradlew"
         return self.bundle_path(app) / gradlew
 
-    def verify_python_version(self):
-        if self.python_version_tag != "3.7":
-            raise BriefcaseCommandError(
-                """\
-Found Python version {self.python_version_tag}. Android packaging currently
-requires Python 3.7.""".format(
-                    self=self
-                )
-            )
-
     def verify_tools(self):
         """
         Verify that we the Android APK tools in `briefcase` will operate on
         this system, downloading tools as needed.
         """
         super().verify_tools()
-        self.verify_python_version()
         self.java_home_path = verify_jdk(self)
         self.android_sdk = verify_android_sdk(self)
 
