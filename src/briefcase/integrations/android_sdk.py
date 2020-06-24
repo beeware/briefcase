@@ -126,6 +126,64 @@ Delete {sdk_zip_path} and run briefcase again.""".format(
     return sdk
 
 
+def _get_choices_and_names(running_devices, all_emulators, avd_name_by_device_id):
+    '''Input:
+
+    - `running_devices`: Dict from ADB device ID to dict with 'model' property.
+    - `all_emulators`: List of emulator device names.
+    - `avd_name_by_device_id`: A dict from ADB device ID to AVD name.
+
+    Output:
+
+    Tuple of `choice_ids`, `full_names`.
+
+    `choice_ids` is a list of all running devices, followed by all non-running
+    AVD names prefixed with `@`.
+
+    `full_names` is dict from string (device ID *or* AVD) to a formatted description
+    of the device.
+    '''
+    choice_ids = []
+    full_names = {}
+
+    running_avds = set()  # Used to avoid adding an AVD twice to the list of choices.
+
+    # Handle devices that are running.
+    for device_id, device_info in sorted(running_devices.items(), key=lambda d: d[1]["name"]):
+        model = device_info["name"]
+        if avd_name_by_device_id.get(device_id):
+            avd = avd_name_by_device_id[device_id]
+            running_avds.add(avd)
+            # For emulators, the full_name shows the @{avd} name. This is because the
+            # ADB device ID is not stable over reboots for Android virtual devices.
+            printable_device_id = "@{avd}".format(avd=avd)
+            device_type = "emulator"
+        else:
+            printable_device_id = device_id
+            device_type = "device"
+
+        full_name = "{printable_device_id} ({model} {device_type})".format(
+            device_type=device_type, model=model, printable_device_id=printable_device_id,
+        )
+        full_names[device_id] = full_name
+        if device_type == "emulator":
+            full_names[printable_device_id] = full_name
+        choice_ids.append(device_id)
+
+    # Handle devices (emulator names) that aren't running.
+    for avd in all_emulators:
+        if avd in running_avds:
+            continue  # skip
+        choice_id = '@{avd}'.format(avd=avd)
+        choice_ids.append(choice_id)
+        full_name = "{choice_id} ({device_type})".format(
+            choice_id=choice_id, device_type=device_type,
+        )
+        full_names[choice_id] = full_name
+
+    return choice_ids, full_names
+
+
 class AndroidSDK:
     def __init__(self, command, root_path):
         self.command = command
@@ -319,18 +377,17 @@ class AndroidSDK:
                         key, value = part.split(":")
                         details[key] = value
 
+                    model = "Unknown"
                     if parts[1] == "device":
-                        name = details["device"]
+                        model = details["model"]
                         authorized = True
                     elif parts[1] == "offline":
-                        name = "Unknown device (offline)"
                         authorized = False
                     else:
-                        name = "Unknown device (not authorized for development)"
                         authorized = False
 
                     devices[parts[0]] = {
-                        "name": name,
+                        "name": model,
                         "authorized": authorized,
                     }
 
@@ -353,92 +410,47 @@ class AndroidSDK:
             be asked to select a device from the list available.
         :returns: A tuple containing ``(device, name, avd)``. ``avd``
             will only be provided if an emulator with that AVD is not currently
-            running. If ``device`` is null, a new emulator should be created.
+            running. If ``device`` is None and ``avd`` is a string, the named
+            AVD (emulator) should be started. If ``device`` is None and ``avd``
+            is None, a new emulator should be created.
         """
         # Get the list of attached devices (includes running emulators)
         running_devices = self.devices()
+        # Compute mappings of running Android virtual devices to running device IDs.
+        avd_name_by_device_id = dict([
+            (device_id, self.adb(device_id).avd_name())
+            for device_id in running_devices
+        ])
+        device_id_by_avd_name = dict([(avd_name, device_id) for device_id, avd_name in avd_name_by_device_id.items()])
+        choice_ids, full_names = _get_choices_and_names(running_devices, self.emulators(), avd_name_by_device_id)
 
-        # Choices is an ordered list of options that can be shown to the user.
-        # Each device should appear only once, and be keyed by AVD only if
-        # a device ID isn't available.
-        choices = []
-        # Device choices is the full lookup list. Devices can be looked up
-        # by any valid key - ID *or* AVD.
-        device_choices = {}
-
-        # Iterate over all the running devices.
-        # If the device is a virtual device, use ADB to get the emulator AVD name.
-        # If it is a physical device, use the device name.
-        # Keep a log of all running AVDs
-        running_avds = {}
-        for d, details in sorted(running_devices.items(), key=lambda d: d[1]["name"]):
-            name = details["name"]
-            avd = self.adb(d).avd_name()
-            if avd:
-                # It's a running emulator
-                running_avds[avd] = d
-                full_name = "@{avd} ({name} emulator)".format(
-                    avd=avd, name=name,
-                )
-                choices.append((d, full_name))
-
-                # Save the AVD as a device detail.
-                details["avd"] = avd
-
-                # Device can be looked up by device ID or AVD
-                device_choices[d] = full_name
-                device_choices["@" + avd] = full_name
-            else:
-                # It's a physical device (might be disabled)
-                choices.append((d, name))
-                device_choices[d] = name
-
-        # Add any non-running emulator AVDs to the list of candidate devices
-        for avd in self.emulators():
-            if avd not in running_avds:
-                name = "@{avd} (emulator)".format(avd=avd)
-                choices.append(("@" + avd, name))
-                device_choices["@" + avd] = name
-
-        # If a device or AVD has been provided, check it against the available
-        # device list.
+        # If a device or AVD has been provided, either return a 3-tuple (device, name, avd) or raise a
+        # validation error.
         if device_or_avd:
-            try:
-                name = device_choices[device_or_avd]
-
-                if device_or_avd.startswith("@"):
-                    # specifier is an AVD
-                    try:
-                        avd = device_or_avd[1:]
-                        device = running_avds[avd]
-                    except KeyError:
-                        # device_or_avd isn't in the list of running avds;
-                        # it must be a non-running emulator.
-                        return None, name, avd
-                else:
-                    # Specifier is a direct device ID
-                    avd = None
-                    device = device_or_avd
-
-                details = running_devices[device]
-                avd = details.get("avd")
-                if details["authorized"]:
-                    # An authorized, running device (emulator or physical)
-                    return device, name, avd
-                else:
-                    # An unauthorized physical device
-                    raise AndroidDeviceNotAuthorized(device)
-
-            except KeyError:
-                # Provided device_or_id isn't a valid device identifier.
+            # Ensure it's a device whose name we know something about, i.e., it's a valid AVD name or ADB device ID.
+            if device_or_avd not in full_names:
                 if device_or_avd.startswith("@"):
                     id_type = "emulator AVD"
                 else:
                     id_type = "device ID"
                 raise InvalidDeviceError(id_type, device_or_avd)
 
-        # We weren't given a device/AVD; we have to select from the list.
-        # If we're selecting from a list, there's always one last choice
+            # Compute device ID, or return early.
+            if device_or_avd.startswith("@"):
+                avd = device_or_avd[1:]
+                if avd not in device_id_by_avd_name:
+                    return None, full_names[device_or_avd], avd
+                device = device_id_by_avd_name[avd]
+            else:
+                device = device_or_avd
+
+            # Check that we can attach to it over ADB.
+            if not running_devices[device]["authorized"]:
+                raise AndroidDeviceNotAuthorized(device)
+            return device, full_names[device], avd_name_by_device_id.get(device)
+
+        # Create a prompt, always including "Create a new Android emulator" as the last choice.
+        choices = [(choice_id, full_names[choice_id]) for choice_id in choice_ids]
         choices.append((None, "Create a new Android emulator"))
 
         # Show the choices to the user.
@@ -460,44 +472,32 @@ class AndroidSDK:
         # Proces the user's choice
         if choice is None:
             # Create a new emulator. No device ID or AVD.
-            device = None
-            avd = None
-            name = None
+            device, avd, name = None, None, None
         elif choice.startswith("@"):
             # A non-running emulator. We have an AVD, but no device ID.
-            device = None
-            name = device_choices[choice]
-            avd = choice[1:]
+            device, name, avd = None, full_names[choice], choice[1:]
         else:
-            # Either a running emulator, or a physical device. Regardless,
-            # we need to check if the device is developer enabled
-            try:
-                details = running_devices[choice]
-                if not details["authorized"]:
-                    # An unauthorized physical device
-                    raise AndroidDeviceNotAuthorized(choice)
-
-                # Return the device ID and name.
-                device = choice
-                name = device_choices[choice]
-                avd = details.get("avd")
-            except KeyError:
+            # An ADB device ID referring to either a running emulator or a physical device.
+            # Ensure the device is running.
+            if choice not in running_devices:
                 raise InvalidDeviceError("device ID", choice)
 
-        if avd:
+            # Ensure the device is developer-enabled.
+            if not running_devices[choice]["authorized"]:
+                raise AndroidDeviceNotAuthorized(choice)
+
+            # Compute the 3-tuple that we return.
+            device, name, avd = choice, full_names[choice], avd_name_by_device_id.get(choice)
+
+        # For virtual devices, tell the user they can specify this device by its AVD name.
+        # For physical devices, tell the user they can specify this device by its ADB device ID.
+        if avd or device:
             print("""
 In future, you can specify this device by running:
 
-    briefcase run android -d @{avd}
+    briefcase run android -d {specify_this_device}
 
-""".format(avd=avd))
-        elif device:
-            print("""
-In future, you can specify this device by running:
-
-    briefcase run android -d {device}
-
-""".format(device=device))
+""".format(specify_this_device="@" + avd if avd else device))
 
         return device, name, avd
 

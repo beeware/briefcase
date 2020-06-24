@@ -59,7 +59,7 @@ def test_explicit_device(mock_sdk):
 
     # Physical running device, so no AVD
     assert device == 'KABCDABCDA1513'
-    assert name == 'Kogan_Agora_9'
+    assert name == 'KABCDABCDA1513 (Kogan_Agora_9 device)'
     assert avd is None
 
     # No input was requested
@@ -154,7 +154,7 @@ def test_select_device(mock_sdk, capsys):
 
     # Physical running device, so no AVD
     assert device == 'KABCDABCDA1513'
-    assert name == 'Kogan_Agora_9'
+    assert name == 'KABCDABCDA1513 (Kogan_Agora_9 device)'
     assert avd is None
 
     # The user was asked to select a device
@@ -279,7 +279,7 @@ def test_input_disabled_one_device(mock_sdk):
 
     # The only device is returned
     assert device == 'KABCDABCDA1513'
-    assert name == "Kogan_Agora_9"
+    assert name == "KABCDABCDA1513 (Kogan_Agora_9 device)"
     assert avd is None
 
     # No input was requested
