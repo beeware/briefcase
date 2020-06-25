@@ -377,8 +377,8 @@ class AndroidSDK:
             if avd:
                 # It's a running emulator
                 running_avds[avd] = d
-                full_name = "@{avd} ({name} emulator)".format(
-                    avd=avd, name=name,
+                full_name = "@{avd} (running emulator)".format(
+                    avd=avd,
                 )
                 choices.append((d, full_name))
 
@@ -689,8 +689,8 @@ find this page helpful in diagnosing emulator problems.
                             # Found an active device that matches
                             # the AVD we are starting.
                             name = details["name"]
-                            full_name = "@{avd} ({name} emulator)".format(
-                                avd=avd, name=name,
+                            full_name = "@{avd} (running emulator)".format(
+                                avd=avd,
                             )
                             break
                         else:
