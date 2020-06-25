@@ -320,7 +320,7 @@ class AndroidSDK:
                         details[key] = value
 
                     if parts[1] == "device":
-                        name = details["model"]
+                        name = details["model"].replace("_", " ")
                         authorized = True
                     elif parts[1] == "offline":
                         name = "Unknown device (offline)"

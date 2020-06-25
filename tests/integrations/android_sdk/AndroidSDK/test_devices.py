@@ -26,7 +26,7 @@ def test_one_emulator(mock_sdk):
 
     assert mock_sdk.devices() == {
         'emulator-5554': {
-            'name': 'Android_SDK_built_for_x86',
+            'name': 'Android SDK built for x86',
             'authorized': True,
         },
     }
@@ -42,11 +42,11 @@ def test_multiple_devices(mock_sdk):
             'authorized': False,
         },
         'KABCDABCDA1513': {
-            'name': 'Kogan_Agora_9',
+            'name': 'Kogan Agora 9',
             'authorized': True,
         },
         'emulator-5554': {
-            'name': 'Android_SDK_built_for_x86',
+            'name': 'Android SDK built for x86',
             'authorized': True,
         },
         'emulator-5556': {
