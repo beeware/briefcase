@@ -23,11 +23,11 @@ def mock_sdk(tmp_path):
             'authorized': False,
         },
         'KABCDABCDA1513': {
-            'name': 'Kogan_Agora_9',
+            'name': 'Kogan Agora 9',
             'authorized': True,
         },
         'emulator-5554': {
-            'name': 'generic_x86',
+            'name': 'Android SDK built for x86',
             'authorized': True,
         },
     })
@@ -59,7 +59,7 @@ def test_explicit_device(mock_sdk):
 
     # Physical running device, so no AVD
     assert device == 'KABCDABCDA1513'
-    assert name == 'Kogan_Agora_9'
+    assert name == 'Kogan Agora 9 (KABCDABCDA1513)'
     assert avd is None
 
     # No input was requested
@@ -85,7 +85,7 @@ def test_explicit_running_emulator_by_id(mock_sdk):
 
     # Emulator is running, so there is a device ID
     assert device == 'emulator-5554'
-    assert name == '@runningEmulator (generic_x86 emulator)'
+    assert name == '@runningEmulator (running emulator)'
     assert avd == "runningEmulator"
 
     # No input was requested
@@ -100,7 +100,7 @@ def test_explicit_running_emulator_by_avd(mock_sdk):
 
     # Emulator is running, so there is a device ID
     assert device == 'emulator-5554'
-    assert name == '@runningEmulator (generic_x86 emulator)'
+    assert name == '@runningEmulator (running emulator)'
     assert avd == "runningEmulator"
 
     # No input was requested
@@ -147,14 +147,14 @@ def test_explicit_invalid_avd(mock_sdk):
 def test_select_device(mock_sdk, capsys):
     "If the user manually selects a physical device, details are returned"
     # Mock the user input
-    mock_sdk.command.input.values = ["1"]
+    mock_sdk.command.input.values = ["2"]
 
     # Run the selection with no pre-existing choice
     device, name, avd = mock_sdk.select_target_device(None)
 
     # Physical running device, so no AVD
     assert device == 'KABCDABCDA1513'
-    assert name == 'Kogan_Agora_9'
+    assert name == 'Kogan Agora 9 (KABCDABCDA1513)'
     assert avd is None
 
     # The user was asked to select a device
@@ -168,7 +168,7 @@ def test_select_device(mock_sdk, capsys):
 def test_select_unauthorized_device(mock_sdk):
     "If the user manually selects an unauthorized running device, an error is raised"
     # Mock the user input
-    mock_sdk.command.input.values = ['2']
+    mock_sdk.command.input.values = ['3']
 
     # Run the selection with no pre-existing choice
     with pytest.raises(AndroidDeviceNotAuthorized):
@@ -178,14 +178,14 @@ def test_select_unauthorized_device(mock_sdk):
 def test_select_running_emulator(mock_sdk, capsys):
     "If the user manually selects a running emulator, details are returned"
     # Mock the user input
-    mock_sdk.command.input.values = ['3']
+    mock_sdk.command.input.values = ['1']
 
     # Run the selection with no pre-existing choice
     device, name, avd = mock_sdk.select_target_device(None)
 
     # Emulator is running, so there is a device ID
     assert device == 'emulator-5554'
-    assert name == '@runningEmulator (generic_x86 emulator)'
+    assert name == '@runningEmulator (running emulator)'
     assert avd == "runningEmulator"
 
     # A re-run prompt has been provided
@@ -268,7 +268,7 @@ def test_input_disabled_one_device(mock_sdk):
     # Set up a single device.
     mock_sdk.devices = MagicMock(return_value={
         'KABCDABCDA1513': {
-            'name': 'Kogan_Agora_9',
+            'name': 'Kogan Agora 9',
             'authorized': True,
         },
     })
@@ -279,7 +279,7 @@ def test_input_disabled_one_device(mock_sdk):
 
     # The only device is returned
     assert device == 'KABCDABCDA1513'
-    assert name == "Kogan_Agora_9"
+    assert name == "Kogan Agora 9 (KABCDABCDA1513)"
     assert avd is None
 
     # No input was requested

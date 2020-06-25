@@ -52,11 +52,11 @@ def test_start_emulator(mock_sdk):
             'authorized': False,
         },
         'KABCDABCDA1513': {
-            'name': 'Kogan_Agora_9',
+            'name': 'Kogan Agora 9',
             'authorized': True,
         },
         'emulator-5554': {
-            'name': 'generic_x86',
+            'name': 'Android SDK built for x86',
             'authorized': True,
         },
     }
@@ -99,7 +99,7 @@ def test_start_emulator(mock_sdk):
 
     # The device details are as expected
     assert device == 'emulator-5556'
-    assert name == '@idleEmulator (generic_x86 emulator)'
+    assert name == '@idleEmulator (running emulator)'
 
     # The process was started.
     mock_sdk.command.subprocess.Popen.assert_called_with(
@@ -141,11 +141,11 @@ def test_emulator_fail_to_start(mock_sdk):
             'authorized': False,
         },
         'KABCDABCDA1513': {
-            'name': 'Kogan_Agora_9',
+            'name': 'Kogan Agora 9',
             'authorized': True,
         },
         'emulator-5554': {
-            'name': 'generic_x86',
+            'name': 'Android SDK built for x86',
             'authorized': True,
         },
     }
@@ -224,11 +224,11 @@ def test_emulator_fail_to_boot(mock_sdk):
             'authorized': False,
         },
         'KABCDABCDA1513': {
-            'name': 'Kogan_Agora_9',
+            'name': 'Kogan Agora 9',
             'authorized': True,
         },
         'emulator-5554': {
-            'name': 'generic_x86',
+            'name': 'Android SDK built for x86',
             'authorized': True,
         },
     }
@@ -239,7 +239,7 @@ def test_emulator_fail_to_boot(mock_sdk):
     }
     devices_4 = devices.copy()
     devices_4['emulator-5556'] = {
-        'name': 'generic_x86',
+        'name': 'Android SDK built for x86',
         'authorized': True,
     }
 

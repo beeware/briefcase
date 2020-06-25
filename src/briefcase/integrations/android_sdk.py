@@ -320,7 +320,7 @@ class AndroidSDK:
                         details[key] = value
 
                     if parts[1] == "device":
-                        name = details["device"]
+                        name = details["model"].replace("_", " ")
                         authorized = True
                     elif parts[1] == "offline":
                         name = "Unknown device (offline)"
@@ -377,8 +377,8 @@ class AndroidSDK:
             if avd:
                 # It's a running emulator
                 running_avds[avd] = d
-                full_name = "@{avd} ({name} emulator)".format(
-                    avd=avd, name=name,
+                full_name = "@{avd} (running emulator)".format(
+                    avd=avd,
                 )
                 choices.append((d, full_name))
 
@@ -390,8 +390,9 @@ class AndroidSDK:
                 device_choices["@" + avd] = full_name
             else:
                 # It's a physical device (might be disabled)
-                choices.append((d, name))
-                device_choices[d] = name
+                full_name = "{name} ({d})".format(name=name, d=d)
+                choices.append((d, full_name))
+                device_choices[d] = full_name
 
         # Add any non-running emulator AVDs to the list of candidate devices
         for avd in self.emulators():
@@ -687,9 +688,8 @@ find this page helpful in diagnosing emulator problems.
                         if device_avd == avd:
                             # Found an active device that matches
                             # the AVD we are starting.
-                            name = details["name"]
-                            full_name = "@{avd} ({name} emulator)".format(
-                                avd=avd, name=name,
+                            full_name = "@{avd} (running emulator)".format(
+                                avd=avd,
                             )
                             break
                         else:
