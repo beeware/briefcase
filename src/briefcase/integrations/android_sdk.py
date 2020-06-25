@@ -377,7 +377,7 @@ class AndroidSDK:
             if avd:
                 # It's a running emulator
                 running_avds[avd] = d
-                full_name = "emulator (@{avd} {name})".format(
+                full_name = "@{avd} ({name} emulator)".format(
                     avd=avd, name=name,
                 )
                 choices.append((d, full_name))
@@ -397,7 +397,7 @@ class AndroidSDK:
         # Add any non-running emulator AVDs to the list of candidate devices
         for avd in self.emulators():
             if avd not in running_avds:
-                name = "emulator (@{avd})".format(avd=avd)
+                name = "@{avd} (emulator)".format(avd=avd)
                 choices.append(("@" + avd, name))
                 device_choices["@" + avd] = name
 

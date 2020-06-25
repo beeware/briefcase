@@ -85,7 +85,7 @@ def test_explicit_running_emulator_by_id(mock_sdk):
 
     # Emulator is running, so there is a device ID
     assert device == 'emulator-5554'
-    assert name == 'emulator (@runningEmulator generic_x86)'
+    assert name == '@runningEmulator (generic_x86 emulator)'
     assert avd == "runningEmulator"
 
     # No input was requested
@@ -100,7 +100,7 @@ def test_explicit_running_emulator_by_avd(mock_sdk):
 
     # Emulator is running, so there is a device ID
     assert device == 'emulator-5554'
-    assert name == 'emulator (@runningEmulator generic_x86)'
+    assert name == '@runningEmulator (generic_x86 emulator)'
     assert avd == "runningEmulator"
 
     # No input was requested
@@ -115,7 +115,7 @@ def test_explicit_idle_emulator(mock_sdk):
 
     # Emulator is not running, so no device ID
     assert device is None
-    assert name == 'emulator (@idleEmulator)'
+    assert name == '@idleEmulator (emulator)'
     assert avd == 'idleEmulator'
 
     # No input was requested
@@ -185,7 +185,7 @@ def test_select_running_emulator(mock_sdk, capsys):
 
     # Emulator is running, so there is a device ID
     assert device == 'emulator-5554'
-    assert name == 'emulator (@runningEmulator generic_x86)'
+    assert name == '@runningEmulator (generic_x86 emulator)'
     assert avd == "runningEmulator"
 
     # A re-run prompt has been provided
@@ -203,7 +203,7 @@ def test_select_idle_emulator(mock_sdk, capsys):
 
     # Emulator is not running, so no device ID
     assert device is None
-    assert name == 'emulator (@idleEmulator)'
+    assert name == '@idleEmulator (emulator)'
     assert avd == 'idleEmulator'
 
     # A re-run prompt has been provided

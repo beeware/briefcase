@@ -1,3 +1,3 @@
 Use Android device model name and unique ID in ``briefcase run android`` list so that e.g. a Pixel 3A shows up as "Pixel_3a (adbDeviceId)".
 
-For virtual devices, always give them a name starting with "emulator", followed by the AVD name and optionally device model in parentheses.
+For virtual devices, always give them a name starting with the emulator AVD name prefixed by "@", followed the device model (if available) and the word "emulator" in parentheses.
