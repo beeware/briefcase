@@ -688,7 +688,6 @@ find this page helpful in diagnosing emulator problems.
                         if device_avd == avd:
                             # Found an active device that matches
                             # the AVD we are starting.
-                            name = details["name"]
                             full_name = "@{avd} (running emulator)".format(
                                 avd=avd,
                             )
