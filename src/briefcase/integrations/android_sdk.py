@@ -377,7 +377,7 @@ class AndroidSDK:
             if avd:
                 # It's a running emulator
                 running_avds[avd] = d
-                full_name = "@{avd} ({name} emulator)".format(
+                full_name = "emulator (@{avd} {name})".format(
                     avd=avd, name=name,
                 )
                 choices.append((d, full_name))
