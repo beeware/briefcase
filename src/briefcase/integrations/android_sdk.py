@@ -320,7 +320,7 @@ class AndroidSDK:
                         details[key] = value
 
                     if parts[1] == "device":
-                        name = details["device"]
+                        name = details["model"]
                         authorized = True
                     elif parts[1] == "offline":
                         name = "Unknown device (offline)"
@@ -390,13 +390,14 @@ class AndroidSDK:
                 device_choices["@" + avd] = full_name
             else:
                 # It's a physical device (might be disabled)
-                choices.append((d, name))
-                device_choices[d] = name
+                full_name = "{name} ({d})".format(name=name, d=d)
+                choices.append((d, full_name))
+                device_choices[d] = full_name
 
         # Add any non-running emulator AVDs to the list of candidate devices
         for avd in self.emulators():
             if avd not in running_avds:
-                name = "@{avd} (emulator)".format(avd=avd)
+                name = "emulator (@{avd})".format(avd=avd)
                 choices.append(("@" + avd, name))
                 device_choices["@" + avd] = name
 

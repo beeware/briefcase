@@ -1,0 +1,1 @@
+Use Android device model name and unique ID in ``briefcase run android`` list so that e.g. a Pixel 3A shows up as "Pixel_3a (adbDeviceId)".

@@ -59,7 +59,7 @@ def test_explicit_device(mock_sdk):
 
     # Physical running device, so no AVD
     assert device == 'KABCDABCDA1513'
-    assert name == 'Kogan_Agora_9'
+    assert name == 'Kogan_Agora_9 (KABCDABCDA1513)'
     assert avd is None
 
     # No input was requested
@@ -115,7 +115,7 @@ def test_explicit_idle_emulator(mock_sdk):
 
     # Emulator is not running, so no device ID
     assert device is None
-    assert name == '@idleEmulator (emulator)'
+    assert name == 'emulator (@idleEmulator)'
     assert avd == 'idleEmulator'
 
     # No input was requested
@@ -154,7 +154,7 @@ def test_select_device(mock_sdk, capsys):
 
     # Physical running device, so no AVD
     assert device == 'KABCDABCDA1513'
-    assert name == 'Kogan_Agora_9'
+    assert name == 'Kogan_Agora_9 (KABCDABCDA1513)'
     assert avd is None
 
     # The user was asked to select a device
@@ -203,7 +203,7 @@ def test_select_idle_emulator(mock_sdk, capsys):
 
     # Emulator is not running, so no device ID
     assert device is None
-    assert name == '@idleEmulator (emulator)'
+    assert name == 'emulator (@idleEmulator)'
     assert avd == 'idleEmulator'
 
     # A re-run prompt has been provided
@@ -279,7 +279,7 @@ def test_input_disabled_one_device(mock_sdk):
 
     # The only device is returned
     assert device == 'KABCDABCDA1513'
-    assert name == "Kogan_Agora_9"
+    assert name == "Kogan_Agora_9 (KABCDABCDA1513)"
     assert avd is None
 
     # No input was requested
