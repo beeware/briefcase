@@ -11,6 +11,7 @@ from briefcase.platforms.android.gradle import GradleBuildCommand
 def build_command(tmp_path, first_app_config):
     command = GradleBuildCommand(base_path=tmp_path / "base_path")
     command.dot_briefcase_path = tmp_path / ".briefcase"
+    command.android_sdk = MagicMock()
     command.os = MagicMock()
     command.os.environ = {}
     command.sys = MagicMock()
@@ -38,7 +39,7 @@ def test_execute_gradle(build_command, first_app_config, host_os, gradlew_name):
             "assembleDebug",
         ],
         cwd=str(build_command.bundle_path(first_app_config)),
-        env={"ANDROID_SDK_ROOT": str(build_command.sdk_path), "key": "value"},
+        env=build_command.android_sdk.env,
         check=True,
     )
 

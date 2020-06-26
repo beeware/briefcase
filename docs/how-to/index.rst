@@ -15,6 +15,7 @@ stand alone.
 
    code-signing/index
    upgrade-from-v0.2
+   access-packaging-metadata
    contribute-code
    contribute-docs
    See errors on iOS <see_errors_on_ios>

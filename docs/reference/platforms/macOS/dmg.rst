@@ -20,11 +20,12 @@ Icon format
 
 macOS DMGs use ``.icns`` format icons for the application and installer.
 
-Image format
-============
+Splash Image format
+===================
 
-macOS DMGs do not support splash screens. The installer background must be
-in ``.png`` format.
+macOS DMGs do not support splash screens.
+
+The installer background must be in ``.png`` format.
 
 Additional options
 ==================
@@ -39,6 +40,11 @@ publish
 ~~~~~~~~~~~~~
 
 Don't perform code signing on the ``.app`` bundles in the DMG.
+
+``--adhoc-sign``
+~~~~~~~~~~~~~~~~
+
+Sign ``.app`` bundles with adhoc identity.
 
 ``-i <identity>`` / ``--identity <identity>``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

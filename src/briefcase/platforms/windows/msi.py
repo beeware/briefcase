@@ -1,5 +1,4 @@
 import os
-import re
 import struct
 import subprocess
 import sys
@@ -14,7 +13,7 @@ from briefcase.commands import (
     RunCommand,
     UpdateCommand
 )
-from briefcase.config import BaseConfig
+from briefcase.config import BaseConfig, parsed_version
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.platforms.windows import WindowsMixin
 
@@ -30,6 +29,7 @@ class WindowsMSIMixin(WindowsMixin):
 
     def verify_tools(self):
         super().verify_tools()
+
         if self.host_os != 'Windows':
             raise BriefcaseCommandError("""
 A Windows MSI installer can only be created on Windows.
@@ -96,8 +96,9 @@ class WindowsMSICreateCommand(WindowsMSIMixin, CreateCommand):
         try:
             version_triple = app.version_triple
         except AttributeError:
+            parsed = parsed_version(app.version)
             version_triple = '.'.join(
-                (re.findall(r'\d+', app.version) + ['0', '0'])[:3]
+                ([str(v) for v in parsed.release] + ['0', '0'])[:3]
             )
 
         # The application needs a unique GUID.

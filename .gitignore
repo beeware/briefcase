@@ -10,9 +10,11 @@ distribute-*
 .python-version
 .pytest_cache
 .coverage
+coverage.xml
 venv/
 .vscode/
 .eggs/
+.tox/
 /local
 
 /pip-wheel-metadata
@@ -24,3 +26,8 @@ venv/
 *.iws
 ## mpeltonen/sbt-idea plugin
 .idea_modules/
+# direnv
+.envrc
+
+# Wing IDE
+*.wp[ur]

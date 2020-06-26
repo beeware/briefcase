@@ -1,4 +1,5 @@
 import subprocess
+from contextlib import contextmanager
 
 from requests import exceptions as requests_exceptions
 
@@ -12,6 +13,7 @@ from briefcase.commands import (
 )
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError, NetworkFailure
+from briefcase.integrations.docker import verify_docker
 from briefcase.platforms.linux import LinuxMixin
 
 
@@ -29,15 +31,88 @@ class LinuxAppImageMixin(LinuxMixin):
     def distribution_path(self, app):
         return self.binary_path(app)
 
+    def add_options(self, parser):
+        super().add_options(parser)
+        parser.add_argument(
+            '--no-docker',
+            dest='use_docker',
+            action='store_false',
+            help='The device to target; either a UDID, '
+                 'a device name ("iPhone 11"), '
+                 'or a device name and OS version ("iPhone 11::iOS 13.3")',
+            required=False,
+        )
+
+    def parse_options(self, extra):
+        """Extract the use_docker option"""
+        options = super().parse_options(extra)
+
+        self.use_docker = options.pop('use_docker')
+
+        return options
+
+    def clone_options(self, command):
+        """Clone the use_docker option"""
+        super().clone_options(command)
+        self.use_docker = command.use_docker
+
+    def docker_image_tag(self, app):
+        "The Docker image tag for an app"
+        return 'briefcase/{app.bundle}.{app.app_name}:py{self.python_version_tag}'.format(
+            app=app,
+            self=self,
+        )
+
     def verify_tools(self):
         """
-        Verify that we're on Linux.
+        Verify that Docker is available; and if it isn't that we're on Linux.
         """
         super().verify_tools()
-        if self.host_os != 'Linux':
-            raise BriefcaseCommandError("""
+        if self.use_docker:
+            if self.host_os == 'Windows':
+                raise BriefcaseCommandError("""
+Linux AppImages cannot be generated on Windows.
+""")
+            else:
+                self.Docker = verify_docker(self)
+        else:
+            if self.host_os == 'Linux':
+                # Use subprocess natively. No Docker wrapper is needed
+                self.Docker = None
+            else:
+                raise BriefcaseCommandError("""
 Linux AppImages can only be generated on Linux.
 """)
+
+    @contextmanager
+    def dockerize(self, app):
+        """
+        Enter a Docker container based on the properties of the app.
+
+        Provides a context manager for the Docker context. The context
+        object is an object that exposes subprocess-analog calls.
+
+        This will replace self.subprocess with a version that proxies all
+        subprocess calls into the docker container.
+
+        If the user has selected --no-docker, this is a no-op.
+
+        :param app: The application that will determine the container image.
+        """
+        if self.use_docker:
+            """
+            Enter the Docker context.
+            """
+            print("[{app.app_name}] Entering Docker context...".format(app=app))
+            orig_subprocess = self.subprocess
+            self.subprocess = self.Docker(self, app)
+
+            yield self.subprocess
+
+            print("[{app.app_name}] Leaving Docker context.".format(app=app))
+            self.subprocess = orig_subprocess
+        else:
+            yield self.subprocess
 
 
 class LinuxAppImageCreateCommand(LinuxAppImageMixin, CreateCommand):
@@ -53,6 +128,19 @@ class LinuxAppImageCreateCommand(LinuxAppImageMixin, CreateCommand):
             ('version', self.python_version_tag),
             ('arch', self.host_arch),
         ]
+
+    def install_app_dependencies(self, app: BaseConfig):
+        """
+        Install application dependencies.
+
+        This will be containerized in Docker to ensure that the right
+        binary versions are installed.
+        """
+        with self.dockerize(app=app) as docker:
+            docker.prepare()
+
+            # Install dependencies. This will run inside a Docker container.
+            super().install_app_dependencies(app=app)
 
 
 class LinuxAppImageUpdateCommand(LinuxAppImageMixin, UpdateCommand):
@@ -99,26 +187,29 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
             # Build the AppImage.
             # For some reason, the version has to be passed in as an
             # environment variable, *not* in the configuration...
-            env = self.os.environ.copy()
-            env['VERSION'] = app.version
+            env = {
+                'VERSION': app.version
+            }
             appdir_path = self.bundle_path(app) / "{app.formal_name}.AppDir".format(
                 app=app
             )
-            self.subprocess.run(
-                [
-                    str(self.linuxdeploy_appimage),
-                    "--appdir={appdir_path}".format(appdir_path=appdir_path),
-                    "-d", str(
-                        appdir_path / "{app.bundle}.{app.app_name}.desktop".format(
-                            app=app,
-                        )
-                    ),
-                    "-o", "appimage",
-                ],
-                env=env,
-                check=True,
-                cwd=str(self.platform_path)
-            )
+            with self.dockerize(app) as docker:
+                docker.run(
+                    [
+                        str(self.linuxdeploy_appimage),
+                        "--appimage-extract-and-run",
+                        "--appdir={appdir_path}".format(appdir_path=appdir_path),
+                        "-d", str(
+                            appdir_path / "{app.bundle}.{app.app_name}.desktop".format(
+                                app=app,
+                            )
+                        ),
+                        "-o", "appimage",
+                    ],
+                    env=env,
+                    check=True,
+                    cwd=str(self.platform_path)
+                )
 
             # Make the binary executable.
             self.os.chmod(str(self.binary_path(app)), 0o755)
@@ -131,6 +222,16 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
 
 class LinuxAppImageRunCommand(LinuxAppImageMixin, RunCommand):
     description = "Run a Linux AppImage."
+
+    def verify_tools(self):
+        """
+        Verify that we're on Linux.
+        """
+        super().verify_tools()
+        if self.host_os != 'Linux':
+            raise BriefcaseCommandError(
+                "AppImages can only be executed on Linux."
+            )
 
     def run_app(self, app: BaseConfig, **kwargs):
         """

@@ -81,3 +81,19 @@ def test_package_app_no_sign(first_app_with_binaries, tmp_path):
     # No code signing has been performed.
     assert command.select_identity.call_count == 0
     assert command.subprocess.run.call_count == 0
+
+
+def test_package_app_adhoc_sign(first_app_with_binaries, tmp_path):
+    "A macOS App can be packaged and signed with adhoc identity"
+
+    command = macOSAppPackageCommand(base_path=tmp_path)
+    command.subprocess = mock.MagicMock()
+
+    command.select_identity = mock.MagicMock(return_value="Sekrit identity (DEADBEEF)")
+
+    command.package_app(first_app_with_binaries, adhoc_sign=True)
+
+    # the select_identity method has not been used
+    assert command.select_identity.call_count == 0
+    # but code signing has been performed with "--sign -"
+    assert command.subprocess.run.call_args[0][0][1:3] == ["--sign", "-"]

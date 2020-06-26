@@ -21,8 +21,8 @@ Briefcase
    :target: https://github.com/beeware/briefcase/blob/master/LICENSE
    :alt: BSD License
 
-.. image:: https://github.com/beeware/beefore/workflows/Build%20status/badge.svg
-   :target: https://github.com/beeware/beefore/actions
+.. image:: https://github.com/beeware/briefcase/workflows/CI/badge.svg?branch=master
+   :target: https://github.com/beeware/briefcase/actions
    :alt: Build Status
 
 .. image:: https://badges.gitter.im/beeware/general.svg
@@ -36,8 +36,9 @@ application. You can package projects for:
 * Windows
 * Linux
 * iPhone/iPad
+* Android
 
-Support for Android, AppleTV, watchOS, wearOS and web deployments is planned.
+Support for AppleTV, watchOS, wearOS and web deployments is planned.
 
 If you want to see Briefcase in action, try the `BeeWare tutorial
 <https://beeware.readthedocs.io>`__. That tutorial walks you through the

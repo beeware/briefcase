@@ -11,7 +11,7 @@ def test_minimal_AppConfig():
         version="1.2.3",
         bundle="org.beeware",
         description="A simple app",
-        sources=['src/myapp'],
+        sources=['src/myapp', 'somewhere/else/interesting'],
     )
 
     # The basic properties have been set.
@@ -29,6 +29,10 @@ def test_minimal_AppConfig():
     assert config.icon is None
     assert config.splash is None
 
+    # The PYTHONPATH is derived correctly
+    assert config.PYTHONPATH == ['src', 'somewhere/else']
+
+    # The object has a meaningful REPL
     assert repr(config) == "<org.beeware.myapp v1.2.3 AppConfig>"
 
 
@@ -170,6 +174,25 @@ def test_module_name(name, module_name):
     )
 
     assert config.module_name == module_name
+
+
+@pytest.mark.parametrize(
+    'bundle, package_name',
+    [
+        ('com.example', 'com.example'),
+        ('com.ex-ample', 'com.ex_ample'),
+    ]
+)
+def test_package_name(bundle, package_name):
+    config = AppConfig(
+        app_name="myapp",
+        version="1.2.3",
+        bundle=bundle,
+        description="A simple app",
+        sources=['src/myapp']
+    )
+
+    assert config.package_name == package_name
 
 
 @pytest.mark.parametrize(

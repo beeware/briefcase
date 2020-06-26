@@ -14,8 +14,8 @@ Icon format
 
 ``.app`` bundles use ``.icns`` format icons.
 
-Image format
-============
+Splash Image format
+===================
 
 ``.app`` bundles do not support splash screens or installer images.
 
@@ -32,6 +32,11 @@ publish
 ~~~~~~~~~~~~~
 
 Don't perform code signing on the ``.app`` bundles.
+
+``--adhoc-sign``
+~~~~~~~~~~~~~~~~
+
+Sign ``.app`` bundles with adhoc identity.
 
 ``-i <identity>`` / ``--identity <identity>``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

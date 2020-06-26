@@ -4,7 +4,7 @@ from typing import Optional
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError
 
-from .base import BaseCommand, full_kwargs
+from .base import BaseCommand, full_options
 
 
 class RunCommand(BaseCommand):
@@ -25,7 +25,7 @@ class RunCommand(BaseCommand):
         )
 
     @abstractmethod
-    def run_app(self, app: BaseConfig, **kwargs):
+    def run_app(self, app: BaseConfig, **options):
         """
         Start an application.
 
@@ -37,7 +37,7 @@ class RunCommand(BaseCommand):
         self,
         appname: Optional[str] = None,
         update: Optional[bool] = False,
-        **kwargs
+        **options
     ):
         # Confirm all required tools are available
         self.verify_tools()
@@ -64,16 +64,16 @@ class RunCommand(BaseCommand):
         template_file = self.bundle_path(app)
         binary_file = self.binary_path(app)
         if not template_file.exists():
-            state = self.create_command(app, **kwargs)
-            state = self.build_command(app, **full_kwargs(state, kwargs))
+            state = self.create_command(app, **options)
+            state = self.build_command(app, **full_options(state, options))
         elif update:
-            state = self.update_command(app, **kwargs)
-            state = self.build_command(app, **full_kwargs(state, kwargs))
+            state = self.update_command(app, **options)
+            state = self.build_command(app, **full_options(state, options))
         elif not binary_file.exists():
-            state = self.build_command(app, **kwargs)
+            state = self.build_command(app, **options)
         else:
             state = None
 
-        state = self.run_app(app, **full_kwargs(state, kwargs))
+        state = self.run_app(app, **full_options(state, options))
 
         return state

@@ -5,6 +5,7 @@ import toml
 
 from briefcase.commands import CreateCommand
 from briefcase.config import AppConfig
+from tests.utils import DummyConsole
 
 
 class DummyCreateCommand(CreateCommand):
@@ -28,6 +29,7 @@ class DummyCreateCommand(CreateCommand):
         self.cookiecutter = mock.MagicMock()
         self.subprocess = mock.MagicMock()
         self.support_file = support_file
+        self.input = DummyConsole()
 
     def bundle_path(self, app):
         return self.platform_path / '{app.app_name}.bundle'.format(app=app)
@@ -60,9 +62,9 @@ class TrackingCreateCommand(DummyCreateCommand):
 
         self.actions = []
 
-    def verify_tools(self):
+    def verify_tools(self,):
         super().verify_tools()
-        self.actions.append(('verify'))
+        self.actions.append(('verify',))
 
     # Override all the body methods of a CreateCommand
     # with versions that we can use to track actions performed.
@@ -91,7 +93,7 @@ class TrackingCreateCommand(DummyCreateCommand):
 def create_command(tmp_path, mock_git):
     return DummyCreateCommand(
         base_path=tmp_path,
-        dot_briefcase_path=tmp_path / "dot-briefcase",
+        home_path=tmp_path,
         git=mock_git,
     )
 

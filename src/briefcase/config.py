@@ -1,5 +1,6 @@
 import copy
 import re
+from types import SimpleNamespace
 
 import toml
 
@@ -13,6 +14,16 @@ PEP508_NAME_RE = re.compile(
     re.IGNORECASE
 )
 
+# This is the canonical definition from PEP440, modified to include
+# named groups
+PEP440_CANONICAL_VERSION_PATTERN_RE = re.compile(
+    r'^((?P<epoch>[1-9][0-9]*)!)?'
+    r'(?P<release>(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*))*)'
+    r'((?P<pre_tag>a|b|rc)(?P<pre_value>0|[1-9][0-9]*))?'
+    r'(\.post(?P<post>0|[1-9][0-9]*))?'
+    r'(\.dev(?P<dev>0|[1-9][0-9]*))?$'
+)
+
 
 def is_pep440_canonical_version(version):
     """
@@ -22,14 +33,35 @@ def is_pep440_canonical_version(version):
 
     :returns: True if the version string is valid; false otherwise.
     """
-    return re.match(
-        (
-            r'^([1-9][0-9]*!)?'
-            r'(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*))*((a|b|rc)(0|[1-9][0-9]*))?'
-            r'(\.post(0|[1-9][0-9]*))?(\.dev(0|[1-9][0-9]*))?$'
-        ),
-        version
-    ) is not None
+    return PEP440_CANONICAL_VERSION_PATTERN_RE.match(version) is not None
+
+
+def parsed_version(version):
+    """
+    Return a parsed version string
+
+    :param version: The parsed version string
+    """
+    groupdict = PEP440_CANONICAL_VERSION_PATTERN_RE.match(version).groupdict()
+
+    # Convert dot separated string of integers to tuple of integers
+    groupdict['release'] = tuple(int(p) for p in groupdict.pop('release').split('.'))
+
+    # Convert strings to values
+    for key in ('epoch', 'pre_value', 'post', 'dev'):
+        try:
+            groupdict[key] = int(groupdict[key])
+        except TypeError:
+            pass
+
+    tag = groupdict.pop('pre_tag')
+    value = groupdict.pop('pre_value')
+    if tag is not None:
+        groupdict['pre'] = (tag, value)
+    else:
+        groupdict['pre'] = None
+
+    return SimpleNamespace(**groupdict)
 
 
 class BaseConfig:
@@ -155,6 +187,25 @@ class AppConfig(BaseConfig):
         * all `-` have been replaced with `_`.
         """
         return self.app_name.replace('-', '_')
+
+    @property
+    def package_name(self):
+        """
+        The bundle name of the app, with `-` replaced with `_` to create
+        something that can be used a namespace identifier on Python or Java,
+        similar to `module_name`.
+        """
+        return self.bundle.replace('-', '_')
+
+    @property
+    def PYTHONPATH(self):
+        "The PYTHONPATH modifications needed to run this app."
+        paths = []
+        for source in self.sources:
+            path = source.rsplit('/', 1)[0]
+            if path not in paths:
+                paths.append(path)
+        return paths
 
 
 def merge_config(config, data):

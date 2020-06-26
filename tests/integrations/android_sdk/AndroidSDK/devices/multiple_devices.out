@@ -1,0 +1,6 @@
+List of devices attached
+041234567892009a       unauthorized usb:336675328X transport_id:2
+KABCDABCDA1513         device usb:336675584X product:Kogan_Agora_9 model:Kogan_Agora_9 device:Kogan_Agora_9 transport_id:1
+emulator-5554          device product:sdk_phone_x86 model:Android_SDK_built_for_x86 device:generic_x86 transport_id:4
+emulator-5556          offline transport_id:32
+

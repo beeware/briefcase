@@ -12,8 +12,9 @@ from requests import exceptions as requests_exceptions
 
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError, NetworkFailure
+import briefcase
 
-from .base import BaseCommand, TemplateUnsupportedVersion, full_kwargs
+from .base import BaseCommand, TemplateUnsupportedVersion, full_options
 
 
 class InvalidTemplateRepository(BriefcaseCommandError):
@@ -94,6 +95,7 @@ def write_dist_info(app: BaseConfig, dist_info_path: Path):
         f.write('briefcase\n')
     with (dist_info_path / 'METADATA').open('w') as f:
         f.write('Metadata-Version: 2.1\n')
+        f.write('Briefcase-Version: {}\n'.format(briefcase.__version__))
         f.write('Name: {app.app_name}\n'.format(app=app))
         f.write('Formal-Name: {app.formal_name}\n'.format(app=app))
         f.write('App-ID: {app.bundle}.{app.app_name}\n'.format(app=app))
@@ -110,8 +112,8 @@ def write_dist_info(app: BaseConfig, dist_info_path: Path):
 class CreateCommand(BaseCommand):
     command = 'create'
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args, **options):
+        super().__init__(*args, **options)
         self._path_index = {}
         self._s3 = None
 
@@ -323,6 +325,7 @@ class CreateCommand(BaseCommand):
         extra_context.update({
             # Transformations of explicit properties into useful forms
             'module_name': app.module_name,
+            'package_name': app.package_name,
 
             # Properties that are a function of the execution
             'year': date.today().strftime('%Y'),
@@ -417,7 +420,7 @@ class CreateCommand(BaseCommand):
                 str(support_filename),
                 extract_dir=str(support_path)
             )
-        except shutil.ReadError:
+        except (shutil.ReadError, EOFError):
             print()
             raise InvalidSupportPackage(support_package_url)
 
@@ -508,7 +511,6 @@ class CreateCommand(BaseCommand):
                     try:
                         source_filename = '{source}{target.suffix}'.format(
                             source=source[variant],
-                            variant=variant,
                             target=target,
                         )
                         full_role = '{variant} {role}'.format(
@@ -557,7 +559,6 @@ class CreateCommand(BaseCommand):
                     try:
                         source_filename = '{source}-{size}{target.suffix}'.format(
                             source=source[variant],
-                            variant=variant,
                             size=size,
                             target=target,
                         )
@@ -657,7 +658,7 @@ class CreateCommand(BaseCommand):
                     target=self.bundle_path(app) / target,
                 )
 
-    def create_app(self, app: BaseConfig, **kwargs):
+    def create_app(self, app: BaseConfig, **options):
         """
         Create an application bundle.
 
@@ -666,10 +667,11 @@ class CreateCommand(BaseCommand):
         bundle_path = self.bundle_path(app)
         if bundle_path.exists():
             print()
-            confirm = self.input('Application {app.app_name} already exists; overwrite (y/N)? '.format(
-                app=app
-            ))
-            if confirm.lower() != 'y':
+            confirm = self.input.boolean_input(
+                'Application {app.app_name} already exists; overwrite'.format(app=app),
+                default=False
+            )
+            if not confirm:
                 print("Aborting creation of app {app.app_name}".format(
                     app=app
                 ))
@@ -722,17 +724,17 @@ class CreateCommand(BaseCommand):
 
         Raises MissingToolException if a required system tool is missing.
         """
-        self.git = self.integrations.git.verify_git_is_installed(self.host_os)
+        self.git = self.integrations.git.verify_git_is_installed(self)
 
-    def __call__(self, app: Optional[BaseConfig] = None, **kwargs):
+    def __call__(self, app: Optional[BaseConfig] = None, **options):
         # Confirm all required tools are available
         self.verify_tools()
 
         if app:
-            state = self.create_app(app, **kwargs)
+            state = self.create_app(app, **options)
         else:
             state = None
             for app_name, app in sorted(self.apps.items()):
-                state = self.create_app(app, **full_kwargs(state, kwargs))
+                state = self.create_app(app, **full_options(state, options))
 
         return state

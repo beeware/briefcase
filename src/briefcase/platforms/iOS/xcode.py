@@ -11,8 +11,8 @@ from briefcase.commands import (
     UpdateCommand
 )
 from briefcase.config import BaseConfig
-from briefcase.console import select_option
-from briefcase.exceptions import BriefcaseCommandError
+from briefcase.console import select_option, InputDisabled
+from briefcase.exceptions import BriefcaseCommandError, InvalidDeviceError
 from briefcase.integrations.xcode import (
     DeviceState,
     get_device_state,
@@ -78,7 +78,7 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
         :returns: A tuple containing the udid, iOS version, and device name
             for the selected device.
         """
-        simulators = self.get_simulators('iOS', sub=self.subprocess)
+        simulators = self.get_simulators(self, 'iOS')
 
         try:
             # Try to convert to a UDID. If this succeeds, then the argument
@@ -95,11 +95,8 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
 
             # We've iterated through all available iOS versions and
             # found no match; return an error.
-            raise BriefcaseCommandError(
-                "Invalid simulator UDID {udid}".format(
-                    udid=udid_or_device
-                )
-            )
+            raise InvalidDeviceError('device UDID', udid)
+
         except (ValueError, TypeError):
             # Provided value wasn't a UDID.
             # It must be a device or device+version
@@ -121,17 +118,9 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
                         device = devices[udid]
                         return udid, iOS_version, device
                     except KeyError:
-                        raise BriefcaseCommandError(
-                            "Invalid device name '{device}'".format(
-                                    device=device
-                                )
-                            )
+                        raise InvalidDeviceError('device name', device)
                 except KeyError:
-                    raise BriefcaseCommandError(
-                       "Invalid OS Version '{iOS_version}'".format(
-                            iOS_version=iOS_version
-                        )
-                    )
+                    raise InvalidDeviceError('iOS Version', iOS_version)
             elif udid_or_device:
                 # Just a device name
                 device = udid_or_device
@@ -155,11 +144,7 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
                     except KeyError:
                         # UDID doesn't exist in this iOS version; try another.
                         pass
-                raise BriefcaseCommandError(
-                    "Invalid device name '{device}'".format(
-                            device=device
-                        )
-                    )
+                raise InvalidDeviceError('device name', device)
 
         if len(simulators) == 0:
             raise BriefcaseCommandError(
@@ -168,9 +153,10 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
         elif len(simulators) == 1:
             iOS_version = list(simulators.keys())[0]
         else:
-            print()
-            print("Select iOS version:")
-            print()
+            if self.input.enabled:
+                print()
+                print("Select iOS version:")
+                print()
             iOS_version = select_option({
                 version: version
                 for version in simulators.keys()
@@ -187,9 +173,10 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
         elif len(devices) == 1:
             udid = list(devices.keys())[0]
         else:
-            print()
-            print("Select simulator device:")
-            print()
+            if self.input.enabled:
+                print()
+                print("Select simulator device:")
+                print()
             udid = select_option(devices, input=self.input)
 
         device = devices[udid]
@@ -227,7 +214,12 @@ class iOSXcodeBuildCommand(iOSXcodeMixin, BuildCommand):
         :param udid: The device UDID to target. If ``None``, the user will
             be asked to select a device at runtime.
         """
-        udid, iOS_version, device = self.select_target_device(udid)
+        try:
+            udid, iOS_version, device = self.select_target_device(udid)
+        except InputDisabled:
+            raise BriefcaseCommandError(
+                "Input has been disabled; can't select a device to target."
+            )
 
         print()
         print("Targeting an {device} running iOS {iOS_version} (device UDID {udid})".format(
@@ -302,7 +294,13 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
             be asked to select a device at runtime.
         :param base_path: The path to the project directory.
         """
-        udid, iOS_version, device = self.select_target_device(udid)
+        try:
+            udid, iOS_version, device = self.select_target_device(udid)
+        except InputDisabled:
+            raise BriefcaseCommandError(
+                "Input has been disabled; can't select a device to target."
+            )
+
         print()
         print(
             "[{app.app_name}] Starting app on an {device} running "
@@ -317,13 +315,13 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         # The simulator needs to be booted before being started.
         # If it's shut down, we can boot it again; but if it's currently
         # shutting down, we need to wait for it to shut down before restarting.
-        device_state = self.get_device_state(udid, sub=self.subprocess)
+        device_state = self.get_device_state(self, udid)
         if device_state not in {DeviceState.SHUTDOWN, DeviceState.BOOTED}:
             print('Waiting for simulator...', flush=True, end='')
             while device_state not in {DeviceState.SHUTDOWN, DeviceState.BOOTED}:
                 self.sleep(2)
                 print('.', flush=True, end='')
-                device_state = self.get_device_state(udid, sub=self.subprocess)
+                device_state = self.get_device_state(self, udid)
 
         # We now know the simulator is either shut down or booted;
         # if it's shut down, start it again.

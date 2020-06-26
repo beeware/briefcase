@@ -27,9 +27,6 @@ your ``setup.py`` or ``setup.cfg`` file.
 
 The following is a minimal starting point for your ``pyproject.toml`` file::
 
-    [build-system]
-    requires = ["briefcase"]
-
     [tool.briefcase]
     project_name = "My Project"
     bundle = "com.example"
@@ -56,10 +53,7 @@ The following is a minimal starting point for your ``pyproject.toml`` file::
     [tool.briefcase.app.myapp.iOS]
     requires = ['toga-iOS==0.3.0.dev15']
 
-The ``[build-system]`` section is preamble required by PEP518, declaring the
-dependency on Briefcase.
-
-The remaining sections are tool specific, and start with the prefix
+The configuration sections are tool specific, and start with the prefix
 ``tool.briefcase``. Additional dotted paths define the specificity of the
 settings that follow.
 

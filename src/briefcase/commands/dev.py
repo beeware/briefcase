@@ -51,7 +51,7 @@ class DevCommand(BaseCommand):
             help='Update dependencies for app'
         )
 
-    def install_dev_dependencies(self, app: BaseConfig, **kwargs):
+    def install_dev_dependencies(self, app: BaseConfig, **options):
         """
         Install the dependencies for the app devly.
 
@@ -72,7 +72,7 @@ class DevCommand(BaseCommand):
         else:
             print("No application dependencies.")
 
-    def run_dev_app(self, app: BaseConfig, env: dict, **kwargs):
+    def run_dev_app(self, app: BaseConfig, env: dict, **options):
         """
         Run the app in the dev environment.
 
@@ -97,20 +97,14 @@ class DevCommand(BaseCommand):
         # Create a shell environment where PYTHONPATH points to the source
         # directories described by the app config.
         env = os.environ.copy()
-        paths = []
-        for app in app.sources:
-            path = app.rsplit('/', 1)[0]
-            if path not in paths:
-                paths.append(path)
-
-        env['PYTHONPATH'] = os.pathsep.join(paths)
+        env['PYTHONPATH'] = os.pathsep.join(app.PYTHONPATH)
         return env
 
     def __call__(
         self,
         appname: Optional[str] = None,
         update_dependencies: Optional[bool] = False,
-        **kwargs
+        **options
     ):
         # Confirm all required tools are available
         self.verify_tools()
@@ -144,7 +138,7 @@ class DevCommand(BaseCommand):
             print('[{app.app_name}] Installing dependencies...'.format(
                 app=app
             ))
-            self.install_dev_dependencies(app, **kwargs)
+            self.install_dev_dependencies(app, **options)
             write_dist_info(app, dist_info_path)
 
         print()
@@ -152,5 +146,5 @@ class DevCommand(BaseCommand):
             app=app
         ))
         env = self.get_environment(app)
-        state = self.run_dev_app(app, env, **kwargs)
+        state = self.run_dev_app(app, env, **options)
         return state

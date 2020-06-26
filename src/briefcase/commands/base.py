@@ -5,7 +5,6 @@ import inspect
 import os
 import platform
 import shutil
-import subprocess
 import sys
 from abc import ABC, abstractmethod
 from cgi import parse_header
@@ -18,12 +17,14 @@ from cookiecutter.repository import is_repo_url
 
 from briefcase import __version__, integrations
 from briefcase.config import AppConfig, GlobalConfig, parse_config
+from briefcase.console import Console
 from briefcase.exceptions import (
     BadNetworkResourceError,
     BriefcaseCommandError,
     BriefcaseConfigError,
     MissingNetworkResourceError
 )
+from briefcase.integrations.subprocess import Subprocess
 
 
 class TemplateUnsupportedVersion(BriefcaseCommandError):
@@ -78,22 +79,22 @@ def cookiecutter_cache_path(template):
     return Path.home() / '.cookiecutters' / cache_name
 
 
-def full_kwargs(state, kwargs):
+def full_options(state, options):
     """
     Merge command state with keyword arguments.
 
     Command state takes precedence over any keyword argument.
 
     :param state: The current command state. Can be ``None``.
-    :param kwargs: The base keyword arguments.
-    :returns: A dictionary containing all of ``kwargs``, with any values
-        provided in ``state`` overriding the base ``kwargs`` values.
+    :param options: The base options.
+    :returns: A dictionary containing all of ``options``, with any values
+        provided in ``state`` overriding the base ``options`` values.
     """
     if state is not None:
-        full = kwargs.copy()
+        full = options.copy()
         full.update(state)
     else:
-        full = kwargs
+        full = options
 
     return full
 
@@ -103,14 +104,10 @@ class BaseCommand(ABC):
     GLOBAL_CONFIG_CLASS = GlobalConfig
     APP_CONFIG_CLASS = AppConfig
 
-    def __init__(
-            self,
-            base_path,
-            dot_briefcase_path=Path.home() / ".briefcase",
-            apps=None,
-            ):
+    def __init__(self, base_path, home_path=Path.home(), apps=None, input_enabled=True):
         self.base_path = base_path
-        self.dot_briefcase_path = dot_briefcase_path
+        self.home_path = home_path
+        self.dot_briefcase_path = home_path / ".briefcase"
 
         self.global_config = None
         self.apps = {} if apps is None else apps
@@ -123,11 +120,11 @@ class BaseCommand(ABC):
         # These are abstracted to enable testing without patching.
         self.cookiecutter = cookiecutter
         self.requests = requests
-        self.input = input
+        self.input = Console(enabled=input_enabled)
         self.os = os
         self.sys = sys
         self.shutil = shutil
-        self.subprocess = subprocess
+        self.subprocess = Subprocess(self)
 
         # The internal Briefcase integrations API.
         self.integrations = integrations
@@ -136,37 +133,73 @@ class BaseCommand(ABC):
     def create_command(self):
         "Factory property; return an instance of a create command for the same format"
         format_module = importlib.import_module(self.__module__)
-        return format_module.create(base_path=self.base_path, apps=self.apps)
+        command = format_module.create(
+            base_path=self.base_path,
+            apps=self.apps,
+            input_enabled=self.input.enabled,
+        )
+        command.clone_options(self)
+        return command
 
     @property
     def update_command(self):
         "Factory property; return an instance of an update command for the same format"
         format_module = importlib.import_module(self.__module__)
-        return format_module.update(base_path=self.base_path, apps=self.apps)
+        command = format_module.update(
+            base_path=self.base_path,
+            apps=self.apps,
+            input_enabled=self.input.enabled,
+        )
+        command.clone_options(self)
+        return command
 
     @property
     def build_command(self):
         "Factory property; return an instance of a build command for the same format"
         format_module = importlib.import_module(self.__module__)
-        return format_module.build(base_path=self.base_path, apps=self.apps)
+        command = format_module.build(
+            base_path=self.base_path,
+            apps=self.apps,
+            input_enabled=self.input.enabled,
+        )
+        command.clone_options(self)
+        return command
 
     @property
     def run_command(self):
         "Factory property; return an instance of a run command for the same format"
         format_module = importlib.import_module(self.__module__)
-        return format_module.run(base_path=self.base_path, apps=self.apps)
+        command = format_module.run(
+            base_path=self.base_path,
+            apps=self.apps,
+            input_enabled=self.input.enabled,
+        )
+        command.clone_options(self)
+        return command
 
     @property
     def package_command(self):
         "Factory property; return an instance of a package command for the same format"
         format_module = importlib.import_module(self.__module__)
-        return format_module.package(base_path=self.base_path, apps=self.apps)
+        command = format_module.package(
+            base_path=self.base_path,
+            apps=self.apps,
+            input_enabled=self.input.enabled,
+        )
+        command.clone_options(self)
+        return command
 
     @property
     def publish_command(self):
         "Factory property; return an instance of a publish command for the same format"
         format_module = importlib.import_module(self.__module__)
-        return format_module.publish(base_path=self.base_path, apps=self.apps)
+        command = format_module.publish(
+            base_path=self.base_path,
+            apps=self.apps,
+            input_enabled=self.input.enabled,
+        )
+        command.clone_options(self)
+        return command
 
     @property
     def platform_path(self):
@@ -279,7 +312,22 @@ class BaseCommand(ABC):
         # Parse the full set of command line options from the content
         # remaining after the basic command/platform/output format
         # has been extracted.
-        return vars(parser.parse_args(extra))
+        options = vars(parser.parse_args(extra))
+
+        # Extract the base default options onto the command
+        self.input.enabled = options.pop('input_enabled')
+        self.verbosity = options.pop('verbosity')
+
+        return options
+
+    def clone_options(self, command):
+        """
+        Clone options from one command to this one.
+
+        :param command: The command whose options are to be cloned
+        """
+        self.input.enabled = command.input.enabled
+        self.verbosity = command.verbosity
 
     def add_default_options(self, parser):
         """
@@ -297,6 +345,15 @@ class BaseCommand(ABC):
             '-V', '--version',
             action='version',
             version=__version__
+        )
+        parser.add_argument(
+            '--no-input',
+            action='store_false',
+            default=True,
+            dest="input_enabled",
+            help="Don't ask for user input. If any action would be destructive, "
+                 "an error will be raised; otherwise, default answers will be "
+                 "assumed."
         )
 
     def add_options(self, parser):

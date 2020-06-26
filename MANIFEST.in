@@ -1,3 +1,4 @@
+exclude labels.toml
 include beekeeper.yml
 include CONTRIBUTING.md
 include README.rst
@@ -6,7 +7,11 @@ include LICENSE.txt
 include requirements*.txt
 include docs/spelling_wordlist
 include tests/integrations/xcode/simctl/README
-recursive-include briefcase *.py
+include pyproject.toml
+include tox.ini
+include .coveragerc
+recursive-include changes *.rst
+recursive-include src *.py
 recursive-include docs *.bat
 recursive-include docs *.png
 recursive-include docs *.py
@@ -16,3 +21,5 @@ recursive-include docs Makefile
 recursive-exclude docs/_build *
 recursive-include tests *.py
 recursive-include tests *.json
+recursive-include tests *.out
+recursive-include tests *.returncode

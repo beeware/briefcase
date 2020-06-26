@@ -1,7 +1,4 @@
 import subprocess
-from zipfile import BadZipFile, ZipFile
-
-from requests import exceptions as requests_exceptions
 
 from briefcase.commands import (
     BuildCommand,
@@ -11,9 +8,10 @@ from briefcase.commands import (
     RunCommand,
     UpdateCommand
 )
-from briefcase.config import BaseConfig
-from briefcase.exceptions import BriefcaseCommandError, NetworkFailure
-from briefcase.integrations.adb import ADB, no_or_wrong_device_message
+from briefcase.config import BaseConfig, parsed_version
+from briefcase.exceptions import BriefcaseCommandError
+from briefcase.integrations.android_sdk import verify_android_sdk
+from briefcase.integrations.java import verify_jdk
 
 
 class GradleMixin:
@@ -22,7 +20,6 @@ class GradleMixin:
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.ADB = ADB  # Storing for easy override by unit tests.
 
     def binary_path(self, app):
         return (
@@ -37,126 +34,20 @@ class GradleMixin:
         )
 
     def distribution_path(self, app):
-        return self.binary_path(app)
-
-    @property
-    def sdk_path(self):
-        return self.dot_briefcase_path / "tools" / "android_sdk"
-
-    @property
-    def sdkmanager_path(self):
-        sdkmanager = "sdkmanager.bat" if self.host_os == "Windows" else "sdkmanager"
-        return self.sdk_path / "tools" / "bin" / sdkmanager
+        return (
+            self.platform_path
+            / app.formal_name
+            / "app"
+            / "build"
+            / "outputs"
+            / "apk"
+            / "release"
+            / "app-release-unsigned.apk"
+        )
 
     def gradlew_path(self, app):
         gradlew = "gradlew.bat" if self.host_os == "Windows" else "gradlew"
         return self.bundle_path(app) / gradlew
-
-    @property
-    def sdk_url(self):
-        """The Android SDK URL appropriate to the current operating system."""
-        # The URLs described by the pattern below have existed since
-        # approximately 2017, and the code they download has a built-in
-        # updater. I hope they will work for many years.
-        return "https://dl.google.com/android/repository/" + (
-            "sdk-tools-{os}-4333796.zip".format(os=self.host_os.lower())
-        )
-
-    def verify_python_version(self):
-        if self.python_version_tag != "3.7":
-            raise BriefcaseCommandError(
-                """\
-Found Python version {self.python_version_tag}. Android packaging currently
-requires Python 3.7.""".format(
-                    self=self
-                )
-            )
-
-    def verify_sdk(self):
-        """
-        Install the Android SDK if needed.
-        """
-        # On Windows, the Android SDK makes some files executable by adding `.bat` to
-        # the end of their filenames.
-        #
-        # On macOS & Linux, `verify_sdk()` takes care to chmod some files so that
-        # they are marked executable.
-        #
-        # On all platforms, we need to unpack the Android SDK ZIP file.
-        #
-        # If we've already done this, we can exit early.
-        if self.sdkmanager_path.exists() and (
-            self.host_os == "Windows"
-            or self.os.access(str(self.sdkmanager_path), self.os.X_OK)
-        ):
-            return
-
-        print("Setting up Android SDK...")
-        try:
-            sdk_zip_path = self.download_url(
-                url=self.sdk_url, download_path=self.dot_briefcase_path / "tools",
-            )
-        except requests_exceptions.ConnectionError:
-            raise NetworkFailure("download Android SDK")
-        try:
-            with ZipFile(str(sdk_zip_path)) as sdk_zip:
-                sdk_zip.extractall(path=str(self.sdk_path))
-        except BadZipFile:
-            raise BriefcaseCommandError(
-                """\
-Unable to unpack Android SDK ZIP file. The download may have been interrupted
-or corrupted.
-
-Delete {sdk_zip_path} and run briefcase again.""".format(
-                    sdk_zip_path=sdk_zip_path
-                )
-            )
-        sdk_zip_path.unlink()  # Zip file no longer needed once unpacked.
-        # `ZipFile` ignores the permission metadata in the Android SDK ZIP
-        # file, so on non-Windows, we manually fix permissions.
-        if self.host_os == "Windows":
-            return
-        for binpath in (self.sdk_path / "tools" / "bin").glob("*"):
-            if not self.os.access(str(binpath), self.os.X_OK):
-                binpath.chmod(0o755)
-
-    def verify_license(self):
-        license_path = self.sdk_path / "licenses" / "android-sdk-license"
-        if license_path.exists():
-            return
-
-        print(
-            "\n"
-            + """\
-The Android tools provided by Google have license terms that you must accept
-before you may use those tools.
-"""
-        )
-        try:
-            # Using subprocess.run() with no I/O redirection so the user sees
-            # the full output and can send input.
-            self.subprocess.run(
-                [str(self.sdkmanager_path), "--licenses"],
-                check=True,
-            )
-        except subprocess.CalledProcessError:
-            raise BriefcaseCommandError(
-                """\
-Error while reviewing Android SDK licenses. Please run this command and examine
-its output for errors.
-
-$ {sdkmanager} --licenses""".format(
-                    sdkmanager=self.sdk_path / "tools" / "bin" / "sdkmanager"
-                )
-            )
-
-        if not license_path.exists():
-            raise BriefcaseCommandError(
-                """\
-You did not accept the Android SDK licenses. Please re-run the briefcase command
-and accept the Android SDK license when prompted. You may need an Internet
-connection."""
-            )
 
     def verify_tools(self):
         """
@@ -164,13 +55,36 @@ connection."""
         this system, downloading tools as needed.
         """
         super().verify_tools()
-        self.verify_python_version()
-        self.verify_sdk()
-        self.verify_license()
+        self.java_home_path = verify_jdk(self)
+        self.android_sdk = verify_android_sdk(self)
 
 
 class GradleCreateCommand(GradleMixin, CreateCommand):
     description = "Create and populate an Android APK."
+
+    def output_format_template_context(self, app: BaseConfig):
+        """
+        Additional template context required by the output format.
+
+        :param app: The config object for the app
+        """
+        # Android requires an integer "version code". If a version code
+        # isn't explicitly provided, generate one from the version number.
+        # The build number will also be appended, if provided.
+        try:
+            version_code = app.version_code
+        except AttributeError:
+            parsed = parsed_version(app.version)
+
+            version_triple = (list(parsed.release) + [0, 0])[:3]
+            version_code = '{v[0]:d}{v[1]:02d}{v[2]:02d}{build:02d}'.format(
+                v=version_triple,
+                build=int(getattr(app, 'build', '0'))
+            ).lstrip('0')
+
+        return {
+            'version_code': version_code,
+        }
 
 
 class GradleUpdateCommand(GradleMixin, UpdateCommand):
@@ -188,13 +102,12 @@ class GradleBuildCommand(GradleMixin, BuildCommand):
         """
         print("[{app.app_name}] Building Android APK...".format(app=app))
         try:
-            env = {**self.os.environ, "ANDROID_SDK_ROOT": str(self.sdk_path)}
             self.subprocess.run(
                 # Windows needs the full path to `gradlew`; macOS & Linux can find it
                 # via `./gradlew`. For simplicity of implementation, we always provide
                 # the full path.
                 [str(self.gradlew_path(app)), "assembleDebug"],
-                env=env,
+                env=self.android_sdk.env,
                 # Set working directory so gradle can use the app bundle path as its
                 # project root, i.e., to avoid 'Task assembleDebug not found'.
                 cwd=str(self.bundle_path(app)),
@@ -210,42 +123,20 @@ class GradleRunCommand(GradleMixin, RunCommand):
 
     def verify_tools(self):
         super().verify_tools()
-        self.verify_emulator()
-
-    def verify_emulator(self):
-        if (self.sdk_path / "emulator").exists():
-            return
-
-        print("Downloading the Android emulator and system image...")
-        try:
-            # Using `check_output` and `stderr=STDOUT` so we buffer output,
-            # displaying it only if an exception occurs.
-            self.subprocess.run(
-                [
-                    str(self.sdkmanager_path),
-                    "platforms;android-28",
-                    "system-images;android-28;default;x86",
-                    "emulator",
-                    "platform-tools",
-                ],
-                check=True
-            )
-        except subprocess.CalledProcessError:
-            raise BriefcaseCommandError(
-                "Error while installing Android emulator and system image."
-            )
+        self.android_sdk.verify_emulator()
 
     def add_options(self, parser):
         super().add_options(parser)
         parser.add_argument(
             "-d",
             "--device",
-            dest="device",
-            help="The device to target, formatted for `adb`",
+            dest="device_or_avd",
+            help="The device to target; either a device ID for a physical device, "
+                 " or an AVD name ('@emulatorName') ",
             required=False,
         )
 
-    def run_app(self, app: BaseConfig, device=None, **kwargs):
+    def run_app(self, app: BaseConfig, device_or_avd=None, **kwargs):
         """
         Start the application.
 
@@ -253,42 +144,81 @@ class GradleRunCommand(GradleMixin, RunCommand):
         :param device: The device to target. If ``None``, the user will
             be asked to re-run the command selecting a specific device.
         """
-        print()
-        if device is None:
-            raise BriefcaseCommandError(
-                """\
-No Android device was specified. Please specify a specific device on which
-to run the app by passing `-d <device_id>`.
+        device, name, avd = self.android_sdk.select_target_device(
+            device_or_avd=device_or_avd
+        )
 
-"""
-                + no_or_wrong_device_message(self.sdk_path)
+        # If there's no device ID, that means the emulator isn't running.
+        # If there's no AVD either, it means the user has chosen to create
+        # an entirely new emulator. Create the emulator (if necessary),
+        # then start it.
+        if device is None:
+            if avd is None:
+                avd = self.android_sdk.create_emulator()
+
+            device, name = self.android_sdk.start_emulator(avd)
+
+        print()
+        print(
+            "[{app.app_name}] Starting app on {name} (device ID {device})".format(
+                app=app,
+                name=name,
+                device=device,
             )
+        )
 
         # Create an ADB wrapper for the selected device
-        adb = self.ADB(sdk_path=self.sdk_path, device=device)
+        adb = self.android_sdk.adb(device=device)
+
+        # Compute Android package name. The Android template uses
+        # `package_name` and `module_name`, so we use those here as well.
+        package = "{app.package_name}.{app.module_name}".format(app=app)
+
+        # We force-stop the app to ensure the activity launches freshly.
+        print()
+        print("[{app.app_name}] Stopping old versions of the app...".format(app=app))
+        adb.force_stop_app(package)
 
         # Install the latest APK file onto the device.
-        print("[{app.app_name}] Installing app (Device ID {device})...".format(
+        print()
+        print("[{app.app_name}] Installing app...".format(
             app=app,
-            device=device,
         ))
         adb.install_apk(self.binary_path(app))
 
-        # Compute Android package name based on beeware `bundle` and `app_name`
-        # app properties, similar to iOS.
-        package = "{app.bundle}.{app.app_name}".format(app=app)
-
-        # We force-stop the app to ensure the activity launches freshly.
-        print("[{app.app_name}] Stopping app...".format(app=app))
-        adb.force_stop_app(package)
-
         # To start the app, we launch `org.beeware.android.MainActivity`.
+        print()
         print("[{app.app_name}] Launching app...".format(app=app))
         adb.start_app(package, "org.beeware.android.MainActivity")
 
 
 class GradlePackageCommand(GradleMixin, PackageCommand):
     description = "Package an Android APK."
+
+    def package_app(self, app: BaseConfig, **kwargs):
+        """
+        Package the app for distribution.
+
+        This involves building the release APK.
+
+        :param app: The application to build
+        """
+        print("[{app.app_name}] Building Android release APK...".format(app=app))
+        try:
+            self.subprocess.run(
+                # Windows needs the full path to `gradlew`; macOS & Linux can find it
+                # via `./gradlew`. For simplicity of implementation, we always provide
+                # the full path.
+                [str(self.gradlew_path(app)), "assembleRelease"],
+                env=self.android_sdk.env,
+                # Set working directory so gradle can use the app bundle path as its
+                # project root, i.e., to avoid 'Task assembleRelease not found'.
+                cwd=str(self.bundle_path(app)),
+                check=True
+            )
+        except subprocess.CalledProcessError:
+            print()
+            raise BriefcaseCommandError("Error while building project.")
 
 
 class GradlePublishCommand(GradleMixin, PublishCommand):

@@ -16,22 +16,31 @@ sure that it is referenced in the index of the corresponding category, so it
 will show on in the documentation. If you have no idea how to do this, study
 the other index files for clues.
 
-
 Build documentation locally
 ---------------------------
 
-Go to the documentation folder::
+To build the documentation locally, :ref:`set up a development environment
+<setup-dev-environment>`, and run:
 
-    $ cd docs
+.. tabs::
 
-Install Sphinx with the helpers and extensions we use::
+  .. group-tab:: macOS
 
-    $ pip install -r requirements_rtd.txt
+    .. code-block:: bash
 
-Create the static files: ::
+      (venv) $ tox -e docs
 
-    $ make html
+  .. group-tab:: Linux
 
-Check for any errors and,if possible, fix them.
-The output of the file should be in the ``_build/html`` folder.
-Open the file you changed in the browser.
+    .. code-block:: bash
+
+      (venv) $ tox -e docs
+
+  .. group-tab:: Windows
+
+    .. code-block:: bash
+
+      C:\...>tox -e docs
+
+The output of the file should be in the ``build/sphinx/html`` folder. If there
+are any markup problems, they'll raise an error.
