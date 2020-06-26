@@ -21,6 +21,18 @@ Run this command.
 
       $ (venv) briefcase package android
 
+  .. group-tab:: Linux
+
+    .. code-block:: bash
+
+      $ (venv) briefcase package android
+
+  .. group-tab:: Windows
+
+    .. code-block:: bash
+
+      C:\...> (venv) briefcase package android
+
 This will result in an Android App Bundle file being generated. An `Android App Bundle
 <https://developer.android.com/guide/app-bundle>`__ is a publishing format that
 includes all your app’s compiled code and resources, and defers APK generation and
