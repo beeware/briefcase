@@ -40,9 +40,9 @@ class GradleMixin:
             / "app"
             / "build"
             / "outputs"
-            / "apk"
+            / "bundle"
             / "release"
-            / "app-release-unsigned.apk"
+            / "app-release.aab"
         )
 
     def gradlew_path(self, app):
@@ -88,11 +88,11 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
 
 
 class GradleUpdateCommand(GradleMixin, UpdateCommand):
-    description = "Update an existing Android APK."
+    description = "Update an existing Android debug APK."
 
 
 class GradleBuildCommand(GradleMixin, BuildCommand):
-    description = "Build an Android APK."
+    description = "Build an Android debug APK."
 
     def build_app(self, app: BaseConfig, **kwargs):
         """
@@ -106,10 +106,10 @@ class GradleBuildCommand(GradleMixin, BuildCommand):
                 # Windows needs the full path to `gradlew`; macOS & Linux can find it
                 # via `./gradlew`. For simplicity of implementation, we always provide
                 # the full path.
-                [str(self.gradlew_path(app)), "assembleDebug"],
+                [str(self.gradlew_path(app)), "bundleRelease"],
                 env=self.android_sdk.env,
                 # Set working directory so gradle can use the app bundle path as its
-                # project root, i.e., to avoid 'Task assembleDebug not found'.
+                # project root, i.e., to avoid 'Task bundleRelease not found'.
                 cwd=str(self.bundle_path(app)),
                 check=True
             )
@@ -119,7 +119,7 @@ class GradleBuildCommand(GradleMixin, BuildCommand):
 
 
 class GradleRunCommand(GradleMixin, RunCommand):
-    description = "Run an Android APK."
+    description = "Run an Android debug APK on a device (physical or virtual)."
 
     def verify_tools(self):
         super().verify_tools()
@@ -193,17 +193,17 @@ class GradleRunCommand(GradleMixin, RunCommand):
 
 
 class GradlePackageCommand(GradleMixin, PackageCommand):
-    description = "Package an Android APK."
+    description = "Create an Android App Bundle and APK in release mode."
 
     def package_app(self, app: BaseConfig, **kwargs):
         """
         Package the app for distribution.
 
-        This involves building the release APK.
+        This involves building the release app bundle.
 
         :param app: The application to build
         """
-        print("[{app.app_name}] Building Android release APK...".format(app=app))
+        print("[{app.app_name}] Building Android App Bundle and APK in release mode...".format(app=app))
         try:
             self.subprocess.run(
                 # Windows needs the full path to `gradlew`; macOS & Linux can find it

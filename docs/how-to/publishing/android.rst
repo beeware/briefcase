@@ -1,7 +1,3 @@
-.. Notes about this file:
-    The writing style may not match other BeeWare docs. I intend to revise it.
-    This file is a stub. Feedback very welcome, though.
-
 =======
 Android
 =======
@@ -15,115 +11,158 @@ focuses on how to distribute a BeeWare app there.
 Build the app in release mode
 -----------------------------
 
-Run this command::
+Run this command.
 
-  briefcase publish android
+.. tabs::
 
-This will result in four APK files being generated. Each file corresponds
-to a different type of CPU that may be in an Android device, known as an
-Android ABI.
+  .. group-tab:: macOS
 
-.. TODO list:
-    - Adjust cookiecutter to make per-ABI APKs, per https://dev.to/sys1yagi/enable-split-apk-only-when-release-build-1ij
-    - Use Windows/Mac/Linux tabs for the above.
-    - Test it.
+    .. code-block:: bash
 
+      $ (venv) briefcase package android
 
-Sign the APK files
-------------------
+This will result in an Android App Bundle file being generated. An `Android App Bundle
+<https://developer.android.com/guide/app-bundle>`__ is a publishing format that
+includes all your app’s compiled code and resources, and defers APK generation and
+signing to Google.
+
+Sign the Android App Bundle
+---------------------------
 
 .. admonition:: Create code signing identity
 
   Before you sign the APK files, you need to :doc:`create a code signing
-  identity<../code-signing/android>`.
+  identity. <../code-signing/android>`
 
-Since you already have a code signing identity, we run the two Android SDK
-commands required to sign the APK files. First, we ensure the APK files are
-aligned to 32-bit boundaries, per the Android requirements.
+The Google Play Store requires that the Android App Bundle is signed
+before it is uploaded. Since you already have a code signing identity,
+we run the Java jarsigner tool to sign the AAB file.
 
-::
+In this example below, we assume your code signing identity is stored
+in **upload-key-helloworld.jks** under ``.android`` within your home
+folder.
 
-  $ zipalign -p 4 -f filename.apk
+.. tabs::
 
-Next, we sign the actual package files.
+  .. group-tab:: macOS
 
-::
+    .. code-block:: bash
 
-  $ apksigner sign --ks my-release-key.jks my-app-unsigned-aligned.apk
+      $ ~/.briefcase/tools/java/Contents/Home/bin/jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore ~/.android/upload-key-helloworld.jks android/*/app/build/outputs/bundle/release/app-release.aab upload-key -storepass android
 
-.. TODO list:
-    - Use Windows/Mac/Linux tabs for the above.
-    - Make sure we specify a path that finds these programs.
-    - Test it.
-    - Decide with Russell where we want to store these keys.
+  .. group-tab:: Linux
 
-Adding the app to the Google Play store
----------------------------------------
+    .. code-block:: bash
 
-Adding the app requires a few steps. You need to have a Google Account and
-create a listing for your app. You will need to choose your app's signing
-configuration in the store. Finally, you will create a new release of the app,
-at which point you will upload the APK files that comprise your app.
+      $ ~/.briefcase/tools/java/bin/jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore ~/.android/upload-key-helloworld.jks android/*/app/build/outputs/bundle/release/app-release.aab upload-key -storepass android
 
-Creating a listing
-++++++++++++++++++
+  .. group-tab:: Windows
 
-To distribute your app on the Google Play Store, you need to visit
-https://play.google.com/apps/publish/ and create an account.
+    On Windows, you must specify the full path to the AAB file. We assume below
+    that the app's formal name is Hello World. You will need to change the path
+    to the AAB file based on your app's formal name.
+
+    .. code-block:: doscon
+
+      C:\...> %HOMEPATH%\.briefcase\tools\java\bin\jarsigner.exe -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore %HOMEPATH%\.android\upload-key-helloworld.jks "android\Hello World\app\build\outputs\bundle\release\app-release.aab" upload-key -storepass android
+
+Add the app to the Google Play store
+------------------------------------
+
+To publish to the Google Play store, you will need a Google Play
+Developer account. Creating a Google Play developer account costs about
+$25 USD. You will then need to provide information for your app's store
+listing including an icon and screenshots, upload the app to Google, and
+finally roll the app out to production.
+
+The Google Play Store allows you to distribute your app for free to users,
+to charge for it, and/or to require in-app payments to unlock app features.
+The BeeWare tools do not currently provide particular support for using Play
+Store in-app payments, but it should be possible with substantial work.
+
+Register for a Google Play Developer account and pay the registration fee
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Registering for a Google Play Developer account requires a Google Account.
+You will need to pay registration fee and accept an agreement in the
+process.
+
+To check if you already have a Google Play Developer account, you can visit
+the `Google Play console. <https://play.google.com/apps/publish/>`__ If you
+see a button to **Publish an Android App on Google Play** or a button to
+**Create Application**, you can skip this step.
+
+To create your Google Play developer account, pay the fee, and review the
+agreements, `follow Google's documentation.
+<https://support.google.com/googleplay/android-developer/answer/6112435?hl=en>`__
+
+
+Create a listing
+++++++++++++++++
+
+Visit the `Google Play console. <https://play.google.com/apps/publish/>`__
+You will see a button labeled **Publish an Android App on Google Play** or
+a button to **Create Application**. Click it.
 
 Once you've done that, click **Create Application**. Choose a language and
-write a brief app title, up to 50 characters. This should probably be the
-same as your app's Formal Name in the BeeWare ecosystem.
+write a brief app title, up to 50 characters. We suggest making this the
+same as your app's Formal Name in its ``pyproject.toml``.
 
-This will take you to **Store Listing** section of your app. You will need to
-answer a variety of questions. Take your time to answer them well.
+This will take you to **Store Listing** section of your app. You will need
+to provide a short app description (up to 80 characters) and a full
+description (up to 4000 characters).
 
-You will need to upload an icon. For briefcase apps, an icon is typically specified in
-your app's ``pyproject.toml`` file. Look for a line starting with ``icon = ``.
-The Google Play Store will require a variety of other information, including at least
-one screenshot of your app and your assessment of likelihood that children will want
-to use the app.
+You will need to upload an icon of size 512x512. For briefcase apps, an icon
+is typically specified in
+your app's ``pyproject.toml`` file. Look for a line starting with ``icon =``.
 
-Configure app signing
-+++++++++++++++++++++
+You will need at least two screenshots of the app. Google recommends
+using a screenshot `without framing.
+<https://developer.android.com/distribute/marketing-tools/device-art-generator>`__
+One way to capture such a screenshot is with the Android emulator's screenshot
+functionality, notated by a camera icon. This allows your screenshot to contain
+just what appears on the screen rather than a picture of the virtual device.
+This will store a file in your Desktop folder.
 
-Click **App Signing** in the left navigation. The Google Play Store offers an app signing
-feature where they maintain the signing key for your app. For simplicity, you will
-click **Opt Out** to opt out of that feature.
+You will need a feature graphic. A feature graphic visually represents the
+purpose of the app or your logo and can optionally include a screenshot of
+the app in use, typically including device framing.
 
-.. admonition:: Letting Google manage and protect your app signing key
+Google Play supports optional graphic assets including promo videos, TV banners,
+and 360 degree stereoscopic images. See also `Google's advice on graphic assets.
+<https://support.google.com/googleplay/android-developer/answer/1078870>`__
 
-  The Google Play store's feature to manage app signing keys offers a way to
-  protect your app if your signing key is ever lost or compromised. You can read
-  more about it in `Google's documentation. <https://support.google.com/googleplay/android-developer/answer/7384423?hl=en>`_
-  For simplicity, this documentation relies on you to manage and protect your
-  app's signing key.
+The Google Play Store will require a variety of other information, including
+an app category and your assessment of the likelihood that children will want
+to use the app, an email address where users can contact you. This email
+address is publicly displayed.
 
-  You can enable this feature later if you are willing to give Google the private
-  key corresponding to this app.
+Create a release and uploading your signed Android App Bundle
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-Creating a release and uploading APK files
-++++++++++++++++++++++++++++++++++++++++++
+To create a release, visit your app in the `Google Play console
+<https://play.google.com/apps/publish/>`__. If you have multiple apps, ensure
+the correct app is selected, usually in a drop-down at the top of the screen.
 
-To create a release, click **Release management** in the navigation.
-Choose **App releases.**  **Production**, click the button labeled
-**Manage.** In this section, click **Create Release.**
+Click **App releases** in the navigation (typically on the left). Click **Manage**
+within the **Production track.** In this section, click **Create Release.**
 
-If prompted to enable Google's hosted app signing, click **Opt Out**. You may have
-to click **I'm Sure, Opt Out** for now. If you do prefer to set up Google's hosted
-app signing, you may configure that, but it is beyond the scope of this document.
+If prompted to enable App Signing by Google Play, click **Continue**.
 
-Scroll to **Android App Bundles and APKs to add** and click **Browse Files.** This will
-allow you to choose the four APK files under the TODO directory.
+In an earlier section of this tutorial, we used ``briefcase publish`` and
+``jarsigner`` to create a signed Android App Bundle file. It is stored at
+``android/*/app/build/outputs/bundle/release/app-release.aab`` (where ``*``
+refers to your app's formal name). Upload this file to the Google Play
+console within **Browse Files** under **Android App Bundles and APKs to add.**
 
-Scroll to **What's new in this release?**. If this is your first upload of the app,
-write the words, "Initial upload."
+You will need to write release notes for the app in the **What's new in this
+release?** section. If this is your first upload of the app, write the words,
+"Initial upload."
 
-Finally, click **Review.**
-
-This will prompt a variety of questions from the Google Play Store about the content
-of your app, including the absence/presence of advertising, its appropriateness for
-different age groups, and any embedded commercial aspects.
+Click **Review** to see your answers. You can expect to be prompted to answer
+a variety of content questions from the Google Play Store about the
+absence/presence of advertising, the appropriateness of your app for different
+age groups, and any embedded commercial aspects.
 
 Once you have answered those questions, you can click **Start Rollout To Production.**
 
