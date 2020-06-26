@@ -134,11 +134,15 @@ using a screenshot `without framing.
 One way to capture such a screenshot is with the Android emulator's screenshot
 functionality, notated by a camera icon. This allows your screenshot to contain
 just what appears on the screen rather than a picture of the virtual device.
-This will store a file in your Desktop folder.
+This will store a file in your Desktop folder. Screenshots must be at least
+320px on their smallest dimension, no larger than 3480px on their largest
+dimension, and can't have an spect ratio more extreme than 2:1. A screenshot
+from the Android emulator typically fulfills these requirements.
 
 You will need a feature graphic. A feature graphic visually represents the
 purpose of the app or your logo and can optionally include a screenshot of
-the app in use, typically including device framing.
+the app in use, typically including device framing. It must be exactly
+1024px by 500px.
 
 Google Play supports optional graphic assets including promo videos, TV banners,
 and 360 degree stereoscopic images. See also `Google's advice on graphic assets.
