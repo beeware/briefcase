@@ -122,7 +122,7 @@ same as your app's Formal Name in its ``pyproject.toml``.
 
 This will take you to **Store Listing** section of your app. You will need
 to provide a short app description (up to 80 characters) and a full
-description (up to 4000 characters).
+description (up to 4000 characters). Your app metadata may be helpful here.
 
 You will need to upload an icon of size 512x512. For briefcase apps, an icon
 is typically specified in
