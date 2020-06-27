@@ -175,12 +175,17 @@ You will need to write release notes for the app in the **What's new in this
 release?** section. If this is your first upload of the app, write the words,
 "Initial upload."
 
-Click **Review** to see your answers. You can expect to be prompted to answer
-a variety of content questions from the Google Play Store about the
-absence/presence of advertising, the appropriateness of your app for different
-age groups, and any embedded commercial aspects.
+Click **Review** to see your answers. The Play Store will insist that you save
+a draft, then visit a few tabs -- **Content rating**, **App content**, and
+**Pricing & distribution** to answer a substantial number of questions
+about the absence/presence of advertising, the appropriateness of your app
+for different age groups, and any embedded commercial aspects. These mandatory
+sections are indicated by a grayed-out check mark. When they are done, you will
+see a green check mark next to them.
 
-Once you have answered those questions, you can click **Start Rollout To Production.**
+Once you have answered those questions, you can switch back to the
+**App releases** tab. Click **Edit release**, save your changes, and
+click **Start Rollout To Production.**
 
 The Google Play Store may at this point pause roll-out while they review your app.
 They will email updates to you. Once review is complete, you can log in to the
