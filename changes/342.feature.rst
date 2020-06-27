@@ -1,0 +1,5 @@
+Add docs on signing Android apps & publishing them to the Google Play store.
+
+Switch Android ``package`` command to use Android App Bundle format. This
+allows the Play Store to dynmically build the smallest APK appropriate to
+a device installing an app.
