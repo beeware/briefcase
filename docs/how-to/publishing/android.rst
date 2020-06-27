@@ -52,7 +52,9 @@ we run the Java jarsigner tool to sign the AAB file.
 
 In this example below, we assume your code signing identity is stored
 in **upload-key-helloworld.jks** under ``.android`` within your home
-folder.
+folder. We also assume that the app's formal name is Hello World. You
+will need to change the path to the AAB file based on your app's formal
+name.
 
 .. tabs::
 
@@ -60,19 +62,15 @@ folder.
 
     .. code-block:: bash
 
-      $ ~/.briefcase/tools/java/Contents/Home/bin/jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore ~/.android/upload-key-helloworld.jks android/*/app/build/outputs/bundle/release/app-release.aab upload-key -storepass android
+      $ ~/.briefcase/tools/java/Contents/Home/bin/jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore ~/.android/upload-key-helloworld.jks "android/Hello World/app/build/outputs/bundle/release/app-release.aab" upload-key -storepass android
 
   .. group-tab:: Linux
 
     .. code-block:: bash
 
-      $ ~/.briefcase/tools/java/bin/jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore ~/.android/upload-key-helloworld.jks android/*/app/build/outputs/bundle/release/app-release.aab upload-key -storepass android
+      $ ~/.briefcase/tools/java/bin/jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore ~/.android/upload-key-helloworld.jks "android/Hello World/app/build/outputs/bundle/release/app-release.aab" upload-key -storepass android
 
   .. group-tab:: Windows
-
-    On Windows, you must specify the full path to the AAB file. We assume below
-    that the app's formal name is Hello World. You will need to change the path
-    to the AAB file based on your app's formal name.
 
     .. code-block:: doscon
 
