@@ -74,7 +74,7 @@ name.
 
   .. group-tab:: macOS
 
-    .. code-block:: bash
+    .. code-block::
 
       $ ~/.briefcase/tools/java/Contents/Home/bin/jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore ~/.android/upload-key-helloworld.jks "android/Hello World/app/build/outputs/bundle/release/app-release.aab" upload-key -storepass android
          adding: META-INF/MANIFEST.MF
@@ -99,7 +99,7 @@ name.
 
   .. group-tab:: Linux
 
-    .. code-block:: bash
+    .. code-block::
 
       $ ~/.briefcase/tools/java/bin/jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore ~/.android/upload-key-helloworld.jks "android/Hello World/app/build/outputs/bundle/release/app-release.aab" upload-key -storepass android
          adding: META-INF/MANIFEST.MF
