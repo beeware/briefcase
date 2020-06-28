@@ -148,6 +148,7 @@ Re-run Briefcase once that installation is complete.
     try:
         output = command.subprocess.check_output(
             ['xcodebuild', '-version'],
+            stderr=subprocess.STDOUT,
             universal_newlines=True
         )
 
@@ -198,16 +199,28 @@ Re-run Briefcase once that installation is complete.
 *************************************************************************
 """)
 
-    except subprocess.CalledProcessError:
-        raise BriefcaseCommandError("""
-Xcode is not installed.
+    except subprocess.CalledProcessError as e:
+        if " is a command line tools instance" in e.output:
+            raise BriefcaseCommandError("""
+Xcode is installed, but the active developer directory is a
+command line tools instance. To make XCode the active developer
+directory, run:
 
-You should be shown a dialog prompting you to install Xcode and the
-command line tools. Select "Get Xcode" to install Xcode from the app store.
+    $ sudo xcode-select -switch /Applications/Xcode.app
 
-You can install Xcode from the macOS App Store.
+and then re-run Briefcase.
+""")
+        else:
+            raise BriefcaseCommandError("""
+The Xcode install appears to exist, but Briefcase was unable to
+determine the current Xcode version. Running:
 
-Re-run Briefcase once that installation is complete.
+    $ xcodebuild -version
+
+should return the current Xcode version, but it raised an error.
+
+You may need to re-install Xcode. Re-run Briefcase once that
+installation is complete.
 """)
 
 

@@ -34,20 +34,49 @@ def test_not_installed(tmp_path):
     command.subprocess.check_output.assert_not_called()
 
 
-def test_exists_but_not_installed(xcode):
+def test_exists_but_command_line_tools_selected(xcode):
+    "If the Xcode folder exists, but cmd-line tools are selected, raise an error."
+    command = mock.MagicMock()
+    command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
+        cmd=['xcodebuild', '-version'],
+        returncode=1
+    )
+    command.subprocess.check_output.side_effect.output = (
+        "xcode-select: error: tool 'xcodebuild' requires Xcode, but "
+        "active developer directory '/Library/Developer/CommandLineTools' "
+        "is a command line tools instance\n"
+    )
+
+    with pytest.raises(BriefcaseCommandError, match=r"xcode-select -switch"):
+        ensure_xcode_is_installed(command, xcode_location=xcode)
+
+    # xcode-select was invoked
+    command.subprocess.check_output.assert_called_once_with(
+        ['xcodebuild', '-version'],
+        stderr=subprocess.STDOUT,
+        universal_newlines=True,
+    )
+
+
+def test_exists_but_corrupted(xcode):
     "If the Xcode folder exists, but xcodebuild breaks, raise an error."
     command = mock.MagicMock()
     command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
         cmd=['xcodebuild', '-version'],
         returncode=1
     )
+    command.subprocess.check_output.side_effect.output = "Badness occurred."
 
-    with pytest.raises(BriefcaseCommandError):
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"should return the current Xcode version"
+    ):
         ensure_xcode_is_installed(command, xcode_location=xcode)
 
     # xcode-select was invoked
     command.subprocess.check_output.assert_called_once_with(
         ['xcodebuild', '-version'],
+        stderr=subprocess.STDOUT,
         universal_newlines=True,
     )
 
@@ -63,6 +92,7 @@ def test_installed_no_minimum_version(xcode):
     # xcode-select was invoked
     command.subprocess.check_output.assert_called_once_with(
         ['xcodebuild', '-version'],
+        stderr=subprocess.STDOUT,
         universal_newlines=True,
     )
 
@@ -122,6 +152,7 @@ def test_installed_with_minimum_version_success(min_version, version, capsys, xc
     # xcode-select was invoked
     command.subprocess.check_output.assert_called_once_with(
         ['xcodebuild', '-version'],
+        stderr=subprocess.STDOUT,
         universal_newlines=True,
     )
 
@@ -160,6 +191,7 @@ def test_installed_with_minimum_version_failure(min_version, version, xcode):
     # xcode-select was invoked
     command.subprocess.check_output.assert_called_once_with(
         ['xcodebuild', '-version'],
+        stderr=subprocess.STDOUT,
         universal_newlines=True,
     )
 
@@ -179,6 +211,7 @@ def test_unexpected_version_output(capsys, xcode):
     # xcode-select was invoked
     command.subprocess.check_output.assert_called_once_with(
         ['xcodebuild', '-version'],
+        stderr=subprocess.STDOUT,
         universal_newlines=True,
     )
 
