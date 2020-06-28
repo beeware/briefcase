@@ -14,4 +14,5 @@ supports:
 .. toctree::
    :maxdepth: 1
 
+   android
    macOS

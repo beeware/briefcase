@@ -20,3 +20,4 @@ stand alone.
    contribute-docs
    See errors on iOS <see_errors_on_ios>
    internal/index
+   publishing/index
