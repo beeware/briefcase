@@ -1,0 +1,1 @@
+Removed `--interactive` from docker run to prevent failure on CI
