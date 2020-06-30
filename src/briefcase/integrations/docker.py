@@ -170,7 +170,7 @@ class Docker:
         # with volume mounts for the platform and .briefcase directories.
         docker_args = [
             "docker", "run",
-            "--interactive",
+            # "--interactive",
             "--tty",
             "--volume", "{self.command.platform_path}:/app".format(
                 self=self
