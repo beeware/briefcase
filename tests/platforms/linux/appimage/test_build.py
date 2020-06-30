@@ -201,7 +201,8 @@ def test_build_appimage_with_docker(build_command, first_app_config, tmp_path):
     build_command._subprocess.run.assert_called_with(
         [
             "docker",
-            "run", "--interactive", "--tty",
+            "run", "--tty",
+            # "run", "--interactive", "--tty",
             '--volume', '{platform_path}:/app'.format(
                 platform_path=build_command.platform_path
             ),
