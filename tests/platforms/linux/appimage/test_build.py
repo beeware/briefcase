@@ -202,7 +202,6 @@ def test_build_appimage_with_docker(build_command, first_app_config, tmp_path):
         [
             "docker",
             "run", "--tty",
-            # "run", "--interactive", "--tty",
             '--volume', '{platform_path}:/app'.format(
                 platform_path=build_command.platform_path
             ),
