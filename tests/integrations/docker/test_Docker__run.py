@@ -11,7 +11,7 @@ def test_simple_call(mock_docker, tmp_path, capsys):
     mock_docker._subprocess._subprocess.run.assert_called_with(
         [
             'docker',
-            'run', '--interactive', '--tty',
+            'run', '--tty',
             '--volume', '{platform_path}:/app'.format(
                 platform_path=tmp_path / 'platform'
             ),
@@ -34,7 +34,7 @@ def test_simple_call_with_arg(mock_docker, tmp_path, capsys):
     mock_docker._subprocess._subprocess.run.assert_called_with(
         [
             'docker',
-            'run', '--interactive', '--tty',
+            'run', '--tty',
             '--volume', '{platform_path}:/app'.format(
                 platform_path=tmp_path / 'platform'
             ),
@@ -58,7 +58,7 @@ def test_simple_call_with_path_arg(mock_docker, tmp_path, capsys):
     mock_docker._subprocess._subprocess.run.assert_called_with(
         [
             'docker',
-            'run', '--interactive', '--tty',
+            'run',  '--tty',
             '--volume', '{platform_path}:/app'.format(
                 platform_path=tmp_path / 'platform'
             ),
@@ -87,7 +87,7 @@ def test_simple_verbose_call(mock_docker, tmp_path, capsys):
     mock_docker._subprocess._subprocess.run.assert_called_with(
         [
             'docker',
-            'run', '--interactive', '--tty',
+            'run', '--tty',
             '--volume', '{platform_path}:/app'.format(
                 platform_path=tmp_path / 'platform'
             ),
@@ -100,7 +100,7 @@ def test_simple_verbose_call(mock_docker, tmp_path, capsys):
         ]
     )
     assert capsys.readouterr().out == (
-        ">>> docker run --interactive --tty "
+        ">>> docker run --tty "
         "--volume {platform_path}:/app "
         "--volume {dot_briefcase_path}:/home/brutus/.briefcase "
         "briefcase/com.example.myapp:py3.X "
