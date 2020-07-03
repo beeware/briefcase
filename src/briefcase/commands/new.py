@@ -425,6 +425,7 @@ What GUI toolkit do you want to use for this project?""",
             options=[
                 'Toga',
                 'PySide2',
+                'PursuedPyBear',
                 'None',
             ],
         )
