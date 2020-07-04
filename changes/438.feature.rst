@@ -1,1 +1,0 @@
-Android apps are now packaged in Android App Bundle format. This allows the Play Store to dynmically build the smallest APK appropriate to a device installing an app.

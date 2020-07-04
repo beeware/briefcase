@@ -4,8 +4,45 @@ Release History
 
 .. towncrier release notes start
 
+0.3.2 (2020-07-04)
+==================
+
+Features
+--------
+
+* Added pytest coverage to CI/CD process. (#417)
+* Application metadata now contains a ``Briefcase-Version`` indicator. (#425)
+* The device list returned by ``briefcase run android`` now uses the Android
+  device model name and unique ID e.g. a Pixel 3a shows up as ``Pixel 3a
+  (adbDeviceId)``. (#433)
+* Android apps are now packaged in Android App Bundle format. This allows the
+  Play Store to dynmically build the smallest APK appropriate to a device
+  installing an app. (#438)
+* PursuedPyBear is now included in the new project wizard. (#440)
+
+Bugfixes
+--------
+
+* iOS builds will now warn if the Xcode command line tools are the active.
+  (#397)
+* Linux Docker builds no longer use interactive mode, allowing builds to run on
+  CI (or other TTY-less devices). (#439)
+
+Improved Documentation
+----------------------
+
+* Documented the process of signing Android apps & publishing them to the Google
+  Play store. (#342)
+
+Misc
+----
+
+* #428
+
+
 0.3.1 (2020-06-13)
 ==================
+
 Features
 --------
 

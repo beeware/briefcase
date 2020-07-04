@@ -1,1 +1,0 @@
-iOS builds will now warn if the Xcode command line tools are the active.

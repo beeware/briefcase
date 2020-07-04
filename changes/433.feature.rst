@@ -1,3 +1,0 @@
-The device list returned by ``briefcase run android`` now uses the Android
-device model name and unique ID e.g. a Pixel 3a shows up as ``Pixel 3a
-(adbDeviceId)``.

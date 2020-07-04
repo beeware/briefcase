@@ -1,1 +1,0 @@
-PursuedPyBear is now included in the new project wizard.

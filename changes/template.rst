@@ -5,6 +5,7 @@
 {% if sections[section] %}
 {% for category, val in definitions.items() if category in sections[section]%}
 {{ definitions[category]['name'] }}
+
 {{ underline * definitions[category]['name']|length }}
 
 {% if definitions[category]['showcontent'] %}
