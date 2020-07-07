@@ -58,6 +58,7 @@ def test_docker_doesnt_exist(test_command):
         stderr=subprocess.STDOUT,
     )
 
+
 @mock.patch('briefcase.integrations.docker._verify_docker_can_run')
 def test_docker_failure(test_command, capsys):
     "If docker failed during execution, the Docker wrapper is returned with a warning"
@@ -96,6 +97,7 @@ def test_docker_bad_version(test_command, capsys):
     ):
         verify_docker(command=test_command)
 
+
 @mock.patch('briefcase.integrations.docker._verify_docker_can_run')
 def test_docker_unknown_version(test_command, capsys):
     "If docker exists but the version string doesn't make sense, the Docker wrapper is returned with a warning."
@@ -119,22 +121,30 @@ def test_docker_unknown_version(test_command, capsys):
     assert '** WARNING: Unable to determine the version of Docker' in output.out
     assert output.err == ''
 
+
 def test_docker_exists_but_process_lacks_permission_to_use_it(test_command, capsys):
-    error_message = '''
+    message1 = '''
 Client:
  Debug Mode: false
 
 Server:
-ERROR: Got permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get http://%2Fvar%2Frun%2Fdocker.sock/v1.40/info: dial unix /var/run/docker.sock: connect: permission denied
+ERROR: Got permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: '''
+
+    message2 = '''Get http://%2Fvar%2Frun%2Fdocker.sock/v1.40/info: dial unix /var/run/docker.sock: connect: permission denied
 errors pretty printing info'''
+
+    error_message = message1 + message2
+    # splitting it up is to appease flake8 line length - not sure how to add noqa to a triple quoted string line
+
     test_command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
-        returncode=1, cmd="docker info", output = error_message
+        returncode=1, cmd="docker info", output=error_message
     )
     with pytest.raises(BriefcaseCommandError):
-        _verify_docker_can_run(command = test_command)
+        _verify_docker_can_run(command=test_command)
 
     output = capsys.readouterr()
     assert 'ERROR: docker command lacks relevant permissions' in output.out
+
 
 def test_docker_exists_but_is_not_running(test_command, capsys):
     error_message = '''
@@ -146,23 +156,24 @@ ERROR: Cannot connect to the Docker daemon at unix:///var/run/docker.sock. Is th
 errors pretty printing info'''
 
     test_command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
-        returncode=1, cmd='docker info', output = error_message,
+        returncode=1, cmd='docker info', output=error_message,
     )
     with pytest.raises(BriefcaseCommandError):
-        _verify_docker_can_run(command = test_command)
+        _verify_docker_can_run(command=test_command)
 
     output = capsys.readouterr()
     assert 'ERROR: docker daemon not running' in output.out
+
 
 def test_docker_exists_but_unknown_error_when_running_command(test_command, capsys):
 
     error_message = 'This command failed!'
     test_command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
-        returncode=1, cmd = 'docker info', output = error_message,
+        returncode=1, cmd='docker info', output=error_message,
     )
 
     with pytest.raises(BriefcaseCommandError):
-        _verify_docker_can_run(command = test_command)
+        _verify_docker_can_run(command=test_command)
 
     output = capsys.readouterr()
     assert output.out.strip() == 'docker command failed with error: {}'.format(error_message)

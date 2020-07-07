@@ -97,8 +97,6 @@ to download and install git manually.
 If you have installed Docker recently and are still getting this error, you may
 need to restart your terminal session.
 '''
-
-
     try:
         # Try to get the version of docker that is installed.
         output = command.subprocess.check_output(
@@ -134,7 +132,7 @@ need to restart your terminal session.
             )
         )
 
-    _verify_docker_can_run(command) 
+    _verify_docker_can_run(command)
     # will raise BriefcaseCommandError and print help message
     # if a test docker command fails
 
@@ -190,14 +188,14 @@ docker command failed with error: {error_message}'''
             print(LACKS_PERMISSION_ERROR_MESSAGE)
             raise BriefcaseCommandError("docker lacks required permissions")
         if (
-            'Is the docker daemon running?' in failure_output or # error message on ubuntu
-            'connect: connection refused' in failure_output # error message on macos
+            'Is the docker daemon running?' in failure_output or  # error message on ubuntu
+            'connect: connection refused' in failure_output  # error message on macos
         ):
             print(DAEMON_NOT_RUNNING_ERROR_MESSAGE)
             raise BriefcaseCommandError("docker daemon not running")
 
-        print(GENERIC_ERROR_MESSAGE.format(error_message = failure_output))
-        raise BriefcaseCommandError(GENERIC_ERROR_MESSAGE.format(error_message = failure_output))
+        print(GENERIC_ERROR_MESSAGE.format(error_message=failure_output))
+        raise BriefcaseCommandError(GENERIC_ERROR_MESSAGE.format(error_message=failure_output))
 
 
 class Docker:
