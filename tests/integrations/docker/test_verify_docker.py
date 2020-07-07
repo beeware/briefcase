@@ -30,11 +30,11 @@ def test_docker_exists(test_command, capsys):
         docker_info_called_with,
     ) = test_command.subprocess.check_output.call_args_list
 
-    assert docker_version_called_with.args == (['docker', '--version'],)
-    assert docker_version_called_with.kwargs == {'universal_newlines': True, 'stderr': -2}
+    assert docker_version_called_with[0] == (['docker', '--version'],)
+    assert docker_version_called_with[1] == {'universal_newlines': True, 'stderr': -2}
 
-    assert docker_info_called_with.args == (['docker', 'info'],)
-    assert docker_info_called_with.kwargs == {'universal_newlines': True, 'stderr': -2}
+    assert docker_info_called_with[0] == (['docker', 'info'],)
+    assert docker_info_called_with[1] == {'universal_newlines': True, 'stderr': -2}
 
     # No console output
     output = capsys.readouterr()
