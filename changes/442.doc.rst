@@ -1,0 +1,1 @@
+Added additional checks and error output around the docker commands used when running Briefcase build
