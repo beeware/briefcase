@@ -148,7 +148,7 @@ def _verify_docker_can_run(command):
 
     LACKS_PERMISSION_ERROR_MESSAGE = '''
 *************************************************************************
-** WARNING: docker command lacks relevant permissions                  **
+** ERROR: docker command lacks relevant permissions                    **
 *************************************************************************
 
 docker reported an error when Briefcase attempted to use it.  It is
@@ -161,7 +161,7 @@ option (note this may require installing additional dependencies)
 *************************************************************************'''
     DAEMON_NOT_RUNNING_ERROR_MESSAGE = '''
 *************************************************************************
-** WARNING: docker daemon not running                                  **
+** ERROR: docker daemon not running                                    **
 *************************************************************************
 
 Briefcase is unable to use docker commands because the docker daemon
@@ -173,6 +173,8 @@ running Briefcase build with the --no-docker option
 (note this may require installing addtional dependencies)
 
 *************************************************************************'''
+    GENERIC_ERROR_MESSAGE = '''
+docker command failed with error: {error_message}'''
 
     try:
         _ = command.subprocess.check_output(
@@ -193,7 +195,9 @@ running Briefcase build with the --no-docker option
         ):
             print(DAEMON_NOT_RUNNING_ERROR_MESSAGE)
             raise BriefcaseCommandError("docker daemon not running")
-        raise BriefcaseCommandError("docker command failed with error: {}".format(failure_output))
+
+        print(GENERIC_ERROR_MESSAGE.format(error_message = failure_output))
+        raise BriefcaseCommandError(GENERIC_ERROR_MESSAGE.format(error_message = failure_output))
 
 
 class Docker:
