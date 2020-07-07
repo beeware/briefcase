@@ -25,11 +25,16 @@ def test_docker_exists(test_command, capsys):
     # The verify call should return the Docker wrapper
     assert result == Docker
 
-    test_command.subprocess.check_output.assert_called_with(
-        ['docker', '--version'],
-        universal_newlines=True,
-        stderr=subprocess.STDOUT,
-    )
+    (
+        docker_version_called_with,
+        docker_info_called_with,
+    ) = test_command.subprocess.check_output.call_args_list
+
+    assert docker_version_called_with.args == (['docker', '--version'],)
+    assert docker_version_called_with.kwargs == {'universal_newlines': True, 'stderr': -2}
+
+    assert docker_info_called_with.args == (['docker', 'info'],)
+    assert docker_info_called_with.kwargs == {'universal_newlines': True, 'stderr': -2}
 
     # No console output
     output = capsys.readouterr()
