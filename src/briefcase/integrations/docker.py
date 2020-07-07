@@ -119,6 +119,52 @@ to download and install git manually.
 If you have installed Docker recently and are still getting this error, you may
 need to restart your terminal session.
 """.format(**docker_install_details(command.host_os)))
+    try:
+        # Docker is probably installed, but it still
+        # may not have the right permissions to run
+        _ = command.subprocess.check_output(
+            ['docker', 'info'],  # any docker command will work to check permissions; this one is quick
+            universal_newlines=True,
+            stderr=subprocess.STDOUT,
+        ).strip('\n')
+    except subprocess.CalledProcessError as e:
+        failure_output = e.output
+        if (
+            'Got permission denied while trying to connect to the Docker daemon socket' in failure_output
+        ):
+            print('''
+*************************************************************************
+** WARNING: docker command lacks relevant permissions                  **
+*************************************************************************
+
+   docker reported an error when Briefcase attempted to use it.  It is
+   possible that docker requires sudo privileges in its current config.
+
+   See docs at https://docs.docker.com/engine/install/linux-postinstall/
+   for information, or try running Briefcase build with the --no-docker
+   option (note this may require installing additional dependencies)
+
+*************************************************************************
+    ''')
+            raise BriefcaseCommandError("docker lacks required permissions")
+        if 'Is the docker daemon running?' in failure_output:
+            print('''
+*************************************************************************
+** WARNING: docker daemon not running                                  **
+*************************************************************************
+
+   Briefcase is unable to use docker commands because the docker daemon
+   appears to not be running.
+
+   See docs at https://docs.docker.com/config/daemon/ for help
+   ensuring that it is running or debugging any issues, or try
+   running Briefcase build with the --no-docker option
+   (note this may require installing addtional dependencies)
+
+*************************************************************************
+    ''')
+            raise BriefcaseCommandError("docker daemon not running")
+        raise BriefcaseCommandError("docker command failed with error: {}".format(failure_output))
 
     # Return the Docker wrapper
     return Docker
