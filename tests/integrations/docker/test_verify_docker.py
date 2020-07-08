@@ -31,10 +31,10 @@ def test_docker_exists(test_command, capsys):
     ) = test_command.subprocess.check_output.call_args_list
 
     assert docker_version_called_with[0] == (['docker', '--version'],)
-    assert docker_version_called_with[1] == {'universal_newlines': True, 'stderr': -2}
+    assert docker_version_called_with[1] == {'universal_newlines': True, 'stderr': subprocess.STDOUT}
 
     assert docker_info_called_with[0] == (['docker', 'info'],)
-    assert docker_info_called_with[1] == {'universal_newlines': True, 'stderr': -2}
+    assert docker_info_called_with[1] == {'universal_newlines': True, 'stderr': subprocess.STDOUT}
 
     # No console output
     output = capsys.readouterr()
@@ -98,7 +98,6 @@ def test_docker_bad_version(test_command, capsys):
         verify_docker(command=test_command)
 
 
-@mock.patch('briefcase.integrations.docker._verify_docker_can_run')
 def test_docker_unknown_version(test_command, capsys):
     "If docker exists but the version string doesn't make sense, the Docker wrapper is returned with a warning."
     # Mock a bad return value of `docker --version`
@@ -110,11 +109,13 @@ def test_docker_unknown_version(test_command, capsys):
     # The verify call should return the Docker wrapper
     assert result == Docker
 
-    test_command.subprocess.check_output.assert_called_with(
-        ['docker', '--version'],
-        universal_newlines=True,
-        stderr=subprocess.STDOUT,
-    )
+    docker_version_called_with, docker_info_called_with = test_command.subprocess.check_output.call_args_list
+
+    assert docker_version_called_with[0] == (['docker', '--version'],)
+    assert docker_version_called_with[1] == {'universal_newlines': True, 'stderr': subprocess.STDOUT}
+
+    assert docker_info_called_with[0] == (['docker', 'info'],)
+    assert docker_info_called_with[1] == {'universal_newlines': True, 'stderr': subprocess.STDOUT}
 
     # console output
     output = capsys.readouterr()
@@ -122,7 +123,7 @@ def test_docker_unknown_version(test_command, capsys):
     assert output.err == ''
 
 
-def test_docker_exists_but_process_lacks_permission_to_use_it(test_command, capsys):
+def test_docker_exists_but_process_lacks_permission_to_use_it(test_command):
     message1 = '''
 Client:
  Debug Mode: false
@@ -139,41 +140,51 @@ errors pretty printing info'''
     test_command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
         returncode=1, cmd="docker info", output=error_message
     )
-    with pytest.raises(BriefcaseCommandError):
+    with pytest.raises(BriefcaseCommandError) as exc_info:
         _verify_docker_can_run(command=test_command)
 
-    output = capsys.readouterr()
-    assert 'ERROR: docker command lacks relevant permissions' in output.out
+    assert 'ERROR: docker command lacks relevant permissions' in exc_info.value.msg
 
 
-def test_docker_exists_but_is_not_running(test_command, capsys):
-    error_message = '''
-Client:
- Debug Mode: false
+docker_not_running_error_messages = [
+    '''
+    Client:
+     Debug Mode: false
 
-Server:
-ERROR: Cannot connect to the Docker daemon at unix:///var/run/docker.sock. Is the docker daemon running?
-errors pretty printing info'''
+    Server:
+    ERROR: Error response from daemon: dial unix docker.raw.sock: connect: connection refused
+    errors pretty printing info
+    ''',  # this is the error shown on mac
+    '''
+    Client:
+     Debug Mode: false
+
+    Server:
+    ERROR: Cannot connect to the Docker daemon at unix:///var/run/docker.sock. Is the docker daemon running?
+    errors pretty printing info''',  # this is the error show on linux
+]
+
+
+@pytest.mark.parametrize('error_message', docker_not_running_error_messages)
+def test_docker_exists_but_is_not_running(error_message, test_command):
 
     test_command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
         returncode=1, cmd='docker info', output=error_message,
     )
-    with pytest.raises(BriefcaseCommandError):
+    with pytest.raises(BriefcaseCommandError) as exc_info:
         _verify_docker_can_run(command=test_command)
 
-    output = capsys.readouterr()
-    assert 'ERROR: docker daemon not running' in output.out
+    assert 'ERROR: docker daemon not running' in exc_info.value.msg
 
 
-def test_docker_exists_but_unknown_error_when_running_command(test_command, capsys):
+def test_docker_exists_but_unknown_error_when_running_command(test_command):
 
     error_message = 'This command failed!'
     test_command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
         returncode=1, cmd='docker info', output=error_message,
     )
 
-    with pytest.raises(BriefcaseCommandError):
+    with pytest.raises(BriefcaseCommandError) as exc_info:
         _verify_docker_can_run(command=test_command)
 
-    output = capsys.readouterr()
-    assert output.out.strip() == 'docker command failed with error: {}'.format(error_message)
+    assert 'docker command failed with error: {}'.format(error_message) in exc_info.value.msg

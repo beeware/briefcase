@@ -175,7 +175,7 @@ running Briefcase build with the --no-docker option
 docker command failed with error: {error_message}'''
 
     try:
-        _ = command.subprocess.check_output(
+        command.subprocess.check_output(
             ['docker', 'info'],  # any docker command will work to check permissions; this one is quick
             universal_newlines=True,
             stderr=subprocess.STDOUT,
@@ -185,16 +185,13 @@ docker command failed with error: {error_message}'''
         if (
             'Got permission denied while trying to connect to the Docker daemon socket' in failure_output
         ):
-            print(LACKS_PERMISSION_ERROR_MESSAGE)
-            raise BriefcaseCommandError("docker lacks required permissions")
+            raise BriefcaseCommandError(LACKS_PERMISSION_ERROR_MESSAGE)
         if (
             'Is the docker daemon running?' in failure_output or  # error message on ubuntu
             'connect: connection refused' in failure_output  # error message on macos
         ):
-            print(DAEMON_NOT_RUNNING_ERROR_MESSAGE)
-            raise BriefcaseCommandError("docker daemon not running")
+            raise BriefcaseCommandError(DAEMON_NOT_RUNNING_ERROR_MESSAGE)
 
-        print(GENERIC_ERROR_MESSAGE.format(error_message=failure_output))
         raise BriefcaseCommandError(GENERIC_ERROR_MESSAGE.format(error_message=failure_output))
 
 
