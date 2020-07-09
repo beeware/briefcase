@@ -1,1 +1,1 @@
-Added additional checks and error output around the docker commands used when running Briefcase build
+Docker-using commands now check whether the Docker daemon is running and if the user has permission to access it.
