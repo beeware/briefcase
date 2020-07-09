@@ -37,7 +37,7 @@ def verify_docker(command):
     :param command: The command that needs to perform the verification check.
     """
 
-    WRONG_DOCKER_VERSION_ERROR_MESSAGE = '''
+    WRONG_DOCKER_VERSION_ERROR = """
 Briefcase requires Docker 19 or higher, but you are currently running
 version {docker_version}. Visit:
 
@@ -45,48 +45,51 @@ version {docker_version}. Visit:
 
 to download and install an updated version of Docker.
 {extra_content}
-'''
-    UNKNOWN_DOCKER_VERSION_WARNING = '''
+"""
+    UNKNOWN_DOCKER_VERSION_WARNING = """
 *************************************************************************
 ** WARNING: Unable to determine the version of Docker                  **
 *************************************************************************
 
-   Briefcase will proceed, assuming everything is OK. If you experience
-   problems, this is almost certainly the cause of those problems.
+    Briefcase will proceed, assuming everything is OK. If you
+    experience problems, this is almost certainly the cause of those
+    problems.
 
-   Please report this as a bug at:
+    Please report this as a bug at:
 
-     https://github.com/beeware/briefcase/issues/new
+      https://github.com/beeware/briefcase/issues/new
 
-   In your report, please including the output from running:
+    In your report, please including the output from running:
 
-     docker --version
+      docker --version
 
-   from the command prompt.
+    from the command prompt.
 
 *************************************************************************
-'''
-    DOCKER_INSTALLATION_STATUS_UNKNOWN_WARNING = '''
+"""
+
+    DOCKER_INSTALLATION_STATUS_UNKNOWN_WARNING = """
 *************************************************************************
 ** WARNING: Unable to determine if Docker is installed                 **
 *************************************************************************
 
-   Briefcase will proceed, assuming everything is OK. If you experience
-   problems, this is almost certainly the cause of those problems.
+    Briefcase will proceed, assuming everything is OK. If you
+    experience problems, this is almost certainly the cause of those
+    problems.
 
-   Please report this as a bug at:
+    Please report this as a bug at:
 
-     https://github.com/beeware/briefcase/issues/new
+      https://github.com/beeware/briefcase/issues/new
 
-   In your report, please including the output from running:
+    In your report, please including the output from running:
 
-     docker --version
+      docker --version
 
-   from the command prompt.
+    from the command prompt.
 
 *************************************************************************
-'''
-    DOCKER_NOT_INSTALLED_ERROR_MESSAGE = '''
+"""
+    DOCKER_NOT_INSTALLED_ERROR = """
 Briefcase requires Docker, but it is not installed (or is not on your PATH).
 Visit:
 
@@ -96,7 +99,7 @@ to download and install git manually.
 {extra_content}
 If you have installed Docker recently and are still getting this error, you may
 need to restart your terminal session.
-'''
+"""
     try:
         # Try to get the version of docker that is installed.
         output = command.subprocess.check_output(
@@ -114,7 +117,7 @@ need to restart your terminal session.
             if int(version[0]) < 19:
                 # Docker version isn't compatible.
                 raise BriefcaseCommandError(
-                    WRONG_DOCKER_VERSION_ERROR_MESSAGE.format(
+                    WRONG_DOCKER_VERSION_ERROR.format(
                         docker_version=docker_version,
                         **docker_install_details(command.host_os),
                     )
@@ -127,72 +130,73 @@ need to restart your terminal session.
     except FileNotFoundError:
         # Docker executable doesn't exist.
         raise BriefcaseCommandError(
-            DOCKER_NOT_INSTALLED_ERROR_MESSAGE.format(
+            DOCKER_NOT_INSTALLED_ERROR.format(
                 **docker_install_details(command.host_os)
             )
         )
 
+    # Check that docker commands can actually run.
     _verify_docker_can_run(command)
-    # will raise BriefcaseCommandError and print help message
-    # if a test docker command fails
 
     # Return the Docker wrapper
     return Docker
 
 
 def _verify_docker_can_run(command):
-    # Docker is probably installed, but it still
-    # may not have the right permissions to run
+    """
+    Verify that the user has sufficient permissions, and that the Docker
+    daemon is running.
 
-    LACKS_PERMISSION_ERROR_MESSAGE = '''
-*************************************************************************
-** ERROR: docker command lacks relevant permissions                    **
-*************************************************************************
+    This is done by attempting to run a low-impact command (docker info)
+    that requires both permissions and a working daemon.
 
-docker reported an error when Briefcase attempted to use it.  It is
-possible that docker requires sudo privileges in its current config.
+    :param command: The command that needs to perform the verification check.
+    """
 
-See docs at https://docs.docker.com/engine/install/linux-postinstall/
-for information, or try running Briefcase build with the --no-docker
-option (note this may require installing additional dependencies)
+    LACKS_PERMISSION_ERROR = """
+Docker has been installed, but Briefcase is unable to invoke
+Docker commands. It is possible that your user does not have
+permissions to invoke Docker.
 
-*************************************************************************'''
-    DAEMON_NOT_RUNNING_ERROR_MESSAGE = '''
-*************************************************************************
-** ERROR: docker daemon not running                                    **
-*************************************************************************
+See https://docs.docker.com/engine/install/linux-postinstall/
+for details on configuring access to your Docker installation.
+"""
 
-Briefcase is unable to use docker commands because the docker daemon
-appears to not be running.
+    DAEMON_NOT_RUNNING_ERROR = """
+Briefcase is unable to use Docker commands. It appears the Docker
+daemon is not running.
 
-See docs at https://docs.docker.com/config/daemon/ for help
-ensuring that it is running or debugging any issues, or try
-running Briefcase build with the --no-docker option
-(note this may require installing addtional dependencies)
+See https://docs.docker.com/config/daemon/ for details on how to
+configure your Docker daemon.
+"""
 
-*************************************************************************'''
-    GENERIC_ERROR_MESSAGE = '''
-docker command failed with error: {error_message}'''
+    GENERIC_DOCKER_ERROR = """
+Briefcase was unable to use Docker commands. Check your Docker
+installation, and try again.
+"""
 
     try:
+        # Invoke a docker command to check if the daemon is running,
+        # and the user has sufficient permissions.
+        # We don't care about the output, just that it succeeds.
         command.subprocess.check_output(
-            ['docker', 'info'],  # any docker command will work to check permissions; this one is quick
+            ['docker', 'info'],
             universal_newlines=True,
             stderr=subprocess.STDOUT,
         ).strip('\n')
     except subprocess.CalledProcessError as e:
         failure_output = e.output
-        if (
-            'Got permission denied while trying to connect to the Docker daemon socket' in failure_output
+        if 'permission denied while trying to connect' in failure_output:
+            raise BriefcaseCommandError(LACKS_PERMISSION_ERROR)
+        elif (
+            # error message on Ubuntu
+            'Is the docker daemon running?' in failure_output
+            # error message on macOS
+            or 'connect: connection refused' in failure_output
         ):
-            raise BriefcaseCommandError(LACKS_PERMISSION_ERROR_MESSAGE)
-        if (
-            'Is the docker daemon running?' in failure_output or  # error message on ubuntu
-            'connect: connection refused' in failure_output  # error message on macos
-        ):
-            raise BriefcaseCommandError(DAEMON_NOT_RUNNING_ERROR_MESSAGE)
-
-        raise BriefcaseCommandError(GENERIC_ERROR_MESSAGE.format(error_message=failure_output))
+            raise BriefcaseCommandError(DAEMON_NOT_RUNNING_ERROR)
+        else:
+            raise BriefcaseCommandError(GENERIC_DOCKER_ERROR)
 
 
 class Docker:

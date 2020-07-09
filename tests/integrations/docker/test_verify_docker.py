@@ -131,6 +131,7 @@ def test_docker_unknown_version(test_command, capsys):
 
 
 def test_docker_exists_but_process_lacks_permission_to_use_it(test_command):
+    "If the docker daemon isn't running, the check fails."
     message1 = '''
 Client:
  Debug Mode: false
@@ -150,7 +151,7 @@ errors pretty printing info'''
     with pytest.raises(BriefcaseCommandError) as exc_info:
         _verify_docker_can_run(command=test_command)
 
-    assert 'ERROR: docker command lacks relevant permissions' in exc_info.value.msg
+    assert 'does not have\npermissions to invoke Docker.' in exc_info.value.msg
 
 
 docker_not_running_error_messages = [
@@ -174,24 +175,23 @@ docker_not_running_error_messages = [
 
 @pytest.mark.parametrize('error_message', docker_not_running_error_messages)
 def test_docker_exists_but_is_not_running(error_message, test_command):
-
+    "If the docker daemon isn't running, the check fails."
     test_command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
         returncode=1, cmd='docker info', output=error_message,
     )
     with pytest.raises(BriefcaseCommandError) as exc_info:
         _verify_docker_can_run(command=test_command)
 
-    assert 'ERROR: docker daemon not running' in exc_info.value.msg
+    assert 'the Docker\ndaemon is not running' in exc_info.value.msg
 
 
 def test_docker_exists_but_unknown_error_when_running_command(test_command):
-
-    error_message = 'This command failed!'
+    "If docker info fails in unknown ways, the check fails."
     test_command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
-        returncode=1, cmd='docker info', output=error_message,
+        returncode=1, cmd='docker info', output='This command failed!',
     )
 
     with pytest.raises(BriefcaseCommandError) as exc_info:
         _verify_docker_can_run(command=test_command)
 
-    assert 'docker command failed with error: {}'.format(error_message) in exc_info.value.msg
+    assert 'Check your Docker\ninstallation, and try again' in exc_info.value.msg
