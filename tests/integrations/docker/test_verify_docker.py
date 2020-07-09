@@ -59,13 +59,15 @@ def test_docker_doesnt_exist(test_command):
     )
 
 
-@mock.patch('briefcase.integrations.docker._verify_docker_can_run')
 def test_docker_failure(test_command, capsys):
     "If docker failed during execution, the Docker wrapper is returned with a warning"
     # Mock the return value of Docker Version
-    test_command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
-        returncode=1, cmd="docker --version"
-    )
+    test_command.subprocess.check_output.side_effect = [
+        subprocess.CalledProcessError(
+            returncode=1, cmd="docker --version",
+        ),
+        'Success!',
+    ]
 
     # Invoke verify_docker
     result = verify_docker(command=test_command)
@@ -73,11 +75,16 @@ def test_docker_failure(test_command, capsys):
     # The verify call should return the Docker wrapper
     assert result == Docker
 
-    test_command.subprocess.check_output.assert_called_with(
-        ['docker', '--version'],
-        universal_newlines=True,
-        stderr=subprocess.STDOUT,
-    )
+    (
+        docker_version_called_with,
+        docker_info_called_with,
+    ) = test_command.subprocess.check_output.call_args_list
+
+    assert docker_version_called_with[0] == (['docker', '--version'],)
+    assert docker_version_called_with[1] == {'universal_newlines': True, 'stderr': subprocess.STDOUT}
+
+    assert docker_info_called_with[0] == (['docker', 'info'],)
+    assert docker_info_called_with[1] == {'universal_newlines': True, 'stderr': subprocess.STDOUT}
 
     # console output
     output = capsys.readouterr()
