@@ -1,0 +1,1 @@
+Docker-using commands now check whether the Docker daemon is running and if the user has permission to access it.
