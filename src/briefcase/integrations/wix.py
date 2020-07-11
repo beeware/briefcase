@@ -3,13 +3,10 @@ from pathlib import Path
 
 from requests import exceptions as requests_exceptions
 
-from briefcase.exceptions import (
-    BriefcaseCommandError,
-    NetworkFailure
-)
-
+from briefcase.exceptions import BriefcaseCommandError, NetworkFailure
 
 WIX_DOWNLOAD_URL = "https://github.com/wixtoolset/wix3/releases/download/wix3112rtm/wix311-binaries.zip"
+
 
 class WiX:
     def __init__(self, wix_home, bin_install=False):

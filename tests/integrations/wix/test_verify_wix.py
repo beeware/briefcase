@@ -4,7 +4,7 @@ import pytest
 from requests import exceptions as requests_exceptions
 
 from briefcase.exceptions import BriefcaseCommandError, NetworkFailure
-from briefcase.integrations.wix import verify_wix, WIX_DOWNLOAD_URL
+from briefcase.integrations.wix import WIX_DOWNLOAD_URL, verify_wix
 
 
 @pytest.fixture
