@@ -1,9 +1,7 @@
-import os
 import struct
 import subprocess
 import sys
 import uuid
-from pathlib import Path
 
 from briefcase.commands import (
     BuildCommand,
@@ -15,6 +13,7 @@ from briefcase.commands import (
 )
 from briefcase.config import BaseConfig, parsed_version
 from briefcase.exceptions import BriefcaseCommandError
+from briefcase.integrations.wix import verify_wix
 from briefcase.platforms.windows import WindowsMixin
 
 
@@ -29,44 +28,7 @@ class WindowsMSIMixin(WindowsMixin):
 
     def verify_tools(self):
         super().verify_tools()
-
-        if self.host_os != 'Windows':
-            raise BriefcaseCommandError("""
-A Windows MSI installer can only be created on Windows.
-""")
-
-        # Look for the WiX environment variable
-        wix_path = Path(os.getenv('WIX', ''))
-
-        # Set up the paths for the WiX executables we will use.
-        self.heat_exe = wix_path / 'bin' / 'heat.exe'
-        self.light_exe = wix_path / 'bin' / 'light.exe'
-        self.candle_exe = wix_path / 'bin' / 'candle.exe'
-        if not wix_path:
-            raise BriefcaseCommandError("""
-WiX Toolset is not installed.
-
-Please install the latest stable release from:
-
-    https://wixtoolset.org/
-
-If WiX is already installed, ensure the WIX environment variable has been set,
-and that it point to the installed location.
-
-If you're using Windows 10, you may need to enable the .NET 3.5 framework
-before installing WiX. Open the Control Panel, select "Programs and Features",
-then "Turn Windows features on or off". Ensure ".NET Framework 3.5 (Includes
-.NET 2.0 and 3.0)" is enabled.
-""")
-        elif not (
-            self.heat_exe.exists()
-            and self.light_exe.exists()
-            and self.candle_exe.exists()
-        ):
-            raise BriefcaseCommandError("""
-The WIX environment variable does not point to an install of the WiX Toolset.
-Current value: {wix_path!r}
-""".format(wix_path=wix_path))
+        self.wix = verify_wix(self)
 
 
 class WindowsMSICreateCommand(WindowsMSIMixin, CreateCommand):
@@ -200,7 +162,7 @@ class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
             print("Compiling application manifest...")
             self.subprocess.run(
                 [
-                    str(self.heat_exe),
+                    str(self.wix.heat_exe),
                     "dir",
                     "src",
                     "-nologo",  # Don't display startup text
@@ -227,7 +189,7 @@ class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
             print("Compiling application installer...")
             self.subprocess.run(
                 [
-                    str(self.candle_exe),
+                    str(self.wix.candle_exe),
                     "-nologo",  # Don't display startup text
                     "-ext", "WixUtilExtension",
                     "-ext", "WixUIExtension",
@@ -248,7 +210,7 @@ class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
             print("Linking application installer...")
             self.subprocess.run(
                 [
-                    str(self.light_exe),
+                    str(self.wix.light_exe),
                     "-nologo",  # Don't display startup text
                     "-ext", "WixUtilExtension",
                     "-ext", "WixUIExtension",
