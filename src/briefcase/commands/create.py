@@ -437,7 +437,8 @@ class CreateCommand(BaseCommand):
                         sys.executable, "-m",
                         "pip", "install",
                         "--upgrade",
-                        '--target={}'.format(self.app_packages_path(app)),
+                        "--no-user",
+                        "--target={}".format(self.app_packages_path(app)),
                     ] + app.requires,
                     check=True,
                 )

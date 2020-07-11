@@ -53,7 +53,7 @@ def test_install_app_dependencies(first_app_config, tmp_path):
     docker.run.assert_called_with(
         [
             sys.executable, '-m', 'pip',
-            'install', '--upgrade',
+            'install', '--upgrade', '--no-user',
             '--target={tmp_path}/linux/First App/path/to/app_packages'.format(
                 tmp_path=tmp_path
             ),
@@ -98,7 +98,7 @@ def test_install_app_dependencies_no_docker(first_app_config, tmp_path):
     command.subprocess.run.assert_called_with(
         [
             sys.executable, '-m', 'pip',
-            'install', '--upgrade',
+            'install', '--upgrade', '--no-user',
             '--target={tmp_path}/linux/First App/path/to/app_packages'.format(
                 tmp_path=tmp_path
             ),
