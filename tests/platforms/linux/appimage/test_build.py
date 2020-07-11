@@ -6,8 +6,8 @@ import pytest
 from requests import exceptions as requests_exceptions
 
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.platforms.linux.appimage import LinuxAppImageBuildCommand
 from briefcase.integrations.docker import Docker
+from briefcase.platforms.linux.appimage import LinuxAppImageBuildCommand
 
 
 @pytest.fixture

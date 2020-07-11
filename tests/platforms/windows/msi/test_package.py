@@ -3,6 +3,7 @@ from unittest import mock
 
 import pytest
 
+from briefcase.integrations.wix import WiX
 from briefcase.platforms.windows.msi import WindowsMSIPackageCommand
 
 
@@ -10,9 +11,7 @@ from briefcase.platforms.windows.msi import WindowsMSIPackageCommand
 def package_command(tmp_path):
     command = WindowsMSIPackageCommand(base_path=tmp_path)
     command.subprocess = mock.MagicMock()
-    command.candle_exe = tmp_path / 'wix' / 'bin' / 'candle.exe'
-    command.light_exe = tmp_path / 'wix' / 'bin' / 'light.exe'
-    command.heat_exe = tmp_path / 'wix' / 'bin' / 'heat.exe'
+    command.wix = WiX(tmp_path / 'wix')
     return command
 
 

@@ -10,9 +10,9 @@ import toml
 from cookiecutter import exceptions as cookiecutter_exceptions
 from requests import exceptions as requests_exceptions
 
+import briefcase
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError, NetworkFailure
-import briefcase
 
 from .base import BaseCommand, TemplateUnsupportedVersion, full_options
 

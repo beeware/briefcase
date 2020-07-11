@@ -7,7 +7,7 @@ from pathlib import Path
 from requests import exceptions as requests_exceptions
 
 from briefcase.config import PEP508_NAME_RE
-from briefcase.console import select_option, InputDisabled
+from briefcase.console import InputDisabled, select_option
 from briefcase.exceptions import (
     BriefcaseCommandError,
     InvalidDeviceError,

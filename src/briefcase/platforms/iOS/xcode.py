@@ -11,7 +11,7 @@ from briefcase.commands import (
     UpdateCommand
 )
 from briefcase.config import BaseConfig
-from briefcase.console import select_option, InputDisabled
+from briefcase.console import InputDisabled, select_option
 from briefcase.exceptions import BriefcaseCommandError, InvalidDeviceError
 from briefcase.integrations.xcode import (
     DeviceState,

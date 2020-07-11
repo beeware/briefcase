@@ -1,12 +1,12 @@
-from unittest.mock import MagicMock
 import sys
+from unittest.mock import MagicMock
 
 import pytest
 
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.platforms.linux.appimage import LinuxAppImageCreateCommand
-from briefcase.integrations.subprocess import Subprocess
 from briefcase.integrations.docker import Docker
+from briefcase.integrations.subprocess import Subprocess
+from briefcase.platforms.linux.appimage import LinuxAppImageCreateCommand
 
 
 def test_binary_path(first_app_config, tmp_path):

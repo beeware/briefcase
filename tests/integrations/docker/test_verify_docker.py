@@ -4,7 +4,7 @@ from unittest import mock
 import pytest
 
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.integrations.docker import verify_docker, Docker, _verify_docker_can_run
+from briefcase.integrations.docker import Docker, verify_docker, _verify_docker_can_run
 
 
 @pytest.fixture
