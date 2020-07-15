@@ -57,34 +57,8 @@ def build_command(tmp_path, first_app_config):
     # Set up a Docker wrapper
     command.Docker = Docker
 
-    command.linuxdeploy_appimage = tmp_path / 'tools' / 'linuxdeploy-wonky.AppImage'
+    command.linuxdeploy_appimage_path = tmp_path / 'tools' / 'linuxdeploy-wonky.AppImage'
     return command
-
-
-def test_linuxdeploy_download_url(build_command):
-    assert (
-        build_command.linuxdeploy_download_url
-        == 'https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-wonky.AppImage'
-    )
-
-
-def test_verify_tools(build_command, first_app, tmp_path):
-    "The build process invokes verify_tools, which retrieves linuxdeploy"
-
-    build_command.build_app = mock.MagicMock()
-    build_command.download_url = mock.MagicMock(return_value='new-downloaded-file')
-
-    # Invoke the full build.
-    build_command()
-
-    # The downloaded file will be made executable
-    build_command.os.chmod.assert_called_with('new-downloaded-file', 0o755)
-
-    # The build command retains the path to the downloaded file.
-    assert build_command.linuxdeploy_appimage == 'new-downloaded-file'
-
-    # build_app will be invoked on the apps.
-    build_command.build_app.assert_called_with(first_app)
 
 
 def test_verify_tools_wrong_platform(build_command):
@@ -105,7 +79,7 @@ def test_verify_tools_wrong_platform(build_command):
     assert build_command.os.chmod.call_count == 0
 
     # and the command won't retain the downloaded filename.
-    assert build_command.linuxdeploy_appimage != 'new-downloaded-file'
+    assert build_command.linuxdeploy_appimage_path != 'new-downloaded-file'
 
     # and no build will be attempted
     assert build_command.build_app.call_count == 0
@@ -132,7 +106,7 @@ def test_verify_tools_download_failure(build_command):
     assert build_command.os.chmod.call_count == 0
 
     # and the command won't retain the downloaded filename.
-    assert build_command.linuxdeploy_appimage != 'new-downloaded-file'
+    assert build_command.linuxdeploy_appimage_path != 'new-downloaded-file'
 
     # and no build will be attempted
     assert build_command.build_app.call_count == 0
@@ -147,7 +121,7 @@ def test_build_appimage(build_command, first_app, tmp_path):
     app_dir = tmp_path / 'linux' / 'First App' / 'First App.AppDir'
     build_command._subprocess.run.assert_called_with(
         [
-            str(build_command.linuxdeploy_appimage),
+            str(build_command.linuxdeploy_appimage_path),
             "--appimage-extract-and-run",
             "--appdir={appdir}".format(appdir=app_dir),
             "-d", str(app_dir / "com.example.first-app.desktop"),
@@ -187,7 +161,7 @@ def test_build_failure(build_command, first_app, tmp_path):
     app_dir = tmp_path / 'linux' / 'First App' / 'First App.AppDir'
     build_command._subprocess.run.assert_called_with(
         [
-            str(build_command.linuxdeploy_appimage),
+            str(build_command.linuxdeploy_appimage_path),
             "--appimage-extract-and-run",
             "--appdir={appdir}".format(appdir=app_dir),
             "-d", str(app_dir / "com.example.first-app.desktop"),
@@ -239,7 +213,7 @@ def test_build_appimage_with_docker(build_command, first_app, tmp_path):
             'briefcase/com.example.first-app:py3.{minor}'.format(
                 minor=sys.version_info.minor
             ),
-            str(build_command.linuxdeploy_appimage),
+            str(build_command.linuxdeploy_appimage_path),
             "--appimage-extract-and-run",
             "--appdir=/app/First App/First App.AppDir",
             "-d", "/app/First App/First App.AppDir/com.example.first-app.desktop",

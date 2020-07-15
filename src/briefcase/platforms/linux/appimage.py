@@ -1,8 +1,6 @@
 import subprocess
 from contextlib import contextmanager
 
-from requests import exceptions as requests_exceptions
-
 from briefcase.commands import (
     BuildCommand,
     CreateCommand,
@@ -12,8 +10,9 @@ from briefcase.commands import (
     UpdateCommand
 )
 from briefcase.config import BaseConfig
-from briefcase.exceptions import BriefcaseCommandError, NetworkFailure
+from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.docker import verify_docker
+from briefcase.integrations.linuxdeploy import verify_linuxdeploy
 from briefcase.platforms.linux import LinuxMixin
 
 
@@ -153,28 +152,9 @@ class LinuxAppImageUpdateCommand(LinuxAppImageMixin, UpdateCommand):
 class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
     description = "Build a Linux AppImage."
 
-    @property
-    def linuxdeploy_download_url(self):
-        return (
-            'https://github.com/linuxdeploy/linuxdeploy/'
-            'releases/download/continuous/linuxdeploy-{self.host_arch}.AppImage'.format(
-                self=self
-            )
-        )
-
     def verify_tools(self):
         super().verify_tools()
-
-        try:
-            print()
-            print("Ensure we have the linuxdeploy AppImage...")
-            self.linuxdeploy_appimage = self.download_url(
-                url=self.linuxdeploy_download_url,
-                download_path=self.dot_briefcase_path / 'tools'
-            )
-            self.os.chmod(str(self.linuxdeploy_appimage), 0o755)
-        except requests_exceptions.ConnectionError:
-            raise NetworkFailure('downloading linuxdeploy AppImage')
+        self.linuxdeploy_appimage_path = verify_linuxdeploy(self)
 
     def build_app(self, app: BaseConfig, **kwargs):
         """
@@ -211,7 +191,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
             with self.dockerize(app) as docker:
                 docker.run(
                     [
-                        str(self.linuxdeploy_appimage),
+                        str(self.linuxdeploy_appimage_path),
                         "--appimage-extract-and-run",
                         "--appdir={appdir_path}".format(appdir_path=self.appdir_path(app)),
                         "-d", str(
