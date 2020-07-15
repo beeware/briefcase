@@ -6,6 +6,9 @@ from briefcase.exceptions import NetworkFailure
 def verify_linuxdeploy(command):
     """
     Verify that LinuxDeploy is available.
+
+    :param command: The command that needs to use linuxdeploy
+    :returns: The path to the linuxdeploy AppImage.
     """
 
     linuxdeploy_download_url = (
