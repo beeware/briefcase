@@ -198,7 +198,6 @@ def test_build_appimage_with_docker(build_command, first_app, tmp_path):
     assert type(build_command.subprocess) != Docker
 
     # linuxdeploy was invoked inside Docker
-    app_dir = tmp_path / 'linux' / 'First App' / 'First App.AppDir'
     build_command._subprocess.run.assert_called_with(
         [
             "docker",
