@@ -1,8 +1,6 @@
 import subprocess
 from contextlib import contextmanager
 
-from requests import exceptions as requests_exceptions
-
 from briefcase.commands import (
     BuildCommand,
     CreateCommand,
@@ -12,13 +10,17 @@ from briefcase.commands import (
     UpdateCommand
 )
 from briefcase.config import BaseConfig
-from briefcase.exceptions import BriefcaseCommandError, NetworkFailure
+from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.docker import verify_docker
+from briefcase.integrations.linuxdeploy import verify_linuxdeploy
 from briefcase.platforms.linux import LinuxMixin
 
 
 class LinuxAppImageMixin(LinuxMixin):
     output_format = 'appimage'
+
+    def appdir_path(self, app):
+        return self.bundle_path(app) / "{app.formal_name}.AppDir".format(app=app)
 
     def binary_path(self, app):
         binary_name = app.formal_name.replace(' ', '_')
@@ -150,28 +152,9 @@ class LinuxAppImageUpdateCommand(LinuxAppImageMixin, UpdateCommand):
 class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
     description = "Build a Linux AppImage."
 
-    @property
-    def linuxdeploy_download_url(self):
-        return (
-            'https://github.com/linuxdeploy/linuxdeploy/'
-            'releases/download/continuous/linuxdeploy-{self.host_arch}.AppImage'.format(
-                self=self
-            )
-        )
-
     def verify_tools(self):
         super().verify_tools()
-
-        try:
-            print()
-            print("Ensure we have the linuxdeploy AppImage...")
-            self.linuxdeploy_appimage = self.download_url(
-                url=self.linuxdeploy_download_url,
-                download_path=self.dot_briefcase_path / 'tools'
-            )
-            self.os.chmod(str(self.linuxdeploy_appimage), 0o755)
-        except requests_exceptions.ConnectionError:
-            raise NetworkFailure('downloading linuxdeploy AppImage')
+        self.linuxdeploy_appimage_path = verify_linuxdeploy(self)
 
     def build_app(self, app: BaseConfig, **kwargs):
         """
@@ -190,22 +173,34 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
             env = {
                 'VERSION': app.version
             }
-            appdir_path = self.bundle_path(app) / "{app.formal_name}.AppDir".format(
-                app=app
-            )
+
+            # Find all the .so files in app and app_packages,
+            # so they can be passed in to linuxdeploy to have their
+            # dependencies added to the AppImage. Looks for any .so file
+            # in the application, and make sure it is marked for deployment.
+            so_folders = set()
+            for so_file in self.appdir_path(app).glob('**/*.so'):
+                so_folders.add(so_file.parent)
+
+            deploy_deps_args = []
+            for folder in sorted(so_folders):
+                deploy_deps_args.extend(["--deploy-deps-only", str(folder)])
+
+            # Build the app image. We use `--appimage-extract-and-run`
+            # because AppImages won't run natively inside Docker.
             with self.dockerize(app) as docker:
                 docker.run(
                     [
-                        str(self.linuxdeploy_appimage),
+                        str(self.linuxdeploy_appimage_path),
                         "--appimage-extract-and-run",
-                        "--appdir={appdir_path}".format(appdir_path=appdir_path),
+                        "--appdir={appdir_path}".format(appdir_path=self.appdir_path(app)),
                         "-d", str(
-                            appdir_path / "{app.bundle}.{app.app_name}.desktop".format(
+                            self.appdir_path(app) / "{app.bundle}.{app.app_name}.desktop".format(
                                 app=app,
                             )
                         ),
                         "-o", "appimage",
-                    ],
+                    ] + deploy_deps_args,
                     env=env,
                     check=True,
                     cwd=str(self.platform_path)

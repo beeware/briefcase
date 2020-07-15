@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import Optional
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
-import toml
 from cookiecutter import exceptions as cookiecutter_exceptions
 from requests import exceptions as requests_exceptions
 
@@ -114,7 +113,6 @@ class CreateCommand(BaseCommand):
 
     def __init__(self, *args, **options):
         super().__init__(*args, **options)
-        self._path_index = {}
         self._s3 = None
 
     @property
@@ -140,59 +138,6 @@ class CreateCommand(BaseCommand):
         return "https://briefcase-support.org/python?{query}".format(
             query=urlencode(self.support_package_url_query)
         )
-
-    def _load_path_index(self, app: BaseConfig):
-        """
-        Load the path index from the index file provided by the app template
-
-        :param app: The config object for the app
-        :return: The contents of the application path index.
-        """
-        with (self.bundle_path(app) / 'briefcase.toml').open() as f:
-            self._path_index[app] = toml.load(f)['paths']
-        return self._path_index[app]
-
-    def support_path(self, app: BaseConfig):
-        """
-        Obtain the path into which the support package should be unpacked
-
-        :param app: The config object for the app
-        :return: The full path where the support package should be unpacked.
-        """
-        # If the index file hasn't been loaded for this app, load it.
-        try:
-            path_index = self._path_index[app]
-        except KeyError:
-            path_index = self._load_path_index(app)
-        return self.bundle_path(app) / path_index['support_path']
-
-    def app_packages_path(self, app: BaseConfig):
-        """
-        Obtain the path into which dependencies should be installed
-
-        :param app: The config object for the app
-        :return: The full path where application dependencies should be installed.
-        """
-        # If the index file hasn't been loaded for this app, load it.
-        try:
-            path_index = self._path_index[app]
-        except KeyError:
-            path_index = self._load_path_index(app)
-        return self.bundle_path(app) / path_index['app_packages_path']
-
-    def app_path(self, app: BaseConfig):
-        """
-        Obtain the path into which the application should be installed.
-
-        :param app: The config object for the app
-        :return: The full path where application code should be installed.
-        """
-        # If the index file hasn't been loaded for this app, load it.
-        try:
-            path_index = self._path_index[app]
-        except KeyError:
-            path_index = self._load_path_index(app)
-        return self.bundle_path(app) / path_index['app_path']
 
     def icon_targets(self, app: BaseConfig):
         """

@@ -12,11 +12,12 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 import requests
+import toml
 from cookiecutter.main import cookiecutter
 from cookiecutter.repository import is_repo_url
 
 from briefcase import __version__, integrations
-from briefcase.config import AppConfig, GlobalConfig, parse_config
+from briefcase.config import AppConfig, BaseConfig, GlobalConfig, parse_config
 from briefcase.console import Console
 from briefcase.exceptions import (
     BadNetworkResourceError,
@@ -111,6 +112,7 @@ class BaseCommand(ABC):
 
         self.global_config = None
         self.apps = {} if apps is None else apps
+        self._path_index = {}
 
         # Some details about the host machine
         self.host_arch = platform.machine()
@@ -248,6 +250,59 @@ class BaseCommand(ABC):
         :param app: The app config
         """
         ...
+
+    def _load_path_index(self, app: BaseConfig):
+        """
+        Load the path index from the index file provided by the app template
+
+        :param app: The config object for the app
+        :return: The contents of the application path index.
+        """
+        with (self.bundle_path(app) / 'briefcase.toml').open() as f:
+            self._path_index[app] = toml.load(f)['paths']
+        return self._path_index[app]
+
+    def support_path(self, app: BaseConfig):
+        """
+        Obtain the path into which the support package should be unpacked
+
+        :param app: The config object for the app
+        :return: The full path where the support package should be unpacked.
+        """
+        # If the index file hasn't been loaded for this app, load it.
+        try:
+            path_index = self._path_index[app]
+        except KeyError:
+            path_index = self._load_path_index(app)
+        return self.bundle_path(app) / path_index['support_path']
+
+    def app_packages_path(self, app: BaseConfig):
+        """
+        Obtain the path into which dependencies should be installed
+
+        :param app: The config object for the app
+        :return: The full path where application dependencies should be installed.
+        """
+        # If the index file hasn't been loaded for this app, load it.
+        try:
+            path_index = self._path_index[app]
+        except KeyError:
+            path_index = self._load_path_index(app)
+        return self.bundle_path(app) / path_index['app_packages_path']
+
+    def app_path(self, app: BaseConfig):
+        """
+        Obtain the path into which the application should be installed.
+
+        :param app: The config object for the app
+        :return: The full path where application code should be installed.
+        """
+        # If the index file hasn't been loaded for this app, load it.
+        try:
+            path_index = self._path_index[app]
+        except KeyError:
+            path_index = self._load_path_index(app)
+        return self.bundle_path(app) / path_index['app_path']
 
     def app_module_path(self, app):
         """

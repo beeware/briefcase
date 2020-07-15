@@ -11,6 +11,24 @@ from briefcase.platforms.linux.appimage import LinuxAppImageBuildCommand
 
 
 @pytest.fixture
+def first_app(first_app_config, tmp_path):
+    "A fixture for the first app, rolled out on disk"
+    # Make it look like the template has been generated
+    app_dir = tmp_path / 'linux' / 'First App' / 'First App.AppDir'
+    (app_dir / 'usr' / 'app' / 'support').mkdir(parents=True, exist_ok=True)
+    (app_dir / 'usr' / 'app_packages' / 'firstlib').mkdir(parents=True, exist_ok=True)
+    (app_dir / 'usr' / 'app_packages' / 'secondlib').mkdir(parents=True, exist_ok=True)
+
+    # Create some .so files
+    (app_dir / 'usr' / 'app' / 'support' / 'support.so').touch()
+    (app_dir / 'usr' / 'app_packages' / 'firstlib' / 'first.so').touch()
+    (app_dir / 'usr' / 'app_packages' / 'secondlib' / 'second_a.so').touch()
+    (app_dir / 'usr' / 'app_packages' / 'secondlib' / 'second_b.so').touch()
+
+    return first_app_config
+
+
+@pytest.fixture
 def build_command(tmp_path, first_app_config):
     command = LinuxAppImageBuildCommand(
         base_path=tmp_path,
@@ -21,7 +39,12 @@ def build_command(tmp_path, first_app_config):
     command.host_arch = 'wonky'
     command.verbosity = 0
     command.use_docker = False
-
+    command._path_index = {
+        first_app_config: {
+            'app_path': "First App.AppDir/usr/app",
+            'app_packages_path': "First App.AppDir/usr/app_packages",
+        }
+    }
     command.os = mock.MagicMock()
     command.os.environ.copy.return_value = {
         'PATH': '/usr/local/bin:/usr/bin'
@@ -34,37 +57,8 @@ def build_command(tmp_path, first_app_config):
     # Set up a Docker wrapper
     command.Docker = Docker
 
-    command.linuxdeploy_appimage = tmp_path / 'tools' / 'linuxdeploy-wonky.AppImage'
+    command.linuxdeploy_appimage_path = tmp_path / 'tools' / 'linuxdeploy-wonky.AppImage'
     return command
-
-
-def test_linuxdeploy_download_url(build_command):
-    assert (
-        build_command.linuxdeploy_download_url
-        == 'https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-wonky.AppImage'
-    )
-
-
-def test_verify_tools(build_command, first_app_config, tmp_path):
-    "The build process invokes verify_tools, which retrieves linuxdeploy"
-
-    build_command.build_app = mock.MagicMock()
-    build_command.download_url = mock.MagicMock(return_value='new-downloaded-file')
-
-    # Make it look like the template has been generated
-    (tmp_path / 'linux' / 'First App').mkdir(parents=True, exist_ok=True)
-
-    # Invoke the full build.
-    build_command()
-
-    # The downloaded file will be made executable
-    build_command.os.chmod.assert_called_with('new-downloaded-file', 0o755)
-
-    # The build command retains the path to the downloaded file.
-    assert build_command.linuxdeploy_appimage == 'new-downloaded-file'
-
-    # build_app will be invoked on the apps.
-    build_command.build_app.assert_called_with(first_app_config)
 
 
 def test_verify_tools_wrong_platform(build_command):
@@ -85,7 +79,7 @@ def test_verify_tools_wrong_platform(build_command):
     assert build_command.os.chmod.call_count == 0
 
     # and the command won't retain the downloaded filename.
-    assert build_command.linuxdeploy_appimage != 'new-downloaded-file'
+    assert build_command.linuxdeploy_appimage_path != 'new-downloaded-file'
 
     # and no build will be attempted
     assert build_command.build_app.call_count == 0
@@ -112,26 +106,29 @@ def test_verify_tools_download_failure(build_command):
     assert build_command.os.chmod.call_count == 0
 
     # and the command won't retain the downloaded filename.
-    assert build_command.linuxdeploy_appimage != 'new-downloaded-file'
+    assert build_command.linuxdeploy_appimage_path != 'new-downloaded-file'
 
     # and no build will be attempted
     assert build_command.build_app.call_count == 0
 
 
-def test_build_appimage(build_command, first_app_config, tmp_path):
+def test_build_appimage(build_command, first_app, tmp_path):
     "A Linux app can be packaged as an AppImage"
 
-    build_command.build_app(first_app_config)
+    build_command.build_app(first_app)
 
     # linuxdeploy was invoked
     app_dir = tmp_path / 'linux' / 'First App' / 'First App.AppDir'
     build_command._subprocess.run.assert_called_with(
         [
-            str(build_command.linuxdeploy_appimage),
+            str(build_command.linuxdeploy_appimage_path),
             "--appimage-extract-and-run",
             "--appdir={appdir}".format(appdir=app_dir),
             "-d", str(app_dir / "com.example.first-app.desktop"),
             "-o", "appimage",
+            "--deploy-deps-only", str(app_dir / 'usr' / 'app' / 'support'),
+            "--deploy-deps-only", str(app_dir / 'usr' / 'app_packages' / 'firstlib'),
+            "--deploy-deps-only", str(app_dir / 'usr' / 'app_packages' / 'secondlib'),
         ],
         env={
             'PATH': '/usr/local/bin:/usr/bin',
@@ -147,7 +144,7 @@ def test_build_appimage(build_command, first_app_config, tmp_path):
     )
 
 
-def test_build_failure(build_command, first_app_config, tmp_path):
+def test_build_failure(build_command, first_app, tmp_path):
     "If linuxdeploy fails, the build is stopped."
 
     # Mock a failure in the build
@@ -158,17 +155,20 @@ def test_build_failure(build_command, first_app_config, tmp_path):
 
     # Invoking the build will raise an error.
     with pytest.raises(BriefcaseCommandError):
-        build_command.build_app(first_app_config)
+        build_command.build_app(first_app)
 
     # linuxdeploy was invoked
     app_dir = tmp_path / 'linux' / 'First App' / 'First App.AppDir'
     build_command._subprocess.run.assert_called_with(
         [
-            str(build_command.linuxdeploy_appimage),
+            str(build_command.linuxdeploy_appimage_path),
             "--appimage-extract-and-run",
             "--appdir={appdir}".format(appdir=app_dir),
             "-d", str(app_dir / "com.example.first-app.desktop"),
             "-o", "appimage",
+            "--deploy-deps-only", str(app_dir / 'usr' / 'app' / 'support'),
+            "--deploy-deps-only", str(app_dir / 'usr' / 'app_packages' / 'firstlib'),
+            "--deploy-deps-only", str(app_dir / 'usr' / 'app_packages' / 'secondlib'),
         ],
         env={
             'PATH': '/usr/local/bin:/usr/bin',
@@ -186,13 +186,13 @@ def test_build_failure(build_command, first_app_config, tmp_path):
     sys.platform == "win32",
     reason="Windows paths aren't converted in Docker context"
 )
-def test_build_appimage_with_docker(build_command, first_app_config, tmp_path):
+def test_build_appimage_with_docker(build_command, first_app, tmp_path):
     "A Linux app can be packaged as an AppImage"
     # Enable docker, and move to a non-Linux OS.
     build_command.host_os = 'TestOS'
     build_command.use_docker = True
 
-    build_command.build_app(first_app_config)
+    build_command.build_app(first_app)
 
     # Ensure that the effect of the Docker context has been reversed.
     assert type(build_command.subprocess) != Docker
@@ -212,11 +212,14 @@ def test_build_appimage_with_docker(build_command, first_app_config, tmp_path):
             'briefcase/com.example.first-app:py3.{minor}'.format(
                 minor=sys.version_info.minor
             ),
-            str(build_command.linuxdeploy_appimage),
+            str(build_command.linuxdeploy_appimage_path),
             "--appimage-extract-and-run",
             "--appdir=/app/First App/First App.AppDir",
             "-d", "/app/First App/First App.AppDir/com.example.first-app.desktop",
             "-o", "appimage",
+            "--deploy-deps-only", "/app/First App/First App.AppDir/usr/app/support",
+            "--deploy-deps-only", "/app/First App/First App.AppDir/usr/app_packages/firstlib",
+            "--deploy-deps-only", "/app/First App/First App.AppDir/usr/app_packages/secondlib",
         ],
         check=True,
         cwd=str(tmp_path / 'linux')
