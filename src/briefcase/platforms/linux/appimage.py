@@ -20,6 +20,9 @@ from briefcase.platforms.linux import LinuxMixin
 class LinuxAppImageMixin(LinuxMixin):
     output_format = 'appimage'
 
+    def appdir_path(self, app):
+        return self.bundle_path(app) / "{app.formal_name}.AppDir".format(app=app)
+
     def binary_path(self, app):
         binary_name = app.formal_name.replace(' ', '_')
         return self.platform_path / '{binary_name}-{app.version}-{self.host_arch}.AppImage'.format(
@@ -190,22 +193,34 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
             env = {
                 'VERSION': app.version
             }
-            appdir_path = self.bundle_path(app) / "{app.formal_name}.AppDir".format(
-                app=app
-            )
+
+            # Find all the .so files in app and app_packages,
+            # so they can be passed in to linuxdeploy to have their
+            # dependencies added to the AppImage. Looks for any .so file
+            # in the application, and make sure it is marked for deployment.
+            so_folders = set()
+            for so_file in self.appdir_path(app).glob('**/*.so'):
+                so_folders.add(so_file.parent)
+
+            deploy_deps_args = []
+            for folder in sorted(so_folders):
+                deploy_deps_args.extend(["--deploy-deps-only", str(folder)])
+
+            # Build the app image. We use `--appimage-extract-and-run`
+            # because AppImages won't run natively inside Docker.
             with self.dockerize(app) as docker:
                 docker.run(
                     [
                         str(self.linuxdeploy_appimage),
                         "--appimage-extract-and-run",
-                        "--appdir={appdir_path}".format(appdir_path=appdir_path),
+                        "--appdir={appdir_path}".format(appdir_path=self.appdir_path(app)),
                         "-d", str(
-                            appdir_path / "{app.bundle}.{app.app_name}.desktop".format(
+                            self.appdir_path(app) / "{app.bundle}.{app.app_name}.desktop".format(
                                 app=app,
                             )
                         ),
                         "-o", "appimage",
-                    ],
+                    ] + deploy_deps_args,
                     env=env,
                     check=True,
                     cwd=str(self.platform_path)
