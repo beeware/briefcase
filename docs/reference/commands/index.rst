@@ -13,3 +13,4 @@ Command reference
    run
    package
    publish
+   upgrade
