@@ -3,7 +3,11 @@ from unittest.mock import MagicMock
 import pytest
 from requests import exceptions as requests_exceptions
 
-from briefcase.exceptions import BriefcaseCommandError, NetworkFailure
+from briefcase.exceptions import (
+    BriefcaseCommandError,
+    MissingToolError,
+    NetworkFailure
+)
 from briefcase.integrations.wix import WIX_DOWNLOAD_URL, WiX
 
 
@@ -126,6 +130,22 @@ def test_download_wix(mock_command, tmp_path):
     assert wix.heat_exe == tmp_path / 'tools' / 'wix' / 'heat.exe'
     assert wix.light_exe == tmp_path / 'tools' / 'wix' / 'light.exe'
     assert wix.candle_exe == tmp_path / 'tools' / 'wix' / 'candle.exe'
+
+
+def test_dont_install(mock_command, tmp_path):
+    "If there's no existing managed WiX install, an install is not requested, verify fails"
+    # Mock the environment as if there is not WiX variable
+    mock_command.os.environ.get.return_value = None
+
+    # Verify, but don't install. This will fail.
+    with pytest.raises(MissingToolError):
+        WiX.verify(mock_command, install=False)
+
+    # The environment was queried.
+    mock_command.os.environ.get.assert_called_with('WIX')
+
+    # No download was initiated
+    mock_command.download_url.assert_not_called()
 
 
 def test_download_fail(mock_command, tmp_path):

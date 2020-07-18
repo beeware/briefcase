@@ -43,15 +43,11 @@ class AndroidSDK:
     name = 'android_sdk'
     full_name = 'Android SDK'
 
-    def __init__(self, command, jdk, root_path=None):
+    def __init__(self, command, jdk, root_path):
         self.command = command
         self.dot_android_path = self.command.home_path / ".android"
         self.jdk = jdk
-
-        if root_path:
-            self.root_path = root_path
-        else:
-            self.root_path = self.command.tools_path / "android_sdk"
+        self.root_path = root_path
 
         # A wrapper for testing purposes
         self.sleep = time.sleep
@@ -184,14 +180,11 @@ class AndroidSDK:
 
     @property
     def managed_install(self):
-        try:
-            # Determine if sdk_root is relative to the .briefcase folder.
-            # If sdk_root isn't inside .briefcase, this will raise a ValueError,
-            # indicating it is a non-managed install.
-            self.root_path.relative_to(self.command.tools_path)
-            return True
-        except ValueError:
-            return False
+        "Is the Android SDK install managed by Briefcase?"
+        # Although the end-user can provide their own SDK, the SDK also
+        # provides a built-in upgrade mechanism. Therefore, all Android SDKs
+        # are managed installs.
+        return True
 
     def install(self):
         """
