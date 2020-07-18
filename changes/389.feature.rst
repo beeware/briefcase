@@ -1,1 +1,0 @@
-WiX is now auto-downloaded when the MSI backend is used.

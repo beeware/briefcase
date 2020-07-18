@@ -1,1 +1,0 @@
-Binary modules in Linux AppImages are now processed correctly, ensuring that no references to system libraries are retained in the AppImage.

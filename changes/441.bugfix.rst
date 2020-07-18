@@ -1,1 +1,0 @@
-If pip is configured to use a per-user site_packages, this no longer clashes with the installation of application packages.

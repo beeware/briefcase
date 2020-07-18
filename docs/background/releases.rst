@@ -4,6 +4,27 @@ Release History
 
 .. towncrier release notes start
 
+0.3.3 (2020-07-18)
+==================
+
+Features
+--------
+
+* WiX is now auto-downloaded when the MSI backend is used. (#389)
+* The ``upgrade`` command now provides a way to upgrade tools that Briefcase has
+  downloaded, including WiX, Java, linuxdeploy, and the Android SDK. (#450)
+
+Bugfixes
+--------
+
+* Binary modules in Linux AppImages are now processed correctly, ensuring that no
+  references to system libraries are retained in the AppImage. (#420)
+* If pip is configured to use a per-user site_packages, this no longer clashes
+  with the installation of application packages. (#441)
+* Docker-using commands now check whether the Docker daemon is running and if
+  the user has permission to access it. (#442)
+
+
 0.3.2 (2020-07-04)
 ==================
 
