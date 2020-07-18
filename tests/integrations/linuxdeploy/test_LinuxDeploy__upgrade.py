@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 import pytest
 from requests import exceptions as requests_exceptions
 
-from briefcase.exceptions import NetworkFailure
+from briefcase.exceptions import NetworkFailure, MissingToolError
 from briefcase.integrations.linuxdeploy import LinuxDeploy
 
 
@@ -45,29 +45,20 @@ def test_upgrade_exists(mock_command, tmp_path):
 
 
 def test_upgrade_does_not_exist(mock_command, tmp_path):
-    "If linuxdeploy doesn't exist, it is downloaded"
-    # Mock a successful download
-    mock_command.download_url.return_value = 'new-downloaded-file'
-
+    "If linuxdeploy doesn't already exist, upgrading is an error"
     # Create a linuxdeploy wrapper, then upgrade it
     linuxdeploy = LinuxDeploy(mock_command)
-    linuxdeploy.upgrade()
+    with pytest.raises(MissingToolError):
+        linuxdeploy.upgrade()
 
-    # A download is invoked
-    mock_command.download_url.assert_called_with(
-        url='https://github.com/linuxdeploy/linuxdeploy/'
-            'releases/download/continuous/linuxdeploy-wonky.AppImage',
-        download_path=tmp_path / 'tools'
-    )
-    # The downloaded file will be made executable
-    mock_command.os.chmod.assert_called_with('new-downloaded-file', 0o755)
+    # The tool wasn't already installed, so an error is raised.
+    assert mock_command.download_url.call_count == 0
 
 
 def test_upgrade_linuxdeploy_download_failure(mock_command, tmp_path):
     "If linuxdeploy doesn't exist, but a download failure occurs, an error is raised"
-    appimage_path = tmp_path / 'tools' / 'linuxdeploy-wonky.AppImage'
-
     # Mock the existence of an install
+    appimage_path = tmp_path / 'tools' / 'linuxdeploy-wonky.AppImage'
     appimage_path.touch()
 
     mock_command.download_url.side_effect = requests_exceptions.ConnectionError
