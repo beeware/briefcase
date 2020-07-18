@@ -6,8 +6,8 @@ from unittest.mock import MagicMock
 import pytest
 from requests import exceptions as requests_exceptions
 
-from briefcase.exceptions import BriefcaseCommandError, NetworkFailure
-from briefcase.integrations.android_sdk import verify_android_sdk
+from briefcase.exceptions import BriefcaseCommandError, NetworkFailure, MissingToolError
+from briefcase.integrations.android_sdk import AndroidSDK
 
 
 @pytest.fixture
@@ -16,10 +16,7 @@ def mock_command(tmp_path):
 
     # Mock-out the `sys` module so we can mock out the Python version in some tests.
     command.sys = MagicMock()
-
-    # Use the `tmp_path` in `dot_briefcase_path` to ensure tests don't interfere
-    # with each other.
-    command.dot_briefcase_path = tmp_path / ".briefcase"
+    command.tools_path = tmp_path / "tools"
 
     # Make the `os` module and `host_os` live.
     command.os = os
@@ -47,9 +44,9 @@ def accept_license(android_sdk_root_path):
 
 @pytest.mark.parametrize("host_os", ("ArbitraryNotWindows", "Windows"))
 def test_succeeds_immediately_in_happy_path(mock_command, host_os, tmp_path):
-    "If verify_android_sdk is invoked on a path containing an Android SDK, it does nothing."
+    "If verify is invoked on a path containing an Android SDK, it does nothing."
     # If `sdkmanager` exists and has the right permissions, and
-    # `android-sdk-license` exists, verify_android_sdk() should
+    # `android-sdk-license` exists, verify() should
     # succeed, create no subprocesses, make no requests, and return a
     # SDK wrapper.
 
@@ -57,7 +54,7 @@ def test_succeeds_immediately_in_happy_path(mock_command, host_os, tmp_path):
     # `sdkmanager`.
 
     # Create `sdkmanager` and the license file.
-    android_sdk_root_path = tmp_path / ".briefcase" / "tools" / "android_sdk"
+    android_sdk_root_path = tmp_path / "tools" / "android_sdk"
     tools_bin = android_sdk_root_path / "tools" / "bin"
     tools_bin.mkdir(parents=True, mode=0o755)
     if host_os == "Windows":
@@ -71,8 +68,8 @@ def test_succeeds_immediately_in_happy_path(mock_command, host_os, tmp_path):
     # Configure `mock_command` to assume the `host_os` we parameterized with.
     mock_command.host_os = host_os
 
-    # Expect verify_android_sdk() to succeed
-    sdk = verify_android_sdk(mock_command)
+    # Expect verify() to succeed
+    sdk = AndroidSDK.verify(mock_command, jdk=MagicMock())
 
     # No calls to download, run or unpack anything.
     mock_command.download_url.assert_not_called()
@@ -100,8 +97,8 @@ def test_user_provided_sdk(mock_command, tmp_path):
         'ANDROID_SDK_ROOT': str(existing_android_sdk_root_path)
     }
 
-    # Expect verify_android_sdk() to succeed
-    sdk = verify_android_sdk(mock_command)
+    # Expect verify() to succeed
+    sdk = AndroidSDK.verify(mock_command, jdk=MagicMock())
 
     # No calls to download, run or unpack anything.
     mock_command.download_url.assert_not_called()
@@ -119,7 +116,7 @@ def test_invalid_user_provided_sdk(mock_command, tmp_path):
 
     # Create `sdkmanager` and the license file
     # for the *briefcase* SDK.
-    android_sdk_root_path = tmp_path / ".briefcase" / "tools" / "android_sdk"
+    android_sdk_root_path = tmp_path / "tools" / "android_sdk"
     tools_bin = android_sdk_root_path / "tools" / "bin"
     tools_bin.mkdir(parents=True, mode=0o755)
     (tools_bin / "sdkmanager").touch(mode=0o755)
@@ -132,8 +129,8 @@ def test_invalid_user_provided_sdk(mock_command, tmp_path):
         'ANDROID_SDK_ROOT': str(tmp_path / "other_sdk")
     }
 
-    # Expect verify_android_sdk() to succeed
-    sdk = verify_android_sdk(mock_command)
+    # Expect verify() to succeed
+    sdk = AndroidSDK.verify(mock_command, jdk=MagicMock())
 
     # No calls to download, run or unpack anything.
     mock_command.download_url.assert_not_called()
@@ -148,7 +145,7 @@ def test_invalid_user_provided_sdk(mock_command, tmp_path):
 @pytest.mark.parametrize("host_os", ("ArbitraryNotWindows", "Windows"))
 def test_download_sdk(mock_command, tmp_path, host_os):
     "If an SDK is not available, one will be downloaded"
-    android_sdk_root_path = tmp_path / ".briefcase" / "tools" / "android_sdk"
+    android_sdk_root_path = tmp_path / "tools" / "android_sdk"
 
     # Mock-out `host_os` so we only do our permission check on non-Windows.
     mock_command.host_os = host_os
@@ -166,8 +163,8 @@ def test_download_sdk(mock_command, tmp_path, host_os):
     # Set up a side effect for accepting the license
     mock_command.subprocess.run.side_effect = accept_license(android_sdk_root_path)
 
-    # Call `verify_android_sdk()`
-    sdk = verify_android_sdk(mock_command)
+    # Call `verify()`
+    sdk = AndroidSDK.verify(mock_command, jdk=MagicMock())
 
     # Validate that the SDK was downloaded and unpacked
     url = "https://dl.google.com/android/repository/sdk-tools-{host_os}-4333796.zip".format(
@@ -175,7 +172,7 @@ def test_download_sdk(mock_command, tmp_path, host_os):
     )
     mock_command.download_url.assert_called_once_with(
         url=url,
-        download_path=mock_command.dot_briefcase_path / "tools",
+        download_path=mock_command.tools_path,
     )
     mock_command.shutil.unpack_archive.assert_called_once_with(
         "/path/to/download.zip",
@@ -196,16 +193,26 @@ def test_download_sdk(mock_command, tmp_path, host_os):
     assert sdk.root_path == android_sdk_root_path
 
 
+def test_no_install(mock_command, tmp_path):
+    "If an SDK is not available, and install is not requested, an error is raised"
+
+    # Call `verify()`
+    with pytest.raises(MissingToolError):
+        AndroidSDK.verify(mock_command, jdk=MagicMock(), install=False)
+
+    assert mock_command.download_url.call_count == 0
+
+
 @pytest.mark.skipif(
     sys.platform == "win32", reason="executable permission doesn't make sense on Windows"
 )
 def test_download_sdk_if_sdkmanager_not_executable(mock_command, tmp_path):
     """An SDK will be downloaded and unpackged if `tools/bin/sdkmanager` exists
     but does not have its permissions set properly."""
-    android_sdk_root_path = tmp_path / ".briefcase" / "tools" / "android_sdk"
+    android_sdk_root_path = tmp_path / "tools" / "android_sdk"
 
     # Create non-executable `sdkmanager`.
-    android_sdk_root_path = tmp_path / ".briefcase" / "tools" / "android_sdk"
+    android_sdk_root_path = tmp_path / "tools" / "android_sdk"
     (android_sdk_root_path / "tools" / "bin").mkdir(parents=True)
     (android_sdk_root_path / "tools" / "bin" / "sdkmanager").touch(mode=0o644)
 
@@ -217,13 +224,13 @@ def test_download_sdk_if_sdkmanager_not_executable(mock_command, tmp_path):
     # Set up a side effect for accepting the license
     mock_command.subprocess.run.side_effect = accept_license(android_sdk_root_path)
 
-    # Call `verify_android_sdk()`
-    sdk = verify_android_sdk(mock_command)
+    # Call `verify()`
+    sdk = AndroidSDK.verify(mock_command, jdk=MagicMock())
 
     # Validate that the SDK was downloaded and unpacked
     mock_command.download_url.assert_called_once_with(
         url="https://dl.google.com/android/repository/sdk-tools-unknown-4333796.zip",
-        download_path=mock_command.dot_briefcase_path / "tools",
+        download_path=mock_command.tools_path,
     )
     mock_command.shutil.unpack_archive.assert_called_once_with(
         "/path/to/download.zip",
@@ -245,12 +252,12 @@ def test_raises_networkfailure_on_connectionerror(mock_command):
     mock_command.download_url.side_effect = requests_exceptions.ConnectionError()
 
     with pytest.raises(NetworkFailure):
-        verify_android_sdk(mock_command)
+        AndroidSDK.verify(mock_command, jdk=MagicMock())
 
     # The download was attempted
     mock_command.download_url.assert_called_once_with(
         url="https://dl.google.com/android/repository/sdk-tools-unknown-4333796.zip",
-        download_path=mock_command.dot_briefcase_path / "tools",
+        download_path=mock_command.tools_path,
     )
     # But no unpack occurred
     assert mock_command.shutil.unpack_archive.call_count == 0
@@ -258,7 +265,7 @@ def test_raises_networkfailure_on_connectionerror(mock_command):
 
 def test_detects_bad_zipfile(mock_command, tmp_path):
     "If the ZIP file is corrupted, an error is raised."
-    android_sdk_root_path = tmp_path / ".briefcase" / "tools" / "android_sdk"
+    android_sdk_root_path = tmp_path / "tools" / "android_sdk"
 
     # The download will produce a cached file
     cache_file = MagicMock()
@@ -269,12 +276,12 @@ def test_detects_bad_zipfile(mock_command, tmp_path):
     mock_command.shutil.unpack_archive.side_effect = shutil.ReadError
 
     with pytest.raises(BriefcaseCommandError):
-        verify_android_sdk(mock_command)
+        AndroidSDK.verify(mock_command, jdk=MagicMock())
 
     # The download attempt was made.
     mock_command.download_url.assert_called_once_with(
         url="https://dl.google.com/android/repository/sdk-tools-unknown-4333796.zip",
-        download_path=mock_command.dot_briefcase_path / "tools",
+        download_path=mock_command.tools_path,
     )
     mock_command.shutil.unpack_archive.assert_called_once_with(
         "/path/to/download.zip",

@@ -11,8 +11,11 @@ from briefcase.console import InputDisabled, select_option
 from briefcase.exceptions import (
     BriefcaseCommandError,
     InvalidDeviceError,
-    NetworkFailure
+    NetworkFailure,
+    MissingToolError,
 )
+from briefcase.integrations.java import JDK
+
 
 DEVICE_NOT_FOUND = re.compile(r"^error: device '[^']*' not found")
 
@@ -37,100 +40,16 @@ this device as a deployment target.
         )
 
 
-def verify_android_sdk(command):
-    """
-    Verify an Android SDK is available.
-
-    If the ANDROID_SDK_ROOT environment variable is set, that location will
-    be checked for a valid SDK.
-
-    If the location provided doesn't contain an SDK, or no location is provided,
-    an SDK is downloaded.
-
-    :param command: The command making the verification request.
-    :returns: An AndroidSDK instance, bound to command.
-    """
-    sdk_root = command.os.environ.get("ANDROID_SDK_ROOT")
-    if sdk_root:
-        sdk = AndroidSDK(command=command, root_path=Path(sdk_root))
-
-        if sdk.exists():
-            # Ensure licenses have been accepted
-            sdk.verify_license()
-            return sdk
-        else:
-            print(
-                """
-*************************************************************************
-** WARNING: ANDROID_SDK_ROOT does not point to an Android SDK          **
-*************************************************************************
-
-    The location pointed to by the ANDROID_SDK_ROOT environment variable:
-
-     {sdk_root}
-
-    doesn't appear to contain an Android SDK.
-
-    Briefcase will use its own SDK instance.
-
-*************************************************************************
-
-""".format(
-                    sdk_root=sdk_root
-                )
-            )
-
-    # Build an SDK wrapper for the Briefcase SDK instance.
-    sdk = AndroidSDK(
-        command=command, root_path=command.dot_briefcase_path / "tools" / "android_sdk"
-    )
-
-    if sdk.exists():
-        # Ensure licenses have been accepted
-        sdk.verify_license()
-        return sdk
-
-    print("Setting up Android SDK...")
-    try:
-        sdk_zip_path = command.download_url(
-            url=sdk.sdk_url, download_path=command.dot_briefcase_path / "tools",
-        )
-    except requests_exceptions.ConnectionError:
-        raise NetworkFailure("download Android SDK")
-    try:
-        command.shutil.unpack_archive(str(sdk_zip_path), extract_dir=str(sdk.root_path))
-    except (shutil.ReadError, EOFError):
-        raise BriefcaseCommandError(
-            """\
-Unable to unpack Android SDK ZIP file. The download may have been interrupted
-or corrupted.
-
-Delete {sdk_zip_path} and run briefcase again.""".format(
-                sdk_zip_path=sdk_zip_path
-            )
-        )
-
-    # Zip file no longer needed once unpacked.
-    sdk_zip_path.unlink()
-
-    # Python zip unpacking ignores permission metadata.
-    # On non-Windows, we manually fix permissions.
-    if command.host_os != "Windows":
-        for binpath in (sdk.root_path / "tools" / "bin").glob("*"):
-            if not command.os.access(str(binpath), command.os.X_OK):
-                binpath.chmod(0o755)
-
-    # Licences must be accepted.
-    sdk.verify_license()
-
-    return sdk
-
-
 class AndroidSDK:
-    def __init__(self, command, root_path):
+    def __init__(self, command, jdk, root_path=None):
         self.command = command
-        self.root_path = root_path
         self.dot_android_path = self.command.home_path / ".android"
+        self.jdk = jdk
+
+        if root_path:
+            self.root_path = root_path
+        else:
+            self.root_path = self.command.tools_path / "android_sdk"
 
         # A wrapper for testing purposes
         self.sleep = time.sleep
@@ -168,7 +87,7 @@ class AndroidSDK:
         return {
             **self.command.os.environ,
             "ANDROID_SDK_ROOT": str(self.root_path),
-            "JAVA_HOME": str(self.command.java_home_path),
+            "JAVA_HOME": str(self.jdk.java_home),
         }
 
     @property
@@ -181,6 +100,75 @@ class AndroidSDK:
             "sdk-tools-{os}-4333796.zip".format(os=self.command.host_os.lower())
         )
 
+    @classmethod
+    def verify(cls, command, install=True, jdk=None):
+        """
+        Verify an Android SDK is available.
+
+        If the ANDROID_SDK_ROOT environment variable is set, that location will
+        be checked for a valid SDK.
+
+        If the location provided doesn't contain an SDK, or no location is provided,
+        an SDK is downloaded.
+
+        :param command: The command making the verification request.
+        :param install: Should the tool be installed if it is not found?
+        :param jdk: The JDK instance to use.
+        :returns: A valid Android SDK wrapper. If Android SDK is not
+            available, and was not installed, raises MissingToolError.
+        """
+        if jdk is None:
+            jdk = JDK.verify(command)
+
+        sdk_root = command.os.environ.get("ANDROID_SDK_ROOT")
+        if sdk_root:
+            sdk = AndroidSDK(command=command, jdk=jdk, root_path=Path(sdk_root))
+
+            if sdk.exists():
+                # Ensure licenses have been accepted
+                sdk.verify_license()
+                return sdk
+            else:
+                print(
+                    """
+*************************************************************************
+** WARNING: ANDROID_SDK_ROOT does not point to an Android SDK          **
+*************************************************************************
+
+    The location pointed to by the ANDROID_SDK_ROOT environment
+    variable:
+
+    {sdk_root}
+
+    doesn't appear to contain an Android SDK.
+
+    Briefcase will use its own SDK instance.
+
+*************************************************************************
+
+    """.format(
+                        sdk_root=sdk_root
+                    )
+                )
+
+        # Build an SDK wrapper for the Briefcase SDK instance.
+        sdk = AndroidSDK(
+            command=command,
+            jdk=jdk,
+            root_path=command.tools_path / "android_sdk"
+        )
+
+        if sdk.exists():
+            # Ensure licenses have been accepted
+            sdk.verify_license()
+            return sdk
+
+        if install:
+            sdk.install()
+            return sdk
+        else:
+            raise MissingToolError('Android SDK')
+
     def exists(self):
         """Confirm that the SDK actually exists.
 
@@ -191,6 +179,74 @@ class AndroidSDK:
             self.command.host_os == "Windows"
             or self.command.os.access(str(self.sdkmanager_path), self.command.os.X_OK)
         )
+
+    @property
+    def managed_install(self):
+        try:
+            # Determine if sdk_root is relative to the .briefcase folder.
+            # If sdk_root isn't inside .briefcase, this will raise a ValueError,
+            # indicating it is a non-managed install.
+            self.root_path.relative_to(self.command.tools_path)
+            return True
+        except ValueError:
+            return False
+
+    def install(self):
+        """
+        Download and install the Android SDK.
+        """
+        try:
+            sdk_zip_path = self.command.download_url(
+                url=self.sdk_url, download_path=self.command.tools_path,
+            )
+        except requests_exceptions.ConnectionError:
+            raise NetworkFailure("download Android SDK")
+
+        try:
+            print("Install Android SDK...")
+            self.command.shutil.unpack_archive(str(sdk_zip_path), extract_dir=str(self.root_path))
+        except (shutil.ReadError, EOFError):
+            raise BriefcaseCommandError(
+                """\
+Unable to unpack Android SDK ZIP file. The download may have been interrupted
+or corrupted.
+
+Delete {sdk_zip_path} and run briefcase again.""".format(
+                    sdk_zip_path=sdk_zip_path
+                )
+            )
+
+        # Zip file no longer needed once unpacked.
+        sdk_zip_path.unlink()
+
+        # Python zip unpacking ignores permission metadata.
+        # On non-Windows, we manually fix permissions.
+        if self.command.host_os != "Windows":
+            for binpath in (self.root_path / "tools" / "bin").glob("*"):
+                if not self.command.os.access(str(binpath), self.command.os.X_OK):
+                    binpath.chmod(0o755)
+
+        # Licences must be accepted.
+        self.verify_license()
+
+    def upgrade(self):
+        """Upgrade the Android SDK"""
+        try:
+            # Using subprocess.run() with no I/O redirection so the user sees
+            # the full output and can send input.
+            self.command.subprocess.run(
+                [str(self.sdkmanager_path), "--update"], env=self.env, check=True,
+            )
+        except subprocess.CalledProcessError:
+            raise BriefcaseCommandError(
+                """\
+    Error while reviewing Android SDK licenses. Please run this command and examine
+    its output for errors.
+
+    $ {sdkmanager} --update""".format(
+                    sdkmanager=self.root_path / "tools" / "bin" / "sdkmanager"
+                )
+            )
 
     def adb(self, device):
         """Obtain an ADB instance for managing a specific device.

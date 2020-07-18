@@ -12,7 +12,7 @@ def mock_sdk(tmp_path):
     command = MagicMock()
     command.host_platform = 'unknown'
 
-    sdk = AndroidSDK(command, root_path=tmp_path)
+    sdk = AndroidSDK(command, jdk=MagicMock(), root_path=tmp_path)
     sdk.sleep = MagicMock()
 
     sdk.mock_run = MagicMock()

@@ -15,7 +15,7 @@ def mock_sdk(tmp_path):
     command = MagicMock()
     command.input = DummyConsole()
 
-    sdk = AndroidSDK(command, root_path=tmp_path)
+    sdk = AndroidSDK(command, jdk=MagicMock(), root_path=tmp_path)
 
     sdk.devices = MagicMock(return_value={
         '041234567892009a': {
