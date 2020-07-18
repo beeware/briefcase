@@ -1,0 +1,2 @@
+The ``upgrade`` command now provides a way to upgrade tools that Briefcase has
+downloaded, including WiX, Java, linuxdeploy, and the Android SDK.
