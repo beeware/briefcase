@@ -14,7 +14,7 @@ def run_command(tmp_path, first_app_config):
     command.java_home_path = tmp_path / "java"
 
     command.mock_adb = MagicMock()
-    command.android_sdk = AndroidSDK(command, root_path=tmp_path)
+    command.android_sdk = AndroidSDK(command, jdk=MagicMock(), root_path=tmp_path)
     command.android_sdk.adb = MagicMock(return_value=command.mock_adb)
 
     command.os = MagicMock()

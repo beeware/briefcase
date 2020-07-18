@@ -11,7 +11,7 @@ from briefcase.platforms.windows.msi import WindowsMSIPackageCommand
 def package_command(tmp_path):
     command = WindowsMSIPackageCommand(base_path=tmp_path)
     command.subprocess = mock.MagicMock()
-    command.wix = WiX(tmp_path / 'wix')
+    command.wix = WiX(command=command, wix_home=tmp_path / 'wix')
     return command
 
 

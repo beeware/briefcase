@@ -14,7 +14,7 @@ def mock_sdk(tmp_path):
     command.home_path = tmp_path
     command.host_platform = 'unknown'
 
-    sdk = AndroidSDK(command, root_path=tmp_path)
+    sdk = AndroidSDK(command, jdk=MagicMock(), root_path=tmp_path)
 
     # Mock some existing emulators
     sdk.emulators = MagicMock(return_value=[

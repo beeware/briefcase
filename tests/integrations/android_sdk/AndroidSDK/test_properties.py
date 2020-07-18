@@ -111,3 +111,8 @@ def test_override_env(mock_sdk, tmp_path):
         'JAVA_HOME': str(Path('/path/to/jdk')),
         'ANDROID_SDK_ROOT': str(tmp_path / 'sdk')
     }
+
+
+def test_managed_install(mock_sdk):
+    "All Android SDK installs are managed"
+    assert mock_sdk.managed_install

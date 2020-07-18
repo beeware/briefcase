@@ -6,3 +6,4 @@ from .package import PackageCommand  # noqa
 from .publish import PublishCommand  # noqa
 from .run import RunCommand  # noqa
 from .update import UpdateCommand  # noqa
+from .upgrade import UpgradeCommand  # noqa

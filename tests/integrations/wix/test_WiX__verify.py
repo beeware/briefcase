@@ -3,15 +3,19 @@ from unittest.mock import MagicMock
 import pytest
 from requests import exceptions as requests_exceptions
 
-from briefcase.exceptions import BriefcaseCommandError, NetworkFailure
-from briefcase.integrations.wix import WIX_DOWNLOAD_URL, verify_wix
+from briefcase.exceptions import (
+    BriefcaseCommandError,
+    MissingToolError,
+    NetworkFailure
+)
+from briefcase.integrations.wix import WIX_DOWNLOAD_URL, WiX
 
 
 @pytest.fixture
 def mock_command(tmp_path):
     command = MagicMock()
     command.host_os = 'Windows'
-    command.dot_briefcase_path = tmp_path / '.briefcase'
+    command.tools_path = tmp_path / 'tools'
 
     return command
 
@@ -23,7 +27,7 @@ def test_non_windows_host(mock_command):
     mock_command.host_os = 'Other OS'
 
     with pytest.raises(BriefcaseCommandError, match="can only be created on Windows"):
-        verify_wix(mock_command)
+        WiX.verify(mock_command)
 
 
 def test_valid_wix_envvar(mock_command, tmp_path):
@@ -39,12 +43,12 @@ def test_valid_wix_envvar(mock_command, tmp_path):
     (wix_path / 'bin' / 'candle.exe').touch()
 
     # Verify the install
-    wix = verify_wix(mock_command)
+    wix = WiX.verify(mock_command)
 
     # The environment was queried.
     mock_command.os.environ.get.assert_called_with('WIX')
 
-    # The returned paths are as expected
+    # The returned paths are as expected (and are the full paths)
     assert str(wix.heat_exe) == str(tmp_path / 'wix' / 'bin' / 'heat.exe')
     assert str(wix.light_exe) == str(tmp_path / 'wix' / 'bin' / 'light.exe')
     assert str(wix.candle_exe) == str(tmp_path / 'wix' / 'bin' / 'candle.exe')
@@ -58,48 +62,51 @@ def test_invalid_wix_envvar(mock_command, tmp_path):
 
     # Don't create the actual install, and then attempt to validate
     with pytest.raises(BriefcaseCommandError, match="does not point to an install"):
-        verify_wix(mock_command)
+        WiX.verify(mock_command)
 
 
 def test_existing_wix_install(mock_command, tmp_path):
-    "If there's an existing WiX install, the validator succeeds"
+    "If there's an existing managed WiX install, the validator succeeds"
     # Mock the environment as if there is not WiX variable
     mock_command.os.environ.get.return_value = None
 
     # Create a mock of a previously installed WiX version.
-    wix_path = tmp_path / '.briefcase' / 'tools' / 'wix'
+    wix_path = tmp_path / 'tools' / 'wix'
     wix_path.mkdir(parents=True)
     (wix_path / 'heat.exe').touch()
     (wix_path / 'light.exe').touch()
     (wix_path / 'candle.exe').touch()
 
-    wix = verify_wix(mock_command)
+    wix = WiX.verify(mock_command)
 
     # The environment was queried.
     mock_command.os.environ.get.assert_called_with('WIX')
 
+    # No download was attempted
+    assert mock_command.download_url.call_count == 0
+
     # The returned paths are as expected
-    assert wix.heat_exe == tmp_path / '.briefcase' / 'tools' / 'wix' / 'heat.exe'
-    assert wix.light_exe == tmp_path / '.briefcase' / 'tools' / 'wix' / 'light.exe'
-    assert wix.candle_exe == tmp_path / '.briefcase' / 'tools' / 'wix' / 'candle.exe'
+    assert wix.heat_exe == tmp_path / 'tools' / 'wix' / 'heat.exe'
+    assert wix.light_exe == tmp_path / 'tools' / 'wix' / 'light.exe'
+    assert wix.candle_exe == tmp_path / 'tools' / 'wix' / 'candle.exe'
 
 
 def test_download_wix(mock_command, tmp_path):
-    "If there's no existing WiX install, it is downloaded and unpacked"
+    "If there's no existing managed WiX install, it is downloaded and unpacked"
     # Mock the environment as if there is not WiX variable
     mock_command.os.environ.get.return_value = None
 
     # Mock the download
-    wix_path = tmp_path / '.briefcase' / 'tools' / 'wix'
+    wix_path = tmp_path / 'tools' / 'wix'
 
-    wix_zip_path = tmp_path / '.briefcase' / 'tools' / 'wix.zip'
+    wix_zip_path = tmp_path / 'tools' / 'wix.zip'
     wix_zip = MagicMock()
     wix_zip.__str__.return_value = str(wix_zip_path)
 
     mock_command.download_url.return_value = wix_zip
 
     # Verify the install. This will trigger a download
-    wix = verify_wix(mock_command)
+    wix = WiX.verify(mock_command)
 
     # The environment was queried.
     mock_command.os.environ.get.assert_called_with('WIX')
@@ -107,7 +114,7 @@ def test_download_wix(mock_command, tmp_path):
     # A download was initiated
     mock_command.download_url.assert_called_with(
         url=WIX_DOWNLOAD_URL,
-        download_path=tmp_path / '.briefcase' / 'tools',
+        download_path=tmp_path / 'tools',
     )
 
     # The download was unpacked
@@ -120,9 +127,25 @@ def test_download_wix(mock_command, tmp_path):
     wix_zip.unlink.assert_called_with()
 
     # The returned paths are as expected
-    assert wix.heat_exe == tmp_path / '.briefcase' / 'tools' / 'wix' / 'heat.exe'
-    assert wix.light_exe == tmp_path / '.briefcase' / 'tools' / 'wix' / 'light.exe'
-    assert wix.candle_exe == tmp_path / '.briefcase' / 'tools' / 'wix' / 'candle.exe'
+    assert wix.heat_exe == tmp_path / 'tools' / 'wix' / 'heat.exe'
+    assert wix.light_exe == tmp_path / 'tools' / 'wix' / 'light.exe'
+    assert wix.candle_exe == tmp_path / 'tools' / 'wix' / 'candle.exe'
+
+
+def test_dont_install(mock_command, tmp_path):
+    "If there's no existing managed WiX install, an install is not requested, verify fails"
+    # Mock the environment as if there is not WiX variable
+    mock_command.os.environ.get.return_value = None
+
+    # Verify, but don't install. This will fail.
+    with pytest.raises(MissingToolError):
+        WiX.verify(mock_command, install=False)
+
+    # The environment was queried.
+    mock_command.os.environ.get.assert_called_with('WIX')
+
+    # No download was initiated
+    mock_command.download_url.assert_not_called()
 
 
 def test_download_fail(mock_command, tmp_path):
@@ -135,7 +158,7 @@ def test_download_fail(mock_command, tmp_path):
 
     # Verify the install. This will trigger a download
     with pytest.raises(NetworkFailure):
-        verify_wix(mock_command)
+        WiX.verify(mock_command)
 
     # The environment was queried.
     mock_command.os.environ.get.assert_called_with('WIX')
@@ -143,7 +166,7 @@ def test_download_fail(mock_command, tmp_path):
     # A download was initiated
     mock_command.download_url.assert_called_with(
         url=WIX_DOWNLOAD_URL,
-        download_path=tmp_path / '.briefcase' / 'tools',
+        download_path=tmp_path / 'tools',
     )
 
     # ... but the unpack didn't happen
@@ -156,9 +179,9 @@ def test_unpack_fail(mock_command, tmp_path):
     mock_command.os.environ.get.return_value = None
 
     # Mock the download
-    wix_path = tmp_path / '.briefcase' / 'tools' / 'wix'
+    wix_path = tmp_path / 'tools' / 'wix'
 
-    wix_zip_path = tmp_path / '.briefcase' / 'tools' / 'wix.zip'
+    wix_zip_path = tmp_path / 'tools' / 'wix.zip'
     wix_zip = MagicMock()
     wix_zip.__str__.return_value = str(wix_zip_path)
 
@@ -170,7 +193,7 @@ def test_unpack_fail(mock_command, tmp_path):
     # Verify the install. This will trigger a download,
     # but the unpack will fail
     with pytest.raises(BriefcaseCommandError, match="interrupted or corrupted"):
-        verify_wix(mock_command)
+        WiX.verify(mock_command)
 
     # The environment was queried.
     mock_command.os.environ.get.assert_called_with('WIX')
@@ -178,7 +201,7 @@ def test_unpack_fail(mock_command, tmp_path):
     # A download was initiated
     mock_command.download_url.assert_called_with(
         url=WIX_DOWNLOAD_URL,
-        download_path=tmp_path / '.briefcase' / 'tools',
+        download_path=tmp_path / 'tools',
     )
 
     # The download was unpacked

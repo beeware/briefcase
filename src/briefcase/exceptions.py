@@ -119,6 +119,16 @@ class MissingToolError(BriefcaseCommandError):
         )
 
 
+class NonManagedToolError(BriefcaseCommandError):
+    def __init__(self, tool):
+        self.tool = tool
+        super().__init__(
+            msg="{tool!r} is using an install that is user managed.".format(
+                tool=tool,
+            )
+        )
+
+
 class InvalidDeviceError(BriefcaseCommandError):
     def __init__(self, id_type, device):
         self.id_type = id_type

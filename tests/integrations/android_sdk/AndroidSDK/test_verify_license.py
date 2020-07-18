@@ -44,6 +44,12 @@ def test_verify_license_handles_sdkmanager_crash(mock_sdk):
     with pytest.raises(BriefcaseCommandError):
         mock_sdk.verify_license()
 
+    mock_sdk.command.subprocess.run.assert_called_once_with(
+        [str(mock_sdk.sdkmanager_path), "--licenses"],
+        env=mock_sdk.env,
+        check=True,
+    )
+
 
 def test_verify_license_insists_on_agreement(mock_sdk):
     """Validate that if the user quits `sdkmanager --licenses` without agreeing
@@ -52,3 +58,9 @@ def test_verify_license_insists_on_agreement(mock_sdk):
     # subprocess.run() to take no action.
     with pytest.raises(BriefcaseCommandError):
         mock_sdk.verify_license()
+
+    mock_sdk.command.subprocess.run.assert_called_once_with(
+        [str(mock_sdk.sdkmanager_path), "--licenses"],
+        env=mock_sdk.env,
+        check=True,
+    )

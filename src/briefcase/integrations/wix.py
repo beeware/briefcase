@@ -3,22 +3,35 @@ from pathlib import Path
 
 from requests import exceptions as requests_exceptions
 
-from briefcase.exceptions import BriefcaseCommandError, NetworkFailure
+from briefcase.exceptions import (
+    BriefcaseCommandError,
+    MissingToolError,
+    NetworkFailure,
+    NonManagedToolError
+)
 
 WIX_DOWNLOAD_URL = "https://github.com/wixtoolset/wix3/releases/download/wix3112rtm/wix311-binaries.zip"
 
 
 class WiX:
-    def __init__(self, wix_home, bin_install=False):
+    name = 'wix'
+    full_name = 'WiX'
+
+    def __init__(self, command, wix_home=None, bin_install=False):
         """
         Create a wrapper around a WiX install.
 
+        :param command: The command using the wrapper.
         :param wix_home: The path of the WiX installation.
         :param bin_install: Is the install a binaries-only install? A full
             MSI install of WiX has a `/bin` folder in the paths; a
             binaries-only install does not.
         """
-        self.wix_home = wix_home
+        self.command = command
+        if wix_home:
+            self.wix_home = wix_home
+        else:
+            self.wix_home = command.tools_path / 'wix'
         self.bin_install = bin_install
 
     @property
@@ -42,6 +55,52 @@ class WiX:
         else:
             return self.wix_home / 'bin' / 'candle.exe'
 
+    @classmethod
+    def verify(cls, command, install=True):
+        """
+        Verify that there is a WiX install available.
+
+        If the WIX environment variable is set, that location will be checked
+        for a valid WiX installation.
+
+        If the location provided doesn't contain an SDK, or no location is provided,
+        an SDK is downloaded.
+
+        :param command: The command making the verification request.
+        :param install: Should WiX be installed if it is not found?
+        :returns: A valid WiX SDK wrapper. If WiX is not available, and was
+            not installed, raises MissingToolError.
+        """
+        if command.host_os != 'Windows':
+            raise BriefcaseCommandError("""
+A Windows MSI installer can only be created on Windows.
+""")
+
+        # Look for the WIX environment variable
+        wix_env = command.os.environ.get("WIX")
+        if wix_env:
+            wix_home = Path(wix_env)
+
+            # Set up the paths for the WiX executables we will use.
+            wix = WiX(command=command, wix_home=wix_home)
+
+            if not wix.exists():
+                raise BriefcaseCommandError("""
+The WIX environment variable does not point to an install of the
+WiX Toolset. Current value: {wix_home!r}
+""".format(wix_home=wix_home))
+
+        else:
+            wix = WiX(command=command, bin_install=True)
+
+            if not wix.exists():
+                if install:
+                    wix.install()
+                else:
+                    raise MissingToolError('WiX')
+
+        return wix
+
     def exists(self):
         return (
             self.heat_exe.exists()
@@ -49,70 +108,60 @@ class WiX:
             and self.candle_exe.exists()
         )
 
+    @property
+    def managed_install(self):
+        try:
+            # Determine if wix_home is relative to the .briefcase folder.
+            # If wix_home isn't inside .briefcase, this will raise a ValueError,
+            # indicating it is a non-managed install.
+            self.wix_home.relative_to(self.command.tools_path)
+            return True
+        except ValueError:
+            return False
 
-def verify_wix(command):
-    """
-    Verify that there is a WiX install available.
+    def install(self):
+        """
+        Download and install WiX.
+        """
+        try:
+            wix_zip_path = self.command.download_url(
+                url=WIX_DOWNLOAD_URL,
+                download_path=self.command.tools_path,
+            )
+        except requests_exceptions.ConnectionError:
+            raise NetworkFailure("download WiX")
 
-    If the WIX environment variable is set, that location will be checked
-    for a valid WiX installation.
-
-    If the location provided doesn't contain an SDK, or no location is provided,
-    an SDK is downloaded.
-
-    :param command: The command making the verification request.
-    :returns: A triple containing the paths to the heat, light, and candle
-        executables.
-    """
-    if command.host_os != 'Windows':
-        raise BriefcaseCommandError("""
-A Windows MSI installer can only be created on Windows.
-""")
-
-    # Look for the WIX environment variable
-    wix_env = command.os.environ.get("WIX")
-    if wix_env:
-        wix_path = Path(wix_env)
-
-        # Set up the paths for the WiX executables we will use.
-        wix = WiX(wix_path)
-
-        if not wix.exists():
+        try:
+            print("Installing WiX...")
+            self.command.shutil.unpack_archive(
+                str(wix_zip_path),
+                extract_dir=str(self.wix_home)
+            )
+        except (shutil.ReadError, EOFError):
             raise BriefcaseCommandError("""
-The WIX environment variable does not point to an install of the
-WiX Toolset. Current value: {wix_path!r}
-""".format(wix_path=wix_path))
-
-    else:
-        wix_path = command.dot_briefcase_path / 'tools' / 'wix'
-        wix = WiX(wix_path, bin_install=True)
-
-        if not wix.exists():
-            print("Downloading WiX...")
-            try:
-                wix_zip_path = command.download_url(
-                    url=WIX_DOWNLOAD_URL,
-                    download_path=command.dot_briefcase_path / "tools",
-                )
-            except requests_exceptions.ConnectionError:
-                raise NetworkFailure("download WiX")
-
-            try:
-                command.shutil.unpack_archive(
-                    str(wix_zip_path),
-                    extract_dir=str(wix_path)
-                )
-            except (shutil.ReadError, EOFError):
-                raise BriefcaseCommandError("""
 Unable to unpack WiX ZIP file. The download may have been
 interrupted or corrupted.
 
 Delete {wix_zip_path} and run briefcase again.""".format(
-                        wix_zip_path=wix_zip_path
-                    )
+                    wix_zip_path=wix_zip_path
                 )
+            )
 
-            # Zip file no longer needed once unpacked.
-            wix_zip_path.unlink()
+        # Zip file no longer needed once unpacked.
+        wix_zip_path.unlink()
 
-    return wix
+    def upgrade(self):
+        """
+        Upgrade an existing WiX install.
+        """
+        if self.managed_install:
+            if self.exists():
+                print("Removing old WiX install...")
+                self.command.shutil.rmtree(self.wix_home)
+
+                self.install()
+                print("...done.")
+            else:
+                raise MissingToolError('WiX')
+        else:
+            raise NonManagedToolError('WiX')

@@ -12,7 +12,7 @@ from briefcase.commands import (
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.docker import verify_docker
-from briefcase.integrations.linuxdeploy import verify_linuxdeploy
+from briefcase.integrations.linuxdeploy import LinuxDeploy
 from briefcase.platforms.linux import LinuxMixin
 
 
@@ -154,7 +154,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
 
     def verify_tools(self):
         super().verify_tools()
-        self.linuxdeploy_appimage_path = verify_linuxdeploy(self)
+        self.linuxdeploy = LinuxDeploy.verify(self)
 
     def build_app(self, app: BaseConfig, **kwargs):
         """
@@ -191,7 +191,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
             with self.dockerize(app) as docker:
                 docker.run(
                     [
-                        str(self.linuxdeploy_appimage_path),
+                        str(self.linuxdeploy.appimage_path),
                         "--appimage-extract-and-run",
                         "--appdir={appdir_path}".format(appdir_path=self.appdir_path(app)),
                         "-d", str(

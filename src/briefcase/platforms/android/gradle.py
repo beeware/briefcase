@@ -10,8 +10,7 @@ from briefcase.commands import (
 )
 from briefcase.config import BaseConfig, parsed_version
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.integrations.android_sdk import verify_android_sdk
-from briefcase.integrations.java import verify_jdk
+from briefcase.integrations.android_sdk import AndroidSDK
 
 
 class GradleMixin:
@@ -55,8 +54,7 @@ class GradleMixin:
         this system, downloading tools as needed.
         """
         super().verify_tools()
-        self.java_home_path = verify_jdk(self)
-        self.android_sdk = verify_android_sdk(self)
+        self.android_sdk = AndroidSDK.verify(self)
 
 
 class GradleCreateCommand(GradleMixin, CreateCommand):

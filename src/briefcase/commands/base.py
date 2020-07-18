@@ -109,6 +109,7 @@ class BaseCommand(ABC):
         self.base_path = base_path
         self.home_path = home_path
         self.dot_briefcase_path = home_path / ".briefcase"
+        self.tools_path = self.dot_briefcase_path / 'tools'
 
         self.global_config = None
         self.apps = {} if apps is None else apps

@@ -7,6 +7,7 @@ from requests import exceptions as requests_exceptions
 
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.docker import Docker
+from briefcase.integrations.linuxdeploy import LinuxDeploy
 from briefcase.platforms.linux.appimage import LinuxAppImageBuildCommand
 
 
@@ -57,7 +58,7 @@ def build_command(tmp_path, first_app_config):
     # Set up a Docker wrapper
     command.Docker = Docker
 
-    command.linuxdeploy_appimage_path = tmp_path / 'tools' / 'linuxdeploy-wonky.AppImage'
+    command.linuxdeploy = LinuxDeploy(command)
     return command
 
 
@@ -77,9 +78,6 @@ def test_verify_tools_wrong_platform(build_command):
 
     # But it failed, so the file won't be made executable...
     assert build_command.os.chmod.call_count == 0
-
-    # and the command won't retain the downloaded filename.
-    assert build_command.linuxdeploy_appimage_path != 'new-downloaded-file'
 
     # and no build will be attempted
     assert build_command.build_app.call_count == 0
@@ -105,9 +103,6 @@ def test_verify_tools_download_failure(build_command):
     # But it failed, so the file won't be made executable...
     assert build_command.os.chmod.call_count == 0
 
-    # and the command won't retain the downloaded filename.
-    assert build_command.linuxdeploy_appimage_path != 'new-downloaded-file'
-
     # and no build will be attempted
     assert build_command.build_app.call_count == 0
 
@@ -121,7 +116,7 @@ def test_build_appimage(build_command, first_app, tmp_path):
     app_dir = tmp_path / 'linux' / 'First App' / 'First App.AppDir'
     build_command._subprocess.run.assert_called_with(
         [
-            str(build_command.linuxdeploy_appimage_path),
+            str(build_command.linuxdeploy.appimage_path),
             "--appimage-extract-and-run",
             "--appdir={appdir}".format(appdir=app_dir),
             "-d", str(app_dir / "com.example.first-app.desktop"),
@@ -161,7 +156,7 @@ def test_build_failure(build_command, first_app, tmp_path):
     app_dir = tmp_path / 'linux' / 'First App' / 'First App.AppDir'
     build_command._subprocess.run.assert_called_with(
         [
-            str(build_command.linuxdeploy_appimage_path),
+            str(build_command.linuxdeploy.appimage_path),
             "--appimage-extract-and-run",
             "--appdir={appdir}".format(appdir=app_dir),
             "-d", str(app_dir / "com.example.first-app.desktop"),
@@ -212,7 +207,7 @@ def test_build_appimage_with_docker(build_command, first_app, tmp_path):
             'briefcase/com.example.first-app:py3.{minor}'.format(
                 minor=sys.version_info.minor
             ),
-            str(build_command.linuxdeploy_appimage_path),
+            "/home/brutus/.briefcase/tools/linuxdeploy-wonky.AppImage",
             "--appimage-extract-and-run",
             "--appdir=/app/First App/First App.AppDir",
             "-d", "/app/First App/First App.AppDir/com.example.first-app.desktop",

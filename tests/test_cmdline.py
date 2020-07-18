@@ -4,7 +4,7 @@ import pytest
 
 from briefcase import __version__
 from briefcase.cmdline import parse_cmdline
-from briefcase.commands import DevCommand, NewCommand
+from briefcase.commands import DevCommand, NewCommand, UpgradeCommand
 from briefcase.exceptions import (
     InvalidFormatError,
     NoCommandError,
@@ -110,7 +110,25 @@ def test_dev_command(monkeypatch):
     assert cmd.verbosity == 1
     assert options == {
         'appname': None,
-        'update_dependencies': False
+        'update_dependencies': False,
+    }
+
+
+def test_upgrade_command(monkeypatch):
+    "``briefcase upgrade`` returns the upgrade command"
+    # Pretend we're on macOS, regardless of where the tests run.
+    monkeypatch.setattr(sys, 'platform', 'darwin')
+
+    cmd, options = parse_cmdline('upgrade'.split())
+
+    assert isinstance(cmd, UpgradeCommand)
+    assert cmd.platform == 'macOS'
+    assert cmd.output_format is None
+    assert cmd.input.enabled
+    assert cmd.verbosity == 1
+    assert options == {
+        'list_tools': False,
+        'tool_list': [],
     }
 
 

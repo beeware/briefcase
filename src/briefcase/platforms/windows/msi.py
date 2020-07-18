@@ -13,7 +13,7 @@ from briefcase.commands import (
 )
 from briefcase.config import BaseConfig, parsed_version
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.integrations.wix import verify_wix
+from briefcase.integrations.wix import WiX
 from briefcase.platforms.windows import WindowsMixin
 
 
@@ -28,7 +28,7 @@ class WindowsMSIMixin(WindowsMixin):
 
     def verify_tools(self):
         super().verify_tools()
-        self.wix = verify_wix(self)
+        self.wix = WiX.verify(self)
 
 
 class WindowsMSICreateCommand(WindowsMSIMixin, CreateCommand):

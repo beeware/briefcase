@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 
 from briefcase import __version__
-from briefcase.commands import DevCommand, NewCommand
+from briefcase.commands import DevCommand, NewCommand, UpgradeCommand
 from briefcase.platforms import get_output_formats, get_platforms
 
 from .exceptions import (
@@ -43,7 +43,8 @@ def parse_cmdline(args):
     parser.add_argument(
         'command',
         choices=[
-            'new', 'dev', 'create', 'update', 'build', 'run', 'package', 'publish'
+            'new', 'dev', 'upgrade',
+            'create', 'update', 'build', 'run', 'package', 'publish'
         ],
         metavar='command',
         nargs='?',
@@ -62,6 +63,34 @@ def parse_cmdline(args):
             n.lower(): n
             for n in platforms.keys()
         }.get(name.lower(), name)
+
+    # Use parse_known_args to ensure any extra arguments can be ignored,
+    # and parsed as part of subcommand handling. This will capture the
+    # command, platform (filling a default if unspecified) and format
+    # (with no value if unspecified).
+    options, extra = parser.parse_known_args(args)
+
+    # If no command has been provided, display top-level help.
+    if options.command is None:
+        raise NoCommandError(parser.format_help())
+    elif options.command == 'new':
+        command = NewCommand(base_path=Path.cwd())
+        options = command.parse_options(
+            extra=extra
+        )
+        return command, options
+    elif options.command == 'dev':
+        command = DevCommand(base_path=Path.cwd())
+        options = command.parse_options(
+            extra=extra
+        )
+        return command, options
+    elif options.command == 'upgrade':
+        command = UpgradeCommand(base_path=Path.cwd())
+        options = command.parse_options(
+            extra=extra
+        )
+        return command, options
 
     parser.add_argument(
         'platform',
@@ -87,27 +116,9 @@ def parse_cmdline(args):
         help='The output format to use (the available output formats are platform dependent)'
     )
 
-    # Use parse_known_args to ensure any extra arguments can be ignored,
-    # and parsed as part of subcommand handling. This will capture the
-    # command, platform (filling a default if unspecified) and format
-    # (with no value if unspecified).
+    # Re-parse the aruments, now that we know it is a command that makes use
+    # of platform/output_format.
     options, extra = parser.parse_known_args(args)
-
-    # If no command has been provided, display top-level help.
-    if options.command is None:
-        raise NoCommandError(parser.format_help())
-    elif options.command == 'new':
-        command = NewCommand(base_path=Path.cwd())
-        options = command.parse_options(
-            extra=extra
-        )
-        return command, options
-    elif options.command == 'dev':
-        command = DevCommand(base_path=Path.cwd())
-        options = command.parse_options(
-            extra=extra
-        )
-        return command, options
 
     # Import the platform module
     platform_module = platforms[options.platform]
