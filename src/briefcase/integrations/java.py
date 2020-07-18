@@ -4,10 +4,18 @@ from pathlib import Path
 
 from requests import exceptions as requests_exceptions
 
-from briefcase.exceptions import BriefcaseCommandError, NetworkFailure, NonManagedToolError, MissingToolError
+from briefcase.exceptions import (
+    BriefcaseCommandError,
+    MissingToolError,
+    NetworkFailure,
+    NonManagedToolError
+)
 
 
 class JDK:
+    name = 'java'
+    full_name = 'Java JDK'
+
     def __init__(self, command, java_home):
         self.command = command
 
@@ -283,6 +291,7 @@ Delete {jdk_zip_path} and run briefcase again.""".format(
                     self.command.shutil.rmtree(self.java_home)
 
                 self.install()
+                print("...done.")
             else:
                 raise MissingToolError('Java')
         else:

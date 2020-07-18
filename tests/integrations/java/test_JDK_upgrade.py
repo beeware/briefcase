@@ -4,7 +4,12 @@ from unittest.mock import MagicMock
 import pytest
 from requests import exceptions as requests_exceptions
 
-from briefcase.exceptions import BriefcaseCommandError, NetworkFailure, NonManagedToolError, MissingToolError
+from briefcase.exceptions import (
+    BriefcaseCommandError,
+    MissingToolError,
+    NetworkFailure,
+    NonManagedToolError
+)
 from briefcase.integrations.java import JDK
 
 
@@ -51,7 +56,7 @@ def test_existing_install(test_command, tmp_path):
 
     # We actually need to delete the original java install
     def rmtree(path):
-        shutil.rmtree(path)
+        shutil.rmtree(str(path))
     test_command.shutil.rmtree.side_effect = rmtree
 
     # Mock the cached download path
@@ -98,7 +103,7 @@ def test_macOS_existing_install(test_command, tmp_path):
 
     # We actually need to delete the original java install
     def rmtree(path):
-        shutil.rmtree(path)
+        shutil.rmtree(str(path))
     test_command.shutil.rmtree.side_effect = rmtree
 
     # Mock the cached download path
@@ -142,7 +147,7 @@ def test_download_fail(test_command, tmp_path):
 
     # We actually need to delete the original java install
     def rmtree(path):
-        shutil.rmtree(path)
+        shutil.rmtree(str(path))
     test_command.shutil.rmtree.side_effect = rmtree
 
     # Mock a failure on download
@@ -177,7 +182,7 @@ def test_unpack_fail(test_command, tmp_path):
 
     # We actually need to delete the original java install
     def rmtree(path):
-        shutil.rmtree(path)
+        shutil.rmtree(str(path))
     test_command.shutil.rmtree.side_effect = rmtree
 
     # Mock the cached download path

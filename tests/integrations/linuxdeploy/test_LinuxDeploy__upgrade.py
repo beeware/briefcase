@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 import pytest
 from requests import exceptions as requests_exceptions
 
-from briefcase.exceptions import NetworkFailure, MissingToolError
+from briefcase.exceptions import MissingToolError, NetworkFailure
 from briefcase.integrations.linuxdeploy import LinuxDeploy
 
 

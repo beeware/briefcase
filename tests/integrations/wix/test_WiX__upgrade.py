@@ -3,7 +3,12 @@ from unittest.mock import MagicMock
 import pytest
 from requests import exceptions as requests_exceptions
 
-from briefcase.exceptions import BriefcaseCommandError, NetworkFailure, NonManagedToolError, MissingToolError
+from briefcase.exceptions import (
+    BriefcaseCommandError,
+    MissingToolError,
+    NetworkFailure,
+    NonManagedToolError
+)
 from briefcase.integrations.wix import WIX_DOWNLOAD_URL, WiX
 
 

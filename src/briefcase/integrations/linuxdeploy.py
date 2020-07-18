@@ -1,9 +1,12 @@
 from requests import exceptions as requests_exceptions
 
-from briefcase.exceptions import NetworkFailure, NonManagedToolError, MissingToolError
+from briefcase.exceptions import MissingToolError, NetworkFailure
 
 
 class LinuxDeploy:
+    name = 'linuxdeploy'
+    full_name = 'linuxdeploy'
+
     def __init__(self, command):
         self.command = command
 
@@ -67,9 +70,10 @@ class LinuxDeploy:
         Upgrade an existing linuxdeploy install.
         """
         if self.exists():
-            print("Removing old LinuxDeploy install")
+            print("Removing old LinuxDeploy install...")
             self.appimage_path.unlink()
 
             self.install()
+            print("...done.")
         else:
             raise MissingToolError('linuxdeploy')

@@ -6,7 +6,11 @@ from unittest import mock
 import pytest
 from requests import exceptions as requests_exceptions
 
-from briefcase.exceptions import BriefcaseCommandError, NetworkFailure, MissingToolError
+from briefcase.exceptions import (
+    BriefcaseCommandError,
+    MissingToolError,
+    NetworkFailure
+)
 from briefcase.integrations.java import JDK
 
 

@@ -11,11 +11,10 @@ from briefcase.console import InputDisabled, select_option
 from briefcase.exceptions import (
     BriefcaseCommandError,
     InvalidDeviceError,
-    NetworkFailure,
     MissingToolError,
+    NetworkFailure
 )
 from briefcase.integrations.java import JDK
-
 
 DEVICE_NOT_FOUND = re.compile(r"^error: device '[^']*' not found")
 
@@ -41,6 +40,9 @@ this device as a deployment target.
 
 
 class AndroidSDK:
+    name = 'android_sdk'
+    full_name = 'Android SDK'
+
     def __init__(self, command, jdk, root_path=None):
         self.command = command
         self.dot_android_path = self.command.home_path / ".android"
@@ -118,7 +120,7 @@ class AndroidSDK:
             available, and was not installed, raises MissingToolError.
         """
         if jdk is None:
-            jdk = JDK.verify(command)
+            jdk = JDK.verify(command, install=install)
 
         sdk_root = command.os.environ.get("ANDROID_SDK_ROOT")
         if sdk_root:

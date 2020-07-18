@@ -3,12 +3,20 @@ from pathlib import Path
 
 from requests import exceptions as requests_exceptions
 
-from briefcase.exceptions import BriefcaseCommandError, NetworkFailure, MissingToolError, NonManagedToolError
+from briefcase.exceptions import (
+    BriefcaseCommandError,
+    MissingToolError,
+    NetworkFailure,
+    NonManagedToolError
+)
 
 WIX_DOWNLOAD_URL = "https://github.com/wixtoolset/wix3/releases/download/wix3112rtm/wix311-binaries.zip"
 
 
 class WiX:
+    name = 'wix'
+    full_name = 'WiX'
+
     def __init__(self, command, wix_home=None, bin_install=False):
         """
         Create a wrapper around a WiX install.
@@ -87,7 +95,6 @@ WiX Toolset. Current value: {wix_home!r}
 
             if not wix.exists():
                 if install:
-                    print("Downloading WiX...")
                     wix.install()
                 else:
                     raise MissingToolError('WiX')
@@ -117,7 +124,6 @@ WiX Toolset. Current value: {wix_home!r}
         Download and install WiX.
         """
         try:
-            print("Downloading WiX...")
             wix_zip_path = self.command.download_url(
                 url=WIX_DOWNLOAD_URL,
                 download_path=self.command.tools_path,
@@ -133,10 +139,10 @@ WiX Toolset. Current value: {wix_home!r}
             )
         except (shutil.ReadError, EOFError):
             raise BriefcaseCommandError("""
-    Unable to unpack WiX ZIP file. The download may have been
-    interrupted or corrupted.
+Unable to unpack WiX ZIP file. The download may have been
+interrupted or corrupted.
 
-    Delete {wix_zip_path} and run briefcase again.""".format(
+Delete {wix_zip_path} and run briefcase again.""".format(
                     wix_zip_path=wix_zip_path
                 )
             )
@@ -150,10 +156,11 @@ WiX Toolset. Current value: {wix_home!r}
         """
         if self.managed_install:
             if self.exists():
-                print("Removing old WiX install")
+                print("Removing old WiX install...")
                 self.command.shutil.rmtree(self.wix_home)
 
                 self.install()
+                print("...done.")
             else:
                 raise MissingToolError('WiX')
         else:
