@@ -76,3 +76,8 @@ A list of operating system packages that must be installed for the AppImage
 build to succeed. If a Docker build is requested, this list will be passed to
 the Docker context when building the container for the app build. By default,
 entries should be Ubuntu 16.04 `apt` package requirements.
+Please note that building process will ignore development environment. It means,
+even ``briefcase dev`` is working, ``briefcase build`` could fail returning on error
+like ``Could not find dependency: someLIB.so.1``. Please look at the 
+`wiki <https://github.com/beeware/briefcase/wiki/FAQ-on-Linux#could-not-find-dependency-somelibso1>`_
+for some help about it
