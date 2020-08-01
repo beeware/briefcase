@@ -220,7 +220,31 @@ class GradlePackageCommand(GradleMixin, PackageCommand):
 
 
 class GradlePublishCommand(GradleMixin, PublishCommand):
-    description = "Publish an Android APK."
+    description = "Publish an Android AAB to upload on Google Play"
+    def publish_app(self, app: BaseConfig, **kwargs):
+        """
+        Package the app for distribution.
+
+        This involves building the release app bundle.
+
+        :param app: The application to build
+        """
+        print("[{app.app_name}] Building Android App Bundle (AAB) in Publish mode...".format(app=app))
+        try:
+            self.subprocess.run(
+                # Windows needs the full path to `gradlew`; macOS & Linux can find it
+                # via `./gradlew`. For simplicity of implementation, we always provide
+                # the full path.
+                [str(self.gradlew_path(app)), "bundle"],
+                env=self.android_sdk.env,
+                # Set working directory so gradle can use the app bundle path as its
+                # project root, i.e., to avoid 'Task bundle not found'.
+                cwd=str(self.bundle_path(app)),
+                check=True
+            )
+        except subprocess.CalledProcessError:
+            print()
+            raise BriefcaseCommandError("Error while Publishing Project.")
 
 
 # Declare the briefcase command bindings
