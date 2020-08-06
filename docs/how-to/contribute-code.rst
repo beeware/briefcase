@@ -123,7 +123,7 @@ the process while developing, you can run the tests on one Python version only:
 
       C:\...>tox -e py
 
-Or, to run using a specific version of Python:
+Or, to run using a specific version of Python, e.g. when you want to use Python 3.7:
 
 .. tabs::
 
@@ -131,19 +131,19 @@ Or, to run using a specific version of Python:
 
     .. code-block:: bash
 
-      (venv) $ tox -e py
+      (venv) $ tox -e py3.7
 
   .. group-tab:: Linux
 
     .. code-block:: bash
 
-      (venv) $ tox -e py
+      (venv) $ tox -e py3.7
 
   .. group-tab:: Windows
 
     .. code-block:: bash
 
-      C:\...>tox -e py
+      C:\...>tox -e py3.7
 
 substituting the version number that you want to target. You can also specify
 one of the pre-commit checks `flake8`, `docs` or `package` to check code
