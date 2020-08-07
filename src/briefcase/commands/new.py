@@ -324,7 +324,7 @@ used as you type it.""",
             intro="""
 Next, we need a name that can serve as a machine-readable Python package name
 for your application. This name must be PEP508-compliant - that means the name
-may only contain letters, numbers, hypehns and underscores; it can't contain
+may only contain letters, numbers, hyphens and underscores; it can't contain
 spaces or punctuation, and it can't start with a hyphen or underscore.
 
 Based on your formal name, we suggest an app name of '{default_app_name}',
