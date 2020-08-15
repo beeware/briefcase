@@ -53,6 +53,11 @@ color = "25d4dd"
 name = "macOS"
 description = "The issue relates to Apple macOS support."
 
+[more-details]
+color = "f975e6"
+name = "more-details"
+description = "More details are needed before the question can be answered."
+
 [not-quite-right]
 color = "f975e6"
 name = "not-quite-right"
