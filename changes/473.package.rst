@@ -1,0 +1,1 @@
+Added support for upgrading and recompiling an application before packaging it.
