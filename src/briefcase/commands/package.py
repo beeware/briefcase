@@ -8,6 +8,14 @@ from .base import BaseCommand, full_options
 class PackageCommand(BaseCommand):
     command = 'package'
 
+    def add_options(self, parser):
+        parser.add_argument(
+            '-u',
+            '--update',
+            action="store_true",
+            help='Update the app before building'
+        )
+        
     def package_app(self, app: BaseConfig, **options):
         """
         Package an application.
