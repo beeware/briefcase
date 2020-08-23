@@ -15,7 +15,7 @@ class PackageCommand(BaseCommand):
             action="store_true",
             help='Update the app before building'
         )
-        
+
     def package_app(self, app: BaseConfig, **options):
         """
         Package an application.
