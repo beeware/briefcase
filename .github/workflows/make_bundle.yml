@@ -1,0 +1,56 @@
+on: [push, pull_request]
+
+name: Create App Bundle
+
+jobs:
+  bundle:
+    name: Bundle on ${{ matrix.platform }}
+    runs-on: ${{ matrix.platform }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [ubuntu-16.04, macos-latest, windows-latest]
+        testrepo: [GenevieveBuckley/traveltips,
+                   GenevieveBuckley/pyconau2020-toga-helloworld,
+                   GenevieveBuckley/hellopyside,
+                   GenevieveBuckley/hellopyqt]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          path: briefcase
+      - name: Checkout repo with app to bundle
+        uses: actions/checkout@v2
+        with:
+          repository: ${{ matrix.testrepo }}
+          path: helloworld
+      - name: Install Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          cd briefcase
+          python -m pip install .
+          cd ..
+      - name: Create and Build Bundle
+        run: |
+          cd helloworld
+          briefcase create
+          briefcase build
+      - name: Package Mac
+        if: runner.os == 'macOS'
+        run: |
+          cd helloworld
+          briefcase package --no-sign
+      - name: Package Windows / Linux
+        if: runner.os != 'macOS'
+        run: |
+          cd helloworld
+          briefcase package
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.testrepo }}-${{ env.version }}-${{ runner.os }}.zip
+          path: ${{ matrix.testrepo }}-${{ env.version }}-${{ runner.os }}.zip
