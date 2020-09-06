@@ -1,0 +1,42 @@
+on: [push, pull_request]
+
+name: Create App Bundle
+
+jobs:
+  bundle:
+    name: Bundle on ${{ matrix.platform }}
+    runs-on: ${{ matrix.platform }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [ubuntu-16.04, macos-latest, windows-latest]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          path: briefcase
+      - name: Checkout repo with app to bundle
+        uses: actions/checkout@v2
+        with:
+          repository: GenevieveBuckley/hellopyside
+          path: helloworld
+
+      - name: Install Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install ./briefcase
+      - name: Create and Build Bundle
+        run: |
+          cd helloworld
+          briefcase create
+          briefcase build
+      - name: Package Mac
+        if: runner.os == 'macOS'
+        run: briefcase package --no-sign
+      - name: Package Windows / Linux
+        if: runner.os != 'macOS'
+        run: briefcase package
