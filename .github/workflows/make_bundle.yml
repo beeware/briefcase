@@ -40,7 +40,13 @@ jobs:
           briefcase build
       - name: Package Mac
         if: runner.os == 'macOS'
-        run: briefcase package --no-sign
+        run: |
+          pwd
+          ls
+          briefcase package --no-sign
       - name: Package Windows / Linux
         if: runner.os != 'macOS'
-        run: briefcase package
+        run: |
+          pwd
+          ls
+          briefcase package
