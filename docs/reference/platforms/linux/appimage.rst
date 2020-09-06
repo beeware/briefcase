@@ -75,9 +75,19 @@ file.
 A list of operating system packages that must be installed for the AppImage
 build to succeed. If a Docker build is requested, this list will be passed to
 the Docker context when building the container for the app build. By default,
-entries should be Ubuntu 16.04 `apt` package requirements.
-Please note that building process will ignore development environment. It means,
-even ``briefcase dev`` is working, ``briefcase build`` could fail returning on error
-like ``Could not find dependency: someLIB.so.1``. Please look at the 
-`wiki <https://github.com/beeware/briefcase/wiki/FAQ-on-Linux#could-not-find-dependency-somelibso1>`_
-for some help about it
+entries should be Ubuntu 16.04 ``apt`` package requirements. For example,
+
+   system_requires = ['libgirepository1.0-dev', 'libcairo2-dev']
+   
+would make the GTK GI and Cairo operating system libraries available to your 
+app.
+
+If you see errors during ``briefcase build`` of the form::
+
+    Could not find dependency: libSomething.so.1
+
+but the app works under ``briefcase dev``, the problem may be an incomplete
+``system_requires`` definition. The ``briefcase build`` process generates 
+a new environment that is completely isolated from your development 
+environment, so if your app has any operating system dependencies, they
+*must* be listed in your ``system_requires`` definition. 
