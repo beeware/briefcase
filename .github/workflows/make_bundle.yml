@@ -18,7 +18,12 @@ jobs:
       - name: Checkout repo with app to bundle
         uses: actions/checkout@v2
         with:
-          repository: GenevieveBuckley/hellopyside
+          matrix:
+            repository: [
+              GenevieveBuckley/traveltips,
+              GenevieveBuckley/pyconau2020-toga-helloworld,
+              GenevieveBuckley/hellopyside,
+              GenevieveBuckley/hellopyqt]
           path: helloworld
 
       - name: Install Python
