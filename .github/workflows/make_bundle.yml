@@ -34,6 +34,8 @@ jobs:
       - name: Create and Build Bundle
         run: |
           cd helloworld
+          pwd
+          ls
           briefcase create
           briefcase build
       - name: Package Mac
