@@ -1,0 +1,1 @@
+Add GitHub actions to test briefcase app packaging on several test repos.
