@@ -10,6 +10,10 @@ jobs:
       fail-fast: false
       matrix:
         platform: [ubuntu-16.04, macos-latest, windows-latest]
+        testrepo: [GenevieveBuckley/traveltips,
+                   GenevieveBuckley/pyconau2020-toga-helloworld,
+                   GenevieveBuckley/hellopyside,
+                   GenevieveBuckley/hellopyqt]
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -18,14 +22,8 @@ jobs:
       - name: Checkout repo with app to bundle
         uses: actions/checkout@v2
         with:
-          matrix:
-            repository: [
-              GenevieveBuckley/traveltips,
-              GenevieveBuckley/pyconau2020-toga-helloworld,
-              GenevieveBuckley/hellopyside,
-              GenevieveBuckley/hellopyqt]
+          repository: ${{ matrix.testrepo }}
           path: helloworld
-
       - name: Install Python
         uses: actions/setup-python@v2
         with:
