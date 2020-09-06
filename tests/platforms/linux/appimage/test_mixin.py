@@ -37,6 +37,16 @@ def test_docker_image_tag(first_app_config, tmp_path):
     )
 
 
+def test_docker_image_tag_uppercase_name(uppercase_app_config, tmp_path):
+    command = LinuxAppImageCreateCommand(base_path=tmp_path)
+
+    image_tag = command.docker_image_tag(uppercase_app_config)
+
+    assert image_tag == 'briefcase/com.example.first-app:py3.{minor}'.format(
+        minor=sys.version_info.minor
+    )
+
+
 def test_dockerize(first_app_config, tmp_path):
     command = LinuxAppImageCreateCommand(base_path=tmp_path)
     command.Docker = Docker

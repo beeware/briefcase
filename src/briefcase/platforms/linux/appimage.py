@@ -60,9 +60,10 @@ class LinuxAppImageMixin(LinuxMixin):
 
     def docker_image_tag(self, app):
         "The Docker image tag for an app"
-        return 'briefcase/{app.bundle}.{app.app_name}:py{self.python_version_tag}'.format(
+        return 'briefcase/{app.bundle}.{app_name}:py{self.python_version_tag}'.format(
             app=app,
             self=self,
+            app_name=app.app_name.lower()
         )
 
     def verify_tools(self):
