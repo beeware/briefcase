@@ -49,3 +49,8 @@ jobs:
         run: |
           cd helloworld
           briefcase package
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.testrepo }}-${{ env.version }}-${{ runner.os }}.zip
+          path: ${{ matrix.testrepo }}-${{ env.version }}-${{ runner.os }}.zip
