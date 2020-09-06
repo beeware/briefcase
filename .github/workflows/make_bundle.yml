@@ -41,12 +41,14 @@ jobs:
       - name: Package Mac
         if: runner.os == 'macOS'
         run: |
+          cd helloworld
           pwd
           ls
           briefcase package --no-sign
       - name: Package Windows / Linux
         if: runner.os != 'macOS'
         run: |
+          cd helloworld
           pwd
           ls
           briefcase package
