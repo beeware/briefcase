@@ -4,7 +4,7 @@ name: Create App Bundle
 
 jobs:
   bundle:
-    name: Bundle on ${{ matrix.platform }}
+    name: Bundle on ${{ matrix.platform }} ${{ matrix.testrepo }}
     runs-on: ${{ matrix.platform }}
     strategy:
       fail-fast: false
@@ -15,7 +15,7 @@ jobs:
                    hellopyside,
                    hellopursuedpybear]
     steps:
-      - name: Checkout code
+      - name: Checkout code from ${{ matrix.testrepo }}
         uses: actions/checkout@v2
         with:
           path: briefcase
