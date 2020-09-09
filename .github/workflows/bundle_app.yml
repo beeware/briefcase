@@ -11,9 +11,9 @@ jobs:
       matrix:
         platform: [ubuntu-16.04, macos-latest, windows-latest]
         testrepo: [traveltips,
-                   pyconau2020-toga-helloworld,
+                   hellotoga,
                    hellopyside,
-                   hellopyqt]
+                   hellopursuedpybear]
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -34,6 +34,7 @@ jobs:
           cd briefcase
           python -m pip install .
           cd ..
+          python -m pip freeze
       - name: Create and Build Bundle
         run: |
           cd helloworld
