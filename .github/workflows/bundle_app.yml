@@ -49,8 +49,21 @@ jobs:
         run: |
           cd helloworld
           briefcase package
-      - name: Upload Artifact
+      - name: Upload Artifact for Linux
         uses: actions/upload-artifact@v2
+        if: runner.os == 'Linux'
         with:
-          name: ${{ matrix.testrepo }}-${{ env.version }}-${{ runner.os }}.zip
-          path: ${{ matrix.testrepo }}-${{ env.version }}-${{ runner.os }}.zip
+          name: ${{ matrix.testrepo }}-${{ runner.os }}
+          path: '**/*.AppImage'
+      - name: Upload Artifact for MacOS
+        uses: actions/upload-artifact@v2
+        if: runner.os == 'MacOS'
+        with:
+          name: ${{ matrix.testrepo }}-${{ runner.os }}
+          path: '**/*.dmg'
+      - name: Upload Artifact for Windows
+        uses: actions/upload-artifact@v2
+        if: runner.os == 'Windows'
+        with:
+          name: ${{ matrix.testrepo }}-${{ runner.os }}
+          path: '**/*.msi'
