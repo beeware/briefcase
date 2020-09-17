@@ -78,28 +78,7 @@ class macOSAppPackageCommand(macOSAppMixin, PackageCommand):
         # These are abstracted to enable testing without patching.
         self.get_identities = get_identities
 
-    def add_options(self, parser):
-        super().add_options(parser)
-        parser.add_argument(
-            '--no-sign',
-            dest='sign_app',
-            help='Disable code signing of .app bundles.',
-            action='store_false',
-        )
-        parser.add_argument(
-            '--adhoc-sign',
-            help='Sign .app bundles with adhoc identity.',
-            action='store_true',
-        )
-        parser.add_argument(
-            '-i',
-            '--identity',
-            dest='identity',
-            help='The code signing identity to use; either the 40-digit hex '
-                 'checksum, or the full name of the identity.',
-            required=False,
-        )
-
+    
     def select_identity(self, identity=None):
         """
         Get the codesigning identity to use.

@@ -47,6 +47,31 @@ class PackageCommand(BaseCommand):
         ))
         return state
 
+    
+
+    def add_options(self, parser):
+        parser.add_argument(
+            '--no-sign',
+            dest='sign_app',
+            help='Disable code signing of the app.',
+            action='store_false',
+        )
+        parser.add_argument(
+            '--adhoc-sign',
+            help='Sign the app with adhoc identity.',
+            action='store_true',
+        )
+        parser.add_argument(
+            '-i',
+            '--identity',
+            dest='identity',
+            help='The code signing identity to use; either the 40-digit hex '
+                 'checksum, or the full name of the identity.',
+            required=False,
+        )
+
+
+
     def __call__(
         self,
         app: Optional[BaseConfig] = None,
