@@ -43,3 +43,25 @@ running::
 
     $ briefcase update
     $ briefcase package
+
+
+publish
+-------
+
+``--no-sign``
+~~~~~~~~~~~~~
+
+Don't perform code signing on the app.
+
+``--adhoc-sign``
+~~~~~~~~~~~~~~~~
+
+Sign app with adhoc identity.
+
+``-i <identity>`` / ``--identity <identity>``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The code signing identity to use when signing the app.
+
+
+

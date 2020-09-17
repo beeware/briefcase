@@ -27,26 +27,3 @@ macOS DMGs do not support splash screens.
 
 The installer background must be in ``.png`` format.
 
-Additional options
-==================
-
-The following options can be provided at the command line when producing
-DMGs.
-
-publish
--------
-
-``--no-sign``
-~~~~~~~~~~~~~
-
-Don't perform code signing on the ``.app`` bundles in the DMG.
-
-``--adhoc-sign``
-~~~~~~~~~~~~~~~~
-
-Sign ``.app`` bundles with adhoc identity.
-
-``-i <identity>`` / ``--identity <identity>``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The code signing identity to use when signing the ``.app`` bundles in the DMG.
