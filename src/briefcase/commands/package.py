@@ -47,8 +47,6 @@ class PackageCommand(BaseCommand):
         ))
         return state
 
-    
-
     def add_options(self, parser):
         parser.add_argument(
             '--no-sign',
@@ -69,8 +67,6 @@ class PackageCommand(BaseCommand):
                  'checksum, or the full name of the identity.',
             required=False,
         )
-
-
 
     def __call__(
         self,

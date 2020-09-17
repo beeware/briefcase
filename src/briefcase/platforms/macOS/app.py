@@ -78,7 +78,6 @@ class macOSAppPackageCommand(macOSAppMixin, PackageCommand):
         # These are abstracted to enable testing without patching.
         self.get_identities = get_identities
 
-    
     def select_identity(self, identity=None):
         """
         Get the codesigning identity to use.
