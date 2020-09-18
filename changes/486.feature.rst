@@ -1,0 +1,1 @@
+moved package command arguments(adhoc,identity and no-sign) specific to macOs to the base package command
