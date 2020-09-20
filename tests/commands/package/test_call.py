@@ -1,6 +1,3 @@
-import pytest
-
-from briefcase.exceptions import BriefcaseCommandError
 
 
 def test_no_args_package_one_app(package_command, first_app):
@@ -19,13 +16,13 @@ def test_no_args_package_one_app(package_command, first_app):
     # The right sequence of things will be done
     assert package_command.actions == [
         # Tools are verified
-        ("verify", ),   
+        ("verify", ),
         # Package the first app
         ("package", "first", {'adhoc_sign': False, 'identity': None, 'sign_app': True}),
     ]
 
 
-def test_no_args_package_two_app(package_command, first_app,second_app):
+def test_no_args_package_two_app(package_command, first_app, second_app):
     "If there are multiple apps, publish all of them"
     # Add two apps
     package_command.apps = {
@@ -42,13 +39,12 @@ def test_no_args_package_two_app(package_command, first_app,second_app):
     # The right sequence of things will be done
     assert package_command.actions == [
         # Tools are verified
-        ("verify", ),   
+        ("verify", ),
         # Package the first app
         ("package", "first", {'adhoc_sign': False, 'identity': None, 'sign_app': True}),
-        #package the second app
-        ("package", "second", {'adhoc_sign': False, 'identity': None, 'sign_app': True,'package_state':'first'}),
+        # package the second app
+        ("package", "second", {'adhoc_sign': False, 'identity': None, 'sign_app': True, 'package_state': 'first'}),
     ]
-
 
 
 def test_no_sign_package_one_app(package_command, first_app):
@@ -67,12 +63,11 @@ def test_no_sign_package_one_app(package_command, first_app):
     # The right sequence of things will be done
     assert package_command.actions == [
         # Tools are verified
-        ("verify", ),   
+        ("verify", ),
         # Package the first app
         ("package", "first", {'adhoc_sign': False, 'identity': None, 'sign_app': False}),
 
     ]
-
 
 
 def test_identity_arg_package_one_app(package_command, first_app):
@@ -84,7 +79,7 @@ def test_identity_arg_package_one_app(package_command, first_app):
     }
 
     # Configure no command line options
-    options = package_command.parse_options(["--identity","test"])
+    options = package_command.parse_options(["--identity", "test"])
 
     # Run the run command
     package_command(**options)
@@ -92,7 +87,7 @@ def test_identity_arg_package_one_app(package_command, first_app):
     # The right sequence of things will be done
     assert package_command.actions == [
         # Tools are verified
-        ("verify", ),   
+        ("verify", ),
         # Package the first app
         ("package", "first", {'adhoc_sign': False, 'identity': "test", 'sign_app': True}),
 
@@ -115,14 +110,14 @@ def test_adhoc_sign_package_one_app(package_command, first_app):
     # The right sequence of things will be done
     assert package_command.actions == [
         # Tools are verified
-        ("verify", ),   
+        ("verify", ),
         # Package the first app
         ("package", "first", {'adhoc_sign': True, 'identity': None, 'sign_app': True}),
 
     ]
 
 
-def test_no_sign_args_package_two_app(package_command, first_app,second_app):
+def test_no_sign_args_package_two_app(package_command, first_app, second_app):
     "If there are multiple apps, and a --no-sign argument,package doesnt sign all the app"
     # Add a single app
     package_command.apps = {
@@ -139,22 +134,21 @@ def test_no_sign_args_package_two_app(package_command, first_app,second_app):
     # The right sequence of things will be done
     assert package_command.actions == [
         # Tools are verified
-        ("verify", ),   
+        ("verify", ),
         # Package the first app
         ("package", "first", {'adhoc_sign': False, 'identity': None, 'sign_app': False}),
-        #package the second app
-        ("package", "second", {'adhoc_sign': False, 'identity': None, 'sign_app': False,'package_state':'first'}),
+        # package the second app
+        ("package", "second", {'adhoc_sign': False, 'identity': None, 'sign_app': False, 'package_state': 'first'}),
     ]
 
 
-
-def test_adhoc_sign_args_package_two_app(package_command, first_app,second_app):
+def test_adhoc_sign_args_package_two_app(package_command, first_app, second_app):
     "If there are multiple apps,and an --adhoc argument, package signs all apps using adhoc option"
-    
+
     package_command.apps = {
-        #Add the first app
+        # Add the first app
         "first": first_app,
-        #Add the second app
+        # Add the second app
         "second": second_app,
     }
 
@@ -167,16 +161,15 @@ def test_adhoc_sign_args_package_two_app(package_command, first_app,second_app):
     # The right sequence of things will be done
     assert package_command.actions == [
         # Tools are verified
-        ("verify", ),   
+        ("verify", ),
         # Package the first app
         ("package", "first", {'adhoc_sign': True, 'identity': None, 'sign_app': True}),
-        #package the second app
-        ("package", "second", {'adhoc_sign': True, 'identity': None, 'sign_app': True,'package_state':'first'}),
+        # package the second app
+        ("package", "second", {'adhoc_sign': True, 'identity': None, 'sign_app': True, 'package_state': 'first'}),
     ]
 
 
-
-def test_identity_sign_args_package_two_app(package_command, first_app,second_app):
+def test_identity_sign_args_package_two_app(package_command, first_app, second_app):
     "If there are multiple app,and an --identity argument, package signs all the apps with the specified identity"
     # Add a single app
     package_command.apps = {
@@ -185,7 +178,7 @@ def test_identity_sign_args_package_two_app(package_command, first_app,second_ap
     }
 
     # Configure no command line options
-    options = package_command.parse_options(["--identity","test"])
+    options = package_command.parse_options(["--identity", "test"])
 
     # Run the run command
     package_command(**options)
@@ -193,9 +186,9 @@ def test_identity_sign_args_package_two_app(package_command, first_app,second_ap
     # The right sequence of things will be done
     assert package_command.actions == [
         # Tools are verified
-        ("verify", ),   
+        ("verify", ),
         # Package the first app
         ("package", "first", {'adhoc_sign': False, 'identity': "test", 'sign_app': True}),
-        #package the second app
-        ("package", "second", {'adhoc_sign': False, 'identity': "test", 'sign_app': True,'package_state':'first'}),
+        # package the second app
+        ("package", "second", {'adhoc_sign': False, 'identity': "test", 'sign_app': True, 'package_state': 'first'}),
     ]
