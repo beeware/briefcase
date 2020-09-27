@@ -1,1 +1,2 @@
-moved package command arguments(adhoc,identity and no-sign) specific to macOs to the base package command
+Added signing options for all platforms. App signing is only implemented on
+macOS, but ``--no-sign`` can now be used regardless of your target platform.

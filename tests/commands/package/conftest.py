@@ -7,7 +7,7 @@ from briefcase.config import AppConfig
 
 class DummyPackageCommand(PackageCommand):
     """
-    A dummy run command that doesn't actually do anything.
+    A dummy package command that doesn't actually do anything.
     It only serves to track which actions would be performend.
     """
     platform = 'tester'
