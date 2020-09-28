@@ -7,7 +7,7 @@ from briefcase.config import AppConfig
 
 class DummyPackageCommand(PackageCommand):
     """
-    A dummy run command that doesn't actually do anything.
+    A dummy package command that doesn't actually do anything.
     It only serves to track which actions would be performend.
     """
     platform = 'tester'
@@ -86,7 +86,7 @@ def first_app_unbuilt(first_app_config, tmp_path):
 
     return first_app_config
 
- 
+
 @pytest.fixture
 def first_app(first_app_unbuilt, tmp_path):
     # The same fixture as first_app_uncompiled,
