@@ -1,1 +1,0 @@
-moved signing options as a macOS specific extension on the app and dmg commands to reference docs for the package command
