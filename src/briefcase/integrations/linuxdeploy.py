@@ -54,7 +54,7 @@ class LinuxDeploy:
 
     def install(self):
         """
-        Download and install WiX.
+        Download and install linuxdeploy.
         """
         try:
             linuxdeploy_appimage_path = self.command.download_url(
