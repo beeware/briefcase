@@ -39,9 +39,7 @@ class LinuxAppImageMixin(LinuxMixin):
             '--no-docker',
             dest='use_docker',
             action='store_false',
-            help='The device to target; either a UDID, '
-                 'a device name ("iPhone 11"), '
-                 'or a device name and OS version ("iPhone 11::iOS 13.3")',
+            help="Don't use Docker for building the AppImage",
             required=False,
         )
 
