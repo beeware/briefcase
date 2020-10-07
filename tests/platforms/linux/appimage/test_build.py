@@ -197,10 +197,10 @@ def test_build_appimage_with_docker(build_command, first_app, tmp_path):
         [
             "docker",
             "run", "--tty",
-            '--volume', '{platform_path}:/app'.format(
+            '--volume', '{platform_path}:/app:z'.format(
                 platform_path=build_command.platform_path
             ),
-            '--volume', '{dot_briefcase_path}:/home/brutus/.briefcase'.format(
+            '--volume', '{dot_briefcase_path}:/home/brutus/.briefcase:z'.format(
                 dot_briefcase_path=build_command.dot_briefcase_path
             ),
             '--env', 'VERSION=0.0.1',
