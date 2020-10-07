@@ -246,10 +246,10 @@ class Docker:
         docker_args = [
             "docker", "run",
             "--tty",
-            "--volume", "{self.command.platform_path}:/app".format(
+            "--volume", "{self.command.platform_path}:/app:z".format(
                 self=self
             ),
-            "--volume", "{self.command.dot_briefcase_path}:/home/brutus/.briefcase".format(
+            "--volume", "{self.command.dot_briefcase_path}:/home/brutus/.briefcase:z".format(
                 self=self
             ),
         ]
