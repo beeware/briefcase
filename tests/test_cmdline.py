@@ -110,7 +110,7 @@ def test_dev_command(monkeypatch):
     assert cmd.verbosity == 1
     assert options == {
         'appname': None,
-        'update_dependencies': False,
+        'update': False,
     }
 
 
