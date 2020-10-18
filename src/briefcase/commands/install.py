@@ -24,17 +24,24 @@ class InstallCommand(BaseCommand):
             'win32': 'windows',
         }[sys.platform]
 
-    def bundle_path(self, app):
+    def bundle_path(self, app):  # pragma: no cover
         "A placeholder; Dev command doesn't have a bundle path"
         raise NotImplementedError()
 
-    def binary_path(self, app):
+    def binary_path(self, app):  # pragma: no cover
         "A placeholder; Dev command doesn't have a binary path"
         raise NotImplementedError()
 
-    def distribution_path(self, app):
+    def distribution_path(self, app):  # pragma: no cover
         "A placeholder; Dev command doesn't have a distribution path"
         raise NotImplementedError()
+
+    def dist_info_path(self, app):
+        "Location where to save package information"
+        return (
+            self.app_module_path(app).parent
+            / '{app.module_name}.dist-info'.format(app=app)
+        )
 
     def add_options(self, parser):
         parser.add_argument(
@@ -63,11 +70,8 @@ class InstallCommand(BaseCommand):
         # If one exists, assume that the dependencies have already been
         # installed. If a dependency update has been manually requested,
         # do it regardless.
-        dist_info_path = (
-            self.app_module_path(app).parent
-            / '{app.module_name}.dist-info'.format(app=app)
-        )
-        if not update and dist_info_path.exists():
+        dist_info = self.dist_info_path(app)
+        if not update and dist_info.exists():
             return
         print()
         print('[{app.app_name}] Installing dependencies...'.format(
@@ -87,7 +91,7 @@ class InstallCommand(BaseCommand):
                 raise DependencyInstallError()
         else:
             print("No application dependencies.")
-        write_dist_info(app, dist_info_path)
+        write_dist_info(app, dist_info)
 
     def __call__(
         self,

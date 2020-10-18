@@ -22,7 +22,7 @@ class DummyInstallCommand(InstallCommand):
 
     def verify_tools(self):
         super().verify_tools()
-        self.actions.append(('verify',))
+        self.actions.append(("verify",))
 
     def install_dev_dependencies(self, app, update, **kwargs):
         self.actions.append(("dev_dependencies", app.app_name, update, kwargs))
@@ -49,10 +49,9 @@ def test_no_args_one_app(install_command, first_app):
     # The right sequence of things will be done
     assert install_command.actions == [
         # Tools are verified
-        ('verify', ),
-
+        ("verify",),
         # Update dependencies if needed
-        ('dev_dependencies', 'first', False, {}),
+        ("dev_dependencies", "first", False, {}),
     ]
 
 
@@ -74,7 +73,7 @@ def test_no_args_two_apps(install_command, first_app, second_app):
     # No apps will be launched
     assert install_command.actions == [
         # Tools are verified
-        ('verify', ),
+        ("verify",),
     ]
 
 
@@ -94,10 +93,9 @@ def test_with_arg_one_app(install_command, first_app):
     # The right sequence of things will be done
     assert install_command.actions == [
         # Tools are verified
-        ('verify', ),
-
+        ("verify",),
         # Update dependencies if needed
-        ('dev_dependencies', 'first', False, {}),
+        ("dev_dependencies", "first", False, {}),
     ]
 
 
@@ -118,10 +116,9 @@ def test_with_arg_two_apps(install_command, first_app, second_app):
     # The right sequence of things will be done
     assert install_command.actions == [
         # Tools are verified
-        ('verify', ),
-
+        ("verify",),
         # Update dependencies if needed
-        ('dev_dependencies', 'second', False, {}),
+        ("dev_dependencies", "second", False, {}),
     ]
 
 
@@ -143,7 +140,7 @@ def test_bad_app_reference(install_command, first_app, second_app):
     # No apps will be launched
     assert install_command.actions == [
         # Tools are verified
-        ('verify', ),
+        ("verify",),
     ]
 
 
@@ -163,10 +160,9 @@ def test_update_dependencies(install_command, first_app):
     # The right sequence of things will be done
     assert install_command.actions == [
         # Tools are verified
-        ('verify', ),
-
+        ("verify",),
         # Update dependencies if needed
-        ('dev_dependencies', 'first', True, {}),
+        ("dev_dependencies", "first", True, {}),
     ]
 
 
@@ -186,8 +182,7 @@ def test_run_uninstalled(install_command, first_app_uninstalled):
     # The right sequence of things will be done
     assert install_command.actions == [
         # Tools are verified
-        ('verify', ),
-
+        ("verify",),
         # The app will be installed
         ("dev_dependencies", "first", False, {}),
     ]
@@ -209,8 +204,7 @@ def test_update_uninstalled(install_command, first_app_uninstalled):
     # The right sequence of things will be done
     assert install_command.actions == [
         # Tools are verified
-        ('verify', ),
-
+        ("verify",),
         # An update was requested
         ("dev_dependencies", "first", True, {}),
     ]
