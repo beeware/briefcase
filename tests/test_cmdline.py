@@ -4,7 +4,7 @@ import pytest
 
 from briefcase import __version__
 from briefcase.cmdline import parse_cmdline
-from briefcase.commands import DevCommand, NewCommand, UpgradeCommand
+from briefcase.commands import DevCommand, NewCommand, UpgradeCommand, InstallCommand
 from briefcase.exceptions import (
     InvalidFormatError,
     NoCommandError,
@@ -104,6 +104,24 @@ def test_dev_command(monkeypatch):
     cmd, options = parse_cmdline('dev'.split())
 
     assert isinstance(cmd, DevCommand)
+    assert cmd.platform == 'macOS'
+    assert cmd.output_format is None
+    assert cmd.input.enabled
+    assert cmd.verbosity == 1
+    assert options == {
+        'appname': None,
+        'update': False,
+    }
+
+
+def test_install_command(monkeypatch):
+    "``briefcase install`` returns the Install command"
+    # Pretend we're on macOS, regardless of where the tests run.
+    monkeypatch.setattr(sys, 'platform', 'darwin')
+
+    cmd, options = parse_cmdline('install'.split())
+
+    assert isinstance(cmd, InstallCommand)
     assert cmd.platform == 'macOS'
     assert cmd.output_format is None
     assert cmd.input.enabled
