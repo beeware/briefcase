@@ -1,0 +1,2 @@
+Added the `briefcase install` command, which installs the app dependencies without
+running it
