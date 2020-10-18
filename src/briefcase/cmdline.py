@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 
 from briefcase import __version__
-from briefcase.commands import DevCommand, NewCommand, UpgradeCommand
+from briefcase.commands import DevCommand, InstallCommand, NewCommand, UpgradeCommand
 from briefcase.platforms import get_output_formats, get_platforms
 
 from .exceptions import (
@@ -43,7 +43,7 @@ def parse_cmdline(args):
     parser.add_argument(
         'command',
         choices=[
-            'new', 'dev', 'upgrade',
+            'new', 'dev', 'install', 'upgrade',
             'create', 'update', 'build', 'run', 'package', 'publish'
         ],
         metavar='command',
@@ -75,6 +75,12 @@ def parse_cmdline(args):
         raise NoCommandError(parser.format_help())
     elif options.command == 'new':
         command = NewCommand(base_path=Path.cwd())
+        options = command.parse_options(
+            extra=extra
+        )
+        return command, options
+    elif options.command == 'install':
+        command = InstallCommand(base_path=Path.cwd())
         options = command.parse_options(
             extra=extra
         )
