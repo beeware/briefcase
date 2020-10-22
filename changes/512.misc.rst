@@ -1,0 +1,1 @@
+Reducing the size of icons in the macOS dmg for a nicer visual appearance.
