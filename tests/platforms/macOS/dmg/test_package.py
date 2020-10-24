@@ -41,9 +41,12 @@ def test_build_dmg(first_app_config, tmp_path):
             'files': [str(tmp_path / 'macOS' / 'First App' / 'First App.app')],
             'symlinks': {'Applications': '/Applications'},
             'icon_locations': {
-                'First App.app': (100, 100),
-                'Applications': (300, 100),
+                'First App.app': (75, 75),
+                'Applications': (225, 75),
             },
+            'window_rect': ((600, 600), (350, 150)),
+            'icon_size': 64,
+            'text_size': 12,
         }
     )
 
@@ -86,10 +89,13 @@ def test_installer_icon(first_app_config, tmp_path):
             'files': [str(tmp_path / 'macOS' / 'First App' / 'First App.app')],
             'symlinks': {'Applications': '/Applications'},
             'icon_locations': {
-                'First App.app': (100, 100),
-                'Applications': (300, 100),
+                'First App.app': (75, 75),
+                'Applications': (225, 75),
             },
-            'icon': str(tmp_path / 'resources' / 'installer_icon.icns')
+            'window_rect': ((600, 600), (350, 150)),
+            'icon_size': 64,
+            'text_size': 12,
+            'icon': str(tmp_path / 'resources' / 'installer_icon.icns'),
         }
     )
 
@@ -129,9 +135,12 @@ def test_installer_icon_missing(first_app_config, tmp_path):
             'files': [str(tmp_path / 'macOS' / 'First App' / 'First App.app')],
             'symlinks': {'Applications': '/Applications'},
             'icon_locations': {
-                'First App.app': (100, 100),
-                'Applications': (300, 100),
+                'First App.app': (75, 75),
+                'Applications': (225, 75),
             },
+            'window_rect': ((600, 600), (350, 150)),
+            'icon_size': 64,
+            'text_size': 12,
         }
     )
 
@@ -174,10 +183,13 @@ def test_app_icon(first_app_config, tmp_path):
             'files': [str(tmp_path / 'macOS' / 'First App' / 'First App.app')],
             'symlinks': {'Applications': '/Applications'},
             'icon_locations': {
-                'First App.app': (100, 100),
-                'Applications': (300, 100),
+                'First App.app': (75, 75),
+                'Applications': (225, 75),
             },
-            'icon': str(tmp_path / 'resources' / 'icon.icns')
+            'window_rect': ((600, 600), (350, 150)),
+            'icon_size': 64,
+            'text_size': 12,
+            'icon': str(tmp_path / 'resources' / 'icon.icns'),
         }
     )
 
@@ -217,9 +229,12 @@ def test_app_icon_missing(first_app_config, tmp_path):
             'files': [str(tmp_path / 'macOS' / 'First App' / 'First App.app')],
             'symlinks': {'Applications': '/Applications'},
             'icon_locations': {
-                'First App.app': (100, 100),
-                'Applications': (300, 100),
+                'First App.app': (75, 75),
+                'Applications': (225, 75),
             },
+            'window_rect': ((600, 600), (350, 150)),
+            'icon_size': 64,
+            'text_size': 12,
         }
     )
 
@@ -262,10 +277,13 @@ def test_build_with_background(first_app_config, tmp_path):
             'files': [str(tmp_path / 'macOS' / 'First App' / 'First App.app')],
             'symlinks': {'Applications': '/Applications'},
             'icon_locations': {
-                'First App.app': (100, 100),
-                'Applications': (300, 100),
+                'First App.app': (75, 75),
+                'Applications': (225, 75),
             },
-            'background': str(tmp_path / 'resources' / 'background.png')
+            'window_rect': ((600, 600), (350, 150)),
+            'icon_size': 64,
+            'text_size': 12,
+            'background': str(tmp_path / 'resources' / 'background.png'),
         }
     )
 
@@ -305,8 +323,11 @@ def test_build_with_background_missing(first_app_config, tmp_path):
             'files': [str(tmp_path / 'macOS' / 'First App' / 'First App.app')],
             'symlinks': {'Applications': '/Applications'},
             'icon_locations': {
-                'First App.app': (100, 100),
-                'Applications': (300, 100),
+                'First App.app': (75, 75),
+                'Applications': (225, 75),
             },
+            'window_rect': ((600, 600), (350, 150)),
+            'icon_size': 64,
+            'text_size': 12,
         }
     )

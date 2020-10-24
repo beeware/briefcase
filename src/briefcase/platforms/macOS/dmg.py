@@ -78,9 +78,12 @@ class macOSDmgPackageCommand(macOSDmgMixin, macOSAppPackageCommand):
             'files': [str(self.binary_path(app))],
             'symlinks': {'Applications': '/Applications'},
             'icon_locations': {
-                '{app.formal_name}.app'.format(app=app): (100, 100),
-                'Applications': (300, 100),
+                '{app.formal_name}.app'.format(app=app): (75, 75),
+                'Applications': (225, 75),
             },
+            'window_rect': ((600, 600), (350, 150)),
+            'icon_size': 64,
+            'text_size': 12,
         }
 
         try:
