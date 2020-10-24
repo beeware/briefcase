@@ -1,0 +1,2 @@
+Fixed missing signature for Python executable in macOS app bundle.
+This enables the packaged dmg to be notarized by Apple.

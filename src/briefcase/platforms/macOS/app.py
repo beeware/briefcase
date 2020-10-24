@@ -184,6 +184,7 @@ class macOSAppPackageCommand(macOSAppMixin, PackageCommand):
             for path in itertools.chain(
                 self.binary_path(app).glob('**/*.so'),
                 self.binary_path(app).glob('**/*.dylib'),
+                self.binary_path(app).glob('**/python3'),
                 [self.binary_path(app)],
             ):
                 self.sign(
