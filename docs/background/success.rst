@@ -9,3 +9,7 @@ Want to see examples of Briefcase in use? Here's some:
 
 * `Mu <https://codewith.mu>`_ is a simple code editor for beginner programmers.
   It uses Briefcase to prepare a macOS installer.
+
+* `Napari <https://napari.org/>`_ is a multi-dimensional image viewer for python.
+  It uses Briefcase to prepare bundled Windows, MacOS, and Linux installers.
+  
