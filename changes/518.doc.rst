@@ -1,0 +1,1 @@
+Added the napari project to the briefcase success stories documentation page.
