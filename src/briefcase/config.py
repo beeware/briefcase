@@ -120,6 +120,7 @@ class AppConfig(BaseConfig):
         splash=None,
         document_type=None,
         template=None,
+        template_branch=None,
         **kwargs
     ):
         super().__init__(**kwargs)
@@ -138,6 +139,7 @@ class AppConfig(BaseConfig):
         self.splash = splash
         self.document_types = {} if document_type is None else document_type
         self.template = template
+        self.template_branch = template_branch
 
         # Validate that the app name is valid.
         if not PEP508_NAME_RE.match(self.app_name):
