@@ -79,9 +79,15 @@ class WindowsMSICreateCommand(WindowsMSIMixin, CreateCommand):
                 guid=guid,
             ))
 
+        try:
+            install_scope = app.install_scope
+        except AttributeError:
+            install_scope = "perUser"
+
         return {
             'version_triple': version_triple,
             'guid': str(guid),
+            'install_scope': install_scope
         }
 
     def install_app_support_package(self, app: BaseConfig):
