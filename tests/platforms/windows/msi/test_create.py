@@ -68,8 +68,9 @@ def test_support_package_url(first_app_config, tmp_path):
 
     # This test result assumes we're on ARM64. However, we will be
     # on almost every Windows box (and definite will be in CI)
+    arch = "amd64" if sys.maxsize.bit_length() == 63 else "win32"
     assert command.support_package_url_query == [
         ('platform', 'tester'),
         ('version', '3.{minor}'.format(minor=sys.version_info.minor)),
-        ('arch', 'amd64'),
+        ('arch', arch),
     ]
