@@ -67,7 +67,7 @@ def test_support_package_url(first_app_config, tmp_path):
     command.platform = 'tester'
 
     # This test result is dependent on whether we're using a 32-bit (win32)
-    # or 64-bit (amd64) machine. 
+    # or 64-bit (amd64) machine.
     arch = "amd64" if sys.maxsize.bit_length() == 63 else "win32"
     assert command.support_package_url_query == [
         ('platform', 'tester'),
