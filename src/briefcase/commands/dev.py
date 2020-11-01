@@ -50,6 +50,11 @@ class DevCommand(BaseCommand):
             action="store_true",
             help='Update dependencies for app'
         )
+        parser.add_argument(
+            '--no-run',
+            action="store_true",
+            help='Do not run the app, just install dependencies.'
+        )
 
     def install_dev_dependencies(self, app: BaseConfig, **options):
         """
@@ -104,6 +109,7 @@ class DevCommand(BaseCommand):
         self,
         appname: Optional[str] = None,
         update_dependencies: Optional[bool] = False,
+        no_run: Optional[bool] = False,
         **options
     ):
         # Confirm all required tools are available
@@ -133,7 +139,7 @@ class DevCommand(BaseCommand):
         # installed. If a dependency update has been manually requested,
         # do it regardless.
         dist_info_path = self.app_module_path(app).parent / '{app.module_name}.dist-info'.format(app=app)
-        if update_dependencies or not dist_info_path.exists():
+        if update_dependencies or no_run or not dist_info_path.exists():
             print()
             print('[{app.app_name}] Installing dependencies...'.format(
                 app=app
@@ -141,10 +147,11 @@ class DevCommand(BaseCommand):
             self.install_dev_dependencies(app, **options)
             write_dist_info(app, dist_info_path)
 
-        print()
-        print('[{app.app_name}] Starting in dev mode...'.format(
-            app=app
-        ))
-        env = self.get_environment(app)
-        state = self.run_dev_app(app, env, **options)
-        return state
+        if not no_run:
+            print()
+            print('[{app.app_name}] Starting in dev mode...'.format(
+                app=app
+            ))
+            env = self.get_environment(app)
+            state = self.run_dev_app(app, env, **options)
+            return state

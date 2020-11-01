@@ -231,3 +231,26 @@ def test_update_uninstalled(dev_command, first_app_uninstalled):
         # Then, it will be started
         ("run_dev", "first", {}, dev_command.env),
     ]
+
+
+def test_no_run(dev_command, first_app_uninstalled):
+    "Install dependencies without running the app"
+    # Add a single app
+    dev_command.apps = {
+        "first": first_app_uninstalled,
+    }
+
+    # Configure no command line options
+    options = dev_command.parse_options(["--no-run"])
+
+    # Run the run command
+    dev_command(**options)
+
+    # The right sequence of things will be done
+    assert dev_command.actions == [
+        # Tools are verified
+        ('verify', ),
+
+        # Only update dependencies without running the app
+        ("dev_dependencies", "first", {}),
+    ]
