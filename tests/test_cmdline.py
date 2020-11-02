@@ -111,7 +111,7 @@ def test_dev_command(monkeypatch):
     assert options == {
         'appname': None,
         'update_dependencies': False,
-        'no_run': False
+        'run_app': True
     }
 
 

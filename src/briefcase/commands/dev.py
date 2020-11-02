@@ -52,7 +52,9 @@ class DevCommand(BaseCommand):
         )
         parser.add_argument(
             '--no-run',
-            action="store_true",
+            dest="run_app",
+            action="store_false",
+            default=True,
             help='Do not run the app, just install dependencies.'
         )
 
@@ -109,7 +111,7 @@ class DevCommand(BaseCommand):
         self,
         appname: Optional[str] = None,
         update_dependencies: Optional[bool] = False,
-        no_run: Optional[bool] = False,
+        run_app: Optional[bool] = True,
         **options
     ):
         # Confirm all required tools are available
@@ -139,7 +141,10 @@ class DevCommand(BaseCommand):
         # installed. If a dependency update has been manually requested,
         # do it regardless.
         dist_info_path = self.app_module_path(app).parent / '{app.module_name}.dist-info'.format(app=app)
-        if update_dependencies or no_run or not dist_info_path.exists():
+        if not run_app:
+            # If we are not running the app, it means we should update dependencies.
+            update_dependencies = True
+        if update_dependencies or not dist_info_path.exists():
             print()
             print('[{app.app_name}] Installing dependencies...'.format(
                 app=app
@@ -147,7 +152,7 @@ class DevCommand(BaseCommand):
             self.install_dev_dependencies(app, **options)
             write_dist_info(app, dist_info_path)
 
-        if not no_run:
+        if run_app:
             print()
             print('[{app.app_name}] Starting in dev mode...'.format(
                 app=app
