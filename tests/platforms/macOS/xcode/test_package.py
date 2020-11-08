@@ -8,7 +8,7 @@ from briefcase.platforms.macOS.xcode import macOSXcodePackageCommand
 @pytest.fixture
 def first_app_with_binaries(first_app_config, tmp_path):
     # Create some libraries that need to be signed.
-    app_path = tmp_path / 'macOS' / 'First App' / 'build' / 'Debug' / 'First App.app'
+    app_path = tmp_path / 'macOS' / 'First App' / 'build' / 'Release' / 'First App.app'
     lib_path = app_path / 'Contents' / 'Resources'
     lib_path.mkdir(parents=True)
     with (lib_path / 'first_so.so').open('w') as f:
@@ -54,7 +54,7 @@ def test_package_app(first_app_with_binaries, tmp_path):
 
     # A request has been made to sign all the so and dylib files, plus the
     # app bundle itself.
-    app_path = tmp_path / 'macOS' / 'First App' / 'build' / 'Debug' / 'First App.app'
+    app_path = tmp_path / 'macOS' / 'First App' / 'build' / 'Release' / 'First App.app'
     lib_path = app_path / 'Contents' / 'Resources'
 
     command.subprocess.run.assert_has_calls(

@@ -12,7 +12,7 @@ def test_binary_path(first_app_config, tmp_path):
     command = macOSDmgCreateCommand(base_path=tmp_path)
     binary_path = command.binary_path(first_app_config)
 
-    assert binary_path == tmp_path / 'macOS' / 'First App' / 'build' / 'Debug' / 'First App.app'
+    assert binary_path == tmp_path / 'macOS' / 'First App' / 'build' / 'Release' / 'First App.app'
 
 
 def test_distribution_path(first_app_config, tmp_path):

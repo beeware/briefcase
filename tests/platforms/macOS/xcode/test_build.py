@@ -19,7 +19,7 @@ def test_build_app(first_app_config, tmp_path):
             'xcodebuild',
             '-project', tmp_path / 'macOS' / 'First App' / 'First App.xcodeproj',
             '-quiet',
-            '-configuration', 'Debug',
+            '-configuration', 'Release',
             'build'
         ],
         check=True
@@ -45,7 +45,7 @@ def test_build_app_failed(first_app_config, tmp_path):
             'xcodebuild',
             '-project', tmp_path / 'macOS' / 'First App' / 'First App.xcodeproj',
             '-quiet',
-            '-configuration', 'Debug',
+            '-configuration', 'Release',
             'build'
         ],
         check=True

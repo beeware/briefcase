@@ -23,7 +23,7 @@ class macOSXcodeMixin(macOSMixin):
         return (
             self.platform_path
             / '{app.formal_name}'.format(app=app)
-            / 'build' / 'Debug'
+            / 'build' / 'Release'
             / '{app.formal_name}.app'.format(app=app)
         )
 
@@ -54,8 +54,6 @@ class macOSXcodeBuildCommand(macOSXcodeMixin, BuildCommand):
         Build the Xcode project for the application.
 
         :param app: The application to build
-        :param udid: The device UDID to target. If ``None``, the user will
-            be asked to select a device at runtime.
         """
 
         print()
@@ -79,7 +77,7 @@ class macOSXcodeBuildCommand(macOSXcodeMixin, BuildCommand):
                     'xcodebuild',  # ' '.join(build_settings_str),
                     '-project', self.bundle_path(app) / '{app.formal_name}.xcodeproj'.format(app=app),
                     '-quiet',
-                    '-configuration', 'Debug',
+                    '-configuration', 'Release',
                     'build'
                 ],
                 check=True,
@@ -108,13 +106,7 @@ class macOSXcodeRunCommand(macOSXcodeMixin, RunCommand):
         ))
         try:
             print()
-            self.subprocess.run(
-                [
-                    'open',
-                    self.binary_path(app),
-                ],
-                check=True,
-            )
+            self.subprocess.run(['open', str(self.binary_path(app))], check=True)
         except subprocess.CalledProcessError:
             print()
             raise BriefcaseCommandError(
