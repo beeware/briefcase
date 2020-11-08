@@ -1,13 +1,13 @@
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.platforms.macOS.app import (
-    macOSAppBuildCommand,
-    macOSAppCreateCommand,
-    macOSAppMixin,
-    macOSAppPackageCommand,
-    macOSAppPublishCommand,
-    macOSAppRunCommand,
-    macOSAppUpdateCommand
+from briefcase.platforms.macOS.xcode import (
+    macOSXcodeBuildCommand,
+    macOSXcodeCreateCommand,
+    macOSXcodeMixin,
+    macOSXcodePackageCommand,
+    macOSXcodePublishCommand,
+    macOSXcodeRunCommand,
+    macOSXcodeUpdateCommand
 )
 
 try:
@@ -18,7 +18,7 @@ except ImportError:
     dmgbuild = None
 
 
-class macOSDmgMixin(macOSAppMixin):
+class macOSDmgMixin(macOSXcodeMixin):
     output_format = 'dmg'
 
     def distribution_path(self, app):
@@ -27,33 +27,31 @@ class macOSDmgMixin(macOSAppMixin):
     def verify_tools(self):
         super().verify_tools()
         if dmgbuild is None:
-            raise BriefcaseCommandError("""
-A macOS DMG can only be created on macOS.
-""")
+            raise BriefcaseCommandError("A macOS DMG can only be created on macOS.")
 
 
-class macOSDmgCreateCommand(macOSDmgMixin, macOSAppCreateCommand):
+class macOSDmgCreateCommand(macOSDmgMixin, macOSXcodeCreateCommand):
     @property
     def app_template_url(self):
-        "The URL for a cookiecutter repository to use when creating apps"
-        return 'https://github.com/beeware/briefcase-{self.platform}-app-template.git'.format(
+        """The URL for a cookiecutter repository to use when creating apps"""
+        return 'https://github.com/beeware/briefcase-{self.platform}-Xcode-template.git'.format(
             self=self
         )
 
 
-class macOSDmgUpdateCommand(macOSDmgMixin, macOSAppUpdateCommand):
+class macOSDmgUpdateCommand(macOSDmgMixin, macOSXcodeUpdateCommand):
     description = "Update an existing macOS app."
 
 
-class macOSDmgBuildCommand(macOSDmgMixin, macOSAppBuildCommand):
+class macOSDmgBuildCommand(macOSDmgMixin, macOSXcodeBuildCommand):
     description = "Build a macOS app."
 
 
-class macOSDmgRunCommand(macOSDmgMixin, macOSAppRunCommand):
+class macOSDmgRunCommand(macOSDmgMixin, macOSXcodeRunCommand):
     description = "Run a macOS app."
 
 
-class macOSDmgPackageCommand(macOSDmgMixin, macOSAppPackageCommand):
+class macOSDmgPackageCommand(macOSDmgMixin, macOSXcodePackageCommand):
     description = "Package a macOS app as a DMG."
 
     def __init__(self, *args, **kwargs):
@@ -133,7 +131,7 @@ class macOSDmgPackageCommand(macOSDmgMixin, macOSAppPackageCommand):
         )
 
 
-class macOSDmgPublishCommand(macOSDmgMixin, macOSAppPublishCommand):
+class macOSDmgPublishCommand(macOSDmgMixin, macOSXcodePublishCommand):
     description = "Publish a macOS DMG."
 
 

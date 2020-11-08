@@ -1,5 +1,5 @@
-import itertools
 import subprocess
+import itertools
 
 from briefcase.commands import (
     BuildCommand,
@@ -10,35 +10,89 @@ from briefcase.commands import (
     UpdateCommand
 )
 from briefcase.config import BaseConfig
-from briefcase.console import select_option
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.integrations.xcode import get_identities
+from briefcase.console import select_option
 from briefcase.platforms.macOS import macOSMixin
+from briefcase.integrations.xcode import get_identities
 
 
-class macOSAppMixin(macOSMixin):
-    output_format = 'app'
+class macOSXcodeMixin(macOSMixin):
+    output_format = 'xcode'
 
     def binary_path(self, app):
-        return self.bundle_path(app) / '{app.formal_name}.app'.format(app=app)
+        return (
+            self.platform_path
+            / '{app.formal_name}'.format(app=app)
+            / 'build' / 'Debug'
+            / '{app.formal_name}.app'.format(app=app)
+        )
 
     def distribution_path(self, app):
         return self.binary_path(app)
 
-
-class macOSAppCreateCommand(macOSAppMixin, CreateCommand):
-    description = "Create and populate a macOS app."
-
-
-class macOSAppUpdateCommand(macOSAppMixin, UpdateCommand):
-    description = "Update an existing macOS app."
-
-
-class macOSAppBuildCommand(macOSAppMixin, BuildCommand):
-    description = "Build a macOS app."
+    def entitlements_path(self, app):
+        return (
+                self.bundle_path(app)
+                / '{app.formal_name}'.format(app=app)
+                / '{app.app_name}.entitlements'.format(app=app)
+        )
 
 
-class macOSAppRunCommand(macOSAppMixin, RunCommand):
+class macOSXcodeCreateCommand(macOSXcodeMixin, CreateCommand):
+    description = "Create and populate a macOS Xcode project."
+
+
+class macOSXcodeUpdateCommand(macOSXcodeMixin, UpdateCommand):
+    description = "Update an existing macOS Xcode project."
+
+
+class macOSXcodeBuildCommand(macOSXcodeMixin, BuildCommand):
+    description = "Build a macOS Xcode project."
+
+    def build_app(self, app: BaseConfig, **kwargs):
+        """
+        Build the Xcode project for the application.
+
+        :param app: The application to build
+        :param udid: The device UDID to target. If ``None``, the user will
+            be asked to select a device at runtime.
+        """
+
+        print()
+        print('[{app.app_name}] Building XCode project...'.format(
+            app=app
+        ))
+
+        # build_settings = [
+        #     ('AD_HOC_CODE_SIGNING_ALLOWED', 'YES'),
+        #     ('CODE_SIGN_IDENTITY', '-'),
+        #     ('VALID_ARCHS', '"i386 x86_64"'),
+        #     ('ARCHS', 'x86_64'),
+        #     ('ONLY_ACTIVE_ARCHS', 'NO')
+        # ]
+        # build_settings_str = ['{}={}'.format(*x) for x in build_settings]
+
+        try:
+            print()
+            self.subprocess.run(
+                [
+                    'xcodebuild',  # ' '.join(build_settings_str),
+                    '-project', self.bundle_path(app) / '{app.formal_name}.xcodeproj'.format(app=app),
+                    '-quiet',
+                    '-configuration', 'Debug',
+                    'build'
+                ],
+                check=True,
+            )
+            print('Build succeeded.')
+        except subprocess.CalledProcessError:
+            print()
+            raise BriefcaseCommandError(
+                "Unable to build app {app.app_name}.".format(app=app)
+            )
+
+
+class macOSXcodeRunCommand(macOSXcodeMixin, RunCommand):
     description = "Run a macOS app."
 
     def run_app(self, app: BaseConfig, **kwargs):
@@ -68,7 +122,7 @@ class macOSAppRunCommand(macOSAppMixin, RunCommand):
             )
 
 
-class macOSAppPackageCommand(macOSAppMixin, PackageCommand):
+class macOSXcodePackageCommand(macOSXcodeMixin, PackageCommand):
     description = "Package a macOS app for distribution."
 
     def __init__(self, *args, **kwargs):
@@ -184,24 +238,23 @@ class macOSAppPackageCommand(macOSAppMixin, PackageCommand):
             for path in itertools.chain(
                 self.binary_path(app).glob('**/*.so'),
                 self.binary_path(app).glob('**/*.dylib'),
-                self.binary_path(app).glob('**/python3'),
                 [self.binary_path(app)],
             ):
                 self.sign(
                     path,
-                    entitlements=self.bundle_path(app) / 'Entitlements.plist',
+                    entitlements=self.entitlements_path(app),
                     identity=identity,
                 )
 
 
-class macOSAppPublishCommand(macOSAppMixin, PublishCommand):
+class macOSXcodePublishCommand(macOSXcodeMixin, PublishCommand):
     description = "Publish a macOS app."
 
 
 # Declare the briefcase command bindings
-create = macOSAppCreateCommand  # noqa
-update = macOSAppUpdateCommand  # noqa
-build = macOSAppBuildCommand  # noqa
-run = macOSAppRunCommand  # noqa
-package = macOSAppPackageCommand  # noqa
-publish = macOSAppPublishCommand  # noqa
+create = macOSXcodeCreateCommand  # noqa
+update = macOSXcodeUpdateCommand  # noqa
+build = macOSXcodeBuildCommand  # noqa
+run = macOSXcodeRunCommand  # noqa
+package = macOSXcodePackageCommand  # noqa
+publish = macOSXcodePublishCommand  # noqa
