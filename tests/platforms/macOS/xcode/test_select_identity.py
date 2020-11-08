@@ -3,11 +3,11 @@ from unittest import mock
 import pytest
 
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.platforms.macOS.app import macOSAppPackageCommand
+from briefcase.platforms.macOS.xcode import macOSXcodePackageCommand
 from tests.utils import DummyConsole
 
 
-class DummyPublishCommand(macOSAppPackageCommand):
+class DummyPublishCommand(macOSXcodePackageCommand):
     """
     A Publish command that overrides
     """

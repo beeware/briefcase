@@ -25,8 +25,8 @@ def test_build_dmg(first_app_config, tmp_path):
         [
             'codesign',
             '--sign', 'Sekrit identity (DEADBEEF)',
-            '--entitlements', str(tmp_path / 'macOS' / 'First App' / 'Entitlements.plist'),
-            '--deep', str(tmp_path / 'macOS' / 'First App' / 'First App.app'),
+            '--entitlements', str(command.entitlements_path(first_app_config)),
+            '--deep', str(tmp_path / 'macOS' / 'First App' / 'build' / 'Debug' / 'First App.app'),
             '--force',
             '--options', 'runtime',
         ],
@@ -38,7 +38,7 @@ def test_build_dmg(first_app_config, tmp_path):
         filename=str(tmp_path / 'macOS' / 'First App-0.0.1.dmg'),
         volume_name='First App 0.0.1',
         settings={
-            'files': [str(tmp_path / 'macOS' / 'First App' / 'First App.app')],
+            'files': [str(tmp_path / 'macOS' / 'First App' / 'build' / 'Debug' / 'First App.app')],
             'symlinks': {'Applications': '/Applications'},
             'icon_locations': {
                 'First App.app': (75, 75),
@@ -73,8 +73,8 @@ def test_installer_icon(first_app_config, tmp_path):
         [
             'codesign',
             '--sign', 'Sekrit identity (DEADBEEF)',
-            '--entitlements', str(tmp_path / 'macOS' / 'First App' / 'Entitlements.plist'),
-            '--deep', str(tmp_path / 'macOS' / 'First App' / 'First App.app'),
+            '--entitlements', str(command.entitlements_path(first_app_config)),
+            '--deep', str(tmp_path / 'macOS' / 'First App' / 'build' / 'Debug' / 'First App.app'),
             '--force',
             '--options', 'runtime',
         ],
@@ -86,7 +86,7 @@ def test_installer_icon(first_app_config, tmp_path):
         filename=str(tmp_path / 'macOS' / 'First App-0.0.1.dmg'),
         volume_name='First App 0.0.1',
         settings={
-            'files': [str(tmp_path / 'macOS' / 'First App' / 'First App.app')],
+            'files': [str(tmp_path / 'macOS' / 'First App' / 'build' / 'Debug' / 'First App.app')],
             'symlinks': {'Applications': '/Applications'},
             'icon_locations': {
                 'First App.app': (75, 75),
@@ -119,8 +119,8 @@ def test_installer_icon_missing(first_app_config, tmp_path):
         [
             'codesign',
             '--sign', 'Sekrit identity (DEADBEEF)',
-            '--entitlements', str(tmp_path / 'macOS' / 'First App' / 'Entitlements.plist'),
-            '--deep', str(tmp_path / 'macOS' / 'First App' / 'First App.app'),
+            '--entitlements', str(command.entitlements_path(first_app_config)),
+            '--deep', str(tmp_path / 'macOS' / 'First App' / 'build' / 'Debug' / 'First App.app'),
             '--force',
             '--options', 'runtime',
         ],
@@ -132,7 +132,7 @@ def test_installer_icon_missing(first_app_config, tmp_path):
         filename=str(tmp_path / 'macOS' / 'First App-0.0.1.dmg'),
         volume_name='First App 0.0.1',
         settings={
-            'files': [str(tmp_path / 'macOS' / 'First App' / 'First App.app')],
+            'files': [str(tmp_path / 'macOS' / 'First App' / 'build' / 'Debug' / 'First App.app')],
             'symlinks': {'Applications': '/Applications'},
             'icon_locations': {
                 'First App.app': (75, 75),
@@ -167,8 +167,8 @@ def test_app_icon(first_app_config, tmp_path):
         [
             'codesign',
             '--sign', 'Sekrit identity (DEADBEEF)',
-            '--entitlements', str(tmp_path / 'macOS' / 'First App' / 'Entitlements.plist'),
-            '--deep', str(tmp_path / 'macOS' / 'First App' / 'First App.app'),
+            '--entitlements', str(command.entitlements_path(first_app_config)),
+            '--deep', str(tmp_path / 'macOS' / 'First App' / 'build' / 'Debug' / 'First App.app'),
             '--force',
             '--options', 'runtime',
         ],
@@ -180,7 +180,7 @@ def test_app_icon(first_app_config, tmp_path):
         filename=str(tmp_path / 'macOS' / 'First App-0.0.1.dmg'),
         volume_name='First App 0.0.1',
         settings={
-            'files': [str(tmp_path / 'macOS' / 'First App' / 'First App.app')],
+            'files': [str(tmp_path / 'macOS' / 'First App' / 'build' / 'Debug' / 'First App.app')],
             'symlinks': {'Applications': '/Applications'},
             'icon_locations': {
                 'First App.app': (75, 75),
@@ -213,8 +213,8 @@ def test_app_icon_missing(first_app_config, tmp_path):
         [
             'codesign',
             '--sign', 'Sekrit identity (DEADBEEF)',
-            '--entitlements', str(tmp_path / 'macOS' / 'First App' / 'Entitlements.plist'),
-            '--deep', str(tmp_path / 'macOS' / 'First App' / 'First App.app'),
+            '--entitlements', str(command.entitlements_path(first_app_config)),
+            '--deep', str(tmp_path / 'macOS' / 'First App' / 'build' / 'Debug' / 'First App.app'),
             '--force',
             '--options', 'runtime',
         ],
@@ -226,7 +226,7 @@ def test_app_icon_missing(first_app_config, tmp_path):
         filename=str(tmp_path / 'macOS' / 'First App-0.0.1.dmg'),
         volume_name='First App 0.0.1',
         settings={
-            'files': [str(tmp_path / 'macOS' / 'First App' / 'First App.app')],
+            'files': [str(tmp_path / 'macOS' / 'First App' / 'build' / 'Debug' / 'First App.app')],
             'symlinks': {'Applications': '/Applications'},
             'icon_locations': {
                 'First App.app': (75, 75),
@@ -261,8 +261,8 @@ def test_build_with_background(first_app_config, tmp_path):
         [
             'codesign',
             '--sign', 'Sekrit identity (DEADBEEF)',
-            '--entitlements', str(tmp_path / 'macOS' / 'First App' / 'Entitlements.plist'),
-            '--deep', str(tmp_path / 'macOS' / 'First App' / 'First App.app'),
+            '--entitlements', str(command.entitlements_path(first_app_config)),
+            '--deep', str(tmp_path / 'macOS' / 'First App' / 'build' / 'Debug' / 'First App.app'),
             '--force',
             '--options', 'runtime',
         ],
@@ -274,7 +274,7 @@ def test_build_with_background(first_app_config, tmp_path):
         filename=str(tmp_path / 'macOS' / 'First App-0.0.1.dmg'),
         volume_name='First App 0.0.1',
         settings={
-            'files': [str(tmp_path / 'macOS' / 'First App' / 'First App.app')],
+            'files': [str(tmp_path / 'macOS' / 'First App' / 'build' / 'Debug' / 'First App.app')],
             'symlinks': {'Applications': '/Applications'},
             'icon_locations': {
                 'First App.app': (75, 75),
@@ -307,8 +307,8 @@ def test_build_with_background_missing(first_app_config, tmp_path):
         [
             'codesign',
             '--sign', 'Sekrit identity (DEADBEEF)',
-            '--entitlements', str(tmp_path / 'macOS' / 'First App' / 'Entitlements.plist'),
-            '--deep', str(tmp_path / 'macOS' / 'First App' / 'First App.app'),
+            '--entitlements', str(command.entitlements_path(first_app_config)),
+            '--deep', str(tmp_path / 'macOS' / 'First App' / 'build' / 'Debug' / 'First App.app'),
             '--force',
             '--options', 'runtime',
         ],
@@ -320,7 +320,7 @@ def test_build_with_background_missing(first_app_config, tmp_path):
         filename=str(tmp_path / 'macOS' / 'First App-0.0.1.dmg'),
         volume_name='First App 0.0.1',
         settings={
-            'files': [str(tmp_path / 'macOS' / 'First App' / 'First App.app')],
+            'files': [str(tmp_path / 'macOS' / 'First App' / 'build' / 'Debug' / 'First App.app')],
             'symlinks': {'Applications': '/Applications'},
             'icon_locations': {
                 'First App.app': (75, 75),

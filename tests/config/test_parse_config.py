@@ -11,7 +11,7 @@ def test_invalid_toml():
     config_file = StringIO("this is not toml!")
 
     with pytest.raises(BriefcaseConfigError, match="Invalid pyproject.toml"):
-        parse_config(config_file, platform='macOS', output_format='app')
+        parse_config(config_file, platform='macOS', output_format='xcode')
 
 
 def test_no_briefcase_section():
@@ -25,7 +25,7 @@ def test_no_briefcase_section():
     )
 
     with pytest.raises(BriefcaseConfigError, match="No tool.briefcase section"):
-        parse_config(config_file, platform='macOS', output_format='app')
+        parse_config(config_file, platform='macOS', output_format='xcode')
 
 
 def test_no_apps():
@@ -39,7 +39,7 @@ def test_no_apps():
     )
 
     with pytest.raises(BriefcaseConfigError, match="No Briefcase apps defined"):
-        parse_config(config_file, platform='macOS', output_format='app')
+        parse_config(config_file, platform='macOS', output_format='xcode')
 
 
 def test_single_minimal_app():
@@ -53,7 +53,7 @@ def test_single_minimal_app():
         """
     )
 
-    global_options, apps = parse_config(config_file, platform='macOS', output_format='app')
+    global_options, apps = parse_config(config_file, platform='macOS', output_format='xcode')
 
     # There's a single global option
     assert global_options == {
@@ -83,7 +83,7 @@ def test_multiple_minimal_apps():
         """
     )
 
-    global_options, apps = parse_config(config_file, platform='macOS', output_format='app')
+    global_options, apps = parse_config(config_file, platform='macOS', output_format='xcode')
 
     # There are no global options
     assert global_options == {}
@@ -128,7 +128,7 @@ def test_platform_override():
         """
     )
 
-    global_options, apps = parse_config(config_file, platform='macOS', output_format='app')
+    global_options, apps = parse_config(config_file, platform='macOS', output_format='xcode')
 
     # The global options are exactly as specified
     assert global_options == {
@@ -185,7 +185,7 @@ def test_platform_override_ordering():
         """
     )
 
-    global_options, apps = parse_config(config_file, platform='macOS', output_format='app')
+    global_options, apps = parse_config(config_file, platform='macOS', output_format='xcode')
 
     # The global options are exactly as specified
     assert global_options == {
@@ -232,7 +232,7 @@ def test_format_override():
         value = 2
         platformvalue = "macos platform"
 
-        [tool.briefcase.app.my_app.macOS.app]
+        [tool.briefcase.app.my_app.macOS.xcode]
         value = 21
         formatvalue = "app format"
 
@@ -256,13 +256,13 @@ def test_format_override():
         value = 32
         formatvalue = "appimage format"
 
-        [tool.briefcase.app.other_app.macOS.app]
+        [tool.briefcase.app.other_app.macOS.xcode]
         value = 41
         formatvalue = "other macos app format"
         """
     )
 
-    global_options, apps = parse_config(config_file, platform='macOS', output_format='app')
+    global_options, apps = parse_config(config_file, platform='macOS', output_format='xcode')
 
     # The global options are exactly as specified
     assert global_options == {
@@ -310,7 +310,7 @@ def test_format_override_ordering():
         value = 2
         platformvalue = "macos platform"
 
-        [tool.briefcase.app.my_app.macOS.app]
+        [tool.briefcase.app.my_app.macOS.xcode]
         value = 21
         formatvalue = "app format"
 
@@ -334,7 +334,7 @@ def test_format_override_ordering():
         value = 32
         formatvalue = "appimage format"
 
-        [tool.briefcase.app.other_app.macOS.app]
+        [tool.briefcase.app.other_app.macOS.xcode]
         value = 41
         formatvalue = "other macos app format"
         """
@@ -385,7 +385,7 @@ def test_requires():
         [tool.briefcase.app.my_app.macOS]
         requires = ["macos value"]
 
-        [tool.briefcase.app.my_app.macOS.app]
+        [tool.briefcase.app.my_app.macOS.xcode]
         requires = ["app value"]
 
         [tool.briefcase.app.my_app.macOS.dmg]
@@ -402,7 +402,7 @@ def test_requires():
     )
 
     # Request a macOS app
-    global_options, apps = parse_config(config_file, platform='macOS', output_format='app')
+    global_options, apps = parse_config(config_file, platform='macOS', output_format='xcode')
 
     # The global options are exactly as specified
     assert global_options == {
@@ -520,7 +520,7 @@ def test_document_types():
     )
 
     # Request a macOS app
-    global_options, apps = parse_config(config_file, platform='macOS', output_format='app')
+    global_options, apps = parse_config(config_file, platform='macOS', output_format='xcode')
 
     # The macOS my_app app specifies a full inherited chain.
     # The other_app app doesn't specify any options.
