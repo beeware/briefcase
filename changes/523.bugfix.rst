@@ -1,0 +1,1 @@
+Switch macoS build to Xcode project creating a native binary.
