@@ -243,13 +243,15 @@ class Docker:
         "Run a process inside the Docker container"
         # Set up the `docker run` invocation in interactive mode,
         # with volume mounts for the platform and .briefcase directories.
+        # The :z suffix allows SELinux to modify the host mount; it is ignored
+        # on non-SELinux platforms.
         docker_args = [
             "docker", "run",
             "--tty",
-            "--volume", "{self.command.platform_path}:/app".format(
+            "--volume", "{self.command.platform_path}:/app:z".format(
                 self=self
             ),
-            "--volume", "{self.command.dot_briefcase_path}:/home/brutus/.briefcase".format(
+            "--volume", "{self.command.dot_briefcase_path}:/home/brutus/.briefcase:z".format(
                 self=self
             ),
         ]
