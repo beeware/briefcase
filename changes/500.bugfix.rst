@@ -1,1 +1,1 @@
-Fixed docker build error on Linux
+Modified the volume mounting process to allow for SELinux.
