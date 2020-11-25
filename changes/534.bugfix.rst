@@ -1,0 +1,1 @@
+Fixed broken .briefcase directory permissions in some cases during linux builds.
