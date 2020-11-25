@@ -289,6 +289,10 @@ class Docker:
             else:
                 docker_args.append(arg)
 
+        # Ensure the .briefcase directory has been created before mounting it as
+        # a volume or else inside the container it will be owned by root.
+        self.command.dot_briefcase_path.mkdir(exist_ok=True)
+
         # Invoke the process.
         # Any exceptions from running the process are *not* caught.
         # This ensures that "docker.run()" behaves as closely to
