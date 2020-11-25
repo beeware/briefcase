@@ -26,6 +26,9 @@ def first_app(first_app_config, tmp_path):
     (app_dir / 'usr' / 'app_packages' / 'secondlib' / 'second_a.so').touch()
     (app_dir / 'usr' / 'app_packages' / 'secondlib' / 'second_b.so').touch()
 
+    # Create home directory
+    (tmp_path / 'home').mkdir(parents=True, exist_ok=True)
+
     return first_app_config
 
 
