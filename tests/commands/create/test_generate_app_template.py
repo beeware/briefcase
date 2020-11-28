@@ -96,7 +96,8 @@ def test_explicit_branch(create_command, myapp):
 
 def test_platform_exists(create_command, myapp):
     "If the platform directory already exists, it's ok"
-    myapp.template = 'https://example.com/magic/special-template.git'
+    # There won't be a cookiecutter cache, so there won't be
+    # a cache path (yet).
     create_command.git.Repo.side_effect = git_exceptions.NoSuchPathError
 
     # Create the platform directory
