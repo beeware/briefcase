@@ -12,7 +12,7 @@ from briefcase.commands import (
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.console import select_option
-from briefcase.platforms.macOS import macOSMixin
+from briefcase.platforms.macOS import macOSMixin, macOSPackageDMGMixin
 from briefcase.integrations.xcode import get_identities
 
 
@@ -114,7 +114,7 @@ class macOSXcodeRunCommand(macOSXcodeMixin, RunCommand):
             )
 
 
-class macOSXcodePackageCommand(macOSXcodeMixin, PackageCommand):
+class macOSXcodePackageCommand(macOSXcodeMixin, macOSPackageDMGMixin, PackageCommand):
     description = "Package a macOS app for distribution."
 
     def __init__(self, *args, **kwargs):
@@ -195,48 +195,6 @@ class macOSXcodePackageCommand(macOSXcodeMixin, PackageCommand):
             raise BriefcaseCommandError(
                 "Unable to code sign {path}.".format(path=path)
             )
-
-    def package_app(
-        self, app: BaseConfig, sign_app=True, identity=None, adhoc_sign=False, **kwargs
-    ):
-        """
-        Prepare the .app bundle for distribution.
-
-        This involves code signing.
-
-        :param app: The application to package
-        :param sign_app: Should the application be signed?
-        :param identity: The code signing identity to use. This can be either
-            the 40-digit hex checksum, or the string name of the identity.
-            If unspecified, the user will be prompted for a code signing
-            identity. Ignored if ``sign_app`` is False.
-        :param adhoc_sign: If true, code will be signed with adhoc identity of "-"
-        """
-        if sign_app:
-            if adhoc_sign:
-                identity = "-"
-
-                print()
-                print("[{app.app_name}] Signing app with adhoc identity...".format(app=app))
-            else:
-                identity = self.select_identity(identity=identity)
-
-                print()
-                print("[{app.app_name}] Signing app with identity {identity}...".format(
-                    app=app,
-                    identity=identity
-                ))
-
-            for path in itertools.chain(
-                self.binary_path(app).glob('**/*.so'),
-                self.binary_path(app).glob('**/*.dylib'),
-                [self.binary_path(app)],
-            ):
-                self.sign(
-                    path,
-                    entitlements=self.entitlements_path(app),
-                    identity=identity,
-                )
 
 
 class macOSXcodePublishCommand(macOSXcodeMixin, PublishCommand):
