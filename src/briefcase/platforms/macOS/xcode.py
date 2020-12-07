@@ -1,5 +1,4 @@
 import subprocess
-import itertools
 
 from briefcase.commands import (
     BuildCommand,
@@ -11,9 +10,7 @@ from briefcase.commands import (
 )
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.console import select_option
-from briefcase.platforms.macOS import macOSMixin, macOSPackageDMGMixin
-from briefcase.integrations.xcode import get_identities
+from briefcase.platforms.macOS import macOSMixin, macOSPackageMixin
 
 
 class macOSXcodeMixin(macOSMixin):
@@ -114,87 +111,8 @@ class macOSXcodeRunCommand(macOSXcodeMixin, RunCommand):
             )
 
 
-class macOSXcodePackageCommand(macOSXcodeMixin, macOSPackageDMGMixin, PackageCommand):
+class macOSXcodePackageCommand(macOSXcodeMixin, macOSPackageMixin, PackageCommand):
     description = "Package a macOS app for distribution."
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        # External service APIs.
-        # These are abstracted to enable testing without patching.
-        self.get_identities = get_identities
-
-    def select_identity(self, identity=None):
-        """
-        Get the codesigning identity to use.
-
-        :param identity: A pre-specified identity (either the 40-digit
-            hex checksum, or the string name of the identity). If provided, it
-            will be validated against the list of available identities to
-            confirm that it is a valid codesigning identity.
-        :returns: The final identity to use
-        """
-        # Obtain the valid codesigning identities.
-        identities = self.get_identities(self, 'codesigning')
-
-        if identity:
-            try:
-                # Try to look up the identity as a hex checksum
-                return identities[identity]
-            except KeyError:
-                # It's not a valid checksum; try to use it as a value.
-                if identity in identities.values():
-                    return identity
-
-            raise BriefcaseCommandError(
-                "Invalid code signing identity {identity!r}".format(
-                    identity=identity
-                )
-            )
-
-        if len(identities) == 0:
-            raise BriefcaseCommandError(
-                "No code signing identities are available."
-            )
-        elif len(identities) == 1:
-            identity = list(identities.items())[0][1]
-        else:
-            print()
-            print("Select code signing identity to use:")
-            print()
-            selection = select_option(identities, input=self.input)
-            identity = identities[selection]
-            print("selected", identity)
-
-        return identity
-
-    def sign(self, path, entitlements, identity):
-        """
-        Code sign a file.
-
-        :param path: The path to the file to sign.
-        :param entitlements: The path to the entitlements file to use.
-        :param identity: The code signing identity to use. Either the 40-digit
-            hex checksum, or the string name of the identity.
-        """
-        try:
-            print("Signing", path)
-            self.subprocess.run(
-                [
-                    'codesign',
-                    '--sign', identity,
-                    '--entitlements', str(entitlements),
-                    '--deep', str(path),
-                    '--force',
-                    '--options', 'runtime',
-                ],
-                check=True,
-            )
-        except subprocess.CalledProcessError:
-            print()
-            raise BriefcaseCommandError(
-                "Unable to code sign {path}.".format(path=path)
-            )
 
 
 class macOSXcodePublishCommand(macOSXcodeMixin, PublishCommand):
