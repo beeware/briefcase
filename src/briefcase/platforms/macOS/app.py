@@ -28,6 +28,7 @@ class macOSAppMixin(macOSMixin):
                 / 'Entitlements.plist'
         )
 
+
 class macOSAppCreateCommand(macOSAppMixin, CreateCommand):
     description = "Create and populate a macOS app."
 
