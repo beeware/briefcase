@@ -22,6 +22,11 @@ class macOSAppMixin(macOSMixin):
     def distribution_path(self, app):
         return self.binary_path(app)
 
+    def entitlements_path(self, app):
+        return (
+                self.bundle_path(app)
+                / 'Entitlements.plist'
+        )
 
 class macOSAppCreateCommand(macOSAppMixin, CreateCommand):
     description = "Create and populate a macOS app."
