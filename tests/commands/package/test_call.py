@@ -18,7 +18,11 @@ def test_no_args_package_one_app(package_command, first_app):
         # Tools are verified
         ("verify", ),
         # Package the first app
-        ("package", "first", {'format': 'dmg', 'adhoc_sign': False, 'identity': None, 'sign_app': True}),
+        (
+            "package",
+            "first",
+            {"format": "dmg", "adhoc_sign": False, "identity": None, "sign_app": True},
+        ),
     ]
 
 
@@ -41,9 +45,23 @@ def test_no_args_package_two_app(package_command, first_app, second_app):
         # Tools are verified
         ("verify", ),
         # Package the first app
-        ("package", "first", {'format': 'dmg', 'adhoc_sign': False, 'identity': None, 'sign_app': True}),
+        (
+            "package",
+            "first",
+            {"format": "dmg", "adhoc_sign": False, "identity": None, "sign_app": True},
+        ),
         # package the second app
-        ("package", "second", {'format': 'dmg', 'adhoc_sign': False, 'identity': None, 'sign_app': True, 'package_state': 'first'}),
+        (
+            "package",
+            "second",
+            {
+                "format": "dmg",
+                "adhoc_sign": False,
+                "identity": None,
+                "sign_app": True,
+                "package_state": "first",
+            },
+        ),
     ]
 
 
@@ -65,8 +83,11 @@ def test_no_sign_package_one_app(package_command, first_app):
         # Tools are verified
         ("verify", ),
         # Package the first app
-        ("package", "first", {'format': 'dmg', 'adhoc_sign': False, 'identity': None, 'sign_app': False}),
-
+        (
+            "package",
+            "first",
+            {"format": "dmg", "adhoc_sign": False, "identity": None, "sign_app": False},
+        ),
     ]
 
 
@@ -75,7 +96,6 @@ def test_identity_arg_package_one_app(package_command, first_app):
     # Add a single app
     package_command.apps = {
         "first": first_app,
-
     }
 
     # Configure no command line options
@@ -89,8 +109,16 @@ def test_identity_arg_package_one_app(package_command, first_app):
         # Tools are verified
         ("verify", ),
         # Package the first app
-        ("package", "first", {'format': 'dmg', 'adhoc_sign': False, 'identity': "test", 'sign_app': True}),
-
+        (
+            "package",
+            "first",
+            {
+                "format": "dmg",
+                "adhoc_sign": False,
+                "identity": "test",
+                "sign_app": True,
+            },
+        ),
     ]
 
 
@@ -112,8 +140,11 @@ def test_adhoc_sign_package_one_app(package_command, first_app):
         # Tools are verified
         ("verify", ),
         # Package the first app
-        ("package", "first", {'format': 'dmg', 'adhoc_sign': True, 'identity': None, 'sign_app': True}),
-
+        (
+            "package",
+            "first",
+            {"format": "dmg", "adhoc_sign": True, "identity": None, "sign_app": True},
+        ),
     ]
 
 
@@ -136,9 +167,23 @@ def test_no_sign_args_package_two_app(package_command, first_app, second_app):
         # Tools are verified
         ("verify", ),
         # Package the first app
-        ("package", "first", {'format': 'dmg', 'adhoc_sign': False, 'identity': None, 'sign_app': False}),
+        (
+            "package",
+            "first",
+            {"format": "dmg", "adhoc_sign": False, "identity": None, "sign_app": False},
+        ),
         # package the second app
-        ("package", "second", {'format': 'dmg', 'adhoc_sign': False, 'identity': None, 'sign_app': False, 'package_state': 'first'}),
+        (
+            "package",
+            "second",
+            {
+                "format": "dmg",
+                "adhoc_sign": False,
+                "identity": None,
+                "sign_app": False,
+                "package_state": "first",
+            },
+        ),
     ]
 
 
@@ -163,9 +208,23 @@ def test_adhoc_sign_args_package_two_app(package_command, first_app, second_app)
         # Tools are verified
         ("verify", ),
         # Package the first app
-        ("package", "first", {'format': 'dmg', 'adhoc_sign': True, 'identity': None, 'sign_app': True}),
+        (
+            "package",
+            "first",
+            {"format": "dmg", "adhoc_sign": True, "identity": None, "sign_app": True},
+        ),
         # package the second app
-        ("package", "second", {'format': 'dmg', 'adhoc_sign': True, 'identity': None, 'sign_app': True, 'package_state': 'first'}),
+        (
+            "package",
+            "second",
+            {
+                "format": "dmg",
+                "adhoc_sign": True,
+                "identity": None,
+                "sign_app": True,
+                "package_state": "first",
+            },
+        ),
     ]
 
 
@@ -188,7 +247,26 @@ def test_identity_sign_args_package_two_app(package_command, first_app, second_a
         # Tools are verified
         ("verify", ),
         # Package the first app
-        ("package", "first", {'format': 'dmg', 'adhoc_sign': False, 'identity': "test", 'sign_app': True}),
+        (
+            "package",
+            "first",
+            {
+                "format": "dmg",
+                "adhoc_sign": False,
+                "identity": "test",
+                "sign_app": True,
+            },
+        ),
         # package the second app
-        ("package", "second", {'format': 'dmg', 'adhoc_sign': False, 'identity': "test", 'sign_app': True, 'package_state': 'first'}),
+        (
+            "package",
+            "second",
+            {
+                "format": "dmg",
+                "adhoc_sign": False,
+                "identity": "test",
+                "sign_app": True,
+                "package_state": "first",
+            },
+        ),
     ]
