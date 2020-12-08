@@ -232,13 +232,13 @@ def test_format_override():
         value = 2
         platformvalue = "macos platform"
 
-        [tool.briefcase.app.my_app.macOS.xcode]
+        [tool.briefcase.app.my_app.macOS.app]
         value = 21
         formatvalue = "app format"
 
-        [tool.briefcase.app.my_app.macOS.dmg]
+        [tool.briefcase.app.my_app.macOS.xcode]
         value = 22
-        formatvalue = "dmg format"
+        formatvalue = "xcode format"
 
         [tool.briefcase.app.my_app.macOS.homebrew]
         value = 23
@@ -256,13 +256,13 @@ def test_format_override():
         value = 32
         formatvalue = "appimage format"
 
-        [tool.briefcase.app.other_app.macOS.xcode]
+        [tool.briefcase.app.other_app.macOS.app]
         value = 41
         formatvalue = "other macos app format"
         """
     )
 
-    global_options, apps = parse_config(config_file, platform='macOS', output_format='xcode')
+    global_options, apps = parse_config(config_file, platform='macOS', output_format='app')
 
     # The global options are exactly as specified
     assert global_options == {
@@ -314,9 +314,9 @@ def test_format_override_ordering():
         value = 21
         formatvalue = "app format"
 
-        [tool.briefcase.app.my_app.macOS.dmg]
+        [tool.briefcase.app.my_app.macOS.app]
         value = 22
-        formatvalue = "dmg format"
+        formatvalue = "app format"
 
         [tool.briefcase.app.my_app.macOS.homebrew]
         value = 23
@@ -340,7 +340,7 @@ def test_format_override_ordering():
         """
     )
 
-    global_options, apps = parse_config(config_file, platform='macOS', output_format='dmg')
+    global_options, apps = parse_config(config_file, platform='macOS', output_format='app')
 
     # The global options are exactly as specified
     assert global_options == {
@@ -361,7 +361,7 @@ def test_format_override_ordering():
             "basevalue": "the base",
             "appvalue": "the app",
             "platformvalue": "macos platform",
-            "formatvalue": "dmg format",
+            "formatvalue": "app format",
         },
         'other_app': {
             "app_name": "other_app",
@@ -386,10 +386,10 @@ def test_requires():
         requires = ["macos value"]
 
         [tool.briefcase.app.my_app.macOS.xcode]
-        requires = ["app value"]
+        requires = ["xcode value"]
 
-        [tool.briefcase.app.my_app.macOS.dmg]
-        requires = ["dmg value"]
+        [tool.briefcase.app.my_app.macOS.app]
+        requires = ["app value"]
 
         [tool.briefcase.app.my_app.linux]
         requires = ["linux value"]
@@ -402,7 +402,7 @@ def test_requires():
     )
 
     # Request a macOS app
-    global_options, apps = parse_config(config_file, platform='macOS', output_format='xcode')
+    global_options, apps = parse_config(config_file, platform='macOS', output_format='app')
 
     # The global options are exactly as specified
     assert global_options == {
@@ -432,9 +432,9 @@ def test_requires():
         }
     }
 
-    # Request a macOS dmg
+    # Request a macOS xcode project
     config_file.seek(0)
-    global_options, apps = parse_config(config_file, platform='macOS', output_format='dmg')
+    global_options, apps = parse_config(config_file, platform='macOS', output_format='xcode')
 
     # The global options are exactly as specified
     assert global_options == {
@@ -451,7 +451,7 @@ def test_requires():
                 "base value",
                 "my_app value",
                 "macos value",
-                "dmg value",
+                "xcode value",
             ],
             "value": 0,
         },
