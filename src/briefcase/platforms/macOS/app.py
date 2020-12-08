@@ -71,7 +71,7 @@ class macOSAppRunCommand(macOSAppMixin, RunCommand):
             )
 
 
-class macOSAppPackageCommand(macOSAppMixin, macOSPackageMixin, PackageCommand):
+class macOSAppPackageCommand(macOSPackageMixin, macOSAppMixin, PackageCommand):
     description = "Package a macOS app for distribution."
 
 
