@@ -15,7 +15,7 @@ except ImportError:
     dmgbuild = None
 
 
-DEFAULT_OUTPUT_FORMAT = 'dmg'
+DEFAULT_OUTPUT_FORMAT = 'app'
 
 
 class macOSMixin:
