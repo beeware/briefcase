@@ -13,3 +13,10 @@ def test_distribution_path(first_app_config, tmp_path):
     distribution_path = command.distribution_path(first_app_config)
 
     assert distribution_path == tmp_path / 'macOS' / 'First App' / 'First App.app'
+
+
+def test_entitlements_path(first_app_config, tmp_path):
+    command = macOSAppCreateCommand(base_path=tmp_path)
+    entitlements_path = command.entitlements_path(first_app_config)
+
+    assert entitlements_path == tmp_path / 'macOS' / 'First App' / 'Entitlements.plist'
