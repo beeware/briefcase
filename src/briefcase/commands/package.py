@@ -49,6 +49,14 @@ class PackageCommand(BaseCommand):
 
     def add_options(self, parser):
         parser.add_argument(
+            '-f',
+            '--format',
+            dest='format',
+            help='Output format to use (dmg or raw).',
+            default='dmg',
+            action='store_false',
+        )
+        parser.add_argument(
             '--no-sign',
             dest='sign_app',
             help='Disable code signing of the app.',
