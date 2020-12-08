@@ -32,6 +32,15 @@ class macOSAppMixin(macOSMixin):
 class macOSAppCreateCommand(macOSAppMixin, CreateCommand):
     description = "Create and populate a macOS app."
 
+    def install_app_support_package(self, app: BaseConfig):
+        """
+        Install the application support packge.
+
+        :param app: The config object for the app
+        """
+        # nothing to do here template already contains built binary
+        pass
+
 
 class macOSAppUpdateCommand(macOSAppMixin, UpdateCommand):
     description = "Update an existing macOS app."
