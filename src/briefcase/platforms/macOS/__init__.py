@@ -52,6 +52,7 @@ class macOSPackageMixin:
         # External service APIs.
         # These are abstracted to enable testing without patching.
         self.get_identities = get_identities
+        self.dmgbuild = dmgbuild
 
     def select_identity(self, identity=None):
         """
