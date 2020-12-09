@@ -260,16 +260,23 @@ class CreateCommand(BaseCommand):
         if app.template_branch is None:
             app.template_branch = self.python_version_tag
 
-        print("Using app template: {app_template}, branch {template_branch}".format(
+        parts = app.template.split("@")
+        if len(parts) > 1:
+            app.template = parts[0]
+            branch = parts[-1]
+        else:
+            branch = self.python_version_tag
+
+        print("Using app template: {app_template}, branch={branch}".format(
             app_template=app.template,
-            template_branch=app.template_branch,
+            branch=branch,
         ))
 
         # Make sure we have an updated cookiecutter template,
         # checked out to the right branch
         cached_template = self.update_cookiecutter_cache(
             template=app.template,
-            branch=app.template_branch
+            branch=branch,
         )
 
         # Construct a template context from the app configuration.
@@ -297,7 +304,7 @@ class CreateCommand(BaseCommand):
                 str(cached_template),
                 no_input=True,
                 output_dir=str(output_path),
-                checkout=app.template_branch,
+                checkout=branch,
                 extra_context=extra_context
             )
         except subprocess.CalledProcessError:
@@ -314,7 +321,7 @@ class CreateCommand(BaseCommand):
 
     def install_app_support_package(self, app: BaseConfig):
         """
-        Install the application support packge.
+        Install the application support package.
 
         :param app: The config object for the app
         """
