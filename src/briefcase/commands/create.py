@@ -48,6 +48,16 @@ class NoSupportPackage(BriefcaseCommandError):
         )
 
 
+class UnsupportedArchitecture(BriefcaseCommandError):
+    def __init__(self, arch):
+        self.arch = arch
+        super().__init__(
+            'Unsupported Architecture {arch}; Compile the support package yourself, add a support_package reference to pyproject.toml file'.format(
+                arch=arch,
+            )
+        )
+
+
 class DependencyInstallError(BriefcaseCommandError):
     def __init__(self):
         super().__init__(
@@ -337,6 +347,8 @@ class CreateCommand(BaseCommand):
                     url_parts = list(urlsplit(support_package_url))
                     query = []
                     for key, value in parse_qsl(url_parts[3]):
+                        if key == 'arch' and value != 'x86_64':
+                            raise UnsupportedArchitecture(value)
                         query.append((key, value))
                     query.append(('revision', app.support_revision))
                     url_parts[3] = urlencode(query)
