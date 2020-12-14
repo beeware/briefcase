@@ -1,0 +1,1 @@
+Raises an Error when an unsupported architecture is present in the support package url

@@ -4,7 +4,7 @@ from unittest import mock
 import pytest
 from requests import exceptions as requests_exceptions
 
-from briefcase.commands.create import InvalidSupportPackage
+from briefcase.commands.create import InvalidSupportPackage, UnsupportedArchitecture
 from briefcase.exceptions import NetworkFailure
 
 
@@ -83,6 +83,16 @@ def test_install_custom_app_support_package_file(create_command, myapp, tmp_path
     # Confirm that the full path to the support file
     # has been unpacked.
     assert (support_path / 'internal' / 'file.txt').exists()
+
+
+def test_support_package_url_with_arch(create_command, myapp):
+    "Architectures other than x86_64 are not supported"
+    # Provide an package URL with unsupported arch
+    myapp.support_package = 'https://briefcase-support.org/python?platform=linux&version=3.6&arch=i686'
+
+    # Confirm that an Exception is Raised
+    with pytest.raises(UnsupportedArchitecture, match=r"Unsupported Architecture i686.*"):
+        create_command.install_app_support_package(myapp)
 
 
 def test_install_custom_app_support_package_url(create_command, myapp, tmp_path, support_path):
