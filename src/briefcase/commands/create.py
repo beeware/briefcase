@@ -52,7 +52,8 @@ class UnsupportedArchitecture(BriefcaseCommandError):
     def __init__(self, arch):
         self.arch = arch
         super().__init__(
-            'Unsupported Architecture {arch}; Compile the support package yourself, add a support_package reference to pyproject.toml file'.format(
+            'Unsupported Architecture {arch}; Compile the support package yourself, add a support_package reference to '
+            'pyproject.toml file'.format(
                 arch=arch,
             )
         )
