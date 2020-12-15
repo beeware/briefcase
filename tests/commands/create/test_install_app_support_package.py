@@ -93,8 +93,10 @@ def test_support_package_url_with_invalid_url(create_command, myapp):
     # Confirm that an Exception is Raised
     with pytest.raises(
             MissingNetworkResourceError,
-            match=f"Unable to download {myapp.support_package}; is the URL correct? Suggestion : Compile the " +
-            "support package yourself, add a support_package reference to pyproject.toml file"):
+            match="Unable to download {url}; is the URL correct? Suggestion : Compile the "
+                  "support package yourself, add a support_package reference to pyproject.toml file".format(
+                url=myapp.support_package
+            )):
         create_command.install_app_support_package(myapp)
 
 
