@@ -91,10 +91,10 @@ def test_support_package_url_with_invalid_url(create_command, myapp):
     myapp.support_package = 'https://briefcase-support.org/python?platform=linux&version=3.6&arch=i686'
 
     # Confirm that an Exception is Raised
-    with pytest.raises(MissingNetworkResourceError, match=rf"Unable to download {myapp.support_package}; "
-                                                          r"is the URL correct? Suggestion : Compile the "
-                                                          r"support package yourself, add a ssupport_package "
-                                                          r"reference to pyproject.toml file"):
+    with pytest.raises(
+            MissingNetworkResourceError,
+            match=f"Unable to download {myapp.support_package}; is the URL correct? Suggestion : Compile the " +
+            "support package yourself, add a support_package reference to pyproject.toml file"):
         create_command.install_app_support_package(myapp)
 
 
