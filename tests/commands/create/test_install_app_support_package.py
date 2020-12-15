@@ -92,7 +92,7 @@ def test_support_package_url_with_invalid_url(create_command, myapp):
     myapp.support_package = url
 
     # Confirm that an Exception is Raised
-    with pytest.raises(MissingNetworkResourceError):
+    with pytest.raises(MissingNetworkResourceError, match=r".*Suggestion.*"):
         create_command.install_app_support_package(myapp)
 
 
