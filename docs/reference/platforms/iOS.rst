@@ -2,7 +2,8 @@
 iOS
 ===
 
-When generating an iOS project, Briefcase produces an Xcode project.
+When generating an iOS project, Briefcase produces an Xcode project. Note that the GUI frameworks PySide2 and
+PursuedPyBear are not supported.
 
 Icon format
 ===========
