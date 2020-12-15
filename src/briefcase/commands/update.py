@@ -31,6 +31,9 @@ class UpdateCommand(CreateCommand):
         :param update_dependencies: Should dependencies be updated? (default: False)
         :param update_resources: Should extra resources be updated? (default: False)
         """
+        if app.supported == False:  # as opposed to None
+            raise GuiUnsupportedForPlatform(self.platform)
+
         bundle_path = self.bundle_path(app)
         if not bundle_path.exists():
             print()

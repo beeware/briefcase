@@ -120,6 +120,7 @@ class AppConfig(BaseConfig):
         splash=None,
         document_type=None,
         template=None,
+        supported=None,
         **kwargs
     ):
         super().__init__(**kwargs)
@@ -138,6 +139,7 @@ class AppConfig(BaseConfig):
         self.splash = splash
         self.document_types = {} if document_type is None else document_type
         self.template = template
+        self.supported = supported
 
         # Validate that the app name is valid.
         if not PEP508_NAME_RE.match(self.app_name):
@@ -216,7 +218,7 @@ def merge_config(config, data):
         is modified in-situ.
     :param data: The new configuration data to merge into the configuration.
     """
-    for option in ['requires', 'sources']:
+    for option in ['requires', 'sources', 'is_supported']:
         value = data.pop(option, [])
 
         if value:
@@ -335,7 +337,7 @@ def parse_config(config_file, platform, output_format):
         merge_config(config, app_data)
 
         # If there is platform-specific configuration, merge the requirements,
-        # the overwrite the platform-specific values.
+        # then overwrite the platform-specific values.
         # This will already include any format-specific configuration.
         if platform_data:
             merge_config(config, platform_data)

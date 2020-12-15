@@ -420,7 +420,7 @@ What license do you want to use for this project's code?""",
 
         gui_framework = self.input_select(
             intro="""
-What GUI toolkit do you want to use for this project?""",
+What GUI toolkit do you want to use for this project? Note: PySide2 and PursuedPyBear cannot be deployed to Android or iOS""",
             variable="GUI framework",
             options=[
                 'Toga',
