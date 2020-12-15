@@ -88,15 +88,11 @@ def test_install_custom_app_support_package_file(create_command, myapp, tmp_path
 def test_support_package_url_with_invalid_url(create_command, myapp):
     "Architectures other than x86_64 are not supported"
     # Provide an invalid package URL with unsupported arch
-    myapp.support_package = 'https://briefcase-support.org/python?platform=linux&version=3.6&arch=i686'
+    url = 'https://briefcase-support.org/python?platform=linux&version=3.6&arch=i686'
+    myapp.support_package = url
 
     # Confirm that an Exception is Raised
-    with pytest.raises(
-            MissingNetworkResourceError,
-            match="Unable to download {url}; is the URL correct? Suggestion : Compile the "
-                  "support package yourself, add a support_package reference to pyproject.toml file".format(
-                url=myapp.support_package
-            )):
+    with pytest.raises(MissingNetworkResourceError, match=rf".*{url}.*Suggestion.*file"):
         create_command.install_app_support_package(myapp)
 
 
