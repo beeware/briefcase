@@ -92,8 +92,8 @@ class MissingNetworkResourceError(BriefcaseCommandError):
         super().__init__(
             msg="Unable to download {url}; is the URL correct? Suggestion : Compile the support package yourself,"
                 " add a support_package reference to pyproject.toml file".format(
-                url=url
-            )
+                    url=url
+                )
         )
 
 
