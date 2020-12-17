@@ -1,3 +1,7 @@
+import pytest
+from briefcase.commands.base import GuiUnsupportedForPlatform
+from briefcase.config import AppConfig
+
 
 def test_create_app(tracking_create_command):
     "If the app doesn't already exist, it will be created"
@@ -129,3 +133,22 @@ def test_create_existing_app_input_disabled(tracking_create_command):
 
     # New app content has not been created
     assert not (bundle_path / 'new').exists()
+
+
+def test_create_app_not_supported(tracking_create_command):
+    "If the supported attribute is false, the command will terminate with an error message"
+
+    with pytest.raises(GuiUnsupportedForPlatform):
+        tracking_create_command.create_app(
+            AppConfig(
+                app_name='third',
+                bundle='com.example',
+                version='0.0.3',
+                description='The third simple app',
+                sources=['src/third'],
+                supported=False
+            )
+        )
+
+    # No actions carried out
+    assert tracking_create_command.actions == []

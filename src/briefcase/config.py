@@ -120,7 +120,7 @@ class AppConfig(BaseConfig):
         splash=None,
         document_type=None,
         template=None,
-        supported=None,
+        supported=True,
         **kwargs
     ):
         super().__init__(**kwargs)
@@ -218,7 +218,7 @@ def merge_config(config, data):
         is modified in-situ.
     :param data: The new configuration data to merge into the configuration.
     """
-    for option in ['requires', 'sources', 'is_supported']:
+    for option in ['requires', 'sources']:
         value = data.pop(option, [])
 
         if value:

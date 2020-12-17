@@ -2,8 +2,7 @@
 Android
 =======
 
-When generating an Android project, Briefcase produces a Gradle project. Note that the GUI frameworks PySide2 and
-PursuedPyBear are not supported.
+When generating an Android project, Briefcase produces a Gradle project.
 
 Icon format
 ===========

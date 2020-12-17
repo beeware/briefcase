@@ -37,12 +37,13 @@ class TemplateUnsupportedVersion(BriefcaseCommandError):
             )
         )
 
+
 class GuiUnsupportedForPlatform(BriefcaseCommandError):
     def __init__(self, platform):
         self.platform = platform
         super().__init__(
-            msg = 'GUI Framework does not support {platform}'.format(
-                platform = platform
+            msg='GUI Framework does not support {platform}'.format(
+                platform=platform
             )
         )
 
