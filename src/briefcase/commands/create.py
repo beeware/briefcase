@@ -11,7 +11,7 @@ from requests import exceptions as requests_exceptions
 
 import briefcase
 from briefcase.config import BaseConfig
-from briefcase.exceptions import BriefcaseCommandError, NetworkFailure
+from briefcase.exceptions import BriefcaseCommandError, NetworkFailure, MissingNetworkResourceError
 
 from .base import BaseCommand, TemplateUnsupportedVersion, full_options
 
@@ -32,6 +32,17 @@ class InvalidSupportPackage(BriefcaseCommandError):
         super().__init__(
             'Unable to unpack support package {filename!r}'.format(
                 filename=filename
+            )
+        )
+
+
+class InvalidSupportPackageURL(BriefcaseCommandError):
+    def __init__(self, url):
+        self.url = url
+        super().__init__(
+            "Invalid support package URL {url}; Compile the support package yourself, "
+            "add a support_package reference to pyproject.toml file".format(
+                url=url
             )
         )
 
@@ -354,6 +365,8 @@ class CreateCommand(BaseCommand):
                 )
             else:
                 support_filename = Path(support_package_url)
+        except MissingNetworkResourceError:
+            raise InvalidSupportPackageURL(support_package_url)
         except requests_exceptions.ConnectionError:
             raise NetworkFailure('downloading support package')
 

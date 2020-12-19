@@ -1,1 +1,3 @@
-Extends MissingNetworkResourceError message to include suggested workaround
+- Created a new exception class InvalidSupportPackageURL
+- MissingNetworkResourceError is caught in install_app_support_package and InvalidSupportPackageURL is raised
+- Test Case test_support_package_url_with_invalid_url added to check the new exception

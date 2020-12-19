@@ -4,8 +4,8 @@ from unittest import mock
 import pytest
 from requests import exceptions as requests_exceptions
 
-from briefcase.commands.create import InvalidSupportPackage
-from briefcase.exceptions import NetworkFailure, MissingNetworkResourceError
+from briefcase.commands.create import InvalidSupportPackage, InvalidSupportPackageURL
+from briefcase.exceptions import NetworkFailure
 
 
 def test_install_app_support_package(create_command, myapp, tmp_path, support_path):
@@ -92,7 +92,7 @@ def test_support_package_url_with_invalid_url(create_command, myapp):
     myapp.support_package = url
 
     # Confirm that an Exception is Raised
-    with pytest.raises(MissingNetworkResourceError, match=r".*Suggestion.*"):
+    with pytest.raises(InvalidSupportPackageURL, match=r"Invalid support package URL.*Suggestion.*"):
         create_command.install_app_support_package(myapp)
 
 
