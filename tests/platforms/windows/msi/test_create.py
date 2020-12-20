@@ -74,3 +74,22 @@ def test_support_package_url(first_app_config, tmp_path):
         ('version', '3.{minor}'.format(minor=sys.version_info.minor)),
         ('arch', arch),
     ]
+
+
+def test_default_install_scope(first_app_config, tmp_path):
+    "By default, app should be installed per user."
+    command = WindowsMSICreateCommand(base_path=tmp_path)
+
+    context = command.output_format_template_context(first_app_config)
+
+    assert context['install_scope'] == 'perUser'
+
+
+def test_per_machine_install_scope(first_app_config, tmp_path):
+    "By default, app should be installed per user."
+    command = WindowsMSICreateCommand(base_path=tmp_path)
+    first_app_config.install_scope = "perMachine"
+
+    context = command.output_format_template_context(first_app_config)
+
+    assert context['install_scope'] == "perMachine"
