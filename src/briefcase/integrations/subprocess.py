@@ -56,7 +56,7 @@ class Subprocess:
         # All exceptions are propegated back to the caller.
         if self.command.verbosity >= 2:
             print(">>> {cmdline}".format(
-                cmdline=' '.join(shlex.quote(arg) for arg in args)
+                cmdline=' '.join(shlex.quote(str(arg)) for arg in args)
             ))
 
         return self._subprocess.run(
