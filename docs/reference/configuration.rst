@@ -312,6 +312,13 @@ format.
 If this setting is not provided, Briefcase will use a default template for
 the output format and Python version.
 
+``template_branch``
+~~~~~~~~~~~~~~~~~~~
+
+A branch to checkout in case ``template`` is a repository URL. If not specified, it
+will be considered as the current python version (ie. it will be set to "3.8" when
+using python 3.8).
+
 ``url``
 ~~~~~~~
 
