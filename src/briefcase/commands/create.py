@@ -610,7 +610,7 @@ class CreateCommand(BaseCommand):
 
         :param app: The config object for the app
         """
-        if app.supported is False:  # as opposed to None
+        if not app.supported:
             raise GuiUnsupportedForPlatform(self.platform)
 
         bundle_path = self.bundle_path(app)

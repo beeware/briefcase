@@ -1,8 +1,3 @@
-import pytest
-from briefcase.commands.base import GuiUnsupportedForPlatform
-from briefcase.config import AppConfig
-
-
 def test_update_app(update_command, first_app):
     "If the app already exists, it will be updated"
     update_command.update_app(update_command.apps['first'])
@@ -76,27 +71,3 @@ def test_update_app_with_resources(update_command, first_app):
     assert not (update_command.platform_path / 'first.dummy' / 'dependencies').exists()
     # ... and the app still exists
     assert (update_command.platform_path / 'first.dummy' / 'Content').exists()
-
-
-def test_update_app_with_unsupported_platform(update_command, third_app):
-    """If the user requests to package their application code for a different unsupported platform,
-    an exception is thrown. """
-
-    with pytest.raises(GuiUnsupportedForPlatform):
-        update_command.update_app(
-            AppConfig(
-                app_name='third',
-                bundle='com.example',
-                version='0.0.3',
-                description='The third simple app',
-                sources=['src/third'],
-                supported=False
-            )
-        )
-
-    # No app creation actions will be performed
-    assert update_command.actions == []
-
-    # App content has been not updated
-    assert not (update_command.platform_path / 'third.dummy' / 'dependencies').exists()
-    assert not (update_command.platform_path / 'third.dummy' / 'code.py').exists()

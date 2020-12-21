@@ -308,8 +308,7 @@ If the support package is a file path, this argument is ignored.
 Indicates if the the platform is not supported. This applies for GUI frameworks (PySide2, PursuedPyBear) that do
 not support mobile platforms.
 
-The `create` and `update` commands will check if `supported=false` is present in the configuration before creating
-or updating the project application.
+The `create` command will check if `supported=false` is present in the configuration before creating the project application.
 
 ``template``
 ~~~~~~~~~~~~

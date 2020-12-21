@@ -1,2 +1,0 @@
-Modified GUI options in new project wizard to advise on platform compatibility,
-and disallow deployment on incompatible platforms through the create and update commands.

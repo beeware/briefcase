@@ -88,12 +88,3 @@ def second_app(tmp_path):
     bundle_dir.mkdir(parents=True)
     with (bundle_dir / 'Content').open('w') as f:
         f.write("second app.bundle")
-
-
-@pytest.fixture
-def third_app(tmp_path):
-    "Populate skeleton app content for the third app"
-    bundle_dir = tmp_path / "tester" / "third.dummy"
-    bundle_dir.mkdir(parents=True)
-    with (bundle_dir / 'Content').open('w') as f:
-        f.write("third app.bundle")
