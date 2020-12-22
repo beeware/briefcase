@@ -54,7 +54,7 @@ class PackageCommand(BaseCommand):
             dest='format',
             help='Output format to use (dmg or raw).',
             default='dmg',
-            action='store_false',
+            choices=['dmg', 'app'],
         )
         parser.add_argument(
             '--no-sign',
