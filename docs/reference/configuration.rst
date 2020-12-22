@@ -312,6 +312,14 @@ format.
 If this setting is not provided, Briefcase will use a default template for
 the output format and Python version.
 
+``template_branch``
+~~~~~~~~~~~~~~~~~~~
+
+The branch of the project template to use when generating the app. If the
+template is a local file, this attribute will be ignored. If not specified,
+Briefcase will use a branch matching the Python version in use (i.e., the `3.8`
+branch will be used when Python 3.8 is used to generate the app).
+
 ``url``
 ~~~~~~~
 

@@ -64,6 +64,32 @@ def test_default_template(create_command, myapp):
         output_dir=str(create_command.platform_path),
         extra_context=full_context({
             'template': 'https://github.com/beeware/briefcase-tester-dummy-template.git',
+            'template_branch': '3.X',
+        })
+    )
+
+
+def test_explicit_branch(create_command, myapp):
+    "user can choose which branch to take the template from."
+    branch = 'some_branch'
+    myapp.template_branch = branch
+    create_command.git.Repo.side_effect = git_exceptions.NoSuchPathError
+
+    # Generate the template.
+    create_command.generate_app_template(myapp)
+
+    # App's template has been set
+    assert myapp.template == 'https://github.com/beeware/briefcase-tester-dummy-template.git'
+
+    # Cookiecutter was invoked with the expected template name and context.
+    create_command.cookiecutter.assert_called_once_with(
+        'https://github.com/beeware/briefcase-tester-dummy-template.git',
+        no_input=True,
+        checkout=branch,
+        output_dir=str(create_command.platform_path),
+        extra_context=full_context({
+            'template': 'https://github.com/beeware/briefcase-tester-dummy-template.git',
+            'template_branch': branch,
         })
     )
 
@@ -91,6 +117,7 @@ def test_platform_exists(create_command, myapp):
         output_dir=str(create_command.platform_path),
         extra_context=full_context({
             'template': 'https://github.com/beeware/briefcase-tester-dummy-template.git',
+            'template_branch': '3.X',
         })
     )
 
@@ -117,6 +144,7 @@ def test_explicit_repo_template(create_command, myapp):
         output_dir=str(create_command.platform_path),
         extra_context=full_context({
             'template': 'https://example.com/magic/special-template.git',
+            'template_branch': '3.X',
         })
     )
 
@@ -139,6 +167,7 @@ def test_explicit_local_template(create_command, myapp):
         output_dir=str(create_command.platform_path),
         extra_context=full_context({
             'template': '/path/to/special-template',
+            'template_branch': '3.X',
         })
     )
 
@@ -173,6 +202,7 @@ def test_offline_repo_template(create_command, myapp):
         output_dir=str(create_command.platform_path),
         extra_context=full_context({
             'template': 'https://github.com/beeware/briefcase-tester-dummy-template.git',
+            'template_branch': '3.X',
         })
     )
 
@@ -203,6 +233,7 @@ def test_invalid_repo_template(create_command, myapp):
         output_dir=str(create_command.platform_path),
         extra_context=full_context({
             'template': 'https://example.com/somewhere/not-a-repo.git',
+            'template_branch': '3.X',
         })
     )
 
@@ -234,6 +265,7 @@ def test_missing_branch_template(create_command, myapp):
         output_dir=str(create_command.platform_path),
         extra_context=full_context({
             'template': 'https://example.com/somewhere/missing-branch.git',
+            'template_branch': '3.X',
         })
     )
 
@@ -271,6 +303,7 @@ def test_cached_template(create_command, myapp):
         output_dir=str(create_command.platform_path),
         extra_context=full_context({
             'template': 'https://github.com/beeware/briefcase-tester-dummy-template.git',
+            'template_branch': '3.X',
         })
     )
 
@@ -314,6 +347,7 @@ def test_cached_template_offline(create_command, myapp, capsys):
         output_dir=str(create_command.platform_path),
         extra_context=full_context({
             'template': 'https://github.com/beeware/briefcase-tester-dummy-template.git',
+            'template_branch': '3.X',
         })
     )
 
