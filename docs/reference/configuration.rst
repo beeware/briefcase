@@ -302,6 +302,17 @@ it is downloaded.
 
 If the support package is a file path, this argument is ignored.
 
+``supported``
+~~~~~~~~~~~~~
+
+Indicates that the platform is not supported. For example, if you know that
+the app cannot be deployed to Android for some reason, you can explicitly
+prevent deployment by setting `supported=False` in the Android section of the
+app configuration file.
+
+If `supported` is set to `false`, the create command will fail, advising the
+user of the limitation.
+
 ``template``
 ~~~~~~~~~~~~
 

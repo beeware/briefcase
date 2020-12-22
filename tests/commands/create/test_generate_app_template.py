@@ -27,6 +27,7 @@ def full_context(extra):
         'requires': None,
         'icon': None,
         'splash': None,
+        'supported': True,
         'document_types': {},
 
         # Fields generated from other properties

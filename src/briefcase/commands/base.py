@@ -38,6 +38,17 @@ class TemplateUnsupportedVersion(BriefcaseCommandError):
         )
 
 
+class UnsupportedPlatform(BriefcaseCommandError):
+    def __init__(self, platform):
+        self.platform = platform
+        super().__init__(
+            msg="App cannot be deployed on {platform}. This is probably because one or more\n"
+                "dependencies (e.g., the GUI library) doesn't support {platform}.".format(
+                    platform=platform
+                )
+        )
+
+
 def create_config(klass, config, msg):
     try:
         return klass(**config)

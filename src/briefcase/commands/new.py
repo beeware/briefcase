@@ -424,8 +424,8 @@ What GUI toolkit do you want to use for this project?""",
             variable="GUI framework",
             options=[
                 'Toga',
-                'PySide2',
-                'PursuedPyBear',
+                'PySide2 (does not support iOS/Android deployment)',
+                'PursuedPyBear (does not support iOS/Android deployment)',
                 'None',
             ],
         )
@@ -442,7 +442,7 @@ What GUI toolkit do you want to use for this project?""",
             "bundle": bundle,
             "url": url,
             "license": project_license,
-            "gui_framework": gui_framework,
+            "gui_framework": (gui_framework.split())[0],
         }
 
     def new_app(self, template: Optional[str] = None, **options):
