@@ -10,7 +10,12 @@ def test_binary_path(first_app_config, tmp_path):
 
 def test_distribution_path(first_app_config, tmp_path):
     command = macOSAppCreateCommand(base_path=tmp_path)
+
     distribution_path = command.distribution_path(first_app_config)
+
+    assert distribution_path == tmp_path / 'macOS' / 'First App-0.0.1.dmg'
+
+    distribution_path = command.distribution_path(first_app_config, package_format='app')
 
     assert distribution_path == tmp_path / 'macOS' / 'First App' / 'First App.app'
 
