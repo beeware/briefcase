@@ -120,6 +120,7 @@ class AppConfig(BaseConfig):
         splash=None,
         document_type=None,
         template=None,
+        template_branch=None,
         supported=True,
         **kwargs
     ):
@@ -139,6 +140,7 @@ class AppConfig(BaseConfig):
         self.splash = splash
         self.document_types = {} if document_type is None else document_type
         self.template = template
+        self.template_branch = template_branch
         self.supported = supported
 
         # Validate that the app name is valid.

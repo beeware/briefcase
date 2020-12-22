@@ -257,16 +257,19 @@ class CreateCommand(BaseCommand):
         # use a default template.
         if app.template is None:
             app.template = self.app_template_url
+        if app.template_branch is None:
+            app.template_branch = self.python_version_tag
 
-        print("Using app template: {app_template}".format(
+        print("Using app template: {app_template}, branch {template_branch}".format(
             app_template=app.template,
+            template_branch=app.template_branch,
         ))
 
         # Make sure we have an updated cookiecutter template,
         # checked out to the right branch
         cached_template = self.update_cookiecutter_cache(
             template=app.template,
-            branch=self.python_version_tag
+            branch=app.template_branch
         )
 
         # Construct a template context from the app configuration.
@@ -294,7 +297,7 @@ class CreateCommand(BaseCommand):
                 str(cached_template),
                 no_input=True,
                 output_dir=str(output_path),
-                checkout=self.python_version_tag,
+                checkout=app.template_branch,
                 extra_context=extra_context
             )
         except subprocess.CalledProcessError:
@@ -307,7 +310,7 @@ class CreateCommand(BaseCommand):
             raise InvalidTemplateRepository(app.template)
         except cookiecutter_exceptions.RepositoryCloneFailed:
             # Branch does not exist for python version
-            raise TemplateUnsupportedVersion(self.python_version_tag)
+            raise TemplateUnsupportedVersion(app.template_branch)
 
     def install_app_support_package(self, app: BaseConfig):
         """
