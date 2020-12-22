@@ -24,8 +24,12 @@ class macOSXcodeMixin(macOSMixin):
             / '{app.formal_name}.app'.format(app=app)
         )
 
-    def distribution_path(self, app):
-        return self.binary_path(app)
+    def distribution_path(self, app, package_format='dmg'):
+        if package_format == 'dmg':
+            return self.platform_path / '{app.formal_name}-{app.version}.dmg'.format(
+                app=app)
+        else:
+            return self.binary_path(app)
 
     def entitlements_path(self, app):
         return (

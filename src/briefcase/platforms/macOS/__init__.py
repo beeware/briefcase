@@ -37,10 +37,6 @@ only available on macOS.
 
 class macOSPackageMixin:
 
-    def distribution_path(self, app):
-        return self.platform_path / '{app.formal_name}-{app.version}.dmg'.format(
-            app=app)
-
     def verify_tools(self):
         super().verify_tools()
         if dmgbuild is None:
@@ -232,7 +228,7 @@ class macOSPackageMixin:
                 pass
 
             self.dmgbuild.build_dmg(
-                filename=str(self.distribution_path(app)),
+                filename=str(self.distribution_path(app, package_format)),
                 volume_name='{app.formal_name} {app.version}'.format(app=app),
                 settings=dmg_settings
             )
