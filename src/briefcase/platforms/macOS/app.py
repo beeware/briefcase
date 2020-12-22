@@ -1,3 +1,7 @@
+import os
+import glob
+import shutil
+import tempfile
 import subprocess
 
 from briefcase.commands import (
@@ -38,12 +42,20 @@ class macOSAppCreateCommand(macOSAppMixin, CreateCommand):
 
     def install_app_support_package(self, app: BaseConfig):
         """
-        Install the application support packge.
+        Install the application support package.
 
         :param app: The config object for the app
         """
-        # nothing to do here template already contains built binary
-        pass
+        super().install_app_support_package(app)
+
+        # keep only Python lib from support package
+        lib_path = glob.glob(str(self.support_path(app) / '**' / 'lib'), recursive=True)[0]
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            shutil.move(lib_path, tmpdir)
+            shutil.rmtree(self.support_path(app))
+            os.mkdir(self.support_path(app))
+            shutil.move(tmpdir, self.support_path(app) / 'lib')
 
 
 class macOSAppUpdateCommand(macOSAppMixin, UpdateCommand):
