@@ -129,14 +129,14 @@ class macOSPackageMixin:
     def package_app(
             self,
             app: BaseConfig,
-            format='dmg',
+            package_format='dmg',
             sign_app=True,
             identity=None,
             adhoc_sign=False,
             **kwargs
     ):
         """
-        Build a DMG.
+        Package an app bundle.
 
         :param app: The application to package
         :param sign_app: Should the application be signed?
@@ -145,7 +145,7 @@ class macOSPackageMixin:
             If unspecified, the user will be prompted for a code signing
             identity. Ignored if ``sign_app`` is False.
         :param adhoc_sign: If true, code will be signed with adhoc identity of "-"
-        :param format: If "dmg", package app as DMG.
+        :param package_format: If "dmg", package app as DMG.
         """
 
         if sign_app:
@@ -174,7 +174,7 @@ class macOSPackageMixin:
                     identity=identity,
                 )
 
-        if format == 'dmg':
+        if package_format == 'dmg':
 
             print()
             print('[{app.app_name}] Building DMG...'.format(app=app))

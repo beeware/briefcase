@@ -49,10 +49,10 @@ class PackageCommand(BaseCommand):
 
     def add_options(self, parser):
         parser.add_argument(
-            '-f',
-            '--format',
-            dest='format',
-            help='Output format to use (dmg or raw).',
+            '-p',
+            '--package-format',
+            dest='package_format',
+            help='Output format to use.',
             default='dmg',
             choices=['dmg', 'app'],
         )
