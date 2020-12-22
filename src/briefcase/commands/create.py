@@ -13,7 +13,12 @@ import briefcase
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError, NetworkFailure
 
-from .base import BaseCommand, TemplateUnsupportedVersion, GuiUnsupportedForPlatform, full_options
+from .base import (
+    BaseCommand,
+    TemplateUnsupportedVersion,
+    UnsupportedPlatform,
+    full_options
+)
 
 
 class InvalidTemplateRepository(BriefcaseCommandError):
@@ -611,7 +616,7 @@ class CreateCommand(BaseCommand):
         :param app: The config object for the app
         """
         if not app.supported:
-            raise GuiUnsupportedForPlatform(self.platform)
+            raise UnsupportedPlatform(self.platform)
 
         bundle_path = self.bundle_path(app)
         if bundle_path.exists():

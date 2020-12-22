@@ -1,5 +1,6 @@
 import pytest
-from briefcase.commands.base import GuiUnsupportedForPlatform
+
+from briefcase.commands.base import UnsupportedPlatform
 from briefcase.config import AppConfig
 
 
@@ -138,7 +139,7 @@ def test_create_existing_app_input_disabled(tracking_create_command):
 def test_create_app_not_supported(tracking_create_command):
     "If the supported attribute is false, the command will terminate with an error message"
 
-    with pytest.raises(GuiUnsupportedForPlatform):
+    with pytest.raises(UnsupportedPlatform):
         tracking_create_command.create_app(
             AppConfig(
                 app_name='third',
