@@ -1,4 +1,3 @@
-
 def test_update_app(update_command, first_app):
     "If the app already exists, it will be updated"
     update_command.update_app(update_command.apps['first'])
