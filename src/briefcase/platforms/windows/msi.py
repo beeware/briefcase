@@ -79,10 +79,8 @@ class WindowsMSICreateCommand(WindowsMSIMixin, CreateCommand):
                 guid=guid,
             ))
 
-        try:
-            install_scope = app.install_scope
-        except AttributeError:
-            install_scope = "perUser"
+        system_installer = getattr(app, "system_installer", False)
+        install_scope = "perMachine" if system_installer else "perUser"
 
         return {
             'version_triple': version_triple,

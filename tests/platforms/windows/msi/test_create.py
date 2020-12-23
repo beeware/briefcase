@@ -88,7 +88,7 @@ def test_default_install_scope(first_app_config, tmp_path):
 def test_per_machine_install_scope(first_app_config, tmp_path):
     "By default, app should be installed per user."
     command = WindowsMSICreateCommand(base_path=tmp_path)
-    first_app_config.install_scope = "perMachine"
+    first_app_config.system_installer = True
 
     context = command.output_format_template_context(first_app_config)
 
