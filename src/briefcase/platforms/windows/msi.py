@@ -79,9 +79,19 @@ class WindowsMSICreateCommand(WindowsMSIMixin, CreateCommand):
                 guid=guid,
             ))
 
+        try:
+            if app.system_installer:
+                install_scope = "perMachine"
+            else:
+                install_scope = "perUser"
+        except AttributeError:
+            # system_installer not defined in config; default to perUser install.
+            install_scope = "perUser"
+
         return {
             'version_triple': version_triple,
             'guid': str(guid),
+            'install_scope': install_scope
         }
 
     def install_app_support_package(self, app: BaseConfig):

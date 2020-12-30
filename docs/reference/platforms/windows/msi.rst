@@ -34,6 +34,17 @@ The following options can be added to the
 ``tool.briefcase.app.<appname>.windows`` section of your ``pyproject.toml``
 file.
 
+``system_installer``
+--------------------
+
+Controls whether the app will be installed as a per-user or per-machine app.
+Per-machine apps are "system" apps, and require admin permissions to run the
+installer; however, they are installed once and shared between all users on a
+computer.
+
+If ``true`` the installer will attempt to install the app as a per-machine app,
+available to all users. Defaults to a per-user install.
+
 ``version_triple``
 ------------------
 
