@@ -79,8 +79,14 @@ class WindowsMSICreateCommand(WindowsMSIMixin, CreateCommand):
                 guid=guid,
             ))
 
-        system_installer = getattr(app, "system_installer", False)
-        install_scope = "perMachine" if system_installer else "perUser"
+        try:
+            if app.system_installer:
+                install_scope = "perMachine"
+            else:
+                install_scope = "perUser"
+        except AttributeError:
+            # system_installer not defined in config; default to perUser install.
+            install_scope = "perUser"
 
         return {
             'version_triple': version_triple,
