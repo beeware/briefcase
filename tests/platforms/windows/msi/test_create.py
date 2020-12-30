@@ -93,3 +93,13 @@ def test_per_machine_install_scope(first_app_config, tmp_path):
     context = command.output_format_template_context(first_app_config)
 
     assert context['install_scope'] == "perMachine"
+
+
+def test_per_user_install_scope(first_app_config, tmp_path):
+    "App can be set to have explocit per-user scope."
+    command = WindowsMSICreateCommand(base_path=tmp_path)
+    first_app_config.system_installer = False
+
+    context = command.output_format_template_context(first_app_config)
+
+    assert context['install_scope'] == "perUser"
