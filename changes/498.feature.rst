@@ -1,1 +1,1 @@
-User can now define an MSI file to be "per user" or "per machine"
+Windows MSI installers can be configured to be per-machine, system-wide installers.
