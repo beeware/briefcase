@@ -1,1 +1,0 @@
-Windows MSI installers can be configured to be per-machine, system-wide installers.

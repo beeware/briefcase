@@ -1,2 +1,0 @@
-Added the `--no-run` flag to the *Dev* command, which installs the app dependencies
-without running it.

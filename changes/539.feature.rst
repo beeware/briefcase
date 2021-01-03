@@ -1,2 +1,0 @@
-The new project wizard will now warn users when they select a platform that
-doesn't support mobile deployment.

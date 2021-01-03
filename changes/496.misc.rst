@@ -1,1 +1,0 @@
- Fix --no-docker option help for AppImage build

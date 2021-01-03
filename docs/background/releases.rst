@@ -4,6 +4,41 @@ Release History
 
 .. towncrier release notes start
 
+0.3.4 (2021-01-03)
+==================
+
+Features
+--------
+
+* Added signing options for all platforms. App signing is only implemented on
+  macOS, but ``--no-sign`` can now be used regardless of your target platform. (#486)
+* Windows MSI installers can be configured to be per-machine, system-wide installers. (#498)
+* Projects can specify a custom branch for the template used to generate the app. (#519)
+* Added the `--no-run` flag to the *dev* command. This allows developers to
+  install app dependencies without running the app. (#522)
+* The new project wizard will now warn users when they select a platform that
+  doesn't support mobile deployment. (#539)
+
+Bugfixes
+--------
+
+* Modified the volume mounting process to allow for SELinux. (#500)
+* Fixed missing signature for Python executable in macOS app bundle. This enables
+  the packaged dmg to be notarized by Apple. (#514)
+* Modified the Windows tests to allow them to pass on 32-bit machines. (#521)
+* Fixed a crash when running with verbose output. (#532)
+
+Improved Documentation
+----------------------
+
+* Clarified documentation around system_requires dependencies on Linux. (#459)
+
+Misc
+----
+
+* #465, #475, #496, #512, #518
+
+
 0.3.3 (2020-07-18)
 ==================
 
