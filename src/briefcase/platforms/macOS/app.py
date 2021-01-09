@@ -53,9 +53,9 @@ class macOSAppCreateCommand(macOSAppMixin, CreateCommand):
 
         with tempfile.TemporaryDirectory() as tmpdir:
             self.shutil.move(lib_path, tmpdir)
-            self.shutil.rmtree(self.support_path(app))
-            self.os.mkdir(self.support_path(app))
-            self.shutil.move(os.path.join(tmpdir, 'lib'), self.support_path(app) / 'lib')
+            self.shutil.rmtree(str(self.support_path(app)))
+            self.os.mkdir(str(self.support_path(app)))
+            self.shutil.move(os.path.join(tmpdir, 'lib'), str(self.support_path(app) / 'lib'))
 
 
 class macOSAppUpdateCommand(macOSAppMixin, UpdateCommand):
