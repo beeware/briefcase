@@ -18,4 +18,3 @@ Splash Image format
 ===================
 
 ``.app`` bundles do not support splash screens or installer images.
-
