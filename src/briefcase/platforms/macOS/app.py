@@ -1,6 +1,5 @@
 import os
 import glob
-import shutil
 import tempfile
 import subprocess
 
@@ -49,13 +48,14 @@ class macOSAppCreateCommand(macOSAppMixin, CreateCommand):
         super().install_app_support_package(app)
 
         # keep only Python lib from support package
-        lib_path = glob.glob(str(self.support_path(app) / '**' / 'lib'), recursive=True)[0]
+        glob_pattern = str(self.support_path(app) / '**' / 'lib')
+        lib_path = glob.glob(glob_pattern, recursive=True)[0]
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            shutil.move(lib_path, tmpdir)
-            shutil.rmtree(self.support_path(app))
-            os.mkdir(self.support_path(app))
-            shutil.move(tmpdir, self.support_path(app) / 'lib')
+            self.shutil.move(lib_path, tmpdir)
+            self.shutil.rmtree(self.support_path(app))
+            self.os.mkdir(self.support_path(app))
+            self.shutil.move(os.path.join(tmpdir, 'lib'), self.support_path(app) / 'lib')
 
 
 class macOSAppUpdateCommand(macOSAppMixin, UpdateCommand):
