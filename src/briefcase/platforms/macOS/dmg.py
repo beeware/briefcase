@@ -22,7 +22,7 @@ class macOSDmgMixin(macOSAppMixin):
     output_format = 'dmg'
 
     def distribution_path(self, app):
-        return self.platform_path / '{app.formal_name}-{app.version}.dmg'.format(app=app)
+        return self.output_dir(app) / '{app.formal_name}-{app.version}.dmg'.format(app=app)
 
     def verify_tools(self):
         super().verify_tools()
