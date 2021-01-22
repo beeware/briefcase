@@ -24,7 +24,7 @@ class LinuxAppImageMixin(LinuxMixin):
 
     def binary_path(self, app):
         binary_name = app.formal_name.replace(' ', '_')
-        return self.platform_path / '{binary_name}-{app.version}-{self.host_arch}.AppImage'.format(
+        return self.output_dir(app) / '{binary_name}-{app.version}-{self.host_arch}.AppImage'.format(
             app=app,
             self=self,
             binary_name=binary_name,
@@ -202,7 +202,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
                     ] + deploy_deps_args,
                     env=env,
                     check=True,
-                    cwd=str(self.platform_path)
+                    cwd=str(self.output_dir(app))
                 )
 
             # Make the binary executable.

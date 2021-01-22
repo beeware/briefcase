@@ -30,6 +30,26 @@ def first_app(first_app_config, tmp_path):
 
 
 @pytest.fixture
+def first_app_output_dir(first_app_config, tmp_path):
+    "A fixture for the first app, rolled out on disk"
+    # Make it look like the template has been generated
+    output_dir = "output"
+    first_app_config.output_dir = output_dir
+    app_dir = tmp_path/ output_dir / 'First App' / 'First App.AppDir'
+    (app_dir / 'usr' / 'app' / 'support').mkdir(parents=True, exist_ok=True)
+    (app_dir / 'usr' / 'app_packages' / 'firstlib').mkdir(parents=True, exist_ok=True)
+    (app_dir / 'usr' / 'app_packages' / 'secondlib').mkdir(parents=True, exist_ok=True)
+
+    # Create some .so files
+    (app_dir / 'usr' / 'app' / 'support' / 'support.so').touch()
+    (app_dir / 'usr' / 'app_packages' / 'firstlib' / 'first.so').touch()
+    (app_dir / 'usr' / 'app_packages' / 'secondlib' / 'second_a.so').touch()
+    (app_dir / 'usr' / 'app_packages' / 'secondlib' / 'second_b.so').touch()
+
+    return first_app_config
+
+
+@pytest.fixture
 def build_command(tmp_path, first_app_config):
     command = LinuxAppImageBuildCommand(
         base_path=tmp_path,
@@ -135,6 +155,41 @@ def test_build_appimage(build_command, first_app, tmp_path):
     # Binary is marked executable
     build_command.os.chmod.assert_called_with(
         str(tmp_path / 'linux' / 'First_App-0.0.1-wonky.AppImage'),
+        0o755
+    )
+
+
+def test_build_appimage_with_output_directory(
+    build_command, first_app_output_dir, tmp_path
+):
+    "A Linux app can be packaged as an AppImage"
+
+    build_command.build_app(first_app_output_dir)
+
+    output_dir = tmp_path / first_app_output_dir.output_dir
+    # linuxdeploy was invoked
+    app_dir = output_dir / 'First App' / 'First App.AppDir'
+    build_command._subprocess.run.assert_called_with(
+        [
+            str(build_command.linuxdeploy.appimage_path),
+            "--appimage-extract-and-run",
+            "--appdir={appdir}".format(appdir=app_dir),
+            "-d", str(app_dir / "com.example.first-app.desktop"),
+            "-o", "appimage",
+            "--deploy-deps-only", str(app_dir / 'usr' / 'app' / 'support'),
+            "--deploy-deps-only", str(app_dir / 'usr' / 'app_packages' / 'firstlib'),
+            "--deploy-deps-only", str(app_dir / 'usr' / 'app_packages' / 'secondlib'),
+        ],
+        env={
+            'PATH': '/usr/local/bin:/usr/bin',
+            'VERSION': '0.0.1',
+        },
+        check=True,
+        cwd=str(output_dir)
+    )
+    # Binary is marked executable
+    build_command.os.chmod.assert_called_with(
+        str(output_dir / 'First_App-0.0.1-wonky.AppImage'),
         0o755
     )
 
