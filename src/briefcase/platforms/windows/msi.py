@@ -21,10 +21,10 @@ class WindowsMSIMixin(WindowsMixin):
     output_format = 'msi'
 
     def binary_path(self, app):
-        return self.platform_path / app.formal_name
+        return self.output_dir(app) / app.formal_name
 
     def distribution_path(self, app):
-        return self.platform_path / '{app.formal_name}-{app.version}.msi'.format(app=app)
+        return self.output_dir(app) / '{app.formal_name}-{app.version}.msi'.format(app=app)
 
     def verify_tools(self):
         super().verify_tools()
