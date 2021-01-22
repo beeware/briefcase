@@ -22,7 +22,7 @@ class GradleMixin:
 
     def binary_path(self, app):
         return (
-            self.platform_path
+            self.output_dir(app)
             / app.formal_name
             / "app"
             / "build"
@@ -34,7 +34,7 @@ class GradleMixin:
 
     def distribution_path(self, app):
         return (
-            self.platform_path
+            self.output_dir(app)
             / app.formal_name
             / "app"
             / "build"
