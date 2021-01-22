@@ -35,7 +35,7 @@ def first_app_output_dir(first_app_config, tmp_path):
     # Make it look like the template has been generated
     output_dir = "output"
     first_app_config.output_dir = output_dir
-    app_dir = tmp_path/ output_dir / 'First App' / 'First App.AppDir'
+    app_dir = tmp_path / output_dir / 'First App' / 'First App.AppDir'
     (app_dir / 'usr' / 'app' / 'support').mkdir(parents=True, exist_ok=True)
     (app_dir / 'usr' / 'app_packages' / 'firstlib').mkdir(parents=True, exist_ok=True)
     (app_dir / 'usr' / 'app_packages' / 'secondlib').mkdir(parents=True, exist_ok=True)

@@ -30,4 +30,11 @@ def test_distribution_path_with_output_dir(first_app_config, tmp_path):
     command = iOSXcodeCreateCommand(base_path=tmp_path)
     distribution_path = command.distribution_path(first_app_config)
 
-    assert distribution_path == tmp_path / output_dir / 'First App' / 'build' / 'Debug-iphonesimulator' / 'First App.app'
+    assert distribution_path == (
+        tmp_path
+        / output_dir
+        / 'First App'
+        / 'build'
+        / 'Debug-iphonesimulator'
+        / 'First App.app'
+    )
