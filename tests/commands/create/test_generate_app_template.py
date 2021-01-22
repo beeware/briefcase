@@ -70,6 +70,34 @@ def test_default_template(create_command, myapp):
     )
 
 
+def test_define_output_directory(create_command, myapp, tmp_path):
+    "Absent of other information, the default template is used"
+    # There won't be a cookiecutter cache, so there won't be
+    # a cache path (yet).
+    create_command.git.Repo.side_effect = git_exceptions.NoSuchPathError
+    output_dir = "output"
+    myapp.output_dir = output_dir
+
+    # Generate the template.
+    create_command.generate_app_template(myapp)
+
+    # App's template has been set
+    assert myapp.template == 'https://github.com/beeware/briefcase-tester-dummy-template.git'
+
+    # Cookiecutter was invoked with the expected template name and context.
+    create_command.cookiecutter.assert_called_once_with(
+        'https://github.com/beeware/briefcase-tester-dummy-template.git',
+        no_input=True,
+        checkout=create_command.python_version_tag,
+        output_dir=str(tmp_path / output_dir),
+        extra_context=full_context({
+            'template': 'https://github.com/beeware/briefcase-tester-dummy-template.git',
+            'template_branch': '3.X',
+            'output_dir': output_dir,
+        })
+    )
+
+
 def test_explicit_branch(create_command, myapp):
     "user can choose which branch to take the template from."
     branch = 'some_branch'

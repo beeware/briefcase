@@ -290,7 +290,7 @@ class CreateCommand(BaseCommand):
 
         try:
             # Create the platform directory (if it doesn't already exist)
-            output_path = self.bundle_path(app).parent
+            output_path = self.output_dir(app)
             output_path.mkdir(parents=True, exist_ok=True)
             # Unroll the template
             self.cookiecutter(
@@ -672,7 +672,7 @@ class CreateCommand(BaseCommand):
 
         print("[{app.app_name}] Created {filename}".format(
             app=app,
-            filename=self.bundle_path(app).relative_to(self.base_path),
+            filename=self.bundle_path(app).name,
         ))
 
     def verify_tools(self):

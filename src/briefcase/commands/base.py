@@ -222,6 +222,18 @@ class BaseCommand(ABC):
         """
         return self.base_path / self.platform
 
+    def output_dir(self, app):
+        """
+        The directory path in which to save all of the content files of the app.
+
+        By default, that would be same as the platform path, but it may be override
+        by the user.
+        """
+        output_dir = getattr(app, "output_dir", None)
+        if output_dir is None:
+            return self.platform_path
+        return self.base_path / output_dir
+
     def bundle_path(self, app):
         """
         The path to the bundle for the app in the output format.
@@ -232,7 +244,7 @@ class BaseCommand(ABC):
 
         :param app: The app config
         """
-        return self.platform_path / app.formal_name
+        return self.output_dir(app) / app.formal_name
 
     @abstractmethod
     def binary_path(self, app):
