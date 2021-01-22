@@ -1,12 +1,6 @@
-import sys
 from unittest import mock
 
-import pytest
-
 from briefcase.platforms.macOS.dmg import macOSDmgPackageCommand
-
-if sys.platform != 'darwin':
-    pytest.skip("requires macOS", allow_module_level=True)
 
 
 def test_build_dmg(first_app_config, tmp_path):
