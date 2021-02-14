@@ -24,7 +24,7 @@ def test_valid_bundle(new_command, bundle):
         'com.hello_world',  # underscore
         'com.hello,world',  # comma
         'com.hello world!',  # exclamation point
-	'com.switch', # java reserved word
+        'com.switch',  # java reserved word
     ]
 )
 def test_invalid_bundle(new_command, bundle):
