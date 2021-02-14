@@ -8,6 +8,7 @@ import pytest
         'com.example.more',
         'com.example42.more',
         'com.example-42.more',
+	'com.def', # python reserved words are allowed in bundles
     ]
 )
 def test_valid_bundle(new_command, bundle):
