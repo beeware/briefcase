@@ -25,6 +25,8 @@ def test_valid_app_name(new_command, name):
         '_helloworld',  # leading underscore
         '-helloworld',  # leading hyphen
         'existing',  # pre-existing directory
+	'def', # python reserved word
+	'switch', # java reserved word
     ]
 )
 def test_invalid_app_name(new_command, name, tmp_path):
