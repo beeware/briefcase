@@ -1,0 +1,1 @@
+Fix for Issue #460 by adding a check in `briefcase new` for use of Python or Java keywords.
