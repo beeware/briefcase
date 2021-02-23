@@ -2,7 +2,7 @@
 macOS
 =====
 
-The default output format for macOS is an app :doc:`app <./app>`.
+The default output format for macOS is an :doc:`app <./app>`.
 
 Briefcase also supports creating an :doc:`.Xcode project <./xcode>`
 which in turn can be used to build an app.
