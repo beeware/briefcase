@@ -232,7 +232,7 @@ class BaseCommand(ABC):
 
         :param app: The app config
         """
-        return self.platform_path / app.formal_name
+        return self.platform_path / self.output_format / app.formal_name
 
     @abstractmethod
     def binary_path(self, app):

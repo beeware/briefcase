@@ -33,6 +33,7 @@ class macOSXcodeMixin(macOSMixin):
     def binary_path(self, app):
         return (
             self.platform_path
+            / self.output_format
             / '{app.formal_name}'.format(app=app)
             / 'build' / 'Release'
             / '{app.formal_name}.app'.format(app=app)
