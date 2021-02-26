@@ -11,10 +11,24 @@ from briefcase.commands import (
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.platforms.macOS import macOSMixin, macOSPackageMixin
+from briefcase.integrations.xcode import verify_command_line_tools_install
 
 
 class macOSXcodeMixin(macOSMixin):
     output_format = 'xcode'
+
+    def verify_tools(self):
+        if self.host_os != 'Darwin':
+            raise BriefcaseCommandError("""
+    macOS applications require the Xcode command line tools, which are
+    only available on macOS.
+    """)
+        # Require the XCode command line tools.
+        verify_command_line_tools_install(self)
+
+        # Verify superclass tools *after* xcode. This ensures we get the
+        # git check *after* the xcode check.
+        super().verify_tools()
 
     def binary_path(self, app):
         return (

@@ -21,26 +21,22 @@ DEFAULT_OUTPUT_FORMAT = 'app'
 class macOSMixin:
     platform = 'macOS'
 
+
+class macOSPackageMixin:
+
     def verify_tools(self):
+
         if self.host_os != 'Darwin':
             raise BriefcaseCommandError("""
-macOS applications require the Xcode command line tools, which are
-only available on macOS.
-""")
+        Code signing and / or building a DMG requires running on macOS.
+        """)
+
         # Require the XCode command line tools.
         verify_command_line_tools_install(self)
 
         # Verify superclass tools *after* xcode. This ensures we get the
         # git check *after* the xcode check.
         super().verify_tools()
-
-
-class macOSPackageMixin:
-
-    def verify_tools(self):
-        super().verify_tools()
-        if dmgbuild is None:
-            raise BriefcaseCommandError("A macOS DMG can only be created on macOS.")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
