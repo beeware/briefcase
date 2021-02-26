@@ -1,0 +1,1 @@
+Fixes listing output formats for platforms with upper case letters.
