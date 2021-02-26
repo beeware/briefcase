@@ -24,7 +24,7 @@ def test_build_app(first_app_config, tmp_path):
     command.subprocess.run.assert_called_with(
         [
             'xcodebuild',
-            '-project', tmp_path / 'iOS' / 'First App' / 'First App.xcodeproj',
+            '-project', tmp_path / 'iOS' / 'Xcode' / 'First App' / 'First App.xcodeproj',
             '-destination',
             'platform="iOS Simulator,name=iPhone 11,OS=13.2"',
             '-quiet',
@@ -60,7 +60,7 @@ def test_build_app_failed(first_app_config, tmp_path):
     command.subprocess.run.assert_called_with(
         [
             'xcodebuild',
-            '-project', tmp_path / 'iOS' / 'First App' / 'First App.xcodeproj',
+            '-project', tmp_path / 'iOS' / 'Xcode' / 'First App' / 'First App.xcodeproj',
             '-destination',
             'platform="iOS Simulator,name=iPhone 11,OS=13.2"',
             '-quiet',

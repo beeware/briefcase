@@ -17,7 +17,7 @@ def test_build_app(first_app_config, tmp_path):
     command.subprocess.run.assert_called_with(
         [
             'xcodebuild',
-            '-project', tmp_path / 'macOS' / 'First App' / 'First App.xcodeproj',
+            '-project', tmp_path / 'macOS' / 'xcode' / 'First App' / 'First App.xcodeproj',
             '-quiet',
             '-configuration', 'Release',
             'build'
@@ -43,7 +43,7 @@ def test_build_app_failed(first_app_config, tmp_path):
     command.subprocess.run.assert_called_with(
         [
             'xcodebuild',
-            '-project', tmp_path / 'macOS' / 'First App' / 'First App.xcodeproj',
+            '-project', tmp_path / 'macOS' / 'xcode' / 'First App' / 'First App.xcodeproj',
             '-quiet',
             '-configuration', 'Release',
             'build'

@@ -15,7 +15,7 @@ from briefcase.platforms.linux.appimage import LinuxAppImageBuildCommand
 def first_app(first_app_config, tmp_path):
     "A fixture for the first app, rolled out on disk"
     # Make it look like the template has been generated
-    app_dir = tmp_path / 'linux' / 'First App' / 'First App.AppDir'
+    app_dir = tmp_path / 'linux' / 'appimage' / 'First App' / 'First App.AppDir'
     (app_dir / 'usr' / 'app' / 'support').mkdir(parents=True, exist_ok=True)
     (app_dir / 'usr' / 'app_packages' / 'firstlib').mkdir(parents=True, exist_ok=True)
     (app_dir / 'usr' / 'app_packages' / 'secondlib').mkdir(parents=True, exist_ok=True)
@@ -113,7 +113,7 @@ def test_build_appimage(build_command, first_app, tmp_path):
     build_command.build_app(first_app)
 
     # linuxdeploy was invoked
-    app_dir = tmp_path / 'linux' / 'First App' / 'First App.AppDir'
+    app_dir = tmp_path / 'linux' / 'appimage' / 'First App' / 'First App.AppDir'
     build_command._subprocess.run.assert_called_with(
         [
             str(build_command.linuxdeploy.appimage_path),
@@ -153,7 +153,7 @@ def test_build_failure(build_command, first_app, tmp_path):
         build_command.build_app(first_app)
 
     # linuxdeploy was invoked
-    app_dir = tmp_path / 'linux' / 'First App' / 'First App.AppDir'
+    app_dir = tmp_path / 'linux' / 'appimage' / 'First App' / 'First App.AppDir'
     build_command._subprocess.run.assert_called_with(
         [
             str(build_command.linuxdeploy.appimage_path),
@@ -209,12 +209,12 @@ def test_build_appimage_with_docker(build_command, first_app, tmp_path):
             ),
             "/home/brutus/.briefcase/tools/linuxdeploy-wonky.AppImage",
             "--appimage-extract-and-run",
-            "--appdir=/app/First App/First App.AppDir",
-            "-d", "/app/First App/First App.AppDir/com.example.first-app.desktop",
+            "--appdir=/app/appimage/First App/First App.AppDir",
+            "-d", "/app/appimage/First App/First App.AppDir/com.example.first-app.desktop",
             "-o", "appimage",
-            "--deploy-deps-only", "/app/First App/First App.AppDir/usr/app/support",
-            "--deploy-deps-only", "/app/First App/First App.AppDir/usr/app_packages/firstlib",
-            "--deploy-deps-only", "/app/First App/First App.AppDir/usr/app_packages/secondlib",
+            "--deploy-deps-only", "/app/appimage/First App/First App.AppDir/usr/app/support",
+            "--deploy-deps-only", "/app/appimage/First App/First App.AppDir/usr/app_packages/firstlib",
+            "--deploy-deps-only", "/app/appimage/First App/First App.AppDir/usr/app_packages/secondlib",
         ],
         check=True,
         cwd=str(tmp_path / 'linux')

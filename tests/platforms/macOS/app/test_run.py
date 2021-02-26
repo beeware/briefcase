@@ -14,7 +14,7 @@ def test_run_app(first_app_config, tmp_path):
     command.run_app(first_app_config)
 
     command.subprocess.run.assert_called_with(
-        ['open', tmp_path / 'macOS' / 'First App' / 'First App.app'],
+        ['open', tmp_path / 'macOS' / 'app' / 'First App' / 'First App.app'],
         check=True
     )
 
@@ -30,6 +30,6 @@ def test_run_app_failed(first_app_config, tmp_path):
 
     # The run command was still invoked, though
     command.subprocess.run.assert_called_with(
-        ['open', tmp_path / 'macOS' / 'First App' / 'First App.app'],
+        ['open', tmp_path / 'macOS' / 'app' / 'First App' / 'First App.app'],
         check=True
     )
