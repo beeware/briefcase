@@ -1,0 +1,1 @@
+Added check for invalid filenames like CON on windows, and warning for non-windows users.
