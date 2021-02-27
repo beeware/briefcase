@@ -85,7 +85,7 @@ class macOSAppRunCommand(macOSAppMixin, RunCommand):
             self.subprocess.run(
                 [
                     'open',
-                    self.binary_path(app),
+                    str(self.binary_path(app)),
                 ],
                 check=True,
             )
