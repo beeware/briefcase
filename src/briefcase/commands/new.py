@@ -1,5 +1,6 @@
 import re
 import subprocess
+import platform  # For Windows invalid filenames like CON
 from email.utils import parseaddr
 from typing import Optional
 from urllib.parse import urlparse
@@ -113,6 +114,41 @@ class NewCommand(BaseCommand):
                 "name, move to a different parent directory, or delete the "
                 "existing folder.".format(candidate=candidate)
             )
+
+        """
+        Make sure name is valid in Windows. Otherwise downloading to Windows
+        for building is impossible.
+        """
+
+        if (candidate.upper() in [
+            "CON", "PRN", "AUX", "NUL",
+            "COM1", "COM2", "COM3",
+            "COM4", "COM5", "COM6",
+            "COM7", "COM8", "COM9",
+            "LPT1", "LPT2", "LPT3",
+            "LPT4", "LPT5", "LPT6",
+            "LPT7", "LPT8", "LPT9"
+        ]):
+
+            if platform.system() == "Windows":
+                raise ValueError(
+                    "'{candidate}' is one of the following filenames not allowed\n"
+                    "on Windows systems: CON, PRN, AUX, NUL, COM1, COM2, COM3,\n"
+                    "COM4, COM5, COM6, COM7, COM8, COM9, LPT1, LPT2, LPT3, LPT4,\n"
+                    "LPT5, LPT6, LPT7, LPT8, and LPT9. Select a different name."
+                    .format(candidate=candidate)
+                    )
+            else:
+                foo = self.input_text(intro="""
+WARNING: This filename is not allowed on Windows
+systems. This means that it cannot be downloaded and built
+on Windows. Consider changing it to prevent incompatibility
+issues.""", variable="Would you like to change your appname? Y/N", default="y").lower()
+                if foo == "n":
+                    pass
+                else:
+                    raise ValueError("User-requested reset")
+                    # Not perfect, but trying to keep it simple.
 
         return True
 
