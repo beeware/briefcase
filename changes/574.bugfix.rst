@@ -1,0 +1,2 @@
+Fixed the registration of setuptools entry points caused by a change in case
+sensitivity handling in Setuptools 53.1.0.
