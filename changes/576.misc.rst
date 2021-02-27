@@ -1,0 +1,1 @@
+Added check for illegal filenames like CON or PRN in briefcase new. Prevents these names in Windows, and adds warnings for them in mac/linux.
