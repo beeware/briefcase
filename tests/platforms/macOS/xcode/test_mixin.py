@@ -5,7 +5,7 @@ def test_binary_path(first_app_config, tmp_path):
     command = macOSXcodeCreateCommand(base_path=tmp_path)
     binary_path = command.binary_path(first_app_config)
 
-    assert binary_path == tmp_path / 'macOS' / 'xcode' / 'First App' / 'build' / 'Release' / 'First App.app'
+    assert binary_path == tmp_path / 'macOS' / 'Xcode' / 'First App' / 'build' / 'Release' / 'First App.app'
 
 
 def test_distribution_path(first_app_config, tmp_path):
@@ -17,11 +17,11 @@ def test_distribution_path(first_app_config, tmp_path):
 
     distribution_path = command.distribution_path(first_app_config, package_format='app')
 
-    assert distribution_path == tmp_path / 'macOS' / 'xcode' / 'First App' / 'build' / 'Release' / 'First App.app'
+    assert distribution_path == tmp_path / 'macOS' / 'Xcode' / 'First App' / 'build' / 'Release' / 'First App.app'
 
 
 def test_entitlements_path(first_app_config, tmp_path):
     command = macOSXcodeCreateCommand(base_path=tmp_path)
     entitlements_path = command.entitlements_path(first_app_config)
 
-    assert entitlements_path == tmp_path / 'macOS' / 'xcode' / 'First App' / 'First App' / 'first-app.entitlements'
+    assert entitlements_path == tmp_path / 'macOS' / 'Xcode' / 'First App' / 'First App' / 'first-app.entitlements'

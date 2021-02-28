@@ -427,6 +427,6 @@ def test_unknown_command_options(monkeypatch, capsys):
     output = capsys.readouterr().err
 
     assert output.startswith(
-        "usage: briefcase publish macOS xcode [-h] [-v] [-V] [--no-input] [-c {s3}]\n"
-        "briefcase publish macOS xcode: error: unrecognized arguments: -x"
+        "usage: briefcase publish macOS Xcode [-h] [-v] [-V] [--no-input] [-c {s3}]\n"
+        "briefcase publish macOS Xcode: error: unrecognized arguments: -x"
     )

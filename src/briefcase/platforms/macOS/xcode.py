@@ -15,7 +15,7 @@ from briefcase.integrations.xcode import verify_xcode_install
 
 
 class macOSXcodeMixin(macOSMixin):
-    output_format = 'xcode'
+    output_format = 'Xcode'
 
     def verify_tools(self):
         if self.host_os != 'Darwin':
