@@ -26,9 +26,7 @@ class iOSXcodePassiveMixin(iOSMixin):
 
     def binary_path(self, app):
         return (
-            self.platform_path
-            / '{app.formal_name}'.format(app=app)
-            / 'build' / 'Debug-iphonesimulator'
+            self.bundle_path(app) / 'build' / 'Debug-iphonesimulator'
             / '{app.formal_name}.app'.format(app=app)
         )
 

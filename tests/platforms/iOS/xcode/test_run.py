@@ -53,7 +53,7 @@ def test_run_app_simulator_booted(first_app_config, tmp_path):
             [
                 'xcrun', 'simctl', 'install',
                 '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-                tmp_path / 'iOS' / 'First App' / 'build' / 'Debug-iphonesimulator' / 'First App.app'
+                tmp_path / 'iOS' / 'Xcode' / 'First App' / 'build' / 'Debug-iphonesimulator' / 'First App.app'
             ],
             check=True
         ),
@@ -119,7 +119,7 @@ def test_run_app_simulator_shut_down(first_app_config, tmp_path):
             [
                 'xcrun', 'simctl', 'install',
                 '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-                tmp_path / 'iOS' / 'First App' / 'build' / 'Debug-iphonesimulator' / 'First App.app'
+                tmp_path / 'iOS' / 'Xcode' / 'First App' / 'build' / 'Debug-iphonesimulator' / 'First App.app'
             ],
             check=True
         ),
@@ -198,7 +198,7 @@ def test_run_app_simulator_shutting_down(first_app_config, tmp_path):
             [
                 'xcrun', 'simctl', 'install',
                 '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-                tmp_path / 'iOS' / 'First App' / 'build' / 'Debug-iphonesimulator' / 'First App.app'
+                tmp_path / 'iOS' / 'Xcode' / 'First App' / 'build' / 'Debug-iphonesimulator' / 'First App.app'
             ],
             check=True
         ),
@@ -415,7 +415,7 @@ def test_run_app_simulator_install_failure(first_app_config, tmp_path):
             [
                 'xcrun', 'simctl', 'install',
                 '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-                tmp_path / 'iOS' / 'First App' / 'build' / 'Debug-iphonesimulator' / 'First App.app'
+                tmp_path / 'iOS' / 'Xcode' / 'First App' / 'build' / 'Debug-iphonesimulator' / 'First App.app'
             ],
             check=True
         ),
@@ -484,7 +484,7 @@ def test_run_app_simulator_launch_failure(first_app_config, tmp_path):
             [
                 'xcrun', 'simctl', 'install',
                 '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-                tmp_path / 'iOS' / 'First App' / 'build' / 'Debug-iphonesimulator' / 'First App.app'
+                tmp_path / 'iOS' / 'Xcode' / 'First App' / 'build' / 'Debug-iphonesimulator' / 'First App.app'
             ],
             check=True
         ),
