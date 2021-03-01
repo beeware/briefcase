@@ -16,7 +16,7 @@ from .create import InvalidTemplateRepository
 
 VALID_BUNDLE_RE = re.compile(r'[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$')
 
-javareserved = [
+reservedwords = {
     "abstract", "assert", "boolean", "break", "byte", "case", "catch",
     "char", "class", "const", "continue", "default", "do", "double",
     "else", "enum", "extends", "final", "finally", "float", "for",
@@ -26,7 +26,7 @@ javareserved = [
     "super", "switch", "synchronized", "this", "throw", "throws",
     "transient", "try", "void", "volatile", "while", "true", "false",
     "null"
-]
+}
 
 
 def titlecase(s):
@@ -125,11 +125,15 @@ class NewCommand(BaseCommand):
             raise ValueError(
                 "A '{candidate}' directory already exists. Select a different "
                 "name, move to a different parent directory, or delete the "
-                "existing folder.".format(candidate=candidate)
+                "existing folder.".format(
+                    candidate=candidate,
+                )
             )
-        if iskeyword(candidate) or candidate in javareserved:
+        if iskeyword(candidate) or candidate in reservedwords:
             raise ValueError(
-                "App name may not contain Java or Python reserved words."
+                f"App name may not contain the reserved word '{candidate}'.".format(
+                    candidate=candidate,
+                )
             )
         return True
 
@@ -158,9 +162,11 @@ class NewCommand(BaseCommand):
                 "include letters, numbers, and hyphens."
             )
         for word in candidate.split("."):
-            if word in javareserved:
+            if word in reservedwords:
                 raise ValueError(
-                    "Bundle name components may not contain Java reserved words."
+                    "Bundle name component may not contain the reserved word '{candidate}'.".format(
+                        candidate=candidate,
+                    )
                 )
         return True
 
@@ -349,7 +355,7 @@ for your application. This name must be PEP508-compliant - that means the name
 may only contain letters, numbers, hyphens and underscores; it can't contain
 spaces or punctuation, and it can't start with a hyphen or underscore.
 
-Due to build requirements, the app name may also not be a Java or Python keyword.
+Due to build requirements, the app name should avoid reserved words in common programming languages.
 Based on your formal name, we suggest an app name of '{default_app_name}',
 but you can use another name if you want.""".format(
                 default_app_name=default_app_name
