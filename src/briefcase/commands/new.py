@@ -164,8 +164,8 @@ class NewCommand(BaseCommand):
         for word in candidate.split("."):
             if word in reservedwords:
                 raise ValueError(
-                    "Bundle name component may not contain the reserved word '{candidate}'.".format(
-                        candidate=candidate,
+                    "Bundle name component may not contain the reserved word '{word}'.".format(
+                        word=word,
                     )
                 )
         return True
