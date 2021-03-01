@@ -21,7 +21,7 @@ class WindowsMSIMixin(WindowsMixin):
     output_format = 'msi'
 
     def binary_path(self, app):
-        return self.platform_path / app.formal_name
+        return self.bundle_path(app)
 
     def distribution_path(self, app):
         return self.platform_path / '{app.formal_name}-{app.version}.msi'.format(app=app)
