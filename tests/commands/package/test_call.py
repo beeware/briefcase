@@ -21,7 +21,12 @@ def test_no_args_package_one_app(package_command, first_app):
         (
             "package",
             "first",
-            {"package_format": "dmg", "adhoc_sign": False, "identity": None, "sign_app": True},
+            {
+                'packaging_format': 'pkg',
+                'adhoc_sign': False,
+                'identity': None,
+                'sign_app': True,
+            }
         ),
     ]
 
@@ -48,14 +53,19 @@ def test_no_args_package_two_app(package_command, first_app, second_app):
         (
             "package",
             "first",
-            {"package_format": "dmg", "adhoc_sign": False, "identity": None, "sign_app": True},
+            {
+                'packaging_format': 'pkg',
+                'adhoc_sign': False,
+                'identity': None,
+                'sign_app': True,
+            }
         ),
         # package the second app
         (
             "package",
             "second",
             {
-                "package_format": "dmg",
+                'packaging_format': 'pkg',
                 "adhoc_sign": False,
                 "identity": None,
                 "sign_app": True,
@@ -86,7 +96,12 @@ def test_no_sign_package_one_app(package_command, first_app):
         (
             "package",
             "first",
-            {"package_format": "dmg", "adhoc_sign": False, "identity": None, "sign_app": False},
+            {
+                'packaging_format': 'pkg',
+                'adhoc_sign': False,
+                'identity': None,
+                'sign_app': False,
+            }
         ),
     ]
 
@@ -113,7 +128,7 @@ def test_identity_arg_package_one_app(package_command, first_app):
             "package",
             "first",
             {
-                "package_format": "dmg",
+                'packaging_format': 'pkg',
                 "adhoc_sign": False,
                 "identity": "test",
                 "sign_app": True,
@@ -143,7 +158,12 @@ def test_adhoc_sign_package_one_app(package_command, first_app):
         (
             "package",
             "first",
-            {"package_format": "dmg", "adhoc_sign": True, "identity": None, "sign_app": True},
+            {
+                'packaging_format': 'pkg',
+                'adhoc_sign': True,
+                'identity': None,
+                'sign_app': True,
+            }
         ),
     ]
 
@@ -170,14 +190,19 @@ def test_no_sign_args_package_two_app(package_command, first_app, second_app):
         (
             "package",
             "first",
-            {"package_format": "dmg", "adhoc_sign": False, "identity": None, "sign_app": False},
+            {
+                'packaging_format': 'pkg',
+                'adhoc_sign': False,
+                'identity': None,
+                'sign_app': False,
+            }
         ),
         # package the second app
         (
             "package",
             "second",
             {
-                "package_format": "dmg",
+                'packaging_format': 'pkg',
                 "adhoc_sign": False,
                 "identity": None,
                 "sign_app": False,
@@ -211,14 +236,19 @@ def test_adhoc_sign_args_package_two_app(package_command, first_app, second_app)
         (
             "package",
             "first",
-            {"package_format": "dmg", "adhoc_sign": True, "identity": None, "sign_app": True},
+            {
+                'packaging_format': 'pkg',
+                'adhoc_sign': True,
+                'identity': None,
+                'sign_app': True,
+            }
         ),
         # package the second app
         (
             "package",
             "second",
             {
-                "package_format": "dmg",
+                'packaging_format': 'pkg',
                 "adhoc_sign": True,
                 "identity": None,
                 "sign_app": True,
@@ -251,7 +281,7 @@ def test_identity_sign_args_package_two_app(package_command, first_app, second_a
             "package",
             "first",
             {
-                "package_format": "dmg",
+                'packaging_format': 'pkg',
                 "adhoc_sign": False,
                 "identity": "test",
                 "sign_app": True,
@@ -262,11 +292,42 @@ def test_identity_sign_args_package_two_app(package_command, first_app, second_a
             "package",
             "second",
             {
-                "package_format": "dmg",
+                'packaging_format': 'pkg',
                 "adhoc_sign": False,
                 "identity": "test",
                 "sign_app": True,
                 "package_state": "first",
             },
+        ),
+    ]
+
+
+def test_package_alternate_format(package_command, first_app):
+    "An app can be packaged in an alternate format"
+    # Add a single app
+    package_command.apps = {
+        "first": first_app,
+    }
+
+    # Configure command line options with an alternate format
+    options = package_command.parse_options(['--packaging-format', 'box'])
+
+    # Run the run command
+    package_command(**options)
+
+    # The right sequence of things will be done
+    assert package_command.actions == [
+        # Tools are verified
+        ("verify", ),
+        # Package the first app
+        (
+            "package",
+            "first",
+            {
+                'packaging_format': 'box',
+                'adhoc_sign': False,
+                'identity': None,
+                'sign_app': True,
+            }
         ),
     ]

@@ -25,8 +25,11 @@ class DummyRunCommand(RunCommand):
     def binary_path(self, app):
         return self.platform_path / app.app_name / '{app.app_name}.bin'.format(app=app)
 
-    def distribution_path(self, app):
-        return self.platform_path / app.app_name / '{app.app_name}.dist'.format(app=app)
+    def distribution_path(self, app, packaging_format):
+        return self.platform_path / '{app.app_name}.dummy.{packaging_format}'.format(
+            app=app,
+            packaging_format=packaging_format,
+        )
 
     def verify_tools(self):
         super().verify_tools()

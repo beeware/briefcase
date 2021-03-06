@@ -24,6 +24,14 @@ class macOSMixin:
 
 class macOSPackageMixin:
 
+    @property
+    def packaging_formats(self):
+        return ['app', 'dmg']
+
+    @property
+    def default_packaging_format(self):
+        return 'dmg'
+
     def verify_tools(self):
 
         if self.host_os != 'Darwin':
@@ -121,10 +129,10 @@ class macOSPackageMixin:
     def package_app(
             self,
             app: BaseConfig,
-            package_format='dmg',
             sign_app=True,
             identity=None,
             adhoc_sign=False,
+            packaging_format='dmg',
             **kwargs
     ):
         """
@@ -137,7 +145,7 @@ class macOSPackageMixin:
             If unspecified, the user will be prompted for a code signing
             identity. Ignored if ``sign_app`` is False.
         :param adhoc_sign: If true, code will be signed with adhoc identity of "-"
-        :param package_format: If "dmg", package app as DMG.
+        :param packaging_format: The packaging format to use. Default is `dmg`.
         """
 
         if sign_app:
@@ -166,7 +174,7 @@ class macOSPackageMixin:
                     identity=identity,
                 )
 
-        if package_format == 'dmg':
+        if packaging_format == 'dmg':
 
             print()
             print('[{app.app_name}] Building DMG...'.format(app=app))
@@ -224,7 +232,7 @@ class macOSPackageMixin:
                 pass
 
             self.dmgbuild.build_dmg(
-                filename=str(self.distribution_path(app, package_format)),
+                filename=str(self.distribution_path(app, packaging_format=packaging_format)),
                 volume_name='{app.formal_name} {app.version}'.format(app=app),
                 settings=dmg_settings
             )

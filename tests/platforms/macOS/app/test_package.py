@@ -37,6 +37,7 @@ def test_package_app(first_app_with_binaries, tmp_path):
     command.dmgbuild = mock.MagicMock()
 
     command.select_identity = mock.MagicMock(return_value='Sekrit identity (DEADBEEF)')
+    command.packaging_format = 'dmg'
 
     command.package_app(first_app_with_binaries)
 
@@ -94,6 +95,7 @@ def test_package_app_no_sign(first_app_with_binaries, tmp_path):
     command.dmgbuild = mock.MagicMock()
 
     command.select_identity = mock.MagicMock(return_value='Sekrit identity (DEADBEEF)')
+    command.packaging_format = 'dmg'
 
     command.package_app(first_app_with_binaries, sign_app=False)
 
@@ -110,6 +112,7 @@ def test_package_app_adhoc_sign(first_app_with_binaries, tmp_path):
     command.dmgbuild = mock.MagicMock()
 
     command.select_identity = mock.MagicMock(return_value="Sekrit identity (DEADBEEF)")
+    command.packaging_format = 'dmg'
 
     command.package_app(first_app_with_binaries, adhoc_sign=True)
 
@@ -120,15 +123,16 @@ def test_package_app_adhoc_sign(first_app_with_binaries, tmp_path):
 
 
 def test_package_app_no_dmg(first_app_with_binaries, tmp_path):
-    "A macOS App can be packaged raw, without building dmg"
+    "A macOS App can be packaged without building dmg"
 
     command = macOSAppPackageCommand(base_path=tmp_path)
     command.subprocess = mock.MagicMock()
     command.dmgbuild = mock.MagicMock()
 
     command.select_identity = mock.MagicMock(return_value='Sekrit identity (DEADBEEF)')
+    command.packaging_format = 'app'
 
-    command.package_app(first_app_with_binaries, format="raw")
+    command.package_app(first_app_with_binaries)
 
     # No dmg was built.
     assert command.dmgbuild.call_count == 0

@@ -24,13 +24,21 @@ from briefcase.platforms.iOS import iOSMixin
 class iOSXcodePassiveMixin(iOSMixin):
     output_format = 'Xcode'
 
+    @property
+    def packaging_formats(self):
+        return ['ipa']
+
+    @property
+    def default_packaging_format(self):
+        return 'ipa'
+
     def binary_path(self, app):
         return (
             self.bundle_path(app) / 'build' / 'Debug-iphonesimulator'
             / '{app.formal_name}.app'.format(app=app)
         )
 
-    def distribution_path(self, app):
+    def distribution_path(self, app, packaging_format):
         return self.binary_path(app)
 
 

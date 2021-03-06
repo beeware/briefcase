@@ -54,7 +54,7 @@ class NewCommand(BaseCommand):
         "A placeholder; New command doesn't have a binary path"
         raise NotImplementedError()
 
-    def distribution_path(self, app):
+    def distribution_path(self, app, packaging_format):
         "A placeholder; New command doesn't have a distribution path"
         raise NotImplementedError()
 

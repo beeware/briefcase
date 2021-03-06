@@ -30,7 +30,7 @@ class LinuxAppImageMixin(LinuxMixin):
             binary_name=binary_name,
         )
 
-    def distribution_path(self, app):
+    def distribution_path(self, app, packaging_format):
         return self.binary_path(app)
 
     def add_options(self, parser):

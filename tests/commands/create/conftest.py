@@ -37,8 +37,11 @@ class DummyCreateCommand(CreateCommand):
     def binary_path(self, app):
         return self.platform_path / '{app.app_name}.binary'.format(app=app)
 
-    def distribution_path(self, app):
-        return self.platform_path / '{app.app_name}.dist'.format(app=app)
+    def distribution_path(self, app, packaging_format):
+        return self.platform_path / '{app.app_name}.dummy.{packaging_format}'.format(
+            app=app,
+            packaging_format=packaging_format,
+        )
 
     # Hard code the python version to make testing easier.
     @property

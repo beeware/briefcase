@@ -10,6 +10,6 @@ def test_binary_path(first_app_config, tmp_path):
 
 def test_distribution_path(first_app_config, tmp_path):
     command = WindowsMSICreateCommand(base_path=tmp_path)
-    distribution_path = command.distribution_path(first_app_config)
+    distribution_path = command.distribution_path(first_app_config, 'msi')
 
     assert distribution_path == tmp_path / 'windows' / 'First App-0.0.1.msi'

@@ -17,6 +17,14 @@ class GradleMixin:
     output_format = "gradle"
     platform = "android"
 
+    @property
+    def packaging_formats(self):
+        return ['aab']
+
+    @property
+    def default_packaging_format(self):
+        return 'aab'
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -31,7 +39,7 @@ class GradleMixin:
             / "app-debug.apk"
         )
 
-    def distribution_path(self, app):
+    def distribution_path(self, app, packaging_format):
         return (
             self.bundle_path(app)
             / "app"

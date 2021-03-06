@@ -23,7 +23,7 @@ class WindowsMSIMixin(WindowsMixin):
     def binary_path(self, app):
         return self.bundle_path(app)
 
-    def distribution_path(self, app):
+    def distribution_path(self, app, packaging_format):
         return self.platform_path / '{app.formal_name}-{app.version}.msi'.format(app=app)
 
     def verify_tools(self):
@@ -224,7 +224,7 @@ class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
                     "-nologo",  # Don't display startup text
                     "-ext", "WixUtilExtension",
                     "-ext", "WixUIExtension",
-                    "-o", str(self.distribution_path(app)),
+                    "-o", str(self.distribution_path(app, packaging_format='msi')),
                     "{app.app_name}.wixobj".format(app=app),
                     "{app.app_name}-manifest.wixobj".format(app=app),
                 ],
