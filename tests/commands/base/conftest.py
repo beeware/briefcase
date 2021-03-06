@@ -27,7 +27,7 @@ class DummyCommand(BaseCommand):
     def binary_path(self, app):
         raise NotImplementedError()
 
-    def distribution_path(self, app):
+    def distribution_path(self, app, packaging_format):
         raise NotImplementedError()
 
 
@@ -117,7 +117,7 @@ class OtherDummyCommand(BaseCommand):
     def binary_path(self, app):
         raise NotImplementedError()
 
-    def distribution_path(self, app):
+    def distribution_path(self, app, packaging_format):
         raise NotImplementedError()
 
 

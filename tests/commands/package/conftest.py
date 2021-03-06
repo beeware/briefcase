@@ -14,6 +14,14 @@ class DummyPackageCommand(PackageCommand):
     output_format = 'dummy'
     description = 'Dummy package command'
 
+    @property
+    def packaging_formats(self):
+        return ['pkg', 'box']
+
+    @property
+    def default_packaging_format(self):
+        return 'pkg'
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, apps=[], **kwargs)
 
@@ -25,8 +33,11 @@ class DummyPackageCommand(PackageCommand):
     def binary_path(self, app):
         return self.platform_path / app.app_name / '{app.app_name}.bin'.format(app=app)
 
-    def distribution_path(self, app):
-        return self.platform_path / app.app_name / '{app.app_name}.dist'.format(app=app)
+    def distribution_path(self, app, packaging_format):
+        return self.platform_path / '{app.app_name}.{packaging_format}'.format(
+            app=app,
+            packaging_format=packaging_format,
+        )
 
     def verify_tools(self):
         super().verify_tools()

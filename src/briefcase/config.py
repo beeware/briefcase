@@ -329,7 +329,7 @@ def parse_config(config_file, platform, output_format):
         # First, convert the requirement definition at the global level
         merge_config(global_config, global_config)
 
-        # The app's config starts as a copy of the base briefcase configuation.
+        # The app's config starts as a copy of the base briefcase configuration.
         config = copy.deepcopy(global_config)
 
         # The app name is both the key, and a property of the configuration

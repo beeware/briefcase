@@ -37,7 +37,7 @@ class UpgradeCommand(BaseCommand):
         "A placeholder; Upgrade command doesn't have a binary path"
         raise NotImplementedError()
 
-    def distribution_path(self, app):
+    def distribution_path(self, app, packaging_format):
         "A placeholder; Upgrade command doesn't have a distribution path"
         raise NotImplementedError()
 

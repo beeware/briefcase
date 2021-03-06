@@ -232,7 +232,7 @@ class BaseCommand(ABC):
 
         :param app: The app config
         """
-        return self.platform_path / app.formal_name
+        return self.platform_path / self.output_format / app.formal_name
 
     @abstractmethod
     def binary_path(self, app):
@@ -250,9 +250,10 @@ class BaseCommand(ABC):
         ...
 
     @abstractmethod
-    def distribution_path(self, app):
+    def distribution_path(self, app, packaging_format):
         """
-        The path to the distributable artefact for the app in the output format.
+        The path to the distributable artefact for the app in the given
+        packaging format.
 
         This is the single file that should be uploaded for distribution.
         This may be the binary (if the binary is a self contained executable);
@@ -260,6 +261,7 @@ class BaseCommand(ABC):
         path to the installer.
 
         :param app: The app config
+        :param packaging_format: The format of the redistributable artefact.
         """
         ...
 
