@@ -1,1 +1,3 @@
-Switch macOS build to Xcode project creating a native binary.
+macOS apps are now built as an embedded native binary, rather than a shell
+script invoking a Python script. This was necessary to provide better support
+for macOS app notarization and sandboxing.

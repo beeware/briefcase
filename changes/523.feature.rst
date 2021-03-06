@@ -1,0 +1,1 @@
+macOS projects can now be generated as an Xcode project.
