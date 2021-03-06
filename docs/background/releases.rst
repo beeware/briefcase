@@ -4,6 +4,29 @@ Release History
 
 .. towncrier release notes start
 
+0.3.5 (2021-03-06)
+==================
+
+Features
+--------
+
+* macOS projects can now be generated as an Xcode project. (#523)
+
+Bugfixes
+--------
+
+* macOS apps are now built as an embedded native binary, rather than a shell
+  script invoking a Python script. This was necessary to provide better support
+  for macOS app notarization and sandboxing. (#523)
+* Fixed the registration of setuptools entry points caused by a change in case
+  sensitivity handling in Setuptools 53.1.0. (#574)
+
+Misc
+----
+
+* #562
+
+
 0.3.4 (2021-01-03)
 ==================
 
