@@ -1,0 +1,1 @@
+Pinned the version of Sphinx used to build on Read The Docs.
