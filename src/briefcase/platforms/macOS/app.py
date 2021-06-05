@@ -1,5 +1,4 @@
 import tempfile
-import subprocess
 from pathlib import Path
 
 from briefcase.commands import (
@@ -11,8 +10,7 @@ from briefcase.commands import (
     UpdateCommand
 )
 from briefcase.config import BaseConfig
-from briefcase.exceptions import BriefcaseCommandError
-from briefcase.platforms.macOS import macOSMixin, macOSPackageMixin
+from briefcase.platforms.macOS import macOSMixin, macOSRunMixin, macOSPackageMixin
 
 
 class macOSAppMixin(macOSMixin):
@@ -65,68 +63,8 @@ class macOSAppBuildCommand(macOSAppMixin, BuildCommand):
     description = "Build a macOS app."
 
 
-class macOSAppRunCommand(macOSAppMixin, RunCommand):
+class macOSAppRunCommand(macOSRunMixin, macOSAppMixin, RunCommand):
     description = "Run a macOS app."
-
-    def run_app(self, app: BaseConfig, **kwargs):
-        """
-        Start the application.
-
-        :param app: The config object for the app
-        :param base_path: The path to the project directory.
-        """
-        print()
-        print('[{app.app_name}] Starting app...'.format(
-            app=app
-        ))
-        try:
-            print()
-            self.subprocess.run(
-                [
-                    'open',
-                    '-n',  # Force a new app to be launched
-                    str(self.binary_path(app)),
-                ],
-                check=True,
-            )
-        except subprocess.CalledProcessError:
-            print()
-            raise BriefcaseCommandError(
-                "Unable to start app {app.app_name}.".format(app=app)
-            )
-
-        # Find the PID of the new instance using pgrep
-        try:
-            pid = self.subprocess.check_output(
-                ["pgrep", "-n", app.formal_name],
-                universal_newlines=True,
-            ).strip()
-        except subprocess.CalledProcessError:
-            print()
-            raise BriefcaseCommandError(
-                "Unable to find PID for app {app.app_name}.".format(app=app)
-            )
-
-        # Start streaming logs for the app.
-        try:
-            print()
-            print("[{app.app_name}] Following system log output (type CTRL-C to stop log)...".format(app=app))
-            print("=" * 75)
-            self.subprocess.run(
-                [
-                    "log",
-                    "stream",
-                    "--process", pid,
-                    "--style", "compact",
-                    "--type", "log",
-                ],
-                check=True,
-            )
-        except subprocess.CalledProcessError:
-            print()
-            raise BriefcaseCommandError(
-                "Unable to start log stream for app {app.app_name} (pid {pid}).".format(app=app, pid=pid)
-            )
 
 
 class macOSAppPackageCommand(macOSPackageMixin, macOSAppMixin, PackageCommand):

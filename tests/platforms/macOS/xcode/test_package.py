@@ -1,1 +1,1 @@
-# skip since packing uses the same code as app command
+# skip since packaging uses the same code as app command

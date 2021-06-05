@@ -22,8 +22,69 @@ class macOSMixin:
     platform = 'macOS'
 
 
-class macOSPackageMixin:
+class macOSRunMixin:
+    def run_app(self, app: BaseConfig, **kwargs):
+        """
+        Start the application.
 
+        :param app: The config object for the app
+        :param base_path: The path to the project directory.
+        """
+        print()
+        print('[{app.app_name}] Starting app...'.format(
+            app=app
+        ))
+        try:
+            print()
+            self.subprocess.run(
+                [
+                    'open',
+                    '-n',  # Force a new app to be launched
+                    str(self.binary_path(app)),
+                ],
+                check=True,
+            )
+        except subprocess.CalledProcessError:
+            print()
+            raise BriefcaseCommandError(
+                "Unable to start app {app.app_name}.".format(app=app)
+            )
+
+        # Find the PID of the new instance using pgrep
+        try:
+            pid = self.subprocess.check_output(
+                ["pgrep", "-n", app.formal_name],
+                universal_newlines=True,
+            ).strip()
+        except subprocess.CalledProcessError:
+            print()
+            raise BriefcaseCommandError(
+                "Unable to find PID for app {app.app_name}.".format(app=app)
+            )
+
+        # Start streaming logs for the app.
+        try:
+            print()
+            print("[{app.app_name}] Following system log output (type CTRL-C to stop log)...".format(app=app))
+            print("=" * 75)
+            self.subprocess.run(
+                [
+                    "log",
+                    "stream",
+                    "--process", pid,
+                    "--style", "compact",
+                    "--type", "log",
+                ],
+                check=True,
+            )
+        except subprocess.CalledProcessError:
+            print()
+            raise BriefcaseCommandError(
+                "Unable to start log stream for app {app.app_name} (pid {pid}).".format(app=app, pid=pid)
+            )
+
+
+class macOSPackageMixin:
     @property
     def packaging_formats(self):
         return ['app', 'dmg']
