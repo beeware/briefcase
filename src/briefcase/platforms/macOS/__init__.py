@@ -35,7 +35,6 @@ class macOSRunMixin:
             app=app
         ))
         try:
-            print()
             self.subprocess.run(
                 [
                     'open',
@@ -50,18 +49,6 @@ class macOSRunMixin:
                 "Unable to start app {app.app_name}.".format(app=app)
             )
 
-        # Find the PID of the new instance using pgrep
-        try:
-            pid = self.subprocess.check_output(
-                ["pgrep", "-n", app.formal_name],
-                universal_newlines=True,
-            ).strip()
-        except subprocess.CalledProcessError:
-            print()
-            raise BriefcaseCommandError(
-                "Unable to find PID for app {app.app_name}.".format(app=app)
-            )
-
         # Start streaming logs for the app.
         try:
             print()
@@ -71,16 +58,17 @@ class macOSRunMixin:
                 [
                     "log",
                     "stream",
-                    "--process", pid,
                     "--style", "compact",
-                    "--type", "log",
+                    "--predicate", 'senderImagePath=="{sender}"'.format(
+                        sender=str(self.binary_path(app) / "Contents" / "MacOS" / app.formal_name)
+                    )
                 ],
                 check=True,
             )
         except subprocess.CalledProcessError:
             print()
             raise BriefcaseCommandError(
-                "Unable to start log stream for app {app.app_name} (pid {pid}).".format(app=app, pid=pid)
+                "Unable to start log stream for app {app.app_name}.".format(app=app)
             )
 
 
