@@ -25,7 +25,10 @@ def test_run_app(first_app_config, tmp_path):
             [
                 'log', 'stream',
                 '--style', 'compact',
-                '--predicate', 'senderImagePath=="{bin_path}/Contents/MacOS/First App"'.format(bin_path=bin_path)
+                '--predicate',
+                'senderImagePath=="{bin_path}/Contents/MacOS/First App"'
+                ' OR (processImagePath=="{bin_path}/Contents/MacOS/First App"'
+                ' AND senderImagePath=="/usr/lib/libffi.dylib")'.format(bin_path=bin_path)
             ],
             check=True,
         )
@@ -78,7 +81,10 @@ def test_run_app_log_stream_failed(first_app_config, tmp_path):
             [
                 'log', 'stream',
                 '--style', 'compact',
-                '--predicate', 'senderImagePath=="{bin_path}/Contents/MacOS/First App"'.format(bin_path=bin_path)
+                '--predicate',
+                'senderImagePath=="{bin_path}/Contents/MacOS/First App"'
+                ' OR (processImagePath=="{bin_path}/Contents/MacOS/First App"'
+                ' AND senderImagePath=="/usr/lib/libffi.dylib")'.format(bin_path=bin_path)
             ],
             check=True,
         )

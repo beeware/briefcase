@@ -54,12 +54,26 @@ class macOSRunMixin:
             print()
             print("[{app.app_name}] Following system log output (type CTRL-C to stop log)...".format(app=app))
             print("=" * 75)
+            # Streaming the system log is... a mess. The system log contains a
+            # *lot* of noise from other processes; even if you filter by
+            # process, there's a lot of macOS-generated noise. It's very
+            # difficult to extract just the "user generated" stdout/err log
+            # messages.
+            #
+            # The following sets up a log stream filter that looks for:
+            #  1. a log sender that matches that app binary; or,
+            #  2. a log sender of libffi, and a process that matches the app binary.
+            # Case (1) works for pre-Python 3.9 static linked binaries.
+            # Case (2) works for Python 3.9+ dynamic linked binaries.
             self.subprocess.run(
                 [
                     "log",
                     "stream",
                     "--style", "compact",
-                    "--predicate", 'senderImagePath=="{sender}"'.format(
+                    "--predicate",
+                    'senderImagePath=="{sender}"'
+                    ' OR (processImagePath=="{sender}"'
+                    ' AND senderImagePath=="/usr/lib/libffi.dylib")'.format(
                         sender=str(self.binary_path(app) / "Contents" / "MacOS" / app.formal_name)
                     )
                 ],
