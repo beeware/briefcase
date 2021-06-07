@@ -25,9 +25,9 @@ Briefcase
    :target: https://github.com/beeware/briefcase/actions
    :alt: Build Status
 
-.. image:: https://badges.gitter.im/beeware/general.svg
-   :target: https://gitter.im/beeware/general
-   :alt: Chat on Gitter
+.. image:: https://img.shields.io/discord/836455665257021440?label=Discord%20Chat&logo=discord&style=plastic
+   :target: https://beeware.org/bee/chat/
+   :alt: Discord server
 
 Briefcase is a tool for converting a Python project into a standalone native
 application. You can package projects for:
@@ -54,9 +54,11 @@ Community
 
 Briefcase is part of the `BeeWare suite`_. You can talk to the community through:
 
-* `@pybeeware on Twitter`_
+* `@pybeeware on Twitter <https://twitter.com/pybeeware>`__
 
-* The `beeware/general`_ channel on Gitter.
+* `Discord <https://beeware.org/bee/chat/>`__
+
+* The Briefcase `Github Discussions forum <https://github.com/beeware/briefcase/discussions>`__
 
 We foster a welcoming and respectful community as described in our
 `BeeWare Community Code of Conduct`_.
@@ -69,8 +71,6 @@ want to contribute code, please `fork the code`_ and `submit a pull request`_.
 
 .. _BeeWare suite: http://beeware.org
 .. _Read The Docs: https://briefcase.readthedocs.io
-.. _@pybeeware on Twitter: https://twitter.com/pybeeware
-.. _beeware/general: https://gitter.im/beeware/general
 .. _BeeWare Community Code of Conduct: http://beeware.org/community/behavior/
 .. _log them on Github: https://github.com/beeware/briefcase/issues
 .. _fork the code: https://github.com/beeware/briefcase
