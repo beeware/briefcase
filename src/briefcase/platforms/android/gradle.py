@@ -202,7 +202,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
         adb.start_app(package, "org.beeware.android.MainActivity")
 
         print()
-        print("[{app.app_name}] Tailing device log (type CTRL-C to stop log)...".format(app=app))
+        print("[{app.app_name}] Following device log output (type CTRL-C to stop log)...".format(app=app))
         print("=" * 75)
         adb.logcat()
 
