@@ -87,14 +87,14 @@ Community
 
 Briefcase is part of the `BeeWare suite`_. You can talk to the community through:
 
- * `@pybeeware on Twitter`_
+ * `@pybeeware on Twitter <https://twitter.com/pybeeware>`__
 
- * `beeware/general on Gitter`_
+ * `Discord <https://beeware.org/bee/chat/>`__
+
+ * The Briefcase `Github Discussions forum <https://github.com/beeware/briefcase/discussions>`__
 
 .. _BeeWare suite: http://beeware.org
 .. _Read The Docs: https://briefcase.readthedocs.io
-.. _@pybeeware on Twitter: https://twitter.com/pybeeware
-.. _beeware/general on Gitter: https://gitter.im/beeware/general
 
 
 .. toctree::
