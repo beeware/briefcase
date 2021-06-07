@@ -15,10 +15,10 @@ def test_run_app(first_app_config, tmp_path):
     command.run_app(first_app_config)
 
     # Calls were made to start the app and to start a log stream.
-    bin_path = str(command.binary_path(first_app_config))
+    bin_path = command.binary_path(first_app_config)
     command.subprocess.run.assert_has_calls([
         mock.call(
-            ['open', '-n', bin_path],
+            ['open', '-n', str(bin_path)],
             check=True
         ),
         mock.call(
@@ -26,9 +26,11 @@ def test_run_app(first_app_config, tmp_path):
                 'log', 'stream',
                 '--style', 'compact',
                 '--predicate',
-                'senderImagePath=="{bin_path}/Contents/MacOS/First App"'
-                ' OR (processImagePath=="{bin_path}/Contents/MacOS/First App"'
-                ' AND senderImagePath=="/usr/lib/libffi.dylib")'.format(bin_path=bin_path)
+                'senderImagePath=="{sender}"'
+                ' OR (processImagePath=="{sender}"'
+                ' AND senderImagePath=="/usr/lib/libffi.dylib")'.format(
+                    sender=bin_path / "Contents" / "MacOS" / "First App"
+                )
             ],
             check=True,
         )
@@ -71,10 +73,10 @@ def test_run_app_log_stream_failed(first_app_config, tmp_path):
         command.run_app(first_app_config)
 
     # Calls were made to start the app and to start a log stream.
-    bin_path = str(command.binary_path(first_app_config))
+    bin_path = command.binary_path(first_app_config)
     command.subprocess.run.assert_has_calls([
         mock.call(
-            ['open', '-n', bin_path],
+            ['open', '-n', str(bin_path)],
             check=True
         ),
         mock.call(
@@ -82,9 +84,11 @@ def test_run_app_log_stream_failed(first_app_config, tmp_path):
                 'log', 'stream',
                 '--style', 'compact',
                 '--predicate',
-                'senderImagePath=="{bin_path}/Contents/MacOS/First App"'
-                ' OR (processImagePath=="{bin_path}/Contents/MacOS/First App"'
-                ' AND senderImagePath=="/usr/lib/libffi.dylib")'.format(bin_path=bin_path)
+                'senderImagePath=="{sender}"'
+                ' OR (processImagePath=="{sender}"'
+                ' AND senderImagePath=="/usr/lib/libffi.dylib")'.format(
+                    sender=bin_path / "Contents" / "MacOS" / "First App"
+                )
             ],
             check=True,
         )
