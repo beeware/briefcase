@@ -36,9 +36,9 @@ def test_adb_failure(mock_sdk):
     "If adb logcat fails, the error is caught."
     # Mock out the run command on an adb instance
     adb = ADB(mock_sdk, "exampleDevice")
-    adb.run = MagicMock(side_effect=subprocess.CalledProcessError(
+    mock_sdk.command.subprocess.run = MagicMock(side_effect=subprocess.CalledProcessError(
         returncode=1, cmd='adb logcat'
     ))
 
     with pytest.raises(BriefcaseCommandError):
-        adb.clear_log()
+        adb.logcat()
