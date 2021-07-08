@@ -1,3 +1,4 @@
+import os
 import subprocess
 from unittest.mock import MagicMock
 
@@ -58,7 +59,7 @@ def test_create_emulator(mock_sdk, tmp_path):
     # avdmanager was invoked
     mock_sdk.command.subprocess.check_output.assert_called_once_with(
         [
-            str(mock_sdk.avdmanager_path),
+            os.fsdecode(mock_sdk.avdmanager_path),
             "--verbose",
             "create", "avd",
             "--name", "new-emulator",
@@ -121,7 +122,7 @@ def test_create_preexisting_skins(mock_sdk, tmp_path):
     # avdmanager was invoked
     mock_sdk.command.subprocess.check_output.assert_called_once_with(
         [
-            str(mock_sdk.avdmanager_path),
+            os.fsdecode(mock_sdk.avdmanager_path),
             "--verbose",
             "create", "avd",
             "--name", "new-emulator",
@@ -161,7 +162,7 @@ def test_create_failure(mock_sdk):
     # but avdmanager was invoked
     mock_sdk.command.subprocess.check_output.assert_called_once_with(
         [
-            str(mock_sdk.avdmanager_path),
+            os.fsdecode(mock_sdk.avdmanager_path),
             "--verbose",
             "create", "avd",
             "--name", "new-emulator",
@@ -190,7 +191,7 @@ def test_download_failure(mock_sdk, tmp_path):
     # avdmanager was invoked
     mock_sdk.command.subprocess.check_output.assert_called_once_with(
         [
-            str(mock_sdk.avdmanager_path),
+            os.fsdecode(mock_sdk.avdmanager_path),
             "--verbose",
             "create", "avd",
             "--name", "new-emulator",
@@ -235,7 +236,7 @@ def test_unpack_failure(mock_sdk, tmp_path):
     # avdmanager was invoked
     mock_sdk.command.subprocess.check_output.assert_called_once_with(
         [
-            str(mock_sdk.avdmanager_path),
+            os.fsdecode(mock_sdk.avdmanager_path),
             "--verbose",
             "create", "avd",
             "--name", "new-emulator",

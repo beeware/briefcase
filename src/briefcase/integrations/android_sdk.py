@@ -1,3 +1,4 @@
+import os
 import re
 import shutil
 import subprocess
@@ -84,7 +85,7 @@ class AndroidSDK:
     def env(self):
         return {
             **self.command.os.environ,
-            "ANDROID_SDK_ROOT": str(self.root_path),
+            "ANDROID_SDK_ROOT": os.fsdecode(self.root_path),
             "JAVA_HOME": str(self.jdk.java_home),
         }
 
@@ -175,7 +176,7 @@ class AndroidSDK:
         """
         return self.sdkmanager_path.exists() and (
             self.command.host_os == "Windows"
-            or self.command.os.access(str(self.sdkmanager_path), self.command.os.X_OK)
+            or self.command.os.access(self.sdkmanager_path, self.command.os.X_OK)
         )
 
     @property
@@ -218,7 +219,7 @@ Delete {sdk_zip_path} and run briefcase again.""".format(
         # On non-Windows, we manually fix permissions.
         if self.command.host_os != "Windows":
             for binpath in (self.root_path / "tools" / "bin").glob("*"):
-                if not self.command.os.access(str(binpath), self.command.os.X_OK):
+                if not self.command.os.access(binpath, self.command.os.X_OK):
                     binpath.chmod(0o755)
 
         # Licences must be accepted.
@@ -230,7 +231,7 @@ Delete {sdk_zip_path} and run briefcase again.""".format(
             # Using subprocess.run() with no I/O redirection so the user sees
             # the full output and can send input.
             self.command.subprocess.run(
-                [str(self.sdkmanager_path), "--update"], env=self.env, check=True,
+                [os.fsdecode(self.sdkmanager_path), "--update"], env=self.env, check=True,
             )
         except subprocess.CalledProcessError:
             raise BriefcaseCommandError(
@@ -272,7 +273,7 @@ Delete {sdk_zip_path} and run briefcase again.""".format(
             # Using subprocess.run() with no I/O redirection so the user sees
             # the full output and can send input.
             self.command.subprocess.run(
-                [str(self.sdkmanager_path), "--licenses"], env=self.env, check=True,
+                [os.fsdecode(self.sdkmanager_path), "--licenses"], env=self.env, check=True,
             )
         except subprocess.CalledProcessError:
             raise BriefcaseCommandError(
@@ -307,7 +308,7 @@ Delete {sdk_zip_path} and run briefcase again.""".format(
             # displaying it only if an exception occurs.
             self.command.subprocess.run(
                 [
-                    str(self.sdkmanager_path),
+                    os.fsdecode(self.sdkmanager_path),
                     "platforms;android-28",
                     "system-images;android-28;default;x86",
                     "emulator",
@@ -329,7 +330,7 @@ Delete {sdk_zip_path} and run briefcase again.""".format(
             # Capture `stderr` so that if the process exits with failure, the
             # stderr data is in `e.output`.
             output = self.command.subprocess.check_output(
-                [str(self.emulator_path), "-list-avds"],
+                [os.fsdecode(self.emulator_path), "-list-avds"],
                 universal_newlines=True,
                 stderr=subprocess.STDOUT,
             ).strip()
@@ -349,7 +350,7 @@ Delete {sdk_zip_path} and run briefcase again.""".format(
             # Capture `stderr` so that if the process exits with failure, the
             # stderr data is in `e.output`.
             output = self.command.subprocess.check_output(
-                [str(self.adb_path), "devices", "-l"],
+                [os.fsdecode(self.adb_path), "devices", "-l"],
                 universal_newlines=True,
                 stderr=subprocess.STDOUT,
             ).strip()
@@ -611,7 +612,7 @@ An emulator named '{avd}' already exists.
             print()
             self.command.subprocess.check_output(
                 [
-                    str(self.avdmanager_path),
+                    os.fsdecode(self.avdmanager_path),
                     "--verbose",
                     "create", "avd",
                     "--name", avd,
@@ -694,7 +695,7 @@ In future, you can specify this device by running:
             print("Starting emulator {avd}...".format(avd=avd))
             emulator_popen = self.command.subprocess.Popen(
                 [
-                    str(self.emulator_path),
+                    os.fsdecode(self.emulator_path),
                     '@' + avd,
                     '-dns-server', '8.8.8.8'
                 ],
@@ -850,7 +851,7 @@ class ADB:
             # stderr data is in `e.output`.
             return self.command.subprocess.check_output(
                 [
-                    str(self.android_sdk.adb_path),
+                    os.fsdecode(self.android_sdk.adb_path),
                     "-s",
                     self.device,
                 ]
@@ -872,7 +873,7 @@ class ADB:
         Returns `None` on success; raises an exception on failure.
         """
         try:
-            self.run("install", str(apk_path))
+            self.run("install", os.fsdecode(apk_path))
         except subprocess.CalledProcessError:
             raise BriefcaseCommandError(
                 "Unable to install APK {apk_path} on {device}".format(

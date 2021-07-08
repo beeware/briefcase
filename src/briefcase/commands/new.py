@@ -1,3 +1,4 @@
+import os
 import re
 import subprocess
 from email.utils import parseaddr
@@ -484,7 +485,7 @@ What GUI toolkit do you want to use for this project?""",
             self.cookiecutter(
                 str(cached_template),
                 no_input=True,
-                output_dir=str(self.base_path),
+                output_dir=os.fsdecode(self.base_path),
                 checkout="v0.3",
                 extra_context=context
             )

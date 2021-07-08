@@ -1,3 +1,4 @@
+import os
 from unittest import mock
 
 import pytest
@@ -46,8 +47,8 @@ def test_package_app(first_app_with_binaries, tmp_path):
             [
                 'codesign',
                 '--sign', 'Sekrit identity (DEADBEEF)',
-                '--entitlements', str(tmp_path / 'macOS' / 'app' / 'First App' / 'Entitlements.plist'),
-                '--deep', str(filepath),
+                '--entitlements', os.fsdecode(tmp_path / 'macOS' / 'app' / 'First App' / 'Entitlements.plist'),
+                '--deep', os.fsdecode(filepath),
                 '--force',
                 '--options', 'runtime',
             ],

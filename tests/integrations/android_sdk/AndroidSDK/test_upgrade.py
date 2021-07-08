@@ -1,3 +1,4 @@
+import os
 import subprocess
 
 import pytest
@@ -10,7 +11,7 @@ def test_upgrade(mock_sdk):
     mock_sdk.upgrade()
 
     mock_sdk.command.subprocess.run.assert_called_once_with(
-        [str(mock_sdk.sdkmanager_path), "--update"],
+        [os.fsdecode(mock_sdk.sdkmanager_path), "--update"],
         env=mock_sdk.env,
         check=True,
     )
@@ -23,7 +24,7 @@ def test_upgrade_failure(mock_sdk):
         mock_sdk.upgrade()
 
     mock_sdk.command.subprocess.run.assert_called_once_with(
-        [str(mock_sdk.sdkmanager_path), "--update"],
+        [os.fsdecode(mock_sdk.sdkmanager_path), "--update"],
         env=mock_sdk.env,
         check=True,
     )
