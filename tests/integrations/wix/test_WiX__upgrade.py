@@ -1,3 +1,4 @@
+import os
 from unittest.mock import MagicMock
 
 import pytest
@@ -61,7 +62,7 @@ def test_existing_wix_install(mock_command, tmp_path):
 
     wix_zip_path = tmp_path / 'tools' / 'wix.zip'
     wix_zip = MagicMock()
-    wix_zip.__str__.return_value = str(wix_zip_path)
+    wix_zip.__str__.return_value = os.fsdecode(wix_zip_path)
 
     mock_command.download_url.return_value = wix_zip
 
@@ -82,8 +83,8 @@ def test_existing_wix_install(mock_command, tmp_path):
 
     # The download was unpacked
     mock_command.shutil.unpack_archive.assert_called_with(
-        str(wix_zip_path),
-        extract_dir=str(wix_path)
+        os.fsdecode(wix_zip_path),
+        extract_dir=os.fsdecode(wix_path)
     )
 
     # The zip file was removed
@@ -131,7 +132,7 @@ def test_unpack_fail(mock_command, tmp_path):
     # Mock the download
     wix_zip_path = tmp_path / 'tools' / 'wix.zip'
     wix_zip = MagicMock()
-    wix_zip.__str__.return_value = str(wix_zip_path)
+    wix_zip.__str__.return_value = os.fsdecode(wix_zip_path)
 
     mock_command.download_url.return_value = wix_zip
 
@@ -154,8 +155,8 @@ def test_unpack_fail(mock_command, tmp_path):
 
     # The download was unpacked
     mock_command.shutil.unpack_archive.assert_called_with(
-        str(wix_zip_path),
-        extract_dir=str(wix_path)
+        os.fsdecode(wix_zip_path),
+        extract_dir=os.fsdecode(wix_path)
     )
 
     # The zip file was not removed

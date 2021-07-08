@@ -1,3 +1,4 @@
+import os
 import subprocess
 import sys
 from unittest import mock
@@ -116,7 +117,7 @@ def test_build_appimage(build_command, first_app, tmp_path):
     app_dir = tmp_path / 'linux' / 'appimage' / 'First App' / 'First App.AppDir'
     build_command._subprocess.run.assert_called_with(
         [
-            str(build_command.linuxdeploy.appimage_path),
+            os.fsdecode(build_command.linuxdeploy.appimage_path),
             "--appimage-extract-and-run",
             "--appdir={appdir}".format(appdir=app_dir),
             "-d", str(app_dir / "com.example.first-app.desktop"),
@@ -130,7 +131,7 @@ def test_build_appimage(build_command, first_app, tmp_path):
             'VERSION': '0.0.1',
         },
         check=True,
-        cwd=str(tmp_path / 'linux')
+        cwd=os.fsdecode(tmp_path / 'linux')
     )
     # Binary is marked executable
     build_command.os.chmod.assert_called_with(
@@ -156,7 +157,7 @@ def test_build_failure(build_command, first_app, tmp_path):
     app_dir = tmp_path / 'linux' / 'appimage' / 'First App' / 'First App.AppDir'
     build_command._subprocess.run.assert_called_with(
         [
-            str(build_command.linuxdeploy.appimage_path),
+            os.fsdecode(build_command.linuxdeploy.appimage_path),
             "--appimage-extract-and-run",
             "--appdir={appdir}".format(appdir=app_dir),
             "-d", str(app_dir / "com.example.first-app.desktop"),
@@ -170,7 +171,7 @@ def test_build_failure(build_command, first_app, tmp_path):
             'VERSION': '0.0.1',
         },
         check=True,
-        cwd=str(tmp_path / 'linux')
+        cwd=os.fsdecode(tmp_path / 'linux')
     )
 
     # chmod isn't invoked if the binary wasn't created.

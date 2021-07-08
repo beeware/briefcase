@@ -1,3 +1,4 @@
+import os
 from unittest.mock import MagicMock
 
 import pytest
@@ -34,7 +35,7 @@ def test_valid_wix_envvar(mock_command, tmp_path):
     "If the WiX envvar points to a valid WiX install, the validator succeeds"
     # Mock the environment for a WiX install
     wix_path = tmp_path / 'wix'
-    mock_command.os.environ.get.return_value = str(wix_path)
+    mock_command.os.environ.get.return_value = os.fsdecode(wix_path)
 
     # Mock the interesting parts of a WiX install
     (wix_path / 'bin').mkdir(parents=True)
@@ -49,16 +50,16 @@ def test_valid_wix_envvar(mock_command, tmp_path):
     mock_command.os.environ.get.assert_called_with('WIX')
 
     # The returned paths are as expected (and are the full paths)
-    assert str(wix.heat_exe) == str(tmp_path / 'wix' / 'bin' / 'heat.exe')
-    assert str(wix.light_exe) == str(tmp_path / 'wix' / 'bin' / 'light.exe')
-    assert str(wix.candle_exe) == str(tmp_path / 'wix' / 'bin' / 'candle.exe')
+    assert os.fsdecode(wix.heat_exe) == os.fsdecode(tmp_path / 'wix' / 'bin' / 'heat.exe')
+    assert os.fsdecode(wix.light_exe) == os.fsdecode(tmp_path / 'wix' / 'bin' / 'light.exe')
+    assert os.fsdecode(wix.candle_exe) == os.fsdecode(tmp_path / 'wix' / 'bin' / 'candle.exe')
 
 
 def test_invalid_wix_envvar(mock_command, tmp_path):
     "If the WiX envvar points to an invalid WiX install, the validator fails"
     # Mock the environment for a WiX install
     wix_path = tmp_path / 'wix'
-    mock_command.os.environ.get.return_value = str(wix_path)
+    mock_command.os.environ.get.return_value = os.fsdecode(wix_path)
 
     # Don't create the actual install, and then attempt to validate
     with pytest.raises(BriefcaseCommandError, match="does not point to an install"):
@@ -101,7 +102,7 @@ def test_download_wix(mock_command, tmp_path):
 
     wix_zip_path = tmp_path / 'tools' / 'wix.zip'
     wix_zip = MagicMock()
-    wix_zip.__str__.return_value = str(wix_zip_path)
+    wix_zip.__str__.return_value = os.fsdecode(wix_zip_path)
 
     mock_command.download_url.return_value = wix_zip
 
@@ -119,8 +120,8 @@ def test_download_wix(mock_command, tmp_path):
 
     # The download was unpacked
     mock_command.shutil.unpack_archive.assert_called_with(
-        str(wix_zip_path),
-        extract_dir=str(wix_path)
+        os.fsdecode(wix_zip_path),
+        extract_dir=os.fsdecode(wix_path)
     )
 
     # The zip file was removed
@@ -183,7 +184,7 @@ def test_unpack_fail(mock_command, tmp_path):
 
     wix_zip_path = tmp_path / 'tools' / 'wix.zip'
     wix_zip = MagicMock()
-    wix_zip.__str__.return_value = str(wix_zip_path)
+    wix_zip.__str__.return_value = os.fsdecode(wix_zip_path)
 
     mock_command.download_url.return_value = wix_zip
 
@@ -206,8 +207,8 @@ def test_unpack_fail(mock_command, tmp_path):
 
     # The download was unpacked
     mock_command.shutil.unpack_archive.assert_called_with(
-        str(wix_zip_path),
-        extract_dir=str(wix_path)
+        os.fsdecode(wix_zip_path),
+        extract_dir=os.fsdecode(wix_path)
     )
 
     # The zip file was not removed

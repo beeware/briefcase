@@ -1,3 +1,4 @@
+import os
 import subprocess
 import itertools
 
@@ -114,7 +115,7 @@ class macOSPackageMixin:
                     'codesign',
                     '--sign', identity,
                     '--entitlements', str(entitlements),
-                    '--deep', str(path),
+                    '--deep', os.fsdecode(path),
                     '--force',
                     '--options', 'runtime',
                 ],

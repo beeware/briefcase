@@ -1,3 +1,4 @@
+import os
 import shutil
 import subprocess
 import sys
@@ -296,7 +297,7 @@ class CreateCommand(BaseCommand):
             self.cookiecutter(
                 str(cached_template),
                 no_input=True,
-                output_dir=str(output_path),
+                output_dir=os.fsdecode(output_path),
                 checkout=app.template_branch,
                 extra_context=extra_context
             )
@@ -371,7 +372,7 @@ class CreateCommand(BaseCommand):
             support_path.mkdir(parents=True, exist_ok=True)
             self.shutil.unpack_archive(
                 str(support_filename),
-                extract_dir=str(support_path)
+                extract_dir=os.fsdecode(support_path)
             )
         except (shutil.ReadError, EOFError):
             print()
@@ -637,7 +638,7 @@ class CreateCommand(BaseCommand):
             print("[{app.app_name}] Removing old application bundle...".format(
                 app=app
             ))
-            self.shutil.rmtree(str(bundle_path))
+            self.shutil.rmtree(os.fsdecode(bundle_path))
 
         print()
         print('[{app.app_name}] Generating application template...'.format(

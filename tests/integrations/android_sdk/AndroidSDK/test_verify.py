@@ -98,7 +98,7 @@ def test_user_provided_sdk(mock_command, tmp_path):
 
     # Set the environment to specify ANDROID_SDK_ROOT
     mock_command.os.environ = {
-        'ANDROID_SDK_ROOT': str(existing_android_sdk_root_path)
+        'ANDROID_SDK_ROOT': os.fsdecode(existing_android_sdk_root_path)
     }
 
     # Expect verify() to succeed
@@ -111,8 +111,7 @@ def test_user_provided_sdk(mock_command, tmp_path):
     mock_command.shutil.unpack_archive.assert_not_called()
 
     # The returned SDK has the expected root path.
-    # FIXME: The conversion to str is needed for Python 3.5 compatibility.
-    assert str(sdk.root_path) == str(existing_android_sdk_root_path)
+    assert sdk.root_path == existing_android_sdk_root_path
 
 
 def test_invalid_user_provided_sdk(mock_command, tmp_path):
@@ -180,7 +179,7 @@ def test_download_sdk(mock_command, tmp_path, host_os):
     )
     mock_command.shutil.unpack_archive.assert_called_once_with(
         "/path/to/download.zip",
-        extract_dir=str(android_sdk_root_path)
+        extract_dir=os.fsdecode(android_sdk_root_path)
     )
 
     # The cached file will be deleeted
@@ -238,7 +237,7 @@ def test_download_sdk_if_sdkmanager_not_executable(mock_command, tmp_path):
     )
     mock_command.shutil.unpack_archive.assert_called_once_with(
         "/path/to/download.zip",
-        extract_dir=str(android_sdk_root_path)
+        extract_dir=os.fsdecode(android_sdk_root_path)
     )
 
     # The cached file will be deleted
@@ -289,5 +288,5 @@ def test_detects_bad_zipfile(mock_command, tmp_path):
     )
     mock_command.shutil.unpack_archive.assert_called_once_with(
         "/path/to/download.zip",
-        extract_dir=str(android_sdk_root_path)
+        extract_dir=os.fsdecode(android_sdk_root_path)
     )
