@@ -1,5 +1,4 @@
 import tempfile
-import subprocess
 from pathlib import Path
 
 from briefcase.commands import (
@@ -11,8 +10,7 @@ from briefcase.commands import (
     UpdateCommand
 )
 from briefcase.config import BaseConfig
-from briefcase.exceptions import BriefcaseCommandError
-from briefcase.platforms.macOS import macOSMixin, macOSPackageMixin
+from briefcase.platforms.macOS import macOSMixin, macOSRunMixin, macOSPackageMixin
 
 
 class macOSAppMixin(macOSMixin):
@@ -65,34 +63,8 @@ class macOSAppBuildCommand(macOSAppMixin, BuildCommand):
     description = "Build a macOS app."
 
 
-class macOSAppRunCommand(macOSAppMixin, RunCommand):
+class macOSAppRunCommand(macOSRunMixin, macOSAppMixin, RunCommand):
     description = "Run a macOS app."
-
-    def run_app(self, app: BaseConfig, **kwargs):
-        """
-        Start the application.
-
-        :param app: The config object for the app
-        :param base_path: The path to the project directory.
-        """
-        print()
-        print('[{app.app_name}] Starting app...'.format(
-            app=app
-        ))
-        try:
-            print()
-            self.subprocess.run(
-                [
-                    'open',
-                    str(self.binary_path(app)),
-                ],
-                check=True,
-            )
-        except subprocess.CalledProcessError:
-            print()
-            raise BriefcaseCommandError(
-                "Unable to start app {app.app_name}.".format(app=app)
-            )
 
 
 class macOSAppPackageCommand(macOSPackageMixin, macOSAppMixin, PackageCommand):

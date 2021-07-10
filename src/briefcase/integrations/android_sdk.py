@@ -950,3 +950,43 @@ class ADB:
                     package=package, activity=activity, device=self.device,
                 )
             )
+
+    def clear_log(self):
+        """
+        Clear the log for the device.
+
+        Returns `None` on success; raises an exception on failure.
+        """
+        try:
+            # Invoke `adb logcat -c`
+            self.run("logcat", "-c")
+        except subprocess.CalledProcessError:
+            raise BriefcaseCommandError(
+                "Unable to clear log on {device}".format(
+                    device=self.device,
+                )
+            )
+
+    def logcat(self):
+        """
+        Start tailing the adb log for the device.
+        """
+        try:
+            # Using subprocess.run() with no I/O redirection so the user sees
+            # the full output and can send input.
+            self.command.subprocess.run(
+                [
+                    str(self.android_sdk.adb_path),
+                    "-s",
+                    self.device,
+                    "logcat",
+                    "-s",
+                    "MainActivity:*",
+                    "stdio:*",
+                    "Python:*",
+                ],
+                env=self.android_sdk.env,
+                check=True,
+            )
+        except subprocess.CalledProcessError:
+            raise BriefcaseCommandError("Error starting ADB logcat.")
