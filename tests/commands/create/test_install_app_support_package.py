@@ -1,3 +1,4 @@
+import os
 import zipfile
 from unittest import mock
 
@@ -12,7 +13,7 @@ def test_install_app_support_package(create_command, myapp, tmp_path, support_pa
     "A support package can be downloaded and unpacked where it is needed"
     # Write a temporary support zip file
     support_file = tmp_path / 'out.zip'
-    with zipfile.ZipFile(str(support_file), 'w') as support_zip:
+    with zipfile.ZipFile(support_file, 'w') as support_zip:
         support_zip.writestr('internal/file.txt', data='hello world')
 
     # Modify download_url to return the temp zipfile
@@ -39,7 +40,7 @@ def test_install_pinned_app_support_package(create_command, myapp, tmp_path, sup
 
     # Write a temporary support zip file
     support_file = tmp_path / 'out.zip'
-    with zipfile.ZipFile(str(support_file), 'w') as support_zip:
+    with zipfile.ZipFile(support_file, 'w') as support_zip:
         support_zip.writestr('internal/file.txt', data='hello world')
 
     # Modify download_url to return the temp zipfile
@@ -62,12 +63,12 @@ def test_install_pinned_app_support_package(create_command, myapp, tmp_path, sup
 def test_install_custom_app_support_package_file(create_command, myapp, tmp_path, support_path):
     "A custom support package can be specified as a local file"
     # Provide an app-specific override of the package URL
-    myapp.support_package = str(tmp_path / 'custom' / 'support.zip')
+    myapp.support_package = os.fsdecode(tmp_path / 'custom' / 'support.zip')
 
     # Write a temporary support zip file
     support_file = tmp_path / 'custom' / 'support.zip'
     support_file.parent.mkdir(parents=True)
-    with zipfile.ZipFile(str(support_file), 'w') as support_zip:
+    with zipfile.ZipFile(support_file, 'w') as support_zip:
         support_zip.writestr('internal/file.txt', data='hello world')
 
     # Modify download_url to return the temp zipfile
@@ -92,7 +93,7 @@ def test_install_custom_app_support_package_url(create_command, myapp, tmp_path,
 
     # Write a temporary support zip file
     support_file = tmp_path / 'out.zip'
-    with zipfile.ZipFile(str(support_file), 'w') as support_zip:
+    with zipfile.ZipFile(support_file, 'w') as support_zip:
         support_zip.writestr('internal/file.txt', data='hello world')
 
     # Modify download_url to return the temp zipfile
@@ -122,7 +123,7 @@ def test_install_pinned_custom_app_support_package_url(create_command, myapp, tm
 
     # Write a temporary support zip file
     support_file = tmp_path / 'out.zip'
-    with zipfile.ZipFile(str(support_file), 'w') as support_zip:
+    with zipfile.ZipFile(support_file, 'w') as support_zip:
         support_zip.writestr('internal/file.txt', data='hello world')
 
     # Modify download_url to return the temp zipfile
@@ -152,7 +153,7 @@ def test_install_pinned_custom_app_support_package_url_with_args(create_command,
 
     # Write a temporary support zip file
     support_file = tmp_path / 'out.zip'
-    with zipfile.ZipFile(str(support_file), 'w') as support_zip:
+    with zipfile.ZipFile(support_file, 'w') as support_zip:
         support_zip.writestr('internal/file.txt', data='hello world')
 
     # Modify download_url to return the temp zipfile
@@ -187,7 +188,7 @@ def test_invalid_support_package(create_command, myapp, tmp_path, support_path):
     "If the support package isn't a valid zipfile, an error is raised"
     # Create a support package that isn't a zipfile
     support_file = tmp_path / 'out.zip'
-    with open(str(support_file), 'w') as bad_support_zip:
+    with open(support_file, 'w') as bad_support_zip:
         bad_support_zip.write("This isn't a zip file")
 
     # Make the download URL return the temp file

@@ -1,3 +1,4 @@
+import os
 from subprocess import CalledProcessError
 from unittest.mock import MagicMock
 
@@ -35,10 +36,10 @@ def test_execute_gradle(build_command, first_app_config, host_os, gradlew_name):
     build_command.build_app(first_app_config)
     build_command.subprocess.run.assert_called_once_with(
         [
-            str(build_command.bundle_path(first_app_config) / gradlew_name),
+            os.fsdecode(build_command.bundle_path(first_app_config) / gradlew_name),
             "assembleDebug",
         ],
-        cwd=str(build_command.bundle_path(first_app_config)),
+        cwd=os.fsdecode(build_command.bundle_path(first_app_config)),
         env=build_command.android_sdk.env,
         check=True,
     )

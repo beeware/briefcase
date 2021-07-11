@@ -194,7 +194,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
                         os.fsdecode(self.linuxdeploy.appimage_path),
                         "--appimage-extract-and-run",
                         "--appdir={appdir_path}".format(appdir_path=self.appdir_path(app)),
-                        "-d", str(
+                        "-d", os.fsdecode(
                             self.appdir_path(app) / "{app.bundle}.{app.app_name}.desktop".format(
                                 app=app,
                             )
@@ -207,7 +207,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
                 )
 
             # Make the binary executable.
-            self.os.chmod(str(self.binary_path(app)), 0o755)
+            self.os.chmod(self.binary_path(app), 0o755)
         except subprocess.CalledProcessError:
             print()
             raise BriefcaseCommandError(
@@ -243,7 +243,7 @@ class LinuxAppImageRunCommand(LinuxAppImageMixin, RunCommand):
             print()
             self.subprocess.run(
                 [
-                    str(self.binary_path(app)),
+                    os.fsdecode(self.binary_path(app)),
                 ],
                 check=True,
             )

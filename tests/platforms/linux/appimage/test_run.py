@@ -1,3 +1,4 @@
+import os
 from unittest.mock import MagicMock
 
 import pytest
@@ -47,7 +48,7 @@ def test_run_app(first_app_config, tmp_path):
     command.run_app(first_app_config)
 
     command.subprocess.run.assert_called_with(
-        [str(tmp_path / 'linux' / 'First_App-0.0.1-wonky.AppImage')],
+        [os.fsdecode(tmp_path / 'linux' / 'First_App-0.0.1-wonky.AppImage')],
         check=True
     )
 
@@ -67,6 +68,6 @@ def test_run_app_failed(first_app_config, tmp_path):
 
     # The run command was still invoked, though
     command.subprocess.run.assert_called_with(
-        [str(tmp_path / 'linux' / 'First_App-0.0.1-wonky.AppImage')],
+        [os.fsdecode(tmp_path / 'linux' / 'First_App-0.0.1-wonky.AppImage')],
         check=True
     )

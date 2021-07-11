@@ -120,11 +120,11 @@ def test_build_appimage(build_command, first_app, tmp_path):
             os.fsdecode(build_command.linuxdeploy.appimage_path),
             "--appimage-extract-and-run",
             "--appdir={appdir}".format(appdir=app_dir),
-            "-d", str(app_dir / "com.example.first-app.desktop"),
+            "-d", os.fsdecode(app_dir / "com.example.first-app.desktop"),
             "-o", "appimage",
-            "--deploy-deps-only", str(app_dir / 'usr' / 'app' / 'support'),
-            "--deploy-deps-only", str(app_dir / 'usr' / 'app_packages' / 'firstlib'),
-            "--deploy-deps-only", str(app_dir / 'usr' / 'app_packages' / 'secondlib'),
+            "--deploy-deps-only", os.fsdecode(app_dir / 'usr' / 'app' / 'support'),
+            "--deploy-deps-only", os.fsdecode(app_dir / 'usr' / 'app_packages' / 'firstlib'),
+            "--deploy-deps-only", os.fsdecode(app_dir / 'usr' / 'app_packages' / 'secondlib'),
         ],
         env={
             'PATH': '/usr/local/bin:/usr/bin',
@@ -135,7 +135,7 @@ def test_build_appimage(build_command, first_app, tmp_path):
     )
     # Binary is marked executable
     build_command.os.chmod.assert_called_with(
-        str(tmp_path / 'linux' / 'First_App-0.0.1-wonky.AppImage'),
+        tmp_path / 'linux' / 'First_App-0.0.1-wonky.AppImage',
         0o755
     )
 
@@ -160,11 +160,11 @@ def test_build_failure(build_command, first_app, tmp_path):
             os.fsdecode(build_command.linuxdeploy.appimage_path),
             "--appimage-extract-and-run",
             "--appdir={appdir}".format(appdir=app_dir),
-            "-d", str(app_dir / "com.example.first-app.desktop"),
+            "-d", os.fsdecode(app_dir / "com.example.first-app.desktop"),
             "-o", "appimage",
-            "--deploy-deps-only", str(app_dir / 'usr' / 'app' / 'support'),
-            "--deploy-deps-only", str(app_dir / 'usr' / 'app_packages' / 'firstlib'),
-            "--deploy-deps-only", str(app_dir / 'usr' / 'app_packages' / 'secondlib'),
+            "--deploy-deps-only", os.fsdecode(app_dir / 'usr' / 'app' / 'support'),
+            "--deploy-deps-only", os.fsdecode(app_dir / 'usr' / 'app_packages' / 'firstlib'),
+            "--deploy-deps-only", os.fsdecode(app_dir / 'usr' / 'app_packages' / 'secondlib'),
         ],
         env={
             'PATH': '/usr/local/bin:/usr/bin',
@@ -218,10 +218,10 @@ def test_build_appimage_with_docker(build_command, first_app, tmp_path):
             "--deploy-deps-only", "/app/appimage/First App/First App.AppDir/usr/app_packages/secondlib",
         ],
         check=True,
-        cwd=str(tmp_path / 'linux')
+        cwd=os.fsdecode(tmp_path / 'linux')
     )
     # Binary is marked executable
     build_command.os.chmod.assert_called_with(
-        str(tmp_path / 'linux' / 'First_App-0.0.1-wonky.AppImage'),
+        tmp_path / 'linux' / 'First_App-0.0.1-wonky.AppImage',
         0o755
     )

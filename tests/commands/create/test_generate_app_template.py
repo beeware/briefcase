@@ -299,7 +299,7 @@ def test_cached_template(create_command, myapp):
 
     # Cookiecutter was invoked with the path to the *cached* template name
     create_command.cookiecutter.assert_called_once_with(
-        str(Path.home() / '.cookiecutters' / 'briefcase-tester-dummy-template'),
+        os.fsdecode(Path.home() / '.cookiecutters' / 'briefcase-tester-dummy-template'),
         no_input=True,
         checkout=create_command.python_version_tag,
         output_dir=os.fsdecode(create_command.platform_path),
@@ -343,7 +343,7 @@ def test_cached_template_offline(create_command, myapp, capsys):
 
     # Cookiecutter was invoked with the path to the *cached* template name
     create_command.cookiecutter.assert_called_once_with(
-        str(Path.home() / '.cookiecutters' / 'briefcase-tester-dummy-template'),
+        os.fsdecode(Path.home() / '.cookiecutters' / 'briefcase-tester-dummy-template'),
         no_input=True,
         checkout=create_command.python_version_tag,
         output_dir=os.fsdecode(create_command.platform_path),

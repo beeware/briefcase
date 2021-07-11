@@ -371,7 +371,7 @@ class CreateCommand(BaseCommand):
             support_path = self.support_path(app)
             support_path.mkdir(parents=True, exist_ok=True)
             self.shutil.unpack_archive(
-                str(support_filename),
+                os.fsdecode(support_filename),
                 extract_dir=os.fsdecode(support_path)
             )
         except (shutil.ReadError, EOFError):
@@ -416,7 +416,7 @@ class CreateCommand(BaseCommand):
                 # Remove existing versions of the code
                 if target.exists():
                     if target.is_dir():
-                        self.shutil.rmtree(str(target))
+                        self.shutil.rmtree(target)
                     else:
                         target.unlink()
 
@@ -424,9 +424,9 @@ class CreateCommand(BaseCommand):
                 if not original.exists():
                     raise MissingAppSources(src)
                 elif original.is_dir():
-                    self.shutil.copytree(str(original), str(target))
+                    self.shutil.copytree(original, target)
                 else:
-                    self.shutil.copy(str(original), str(target))
+                    self.shutil.copy(original, target)
         else:
             print("No sources defined for {app.app_name}.".format(app=app))
 
@@ -543,7 +543,7 @@ class CreateCommand(BaseCommand):
                 # Make sure the target directory exists
                 target.parent.mkdir(parents=True, exist_ok=True)
                 # Copy the source image to the target location
-                self.shutil.copy(str(full_source), str(target))
+                self.shutil.copy(full_source, target)
             else:
                 print(
                     "Unable to find {source_filename} for {full_role}; using default".format(

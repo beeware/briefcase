@@ -1,3 +1,4 @@
+import os
 import subprocess
 
 from briefcase.commands import (
@@ -124,7 +125,7 @@ class macOSXcodeRunCommand(macOSXcodeMixin, RunCommand):
         ))
         try:
             print()
-            self.subprocess.run(['open', str(self.binary_path(app))], check=True)
+            self.subprocess.run(['open', os.fsdecode(self.binary_path(app))], check=True)
         except subprocess.CalledProcessError:
             print()
             raise BriefcaseCommandError(

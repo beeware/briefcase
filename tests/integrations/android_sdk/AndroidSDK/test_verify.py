@@ -129,7 +129,7 @@ def test_invalid_user_provided_sdk(mock_command, tmp_path):
 
     # Set the environment to specify an ANDROID_SDK_ROOT that doesn't exist
     mock_command.os.environ = {
-        'ANDROID_SDK_ROOT': str(tmp_path / "other_sdk")
+        'ANDROID_SDK_ROOT': os.fsdecode(tmp_path / "other_sdk")
     }
 
     # Expect verify() to succeed
@@ -187,7 +187,7 @@ def test_download_sdk(mock_command, tmp_path, host_os):
 
     # On non-Windows, ensure the unpacked binary was made executable
     if host_os != 'Windows':
-        assert os.access(str(example_tool), os.X_OK)
+        assert os.access(example_tool, os.X_OK)
 
     # The license has been accepted
     assert (android_sdk_root_path / "licenses" / "android-sdk-license").exists()

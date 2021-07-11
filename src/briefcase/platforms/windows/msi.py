@@ -1,3 +1,4 @@
+import os
 import struct
 import subprocess
 import sys
@@ -143,7 +144,7 @@ class WindowsMSIRunCommand(WindowsMSIMixin, RunCommand):
             print()
             self.subprocess.run(
                 [
-                    str(self.binary_path(app) / 'src' / 'python' / 'pythonw.exe'),
+                    os.fsdecode(self.binary_path(app) / 'src' / 'python' / 'pythonw.exe'),
                     "-m", app.module_name
                 ],
                 check=True,
@@ -187,7 +188,7 @@ class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
                     "-out", "{app.app_name}-manifest.wxs".format(app=app),
                 ],
                 check=True,
-                cwd=str(self.bundle_path(app))
+                cwd=os.fsdecode(self.bundle_path(app))
             )
         except subprocess.CalledProcessError:
             raise BriefcaseCommandError(
@@ -208,7 +209,7 @@ class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
                     "{app.app_name}-manifest.wxs".format(app=app),
                 ],
                 check=True,
-                cwd=str(self.bundle_path(app))
+                cwd=os.fsdecode(self.bundle_path(app))
             )
         except subprocess.CalledProcessError:
             raise BriefcaseCommandError(
@@ -224,12 +225,12 @@ class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
                     "-nologo",  # Don't display startup text
                     "-ext", "WixUtilExtension",
                     "-ext", "WixUIExtension",
-                    "-o", str(self.distribution_path(app, packaging_format='msi')),
+                    "-o", os.fsdecode(self.distribution_path(app, packaging_format='msi')),
                     "{app.app_name}.wixobj".format(app=app),
                     "{app.app_name}-manifest.wixobj".format(app=app),
                 ],
                 check=True,
-                cwd=str(self.bundle_path(app))
+                cwd=os.fsdecode(self.bundle_path(app))
             )
         except subprocess.CalledProcessError:
             print()

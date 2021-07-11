@@ -1,3 +1,4 @@
+import os
 import subprocess
 
 from briefcase.commands import (
@@ -110,11 +111,11 @@ class GradleBuildCommand(GradleMixin, BuildCommand):
                 # Windows needs the full path to `gradlew`; macOS & Linux can find it
                 # via `./gradlew`. For simplicity of implementation, we always provide
                 # the full path.
-                [str(self.gradlew_path(app)), "assembleDebug"],
+                [os.fsdecode(self.gradlew_path(app)), "assembleDebug"],
                 env=self.android_sdk.env,
                 # Set working directory so gradle can use the app bundle path as its
                 # project root, i.e., to avoid 'Task assembleDebug not found'.
-                cwd=str(self.bundle_path(app)),
+                cwd=os.fsdecode(self.bundle_path(app)),
                 check=True
             )
         except subprocess.CalledProcessError:
@@ -213,11 +214,11 @@ class GradlePackageCommand(GradleMixin, PackageCommand):
                 # Windows needs the full path to `gradlew`; macOS & Linux can find it
                 # via `./gradlew`. For simplicity of implementation, we always provide
                 # the full path.
-                [str(self.gradlew_path(app)), "bundleRelease"],
+                [os.fsdecode(self.gradlew_path(app)), "bundleRelease"],
                 env=self.android_sdk.env,
                 # Set working directory so gradle can use the app bundle path as its
                 # project root, i.e., to avoid 'Task bundleRelease not found'.
-                cwd=str(self.bundle_path(app)),
+                cwd=os.fsdecode(self.bundle_path(app)),
                 check=True
             )
         except subprocess.CalledProcessError:

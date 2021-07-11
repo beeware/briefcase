@@ -1,4 +1,4 @@
-# import sys
+import os
 from unittest import mock
 
 import pytest
@@ -24,7 +24,7 @@ def test_package_msi(package_command, first_app_config, tmp_path):
         # Collect manifest
         mock.call(
             [
-                str(tmp_path / 'wix' / 'bin' / 'heat.exe'),
+                os.fsdecode(tmp_path / 'wix' / 'bin' / 'heat.exe'),
                 "dir",
                 "src",
                 "-nologo",
@@ -39,12 +39,12 @@ def test_package_msi(package_command, first_app_config, tmp_path):
                 "-out", "first-app-manifest.wxs",
             ],
             check=True,
-            cwd=str(tmp_path / 'windows' / 'msi' / 'First App'),
+            cwd=os.fsdecode(tmp_path / 'windows' / 'msi' / 'First App'),
         ),
         # Compile MSI
         mock.call(
             [
-                str(tmp_path / 'wix' / 'bin' / 'candle.exe'),
+                os.fsdecode(tmp_path / 'wix' / 'bin' / 'candle.exe'),
                 "-nologo",
                 "-ext", "WixUtilExtension",
                 "-ext", "WixUIExtension",
@@ -53,21 +53,21 @@ def test_package_msi(package_command, first_app_config, tmp_path):
                 "first-app-manifest.wxs",
             ],
             check=True,
-            cwd=str(tmp_path / 'windows' / 'msi' / 'First App'),
+            cwd=os.fsdecode(tmp_path / 'windows' / 'msi' / 'First App'),
         ),
 
         # Link MSI
         mock.call(
             [
-                str(tmp_path / 'wix' / 'bin' / 'light.exe'),
+                os.fsdecode(tmp_path / 'wix' / 'bin' / 'light.exe'),
                 "-nologo",
                 "-ext", "WixUtilExtension",
                 "-ext", "WixUIExtension",
-                "-o", str(tmp_path / 'windows' / 'First App-0.0.1.msi'),
+                "-o", os.fsdecode(tmp_path / 'windows' / 'First App-0.0.1.msi'),
                 "first-app.wixobj",
                 "first-app-manifest.wixobj",
             ],
             check=True,
-            cwd=str(tmp_path / 'windows' / 'msi' / 'First App'),
+            cwd=os.fsdecode(tmp_path / 'windows' / 'msi' / 'First App'),
         ),
     ])

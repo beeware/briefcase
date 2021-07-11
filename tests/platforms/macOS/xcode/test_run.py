@@ -1,3 +1,4 @@
+import os
 import subprocess
 from unittest import mock
 
@@ -15,7 +16,7 @@ def test_run_app(first_app_config, tmp_path):
     command.run_app(first_app_config)
 
     command.subprocess.run.assert_called_with(
-        ['open', str(command.binary_path(first_app_config))],
+        ['open', os.fsdecode(command.binary_path(first_app_config))],
         check=True
     )
 
@@ -25,7 +26,7 @@ def test_run_app_failed(first_app_config, tmp_path):
     command = macOSXcodeRunCommand(base_path=tmp_path)
     command.subprocess = mock.MagicMock()
     command.subprocess.run.side_effect = subprocess.CalledProcessError(
-        cmd=['open', str(command.binary_path(first_app_config))],
+        cmd=['open', os.fsdecode(command.binary_path(first_app_config))],
         returncode=1
     )
 
@@ -34,6 +35,6 @@ def test_run_app_failed(first_app_config, tmp_path):
 
     # The run command was still invoked, though
     command.subprocess.run.assert_called_with(
-        ['open', str(command.binary_path(first_app_config))],
+        ['open', os.fsdecode(command.binary_path(first_app_config))],
         check=True
     )

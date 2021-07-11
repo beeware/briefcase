@@ -1,3 +1,4 @@
+import os
 import subprocess
 from pathlib import Path
 
@@ -17,7 +18,7 @@ def test_simple_command(mock_sdk, tmp_path):
     # Check that adb was invoked with the expected commands
     mock_sdk.command.subprocess.check_output.assert_called_once_with(
         [
-            str(tmp_path / "sdk" / "platform-tools" / "adb"),
+            os.fsdecode(tmp_path / "sdk" / "platform-tools" / "adb"),
             "-s",
             "exampleDevice",
             "example",
@@ -59,7 +60,7 @@ def test_error_handling(mock_sdk, tmp_path, name, exception):
     # Check that adb was invoked as expected
     mock_sdk.command.subprocess.check_output.assert_called_once_with(
         [
-            str(tmp_path / "sdk" / "platform-tools" / "adb"),
+            os.fsdecode(tmp_path / "sdk" / "platform-tools" / "adb"),
             "-s",
             "exampleDevice",
             "example",

@@ -1,3 +1,4 @@
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -91,7 +92,7 @@ class JDK:
                 # This verifies that we have a JDK, not a just a JRE.
                 output = command.subprocess.check_output(
                     [
-                        str(Path(java_home) / 'bin' / 'javac'),
+                        os.fsdecode(Path(java_home) / 'bin' / 'javac'),
                         '-version',
                     ],
                     universal_newlines=True,
