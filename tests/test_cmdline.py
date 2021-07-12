@@ -14,7 +14,7 @@ from briefcase.exceptions import (
 from briefcase.platforms.linux.appimage import LinuxAppImageCreateCommand
 from briefcase.platforms.macOS.app import (
     macOSAppCreateCommand,
-    macOSAppPublishCommand,
+    macOSAppPublishCommand
 )
 from briefcase.platforms.windows.msi import WindowsMSICreateCommand
 

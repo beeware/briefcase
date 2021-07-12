@@ -1,12 +1,14 @@
+import itertools
 import os
 import subprocess
-import itertools
 
 from briefcase.config import BaseConfig
 from briefcase.console import select_option
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.integrations.xcode import get_identities
-from briefcase.integrations.xcode import verify_command_line_tools_install
+from briefcase.integrations.xcode import (
+    get_identities,
+    verify_command_line_tools_install
+)
 
 try:
     import dmgbuild

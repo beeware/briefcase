@@ -11,8 +11,8 @@ from briefcase.commands import (
 )
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.platforms.macOS import macOSMixin, macOSPackageMixin
 from briefcase.integrations.xcode import verify_xcode_install
+from briefcase.platforms.macOS import macOSMixin, macOSPackageMixin
 
 
 class macOSXcodeMixin(macOSMixin):
