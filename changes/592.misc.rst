@@ -1,0 +1,2 @@
+str() functions from str(pathlib.Path(...)) are removed or replaced with os.fsdecode.
+str() functions were introduced for compatibility with Python 3.5.
