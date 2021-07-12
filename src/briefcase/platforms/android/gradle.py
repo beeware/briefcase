@@ -191,10 +191,21 @@ class GradleRunCommand(GradleMixin, RunCommand):
         ))
         adb.install_apk(self.binary_path(app))
 
+        print()
+        print("[{app.app_name}] Clearing device log...".format(
+            app=app,
+        ))
+        adb.clear_log()
+
         # To start the app, we launch `org.beeware.android.MainActivity`.
         print()
         print("[{app.app_name}] Launching app...".format(app=app))
         adb.start_app(package, "org.beeware.android.MainActivity")
+
+        print()
+        print("[{app.app_name}] Following device log output (type CTRL-C to stop log)...".format(app=app))
+        print("=" * 75)
+        adb.logcat()
 
 
 class GradlePackageCommand(GradleMixin, PackageCommand):
