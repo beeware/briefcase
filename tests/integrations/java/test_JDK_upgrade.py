@@ -1,4 +1,3 @@
-import os
 import shutil
 from unittest.mock import MagicMock
 
@@ -57,7 +56,7 @@ def test_existing_install(test_command, tmp_path):
 
     # We actually need to delete the original java install
     def rmtree(path):
-        shutil.rmtree(os.fsdecode(path))
+        shutil.rmtree(path)
     test_command.shutil.rmtree.side_effect = rmtree
 
     # Mock the cached download path
@@ -104,7 +103,7 @@ def test_macOS_existing_install(test_command, tmp_path):
 
     # We actually need to delete the original java install
     def rmtree(path):
-        shutil.rmtree(os.fsdecode(path))
+        shutil.rmtree(path)
     test_command.shutil.rmtree.side_effect = rmtree
 
     # Mock the cached download path
@@ -148,7 +147,7 @@ def test_download_fail(test_command, tmp_path):
 
     # We actually need to delete the original java install
     def rmtree(path):
-        shutil.rmtree(os.fsdecode(path))
+        shutil.rmtree(path)
     test_command.shutil.rmtree.side_effect = rmtree
 
     # Mock a failure on download
@@ -183,7 +182,7 @@ def test_unpack_fail(test_command, tmp_path):
 
     # We actually need to delete the original java install
     def rmtree(path):
-        shutil.rmtree(os.fsdecode(path))
+        shutil.rmtree(path)
     test_command.shutil.rmtree.side_effect = rmtree
 
     # Mock the cached download path

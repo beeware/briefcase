@@ -191,7 +191,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
             with self.dockerize(app) as docker:
                 docker.run(
                     [
-                        os.fsdecode(self.linuxdeploy.appimage_path),
+                        self.linuxdeploy.appimage_path,
                         "--appimage-extract-and-run",
                         "--appdir={appdir_path}".format(appdir_path=self.appdir_path(app)),
                         "-d", os.fsdecode(
@@ -203,7 +203,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
                     ] + deploy_deps_args,
                     env=env,
                     check=True,
-                    cwd=os.fsdecode(self.platform_path)
+                    cwd=self.platform_path
                 )
 
             # Make the binary executable.

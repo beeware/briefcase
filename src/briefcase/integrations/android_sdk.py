@@ -855,7 +855,7 @@ class ADB:
                     "-s",
                     self.device,
                 ]
-                + list(arguments),
+                + [(os.fsdecode(arg) if isinstance(arg, Path) else arg) for arg in arguments],
                 universal_newlines=True,
                 stderr=subprocess.STDOUT,
             )
@@ -873,7 +873,7 @@ class ADB:
         Returns `None` on success; raises an exception on failure.
         """
         try:
-            self.run("install", os.fsdecode(apk_path))
+            self.run("install", apk_path)
         except subprocess.CalledProcessError:
             raise BriefcaseCommandError(
                 "Unable to install APK {apk_path} on {device}".format(

@@ -32,7 +32,7 @@ def test_simulator_is_missing(tmp_path):
     simulators = get_simulators(
         command,
         'iOS',
-        simulator_location=os.fsdecode(tmp_path / 'CoreSimulator.framework'),
+        simulator_location=tmp_path / 'CoreSimulator.framework',
     )
 
     # The prompt was displayed

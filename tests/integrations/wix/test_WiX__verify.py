@@ -50,9 +50,9 @@ def test_valid_wix_envvar(mock_command, tmp_path):
     mock_command.os.environ.get.assert_called_with('WIX')
 
     # The returned paths are as expected (and are the full paths)
-    assert os.fsdecode(wix.heat_exe) == os.fsdecode(tmp_path / 'wix' / 'bin' / 'heat.exe')
-    assert os.fsdecode(wix.light_exe) == os.fsdecode(tmp_path / 'wix' / 'bin' / 'light.exe')
-    assert os.fsdecode(wix.candle_exe) == os.fsdecode(tmp_path / 'wix' / 'bin' / 'candle.exe')
+    assert wix.heat_exe == tmp_path / 'wix' / 'bin' / 'heat.exe'
+    assert wix.light_exe == tmp_path / 'wix' / 'bin' / 'light.exe'
+    assert wix.candle_exe == tmp_path / 'wix' / 'bin' / 'candle.exe'
 
 
 def test_invalid_wix_envvar(mock_command, tmp_path):

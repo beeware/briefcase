@@ -173,7 +173,7 @@ class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
             print("Compiling application manifest...")
             self.subprocess.run(
                 [
-                    str(self.wix.heat_exe),
+                    self.wix.heat_exe,
                     "dir",
                     "src",
                     "-nologo",  # Don't display startup text
@@ -188,7 +188,7 @@ class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
                     "-out", "{app.app_name}-manifest.wxs".format(app=app),
                 ],
                 check=True,
-                cwd=os.fsdecode(self.bundle_path(app))
+                cwd=self.bundle_path(app)
             )
         except subprocess.CalledProcessError:
             raise BriefcaseCommandError(
@@ -200,7 +200,7 @@ class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
             print("Compiling application installer...")
             self.subprocess.run(
                 [
-                    str(self.wix.candle_exe),
+                    self.wix.candle_exe,
                     "-nologo",  # Don't display startup text
                     "-ext", "WixUtilExtension",
                     "-ext", "WixUIExtension",
@@ -209,7 +209,7 @@ class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
                     "{app.app_name}-manifest.wxs".format(app=app),
                 ],
                 check=True,
-                cwd=os.fsdecode(self.bundle_path(app))
+                cwd=self.bundle_path(app)
             )
         except subprocess.CalledProcessError:
             raise BriefcaseCommandError(
@@ -221,16 +221,16 @@ class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
             print("Linking application installer...")
             self.subprocess.run(
                 [
-                    str(self.wix.light_exe),
+                    self.wix.light_exe,
                     "-nologo",  # Don't display startup text
                     "-ext", "WixUtilExtension",
                     "-ext", "WixUIExtension",
-                    "-o", os.fsdecode(self.distribution_path(app, packaging_format='msi')),
+                    "-o", self.distribution_path(app, packaging_format='msi'),
                     "{app.app_name}.wixobj".format(app=app),
                     "{app.app_name}-manifest.wixobj".format(app=app),
                 ],
                 check=True,
-                cwd=os.fsdecode(self.bundle_path(app))
+                cwd=self.bundle_path(app)
             )
         except subprocess.CalledProcessError:
             print()

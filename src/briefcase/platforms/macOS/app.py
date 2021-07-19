@@ -46,14 +46,14 @@ class macOSAppCreateCommand(macOSAppMixin, CreateCommand):
         super().install_app_support_package(app)
 
         # keep only Python lib from support package
-        lib_path = os.fsdecode(self.support_path(app).parent / 'Support' / 'Python' / 'Resources' / 'lib')
+        lib_path = self.support_path(app).parent / 'Support' / 'Python' / 'Resources' / 'lib'
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            self.shutil.move(lib_path, tmpdir)
-            self.shutil.rmtree(os.fsdecode(self.support_path(app)))
+            self.shutil.move(os.fsdecode(lib_path), os.fsdecode(tmpdir))
+            self.shutil.rmtree(self.support_path(app))
 
-            self.os.makedirs(os.fsdecode(Path(lib_path).parent))
-            self.shutil.move(os.fsdecode(Path(tmpdir) / 'lib'), lib_path)
+            self.os.makedirs(Path(lib_path).parent)
+            self.shutil.move(os.fsdecode(Path(tmpdir) / 'lib'), os.fsdecode(lib_path))
 
 
 class macOSAppUpdateCommand(macOSAppMixin, UpdateCommand):

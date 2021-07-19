@@ -638,7 +638,7 @@ class CreateCommand(BaseCommand):
             print("[{app.app_name}] Removing old application bundle...".format(
                 app=app
             ))
-            self.shutil.rmtree(os.fsdecode(bundle_path))
+            self.shutil.rmtree(bundle_path)
 
         print()
         print('[{app.app_name}] Generating application template...'.format(

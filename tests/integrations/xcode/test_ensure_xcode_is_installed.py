@@ -28,7 +28,7 @@ def test_not_installed(tmp_path):
     with pytest.raises(BriefcaseCommandError):
         ensure_xcode_is_installed(
             command,
-            xcode_location=os.fsdecode(tmp_path / 'Xcode.app'),
+            xcode_location=tmp_path / 'Xcode.app',
         )
 
     # xcode-select was not invoked
