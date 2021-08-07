@@ -370,6 +370,7 @@ class CreateCommand(BaseCommand):
             print("Unpacking support package...")
             support_path = self.support_path(app)
             support_path.mkdir(parents=True, exist_ok=True)
+            # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
             self.shutil.unpack_archive(
                 os.fsdecode(support_filename),
                 extract_dir=os.fsdecode(support_path)

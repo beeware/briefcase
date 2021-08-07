@@ -12,6 +12,7 @@ from briefcase.exceptions import (
     NetworkFailure
 )
 from briefcase.integrations.android_sdk import AndroidSDK
+from tests.utils import FsPathMock
 
 
 @pytest.fixture
@@ -153,9 +154,14 @@ def test_download_sdk(mock_command, tmp_path, host_os):
     # Mock-out `host_os` so we only do our permission check on non-Windows.
     mock_command.host_os = host_os
 
-    # The download will produce a cached file
-    cache_file = MagicMock()
-    cache_file.__str__.return_value = "/path/to/download.zip"
+    # The download will produce a cached file.
+    # Consider to remove if block when we drop py3.7 support, only keep statements from else.
+    # MagicMock below py3.8 doesn't has __fspath__ attribute.
+    if sys.version_info < (3, 8):
+        cache_file = FsPathMock("/path/to/download.zip")
+    else:
+        cache_file = MagicMock()
+        cache_file.__fspath__.return_value = "/path/to/download.zip"
     mock_command.download_url.return_value = cache_file
 
     # Create a file that would have been created by unpacking the archive
@@ -177,12 +183,13 @@ def test_download_sdk(mock_command, tmp_path, host_os):
         url=url,
         download_path=mock_command.tools_path,
     )
+    # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
     mock_command.shutil.unpack_archive.assert_called_once_with(
         "/path/to/download.zip",
         extract_dir=os.fsdecode(android_sdk_root_path)
     )
 
-    # The cached file will be deleeted
+    # The cached file will be deleted
     cache_file.unlink.assert_called_once_with()
 
     # On non-Windows, ensure the unpacked binary was made executable
@@ -220,8 +227,13 @@ def test_download_sdk_if_sdkmanager_not_executable(mock_command, tmp_path):
     (android_sdk_root_path / "tools" / "bin" / "sdkmanager").touch(mode=0o644)
 
     # The download will produce a cached file
-    cache_file = MagicMock()
-    cache_file.__str__.return_value = "/path/to/download.zip"
+    # Consider to remove if block when we drop py3.7 support, only keep statements from else.
+    # MagicMock below py3.8 doesn't has __fspath__ attribute.
+    if sys.version_info < (3, 8):
+        cache_file = FsPathMock("/path/to/download.zip")
+    else:
+        cache_file = MagicMock()
+        cache_file.__fspath__.return_value = "/path/to/download.zip"
     mock_command.download_url.return_value = cache_file
 
     # Set up a side effect for accepting the license
@@ -235,6 +247,7 @@ def test_download_sdk_if_sdkmanager_not_executable(mock_command, tmp_path):
         url="https://dl.google.com/android/repository/sdk-tools-unknown-4333796.zip",
         download_path=mock_command.tools_path,
     )
+    # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
     mock_command.shutil.unpack_archive.assert_called_once_with(
         "/path/to/download.zip",
         extract_dir=os.fsdecode(android_sdk_root_path)
@@ -271,8 +284,13 @@ def test_detects_bad_zipfile(mock_command, tmp_path):
     android_sdk_root_path = tmp_path / "tools" / "android_sdk"
 
     # The download will produce a cached file
-    cache_file = MagicMock()
-    cache_file.__str__.return_value = "/path/to/download.zip"
+    # Consider to remove if block when we drop py3.7 support, only keep statements from else.
+    # MagicMock below py3.8 doesn't has __fspath__ attribute.
+    if sys.version_info < (3, 8):
+        cache_file = FsPathMock("/path/to/download.zip")
+    else:
+        cache_file = MagicMock()
+        cache_file.__fspath__.return_value = "/path/to/download.zip"
     mock_command.download_url.return_value = cache_file
 
     # But the unpack will fail.
@@ -286,6 +304,7 @@ def test_detects_bad_zipfile(mock_command, tmp_path):
         url="https://dl.google.com/android/repository/sdk-tools-unknown-4333796.zip",
         download_path=mock_command.tools_path,
     )
+    # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
     mock_command.shutil.unpack_archive.assert_called_once_with(
         "/path/to/download.zip",
         extract_dir=os.fsdecode(android_sdk_root_path)

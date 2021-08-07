@@ -1,4 +1,5 @@
 import os
+import sys
 from unittest.mock import MagicMock
 
 import pytest
@@ -10,6 +11,7 @@ from briefcase.exceptions import (
     NetworkFailure
 )
 from briefcase.integrations.wix import WIX_DOWNLOAD_URL, WiX
+from tests.utils import FsPathMock
 
 
 @pytest.fixture
@@ -100,9 +102,14 @@ def test_download_wix(mock_command, tmp_path):
     # Mock the download
     wix_path = tmp_path / 'tools' / 'wix'
 
-    wix_zip_path = tmp_path / 'tools' / 'wix.zip'
-    wix_zip = MagicMock()
-    wix_zip.__str__.return_value = os.fsdecode(wix_zip_path)
+    wix_zip_path = os.fsdecode(tmp_path / 'tools' / 'wix.zip')
+    # Consider to remove if block when we drop py3.7 support, only keep statements from else.
+    # MagicMock below py3.8 doesn't has __fspath__ attribute.
+    if sys.version_info < (3, 8):
+        wix_zip = FsPathMock(wix_zip_path)
+    else:
+        wix_zip = MagicMock()
+        wix_zip.__fspath__.return_value = wix_zip_path
 
     mock_command.download_url.return_value = wix_zip
 
@@ -118,7 +125,8 @@ def test_download_wix(mock_command, tmp_path):
         download_path=tmp_path / 'tools',
     )
 
-    # The download was unpacked
+    # The download was unpacked.
+    # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
     mock_command.shutil.unpack_archive.assert_called_with(
         os.fsdecode(wix_zip_path),
         extract_dir=os.fsdecode(wix_path)
@@ -182,9 +190,14 @@ def test_unpack_fail(mock_command, tmp_path):
     # Mock the download
     wix_path = tmp_path / 'tools' / 'wix'
 
-    wix_zip_path = tmp_path / 'tools' / 'wix.zip'
-    wix_zip = MagicMock()
-    wix_zip.__str__.return_value = os.fsdecode(wix_zip_path)
+    wix_zip_path = os.fsdecode(tmp_path / 'tools' / 'wix.zip')
+    # Consider to remove if block when we drop py3.7 support, only keep statements from else.
+    # MagicMock below py3.8 doesn't has __fspath__ attribute.
+    if sys.version_info < (3, 8):
+        wix_zip = FsPathMock(wix_zip_path)
+    else:
+        wix_zip = MagicMock()
+        wix_zip.__fspath__.return_value = wix_zip_path
 
     mock_command.download_url.return_value = wix_zip
 
@@ -205,7 +218,8 @@ def test_unpack_fail(mock_command, tmp_path):
         download_path=tmp_path / 'tools',
     )
 
-    # The download was unpacked
+    # The download was unpacked.
+    # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
     mock_command.shutil.unpack_archive.assert_called_with(
         os.fsdecode(wix_zip_path),
         extract_dir=os.fsdecode(wix_path)

@@ -200,7 +200,8 @@ class AndroidSDK:
 
         try:
             print("Install Android SDK...")
-            self.command.shutil.unpack_archive(str(sdk_zip_path), extract_dir=str(self.root_path))
+            # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
+            self.command.shutil.unpack_archive(os.fsdecode(sdk_zip_path), extract_dir=os.fsdecode(self.root_path))
         except (shutil.ReadError, EOFError):
             raise BriefcaseCommandError(
                 """\
@@ -649,9 +650,10 @@ An emulator named '{avd}' already exists.
 
             # Unpack skin archive
             try:
+                # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
                 self.command.shutil.unpack_archive(
-                    str(skin_tgz_path),
-                    extract_dir=str(skin_path)
+                    os.fsdecode(skin_tgz_path),
+                    extract_dir=os.fsdecode(skin_path)
                 )
             except (shutil.ReadError, EOFError):
                 raise BriefcaseCommandError(

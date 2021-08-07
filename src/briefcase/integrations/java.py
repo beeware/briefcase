@@ -255,9 +255,10 @@ class JDK:
 
         try:
             print("Installing AdoptOpenJDK...")
+            # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
             self.command.shutil.unpack_archive(
-                str(jdk_zip_path),
-                extract_dir=str(self.command.tools_path)
+                os.fsdecode(jdk_zip_path),
+                extract_dir=os.fsdecode(self.command.tools_path)
             )
         except (shutil.ReadError, EOFError):
             raise BriefcaseCommandError(
