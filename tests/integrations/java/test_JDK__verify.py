@@ -1,5 +1,7 @@
+import os
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 from unittest import mock
 
@@ -12,6 +14,7 @@ from briefcase.exceptions import (
     NetworkFailure
 )
 from briefcase.integrations.java import JDK
+from tests.utils import FsPathMock
 
 
 @pytest.fixture
@@ -51,7 +54,7 @@ def test_macos_tool_java_home(test_command, capsys):
         ),
         # Second is a call to verify a valid Java version
         mock.call(
-            [str(Path('/path/to/java/bin/javac')), '-version'],
+            [os.fsdecode(Path('/path/to/java/bin/javac')), '-version'],
             universal_newlines=True,
             stderr=subprocess.STDOUT,
         ),
@@ -116,7 +119,7 @@ def test_macos_provided_overrides_tool_java_home(test_command, capsys):
 
     # A single call to check output
     test_command.subprocess.check_output.assert_called_once_with(
-        [str(Path('/path/to/java/bin/javac')), '-version'],
+        [os.fsdecode(Path('/path/to/java/bin/javac')), '-version'],
         universal_newlines=True,
         stderr=subprocess.STDOUT,
     ),
@@ -143,7 +146,7 @@ def test_valid_provided_java_home(test_command, capsys):
 
     # A single call to check output
     test_command.subprocess.check_output.assert_called_once_with(
-        [str(Path('/path/to/java/bin/javac')), '-version'],
+        [os.fsdecode(Path('/path/to/java/bin/javac')), '-version'],
         universal_newlines=True,
         stderr=subprocess.STDOUT,
     ),
@@ -173,7 +176,7 @@ def test_invalid_jdk_version(test_command, tmp_path, capsys):
 
     # A single call was made to check javac
     test_command.subprocess.check_output.assert_called_once_with(
-        [str(Path('/path/to/java/bin/javac')), '-version'],
+        [os.fsdecode(Path('/path/to/java/bin/javac')), '-version'],
         universal_newlines=True,
         stderr=subprocess.STDOUT,
     ),
@@ -203,7 +206,7 @@ def test_no_javac(test_command, tmp_path, capsys):
 
     # A single call was made to check javac
     test_command.subprocess.check_output.assert_called_once_with(
-        [str(Path('/path/to/nowhere/bin/javac')), '-version'],
+        [os.fsdecode(Path('/path/to/nowhere/bin/javac')), '-version'],
         universal_newlines=True,
         stderr=subprocess.STDOUT,
     ),
@@ -235,7 +238,7 @@ def test_javac_error(test_command, tmp_path, capsys):
 
     # A single call was made to check javac
     test_command.subprocess.check_output.assert_called_once_with(
-        [str(Path('/path/to/java/bin/javac')), '-version'],
+        [os.fsdecode(Path('/path/to/java/bin/javac')), '-version'],
         universal_newlines=True,
         stderr=subprocess.STDOUT,
     ),
@@ -265,7 +268,7 @@ def test_unparseable_javac_version(test_command, tmp_path, capsys):
 
     # A single call was made to check javac
     test_command.subprocess.check_output.assert_called_once_with(
-        [str(Path('/path/to/java/bin/javac')), '-version'],
+        [os.fsdecode(Path('/path/to/java/bin/javac')), '-version'],
         universal_newlines=True,
         stderr=subprocess.STDOUT,
     ),
@@ -308,8 +311,13 @@ def test_successful_jdk_download(test_command, tmp_path, capsys, host_os, jdk_ur
     test_command.os.environ.get = mock.MagicMock(return_value='/does/not/exist')
 
     # Mock the cached download path
-    archive = mock.MagicMock()
-    archive.__str__.return_value = '/path/to/download.zip'
+    # Consider to remove if block when we drop py3.7 support, only keep statements from else.
+    # MagicMock below py3.8 doesn't has __fspath__ attribute.
+    if sys.version_info < (3, 8):
+        archive = FsPathMock("/path/to/download.zip")
+    else:
+        archive = mock.MagicMock()
+        archive.__fspath__.return_value = "/path/to/download.zip"
     test_command.download_url.return_value = archive
 
     # Create a directory to make it look like Java was downloaded and unpacked.
@@ -331,9 +339,10 @@ def test_successful_jdk_download(test_command, tmp_path, capsys, host_os, jdk_ur
         download_path=tmp_path / "tools",
     )
     # The archive was unpacked
+    # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
     test_command.shutil.unpack_archive.assert_called_with(
-        '/path/to/download.zip',
-        extract_dir=str(tmp_path / "tools")
+        "/path/to/download.zip",
+        extract_dir=os.fsdecode(tmp_path / "tools")
     )
     # The original archive was deleted
     archive.unlink.assert_called_once_with()
@@ -380,8 +389,13 @@ def test_invalid_jdk_archive(test_command, tmp_path):
     test_command.host_os = 'Linux'
 
     # Mock the cached download path
-    archive = mock.MagicMock()
-    archive.__str__.return_value = '/path/to/download.zip'
+    # Consider to remove if block when we drop py3.7 support, only keep statements from else.
+    # MagicMock below py3.8 doesn't has __fspath__ attribute.
+    if sys.version_info < (3, 8):
+        archive = FsPathMock("/path/to/download.zip")
+    else:
+        archive = mock.MagicMock()
+        archive.__fspath__.return_value = "/path/to/download.zip"
     test_command.download_url.return_value = archive
 
     # Mock an unpack failure due to an invalid archive
@@ -396,10 +410,11 @@ def test_invalid_jdk_archive(test_command, tmp_path):
             "jdk8u242-b08/OpenJDK8U-jdk_x64_linux_hotspot_8u242b08.tar.gz",
         download_path=tmp_path / "tools",
     )
-    # An attempt was made to unpack the archive
+    # An attempt was made to unpack the archive.
+    # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
     test_command.shutil.unpack_archive.assert_called_with(
-        '/path/to/download.zip',
-        extract_dir=str(tmp_path / "tools")
+        "/path/to/download.zip",
+        extract_dir=os.fsdecode(tmp_path / "tools")
     )
     # The original archive was not deleted
     assert archive.unlink.call_count == 0

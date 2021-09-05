@@ -8,7 +8,7 @@ def test_install_app_support_package(first_app_config, tmp_path):
     "A support package can be downloaded and unpacked where it is needed"
     # Write a temporary support zip file which includes the Python lib
     support_file = tmp_path / 'out.zip'
-    with zipfile.ZipFile(str(support_file), 'w') as support_zip:
+    with zipfile.ZipFile(support_file, 'w') as support_zip:
         support_zip.writestr('internal/file.txt', data='hello world')
         support_zip.writestr('Python/Resources/lib/module.py', data='code')
 

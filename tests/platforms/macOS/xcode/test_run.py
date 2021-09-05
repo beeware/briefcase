@@ -1,6 +1,7 @@
 # Xcode uses the same run implementation as the base app;
 # Run a basic test to ensure coverage, but fall back to
 # the app backend for exhaustive tests.
+import os
 from unittest import mock
 
 from briefcase.platforms.macOS.xcode import macOSXcodeRunCommand
@@ -17,7 +18,7 @@ def test_run_app(first_app_config, tmp_path):
     bin_path = command.binary_path(first_app_config)
     command.subprocess.run.assert_has_calls([
         mock.call(
-            ['open', '-n', str(bin_path)],
+            ['open', '-n', os.fsdecode(bin_path)],
             check=True
         ),
         mock.call(

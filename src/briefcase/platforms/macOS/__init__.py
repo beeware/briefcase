@@ -1,11 +1,14 @@
-import subprocess
 import itertools
+import os
+import subprocess
 
 from briefcase.config import BaseConfig
 from briefcase.console import select_option
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.integrations.xcode import get_identities
-from briefcase.integrations.xcode import verify_command_line_tools_install
+from briefcase.integrations.xcode import (
+    get_identities,
+    verify_command_line_tools_install
+)
 
 try:
     import dmgbuild
@@ -39,7 +42,7 @@ class macOSRunMixin:
                 [
                     'open',
                     '-n',  # Force a new app to be launched
-                    str(self.binary_path(app)),
+                    os.fsdecode(self.binary_path(app)),
                 ],
                 check=True,
             )
@@ -74,7 +77,7 @@ class macOSRunMixin:
                     'senderImagePath=="{sender}"'
                     ' OR (processImagePath=="{sender}"'
                     ' AND senderImagePath=="/usr/lib/libffi.dylib")'.format(
-                        sender=str(self.binary_path(app) / "Contents" / "MacOS" / app.formal_name)
+                        sender=os.fsdecode(self.binary_path(app) / "Contents" / "MacOS" / app.formal_name)
                     )
                 ],
                 check=True,
@@ -176,8 +179,8 @@ class macOSPackageMixin:
                 [
                     'codesign',
                     '--sign', identity,
-                    '--entitlements', str(entitlements),
-                    '--deep', str(path),
+                    '--entitlements', os.fsdecode(entitlements),
+                    '--deep', os.fsdecode(path),
                     '--force',
                     '--options', 'runtime',
                 ],
@@ -243,7 +246,7 @@ class macOSPackageMixin:
             print('[{app.app_name}] Building DMG...'.format(app=app))
 
             dmg_settings = {
-                'files': [str(self.binary_path(app))],
+                'files': [os.fsdecode(self.binary_path(app))],
                 'symlinks': {'Applications': '/Applications'},
                 'icon_locations': {
                     '{app.formal_name}.app'.format(app=app): (75, 75),
@@ -278,14 +281,14 @@ class macOSPackageMixin:
                     icon_filename = None
 
             if icon_filename:
-                dmg_settings['icon'] = str(icon_filename)
+                dmg_settings['icon'] = os.fsdecode(icon_filename)
 
             try:
                 image_filename = self.base_path / '{image}.png'.format(
                     image=app.installer_background
                 )
                 if image_filename.exists():
-                    dmg_settings['background'] = str(image_filename)
+                    dmg_settings['background'] = os.fsdecode(image_filename)
                 else:
                     print("Can't find {filename}.png for DMG background".format(
                         filename=app.installer_background
@@ -295,7 +298,7 @@ class macOSPackageMixin:
                 pass
 
             self.dmgbuild.build_dmg(
-                filename=str(self.distribution_path(app, packaging_format=packaging_format)),
+                filename=os.fsdecode(self.distribution_path(app, packaging_format=packaging_format)),
                 volume_name='{app.formal_name} {app.version}'.format(app=app),
                 settings=dmg_settings
             )

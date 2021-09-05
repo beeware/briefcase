@@ -1,3 +1,4 @@
+import os
 import tempfile
 from pathlib import Path
 
@@ -45,14 +46,16 @@ class macOSAppCreateCommand(macOSAppMixin, CreateCommand):
         super().install_app_support_package(app)
 
         # keep only Python lib from support package
-        lib_path = str(self.support_path(app).parent / 'Support' / 'Python' / 'Resources' / 'lib')
+        lib_path = self.support_path(app).parent / 'Support' / 'Python' / 'Resources' / 'lib'
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            self.shutil.move(lib_path, tmpdir)
-            self.shutil.rmtree(str(self.support_path(app)))
+            # TODO: Py3.8 compatibility; os.fsdecode not required in Py3.9
+            self.shutil.move(os.fsdecode(lib_path), os.fsdecode(tmpdir))
+            self.shutil.rmtree(self.support_path(app))
 
-            self.os.makedirs(str(Path(lib_path).parent))
-            self.shutil.move(str(Path(tmpdir) / 'lib'), lib_path)
+            self.os.makedirs(Path(lib_path).parent)
+            # TODO: Py3.8 compatibility; os.fsdecode not required in Py3.9
+            self.shutil.move(os.fsdecode(Path(tmpdir) / 'lib'), os.fsdecode(lib_path))
 
 
 class macOSAppUpdateCommand(macOSAppMixin, UpdateCommand):

@@ -1,3 +1,4 @@
+import os
 import subprocess
 from unittest.mock import MagicMock, call
 
@@ -104,7 +105,7 @@ def test_start_emulator(mock_sdk):
     # The process was started.
     mock_sdk.command.subprocess.Popen.assert_called_with(
         [
-            str(mock_sdk.emulator_path),
+            os.fsdecode(mock_sdk.emulator_path),
             '@idleEmulator',
             '-dns-server', '8.8.8.8',
         ],
@@ -192,7 +193,7 @@ def test_emulator_fail_to_start(mock_sdk):
     # The process was started.
     mock_sdk.command.subprocess.Popen.assert_called_with(
         [
-            str(mock_sdk.emulator_path),
+            os.fsdecode(mock_sdk.emulator_path),
             '@idleEmulator',
             '-dns-server', '8.8.8.8',
         ],
@@ -274,7 +275,7 @@ def test_emulator_fail_to_boot(mock_sdk):
     # The process was started.
     mock_sdk.command.subprocess.Popen.assert_called_with(
         [
-            str(mock_sdk.emulator_path),
+            os.fsdecode(mock_sdk.emulator_path),
             '@idleEmulator',
             '-dns-server', '8.8.8.8',
         ],

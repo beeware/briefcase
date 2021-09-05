@@ -1,3 +1,4 @@
+import os
 import subprocess
 from unittest import mock
 
@@ -18,7 +19,7 @@ def test_run_app(first_app_config, tmp_path):
     bin_path = command.binary_path(first_app_config)
     command.subprocess.run.assert_has_calls([
         mock.call(
-            ['open', '-n', str(bin_path)],
+            ['open', '-n', os.fsdecode(bin_path)],
             check=True
         ),
         mock.call(
@@ -42,7 +43,7 @@ def test_run_app_failed(first_app_config, tmp_path):
     command = macOSAppRunCommand(base_path=tmp_path)
     command.subprocess = mock.MagicMock()
     command.subprocess.run.side_effect = subprocess.CalledProcessError(
-        cmd=['open', '-n', str(command.binary_path(first_app_config))],
+        cmd=['open', '-n', os.fsdecode(command.binary_path(first_app_config))],
         returncode=1
     )
 
@@ -51,7 +52,7 @@ def test_run_app_failed(first_app_config, tmp_path):
 
     # The run command was still invoked, though
     command.subprocess.run.assert_called_with(
-        ['open', '-n', str(command.binary_path(first_app_config))],
+        ['open', '-n', os.fsdecode(command.binary_path(first_app_config))],
         check=True
     )
 
@@ -76,7 +77,7 @@ def test_run_app_log_stream_failed(first_app_config, tmp_path):
     bin_path = command.binary_path(first_app_config)
     command.subprocess.run.assert_has_calls([
         mock.call(
-            ['open', '-n', str(bin_path)],
+            ['open', '-n', os.fsdecode(bin_path)],
             check=True
         ),
         mock.call(

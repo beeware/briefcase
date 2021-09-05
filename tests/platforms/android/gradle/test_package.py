@@ -43,10 +43,10 @@ def test_execute_gradle(package_command, first_app_config, host_os, gradlew_name
     package_command.package_app(first_app_config)
     package_command.subprocess.run.assert_called_once_with(
         [
-            str(package_command.bundle_path(first_app_config) / gradlew_name),
+            package_command.bundle_path(first_app_config) / gradlew_name,
             "bundleRelease",
         ],
-        cwd=str(package_command.bundle_path(first_app_config)),
+        cwd=package_command.bundle_path(first_app_config),
         env=package_command.android_sdk.env,
         check=True,
     )

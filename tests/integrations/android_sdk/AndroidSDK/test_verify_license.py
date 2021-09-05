@@ -1,3 +1,4 @@
+import os
 import subprocess
 
 import pytest
@@ -31,7 +32,7 @@ def test_verify_license_prompts_for_licenses_and_exits_if_you_agree(mock_sdk):
     mock_sdk.command.subprocess.run.side_effect = accept_license
     mock_sdk.verify_license()
     mock_sdk.command.subprocess.run.assert_called_once_with(
-        [str(mock_sdk.sdkmanager_path), "--licenses"],
+        [os.fsdecode(mock_sdk.sdkmanager_path), "--licenses"],
         env=mock_sdk.env,
         check=True,
     )
@@ -45,7 +46,7 @@ def test_verify_license_handles_sdkmanager_crash(mock_sdk):
         mock_sdk.verify_license()
 
     mock_sdk.command.subprocess.run.assert_called_once_with(
-        [str(mock_sdk.sdkmanager_path), "--licenses"],
+        [os.fsdecode(mock_sdk.sdkmanager_path), "--licenses"],
         env=mock_sdk.env,
         check=True,
     )
@@ -60,7 +61,7 @@ def test_verify_license_insists_on_agreement(mock_sdk):
         mock_sdk.verify_license()
 
     mock_sdk.command.subprocess.run.assert_called_once_with(
-        [str(mock_sdk.sdkmanager_path), "--licenses"],
+        [os.fsdecode(mock_sdk.sdkmanager_path), "--licenses"],
         env=mock_sdk.env,
         check=True,
     )

@@ -1,3 +1,4 @@
+import os
 import subprocess
 from datetime import date
 from pathlib import Path
@@ -62,7 +63,7 @@ def test_default_template(create_command, myapp):
         'https://github.com/beeware/briefcase-tester-dummy-template.git',
         no_input=True,
         checkout=create_command.python_version_tag,
-        output_dir=str(create_command.platform_path),
+        output_dir=os.fsdecode(create_command.platform_path),
         extra_context=full_context({
             'template': 'https://github.com/beeware/briefcase-tester-dummy-template.git',
             'template_branch': '3.X',
@@ -87,7 +88,7 @@ def test_explicit_branch(create_command, myapp):
         'https://github.com/beeware/briefcase-tester-dummy-template.git',
         no_input=True,
         checkout=branch,
-        output_dir=str(create_command.platform_path),
+        output_dir=os.fsdecode(create_command.platform_path),
         extra_context=full_context({
             'template': 'https://github.com/beeware/briefcase-tester-dummy-template.git',
             'template_branch': branch,
@@ -115,7 +116,7 @@ def test_platform_exists(create_command, myapp):
         'https://github.com/beeware/briefcase-tester-dummy-template.git',
         no_input=True,
         checkout=create_command.python_version_tag,
-        output_dir=str(create_command.platform_path),
+        output_dir=os.fsdecode(create_command.platform_path),
         extra_context=full_context({
             'template': 'https://github.com/beeware/briefcase-tester-dummy-template.git',
             'template_branch': '3.X',
@@ -142,7 +143,7 @@ def test_explicit_repo_template(create_command, myapp):
         'https://example.com/magic/special-template.git',
         no_input=True,
         checkout=create_command.python_version_tag,
-        output_dir=str(create_command.platform_path),
+        output_dir=os.fsdecode(create_command.platform_path),
         extra_context=full_context({
             'template': 'https://example.com/magic/special-template.git',
             'template_branch': '3.X',
@@ -165,7 +166,7 @@ def test_explicit_local_template(create_command, myapp):
         '/path/to/special-template',
         no_input=True,
         checkout=create_command.python_version_tag,
-        output_dir=str(create_command.platform_path),
+        output_dir=os.fsdecode(create_command.platform_path),
         extra_context=full_context({
             'template': '/path/to/special-template',
             'template_branch': '3.X',
@@ -200,7 +201,7 @@ def test_offline_repo_template(create_command, myapp):
         'https://github.com/beeware/briefcase-tester-dummy-template.git',
         no_input=True,
         checkout=create_command.python_version_tag,
-        output_dir=str(create_command.platform_path),
+        output_dir=os.fsdecode(create_command.platform_path),
         extra_context=full_context({
             'template': 'https://github.com/beeware/briefcase-tester-dummy-template.git',
             'template_branch': '3.X',
@@ -231,7 +232,7 @@ def test_invalid_repo_template(create_command, myapp):
         'https://example.com/somewhere/not-a-repo.git',
         no_input=True,
         checkout=create_command.python_version_tag,
-        output_dir=str(create_command.platform_path),
+        output_dir=os.fsdecode(create_command.platform_path),
         extra_context=full_context({
             'template': 'https://example.com/somewhere/not-a-repo.git',
             'template_branch': '3.X',
@@ -263,7 +264,7 @@ def test_missing_branch_template(create_command, myapp):
         'https://example.com/somewhere/missing-branch.git',
         no_input=True,
         checkout=create_command.python_version_tag,
-        output_dir=str(create_command.platform_path),
+        output_dir=os.fsdecode(create_command.platform_path),
         extra_context=full_context({
             'template': 'https://example.com/somewhere/missing-branch.git',
             'template_branch': '3.X',
@@ -298,10 +299,10 @@ def test_cached_template(create_command, myapp):
 
     # Cookiecutter was invoked with the path to the *cached* template name
     create_command.cookiecutter.assert_called_once_with(
-        str(Path.home() / '.cookiecutters' / 'briefcase-tester-dummy-template'),
+        os.fsdecode(Path.home() / '.cookiecutters' / 'briefcase-tester-dummy-template'),
         no_input=True,
         checkout=create_command.python_version_tag,
-        output_dir=str(create_command.platform_path),
+        output_dir=os.fsdecode(create_command.platform_path),
         extra_context=full_context({
             'template': 'https://github.com/beeware/briefcase-tester-dummy-template.git',
             'template_branch': '3.X',
@@ -342,10 +343,10 @@ def test_cached_template_offline(create_command, myapp, capsys):
 
     # Cookiecutter was invoked with the path to the *cached* template name
     create_command.cookiecutter.assert_called_once_with(
-        str(Path.home() / '.cookiecutters' / 'briefcase-tester-dummy-template'),
+        os.fsdecode(Path.home() / '.cookiecutters' / 'briefcase-tester-dummy-template'),
         no_input=True,
         checkout=create_command.python_version_tag,
-        output_dir=str(create_command.platform_path),
+        output_dir=os.fsdecode(create_command.platform_path),
         extra_context=full_context({
             'template': 'https://github.com/beeware/briefcase-tester-dummy-template.git',
             'template_branch': '3.X',

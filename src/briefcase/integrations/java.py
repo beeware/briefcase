@@ -1,3 +1,4 @@
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -91,7 +92,7 @@ class JDK:
                 # This verifies that we have a JDK, not a just a JRE.
                 output = command.subprocess.check_output(
                     [
-                        str(Path(java_home) / 'bin' / 'javac'),
+                        os.fsdecode(Path(java_home) / 'bin' / 'javac'),
                         '-version',
                     ],
                     universal_newlines=True,
@@ -254,9 +255,10 @@ class JDK:
 
         try:
             print("Installing AdoptOpenJDK...")
+            # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
             self.command.shutil.unpack_archive(
-                str(jdk_zip_path),
-                extract_dir=str(self.command.tools_path)
+                os.fsdecode(jdk_zip_path),
+                extract_dir=os.fsdecode(self.command.tools_path)
             )
         except (shutil.ReadError, EOFError):
             raise BriefcaseCommandError(

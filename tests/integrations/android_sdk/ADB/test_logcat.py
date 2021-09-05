@@ -1,3 +1,4 @@
+import os
 import subprocess
 from unittest.mock import MagicMock
 
@@ -18,7 +19,7 @@ def test_logcat(mock_sdk):
     # Validate call parameters.
     mock_sdk.command.subprocess.run.assert_called_once_with(
         [
-            str(mock_sdk.adb_path),
+            os.fsdecode(mock_sdk.adb_path),
             "-s",
             "exampleDevice",
             "logcat",

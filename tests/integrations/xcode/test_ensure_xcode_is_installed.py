@@ -1,3 +1,4 @@
+import os
 import subprocess
 from unittest import mock
 
@@ -12,7 +13,7 @@ def xcode(tmp_path):
     "Create a dummy location for Xcode"
     xcode_location = tmp_path / 'Xcode.app'
     xcode_location.mkdir(parents=True, exist_ok=True)
-    return str(xcode_location)
+    return os.fsdecode(xcode_location)
 
 
 def test_not_installed(tmp_path):
@@ -27,7 +28,7 @@ def test_not_installed(tmp_path):
     with pytest.raises(BriefcaseCommandError):
         ensure_xcode_is_installed(
             command,
-            xcode_location=str(tmp_path / 'Xcode.app'),
+            xcode_location=tmp_path / 'Xcode.app',
         )
 
     # xcode-select was not invoked

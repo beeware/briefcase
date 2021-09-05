@@ -61,7 +61,7 @@ class LinuxDeploy:
                 url=self.linuxdeploy_download_url,
                 download_path=self.command.tools_path
             )
-            self.command.os.chmod(str(linuxdeploy_appimage_path), 0o755)
+            self.command.os.chmod(linuxdeploy_appimage_path, 0o755)
         except requests_exceptions.ConnectionError:
             raise NetworkFailure('downloading linuxdeploy AppImage')
 

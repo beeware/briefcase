@@ -1,3 +1,4 @@
+import os
 from unittest import mock
 
 import pytest
@@ -15,7 +16,7 @@ def test_run_app(first_app_config, tmp_path):
 
     command.subprocess.run.assert_called_with(
         [
-            str(tmp_path / 'windows' / 'msi' / 'First App' / 'src' / 'python' / 'pythonw.exe'),
+            os.fsdecode(tmp_path / 'windows' / 'msi' / 'First App' / 'src' / 'python' / 'pythonw.exe'),
             "-m", "first_app"
         ],
         check=True
@@ -34,7 +35,7 @@ def test_run_app_failed(first_app_config, tmp_path):
     # The run command was still invoked, though
     command.subprocess.run.assert_called_with(
         [
-            str(tmp_path / 'windows' / 'msi' / 'First App' / 'src' / 'python' / 'pythonw.exe'),
+            os.fsdecode(tmp_path / 'windows' / 'msi' / 'First App' / 'src' / 'python' / 'pythonw.exe'),
             "-m", "first_app"
         ],
         check=True

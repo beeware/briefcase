@@ -1,3 +1,4 @@
+import os
 from unittest import mock
 
 import pytest
@@ -46,8 +47,8 @@ def test_package_app(first_app_with_binaries, tmp_path):
             [
                 'codesign',
                 '--sign', 'Sekrit identity (DEADBEEF)',
-                '--entitlements', str(tmp_path / 'macOS' / 'app' / 'First App' / 'Entitlements.plist'),
-                '--deep', str(filepath),
+                '--entitlements', os.fsdecode(tmp_path / 'macOS' / 'app' / 'First App' / 'Entitlements.plist'),
+                '--deep', os.fsdecode(filepath),
                 '--force',
                 '--options', 'runtime',
             ],
@@ -71,10 +72,10 @@ def test_package_app(first_app_with_binaries, tmp_path):
 
     # The DMG has been built as expected
     command.dmgbuild.build_dmg.assert_called_with(
-        filename=str(tmp_path / 'macOS' / 'First App-0.0.1.dmg'),
+        filename=os.fsdecode(tmp_path / 'macOS' / 'First App-0.0.1.dmg'),
         volume_name='First App 0.0.1',
         settings={
-            'files': [str(tmp_path / 'macOS' / 'app' / 'First App' / 'First App.app')],
+            'files': [os.fsdecode(tmp_path / 'macOS' / 'app' / 'First App' / 'First App.app')],
             'symlinks': {'Applications': '/Applications'},
             'icon_locations': {
                 'First App.app': (75, 75),

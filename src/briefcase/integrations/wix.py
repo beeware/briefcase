@@ -1,3 +1,4 @@
+import os
 import shutil
 from pathlib import Path
 
@@ -133,9 +134,10 @@ WiX Toolset. Current value: {wix_home!r}
 
         try:
             print("Installing WiX...")
+            # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
             self.command.shutil.unpack_archive(
-                str(wix_zip_path),
-                extract_dir=str(self.wix_home)
+                os.fsdecode(wix_zip_path),
+                extract_dir=os.fsdecode(self.wix_home)
             )
         except (shutil.ReadError, EOFError):
             raise BriefcaseCommandError("""
