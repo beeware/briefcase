@@ -6,13 +6,13 @@ from typing import Optional
 from urllib.parse import urlparse
 
 from cookiecutter import exceptions as cookiecutter_exceptions
-
+#checkout comment on line 9 w/Russ
 from briefcase.config import PEP508_NAME_RE
 from briefcase.exceptions import NetworkFailure
 
 from .base import BaseCommand, BriefcaseCommandError
 from .create import InvalidTemplateRepository
-
+from .python_keywords_list import pythonKeywordsList
 VALID_BUNDLE_RE = re.compile(r'[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$')
 
 
@@ -94,7 +94,8 @@ class NewCommand(BaseCommand):
         :returns: The candidate app name
         """
         return re.sub('[^0-9a-zA-Z_]+', '', formal_name).lstrip('_').lower()
-
+    
+ #
     def validate_app_name(self, candidate):
         """
         Determine if the app name is valid.
@@ -114,7 +115,16 @@ class NewCommand(BaseCommand):
                 "name, move to a different parent directory, or delete the "
                 "existing folder.".format(candidate=candidate)
             )
-
+        if 'switch' == candidate:
+            raise ValueError(
+                "A {candidate} keyword is not available. Select a new name"
+            )
+        #EG; Will check if the candidate is a reserved python keyword and raise an error with a message if it is 
+        if candidate.lower() in pythonKeywordsList:
+            raise ValueError(
+                "{candidate} is a reserved python keyword. Select a new app name please"
+            )
+        #End of EG edit
         return True
 
     def make_module_name(self, app_name):
@@ -309,7 +319,7 @@ Select one of the following:
         """
         formal_name = self.input_text(
             intro="""
-First, we need a formal name for your application. This is the name that will
+First, we need a formal name for your app. This is the name that will
 be displayed to humans whenever the name of the application is displayed. It
 can have spaces and punctuation if you like, and any capitalization will be
 used as you type it.""",

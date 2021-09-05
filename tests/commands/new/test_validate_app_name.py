@@ -10,6 +10,8 @@ import pytest
         '42helloworld',  # ?? Are we sure this is correct?
         'hello_world',
         'hello-world',
+        
+        
     ]
 )
 def test_valid_app_name(new_command, name):
@@ -25,6 +27,10 @@ def test_valid_app_name(new_command, name):
         '_helloworld',  # leading underscore
         '-helloworld',  # leading hyphen
         'existing',  # pre-existing directory
+        'switch',
+        'false', # added from the keywords_list
+        'YIELD',    # checking whether on reserved keywords list
+        
     ]
 )
 def test_invalid_app_name(new_command, name, tmp_path):
