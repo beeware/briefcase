@@ -6,7 +6,6 @@ from typing import Optional
 from urllib.parse import urlparse
 
 from cookiecutter import exceptions as cookiecutter_exceptions
-#checkout comment on line 9 w/Russ
 from briefcase.config import PEP508_NAME_RE
 from briefcase.exceptions import NetworkFailure
 
@@ -94,8 +93,6 @@ class NewCommand(BaseCommand):
         :returns: The candidate app name
         """
         return re.sub('[^0-9a-zA-Z_]+', '', formal_name).lstrip('_').lower()
-    
- #
     def validate_app_name(self, candidate):
         """
         Determine if the app name is valid.
@@ -119,12 +116,10 @@ class NewCommand(BaseCommand):
             raise ValueError(
                 "A {candidate} keyword is not available. Select a new name"
             )
-        #EG; Will check if the candidate is a reserved python keyword and raise an error with a message if it is 
         if candidate.lower() in pythonKeywordsList:
             raise ValueError(
                 "{candidate} is a reserved python keyword. Select a new app name please"
             )
-        #End of EG edit
         return True
 
     def make_module_name(self, app_name):
