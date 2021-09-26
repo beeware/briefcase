@@ -131,19 +131,19 @@ Or, to run using a specific version of Python, e.g. when you want to use Python 
 
     .. code-block:: bash
 
-      (venv) $ tox -e py3.7
+      (venv) $ tox -e py37
 
   .. group-tab:: Linux
 
     .. code-block:: bash
 
-      (venv) $ tox -e py3.7
+      (venv) $ tox -e py37
 
   .. group-tab:: Windows
 
     .. code-block:: bash
 
-      C:\...>tox -e py3.7
+      C:\...>tox -e py37
 
 substituting the version number that you want to target. You can also specify
 one of the pre-commit checks `flake8`, `docs` or `package` to check code
