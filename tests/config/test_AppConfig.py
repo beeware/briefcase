@@ -237,6 +237,28 @@ def test_duplicated_uri_schemes(uri_scheme):
         )
 
 
+@pytest.mark.parametrize(
+    'uri_scheme',
+    [
+        ['1invalid'],
+        ['-invalid'],
+        ['invalid uri'],
+        ['.invalid'],
+        ['1']
+    ]
+)
+def test_invalid_uri_schemes(uri_scheme):
+    with pytest.raises(BriefcaseConfigError, match=r" contains non-valid URI scheme"):
+        AppConfig(
+            app_name='my-app',
+            version="1.2.3",
+            bundle="org.beeware",
+            description="A simple app",
+            sources=['src/myapp'],
+            uri_schemes=uri_scheme
+        )
+
+
 def test_no_source_for_app():
     with pytest.raises(BriefcaseConfigError, match=r" does not include a package named 'my_app'\."):
         AppConfig(

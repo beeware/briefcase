@@ -24,6 +24,16 @@ PEP440_CANONICAL_VERSION_PATTERN_RE = re.compile(
     r'(\.dev(?P<dev>0|[1-9][0-9]*))?$'
 )
 
+# According to IETF RFC3986 section 3.1,
+# Scheme names consist of a sequence of characters beginning with a
+# letter and followed by any combination of letters, digits, plus
+# ("+"), period ("."), or hyphen ("-").
+# https://datatracker.ietf.org/doc/html/rfc3986#section-3.1
+URI_SCHEME_PATTERN_RE = re.compile(
+    r'^([A-Z]+[A-Z0-9+.-]*)$',
+    re.IGNORECASE
+)
+
 
 def is_pep440_canonical_version(version):
     """
@@ -34,6 +44,15 @@ def is_pep440_canonical_version(version):
     :returns: True if the version string is valid; false otherwise.
     """
     return PEP440_CANONICAL_VERSION_PATTERN_RE.match(version) is not None
+
+
+def is_uri_scheme_valid(scheme):
+    """
+    Check if the URI scheme is a valid according to IETF RFC3986 section 3.1.
+
+    :returns: True if scheme is valid; false otherwise.
+    """
+    return URI_SCHEME_PATTERN_RE.match(scheme) is not None
 
 
 def parsed_version(version):
@@ -180,11 +199,23 @@ class AppConfig(BaseConfig):
             )
 
         # URI scheme list doesn't include any duplicates
-        uri_schemes_list = set(self.uri_schemes)
+        uri_schemes_list = {scheme.lower() for scheme in self.uri_schemes}
         if len(uri_schemes_list) != len(self.uri_schemes):
             raise BriefcaseConfigError(
                 "The `uri_schemes` list for {self.app_name} contains "
                 "duplicated schemes.".format(self=self)
+            )
+    
+        # One of the URI schemes is invalid
+        invalid_scheme = next((scheme for scheme in uri_schemes_list if not is_uri_scheme_valid(scheme)), None)
+        if invalid_scheme:
+            raise BriefcaseConfigError(
+                "The `uri_schemes` list for {self.app_name} contains "
+                "non-valid URI scheme called '{invalid_scheme}'.\n\n"
+                "URI schemes must be IETF RFC3986 section 3.1 compliant; "
+                "see https://datatracker.ietf.org/doc/html/rfc3986#section-3.1 for details.".format(
+                    self=self, invalid_scheme=invalid_scheme
+                )
             )
 
     def __repr__(self):

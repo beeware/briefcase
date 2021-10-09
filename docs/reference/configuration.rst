@@ -338,6 +338,10 @@ A list of URI scheme names. Some applications may require registering a custom
 URI scheme to the operating system. So by adding a scheme, applications can be
 launched by opening a URL prefixed with the specified scheme.
 
+Scheme names consist of a sequence of characters beginning with a letter and
+followed by any combination of letters, digits, plus ("+"), period ("."), 
+or hyphen ("-").
+
 ``url``
 ~~~~~~~
 
