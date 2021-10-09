@@ -331,6 +331,13 @@ template is a local file, this attribute will be ignored. If not specified,
 Briefcase will use a branch matching the Python version in use (i.e., the `3.8`
 branch will be used when Python 3.8 is used to generate the app).
 
+``uri_schemes``
+~~~~~~~~~~~~~~~
+
+A list of URI scheme names. Some applications may require registering a custom
+URI scheme to the operating system. So by adding a scheme, applications can be
+launched by opening a URL prefixed with the specified scheme.
+
 ``url``
 ~~~~~~~
 

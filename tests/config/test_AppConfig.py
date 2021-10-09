@@ -24,6 +24,7 @@ def test_minimal_AppConfig():
     # Derived properties have been set.
     assert config.formal_name == 'myapp'
     assert config.document_types == {}
+    assert config.uri_schemes == []
 
     # There is no icon or splash of any kind
     assert config.icon is None
@@ -53,6 +54,7 @@ def test_extra_attrs():
                 'description': 'A document',
             }
         },
+        uri_schemes=['myapp'],
         first="value 1",
         second=42,
     )
@@ -73,6 +75,7 @@ def test_extra_attrs():
             'description': 'A document',
         }
     }
+    assert config.uri_schemes == ['myapp']
 
     # Explicit additional properties have been set
     assert config.first == "value 1"
@@ -212,6 +215,25 @@ def test_duplicated_source(sources):
             bundle="org.beeware",
             description="A simple app",
             sources=sources
+        )
+
+
+@pytest.mark.parametrize(
+    'uri_scheme',
+    [
+        ['myapp', 'myapp'],
+        ['myapp', 'other', 'myapp']
+    ]
+)
+def test_duplicated_uri_schemes(uri_scheme):
+    with pytest.raises(BriefcaseConfigError, match=r"contains duplicated schemes\."):
+        AppConfig(
+            app_name='dupe',
+            version="1.2.3",
+            bundle="org.beeware",
+            description="A simple app",
+            sources=['src/myapp'],
+            uri_schemes=uri_scheme
         )
 
 

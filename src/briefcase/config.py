@@ -119,6 +119,7 @@ class AppConfig(BaseConfig):
         icon=None,
         splash=None,
         document_type=None,
+        uri_schemes=None,
         template=None,
         template_branch=None,
         supported=True,
@@ -139,6 +140,7 @@ class AppConfig(BaseConfig):
         self.icon = icon
         self.splash = splash
         self.document_types = {} if document_type is None else document_type
+        self.uri_schemes = [] if uri_schemes is None else uri_schemes
         self.template = template
         self.template_branch = template_branch
         self.supported = supported
@@ -175,6 +177,14 @@ class AppConfig(BaseConfig):
             raise BriefcaseConfigError(
                 "The `sources` list for {self.app_name} does not include a "
                 "package named '{self.module_name}'.".format(self=self)
+            )
+
+        # URI scheme list doesn't include any duplicates
+        uri_schemes_list = set(self.uri_schemes)
+        if len(uri_schemes_list) != len(self.uri_schemes):
+            raise BriefcaseConfigError(
+                "The `uri_schemes` list for {self.app_name} contains "
+                "duplicated schemes.".format(self=self)
             )
 
     def __repr__(self):

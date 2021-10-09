@@ -30,6 +30,7 @@ def full_context(extra):
         'splash': None,
         'supported': True,
         'document_types': {},
+        'uri_schemes': [],
 
         # Fields generated from other properties
         'module_name': 'my_app',
