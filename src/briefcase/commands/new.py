@@ -13,7 +13,45 @@ from .base import BaseCommand, BriefcaseCommandError
 from .create import InvalidTemplateRepository
 from .python_keywords_list import pythonKeywordsList
 VALID_BUNDLE_RE = re.compile(r'[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$')
+# Create a list of reserved keywords
+#PYTHON_RESERVED_WORDS
+pythonKeywordsList = [
 
+    'and',
+    'as',
+    'assert',
+    'break',
+    'class',
+    'continue',
+    'def',
+    'del',
+    'elif',
+    'else',
+    'except',
+    'false',
+    'finally',
+    'for',
+    'from',
+    'global',
+    'if',
+    'import',
+    'in',
+    'is',
+    'lambda',
+    'none',
+    'nonlocal',
+    'not',
+    'or',
+    'pass'
+    'raise',
+    'return',
+    'switch',
+    'true',
+    'try',
+    'while',
+    'with',
+    'yield',
+]
 
 def titlecase(s):
     """
