@@ -31,3 +31,20 @@ class RGBExtension(Extension):
         environment.filters['float_red'] = float_red
         environment.filters['float_green'] = float_green
         environment.filters['float_blue'] = float_blue
+
+
+class ListExtension(Extension):
+    """Jinja2 extension to parse list as cookiecutter doesn't support lists."""
+
+    def __init__(self, environment) -> None:
+        """Initialize the extension with the given environment."""
+        super(ListExtension, self).__init__(environment)
+
+        def parse_list(obj):
+            if isinstance(obj, str):
+                return obj.strip().split(",")
+            elif isinstance(obj, list):
+                return obj
+            return []
+
+        environment.filters['parse_list'] = parse_list
