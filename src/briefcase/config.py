@@ -205,7 +205,7 @@ class AppConfig(BaseConfig):
                 "The `uri_schemes` list for {self.app_name} contains "
                 "duplicated schemes.".format(self=self)
             )
-    
+
         # One of the URI schemes is invalid
         invalid_scheme = next((scheme for scheme in uri_schemes_list if not is_uri_scheme_valid(scheme)), None)
         if invalid_scheme:
