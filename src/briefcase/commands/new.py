@@ -11,11 +11,11 @@ from briefcase.exceptions import NetworkFailure
 
 from .base import BaseCommand, BriefcaseCommandError
 from .create import InvalidTemplateRepository
-from .python_keywords_list import pythonKeywordsList
+
 VALID_BUNDLE_RE = re.compile(r'[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$')
 # Create a list of reserved keywords
-#PYTHON_RESERVED_WORDS
-pythonKeywordsList = [
+
+RESERVED_KEYWORDS = [
 
     'and',
     'as',
@@ -52,6 +52,7 @@ pythonKeywordsList = [
     'with',
     'yield',
 ]
+
 
 def titlecase(s):
     """
@@ -151,7 +152,7 @@ class NewCommand(BaseCommand):
                 "name, move to a different parent directory, or delete the "
                 "existing folder.".format(candidate=candidate)
             )
-        if candidate.lower() in pythonKeywordsList:
+        if candidate.lower() in RESERVED_KEYWORDS:
             raise ValueError(
                 "{candidate} is a reserved python keyword. Select a new app name please"
             )
