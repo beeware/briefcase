@@ -1,5 +1,6 @@
 # Create a list of reserved keywords
 pythonKeywordsList = [
+    'switch',
     'false',
     'def',
     'if',

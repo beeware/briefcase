@@ -113,10 +113,6 @@ class NewCommand(BaseCommand):
                 "name, move to a different parent directory, or delete the "
                 "existing folder.".format(candidate=candidate)
             )
-        if 'switch' == candidate:
-            raise ValueError(
-                "A {candidate} keyword is not available. Select a new name"
-            )
         if candidate.lower() in pythonKeywordsList:
             raise ValueError(
                 "{candidate} is a reserved python keyword. Select a new app name please"
@@ -315,7 +311,7 @@ Select one of the following:
         """
         formal_name = self.input_text(
             intro="""
-First, we need a formal name for your app. This is the name that will
+First, we need a formal name for your application. This is the name that will
 be displayed to humans whenever the name of the application is displayed. It
 can have spaces and punctuation if you like, and any capitalization will be
 used as you type it.""",
