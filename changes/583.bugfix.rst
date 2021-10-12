@@ -1,0 +1,1 @@
+Stripping is now disabled for appimage, because stripping shared objects can lead to some issues - e.g NumPy.
