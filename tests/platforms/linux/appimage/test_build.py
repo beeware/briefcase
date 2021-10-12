@@ -129,6 +129,7 @@ def test_build_appimage(build_command, first_app, tmp_path):
         env={
             'PATH': '/usr/local/bin:/usr/bin',
             'VERSION': '0.0.1',
+            'NO_STRIP': 1,
         },
         check=True,
         cwd=os.fsdecode(tmp_path / 'linux')
@@ -169,6 +170,7 @@ def test_build_failure(build_command, first_app, tmp_path):
         env={
             'PATH': '/usr/local/bin:/usr/bin',
             'VERSION': '0.0.1',
+            'NO_STRIP': 1,
         },
         check=True,
         cwd=os.fsdecode(tmp_path / 'linux')
@@ -205,6 +207,7 @@ def test_build_appimage_with_docker(build_command, first_app, tmp_path):
                 dot_briefcase_path=build_command.dot_briefcase_path
             ),
             '--env', 'VERSION=0.0.1',
+            '--env', 'NO_STRIP=1',
             'briefcase/com.example.first-app:py3.{minor}'.format(
                 minor=sys.version_info.minor
             ),
