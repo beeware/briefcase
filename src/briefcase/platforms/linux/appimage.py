@@ -171,7 +171,8 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
             # For some reason, the version has to be passed in as an
             # environment variable, *not* in the configuration...
             env = {
-                'VERSION': app.version
+                'VERSION': app.version,
+                'NO_STRIP': 1
             }
 
             # Find all the .so files in app and app_packages,
