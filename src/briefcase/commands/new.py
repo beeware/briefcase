@@ -81,7 +81,9 @@ class NewCommand(BaseCommand):
         :param formal_name: The formal name
         :returns: The app's class name
         """
-        class_name = re.sub('[^0-9a-zA-Z_]+', '', formal_name)
+        # class_name = re.sub('[^0-9a-zA-Z_]+', '', formal_name)  # creates an empty string for non-ascii
+        class_name = re.sub('\s', '', formal_name)  # changed reg expression to remove spaces
+
         if class_name[0].isdigit():
             class_name = '_' + class_name
         return class_name
