@@ -95,7 +95,8 @@ class NewCommand(BaseCommand):
         :param formal_name: The formal name
         :returns: The candidate app name
         """
-        return re.sub('[^0-9a-zA-Z_]+', '', formal_name).lstrip('_').lower()
+        # return re.sub('[^0-9a-zA-Z_]+', '', formal_name).lstrip('_').lower()
+        return re.sub('\s', '', formal_name).lstrip('_').lower()  # prevent returning None for non-ascii
 
     def validate_app_name(self, candidate):
         """
@@ -105,7 +106,7 @@ class NewCommand(BaseCommand):
         :returns: True. If there are any validation problems, raises ValueError
             with a diagnostic message.
         """
-        if not PEP508_NAME_RE.match(candidate):
+        if not PEP508_NAME_RE.match(candidate) and candidate.isascii():  # prevent error for non-ascii characters
             raise ValueError(
                 "App name may only contain letters, numbers, hypens and "
                 "underscores, and may not start with a hyphen or underscore."
