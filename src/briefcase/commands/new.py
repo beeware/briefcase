@@ -30,11 +30,11 @@ def titlecase(s):
     """
     return ' '.join(
         word if (
-            word.isupper()
-            or word in {
-                'a', 'an', 'and', 'as', 'at', 'but', 'by', 'en', 'for',
-                'if', 'in', 'of', 'on', 'or', 'the', 'to', 'via', 'vs'
-            }
+                word.isupper()
+                or word in {
+                    'a', 'an', 'and', 'as', 'at', 'but', 'by', 'en', 'for',
+                    'if', 'in', 'of', 'on', 'or', 'the', 'to', 'via', 'vs'
+                }
         ) else word.capitalize()
         for word in s.split(' ')
     )
@@ -74,18 +74,6 @@ class NewCommand(BaseCommand):
             help='The cookiecutter template to use for the new project'
         )
 
-    def make_class_name(self, formal_name):
-        """
-        Construct a valid class name from a formal name.
-
-        :param formal_name: The formal name
-        :returns: The app's class name
-        """
-        class_name = re.sub('[^0-9a-zA-Z_]+', '', formal_name)
-        if class_name[0].isdigit():
-            class_name = '_' + class_name
-        return class_name
-
     def make_app_name(self, formal_name):
         """
         Construct a candidate app name from a formal name.
@@ -93,7 +81,9 @@ class NewCommand(BaseCommand):
         :param formal_name: The formal name
         :returns: The candidate app name
         """
+
         return re.sub('[^0-9a-zA-Z_]+', '', formal_name).lstrip('_').lower()
+
 
     def validate_app_name(self, candidate):
         """
@@ -108,6 +98,12 @@ class NewCommand(BaseCommand):
                 "App name may only contain letters, numbers, hypens and "
                 "underscores, and may not start with a hyphen or underscore."
             )
+
+        if candidate[0].isdigit():
+            raise ValueError(
+                "App name cannot start with a digit."
+            )
+
         if (self.base_path / candidate).exists():
             raise ValueError(
                 "A '{candidate}' directory already exists. Select a different "
@@ -116,6 +112,22 @@ class NewCommand(BaseCommand):
             )
 
         return True
+
+    def make_class_name(self, candidate):
+        """
+        Construct a candidate class name from an app name.
+
+        :param candidate: The app name
+        :returns: The candidate class name
+        """
+
+        class_name = re.sub('[^0-9a-zA-Z_]+', '', candidate)
+        if not class_name:
+            class_name = "MainApp"
+        elif class_name[0].isdigit():
+            class_name = '_' + class_name
+
+        return class_name
 
     def make_module_name(self, app_name):
         """
@@ -317,10 +329,8 @@ used as you type it.""",
             default='Hello World',
         )
 
-        # The class name can be completely derived from the formal name.
-        class_name = self.make_class_name(formal_name)
-
         default_app_name = self.make_app_name(formal_name)
+
         app_name = self.input_text(
             intro="""
 Next, we need a name that can serve as a machine-readable Python package name
@@ -336,6 +346,8 @@ but you can use another name if you want.""".format(
             default=default_app_name,
             validator=self.validate_app_name,
         )
+
+        class_name = self.make_class_name(app_name)
 
         # The module name can be completely derived from the app name.
         module_name = self.make_module_name(app_name)
@@ -514,9 +526,9 @@ Application '{formal_name}' has been generated. To run your application, type:
         self.git = self.integrations.git.verify_git_is_installed(self)
 
     def __call__(
-        self,
-        template: Optional[str] = None,
-        **options
+            self,
+            template: Optional[str] = None,
+            **options
     ):
         # Confirm all required tools are available
         self.verify_tools()
