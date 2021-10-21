@@ -99,7 +99,7 @@ class NewCommand(BaseCommand):
         """
 
         if formal_name[0].isdigit():
-            return "default_app_name"  # name cannot start with a digit
+            return "MainApp"  # name cannot start with a digit
         else:
             return re.sub('[^0-9a-zA-Z_]+', '', formal_name).lstrip('_').lower()
 
@@ -134,19 +134,11 @@ class NewCommand(BaseCommand):
 
     def make_class_name(self, candidate):
         """
-        Construct a candidate class name from an app name.
-
-        :param candidate: The app name
-        :returns: The candidate class name
+        Construct a valid class name from a candidate name.
+        :param formal_name: The candidate name
+        :returns: The app's class name
         """
-
-        class_name = re.sub('[^0-9a-zA-Z_]+', '', candidate)
-        if not class_name:
-            class_name = "MainApp"
-        elif class_name[0].isdigit():
-            class_name = '_' + class_name
-
-        return class_name
+        return re.sub('[^0-9a-zA-Z_]+', '', candidate)
 
     def make_module_name(self, app_name):
         """
@@ -172,6 +164,7 @@ class NewCommand(BaseCommand):
                 "least 2 dot-separated sections, and each section may only "
                 "include letters, numbers, and hyphens."
             )
+
         return True
 
     def make_domain(self, bundle):
@@ -367,6 +360,7 @@ but you can use another name if you want.""".format(
             validator=self.validate_app_name,
         )
 
+        # Class name can be derived from app name
         class_name = self.make_class_name(app_name)
 
         # The module name can be completely derived from the app name.
