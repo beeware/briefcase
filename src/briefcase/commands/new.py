@@ -74,6 +74,22 @@ class NewCommand(BaseCommand):
             help='The cookiecutter template to use for the new project'
         )
 
+    def validate_formal_name(selfs, candidate):
+        """
+        Determine if the formal name is valid.
+
+        :param candidate: The candidate name
+        :returns: True. If there are any validation problems, raises ValueError
+            with a diagnostic message.
+        """
+        try:
+            candidate.encode(encoding="ascii", errors="strict")
+        except UnicodeEncodeError:
+            raise ValueError(
+                "Formal name may only contain letters, numbers, spaces "
+                "and punctuations.")
+        return True
+
     def make_app_name(self, formal_name):
         """
         Construct a candidate app name from a formal name.
@@ -327,6 +343,7 @@ can have spaces and punctuation if you like, and any capitalization will be
 used as you type it.""",
             variable="formal name",
             default='Hello World',
+            validator=self.validate_formal_name
         )
 
         default_app_name = self.make_app_name(formal_name)
