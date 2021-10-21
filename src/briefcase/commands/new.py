@@ -98,7 +98,10 @@ class NewCommand(BaseCommand):
         :returns: The candidate app name
         """
 
-        return re.sub('[^0-9a-zA-Z_]+', '', formal_name).lstrip('_').lower()
+        if formal_name[0].isdigit():
+            return "default_app_name"  # name cannot start with a digit
+        else:
+            return re.sub('[^0-9a-zA-Z_]+', '', formal_name).lstrip('_').lower()
 
 
     def validate_app_name(self, candidate):
@@ -112,7 +115,7 @@ class NewCommand(BaseCommand):
         if not PEP508_NAME_RE.match(candidate):
             raise ValueError(
                 "App name may only contain letters, numbers, hypens and "
-                "underscores, and may not start with a hyphen or underscore."
+                "underscores, and may not start with a number, hyphen or underscore."
             )
 
         if candidate[0].isdigit():
