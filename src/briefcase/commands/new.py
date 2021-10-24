@@ -45,6 +45,7 @@ RESERVED_KEYWORDS = [
     'export',
     'extends',
     'extern',
+    'false',
     'final',
     'finally',
     'float',
@@ -91,6 +92,7 @@ RESERVED_KEYWORDS = [
     'throw',
     'throws',
     'transient',
+    'true',
     'try',
     'typedef',
     'typeof',
@@ -102,8 +104,6 @@ RESERVED_KEYWORDS = [
     'while',
     'with',
     'yield',
-    'false',
-    'true',
 ]
 
 
