@@ -26,7 +26,7 @@ def test_valid_app_name(new_command, name):
         'existing',  # pre-existing directory
         'switch',
         'false',
-        'False'  # added from the keywords_list
+        'False',  # added from the keywords_list
         'YIELD',    # checking whether on reserved keywords list
     ]
 )
