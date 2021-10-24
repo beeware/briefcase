@@ -25,6 +25,7 @@ def test_valid_app_name(new_command, name):
         '-helloworld',  # leading hyphen
         'existing',  # pre-existing directory
         'switch',
+        'pass',
         'false',
         'False',  # added from the keywords_list
         'YIELD',    # checking whether on reserved keywords list
