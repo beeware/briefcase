@@ -74,7 +74,7 @@ class NewCommand(BaseCommand):
             help='The cookiecutter template to use for the new project'
         )
 
-    def validate_formal_name(selfs, candidate):
+    def validate_formal_name(self, candidate):
         """
         Determine if the formal name is valid.
 
@@ -102,7 +102,6 @@ class NewCommand(BaseCommand):
             return "MainApp"  # name cannot start with a digit
         else:
             return re.sub('[^0-9a-zA-Z_]+', '', formal_name).lstrip('_').lower()
-
 
     def validate_app_name(self, candidate):
         """
@@ -135,7 +134,7 @@ class NewCommand(BaseCommand):
     def make_class_name(self, candidate):
         """
         Construct a valid class name from a candidate name.
-        :param formal_name: The candidate name
+        :param candidate: The candidate name
         :returns: The app's class name
         """
         return re.sub('[^0-9a-zA-Z_]+', '', candidate)
