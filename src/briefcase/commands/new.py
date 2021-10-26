@@ -93,7 +93,7 @@ class NewCommand(BaseCommand):
         :param formal_name: The formal name
         :returns: The candidate app name
         """
-        return re.sub('[^0-9a-zA-Z_]+', '', formal_name).lstrip('_').lower()
+        return re.sub('[^0-9a-zA-Z_]+', 'x', formal_name).lstrip('_').lower()
 
     def validate_app_name(self, candidate):
         """
