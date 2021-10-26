@@ -106,7 +106,7 @@ class NewCommand(BaseCommand):
         if not PEP508_NAME_RE.match(candidate):
             raise ValueError(
                 "App name may only contain letters, numbers, hypens and "
-                "underscores, and may not start with a hyphen or underscore."
+                "underscores, and may not start with a number, hyphen or underscore."
             )
         if (self.base_path / candidate).exists():
             raise ValueError(
