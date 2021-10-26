@@ -74,18 +74,6 @@ class NewCommand(BaseCommand):
             help='The cookiecutter template to use for the new project'
         )
 
-    def make_class_name(self, formal_name):
-        """
-        Construct a valid class name from a formal name.
-
-        :param formal_name: The formal name
-        :returns: The app's class name
-        """
-        class_name = re.sub('[^0-9a-zA-Z_]+', '', formal_name)
-        if class_name[0].isdigit():
-            class_name = '_' + class_name
-        return class_name
-
     def make_app_name(self, formal_name):
         """
         Construct a candidate app name from a formal name.
@@ -317,9 +305,6 @@ used as you type it.""",
             default='Hello World',
         )
 
-        # The class name can be completely derived from the formal name.
-        class_name = self.make_class_name(formal_name)
-
         default_app_name = self.make_app_name(formal_name)
         app_name = self.input_text(
             intro="""
@@ -336,6 +321,9 @@ but you can use another name if you want.""".format(
             default=default_app_name,
             validator=self.validate_app_name,
         )
+
+        # The class name can be completely derived from the app name.
+        class_name = app_name
 
         # The module name can be completely derived from the app name.
         module_name = self.make_module_name(app_name)
