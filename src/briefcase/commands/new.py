@@ -81,7 +81,10 @@ class NewCommand(BaseCommand):
         :param formal_name: The formal name
         :returns: The candidate app name
         """
-        return re.sub('[^a-zA-Z]*[^0-9a-zA-Z_]+', '', formal_name).lstrip('_').lower()
+        app_name = re.sub('[^a-zA-Z]*[^0-9a-zA-Z_]+', '', formal_name).lstrip('_').lower()
+        if app_name == "":
+            app_name = "I can't suggest an app name"
+        return app_name
 
     def validate_app_name(self, candidate):
         """
