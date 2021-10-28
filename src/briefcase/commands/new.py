@@ -83,7 +83,7 @@ class NewCommand(BaseCommand):
         """
         app_name = re.sub('[^a-zA-Z]*[^0-9a-zA-Z_]+', '', formal_name).lstrip('_').lower()
         if app_name == "":
-            app_name = "I can't suggest an app name"
+            app_name = "Unable to suggest a default name based on the formal name."
         return app_name
 
     def validate_app_name(self, candidate):
