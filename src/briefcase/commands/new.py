@@ -108,6 +108,16 @@ class NewCommand(BaseCommand):
 
         return True
 
+    def make_class_name(self, formal_name):
+        """
+        Construct a candidate class name from a formal name.
+
+        :param formal_name: The formal name
+        :returns: The candidate app name; will appear blank if only non-latin characters
+        were entered in the formal_name
+        """
+        return re.sub('[^a-zA-Z]*[^0-9a-zA-Z_]+', '', formal_name)
+
     def validate_class_name(self, candidate):
         """
         Determine if class name is valid
@@ -341,12 +351,12 @@ but you can use another name if you want.""".format(
             validator=self.validate_app_name,
         )
 
+        default_class_name = self.make_class_name(formal_name)
         class_name = self.input_text(
             intro="""
 Next, we need a name that will serve as a class name. The class name must start with 
 a capital letter in the CapWords format. It can't contain spaces or punctuation""",
-            variable="class name",
-            default="",
+            variable=default_class_name,
             validator=self.validate_class_name,
         )
 
