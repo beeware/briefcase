@@ -108,6 +108,22 @@ class NewCommand(BaseCommand):
 
         return True
 
+    def validate_class_name(self, candidate):
+        """
+        Determine if class name is valid
+
+        :param candidate: The candidate name
+        :returns: True. If there are any validation problems, raises ValueError
+            with a diagnostic message.
+        """
+        if not re.match('^[A-Z][a-zA-Z0-9]+$', candidate):
+            raise ValueError(
+                "The class name must start with a capital letter in the CapWords format."
+                "It can't contain spaces and punctuation."
+            )
+
+        return True
+
     def make_module_name(self, app_name):
         """
         Construct a valid module name from an app name.
@@ -325,8 +341,14 @@ but you can use another name if you want.""".format(
             validator=self.validate_app_name,
         )
 
-        # The class name can be completely derived from the app name.
-        class_name = app_name
+        class_name = self.input_text(
+            intro="""
+Next, we need a name that will serve as a class name. The class name must start with 
+a capital letter in the CapWords format. It can't contain spaces or punctuation""",
+            variable="class name",
+            default="",
+            validator=self.validate_class_name,
+        )
 
         # The module name can be completely derived from the app name.
         module_name = self.make_module_name(app_name)
