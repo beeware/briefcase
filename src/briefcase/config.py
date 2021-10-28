@@ -8,6 +8,12 @@ from briefcase.platforms import get_output_formats, get_platforms
 
 from .exceptions import BriefcaseConfigError
 
+# The restriction on application naming comes from PEP508
+PEP508_NAME_RE = re.compile(
+    r'^([A-Z0-9]|[A-Z0-9][A-Z0-9._-]*[A-Z0-9])$',
+    re.IGNORECASE
+)
+
 # This is the canonical definition from PEP440, modified to include
 # named groups
 PEP440_CANONICAL_VERSION_PATTERN_RE = re.compile(
