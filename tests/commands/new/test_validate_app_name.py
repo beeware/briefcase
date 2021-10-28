@@ -7,7 +7,6 @@ import pytest
         'helloworld',
         'helloWorld',
         'hello42world',
-        '42helloworld',  # ?? Are we sure this is correct?
         'hello_world',
         'hello-world',
     ]
@@ -25,6 +24,10 @@ def test_valid_app_name(new_command, name):
         '_helloworld',  # leading underscore
         '-helloworld',  # leading hyphen
         'existing',  # pre-existing directory
+        '98helloworld',  # leading digit
+        '',  # blank
+        '学口算',  # non-latin character
+        'Helloworld'  # start with capital letter
     ]
 )
 def test_invalid_app_name(new_command, name, tmp_path):
