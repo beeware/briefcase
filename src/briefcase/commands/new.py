@@ -94,9 +94,9 @@ class NewCommand(BaseCommand):
         :returns: True. If there are any validation problems, raises ValueError
             with a diagnostic message.
         """
-        if not PEP508_NAME_RE.match(candidate):
+        if not re.match('^[a-z][a-zA-Z0-9._-]+$', candidate):
             raise ValueError(
-                "App name may only contain letters, numbers, hypens and "
+                "App name may only contain letters, numbers, hyphens and "
                 "underscores, and may not start with a number, hyphen or underscore."
             )
         if (self.base_path / candidate).exists():
