@@ -82,8 +82,6 @@ class NewCommand(BaseCommand):
         :returns: The candidate app name
         """
         app_name = re.sub('[^a-zA-Z]*[^0-9a-zA-Z_]+', '', formal_name).lstrip('_').lower()
-        if app_name == "":
-            app_name = "Unable to suggest a default name based on the formal name."
         return app_name
 
     def validate_app_name(self, candidate):
@@ -351,12 +349,13 @@ but you can use another name if you want.""".format(
             validator=self.validate_app_name,
         )
 
-        default_class_name = self.make_class_name(formal_name)
+        default_class_name = self.make_class_name(formal_name).title()
         class_name = self.input_text(
             intro="""
-Next, we need a name that will serve as a class name. The class name must start with 
+Next, we need a name that will serve as the App class name. The class name must start with 
 a capital letter in the CapWords format. It can't contain spaces or punctuation""",
-            variable=default_class_name,
+            variable="class name",
+            default=default_class_name,
             validator=self.validate_class_name,
         )
 
