@@ -9,7 +9,7 @@ import pytest
         ('Hello! World', 'HelloWorld'),
         ('Hello_World', 'Hello_World'),
         ('Hello-World', 'HelloWorld'),
-        ('24 Jump Street', '_24JumpStreet'),
+        ('24 Jump Street', 'JumpStreet'),
     ]
 )
 def test_make_class_name(new_command, formal_name, candidate):
