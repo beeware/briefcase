@@ -114,6 +114,7 @@ class NewCommand(BaseCommand):
         :returns: The candidate app name; will appear blank if only non-latin characters
         were entered in the formal_name
         """
+        formal_name.title()
         return re.sub('[^a-zA-Z]*[^0-9a-zA-Z_]+', '', formal_name)
 
     def validate_class_name(self, candidate):
@@ -124,10 +125,10 @@ class NewCommand(BaseCommand):
         :returns: True. If there are any validation problems, raises ValueError
             with a diagnostic message.
         """
-        if not re.match('^[A-Z][a-zA-Z0-9]+$', candidate):
+        if not re.match('^[A-Z][a-zA-Z0-9_]+$', candidate):
             raise ValueError(
                 "The class name must start with a capital letter in the CapWords format."
-                "It can't contain spaces and punctuation."
+                "It should not contain spaces."
             )
 
         return True
@@ -349,11 +350,11 @@ but you can use another name if you want.""".format(
             validator=self.validate_app_name,
         )
 
-        default_class_name = self.make_class_name(formal_name).title()
+        default_class_name = self.make_class_name(formal_name)
         class_name = self.input_text(
             intro="""
 Next, we need a name that will serve as the App class name. The class name must start with 
-a capital letter in the CapWords format. It can't contain spaces or punctuation""",
+a capital letter in the CapWords format. It should not contain spaces.""",
             variable="class name",
             default=default_class_name,
             validator=self.validate_class_name,
