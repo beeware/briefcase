@@ -81,7 +81,7 @@ class NewCommand(BaseCommand):
         :param formal_name: The formal name
         :returns: The candidate app name
         """
-        return re.sub('[^a-zA-Z]*[^0-9a-zA-Z_]+', '', formal_name).lstrip('_').lower()
+        return re.sub('[^a-zA-Z]*[^a-zA-Z0-9_]+', '', formal_name).lstrip('_').rstrip('_').lower()
 
     def validate_app_name(self, candidate):
         """
@@ -91,10 +91,11 @@ class NewCommand(BaseCommand):
         :returns: True. If there are any validation problems, raises ValueError
             with a diagnostic message.
         """
-        if not re.match('^[a-z][a-zA-Z0-9._-]+$', candidate):
+        if not re.match('^[a-z][a-zA-Z0-9._-]*[a-zA-Z0-9]$', candidate):
             raise ValueError(
-                "App name may only contain letters, numbers, hyphens and "
-                "underscores, and may not start with a number, hyphen or underscore."
+                "App names must be PEP508 compliant (i.e., they can only "
+                "include letters, numbers, '-' and '_'; must start with a "
+                "letter; and cannot end with '-' or '_'."
             )
         if (self.base_path / candidate).exists():
             raise ValueError(
