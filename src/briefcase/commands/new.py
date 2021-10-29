@@ -81,8 +81,7 @@ class NewCommand(BaseCommand):
         :param formal_name: The formal name
         :returns: The candidate app name
         """
-        app_name = re.sub('[^a-zA-Z]*[^0-9a-zA-Z_]+', '', formal_name).lstrip('_').lower()
-        return app_name
+        return re.sub('[^a-zA-Z]*[^0-9a-zA-Z_]+', '', formal_name).lstrip('_').lower()
 
     def validate_app_name(self, candidate):
         """
@@ -115,7 +114,7 @@ class NewCommand(BaseCommand):
         were entered in the formal_name
         """
         formal_name.title()
-        return re.sub('[^a-zA-Z]*[^0-9a-zA-Z_]+', '', formal_name)
+        return re.sub('[^a-zA-Z]*[^a-zA-Z0-9_]+', '', formal_name)
 
     def validate_class_name(self, candidate):
         """
@@ -125,7 +124,7 @@ class NewCommand(BaseCommand):
         :returns: True. If there are any validation problems, raises ValueError
             with a diagnostic message.
         """
-        if not re.match('^[A-Z][a-zA-Z0-9_]+$', candidate):
+        if not re.match('^[A-Z]+[a-zA-Z0-9_]+$', candidate):
             raise ValueError(
                 "The class name must start with a capital letter in the CapWords format."
                 "It should not contain spaces."
