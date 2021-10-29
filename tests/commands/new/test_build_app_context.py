@@ -20,7 +20,7 @@ def test_question_sequence(new_command):
     assert new_command.build_app_context() == {
         'formal_name': 'My Application',
         'app_name': 'myapplication',
-        'class_name': 'Myapplication',
+        'class_name': 'MyApplication',
         'module_name': 'myapplication',
         'bundle': 'org.beeware',
         'project_name': 'My Project',
@@ -54,7 +54,7 @@ def test_question_sequence_with_nondefault_gui(new_command):
     assert new_command.build_app_context() == {
         'formal_name': 'My Application',
         'app_name': 'myapplication',
-        'class_name': 'Myapplication',
+        'class_name': 'MyApplication',
         'module_name': 'myapplication',
         'bundle': 'org.beeware',
         'project_name': 'My Project',
@@ -77,7 +77,7 @@ def test_question_sequence_with_no_user_input(new_command):
         'author': 'Jane Developer',
         'author_email': 'jane@example.com',
         'bundle': 'com.example',
-        'class_name': 'Helloworld',
+        'class_name': 'HelloWorld',
         'description': 'My first application',
         'formal_name': 'Hello World',
         'gui_framework': 'Toga',
