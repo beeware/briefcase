@@ -8,6 +8,7 @@ import pytest
         ('Hello World!', 'helloworld'),
         ('Hello! World', 'helloworld'),
         ('Hello-World', 'helloworld'),
+        ('98 Hello World', 'helloworld')
     ]
 )
 def test_make_app_name(new_command, formal_name, candidate):
