@@ -12,6 +12,7 @@ from briefcase.exceptions import NetworkFailure
 
 from .base import BaseCommand, BriefcaseCommandError
 from .create import InvalidTemplateRepository
+from ..config import PEP508_NAME_RE
 
 VALID_BUNDLE_RE = re.compile(r'[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$')
 
@@ -91,7 +92,7 @@ class NewCommand(BaseCommand):
         :returns: True. If there are any validation problems, raises ValueError
             with a diagnostic message.
         """
-        if not re.match('^[a-z][a-zA-Z0-9._-]*[a-zA-Z0-9]$', candidate):
+        if not PEP508_NAME_RE.match(candidate):
             raise ValueError(
                 "App names must be PEP508 compliant (i.e., they can only "
                 "include letters, numbers, '-' and '_'; must start with a "
