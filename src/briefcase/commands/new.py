@@ -127,7 +127,7 @@ class NewCommand(BaseCommand):
         """
         if not re.match('^[A-Z]+[a-zA-Z0-9_]+$', candidate):
             raise ValueError(
-                "The class name must start with a capital letter in the camel case format."
+                "The class name must start with a capital letter in the CamelCase format."
                 "It should not contain spaces."
             )
 
