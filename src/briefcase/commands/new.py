@@ -4,6 +4,7 @@ import subprocess
 from email.utils import parseaddr
 from typing import Optional
 from urllib.parse import urlparse
+from keyword import iskeyword
 
 from cookiecutter import exceptions as cookiecutter_exceptions
 
@@ -82,6 +83,18 @@ class NewCommand(BaseCommand):
         :returns: The app's class name
         """
         class_name = re.sub('[^0-9a-zA-Z_]+', '', formal_name)
+
+        # If user typed in no standard characters, ask for name again.
+
+        if not class_name \
+                or not class_name.isidentifier() \
+                or iskeyword(class_name):
+            print()
+            print('You must have at least one standard letter in your Formal Name.')
+            print()
+            print('Please provide another Formal Name')
+            return self.build_app_context()
+
         if class_name[0].isdigit():
             class_name = '_' + class_name
         return class_name
