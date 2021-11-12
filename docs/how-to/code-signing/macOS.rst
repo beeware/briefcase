@@ -43,10 +43,14 @@ sign in with your existing Apple ID or alternatively, create a new one:
    :width: 300
 
 As part of the registration procedure, you'll have to pay a **$99 fee**, which
-will be charged on an annual basis. **Note**: If you're registering as a
-non-profit organization, an educational institution or a government entity, you
-may be eligible for a fee waiver, which you can read more about `here
-<https://developer.apple.com/support/membership-fee-waiver/>`__.
+will be charged on an annual basis.
+
+.. admonition:: Fee waivers
+
+  If you're registering as a non-profit organization, an educational institution
+  or a government entity, you may be eligible for a fee waiver, which you can
+  read more about `here
+  <https://developer.apple.com/support/membership-fee-waiver/>`__.
 
 
 Generating a certificate request on Keychain Access
