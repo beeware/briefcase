@@ -8,11 +8,106 @@ from briefcase.platforms import get_output_formats, get_platforms
 
 from .exceptions import BriefcaseConfigError
 
-# The restriction on application naming comes from PEP508
+# The first restriction on application naming comes from PEP508
 PEP508_NAME_RE = re.compile(
     r'^([A-Z0-9]|[A-Z0-9][A-Z0-9._-]*[A-Z0-9])$',
     re.IGNORECASE
 )
+
+#Create a list of reserved keywords for Python, Javascript, Java, C, and C++
+RESERVED_KEYWORDS = [
+    '_Packed',
+    'abstract',
+    'and',
+    'as',
+    'assert',
+    'auto',
+    'boolean',
+    'break',
+    'byte',
+    'case',
+    'catch',
+    'char',
+    'class',
+    'const',
+    'continue',
+    'debugger',
+    'def',
+    'default',
+    'del',
+    'delete',
+    'do',
+    'double',
+    'elif',
+    'else',
+    'enum',
+    'except',
+    'exec',
+    'export',
+    'extends',
+    'extern',
+    'false',
+    'final',
+    'finally',
+    'float',
+    'for',
+    'from',
+    'function',
+    'global',
+    'goto',
+    'if',
+    'implements',
+    'import',
+    'in',
+    'instanceof',
+    'int',
+    'interface',
+    'is',
+    'lambda',
+    'long',
+    'native',
+    'new',
+    'None',
+    'nonlocal',
+    'not',
+    'or',
+    'package',
+    'pass',
+    'print',
+    'private',
+    'protected',
+    'public',
+    'raise',
+    'register',
+    'return',
+    'short',
+    'signed',
+    'sizeof',
+    'static',
+    'strictfp',
+    'struct',
+    'super',
+    'switch',
+    'synchronized',
+    'this',
+    'throw',
+    'throws',
+    'transient',
+    'true',
+    'try',
+    'typedef',
+    'typeof',
+    'union',
+    'unsigned',
+    'var',
+    'void',
+    'volatile',
+    'while',
+    'with',
+    'yield',
+]
+
+
 
 # This is the canonical definition from PEP440, modified to include
 # named groups
@@ -144,6 +239,14 @@ class AppConfig(BaseConfig):
         self.supported = supported
 
         # Validate that the app name is valid.
+        #Ellie note: Instructions: Replace following with a generic check -- not just is it not PEP508, but is it valid app?
+        #Ellie note: here is the code that I wrote to check if in reserved_keywords
+        if self.app_name.lower() in RESERVED_KEYWORDS:
+            raise BriefcaseConfigError(
+                "{self.app_name!r} is not a valid app name.\n\n"
+                "App names must not be reserved keywords such as 'and', 'for' and 'while'.".format(self=self)
+            )
+
         if not PEP508_NAME_RE.match(self.app_name):
             raise BriefcaseConfigError(
                 "{self.app_name!r} is not a valid app name.\n\n"

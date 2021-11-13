@@ -6,105 +6,15 @@ from typing import Optional
 from urllib.parse import urlparse
 
 from cookiecutter import exceptions as cookiecutter_exceptions
-from briefcase.config import PEP508_NAME_RE
+from briefcase.config import PEP508_NAME_RE, RESERVED_KEYWORDS
 from briefcase.exceptions import NetworkFailure
+
 
 from .base import BaseCommand, BriefcaseCommandError
 from .create import InvalidTemplateRepository
 
 VALID_BUNDLE_RE = re.compile(r'[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$')
-#Create a list of reserved keywords for Python, Javascript, Java, C, and C++
-RESERVED_KEYWORDS = [
-    '_Packed',
-    'abstract',
-    'and',
-    'as',
-    'assert',
-    'auto',
-    'boolean',
-    'break',
-    'byte',
-    'case',
-    'catch',
-    'char',
-    'class',
-    'const',
-    'continue',
-    'debugger',
-    'def',
-    'default',
-    'del',
-    'delete',
-    'do',
-    'double',
-    'elif',
-    'else',
-    'enum',
-    'except',
-    'exec',
-    'export',
-    'extends',
-    'extern',
-    'false',
-    'final',
-    'finally',
-    'float',
-    'for',
-    'from',
-    'function',
-    'global',
-    'goto',
-    'if',
-    'implements',
-    'import',
-    'in',
-    'instanceof',
-    'int',
-    'interface',
-    'is',
-    'lambda',
-    'long',
-    'native',
-    'new',
-    'None',
-    'nonlocal',
-    'not',
-    'or',
-    'package',
-    'pass',
-    'print',
-    'private',
-    'protected',
-    'public',
-    'raise',
-    'register',
-    'return',
-    'short',
-    'signed',
-    'sizeof',
-    'static',
-    'strictfp',
-    'struct',
-    'super',
-    'switch',
-    'synchronized',
-    'this',
-    'throw',
-    'throws',
-    'transient',
-    'true',
-    'try',
-    'typedef',
-    'typeof',
-    'union',
-    'unsigned',
-    'var',
-    'void',
-    'volatile',
-    'while',
-    'with',
-    'yield',
-]
+
 
 
 def titlecase(s):
@@ -194,6 +104,11 @@ class NewCommand(BaseCommand):
         :returns: True. If there are any validation problems, raises ValueError
             with a diagnostic message.
         """
+        if candidate.lower() in RESERVED_KEYWORDS:
+            raise ValueError(
+                "{candidate} is not a valid app name.\n\n"
+                "App names must not be reserved keywords such as 'and', 'for' and 'while'."
+            )
         if not PEP508_NAME_RE.match(candidate):
             raise ValueError(
                 "App name may only contain letters, numbers, hypens and "
@@ -205,10 +120,7 @@ class NewCommand(BaseCommand):
                 "name, move to a different parent directory, or delete the "
                 "existing folder.".format(candidate=candidate)
             )
-        if candidate.lower() in RESERVED_KEYWORDS:
-            raise ValueError(
-                "{candidate} is a reserved python keyword. Select a new app name please"
-            )
+
         return True
 
     def make_module_name(self, app_name):
