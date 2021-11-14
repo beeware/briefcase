@@ -6,15 +6,14 @@ from typing import Optional
 from urllib.parse import urlparse
 
 from cookiecutter import exceptions as cookiecutter_exceptions
+
 from briefcase.config import PEP508_NAME_RE, RESERVED_KEYWORDS
 from briefcase.exceptions import NetworkFailure
-
 
 from .base import BaseCommand, BriefcaseCommandError
 from .create import InvalidTemplateRepository
 
 VALID_BUNDLE_RE = re.compile(r'[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$')
-
 
 
 def titlecase(s):
@@ -97,6 +96,7 @@ class NewCommand(BaseCommand):
         return re.sub('[^0-9a-zA-Z_]+', '', formal_name).lstrip('_').lower()
 
     def validate_app_name(self, candidate):
+
         """
         Determine if the app name is valid.
 

@@ -239,8 +239,7 @@ class AppConfig(BaseConfig):
         self.supported = supported
 
         # Validate that the app name is valid.
-        #Ellie note: Instructions: Replace following with a generic check -- not just is it not PEP508, but is it valid app?
-        #Ellie note: here is the code that I wrote to check if in reserved_keywords
+
         if self.app_name.lower() in RESERVED_KEYWORDS:
             raise BriefcaseConfigError(
                 "{self.app_name!r} is not a valid app name.\n\n"
