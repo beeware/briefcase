@@ -1,0 +1,1 @@
+Don't hard-code Xcode location but use Xcode installation set by xcode-select.
