@@ -48,7 +48,7 @@ def test_exists_but_command_line_tools_selected(xcode):
         "is a command line tools instance\n"
     )
 
-    with pytest.raises(BriefcaseCommandError, match=r"xcode-select -switch"):
+    with pytest.raises(BriefcaseCommandError, match=r"xcode-select --switch"):
         ensure_xcode_is_installed(command, xcode_location=xcode)
 
     # xcode-select was invoked
