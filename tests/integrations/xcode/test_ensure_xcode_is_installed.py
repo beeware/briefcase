@@ -153,23 +153,41 @@ def test_installed_no_minimum_version(xcode):
 )
 def test_installed_with_minimum_version_success(min_version, version, capsys, xcode):
     "Check XCode can meet a minimum version requirement."
+
+    def check_output_mock(cmd_list, *args, **kwargs):
+
+        if cmd_list == ['xcode-select', '-p']:
+            return xcode + "\n"
+
+        if cmd_list == ['xcodebuild', '-version']:
+            return "Xcode {version}\nBuild version 11B500\n".format(version=version)
+
+        return mock.DEFAULT
+
     command = mock.MagicMock()
-    command.subprocess.check_output.return_value = "Xcode {version}\nBuild version 11B500\n".format(
-        version=version
-    )
+    command.subprocess.check_output.side_effect = check_output_mock
 
     # Check passes without an error.
     ensure_xcode_is_installed(
         command,
         min_version=min_version,
-        xcode_location=xcode,
     )
 
-    # xcode-select was invoked
-    command.subprocess.check_output.assert_called_once_with(
-        ['xcodebuild', '-version'],
-        stderr=subprocess.STDOUT,
-        universal_newlines=True,
+    # assert xcode-select and xcodebuild were invoked
+    command.subprocess.check_output.assert_has_calls(
+        [
+            mock.call(
+                ['xcode-select', '-p'],
+                stderr=subprocess.STDOUT,
+                universal_newlines=True,
+            ),
+            mock.call(
+                ['xcodebuild', '-version'],
+                stderr=subprocess.STDOUT,
+                universal_newlines=True,
+            ),
+        ],
+        any_order=False,
     )
 
     # Make sure the warning wasn't displayed.
