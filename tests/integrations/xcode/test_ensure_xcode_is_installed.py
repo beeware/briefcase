@@ -20,6 +20,21 @@ def test_not_installed(tmp_path):
     "If Xcode is not installed, raise an error."
     command = mock.MagicMock()
     command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
+        cmd=['xcode-select', '-p'],
+        returncode=2
+    )
+
+    # Test a location where Xcode *won't* be installed
+    with pytest.raises(BriefcaseCommandError):
+        ensure_xcode_is_installed(
+            command,
+        )
+
+
+def test_not_installed_hardcoded_path(tmp_path):
+    "If Xcode is not installed at the given location, raise an error."
+    command = mock.MagicMock()
+    command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
         cmd=['xcodebuild', '-version'],
         returncode=1
     )
