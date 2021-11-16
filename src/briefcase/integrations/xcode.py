@@ -268,7 +268,7 @@ accepted before you can use those tools.
 You can accept these licenses by starting Xcode and clicking "Accept"; or, you
 can run:
 
-    sudo xcodebuild -license
+    $ sudo xcodebuild -license
 
 at the command line and accepting the license there.
 
