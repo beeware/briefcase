@@ -107,8 +107,21 @@ RESERVED_KEYWORDS = [
     'yield',
 ]
 
+def is_PEP508_violation(app_name):
+    if not PEP508_NAME_RE.match(app_name):
+        return True
+    return False
 
 
+def is_reserved_keyword_violation(app_name):
+    if app_name.lower() in RESERVED_KEYWORDS:
+        return True
+    return False
+
+def is_valid_app_name(app_name):
+    if is_reserved_keyword_violation(app_name) or is_PEP508_violation(app_name):
+        return False
+    return True
 # This is the canonical definition from PEP440, modified to include
 # named groups
 PEP440_CANONICAL_VERSION_PATTERN_RE = re.compile(
@@ -129,6 +142,7 @@ def is_pep440_canonical_version(version):
     :returns: True if the version string is valid; false otherwise.
     """
     return PEP440_CANONICAL_VERSION_PATTERN_RE.match(version) is not None
+
 
 
 def parsed_version(version):
@@ -238,17 +252,11 @@ class AppConfig(BaseConfig):
         self.template_branch = template_branch
         self.supported = supported
 
-        # Validate that the app name is valid.
 
-        if self.app_name.lower() in RESERVED_KEYWORDS:
+        if not is_valid_app_name(self.app_name):
             raise BriefcaseConfigError(
-                "{self.app_name!r} is not a valid app name.\n\n"
-                "App names must not be reserved keywords such as 'and', 'for' and 'while'.".format(self=self)
-            )
-
-        if not PEP508_NAME_RE.match(self.app_name):
-            raise BriefcaseConfigError(
-                "{self.app_name!r} is not a valid app name.\n\n"
+                "{self.app_name} is not a valid app name.\n\n"
+                "App names must not be reserved keywords such as 'and', 'for' and 'while'."
                 "App names must be PEP508 compliant (i.e., they can only "
                 "include letters, numbers, '-' and '_'; must start with a "
                 "letter; and cannot end with '-' or '_'.".format(self=self)
