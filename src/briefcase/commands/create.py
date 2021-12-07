@@ -379,6 +379,40 @@ class CreateCommand(BaseCommand):
             print()
             raise InvalidSupportPackage(support_package_url)
 
+    def build_env(self, app: BaseConfig):
+        """
+        Return an environment in which to build the dependencies for the app.
+        This should include the path to Python.h in CPPFLAGS, and libpython
+        and its path in LDFLAGS.
+
+        :param app: The config object for the app
+        """
+        env = dict(os.environ)
+        if self.platform == "android":
+            # sysconfig.get_config_var("INCLUDEPY")
+            includepy = os.path.join(
+                self.bundle_path(app), "app", "include",
+                "python{}m".format(self.python_version_tag),
+            )
+            assert os.path.exists(includepy), includepy
+            cppflags = env.get("CPPFLAGS", "").split(" ")
+            cppflags = [
+                "-I{}".format(includepy.replace(" ", "\ ")),
+            ] + cppflags
+            env.update({"CPPFLAGS": " ".join(cppflags)})
+            # sysconfig.get_config_var("LIBDIR")
+            libdir = os.path.join(
+                self.bundle_path(app), "app", "libs", "arm64-v8a"
+            )
+            assert os.path.exists(libdir), libdir
+            ldflags = env.get("LDFLAGS", "").split(" ")
+            ldflags = [
+                "-L{}".format(libdir.replace(" ", "\ ")),
+                "-lpython{}m".format(self.python_version_tag),
+            ] + ldflags
+            env.update({"LDFLAGS": " ".join(ldflags)})
+        return env
+
     def install_app_dependencies(self, app: BaseConfig):
         """
         Install the dependencies for the app.
@@ -387,15 +421,19 @@ class CreateCommand(BaseCommand):
         """
         if app.requires:
             try:
+                pip = [sys.executable, "-m", "pip"]
+                options = [
+                    "--upgrade",
+                    "--no-user",
+                    "--target={}".format(self.app_packages_path(app)),
+                ]
+                if self.platform == "android":
+                    pip = [sys.executable, "-m", "androidenv"] + pip
+                    options += ["--no-binary", ":all:"]
                 self.subprocess.run(
-                    [
-                        sys.executable, "-m",
-                        "pip", "install",
-                        "--upgrade",
-                        "--no-user",
-                        "--target={}".format(self.app_packages_path(app)),
-                    ] + app.requires,
+                    pip + ["install"] + options + app.requires,
                     check=True,
+                    env=self.build_env(app),
                 )
             except subprocess.CalledProcessError:
                 raise DependencyInstallError()
