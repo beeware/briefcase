@@ -397,7 +397,7 @@ class CreateCommand(BaseCommand):
             assert os.path.exists(includepy), includepy
             cppflags = env.get("CPPFLAGS", "").split(" ")
             cppflags = [
-                "-I{}".format(includepy.replace(" ", "\ ")),
+                "-I{}".format(includepy.replace(" ", "\\ ")),
             ] + cppflags
             env.update({"CPPFLAGS": " ".join(cppflags)})
             # sysconfig.get_config_var("LIBDIR")
@@ -407,7 +407,7 @@ class CreateCommand(BaseCommand):
             assert os.path.exists(libdir), libdir
             ldflags = env.get("LDFLAGS", "").split(" ")
             ldflags = [
-                "-L{}".format(libdir.replace(" ", "\ ")),
+                "-L{}".format(libdir.replace(" ", "\\ ")),
                 "-lpython{}m".format(self.python_version_tag),
             ] + ldflags
             env.update({"LDFLAGS": " ".join(ldflags)})
