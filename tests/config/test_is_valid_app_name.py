@@ -1,5 +1,7 @@
 import pytest
 
+from briefcase.config import is_valid_app_name
+
 
 @pytest.mark.parametrize(
     'name',
@@ -7,13 +9,13 @@ import pytest
         'helloworld',
         'helloWorld',
         'hello42world',
-        '42helloworld',  # ?? Are we sure this is correct?
+        '42helloworld',
         'hello_world',
     ]
 )
-def test_valid_app_name(new_command, name):
+def test_is_valid_app_name(name):
     "Test that valid app names are accepted"
-    assert new_command.validate_app_name(name)
+    assert is_valid_app_name(name) == True
 
 
 @pytest.mark.parametrize(
@@ -23,7 +25,6 @@ def test_valid_app_name(new_command, name):
         'helloworld!',
         '_helloworld',
         '-helloworld',
-        'existing',
         'switch',
         'pass',
         'false',
@@ -31,9 +32,8 @@ def test_valid_app_name(new_command, name):
         'YIELD',
     ]
 )
-def test_invalid_app_name(new_command, name, tmp_path):
-    "Test that invalid app names are rejected"
-    (tmp_path / 'existing').mkdir()
 
-    with pytest.raises(ValueError):
-        new_command.validate_app_name(name)
+def test_is_invalid_app_name(name):
+     "Test that invalid app names are rejected"
+     assert is_valid_app_name(name) == False
+

@@ -122,8 +122,7 @@ def is_valid_app_name(app_name):
     if is_reserved_keyword_violation(app_name) or is_PEP508_violation(app_name):
         return False
     return True
-# This is the canonical definition from PEP440, modified to include
-# named groups
+# This is the canonical definition from PEP440, modified to include named groups
 PEP440_CANONICAL_VERSION_PATTERN_RE = re.compile(
     r'^((?P<epoch>[1-9][0-9]*)!)?'
     r'(?P<release>(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*))*)'
