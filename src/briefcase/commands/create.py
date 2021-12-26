@@ -428,7 +428,10 @@ class CreateCommand(BaseCommand):
 
         :param app: The config object for the app
         """
-        env = dict(os.environ)
+        if self.platform == "android":
+            env = self.android_sdk.env
+        else:
+            env = dict(os.environ)
         includepy = self.include_path(app)
         if includepy is not None:
             cppflags = env.get("CPPFLAGS", "").split(" ")
