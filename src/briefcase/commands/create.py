@@ -1,4 +1,5 @@
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -379,6 +380,46 @@ class CreateCommand(BaseCommand):
             print()
             raise InvalidSupportPackage(support_package_url)
 
+    def include_path(self, app: BaseConfig):
+        """
+        Return the path to Python.h.
+        """
+        if self.platform == "android":
+            include = os.path.join(self.bundle_path(app), "app", "include")
+            for suffix in ["", "m"]:
+                includepy = os.path.join(
+                    include,
+                    "python{}{}".format(self.python_version_tag, suffix),
+                )
+                if os.path.exists(includepy):
+                    return includepy
+            return None
+        else:
+            return None
+
+    def libpython(self, app: BaseConfig):
+        """
+        Return a tuple of the Python shared library name and its path.
+        """
+        if self.platform == "android":
+            # sysconfig.get_config_var("LIBDIR")
+            libdir = os.path.join(
+                self.bundle_path(app), "app", "libs", "arm64-v8a"
+            )
+            if not os.path.exists(libdir):
+                return (None, None)
+            # sysconfig.get_config_var("LDLIBRARY")
+            for suffix in ["", "m"]:
+                ldlibrary = 'libpython{}{}.so'.format(
+                    self.python_version_tag,
+                    suffix,
+                )
+                if os.path.exists(os.path.join(libdir, ldlibrary)):
+                    return (ldlibrary, libdir)
+            return (None, None)
+        else:
+            return (None, None)
+
     def build_env(self, app: BaseConfig):
         """
         Return an environment in which to build the dependencies for the app.
@@ -388,27 +429,19 @@ class CreateCommand(BaseCommand):
         :param app: The config object for the app
         """
         env = dict(os.environ)
-        if self.platform == "android":
-            # sysconfig.get_config_var("INCLUDEPY")
-            includepy = os.path.join(
-                self.bundle_path(app), "app", "include",
-                "python{}m".format(self.python_version_tag),
-            )
-            assert os.path.exists(includepy), includepy
+        includepy = self.include_path(app)
+        if includepy is not None:
             cppflags = env.get("CPPFLAGS", "").split(" ")
             cppflags = [
                 "-I{}".format(includepy.replace(" ", "\\ ")),
             ] + cppflags
             env.update({"CPPFLAGS": " ".join(cppflags)})
-            # sysconfig.get_config_var("LIBDIR")
-            libdir = os.path.join(
-                self.bundle_path(app), "app", "libs", "arm64-v8a"
-            )
-            assert os.path.exists(libdir), libdir
+        ldlibrary, libdir = self.libpython(app)
+        if ldlibrary is not None:
             ldflags = env.get("LDFLAGS", "").split(" ")
             ldflags = [
                 "-L{}".format(libdir.replace(" ", "\\ ")),
-                "-lpython{}m".format(self.python_version_tag),
+                "-l{}".format(re.match(r"lib(.*)[.].*", ldlibrary).group(1)),
             ] + ldflags
             env.update({"LDFLAGS": " ".join(ldflags)})
         return env
