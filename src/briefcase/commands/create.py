@@ -402,10 +402,9 @@ class CreateCommand(BaseCommand):
         Return a tuple of the Python shared library name and its path.
         """
         if self.platform == "android":
+            abi = getattr(app, "ABI", "arm64-v8a")
             # sysconfig.get_config_var("LIBDIR")
-            libdir = os.path.join(
-                self.bundle_path(app), "app", "libs", "arm64-v8a"
-            )
+            libdir = os.path.join(self.bundle_path(app), "app", "libs", abi)
             if not os.path.exists(libdir):
                 return (None, None)
             # sysconfig.get_config_var("LDLIBRARY")
@@ -429,7 +428,8 @@ class CreateCommand(BaseCommand):
         :param app: The config object for the app
         """
         if self.platform == "android":
-            env = self.android_sdk.env
+            env = dict(self.android_sdk.env)
+            env.update({"ABI": getattr(app, "ABI", "arm64-v8a")})
         else:
             env = dict(os.environ)
         includepy = self.include_path(app)
@@ -455,13 +455,24 @@ class CreateCommand(BaseCommand):
 
         :param app: The config object for the app
         """
+        target = self.app_packages_path(app)
+        if self.platform == "android":
+            abi = getattr(app, "ABI", None)
+            if abi is None:
+                for abi in ["armeabi-v7a", "arm64-v8a", "x86", "x86_64"]:
+                    app.ABI = abi
+                    self.install_app_dependencies(app)
+                del app.ABI
+                return
+            else:
+                target = os.path.join(target, abi)
         if app.requires:
             try:
                 pip = [sys.executable, "-m", "pip"]
                 options = [
                     "--upgrade",
                     "--no-user",
-                    "--target={}".format(self.app_packages_path(app)),
+                    "--target={}".format(target),
                 ]
                 if self.platform == "android":
                     pip = [sys.executable, "-m", "androidenv"] + pip
