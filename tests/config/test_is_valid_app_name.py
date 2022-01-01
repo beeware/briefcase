@@ -15,7 +15,7 @@ from briefcase.config import is_valid_app_name
 )
 def test_is_valid_app_name(name):
     "Test that valid app names are accepted"
-    assert is_valid_app_name(name) == True
+    assert is_valid_app_name(name)
 
 
 @pytest.mark.parametrize(
@@ -32,8 +32,6 @@ def test_is_valid_app_name(name):
         'YIELD',
     ]
 )
-
 def test_is_invalid_app_name(name):
-     "Test that invalid app names are rejected"
-     assert is_valid_app_name(name) == False
-
+    "Test that invalid app names are rejected"
+    assert not is_valid_app_name(name)

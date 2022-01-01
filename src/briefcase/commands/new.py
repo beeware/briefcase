@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 
 from cookiecutter import exceptions as cookiecutter_exceptions
 
-from briefcase.config import PEP508_NAME_RE, RESERVED_KEYWORDS, is_valid_app_name
+from briefcase.config import is_valid_app_name
 from briefcase.exceptions import NetworkFailure
 
 from .base import BaseCommand, BriefcaseCommandError

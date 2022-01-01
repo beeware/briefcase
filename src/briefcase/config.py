@@ -14,7 +14,7 @@ PEP508_NAME_RE = re.compile(
     re.IGNORECASE
 )
 
-#Create a list of reserved keywords for Python, Javascript, Java, C, and C++
+# Create a list of reserved keywords for Python, Javascript, Java, C, and C++
 RESERVED_KEYWORDS = [
     '_Packed',
     'abstract',
@@ -107,22 +107,26 @@ RESERVED_KEYWORDS = [
     'yield',
 ]
 
-def is_PEP508_violation(app_name):
-    if not PEP508_NAME_RE.match(app_name):
+
+def is_valid_pep508_name(app_name):
+    if PEP508_NAME_RE.match(app_name):
         return True
     return False
 
 
-def is_reserved_keyword_violation(app_name):
+def is_reserved_keyword(app_name):
     if app_name.lower() in RESERVED_KEYWORDS:
         return True
     return False
 
+
 def is_valid_app_name(app_name):
-    if is_reserved_keyword_violation(app_name) or is_PEP508_violation(app_name):
-        return False
-    return True
+    if not is_reserved_keyword(app_name) and is_valid_pep508_name(app_name):
+        return True
+    return False
 # This is the canonical definition from PEP440, modified to include named groups
+
+
 PEP440_CANONICAL_VERSION_PATTERN_RE = re.compile(
     r'^((?P<epoch>[1-9][0-9]*)!)?'
     r'(?P<release>(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*))*)'
@@ -141,7 +145,6 @@ def is_pep440_canonical_version(version):
     :returns: True if the version string is valid; false otherwise.
     """
     return PEP440_CANONICAL_VERSION_PATTERN_RE.match(version) is not None
-
 
 
 def parsed_version(version):
@@ -250,7 +253,6 @@ class AppConfig(BaseConfig):
         self.template = template
         self.template_branch = template_branch
         self.supported = supported
-
 
         if not is_valid_app_name(self.app_name):
             raise BriefcaseConfigError(

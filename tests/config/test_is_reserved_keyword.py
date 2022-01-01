@@ -1,6 +1,6 @@
 import pytest
 
-from briefcase.config import is_reserved_keyword_violation
+from briefcase.config import is_reserved_keyword
 
 
 @pytest.mark.parametrize(
@@ -15,7 +15,7 @@ from briefcase.config import is_reserved_keyword_violation
 )
 def test_is_not_reserved_keyword_violation(name):
     "Test that names not in the keywords list return false."
-    assert is_reserved_keyword_violation(name) == False
+    assert not is_reserved_keyword(name)
 
 
 @pytest.mark.parametrize(
@@ -32,8 +32,6 @@ def test_is_not_reserved_keyword_violation(name):
         'YIELD',
     ]
 )
-
-def test_is_reserved_keyword_violation(name):
-     "Test that names in the reserved_keywords list returns true"
-     assert is_reserved_keyword_violation(name) == True
-
+def test_is_reserved_keyword(name):
+    "Test that names in the reserved_keywords list returns true"
+    assert is_reserved_keyword(name)
