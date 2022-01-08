@@ -1,1 +1,1 @@
-Officially support Python 3.10.
+Added support for Python 3.10.
