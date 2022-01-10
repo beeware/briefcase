@@ -96,7 +96,6 @@ class NewCommand(BaseCommand):
         return re.sub('[^0-9a-zA-Z_]+', '', formal_name).lstrip('_').lower()
 
     def validate_app_name(self, candidate):
-
         """
         Determine if the app name is valid.
 

@@ -109,24 +109,25 @@ RESERVED_KEYWORDS = [
 
 
 def is_valid_pep508_name(app_name):
-    if PEP508_NAME_RE.match(app_name):
+    '''if PEP508_NAME_RE.match(app_name):
         return True
-    return False
+    return False'''
+    return PEP508_NAME_RE.match(app_name)
 
 
 def is_reserved_keyword(app_name):
-    if app_name.lower() in RESERVED_KEYWORDS:
+    '''if app_name.lower() in RESERVED_KEYWORDS:
         return True
-    return False
+    return False'''
+    return app_name.lower() in RESERVED_KEYWORDS
 
 
 def is_valid_app_name(app_name):
     if not is_reserved_keyword(app_name) and is_valid_pep508_name(app_name):
         return True
     return False
+
 # This is the canonical definition from PEP440, modified to include named groups
-
-
 PEP440_CANONICAL_VERSION_PATTERN_RE = re.compile(
     r'^((?P<epoch>[1-9][0-9]*)!)?'
     r'(?P<release>(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*))*)'

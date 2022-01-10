@@ -11,6 +11,7 @@ from briefcase.config import is_valid_app_name
         'hello42world',
         '42helloworld',
         'hello_world',
+        'hello-world',
     ]
 )
 def test_is_valid_app_name(name):
