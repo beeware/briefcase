@@ -89,7 +89,7 @@ class LinuxDeploy:
         the Linux kernel module `binfmt-misc` will try to load the AppImage
         with AppImageLauncher. As this binary does not exist in the Docker
         container context, we patch the ELF header of linuxdeploy to remove
-        the AppImage bits, thus making the system treat it like a regular
+        the AppImage bits, thus making all systems treat it like a regular
         ELF binary.
 
         Citations:
@@ -102,22 +102,25 @@ class LinuxDeploy:
             'original': bytes.fromhex('414902'),
             'patch': bytes.fromhex('000000')
         }
-        # We should only attempt to patch if the AppImage exists.
+
         if self.exists():
             with open(self.appimage_path, 'r+b') as appimage:
                 appimage.seek(patch['offset'])
                 # Check if the header at the offset is the original value
+                # If so, patch it.
                 if appimage.read(len(patch['original'])) == patch['original']:
                     appimage.seek(patch['offset'])
                     appimage.write(patch['patch'])
                     appimage.flush()
                     appimage.seek(0)
                     print("Patched ELF header of linuxdeploy AppImage.")
+                # Else if the header is the patched value, do nothing.
                 elif appimage.read(len(patch['original'])) == patch['patch']:
                     print("ELF header of linuxdeploy AppImage is already patched.")
                 else:
-                    # We should only get here if the AppImage didn't download correctly.
-                    # In this case, we can't patch the header, so we'll throw an exception.
+                    # We should only get here if the file at the AppImage patch doesn't have
+                    # The original or patched value. If this is the case, the file is likely
+                    # wrong and we should raise an exception.
                     raise MissingToolError("linuxdeploy")
         else:
-            raise MissingToolError("linuxdeploy")
+            print("linuxdeploy AppImage not found. Skipping ELF header patch.")
