@@ -102,19 +102,22 @@ class LinuxDeploy:
             'original': bytes.fromhex('414902'),
             'patch': bytes.fromhex('000000')
         }
-
-        with open(self.appimage_path, 'r+b') as appimage:
-            appimage.seek(patch['offset'])
-            # Check if the header at the offset is the original value
-            if appimage.read(len(patch['original'])) == patch['original']:
+        # We should only attempt to patch if the AppImage exists.
+        if self.exists():
+            with open(self.appimage_path, 'r+b') as appimage:
                 appimage.seek(patch['offset'])
-                appimage.write(patch['patch'])
-                appimage.flush()
-                appimage.seek(0)
-                print("Patched ELF header of linuxdeploy AppImage.")
-            elif appimage.read(len(patch['original'])) == patch['patch']:
-                print("ELF header of linuxdeploy AppImage is already patched.")
-            else:
-                # We should only get here if the AppImage didn't download correctly.
-                # In this case, we can't patch the header, so we'll just warn the user.
-                print("AppImage header doesn't match expected value. Unable to patch linuxdeploy.")
+                # Check if the header at the offset is the original value
+                if appimage.read(len(patch['original'])) == patch['original']:
+                    appimage.seek(patch['offset'])
+                    appimage.write(patch['patch'])
+                    appimage.flush()
+                    appimage.seek(0)
+                    print("Patched ELF header of linuxdeploy AppImage.")
+                elif appimage.read(len(patch['original'])) == patch['patch']:
+                    print("ELF header of linuxdeploy AppImage is already patched.")
+                else:
+                    # We should only get here if the AppImage didn't download correctly.
+                    # In this case, we can't patch the header, so we'll throw an exception.
+                    raise MissingToolError("linuxdeploy")
+        else:
+            raise MissingToolError("linuxdeploy")
