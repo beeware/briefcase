@@ -62,6 +62,7 @@ class LinuxDeploy:
                 download_path=self.command.tools_path
             )
             self.command.os.chmod(linuxdeploy_appimage_path, 0o755)
+            self.elf_header_patch()
         except requests_exceptions.ConnectionError:
             raise NetworkFailure('downloading linuxdeploy AppImage')
 
@@ -77,3 +78,43 @@ class LinuxDeploy:
             print("...done.")
         else:
             raise MissingToolError('linuxdeploy')
+
+    def elf_header_patch(self):
+        """
+        Patch the ELF header of the AppImage to ensure it's always executable. 
+
+        This patch is necessary on Linux hosts that use AppImageLauncher. 
+        AppImages use a modified ELF binary header starting at offset 0x08
+        for additional identification. If a system has AppImageLauncher, 
+        the Linux kernel module `binfmt-misc` will try to load the AppImage
+        with AppImageLauncher. As this binary does not exist in the Docker  
+        container context, we patch the ELF header of linuxdeploy to remove 
+        the AppImage bits, thus making the system treat it like a regular 
+        ELF binary. 
+
+        Citations: 
+        - https://github.com/AppImage/AppImageKit/issues/1027#issuecomment-1028232809
+        - https://github.com/AppImage/AppImageKit/issues/828
+        """
+
+        patch = {
+            'offset': 0x08,
+            'original': bytes.fromhex('414902'),
+            'patch': bytes.fromhex('000000')
+        }
+
+        with open(self.appimage_path, 'r+b') as appimage:
+            appimage.seek(patch['offset'])
+            # Check if the header at the offset is the original value
+            if appimage.read(len(patch['original'])) == patch['original']:
+                appimage.seek(patch['offset'])
+                appimage.write(patch['patch'])
+                appimage.flush()
+                appimage.seek(0)
+                print("Patched ELF header of linuxdeploy AppImage.")
+            elif appimage.read(len(patch['original'])) == patch['patch']:
+                print("ELF header of linuxdeploy AppImage is already patched.")
+            else:
+                # We should only get here if the AppImage didn't download correctly.
+                # In this case, we can't patch the header, so we'll just warn the user.
+                print("AppImage header doesn't match expected value. Unable to patch linuxdeploy.")
