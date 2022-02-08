@@ -81,18 +81,18 @@ class LinuxDeploy:
 
     def elf_header_patch(self):
         """
-        Patch the ELF header of the AppImage to ensure it's always executable. 
+        Patch the ELF header of the AppImage to ensure it's always executable.
 
-        This patch is necessary on Linux hosts that use AppImageLauncher. 
+        This patch is necessary on Linux hosts that use AppImageLauncher.
         AppImages use a modified ELF binary header starting at offset 0x08
-        for additional identification. If a system has AppImageLauncher, 
+        for additional identification. If a system has AppImageLauncher,
         the Linux kernel module `binfmt-misc` will try to load the AppImage
-        with AppImageLauncher. As this binary does not exist in the Docker  
-        container context, we patch the ELF header of linuxdeploy to remove 
-        the AppImage bits, thus making the system treat it like a regular 
-        ELF binary. 
+        with AppImageLauncher. As this binary does not exist in the Docker
+        container context, we patch the ELF header of linuxdeploy to remove
+        the AppImage bits, thus making the system treat it like a regular
+        ELF binary.
 
-        Citations: 
+        Citations:
         - https://github.com/AppImage/AppImageKit/issues/1027#issuecomment-1028232809
         - https://github.com/AppImage/AppImageKit/issues/828
         """
