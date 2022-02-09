@@ -101,11 +101,6 @@ class LinuxDeploy:
         - https://github.com/AppImage/AppImageKit/issues/828
         """
 
-        patch = {
-            'offset': 0x08,
-            'original': bytes.fromhex('414902'),
-            'patch': bytes.fromhex('000000')
-        }
 
         if self.exists():
             with open(self.appimage_path, 'r+b') as appimage:
