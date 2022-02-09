@@ -2,10 +2,11 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from briefcase.exceptions import MissingToolError
-from briefcase.integrations.linuxdeploy import LinuxDeploy
+from briefcase.exceptions import CorruptToolError, MissingToolError
+from briefcase.integrations.linuxdeploy import LinuxDeploy, ELF_PATCH_OFFSET, \
+    ELF_PATCH_ORIGINAL_BYTES, ELF_PATCH_PATCHED_BYTES
 
-from tests.integrations.linuxdeploy.utils import create_mock_appimage, PATCH
+from tests.integrations.linuxdeploy.utils import create_mock_appimage
 
 
 @pytest.fixture
@@ -31,11 +32,11 @@ def test_patch_linuxdeploy_elf_header_unpatched(mock_command, tmp_path):
 
     # Ensure the patch was applied.
     with open(appimage_path, 'rb') as mock_appimage:
-        mock_appimage.seek(PATCH['offset'])
-        patched_header = mock_appimage.read(len(PATCH['patch']))
+        mock_appimage.seek(ELF_PATCH_OFFSET)
+        patched_header = mock_appimage.read(len(ELF_PATCH_PATCHED_BYTES))
 
-    assert pre_patch_header == PATCH['original']
-    assert patched_header == PATCH['patch']
+    assert pre_patch_header == ELF_PATCH_ORIGINAL_BYTES
+    assert patched_header == ELF_PATCH_PATCHED_BYTES
 
 
 def test_patch_linuxdeploy_elf_header_already_patched(mock_command, tmp_path):
@@ -51,11 +52,11 @@ def test_patch_linuxdeploy_elf_header_already_patched(mock_command, tmp_path):
 
     # Ensure the patch was applied.
     with open(appimage_path, 'rb') as mock_appimage:
-        mock_appimage.seek(PATCH['offset'])
-        patched_header = mock_appimage.read(len(PATCH['patch']))
+        mock_appimage.seek(ELF_PATCH_OFFSET)
+        patched_header = mock_appimage.read(len(ELF_PATCH_PATCHED_BYTES))
 
-    assert pre_patch_header == PATCH['patch']
-    assert patched_header == PATCH['patch']
+    assert pre_patch_header == ELF_PATCH_PATCHED_BYTES
+    assert patched_header == ELF_PATCH_PATCHED_BYTES
 
 
 def test_patch_linuxdeploy_elf_header_bad_appimage(mock_command, tmp_path):
@@ -67,7 +68,7 @@ def test_patch_linuxdeploy_elf_header_bad_appimage(mock_command, tmp_path):
 
     # Create a linuxdeploy wrapper, then patch the elf header
     linuxdeploy = LinuxDeploy(mock_command)
-    with pytest.raises(MissingToolError):
+    with pytest.raises(CorruptToolError):
         linuxdeploy = linuxdeploy.patch_elf_header()
 
 
