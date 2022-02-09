@@ -62,7 +62,7 @@ class LinuxDeploy:
                 download_path=self.command.tools_path
             )
             self.command.os.chmod(linuxdeploy_appimage_path, 0o755)
-            self.elf_header_patch()
+            self.patch_elf_header()
         except requests_exceptions.ConnectionError:
             raise NetworkFailure('downloading linuxdeploy AppImage')
 
@@ -79,7 +79,7 @@ class LinuxDeploy:
         else:
             raise MissingToolError('linuxdeploy')
 
-    def elf_header_patch(self):
+    def patch_elf_header(self):
         """
         Patch the ELF header of the AppImage to ensure it's always executable.
 
@@ -123,4 +123,4 @@ class LinuxDeploy:
                     # wrong and we should raise an exception.
                     raise MissingToolError("linuxdeploy")
         else:
-            print("linuxdeploy AppImage not found. Skipping ELF header patch.")
+            raise MissingToolError("linuxdeploy")

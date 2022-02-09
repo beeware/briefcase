@@ -4,13 +4,8 @@ import pytest
 
 from briefcase.exceptions import MissingToolError
 from briefcase.integrations.linuxdeploy import LinuxDeploy
-from random import randrange
 
-PATCH = {
-        'offset': 0x08,
-        'original': bytes.fromhex('414902'),
-        'patch': bytes.fromhex('000000')
-    }
+from tests.integrations.linuxdeploy.utils import create_mock_appimage, PATCH
 
 
 @pytest.fixture
@@ -28,16 +23,11 @@ def test_patch_linuxdeploy_elf_header_unpatched(mock_command, tmp_path):
     appimage_path = tmp_path / 'tools' / 'linuxdeploy-wonky.AppImage'
 
     # Mock an unpatched linuxdeploy AppImage
-    appimage_path.touch()
-    with open(appimage_path, 'r+b') as mock_appimage:
-        unpatched_header = bytes.fromhex('7f454c46020101004149020000000000')
-        mock_appimage.write(unpatched_header)
-        mock_appimage.seek(PATCH['offset'])
-        pre_patch_header = mock_appimage.read(len(PATCH['original']))
+    pre_patch_header = create_mock_appimage(appimage_path=appimage_path, mock_appimage_kind='original')
 
     # Create a linuxdeploy wrapper, then patch the elf header
     linuxdeploy = LinuxDeploy(mock_command)
-    linuxdeploy.elf_header_patch()
+    linuxdeploy.patch_elf_header()
 
     # Ensure the patch was applied.
     with open(appimage_path, 'rb') as mock_appimage:
@@ -53,16 +43,11 @@ def test_patch_linuxdeploy_elf_header_already_patched(mock_command, tmp_path):
     appimage_path = tmp_path / 'tools' / 'linuxdeploy-wonky.AppImage'
 
     # Mock a patched linuxdeploy AppImage
-    appimage_path.touch()
-    with open(appimage_path, 'r+b') as mock_appimage:
-        patched_header = bytes.fromhex('7f454c46020101000000000000000000')
-        mock_appimage.write(patched_header)
-        mock_appimage.seek(PATCH['offset'])
-        pre_patch_header = mock_appimage.read(len(PATCH['original']))
+    pre_patch_header = create_mock_appimage(appimage_path=appimage_path, mock_appimage_kind='patched')
 
     # Create a linuxdeploy wrapper, then patch the elf header
     linuxdeploy = LinuxDeploy(mock_command)
-    linuxdeploy.elf_header_patch()
+    linuxdeploy.patch_elf_header()
 
     # Ensure the patch was applied.
     with open(appimage_path, 'rb') as mock_appimage:
@@ -78,12 +63,17 @@ def test_patch_linuxdeploy_elf_header_bad_appimage(mock_command, tmp_path):
     appimage_path = tmp_path / 'tools' / 'linuxdeploy-wonky.AppImage'
 
     # Mock an bad linuxdeploy AppImage
-    appimage_path.touch()
-    with open(appimage_path, 'r+b') as mock_appimage:
-        unpatched_header = bytes.fromhex('%030x' % randrange(16**30))
-        mock_appimage.write(unpatched_header)
+    create_mock_appimage(appimage_path=appimage_path, mock_appimage_kind='corrupt')
 
     # Create a linuxdeploy wrapper, then patch the elf header
     linuxdeploy = LinuxDeploy(mock_command)
     with pytest.raises(MissingToolError):
-        linuxdeploy = linuxdeploy.elf_header_patch()
+        linuxdeploy = linuxdeploy.patch_elf_header()
+
+
+def test_patch_linuxdeploy_elf_header_no_file(mock_command, tmp_path):
+    "If there is no linuxdeploy AppImage, raise an error."
+    # Create a linuxdeploy wrapper, then patch the elf header
+    linuxdeploy = LinuxDeploy(mock_command)
+    with pytest.raises(MissingToolError):
+        linuxdeploy = linuxdeploy.patch_elf_header()
