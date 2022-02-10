@@ -140,6 +140,7 @@ class InvalidDeviceError(BriefcaseCommandError):
             )
         )
 
+
 class CorruptToolError(BriefcaseCommandError):
     def __init__(self, tool):
         self.tool = tool

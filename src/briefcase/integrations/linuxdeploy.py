@@ -101,7 +101,6 @@ class LinuxDeploy:
         - https://github.com/AppImage/AppImageKit/issues/828
         """
 
-
         if self.exists():
             with open(self.appimage_path, 'r+b') as appimage:
                 appimage.seek(ELF_PATCH_OFFSET)
