@@ -139,3 +139,13 @@ class InvalidDeviceError(BriefcaseCommandError):
                 device=device,
             )
         )
+
+
+class CorruptToolError(BriefcaseCommandError):
+    def __init__(self, tool):
+        self.tool = tool
+        super().__init__(
+            msg="{tool!r} found, but it appears to be corrupted.".format(
+                tool=tool,
+            )
+        )
