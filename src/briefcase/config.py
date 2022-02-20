@@ -127,6 +127,7 @@ def is_valid_app_name(app_name):
         return True
     return False
 
+
 # This is the canonical definition from PEP440, modified to include named groups
 PEP440_CANONICAL_VERSION_PATTERN_RE = re.compile(
     r'^((?P<epoch>[1-9][0-9]*)!)?'
@@ -303,6 +304,7 @@ class AppConfig(BaseConfig):
         * all `-` have been replaced with `_`.
         """
         return self.app_name.replace('-', '_')
+
 
     @property
     def package_name(self):
