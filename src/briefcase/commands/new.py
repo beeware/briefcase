@@ -7,11 +7,12 @@ from urllib.parse import urlparse
 
 from cookiecutter import exceptions as cookiecutter_exceptions
 
-from briefcase.config import PEP508_NAME_RE
+
 from briefcase.exceptions import NetworkFailure
 
 from .base import BaseCommand, BriefcaseCommandError
 from .create import InvalidTemplateRepository
+from ..config import PEP508_NAME_RE
 
 VALID_BUNDLE_RE = re.compile(r'[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$')
 
@@ -74,18 +75,6 @@ class NewCommand(BaseCommand):
             help='The cookiecutter template to use for the new project'
         )
 
-    def make_class_name(self, formal_name):
-        """
-        Construct a valid class name from a formal name.
-
-        :param formal_name: The formal name
-        :returns: The app's class name
-        """
-        class_name = re.sub('[^0-9a-zA-Z_]+', '', formal_name)
-        if class_name[0].isdigit():
-            class_name = '_' + class_name
-        return class_name
-
     def make_app_name(self, formal_name):
         """
         Construct a candidate app name from a formal name.
@@ -93,7 +82,7 @@ class NewCommand(BaseCommand):
         :param formal_name: The formal name
         :returns: The candidate app name
         """
-        return re.sub('[^0-9a-zA-Z_]+', '', formal_name).lstrip('_').lower()
+        return re.sub('[^a-zA-Z]*[^a-zA-Z0-9_]+', '', formal_name).lstrip('_').rstrip('_').lower()
 
     def validate_app_name(self, candidate):
         """
@@ -105,14 +94,41 @@ class NewCommand(BaseCommand):
         """
         if not PEP508_NAME_RE.match(candidate):
             raise ValueError(
-                "App name may only contain letters, numbers, hypens and "
-                "underscores, and may not start with a hyphen or underscore."
+                "App names must be PEP508 compliant (i.e., they can only "
+                "include letters, numbers, '-' and '_'; must start with a "
+                "letter; and cannot end with '-' or '_'."
             )
         if (self.base_path / candidate).exists():
             raise ValueError(
                 "A '{candidate}' directory already exists. Select a different "
                 "name, move to a different parent directory, or delete the "
                 "existing folder.".format(candidate=candidate)
+            )
+
+        return True
+
+    def make_class_name(self, formal_name):
+        """
+        Construct a candidate class name from a formal name.
+
+        :param formal_name: The formal name
+        :returns: The candidate app name; will appear blank if only non-latin characters
+        were entered in the formal_name
+        """
+        return re.sub('[^a-zA-Z]*[^a-zA-Z0-9_]+', '', formal_name.title())
+
+    def validate_class_name(self, candidate):
+        """
+        Determine if class name is valid
+
+        :param candidate: The candidate name
+        :returns: True. If there are any validation problems, raises ValueError
+            with a diagnostic message.
+        """
+        if not re.match('^[A-Z]+[a-zA-Z0-9_]+$', candidate):
+            raise ValueError(
+                "The class name must start with a capital letter in the CamelCase format."
+                "It should not contain spaces."
             )
 
         return True
@@ -317,9 +333,6 @@ used as you type it.""",
             default='Hello World',
         )
 
-        # The class name can be completely derived from the formal name.
-        class_name = self.make_class_name(formal_name)
-
         default_app_name = self.make_app_name(formal_name)
         app_name = self.input_text(
             intro="""
@@ -335,6 +348,16 @@ but you can use another name if you want.""".format(
             variable="app name",
             default=default_app_name,
             validator=self.validate_app_name,
+        )
+
+        default_class_name = self.make_class_name(formal_name)
+        class_name = self.input_text(
+            intro="""
+Next, we need a name that will serve as the App class name. The class name must start with 
+a capital letter in the CapWords format. It should not contain spaces.""",
+            variable="class name",
+            default=default_class_name,
+            validator=self.validate_class_name,
         )
 
         # The module name can be completely derived from the app name.

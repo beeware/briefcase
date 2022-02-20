@@ -10,8 +10,7 @@ from .exceptions import BriefcaseConfigError
 
 # The restriction on application naming comes from PEP508
 PEP508_NAME_RE = re.compile(
-    r'^([A-Z0-9]|[A-Z0-9][A-Z0-9._-]*[A-Z0-9])$',
-    re.IGNORECASE
+    r'^[a-z][a-zA-Z0-9._-]*[a-zA-Z0-9]$'
 )
 
 # This is the canonical definition from PEP440, modified to include

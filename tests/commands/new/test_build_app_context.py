@@ -6,6 +6,7 @@ def test_question_sequence(new_command):
     new_command.input.values = [
         'My Application',  # formal name
         '',  # app name - accept the default
+        '',  # class name
         'org.beeware',  # bundle ID
         'My Project',  # project name
         'Cool stuff',  # description
@@ -18,8 +19,8 @@ def test_question_sequence(new_command):
 
     assert new_command.build_app_context() == {
         'formal_name': 'My Application',
-        'class_name': 'MyApplication',
         'app_name': 'myapplication',
+        'class_name': 'MyApplication',
         'module_name': 'myapplication',
         'bundle': 'org.beeware',
         'project_name': 'My Project',
@@ -39,6 +40,7 @@ def test_question_sequence_with_nondefault_gui(new_command):
     new_command.input.values = [
         'My Application',  # formal name
         '',  # app name - accept the default
+        '',  # class name
         'org.beeware',  # bundle ID
         'My Project',  # project name
         'Cool stuff',  # description
@@ -51,8 +53,8 @@ def test_question_sequence_with_nondefault_gui(new_command):
 
     assert new_command.build_app_context() == {
         'formal_name': 'My Application',
-        'class_name': 'MyApplication',
         'app_name': 'myapplication',
+        'class_name': 'MyApplication',
         'module_name': 'myapplication',
         'bundle': 'org.beeware',
         'project_name': 'My Project',
