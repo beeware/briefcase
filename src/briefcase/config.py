@@ -305,7 +305,6 @@ class AppConfig(BaseConfig):
         """
         return self.app_name.replace('-', '_')
 
-
     @property
     def package_name(self):
         """
