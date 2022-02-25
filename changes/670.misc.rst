@@ -1,0 +1,1 @@
+Add PySide6 to the GUI Framework template options
