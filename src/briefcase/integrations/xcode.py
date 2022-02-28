@@ -224,10 +224,14 @@ Re-run Briefcase once that installation is complete.
         if " is a command line tools instance" in e.output:
             raise BriefcaseCommandError("""
 Xcode may be installed, but the active developer directory is a
-command line tools instance. To make Xcode the active developer
-directory, run:
+command line tools instance. To make the default Xcode install the
+active developer directory, run:
 
-    $ sudo xcode-select --switch path/to/Xcode.app
+    $ sudo xcode-select --switch /Applications/Xcode.app
+
+Or, to use a version of Xcode installed in a non-default location:
+
+    $ sudo xcode-select --switch /path/to/Xcode.app
 
 and then re-run Briefcase.
 """)
