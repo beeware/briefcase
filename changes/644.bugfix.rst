@@ -1,1 +1,1 @@
-Clear app packages directory before reinstalling dependencies.
+Existing app packages are now cleared before reinstalling dependencies.
