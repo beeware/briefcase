@@ -1,1 +1,0 @@
-Added binary patcher for linuxtools AppImage to increase compatibility.

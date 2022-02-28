@@ -1,1 +1,0 @@
-Xcode detection code now allows for Xcode to be installed in locations other than ``/Applications/Xcode.app``.

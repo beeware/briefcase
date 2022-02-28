@@ -1,1 +1,0 @@
-Calls to str() around pathlib objects have have been removed, or replaced with os.fsdecode.
