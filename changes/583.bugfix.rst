@@ -1,1 +1,1 @@
-Stripping is now disabled for appimage, because stripping shared objects can lead to some issues - e.g NumPy.
+Stripping is now disabled for AppImage binaries. Some libraries (e.g., NumPy) rely on the metadata that was being stripped.
