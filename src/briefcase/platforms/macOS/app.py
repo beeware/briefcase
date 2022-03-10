@@ -11,7 +11,11 @@ from briefcase.commands import (
     UpdateCommand
 )
 from briefcase.config import BaseConfig
-from briefcase.platforms.macOS import macOSMixin, macOSRunMixin, macOSPackageMixin
+from briefcase.platforms.macOS import (
+    macOSMixin,
+    macOSPackageMixin,
+    macOSRunMixin
+)
 
 
 class macOSAppMixin(macOSMixin):
