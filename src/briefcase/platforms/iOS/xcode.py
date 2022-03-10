@@ -228,7 +228,7 @@ class iOSXcodeBuildCommand(iOSXcodeMixin, BuildCommand):
             )
 
         print()
-        print("Targeting an {device} running iOS {iOS_version} (device UDID {udid})".format(
+        print("Targeting an {device} running {iOS_version} (device UDID {udid})".format(
             device=device,
             iOS_version=iOS_version,
             udid=udid,
