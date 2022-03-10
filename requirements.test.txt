@@ -1,0 +1,3 @@
+pytest
+pytest-tldr
+pytest-cov
