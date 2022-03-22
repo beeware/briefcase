@@ -40,6 +40,11 @@ def test_is_not_reserved_keyword_violation(name):
         'false',
         'False',
         'FALSE',
+        # Windows reserved keywords
+        'CON',
+        'con',  # lower case version of reserved name
+        'LPT5',
+        'Lpt5',  # unconventional spelling of reserved name
     ]
 )
 def test_is_reserved_keyword(name):
