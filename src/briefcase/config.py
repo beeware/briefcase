@@ -257,42 +257,38 @@ class AppConfig(BaseConfig):
 
         if not is_valid_app_name(self.app_name):
             raise BriefcaseConfigError(
-                "{self.app_name} is not a valid app name.\n\n"
+                f"{self.app_name!r} is not a valid app name.\n\n"
                 "App names must not be reserved keywords such as 'and', 'for' and 'while'."
-                "App names must be PEP508 compliant (i.e., they can only "
                 "include letters, numbers, '-' and '_'; must start with a "
-                "letter; and cannot end with '-' or '_'.".format(self=self)
+                "App names must be PEP508 compliant (i.e., they can only "
+                "letter; and cannot end with '-' or '_'."
             )
 
         # Version number is PEP440 compliant:
         if not is_pep440_canonical_version(self.version):
             raise BriefcaseConfigError(
-                "Version number for {self.app_name} ({self.version}) is not valid.\n\n"
+                f"Version number for {self.app_name!r} ({self.version}) is not valid.\n\n"
                 "Version numbers must be PEP440 compliant; "
-                "see https://www.python.org/dev/peps/pep-0440/ for details.".format(
-                    self=self
-                )
+                "see https://www.python.org/dev/peps/pep-0440/ for details."
             )
 
         # Sources list doesn't include any duplicates
         source_modules = {source.rsplit('/', 1)[-1] for source in self.sources}
         if len(self.sources) != len(source_modules):
             raise BriefcaseConfigError(
-                "The `sources` list for {self.app_name} contains duplicated "
-                "package names.".format(self=self)
+                f"The `sources` list for {self.app_name!r} contains duplicated "
+                "package names."
             )
 
         # There is, at least, a source for the app module
         if self.module_name not in source_modules:
             raise BriefcaseConfigError(
-                "The `sources` list for {self.app_name} does not include a "
-                "package named '{self.module_name}'.".format(self=self)
+                f"The `sources` list for {self.app_name!r} does not include a "
+                f"package named {self.module_name!r}."
             )
 
     def __repr__(self):
-        return "<{self.bundle}.{self.app_name} v{self.version} AppConfig>".format(
-            self=self,
-        )
+        return f"<{self.bundle}.{self.app_name} v{self.version} AppConfig>"
 
     @property
     def module_name(self):

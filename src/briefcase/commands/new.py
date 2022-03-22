@@ -106,7 +106,7 @@ class NewCommand(BaseCommand):
         if not is_valid_app_name(candidate):
 
             raise ValueError(
-                "{candidate} is not a valid app name.\n\n"
+                f"{candidate!r} is not a valid app name.\n\n"
                 "App names must not be reserved keywords such as 'and', 'for' and 'while'."
                 "App names must be PEP508 compliant (i.e., they can only "
                 "include letters, numbers, '-' and '_'; must start with a "
@@ -115,9 +115,9 @@ class NewCommand(BaseCommand):
 
         if (self.base_path / candidate).exists():
             raise ValueError(
-                "A '{candidate}' directory already exists. Select a different "
+                f"A '{candidate!r}' directory already exists. Select a different "
                 "name, move to a different parent directory, or delete the "
-                "existing folder.".format(candidate=candidate)
+                "existing folder."
             )
 
         return True
