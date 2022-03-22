@@ -1,4 +1,5 @@
 import copy
+import keyword
 import re
 from types import SimpleNamespace
 
@@ -17,14 +18,50 @@ PEP508_NAME_RE = re.compile(
     re.IGNORECASE
 )
 
-# Python, Javascript, Java, C, and C++ have reserved words that should be excluded
-RESERVED_KEYWORDS = [
-    '_Packed',
+# Javascript reserved keywords:
+# https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#reserved_keywords_as_of_ecmascript_2015
+JAVASCRIPT_RESERVED_WORDS = {
+    'break',
+    'case',
+    'catch',
+    'class',
+    'const',
+    'continue',
+    'debugger',
+    'default',
+    'delete',
+    'do',
+    'else',
+    'export',
+    'extends',
+    'finally',
+    'for',
+    'function',
+    'if',
+    'import',
+    'in',
+    'instanceof',
+    'new',
+    'return',
+    'super',
+    'switch',
+    'this',
+    'throw',
+    'try',
+    'typeof',
+    'var',
+    'void',
+    'while',
+    'with',
+    'yield',
+}
+
+# Java reserved keywords
+# https://en.wikipedia.org/wiki/List_of_Java_keywords
+JAVA_RESERVED_WORDS = {
+    # Keywords
     'abstract',
-    'and',
-    'as',
     'assert',
-    'auto',
     'boolean',
     'break',
     'byte',
@@ -34,61 +71,33 @@ RESERVED_KEYWORDS = [
     'class',
     'const',
     'continue',
-    'debugger',
-    'def',
     'default',
-    'del',
-    'delete',
     'do',
     'double',
-    'elif',
     'else',
     'enum',
-    'except',
-    'exec',
-    'export',
     'extends',
-    'extern',
-    'false',
     'final',
     'finally',
     'float',
     'for',
-    'from',
-    'function',
-    'global',
     'goto',
     'if',
     'implements',
     'import',
-    'in',
     'instanceof',
     'int',
     'interface',
-    'is',
-    'lambda',
     'long',
     'native',
     'new',
-    'None',
-    'nonlocal',
-    'not',
-    'or',
     'package',
-    'pass',
-    'print',
     'private',
     'protected',
     'public',
-    'raise',
-    'register',
     'return',
     'short',
-    'signed',
-    'sizeof',
     'static',
-    'strictfp',
-    'struct',
     'super',
     'switch',
     'synchronized',
@@ -96,19 +105,42 @@ RESERVED_KEYWORDS = [
     'throw',
     'throws',
     'transient',
-    'true',
     'try',
-    'typedef',
-    'typeof',
-    'union',
-    'unsigned',
-    'var',
     'void',
     'volatile',
     'while',
+
+    # Reserved Identifiers
+    'exports',
+    'module',
+    'non-sealed',
+    'open',
+    'opens',
+    'permits',
+    'provides',
+    'record',
+    'requires',
+    'sealed',
+    'to',
+    'transitive',
+    'uses',
+    'var',
     'with',
     'yield',
-]
+
+    # Reserved Literals
+    'true',
+    'false',
+    'null',
+
+    # Unused, but reserved.
+    'strictfp',
+}
+
+NON_PYTHON_RESERVED_WORDS = set.union(
+    JAVASCRIPT_RESERVED_WORDS,
+    JAVA_RESERVED_WORDS,
+)
 
 
 def is_valid_pep508_name(app_name):
@@ -118,7 +150,7 @@ def is_valid_pep508_name(app_name):
 
 def is_reserved_keyword(app_name):
     "Determine if the name is a reserved keyword"
-    return app_name.lower() in RESERVED_KEYWORDS
+    return keyword.iskeyword(app_name.lower()) or app_name.lower() in NON_PYTHON_RESERVED_WORDS
 
 
 def is_valid_app_name(app_name):
