@@ -147,7 +147,10 @@ def test_valid_app_version():
 
 
 def test_invalid_app_version():
-    with pytest.raises(BriefcaseConfigError, match=r"Version number for myapp.*is not valid\."):
+    with pytest.raises(
+        BriefcaseConfigError,
+        match=r"Version number for 'myapp' \(foobar\) is not valid\."
+    ):
         AppConfig(
             app_name="myapp",
             version="foobar",

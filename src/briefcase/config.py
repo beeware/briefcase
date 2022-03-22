@@ -1,4 +1,5 @@
 import copy
+import keyword
 import re
 from types import SimpleNamespace
 
@@ -11,14 +12,154 @@ from briefcase.platforms import get_output_formats, get_platforms
 
 from .exceptions import BriefcaseConfigError
 
-# The restriction on application naming comes from PEP508
+# PEP508 provides a basic restriction on naming
 PEP508_NAME_RE = re.compile(
     r'^([A-Z0-9]|[A-Z0-9][A-Z0-9._-]*[A-Z0-9])$',
     re.IGNORECASE
 )
 
-# This is the canonical definition from PEP440, modified to include
-# named groups
+# Javascript reserved keywords:
+# https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#reserved_keywords_as_of_ecmascript_2015
+JAVASCRIPT_RESERVED_WORDS = {
+    'break',
+    'case',
+    'catch',
+    'class',
+    'const',
+    'continue',
+    'debugger',
+    'default',
+    'delete',
+    'do',
+    'else',
+    'export',
+    'extends',
+    'finally',
+    'for',
+    'function',
+    'if',
+    'import',
+    'in',
+    'instanceof',
+    'new',
+    'return',
+    'super',
+    'switch',
+    'this',
+    'throw',
+    'try',
+    'typeof',
+    'var',
+    'void',
+    'while',
+    'with',
+    'yield',
+}
+
+# Java reserved keywords
+# https://en.wikipedia.org/wiki/List_of_Java_keywords
+JAVA_RESERVED_WORDS = {
+    # Keywords
+    'abstract',
+    'assert',
+    'boolean',
+    'break',
+    'byte',
+    'case',
+    'catch',
+    'char',
+    'class',
+    'const',
+    'continue',
+    'default',
+    'do',
+    'double',
+    'else',
+    'enum',
+    'extends',
+    'final',
+    'finally',
+    'float',
+    'for',
+    'goto',
+    'if',
+    'implements',
+    'import',
+    'instanceof',
+    'int',
+    'interface',
+    'long',
+    'native',
+    'new',
+    'package',
+    'private',
+    'protected',
+    'public',
+    'return',
+    'short',
+    'static',
+    'super',
+    'switch',
+    'synchronized',
+    'this',
+    'throw',
+    'throws',
+    'transient',
+    'try',
+    'void',
+    'volatile',
+    'while',
+
+    # Reserved Identifiers
+    'exports',
+    'module',
+    'non-sealed',
+    'open',
+    'opens',
+    'permits',
+    'provides',
+    'record',
+    'requires',
+    'sealed',
+    'to',
+    'transitive',
+    'uses',
+    'var',
+    'with',
+    'yield',
+
+    # Reserved Literals
+    'true',
+    'false',
+    'null',
+
+    # Unused, but reserved.
+    'strictfp',
+}
+
+NON_PYTHON_RESERVED_WORDS = set.union(
+    JAVASCRIPT_RESERVED_WORDS,
+    JAVA_RESERVED_WORDS,
+)
+
+
+def is_valid_pep508_name(app_name):
+    "Determine if the name is valid by PEP508 rules"
+    return PEP508_NAME_RE.match(app_name)
+
+
+def is_reserved_keyword(app_name):
+    "Determine if the name is a reserved keyword"
+    return keyword.iskeyword(app_name.lower()) or app_name.lower() in NON_PYTHON_RESERVED_WORDS
+
+
+def is_valid_app_name(app_name):
+    if not is_reserved_keyword(app_name) and is_valid_pep508_name(app_name):
+        return True
+    return False
+
+
+# This is the canonical definition from PEP440, modified to include named groups
 PEP440_CANONICAL_VERSION_PATTERN_RE = re.compile(
     r'^((?P<epoch>[1-9][0-9]*)!)?'
     r'(?P<release>(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*))*)'
@@ -146,44 +287,39 @@ class AppConfig(BaseConfig):
         self.template_branch = template_branch
         self.supported = supported
 
-        # Validate that the app name is valid.
-        if not PEP508_NAME_RE.match(self.app_name):
+        if not is_valid_app_name(self.app_name):
             raise BriefcaseConfigError(
-                "{self.app_name!r} is not a valid app name.\n\n"
-                "App names must be PEP508 compliant (i.e., they can only "
-                "include letters, numbers, '-' and '_'; must start with a "
-                "letter; and cannot end with '-' or '_'.".format(self=self)
+                f"{self.app_name!r} is not a valid app name.\n\n"
+                "App names must not be reserved keywords such as 'and', 'for' and 'while'.\n"
+                "They must also be PEP508 compliant (i.e., they can only include letters,\n"
+                "numbers, '-' and '_'; must start with a letter; and cannot end with '-' or '_')."
             )
 
         # Version number is PEP440 compliant:
         if not is_pep440_canonical_version(self.version):
             raise BriefcaseConfigError(
-                "Version number for {self.app_name} ({self.version}) is not valid.\n\n"
+                f"Version number for {self.app_name!r} ({self.version}) is not valid.\n\n"
                 "Version numbers must be PEP440 compliant; "
-                "see https://www.python.org/dev/peps/pep-0440/ for details.".format(
-                    self=self
-                )
+                "see https://www.python.org/dev/peps/pep-0440/ for details."
             )
 
         # Sources list doesn't include any duplicates
         source_modules = {source.rsplit('/', 1)[-1] for source in self.sources}
         if len(self.sources) != len(source_modules):
             raise BriefcaseConfigError(
-                "The `sources` list for {self.app_name} contains duplicated "
-                "package names.".format(self=self)
+                f"The `sources` list for {self.app_name!r} contains duplicated "
+                "package names."
             )
 
         # There is, at least, a source for the app module
         if self.module_name not in source_modules:
             raise BriefcaseConfigError(
-                "The `sources` list for {self.app_name} does not include a "
-                "package named '{self.module_name}'.".format(self=self)
+                f"The `sources` list for {self.app_name!r} does not include a "
+                f"package named {self.module_name!r}."
             )
 
     def __repr__(self):
-        return "<{self.bundle}.{self.app_name} v{self.version} AppConfig>".format(
-            self=self,
-        )
+        return f"<{self.bundle}.{self.app_name} v{self.version} AppConfig>"
 
     @property
     def module_name(self):

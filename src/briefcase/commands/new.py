@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 
 from cookiecutter import exceptions as cookiecutter_exceptions
 
-from briefcase.config import PEP508_NAME_RE
+from briefcase.config import is_valid_app_name
 from briefcase.exceptions import NetworkFailure
 
 from .base import BaseCommand, BriefcaseCommandError
@@ -103,16 +103,19 @@ class NewCommand(BaseCommand):
         :returns: True. If there are any validation problems, raises ValueError
             with a diagnostic message.
         """
-        if not PEP508_NAME_RE.match(candidate):
+        if not is_valid_app_name(candidate):
             raise ValueError(
-                "App name may only contain letters, numbers, hypens and "
-                "underscores, and may not start with a hyphen or underscore."
+                f"{candidate!r} is not a valid app name.\n\n"
+                "App names must not be reserved keywords such as 'and', 'for' and 'while'.\n"
+                "They must also be PEP508 compliant (i.e., they can only include letters,\n"
+                "numbers, '-' and '_'; must start with a letter; and cannot end with '-' or '_')."
             )
+
         if (self.base_path / candidate).exists():
             raise ValueError(
-                "A '{candidate}' directory already exists. Select a different "
+                f"A '{candidate!r}' directory already exists. Select a different "
                 "name, move to a different parent directory, or delete the "
-                "existing folder.".format(candidate=candidate)
+                "existing folder."
             )
 
         return True
