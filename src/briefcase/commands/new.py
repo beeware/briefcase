@@ -7,13 +7,11 @@ from urllib.parse import urlparse
 
 from cookiecutter import exceptions as cookiecutter_exceptions
 
-from briefcase.config import is_valid_app_name
+from briefcase.config import is_valid_app_name, is_valid_bundle_identifier
 from briefcase.exceptions import NetworkFailure
 
 from .base import BaseCommand, BriefcaseCommandError
 from .create import InvalidTemplateRepository
-
-VALID_BUNDLE_RE = re.compile(r'[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$')
 
 
 def titlecase(s):
@@ -138,12 +136,15 @@ class NewCommand(BaseCommand):
         :returns: True. If there are any validation problems, raises ValueError
             with a diagnostic message.
         """
-        if not VALID_BUNDLE_RE.match(candidate):
+        if not is_valid_bundle_identifier(candidate):
             raise ValueError(
-                "Bundle should be a reversed domain name. It must contain at "
-                "least 2 dot-separated sections, and each section may only "
-                "include letters, numbers, and hyphens."
+                f"{candidate!r} is not a valid bundle identifier.\n\n"
+                "The bundle should be a reversed domain name. It must contain at least 2\n"
+                "dot-separated sections; each section may only include letters, numbers,\n"
+                "and hyphens; and each section may not contain any reserved words (like\n"
+                "'switch', or 'while')."
             )
+
         return True
 
     def make_domain(self, bundle):

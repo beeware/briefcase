@@ -1,0 +1,1 @@
+Bundle identifiers are now validated to ensure they don't contain reserved words.

@@ -159,6 +159,21 @@ def is_valid_app_name(app_name):
     return False
 
 
+VALID_BUNDLE_RE = re.compile(r'[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$')
+
+
+def is_valid_bundle_identifier(bundle):
+    # Ensure the bundle identifier follows the basi
+    if not VALID_BUNDLE_RE.match(bundle):
+        return False
+
+    for part in bundle.split('.'):
+        if is_reserved_keyword(part):
+            return False
+
+    return True
+
+
 # This is the canonical definition from PEP440, modified to include named groups
 PEP440_CANONICAL_VERSION_PATTERN_RE = re.compile(
     r'^((?P<epoch>[1-9][0-9]*)!)?'
@@ -293,6 +308,15 @@ class AppConfig(BaseConfig):
                 "App names must not be reserved keywords such as 'and', 'for' and 'while'.\n"
                 "They must also be PEP508 compliant (i.e., they can only include letters,\n"
                 "numbers, '-' and '_'; must start with a letter; and cannot end with '-' or '_')."
+            )
+
+        if not is_valid_bundle_identifier(self.bundle):
+            raise BriefcaseConfigError(
+                f"{self.bundle!r} is not a valid bundle identifier.\n\n"
+                "The bundle should be a reversed domain name. It must contain at least 2\n"
+                "dot-separated sections; each section may only include letters, numbers,\n"
+                "and hyphens; and each section may not contain any reserved words (like\n"
+                "'switch', or 'while')."
             )
 
         # Version number is PEP440 compliant:
