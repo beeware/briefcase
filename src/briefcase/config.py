@@ -290,10 +290,9 @@ class AppConfig(BaseConfig):
         if not is_valid_app_name(self.app_name):
             raise BriefcaseConfigError(
                 f"{self.app_name!r} is not a valid app name.\n\n"
-                "App names must not be reserved keywords such as 'and', 'for' and 'while'."
-                "include letters, numbers, '-' and '_'; must start with a "
-                "App names must be PEP508 compliant (i.e., they can only "
-                "letter; and cannot end with '-' or '_'."
+                "App names must not be reserved keywords such as 'and', 'for' and 'while'.\n"
+                "They must also be PEP508 compliant (i.e., they can only include letters,\n"
+                "numbers, '-' and '_'; must start with a letter; and cannot end with '-' or '_')."
             )
 
         # Version number is PEP440 compliant:

@@ -104,13 +104,11 @@ class NewCommand(BaseCommand):
             with a diagnostic message.
         """
         if not is_valid_app_name(candidate):
-
             raise ValueError(
                 f"{candidate!r} is not a valid app name.\n\n"
-                "App names must not be reserved keywords such as 'and', 'for' and 'while'."
-                "App names must be PEP508 compliant (i.e., they can only "
-                "include letters, numbers, '-' and '_'; must start with a "
-                "letter; and cannot end with '-' or '_'."
+                "App names must not be reserved keywords such as 'and', 'for' and 'while'.\n"
+                "They must also be PEP508 compliant (i.e., they can only include letters,\n"
+                "numbers, '-' and '_'; must start with a letter; and cannot end with '-' or '_')."
             )
 
         if (self.base_path / candidate).exists():
