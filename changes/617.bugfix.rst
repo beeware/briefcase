@@ -1,1 +1,1 @@
-Created a list of reserved python keywords and added a check for name violations when creating a new app.
+Names that are reserved words in Python (or other common programming languages) are now prevented when creating apps.
