@@ -6,11 +6,14 @@ from briefcase.config import is_reserved_keyword
 @pytest.mark.parametrize(
     'name',
     [
+        # These names may not be valid identifiers,
+        # but they're not reserved words in any language we care about.
         'BLACK',
         'purple',
         '9pink',
         'Yellow',
         'green',
+        'hello world',
     ]
 )
 def test_is_not_reserved_keyword_violation(name):
@@ -21,15 +24,22 @@ def test_is_not_reserved_keyword_violation(name):
 @pytest.mark.parametrize(
     'name',
     [
-        'abstract',
-        'break',
-        'byte',
-        'case',
-        'catch',
+        # Python specific keyword, in various case variants
         'pass',
+        'Pass',
+        'PASS',
+        # Javascript specific keyword, in various case variants
+        'in',
+        'In',
+        'IN',
+        # Java specific keyword, in various case variants
+        'synchronized',
+        'Synchronized',
+        'SYNCHRONIZED',
+        # Keyword in multiple languages, in various case variants
         'false',
         'False',
-        'YIELD',
+        'FALSE',
     ]
 )
 def test_is_reserved_keyword(name):
