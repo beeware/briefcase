@@ -12,9 +12,13 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 import requests
-import toml
 from cookiecutter.main import cookiecutter
 from cookiecutter.repository import is_repo_url
+
+try:
+    import tomllib
+except ModuleNotFoundError:
+    import tomli as tomllib
 
 from briefcase import __version__, integrations
 from briefcase.config import AppConfig, BaseConfig, GlobalConfig, parse_config
@@ -272,8 +276,8 @@ class BaseCommand(ABC):
         :param app: The config object for the app
         :return: The contents of the application path index.
         """
-        with (self.bundle_path(app) / 'briefcase.toml').open() as f:
-            self._path_index[app] = toml.load(f)['paths']
+        with (self.bundle_path(app) / 'briefcase.toml').open('rb') as f:
+            self._path_index[app] = tomllib.load(f)['paths']
         return self._path_index[app]
 
     def support_path(self, app: BaseConfig):
@@ -435,7 +439,7 @@ class BaseCommand(ABC):
 
     def parse_config(self, filename):
         try:
-            with open(filename) as config_file:
+            with open(filename, 'rb') as config_file:
                 # Parse the content of the pyproject.toml file, extracting
                 # any platform and output format configuration for each app,
                 # creating a single set of configuration options.

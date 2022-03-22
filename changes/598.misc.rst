@@ -1,1 +1,0 @@
-Dropped the Jinja2 version pin as Python 3.5 is no longer supported.

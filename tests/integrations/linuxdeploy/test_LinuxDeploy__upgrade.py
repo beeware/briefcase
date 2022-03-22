@@ -6,6 +6,8 @@ from requests import exceptions as requests_exceptions
 from briefcase.exceptions import MissingToolError, NetworkFailure
 from briefcase.integrations.linuxdeploy import LinuxDeploy
 
+from tests.integrations.linuxdeploy.utils import create_mock_appimage
+
 
 @pytest.fixture
 def mock_command(tmp_path):
@@ -25,14 +27,17 @@ def test_upgrade_exists(mock_command, tmp_path):
     appimage_path.touch()
 
     # Mock a successful download
-    mock_command.download_url.return_value = 'new-downloaded-file'
+    def side_effect_create_mock_appimage(*args, **kwargs):
+        create_mock_appimage(appimage_path=appimage_path)
+        return 'new-downloaded-file'
+    mock_command.download_url.side_effect = side_effect_create_mock_appimage
 
     # Create a linuxdeploy wrapper, then upgrade it
     linuxdeploy = LinuxDeploy(mock_command)
     linuxdeploy.upgrade()
 
-    # The mock file will be deleted
-    assert not appimage_path.exists()
+    # The mock file should exist as the upgraded version
+    assert appimage_path.exists()
 
     # A download is invoked
     mock_command.download_url.assert_called_with(

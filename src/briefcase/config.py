@@ -2,7 +2,10 @@ import copy
 import re
 from types import SimpleNamespace
 
-import toml
+try:
+    import tomllib
+except ModuleNotFoundError:
+    import tomli as tomllib
 
 from briefcase.platforms import get_output_formats, get_platforms
 
@@ -372,10 +375,10 @@ def parse_config(config_file, platform, output_format):
         format definitions.
     """
     try:
-        pyproject = toml.load(config_file)
+        pyproject = tomllib.load(config_file)
 
         global_config = pyproject['tool']['briefcase']
-    except toml.TomlDecodeError as e:
+    except tomllib.TOMLDecodeError as e:
         raise BriefcaseConfigError('Invalid pyproject.toml: {e}'.format(e=e))
     except KeyError:
         raise BriefcaseConfigError('No tool.briefcase section in pyproject.toml')

@@ -315,7 +315,7 @@ class CreateCommand(BaseCommand):
 
     def install_app_support_package(self, app: BaseConfig):
         """
-        Install the application support packge.
+        Install the application support package.
 
         :param app: The config object for the app
         """
@@ -385,6 +385,15 @@ class CreateCommand(BaseCommand):
 
         :param app: The config object for the app
         """
+
+        target = self.app_packages_path(app)
+
+        # Clear existing dependency directory
+        if target.is_dir():
+            self.shutil.rmtree(target)
+            self.os.mkdir(target)
+
+        # Install  dependencies
         if app.requires:
             try:
                 self.subprocess.run(
@@ -393,7 +402,7 @@ class CreateCommand(BaseCommand):
                         "pip", "install",
                         "--upgrade",
                         "--no-user",
-                        "--target={}".format(self.app_packages_path(app)),
+                        "--target={}".format(target),
                     ] + app.requires,
                     check=True,
                 )

@@ -4,6 +4,36 @@ Release History
 
 .. towncrier release notes start
 
+0.3.6 (2022-02-28)
+==================
+
+Features
+--------
+
+* On macOS, iOS, and Android, ``briefcase run`` now displays the application logs once the application has started. (#591)
+* Xcode detection code now allows for Xcode to be installed in locations other than ``/Applications/Xcode.app``. (#622)
+* Deprecated support for Python 3.6. (#653)
+
+
+Bugfixes
+--------
+
+* Existing app packages are now cleared before reinstalling dependencies. (#644)
+* Added binary patcher for linuxtools AppImage to increase compatibility. (#667)
+
+
+Improved Documentation
+----------------------
+
+* Documentation on creating macOS/iOS code signing identities has been added (#641)
+
+
+Misc
+----
+
+* #587, #588, #592, #598, #621, #643, #654, #670
+
+
 0.3.5 (2021-03-06)
 ==================
 
