@@ -1,5 +1,7 @@
 import pytest
 
+from briefcase.config import is_valid_bundle_identifier
+
 
 @pytest.mark.parametrize(
     'bundle',
@@ -10,9 +12,9 @@ import pytest
         'com.example-42.more',
     ]
 )
-def test_valid_bundle(new_command, bundle):
+def test_valid_bundle(bundle):
     "Test that valid bundles are accepted"
-    assert new_command.validate_bundle(bundle)
+    assert is_valid_bundle_identifier(bundle)
 
 
 @pytest.mark.parametrize(
@@ -23,10 +25,12 @@ def test_valid_bundle(new_command, bundle):
         'com.hello_world',  # underscore
         'com.hello,world',  # comma
         'com.hello world!',  # exclamation point
-        'com.pass.example',  # Reserved word
+        'com.pass',  # Python reserved word
+        'com.pass.example',  # Python reserved word
+        'com.switch',  # Java reserved word
+        'com.switch.example',  # Java reserved word
     ]
 )
-def test_invalid_bundle(new_command, bundle):
+def test_invalid_bundle(bundle):
     "Test that invalid bundles are rejected"
-    with pytest.raises(ValueError):
-        new_command.validate_bundle(bundle)
+    assert not is_valid_bundle_identifier(bundle)
