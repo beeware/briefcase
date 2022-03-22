@@ -11,13 +11,13 @@ from briefcase.platforms import get_output_formats, get_platforms
 
 from .exceptions import BriefcaseConfigError
 
-# The first restriction on application naming comes from PEP508
+# PEP508 provides a basic restriction on naming
 PEP508_NAME_RE = re.compile(
     r'^([A-Z0-9]|[A-Z0-9][A-Z0-9._-]*[A-Z0-9])$',
     re.IGNORECASE
 )
 
-# Create a list of reserved keywords for Python, Javascript, Java, C, and C++
+# Python, Javascript, Java, C, and C++ have reserved words that should be excluded
 RESERVED_KEYWORDS = [
     '_Packed',
     'abstract',
@@ -112,16 +112,12 @@ RESERVED_KEYWORDS = [
 
 
 def is_valid_pep508_name(app_name):
-    '''if PEP508_NAME_RE.match(app_name):
-        return True
-    return False'''
+    "Determine if the name is valid by PEP508 rules"
     return PEP508_NAME_RE.match(app_name)
 
 
 def is_reserved_keyword(app_name):
-    '''if app_name.lower() in RESERVED_KEYWORDS:
-        return True
-    return False'''
+    "Determine if the name is a reserved keyword"
     return app_name.lower() in RESERVED_KEYWORDS
 
 
