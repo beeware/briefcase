@@ -140,7 +140,7 @@ class macOSPackageMixin:
                 return identity
 
             # Try to look up the identity as readable name
-            identity_by_name = next(((hex_key,name) for hex_key,name in identities.items()
+            identity_by_name = next(((hex_key, name) for hex_key, name in identities.items()
                                     if identity in name), None)
             if identity_by_name is not None:
                 if identity_by_name[1] == identity:
@@ -219,8 +219,9 @@ class macOSPackageMixin:
                     # We should not be signing this in the first place
                     print("Skipping signature for:", path)
                     if path.suffix == '.cstemp':
-                        print("     (this looks like a temporary file from codesign -- "
-                                "if that's the case it can be safely removed)"
+                        print(
+                            "     (this looks like a temporary file from codesign -- "
+                            "if that's the case it can be safely removed)"
                         )
                     return
                 raise BriefcaseCommandError(
@@ -273,11 +274,11 @@ class macOSPackageMixin:
             # Signs code objects in reversed lexicographic order to ensure nesting order is respected
             # (objects must be signed from the inside out)
             bundle_path = self.binary_path(app)
-            resources_path = bundle_path / 'Contents'/ 'Resources'
-            all_files = ((f,os.stat(f).st_mode,) for f in resources_path.rglob('*'))
+            resources_path = bundle_path / 'Contents' / 'Resources'
+            all_files = ((f, os.stat(f).st_mode,) for f in resources_path.rglob('*'))
             exec_suffixes = ('.dylib', '.o', '.so', '')
-            exec_files = (f for f,m in all_files if (not stat.S_ISDIR(m)) and
-                                ((m & stat.S_IXUSR) or f.suffix.lower() in exec_suffixes))
+            exec_files = (f for f, m in all_files if (not stat.S_ISDIR(m)) and
+                          ((m & stat.S_IXUSR) or f.suffix.lower() in exec_suffixes))
             exec_binaries = (f for f in exec_files if validate_mach_o(f))
 
             final_bundle = (bundle_path,)
