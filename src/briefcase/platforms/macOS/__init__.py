@@ -1,6 +1,7 @@
 import itertools
 import os
 import subprocess
+import stat
 
 from briefcase.config import BaseConfig
 from briefcase.console import select_option
@@ -134,14 +135,24 @@ class macOSPackageMixin:
         identities = self.get_identities(self, 'codesigning')
 
         if identity:
-            try:
-                # Try to look up the identity as a hex checksum
-                return identities[identity]
-            except KeyError:
-                # It's not a valid checksum; try to use it as a value.
-                if identity in identities.values():
-                    return identity
+            # Try to look up the identity as a hex checksum
+            if identity in identities:
+                return identity
 
+            # Try to look up the identity as readable name
+            identity_by_name = next(((hex_key,name) for hex_key,name in identities.items()
+                                    if identity in name), None)
+            if identity_by_name is not None:
+                if identity_by_name[1] == identity:
+                    return identity_by_name[1]
+                else:
+                    raise BriefcaseCommandError(
+                        "Invalid code signing identity {identity!r}. (Did you mean {found!r}?)".format(
+                            identity=identity, found=identity_by_name[1],
+                        )
+                    )
+
+            # Not found
             raise BriefcaseCommandError(
                 "Invalid code signing identity {identity!r}".format(
                     identity=identity
@@ -160,37 +171,61 @@ class macOSPackageMixin:
             print()
             selection = select_option(identities, input=self.input)
             identity = identities[selection]
-            print("selected", identity)
+            print(f"selected '{identity}")
 
         return identity
 
-    def sign(self, path, entitlements, identity):
+    def sign(self, path, identity, entitlements=None):
         """
         Code sign a file.
 
         :param path: The path to the file to sign.
-        :param entitlements: The path to the entitlements file to use.
         :param identity: The code signing identity to use. Either the 40-digit
             hex checksum, or the string name of the identity.
+        :param entitlements: The path to the entitlements file to use.
         """
-        try:
-            print("Signing", path)
-            self.subprocess.run(
-                [
-                    'codesign',
-                    '--sign', identity,
-                    '--entitlements', os.fsdecode(entitlements),
-                    '--deep', os.fsdecode(path),
-                    '--force',
-                    '--options', 'runtime',
-                ],
-                check=True,
-            )
-        except subprocess.CalledProcessError:
-            print()
-            raise BriefcaseCommandError(
-                "Unable to code sign {path}.".format(path=path)
-            )
+        options = 'runtime' if identity != '-' else None
+        process_command = [
+            'codesign',
+            '--sign', identity,
+            str(path),
+            '--force',
+        ]
+        if entitlements:
+            process_command.append('--entitlements')
+            process_command.append(str(entitlements))
+        if options:
+            process_command.append('--options')
+            process_command.append(options)
+
+        while True:
+            try:
+                print("Signing:", ' '.join((f"'{pc}'" if ' ' in pc else pc for pc in process_command)))
+                self.subprocess.run(
+                    process_command,
+                    stderr=subprocess.PIPE,
+                    check=True,
+                )
+                break
+            except subprocess.CalledProcessError as e:
+                errors = e.stderr.decode('utf-8', errors='replace')
+                print(errors)
+                if 'not signed at all' in errors and '--deep' not in process_command:
+                    # The lexicographic order was not enough to resolve the dependencies
+                    # Retry with --deep
+                    process_command.append('--deep')
+                    continue
+                if 'unsupported format for signature' in errors:
+                    # We should not be signing this in the first place
+                    print("Skipping signature for:", path)
+                    if path.suffix == '.cstemp':
+                        print("     (this looks like a temporary file from codesign -- "
+                                "if that's the case it can be safely removed)"
+                        )
+                    return
+                raise BriefcaseCommandError(
+                    "Unable to code sign {path}.".format(path=path)
+                )
 
     def package_app(
             self,
@@ -229,11 +264,30 @@ class macOSPackageMixin:
                     identity=identity
                 ))
 
-            for path in itertools.chain(
-                self.binary_path(app).glob('**/*.so'),
-                self.binary_path(app).glob('**/*.dylib'),
-                [self.binary_path(app)],
-            ):
+            def validate_mach_o(filename):
+                with open(filename, 'rb') as f:
+                    magic = f.read(4)
+                return magic in (b'\xCA\xFE\xBA\xBE', b'\xCF\xFA\xED\xFE', b'\xCE\xFA\xED\xFE',
+                                 b'\xBE\xBA\xFE\xCA', b'\xFE\xED\xFA\xCF', b'\xFE\xED\xFA\xCE',)
+
+            # Signs code objects in reversed lexicographic order to ensure nesting order is respected
+            # (objects must be signed from the inside out)
+            bundle_path = self.binary_path(app)
+            resources_path = bundle_path / 'Contents'/ 'Resources'
+            all_files = ((f,os.stat(f).st_mode,) for f in resources_path.rglob('*'))
+            exec_suffixes = ('.dylib', '.o', '.so', '')
+            exec_files = (f for f,m in all_files if (not stat.S_ISDIR(m)) and
+                                ((m & stat.S_IXUSR) or f.suffix.lower() in exec_suffixes))
+            exec_binaries = (f for f in exec_files if validate_mach_o(f))
+
+            final_bundle = (bundle_path,)
+            bundles = itertools.chain(
+                            resources_path.rglob('*.framework'),
+                            resources_path.rglob('*.app'),
+                            final_bundle,
+                        )
+            sign_targets = sorted(itertools.chain(exec_binaries, bundles), reverse=True)
+            for path in sign_targets:
                 self.sign(
                     path,
                     entitlements=self.entitlements_path(app),
@@ -297,8 +351,15 @@ class macOSPackageMixin:
                 # No installer background image provided
                 pass
 
+            dmg_path = os.fsdecode(self.distribution_path(app, packaging_format=packaging_format))
             self.dmgbuild.build_dmg(
-                filename=os.fsdecode(self.distribution_path(app, packaging_format=packaging_format)),
+                filename=dmg_path,
                 volume_name='{app.formal_name} {app.version}'.format(app=app),
                 settings=dmg_settings
             )
+
+            if sign_app:
+                self.sign(
+                    dmg_path,
+                    identity=identity,
+                )
