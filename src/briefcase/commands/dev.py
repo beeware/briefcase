@@ -33,7 +33,7 @@ class DevCommand(BaseCommand):
         "A placeholder; Dev command doesn't have a binary path"
         raise NotImplementedError()
 
-    def distribution_path(self, app):
+    def distribution_path(self, app, packaging_format):
         "A placeholder; Dev command doesn't have a distribution path"
         raise NotImplementedError()
 
@@ -49,6 +49,13 @@ class DevCommand(BaseCommand):
             '--update-dependencies',
             action="store_true",
             help='Update dependencies for app'
+        )
+        parser.add_argument(
+            '--no-run',
+            dest="run_app",
+            action="store_false",
+            default=True,
+            help='Do not run the app, just install dependencies.'
         )
 
     def install_dev_dependencies(self, app: BaseConfig, **options):
@@ -104,6 +111,7 @@ class DevCommand(BaseCommand):
         self,
         appname: Optional[str] = None,
         update_dependencies: Optional[bool] = False,
+        run_app: Optional[bool] = True,
         **options
     ):
         # Confirm all required tools are available
@@ -133,6 +141,9 @@ class DevCommand(BaseCommand):
         # installed. If a dependency update has been manually requested,
         # do it regardless.
         dist_info_path = self.app_module_path(app).parent / '{app.module_name}.dist-info'.format(app=app)
+        if not run_app:
+            # If we are not running the app, it means we should update dependencies.
+            update_dependencies = True
         if update_dependencies or not dist_info_path.exists():
             print()
             print('[{app.app_name}] Installing dependencies...'.format(
@@ -141,10 +152,11 @@ class DevCommand(BaseCommand):
             self.install_dev_dependencies(app, **options)
             write_dist_info(app, dist_info_path)
 
-        print()
-        print('[{app.app_name}] Starting in dev mode...'.format(
-            app=app
-        ))
-        env = self.get_environment(app)
-        state = self.run_dev_app(app, env, **options)
-        return state
+        if run_app:
+            print()
+            print('[{app.app_name}] Starting in dev mode...'.format(
+                app=app
+            ))
+            env = self.get_environment(app)
+            state = self.run_dev_app(app, env, **options)
+            return state

@@ -15,11 +15,11 @@ Briefcase currently has support for:
   * Linux (producing AppImage files)
   * Windows (producing MSI installers)
   * iOS (producing Xcode projects)
+  * Android (producing Gradle projects)
 
-Support for Android will be added in the near future. Support for other some
-other packaging formats (e.g., NSIS installers for Windows; Snap and Flatpak
-installers for Linux) and other operating systems (e.g., tvOS, watchOS, WearOS)
-are on our roadmap.
+Support for other some other packaging formats (e.g., NSIS installers for
+Windows; Snap and Flatpak installers for Linux) and other operating systems
+(e.g., tvOS, watchOS, WearOS) are on our roadmap.
 
 Briefcase's platform support is built on a plugin system, so if you want to add
 support for a custom platform, you can do so; or, you can contribute the

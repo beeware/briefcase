@@ -1,3 +1,4 @@
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -228,7 +229,7 @@ class Docker:
                     ),
                     "--build-arg", "HOST_UID={uid}".format(uid=self.command.os.getuid()),
                     "--build-arg", "HOST_GID={gid}".format(gid=self.command.os.getgid()),
-                    Path(str(self.command.base_path), *self.app.sources[0].split('/')[:-1])
+                    Path(self.command.base_path, *self.app.sources[0].split('/')[:-1])
                 ],
                 check=True,
             )
@@ -243,13 +244,15 @@ class Docker:
         "Run a process inside the Docker container"
         # Set up the `docker run` invocation in interactive mode,
         # with volume mounts for the platform and .briefcase directories.
+        # The :z suffix allows SELinux to modify the host mount; it is ignored
+        # on non-SELinux platforms.
         docker_args = [
             "docker", "run",
             "--tty",
-            "--volume", "{self.command.platform_path}:/app".format(
+            "--volume", "{self.command.platform_path}:/app:z".format(
                 self=self
             ),
-            "--volume", "{self.command.dot_briefcase_path}:/home/brutus/.briefcase".format(
+            "--volume", "{self.command.dot_briefcase_path}:/home/brutus/.briefcase:z".format(
                 self=self
             ),
         ]
@@ -274,14 +277,14 @@ class Docker:
                         command=self.command
                     )
                 )
-            elif str(self.command.platform_path) in arg:
+            elif os.fsdecode(self.command.platform_path) in arg:
                 docker_args.append(
-                    arg.replace(str(self.command.platform_path), '/app')
+                    arg.replace(os.fsdecode(self.command.platform_path), '/app')
                 )
-            elif str(self.command.dot_briefcase_path) in arg:
+            elif os.fsdecode(self.command.dot_briefcase_path) in arg:
                 docker_args.append(
                     arg.replace(
-                        str(self.command.dot_briefcase_path), '/home/brutus/.briefcase'
+                        os.fsdecode(self.command.dot_briefcase_path), '/home/brutus/.briefcase'
                     )
                 )
             else:

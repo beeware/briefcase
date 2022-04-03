@@ -22,7 +22,7 @@ def test_distribution_path(first_app_config, tmp_path):
     command = LinuxAppImageCreateCommand(base_path=tmp_path)
     # Force the architecture to x86_64 for test purposes.
     command.host_arch = 'x86_64'
-    distribution_path = command.distribution_path(first_app_config)
+    distribution_path = command.distribution_path(first_app_config, 'appimage')
 
     assert distribution_path == tmp_path / 'linux' / 'First_App-0.0.1-x86_64.AppImage'
 
@@ -31,6 +31,16 @@ def test_docker_image_tag(first_app_config, tmp_path):
     command = LinuxAppImageCreateCommand(base_path=tmp_path)
 
     image_tag = command.docker_image_tag(first_app_config)
+
+    assert image_tag == 'briefcase/com.example.first-app:py3.{minor}'.format(
+        minor=sys.version_info.minor
+    )
+
+
+def test_docker_image_tag_uppercase_name(uppercase_app_config, tmp_path):
+    command = LinuxAppImageCreateCommand(base_path=tmp_path)
+
+    image_tag = command.docker_image_tag(uppercase_app_config)
 
     assert image_tag == 'briefcase/com.example.first-app:py3.{minor}'.format(
         minor=sys.version_info.minor

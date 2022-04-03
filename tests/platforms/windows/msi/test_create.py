@@ -66,10 +66,40 @@ def test_support_package_url(first_app_config, tmp_path):
     command.host_arch = 'wonky'
     command.platform = 'tester'
 
-    # This test result assumes we're on ARM64. However, we will be
-    # on almost every Windows box (and definite will be in CI)
+    # This test result is dependent on whether we're using a 32-bit (win32)
+    # or 64-bit (amd64) machine.
+    arch = "amd64" if sys.maxsize.bit_length() == 63 else "win32"
     assert command.support_package_url_query == [
         ('platform', 'tester'),
         ('version', '3.{minor}'.format(minor=sys.version_info.minor)),
-        ('arch', 'amd64'),
+        ('arch', arch),
     ]
+
+
+def test_default_install_scope(first_app_config, tmp_path):
+    "By default, app should be installed per user."
+    command = WindowsMSICreateCommand(base_path=tmp_path)
+
+    context = command.output_format_template_context(first_app_config)
+
+    assert context['install_scope'] == 'perUser'
+
+
+def test_per_machine_install_scope(first_app_config, tmp_path):
+    "By default, app should be installed per user."
+    command = WindowsMSICreateCommand(base_path=tmp_path)
+    first_app_config.system_installer = True
+
+    context = command.output_format_template_context(first_app_config)
+
+    assert context['install_scope'] == "perMachine"
+
+
+def test_per_user_install_scope(first_app_config, tmp_path):
+    "App can be set to have explocit per-user scope."
+    command = WindowsMSICreateCommand(base_path=tmp_path)
+    first_app_config.system_installer = False
+
+    context = command.output_format_template_context(first_app_config)
+
+    assert context['install_scope'] == "perUser"

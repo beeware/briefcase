@@ -1,3 +1,4 @@
+import os
 import sys
 
 import pytest
@@ -12,10 +13,10 @@ def test_simple_call(mock_docker, tmp_path, capsys):
         [
             'docker',
             'run', '--tty',
-            '--volume', '{platform_path}:/app'.format(
+            '--volume', '{platform_path}:/app:z'.format(
                 platform_path=tmp_path / 'platform'
             ),
-            '--volume', '{dot_briefcase_path}:/home/brutus/.briefcase'.format(
+            '--volume', '{dot_briefcase_path}:/home/brutus/.briefcase:z'.format(
                 dot_briefcase_path=tmp_path / '.briefcase'
             ),
             'briefcase/com.example.myapp:py3.X',
@@ -35,10 +36,10 @@ def test_simple_call_with_arg(mock_docker, tmp_path, capsys):
         [
             'docker',
             'run', '--tty',
-            '--volume', '{platform_path}:/app'.format(
+            '--volume', '{platform_path}:/app:z'.format(
                 platform_path=tmp_path / 'platform'
             ),
-            '--volume', '{dot_briefcase_path}:/home/brutus/.briefcase'.format(
+            '--volume', '{dot_briefcase_path}:/home/brutus/.briefcase:z'.format(
                 dot_briefcase_path=tmp_path / '.briefcase'
             ),
             'briefcase/com.example.myapp:py3.X',
@@ -59,17 +60,17 @@ def test_simple_call_with_path_arg(mock_docker, tmp_path, capsys):
         [
             'docker',
             'run',  '--tty',
-            '--volume', '{platform_path}:/app'.format(
+            '--volume', '{platform_path}:/app:z'.format(
                 platform_path=tmp_path / 'platform'
             ),
-            '--volume', '{dot_briefcase_path}:/home/brutus/.briefcase'.format(
+            '--volume', '{dot_briefcase_path}:/home/brutus/.briefcase:z'.format(
                 dot_briefcase_path=tmp_path / '.briefcase'
             ),
             'briefcase/com.example.myapp:py3.X',
             'hello',
-            str(tmp_path / 'location')
+            os.fsdecode(tmp_path / 'location')
         ],
-        cwd=str(tmp_path / 'cwd')
+        cwd=os.fsdecode(tmp_path / 'cwd')
     )
     assert capsys.readouterr().out == ""
 
@@ -88,10 +89,10 @@ def test_simple_verbose_call(mock_docker, tmp_path, capsys):
         [
             'docker',
             'run', '--tty',
-            '--volume', '{platform_path}:/app'.format(
+            '--volume', '{platform_path}:/app:z'.format(
                 platform_path=tmp_path / 'platform'
             ),
-            '--volume', '{dot_briefcase_path}:/home/brutus/.briefcase'.format(
+            '--volume', '{dot_briefcase_path}:/home/brutus/.briefcase:z'.format(
                 dot_briefcase_path=tmp_path / '.briefcase'
             ),
             'briefcase/com.example.myapp:py3.X',
@@ -101,8 +102,8 @@ def test_simple_verbose_call(mock_docker, tmp_path, capsys):
     )
     assert capsys.readouterr().out == (
         ">>> docker run --tty "
-        "--volume {platform_path}:/app "
-        "--volume {dot_briefcase_path}:/home/brutus/.briefcase "
+        "--volume {platform_path}:/app:z "
+        "--volume {dot_briefcase_path}:/home/brutus/.briefcase:z "
         "briefcase/com.example.myapp:py3.X "
         "hello world\n"
     ).format(

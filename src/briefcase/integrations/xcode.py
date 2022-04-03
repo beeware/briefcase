@@ -117,7 +117,7 @@ Re-run Briefcase once that installation is complete.
 
 def ensure_xcode_is_installed(
     command,
-    xcode_location='/Applications/Xcode.app',
+    xcode_location=None,
     min_version=None,
 ):
     """
@@ -129,14 +129,34 @@ def ensure_xcode_is_installed(
 
     :param command: The command that needs to perform the verification check.
     :param xcode_location: The location where Xcode should be installed.
-        Default is `/Applications/Xcode.app`, which is where the App Store
-        installs Xcode.
+        If not given, the location returned by `xcode-select -p` will be used.
     :param min_version: The minimum allowed version of Xcode, specified as a
         tuple of integers (e.g., (11, 2, 1)). Default: ``None``, meaning there
         is no minimum version.
     """
     # Try the direct approach. Look for the Xcode folder that is created
     # when you install from the App store.
+
+    if xcode_location is None:
+
+        try:
+            output = command.subprocess.check_output(
+                ['xcode-select', '-p'],
+                stderr=subprocess.STDOUT,
+                universal_newlines=True
+            )
+            xcode_location = output.strip()
+        except subprocess.CalledProcessError:
+            raise BriefcaseCommandError("""
+Could not find Xcode installation.
+
+To select an existing Xcode installation, run:
+
+    $ sudo xcode-select --switch path/to/Xcode.app
+
+or install Xcode from the macOS App Store. Re-run Briefcase afterwards.
+""")
+
     if not Path(xcode_location).exists():
         raise BriefcaseCommandError("""
 Xcode is not installed.
@@ -145,6 +165,7 @@ You can install Xcode from the macOS App Store.
 
 Re-run Briefcase once that installation is complete.
 """)
+
     try:
         output = command.subprocess.check_output(
             ['xcodebuild', '-version'],
@@ -202,11 +223,15 @@ Re-run Briefcase once that installation is complete.
     except subprocess.CalledProcessError as e:
         if " is a command line tools instance" in e.output:
             raise BriefcaseCommandError("""
-Xcode is installed, but the active developer directory is a
-command line tools instance. To make XCode the active developer
-directory, run:
+Xcode may be installed, but the active developer directory is a
+command line tools instance. To make the default Xcode install the
+active developer directory, run:
 
-    $ sudo xcode-select -switch /Applications/Xcode.app
+    $ sudo xcode-select --switch /Applications/Xcode.app
+
+Or, to use a version of Xcode installed in a non-default location:
+
+    $ sudo xcode-select --switch /path/to/Xcode.app
 
 and then re-run Briefcase.
 """)
@@ -247,7 +272,7 @@ accepted before you can use those tools.
 You can accept these licenses by starting Xcode and clicking "Accept"; or, you
 can run:
 
-    sudo xcodebuild -license
+    $ sudo xcodebuild -license
 
 at the command line and accepting the license there.
 

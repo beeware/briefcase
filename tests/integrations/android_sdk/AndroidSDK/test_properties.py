@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import pytest
@@ -93,8 +94,8 @@ def test_avd_path(mock_sdk, tmp_path):
 def test_simple_env(mock_sdk, tmp_path):
     "The SDK Environment can be constructed"
     assert mock_sdk.env == {
-        'JAVA_HOME': str(Path('/path/to/jdk')),
-        'ANDROID_SDK_ROOT': str(tmp_path / 'sdk')
+        'JAVA_HOME': os.fsdecode(Path('/path/to/jdk')),
+        'ANDROID_SDK_ROOT': os.fsdecode(tmp_path / 'sdk')
     }
 
 
@@ -108,8 +109,8 @@ def test_override_env(mock_sdk, tmp_path):
 
     assert mock_sdk.env == {
         'other': 'stuff',
-        'JAVA_HOME': str(Path('/path/to/jdk')),
-        'ANDROID_SDK_ROOT': str(tmp_path / 'sdk')
+        'JAVA_HOME': os.fsdecode(Path('/path/to/jdk')),
+        'ANDROID_SDK_ROOT': os.fsdecode(tmp_path / 'sdk')
     }
 
 

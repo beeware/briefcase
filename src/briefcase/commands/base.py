@@ -12,9 +12,13 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 import requests
-import toml
 from cookiecutter.main import cookiecutter
 from cookiecutter.repository import is_repo_url
+
+try:
+    import tomllib
+except ModuleNotFoundError:
+    import tomli as tomllib
 
 from briefcase import __version__, integrations
 from briefcase.config import AppConfig, BaseConfig, GlobalConfig, parse_config
@@ -35,6 +39,17 @@ class TemplateUnsupportedVersion(BriefcaseCommandError):
             msg='Template does not support {version_tag}'.format(
                 version_tag=version_tag
             )
+        )
+
+
+class UnsupportedPlatform(BriefcaseCommandError):
+    def __init__(self, platform):
+        self.platform = platform
+        super().__init__(
+            msg="App cannot be deployed on {platform}. This is probably because one or more\n"
+                "dependencies (e.g., the GUI library) doesn't support {platform}.".format(
+                    platform=platform
+                )
         )
 
 
@@ -221,7 +236,7 @@ class BaseCommand(ABC):
 
         :param app: The app config
         """
-        return self.platform_path / app.formal_name
+        return self.platform_path / self.output_format / app.formal_name
 
     @abstractmethod
     def binary_path(self, app):
@@ -239,9 +254,10 @@ class BaseCommand(ABC):
         ...
 
     @abstractmethod
-    def distribution_path(self, app):
+    def distribution_path(self, app, packaging_format):
         """
-        The path to the distributable artefact for the app in the output format.
+        The path to the distributable artefact for the app in the given
+        packaging format.
 
         This is the single file that should be uploaded for distribution.
         This may be the binary (if the binary is a self contained executable);
@@ -249,6 +265,7 @@ class BaseCommand(ABC):
         path to the installer.
 
         :param app: The app config
+        :param packaging_format: The format of the redistributable artefact.
         """
         ...
 
@@ -259,8 +276,8 @@ class BaseCommand(ABC):
         :param app: The config object for the app
         :return: The contents of the application path index.
         """
-        with (self.bundle_path(app) / 'briefcase.toml').open() as f:
-            self._path_index[app] = toml.load(f)['paths']
+        with (self.bundle_path(app) / 'briefcase.toml').open('rb') as f:
+            self._path_index[app] = tomllib.load(f)['paths']
         return self._path_index[app]
 
     def support_path(self, app: BaseConfig):
@@ -422,7 +439,7 @@ class BaseCommand(ABC):
 
     def parse_config(self, filename):
         try:
-            with open(filename) as config_file:
+            with open(filename, 'rb') as config_file:
                 # Parse the content of the pyproject.toml file, extracting
                 # any platform and output format configuration for each app,
                 # creating a single set of configuration options.

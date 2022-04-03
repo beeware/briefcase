@@ -1,3 +1,5 @@
+import os
+
 
 def test_simple_call(mock_sub, capsys):
     "A simple call will be invoked"
@@ -26,8 +28,8 @@ def test_simple_call_with_path_arg(mock_sub, capsys, tmp_path):
     mock_sub.check_output(['hello', tmp_path / 'location'], cwd=tmp_path / 'cwd')
 
     mock_sub._subprocess.check_output.assert_called_with(
-        ['hello', str(tmp_path / 'location')],
-        cwd=str(tmp_path / 'cwd')
+        ['hello', os.fsdecode(tmp_path / 'location')],
+        cwd=os.fsdecode(tmp_path / 'cwd')
     )
     assert capsys.readouterr().out == ""
 

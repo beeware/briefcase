@@ -62,8 +62,13 @@ or are are common to all applications in this repository.
 
 Configuration options for a specific application.
 
-``<app name>`` must adhere to a valid Python distribution name as
-specified in `PEP508 <https://www.python.org/dev/peps/pep-0508/#names>`__.
+``<app name>`` must adhere to a valid Python distribution name as specified in
+`PEP508 <https://www.python.org/dev/peps/pep-0508/#names>`__. The app name must
+also *not* be a reserved word in Python, Java or JavaScript (i.e., app names
+like ``switch`` or ``pass`` would not be valid); and it may not include any of
+the `filenames prohibited by Windows
+<https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file#naming-conventions>`__
+(i.e., ``CON``, ``PRN``, or ``LPT1``).
 
 ``[tool.briefcase.app.<app name>.<platform>]``
 ----------------------------------------------
@@ -302,6 +307,17 @@ it is downloaded.
 
 If the support package is a file path, this argument is ignored.
 
+``supported``
+~~~~~~~~~~~~~
+
+Indicates that the platform is not supported. For example, if you know that
+the app cannot be deployed to Android for some reason, you can explicitly
+prevent deployment by setting `supported=False` in the Android section of the
+app configuration file.
+
+If `supported` is set to `false`, the create command will fail, advising the
+user of the limitation.
+
 ``template``
 ~~~~~~~~~~~~
 
@@ -311,6 +327,14 @@ format.
 
 If this setting is not provided, Briefcase will use a default template for
 the output format and Python version.
+
+``template_branch``
+~~~~~~~~~~~~~~~~~~~
+
+The branch of the project template to use when generating the app. If the
+template is a local file, this attribute will be ignored. If not specified,
+Briefcase will use a branch matching the Python version in use (i.e., the `3.8`
+branch will be used when Python 3.8 is used to generate the app).
 
 ``url``
 ~~~~~~~

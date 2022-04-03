@@ -24,15 +24,21 @@ from briefcase.platforms.iOS import iOSMixin
 class iOSXcodePassiveMixin(iOSMixin):
     output_format = 'Xcode'
 
+    @property
+    def packaging_formats(self):
+        return ['ipa']
+
+    @property
+    def default_packaging_format(self):
+        return 'ipa'
+
     def binary_path(self, app):
         return (
-            self.platform_path
-            / '{app.formal_name}'.format(app=app)
-            / 'build' / 'Debug-iphonesimulator'
+            self.bundle_path(app) / 'build' / 'Debug-iphonesimulator'
             / '{app.formal_name}.app'.format(app=app)
         )
 
-    def distribution_path(self, app):
+    def distribution_path(self, app, packaging_format):
         return self.binary_path(app)
 
 
@@ -222,7 +228,7 @@ class iOSXcodeBuildCommand(iOSXcodeMixin, BuildCommand):
             )
 
         print()
-        print("Targeting an {device} running iOS {iOS_version} (device UDID {udid})".format(
+        print("Targeting an {device} running {iOS_version} (device UDID {udid})".format(
             device=device,
             iOS_version=iOS_version,
             udid=udid,
@@ -410,6 +416,26 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                 "Unable to launch app {app.app_name}.".format(
                     app=app
                 )
+            )
+
+        # Start streaming logs for the app.
+        try:
+            print()
+            print("[{app.app_name}] Following simulator log output (type CTRL-C to stop log)...".format(app=app))
+            print("=" * 75)
+            self.subprocess.run(
+                [
+                    "xcrun", "simctl", "spawn", udid,
+                    "log", "stream",
+                    "--style", "compact",
+                    "--predicate", 'senderImagePath ENDSWITH "/{app.formal_name}"'.format(app=app)
+                ],
+                check=True,
+            )
+        except subprocess.CalledProcessError:
+            print()
+            raise BriefcaseCommandError(
+                "Unable to start log stream for app {app.app_name}.".format(app=app)
             )
 
         # Preserve the device selection as state.

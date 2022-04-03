@@ -53,7 +53,7 @@ def test_run_app_simulator_booted(first_app_config, tmp_path):
             [
                 'xcrun', 'simctl', 'install',
                 '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-                tmp_path / 'iOS' / 'First App' / 'build' / 'Debug-iphonesimulator' / 'First App.app'
+                tmp_path / 'iOS' / 'Xcode' / 'First App' / 'build' / 'Debug-iphonesimulator' / 'First App.app'
             ],
             check=True
         ),
@@ -63,6 +63,17 @@ def test_run_app_simulator_booted(first_app_config, tmp_path):
                 'xcrun', 'simctl', 'launch',
                 '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
                 'com.example.first-app'
+            ],
+            check=True
+        ),
+        # Start tailing the log
+        mock.call(
+            [
+                'xcrun', 'simctl', 'spawn',
+                '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
+                "log", "stream",
+                "--style", "compact",
+                "--predicate", 'senderImagePath ENDSWITH "/First App"'
             ],
             check=True
         )
@@ -119,7 +130,7 @@ def test_run_app_simulator_shut_down(first_app_config, tmp_path):
             [
                 'xcrun', 'simctl', 'install',
                 '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-                tmp_path / 'iOS' / 'First App' / 'build' / 'Debug-iphonesimulator' / 'First App.app'
+                tmp_path / 'iOS' / 'Xcode' / 'First App' / 'build' / 'Debug-iphonesimulator' / 'First App.app'
             ],
             check=True
         ),
@@ -129,6 +140,17 @@ def test_run_app_simulator_shut_down(first_app_config, tmp_path):
                 'xcrun', 'simctl', 'launch',
                 '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
                 'com.example.first-app'
+            ],
+            check=True
+        ),
+        # Start tailing the log
+        mock.call(
+            [
+                'xcrun', 'simctl', 'spawn',
+                '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
+                "log", "stream",
+                "--style", "compact",
+                "--predicate", 'senderImagePath ENDSWITH "/First App"'
             ],
             check=True
         )
@@ -198,7 +220,7 @@ def test_run_app_simulator_shutting_down(first_app_config, tmp_path):
             [
                 'xcrun', 'simctl', 'install',
                 '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-                tmp_path / 'iOS' / 'First App' / 'build' / 'Debug-iphonesimulator' / 'First App.app'
+                tmp_path / 'iOS' / 'Xcode' / 'First App' / 'build' / 'Debug-iphonesimulator' / 'First App.app'
             ],
             check=True
         ),
@@ -208,6 +230,17 @@ def test_run_app_simulator_shutting_down(first_app_config, tmp_path):
                 'xcrun', 'simctl', 'launch',
                 '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
                 'com.example.first-app'
+            ],
+            check=True
+        ),
+        # Start tailing the log
+        mock.call(
+            [
+                'xcrun', 'simctl', 'spawn',
+                '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
+                "log", "stream",
+                "--style", "compact",
+                "--predicate", 'senderImagePath ENDSWITH "/First App"'
             ],
             check=True
         )
@@ -415,7 +448,7 @@ def test_run_app_simulator_install_failure(first_app_config, tmp_path):
             [
                 'xcrun', 'simctl', 'install',
                 '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-                tmp_path / 'iOS' / 'First App' / 'build' / 'Debug-iphonesimulator' / 'First App.app'
+                tmp_path / 'iOS' / 'Xcode' / 'First App' / 'build' / 'Debug-iphonesimulator' / 'First App.app'
             ],
             check=True
         ),
@@ -484,7 +517,7 @@ def test_run_app_simulator_launch_failure(first_app_config, tmp_path):
             [
                 'xcrun', 'simctl', 'install',
                 '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-                tmp_path / 'iOS' / 'First App' / 'build' / 'Debug-iphonesimulator' / 'First App.app'
+                tmp_path / 'iOS' / 'Xcode' / 'First App' / 'build' / 'Debug-iphonesimulator' / 'First App.app'
             ],
             check=True
         ),
@@ -494,6 +527,96 @@ def test_run_app_simulator_launch_failure(first_app_config, tmp_path):
                 'xcrun', 'simctl', 'launch',
                 '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
                 'com.example.first-app'
+            ],
+            check=True
+        )
+    ])
+
+
+def test_run_app_simulator_log_stream_failure(first_app_config, tmp_path):
+    "If the log stream fails to start, raise an error"
+    command = iOSXcodeRunCommand(base_path=tmp_path)
+
+    # A valid target device will be selected.
+    command.select_target_device = mock.MagicMock(
+        return_value=(
+            '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D', '13.2', 'iPhone 11'
+        )
+    )
+
+    # Simulator is shut down
+    command.get_device_state = mock.MagicMock(return_value=DeviceState.SHUTDOWN)
+
+    # Call to boot and open simulator, uninstall and install succeed, but launch fails.
+    command.subprocess = mock.MagicMock()
+    command.subprocess.run.side_effect = [
+        0,
+        0,
+        0,
+        0,
+        0,
+        subprocess.CalledProcessError(
+            cmd=['xcrun', 'simctl', 'spawn', '...'],
+            returncode=1
+        ),
+    ]
+
+    # Run the app
+    with pytest.raises(BriefcaseCommandError):
+        command.run_app(first_app_config)
+
+    # The correct sequence of commands was issued.
+    command.subprocess.run.assert_has_calls([
+        # Boot the device
+        mock.call(
+            ['xcrun', 'simctl', 'boot', '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D'],
+            check=True,
+        ),
+        # Open the simulator
+        mock.call(
+            [
+                'open',
+                '-a', 'Simulator',
+                '--args',
+                '-CurrentDeviceUDID', '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D'
+            ],
+            check=True
+        ),
+        # Uninstall the old app
+        mock.call(
+            [
+                'xcrun', 'simctl', 'uninstall',
+                '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
+                'com.example.first-app'
+            ],
+            check=True
+        ),
+        # Install the new app
+        mock.call(
+            [
+                'xcrun', 'simctl', 'install',
+                '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
+                tmp_path / 'iOS' / 'Xcode' / 'First App' / 'build' / 'Debug-iphonesimulator' / 'First App.app'
+            ],
+            check=True
+        ),
+        # Launch the new app
+        mock.call(
+            [
+                'xcrun', 'simctl', 'launch',
+                '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
+                'com.example.first-app'
+            ],
+            check=True
+        ),
+        # Start tailing the log
+        mock.call(
+            [
+                'xcrun', 'simctl', 'spawn',
+                '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
+                "log", "stream",
+                "--style", "compact",
+                "--predicate", 'senderImagePath ENDSWITH "/First App"'
             ],
             check=True
         )
