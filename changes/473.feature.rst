@@ -1,1 +1,1 @@
-Added support for upgrading and recompiling an application before packaging it.
+Apps can be updated as part of a call to package.
