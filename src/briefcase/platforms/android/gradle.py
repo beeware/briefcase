@@ -17,15 +17,15 @@ from briefcase.integrations.android_sdk import AndroidSDK
 def safe_formal_name(name):
     """Converts the name into a safe name on Android.
 
-    Certain characters (``/\:<>"\?\*\|``) can't be used as app names
-    on Android; `!` causes problems with Android build tooling.
+    Certain characters (``/\\:<>"?*|``) can't be used as app names
+    on Android; ``!`` causes problems with Android build tooling.
     Also ensure that trailing, leading, and consecutive whitespace
     caused by removing punctuation is collapsed.
 
     :param name: The candidate name
     :returns: The safe version of the name.
     """
-    return re.sub('\s+', ' ', re.sub(r'[!/\\:<>"\?\*\|]', "", name)).strip()
+    return re.sub(r'\s+', ' ', re.sub(r'[!/\\:<>"\?\*\|]', "", name)).strip()
 
 
 class GradleMixin:
