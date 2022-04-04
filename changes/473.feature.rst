@@ -1,0 +1,1 @@
+Apps can be updated as part of a call to package.

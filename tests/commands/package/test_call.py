@@ -69,6 +69,7 @@ def test_no_args_package_two_app(package_command, first_app, second_app):
                 "adhoc_sign": False,
                 "identity": None,
                 "sign_app": True,
+                # state of previous calls have been preserved.
                 "package_state": "first",
             },
         ),
@@ -206,6 +207,7 @@ def test_no_sign_args_package_two_app(package_command, first_app, second_app):
                 "adhoc_sign": False,
                 "identity": None,
                 "sign_app": False,
+                # state of previous calls have been preserved.
                 "package_state": "first",
             },
         ),
@@ -252,6 +254,7 @@ def test_adhoc_sign_args_package_two_app(package_command, first_app, second_app)
                 "adhoc_sign": True,
                 "identity": None,
                 "sign_app": True,
+                # state of previous calls have been preserved.
                 "package_state": "first",
             },
         ),
@@ -296,6 +299,7 @@ def test_identity_sign_args_package_two_app(package_command, first_app, second_a
                 "adhoc_sign": False,
                 "identity": "test",
                 "sign_app": True,
+                # state of previous calls have been preserved.
                 "package_state": "first",
             },
         ),
@@ -329,5 +333,154 @@ def test_package_alternate_format(package_command, first_app):
                 'identity': None,
                 'sign_app': True,
             }
+        ),
+    ]
+
+
+def test_update_package_one_app(package_command, first_app):
+    "If there is one app, and a -u argument, package updates the app"
+    # Add a single app
+    package_command.apps = {
+        "first": first_app,
+    }
+
+    # Configure no command line options
+    options = package_command.parse_options(["-u"])
+
+    # Run the run command
+    package_command(**options)
+
+    # The right sequence of things will be done
+    assert package_command.actions == [
+        # Tools are verified
+        ("verify", ),
+        # Update (and then build) the first app
+        (
+            "update",
+            "first",
+            {
+                "adhoc_sign": False,
+                "identity": None,
+                "sign_app": True,
+            }
+        ),
+        (
+            "build",
+            "first",
+            {
+                "adhoc_sign": False,
+                "identity": None,
+                "sign_app": True,
+                "update_state": "first",
+            }
+        ),
+        # Package the first app
+        (
+            "package",
+            "first",
+            {
+                "packaging_format": "pkg",
+                "adhoc_sign": False,
+                "identity": None,
+                "sign_app": True,
+                "update_state": "first",
+                "build_state": "first",
+            }
+        ),
+    ]
+
+
+def test_update_package_two_app(package_command, first_app, second_app):
+    "If there are multiple apps, update and publish all of them"
+    # Add two apps
+    package_command.apps = {
+        "first": first_app,
+        "second": second_app,
+    }
+
+    # Configure no command line options
+    options = package_command.parse_options(["--update"])
+
+    # Run the package command
+    package_command(**options)
+
+    # The right sequence of things will be done
+    assert package_command.actions == [
+        # Tools are verified
+        ("verify", ),
+        # Update (and then build) the first app
+        (
+            "update",
+            "first",
+            {
+                "adhoc_sign": False,
+                "identity": None,
+                "sign_app": True,
+            }
+        ),
+        (
+            "build",
+            "first",
+            {
+                "adhoc_sign": False,
+                "identity": None,
+                "sign_app": True,
+                "update_state": "first",
+            }
+        ),
+        # Package the first app
+        (
+            "package",
+            "first",
+            {
+                "packaging_format": "pkg",
+                "adhoc_sign": False,
+                "identity": None,
+                "sign_app": True,
+                "update_state": "first",
+                "build_state": "first",
+            }
+        ),
+        # Update (and then build) the second app
+        (
+            "update",
+            "second",
+            {
+                "adhoc_sign": False,
+                "identity": None,
+                "sign_app": True,
+                # state of previous calls have been preserved.
+                "update_state": "first",
+                "build_state": "first",
+                "package_state": "first",
+            }
+        ),
+        (
+            "build",
+            "second",
+            {
+                "adhoc_sign": False,
+                "identity": None,
+                "sign_app": True,
+                "update_state": "second",
+                # state of previous calls have been preserved.
+                "build_state": "first",
+                "package_state": "first",
+            }
+        ),
+        # package the second app
+        (
+            "package",
+            "second",
+            {
+                'packaging_format': 'pkg',
+                "adhoc_sign": False,
+                "identity": None,
+                "sign_app": True,
+                "update_state": "second",
+                "build_state": "second",
+                # state of previous calls have been preserved.
+                "package_state": "first",
+            },
         ),
     ]
