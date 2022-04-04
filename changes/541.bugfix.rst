@@ -1,3 +1,1 @@
-- Created a new exception class InvalidSupportPackageURL
-- MissingNetworkResourceError is caught in install_app_support_package and InvalidSupportPackageURL is raised
-- Test Case test_support_package_url_with_invalid_url added to check the new exception
+Error reporting when the user is on an unsupported platform or Python version has been improved.
