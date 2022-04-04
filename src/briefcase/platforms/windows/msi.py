@@ -1,3 +1,4 @@
+import os
 import struct
 import subprocess
 import sys
@@ -21,9 +22,9 @@ class WindowsMSIMixin(WindowsMixin):
     output_format = 'msi'
 
     def binary_path(self, app):
-        return self.platform_path / app.formal_name
+        return self.bundle_path(app)
 
-    def distribution_path(self, app):
+    def distribution_path(self, app, packaging_format):
         return self.platform_path / '{app.formal_name}-{app.version}.msi'.format(app=app)
 
     def verify_tools(self):
@@ -79,9 +80,19 @@ class WindowsMSICreateCommand(WindowsMSIMixin, CreateCommand):
                 guid=guid,
             ))
 
+        try:
+            if app.system_installer:
+                install_scope = "perMachine"
+            else:
+                install_scope = "perUser"
+        except AttributeError:
+            # system_installer not defined in config; default to perUser install.
+            install_scope = "perUser"
+
         return {
             'version_triple': version_triple,
             'guid': str(guid),
+            'install_scope': install_scope
         }
 
     def install_app_support_package(self, app: BaseConfig):
@@ -133,7 +144,7 @@ class WindowsMSIRunCommand(WindowsMSIMixin, RunCommand):
             print()
             self.subprocess.run(
                 [
-                    str(self.binary_path(app) / 'src' / 'python' / 'pythonw.exe'),
+                    os.fsdecode(self.binary_path(app) / 'src' / 'python' / 'pythonw.exe'),
                     "-m", app.module_name
                 ],
                 check=True,
@@ -162,7 +173,7 @@ class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
             print("Compiling application manifest...")
             self.subprocess.run(
                 [
-                    str(self.wix.heat_exe),
+                    self.wix.heat_exe,
                     "dir",
                     "src",
                     "-nologo",  # Don't display startup text
@@ -177,7 +188,7 @@ class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
                     "-out", "{app.app_name}-manifest.wxs".format(app=app),
                 ],
                 check=True,
-                cwd=str(self.bundle_path(app))
+                cwd=self.bundle_path(app)
             )
         except subprocess.CalledProcessError:
             raise BriefcaseCommandError(
@@ -189,7 +200,7 @@ class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
             print("Compiling application installer...")
             self.subprocess.run(
                 [
-                    str(self.wix.candle_exe),
+                    self.wix.candle_exe,
                     "-nologo",  # Don't display startup text
                     "-ext", "WixUtilExtension",
                     "-ext", "WixUIExtension",
@@ -198,7 +209,7 @@ class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
                     "{app.app_name}-manifest.wxs".format(app=app),
                 ],
                 check=True,
-                cwd=str(self.bundle_path(app))
+                cwd=self.bundle_path(app)
             )
         except subprocess.CalledProcessError:
             raise BriefcaseCommandError(
@@ -210,16 +221,16 @@ class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
             print("Linking application installer...")
             self.subprocess.run(
                 [
-                    str(self.wix.light_exe),
+                    self.wix.light_exe,
                     "-nologo",  # Don't display startup text
                     "-ext", "WixUtilExtension",
                     "-ext", "WixUIExtension",
-                    "-o", str(self.distribution_path(app)),
+                    "-o", self.distribution_path(app, packaging_format='msi'),
                     "{app.app_name}.wixobj".format(app=app),
                     "{app.app_name}-manifest.wixobj".format(app=app),
                 ],
                 check=True,
-                cwd=str(self.bundle_path(app))
+                cwd=self.bundle_path(app)
             )
         except subprocess.CalledProcessError:
             print()

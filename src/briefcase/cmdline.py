@@ -139,6 +139,11 @@ def parse_cmdline(args):
     else:
         output_format = options.output_format
 
+    # Normalise casing of output_format to be more forgiving.
+    output_format = {
+        n.lower(): n for n in output_formats
+    }.get(output_format.lower(), output_format)
+
     # We now know the command, platform, and format.
     # Get the command class that corresponds to that definition.
     try:

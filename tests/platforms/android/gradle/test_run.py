@@ -55,12 +55,17 @@ def test_run_existing_device(run_command, first_app_config):
             first_app_config=first_app_config
         ),
     )
+
+    run_command.mock_adb.clear_log.assert_called_once()
+
     run_command.mock_adb.start_app.assert_called_once_with(
         "{first_app_config.package_name}.{first_app_config.module_name}".format(
             first_app_config=first_app_config
         ),
         "org.beeware.android.MainActivity",
     )
+
+    run_command.mock_adb.logcat.assert_called_once()
 
 
 def test_run_created_device(run_command, first_app_config):

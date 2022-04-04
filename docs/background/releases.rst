@@ -4,6 +4,94 @@ Release History
 
 .. towncrier release notes start
 
+0.3.6 (2022-02-28)
+==================
+
+Features
+--------
+
+* On macOS, iOS, and Android, ``briefcase run`` now displays the application logs once the application has started. (#591)
+* Xcode detection code now allows for Xcode to be installed in locations other than ``/Applications/Xcode.app``. (#622)
+* Deprecated support for Python 3.6. (#653)
+
+
+Bugfixes
+--------
+
+* Existing app packages are now cleared before reinstalling dependencies. (#644)
+* Added binary patcher for linuxtools AppImage to increase compatibility. (#667)
+
+
+Improved Documentation
+----------------------
+
+* Documentation on creating macOS/iOS code signing identities has been added (#641)
+
+
+Misc
+----
+
+* #587, #588, #592, #598, #621, #643, #654, #670
+
+
+0.3.5 (2021-03-06)
+==================
+
+Features
+--------
+
+* macOS projects can now be generated as an Xcode project. (#523)
+
+Bugfixes
+--------
+
+* macOS apps are now built as an embedded native binary, rather than a shell
+  script invoking a Python script. This was necessary to provide better support
+  for macOS app notarization and sandboxing. (#523)
+* Fixed the registration of setuptools entry points caused by a change in case
+  sensitivity handling in Setuptools 53.1.0. (#574)
+
+Misc
+----
+
+* #562
+
+
+0.3.4 (2021-01-03)
+==================
+
+Features
+--------
+
+* Added signing options for all platforms. App signing is only implemented on
+  macOS, but ``--no-sign`` can now be used regardless of your target platform. (#486)
+* Windows MSI installers can be configured to be per-machine, system-wide installers. (#498)
+* Projects can specify a custom branch for the template used to generate the app. (#519)
+* Added the `--no-run` flag to the *dev* command. This allows developers to
+  install app dependencies without running the app. (#522)
+* The new project wizard will now warn users when they select a platform that
+  doesn't support mobile deployment. (#539)
+
+Bugfixes
+--------
+
+* Modified the volume mounting process to allow for SELinux. (#500)
+* Fixed missing signature for Python executable in macOS app bundle. This enables
+  the packaged dmg to be notarized by Apple. (#514)
+* Modified the Windows tests to allow them to pass on 32-bit machines. (#521)
+* Fixed a crash when running with verbose output. (#532)
+
+Improved Documentation
+----------------------
+
+* Clarified documentation around system_requires dependencies on Linux. (#459)
+
+Misc
+----
+
+* #465, #475, #496, #512, #518
+
+
 0.3.3 (2020-07-18)
 ==================
 

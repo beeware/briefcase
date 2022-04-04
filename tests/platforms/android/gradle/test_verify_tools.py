@@ -24,7 +24,7 @@ def build_command(tmp_path, first_app_config):
 
     # Override the `os` module so the app has an environment with JAVA_HOME
     command.os = mock.MagicMock(environ={
-        'JAVA_HOME': str(command.java_home_path)
+        'JAVA_HOME': os.fsdecode(command.java_home_path)
     })
     # Enable the command to use `os.access()` and `os.X_OK`.
     command.os.access = os.access

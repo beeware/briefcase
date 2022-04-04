@@ -1,3 +1,4 @@
+import os
 import re
 import subprocess
 from email.utils import parseaddr
@@ -6,13 +7,11 @@ from urllib.parse import urlparse
 
 from cookiecutter import exceptions as cookiecutter_exceptions
 
-from briefcase.config import PEP508_NAME_RE
+from briefcase.config import is_valid_app_name, is_valid_bundle_identifier
 from briefcase.exceptions import NetworkFailure
 
 from .base import BaseCommand, BriefcaseCommandError
 from .create import InvalidTemplateRepository
-
-VALID_BUNDLE_RE = re.compile(r'[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$')
 
 
 def titlecase(s):
@@ -54,7 +53,7 @@ class NewCommand(BaseCommand):
         "A placeholder; New command doesn't have a binary path"
         raise NotImplementedError()
 
-    def distribution_path(self, app):
+    def distribution_path(self, app, packaging_format):
         "A placeholder; New command doesn't have a distribution path"
         raise NotImplementedError()
 
@@ -102,16 +101,19 @@ class NewCommand(BaseCommand):
         :returns: True. If there are any validation problems, raises ValueError
             with a diagnostic message.
         """
-        if not PEP508_NAME_RE.match(candidate):
+        if not is_valid_app_name(candidate):
             raise ValueError(
-                "App name may only contain letters, numbers, hypens and "
-                "underscores, and may not start with a hyphen or underscore."
+                f"{candidate!r} is not a valid app name.\n\n"
+                "App names must not be reserved keywords such as 'and', 'for' and 'while'.\n"
+                "They must also be PEP508 compliant (i.e., they can only include letters,\n"
+                "numbers, '-' and '_'; must start with a letter; and cannot end with '-' or '_')."
             )
+
         if (self.base_path / candidate).exists():
             raise ValueError(
-                "A '{candidate}' directory already exists. Select a different "
+                f"A '{candidate!r}' directory already exists. Select a different "
                 "name, move to a different parent directory, or delete the "
-                "existing folder.".format(candidate=candidate)
+                "existing folder."
             )
 
         return True
@@ -134,12 +136,15 @@ class NewCommand(BaseCommand):
         :returns: True. If there are any validation problems, raises ValueError
             with a diagnostic message.
         """
-        if not VALID_BUNDLE_RE.match(candidate):
+        if not is_valid_bundle_identifier(candidate):
             raise ValueError(
-                "Bundle should be a reversed domain name. It must contain at "
-                "least 2 dot-separated sections, and each section may only "
-                "include letters, numbers, and hyphens."
+                f"{candidate!r} is not a valid bundle identifier.\n\n"
+                "The bundle should be a reversed domain name. It must contain at least 2\n"
+                "dot-separated sections; each section may only include letters, numbers,\n"
+                "and hyphens; and each section may not contain any reserved words (like\n"
+                "'switch', or 'while')."
             )
+
         return True
 
     def make_domain(self, bundle):
@@ -424,8 +429,9 @@ What GUI toolkit do you want to use for this project?""",
             variable="GUI framework",
             options=[
                 'Toga',
-                'PySide2',
-                'PursuedPyBear',
+                'PySide2 (does not support iOS/Android deployment)',
+                'PySide6 (does not support iOS/Android deployment)',
+                'PursuedPyBear (does not support iOS/Android deployment)',
                 'None',
             ],
         )
@@ -442,7 +448,7 @@ What GUI toolkit do you want to use for this project?""",
             "bundle": bundle,
             "url": url,
             "license": project_license,
-            "gui_framework": gui_framework,
+            "gui_framework": (gui_framework.split())[0],
         }
 
     def new_app(self, template: Optional[str] = None, **options):
@@ -484,7 +490,7 @@ What GUI toolkit do you want to use for this project?""",
             self.cookiecutter(
                 str(cached_template),
                 no_input=True,
-                output_dir=str(self.base_path),
+                output_dir=os.fsdecode(self.base_path),
                 checkout="v0.3",
                 extra_context=context
             )

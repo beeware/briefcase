@@ -1,4 +1,6 @@
+import os
 import subprocess
+import sys
 from unittest.mock import MagicMock
 
 import pytest
@@ -6,6 +8,7 @@ from requests import exceptions as requests_exceptions
 
 from briefcase.exceptions import BriefcaseCommandError, NetworkFailure
 from briefcase.integrations.android_sdk import AndroidSDK
+from tests.utils import FsPathMock
 
 
 @pytest.fixture
@@ -38,9 +41,13 @@ def test_create_emulator(mock_sdk, tmp_path):
         'new-emulator'
     ]
 
-    # Mock the result of the download of a skin
-    skin_tgz_path = MagicMock()
-    skin_tgz_path.__str__.return_value = '/path/to/skin.tgz'
+    # Consider to remove if block when we drop py3.7 support, only keep statements from else.
+    # MagicMock below py3.8 doesn't has __fspath__ attribute.
+    if sys.version_info < (3, 8):
+        skin_tgz_path = FsPathMock("/path/to/skin.tgz")
+    else:
+        skin_tgz_path = MagicMock()
+        skin_tgz_path.__fspath__.return_value = "/path/to/skin.tgz"
     mock_sdk.command.download_url.return_value = skin_tgz_path
 
     # Mock the initial output of an AVD config file.
@@ -58,7 +65,7 @@ def test_create_emulator(mock_sdk, tmp_path):
     # avdmanager was invoked
     mock_sdk.command.subprocess.check_output.assert_called_once_with(
         [
-            str(mock_sdk.avdmanager_path),
+            os.fsdecode(mock_sdk.avdmanager_path),
             "--verbose",
             "create", "avd",
             "--name", "new-emulator",
@@ -79,10 +86,11 @@ def test_create_emulator(mock_sdk, tmp_path):
         download_path=mock_sdk.root_path,
     )
 
-    # Skin is unpacked
+    # Skin is unpacked.
+    # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
     mock_sdk.command.shutil.unpack_archive.assert_called_once_with(
-        str(skin_tgz_path),
-        extract_dir=str(mock_sdk.root_path / "skins" / "pixel_3a")
+        os.fsdecode(skin_tgz_path),
+        extract_dir=os.fsdecode(mock_sdk.root_path / "skins" / "pixel_3a")
     )
 
     # Original file was deleted.
@@ -121,7 +129,7 @@ def test_create_preexisting_skins(mock_sdk, tmp_path):
     # avdmanager was invoked
     mock_sdk.command.subprocess.check_output.assert_called_once_with(
         [
-            str(mock_sdk.avdmanager_path),
+            os.fsdecode(mock_sdk.avdmanager_path),
             "--verbose",
             "create", "avd",
             "--name", "new-emulator",
@@ -161,7 +169,7 @@ def test_create_failure(mock_sdk):
     # but avdmanager was invoked
     mock_sdk.command.subprocess.check_output.assert_called_once_with(
         [
-            str(mock_sdk.avdmanager_path),
+            os.fsdecode(mock_sdk.avdmanager_path),
             "--verbose",
             "create", "avd",
             "--name", "new-emulator",
@@ -190,7 +198,7 @@ def test_download_failure(mock_sdk, tmp_path):
     # avdmanager was invoked
     mock_sdk.command.subprocess.check_output.assert_called_once_with(
         [
-            str(mock_sdk.avdmanager_path),
+            os.fsdecode(mock_sdk.avdmanager_path),
             "--verbose",
             "create", "avd",
             "--name", "new-emulator",
@@ -221,8 +229,13 @@ def test_unpack_failure(mock_sdk, tmp_path):
     mock_sdk.command.input.return_value = 'new-emulator'
 
     # Mock the result of the download of a skin
-    skin_tgz_path = MagicMock()
-    skin_tgz_path.__str__.return_value = '/path/to/skin.tgz'
+    # Consider to remove if block when we drop py3.7 support, only keep statements from else.
+    # MagicMock below py3.8 doesn't has __fspath__ attribute.
+    if sys.version_info < (3, 8):
+        skin_tgz_path = FsPathMock("/path/to/skin.tgz")
+    else:
+        skin_tgz_path = MagicMock()
+        skin_tgz_path.__fspath__.return_value = "/path/to/skin.tgz"
     mock_sdk.command.download_url.return_value = skin_tgz_path
 
     # Mock a failure unpacking the skin
@@ -235,7 +248,7 @@ def test_unpack_failure(mock_sdk, tmp_path):
     # avdmanager was invoked
     mock_sdk.command.subprocess.check_output.assert_called_once_with(
         [
-            str(mock_sdk.avdmanager_path),
+            os.fsdecode(mock_sdk.avdmanager_path),
             "--verbose",
             "create", "avd",
             "--name", "new-emulator",
@@ -256,10 +269,11 @@ def test_unpack_failure(mock_sdk, tmp_path):
         download_path=mock_sdk.root_path,
     )
 
-    # An attempt to unpack the skin was made
+    # An attempt to unpack the skin was made.
+    # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
     mock_sdk.command.shutil.unpack_archive.assert_called_once_with(
-        str(skin_tgz_path),
-        extract_dir=str(mock_sdk.root_path / "skins" / "pixel_3a")
+        os.fsdecode(skin_tgz_path),
+        extract_dir=os.fsdecode(mock_sdk.root_path / "skins" / "pixel_3a")
     )
 
     # Original file wasn't deleted.
@@ -279,6 +293,12 @@ def test_default_name(mock_sdk, tmp_path):
     avd_config_path.parent.mkdir(parents=True)
     with avd_config_path.open('w') as f:
         f.write('hw.device.name=pixel\n')
+
+    # Consider to remove if block when we drop py3.7 support.
+    # MagicMock below py3.8 doesn't has __fspath__ attribute.
+    if sys.version_info < (3, 8):
+        skin_tgz_path = FsPathMock("")
+        mock_sdk.command.download_url.return_value = skin_tgz_path
 
     # Create the emulator
     avd = mock_sdk.create_emulator()
@@ -306,6 +326,12 @@ def test_default_name_with_collisions(mock_sdk, tmp_path):
     avd_config_path.parent.mkdir(parents=True)
     with avd_config_path.open('w') as f:
         f.write('hw.device.name=pixel\n')
+
+    # Consider to remove if block when we drop py3.7 support.
+    # MagicMock below py3.8 doesn't has __fspath__ attribute.
+    if sys.version_info < (3, 8):
+        skin_tgz_path = FsPathMock("")
+        mock_sdk.command.download_url.return_value = skin_tgz_path
 
     # Create the emulator
     avd = mock_sdk.create_emulator()

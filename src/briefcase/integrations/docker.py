@@ -1,3 +1,4 @@
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -228,7 +229,7 @@ class Docker:
                     ),
                     "--build-arg", "HOST_UID={uid}".format(uid=self.command.os.getuid()),
                     "--build-arg", "HOST_GID={gid}".format(gid=self.command.os.getgid()),
-                    Path(str(self.command.base_path), *self.app.sources[0].split('/')[:-1])
+                    Path(self.command.base_path, *self.app.sources[0].split('/')[:-1])
                 ],
                 check=True,
             )
@@ -276,14 +277,14 @@ class Docker:
                         command=self.command
                     )
                 )
-            elif str(self.command.platform_path) in arg:
+            elif os.fsdecode(self.command.platform_path) in arg:
                 docker_args.append(
-                    arg.replace(str(self.command.platform_path), '/app')
+                    arg.replace(os.fsdecode(self.command.platform_path), '/app')
                 )
-            elif str(self.command.dot_briefcase_path) in arg:
+            elif os.fsdecode(self.command.dot_briefcase_path) in arg:
                 docker_args.append(
                     arg.replace(
-                        str(self.command.dot_briefcase_path), '/home/brutus/.briefcase'
+                        os.fsdecode(self.command.dot_briefcase_path), '/home/brutus/.briefcase'
                     )
                 )
             else:

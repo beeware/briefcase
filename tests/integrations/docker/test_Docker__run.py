@@ -1,3 +1,4 @@
+import os
 import sys
 
 import pytest
@@ -67,9 +68,9 @@ def test_simple_call_with_path_arg(mock_docker, tmp_path, capsys):
             ),
             'briefcase/com.example.myapp:py3.X',
             'hello',
-            str(tmp_path / 'location')
+            os.fsdecode(tmp_path / 'location')
         ],
-        cwd=str(tmp_path / 'cwd')
+        cwd=os.fsdecode(tmp_path / 'cwd')
     )
     assert capsys.readouterr().out == ""
 

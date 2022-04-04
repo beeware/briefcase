@@ -1,1 +1,0 @@
-Fix problem with docker tag for project with uppercase in name.

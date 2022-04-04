@@ -1,3 +1,4 @@
+import os
 from unittest import mock
 
 import pytest
@@ -38,7 +39,7 @@ def test_new_app(new_command, tmp_path):
     new_command.cookiecutter.assert_called_with(
         '~/.cookiecutters/briefcase-template',
         no_input=True,
-        output_dir=str(tmp_path),
+        output_dir=os.fsdecode(tmp_path),
         checkout="v0.3",
         extra_context=app_context
     )
@@ -71,7 +72,7 @@ def test_new_app_with_template(new_command, tmp_path):
     new_command.cookiecutter.assert_called_with(
         'https://example.com/other.git',
         no_input=True,
-        output_dir=str(tmp_path),
+        output_dir=os.fsdecode(tmp_path),
         checkout="v0.3",
         extra_context=app_context
     )

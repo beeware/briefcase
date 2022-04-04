@@ -1,3 +1,4 @@
+import os
 import subprocess
 from contextlib import contextmanager
 
@@ -30,7 +31,7 @@ class LinuxAppImageMixin(LinuxMixin):
             binary_name=binary_name,
         )
 
-    def distribution_path(self, app):
+    def distribution_path(self, app, packaging_format):
         return self.binary_path(app)
 
     def add_options(self, parser):
@@ -190,10 +191,10 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
             with self.dockerize(app) as docker:
                 docker.run(
                     [
-                        str(self.linuxdeploy.appimage_path),
+                        self.linuxdeploy.appimage_path,
                         "--appimage-extract-and-run",
                         "--appdir={appdir_path}".format(appdir_path=self.appdir_path(app)),
-                        "-d", str(
+                        "-d", os.fsdecode(
                             self.appdir_path(app) / "{app.bundle}.{app.app_name}.desktop".format(
                                 app=app,
                             )
@@ -202,11 +203,11 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
                     ] + deploy_deps_args,
                     env=env,
                     check=True,
-                    cwd=str(self.platform_path)
+                    cwd=self.platform_path
                 )
 
             # Make the binary executable.
-            self.os.chmod(str(self.binary_path(app)), 0o755)
+            self.os.chmod(self.binary_path(app), 0o755)
         except subprocess.CalledProcessError:
             print()
             raise BriefcaseCommandError(
@@ -242,7 +243,7 @@ class LinuxAppImageRunCommand(LinuxAppImageMixin, RunCommand):
             print()
             self.subprocess.run(
                 [
-                    str(self.binary_path(app)),
+                    os.fsdecode(self.binary_path(app)),
                 ],
                 check=True,
             )

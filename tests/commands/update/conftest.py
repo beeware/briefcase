@@ -24,8 +24,11 @@ class DummyUpdateCommand(UpdateCommand):
     def binary_path(self, app):
         return self.platform_path / '{app.app_name}.dummy.bin'.format(app=app)
 
-    def distribution_path(self, app):
-        return self.platform_path / '{app.app_name}.dummy.dist'.format(app=app)
+    def distribution_path(self, app, packaging_format):
+        return self.platform_path / '{app.app_name}.dummy.{packaging_format}'.format(
+            app=app,
+            packaging_format=packaging_format,
+        )
 
     def verify_tools(self):
         super().verify_tools()

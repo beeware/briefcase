@@ -54,7 +54,7 @@ def test_install_app_dependencies(first_app_config, tmp_path):
         [
             sys.executable, '-m', 'pip',
             'install', '--upgrade', '--no-user',
-            '--target={tmp_path}/linux/First App/path/to/app_packages'.format(
+            '--target={tmp_path}/linux/appimage/First App/path/to/app_packages'.format(
                 tmp_path=tmp_path
             ),
             'foo==1.2.3',
@@ -99,7 +99,7 @@ def test_install_app_dependencies_no_docker(first_app_config, tmp_path):
         [
             sys.executable, '-m', 'pip',
             'install', '--upgrade', '--no-user',
-            '--target={tmp_path}/linux/First App/path/to/app_packages'.format(
+            '--target={tmp_path}/linux/appimage/First App/path/to/app_packages'.format(
                 tmp_path=tmp_path
             ),
             'foo==1.2.3',

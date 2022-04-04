@@ -1,3 +1,4 @@
+import os
 import subprocess
 from pathlib import Path
 from unittest import mock
@@ -13,7 +14,7 @@ def simulator(tmp_path):
     "Create a dummy location for the simulator"
     simulator_location = tmp_path / 'CoreSimulator.framework'
     simulator_location.mkdir(parents=True, exist_ok=True)
-    return str(simulator_location)
+    return os.fsdecode(simulator_location)
 
 
 def simctl_result(name):
@@ -31,7 +32,7 @@ def test_simulator_is_missing(tmp_path):
     simulators = get_simulators(
         command,
         'iOS',
-        simulator_location=str(tmp_path / 'CoreSimulator.framework'),
+        simulator_location=tmp_path / 'CoreSimulator.framework',
     )
 
     # The prompt was displayed

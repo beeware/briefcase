@@ -1,7 +1,7 @@
 from unittest import mock
 
 import pytest
-import toml
+import tomli_w
 
 from briefcase.commands import CreateCommand
 from briefcase.config import AppConfig
@@ -37,8 +37,11 @@ class DummyCreateCommand(CreateCommand):
     def binary_path(self, app):
         return self.platform_path / '{app.app_name}.binary'.format(app=app)
 
-    def distribution_path(self, app):
-        return self.platform_path / '{app.app_name}.dist'.format(app=app)
+    def distribution_path(self, app, packaging_format):
+        return self.platform_path / '{app.app_name}.dummy.{packaging_format}'.format(
+            app=app,
+            packaging_format=packaging_format,
+        )
 
     # Hard code the python version to make testing easier.
     @property
@@ -143,7 +146,7 @@ def bundle_path(myapp, tmp_path):
     (bundle_path / 'path' / 'to' / 'app').mkdir(parents=True, exist_ok=True)
     (bundle_path / 'path' / 'to' / 'app_packages').mkdir(parents=True, exist_ok=True)
     (bundle_path / 'path' / 'to' / 'support').mkdir(parents=True, exist_ok=True)
-    with (bundle_path / 'briefcase.toml').open('w') as f:
+    with (bundle_path / 'briefcase.toml').open('wb') as f:
         index = {
             'paths': {
                 'app_path': 'path/to/app',
@@ -151,7 +154,7 @@ def bundle_path(myapp, tmp_path):
                 'support_path': 'path/to/support',
             }
         }
-        toml.dump(index, f)
+        tomli_w.dump(index, f)
 
     return bundle_path
 

@@ -133,6 +133,53 @@ def test_invalid_app_name(name):
         )
 
 
+@pytest.mark.parametrize(
+    'bundle',
+    [
+        'com.example',
+        'com.example.more',
+        'com.example42.more',
+        'com.example-42.more',
+    ]
+)
+def test_valid_bundle(bundle):
+    try:
+        AppConfig(
+            app_name='myapp',
+            version="1.2.3",
+            bundle=bundle,
+            description="A simple app",
+            sources=['src/myapp']
+        )
+    except BriefcaseConfigError:
+        pytest.fail(f'{bundle} should be valid')
+
+
+@pytest.mark.parametrize(
+    'bundle',
+    [
+        'not a bundle!',  # Free text.
+        'home',  # Only one section.
+        'com.hello_world',  # underscore
+        'com.hello,world',  # comma
+        'com.hello world!',  # exclamation point
+        'com.pass',  # Python reserved word
+        'com.pass.example',  # Python reserved word
+        'com.switch',  # Java reserved word
+        'com.switch.example',  # Java reserved word
+    ]
+)
+def test_invalid_bundle_identifier(bundle):
+    with pytest.raises(BriefcaseConfigError, match=r"is not a valid bundle identifier\."):
+        AppConfig(
+            app_name="myapp",
+            version="1.2.3",
+            bundle=bundle,
+            description="A simple app",
+            sources=['src/invalid']
+        )
+
+
 def test_valid_app_version():
     try:
         AppConfig(
@@ -147,7 +194,10 @@ def test_valid_app_version():
 
 
 def test_invalid_app_version():
-    with pytest.raises(BriefcaseConfigError, match=r"Version number for myapp.*is not valid\."):
+    with pytest.raises(
+        BriefcaseConfigError,
+        match=r"Version number for 'myapp' \(foobar\) is not valid\."
+    ):
         AppConfig(
             app_name="myapp",
             version="foobar",

@@ -1,4 +1,7 @@
+import os
 import shutil
+import sys
+
 from unittest.mock import MagicMock
 
 import pytest
@@ -11,6 +14,7 @@ from briefcase.exceptions import (
     NonManagedToolError
 )
 from briefcase.integrations.java import JDK
+from tests.utils import FsPathMock
 
 
 @pytest.fixture
@@ -56,12 +60,17 @@ def test_existing_install(test_command, tmp_path):
 
     # We actually need to delete the original java install
     def rmtree(path):
-        shutil.rmtree(str(path))
+        shutil.rmtree(path)
     test_command.shutil.rmtree.side_effect = rmtree
 
-    # Mock the cached download path
-    archive = MagicMock()
-    archive.__str__.return_value = '/path/to/download.zip'
+    # Mock the cached download path.
+    # Consider to remove if block when we drop py3.7 support, only keep statements from else.
+    # MagicMock below py3.8 doesn't has __fspath__ attribute.
+    if sys.version_info < (3, 8):
+        archive = FsPathMock("/path/to/download.zip")
+    else:
+        archive = MagicMock()
+        archive.__fspath__.return_value = "/path/to/download.zip"
     test_command.download_url.return_value = archive
 
     # Create a directory to make it look like Java was downloaded and unpacked.
@@ -83,10 +92,11 @@ def test_existing_install(test_command, tmp_path):
         download_path=tmp_path / 'tools',
     )
 
-    # The archive was unpacked
+    # The archive was unpacked.
+    # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
     test_command.shutil.unpack_archive.assert_called_with(
-        '/path/to/download.zip',
-        extract_dir=str(tmp_path / "tools")
+        "/path/to/download.zip",
+        extract_dir=os.fsdecode(tmp_path / "tools")
     )
     # The original archive was deleted
     archive.unlink.assert_called_once_with()
@@ -103,12 +113,17 @@ def test_macOS_existing_install(test_command, tmp_path):
 
     # We actually need to delete the original java install
     def rmtree(path):
-        shutil.rmtree(str(path))
+        shutil.rmtree(path)
     test_command.shutil.rmtree.side_effect = rmtree
 
-    # Mock the cached download path
-    archive = MagicMock()
-    archive.__str__.return_value = '/path/to/download.zip'
+    # Mock the cached download path.
+    # Consider to remove if block when we drop py3.7 support, only keep statements from else.
+    # MagicMock below py3.8 doesn't has __fspath__ attribute.
+    if sys.version_info < (3, 8):
+        archive = FsPathMock("/path/to/download.zip")
+    else:
+        archive = MagicMock()
+        archive.__fspath__.return_value = "/path/to/download.zip"
     test_command.download_url.return_value = archive
 
     # Create a directory to make it look like Java was downloaded and unpacked.
@@ -130,10 +145,11 @@ def test_macOS_existing_install(test_command, tmp_path):
         download_path=tmp_path / 'tools',
     )
 
-    # The archive was unpacked
+    # The archive was unpacked.
+    # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
     test_command.shutil.unpack_archive.assert_called_with(
-        '/path/to/download.zip',
-        extract_dir=str(tmp_path / "tools")
+        "/path/to/download.zip",
+        extract_dir=os.fsdecode(tmp_path / "tools")
     )
     # The original archive was deleted
     archive.unlink.assert_called_once_with()
@@ -147,7 +163,7 @@ def test_download_fail(test_command, tmp_path):
 
     # We actually need to delete the original java install
     def rmtree(path):
-        shutil.rmtree(str(path))
+        shutil.rmtree(path)
     test_command.shutil.rmtree.side_effect = rmtree
 
     # Mock a failure on download
@@ -182,12 +198,17 @@ def test_unpack_fail(test_command, tmp_path):
 
     # We actually need to delete the original java install
     def rmtree(path):
-        shutil.rmtree(str(path))
+        shutil.rmtree(path)
     test_command.shutil.rmtree.side_effect = rmtree
 
     # Mock the cached download path
-    archive = MagicMock()
-    archive.__str__.return_value = '/path/to/download.zip'
+    # Consider to remove if block when we drop py3.7 support, only keep statements from else.
+    # MagicMock below py3.8 doesn't has __fspath__ attribute.
+    if sys.version_info < (3, 8):
+        archive = FsPathMock("/path/to/download.zip")
+    else:
+        archive = MagicMock()
+        archive.__fspath__.return_value = "/path/to/download.zip"
     test_command.download_url.return_value = archive
 
     # Mock an unpack failure due to an invalid archive
@@ -210,10 +231,11 @@ def test_unpack_fail(test_command, tmp_path):
         download_path=tmp_path / 'tools',
     )
 
-    # The archive was unpacked
+    # The archive was unpacked.
+    # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
     test_command.shutil.unpack_archive.assert_called_with(
-        '/path/to/download.zip',
-        extract_dir=str(tmp_path / "tools")
+        "/path/to/download.zip",
+        extract_dir=os.fsdecode(tmp_path / "tools")
     )
     # The original archive was not deleted
     assert archive.unlink.call_count == 0

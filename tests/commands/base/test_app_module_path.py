@@ -7,28 +7,28 @@ def test_single_source(base_command, my_app):
     "If an app provides a single source location and it matches, it is selected as the dist-info location"
     my_app.sources = ['src/my_app']
 
-    assert str(base_command.app_module_path(my_app)) == str(base_command.base_path / 'src' / 'my_app')
+    assert base_command.app_module_path(my_app) == base_command.base_path / 'src' / 'my_app'
 
 
 def test_no_prefix(base_command, my_app):
     "If an app provides a source location without a prefix and it matches, it is selected as the dist-info location"
     my_app.sources = ['my_app']
 
-    assert str(base_command.app_module_path(my_app)) == str(base_command.base_path / 'my_app')
+    assert base_command.app_module_path(my_app) == base_command.base_path / 'my_app'
 
 
 def test_long_prefix(base_command, my_app):
     "If an app provides a source location with a long prefix and it matches, it is selected as the dist-info location"
     my_app.sources = ['path/to/src/my_app']
 
-    assert str(base_command.app_module_path(my_app)) == str(base_command.base_path / 'path' / 'to' / 'src' / 'my_app')
+    assert base_command.app_module_path(my_app) == base_command.base_path / 'path' / 'to' / 'src' / 'my_app'
 
 
 def test_matching_source(base_command, my_app):
     "If an app provides a single matching source location, it is selected as the dist-info location"
     my_app.sources = ['src/other', 'src/my_app', 'src/extra']
 
-    assert str(base_command.app_module_path(my_app)) == str(base_command.base_path / 'src' / 'my_app')
+    assert base_command.app_module_path(my_app) == base_command.base_path / 'src' / 'my_app'
 
 
 def test_multiple_match(base_command, my_app):

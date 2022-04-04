@@ -1,1 +1,0 @@
-Modified a Windows test to allow it to pass on 32-bit machines.

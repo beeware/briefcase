@@ -1,3 +1,4 @@
+import os
 import shutil
 import subprocess
 import sys
@@ -13,7 +14,12 @@ import briefcase
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError, NetworkFailure, MissingNetworkResourceError
 
-from .base import BaseCommand, TemplateUnsupportedVersion, full_options
+from .base import (
+    BaseCommand,
+    TemplateUnsupportedVersion,
+    UnsupportedPlatform,
+    full_options
+)
 
 
 class InvalidTemplateRepository(BriefcaseCommandError):
@@ -263,16 +269,19 @@ class CreateCommand(BaseCommand):
         # use a default template.
         if app.template is None:
             app.template = self.app_template_url
+        if app.template_branch is None:
+            app.template_branch = self.python_version_tag
 
-        print("Using app template: {app_template}".format(
+        print("Using app template: {app_template}, branch {template_branch}".format(
             app_template=app.template,
+            template_branch=app.template_branch,
         ))
 
         # Make sure we have an updated cookiecutter template,
         # checked out to the right branch
         cached_template = self.update_cookiecutter_cache(
             template=app.template,
-            branch=self.python_version_tag
+            branch=app.template_branch
         )
 
         # Construct a template context from the app configuration.
@@ -299,8 +308,8 @@ class CreateCommand(BaseCommand):
             self.cookiecutter(
                 str(cached_template),
                 no_input=True,
-                output_dir=str(output_path),
-                checkout=self.python_version_tag,
+                output_dir=os.fsdecode(output_path),
+                checkout=app.template_branch,
                 extra_context=extra_context
             )
         except subprocess.CalledProcessError:
@@ -313,11 +322,11 @@ class CreateCommand(BaseCommand):
             raise InvalidTemplateRepository(app.template)
         except cookiecutter_exceptions.RepositoryCloneFailed:
             # Branch does not exist for python version
-            raise TemplateUnsupportedVersion(self.python_version_tag)
+            raise TemplateUnsupportedVersion(app.template_branch)
 
     def install_app_support_package(self, app: BaseConfig):
         """
-        Install the application support packge.
+        Install the application support package.
 
         :param app: The config object for the app
         """
@@ -374,9 +383,10 @@ class CreateCommand(BaseCommand):
             print("Unpacking support package...")
             support_path = self.support_path(app)
             support_path.mkdir(parents=True, exist_ok=True)
+            # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
             self.shutil.unpack_archive(
-                str(support_filename),
-                extract_dir=str(support_path)
+                os.fsdecode(support_filename),
+                extract_dir=os.fsdecode(support_path)
             )
         except (shutil.ReadError, EOFError):
             print()
@@ -388,6 +398,15 @@ class CreateCommand(BaseCommand):
 
         :param app: The config object for the app
         """
+
+        target = self.app_packages_path(app)
+
+        # Clear existing dependency directory
+        if target.is_dir():
+            self.shutil.rmtree(target)
+            self.os.mkdir(target)
+
+        # Install  dependencies
         if app.requires:
             try:
                 self.subprocess.run(
@@ -396,7 +415,7 @@ class CreateCommand(BaseCommand):
                         "pip", "install",
                         "--upgrade",
                         "--no-user",
-                        "--target={}".format(self.app_packages_path(app)),
+                        "--target={}".format(target),
                     ] + app.requires,
                     check=True,
                 )
@@ -420,7 +439,7 @@ class CreateCommand(BaseCommand):
                 # Remove existing versions of the code
                 if target.exists():
                     if target.is_dir():
-                        self.shutil.rmtree(str(target))
+                        self.shutil.rmtree(target)
                     else:
                         target.unlink()
 
@@ -428,9 +447,9 @@ class CreateCommand(BaseCommand):
                 if not original.exists():
                     raise MissingAppSources(src)
                 elif original.is_dir():
-                    self.shutil.copytree(str(original), str(target))
+                    self.shutil.copytree(original, target)
                 else:
-                    self.shutil.copy(str(original), str(target))
+                    self.shutil.copy(original, target)
         else:
             print("No sources defined for {app.app_name}.".format(app=app))
 
@@ -547,7 +566,7 @@ class CreateCommand(BaseCommand):
                 # Make sure the target directory exists
                 target.parent.mkdir(parents=True, exist_ok=True)
                 # Copy the source image to the target location
-                self.shutil.copy(str(full_source), str(target))
+                self.shutil.copy(full_source, target)
             else:
                 print(
                     "Unable to find {source_filename} for {full_role}; using default".format(
@@ -623,6 +642,9 @@ class CreateCommand(BaseCommand):
 
         :param app: The config object for the app
         """
+        if not app.supported:
+            raise UnsupportedPlatform(self.platform)
+
         bundle_path = self.bundle_path(app)
         if bundle_path.exists():
             print()
@@ -639,7 +661,7 @@ class CreateCommand(BaseCommand):
             print("[{app.app_name}] Removing old application bundle...".format(
                 app=app
             ))
-            self.shutil.rmtree(str(bundle_path))
+            self.shutil.rmtree(bundle_path)
 
         print()
         print('[{app.app_name}] Generating application template...'.format(

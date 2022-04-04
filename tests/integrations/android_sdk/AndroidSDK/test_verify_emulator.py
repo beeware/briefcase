@@ -1,3 +1,4 @@
+import os
 import subprocess
 
 import pytest
@@ -23,7 +24,7 @@ def test_installs_android_emulator(mock_sdk):
 
     mock_sdk.command.subprocess.run.assert_called_once_with(
         [
-            str(mock_sdk.sdkmanager_path),
+            os.fsdecode(mock_sdk.sdkmanager_path),
             "platforms;android-28",
             "system-images;android-28;default;x86",
             "emulator",
