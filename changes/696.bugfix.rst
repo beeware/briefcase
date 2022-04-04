@@ -1,0 +1,1 @@
+Android projects that have punctuation in their formal names can now build without error.
