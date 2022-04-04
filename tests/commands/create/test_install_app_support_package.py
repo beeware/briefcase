@@ -114,9 +114,11 @@ def test_support_package_url_with_unsupported_platform(create_command, myapp):
     # Set the host architecture to something unsupported
     create_command.host_arch = 'unknown'
 
-    # Modify download_url to raise an exception
+    # Modify download_url to raise an exception due to missing support package
     create_command.download_url = mock.MagicMock(
-        side_effect=MissingSupportPackage(python_version_tag="3.X", host_arch="unknown")
+        side_effect=MissingNetworkResourceError(
+            'https://briefcase-support.org/python?platform=tester&version=3.X&arch=unknown'
+        )
     )
 
     # The unknown platform should cause a missing support package error
