@@ -1,7 +1,6 @@
 import os
 import zipfile
 from unittest import mock
-import py
 
 import pytest
 from requests import exceptions as requests_exceptions
