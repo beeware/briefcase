@@ -8,6 +8,13 @@ import pytest
         ('Hello World!', 'helloworld'),
         ('Hello! World', 'helloworld'),
         ('Hello-World', 'helloworld'),
+
+        # Internationalized names that can be unicode-simplified
+        ('Hallo Vögel', 'hallovogel'),
+        ('Bonjour Garçon', 'bonjourgarcon'),
+
+        # Internationalized names that cannot be unicode-simplified
+        ('你好 世界', 'myapp'),
     ]
 )
 def test_make_app_name(new_command, formal_name, candidate):
