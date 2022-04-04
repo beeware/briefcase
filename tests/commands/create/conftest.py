@@ -20,6 +20,10 @@ class DummyCreateCommand(CreateCommand):
     def __init__(self, *args, support_file=None, git=None, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # Override the host properties
+        self.host_arch = 'gothic'
+        self.host_os = 'c64'
+
         # If a test sets this property, the tool verification step will
         # fail.
         self._missing_tool = None
@@ -30,6 +34,17 @@ class DummyCreateCommand(CreateCommand):
         self.subprocess = mock.MagicMock()
         self.support_file = support_file
         self.input = DummyConsole()
+
+    @property
+    def support_package_url_query(self):
+        """
+        The query arguments to use in a support package query request.
+        """
+        return [
+            ('platform', self.platform),
+            ('version', self.python_version_tag),
+            ('arch', self.host_arch),
+        ]
 
     def bundle_path(self, app):
         return self.platform_path / '{app.app_name}.bundle'.format(app=app)

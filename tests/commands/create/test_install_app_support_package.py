@@ -5,8 +5,8 @@ from unittest import mock
 import pytest
 from requests import exceptions as requests_exceptions
 
-from briefcase.commands.create import InvalidSupportPackage
-from briefcase.exceptions import NetworkFailure
+from briefcase.commands.create import InvalidSupportPackage, MissingSupportPackage
+from briefcase.exceptions import MissingNetworkResourceError, NetworkFailure
 
 
 def test_install_app_support_package(create_command, myapp, tmp_path, support_path):
@@ -25,7 +25,7 @@ def test_install_app_support_package(create_command, myapp, tmp_path, support_pa
     # Confirm the right URL was used
     create_command.download_url.assert_called_with(
         download_path=create_command.dot_briefcase_path / 'support',
-        url='https://briefcase-support.org/python?platform=tester&version=3.X',
+        url='https://briefcase-support.org/python?platform=tester&version=3.X&arch=gothic',
     )
 
     # Confirm that the full path to the support file
@@ -52,7 +52,7 @@ def test_install_pinned_app_support_package(create_command, myapp, tmp_path, sup
     # Confirm the right URL was used
     create_command.download_url.assert_called_with(
         download_path=create_command.dot_briefcase_path / 'support',
-        url='https://briefcase-support.org/python?platform=tester&version=3.X&revision=42',
+        url='https://briefcase-support.org/python?platform=tester&version=3.X&arch=gothic&revision=42',
     )
 
     # Confirm that the full path to the support file
@@ -84,6 +84,52 @@ def test_install_custom_app_support_package_file(create_command, myapp, tmp_path
     # Confirm that the full path to the support file
     # has been unpacked.
     assert (support_path / 'internal' / 'file.txt').exists()
+
+
+def test_support_package_url_with_invalid_custom_support_packge_url(create_command, myapp):
+    "Invalid URL for a custom support package raises MissingNetworkResourceError"
+
+    # Provide an custom support URL
+    url = 'https://example.com/custom/support.zip'
+    myapp.support_package = url
+
+    # Modify download_url to raise an exception
+    create_command.download_url = mock.MagicMock(
+        side_effect=MissingNetworkResourceError(url)
+    )
+
+    # The bad URL should raise a MissingNetworkResourceError
+    with pytest.raises(MissingNetworkResourceError):
+        create_command.install_app_support_package(myapp)
+
+    # However, there will have a been a download attempt
+    create_command.download_url.assert_called_with(
+        download_path=create_command.dot_briefcase_path / 'support',
+        url=url,
+    )
+
+
+def test_support_package_url_with_unsupported_platform(create_command, myapp):
+    "An unsupported platform raises MissingSupportPackage"
+    # Set the host architecture to something unsupported
+    create_command.host_arch = 'unknown'
+
+    # Modify download_url to raise an exception due to missing support package
+    create_command.download_url = mock.MagicMock(
+        side_effect=MissingNetworkResourceError(
+            'https://briefcase-support.org/python?platform=tester&version=3.X&arch=unknown'
+        )
+    )
+
+    # The unknown platform should cause a missing support package error
+    with pytest.raises(MissingSupportPackage):
+        create_command.install_app_support_package(myapp)
+
+    # However, there will have a been a download attempt
+    create_command.download_url.assert_called_with(
+        download_path=create_command.dot_briefcase_path / 'support',
+        url='https://briefcase-support.org/python?platform=tester&version=3.X&arch=unknown',
+    )
 
 
 def test_install_custom_app_support_package_url(create_command, myapp, tmp_path, support_path):

@@ -12,7 +12,7 @@ from requests import exceptions as requests_exceptions
 
 import briefcase
 from briefcase.config import BaseConfig
-from briefcase.exceptions import BriefcaseCommandError, NetworkFailure
+from briefcase.exceptions import BriefcaseCommandError, NetworkFailure, MissingNetworkResourceError
 
 from .base import (
     BaseCommand,
@@ -42,15 +42,17 @@ class InvalidSupportPackage(BriefcaseCommandError):
         )
 
 
-class NoSupportPackage(BriefcaseCommandError):
-    def __init__(self, platform, python_version):
-        self.platform = platform
-        self.python_version = python_version
+class MissingSupportPackage(BriefcaseCommandError):
+    def __init__(self, python_version_tag, host_arch):
+        self.python_version_tag = python_version_tag
+        self.host_arch = host_arch
         super().__init__(
-            'Unable to locate a support package for Python {python_version} on {platform}'.format(
-                python_version=python_version,
-                platform=platform,
-            )
+            "Unable to download a support package for "
+            f"Python {self.python_version_tag} on {self.host_arch}.\n\n"
+            f"This is likely because either Python {self.python_version_tag} "
+            f"and/or {self.host_arch} is not yet supported. You will need to:\n"
+            "  * Use an older version of Python; or\n"
+            "  * Compile your own custom support package.\n"
         )
 
 
@@ -324,11 +326,13 @@ class CreateCommand(BaseCommand):
             # the support package URL.
             try:
                 support_package_url = app.support_package
+                custom_support_package = True
                 print("Using custom support package {support_package_url}".format(
                     support_package_url=support_package_url
                 ))
             except AttributeError:
                 support_package_url = self.support_package_url
+                custom_support_package = False
                 print("Using support package {support_package_url}".format(
                     support_package_url=support_package_url
                 ))
@@ -363,6 +367,15 @@ class CreateCommand(BaseCommand):
                 )
             else:
                 support_filename = Path(support_package_url)
+        except MissingNetworkResourceError:
+            # If there is a custom support package, report the missing resource as-is.
+            if custom_support_package:
+                raise
+            else:
+                raise MissingSupportPackage(
+                    python_version_tag=self.python_version_tag,
+                    host_arch=self.host_arch,
+                )
         except requests_exceptions.ConnectionError:
             raise NetworkFailure('downloading support package')
 
