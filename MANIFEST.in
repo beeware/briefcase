@@ -22,3 +22,4 @@ recursive-include tests *.py
 recursive-include tests *.json
 recursive-include tests *.out
 recursive-include tests *.returncode
+recursive-include tests *.config

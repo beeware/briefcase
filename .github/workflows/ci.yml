@@ -18,7 +18,14 @@ jobs:
         - 'docs'
         - 'package'
     steps:
-    - uses: actions/checkout@v1
+    # Check out master; needed for towncrier comparisons.
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        ref: master
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
     - name: Set up Python 3.9
       uses: actions/setup-python@v2
       with:
@@ -37,7 +44,7 @@ jobs:
     needs: beefore
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v3
     - name: Set up Python 3.7
       uses: actions/setup-python@v2
       with:
@@ -70,7 +77,7 @@ jobs:
       matrix:
         python-version: ['3.8', '3.9', '3.10', '3.11.0-alpha - 3.11.0']
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
@@ -84,12 +91,16 @@ jobs:
       run: |
         tox -e py
 
-  windows:
-    name: Windows tests
-    needs: python-versions
-    runs-on: windows-latest
+  platform-compat:
+    name: Platform compatibility test
+    needs: smoke
+    strategy:
+      max-parallel: 4
+      matrix:
+        platform: ['macos-latest', 'windows-latest']
+    runs-on: ${{ matrix.platform }}
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v3
     - name: Set up Python 3.9
       uses: actions/setup-python@v2
       with:
@@ -103,16 +114,40 @@ jobs:
       run: |
         tox -e py
 
-  macOS:
-    name: macOS tests
-    needs: python-versions
-    runs-on: macOS-latest
+  verify-desktop:
+    name: Desktop app verification
+    needs: smoke
+    strategy:
+      max-parallel: 4
+      matrix:
+        platform: ['macos-latest', 'windows-latest', 'ubuntu-latest']
+        framework: ['toga', 'pyside2', 'pyside6', 'ppb']
+        include:
+        - platform: macos-latest
+          pip-cache-dir: ~/Library/Caches/pip
+          docker-cache-dir: ~/Library/Containers/com.docker.docker/Data/vms/0/
+        - platform: windows-latest
+          pip-cache-dir: ~\AppData\Local\pip\Cache
+          docker-cache-dir: C:\ProgramData\DockerDesktop
+        - platform: ubuntu-latest
+          pip-cache-dir: ~/.cache/pip
+          docker-cache-dir: /var/lib/docker
+    runs-on: ${{ matrix.platform }}
     steps:
-    - uses: actions/checkout@v1
+    - name: Cache Briefcase tools
+      uses: actions/cache@v3
+      with:
+        key: briefcase-${{ matrix.platform }}
+        path: |
+          ~/.briefcase
+          ~/.cookiecutters
+          ${{ matrix.pip-cache-dir }}
+          ${{ matrix.docker-cache-dir }}
+    - uses: actions/checkout@v3
     - name: Set up Python 3.9
       uses: actions/setup-python@v2
       with:
-        python-version: 3.9
+        python-version: "3.9"
     - name: Install dependencies
       run: |
         pip install --upgrade pip
@@ -120,4 +155,4 @@ jobs:
         pip install tox
     - name: Test
       run: |
-        tox -e py
+        tox -e verify-${{ matrix.framework }}
