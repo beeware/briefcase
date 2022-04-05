@@ -31,3 +31,5 @@ venv*/
 
 # Wing IDE
 *.wp[ur]
+
+tests/apps/verify-*/

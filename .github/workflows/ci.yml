@@ -18,7 +18,7 @@ jobs:
         - 'docs'
         - 'package'
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - name: Set up Python 3.9
       uses: actions/setup-python@v2
       with:
@@ -37,7 +37,7 @@ jobs:
     needs: beefore
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - name: Set up Python 3.7
       uses: actions/setup-python@v2
       with:
@@ -70,7 +70,7 @@ jobs:
       matrix:
         python-version: ['3.8', '3.9', '3.10', '3.11.0-alpha - 3.11.0']
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
@@ -84,12 +84,15 @@ jobs:
       run: |
         tox -e py
 
-  windows:
-    name: Windows tests
-    needs: python-versions
-    runs-on: windows-latest
+  platforms:
+    name: Platform compatibility test
+    needs: smoke
+    strategy:
+      max-parallel: 4
+      matrix:
+        platform: ['macos-latest', 'windows-latest']
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - name: Set up Python 3.9
       uses: actions/setup-python@v2
       with:
@@ -103,16 +106,21 @@ jobs:
       run: |
         tox -e py
 
-  macOS:
-    name: macOS tests
-    needs: python-versions
-    runs-on: macOS-latest
+  verify-desktop:
+    name: Desktop app verification
+    needs: smoke
+    strategy:
+      max-parallel: 4
+      matrix:
+        platform: ['macos-latest', 'windows-latest', 'ubuntu-18.04']
+        framework: ['toga', 'pyside2', 'pyside6', 'ppb']
+      steps:
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - name: Set up Python 3.9
       uses: actions/setup-python@v2
       with:
-        python-version: 3.9
+        python-version: "3.9"
     - name: Install dependencies
       run: |
         pip install --upgrade pip
@@ -120,4 +128,28 @@ jobs:
         pip install tox
     - name: Test
       run: |
-        tox -e py
+        tox -e verify-${{ matrix.framework }}
+
+  verify-mobile:
+    name: Mobile app verification
+    needs: smoke
+    runs-on: macos-latest
+    strategy:
+      max-parallel: 4
+      matrix:
+        mobile-platform: ['iOS', 'android']
+      steps:
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v2
+      with:
+        python-version: "3.9"
+    - name: Install dependencies
+      run: |
+        pip install --upgrade pip
+        pip install --upgrade setuptools
+        pip install tox
+    - name: Test
+      run: |
+        tox -e verifymobile-${{ matrix.mobile-platform }}
