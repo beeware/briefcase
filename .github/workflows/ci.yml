@@ -120,8 +120,18 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        platform: ['macos-latest', 'windows-latest', 'ubuntu-18.04']
+        platform: ['macos-latest', 'windows-latest', 'ubuntu-latest']
         framework: ['toga', 'pyside2', 'pyside6', 'ppb']
+        include:
+        - platform: macos-latest
+          pip-cache-dir: ~/Library/Caches/pip
+          docker-cache-dir: ~/Library/Containers/com.docker.docker/Data/vms/0/
+        - platform: windows-latest
+          pip-cache-dir: ~\AppData\Local\pip\Cache
+          docker-cache-dir: C:\ProgramData\DockerDesktop
+        - platform: ubuntu-latest
+          pip-cache-dir: ~/.cache/pip
+          docker-cache-dir: /var/lib/docker
     runs-on: ${{ matrix.platform }}
     steps:
     - name: Cache Briefcase tools
@@ -131,6 +141,8 @@ jobs:
         path: |
           ~/.briefcase
           ~/.cookiecutters
+          ${{ matrix.pip-cache-dir }}
+          ${{ matrix.docker-cache-dir }}
     - uses: actions/checkout@v3
     - name: Set up Python 3.9
       uses: actions/setup-python@v2
