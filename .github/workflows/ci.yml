@@ -124,6 +124,13 @@ jobs:
         framework: ['toga', 'pyside2', 'pyside6', 'ppb']
     runs-on: ${{ matrix.platform }}
     steps:
+    - name: Cache Briefcase tools
+      uses: actions/cache@v3
+      with:
+        key: briefcase
+        path: |
+          ~/.briefcase
+          ~/.cookiecutters
     - uses: actions/checkout@v3
     - name: Set up Python 3.9
       uses: actions/setup-python@v2
