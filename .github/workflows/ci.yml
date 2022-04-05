@@ -114,7 +114,6 @@ jobs:
       matrix:
         platform: ['macos-latest', 'windows-latest', 'ubuntu-18.04']
         framework: ['toga', 'pyside2', 'pyside6', 'ppb']
-      steps:
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python 3.9
@@ -129,27 +128,3 @@ jobs:
     - name: Test
       run: |
         tox -e verify-${{ matrix.framework }}
-
-  verify-mobile:
-    name: Mobile app verification
-    needs: smoke
-    runs-on: macos-latest
-    strategy:
-      max-parallel: 4
-      matrix:
-        mobile-platform: ['iOS', 'android']
-      steps:
-    steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python 3.9
-      uses: actions/setup-python@v2
-      with:
-        python-version: "3.9"
-    - name: Install dependencies
-      run: |
-        pip install --upgrade pip
-        pip install --upgrade setuptools
-        pip install tox
-    - name: Test
-      run: |
-        tox -e verifymobile-${{ matrix.mobile-platform }}
