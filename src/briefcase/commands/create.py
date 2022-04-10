@@ -1,3 +1,4 @@
+import logging
 import os
 import shutil
 import subprocess
@@ -20,6 +21,8 @@ from .base import (
     UnsupportedPlatform,
     full_options
 )
+
+logger = logging.getLogger(__name__)
 
 
 class InvalidTemplateRepository(BriefcaseCommandError):
@@ -263,7 +266,7 @@ class CreateCommand(BaseCommand):
         if app.template_branch is None:
             app.template_branch = self.python_version_tag
 
-        print("Using app template: {app_template}, branch {template_branch}".format(
+        logger.info("Using app template: {app_template}, branch {template_branch}".format(
             app_template=app.template,
             template_branch=app.template_branch,
         ))
@@ -327,19 +330,19 @@ class CreateCommand(BaseCommand):
             try:
                 support_package_url = app.support_package
                 custom_support_package = True
-                print("Using custom support package {support_package_url}".format(
+                logger.info("Using custom support package {support_package_url}".format(
                     support_package_url=support_package_url
                 ))
             except AttributeError:
                 support_package_url = self.support_package_url
                 custom_support_package = False
-                print("Using support package {support_package_url}".format(
+                logger.info("Using support package {support_package_url}".format(
                     support_package_url=support_package_url
                 ))
 
             if support_package_url.startswith('https://') or support_package_url.startswith('http://'):
                 try:
-                    print("... pinned to revision {app.support_revision}".format(
+                    logger.info("... pinned to revision {app.support_revision}".format(
                         app=app
                     ))
                     # If a revision has been specified, add the revision
@@ -357,7 +360,7 @@ class CreateCommand(BaseCommand):
 
                 except AttributeError:
                     # No support revision specified.
-                    print("... using most recent revision")
+                    logger.info("... using most recent revision")
 
                 # Download the support file, caching the result
                 # in the user's briefcase support cache directory.
@@ -380,7 +383,7 @@ class CreateCommand(BaseCommand):
             raise NetworkFailure('downloading support package')
 
         try:
-            print("Unpacking support package...")
+            logger.info("Unpacking support package...")
             support_path = self.support_path(app)
             support_path.mkdir(parents=True, exist_ok=True)
             # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
@@ -389,7 +392,7 @@ class CreateCommand(BaseCommand):
                 extract_dir=os.fsdecode(support_path)
             )
         except (shutil.ReadError, EOFError):
-            print()
+            logger.info("")
             raise InvalidSupportPackage(support_package_url)
 
     def install_app_dependencies(self, app: BaseConfig):
@@ -422,7 +425,7 @@ class CreateCommand(BaseCommand):
             except subprocess.CalledProcessError:
                 raise DependencyInstallError()
         else:
-            print("No application dependencies.")
+            logger.info("No application dependencies.")
 
     def install_app_code(self, app: BaseConfig):
         """
@@ -440,7 +443,7 @@ class CreateCommand(BaseCommand):
         # Install app code.
         if app.sources:
             for src in app.sources:
-                print(f"Installing {src}...")
+                logger.info(f"Installing {src}...")
                 original = self.base_path / src
                 target = app_path / original.name
 
@@ -452,7 +455,7 @@ class CreateCommand(BaseCommand):
                 else:
                     self.shutil.copy(original, target)
         else:
-            print(f"No sources defined for {app.app_name}.")
+            logger.info(f"No sources defined for {app.app_name}.")
 
         # Write the dist-info folder for the application.
         write_dist_info(
@@ -495,7 +498,7 @@ class CreateCommand(BaseCommand):
                             role=role,
                         )
                     except (TypeError, KeyError):
-                        print(
+                        logger.info(
                             "Unable to find {variant} variant for {role}; "
                             "using default".format(
                                 variant=variant,
@@ -545,7 +548,7 @@ class CreateCommand(BaseCommand):
                             role=role,
                         )
                     except (TypeError, KeyError):
-                        print(
+                        logger.info(
                             "Unable to find {size}px {variant} variant for {role}; "
                             "using default".format(
                                 size=size,
@@ -557,7 +560,7 @@ class CreateCommand(BaseCommand):
 
             full_source = self.base_path / source_filename
             if full_source.exists():
-                print("Installing {source_filename} as {full_role}...".format(
+                logger.info("Installing {source_filename} as {full_role}...".format(
                     source_filename=source_filename,
                     full_role=full_role,
                 ))
@@ -567,7 +570,7 @@ class CreateCommand(BaseCommand):
                 # Copy the source image to the target location
                 self.shutil.copy(full_source, target)
             else:
-                print(
+                logger.info(
                     "Unable to find {source_filename} for {full_role}; using default".format(
                         full_role=full_role,
                         source_filename=source_filename,
@@ -646,54 +649,54 @@ class CreateCommand(BaseCommand):
 
         bundle_path = self.bundle_path(app)
         if bundle_path.exists():
-            print()
+            logger.info("")
             confirm = self.input.boolean_input(
                 'Application {app.app_name} already exists; overwrite'.format(app=app),
                 default=False
             )
             if not confirm:
-                print("Aborting creation of app {app.app_name}".format(
+                logger.info("Aborting creation of app {app.app_name}".format(
                     app=app
                 ))
                 return
-            print()
-            print("[{app.app_name}] Removing old application bundle...".format(
+            logger.info("")
+            logger.info("[{app.app_name}] Removing old application bundle...".format(
                 app=app
             ))
             self.shutil.rmtree(bundle_path)
 
-        print()
-        print('[{app.app_name}] Generating application template...'.format(
+        logger.info("")
+        logger.info('[{app.app_name}] Generating application template...'.format(
             app=app
         ))
         self.generate_app_template(app=app)
 
-        print()
-        print('[{app.app_name}] Installing support package...'.format(
+        logger.info("")
+        logger.info('[{app.app_name}] Installing support package...'.format(
             app=app
         ))
         self.install_app_support_package(app=app)
 
-        print()
-        print('[{app.app_name}] Installing dependencies...'.format(
+        logger.info("")
+        logger.info('[{app.app_name}] Installing dependencies...'.format(
             app=app
         ))
         self.install_app_dependencies(app=app)
 
-        print()
-        print('[{app.app_name}] Installing application code...'.format(
+        logger.info("")
+        logger.info('[{app.app_name}] Installing application code...'.format(
             app=app
         ))
         self.install_app_code(app=app)
 
-        print()
-        print('[{app.app_name}] Installing application resources...'.format(
+        logger.info("")
+        logger.info('[{app.app_name}] Installing application resources...'.format(
             app=app
         ))
         self.install_app_resources(app=app)
-        print()
+        logger.info("")
 
-        print("[{app.app_name}] Created {filename}".format(
+        logger.info("[{app.app_name}] Created {filename}".format(
             app=app,
             filename=self.bundle_path(app).relative_to(self.base_path),
         ))

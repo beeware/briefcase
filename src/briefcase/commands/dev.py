@@ -1,3 +1,4 @@
+import logging
 import os
 import subprocess
 import sys
@@ -8,6 +9,8 @@ from briefcase.exceptions import BriefcaseCommandError
 
 from .base import BaseCommand
 from .create import DependencyInstallError, write_dist_info
+
+logger = logging.getLogger(__name__)
 
 
 class DevCommand(BaseCommand):
@@ -77,7 +80,7 @@ class DevCommand(BaseCommand):
             except subprocess.CalledProcessError:
                 raise DependencyInstallError()
         else:
-            print("No application dependencies.")
+            logger.info("No application dependencies.")
 
     def run_dev_app(self, app: BaseConfig, env: dict, **options):
         """
@@ -94,7 +97,7 @@ class DevCommand(BaseCommand):
                 check=True,
             )
         except subprocess.CalledProcessError:
-            print()
+            logger.info("")
             raise BriefcaseCommandError(
                 "Unable to start application '{app.app_name}'".format(
                     app=app
@@ -145,16 +148,16 @@ class DevCommand(BaseCommand):
             # If we are not running the app, it means we should update dependencies.
             update_dependencies = True
         if update_dependencies or not dist_info_path.exists():
-            print()
-            print('[{app.app_name}] Installing dependencies...'.format(
+            logger.info("")
+            logger.info('[{app.app_name}] Installing dependencies...'.format(
                 app=app
             ))
             self.install_dev_dependencies(app, **options)
             write_dist_info(app, dist_info_path)
 
         if run_app:
-            print()
-            print('[{app.app_name}] Starting in dev mode...'.format(
+            logger.info("")
+            logger.info('[{app.app_name}] Starting in dev mode...'.format(
                 app=app
             ))
             env = self.get_environment(app)

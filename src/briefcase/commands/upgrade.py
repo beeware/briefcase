@@ -1,3 +1,4 @@
+import logging
 import sys
 from typing import List
 
@@ -8,6 +9,8 @@ from briefcase.integrations.linuxdeploy import LinuxDeploy
 from briefcase.integrations.wix import WiX
 
 from .base import BaseCommand
+
+logger = logging.getLogger(__name__)
 
 
 class UpgradeCommand(BaseCommand):
@@ -94,22 +97,22 @@ class UpgradeCommand(BaseCommand):
 
         if found_tools:
             if list_tools:
-                print("Briefcase is managing the following tools:")
+                logger.info("Briefcase is managing the following tools:")
                 for name in found_tools:
-                    print(" - {name}".format(name=name))
+                    logger.info(" - {name}".format(name=name))
             else:
-                print('Briefcase will upgrade the following tools:')
+                logger.info('Briefcase will upgrade the following tools:')
                 for name in found_tools:
-                    print(" - {name}".format(name=name))
-                print()
+                    logger.info(" - {name}".format(name=name))
+                logger.info("")
 
                 for name in found_tools:
                     tool = managed_tools[name]
-                    print("[{tool.name}] Upgrading {tool.full_name}...".format(tool=tool))
-                    print()
+                    logger.info("[{tool.name}] Upgrading {tool.full_name}...".format(tool=tool))
+                    logger.info("")
                     tool.upgrade()
 
-                print()
+                logger.info("")
 
         else:
-            print("Briefcase is not managing any tools.")
+            logger.info("Briefcase is not managing any tools.")

@@ -1,5 +1,8 @@
+import logging
 import shlex
 import subprocess
+
+logger = logging.getLogger(__name__)
 
 
 class Subprocess:
@@ -32,7 +35,7 @@ class Subprocess:
             # No explicit environment provided.
             pass
 
-        # If `cwd` has been provded, ensure it is in string form.
+        # If `cwd` has been provided, ensure it is in string form.
         try:
             cwd = kwargs.pop('cwd')
             kwargs['cwd'] = str(cwd)
@@ -53,18 +56,20 @@ class Subprocess:
         """
         # Invoke subprocess.run().
         # Pass through all arguments as-is.
-        # All exceptions are propegated back to the caller.
-        if self.command.verbosity >= 2:
-            print(">>> {cmdline}".format(
-                cmdline=' '.join(shlex.quote(str(arg)) for arg in args)
-            ))
+        # All exceptions are propagated back to the caller.
+        self._log_command(args)
+        self._log_environment(kwargs.get("env"))
 
-        return self._subprocess.run(
+        logger.debug("Command Output:")
+        ret = self._subprocess.run(
             [
                 str(arg) for arg in args
             ],
             **self.final_kwargs(**kwargs)
         )
+
+        self._log_return_code(ret.returncode)
+        return ret
 
     def check_output(self, args, **kwargs):
         """A wrapper for subprocess.check_output()
@@ -76,18 +81,18 @@ class Subprocess:
         environment will be copied, and the contents of env overwritten
         into that environment.
         """
-        # Invoke subprocess.check_output
-        if self.command.verbosity >= 2:
-            print(">>> {cmdline}".format(
-                cmdline=' '.join(shlex.quote(arg) for arg in args)
-            ))
+        self._log_command(args)
+        self._log_environment(kwargs.get("env"))
 
-        return self._subprocess.check_output(
+        ret = self._subprocess.check_output(
             [
                 str(arg) for arg in args
             ],
             **self.final_kwargs(**kwargs)
         )
+
+        self._log_output(ret)
+        return ret
 
     def Popen(self, args, **kwargs):
         """A wrapper for subprocess.Popen()
@@ -99,11 +104,8 @@ class Subprocess:
         environment will be copied, and the contents of env overwritten
         into that environment.
         """
-        # Invoke subprocess.check_output
-        if self.command.verbosity >= 2:
-            print(">>> {cmdline}".format(
-                cmdline=' '.join(shlex.quote(arg) for arg in args)
-            ))
+        self._log_command(args)
+        self._log_environment(kwargs.get("env"))
 
         return self._subprocess.Popen(
             [
@@ -111,3 +113,43 @@ class Subprocess:
             ],
             **self.final_kwargs(**kwargs)
         )
+
+    @staticmethod
+    def _log_command(args):
+        """
+        Log the entire console command being executed.
+        """
+        logger.debug("")
+        logger.debug("Running Command:")
+        logger.debug("\t{cmdline}".format(
+            cmdline=' '.join(shlex.quote(str(arg)) for arg in args)
+        ))
+
+    def _log_environment(self, env=None):
+        """
+        Log the state of environment variables prior to command execution.
+        """
+        if not logger.isEnabledFor(logging.DEBUG):
+            return
+        # use merged environment if it exists, else current environment
+        env = env or self.command.os.environ
+        logger.debug("Environment:")
+        for env_var, value in env.items():
+            logger.debug("\t{env_var}={value}".format(env_var=env_var, value=value))
+
+    @staticmethod
+    def _log_output(output):
+        """
+        Log the output of the executed command.
+        """
+        if output:
+            logger.debug("Command Output:")
+            for line in str(output).splitlines():
+                logger.debug("\t{line}".format(line=line))
+
+    @staticmethod
+    def _log_return_code(return_code):
+        """
+        Log the output value of the executed command.
+        """
+        logger.debug("Return code: {return_code}".format(return_code=return_code))

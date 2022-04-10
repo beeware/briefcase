@@ -1,9 +1,12 @@
+import logging
 import os
 import subprocess
 import sys
 from pathlib import Path
 
 from briefcase.exceptions import BriefcaseCommandError
+
+logger = logging.getLogger(__name__)
 
 
 def docker_install_details(host_os):
@@ -125,9 +128,11 @@ need to restart your terminal session.
                 )
 
         else:
-            print(UNKNOWN_DOCKER_VERSION_WARNING)
+            for line in UNKNOWN_DOCKER_VERSION_WARNING.splitlines():
+                logger.warning(line)
     except subprocess.CalledProcessError:
-        print(DOCKER_INSTALLATION_STATUS_UNKNOWN_WARNING)
+        for line in DOCKER_INSTALLATION_STATUS_UNKNOWN_WARNING.splitlines():
+            logger.warning(line)
     except FileNotFoundError:
         # Docker executable doesn't exist.
         raise BriefcaseCommandError(
@@ -208,9 +213,9 @@ class Docker:
 
     def prepare(self):
         try:
-            print()
-            print("[{app.app_name}] Building Docker container image...".format(app=self.app))
-            print()
+            logger.info("")
+            logger.info("[{app.app_name}] Building Docker container image...".format(app=self.app))
+            logger.info("")
             try:
                 system_requires = ' '.join(self.app.system_requires)
             except AttributeError:
@@ -235,7 +240,7 @@ class Docker:
             )
 
         except subprocess.CalledProcessError:
-            print()
+            logger.info("")
             raise BriefcaseCommandError(
                 "Error building Docker container for {app.app_name}.".format(app=self.app)
             )

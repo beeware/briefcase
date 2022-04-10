@@ -146,6 +146,7 @@ def parse_cmdline(args):
 
     # We now know the command, platform, and format.
     # Get the command class that corresponds to that definition.
+
     try:
         format_module = output_formats[output_format]
         Command = getattr(format_module, options.command)
