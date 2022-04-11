@@ -54,10 +54,9 @@ class Subprocess:
         # Invoke subprocess.run().
         # Pass through all arguments as-is.
         # All exceptions are propagated back to the caller.
+        self._log_environment(kwargs)
         self._log_command(args)
-        self._log_environment(kwargs.get("env"))
 
-        print("Command Output:")
         ret = self._subprocess.run(
             [
                 str(arg) for arg in args
@@ -78,8 +77,8 @@ class Subprocess:
         environment will be copied, and the contents of env overwritten
         into that environment.
         """
+        self._log_environment(kwargs)
         self._log_command(args)
-        self._log_environment(kwargs.get("env"))
 
         ret = self._subprocess.check_output(
             [
@@ -101,8 +100,8 @@ class Subprocess:
         environment will be copied, and the contents of env overwritten
         into that environment.
         """
+        self._log_environment(kwargs)
         self._log_command(args)
-        self._log_environment(kwargs.get("env"))
 
         return self._subprocess.Popen(
             [
@@ -115,45 +114,33 @@ class Subprocess:
         """
         Log the entire console command being executed.
         """
-        if self.command.verbosity < 2:
-            return
-
-        print("")
-        print("Running Command:")
-        print("\t{cmdline}".format(
+        self.command.logger.debug1()
+        self.command.logger.debug1("Running Command:")
+        self.command.logger.debug1("    {cmdline}".format(
             cmdline=' '.join(shlex.quote(str(arg)) for arg in args)
         ))
 
-    def _log_environment(self, env=None):
+    def _log_environment(self, kwargs=None):
         """
         Log the state of environment variables prior to command execution.
         """
-        if self.command.verbosity < 2:
-            return
-
         # use merged environment if it exists, else current environment
-        env = env or self.command.os.environ
-        print("Environment:")
+        env = (kwargs or {}).get("env") or self.command.os.environ
+        self.command.logger.debug3("Environment:")
         for env_var, value in env.items():
-            print("\t{env_var}={value}".format(env_var=env_var, value=value))
+            self.command.logger.debug3("    {env_var}={value}".format(env_var=env_var, value=value))
 
     def _log_output(self, output):
         """
         Log the output of the executed command.
         """
-        if self.command.verbosity < 2:
-            return
-
         if output:
-            print("Command Output:")
+            self.command.logger.debug2("Command Output:")
             for line in str(output).splitlines():
-                print("\t{line}".format(line=line))
+                self.command.logger.debug2("    {line}".format(line=line))
 
     def _log_return_code(self, return_code):
         """
         Log the output value of the executed command.
         """
-        if self.command.verbosity < 2:
-            return
-
-        print("Return code: {return_code}".format(return_code=return_code))
+        self.command.logger.debug2("Return code: {return_code}".format(return_code=return_code))
