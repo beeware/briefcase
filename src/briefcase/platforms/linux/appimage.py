@@ -1,4 +1,3 @@
-import logging
 import os
 import subprocess
 from contextlib import contextmanager
@@ -16,8 +15,6 @@ from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.docker import verify_docker
 from briefcase.integrations.linuxdeploy import LinuxDeploy
 from briefcase.platforms.linux import LinuxMixin
-
-logger = logging.getLogger(__name__)
 
 
 class LinuxAppImageMixin(LinuxMixin):
@@ -108,13 +105,13 @@ Linux AppImages can only be generated on Linux.
             """
             Enter the Docker context.
             """
-            logger.info("[{app.app_name}] Entering Docker context...".format(app=app))
+            print("[{app.app_name}] Entering Docker context...".format(app=app))
             orig_subprocess = self.subprocess
             self.subprocess = self.Docker(self, app)
 
             yield self.subprocess
 
-            logger.info("[{app.app_name}] Leaving Docker context.".format(app=app))
+            print("[{app.app_name}] Leaving Docker context.".format(app=app))
             self.subprocess = orig_subprocess
         else:
             yield self.subprocess
@@ -165,11 +162,11 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
 
         :param app: The application to build
         """
-        logger.info("")
-        logger.info("[{app.app_name}] Building AppImage...".format(app=app))
+        print()
+        print("[{app.app_name}] Building AppImage...".format(app=app))
 
         try:
-            logger.info("")
+            print()
             # Build the AppImage.
             # For some reason, the version has to be passed in as an
             # environment variable, *not* in the configuration...
@@ -212,7 +209,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
             # Make the binary executable.
             self.os.chmod(self.binary_path(app), 0o755)
         except subprocess.CalledProcessError:
-            logger.info("")
+            print()
             raise BriefcaseCommandError(
                 "Error while building app {app.app_name}.".format(app=app)
             )
@@ -238,12 +235,12 @@ class LinuxAppImageRunCommand(LinuxAppImageMixin, RunCommand):
         :param app: The config object for the app
         :param base_path: The path to the project directory.
         """
-        logger.info("")
-        logger.info('[{app.app_name}] Starting app...'.format(
+        print()
+        print('[{app.app_name}] Starting app...'.format(
             app=app
         ))
         try:
-            logger.info("")
+            print()
             self.subprocess.run(
                 [
                     os.fsdecode(self.binary_path(app)),
@@ -251,7 +248,7 @@ class LinuxAppImageRunCommand(LinuxAppImageMixin, RunCommand):
                 check=True,
             )
         except subprocess.CalledProcessError:
-            logger.info("")
+            print()
             raise BriefcaseCommandError(
                 "Unable to start app {app.app_name}.".format(app=app)
             )

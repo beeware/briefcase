@@ -1,5 +1,3 @@
-import logging
-
 from requests import exceptions as requests_exceptions
 
 from briefcase.exceptions import (
@@ -7,8 +5,6 @@ from briefcase.exceptions import (
     MissingToolError,
     NetworkFailure
 )
-
-logger = logging.getLogger(__name__)
 
 ELF_PATCH_OFFSET = 0x08
 ELF_PATCH_ORIGINAL_BYTES = bytes.fromhex('414902')
@@ -83,11 +79,11 @@ class LinuxDeploy:
         Upgrade an existing linuxdeploy install.
         """
         if self.exists():
-            logger.info("Removing old LinuxDeploy install...")
+            print("Removing old LinuxDeploy install...")
             self.appimage_path.unlink()
 
             self.install()
-            logger.info("...done.")
+            print("...done.")
         else:
             raise MissingToolError('linuxdeploy')
 
@@ -119,10 +115,10 @@ class LinuxDeploy:
                     appimage.write(ELF_PATCH_PATCHED_BYTES)
                     appimage.flush()
                     appimage.seek(0)
-                    logger.info("Patched ELF header of linuxdeploy AppImage.")
+                    print("Patched ELF header of linuxdeploy AppImage.")
                 # Else if the header is the patched value, do nothing.
                 elif appimage.read(len(ELF_PATCH_ORIGINAL_BYTES)) == ELF_PATCH_PATCHED_BYTES:
-                    logger.info("ELF header of linuxdeploy AppImage is already patched.")
+                    print("ELF header of linuxdeploy AppImage is already patched.")
                 else:
                     # We should only get here if the file at the AppImage patch doesn't have
                     # The original or patched value. If this is the case, the file is likely

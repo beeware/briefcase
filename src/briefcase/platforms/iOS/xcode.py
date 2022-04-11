@@ -1,4 +1,3 @@
-import logging
 import subprocess
 import time
 from uuid import UUID
@@ -20,8 +19,6 @@ from briefcase.integrations.xcode import (
     get_simulators
 )
 from briefcase.platforms.iOS import iOSMixin
-
-logger = logging.getLogger(__name__)
 
 
 class iOSXcodePassiveMixin(iOSMixin):
@@ -190,17 +187,17 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
 
         device = devices[udid]
 
-        logger.info("In future, you could specify this device by running:")
-        logger.info("")
-        logger.info('    briefcase {self.command} iOS -d "{device}::{iOS_version}"'.format(
+        print("In future, you could specify this device by running:")
+        print()
+        print('    briefcase {self.command} iOS -d "{device}::{iOS_version}"'.format(
             self=self,
             device=device,
             iOS_version=iOS_version
         ))
-        logger.info("")
-        logger.info('or:')
-        logger.info("")
-        logger.info("    briefcase {self.command} iOS -d {udid}".format(self=self, udid=udid))
+        print()
+        print('or:')
+        print()
+        print("    briefcase {self.command} iOS -d {udid}".format(self=self, udid=udid))
         return udid, iOS_version, device
 
 
@@ -230,15 +227,15 @@ class iOSXcodeBuildCommand(iOSXcodeMixin, BuildCommand):
                 "Input has been disabled; can't select a device to target."
             )
 
-        logger.info("")
-        logger.info("Targeting an {device} running {iOS_version} (device UDID {udid})".format(
+        print()
+        print("Targeting an {device} running {iOS_version} (device UDID {udid})".format(
             device=device,
             iOS_version=iOS_version,
             udid=udid,
         ))
 
-        logger.info("")
-        logger.info('[{app.app_name}] Building XCode project...'.format(
+        print()
+        print('[{app.app_name}] Building XCode project...'.format(
             app=app
         ))
 
@@ -252,7 +249,7 @@ class iOSXcodeBuildCommand(iOSXcodeMixin, BuildCommand):
         # build_settings_str = ['{}={}'.format(*x) for x in build_settings]
 
         try:
-            logger.info("")
+            print()
             self.subprocess.run(
                 [
                     'xcodebuild',  # ' '.join(build_settings_str),
@@ -270,9 +267,9 @@ class iOSXcodeBuildCommand(iOSXcodeMixin, BuildCommand):
                 ],
                 check=True,
             )
-            logger.info('Build succeeded.')
+            print('Build succeeded.')
         except subprocess.CalledProcessError:
-            logger.info("")
+            print()
             raise BriefcaseCommandError(
                 "Unable to build app {app.app_name}.".format(app=app)
             )
@@ -310,8 +307,8 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                 "Input has been disabled; can't select a device to target."
             )
 
-        logger.info("")
-        logger.info(
+        print()
+        print(
             "[{app.app_name}] Starting app on an {device} running "
             "iOS {iOS_version} (device UDID {udid})".format(
                 app=app,
@@ -336,7 +333,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         # if it's shut down, start it again.
         if device_state == DeviceState.SHUTDOWN:
             try:
-                logger.info("Booting {device} simulator running iOS {iOS_version}...".format(
+                print("Booting {device} simulator running iOS {iOS_version}...".format(
                         device=device,
                         iOS_version=iOS_version,
                     )
@@ -355,7 +352,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
 
         # We now know the simulator is *running*, so we can open it.
         try:
-            logger.info("Opening {device} simulator running iOS {iOS_version}...".format(
+            print("Opening {device} simulator running iOS {iOS_version}...".format(
                     device=device,
                     iOS_version=iOS_version,
                 )
@@ -375,7 +372,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         # Try to uninstall the app first. If the app hasn't been installed
         # before, this will still succeed.
         app_identifier = '.'.join([app.bundle, app.app_name])
-        logger.info('[{app.app_name}] Uninstalling old app version...'.format(
+        print('[{app.app_name}] Uninstalling old app version...'.format(
             app=app
         ))
         try:
@@ -391,7 +388,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
             )
 
         # Install the app.
-        logger.info('[{app.app_name}] Installing new app version...'.format(
+        print('[{app.app_name}] Installing new app version...'.format(
             app=app
         ))
         try:
@@ -406,7 +403,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                 )
             )
 
-        logger.info('[{app.app_name}] Starting app...'.format(
+        print('[{app.app_name}] Starting app...'.format(
             app=app
         ))
         try:
@@ -423,9 +420,9 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
 
         # Start streaming logs for the app.
         try:
-            logger.info("")
-            logger.info("[{app.app_name}] Following simulator log output (type CTRL-C to stop log)...".format(app=app))
-            logger.info("=" * 75)
+            print()
+            print("[{app.app_name}] Following simulator log output (type CTRL-C to stop log)...".format(app=app))
+            print("=" * 75)
             self.subprocess.run(
                 [
                     "xcrun", "simctl", "spawn", udid,
@@ -436,7 +433,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                 check=True,
             )
         except subprocess.CalledProcessError:
-            logger.info("")
+            print()
             raise BriefcaseCommandError(
                 "Unable to start log stream for app {app.app_name}.".format(app=app)
             )

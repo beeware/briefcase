@@ -1,8 +1,5 @@
-import logging
 import shlex
 import subprocess
-
-logger = logging.getLogger(__name__)
 
 
 class Subprocess:
@@ -60,7 +57,7 @@ class Subprocess:
         self._log_command(args)
         self._log_environment(kwargs.get("env"))
 
-        logger.debug("Command Output:")
+        print("Command Output:")
         ret = self._subprocess.run(
             [
                 str(arg) for arg in args
@@ -114,14 +111,16 @@ class Subprocess:
             **self.final_kwargs(**kwargs)
         )
 
-    @staticmethod
-    def _log_command(args):
+    def _log_command(self, args):
         """
         Log the entire console command being executed.
         """
-        logger.debug("")
-        logger.debug("Running Command:")
-        logger.debug("\t{cmdline}".format(
+        if self.command.verbosity < 2:
+            return
+
+        print("")
+        print("Running Command:")
+        print("\t{cmdline}".format(
             cmdline=' '.join(shlex.quote(str(arg)) for arg in args)
         ))
 
@@ -129,27 +128,32 @@ class Subprocess:
         """
         Log the state of environment variables prior to command execution.
         """
-        if not logger.isEnabledFor(logging.DEBUG):
+        if self.command.verbosity < 2:
             return
+
         # use merged environment if it exists, else current environment
         env = env or self.command.os.environ
-        logger.debug("Environment:")
+        print("Environment:")
         for env_var, value in env.items():
-            logger.debug("\t{env_var}={value}".format(env_var=env_var, value=value))
+            print("\t{env_var}={value}".format(env_var=env_var, value=value))
 
-    @staticmethod
-    def _log_output(output):
+    def _log_output(self, output):
         """
         Log the output of the executed command.
         """
-        if output:
-            logger.debug("Command Output:")
-            for line in str(output).splitlines():
-                logger.debug("\t{line}".format(line=line))
+        if self.command.verbosity < 2:
+            return
 
-    @staticmethod
-    def _log_return_code(return_code):
+        if output:
+            print("Command Output:")
+            for line in str(output).splitlines():
+                print("\t{line}".format(line=line))
+
+    def _log_return_code(self, return_code):
         """
         Log the output value of the executed command.
         """
-        logger.debug("Return code: {return_code}".format(return_code=return_code))
+        if self.command.verbosity < 2:
+            return
+
+        print("Return code: {return_code}".format(return_code=return_code))

@@ -1,4 +1,3 @@
-import logging
 import os
 import re
 import shutil
@@ -18,7 +17,6 @@ from briefcase.exceptions import (
 )
 from briefcase.integrations.java import JDK
 
-logger = logging.getLogger(__name__)
 DEVICE_NOT_FOUND = re.compile(r"^error: device '[^']*' not found")
 
 
@@ -130,20 +128,27 @@ class AndroidSDK:
                 sdk.verify_license()
                 return sdk
             else:
-                logger.warning("*************************************************************************")
-                logger.warning("** WARNING: ANDROID_SDK_ROOT does not point to an Android SDK          **")
-                logger.warning("*************************************************************************")
-                logger.warning("")
-                logger.warning("    The location pointed to by the ANDROID_SDK_ROOT environment")
-                logger.warning("    variable:")
-                logger.warning("")
-                logger.warning("    {sdk_root}".format(sdk_root=sdk_root))
-                logger.warning("")
-                logger.warning("    doesn't appear to contain an Android SDK.")
-                logger.warning("")
-                logger.warning("    Briefcase will use its own SDK instance.")
-                logger.warning("")
-                logger.warning("*************************************************************************")
+                print(
+                    """
+*************************************************************************
+** WARNING: ANDROID_SDK_ROOT does not point to an Android SDK          **
+*************************************************************************
+
+    The location pointed to by the ANDROID_SDK_ROOT environment
+    variable:
+
+    {sdk_root}
+
+    doesn't appear to contain an Android SDK.
+
+    Briefcase will use its own SDK instance.
+
+*************************************************************************
+
+    """.format(
+                        sdk_root=sdk_root
+                    )
+                )
 
         # Build an SDK wrapper for the Briefcase SDK instance.
         sdk = AndroidSDK(
@@ -194,7 +199,7 @@ class AndroidSDK:
             raise NetworkFailure("download Android SDK")
 
         try:
-            logger.info("Install Android SDK...")
+            print("Install Android SDK...")
             # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
             self.command.shutil.unpack_archive(os.fsdecode(sdk_zip_path), extract_dir=os.fsdecode(self.root_path))
         except (shutil.ReadError, EOFError):
@@ -258,13 +263,13 @@ Delete {sdk_zip_path} and run briefcase again.""".format(
         if license_path.exists():
             return
 
-        msg = """
-        
+        print(
+            "\n"
+            + """\
     The Android tools provided by Google have license terms that you must accept
     before you may use those tools.
     """
-        for line in msg.splitlines():
-            logger.info(line)
+        )
         try:
             # Using subprocess.run() with no I/O redirection so the user sees
             # the full output and can send input.
@@ -298,7 +303,7 @@ Delete {sdk_zip_path} and run briefcase again.""".format(
         if (self.root_path / "emulator").exists():
             return
 
-        logger.info("Downloading the Android emulator and system image...")
+        print("Downloading the Android emulator and system image...")
         try:
             # Using `check_output` and `stderr=STDOUT` so we buffer output,
             # displaying it only if an exception occurs.
@@ -534,18 +539,19 @@ Delete {sdk_zip_path} and run briefcase again.""".format(
                 raise InvalidDeviceError("device ID", choice)
 
         if avd:
-            logging.info("")
-            logging.info("In future, you can specify this device by running:")
-            logging.info("")
-            logging.info("    briefcase run android -d @{avd}".format(avd=avd))
-            logging.info("")
+            print("""
+In future, you can specify this device by running:
+
+    briefcase run android -d @{avd}
+
+""".format(avd=avd))
         elif device:
-            logging.info("")
-            logging.info("In future, you can specify this device by running:")
-            logging.info("")
-            logging.info("    briefcase run android -d {device}".format(device=device))
-            logging.info("")
-            logging.info("")
+            print("""
+In future, you can specify this device by running:
+
+    briefcase run android -d {device}
+
+""".format(device=device))
 
         return device, name, avd
 
@@ -565,13 +571,14 @@ Delete {sdk_zip_path} and run briefcase again.""".format(
             default_avd = 'beePhone{i}'.format(i=i)
 
         # Prompt for a device avd until a valid one is provided.
-        logger.info("")
-        logger.info("You need to select a name for your new emulator. This is an identifier that")
-        logger.info("can be used to start the emulator in future. It should follow the same naming")
-        logger.info("conventions as a Python package (i.e., it may only contain letters, numbers,")
-        logger.info("hyphens and underscores). If you don't provide a name, Briefcase will use the")
-        logger.info("a default name '{default_avd}'".format(default_avd=default_avd))
-        logger.info("")
+        print("""
+You need to select a name for your new emulator. This is an identifier that
+can be used to start the emulator in future. It should follow the same naming
+conventions as a Python package (i.e., it may only contain letters, numbers,
+hyphens and underscores). If you don't provide a name, Briefcase will use the
+a default name '{default_avd}'.
+
+""".format(default_avd=default_avd))
         avd_is_invalid = True
         while avd_is_invalid:
             avd = self.command.input("Emulator name [{default_avd}]: ".format(
@@ -582,14 +589,17 @@ Delete {sdk_zip_path} and run briefcase again.""".format(
                 avd = default_avd
 
             if not PEP508_NAME_RE.match(avd):
-                logger.info("")
-                logger.info("'{avd}' is not a valid emulator name. An emulator name may only contain".format(avd=avd))
-                logger.info("letters, numbers, hyphens and underscores")
-                logger.info("")
+                print("""
+'{avd}' is not a valid emulator name. An emulator name may only contain
+letters, numbers, hyphens and underscores
+
+""".format(avd=avd))
             elif avd in emulators:
-                logger.info("")
-                logger.info("An emulator named '{avd}' already exists.".format(avd=avd))
-                logger.info("")
+                print("""
+An emulator named '{avd}' already exists.
+
+""".format(avd=avd))
+                print()
             else:
                 avd_is_invalid = False
 
@@ -598,9 +608,9 @@ Delete {sdk_zip_path} and run briefcase again.""".format(
         skin = 'pixel_3a'
 
         try:
-            logger.info("")
-            logger.info("Creating Android emulator {avd}...".format(avd=avd))
-            logger.info("")
+            print()
+            print("Creating Android emulator {avd}...".format(avd=avd))
+            print()
             self.command.subprocess.check_output(
                 [
                     os.fsdecode(self.avdmanager_path),
@@ -621,9 +631,9 @@ Delete {sdk_zip_path} and run briefcase again.""".format(
         # Check for a device skin. If it doesn't exist, download it.
         skin_path = self.root_path / "skins" / skin
         if skin_path.exists():
-            logger.info("Device skin '{skin}' already exists".format(skin=skin))
+            print("Device skin '{skin}' already exists".format(skin=skin))
         else:
-            logger.info("Obtaining device skin...")
+            print("Obtaining device skin...")
             skin_url = (
                 "https://android.googlesource.com/platform/tools/adt/idea/"
                 "+archive/refs/heads/mirror-goog-studio-master-dev/"
@@ -653,7 +663,7 @@ Delete {sdk_zip_path} and run briefcase again.""".format(
             # Delete the downloaded file.
             skin_tgz_path.unlink()
 
-        logger.info("Adding extra device configuration...")
+        print("Adding extra device configuration...")
         with (
             self.avd_path / '{avd}.avd'.format(avd=avd) / 'config.ini'
         ).open('a') as f:
@@ -666,13 +676,13 @@ skin.path=skins/{skin}
 showDeviceFrame=yes
 """.format(skin=skin))
 
-        logger.info("")
-        logger.info("Android emulator '{avd}' created.")
-        logger.info("")
-        logger.info("In future, you can specify this device by running:")
-        logger.info("")
-        logger.info("    briefcase run android -d @{avd}".format(avd=avd))
-        logger.info("")
+            print("""
+Android emulator '{avd}' created.
+
+In future, you can specify this device by running:
+
+    briefcase run android -d @{avd}
+""".format(avd=avd))
 
         return avd
 

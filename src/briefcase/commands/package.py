@@ -1,12 +1,8 @@
-import logging
 from typing import Optional
 
 from briefcase.config import BaseConfig
 
 from .base import BaseCommand, full_options
-
-
-logger = logging.getLogger(__name__)
 
 
 class PackageCommand(BaseCommand):
@@ -64,8 +60,8 @@ class PackageCommand(BaseCommand):
             **full_options(state, options)
         )
 
-        logger.info("")
-        logger.info("[{app.app_name}] Packaged {filename}".format(
+        print()
+        print("[{app.app_name}] Packaged {filename}".format(
             app=app,
             filename=self.distribution_path(
                 app,

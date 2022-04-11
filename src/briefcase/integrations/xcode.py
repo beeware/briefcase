@@ -1,13 +1,10 @@
 import enum
 import json
-import logging
 import re
 import subprocess
 from pathlib import Path
 
 from briefcase.exceptions import BriefcaseCommandError
-
-logger = logging.getLogger(__name__)
 
 
 class DeviceState(enum.Enum):
@@ -96,26 +93,26 @@ Re-run Briefcase once that installation is complete.
 """)
     except subprocess.CalledProcessError as e:
         if e.returncode != 1:
-            logger.info("")
-            logger.info("*************************************************************************")
-            logger.info("** WARNING: Unable to determine if Xcode is installed                  **")
-            logger.info("*************************************************************************")
-            logger.info("")
-            logger.info("   Briefcase will proceed, assuming everything is OK. If you experience")
-            logger.info("   problems, this is almost certainly the cause of those problems.")
-            logger.info("")
-            logger.info("   Please report this as a bug at:")
-            logger.info("")
-            logger.info("     https://github.com/beeware/briefcase/issues/new")
-            logger.info("")
-            logger.info("   In your report, please including the output from running:")
-            logger.info("")
-            logger.info("     xcode-select --install")
-            logger.info("")
-            logger.info("   from the command prompt.")
-            logger.info("")
-            logger.info("*************************************************************************")
-            logger.info("")
+            print("""
+*************************************************************************
+** WARNING: Unable to determine if Xcode is installed                  **
+*************************************************************************
+
+   Briefcase will proceed, assuming everything is OK. If you experience
+   problems, this is almost certainly the cause of those problems.
+
+   Please report this as a bug at:
+
+     https://github.com/beeware/briefcase/issues/new
+
+   In your report, please including the output from running:
+
+     xcode-select --install
+
+   from the command prompt.
+
+*************************************************************************
+""")
 
 
 def ensure_xcode_is_installed(
@@ -203,26 +200,26 @@ Re-run Briefcase once that installation is complete.
                 except IndexError:
                     pass
 
-            logger.warning("")
-            logger.warning("*************************************************************************")
-            logger.warning("** WARNING: Unable to determine the version of Xcode that is installed **")
-            logger.warning("*************************************************************************")
-            logger.warning("")
-            logger.warning("   Briefcase will proceed, assuming everything is OK. If you experience")
-            logger.warning("   problems, this is almost certainly the cause of those problems.")
-            logger.warning("")
-            logger.warning("   Please report this as a bug at:")
-            logger.warning("")
-            logger.warning("     https://github.com/beeware/briefcase/issues/new")
-            logger.warning("")
-            logger.warning("   In your report, please including the output from running:")
-            logger.warning("")
-            logger.warning("     xcodebuild -version")
-            logger.warning("")
-            logger.warning("   from the command prompt.")
-            logger.warning("")
-            logger.warning("*************************************************************************")
-            logger.warning("")
+            print("""
+*************************************************************************
+** WARNING: Unable to determine the version of Xcode that is installed **
+*************************************************************************
+
+   Briefcase will proceed, assuming everything is OK. If you experience
+   problems, this is almost certainly the cause of those problems.
+
+   Please report this as a bug at:
+
+     https://github.com/beeware/briefcase/issues/new
+
+   In your report, please including the output from running:
+
+     xcodebuild -version
+
+   from the command prompt.
+
+*************************************************************************
+""")
 
     except subprocess.CalledProcessError as e:
         if " is a command line tools instance" in e.output:
@@ -269,20 +266,20 @@ def confirm_xcode_license_accepted(command):
         )
     except subprocess.CalledProcessError as e:
         if e.returncode == 69:
-            logger.info("")
-            logger.info("Use of Xcode and the iOS developer tools are covered by a license that must be")
-            logger.info("accepted before you can use those tools.")
-            logger.info("")
-            logger.info("You can accept these licenses by starting Xcode and clicking \"Accept\"; or, you")
-            logger.info("can run:")
-            logger.info("")
-            logger.info("    $ sudo xcodebuild -license")
-            logger.info("")
-            logger.info("at the command line and accepting the license there.")
-            logger.info("")
-            logger.info("Briefcase will try the command line version of this command now. You will need")
-            logger.info("to enter your password (Briefcase will not store this password anywhere).")
-            logger.info("")
+            print("""
+Use of Xcode and the iOS developer tools are covered by a license that must be
+accepted before you can use those tools.
+
+You can accept these licenses by starting Xcode and clicking "Accept"; or, you
+can run:
+
+    $ sudo xcodebuild -license
+
+at the command line and accepting the license there.
+
+Briefcase will try the command line version of this command now. You will need
+to enter your password (Briefcase will not store this password anywhere).
+""")
             try:
                 command.subprocess.run(
                     ['sudo', 'xcodebuild', '-license'],
@@ -306,47 +303,47 @@ Xcode license has not been accepted. Briefcase cannot continue.
 You need to accept the Xcode license before Briefcase can package your app.
 """)
                 else:
-                    logger.warning("")
-                    logger.warning("*************************************************************************")
-                    logger.warning("** WARNING: Unable to determine if the Xcode license has been accepted **")
-                    logger.warning("*************************************************************************")
-                    logger.warning("")
-                    logger.warning("   Briefcase will proceed, assuming everything is OK. If you experience")
-                    logger.warning("   problems, this is almost certainly the cause of those problems.")
-                    logger.warning("")
-                    logger.warning("   Please report this as a bug at:")
-                    logger.warning("")
-                    logger.warning("     https://github.com/beeware/briefcase/issues/new")
-                    logger.warning("")
-                    logger.warning("   In your report, please including the output from running:")
-                    logger.warning("")
-                    logger.warning("     sudo xcodebuild -license")
-                    logger.warning("")
-                    logger.warning("   from the command prompt.")
-                    logger.warning("")
-                    logger.warning("*************************************************************************")
-                    logger.warning("")
+                    print("""
+*************************************************************************
+** WARNING: Unable to determine if the Xcode license has been accepted **
+*************************************************************************
+
+   Briefcase will proceed, assuming everything is OK. If you experience
+   problems, this is almost certainly the cause of those problems.
+
+   Please report this as a bug at:
+
+     https://github.com/beeware/briefcase/issues/new
+
+   In your report, please including the output from running:
+
+     sudo xcodebuild -license
+
+   from the command prompt.
+
+*************************************************************************
+""")
         else:
-            logger.warning("")
-            logger.warning("*************************************************************************")
-            logger.warning("** WARNING: Unable to determine if the Xcode license has been accepted **")
-            logger.warning("*************************************************************************")
-            logger.warning("")
-            logger.warning("   Briefcase will proceed, assuming everything is OK. If you experience")
-            logger.warning("   problems, this is almost certainly the cause of those problems.")
-            logger.warning("")
-            logger.warning("   Please report this as a bug at:")
-            logger.warning("")
-            logger.warning("     https://github.com/beeware/briefcase/issues/new")
-            logger.warning("")
-            logger.warning("   In your report, please including the output from running:")
-            logger.warning("")
-            logger.warning("     /usr/bin/clang --version")
-            logger.warning("")
-            logger.warning("   from the command prompt.")
-            logger.warning("")
-            logger.warning("*************************************************************************")
-            logger.warning("")
+            print("""
+*************************************************************************
+** WARNING: Unable to determine if the Xcode license has been accepted **
+*************************************************************************
+
+   Briefcase will proceed, assuming everything is OK. If you experience
+   problems, this is almost certainly the cause of those problems.
+
+   Please report this as a bug at:
+
+     https://github.com/beeware/briefcase/issues/new
+
+   In your report, please including the output from running:
+
+     /usr/bin/clang --version
+
+   from the command prompt.
+
+*************************************************************************
+""")
 
 
 def get_simulators(

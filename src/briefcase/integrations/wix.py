@@ -1,4 +1,3 @@
-import logging
 import os
 import shutil
 from pathlib import Path
@@ -11,8 +10,6 @@ from briefcase.exceptions import (
     NetworkFailure,
     NonManagedToolError
 )
-
-logger = logging.getLogger(__name__)
 
 WIX_DOWNLOAD_URL = "https://github.com/wixtoolset/wix3/releases/download/wix3112rtm/wix311-binaries.zip"
 
@@ -136,7 +133,7 @@ WiX Toolset. Current value: {wix_home!r}
             raise NetworkFailure("download WiX")
 
         try:
-            logger.info("Installing WiX...")
+            print("Installing WiX...")
             # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
             self.command.shutil.unpack_archive(
                 os.fsdecode(wix_zip_path),
@@ -161,11 +158,11 @@ Delete {wix_zip_path} and run briefcase again.""".format(
         """
         if self.managed_install:
             if self.exists():
-                logger.info("Removing old WiX install...")
+                print("Removing old WiX install...")
                 self.command.shutil.rmtree(self.wix_home)
 
                 self.install()
-                logger.info("...done.")
+                print("...done.")
             else:
                 raise MissingToolError('WiX')
         else:

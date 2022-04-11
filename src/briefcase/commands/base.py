@@ -1,7 +1,7 @@
+
 import argparse
 import importlib
 import inspect
-import logging
 import os
 import platform
 import shutil
@@ -30,8 +30,6 @@ from briefcase.exceptions import (
     MissingNetworkResourceError
 )
 from briefcase.integrations.subprocess import Subprocess
-
-logger = logging.getLogger(__name__)
 
 
 class TemplateUnsupportedVersion(BriefcaseCommandError):
@@ -515,7 +513,7 @@ class BaseCommand(ABC):
         if not filename.exists():
             # We have meaningful content, and it hasn't been cached previously,
             # so save it in the requested location
-            logger.info('Downloading {cache_name}...'.format(cache_name=cache_name))
+            print('Downloading {cache_name}...'.format(cache_name=cache_name))
             with filename.open('wb') as f:
                 total = response.headers.get('content-length')
                 if total is None:
@@ -528,9 +526,9 @@ class BaseCommand(ABC):
                         f.write(data)
                         done = int(50 * downloaded / total)
                         print('\r{}{} {}%'.format('#' * done, '.' * (50-done), 2*done), end='', flush=True)
-            logger.info("")
+            print()
         else:
-            logger.info('{cache_name} already downloaded'.format(cache_name=cache_name))
+            print('{cache_name} already downloaded'.format(cache_name=cache_name))
         return filename
 
     def update_cookiecutter_cache(self, template: str, branch='master'):
@@ -568,15 +566,15 @@ class BaseCommand(ABC):
                     # We are offline, or otherwise unable to contact
                     # the origin git repo. It's OK to continue; but warn
                     # the user that the template may be stale.
-                    logger.warning("***************************************************************************")
-                    logger.warning("WARNING: Unable to update template (is your computer offline?)")
-                    logger.warning("WARNING: Briefcase will use existing template without updating.")
-                    logger.warning("***************************************************************************")
+                    print("***************************************************************************")
+                    print("WARNING: Unable to update template (is your computer offline?)")
+                    print("WARNING: Briefcase will use existing template without updating.")
+                    print("***************************************************************************")
                 try:
                     # Check out the branch for the required version tag.
                     head = remote.refs[branch]
 
-                    logger.info("Using existing template (sha {hexsha}, updated {datestamp})".format(
+                    print("Using existing template (sha {hexsha}, updated {datestamp})".format(
                         hexsha=head.commit.hexsha,
                         datestamp=head.commit.committed_datetime.strftime("%c")
                     ))

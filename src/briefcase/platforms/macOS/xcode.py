@@ -1,4 +1,3 @@
-import logging
 import subprocess
 
 from briefcase.commands import (
@@ -17,8 +16,6 @@ from briefcase.platforms.macOS import (
     macOSPackageMixin,
     macOSRunMixin
 )
-
-logger = logging.getLogger(__name__)
 
 
 class macOSXcodeMixin(macOSMixin):
@@ -81,8 +78,8 @@ class macOSXcodeBuildCommand(macOSXcodeMixin, BuildCommand):
         :param app: The application to build
         """
 
-        logger.info("")
-        logger.info('[{app.app_name}] Building XCode project...'.format(
+        print()
+        print('[{app.app_name}] Building XCode project...'.format(
             app=app
         ))
 
@@ -96,7 +93,7 @@ class macOSXcodeBuildCommand(macOSXcodeMixin, BuildCommand):
         # build_settings_str = ['{}={}'.format(*x) for x in build_settings]
 
         try:
-            logger.info("")
+            print()
             self.subprocess.run(
                 [
                     'xcodebuild',  # ' '.join(build_settings_str),
@@ -107,9 +104,9 @@ class macOSXcodeBuildCommand(macOSXcodeMixin, BuildCommand):
                 ],
                 check=True,
             )
-            logger.info('Build succeeded.')
+            print('Build succeeded.')
         except subprocess.CalledProcessError:
-            logger.info("")
+            print()
             raise BriefcaseCommandError(
                 "Unable to build app {app.app_name}.".format(app=app)
             )

@@ -1,4 +1,3 @@
-import logging
 import os
 import shutil
 import subprocess
@@ -12,8 +11,6 @@ from briefcase.exceptions import (
     NetworkFailure,
     NonManagedToolError
 )
-
-logger = logging.getLogger(__name__)
 
 
 class JDK:
@@ -222,8 +219,7 @@ class JDK:
                 # We only display the warning messages on the pass where we actually
                 # install the JDK.
                 if install_message:
-                    for line in install_message.splitlines():
-                        logger.info(line)
+                    print(install_message)
 
                 jdk.install()
 
@@ -258,7 +254,7 @@ class JDK:
             raise NetworkFailure("download Java 8 JDK")
 
         try:
-            logger.info("Installing AdoptOpenJDK...")
+            print("Installing AdoptOpenJDK...")
             # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
             self.command.shutil.unpack_archive(
                 os.fsdecode(jdk_zip_path),
@@ -290,14 +286,14 @@ Delete {jdk_zip_path} and run briefcase again.""".format(
         """
         if self.managed_install:
             if self.exists():
-                logger.info("Removing old JDK install...")
+                print("Removing old JDK install...")
                 if self.command.host_os == 'Darwin':
                     self.command.shutil.rmtree(self.java_home.parent.parent)
                 else:
                     self.command.shutil.rmtree(self.java_home)
 
                 self.install()
-                logger.info("...done.")
+                print("...done.")
             else:
                 raise MissingToolError('Java')
         else:
