@@ -81,7 +81,7 @@ def test_simple_call_with_path_arg(mock_docker, tmp_path, capsys):
 )
 def test_simple_verbose_call(mock_docker, tmp_path, capsys):
     "If verbosity is turned out, there is output"
-    mock_docker.command.verbosity = 2
+    mock_docker.command.logger.verbosity = 2
 
     mock_docker.run(['hello', 'world'])
 
@@ -100,12 +100,12 @@ def test_simple_verbose_call(mock_docker, tmp_path, capsys):
             'world',
         ]
     )
-    assert capsys.readouterr().out == (
-        ">>> docker run --tty "
+    assert capsys.readouterr().out.splitlines()[-1] == (
+        "debug1>     docker run --tty "
         "--volume {platform_path}:/app:z "
         "--volume {dot_briefcase_path}:/home/brutus/.briefcase:z "
         "briefcase/com.example.myapp:py3.X "
-        "hello world\n"
+        "hello world"
     ).format(
         platform_path=tmp_path / 'platform',
         dot_briefcase_path=tmp_path / '.briefcase',

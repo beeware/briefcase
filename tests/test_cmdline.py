@@ -91,7 +91,7 @@ def test_new_command():
     assert cmd.platform == 'all'
     assert cmd.output_format is None
     assert cmd.input.enabled
-    assert cmd.verbosity == 1
+    assert cmd.logger.verbosity == 1
     assert options == {'template': None}
 
 
@@ -106,7 +106,7 @@ def test_dev_command(monkeypatch):
     assert cmd.platform == 'macOS'
     assert cmd.output_format is None
     assert cmd.input.enabled
-    assert cmd.verbosity == 1
+    assert cmd.logger.verbosity == 1
     assert options == {
         'appname': None,
         'update_dependencies': False,
@@ -125,7 +125,7 @@ def test_upgrade_command(monkeypatch):
     assert cmd.platform == 'macOS'
     assert cmd.output_format is None
     assert cmd.input.enabled
-    assert cmd.verbosity == 1
+    assert cmd.logger.verbosity == 1
     assert options == {
         'list_tools': False,
         'tool_list': [],
@@ -143,7 +143,7 @@ def test_bare_command(monkeypatch):
     assert cmd.platform == 'macOS'
     assert cmd.output_format == 'app'
     assert cmd.input.enabled
-    assert cmd.verbosity == 1
+    assert cmd.logger.verbosity == 1
     assert options == {}
 
 
@@ -157,7 +157,7 @@ def test_linux_default():
     assert cmd.platform == 'linux'
     assert cmd.output_format == 'appimage'
     assert cmd.input.enabled
-    assert cmd.verbosity == 1
+    assert cmd.logger.verbosity == 1
     assert options == {}
 
 
@@ -171,7 +171,7 @@ def test_macOS_default():
     assert cmd.platform == 'macOS'
     assert cmd.output_format == 'app'
     assert cmd.input.enabled
-    assert cmd.verbosity == 1
+    assert cmd.logger.verbosity == 1
     assert options == {}
 
 
@@ -185,7 +185,7 @@ def test_windows_default():
     assert cmd.platform == 'windows'
     assert cmd.output_format == 'msi'
     assert cmd.input.enabled
-    assert cmd.verbosity == 1
+    assert cmd.logger.verbosity == 1
     assert options == {}
 
 
@@ -257,7 +257,7 @@ def test_command_explicit_platform(monkeypatch):
     assert cmd.platform == 'linux'
     assert cmd.output_format == 'appimage'
     assert cmd.input.enabled
-    assert cmd.verbosity == 1
+    assert cmd.logger.verbosity == 1
     assert options == {}
 
 
@@ -273,7 +273,7 @@ def test_command_explicit_platform_case_handling(monkeypatch):
     assert cmd.platform == 'macOS'
     assert cmd.output_format == 'app'
     assert cmd.input.enabled
-    assert cmd.verbosity == 1
+    assert cmd.logger.verbosity == 1
     assert options == {}
 
 
@@ -320,7 +320,7 @@ def test_command_explicit_format(monkeypatch):
     assert cmd.platform == 'macOS'
     assert cmd.output_format == 'app'
     assert cmd.input.enabled
-    assert cmd.verbosity == 1
+    assert cmd.logger.verbosity == 1
     assert options == {}
 
 
@@ -385,7 +385,7 @@ def test_command_disable_input(monkeypatch):
     assert cmd.platform == 'macOS'
     assert cmd.output_format == 'app'
     assert not cmd.input.enabled
-    assert cmd.verbosity == 1
+    assert cmd.logger.verbosity == 1
     assert options == {}
 
 
@@ -400,7 +400,7 @@ def test_command_options(monkeypatch, capsys):
 
     assert isinstance(cmd, macOSAppPublishCommand)
     assert cmd.input.enabled
-    assert cmd.verbosity == 1
+    assert cmd.logger.verbosity == 1
     assert options == {
         'channel': 's3'
     }

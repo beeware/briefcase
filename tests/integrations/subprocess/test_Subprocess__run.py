@@ -1,5 +1,7 @@
 import os
 
+from briefcase.commands.base import Log
+
 
 def test_simple_call(mock_sub, capsys):
     "A simple call will be invoked"
@@ -36,9 +38,9 @@ def test_simple_call_with_path_arg(mock_sub, capsys, tmp_path):
 
 def test_simple_verbose_call(mock_sub, capsys):
     "If verbosity is turned out, there is output"
-    mock_sub.command.verbosity = 2
+    mock_sub.command.logger = Log(verbosity=2)
 
     mock_sub.run(['hello', 'world'])
 
     mock_sub._subprocess.run.assert_called_with(['hello', 'world'])
-    assert capsys.readouterr().out == ">>> hello world\n"
+    assert capsys.readouterr().out.splitlines()[-1] == "debug1>     hello world"

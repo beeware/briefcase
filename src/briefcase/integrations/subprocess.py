@@ -44,8 +44,6 @@ class Subprocess:
     def run(self, args, **kwargs):
         """A wrapper for subprocess.run()
 
-        If verbosity >= 2, the executed command will be printed to the console.
-
         The behavior of this method is identical to subprocess.run(),
         except for the `env` argument. If provided, the current system
         environment will be copied, and the contents of env overwritten
@@ -54,54 +52,60 @@ class Subprocess:
         # Invoke subprocess.run().
         # Pass through all arguments as-is.
         # All exceptions are propagated back to the caller.
-        self._log_environment(kwargs)
         self._log_command(args)
+        self._log_environment(kwargs)
 
-        ret = self._subprocess.run(
-            [
-                str(arg) for arg in args
-            ],
-            **self.final_kwargs(**kwargs)
-        )
+        try:
+            command_result = self._subprocess.run(
+                [
+                    str(arg) for arg in args
+                ],
+                **self.final_kwargs(**kwargs)
+            )
+        except subprocess.CalledProcessError as exc:
+            self._log_return_code(exc.returncode)
+            raise
 
-        self._log_return_code(ret.returncode)
-        return ret
+        self._log_return_code(command_result.returncode)
+        return command_result
 
     def check_output(self, args, **kwargs):
         """A wrapper for subprocess.check_output()
-
-        If verbosity >= 2, the executed command will be printed to the console.
 
         The behavior of this method is identical to subprocess.check_output(),
         except for the `env` argument. If provided, the current system
         environment will be copied, and the contents of env overwritten
         into that environment.
         """
-        self._log_environment(kwargs)
         self._log_command(args)
+        self._log_environment(kwargs)
 
-        ret = self._subprocess.check_output(
-            [
-                str(arg) for arg in args
-            ],
-            **self.final_kwargs(**kwargs)
-        )
+        try:
+            cmd_output = self._subprocess.check_output(
+                [
+                    str(arg) for arg in args
+                ],
+                **self.final_kwargs(**kwargs)
+            )
+        except subprocess.CalledProcessError as exc:
+            self._log_output(exc.output, exc.stderr)
+            self._log_return_code(exc.returncode)
+            raise
 
-        self._log_output(ret)
-        return ret
+        self._log_output(cmd_output)
+        self._log_return_code(0)
+        return cmd_output
 
     def Popen(self, args, **kwargs):
         """A wrapper for subprocess.Popen()
-
-        If verbosity >= 2, the executed command will be printed to the console.
 
         The behavior of this method is identical to subprocess.Popen(),
         except for the `env` argument. If provided, the current system
         environment will be copied, and the contents of env overwritten
         into that environment.
         """
-        self._log_environment(kwargs)
         self._log_command(args)
+        self._log_environment(kwargs)
 
         return self._subprocess.Popen(
             [
@@ -130,13 +134,18 @@ class Subprocess:
         for env_var, value in env.items():
             self.command.logger.debug3("    {env_var}={value}".format(env_var=env_var, value=value))
 
-    def _log_output(self, output):
+    def _log_output(self, output, stderr=None):
         """
         Log the output of the executed command.
         """
         if output:
             self.command.logger.debug2("Command Output:")
             for line in str(output).splitlines():
+                self.command.logger.debug2("    {line}".format(line=line))
+
+        if stderr:
+            self.command.logger.debug2("Command Error Output (stderr):")
+            for line in str(stderr).splitlines():
                 self.command.logger.debug2("    {line}".format(line=line))
 
     def _log_return_code(self, return_code):

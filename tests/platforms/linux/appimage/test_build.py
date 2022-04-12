@@ -39,7 +39,6 @@ def build_command(tmp_path, first_app_config):
     )
     command.host_os = 'Linux'
     command.host_arch = 'wonky'
-    command.verbosity = 0
     command.use_docker = False
     command._path_index = {
         first_app_config: {

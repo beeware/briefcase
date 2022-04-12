@@ -1,5 +1,7 @@
 from .conftest import DummyCommand
 
+from briefcase.commands.base import Log
+
 
 def test_bundle_path(base_command, my_app, tmp_path):
     bundle_path = base_command.bundle_path(my_app)
@@ -40,7 +42,7 @@ def test_publish_command(base_command):
 def test_input_state_transferred(tmp_path):
     "If input is disabled, that status is transferred to created subcommands"
     command = DummyCommand(base_path=tmp_path, input_enabled=False)
-    command.verbosity = 0
+    command.logger = Log(verbosity=1)
 
     # Check the enabled state of subcommands
     assert not command.create_command.input.enabled

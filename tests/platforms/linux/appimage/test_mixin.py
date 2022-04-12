@@ -98,7 +98,6 @@ def test_verify_non_linux_no_docker(tmp_path):
     command = LinuxAppImageCreateCommand(base_path=tmp_path)
     command.host_os = "WeirdOS"
     command.use_docker = False
-    command.verbosity = 0
 
     # Verify the tools
     with pytest.raises(BriefcaseCommandError):
@@ -110,7 +109,6 @@ def test_verify_linux_docker(tmp_path):
     command = LinuxAppImageCreateCommand(base_path=tmp_path)
     command.host_os = "Linux"
     command.use_docker = True
-    command.verbosity = 0
     # Mock the existence of Docker.
     command.subprocess = MagicMock()
     command.subprocess.check_output.return_value = "Docker version 19.03.8, build afacb8b\n"
@@ -127,7 +125,6 @@ def test_verify_non_linux_docker(tmp_path):
     command = LinuxAppImageCreateCommand(base_path=tmp_path)
     command.host_os = "WierdOS"
     command.use_docker = True
-    command.verbosity = 0
     # Mock the existence of Docker.
     command.subprocess = MagicMock()
     command.subprocess.check_output.return_value = "Docker version 19.03.8, build afacb8b\n"
@@ -144,7 +141,6 @@ def test_verify_windows_docker(tmp_path):
     command = LinuxAppImageCreateCommand(base_path=tmp_path)
     command.host_os = "Windows"
     command.use_docker = True
-    command.verbosity = 0
 
     # Verify the tools
     with pytest.raises(BriefcaseCommandError):

@@ -185,6 +185,9 @@ class BaseCommand(ABC):
         # The internal Briefcase integrations API.
         self.integrations = integrations
 
+        # initialize with default logger...replaced when options are parsed
+        self.logger = Log()
+
     @property
     def create_command(self):
         "Factory property; return an instance of a create command for the same format"
@@ -427,8 +430,7 @@ class BaseCommand(ABC):
 
         # Extract the base default options onto the command
         self.input.enabled = options.pop('input_enabled')
-        self.verbosity = options.pop('verbosity')
-        self.logger = Log(verbosity=self.verbosity)
+        self.logger = Log(verbosity=options.pop('verbosity'))
 
         return options
 
@@ -439,7 +441,7 @@ class BaseCommand(ABC):
         :param command: The command whose options are to be cloned
         """
         self.input.enabled = command.input.enabled
-        self.verbosity = command.verbosity
+        self.logger = command.logger
 
     def add_default_options(self, parser):
         """
