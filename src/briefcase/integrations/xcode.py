@@ -174,16 +174,17 @@ Re-run Briefcase once that installation is complete.
         )
 
         if min_version is not None:
-            if output.startswith('Xcode '):
+            # Look for a line in the output that reads "Xcode X.Y.Z"
+            version_lines = [line for line in output.split('\n') if line.startswith('Xcode ')]
+            if version_lines:
                 try:
-                    # Split content up to the first \n
-                    # then split the content after the first space
+                    # Split the content after the first space
                     # and split that content on the dots.
                     # Append 0's to fill any gaps caused by
                     # version numbers that don't have a minor version.
                     version = tuple(
                         int(v)
-                        for v in output.split('\n')[0].split(' ')[1].split('.')
+                        for v in version_lines[0].split(' ')[1].split('.')
                     ) + (0, 0)
 
                     if version < min_version:
