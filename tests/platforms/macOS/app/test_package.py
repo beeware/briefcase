@@ -1,5 +1,6 @@
 import os
 import subprocess
+import sys
 from pathlib import Path
 from unittest import mock
 
@@ -74,6 +75,7 @@ def sign_call(tmp_path, filepath, entitlements=True, deep=False):
     return mock.call(args, stderr=subprocess.PIPE, check=True)
 
 
+@pytest.mark.skipif(sys.platform != 'darwin', reason="macOS packaging tests only required on macOS")
 def test_package_app(first_app_with_binaries, tmp_path):
     "A macOS App can be packaged"
 
@@ -155,6 +157,7 @@ def test_package_app(first_app_with_binaries, tmp_path):
     )
 
 
+@pytest.mark.skipif(sys.platform != 'darwin', reason="macOS packaging tests only required on macOS")
 def test_package_app_sign_failure(first_app_with_binaries, tmp_path):
     "If the signing process can't be completed, an error is raised"
 
@@ -199,6 +202,7 @@ def test_package_app_sign_failure(first_app_with_binaries, tmp_path):
     command.dmgbuild.assert_not_called()
 
 
+@pytest.mark.skipif(sys.platform != 'darwin', reason="macOS packaging tests only required on macOS")
 def test_package_app_deep_sign_faliure(first_app_with_binaries, tmp_path):
     "A macOS App can be packaged"
 
@@ -252,6 +256,7 @@ def test_package_app_deep_sign_faliure(first_app_with_binaries, tmp_path):
     command.dmgbuild.assert_not_called()
 
 
+@pytest.mark.skipif(sys.platform != 'darwin', reason="macOS packaging tests only required on macOS")
 def test_package_app_no_sign(first_app_with_binaries, tmp_path):
     "A macOS App can be packaged without signing"
 
@@ -269,6 +274,7 @@ def test_package_app_no_sign(first_app_with_binaries, tmp_path):
     assert command.subprocess.run.call_count == 0
 
 
+@pytest.mark.skipif(sys.platform != 'darwin', reason="macOS packaging tests only required on macOS")
 def test_package_app_adhoc_sign(first_app_with_binaries, tmp_path):
     "A macOS App can be packaged and signed with adhoc identity"
 
@@ -288,6 +294,7 @@ def test_package_app_adhoc_sign(first_app_with_binaries, tmp_path):
     assert '--options' not in command.subprocess.run.call_args[0][0]
 
 
+@pytest.mark.skipif(sys.platform != 'darwin', reason="macOS packaging tests only required on macOS")
 def test_package_app_no_dmg(first_app_with_binaries, tmp_path):
     "A macOS App can be packaged without building dmg"
 
