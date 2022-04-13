@@ -26,9 +26,7 @@ def test_not_installed(tmp_path):
 
     # Test a location where Xcode *won't* be installed
     with pytest.raises(BriefcaseCommandError):
-        ensure_xcode_is_installed(
-            command,
-        )
+        ensure_xcode_is_installed(command)
 
 
 def test_not_installed_hardcoded_path(tmp_path):
@@ -111,6 +109,32 @@ def test_installed_no_minimum_version(xcode):
         stderr=subprocess.STDOUT,
         universal_newlines=True,
     )
+
+
+def test_installed_extra_output(capsys, xcode):
+    "If Xcode but outputs extra content, the check is still satisfied."
+    # This specific output was seen in the wild with Xcode 13.2.1; see #668
+    command = mock.MagicMock()
+    command.subprocess.check_output.return_value = '\n'.join([
+        "objc[86306]: Class AMSupportURLConnectionDelegate is implemented in both /usr/lib/libauthinstall.dylib (0x20d17ab90) and /Library/Apple/System/Library/PrivateFrameworks/MobileDevice.framework/Versions/A/MobileDevice (0x1084b82c8). One of the two will be used. Which one is undefined."  # noqa: E501
+        "objc[86306]: Class AMSupportURLSession is implemented in both /usr/lib/libauthinstall.dylib (0x20d17abe0) and /Library/Apple/System/Library/PrivateFrameworks/MobileDevice.framework/Versions/A/MobileDevice (0x1084b8318). One of the two will be used. Which one is undefined.",  # noqa: E501
+        "Xcode 13.2.1",
+        "Build version 13C100",
+    ])
+
+    # Check passes without an error.
+    ensure_xcode_is_installed(command, xcode_location=xcode, min_version=(11, 1))
+
+    # xcode-select was invoked
+    command.subprocess.check_output.assert_called_once_with(
+        ['xcodebuild', '-version'],
+        stderr=subprocess.STDOUT,
+        universal_newlines=True,
+    )
+
+    # No warning generated.
+    out = capsys.readouterr().out
+    assert "WARNING" not in out
 
 
 @pytest.mark.parametrize(
