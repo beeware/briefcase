@@ -18,7 +18,7 @@ def first_app_with_binaries(first_app_config, tmp_path):
         'first_so.so',
         Path('subfolder') / 'second_so.so',
         'first_dylib.dylib',
-        Path('subfolder') /'second_dylib.dylib',
+        Path('subfolder') / 'second_dylib.dylib',
         'other_binary',
     ]:
         (lib_path / lib).parent.mkdir(parents=True, exist_ok=True)
