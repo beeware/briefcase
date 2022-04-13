@@ -1,7 +1,6 @@
-import itertools
 import os
 import subprocess
-import stat
+from pathlib import Path
 
 from briefcase.config import BaseConfig
 from briefcase.console import select_option
@@ -90,6 +89,30 @@ class macOSRunMixin:
             )
 
 
+def is_mach_o_binary(path):
+    """Determine if the file at the given path is a Mach-O binary.
+
+    :param path: The path to check
+    :returns: True if the file at the given location is a Mach-O binary.
+    """
+    # A binary is any file that is executable, or has a suffix from a known list
+    if os.access(path, os.X_OK) or path.suffix.lower() in {'.dylib', '.o', '.so', ''}:
+        # File is a binary; read the file magic to determine if it's Mach-O.
+        with path.open('rb') as f:
+            magic = f.read(4)
+            return magic in (
+                b'\xCA\xFE\xBA\xBE',
+                b'\xCF\xFA\xED\xFE',
+                b'\xCE\xFA\xED\xFE',
+                b'\xBE\xBA\xFE\xCA',
+                b'\xFE\xED\xFA\xCF',
+                b'\xFE\xED\xFA\xCE',
+            )
+    else:
+        # Not a binary
+        return False
+
+
 class macOSPackageMixin:
     @property
     def packaging_formats(self):
@@ -135,29 +158,16 @@ class macOSPackageMixin:
         identities = self.get_identities(self, 'codesigning')
 
         if identity:
-            # Try to look up the identity as a hex checksum
-            if identity in identities:
-                return identity
+            try:
+                # Try to look up the identity as a hex checksum
+                return identities[identity]
+            except KeyError:
+                # Try to look up the identity as readable name
+                if identity in identities.values():
+                    return identity
 
-            # Try to look up the identity as readable name
-            identity_by_name = next(((hex_key, name) for hex_key, name in identities.items()
-                                    if identity in name), None)
-            if identity_by_name is not None:
-                if identity_by_name[1] == identity:
-                    return identity_by_name[1]
-                else:
-                    raise BriefcaseCommandError(
-                        "Invalid code signing identity {identity!r}. (Did you mean {found!r}?)".format(
-                            identity=identity, found=identity_by_name[1],
-                        )
-                    )
-
-            # Not found
-            raise BriefcaseCommandError(
-                "Invalid code signing identity {identity!r}".format(
-                    identity=identity
-                )
-            )
+                # Not found
+                raise BriefcaseCommandError(f"Invalid code signing identity {identity!r}")
 
         if len(identities) == 0:
             raise BriefcaseCommandError(
@@ -171,7 +181,6 @@ class macOSPackageMixin:
             print()
             selection = select_option(identities, input=self.input)
             identity = identities[selection]
-            print(f"selected '{identity}")
 
         return identity
 
@@ -187,46 +196,43 @@ class macOSPackageMixin:
         options = 'runtime' if identity != '-' else None
         process_command = [
             'codesign',
+            os.fsdecode(path),
             '--sign', identity,
-            str(path),
             '--force',
         ]
         if entitlements:
             process_command.append('--entitlements')
-            process_command.append(str(entitlements))
+            process_command.append(os.fsdecode(entitlements))
         if options:
             process_command.append('--options')
             process_command.append(options)
 
-        while True:
-            try:
-                print("Signing:", ' '.join((f"'{pc}'" if ' ' in pc else pc for pc in process_command)))
-                self.subprocess.run(
-                    process_command,
-                    stderr=subprocess.PIPE,
-                    check=True,
-                )
-                break
-            except subprocess.CalledProcessError as e:
-                errors = e.stderr.decode('utf-8', errors='replace')
-                print(errors)
-                if 'not signed at all' in errors and '--deep' not in process_command:
-                    # The lexicographic order was not enough to resolve the dependencies
-                    # Retry with --deep
-                    process_command.append('--deep')
-                    continue
-                if 'unsupported format for signature' in errors:
-                    # We should not be signing this in the first place
-                    print("Skipping signature for:", path)
-                    if path.suffix == '.cstemp':
-                        print(
-                            "     (this looks like a temporary file from codesign -- "
-                            "if that's the case it can be safely removed)"
-                        )
-                    return
-                raise BriefcaseCommandError(
-                    "Unable to code sign {path}.".format(path=path)
-                )
+        try:
+            print(f"Signing {Path(path).relative_to(self.base_path)}")
+            self.subprocess.run(
+                process_command,
+                stderr=subprocess.PIPE,
+                check=True,
+            )
+        except subprocess.CalledProcessError as e:
+            errors = e.stderr.decode('utf-8', errors='replace')
+            if 'not signed at all' in errors:
+                print("... file requires a deep sign; retrying")
+                try:
+                    self.subprocess.run(
+                        process_command + ['--deep'],
+                        stderr=subprocess.PIPE,
+                        check=True,
+                    )
+                except subprocess.CalledProcessError:
+                    raise BriefcaseCommandError(f"Unable to deep code sign {path}.")
+
+            elif 'unsupported format for signature' in errors:
+                # We should not be signing this in the first place
+                print("... no signature required")
+                return
+            else:
+                raise BriefcaseCommandError(f"Unable to code sign {path}.")
 
     def package_app(
             self,
@@ -265,30 +271,28 @@ class macOSPackageMixin:
                     identity=identity
                 ))
 
-            def validate_mach_o(filename):
-                with open(filename, 'rb') as f:
-                    magic = f.read(4)
-                return magic in (b'\xCA\xFE\xBA\xBE', b'\xCF\xFA\xED\xFE', b'\xCE\xFA\xED\xFE',
-                                 b'\xBE\xBA\xFE\xCA', b'\xFE\xED\xFA\xCF', b'\xFE\xED\xFA\xCE',)
+            bundle_path = self.binary_path(app)
+            resources_path = bundle_path / 'Contents' / 'Resources'
+
+            # Sign all Mach-O executable objects
+            sign_targets = [
+                path
+                for path in resources_path.rglob('*')
+                if not path.is_dir() and is_mach_o_binary(path)
+            ]
+
+            # Sign all embedded frameworks
+            sign_targets.extend(resources_path.rglob('*.framework'))
+
+            # Sign all embedded app objets
+            sign_targets.extend(resources_path.rglob('*.app'))
+
+            # Sign the bundle path itself
+            sign_targets.append(bundle_path)
 
             # Signs code objects in reversed lexicographic order to ensure nesting order is respected
             # (objects must be signed from the inside out)
-            bundle_path = self.binary_path(app)
-            resources_path = bundle_path / 'Contents' / 'Resources'
-            all_files = ((f, os.stat(f).st_mode,) for f in resources_path.rglob('*'))
-            exec_suffixes = ('.dylib', '.o', '.so', '')
-            exec_files = (f for f, m in all_files if (not stat.S_ISDIR(m)) and
-                          ((m & stat.S_IXUSR) or f.suffix.lower() in exec_suffixes))
-            exec_binaries = (f for f in exec_files if validate_mach_o(f))
-
-            final_bundle = (bundle_path,)
-            bundles = itertools.chain(
-                            resources_path.rglob('*.framework'),
-                            resources_path.rglob('*.app'),
-                            final_bundle,
-                        )
-            sign_targets = sorted(itertools.chain(exec_binaries, bundles), reverse=True)
-            for path in sign_targets:
+            for path in sorted(sign_targets, reverse=True):
                 self.sign(
                     path,
                     entitlements=self.entitlements_path(app),
@@ -296,7 +300,6 @@ class macOSPackageMixin:
                 )
 
         if packaging_format == 'dmg':
-
             print()
             print('[{app.app_name}] Building DMG...'.format(app=app))
 
