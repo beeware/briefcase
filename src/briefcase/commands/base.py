@@ -33,12 +33,14 @@ from briefcase.integrations.subprocess import Subprocess
 
 
 class TemplateUnsupportedVersion(BriefcaseCommandError):
-    def __init__(self, version_tag):
-        self.version_tag = version_tag
+    def __init__(self, python_version_tag):
+        self.python_version_tag = python_version_tag
         super().__init__(
-            msg='Template does not support {version_tag}'.format(
-                version_tag=version_tag
-            )
+            f"Could not find template for Python {self.python_version_tag}.\n\n"
+            f"This is likely because Python {self.python_version_tag} "
+            "is not yet supported. You will need to:\n"
+            "  * Use an older version of Python; or\n"
+            "  * Define your own custom template.\n"
         )
 
 

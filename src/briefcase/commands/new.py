@@ -1,6 +1,7 @@
 import os
 import re
 import subprocess
+import unicodedata
 from email.utils import parseaddr
 from typing import Optional
 from urllib.parse import urlparse
@@ -79,9 +80,36 @@ class NewCommand(BaseCommand):
         :param formal_name: The formal name
         :returns: The app's class name
         """
-        class_name = re.sub('[^0-9a-zA-Z_]+', '', formal_name)
-        if class_name[0].isdigit():
+        # Identifiers (including class names) can be unicode.
+        # https://docs.python.org/3/reference/lexical_analysis.html#identifiers
+        xid_start = {
+            "Lu",  # uppercase letters
+            "Ll",  # lowercase letters
+            "Lt",  # titlecase letters
+            "Lm",  # modifier letters
+            "Lo",  # other letters
+            "Nl",  # letter numbers
+        }
+        xid_continue = xid_start.union({
+            "Mn",  # nonspacing marks
+            "Mc",  # spacing combining marks
+            "Nd",  # decimal number
+            "Pc",  # connector punctuations
+        })
+
+        # Normalize to NFKC form, then remove any character that isn't
+        # in the allowed categories, or is the underscore character
+        class_name = ''.join(
+            ch for ch in unicodedata.normalize('NFKC', formal_name)
+            if unicodedata.category(ch) in xid_continue
+            or ch in {'_'}
+        )
+
+        # If the first character isn't in the 'start' character set,
+        # and it isn't already an underscore, prepend an underscore.
+        if unicodedata.category(class_name[0]) not in xid_start and class_name[0] != '_':
             class_name = '_' + class_name
+
         return class_name
 
     def make_app_name(self, formal_name):
@@ -91,7 +119,14 @@ class NewCommand(BaseCommand):
         :param formal_name: The formal name
         :returns: The candidate app name
         """
-        return re.sub('[^0-9a-zA-Z_]+', '', formal_name).lstrip('_').lower()
+        normalized = unicodedata.normalize('NFKD', formal_name)
+        stripped = re.sub('[^0-9a-zA-Z_]+', '', normalized).lstrip('_')
+        if stripped:
+            return stripped.lower()
+        else:
+            # If stripping removes all the content,
+            # use a dummy app name as the suggestion.
+            return 'myapp'
 
     def validate_app_name(self, candidate):
         """

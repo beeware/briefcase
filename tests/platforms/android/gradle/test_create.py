@@ -43,7 +43,8 @@ def test_version_code(create_command, first_app_config, version, build, version_
     if build:
         first_app_config.build = build
     assert create_command.output_format_template_context(first_app_config) == {
-        'version_code': version_code
+        'version_code': version_code,
+        'safe_formal_name': 'First App',
     }
     # Version code must be less than a 32 bit signed integer MAXINT.
     assert int(version_code) < 2147483647

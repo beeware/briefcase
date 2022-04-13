@@ -1,3 +1,4 @@
+import re
 import subprocess
 
 from briefcase.commands import (
@@ -11,6 +12,20 @@ from briefcase.commands import (
 from briefcase.config import BaseConfig, parsed_version
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.android_sdk import AndroidSDK
+
+
+def safe_formal_name(name):
+    """Converts the name into a safe name on Android.
+
+    Certain characters (``/\\:<>"?*|``) can't be used as app names
+    on Android; ``!`` causes problems with Android build tooling.
+    Also ensure that trailing, leading, and consecutive whitespace
+    caused by removing punctuation is collapsed.
+
+    :param name: The candidate name
+    :returns: The safe version of the name.
+    """
+    return re.sub(r'\s+', ' ', re.sub(r'[!/\\:<>"\?\*\|]', "", name)).strip()
 
 
 class GradleMixin:
@@ -27,6 +42,20 @@ class GradleMixin:
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+    def bundle_path(self, app):
+        """
+        The path to the bundle for the app in the output format.
+
+        The bundle is the template-generated source form of the app.
+        The path will usually be a directory, the existence of which is
+        indicative that the template has been rolled out for an app.
+
+        This overrides the default behavior, using a "safe" formal name
+
+        :param app: The app config
+        """
+        return self.platform_path / self.output_format / safe_formal_name(app.formal_name)
 
     def binary_path(self, app):
         return (
@@ -88,6 +117,7 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
 
         return {
             'version_code': version_code,
+            'safe_formal_name': safe_formal_name(app.formal_name),
         }
 
 
