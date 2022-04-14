@@ -10,6 +10,9 @@ from briefcase.config import is_valid_bundle_identifier
         'com.example.more',
         'com.example42.more',
         'com.example-42.more',
+        'in.example',  # Valid identifier with a country code as the TLD
+        'is.example',  # Valid identifier with a country code as the TLD
+        'com.example.in',  # Country codes can appear anywhere.
     ]
 )
 def test_valid_bundle(bundle):
@@ -29,6 +32,8 @@ def test_valid_bundle(bundle):
         'com.pass.example',  # Python reserved word
         'com.switch',  # Java reserved word
         'com.switch.example',  # Java reserved word
+        'int.example',  # Valid identifier with a reserved word as the TLD
+        'do.example',  # This *should* be valid by the Java spec, but Android chokes.
     ]
 )
 def test_invalid_bundle(bundle):

@@ -199,7 +199,12 @@ def is_valid_bundle_identifier(bundle):
         return False
 
     for part in bundle.split('.'):
-        if is_reserved_keyword(part):
+        # *Some* 2-letter country codes are valid identifiers,
+        # even though they're reserved words; see:
+        #    https://www.oracle.com/java/technologies/javase/codeconventions-namingconventions.html
+        # `.do` *should* be on this list, but as of Apr 2022, `.do` breaks
+        # the Android build tooling.
+        if is_reserved_keyword(part) and part not in {'in', 'is'}:
             return False
 
     return True
