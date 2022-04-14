@@ -227,7 +227,13 @@ class macOSPackageMixin:
                 except subprocess.CalledProcessError:
                     raise BriefcaseCommandError(f"Unable to deep code sign {path}.")
 
-            elif 'unsupported format for signature' in errors:
+            elif any(
+                msg in errors
+                for msg in [
+                    'unsupported format for signature',
+                    'bundle format unrecognized, invalid, or unsuitable',
+                ]
+            ):
                 # We should not be signing this in the first place
                 print("... no signature required")
                 return
