@@ -216,7 +216,7 @@ class macOSPackageMixin:
             )
         except subprocess.CalledProcessError as e:
             errors = e.stderr.decode('utf-8', errors='replace')
-            if 'not signed at all' in errors:
+            if 'code object is not signed at all' in errors:
                 print("... file requires a deep sign; retrying")
                 try:
                     self.subprocess.run(
@@ -230,7 +230,11 @@ class macOSPackageMixin:
             elif any(
                 msg in errors
                 for msg in [
+                    # File has a signature matching the Mach-O magic,
+                    # but isn't actually a Mach-O binary
                     'unsupported format for signature',
+
+                    # A folder named ``.framework`, but not actually a macOS Framework`
                     'bundle format unrecognized, invalid, or unsuitable',
                 ]
             ):

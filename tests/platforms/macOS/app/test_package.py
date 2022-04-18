@@ -96,13 +96,19 @@ def test_package_app(first_app_with_binaries, tmp_path):
                     raise subprocess.CalledProcessError(
                         returncode=1,
                         cmd=args,
-                        stderr='File was not signed at all.'.encode('utf-8')
+                        stderr=(args[1] + ': code object is not signed at all').encode('utf-8')
                     )
             elif args[1].endswith('/special.binary'):
                 raise subprocess.CalledProcessError(
                     returncode=1,
                     cmd=args,
-                    stderr='File has unsupported format for signature.'.encode('utf-8')
+                    stderr=(args[1] + ': file has unsupported format for signature').encode('utf-8')
+                )
+            elif args[1].endswith('/Extras.framework'):
+                raise subprocess.CalledProcessError(
+                    returncode=1,
+                    cmd=args,
+                    stderr=(args[1] + ': bundle format unrecognized, invalid, or unsuitable').encode('utf-8')
                 )
 
     command.subprocess = mock.MagicMock()
@@ -172,7 +178,7 @@ def test_package_app_sign_failure(first_app_with_binaries, tmp_path):
                 raise subprocess.CalledProcessError(
                     returncode=1,
                     cmd=args,
-                    stderr='Unknown error.'.encode('utf-8')
+                    stderr=(args[1] + ': Unknown error').encode('utf-8')
                 )
 
     command.subprocess = mock.MagicMock()
@@ -203,7 +209,7 @@ def test_package_app_sign_failure(first_app_with_binaries, tmp_path):
 
 
 @pytest.mark.skipif(sys.platform != 'darwin', reason="macOS packaging tests only required on macOS")
-def test_package_app_deep_sign_faliure(first_app_with_binaries, tmp_path):
+def test_package_app_deep_sign_failure(first_app_with_binaries, tmp_path):
     "A macOS App can be packaged"
 
     command = macOSAppPackageCommand(base_path=tmp_path)
@@ -217,13 +223,13 @@ def test_package_app_deep_sign_faliure(first_app_with_binaries, tmp_path):
                     raise subprocess.CalledProcessError(
                         returncode=1,
                         cmd=args,
-                        stderr='File was not signed at all.'.encode('utf-8')
+                        stderr=(args[1] + ': code object is not signed at all').encode('utf-8')
                     )
                 else:
                     raise subprocess.CalledProcessError(
                         returncode=1,
                         cmd=args,
-                        stderr='Unknown error.'.encode('utf-8')
+                        stderr=(args[1] + ': Unknown error').encode('utf-8')
                     )
 
     command.subprocess = mock.MagicMock()
