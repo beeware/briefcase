@@ -69,7 +69,39 @@ requirements, run the following commands within your virtual environment:
 
       C:\...>pip install -e .
 
-Now you are ready to start hacking! Have fun!
+Now you are ready to start hacking! Use `python3 -m briefcase` to run briefcase. Have fun!
+
+(Optional) If you have trouble running briefcase, ensure Briefcase is in your Python path. You may add Briefcase to your Python path by using the Python shell:
+
+.. tabs::
+
+  .. group-tab:: macOS
+
+    .. code-block:: bash
+
+      $ (venv) python3
+
+      >>> import sys
+      >>> sys.path.append("$YOUR_PATH_TO_BRIEFCASE")
+
+  .. group-tab:: Linux
+
+    .. code-block:: bash
+
+      $ (venv) python3
+
+      >>> import sys
+      >>> sys.path.append("$YOUR_PATH_TO_BRIEFCASE")
+
+  .. group-tab:: Windows
+
+    .. code-block:: doscon
+
+      C:\...>python3
+
+      >>> import sys
+      >>> sys.path.append("$YOUR_PATH_TO_BRIEFCASE")
+
 
 Briefcase uses `PyTest <https://pytest.org>`__ for its own test suite. It uses
 `tox <https://tox.readthedocs.io/en/latest/>`__ to manage the testing process.
