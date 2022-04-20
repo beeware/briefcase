@@ -19,7 +19,8 @@ class Subprocess:
         pass
 
     def final_kwargs(self, **kwargs):
-        """Convert subprocess keyword arguments into their final form.
+        """
+        Convert subprocess keyword arguments into their final form.
         """
         # If `env` has been provided, inject a full copy of the local
         # environment, with the values in `env` overriding the local
@@ -42,7 +43,8 @@ class Subprocess:
         return kwargs
 
     def run(self, args, **kwargs):
-        """A wrapper for subprocess.run()
+        """
+        A wrapper for subprocess.run()
 
         The behavior of this method is identical to subprocess.run(),
         except for the `env` argument. If provided, the current system
@@ -52,15 +54,16 @@ class Subprocess:
         # Invoke subprocess.run().
         # Pass through all arguments as-is.
         # All exceptions are propagated back to the caller.
+        sub_kwargs = self.final_kwargs(**kwargs)
         self._log_command(args)
-        self._log_environment(kwargs)
+        self._log_environment(sub_kwargs)
 
         try:
             command_result = self._subprocess.run(
                 [
                     str(arg) for arg in args
                 ],
-                **self.final_kwargs(**kwargs)
+                **sub_kwargs
             )
         except subprocess.CalledProcessError as exc:
             self._log_return_code(exc.returncode)
@@ -70,22 +73,24 @@ class Subprocess:
         return command_result
 
     def check_output(self, args, **kwargs):
-        """A wrapper for subprocess.check_output()
+        """
+        A wrapper for subprocess.check_output()
 
         The behavior of this method is identical to subprocess.check_output(),
         except for the `env` argument. If provided, the current system
         environment will be copied, and the contents of env overwritten
         into that environment.
         """
+        sub_kwargs = self.final_kwargs(**kwargs)
         self._log_command(args)
-        self._log_environment(kwargs)
+        self._log_environment(sub_kwargs)
 
         try:
             cmd_output = self._subprocess.check_output(
                 [
                     str(arg) for arg in args
                 ],
-                **self.final_kwargs(**kwargs)
+                **sub_kwargs
             )
         except subprocess.CalledProcessError as exc:
             self._log_output(exc.output, exc.stderr)
@@ -97,59 +102,61 @@ class Subprocess:
         return cmd_output
 
     def Popen(self, args, **kwargs):
-        """A wrapper for subprocess.Popen()
+        """
+        A wrapper for subprocess.Popen()
 
         The behavior of this method is identical to subprocess.Popen(),
         except for the `env` argument. If provided, the current system
         environment will be copied, and the contents of env overwritten
         into that environment.
         """
+        sub_kwargs = self.final_kwargs(**kwargs)
         self._log_command(args)
-        self._log_environment(kwargs)
+        self._log_environment(sub_kwargs)
 
         return self._subprocess.Popen(
             [
                 str(arg) for arg in args
             ],
-            **self.final_kwargs(**kwargs)
+            **sub_kwargs
         )
 
     def _log_command(self, args):
         """
         Log the entire console command being executed.
         """
-        self.command.logger.debug1()
-        self.command.logger.debug1("Running Command:")
-        self.command.logger.debug1("    {cmdline}".format(
+        self.command.logger.debug()
+        self.command.logger.debug("Running Command:")
+        self.command.logger.debug("    {cmdline}".format(
             cmdline=' '.join(shlex.quote(str(arg)) for arg in args)
         ))
 
-    def _log_environment(self, kwargs=None):
+    def _log_environment(self, sub_kwargs=None):
         """
         Log the state of environment variables prior to command execution.
         """
-        # use merged environment if it exists, else current environment
-        env = (kwargs or {}).get("env") or self.command.os.environ
-        self.command.logger.debug3("Environment:")
-        for env_var, value in env.items():
-            self.command.logger.debug3("    {env_var}={value}".format(env_var=env_var, value=value))
+        env = (sub_kwargs or {}).get("env") or self.command.os.environ
+        if env:
+            self.command.logger.deep_debug("Environment:")
+            for env_var, value in env.items():
+                self.command.logger.deep_debug("    {env_var}={value}".format(env_var=env_var, value=value))
 
     def _log_output(self, output, stderr=None):
         """
         Log the output of the executed command.
         """
         if output:
-            self.command.logger.debug2("Command Output:")
+            self.command.logger.deep_debug("Command Output:")
             for line in str(output).splitlines():
-                self.command.logger.debug2("    {line}".format(line=line))
+                self.command.logger.deep_debug("    {line}".format(line=line))
 
         if stderr:
-            self.command.logger.debug2("Command Error Output (stderr):")
+            self.command.logger.deep_debug("Command Error Output (stderr):")
             for line in str(stderr).splitlines():
-                self.command.logger.debug2("    {line}".format(line=line))
+                self.command.logger.deep_debug("    {line}".format(line=line))
 
     def _log_return_code(self, return_code):
         """
         Log the output value of the executed command.
         """
-        self.command.logger.debug2("Return code: {return_code}".format(return_code=return_code))
+        self.command.logger.deep_debug("Return code: {return_code}".format(return_code=return_code))

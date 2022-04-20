@@ -63,32 +63,25 @@ class Log:
         # verbosity will be 1 more than the number of v flags from invocation
         self.verbosity = verbosity
         # value to be printed at the beginning of all debug output
-        self.debug_preface = "debug{level}> "
+        self.debug_preface = ">>> "
 
-    @staticmethod
-    def _log(preface="", msg=""):
+    def _log(self, preface="", msg=""):
         """Funnel to log all messages"""
         print("{preface}{msg}".format(preface=preface, msg=msg))
 
-    def _debug_log(self, level, msg=""):
+    def _debug_log(self, msg=""):
         """Funnel to log all debug messages."""
-        preface = self.debug_preface.format(level=level)
-        self._log(preface=preface, msg=msg)
+        self._log(preface=self.debug_preface, msg=msg)
 
-    def debug1(self, msg=""):
+    def debug(self, msg=""):
         """Log messages at debug level 1."""
         if self.verbosity >= 2:
-            self._debug_log(level=1, msg=msg)
+            self._debug_log(msg=msg)
 
-    def debug2(self, msg=""):
+    def deep_debug(self, msg=""):
         """Log messages at debug level 2."""
         if self.verbosity >= 3:
-            self._debug_log(level=2, msg=msg)
-
-    def debug3(self, msg=""):
-        """Log messages at debug level 3."""
-        if self.verbosity >= 4:
-            self._debug_log(level=3, msg=msg)
+            self._debug_log(msg=msg)
 
 
 def create_config(klass, config, msg):
@@ -185,7 +178,7 @@ class BaseCommand(ABC):
         # The internal Briefcase integrations API.
         self.integrations = integrations
 
-        # initialize with default logger...replaced when options are parsed
+        # Initialize default logger (replaced when options are parsed).
         self.logger = Log()
 
     @property
