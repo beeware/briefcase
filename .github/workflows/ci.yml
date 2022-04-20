@@ -3,7 +3,7 @@ on:
   pull_request:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   beefore:
@@ -18,11 +18,11 @@ jobs:
         - 'docs'
         - 'package'
     steps:
-    # Check out master; needed for towncrier comparisons.
+    # Check out main; needed for towncrier comparisons.
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
-        ref: master
+        ref: main
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0

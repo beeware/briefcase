@@ -14,19 +14,19 @@ you can configure that checkout by running::
 
 The procedure for cutting a new release is as follows:
 
-1. Check the contents of the upstream repository's master branch::
+1. Check the contents of the upstream repository's main branch::
 
     $ git fetch upstream
-    $ git checkout --detach upstream/master
+    $ git checkout --detach upstream/main
 
-   Check that the HEAD of release now matches upstream/master.
+   Check that the HEAD of release now matches upstream/main.
 
 2. Make sure the branch is ready for release. Ensure that:
 
    1. The version number has been bumped.
 
    2. The release notes are up to date. If they are, the `changes
-      <https://github.com/beeware/briefcase/tree/master/changes>`__ directory
+      <https://github.com/beeware/briefcase/tree/main/changes>`__ directory
       should be empty, except for the ``template.rst`` file.
 
    These two changes (the version bump and release notes update) should go
