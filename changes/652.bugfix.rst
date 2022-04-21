@@ -1,0 +1,1 @@
+The code signing process for macOS apps has been made more robust.
