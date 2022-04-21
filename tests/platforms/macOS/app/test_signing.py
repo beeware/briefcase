@@ -1,6 +1,5 @@
 import os
 import subprocess
-import sys
 from unittest import mock
 
 import pytest
@@ -243,10 +242,7 @@ def test_sign_file_deep_sign_failure(dummy_command, tmp_path, capsys):
     ])
 
     # Sign the file
-    with pytest.raises(
-        BriefcaseCommandError,
-        match=rf"Unable to deep code sign {tmp_path / 'random.file'}"
-    ):
+    with pytest.raises(BriefcaseCommandError, match="Unable to deep code sign "):
         dummy_command.sign_file(tmp_path / 'random.file', identity='Sekrit identity (DEADBEEF)')
 
     # An attempt to codesign was made
@@ -306,10 +302,7 @@ def test_sign_file_unknown_error(dummy_command, tmp_path):
     # Raise an unknown error during codesign
     dummy_command.subprocess.run.side_effect = mock_codesign("Unknown error")
 
-    with pytest.raises(
-        BriefcaseCommandError,
-        match=rf"Unable to code sign {tmp_path / 'random.file'}"
-    ):
+    with pytest.raises(BriefcaseCommandError, match="Unable to code sign "):
         dummy_command.sign_file(tmp_path / 'random.file', identity='Sekrit identity (DEADBEEF)')
 
     # An attempt to codesign was made
@@ -321,7 +314,6 @@ def test_sign_file_unknown_error(dummy_command, tmp_path):
     )
 
 
-@pytest.mark.skipif(sys.platform != 'darwin', reason="macOS packaging tests only required on macOS")
 def test_sign_app(dummy_command, first_app_with_binaries, tmp_path):
     "An app bundle can be signed"
     # Sign the app
