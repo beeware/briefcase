@@ -1,3 +1,4 @@
+import glob
 import os
 import shutil
 import subprocess
@@ -7,6 +8,8 @@ from pathlib import Path
 from typing import Optional
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
+import PIL.Image
+from PIL import Image, UnidentifiedImageError
 from cookiecutter import exceptions as cookiecutter_exceptions
 from requests import exceptions as requests_exceptions
 
@@ -574,6 +577,74 @@ class CreateCommand(BaseCommand):
                         source_filename=source_filename,
                     )
                 )
+
+    """
+    General Notes
+    Nothing has been tested yet
+    This doesn't yet address the temporary storage of images ... will use tempfile
+    I'm not sure if I am integrating this code in the correct area
+    I have omitted anything platform-specific, including the working Apple code, as I think it would be best to get feedback on this inital structure
+    Nothing with splash screens
+    Not tested
+    
+    Feedback request:
+    Am I using glob nearly correctly and is the try/except structure looking appropriate?
+    Do the function names, method signatures and return types seem on the right track?
+    What variable can I access to know the platform target? --> For now, I placeholded with platform: ?type/val?.
+    I'm open to any feedback about anything
+    Thanks! 
+    """
+
+    #def find_largest_icon(self, app: BaseConfig):
+    def find_larges_res_image(self, location: Path):
+
+        largest_image = None
+        img_files = glob.glob(location + "/*.png")
+
+        if img_files:
+
+            try:
+                largest_image = Image.open(img_files.pop())
+
+                for img in img_files:
+
+                    maybe_larger_img = Image.open(img)
+
+                    # Compare widths
+                    if maybe_larger_img.size[0] > largest_image.size[0]:
+                        largest_image = maybe_larger_img
+
+            except OSError:
+                print("Image file cannot be read")
+            except UnidentifiedImageError:
+                print("Image cannot be opened and identified.")
+            except FileNotFoundError:
+                print("Image file cannot be found")
+            except ValueError:
+                print("Mode is not “r”, or a StringIO instance is used for fp")
+            except TypeError:
+                print("If formats is not None, a list or a tuple")
+
+        else:
+            print(f"No images in {location}")
+
+        return largest_image # File or Path?
+
+    def create_downsized_images(self, image: Image, sizes: list[tuple]):
+
+        images = []
+
+        for size in sizes:
+            # See https://pillow.readthedocs.io/en/stable/handbook/concepts.html#concept-filters
+            # Hamming is the mid-tier for quality & performance
+            # Reducing gap of 2 also improves downsample quality. 2 is better than 1 and after 3 there are diminshing returns
+            images.append(image.resize(size, resample=PIL.Image.Resampling.HAMMING), reducing_gap=2)
+
+        return images
+
+    def label_icons(self, downsized_images: list[Image], labels: list[String], platform: ?type/val?):
+
+    def write_icons(self, platform: ?type/val?):
 
     def install_app_resources(self, app: BaseConfig):
         """
