@@ -113,36 +113,13 @@ def is_mach_o_binary(path):
         return False
 
 
-class macOSPackageMixin:
-    @property
-    def packaging_formats(self):
-        return ['app', 'dmg']
-
-    @property
-    def default_packaging_format(self):
-        return 'dmg'
-
-    def verify_tools(self):
-
-        if self.host_os != 'Darwin':
-            raise BriefcaseCommandError("""
-        Code signing and / or building a DMG requires running on macOS.
-        """)
-
-        # Require the XCode command line tools.
-        verify_command_line_tools_install(self)
-
-        # Verify superclass tools *after* xcode. This ensures we get the
-        # git check *after* the xcode check.
-        super().verify_tools()
-
+class macOSSigningMixin:
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         # External service APIs.
         # These are abstracted to enable testing without patching.
         self.get_identities = get_identities
-        self.dmgbuild = dmgbuild
 
     def select_identity(self, identity=None):
         """
@@ -184,7 +161,7 @@ class macOSPackageMixin:
 
         return identity
 
-    def sign(self, path, identity, entitlements=None):
+    def sign_file(self, path, identity, entitlements=None):
         """
         Code sign a file.
 
@@ -244,14 +221,78 @@ class macOSPackageMixin:
             else:
                 raise BriefcaseCommandError(f"Unable to code sign {path}.")
 
+    def sign_app(self, app, identity):
+        """Sign an entire app with a specific identity
+
+        :param app: The app to sign
+        :param identity: The signing identity to use
+        """
+        bundle_path = self.binary_path(app)
+        resources_path = bundle_path / 'Contents' / 'Resources'
+
+        # Sign all Mach-O executable objects
+        sign_targets = [
+            path
+            for path in resources_path.rglob('*')
+            if not path.is_dir() and is_mach_o_binary(path)
+        ]
+
+        # Sign all embedded frameworks
+        sign_targets.extend(resources_path.rglob('*.framework'))
+
+        # Sign all embedded app objets
+        sign_targets.extend(resources_path.rglob('*.app'))
+
+        # Sign the bundle path itself
+        sign_targets.append(bundle_path)
+
+        # Signs code objects in reversed lexicographic order to ensure nesting order is respected
+        # (objects must be signed from the inside out)
+        for path in sorted(sign_targets, reverse=True):
+            self.sign_file(
+                path,
+                entitlements=self.entitlements_path(app),
+                identity=identity,
+            )
+
+
+class macOSPackageMixin(macOSSigningMixin):
+    @property
+    def packaging_formats(self):
+        return ['app', 'dmg']
+
+    @property
+    def default_packaging_format(self):
+        return 'dmg'
+
+    def verify_tools(self):
+        if self.host_os != 'Darwin':
+            raise BriefcaseCommandError("""
+        Code signing and / or building a DMG requires running on macOS.
+        """)
+
+        # Require the XCode command line tools.
+        verify_command_line_tools_install(self)
+
+        # Verify superclass tools *after* xcode. This ensures we get the
+        # git check *after* the xcode check.
+        super().verify_tools()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # External service APIs.
+        # These are abstracted to enable testing without patching.
+        self.dmgbuild = dmgbuild
+
     def package_app(
-            self,
-            app: BaseConfig,
-            sign_app=True,
-            identity=None,
-            adhoc_sign=False,
-            packaging_format='dmg',
-            **kwargs
+        self,
+        app: BaseConfig,
+        sign_app=True,
+        identity=None,
+        adhoc_sign=False,
+        packaging_format='dmg',
+        **kwargs
     ):
         """
         Package an app bundle.
@@ -265,7 +306,6 @@ class macOSPackageMixin:
         :param adhoc_sign: If true, code will be signed with adhoc identity of "-"
         :param packaging_format: The packaging format to use. Default is `dmg`.
         """
-
         if sign_app:
             if adhoc_sign:
                 identity = "-"
@@ -281,33 +321,7 @@ class macOSPackageMixin:
                     identity=identity
                 ))
 
-            bundle_path = self.binary_path(app)
-            resources_path = bundle_path / 'Contents' / 'Resources'
-
-            # Sign all Mach-O executable objects
-            sign_targets = [
-                path
-                for path in resources_path.rglob('*')
-                if not path.is_dir() and is_mach_o_binary(path)
-            ]
-
-            # Sign all embedded frameworks
-            sign_targets.extend(resources_path.rglob('*.framework'))
-
-            # Sign all embedded app objets
-            sign_targets.extend(resources_path.rglob('*.app'))
-
-            # Sign the bundle path itself
-            sign_targets.append(bundle_path)
-
-            # Signs code objects in reversed lexicographic order to ensure nesting order is respected
-            # (objects must be signed from the inside out)
-            for path in sorted(sign_targets, reverse=True):
-                self.sign(
-                    path,
-                    entitlements=self.entitlements_path(app),
-                    identity=identity,
-                )
+            self.sign_app(app=app, identity=identity)
 
         if packaging_format == 'dmg':
             print()
@@ -326,26 +340,21 @@ class macOSPackageMixin:
             }
 
             try:
-                icon_filename = self.base_path / '{icon}.icns'.format(
-                    icon=app.installer_icon
-                )
+                icon_filename = self.base_path / f'{app.installer_icon}.icns'
                 if not icon_filename.exists():
-                    print("Can't find {filename}.icns for DMG installer icon".format(
-                        filename=app.installer_icon
-                    ))
+                    print(f"Can't find {app.installer_icon}.icns to use as DMG installer icon")
                     raise AttributeError()
             except AttributeError:
                 # No installer icon specified. Fall back to the app icon
-                try:
+                if app.icon:
                     icon_filename = self.base_path / '{icon}.icns'.format(
                         icon=app.icon
                     )
                     if not icon_filename.exists():
-                        print("Can't find {filename}.icns for fallback DMG installer icon".format(
-                            filename=app.icon
-                        ))
-                        raise AttributeError()
-                except AttributeError:
+                        print(f"Can't find {app.icon}.icns to use as fallback DMG installer icon")
+                        icon_filename = None
+                else:
+                    # No app icon specified either
                     icon_filename = None
 
             if icon_filename:
@@ -358,7 +367,7 @@ class macOSPackageMixin:
                 if image_filename.exists():
                     dmg_settings['background'] = os.fsdecode(image_filename)
                 else:
-                    print("Can't find {filename}.png for DMG background".format(
+                    print("Can't find {filename}.png to use as DMG background".format(
                         filename=app.installer_background
                     ))
             except AttributeError:
@@ -373,7 +382,7 @@ class macOSPackageMixin:
             )
 
             if sign_app:
-                self.sign(
+                self.sign_file(
                     dmg_path,
                     identity=identity,
                 )
