@@ -1,9 +1,7 @@
-import os
 from unittest import mock
 
 import pytest
 
-from briefcase.exceptions import BriefcaseCommandError
 from briefcase.platforms.macOS.app import macOSAppBuildCommand
 
 
@@ -18,9 +16,8 @@ def build_command(tmp_path):
     return command
 
 
-def test_build_app(build_command, first_app_with_binaries, tmp_path, capsys):
+def test_build_app(build_command, first_app_with_binaries):
     "A macOS App is adhoc signed as part of the build process"
-
     # Build the app
     build_command.build_app(first_app_with_binaries)
 

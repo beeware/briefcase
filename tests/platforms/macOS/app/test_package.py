@@ -160,7 +160,7 @@ def test_package_app_no_dmg(package_command, first_app_with_binaries, tmp_path):
     # by calling sign_app()
     assert package_command.sign_file.call_count == 0
 
-###
+
 def test_dmg_with_installer_icon(package_command, first_app_with_binaries, tmp_path):
     "An installer icon can be specified for a DMG"
     # Specify an installer icon, and create the matching file.
