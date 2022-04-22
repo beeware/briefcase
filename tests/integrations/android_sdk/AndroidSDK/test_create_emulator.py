@@ -28,10 +28,23 @@ def mock_sdk(tmp_path):
     return sdk
 
 
-def test_create_emulator(mock_sdk, tmp_path):
+@pytest.mark.parametrize(
+    "host_os, host_arch, emulator_abi",
+    [
+        ("Darwin", "x86_64", "x86"),
+        ("Darwin", "arm64", "arm64-v8a"),
+        ("Windows", "x86_64", "x86"),
+        ("Linux", "x86_64", "x86"),
+    ]
+)
+def test_create_emulator(mock_sdk, tmp_path, host_os, host_arch, emulator_abi):
     "A new emulator can be created."
     # This test validates everything going well on first run.
     # This means the skin will be downloaded and unpacked.
+
+    # Mock the hardware and operating system
+    mock_sdk.command.host_os = host_os
+    mock_sdk.command.host_arch = host_arch
 
     # Mock the user providing several invalid names before getting it right.
     mock_sdk.command.input.side_effect = [
@@ -69,8 +82,8 @@ def test_create_emulator(mock_sdk, tmp_path):
             "--verbose",
             "create", "avd",
             "--name", "new-emulator",
-            "--abi", "x86",
-            "--package", 'system-images;android-28;default;x86',
+            "--abi", emulator_abi,
+            "--package", f'system-images;android-28;default;{emulator_abi}',
             "--device", "pixel",
         ],
         env=mock_sdk.env,

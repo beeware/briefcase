@@ -99,6 +99,20 @@ class AndroidSDK:
             "sdk-tools-{os}-4333796.zip".format(os=self.command.host_os.lower())
         )
 
+    @property
+    def emulator_abi(self):
+        """The ABI to use for the Android emulator"""
+        if self.command.host_arch == "arm64":
+            if self.command.host_os == "Darwin":
+                return 'arm64-v8a'
+            else:
+                raise BriefcaseCommandError(
+                    "The Android emulator does not currently support "
+                    f"{self.command.host_os} {self.command.host_arch} hardware."
+                )
+        else:
+            return 'x86'
+
     @classmethod
     def verify(cls, command, install=True, jdk=None):
         """
@@ -311,7 +325,7 @@ Delete {sdk_zip_path} and run briefcase again.""".format(
                 [
                     os.fsdecode(self.sdkmanager_path),
                     "platforms;android-28",
-                    "system-images;android-28;default;x86",
+                    f"system-images;android-28;default;{self.emulator_abi}",
                     "emulator",
                     "platform-tools",
                 ],
@@ -617,8 +631,8 @@ An emulator named '{avd}' already exists.
                     "--verbose",
                     "create", "avd",
                     "--name", avd,
-                    "--abi", "x86",
-                    "--package", 'system-images;android-28;default;x86',
+                    "--abi", self.emulator_abi,
+                    "--package", f'system-images;android-28;default;{self.emulator_abi}',
                     "--device", device_type,
                 ],
                 env=self.env,

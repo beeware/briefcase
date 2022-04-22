@@ -18,21 +18,56 @@ def test_succeeds_immediately_if_emulator_installed(mock_sdk):
     mock_sdk.command.requests.get.assert_not_called()
 
 
-def test_installs_android_emulator(mock_sdk):
+@pytest.mark.parametrize(
+    "host_os, host_arch, emulator_abi",
+    [
+        ("Darwin", "x86_64", "x86"),
+        ("Darwin", "arm64", "arm64-v8a"),
+        ("Windows", "x86_64", "x86"),
+        ("Linux", "x86_64", "x86"),
+    ]
+)
+def test_installs_android_emulator(mock_sdk, host_os, host_arch, emulator_abi):
     "The emulator tools will be installed if needed"
+    # Mock the hardware and OS
+    mock_sdk.command.host_os = host_os
+    mock_sdk.command.host_arch = host_arch
+
     mock_sdk.verify_emulator()
 
     mock_sdk.command.subprocess.run.assert_called_once_with(
         [
             os.fsdecode(mock_sdk.sdkmanager_path),
             "platforms;android-28",
-            "system-images;android-28;default;x86",
+            f"system-images;android-28;default;{emulator_abi}",
             "emulator",
             "platform-tools",
         ],
         env=mock_sdk.env,
         check=True,
     )
+
+
+@pytest.mark.parametrize(
+    "host_os, host_arch",
+    [
+        ("Windows", "arm64"),
+        ("Linux", "arm64"),
+    ]
+)
+def test_unsupported_emulator_platform(mock_sdk, host_os, host_arch):
+    "If the platform isn't supported by the Android emulator, an error is raised"
+
+    mock_sdk.command.host_os = host_os
+    mock_sdk.command.host_arch = host_arch
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=f"The Android emulator does not currently support {host_os} {host_arch} hardware"
+    ):
+        mock_sdk.verify_emulator()
+
+    mock_sdk.command.subprocess.run.assert_not_called()
 
 
 def test_install_problems_are_reported(mock_sdk):
