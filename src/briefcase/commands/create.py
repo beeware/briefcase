@@ -3,6 +3,7 @@ import os
 import shutil
 import subprocess
 import sys
+import tempfile
 from datetime import date
 from pathlib import Path
 from typing import Optional
@@ -580,27 +581,36 @@ class CreateCommand(BaseCommand):
 
     """
     General Notes
-    Nothing has been tested yet
-    This doesn't yet address the temporary storage of images ... will use tempfile
-    I'm not sure if I am integrating this code in the correct area
-    I have omitted anything platform-specific, including the working Apple code, as I think it would be best to get feedback on this inital structure
-    Nothing with splash screens
-    Not tested
+
+    I have omitted anything platform-specific, including the working Apple code, as I think it would be best to get feedback on this inital structure. I am unsure how to integrate platform-specific features. Would I start with going to each platform's dev page and collecting the filesize & name specified?
     
-    Feedback request:
-    Am I using glob nearly correctly and is the try/except structure looking appropriate?
+    Nothing with splash screens
+    
+    Nothing tested
+    
+    Feedback Requested:
+    
+    Should multiple image types as input be supported? jpgs or other?
+    
     Do the function names, method signatures and return types seem on the right track?
-    What variable can I access to know the platform target? --> For now, I placeholded with platform: ?type/val?.
-    I'm open to any feedback about anything
+    
+    What variable or variables would give me information about the target platform?
+    
+    I'm open to feedback on anything
+    
     Thanks! 
     """
 
-    #def find_largest_icon(self, app: BaseConfig):
-    def find_larges_res_image(self, location: Path):
+    def find_largest_png(self, source: Path) -> Image:
+        """
+        Search a directory of PNGs and returns the widest
 
+        :param source: Directory to search
+        :return: Widest image
+        """
         largest_image = None
-        img_files = glob.glob(location + "/*.png")
-
+        img_files = source.glob("*.png")
+        img_files = list(img_files)
         if img_files:
 
             try:
@@ -625,26 +635,29 @@ class CreateCommand(BaseCommand):
             except TypeError:
                 print("If formats is not None, a list or a tuple")
 
+
         else:
-            print(f"No images in {location}")
+            print(f"No images in {source}")
 
-        return largest_image # File or Path?
+        return largest_image  # File
 
-    def create_downsized_images(self, image: Image, sizes: list[tuple]):
+    def downscale_image_to_iconset(self, img: Image) -> list[Image]:
+        """
 
-        images = []
+        """
 
-        for size in sizes:
-            # See https://pillow.readthedocs.io/en/stable/handbook/concepts.html#concept-filters
-            # Hamming is the mid-tier for quality & performance
-            # Reducing gap of 2 also improves downsample quality. 2 is better than 1 and after 3 there are diminshing returns
-            images.append(image.resize(size, resample=PIL.Image.Resampling.HAMMING), reducing_gap=2)
+    def label_icons(self, iconset: list[Image], labels: list[str]) -> list[(str, Image)]:
+        """
+        Returns a list of images with specificed platform-specific filenames
+        """
 
-        return images
 
-    def label_icons(self, downsized_images: list[Image], labels: list[String], platform: ?type/val?):
+    def write_icons(self, icons: list[str, Image]):
 
-    def write_icons(self, platform: ?type/val?):
+        with tempfile.TemporaryDirectory() as tmpdirname:
+
+            for fname, img in icons:
+            # Write images to the temporary directory
 
     def install_app_resources(self, app: BaseConfig):
         """
