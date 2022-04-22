@@ -59,6 +59,7 @@ class Log:
     """
     Manage debug logging output driven by verbosity flags.
     """
+
     def __init__(self, verbosity=1):
         # verbosity will be 1 more than the number of v flags from invocation
         self.verbosity = verbosity
@@ -66,22 +67,36 @@ class Log:
         self.debug_preface = ">>> "
 
     def _log(self, preface="", msg=""):
-        """Funnel to log all messages"""
-        print("{preface}{msg}".format(preface=preface, msg=msg))
+        """Funnel to log all messages."""
+        # print each line of message; ensure a line is printed when msg is empty
+        for line in msg.splitlines() or ("",):
+            print("{preface}{msg}".format(preface=preface, msg=line))
 
     def _debug_log(self, msg=""):
         """Funnel to log all debug messages."""
         self._log(preface=self.debug_preface, msg=msg)
 
     def debug(self, msg=""):
-        """Log messages at debug level 1."""
+        """Log messages at debug level. Included in output if verbosity>=2."""
         if self.verbosity >= 2:
             self._debug_log(msg=msg)
 
     def deep_debug(self, msg=""):
-        """Log messages at debug level 2."""
+        """Log messages at deep debug level. Included in output if verbosity>=3."""
         if self.verbosity >= 3:
             self._debug_log(msg=msg)
+
+    def info(self, msg=""):
+        """Log message at info level. Always included in output."""
+        self._log(msg=msg)
+
+    def warning(self, msg=""):
+        """Log message at warning level. Always included in output."""
+        self._log(msg=msg)
+
+    def error(self, msg=""):
+        """Log message at error level. Always included in output."""
+        self._log(msg=msg)
 
 
 def create_config(klass, config, msg):
@@ -446,7 +461,7 @@ class BaseCommand(ABC):
             '-v', '--verbosity',
             action='count',
             default=1,
-            help="set the verbosity of output"
+            help="set the verbosity of output (use -vv for additional debug output)"
         )
         parser.add_argument(
             '-V', '--version',
@@ -545,7 +560,7 @@ class BaseCommand(ABC):
         if not filename.exists():
             # We have meaningful content, and it hasn't been cached previously,
             # so save it in the requested location
-            print('Downloading {cache_name}...'.format(cache_name=cache_name))
+            self.logger.info('Downloading {cache_name}...'.format(cache_name=cache_name))
             with filename.open('wb') as f:
                 total = response.headers.get('content-length')
                 if total is None:
@@ -557,10 +572,11 @@ class BaseCommand(ABC):
                         downloaded += len(data)
                         f.write(data)
                         done = int(50 * downloaded / total)
+                        # TODO: what to do....
                         print('\r{}{} {}%'.format('#' * done, '.' * (50-done), 2*done), end='', flush=True)
-            print()
+            self.logger.info()
         else:
-            print('{cache_name} already downloaded'.format(cache_name=cache_name))
+            self.logger.info('{cache_name} already downloaded'.format(cache_name=cache_name))
         return filename
 
     def update_cookiecutter_cache(self, template: str, branch='master'):
@@ -598,15 +614,15 @@ class BaseCommand(ABC):
                     # We are offline, or otherwise unable to contact
                     # the origin git repo. It's OK to continue; but warn
                     # the user that the template may be stale.
-                    print("***************************************************************************")
-                    print("WARNING: Unable to update template (is your computer offline?)")
-                    print("WARNING: Briefcase will use existing template without updating.")
-                    print("***************************************************************************")
+                    self.logger.warning("***************************************************************************")
+                    self.logger.warning("WARNING: Unable to update template (is your computer offline?)")
+                    self.logger.warning("WARNING: Briefcase will use existing template without updating.")
+                    self.logger.warning("***************************************************************************")
                 try:
                     # Check out the branch for the required version tag.
                     head = remote.refs[branch]
 
-                    print("Using existing template (sha {hexsha}, updated {datestamp})".format(
+                    self.logger.info("Using existing template (sha {hexsha}, updated {datestamp})".format(
                         hexsha=head.commit.hexsha,
                         datestamp=head.commit.committed_datetime.strftime("%c")
                     ))

@@ -101,7 +101,7 @@ def test_simple_verbose_call(mock_docker, tmp_path, capsys):
         ]
     )
     assert capsys.readouterr().out.splitlines()[-1] == (
-        "debug1>     docker run --tty "
+        ">>>     docker run --tty "
         "--volume {platform_path}:/app:z "
         "--volume {dot_briefcase_path}:/home/brutus/.briefcase:z "
         "briefcase/com.example.myapp:py3.X "

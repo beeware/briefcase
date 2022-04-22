@@ -43,4 +43,4 @@ def test_simple_verbose_call(mock_sub, capsys):
     mock_sub.check_output(['hello', 'world'])
 
     mock_sub._subprocess.check_output.assert_called_with(['hello', 'world'])
-    assert capsys.readouterr().out.splitlines()[-1] == "debug1>     hello world"
+    assert capsys.readouterr().out.splitlines()[-1] == ">>>     hello world"

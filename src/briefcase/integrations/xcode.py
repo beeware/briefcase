@@ -93,7 +93,7 @@ Re-run Briefcase once that installation is complete.
 """)
     except subprocess.CalledProcessError as e:
         if e.returncode != 1:
-            print("""
+            command.logger.warning("""
 *************************************************************************
 ** WARNING: Unable to determine if Xcode is installed                  **
 *************************************************************************
@@ -200,7 +200,7 @@ Re-run Briefcase once that installation is complete.
                 except IndexError:
                     pass
 
-            print("""
+            command.logger.warning("""
 *************************************************************************
 ** WARNING: Unable to determine the version of Xcode that is installed **
 *************************************************************************
@@ -266,7 +266,7 @@ def confirm_xcode_license_accepted(command):
         )
     except subprocess.CalledProcessError as e:
         if e.returncode == 69:
-            print("""
+            command.logger.info("""
 Use of Xcode and the iOS developer tools are covered by a license that must be
 accepted before you can use those tools.
 
@@ -292,7 +292,7 @@ to enter your password (Briefcase will not store this password anywhere).
                     raise BriefcaseCommandError("""
 Briefcase was unable to run the Xcode licensing tool. This may be because you
 did not enter your password correctly, or because your account does not have
-administrator priviliges on this computer.
+administrator privileges on this computer.
 
 You need to accept the Xcode license before Briefcase can package your app.
 """)
@@ -303,7 +303,7 @@ Xcode license has not been accepted. Briefcase cannot continue.
 You need to accept the Xcode license before Briefcase can package your app.
 """)
                 else:
-                    print("""
+                    command.logger.warning("""
 *************************************************************************
 ** WARNING: Unable to determine if the Xcode license has been accepted **
 *************************************************************************
@@ -324,7 +324,7 @@ You need to accept the Xcode license before Briefcase can package your app.
 *************************************************************************
 """)
         else:
-            print("""
+            command.logger.warning("""
 *************************************************************************
 ** WARNING: Unable to determine if the Xcode license has been accepted **
 *************************************************************************

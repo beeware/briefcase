@@ -8,6 +8,7 @@ from unittest import mock
 import pytest
 from requests import exceptions as requests_exceptions
 
+from briefcase.commands.base import Log
 from briefcase.exceptions import (
     BriefcaseCommandError,
     MissingToolError,
@@ -20,6 +21,7 @@ from tests.utils import FsPathMock
 @pytest.fixture
 def test_command(tmp_path):
     command = mock.MagicMock()
+    command.logger = Log()
     command.tools_path = tmp_path / 'tools'
 
     # Mock environ.get returning no explicit JAVA_HOME

@@ -3,6 +3,7 @@ from unittest import mock
 
 import pytest
 
+from briefcase.commands.base import Log
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.docker import (
     Docker,
@@ -14,6 +15,7 @@ from briefcase.integrations.docker import (
 @pytest.fixture
 def test_command(tmp_path):
     command = mock.MagicMock()
+    command.logger = Log()
 
     return command
 

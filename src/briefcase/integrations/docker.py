@@ -125,9 +125,9 @@ need to restart your terminal session.
                 )
 
         else:
-            print(UNKNOWN_DOCKER_VERSION_WARNING)
+            command.logger.warning(UNKNOWN_DOCKER_VERSION_WARNING)
     except subprocess.CalledProcessError:
-        print(DOCKER_INSTALLATION_STATUS_UNKNOWN_WARNING)
+        command.logger.warning(DOCKER_INSTALLATION_STATUS_UNKNOWN_WARNING)
     except FileNotFoundError:
         # Docker executable doesn't exist.
         raise BriefcaseCommandError(
@@ -208,9 +208,9 @@ class Docker:
 
     def prepare(self):
         try:
-            print()
-            print("[{app.app_name}] Building Docker container image...".format(app=self.app))
-            print()
+            self.command.logger.info()
+            self.command.logger.info("[{app.app_name}] Building Docker container image...".format(app=self.app))
+            self.command.logger.info()
             try:
                 system_requires = ' '.join(self.app.system_requires)
             except AttributeError:
@@ -235,7 +235,6 @@ class Docker:
             )
 
         except subprocess.CalledProcessError:
-            print()
             raise BriefcaseCommandError(
                 "Error building Docker container for {app.app_name}.".format(app=self.app)
             )

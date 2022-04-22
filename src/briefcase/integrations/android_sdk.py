@@ -128,7 +128,7 @@ class AndroidSDK:
                 sdk.verify_license()
                 return sdk
             else:
-                print(
+                command.logger.warning(
                     """
 *************************************************************************
 ** WARNING: ANDROID_SDK_ROOT does not point to an Android SDK          **
@@ -199,7 +199,7 @@ class AndroidSDK:
             raise NetworkFailure("download Android SDK")
 
         try:
-            print("Install Android SDK...")
+            self.command.logger.info("Install Android SDK...")
             # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
             self.command.shutil.unpack_archive(os.fsdecode(sdk_zip_path), extract_dir=os.fsdecode(self.root_path))
         except (shutil.ReadError, EOFError):
@@ -236,7 +236,7 @@ Delete {sdk_zip_path} and run briefcase again.""".format(
             )
         except subprocess.CalledProcessError:
             raise BriefcaseCommandError(
-                """\
+                """
     Error while reviewing Android SDK licenses. Please run this command and examine
     its output for errors.
 
@@ -263,7 +263,7 @@ Delete {sdk_zip_path} and run briefcase again.""".format(
         if license_path.exists():
             return
 
-        print(
+        self.command.logger.info(
             "\n"
             + """\
     The Android tools provided by Google have license terms that you must accept
@@ -303,7 +303,7 @@ Delete {sdk_zip_path} and run briefcase again.""".format(
         if (self.root_path / "emulator").exists():
             return
 
-        print("Downloading the Android emulator and system image...")
+        self.command.logger.info("Downloading the Android emulator and system image...")
         try:
             # Using `check_output` and `stderr=STDOUT` so we buffer output,
             # displaying it only if an exception occurs.
@@ -539,14 +539,14 @@ Delete {sdk_zip_path} and run briefcase again.""".format(
                 raise InvalidDeviceError("device ID", choice)
 
         if avd:
-            print("""
+            self.command.logger.info("""
 In future, you can specify this device by running:
 
     briefcase run android -d @{avd}
 
 """.format(avd=avd))
         elif device:
-            print("""
+            self.command.logger.info("""
 In future, you can specify this device by running:
 
     briefcase run android -d {device}
@@ -571,7 +571,7 @@ In future, you can specify this device by running:
             default_avd = 'beePhone{i}'.format(i=i)
 
         # Prompt for a device avd until a valid one is provided.
-        print("""
+        self.command.logger.info("""
 You need to select a name for your new emulator. This is an identifier that
 can be used to start the emulator in future. It should follow the same naming
 conventions as a Python package (i.e., it may only contain letters, numbers,
@@ -589,17 +589,17 @@ a default name '{default_avd}'.
                 avd = default_avd
 
             if not PEP508_NAME_RE.match(avd):
-                print("""
+                self.command.logger.info("""
 '{avd}' is not a valid emulator name. An emulator name may only contain
 letters, numbers, hyphens and underscores
 
 """.format(avd=avd))
             elif avd in emulators:
-                print("""
+                self.command.logger.info("""
 An emulator named '{avd}' already exists.
 
 """.format(avd=avd))
-                print()
+                self.command.logger.info()
             else:
                 avd_is_invalid = False
 
@@ -608,9 +608,9 @@ An emulator named '{avd}' already exists.
         skin = 'pixel_3a'
 
         try:
-            print()
-            print("Creating Android emulator {avd}...".format(avd=avd))
-            print()
+            self.command.logger.info()
+            self.command.logger.info("Creating Android emulator {avd}...".format(avd=avd))
+            self.command.logger.info()
             self.command.subprocess.check_output(
                 [
                     os.fsdecode(self.avdmanager_path),
@@ -631,9 +631,9 @@ An emulator named '{avd}' already exists.
         # Check for a device skin. If it doesn't exist, download it.
         skin_path = self.root_path / "skins" / skin
         if skin_path.exists():
-            print("Device skin '{skin}' already exists".format(skin=skin))
+            self.command.logger.info("Device skin '{skin}' already exists".format(skin=skin))
         else:
-            print("Obtaining device skin...")
+            self.command.logger.info("Obtaining device skin...")
             skin_url = (
                 "https://android.googlesource.com/platform/tools/adt/idea/"
                 "+archive/refs/heads/mirror-goog-studio-master-dev/"
@@ -663,7 +663,7 @@ An emulator named '{avd}' already exists.
             # Delete the downloaded file.
             skin_tgz_path.unlink()
 
-        print("Adding extra device configuration...")
+        self.command.logger.info("Adding extra device configuration...")
         with (
             self.avd_path / '{avd}.avd'.format(avd=avd) / 'config.ini'
         ).open('a') as f:
@@ -676,7 +676,7 @@ skin.path=skins/{skin}
 showDeviceFrame=yes
 """.format(skin=skin))
 
-            print("""
+            self.command.logger.info("""
 Android emulator '{avd}' created.
 
 In future, you can specify this device by running:
@@ -694,7 +694,7 @@ In future, you can specify this device by running:
         :param avd: The AVD of the device.
         """
         if avd in set(self.emulators()):
-            print("Starting emulator {avd}...".format(avd=avd))
+            self.command.logger.info("Starting emulator {avd}...".format(avd=avd))
             emulator_popen = self.command.subprocess.Popen(
                 [
                     os.fsdecode(self.emulator_path),

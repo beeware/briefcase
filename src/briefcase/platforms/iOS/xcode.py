@@ -187,17 +187,20 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
 
         device = devices[udid]
 
-        print("In future, you could specify this device by running:")
-        print()
-        print('    briefcase {self.command} iOS -d "{device}::{iOS_version}"'.format(
+        self.logger.info("""
+In the future, you could specify this device by running:
+
+    briefcase {self.command} iOS -d "{device}::{iOS_version}"
+
+or:
+
+    briefcase {self.command} iOS -d {udid}
+""".format(
             self=self,
             device=device,
-            iOS_version=iOS_version
+            iOS_version=iOS_version,
+            udid=udid
         ))
-        print()
-        print('or:')
-        print()
-        print("    briefcase {self.command} iOS -d {udid}".format(self=self, udid=udid))
         return udid, iOS_version, device
 
 
@@ -227,17 +230,15 @@ class iOSXcodeBuildCommand(iOSXcodeMixin, BuildCommand):
                 "Input has been disabled; can't select a device to target."
             )
 
-        print()
-        print("Targeting an {device} running {iOS_version} (device UDID {udid})".format(
+        self.logger.info()
+        self.logger.info("Targeting an {device} running {iOS_version} (device UDID {udid})".format(
             device=device,
             iOS_version=iOS_version,
             udid=udid,
         ))
 
-        print()
-        print('[{app.app_name}] Building XCode project...'.format(
-            app=app
-        ))
+        self.logger.info()
+        self.logger.info('[{app.app_name}] Building XCode project...'.format(app=app))
 
         # build_settings = [
         #     ('AD_HOC_CODE_SIGNING_ALLOWED', 'YES'),
@@ -249,7 +250,6 @@ class iOSXcodeBuildCommand(iOSXcodeMixin, BuildCommand):
         # build_settings_str = ['{}={}'.format(*x) for x in build_settings]
 
         try:
-            print()
             self.subprocess.run(
                 [
                     'xcodebuild',  # ' '.join(build_settings_str),
@@ -267,9 +267,8 @@ class iOSXcodeBuildCommand(iOSXcodeMixin, BuildCommand):
                 ],
                 check=True,
             )
-            print('Build succeeded.')
+            self.logger.info('Build succeeded.')
         except subprocess.CalledProcessError:
-            print()
             raise BriefcaseCommandError(
                 "Unable to build app {app.app_name}.".format(app=app)
             )
@@ -298,7 +297,6 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         :param app: The config object for the app
         :param udid: The device UDID to target. If ``None``, the user will
             be asked to select a device at runtime.
-        :param base_path: The path to the project directory.
         """
         try:
             udid, iOS_version, device = self.select_target_device(udid)
@@ -433,7 +431,6 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                 check=True,
             )
         except subprocess.CalledProcessError:
-            print()
             raise BriefcaseCommandError(
                 "Unable to start log stream for app {app.app_name}.".format(app=app)
             )

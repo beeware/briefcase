@@ -54,16 +54,16 @@ class Subprocess:
         # Invoke subprocess.run().
         # Pass through all arguments as-is.
         # All exceptions are propagated back to the caller.
-        sub_kwargs = self.final_kwargs(**kwargs)
+        subprocess_kwargs = self.final_kwargs(**kwargs)
         self._log_command(args)
-        self._log_environment(sub_kwargs)
+        self._log_environment(subprocess_kwargs)
 
         try:
             command_result = self._subprocess.run(
                 [
                     str(arg) for arg in args
                 ],
-                **sub_kwargs
+                **subprocess_kwargs
             )
         except subprocess.CalledProcessError as exc:
             self._log_return_code(exc.returncode)
@@ -81,16 +81,16 @@ class Subprocess:
         environment will be copied, and the contents of env overwritten
         into that environment.
         """
-        sub_kwargs = self.final_kwargs(**kwargs)
+        subprocess_kwargs = self.final_kwargs(**kwargs)
         self._log_command(args)
-        self._log_environment(sub_kwargs)
+        self._log_environment(subprocess_kwargs)
 
         try:
             cmd_output = self._subprocess.check_output(
                 [
                     str(arg) for arg in args
                 ],
-                **sub_kwargs
+                **subprocess_kwargs
             )
         except subprocess.CalledProcessError as exc:
             self._log_output(exc.output, exc.stderr)
@@ -110,32 +110,30 @@ class Subprocess:
         environment will be copied, and the contents of env overwritten
         into that environment.
         """
-        sub_kwargs = self.final_kwargs(**kwargs)
+        subprocess_kwargs = self.final_kwargs(**kwargs)
         self._log_command(args)
-        self._log_environment(sub_kwargs)
+        self._log_environment(subprocess_kwargs)
 
         return self._subprocess.Popen(
             [
                 str(arg) for arg in args
             ],
-            **sub_kwargs
+            **subprocess_kwargs
         )
 
     def _log_command(self, args):
         """
         Log the entire console command being executed.
         """
-        self.command.logger.debug()
-        self.command.logger.debug("Running Command:")
-        self.command.logger.debug("    {cmdline}".format(
-            cmdline=' '.join(shlex.quote(str(arg)) for arg in args)
-        ))
+        cmdline = ' '.join(shlex.quote(str(arg)) for arg in args)
+        self.command.logger.debug("\nRunning Command:")
+        self.command.logger.debug("    {cmdline}".format(cmdline=cmdline))
 
-    def _log_environment(self, sub_kwargs=None):
+    def _log_environment(self, subprocess_kwargs=None):
         """
         Log the state of environment variables prior to command execution.
         """
-        env = (sub_kwargs or {}).get("env") or self.command.os.environ
+        env = (subprocess_kwargs or {}).get("env") or self.command.os.environ
         if env:
             self.command.logger.deep_debug("Environment:")
             for env_var, value in env.items():

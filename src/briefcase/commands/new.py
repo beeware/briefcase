@@ -495,14 +495,14 @@ What GUI toolkit do you want to use for this project?""",
             template = 'https://github.com/beeware/briefcase-template'
 
         if self.input.enabled:
-            print()
-            print("Let's build a new Briefcase app!")
-            print()
+            self.logger.info()
+            self.logger.info("Let's build a new Briefcase app!")
+            self.logger.info()
 
         context = self.build_app_context()
 
-        print()
-        print("Generating a new application '{formal_name}'".format(
+        self.logger.info()
+        self.logger.info("Generating a new application '{formal_name}'".format(
             **context
         ))
 
@@ -513,7 +513,6 @@ What GUI toolkit do you want to use for this project?""",
 
         # Make extra sure we won't clobber an existing application.
         if (self.base_path / context['app_name']).exists():
-            print()
             raise BriefcaseCommandError(
                 "A directory named '{app_name}' already exists.".format(
                     **context
@@ -538,7 +537,7 @@ What GUI toolkit do you want to use for this project?""",
             # or it isn't a cookiecutter template (i.e., no cookiecutter.json)
             raise InvalidTemplateRepository(template)
 
-        print("""
+        self.logger.info("""
 Application '{formal_name}' has been generated. To run your application, type:
 
     cd {app_name}

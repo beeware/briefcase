@@ -43,8 +43,8 @@ class BuildCommand(BaseCommand):
 
         state = self.build_app(app, **full_options(state, options))
 
-        print()
-        print("[{app.app_name}] Built {filename}".format(
+        self.logger.info()
+        self.logger.info("[{app.app_name}] Built {filename}".format(
             app=app,
             filename=self.binary_path(app).relative_to(self.base_path),
         ))

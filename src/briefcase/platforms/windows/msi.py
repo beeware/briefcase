@@ -75,7 +75,7 @@ class WindowsMSICreateCommand(WindowsMSIMixin, CreateCommand):
             # Create a DNS domain by reversing the bundle identifier
             domain = '.'.join([app.app_name] + app.bundle.split('.')[::-1])
             guid = uuid.uuid5(uuid.NAMESPACE_DNS, domain)
-            print("Assigning {app.app_name} an application GUID of {guid}".format(
+            self.logger.info("Assigning {app.app_name} an application GUID of {guid}".format(
                 app=app,
                 guid=guid,
             ))
@@ -134,14 +134,10 @@ class WindowsMSIRunCommand(WindowsMSIMixin, RunCommand):
         Start the application.
 
         :param app: The config object for the app
-        :param base_path: The path to the project directory.
         """
-        print()
-        print('[{app.app_name}] Starting app...'.format(
-            app=app
-        ))
+        self.logger.info()
+        self.logger.info('[{app.app_name}] Starting app...'.format(app=app))
         try:
-            print()
             self.subprocess.run(
                 [
                     os.fsdecode(self.binary_path(app) / 'src' / 'python' / 'pythonw.exe'),
@@ -150,7 +146,6 @@ class WindowsMSIRunCommand(WindowsMSIMixin, RunCommand):
                 check=True,
             )
         except subprocess.CalledProcessError:
-            print()
             raise BriefcaseCommandError(
                 "Unable to start app {app.app_name}.".format(app=app)
             )
@@ -165,12 +160,12 @@ class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
 
         :param app: The application to build
         """
-        print()
-        print("[{app.app_name}] Building MSI...".format(app=app))
+        self.logger.info()
+        self.logger.info("[{app.app_name}] Building MSI...".format(app=app))
 
         try:
-            print()
-            print("Compiling application manifest...")
+            self.logger.info()
+            self.logger.info("Compiling application manifest...")
             self.subprocess.run(
                 [
                     self.wix.heat_exe,
@@ -196,8 +191,8 @@ class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
             )
 
         try:
-            print()
-            print("Compiling application installer...")
+            self.logger.info()
+            self.logger.info("Compiling application installer...")
             self.subprocess.run(
                 [
                     self.wix.candle_exe,
@@ -217,8 +212,8 @@ class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
             )
 
         try:
-            print()
-            print("Linking application installer...")
+            self.logger.info()
+            self.logger.info("Linking application installer...")
             self.subprocess.run(
                 [
                     self.wix.light_exe,
@@ -233,7 +228,6 @@ class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
                 cwd=self.bundle_path(app)
             )
         except subprocess.CalledProcessError:
-            print()
             raise BriefcaseCommandError(
                 "Unable to link app {app.app_name}.".format(app=app)
             )
