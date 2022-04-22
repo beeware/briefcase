@@ -430,18 +430,20 @@ class CreateCommand(BaseCommand):
 
         :param app: The config object for the app
         """
+
+        # Remove existing versions of the code and dist-info.
+        target = self.app_path(app)
+
+        if target.is_dir():
+            self.shutil.rmtree(target)
+            self.os.mkdir(target)
+
+        # Install app code.
         if app.sources:
             for src in app.sources:
                 print("Installing {src}...".format(src=src))
                 original = self.base_path / src
                 target = self.app_path(app) / original.name
-
-                # Remove existing versions of the code
-                if target.exists():
-                    if target.is_dir():
-                        self.shutil.rmtree(target)
-                    else:
-                        target.unlink()
 
                 # Install the new copy of the app code.
                 if not original.exists():
