@@ -1,6 +1,6 @@
-import itertools
 import os
 import subprocess
+from pathlib import Path
 
 from briefcase.config import BaseConfig
 from briefcase.console import select_option
@@ -89,36 +89,37 @@ class macOSRunMixin:
             )
 
 
-class macOSPackageMixin:
-    @property
-    def packaging_formats(self):
-        return ['app', 'dmg']
+def is_mach_o_binary(path):
+    """Determine if the file at the given path is a Mach-O binary.
 
-    @property
-    def default_packaging_format(self):
-        return 'dmg'
+    :param path: The path to check
+    :returns: True if the file at the given location is a Mach-O binary.
+    """
+    # A binary is any file that is executable, or has a suffix from a known list
+    if os.access(path, os.X_OK) or path.suffix.lower() in {'.dylib', '.o', '.so', ''}:
+        # File is a binary; read the file magic to determine if it's Mach-O.
+        with path.open('rb') as f:
+            magic = f.read(4)
+            return magic in (
+                b'\xCA\xFE\xBA\xBE',
+                b'\xCF\xFA\xED\xFE',
+                b'\xCE\xFA\xED\xFE',
+                b'\xBE\xBA\xFE\xCA',
+                b'\xFE\xED\xFA\xCF',
+                b'\xFE\xED\xFA\xCE',
+            )
+    else:
+        # Not a binary
+        return False
 
-    def verify_tools(self):
 
-        if self.host_os != 'Darwin':
-            raise BriefcaseCommandError("""
-        Code signing and / or building a DMG requires running on macOS.
-        """)
-
-        # Require the XCode command line tools.
-        verify_command_line_tools_install(self)
-
-        # Verify superclass tools *after* xcode. This ensures we get the
-        # git check *after* the xcode check.
-        super().verify_tools()
-
+class macOSSigningMixin:
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         # External service APIs.
         # These are abstracted to enable testing without patching.
         self.get_identities = get_identities
-        self.dmgbuild = dmgbuild
 
     def select_identity(self, identity=None):
         """
@@ -138,15 +139,12 @@ class macOSPackageMixin:
                 # Try to look up the identity as a hex checksum
                 return identities[identity]
             except KeyError:
-                # It's not a valid checksum; try to use it as a value.
+                # Try to look up the identity as readable name
                 if identity in identities.values():
                     return identity
 
-            raise BriefcaseCommandError(
-                "Invalid code signing identity {identity!r}".format(
-                    identity=identity
-                )
-            )
+                # Not found
+                raise BriefcaseCommandError(f"Invalid code signing identity {identity!r}")
 
         if len(identities) == 0:
             raise BriefcaseCommandError(
@@ -160,46 +158,141 @@ class macOSPackageMixin:
             print()
             selection = select_option(identities, input=self.input)
             identity = identities[selection]
-            print("selected", identity)
 
         return identity
 
-    def sign(self, path, entitlements, identity):
+    def sign_file(self, path, identity, entitlements=None):
         """
         Code sign a file.
 
         :param path: The path to the file to sign.
-        :param entitlements: The path to the entitlements file to use.
         :param identity: The code signing identity to use. Either the 40-digit
             hex checksum, or the string name of the identity.
+        :param entitlements: The path to the entitlements file to use.
         """
+        options = 'runtime' if identity != '-' else None
+        process_command = [
+            'codesign',
+            os.fsdecode(path),
+            '--sign', identity,
+            '--force',
+        ]
+        if entitlements:
+            process_command.append('--entitlements')
+            process_command.append(os.fsdecode(entitlements))
+        if options:
+            process_command.append('--options')
+            process_command.append(options)
+
         try:
-            print("Signing", path)
+            print(f"Signing {Path(path).relative_to(self.base_path)}")
             self.subprocess.run(
-                [
-                    'codesign',
-                    '--sign', identity,
-                    '--entitlements', os.fsdecode(entitlements),
-                    '--deep', os.fsdecode(path),
-                    '--force',
-                    '--options', 'runtime',
-                ],
+                process_command,
+                stderr=subprocess.PIPE,
                 check=True,
             )
-        except subprocess.CalledProcessError:
-            print()
-            raise BriefcaseCommandError(
-                "Unable to code sign {path}.".format(path=path)
+        except subprocess.CalledProcessError as e:
+            errors = e.stderr.decode('utf-8', errors='replace')
+            if 'code object is not signed at all' in errors:
+                print("... file requires a deep sign; retrying")
+                try:
+                    self.subprocess.run(
+                        process_command + ['--deep'],
+                        stderr=subprocess.PIPE,
+                        check=True,
+                    )
+                except subprocess.CalledProcessError:
+                    raise BriefcaseCommandError(f"Unable to deep code sign {path}.")
+
+            elif any(
+                msg in errors
+                for msg in [
+                    # File has a signature matching the Mach-O magic,
+                    # but isn't actually a Mach-O binary
+                    'unsupported format for signature',
+
+                    # A folder named ``.framework`, but not actually a macOS Framework`
+                    'bundle format unrecognized, invalid, or unsuitable',
+                ]
+            ):
+                # We should not be signing this in the first place
+                print("... no signature required")
+                return
+            else:
+                raise BriefcaseCommandError(f"Unable to code sign {path}.")
+
+    def sign_app(self, app, identity):
+        """Sign an entire app with a specific identity
+
+        :param app: The app to sign
+        :param identity: The signing identity to use
+        """
+        bundle_path = self.binary_path(app)
+        resources_path = bundle_path / 'Contents' / 'Resources'
+
+        # Sign all Mach-O executable objects
+        sign_targets = [
+            path
+            for path in resources_path.rglob('*')
+            if not path.is_dir() and is_mach_o_binary(path)
+        ]
+
+        # Sign all embedded frameworks
+        sign_targets.extend(resources_path.rglob('*.framework'))
+
+        # Sign all embedded app objets
+        sign_targets.extend(resources_path.rglob('*.app'))
+
+        # Sign the bundle path itself
+        sign_targets.append(bundle_path)
+
+        # Signs code objects in reversed lexicographic order to ensure nesting order is respected
+        # (objects must be signed from the inside out)
+        for path in sorted(sign_targets, reverse=True):
+            self.sign_file(
+                path,
+                entitlements=self.entitlements_path(app),
+                identity=identity,
             )
 
+
+class macOSPackageMixin(macOSSigningMixin):
+    @property
+    def packaging_formats(self):
+        return ['app', 'dmg']
+
+    @property
+    def default_packaging_format(self):
+        return 'dmg'
+
+    def verify_tools(self):
+        if self.host_os != 'Darwin':
+            raise BriefcaseCommandError("""
+        Code signing and / or building a DMG requires running on macOS.
+        """)
+
+        # Require the XCode command line tools.
+        verify_command_line_tools_install(self)
+
+        # Verify superclass tools *after* xcode. This ensures we get the
+        # git check *after* the xcode check.
+        super().verify_tools()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # External service APIs.
+        # These are abstracted to enable testing without patching.
+        self.dmgbuild = dmgbuild
+
     def package_app(
-            self,
-            app: BaseConfig,
-            sign_app=True,
-            identity=None,
-            adhoc_sign=False,
-            packaging_format='dmg',
-            **kwargs
+        self,
+        app: BaseConfig,
+        sign_app=True,
+        identity=None,
+        adhoc_sign=False,
+        packaging_format='dmg',
+        **kwargs
     ):
         """
         Package an app bundle.
@@ -213,7 +306,6 @@ class macOSPackageMixin:
         :param adhoc_sign: If true, code will be signed with adhoc identity of "-"
         :param packaging_format: The packaging format to use. Default is `dmg`.
         """
-
         if sign_app:
             if adhoc_sign:
                 identity = "-"
@@ -229,19 +321,9 @@ class macOSPackageMixin:
                     identity=identity
                 ))
 
-            for path in itertools.chain(
-                self.binary_path(app).glob('**/*.so'),
-                self.binary_path(app).glob('**/*.dylib'),
-                [self.binary_path(app)],
-            ):
-                self.sign(
-                    path,
-                    entitlements=self.entitlements_path(app),
-                    identity=identity,
-                )
+            self.sign_app(app=app, identity=identity)
 
         if packaging_format == 'dmg':
-
             print()
             print('[{app.app_name}] Building DMG...'.format(app=app))
 
@@ -258,26 +340,21 @@ class macOSPackageMixin:
             }
 
             try:
-                icon_filename = self.base_path / '{icon}.icns'.format(
-                    icon=app.installer_icon
-                )
+                icon_filename = self.base_path / f'{app.installer_icon}.icns'
                 if not icon_filename.exists():
-                    print("Can't find {filename}.icns for DMG installer icon".format(
-                        filename=app.installer_icon
-                    ))
+                    print(f"Can't find {app.installer_icon}.icns to use as DMG installer icon")
                     raise AttributeError()
             except AttributeError:
                 # No installer icon specified. Fall back to the app icon
-                try:
+                if app.icon:
                     icon_filename = self.base_path / '{icon}.icns'.format(
                         icon=app.icon
                     )
                     if not icon_filename.exists():
-                        print("Can't find {filename}.icns for fallback DMG installer icon".format(
-                            filename=app.icon
-                        ))
-                        raise AttributeError()
-                except AttributeError:
+                        print(f"Can't find {app.icon}.icns to use as fallback DMG installer icon")
+                        icon_filename = None
+                else:
+                    # No app icon specified either
                     icon_filename = None
 
             if icon_filename:
@@ -290,15 +367,22 @@ class macOSPackageMixin:
                 if image_filename.exists():
                     dmg_settings['background'] = os.fsdecode(image_filename)
                 else:
-                    print("Can't find {filename}.png for DMG background".format(
+                    print("Can't find {filename}.png to use as DMG background".format(
                         filename=app.installer_background
                     ))
             except AttributeError:
                 # No installer background image provided
                 pass
 
+            dmg_path = os.fsdecode(self.distribution_path(app, packaging_format=packaging_format))
             self.dmgbuild.build_dmg(
-                filename=os.fsdecode(self.distribution_path(app, packaging_format=packaging_format)),
+                filename=dmg_path,
                 volume_name='{app.formal_name} {app.version}'.format(app=app),
                 settings=dmg_settings
             )
+
+            if sign_app:
+                self.sign_file(
+                    dmg_path,
+                    identity=identity,
+                )
