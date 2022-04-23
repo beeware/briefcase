@@ -1,4 +1,4 @@
-import glob
+
 import os
 import shutil
 import subprocess
@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Optional
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
-import PIL.Image
+
 from PIL import Image, UnidentifiedImageError
 from cookiecutter import exceptions as cookiecutter_exceptions
 from requests import exceptions as requests_exceptions
@@ -17,6 +17,7 @@ from requests import exceptions as requests_exceptions
 import briefcase
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError, NetworkFailure, MissingNetworkResourceError
+from ..images.images import create_variant
 
 from .base import (
     BaseCommand,
@@ -572,92 +573,21 @@ class CreateCommand(BaseCommand):
                 # Copy the source image to the target location
                 self.shutil.copy(full_source, target)
             else:
-                print(
+
+                source_suffix = source_filename[-5:]
+                if source_suffix == '.icns' and full_role == 'application icon':
+                    create_variant(target, size, source)
+
+                else:
+                    print(
                     "Unable to find {source_filename} for {full_role}; using default".format(
                         full_role=full_role,
                         source_filename=source_filename,
                     )
                 )
 
-    """
-    General Notes
-
-    I have omitted anything platform-specific, including the working Apple code, as I think it would be best to get feedback on this inital structure. I am unsure how to integrate platform-specific features. Would I start with going to each platform's dev page and collecting the filesize & name specified?
-    
-    Nothing with splash screens
-    
-    Nothing tested
-    
-    Feedback Requested:
-    
-    Should multiple image types as input be supported? jpgs or other?
-    
-    Do the function names, method signatures and return types seem on the right track?
-    
-    What variable or variables would give me information about the target platform?
-    
-    I'm open to feedback on anything
-    
-    Thanks! 
-    """
-
-    def find_largest_png(self, source: Path) -> Image:
-        """
-        Search a directory of PNGs and returns the widest
-
-        :param source: Directory to search
-        :return: Widest image
-        """
-        largest_image = None
-        img_files = source.glob("*.png")
-        img_files = list(img_files)
-        if img_files:
-
-            try:
-                largest_image = Image.open(img_files.pop())
-
-                for img in img_files:
-
-                    maybe_larger_img = Image.open(img)
-
-                    # Compare widths
-                    if maybe_larger_img.size[0] > largest_image.size[0]:
-                        largest_image = maybe_larger_img
-
-            except OSError:
-                print("Image file cannot be read")
-            except UnidentifiedImageError:
-                print("Image cannot be opened and identified.")
-            except FileNotFoundError:
-                print("Image file cannot be found")
-            except ValueError:
-                print("Mode is not “r”, or a StringIO instance is used for fp")
-            except TypeError:
-                print("If formats is not None, a list or a tuple")
 
 
-        else:
-            print(f"No images in {source}")
-
-        return largest_image  # File
-
-    def downscale_image_to_iconset(self, img: Image) -> list[Image]:
-        """
-
-        """
-
-    def label_icons(self, iconset: list[Image], labels: list[str]) -> list[(str, Image)]:
-        """
-        Returns a list of images with specificed platform-specific filenames
-        """
-
-
-    def write_icons(self, icons: list[str, Image]):
-
-        with tempfile.TemporaryDirectory() as tmpdirname:
-
-            for fname, img in icons:
-            # Write images to the temporary directory
 
     def install_app_resources(self, app: BaseConfig):
         """
