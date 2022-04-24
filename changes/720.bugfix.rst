@@ -1,1 +1,1 @@
-Clear old dist-info when updating app code.
+Application code and dist-info is now fully replaced during an update.
