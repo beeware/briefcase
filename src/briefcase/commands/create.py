@@ -431,19 +431,18 @@ class CreateCommand(BaseCommand):
         :param app: The config object for the app
         """
 
-        # Remove existing versions of the code and dist-info.
-        target = self.app_path(app)
-
-        if target.is_dir():
-            self.shutil.rmtree(target)
-            self.os.mkdir(target)
+        # Remove existing app folder
+        app_path = self.app_path(app)
+        if app_path.is_dir():
+            self.shutil.rmtree(app_path)
+            self.os.mkdir(app_path)
 
         # Install app code.
         if app.sources:
             for src in app.sources:
-                print("Installing {src}...".format(src=src))
+                print(f"Installing {src}...")
                 original = self.base_path / src
-                target = self.app_path(app) / original.name
+                target = app_path / original.name
 
                 # Install the new copy of the app code.
                 if not original.exists():
@@ -453,14 +452,12 @@ class CreateCommand(BaseCommand):
                 else:
                     self.shutil.copy(original, target)
         else:
-            print("No sources defined for {app.app_name}.".format(app=app))
+            print(f"No sources defined for {app.app_name}.")
 
         # Write the dist-info folder for the application.
         write_dist_info(
             app=app,
-            dist_info_path=self.app_path(app) / '{app.module_name}-{app.version}.dist-info'.format(
-                app=app,
-            )
+            dist_info_path=self.app_path(app) / f'{app.module_name}-{app.version}.dist-info'
         )
 
     def install_image(self, role, variant, size, source, target):
