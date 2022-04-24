@@ -10,14 +10,13 @@ from typing import Optional
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 
-from PIL import Image, UnidentifiedImageError
 from cookiecutter import exceptions as cookiecutter_exceptions
 from requests import exceptions as requests_exceptions
 
 import briefcase
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError, NetworkFailure, MissingNetworkResourceError
-from ..images.images import create_variant
+from ..images import create_image_variant
 
 from .base import (
     BaseCommand,
@@ -574,17 +573,9 @@ class CreateCommand(BaseCommand):
                 self.shutil.copy(full_source, target)
             else:
 
-                source_suffix = source_filename[-5:]
-                if source_suffix == '.icns' and full_role == 'application icon':
-                    create_variant(target, size, source)
+                create_image_variant(target, size, source)
 
-                else:
-                    print(
-                    "Unable to find {source_filename} for {full_role}; using default".format(
-                        full_role=full_role,
-                        source_filename=source_filename,
-                    )
-                )
+
 
 
 
