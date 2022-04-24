@@ -1,4 +1,3 @@
-
 import argparse
 import importlib
 import inspect
@@ -572,8 +571,7 @@ class BaseCommand(ABC):
                         downloaded += len(data)
                         f.write(data)
                         done = int(50 * downloaded / total)
-                        # TODO: what to do....
-                        print('\r{}{} {}%'.format('#' * done, '.' * (50-done), 2*done), end='', flush=True)
+                        self.input.print('\r{}{} {}%'.format('#' * done, '.' * (50-done), 2*done), end='', flush=True)
             self.logger.info()
         else:
             self.logger.info('{cache_name} already downloaded'.format(cache_name=cache_name))

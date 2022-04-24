@@ -651,9 +651,11 @@ class CreateCommand(BaseCommand):
                 default=False
             )
             if not confirm:
-                self.logger.error("Aborting creation of app {app.app_name}".format(
-                    app=app
-                ))
+                self.logger.error(
+                    "Aborting creation of app {app.app_name}; existing application will not be overwritten.".format(
+                        app=app
+                    )
+                )
                 return
             self.logger.info()
             self.logger.info("[{app.app_name}] Removing old application bundle...".format(

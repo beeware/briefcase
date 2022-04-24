@@ -8,7 +8,7 @@ from pathlib import Path
 from requests import exceptions as requests_exceptions
 
 from briefcase.config import PEP508_NAME_RE
-from briefcase.console import InputDisabled, select_option
+from briefcase.console import InputDisabled
 from briefcase.exceptions import (
     BriefcaseCommandError,
     InvalidDeviceError,
@@ -496,20 +496,23 @@ Delete {sdk_zip_path} and run briefcase again.""".format(
         choices.append((None, "Create a new Android emulator"))
 
         # Show the choices to the user.
-        print()
-        print("Select device:")
-        print()
         try:
-            choice = select_option(choices, input=self.command.input)
+            choice = self.command.input.selection_input(
+                intro="Select device:",
+                prompt="> ",
+                options=choices,
+            )
         except InputDisabled:
             # If input is disabled, and there's only one actual simulator,
             # select it. If there are no simulators, select "Create simulator"
             if len(choices) <= 2:
                 choice = choices[0][0]
             else:
-                raise BriefcaseCommandError(
-                    "Input has been disabled; can't select a device to target."
-                )
+                raise BriefcaseCommandError("""
+Input has been disabled and the device to target is ambiguous.
+Use the -d/--device option to explicitly specify the device to use.
+"""
+                                            )
 
         # Proces the user's choice
         if choice is None:
@@ -713,12 +716,12 @@ In future, you can specify this device by running:
 
             # Step 1: Wait for the device to appear so we can get an
             # ADB instance for the new device.
-            print()
-            print('Waiting for emulator to start...', flush=True, end='')
+            self.command.input.print()
+            self.command.input.print('Waiting for emulator to start...', flush=True, end='')
             adb = None
             known_devices = set()
             while adb is None:
-                print('.', flush=True, end='')
+                self.command.input.print('.', flush=True, end='')
                 if emulator_popen.poll() is not None:
                     raise BriefcaseCommandError("""
 Android emulator was unable to start!
@@ -755,7 +758,7 @@ find this page helpful in diagnosing emulator problems.
                 self.sleep(2)
 
             # Print a marker so we can see the phase change
-            print(' booting...', flush=True, end='')
+            self.command.input.print(' booting...', flush=True, end='')
 
             # Phase 2: Wait for the boot process to complete
             while not adb.has_booted():
@@ -775,9 +778,9 @@ find this page helpful in diagnosing emulator problems.
 
                 # Try again in 2 seconds...
                 self.sleep(2)
-                print('.', flush=True, end='')
+                self.command.input.print('.', flush=True, end='')
 
-            print()
+            self.command.input.print()
             # Return the device ID and full name.
             return device, full_name
         else:

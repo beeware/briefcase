@@ -11,7 +11,7 @@ from briefcase.commands import (
     UpdateCommand
 )
 from briefcase.config import BaseConfig
-from briefcase.console import InputDisabled, select_option
+from briefcase.console import InputDisabled
 from briefcase.exceptions import BriefcaseCommandError, InvalidDeviceError
 from briefcase.integrations.xcode import (
     DeviceState,
@@ -159,15 +159,11 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
         elif len(simulators) == 1:
             iOS_version = list(simulators.keys())[0]
         else:
-            if self.input.enabled:
-                print()
-                print("Select iOS version:")
-                print()
-            iOS_version = select_option({
-                version: version
-                for version in simulators.keys()
-            }, input=self.input)
-
+            iOS_version = self.input.selection_input(
+                intro="Select iOS version:",
+                prompt="> ",
+                options=simulators.keys()
+            )
         devices = simulators[iOS_version]
 
         if len(devices) == 0:
@@ -179,11 +175,11 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
         elif len(devices) == 1:
             udid = list(devices.keys())[0]
         else:
-            if self.input.enabled:
-                print()
-                print("Select simulator device:")
-                print()
-            udid = select_option(devices, input=self.input)
+            udid = self.input.selection_input(
+                intro="Select simulator device:",
+                prompt="> ",
+                options=devices,
+            )
 
         device = devices[udid]
 
@@ -305,8 +301,8 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                 "Input has been disabled; can't select a device to target."
             )
 
-        print()
-        print(
+        self.logger.info()
+        self.logger.info(
             "[{app.app_name}] Starting app on an {device} running "
             "iOS {iOS_version} (device UDID {udid})".format(
                 app=app,
@@ -321,17 +317,17 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         # shutting down, we need to wait for it to shut down before restarting.
         device_state = self.get_device_state(self, udid)
         if device_state not in {DeviceState.SHUTDOWN, DeviceState.BOOTED}:
-            print('Waiting for simulator...', flush=True, end='')
+            self.input.print('Waiting for simulator...', flush=True, end='')
             while device_state not in {DeviceState.SHUTDOWN, DeviceState.BOOTED}:
                 self.sleep(2)
-                print('.', flush=True, end='')
+                self.input.print('.', flush=True, end='')
                 device_state = self.get_device_state(self, udid)
 
         # We now know the simulator is either shut down or booted;
         # if it's shut down, start it again.
         if device_state == DeviceState.SHUTDOWN:
             try:
-                print("Booting {device} simulator running iOS {iOS_version}...".format(
+                self.logger.info("Booting {device} simulator running iOS {iOS_version}...".format(
                         device=device,
                         iOS_version=iOS_version,
                     )
@@ -350,7 +346,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
 
         # We now know the simulator is *running*, so we can open it.
         try:
-            print("Opening {device} simulator running iOS {iOS_version}...".format(
+            self.logger.info("Opening {device} simulator running iOS {iOS_version}...".format(
                     device=device,
                     iOS_version=iOS_version,
                 )
@@ -370,7 +366,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         # Try to uninstall the app first. If the app hasn't been installed
         # before, this will still succeed.
         app_identifier = '.'.join([app.bundle, app.app_name])
-        print('[{app.app_name}] Uninstalling old app version...'.format(
+        self.logger.info('[{app.app_name}] Uninstalling old app version...'.format(
             app=app
         ))
         try:
@@ -386,7 +382,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
             )
 
         # Install the app.
-        print('[{app.app_name}] Installing new app version...'.format(
+        self.logger.info('[{app.app_name}] Installing new app version...'.format(
             app=app
         ))
         try:
@@ -401,7 +397,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                 )
             )
 
-        print('[{app.app_name}] Starting app...'.format(
+        self.logger.info('[{app.app_name}] Starting app...'.format(
             app=app
         ))
         try:
@@ -418,9 +414,11 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
 
         # Start streaming logs for the app.
         try:
-            print()
-            print("[{app.app_name}] Following simulator log output (type CTRL-C to stop log)...".format(app=app))
-            print("=" * 75)
+            self.logger.info()
+            self.logger.info(
+                "[{app.app_name}] Following simulator log output (type CTRL-C to stop log)...".format(app=app)
+            )
+            self.logger.info("=" * 75)
             self.subprocess.run(
                 [
                     "xcrun", "simctl", "spawn", udid,

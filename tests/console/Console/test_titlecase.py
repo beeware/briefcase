@@ -1,6 +1,6 @@
 import pytest
 
-from briefcase.commands.new import titlecase
+from briefcase.console import Console
 
 
 @pytest.mark.parametrize(
@@ -21,4 +21,4 @@ from briefcase.commands.new import titlecase
 )
 def test_titlecase(raw, converted):
     "Test that a string can be capitalized"
-    assert titlecase(raw) == converted
+    assert Console.titlecase(raw) == converted

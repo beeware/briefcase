@@ -1,10 +1,8 @@
-import itertools
 import os
 import subprocess
 from pathlib import Path
 
 from briefcase.config import BaseConfig
-from briefcase.console import select_option
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.xcode import (
     get_identities,
@@ -153,11 +151,13 @@ class macOSSigningMixin:
         elif len(identities) == 1:
             identity = list(identities.items())[0][1]
         else:
-            print()
-            print("Select code signing identity to use:")
-            print()
-            selection = select_option(identities, input=self.input)
+            selection = self.input.selection_input(
+                intro="Select code signing identity to use:",
+                prompt="> ",
+                options=identities,
+            )
             identity = identities[selection]
+            self.input.print("selected", identity)
 
         return identity
 

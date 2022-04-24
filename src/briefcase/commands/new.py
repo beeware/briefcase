@@ -15,30 +15,6 @@ from .base import BaseCommand, BriefcaseCommandError
 from .create import InvalidTemplateRepository
 
 
-def titlecase(s):
-    """
-    Convert a string to titlecase.
-
-    Follow Chicago Manual of Style rules for capitalization (roughly).
-
-    * Capitalize *only* the first letter of each word
-    * ... unless the word is an acronym (e.g., URL)
-    * ... or the word is on the exclude list ('of', 'and', 'the)
-    :param s: The input string
-    :returns: A capitalized string.
-    """
-    return ' '.join(
-        word if (
-            word.isupper()
-            or word in {
-                'a', 'an', 'and', 'as', 'at', 'but', 'by', 'en', 'for',
-                'if', 'in', 'of', 'on', 'or', 'the', 'to', 'via', 'vs'
-            }
-        ) else word.capitalize()
-        for word in s.split(' ')
-    )
-
-
 class NewCommand(BaseCommand):
     cmd_line = 'briefcase new'
     command = 'new'
@@ -253,92 +229,6 @@ class NewCommand(BaseCommand):
             raise ValueError('Not a valid URL!')
         return True
 
-    def input_text(self, intro, variable, default, validator=None):
-        """
-        Read a text answer from the user.
-
-        :param intro: An introductory paragraph explaining the question being
-            asked.
-        :param variable: The name of the variable being entered.
-        :param default: The default value if the user hits enter without typing
-            anything.
-        :param validator: (optional) A validator function; accepts a single
-            input (the candidate response), returns True if the answer is
-            valid, or raises ValueError() with a debugging message if the
-            candidate value isn't valid.
-        :returns: a string, guaranteed to meet the validation criteria of
-            ``validator``.
-        """
-        if self.input.enabled:
-            print(intro)
-        while True:
-            if self.input.enabled:
-                print()
-
-            answer = self.input.text_input(
-                "{variable} [{default}]: ".format(
-                    variable=titlecase(variable),
-                    default=default,
-                ),
-                default=default
-            )
-
-            if validator is None:
-                return answer
-
-            try:
-                validator(answer)
-                return answer
-            except ValueError as e:
-                if not self.input.enabled:
-                    raise BriefcaseCommandError(str(e))
-
-                print()
-                print("Invalid value; {e}".format(e=e))
-
-    def input_select(self, intro, variable, options):
-        """
-        Select one from a list of options.
-
-        The first option is assumed to be the default.
-
-        :param intro: An introductory paragraph explaining the question being
-            asked.
-        :param variable: The variable to display to the user.
-        :param options: A list of text strings, describing the available
-            options.
-        :returns: The string content of the selected option.
-        """
-        if self.input.enabled:
-            print(intro)
-
-        index_choices = [str(key) for key in range(1, len(options) + 1)]
-        display_options = '\n'.join(
-            "    [{index}] {option}".format(
-                index=index, option=option
-            )
-            for index, option in zip(index_choices, options)
-        )
-        error_message = "Invalid selection; please enter a number between 1 and {n}".format(
-            n=len(options)
-        )
-        prompt = """
-Select one of the following:
-
-{display_options}
-
-{variable} [1]: """.format(
-            display_options=display_options,
-            variable=titlecase(variable)
-        )
-        selection = self.input.selection_input(
-            prompt=prompt,
-            choices=index_choices,
-            default="1",
-            error_message=error_message
-        )
-        return options[int(selection) - 1]
-
     def build_app_context(self):
         """
         Ask the user for details about the app to be created.
@@ -346,13 +236,13 @@ Select one of the following:
         :returns: A context dictionary to be used in the cookiecutter project
             template.
         """
-        formal_name = self.input_text(
+        formal_name = self.input.text_input(
             intro="""
 First, we need a formal name for your application. This is the name that will
 be displayed to humans whenever the name of the application is displayed. It
 can have spaces and punctuation if you like, and any capitalization will be
 used as you type it.""",
-            variable="formal name",
+            input_name="formal name",
             default='Hello World',
         )
 
@@ -360,7 +250,7 @@ used as you type it.""",
         class_name = self.make_class_name(formal_name)
 
         default_app_name = self.make_app_name(formal_name)
-        app_name = self.input_text(
+        app_name = self.input.text_input(
             intro="""
 Next, we need a name that can serve as a machine-readable Python package name
 for your application. This name must be PEP508-compliant - that means the name
@@ -371,7 +261,7 @@ Based on your formal name, we suggest an app name of '{default_app_name}',
 but you can use another name if you want.""".format(
                 default_app_name=default_app_name
             ),
-            variable="app name",
+            input_name="app name",
             default=default_app_name,
             validator=self.validate_app_name,
         )
@@ -379,7 +269,7 @@ but you can use another name if you want.""".format(
         # The module name can be completely derived from the app name.
         module_name = self.make_module_name(app_name)
 
-        bundle = self.input_text(
+        bundle = self.input.text_input(
             intro="""
 Now we need a bundle identifier for your application. App stores need to
 protect against having multiple applications with the same name; the bundle
@@ -393,59 +283,60 @@ combined with your application's machine readable name to form a complete
 application identifier (e.g., com.example.{app_name}).""".format(
                 app_name=app_name,
             ),
-            variable="bundle identifier",
+            input_name="bundle identifier",
             default='com.example',
             validator=self.validate_bundle,
         )
 
-        project_name = self.input_text(
+        project_name = self.input.text_input(
             intro="""
 Briefcase can manage projects that contain multiple applications, so we need a
 Project name. If you're only planning to have one application in this
 project, you can use the formal name as the project name.""",
-            variable="project name",
+            input_name="project name",
             default=formal_name
         )
 
-        description = self.input_text(
+        description = self.input.text_input(
             intro="""
 Now, we need a one line description for your application.""",
-            variable="description",
+            input_name="description",
             default="My first application"
         )
 
-        author = self.input_text(
+        author = self.input.text_input(
             intro="""
 Who do you want to be credited as the author of this application? This could be
 your own name, or the name of your company you work for.""",
-            variable="author",
+            input_name="author",
             default="Jane Developer",
         )
 
-        author_email = self.input_text(
+        author_email = self.input.text_input(
             intro="""
 What email address should people use to contact the developers of this
 application? This might be your own email address, or a generic contact address
 you set up specifically for this application.""",
-            variable="author's email",
+            input_name="author's email",
             default=self.make_author_email(author, bundle),
             validator=self.validate_email
         )
 
-        url = self.input_text(
+        url = self.input.text_input(
             intro="""
 What is the website URL for this application? If you don't have a website set
 up yet, you can put in a dummy URL.""",
-            variable="application URL",
+            input_name="application URL",
             default=self.make_project_url(bundle, app_name),
             validator=self.validate_url
         )
 
-        project_license = self.input_select(
+        project_license = self.input.selection_input(
             intro="""
 What license do you want to use for this project's code?""",
-            variable="project license""",
-            options=[
+            input_name="project license",
+            default="BSD license",
+            options=(
                 "BSD license",
                 "MIT license",
                 "Apache Software License",
@@ -455,20 +346,21 @@ What license do you want to use for this project's code?""",
                 "GNU General Public License v3 or later (GPLv3+)",
                 "Proprietary",
                 "Other"
-            ],
+            ),
         )
 
-        gui_framework = self.input_select(
+        gui_framework = self.input.selection_input(
             intro="""
 What GUI toolkit do you want to use for this project?""",
-            variable="GUI framework",
-            options=[
-                'Toga',
-                'PySide2 (does not support iOS/Android deployment)',
-                'PySide6 (does not support iOS/Android deployment)',
-                'PursuedPyBear (does not support iOS/Android deployment)',
-                'None',
-            ],
+            input_name="GUI framework",
+            default="Toga",
+            options=(
+                "Toga",
+                "PySide2 (does not support iOS/Android deployment)",
+                "PySide6 (does not support iOS/Android deployment)",
+                "PursuedPyBear (does not support iOS/Android deployment)",
+                "None",
+            ),
         )
 
         return {
@@ -494,10 +386,9 @@ What GUI toolkit do you want to use for this project?""",
         if template is None:
             template = 'https://github.com/beeware/briefcase-template'
 
-        if self.input.enabled:
-            self.logger.info()
-            self.logger.info("Let's build a new Briefcase app!")
-            self.logger.info()
+        self.input.print()
+        self.input.print("Let's build a new Briefcase app!")
+        self.input.print()
 
         context = self.build_app_context()
 
