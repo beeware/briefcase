@@ -1,0 +1,1 @@
+Application code and dist-info is now fully replaced during an update.
