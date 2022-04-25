@@ -21,7 +21,7 @@ except ModuleNotFoundError:
 
 from briefcase import __version__, integrations
 from briefcase.config import AppConfig, BaseConfig, GlobalConfig, parse_config
-from briefcase.console import Console
+from briefcase.console import Console, Log, ProgressBar
 from briefcase.exceptions import (
     BadNetworkResourceError,
     BriefcaseCommandError,
@@ -52,50 +52,6 @@ class UnsupportedPlatform(BriefcaseCommandError):
                     platform=platform
                 )
         )
-
-
-class Log:
-    """
-    Manage debug logging output driven by verbosity flags.
-    """
-
-    def __init__(self, verbosity=1):
-        # verbosity will be 1 more than the number of v flags from invocation
-        self.verbosity = verbosity
-        # value to be printed at the beginning of all debug output
-        self.debug_preface = ">>> "
-
-    def _log(self, preface="", msg=""):
-        """Funnel to log all messages."""
-        # print each line of message; ensure a line is printed when msg is empty
-        for line in msg.splitlines() or ("",):
-            print("{preface}{msg}".format(preface=preface, msg=line))
-
-    def _debug_log(self, msg=""):
-        """Funnel to log all debug messages."""
-        self._log(preface=self.debug_preface, msg=msg)
-
-    def debug(self, msg=""):
-        """Log messages at debug level. Included in output if verbosity>=2."""
-        if self.verbosity >= 2:
-            self._debug_log(msg=msg)
-
-    def deep_debug(self, msg=""):
-        """Log messages at deep debug level. Included in output if verbosity>=3."""
-        if self.verbosity >= 3:
-            self._debug_log(msg=msg)
-
-    def info(self, msg=""):
-        """Log message at info level. Always included in output."""
-        self._log(msg=msg)
-
-    def warning(self, msg=""):
-        """Log message at warning level. Always included in output."""
-        self._log(msg=msg)
-
-    def error(self, msg=""):
-        """Log message at error level. Always included in output."""
-        self._log(msg=msg)
 
 
 def create_config(klass, config, msg):
@@ -566,13 +522,11 @@ class BaseCommand(ABC):
                     f.write(response.content)
                 else:
                     downloaded = 0
-                    total = int(total)
-                    for data in response.iter_content(chunk_size=1024 * 1024):
-                        downloaded += len(data)
-                        f.write(data)
-                        done = int(50 * downloaded / total)
-                        self.input.print('\r{}{} {}%'.format('#' * done, '.' * (50-done), 2*done), end='', flush=True)
-            self.logger.info()
+                    with ProgressBar(total=int(total)) as progress_bar:
+                        for data in response.iter_content(chunk_size=1024 * 1024):
+                            f.write(data)
+                            downloaded += len(data)
+                            progress_bar.update(completed=downloaded)
         else:
             self.logger.info('{cache_name} already downloaded'.format(cache_name=cache_name))
         return filename

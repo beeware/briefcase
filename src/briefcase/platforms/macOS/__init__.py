@@ -3,6 +3,7 @@ import subprocess
 from pathlib import Path
 
 from briefcase.config import BaseConfig
+from briefcase.console import select_option
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.xcode import (
     get_identities,
@@ -151,11 +152,10 @@ class macOSSigningMixin:
         elif len(identities) == 1:
             identity = list(identities.items())[0][1]
         else:
-            selection = self.input.selection_input(
-                intro="Select code signing identity to use:",
-                prompt="> ",
-                options=identities,
-            )
+            self.input.print()
+            self.input.print("Select code signing identity to use:")
+            self.input.print()
+            selection = select_option(identities, input=self.input)
             identity = identities[selection]
             self.input.print("selected", identity)
 
@@ -343,9 +343,6 @@ class macOSPackageMixin(macOSSigningMixin):
                 icon_filename = self.base_path / f'{app.installer_icon}.icns'
                 if not icon_filename.exists():
                     self.logger.warning(f"Can't find {app.installer_icon}.icns to use as DMG installer icon")
-                    self.logger.warning("Can't find {filename}.icns for DMG installer icon".format(
-                        filename=app.installer_icon
-                    ))
                     raise AttributeError()
             except AttributeError:
                 # No installer icon specified. Fall back to the app icon

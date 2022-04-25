@@ -11,7 +11,7 @@ from briefcase.commands import (
     UpdateCommand
 )
 from briefcase.config import BaseConfig
-from briefcase.console import InputDisabled
+from briefcase.console import InputDisabled, WaitBar, select_option
 from briefcase.exceptions import BriefcaseCommandError, InvalidDeviceError
 from briefcase.integrations.xcode import (
     DeviceState,
@@ -159,11 +159,14 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
         elif len(simulators) == 1:
             iOS_version = list(simulators.keys())[0]
         else:
-            iOS_version = self.input.selection_input(
-                intro="Select iOS version:",
-                prompt="> ",
-                options=simulators.keys()
-            )
+            self.input.print()
+            self.input.print("Select iOS version:")
+            self.input.print()
+            iOS_version = select_option({
+                version: version
+                for version in simulators.keys()
+            }, input=self.input)
+
         devices = simulators[iOS_version]
 
         if len(devices) == 0:
@@ -175,11 +178,10 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
         elif len(devices) == 1:
             udid = list(devices.keys())[0]
         else:
-            udid = self.input.selection_input(
-                intro="Select simulator device:",
-                prompt="> ",
-                options=devices,
-            )
+            self.input.print()
+            self.input.print("Select simulator device:")
+            self.input.print()
+            udid = select_option(devices, input=self.input)
 
         device = devices[udid]
 
@@ -317,11 +319,11 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         # shutting down, we need to wait for it to shut down before restarting.
         device_state = self.get_device_state(self, udid)
         if device_state not in {DeviceState.SHUTDOWN, DeviceState.BOOTED}:
-            self.input.print('Waiting for simulator...', flush=True, end='')
-            while device_state not in {DeviceState.SHUTDOWN, DeviceState.BOOTED}:
-                self.sleep(2)
-                self.input.print('.', flush=True, end='')
-                device_state = self.get_device_state(self, udid)
+            with WaitBar(message="Waiting for simulator...") as wait_bar:
+                while device_state not in {DeviceState.SHUTDOWN, DeviceState.BOOTED}:
+                    self.sleep(2)
+                    wait_bar.update()
+                    device_state = self.get_device_state(self, udid)
 
         # We now know the simulator is either shut down or booted;
         # if it's shut down, start it again.

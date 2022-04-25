@@ -8,7 +8,7 @@ from pathlib import Path
 from requests import exceptions as requests_exceptions
 
 from briefcase.config import PEP508_NAME_RE
-from briefcase.console import InputDisabled
+from briefcase.console import InputDisabled, WaitBar, select_option
 from briefcase.exceptions import (
     BriefcaseCommandError,
     InvalidDeviceError,
@@ -496,12 +496,11 @@ Delete {sdk_zip_path} and run briefcase again.""".format(
         choices.append((None, "Create a new Android emulator"))
 
         # Show the choices to the user.
+        self.command.input.print()
+        self.command.input.print("Select device:")
+        self.command.input.print()
         try:
-            choice = self.command.input.selection_input(
-                intro="Select device:",
-                prompt="> ",
-                options=choices,
-            )
+            choice = select_option(choices, input=self.command.input)
         except InputDisabled:
             # If input is disabled, and there's only one actual simulator,
             # select it. If there are no simulators, select "Create simulator"
@@ -509,7 +508,7 @@ Delete {sdk_zip_path} and run briefcase again.""".format(
                 choice = choices[0][0]
             else:
                 raise BriefcaseCommandError("""
-Input has been disabled and the device to target is ambiguous.
+Input has been disabled; can't select a device to target.
 Use the -d/--device option to explicitly specify the device to use.
 """
                                             )
@@ -717,13 +716,13 @@ In future, you can specify this device by running:
             # Step 1: Wait for the device to appear so we can get an
             # ADB instance for the new device.
             self.command.input.print()
-            self.command.input.print('Waiting for emulator to start...', flush=True, end='')
-            adb = None
-            known_devices = set()
-            while adb is None:
-                self.command.input.print('.', flush=True, end='')
-                if emulator_popen.poll() is not None:
-                    raise BriefcaseCommandError("""
+            with WaitBar(message="Waiting for emulator to start...") as startup_wait_bar:
+                adb = None
+                known_devices = set()
+                while adb is None:
+                    startup_wait_bar.update()
+                    if emulator_popen.poll() is not None:
+                        raise BriefcaseCommandError("""
 Android emulator was unable to start!
 
 Try starting the emulator manually by running:
@@ -736,34 +735,32 @@ find this page helpful in diagnosing emulator problems.
     https://developer.android.com/studio/run/emulator-acceleration#accel-vm
 """.format(cmdline=' '.join(str(arg) for arg in emulator_popen.args)))
 
-                for device, details in sorted(self.devices().items()):
-                    # Only process authorized devices that we haven't seen.
-                    if details['authorized'] and device not in known_devices:
-                        adb = self.adb(device)
-                        device_avd = adb.avd_name()
+                    for device, details in sorted(self.devices().items()):
+                        # Only process authorized devices that we haven't seen.
+                        if details['authorized'] and device not in known_devices:
+                            adb = self.adb(device)
+                            device_avd = adb.avd_name()
 
-                        if device_avd == avd:
-                            # Found an active device that matches
-                            # the AVD we are starting.
-                            full_name = "@{avd} (running emulator)".format(
-                                avd=avd,
-                            )
-                            break
-                        else:
-                            # Not the one. Zathras knows.
-                            adb = None
-                            known_devices.add(device)
+                            if device_avd == avd:
+                                # Found an active device that matches
+                                # the AVD we are starting.
+                                full_name = "@{avd} (running emulator)".format(
+                                    avd=avd,
+                                )
+                                break
+                            else:
+                                # Not the one. Zathras knows.
+                                adb = None
+                                known_devices.add(device)
 
-                # Try again in 2 seconds...
-                self.sleep(2)
-
-            # Print a marker so we can see the phase change
-            self.command.input.print(' booting...', flush=True, end='')
+                    # Try again in 2 seconds...
+                    self.sleep(2)
 
             # Phase 2: Wait for the boot process to complete
-            while not adb.has_booted():
-                if emulator_popen.poll() is not None:
-                    raise BriefcaseCommandError("""
+            with WaitBar(message=" booting...") as boot_wait_bar:
+                while not adb.has_booted():
+                    if emulator_popen.poll() is not None:
+                        raise BriefcaseCommandError("""
 Android emulator was unable to boot!
 
 Try starting the emulator manually by running:
@@ -776,11 +773,10 @@ find this page helpful in diagnosing emulator problems.
     https://developer.android.com/studio/run/emulator-acceleration#accel-vm
 """.format(cmdline=' '.join(str(arg) for arg in emulator_popen.args)))
 
-                # Try again in 2 seconds...
-                self.sleep(2)
-                self.command.input.print('.', flush=True, end='')
+                    # Try again in 2 seconds...
+                    self.sleep(2)
+                    boot_wait_bar.update()
 
-            self.command.input.print()
             # Return the device ID and full name.
             return device, full_name
         else:

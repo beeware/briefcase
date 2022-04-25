@@ -1,7 +1,4 @@
 import operator
-from functools import partial
-
-from .exceptions import BriefcaseCommandError
 
 
 class InputDisabled(Exception):
@@ -9,6 +6,50 @@ class InputDisabled(Exception):
         super().__init__(
             "Input is disabled; cannot request user input without a default"
         )
+
+
+class Log:
+    """
+    Manage debug logging output driven by verbosity flags.
+    """
+
+    def __init__(self, verbosity=1):
+        # verbosity will be 1 more than the number of v flags from invocation
+        self.verbosity = verbosity
+        # value to be printed at the beginning of all debug output
+        self.debug_preface = ">>> "
+
+    def _log(self, preface="", msg=""):
+        """Funnel to log all messages."""
+        # print each line of message; ensure a line is printed when msg is empty
+        for line in msg.splitlines() or ("",):
+            print("{preface}{msg}".format(preface=preface, msg=line))
+
+    def _debug_log(self, msg=""):
+        """Funnel to log all debug messages."""
+        self._log(preface=self.debug_preface, msg=msg)
+
+    def deep_debug(self, msg=""):
+        """Log messages at deep debug level. Included in output if verbosity>=3."""
+        if self.verbosity >= 3:
+            self._debug_log(msg=msg)
+
+    def debug(self, msg=""):
+        """Log messages at debug level. Included in output if verbosity>=2."""
+        if self.verbosity >= 2:
+            self._debug_log(msg=msg)
+
+    def info(self, msg=""):
+        """Log message at info level. Always included in output."""
+        self._log(msg=msg)
+
+    def warning(self, msg=""):
+        """Log message at warning level. Always included in output."""
+        self._log(msg=msg)
+
+    def error(self, msg=""):
+        """Log message at error level. Always included in output."""
+        self._log(msg=msg)
 
 
 class Console:
@@ -24,36 +65,8 @@ class Console:
     def enabled(self, enabled):
         self._enabled = enabled
 
-    @staticmethod
-    def titlecase(s):
-        """
-        Convert a string to titlecase.
-
-        Follow Chicago Manual of Style rules for capitalization (roughly).
-
-        * Capitalize *only* the first letter of each word
-        * ... unless the word is an acronym (e.g., URL)
-        * ... or the word is on the exclude list ('of', 'and', 'the)
-        :param s: The input string
-        :returns: A capitalized string.
-        """
-        return ' '.join(
-            word if (
-                    word.isupper()
-                    or word in {
-                        'a', 'an', 'and', 'as', 'at', 'but', 'by', 'en', 'for',
-                        'if', 'in', 'of', 'on', 'or', 'the', 'to', 'via', 'vs'
-                    }
-            ) else word.capitalize()
-            for word in s.split(' ')
-        )
-
     def print(self, *values, **kwargs):
-        """
-        Wrapper for all printing to the screen for the intention of soliciting
-        user interaction or displaying ephemeral information such as file
-        download status or simulator startup status.
-        """
+        """Print to the screen for soliciting user interaction."""
         if self.enabled:
             print(*values, **kwargs)
 
@@ -70,17 +83,6 @@ class Console:
         :param default: (optional) Default response (True/False)
         :returns: True if the user selected "y", or False if they selected "n".
         """
-
-        def normalize_input(user_input):
-            """Normalize user input to just the lowercase version of the first character."""
-            return user_input.lower()[:1]
-
-        def is_y_or_n(user_input):
-            """Validator for text_input() that user entered a literal 'y' or 'n'."""
-            if normalize_input(user_input) in {'y', 'n'}:
-                return True
-            raise ValueError("Please enter Y or N")
-
         if default is None:
             yes_no = "y/n"
             default_text = None
@@ -92,157 +94,72 @@ class Console:
             default_text = 'n'
 
         prompt = "{question} {yes_no}? ".format(question=question, yes_no=yes_no)
-        result = self.text_input(prompt=prompt, default=default_text, validator=is_y_or_n)
 
-        # return True for yes, False for no
-        return normalize_input(result) == 'y'
+        result = self.selection_input(
+            prompt=prompt,
+            choices=['y', 'n'],
+            default=default_text,
+            error_message="Please enter Y or N",
+            transform=lambda s: s.lower()[:1],
+        )
+        if result == 'y':
+            return True
 
-    def selection_input(self, intro=None, prompt="", options=None, input_name=None, default=None):
+        return False
+
+    def selection_input(
+        self,
+        prompt,
+        choices,
+        default=None,
+        error_message="Invalid Selection",
+        transform=None
+    ):
         """
         Prompt the user to select an option from a list of choices.
 
-        If intro is specified, it will be presented once prior to the input prompt.
-        The behavior of prompt is deferred to text_input().
-
-        The list of options can be a dictionary, list of 2 item lists, or a literal list:
-            Dictionary
-                If provided as a dictionary, the values are the
-                human-readable options, and the keys are the values that will
-                be returned as the selection. The human-readable options
-                will be sorted before display to the user.
-            List of 2 item lists
-                If provided as a list of lists, the second item in the inner lists
-                are the human-readable options. The first item will be returned as
-                the selection.
-            List of strings
-                If provided as a simple list of choices, those choices will be
-                used as the human-readable options and returned as the selection.
-
-        Default Value
-            For dictionary options, the default should be a dictionary key.
-            For list of lists, the default should be the first item in one of the inner lists.
-            For a simple list, the default should be a value in the list.
-
-        :param intro: An introductory paragraph explaining the question being asked.
-        :param prompt: The text prompt to display after the choices are printed.
-            See text_input for prompt defaulting.
-        :param options: The list of available choices.
-        :param input_name: (optional) logical name of the value being requested; only
-            used as part of prompt for the user if a value for prompt is not provided.
-        :param default: The default choice to select. Must be dictionary key or value in list.
+        :param prompt: The text prompt to display
+        :param choices: The list of available choices
+        :param default: The default choice to select. If None,
+        :param error_message: The error message to display to the user.
+        :param transform: The text transform to apply to any user input before
+            performing any validity checks.
         """
+        while True:
+            result = self.text_input(prompt, default)
 
-        def is_valid_choice(user_input: str, choices: set):
-            """Validator for text_input() for a specific range of integers."""
-            if user_input in choices:
-                return True
-            raise ValueError("Enter a number from {start} to {end}".format(start=min(choices), end=max(choices)))
+            if transform is not None and result is not None:
+                result = transform(result)
 
-        if intro:
-            self.print(intro)
+            if result in choices:
+                return result
+
             self.print()
+            self.print(error_message)
 
-        # normalize the options in to a list of 2-item tuples
-        if isinstance(options, dict):
-            ordered = list(
-                sorted(
-                    options.items(),
-                    key=operator.itemgetter(1)
-                )
-            )
-        elif all(isinstance(item, (tuple, list)) for item in options):
-            ordered = options
-        else:
-            ordered = [(item, item) for item in options]
-
-        # display the options to the user
-        adjusted_default = None
-        for i, (key, value) in enumerate(ordered, start=1):
-            self.print('  {i}) {label}'.format(i=i, label=value))
-            # recalculate the default for text_input
-            if default is not None and key == default:
-                adjusted_default = str(i)
-        # ensure a default is not passed to text_input unless it was actually found in the options
-        default = adjusted_default
-        self.print()
-
-        # while the internal value of the choices being considered are integers, making them
-        # strings avoids corner cases where strings could be confusingly coerced to integers
-        # for purposes of validation. For instance, if "9.0" is provided to text_input, then
-        # technically int("9.0") (which returns 9) would be considered valid for >=9 choices.
-        validator = partial(is_valid_choice, choices=set(map(str, range(1, len(ordered)+1))))
-        choice = self.text_input(prompt=prompt, input_name=input_name, default=default, validator=validator)
-        return ordered[int(choice) - 1][0]
-
-    def text_input(self, intro=None, prompt="", input_name=None, default=None, validator=None):
+    def text_input(self, prompt, default=None):
         """
         Prompt the user for text input.
 
-        If intro is specified, it will be presented once prior to the input prompt.
+        If no default is specified, the input will be returned as entered.
+        The default will also be returned if input is disabled. If input is
+        disabled, and there is no default, InputDisabled will be raised.
 
-        If prompt is not specified, a prompt of the form "{input_name} [{default}}: "
-            will be shown to the user.
-        If prompt is specified, it is shown to the user and input_name is ignored.
-
-        If validator is not specified:
-            the user's input is returned.
-            If the user enters nothing, the default value is returned if specified,
-                else an empty string is returned.
-
-        If validator is specified:
-            the reason for invalidation will be shown to the user.
-            input will be continuously requested until validation succeeds.
-
-        if input is disabled:
-            Neither intro nor prompt will be printed.
-            The default will be returned.
-            If default is not specified, InputDisabled will be raised.
-
-        :param intro: An introductory paragraph explaining the question being asked.
-        :param prompt: The prompt to display to the user; if omitted, the prompt
-            "{input_name} [{default}}: " will be presented to the user.
-        :param input_name: (optional) logical name of the value being requested; only
-            used as part of prompt for the user if a value for prompt is not provided.
+        :param prompt: The prompt to display to the user.
         :param default: (optional) The response to return if the user provides
-            no input. Will be coerced to a string.
-        :param validator: (optional) A validator function; accepts a single
-            input (the candidate response), returns True if the answer is
-            valid, or raises ValueError() with a debugging message if the
-            candidate value isn't valid.
-        :returns: string of the content entered by the user.
+            no input.
+        :returns: The content entered by the user.
         """
-        if intro:
-            self.print(intro)
-            self.print()
+        try:
+            user_input = self(prompt)
+            if default is not None and user_input == "":
+                return default
+        except InputDisabled:
+            if default is not None:
+                return default
+            raise
 
-        if self.enabled and not prompt and input_name:
-            prompt = self.titlecase(input_name)
-            prompt += " [{default}]".format(default=default) if default is not None else ""
-            prompt += ": "
-
-        while True:
-            try:
-                user_input = self(prompt)
-                if default is not None and user_input == "":
-                    user_input = default
-            except InputDisabled:
-                if default is None:
-                    raise
-                user_input = default
-
-            if validator is not None:
-                try:
-                    validator(user_input)
-                except ValueError as e:
-                    if not self.enabled:
-                        raise BriefcaseCommandError(str(e))
-
-                    self.print()
-                    self.print("Invalid value; {e}".format(e=e))
-                    self.print()
-                    continue
-
-            return str(user_input)
+        return user_input
 
     def __call__(self, prompt):
         "Make Console present the same interface as input()"
@@ -252,3 +169,113 @@ class Console:
             return self._input(prompt)
         except EOFError:
             raise KeyboardInterrupt
+
+
+class ProgressBar:
+    def __init__(self, total: int):
+        """
+        Context manager to display a progress bar in the console.
+
+        Continuously call update() on the yielded object to redraw the progress bar.
+        The progress bar will reach 100% when completed == total.
+
+        :param total: integer representing 100% of progress
+        """
+        self.bar_width = 50
+        self.completed_char = "#"
+        self.remaining_char = "."
+
+        self.total = total
+
+    def __enter__(self):
+        """Initialize the progress bar at 0 and return it to the caller."""
+        self.update(completed=0)
+        return self
+
+    def __exit__(self, *args):
+        """Flush the output and go to the next line on exit."""
+        print()
+
+    def update(self, completed: int):
+        """
+        Build the progress bar and (re)draw it on the console.
+
+        :param completed: amount of the total to show as completed.
+        """
+        completed_count = int(self.bar_width * completed / self.total)
+        bar_completed = self.completed_char * completed_count
+        bar_remaining = self.remaining_char * (self.bar_width - completed_count)
+        percent_done = int(completed_count * (100 / self.bar_width))
+        print("\r{}{} {}%".format(bar_completed, bar_remaining, percent_done), end="", flush=True)
+
+
+class WaitBar:
+    def __init__(self, message: str):
+        """
+        Context manager to inform a user a process is being awaited.
+        Call update() on the yielded object to print a new period character after the message.
+
+        :param message: message to inform the user what's being awaited
+        """
+        self.alive_char = "."
+
+        self.input = input
+        self.message = message
+
+    def __enter__(self):
+        """Show message to user and return bar to the caller."""
+        print(self.message, end="", flush=True)
+        return self
+
+    def __exit__(self, *args):
+        """Flush the output and go to the next line on exit."""
+        print()
+
+    def update(self):
+        """Add another period at the end of the bar."""
+        print(self.alive_char, end="", flush=True)
+
+
+def select_option(options, input, prompt='> ', error="Invalid selection"):
+    """
+    Prompt the user for a choice from a list of options.
+
+    The options are provided as a dictionary; the values are the
+    human-readable options, and the keys are the values that will
+    be returned as the selection. The human readable options
+    will be sorted before display to the user.
+
+    This method does *not* print a question or any leading text;
+    it only prints the list of options, and prompts the user
+    for their choice. If the user chooses an invalid selection (either
+    provides non-integer input, or an invalid integer), it prints an
+    error message and prompts the user again.
+
+    :param options: A dictionary, or list of tuples, of options to present to
+        the user.
+    :param input: The function to use to retrieve the user's input. This
+        exists so that the user's input can be easily mocked during testing.
+    :param prompt: The prompt to display to the user.
+    :param error: The error message to display when the user provides invalid
+        input.
+    :returns: The key corresponding to the user's chosen option.
+    """
+    if isinstance(options, dict):
+        ordered = list(
+            sorted(
+                options.items(),
+                key=operator.itemgetter(1)
+            )
+        )
+    else:
+        ordered = options
+
+    if input.enabled:
+        for i, (key, value) in enumerate(ordered, start=1):
+            input.print('  {i}) {label}'.format(i=i, label=value))
+
+        input.print()
+
+    choices = [str(index) for index in range(1, len(ordered) + 1)]
+    index = input.selection_input(prompt=prompt, choices=choices, error_message=error)
+    return ordered[int(index) - 1][0]

@@ -47,6 +47,7 @@ class UpdateCommand(CreateCommand):
             ))
             self.install_app_dependencies(app=app)
 
+        self.logger.info()
         self.logger.info('{app.app_name}] Updating application code...'.format(
             app=app
         ))
