@@ -65,7 +65,7 @@ class Console:
     def enabled(self, enabled):
         self._enabled = enabled
 
-    def print(self, *values, **kwargs):
+    def prompt(self, *values, **kwargs):
         """Print to the screen for soliciting user interaction."""
         if self.enabled:
             print(*values, **kwargs)
@@ -134,8 +134,8 @@ class Console:
             if result in choices:
                 return result
 
-            self.print()
-            self.print(error_message)
+            self.prompt()
+            self.prompt(error_message)
 
     def text_input(self, prompt, default=None):
         """
@@ -206,7 +206,7 @@ class ProgressBar:
         bar_completed = self.completed_char * completed_count
         bar_remaining = self.remaining_char * (self.bar_width - completed_count)
         percent_done = int(completed_count * (100 / self.bar_width))
-        print("\r{}{} {}%".format(bar_completed, bar_remaining, percent_done), end="", flush=True)
+        print(f"\r{bar_completed}{bar_remaining} {percent_done}%", end="", flush=True)
 
 
 class WaitBar:
@@ -272,9 +272,9 @@ def select_option(options, input, prompt='> ', error="Invalid selection"):
 
     if input.enabled:
         for i, (key, value) in enumerate(ordered, start=1):
-            input.print('  {i}) {label}'.format(i=i, label=value))
+            input.prompt('  {i}) {label}'.format(i=i, label=value))
 
-        input.print()
+        input.prompt()
 
     choices = [str(index) for index in range(1, len(ordered) + 1)]
     index = input.selection_input(prompt=prompt, choices=choices, error_message=error)

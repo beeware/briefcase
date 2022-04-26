@@ -3,7 +3,7 @@ from unittest import mock
 
 import pytest
 
-from briefcase.commands.base import Log
+from briefcase.console import Log
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.xcode import (
     ensure_command_line_tools_are_installed

@@ -496,9 +496,9 @@ Delete {sdk_zip_path} and run briefcase again.""".format(
         choices.append((None, "Create a new Android emulator"))
 
         # Show the choices to the user.
-        self.command.input.print()
-        self.command.input.print("Select device:")
-        self.command.input.print()
+        self.command.input.prompt()
+        self.command.input.prompt("Select device:")
+        self.command.input.prompt()
         try:
             choice = select_option(choices, input=self.command.input)
         except InputDisabled:
@@ -715,7 +715,7 @@ In future, you can specify this device by running:
 
             # Step 1: Wait for the device to appear so we can get an
             # ADB instance for the new device.
-            self.command.input.print()
+            self.command.logger.info()
             with WaitBar(message="Waiting for emulator to start...") as startup_wait_bar:
                 adb = None
                 known_devices = set()

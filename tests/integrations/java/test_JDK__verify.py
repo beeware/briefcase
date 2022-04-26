@@ -8,7 +8,7 @@ from unittest import mock
 import pytest
 from requests import exceptions as requests_exceptions
 
-from briefcase.commands.base import Log
+from briefcase.console import Log
 from briefcase.exceptions import (
     BriefcaseCommandError,
     MissingToolError,

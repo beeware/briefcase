@@ -1,6 +1,6 @@
 import os
 
-from briefcase.commands.base import Log
+from briefcase.console import Log
 
 
 def test_simple_call(mock_sub, capsys):
@@ -43,4 +43,4 @@ def test_simple_verbose_call(mock_sub, capsys):
     mock_sub.Popen(['hello', 'world'])
 
     mock_sub._subprocess.Popen.assert_called_with(['hello', 'world'])
-    assert capsys.readouterr().out.splitlines()[-1] == ">>>     hello world"
+    assert capsys.readouterr().out == ">>> \n>>> Running Command:\n>>>     hello world\n"

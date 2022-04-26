@@ -269,10 +269,10 @@ class NewCommand(BaseCommand):
         :returns: a string, guaranteed to meet the validation criteria of
             ``validator``.
         """
-        self.input.print(intro)
+        self.input.prompt(intro)
 
         while True:
-            self.input.print()
+            self.input.prompt()
 
             answer = self.input.text_input(
                 "{variable} [{default}]: ".format(
@@ -292,8 +292,8 @@ class NewCommand(BaseCommand):
                 if not self.input.enabled:
                     raise BriefcaseCommandError(str(e))
 
-                self.input.print()
-                self.input.print("Invalid value; {e}".format(e=e))
+                self.input.prompt()
+                self.input.prompt("Invalid value; {e}".format(e=e))
 
     def input_select(self, intro, variable, options):
         """
@@ -308,7 +308,7 @@ class NewCommand(BaseCommand):
             options.
         :returns: The string content of the selected option.
         """
-        self.input.print(intro)
+        self.input.prompt(intro)
 
         index_choices = [str(key) for key in range(1, len(options) + 1)]
         display_options = '\n'.join(
@@ -443,7 +443,7 @@ up yet, you can put in a dummy URL.""",
             intro="""
 What license do you want to use for this project's code?""",
             variable="project license",
-            options=(
+            options=[
                 "BSD license",
                 "MIT license",
                 "Apache Software License",
@@ -453,20 +453,20 @@ What license do you want to use for this project's code?""",
                 "GNU General Public License v3 or later (GPLv3+)",
                 "Proprietary",
                 "Other",
-            ),
+            ],
         )
 
         gui_framework = self.input_select(
             intro="""
 What GUI toolkit do you want to use for this project?""",
             variable="GUI framework",
-            options=(
+            options=[
                 "Toga",
                 "PySide2 (does not support iOS/Android deployment)",
                 "PySide6 (does not support iOS/Android deployment)",
                 "PursuedPyBear (does not support iOS/Android deployment)",
                 "None",
-            ),
+            ],
         )
 
         return {
@@ -492,9 +492,9 @@ What GUI toolkit do you want to use for this project?""",
         if template is None:
             template = 'https://github.com/beeware/briefcase-template'
 
-        self.input.print()
-        self.input.print("Let's build a new Briefcase app!")
-        self.input.print()
+        self.input.prompt()
+        self.input.prompt("Let's build a new Briefcase app!")
+        self.input.prompt()
 
         context = self.build_app_context()
 

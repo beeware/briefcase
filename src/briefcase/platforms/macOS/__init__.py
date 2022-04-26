@@ -152,12 +152,12 @@ class macOSSigningMixin:
         elif len(identities) == 1:
             identity = list(identities.items())[0][1]
         else:
-            self.input.print()
-            self.input.print("Select code signing identity to use:")
-            self.input.print()
+            self.input.prompt()
+            self.input.prompt("Select code signing identity to use:")
+            self.input.prompt()
             selection = select_option(identities, input=self.input)
             identity = identities[selection]
-            self.input.print("selected", identity)
+            self.logger.info(f"selected {identity}")
 
         return identity
 

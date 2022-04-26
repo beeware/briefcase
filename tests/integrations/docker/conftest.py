@@ -2,7 +2,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from briefcase.commands.base import Log
+from briefcase.console import Log
 from briefcase.integrations.docker import Docker
 from briefcase.integrations.subprocess import Subprocess
 

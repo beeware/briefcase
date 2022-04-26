@@ -159,9 +159,9 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
         elif len(simulators) == 1:
             iOS_version = list(simulators.keys())[0]
         else:
-            self.input.print()
-            self.input.print("Select iOS version:")
-            self.input.print()
+            self.input.prompt()
+            self.input.prompt("Select iOS version:")
+            self.input.prompt()
             iOS_version = select_option({
                 version: version
                 for version in simulators.keys()
@@ -178,9 +178,9 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
         elif len(devices) == 1:
             udid = list(devices.keys())[0]
         else:
-            self.input.print()
-            self.input.print("Select simulator device:")
-            self.input.print()
+            self.input.prompt()
+            self.input.prompt("Select simulator device:")
+            self.input.prompt()
             udid = select_option(devices, input=self.input)
 
         device = devices[udid]

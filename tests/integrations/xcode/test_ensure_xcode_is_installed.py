@@ -4,7 +4,7 @@ from unittest import mock
 
 import pytest
 
-from briefcase.commands.base import Log
+from briefcase.console import Log
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.xcode import ensure_xcode_is_installed
 
