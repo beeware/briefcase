@@ -11,7 +11,7 @@ from briefcase.commands import (
     UpdateCommand
 )
 from briefcase.config import BaseConfig
-from briefcase.console import InputDisabled, WaitBar, select_option
+from briefcase.console import InputDisabled, select_option
 from briefcase.exceptions import BriefcaseCommandError, InvalidDeviceError
 from briefcase.integrations.xcode import (
     DeviceState,
@@ -319,7 +319,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         # shutting down, we need to wait for it to shut down before restarting.
         device_state = self.get_device_state(self, udid)
         if device_state not in {DeviceState.SHUTDOWN, DeviceState.BOOTED}:
-            with WaitBar(message="Waiting for simulator...") as wait_bar:
+            with self.input.wait_bar("Waiting for simulator...") as wait_bar:
                 while device_state not in {DeviceState.SHUTDOWN, DeviceState.BOOTED}:
                     self.sleep(2)
                     wait_bar.update()

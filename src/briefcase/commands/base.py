@@ -21,7 +21,7 @@ except ModuleNotFoundError:
 
 from briefcase import __version__, integrations
 from briefcase.config import AppConfig, BaseConfig, GlobalConfig, parse_config
-from briefcase.console import Console, Log, ProgressBar
+from briefcase.console import Console, Log
 from briefcase.exceptions import (
     BadNetworkResourceError,
     BriefcaseCommandError,
@@ -522,7 +522,7 @@ class BaseCommand(ABC):
                     f.write(response.content)
                 else:
                     downloaded = 0
-                    with ProgressBar(total=int(total)) as progress_bar:
+                    with self.input.progress_bar(total=int(total)) as progress_bar:
                         for data in response.iter_content(chunk_size=1024 * 1024):
                             f.write(data)
                             downloaded += len(data)

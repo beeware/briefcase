@@ -8,7 +8,7 @@ from pathlib import Path
 from requests import exceptions as requests_exceptions
 
 from briefcase.config import PEP508_NAME_RE
-from briefcase.console import InputDisabled, WaitBar, select_option
+from briefcase.console import InputDisabled, select_option
 from briefcase.exceptions import (
     BriefcaseCommandError,
     InvalidDeviceError,
@@ -716,7 +716,7 @@ In future, you can specify this device by running:
             # Step 1: Wait for the device to appear so we can get an
             # ADB instance for the new device.
             self.command.logger.info()
-            with WaitBar(message="Waiting for emulator to start...") as startup_wait_bar:
+            with self.command.input.wait_bar("Waiting for emulator to start...") as startup_wait_bar:
                 adb = None
                 known_devices = set()
                 while adb is None:
@@ -757,7 +757,7 @@ find this page helpful in diagnosing emulator problems.
                     self.sleep(2)
 
             # Phase 2: Wait for the boot process to complete
-            with WaitBar(message=" booting...") as boot_wait_bar:
+            with self.command.input.wait_bar(" booting...") as boot_wait_bar:
                 while not adb.has_booted():
                     if emulator_popen.poll() is not None:
                         raise BriefcaseCommandError("""

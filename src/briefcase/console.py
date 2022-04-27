@@ -10,7 +10,7 @@ class InputDisabled(Exception):
 
 class Log:
     """
-    Manage debug logging output driven by verbosity flags.
+    Manage logging output driven by verbosity flags.
     """
 
     def __init__(self, verbosity=1):
@@ -69,6 +69,14 @@ class Console:
         """Print to the screen for soliciting user interaction."""
         if self.enabled:
             print(*values, **kwargs)
+
+    def progress_bar(self, total: int):
+        """Returns a progress bar as a context manager."""
+        return _ProgressBar(total=total)
+
+    def wait_bar(self, message: str = ""):
+        """Returns a wait bar as a context manager."""
+        return _WaitBar(message=message)
 
     def boolean_input(self, question, default=False):
         """
@@ -171,7 +179,7 @@ class Console:
             raise KeyboardInterrupt
 
 
-class ProgressBar:
+class _ProgressBar:
     def __init__(self, total: int):
         """
         Context manager to display a progress bar in the console.
@@ -209,8 +217,8 @@ class ProgressBar:
         print(f"\r{bar_completed}{bar_remaining} {percent_done}%", end="", flush=True)
 
 
-class WaitBar:
-    def __init__(self, message: str):
+class _WaitBar:
+    def __init__(self, message: str = ""):
         """
         Context manager to inform a user a process is being awaited.
         Call update() on the yielded object to print a new period character after the message.

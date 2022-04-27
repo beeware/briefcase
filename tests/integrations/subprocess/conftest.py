@@ -16,9 +16,10 @@ def mock_sub():
     sub = Subprocess(command)
     sub._subprocess = MagicMock()
 
-    # mock the output of subprocess.run()
     run_result = MagicMock()
     run_result.returncode = 0
     sub._subprocess.run.return_value = run_result
+
+    sub._subprocess.check_output.return_value = "some output line 1\nmore output line 2"
 
     return sub
