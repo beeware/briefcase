@@ -125,9 +125,9 @@ class Subprocess:
         """
         Log the entire console command being executed.
         """
-        cmdline = ' '.join(shlex.quote(str(arg)) for arg in args)
-        self.command.logger.debug("\nRunning Command:")
-        self.command.logger.debug("    {cmdline}".format(cmdline=cmdline))
+        self.command.logger.debug()
+        self.command.logger.debug("Running Command:")
+        self.command.logger.debug(f"    {' '.join(shlex.quote(str(arg)) for arg in args)}")
 
     def _log_environment(self, subprocess_kwargs=None):
         """
@@ -137,7 +137,7 @@ class Subprocess:
         if env:
             self.command.logger.deep_debug("Environment:")
             for env_var, value in env.items():
-                self.command.logger.deep_debug("    {env_var}={value}".format(env_var=env_var, value=value))
+                self.command.logger.deep_debug(f"    {env_var}={value}")
 
     def _log_output(self, output, stderr=None):
         """
@@ -146,15 +146,15 @@ class Subprocess:
         if output:
             self.command.logger.deep_debug("Command Output:")
             for line in str(output).splitlines():
-                self.command.logger.deep_debug("    {line}".format(line=line))
+                self.command.logger.deep_debug(f"    {line}")
 
         if stderr:
             self.command.logger.deep_debug("Command Error Output (stderr):")
             for line in str(stderr).splitlines():
-                self.command.logger.deep_debug("    {line}".format(line=line))
+                self.command.logger.deep_debug(f"    {line}")
 
     def _log_return_code(self, return_code):
         """
         Log the output value of the executed command.
         """
-        self.command.logger.deep_debug("Return code: {return_code}".format(return_code=return_code))
+        self.command.logger.deep_debug(f"Return code: {return_code}")

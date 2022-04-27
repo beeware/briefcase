@@ -757,7 +757,7 @@ find this page helpful in diagnosing emulator problems.
                     self.sleep(2)
 
             # Phase 2: Wait for the boot process to complete
-            with self.command.input.wait_bar(" booting...") as boot_wait_bar:
+            with self.command.input.wait_bar("Booting...") as boot_wait_bar:
                 while not adb.has_booted():
                     if emulator_popen.poll() is not None:
                         raise BriefcaseCommandError("""

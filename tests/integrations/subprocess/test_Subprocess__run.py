@@ -1,4 +1,7 @@
 import os
+from subprocess import CalledProcessError
+
+import pytest
 
 from briefcase.console import Log
 
@@ -54,12 +57,47 @@ def test_simple_deep_debug_call(mock_sub, capsys):
 
     mock_sub._subprocess.run.assert_called_with(["hello", "world"])
 
-    expected_output = ">>> \n>>> Running Command:\n>>>     hello world\n>>> Environment:"
-    # some env vars (eg PS1) can contain line breaks...so this tries to replicate
-    # Log._log()'s functionality to print multi-line content with the appropriate preface.
-    for env_var, value in os.environ.items():
-        expected_output += "\n>>>     "
-        expected_output += "\n>>> ".join(f"{env_var}={value}".splitlines())
-    expected_output += "\n>>> Return code: 0\n"
+    expected_output = """>>> 
+>>> Running Command:
+>>>     hello world
+>>> Environment:
+>>>     VAR1=Value 1
+>>>     PS1=
+>>> Line 2
+>>> 
+>>> Line 4
+>>>     PWD=/home/user/
+>>> Return code: 0
+"""
+
+    assert capsys.readouterr().out == expected_output
+
+
+def test_calledprocesserror_exception_logging(mock_sub, capsys):
+    mock_sub.command.logger = Log(verbosity=3)
+
+    called_process_error = CalledProcessError(
+        returncode=-1,
+        cmd="hello world",
+        output="output line 1\noutput line 2",
+        stderr="error line 1\nerror line 2",
+    )
+    mock_sub._subprocess.run.side_effect = called_process_error
+
+    with pytest.raises(CalledProcessError):
+        mock_sub.run(["hello", "world"])
+
+    expected_output = """>>> 
+>>> Running Command:
+>>>     hello world
+>>> Environment:
+>>>     VAR1=Value 1
+>>>     PS1=
+>>> Line 2
+>>> 
+>>> Line 4
+>>>     PWD=/home/user/
+>>> Return code: -1
+"""
 
     assert capsys.readouterr().out == expected_output

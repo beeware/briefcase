@@ -23,7 +23,7 @@ class Log:
         """Funnel to log all messages."""
         # print each line of message; ensure a line is printed when msg is empty
         for line in msg.splitlines() or ("",):
-            print("{preface}{msg}".format(preface=preface, msg=line))
+            print(f"{preface}{line}")
 
     def _debug_log(self, msg=""):
         """Funnel to log all debug messages."""

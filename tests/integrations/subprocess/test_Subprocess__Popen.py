@@ -54,12 +54,16 @@ def test_simple_deep_debug_call(mock_sub, capsys):
 
     mock_sub._subprocess.Popen.assert_called_with(["hello", "world"])
 
-    expected_output = ">>> \n>>> Running Command:\n>>>     hello world\n>>> Environment:"
-    # some env vars (eg PS1) can contain line breaks...so this tries to replicate
-    # Log._log()'s functionality to print multi-line content with the appropriate preface.
-    for env_var, value in os.environ.items():
-        expected_output += "\n>>>     "
-        expected_output += "\n>>> ".join(f"{env_var}={value}".splitlines())
-    expected_output += "\n"
+    expected_output = """>>> 
+>>> Running Command:
+>>>     hello world
+>>> Environment:
+>>>     VAR1=Value 1
+>>>     PS1=
+>>> Line 2
+>>> 
+>>> Line 4
+>>>     PWD=/home/user/
+"""
 
     assert capsys.readouterr().out == expected_output

@@ -1,4 +1,3 @@
-import os
 from unittest.mock import MagicMock
 
 import pytest
@@ -11,7 +10,13 @@ from briefcase.console import Log
 def mock_sub():
     command = MagicMock()
     command.logger = Log(verbosity=1)
-    command.os = os
+
+    command.os = MagicMock()
+    command.os.environ = {
+        "VAR1": "Value 1",
+        "PS1": "\nLine 2\n\nLine 4",
+        "PWD": "/home/user/",
+    }
 
     sub = Subprocess(command)
     sub._subprocess = MagicMock()
