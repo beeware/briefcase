@@ -57,18 +57,19 @@ def test_simple_deep_debug_call(mock_sub, capsys):
 
     mock_sub._subprocess.run.assert_called_with(["hello", "world"])
 
-    expected_output = """>>> 
->>> Running Command:
->>>     hello world
->>> Environment:
->>>     VAR1=Value 1
->>>     PS1=
->>> Line 2
->>> 
->>> Line 4
->>>     PWD=/home/user/
->>> Return code: 0
-"""
+    expected_output = (
+        ">>> \n"
+        ">>> Running Command:\n"
+        ">>>     hello world\n"
+        ">>> Environment:\n"
+        ">>>     VAR1=Value 1\n"
+        ">>>     PS1=\n"
+        ">>> Line 2\n"
+        ">>> \n"
+        ">>> Line 4\n"
+        ">>>     PWD=/home/user/\n"
+        ">>> Return code: 0\n"
+    )
 
     assert capsys.readouterr().out == expected_output
 
@@ -87,17 +88,18 @@ def test_calledprocesserror_exception_logging(mock_sub, capsys):
     with pytest.raises(CalledProcessError):
         mock_sub.run(["hello", "world"])
 
-    expected_output = """>>> 
->>> Running Command:
->>>     hello world
->>> Environment:
->>>     VAR1=Value 1
->>>     PS1=
->>> Line 2
->>> 
->>> Line 4
->>>     PWD=/home/user/
->>> Return code: -1
-"""
+    expected_output = (
+        ">>> \n"
+        ">>> Running Command:\n"
+        ">>>     hello world\n"
+        ">>> Environment:\n"
+        ">>>     VAR1=Value 1\n"
+        ">>>     PS1=\n"
+        ">>> Line 2\n"
+        ">>> \n"
+        ">>> Line 4\n"
+        ">>>     PWD=/home/user/\n"
+        ">>> Return code: -1\n"
+    )
 
     assert capsys.readouterr().out == expected_output

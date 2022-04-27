@@ -57,21 +57,22 @@ def test_simple_deep_debug_call(mock_sub, capsys):
 
     mock_sub._subprocess.check_output.assert_called_with(["hello", "world"])
 
-    expected_output = """>>> 
->>> Running Command:
->>>     hello world
->>> Environment:
->>>     VAR1=Value 1
->>>     PS1=
->>> Line 2
->>> 
->>> Line 4
->>>     PWD=/home/user/
->>> Command Output:
->>>     some output line 1
->>>     more output line 2
->>> Return code: 0
-"""
+    expected_output = (
+        ">>> \n"
+        ">>> Running Command:\n"
+        ">>>     hello world\n"
+        ">>> Environment:\n"
+        ">>>     VAR1=Value 1\n"
+        ">>>     PS1=\n"
+        ">>> Line 2\n"
+        ">>> \n"
+        ">>> Line 4\n"
+        ">>>     PWD=/home/user/\n"
+        ">>> Command Output:\n"
+        ">>>     some output line 1\n"
+        ">>>     more output line 2\n"
+        ">>> Return code: 0\n"
+    )
 
     assert capsys.readouterr().out == expected_output
 
@@ -90,23 +91,24 @@ def test_calledprocesserror_exception_logging(mock_sub, capsys):
     with pytest.raises(CalledProcessError):
         mock_sub.check_output(["hello", "world"])
 
-    expected_output = """>>> 
->>> Running Command:
->>>     hello world
->>> Environment:
->>>     VAR1=Value 1
->>>     PS1=
->>> Line 2
->>> 
->>> Line 4
->>>     PWD=/home/user/
->>> Command Output:
->>>     output line 1
->>>     output line 2
->>> Command Error Output (stderr):
->>>     error line 1
->>>     error line 2
->>> Return code: -1
-"""
+    expected_output = (
+        ">>> \n"
+        ">>> Running Command:\n"
+        ">>>     hello world\n"
+        ">>> Environment:\n"
+        ">>>     VAR1=Value 1\n"
+        ">>>     PS1=\n"
+        ">>> Line 2\n"
+        ">>> \n"
+        ">>> Line 4\n"
+        ">>>     PWD=/home/user/\n"
+        ">>> Command Output:\n"
+        ">>>     output line 1\n"
+        ">>>     output line 2\n"
+        ">>> Command Error Output (stderr):\n"
+        ">>>     error line 1\n"
+        ">>>     error line 2\n"
+        ">>> Return code: -1\n"
+    )
 
     assert capsys.readouterr().out == expected_output
