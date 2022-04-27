@@ -56,7 +56,7 @@ class Subprocess:
         # All exceptions are propagated back to the caller.
         subprocess_kwargs = self.final_kwargs(**kwargs)
         self._log_command(args)
-        self._log_environment(subprocess_kwargs)
+        self._log_environment(subprocess_kwargs, kwargs.get("env"))
 
         try:
             command_result = self._subprocess.run(
@@ -83,7 +83,7 @@ class Subprocess:
         """
         subprocess_kwargs = self.final_kwargs(**kwargs)
         self._log_command(args)
-        self._log_environment(subprocess_kwargs)
+        self._log_environment(subprocess_kwargs, kwargs.get("env"))
 
         try:
             cmd_output = self._subprocess.check_output(
@@ -112,7 +112,7 @@ class Subprocess:
         """
         subprocess_kwargs = self.final_kwargs(**kwargs)
         self._log_command(args)
-        self._log_environment(subprocess_kwargs)
+        self._log_environment(subprocess_kwargs, kwargs.get("env"))
 
         return self._subprocess.Popen(
             [
@@ -129,15 +129,25 @@ class Subprocess:
         self.command.logger.debug("Running Command:")
         self.command.logger.debug(f"    {' '.join(shlex.quote(str(arg)) for arg in args)}")
 
-    def _log_environment(self, subprocess_kwargs=None):
+    def _log_environment(self, subprocess_kwargs=None, env_updates=None):
         """
         Log the state of environment variables prior to command execution.
+
+        In debug mode, only the updates to the current environment are logged.
+        In deep debug, the entire environment for the command is logged.
         """
-        env = (subprocess_kwargs or {}).get("env") or self.command.os.environ
-        if env:
-            self.command.logger.deep_debug("Environment:")
-            for env_var, value in env.items():
-                self.command.logger.deep_debug(f"    {env_var}={value}")
+        if self.command.logger.verbosity >= self.command.logger.DEEP_DEBUG:
+            env = (subprocess_kwargs or {}).get("env") or self.command.os.environ
+            if env:
+                self.command.logger.deep_debug("Full Environment:")
+                for env_var, value in env.items():
+                    self.command.logger.deep_debug(f"    {env_var}={value}")
+
+        elif self.command.logger.verbosity >= self.command.logger.DEBUG:
+            if env_updates:
+                self.command.logger.debug("Environment:")
+                for env_var, value in env_updates.items():
+                    self.command.logger.debug(f"    {env_var}={value}")
 
     def _log_output(self, output, stderr=None):
         """

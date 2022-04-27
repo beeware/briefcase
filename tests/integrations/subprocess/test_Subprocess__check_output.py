@@ -46,6 +46,7 @@ def test_simple_debug_call(mock_sub, capsys):
     mock_sub.check_output(['hello', 'world'])
 
     mock_sub._subprocess.check_output.assert_called_with(['hello', 'world'])
+
     assert capsys.readouterr().out == ">>> \n>>> Running Command:\n>>>     hello world\n"
 
 
@@ -61,7 +62,7 @@ def test_simple_deep_debug_call(mock_sub, capsys):
         ">>> \n"
         ">>> Running Command:\n"
         ">>>     hello world\n"
-        ">>> Environment:\n"
+        ">>> Full Environment:\n"
         ">>>     VAR1=Value 1\n"
         ">>>     PS1=\n"
         ">>> Line 2\n"
@@ -95,7 +96,7 @@ def test_calledprocesserror_exception_logging(mock_sub, capsys):
         ">>> \n"
         ">>> Running Command:\n"
         ">>>     hello world\n"
-        ">>> Environment:\n"
+        ">>> Full Environment:\n"
         ">>>     VAR1=Value 1\n"
         ">>>     PS1=\n"
         ">>> Line 2\n"

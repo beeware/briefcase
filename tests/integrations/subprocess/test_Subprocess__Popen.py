@@ -58,7 +58,7 @@ def test_simple_deep_debug_call(mock_sub, capsys):
         ">>> \n"
         ">>> Running Command:\n"
         ">>>     hello world\n"
-        ">>> Environment:\n"
+        ">>> Full Environment:\n"
         ">>>     VAR1=Value 1\n"
         ">>>     PS1=\n"
         ">>> Line 2\n"

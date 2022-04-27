@@ -12,6 +12,8 @@ class Log:
     """
     Manage logging output driven by verbosity flags.
     """
+    DEBUG = 2
+    DEEP_DEBUG = 3
 
     def __init__(self, verbosity=1):
         # verbosity will be 1 more than the number of v flags from invocation
@@ -31,12 +33,12 @@ class Log:
 
     def deep_debug(self, msg=""):
         """Log messages at deep debug level. Included in output if verbosity>=3."""
-        if self.verbosity >= 3:
+        if self.verbosity >= self.DEEP_DEBUG:
             self._debug_log(msg=msg)
 
     def debug(self, msg=""):
         """Log messages at debug level. Included in output if verbosity>=2."""
-        if self.verbosity >= 2:
+        if self.verbosity >= self.DEBUG:
             self._debug_log(msg=msg)
 
     def info(self, msg=""):
