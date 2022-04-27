@@ -152,6 +152,7 @@ class Console:
         Prompt the user for text input.
 
         If no default is specified, the input will be returned as entered.
+
         The default will also be returned if input is disabled. If input is
         disabled, and there is no default, InputDisabled will be raised.
 

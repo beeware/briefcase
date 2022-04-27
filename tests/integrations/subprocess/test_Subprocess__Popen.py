@@ -46,6 +46,28 @@ def test_simple_debug_call(mock_sub, capsys):
     assert capsys.readouterr().out == ">>> \n>>> Running Command:\n>>>     hello world\n"
 
 
+def test_simple_debug_call_with_env(mock_sub, capsys):
+    "If verbosity is turned out, and injected env vars are included output"
+    mock_sub.command.logger = Log(verbosity=2)
+
+    env = {"NewVar": "NewVarValue"}
+    mock_sub.Popen(['hello', 'world'], env=env)
+
+    merged_env = mock_sub.command.os.environ.copy()
+    merged_env.update(env)
+    mock_sub._subprocess.Popen.assert_called_with(['hello', 'world'], env=merged_env)
+
+    expected_output = (
+        ">>> \n"
+        ">>> Running Command:\n"
+        ">>>     hello world\n"
+        ">>> Environment:\n"
+        ">>>     NewVar=NewVarValue\n"
+    )
+
+    assert capsys.readouterr().out == expected_output
+
+
 def test_simple_deep_debug_call(mock_sub, capsys):
     "If verbosity is turned out, there is output"
     mock_sub.command.logger = Log(verbosity=3)
