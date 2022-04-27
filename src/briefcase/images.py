@@ -4,25 +4,32 @@ from pathlib import PosixPath
 from PIL import Image, UnidentifiedImageError
 from tempfile import TemporaryDirectory
 
-def create_image_variant(target: PosixPath, size: (int, int), unavailable_source: PosixPath):
+def create_image_variant(target: PosixPath, size: (int, int), source: str):
+    """
+       Generate requested image and write to target
+
+        :param target: Path to write image string
+        :param size: (Width, Height)
+        :param source: Image directory string
+
+    """
+
 
     # Create.py looked for source image file, but it did not exist
     # Therefore, we need to construct that file from whatever resources are available: Other resource should be in app's src/app/resources/*
-    # Then write it to target?
 
     try:
         # Get the largest available image
-        image = find_largest_png(unavailable_source.parent)
+        image = find_largest_png(PosixPath(source).parent)
 
-        # Although source image is unavailable
-        # It is ultimately what we want to produce
-        # Therefore, determine the image type needed
-        image_type = unavailable_source.split('.')[-1]
+        #test_split = str(target).split('.')
+        # Determine the image type needed
+        image_type = str(target).split('.')[-1]
 
         if image_type == 'icns':
-            create_icns(target, image) # Will create temp img artifacts, then write icns file
+            image = create_icns(target, image)  # Will create temp img artifacts, then write icns file
 
-        else: # We are creating a single image?
+        else: # Create a single image
 
             if size is not None:
                 image = image.resize(size)
@@ -30,20 +37,22 @@ def create_image_variant(target: PosixPath, size: (int, int), unavailable_source
             # # Make sure the target directory exists
             target.parent.mkdir(parents=True, exist_ok=True)
 
-            image.save(unavailable_source) # Image file saved, so it is now available... or should I use temp here too?
-            source_img_file = unavailable_source # Source created, and therefore now available
+            image.save(source)  # Image file saved, so it is now available... or should I use temp here too?
+            source_img_file = source  # Source created, and therefore now available
 
             # Copy the source image to the target location
             shutil.copy(source_img_file, target)
 
-    except:
-
-         print(
-            "Unable to find {source_filename} for {full_role}; using default".format(
-                full_role=full_role, # SHOULD THIS BE PASSED INTO create_image_variant? Is it still relevant?
-                source_filename=unavailable_source,
-            )
-        )
+    except Exception:
+        import sys
+        the_type, the_value, the_traceback = sys.exc_info()
+        print(f'Exception of type {the_type} occured in Create Image Variant. Value is {the_value}.\n'
+              f'{the_traceback}')
+         #print(
+         #   "Unable to find {source_filename} for {full_role}; using default".format(
+         #       full_role=full_role,  # SHOULD THIS BE PASSED INTO create_image_variant? Is it still relevant?
+         #       source_filename=source,
+         #   )#)
 
 
 def find_largest_png(source: PosixPath) -> Image:
@@ -86,7 +95,7 @@ def find_largest_png(source: PosixPath) -> Image:
 
     return largest_image
 
-def create_icns(target: PosixPath, image: Image):
+def create_icns(target: PosixPath, image: Image) -> None: #? : # I think it would be much more clear if we could return the .icns file here somehow, then we can only have the final file writing occur in the parent method.
     """
     Create a .icns file at target
 
@@ -97,6 +106,8 @@ def create_icns(target: PosixPath, image: Image):
 
     with TemporaryDirectory() as tmpdirname:
         tmpdir = PosixPath(tmpdirname)
+        icon_dir = tmpdir / 'myicon.iconset'
+        icon_dir.mkdir()
 
         filenames = ['icon_512x512@2x.png',
                      'icon_512x512.png',
@@ -120,18 +131,22 @@ def create_icns(target: PosixPath, image: Image):
                  (32, 32),
                  (16, 16)]
 
+
+
+
         # Convert to all sizes and write
         for f_name, size in zip(filenames, sizes):
             print(f'Creating {f_name} with size {size}')
 
-            out_path = tmpdir / f_name
+            out_path = icon_dir / f_name
             image.resize(size).save(out_path)
 
-        # Create .icns file
-        subprocess.run(['iconutil', '-c', 'icns', 'myicon.iconset'], cwd=tmpdir)
+        # Create the .icns file
+        completed_proc = subprocess.run(['iconutil', '-c', 'icns', 'myicon.iconset'], cwd=tmpdir)
+
 
         # # Make sure the target directory exists
         target.parent.mkdir(parents=True, exist_ok=True)
         # Copy the source image to the target location
-        shutil.copy(tmpdir / 'myicon.iconset', target)
+        shutil.copy(tmpdir / 'myicon.icns', target)
 
