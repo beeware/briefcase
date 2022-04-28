@@ -80,11 +80,11 @@ class Console:
 
     def progress_bar(self, total: int):
         """Returns a progress bar as a context manager."""
-        return _ProgressBar(total=total)
+        return ProgressBar(total=total)
 
     def wait_bar(self, message: str = ""):
         """Returns a wait bar as a context manager."""
-        return _WaitBar(message=message)
+        return WaitBar(message=message)
 
     def boolean_input(self, question, default=False):
         """
@@ -188,7 +188,7 @@ class Console:
             raise KeyboardInterrupt
 
 
-class _ProgressBar:
+class ProgressBar:
     def __init__(self, total: int):
         """
         Context manager to display a progress bar in the console.
@@ -210,7 +210,8 @@ class _ProgressBar:
         return self
 
     def __exit__(self, *args):
-        """Flush the output and go to the next line on exit."""
+        """On exit, flush the output and add a clearing line."""
+        print()
         print()
 
     def update(self, completed: int):
@@ -226,7 +227,7 @@ class _ProgressBar:
         print(f"\r{bar_completed}{bar_remaining} {percent_done}%", end="", flush=True)
 
 
-class _WaitBar:
+class WaitBar:
     def __init__(self, message: str = ""):
         """
         Context manager to inform a user a process is being awaited.
@@ -245,7 +246,8 @@ class _WaitBar:
         return self
 
     def __exit__(self, *args):
-        """Flush the output and go to the next line on exit."""
+        """On exit, flush the output and add a clearing line."""
+        print()
         print()
 
     def update(self):
