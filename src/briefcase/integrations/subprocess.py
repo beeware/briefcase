@@ -18,17 +18,32 @@ class Subprocess:
         # This is a no-op; the native subprocess environment is ready-to-use.
         pass
 
+    def full_env(self, overrides):
+        """
+        Generate the full environment in which the command will run.
+
+        :param overrides: The environment passed to the subprocess call;
+            can be `None` if there are no explicit environment changes.
+        """
+        env = self.command.os.environ.copy()
+        if overrides:
+            env.update(**overrides)
+        return env
+
     def final_kwargs(self, **kwargs):
         """
         Convert subprocess keyword arguments into their final form.
+
+        This involves:
+         * Converting any environment overrides into a full environment
+         * Converting the `cwd` into a string
         """
         # If `env` has been provided, inject a full copy of the local
         # environment, with the values in `env` overriding the local
         # environment.
         try:
-            extra_env = kwargs.pop('env')
-            kwargs['env'] = self.command.os.environ.copy()
-            kwargs['env'].update(extra_env)
+            overrides = kwargs.pop('env')
+            kwargs['env'] = self.full_env(overrides)
         except KeyError:
             # No explicit environment provided.
             pass
@@ -54,16 +69,15 @@ class Subprocess:
         # Invoke subprocess.run().
         # Pass through all arguments as-is.
         # All exceptions are propagated back to the caller.
-        subprocess_kwargs = self.final_kwargs(**kwargs)
         self._log_command(args)
-        self._log_environment(subprocess_kwargs, kwargs.get("env"))
+        self._log_environment(kwargs.get("env"))
 
         try:
             command_result = self._subprocess.run(
                 [
                     str(arg) for arg in args
                 ],
-                **subprocess_kwargs
+                **self.final_kwargs(**kwargs)
             )
         except subprocess.CalledProcessError as exc:
             self._log_return_code(exc.returncode)
@@ -81,16 +95,15 @@ class Subprocess:
         environment will be copied, and the contents of env overwritten
         into that environment.
         """
-        subprocess_kwargs = self.final_kwargs(**kwargs)
         self._log_command(args)
-        self._log_environment(subprocess_kwargs, kwargs.get("env"))
+        self._log_environment(kwargs.get("env"))
 
         try:
             cmd_output = self._subprocess.check_output(
                 [
                     str(arg) for arg in args
                 ],
-                **subprocess_kwargs
+                **self.final_kwargs(**kwargs)
             )
         except subprocess.CalledProcessError as exc:
             self._log_output(exc.output, exc.stderr)
@@ -110,15 +123,14 @@ class Subprocess:
         environment will be copied, and the contents of env overwritten
         into that environment.
         """
-        subprocess_kwargs = self.final_kwargs(**kwargs)
         self._log_command(args)
-        self._log_environment(subprocess_kwargs, kwargs.get("env"))
+        self._log_environment(kwargs.get("env"))
 
         return self._subprocess.Popen(
             [
                 str(arg) for arg in args
             ],
-            **subprocess_kwargs
+            **self.final_kwargs(**kwargs)
         )
 
     def _log_command(self, args):
@@ -129,24 +141,26 @@ class Subprocess:
         self.command.logger.debug("Running Command:")
         self.command.logger.debug(f"    {' '.join(shlex.quote(str(arg)) for arg in args)}")
 
-    def _log_environment(self, subprocess_kwargs=None, env_updates=None):
+    def _log_environment(self, overrides):
         """
         Log the state of environment variables prior to command execution.
 
         In debug mode, only the updates to the current environment are logged.
         In deep debug, the entire environment for the command is logged.
+
+        :param overrides: The explicit environment passed to the subprocess call;
+            can be `None` if there are no explicit environment changes.
         """
         if self.command.logger.verbosity >= self.command.logger.DEEP_DEBUG:
-            env = (subprocess_kwargs or {}).get("env") or self.command.os.environ
-            if env:
-                self.command.logger.deep_debug("Full Environment:")
-                for env_var, value in env.items():
-                    self.command.logger.deep_debug(f"    {env_var}={value}")
+            full_env = self.full_env(overrides)
+            self.command.logger.deep_debug("Full Environment:")
+            for env_var, value in full_env.items():
+                self.command.logger.deep_debug(f"    {env_var}={value}")
 
         elif self.command.logger.verbosity >= self.command.logger.DEBUG:
-            if env_updates:
+            if overrides:
                 self.command.logger.debug("Environment:")
-                for env_var, value in env_updates.items():
+                for env_var, value in overrides.items():
                     self.command.logger.debug(f"    {env_var}={value}")
 
     def _log_output(self, output, stderr=None):
