@@ -78,10 +78,8 @@ class macOSXcodeBuildCommand(macOSXcodeMixin, BuildCommand):
         :param app: The application to build
         """
 
-        print()
-        print('[{app.app_name}] Building XCode project...'.format(
-            app=app
-        ))
+        self.logger.info()
+        self.logger.info('[{app.app_name}] Building XCode project...'.format(app=app))
 
         # build_settings = [
         #     ('AD_HOC_CODE_SIGNING_ALLOWED', 'YES'),
@@ -93,7 +91,6 @@ class macOSXcodeBuildCommand(macOSXcodeMixin, BuildCommand):
         # build_settings_str = ['{}={}'.format(*x) for x in build_settings]
 
         try:
-            print()
             self.subprocess.run(
                 [
                     'xcodebuild',  # ' '.join(build_settings_str),
@@ -104,9 +101,8 @@ class macOSXcodeBuildCommand(macOSXcodeMixin, BuildCommand):
                 ],
                 check=True,
             )
-            print('Build succeeded.')
+            self.logger.info('Build succeeded.')
         except subprocess.CalledProcessError:
-            print()
             raise BriefcaseCommandError(
                 "Unable to build app {app.app_name}.".format(app=app)
             )

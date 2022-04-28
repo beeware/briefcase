@@ -79,11 +79,11 @@ class LinuxDeploy:
         Upgrade an existing linuxdeploy install.
         """
         if self.exists():
-            print("Removing old LinuxDeploy install...")
+            self.command.logger.info("Removing old LinuxDeploy install...")
             self.appimage_path.unlink()
 
             self.install()
-            print("...done.")
+            self.command.logger.info("...done.")
         else:
             raise MissingToolError('linuxdeploy')
 
@@ -115,10 +115,10 @@ class LinuxDeploy:
                     appimage.write(ELF_PATCH_PATCHED_BYTES)
                     appimage.flush()
                     appimage.seek(0)
-                    print("Patched ELF header of linuxdeploy AppImage.")
+                    self.command.logger.info("Patched ELF header of linuxdeploy AppImage.")
                 # Else if the header is the patched value, do nothing.
                 elif appimage.read(len(ELF_PATCH_ORIGINAL_BYTES)) == ELF_PATCH_PATCHED_BYTES:
-                    print("ELF header of linuxdeploy AppImage is already patched.")
+                    self.command.logger.info("ELF header of linuxdeploy AppImage is already patched.")
                 else:
                     # We should only get here if the file at the AppImage patch doesn't have
                     # The original or patched value. If this is the case, the file is likely

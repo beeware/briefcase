@@ -133,7 +133,7 @@ WiX Toolset. Current value: {wix_home!r}
             raise NetworkFailure("download WiX")
 
         try:
-            print("Installing WiX...")
+            self.command.logger.info("Installing WiX...")
             # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
             self.command.shutil.unpack_archive(
                 os.fsdecode(wix_zip_path),
@@ -158,11 +158,11 @@ Delete {wix_zip_path} and run briefcase again.""".format(
         """
         if self.managed_install:
             if self.exists():
-                print("Removing old WiX install...")
+                self.command.logger.info("Removing old WiX install...")
                 self.command.shutil.rmtree(self.wix_home)
 
                 self.install()
-                print("...done.")
+                self.command.logger.info("...done.")
             else:
                 raise MissingToolError('WiX')
         else:

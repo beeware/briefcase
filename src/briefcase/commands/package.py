@@ -60,8 +60,8 @@ class PackageCommand(BaseCommand):
             **full_options(state, options)
         )
 
-        print()
-        print("[{app.app_name}] Packaged {filename}".format(
+        self.logger.info()
+        self.logger.info("[{app.app_name}] Packaged {filename}".format(
             app=app,
             filename=self.distribution_path(
                 app,

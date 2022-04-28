@@ -4,6 +4,7 @@ from unittest import mock
 
 import pytest
 
+from briefcase.console import Log
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.xcode import ensure_xcode_is_installed
 
@@ -115,6 +116,7 @@ def test_installed_extra_output(capsys, xcode):
     "If Xcode but outputs extra content, the check is still satisfied."
     # This specific output was seen in the wild with Xcode 13.2.1; see #668
     command = mock.MagicMock()
+    command.logger = Log()
     command.subprocess.check_output.return_value = '\n'.join([
         "objc[86306]: Class AMSupportURLConnectionDelegate is implemented in both /usr/lib/libauthinstall.dylib (0x20d17ab90) and /Library/Apple/System/Library/PrivateFrameworks/MobileDevice.framework/Versions/A/MobileDevice (0x1084b82c8). One of the two will be used. Which one is undefined."  # noqa: E501
         "objc[86306]: Class AMSupportURLSession is implemented in both /usr/lib/libauthinstall.dylib (0x20d17abe0) and /Library/Apple/System/Library/PrivateFrameworks/MobileDevice.framework/Versions/A/MobileDevice (0x1084b8318). One of the two will be used. Which one is undefined.",  # noqa: E501
@@ -257,6 +259,7 @@ def test_installed_with_minimum_version_failure(min_version, version, xcode):
 def test_unexpected_version_output(capsys, xcode):
     "If xcodebuild returns unexpected output, assume it's ok..."
     command = mock.MagicMock()
+    command.logger = Log()
     command.subprocess.check_output.return_value = "Wibble Wibble Wibble\n"
 
     # Check passes without an error...

@@ -3,6 +3,7 @@ from unittest import mock
 
 import pytest
 
+from briefcase.console import Log
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.xcode import confirm_xcode_license_accepted
 
@@ -10,6 +11,7 @@ from briefcase.integrations.xcode import confirm_xcode_license_accepted
 def test_license_accepted(capsys):
     "If the Xcode license has been accepted, pass without comment."
     command = mock.MagicMock()
+    command.logger = Log()
 
     # Check passes without an error...
     confirm_xcode_license_accepted(command)
@@ -28,6 +30,7 @@ def test_license_accepted(capsys):
 def test_unknown_error(capsys):
     "If an unexpected problem occurred accepting the license, warn the user."
     command = mock.MagicMock()
+    command.logger = Log()
     command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
         cmd=['/usr/bin/clang', '--version'],
         returncode=1
@@ -132,6 +135,7 @@ def test_license_not_accepted():
 def test_license_status_unknown(capsys):
     "If we get an unusual response from the license, warn but continue."
     command = mock.MagicMock()
+    command.logger = Log()
     command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
         cmd=['/usr/bin/clang', '--version'],
         returncode=69

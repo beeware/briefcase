@@ -2,6 +2,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from briefcase.console import Log
 from briefcase.integrations.docker import Docker
 from briefcase.integrations.subprocess import Subprocess
 
@@ -9,7 +10,7 @@ from briefcase.integrations.subprocess import Subprocess
 @pytest.fixture
 def mock_docker(tmp_path):
     command = MagicMock()
-    command.verbosity = 0
+    command.logger = Log()
     command.base_path = tmp_path / 'base'
     command.platform_path = tmp_path / 'platform'
     command.bundle_path.return_value = tmp_path / 'bundle'

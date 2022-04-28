@@ -134,7 +134,7 @@ class GradleBuildCommand(GradleMixin, BuildCommand):
 
         :param app: The application to build
         """
-        print("[{app.app_name}] Building Android APK...".format(app=app))
+        self.logger.info("[{app.app_name}] Building Android APK...".format(app=app))
         try:
             self.subprocess.run(
                 # Windows needs the full path to `gradlew`; macOS & Linux can find it
@@ -148,7 +148,6 @@ class GradleBuildCommand(GradleMixin, BuildCommand):
                 check=True
             )
         except subprocess.CalledProcessError:
-            print()
             raise BriefcaseCommandError("Error while building project.")
 
 
@@ -192,8 +191,8 @@ class GradleRunCommand(GradleMixin, RunCommand):
 
             device, name = self.android_sdk.start_emulator(avd)
 
-        print()
-        print(
+        self.logger.info()
+        self.logger.info(
             "[{app.app_name}] Starting app on {name} (device ID {device})".format(
                 app=app,
                 name=name,
@@ -209,31 +208,27 @@ class GradleRunCommand(GradleMixin, RunCommand):
         package = "{app.package_name}.{app.module_name}".format(app=app)
 
         # We force-stop the app to ensure the activity launches freshly.
-        print()
-        print("[{app.app_name}] Stopping old versions of the app...".format(app=app))
+        self.logger.info()
+        self.logger.info("[{app.app_name}] Stopping old versions of the app...".format(app=app))
         adb.force_stop_app(package)
 
         # Install the latest APK file onto the device.
-        print()
-        print("[{app.app_name}] Installing app...".format(
-            app=app,
-        ))
+        self.logger.info()
+        self.logger.info("[{app.app_name}] Installing app...".format(app=app))
         adb.install_apk(self.binary_path(app))
 
-        print()
-        print("[{app.app_name}] Clearing device log...".format(
-            app=app,
-        ))
+        self.logger.info()
+        self.logger.info("[{app.app_name}] Clearing device log...".format(app=app))
         adb.clear_log()
 
         # To start the app, we launch `org.beeware.android.MainActivity`.
-        print()
-        print("[{app.app_name}] Launching app...".format(app=app))
+        self.logger.info()
+        self.logger.info("[{app.app_name}] Launching app...".format(app=app))
         adb.start_app(package, "org.beeware.android.MainActivity")
 
-        print()
-        print("[{app.app_name}] Following device log output (type CTRL-C to stop log)...".format(app=app))
-        print("=" * 75)
+        self.logger.info()
+        self.logger.info("[{app.app_name}] Following device log output (type CTRL-C to stop log)...".format(app=app))
+        self.logger.info("=" * 75)
         adb.logcat()
 
 
@@ -248,7 +243,7 @@ class GradlePackageCommand(GradleMixin, PackageCommand):
 
         :param app: The application to build
         """
-        print("[{app.app_name}] Building Android App Bundle and APK in release mode...".format(app=app))
+        self.logger.info("[{app.app_name}] Building Android App Bundle and APK in release mode...".format(app=app))
         try:
             self.subprocess.run(
                 # Windows needs the full path to `gradlew`; macOS & Linux can find it
@@ -262,7 +257,6 @@ class GradlePackageCommand(GradleMixin, PackageCommand):
                 check=True
             )
         except subprocess.CalledProcessError:
-            print()
             raise BriefcaseCommandError("Error while building project.")
 
 

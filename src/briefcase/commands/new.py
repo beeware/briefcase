@@ -269,11 +269,10 @@ class NewCommand(BaseCommand):
         :returns: a string, guaranteed to meet the validation criteria of
             ``validator``.
         """
-        if self.input.enabled:
-            print(intro)
+        self.input.prompt(intro)
+
         while True:
-            if self.input.enabled:
-                print()
+            self.input.prompt()
 
             answer = self.input.text_input(
                 "{variable} [{default}]: ".format(
@@ -293,8 +292,8 @@ class NewCommand(BaseCommand):
                 if not self.input.enabled:
                     raise BriefcaseCommandError(str(e))
 
-                print()
-                print("Invalid value; {e}".format(e=e))
+                self.input.prompt()
+                self.input.prompt("Invalid value; {e}".format(e=e))
 
     def input_select(self, intro, variable, options):
         """
@@ -309,8 +308,7 @@ class NewCommand(BaseCommand):
             options.
         :returns: The string content of the selected option.
         """
-        if self.input.enabled:
-            print(intro)
+        self.input.prompt(intro)
 
         index_choices = [str(key) for key in range(1, len(options) + 1)]
         display_options = '\n'.join(
@@ -444,7 +442,7 @@ up yet, you can put in a dummy URL.""",
         project_license = self.input_select(
             intro="""
 What license do you want to use for this project's code?""",
-            variable="project license""",
+            variable="project license",
             options=[
                 "BSD license",
                 "MIT license",
@@ -454,7 +452,7 @@ What license do you want to use for this project's code?""",
                 "GNU General Public License v3 (GPLv3)",
                 "GNU General Public License v3 or later (GPLv3+)",
                 "Proprietary",
-                "Other"
+                "Other",
             ],
         )
 
@@ -463,11 +461,11 @@ What license do you want to use for this project's code?""",
 What GUI toolkit do you want to use for this project?""",
             variable="GUI framework",
             options=[
-                'Toga',
-                'PySide2 (does not support iOS/Android deployment)',
-                'PySide6 (does not support iOS/Android deployment)',
-                'PursuedPyBear (does not support iOS/Android deployment)',
-                'None',
+                "Toga",
+                "PySide2 (does not support iOS/Android deployment)",
+                "PySide6 (does not support iOS/Android deployment)",
+                "PursuedPyBear (does not support iOS/Android deployment)",
+                "None",
             ],
         )
 
@@ -494,15 +492,14 @@ What GUI toolkit do you want to use for this project?""",
         if template is None:
             template = 'https://github.com/beeware/briefcase-template'
 
-        if self.input.enabled:
-            print()
-            print("Let's build a new Briefcase app!")
-            print()
+        self.input.prompt()
+        self.input.prompt("Let's build a new Briefcase app!")
+        self.input.prompt()
 
         context = self.build_app_context()
 
-        print()
-        print("Generating a new application '{formal_name}'".format(
+        self.logger.info()
+        self.logger.info("Generating a new application '{formal_name}'".format(
             **context
         ))
 
@@ -513,7 +510,6 @@ What GUI toolkit do you want to use for this project?""",
 
         # Make extra sure we won't clobber an existing application.
         if (self.base_path / context['app_name']).exists():
-            print()
             raise BriefcaseCommandError(
                 "A directory named '{app_name}' already exists.".format(
                     **context
@@ -538,7 +534,7 @@ What GUI toolkit do you want to use for this project?""",
             # or it isn't a cookiecutter template (i.e., no cookiecutter.json)
             raise InvalidTemplateRepository(template)
 
-        print("""
+        self.logger.info("""
 Application '{formal_name}' has been generated. To run your application, type:
 
     cd {app_name}

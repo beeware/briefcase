@@ -80,8 +80,8 @@ class macOSAppBuildCommand(macOSAppMixin, macOSSigningMixin, BuildCommand):
         # signed to be able to execute on M1 hardware - even if it's only an
         # adhoc signing identity. Apply an adhoc signing identity to the
         # app bundle.
-        print()
-        print(f'[{app.app_name}] Adhoc signing app...')
+        self.logger.info()
+        self.logger.info(f'[{app.app_name}] Adhoc signing app...')
         self.sign_app(app=app, identity="-")
 
 

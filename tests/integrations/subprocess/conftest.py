@@ -3,14 +3,28 @@ from unittest.mock import MagicMock
 import pytest
 
 from briefcase.integrations.subprocess import Subprocess
+from briefcase.console import Log
 
 
 @pytest.fixture
 def mock_sub():
     command = MagicMock()
-    command.verbosity = 0
+    command.logger = Log(verbosity=1)
+
+    command.os = MagicMock()
+    command.os.environ = {
+        "VAR1": "Value 1",
+        "PS1": "\nLine 2\n\nLine 4",
+        "PWD": "/home/user/",
+    }
 
     sub = Subprocess(command)
     sub._subprocess = MagicMock()
+
+    run_result = MagicMock()
+    run_result.returncode = 0
+    sub._subprocess.run.return_value = run_result
+
+    sub._subprocess.check_output.return_value = "some output line 1\nmore output line 2"
 
     return sub

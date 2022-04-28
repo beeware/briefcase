@@ -16,7 +16,7 @@ def test_parse_options(base_command):
         'required': "important",
     }
     assert base_command.input.enabled
-    assert base_command.verbosity
+    assert base_command.logger.verbosity == 1
 
 
 def test_missing_option(base_command, capsys):

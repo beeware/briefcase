@@ -1,4 +1,3 @@
-
 import argparse
 import importlib
 import inspect
@@ -22,7 +21,7 @@ except ModuleNotFoundError:
 
 from briefcase import __version__, integrations
 from briefcase.config import AppConfig, BaseConfig, GlobalConfig, parse_config
-from briefcase.console import Console
+from briefcase.console import Console, Log
 from briefcase.exceptions import (
     BadNetworkResourceError,
     BriefcaseCommandError,
@@ -148,6 +147,9 @@ class BaseCommand(ABC):
 
         # The internal Briefcase integrations API.
         self.integrations = integrations
+
+        # Initialize default logger (replaced when options are parsed).
+        self.logger = Log()
 
     @property
     def create_command(self):
@@ -391,7 +393,7 @@ class BaseCommand(ABC):
 
         # Extract the base default options onto the command
         self.input.enabled = options.pop('input_enabled')
-        self.verbosity = options.pop('verbosity')
+        self.logger = Log(verbosity=options.pop('verbosity'))
 
         return options
 
@@ -402,7 +404,7 @@ class BaseCommand(ABC):
         :param command: The command whose options are to be cloned
         """
         self.input.enabled = command.input.enabled
-        self.verbosity = command.verbosity
+        self.logger = command.logger
 
     def add_default_options(self, parser):
         """
@@ -414,7 +416,7 @@ class BaseCommand(ABC):
             '-v', '--verbosity',
             action='count',
             default=1,
-            help="set the verbosity of output"
+            help="set the verbosity of output (use -vv for additional debug output)"
         )
         parser.add_argument(
             '-V', '--version',
@@ -513,22 +515,20 @@ class BaseCommand(ABC):
         if not filename.exists():
             # We have meaningful content, and it hasn't been cached previously,
             # so save it in the requested location
-            print('Downloading {cache_name}...'.format(cache_name=cache_name))
+            self.logger.info('Downloading {cache_name}...'.format(cache_name=cache_name))
             with filename.open('wb') as f:
                 total = response.headers.get('content-length')
                 if total is None:
                     f.write(response.content)
                 else:
                     downloaded = 0
-                    total = int(total)
-                    for data in response.iter_content(chunk_size=1024 * 1024):
-                        downloaded += len(data)
-                        f.write(data)
-                        done = int(50 * downloaded / total)
-                        print('\r{}{} {}%'.format('#' * done, '.' * (50-done), 2*done), end='', flush=True)
-            print()
+                    with self.input.progress_bar(total=int(total)) as progress_bar:
+                        for data in response.iter_content(chunk_size=1024 * 1024):
+                            f.write(data)
+                            downloaded += len(data)
+                            progress_bar.update(completed=downloaded)
         else:
-            print('{cache_name} already downloaded'.format(cache_name=cache_name))
+            self.logger.info('{cache_name} already downloaded'.format(cache_name=cache_name))
         return filename
 
     def update_cookiecutter_cache(self, template: str, branch='master'):
@@ -566,15 +566,15 @@ class BaseCommand(ABC):
                     # We are offline, or otherwise unable to contact
                     # the origin git repo. It's OK to continue; but warn
                     # the user that the template may be stale.
-                    print("***************************************************************************")
-                    print("WARNING: Unable to update template (is your computer offline?)")
-                    print("WARNING: Briefcase will use existing template without updating.")
-                    print("***************************************************************************")
+                    self.logger.warning("***************************************************************************")
+                    self.logger.warning("WARNING: Unable to update template (is your computer offline?)")
+                    self.logger.warning("WARNING: Briefcase will use existing template without updating.")
+                    self.logger.warning("***************************************************************************")
                 try:
                     # Check out the branch for the required version tag.
                     head = remote.refs[branch]
 
-                    print("Using existing template (sha {hexsha}, updated {datestamp})".format(
+                    self.logger.info("Using existing template (sha {hexsha}, updated {datestamp})".format(
                         hexsha=head.commit.hexsha,
                         datestamp=head.commit.committed_datetime.strftime("%c")
                     ))

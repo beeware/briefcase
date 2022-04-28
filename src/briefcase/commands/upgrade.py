@@ -94,22 +94,22 @@ class UpgradeCommand(BaseCommand):
 
         if found_tools:
             if list_tools:
-                print("Briefcase is managing the following tools:")
+                self.logger.info("Briefcase is managing the following tools:")
                 for name in found_tools:
-                    print(" - {name}".format(name=name))
+                    self.logger.info(" - {name}".format(name=name))
             else:
-                print('Briefcase will upgrade the following tools:')
+                self.logger.info('Briefcase will upgrade the following tools:')
                 for name in found_tools:
-                    print(" - {name}".format(name=name))
-                print()
+                    self.logger.info(" - {name}".format(name=name))
+                self.logger.info()
 
                 for name in found_tools:
                     tool = managed_tools[name]
-                    print("[{tool.name}] Upgrading {tool.full_name}...".format(tool=tool))
-                    print()
+                    self.logger.info("[{tool.name}] Upgrading {tool.full_name}...".format(tool=tool))
+                    self.logger.info()
                     tool.upgrade()
 
-                print()
+                self.logger.info()
 
         else:
-            print("Briefcase is not managing any tools.")
+            self.logger.info("Briefcase is not managing any tools.")

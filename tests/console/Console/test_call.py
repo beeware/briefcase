@@ -22,3 +22,11 @@ def test_call_raise_exception_when_disabled(disabled_console):
     with pytest.raises(InputDisabled):
         disabled_console(prompt=prompt)
     disabled_console._input.assert_not_called()
+
+
+def test_call_raise_keyboardinterrupt_for_eoferror(console):
+    "Ensure KeyboardInterrupt is raised when users send EOF to an input prompt."
+    console._input.side_effect = EOFError()
+
+    with pytest.raises(KeyboardInterrupt):
+        console(prompt="")
