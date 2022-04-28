@@ -17,7 +17,7 @@ def mock_git():
 _print = print
 
 
-def mock_print(*arg, **kwargs):
+def monkeypatched_print(*arg, **kwargs):
     "Allow print calls from console.py...raise an error for all other callers"
     frame = inspect.currentframe().f_back
     module = inspect.getmodule(frame.f_code)
@@ -25,12 +25,11 @@ def mock_print(*arg, **kwargs):
         _print(*arg, **kwargs)
     else:
         pytest.fail(
-            "Do not directly call the print function. "
-            "Instead, use either Log or Console for printing."
+            "print() should not be invoked directly. Use Log or Console for printing."
         )
 
 
 @pytest.fixture(autouse=True)
 def no_print(monkeypatch):
     "Replace builtin print function for ALL tests"
-    monkeypatch.setattr("builtins.print", mock_print)
+    monkeypatch.setattr("builtins.print", monkeypatched_print)
