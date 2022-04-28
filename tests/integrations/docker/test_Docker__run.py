@@ -87,7 +87,7 @@ def test_simple_verbose_call(mock_docker, tmp_path, capsys):
         ]
     )
     assert capsys.readouterr().out == (
-        ">>> \n"
+        "\n"
         ">>> Running Command:\n"
         ">>>     docker run --tty "
         f"--volume {tmp_path / 'platform'}:/app:z "

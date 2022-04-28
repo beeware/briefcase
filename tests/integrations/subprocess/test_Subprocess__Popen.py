@@ -43,7 +43,7 @@ def test_simple_debug_call(mock_sub, capsys):
     mock_sub.Popen(['hello', 'world'])
 
     mock_sub._subprocess.Popen.assert_called_with(['hello', 'world'])
-    assert capsys.readouterr().out == ">>> \n>>> Running Command:\n>>>     hello world\n"
+    assert capsys.readouterr().out == "\n>>> Running Command:\n>>>     hello world\n"
 
 
 def test_simple_debug_call_with_env(mock_sub, capsys):
@@ -58,7 +58,7 @@ def test_simple_debug_call_with_env(mock_sub, capsys):
     mock_sub._subprocess.Popen.assert_called_with(['hello', 'world'], env=merged_env)
 
     expected_output = (
-        ">>> \n"
+        "\n"
         ">>> Running Command:\n"
         ">>>     hello world\n"
         ">>> Environment:\n"
@@ -77,7 +77,7 @@ def test_simple_deep_debug_call(mock_sub, capsys):
     mock_sub._subprocess.Popen.assert_called_with(["hello", "world"])
 
     expected_output = (
-        ">>> \n"
+        "\n"
         ">>> Running Command:\n"
         ">>>     hello world\n"
         ">>> Full Environment:\n"

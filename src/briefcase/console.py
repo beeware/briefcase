@@ -27,19 +27,25 @@ class Log:
         for line in msg.splitlines() or ("",):
             print(f"{preface}{line}")
 
-    def _debug_log(self, msg=""):
-        """Funnel to log all debug messages."""
-        self._log(preface=self.debug_preface, msg=msg)
-
-    def deep_debug(self, msg=""):
+    def deep_debug(self, msg=None):
         """Log messages at deep debug level. Included in output if verbosity>=3."""
         if self.verbosity >= self.DEEP_DEBUG:
-            self._debug_log(msg=msg)
+            if msg is None:
+                # On a completely no-args debug() call, don't output the preface;
+                # This type of call is just clearing some vertical space.
+                self._log()
+            else:
+                self._log(preface=self.debug_preface, msg=msg)
 
-    def debug(self, msg=""):
+    def debug(self, msg=None):
         """Log messages at debug level. Included in output if verbosity>=2."""
         if self.verbosity >= self.DEBUG:
-            self._debug_log(msg=msg)
+            if msg is None:
+                # On a completely no-args debug() call, don't output the preface;
+                # This type of call is just clearing some vertical space.
+                self._log()
+            else:
+                self._log(preface=self.debug_preface, msg=msg)
 
     def info(self, msg=""):
         """Log message at info level. Always included in output."""
