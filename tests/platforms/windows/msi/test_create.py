@@ -71,7 +71,7 @@ def test_support_package_url(first_app_config, tmp_path):
     arch = "amd64" if sys.maxsize.bit_length() == 63 else "win32"
     assert command.support_package_url_query == [
         ('platform', 'tester'),
-        ('version', '3.{minor}'.format(minor=sys.version_info.minor)),
+        ('version', f'3.{sys.version_info.minor}'),
         ('arch', arch),
     ]
 

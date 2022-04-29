@@ -86,26 +86,22 @@ class UpgradeCommand(BaseCommand):
             if name in managed_tools:
                 found_tools.append(name)
             elif name not in non_managed_tools:
-                raise BriefcaseCommandError(
-                    "Briefcase doesn't know how to manage the tool '{name}'".format(
-                        name=name
-                    )
-                )
+                raise BriefcaseCommandError(f"Briefcase doesn't know how to manage the tool '{name}'")
 
         if found_tools:
             if list_tools:
                 self.logger.info("Briefcase is managing the following tools:")
                 for name in found_tools:
-                    self.logger.info(" - {name}".format(name=name))
+                    self.logger.info(f" - {name}")
             else:
                 self.logger.info('Briefcase will upgrade the following tools:')
                 for name in found_tools:
-                    self.logger.info(" - {name}".format(name=name))
+                    self.logger.info(f" - {name}")
                 self.logger.info()
 
                 for name in found_tools:
                     tool = managed_tools[name]
-                    self.logger.info("[{tool.name}] Upgrading {tool.full_name}...".format(tool=tool))
+                    self.logger.info(f"[{tool.name}] Upgrading {tool.full_name}...")
                     self.logger.info()
                     tool.upgrade()
 

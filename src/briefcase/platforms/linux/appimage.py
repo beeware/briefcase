@@ -21,15 +21,11 @@ class LinuxAppImageMixin(LinuxMixin):
     output_format = 'appimage'
 
     def appdir_path(self, app):
-        return self.bundle_path(app) / "{app.formal_name}.AppDir".format(app=app)
+        return self.bundle_path(app) / f"{app.formal_name}.AppDir"
 
     def binary_path(self, app):
         binary_name = app.formal_name.replace(' ', '_')
-        return self.platform_path / '{binary_name}-{app.version}-{self.host_arch}.AppImage'.format(
-            app=app,
-            self=self,
-            binary_name=binary_name,
-        )
+        return self.platform_path / f'{binary_name}-{app.version}-{self.host_arch}.AppImage'
 
     def distribution_path(self, app, packaging_format):
         return self.binary_path(app)
@@ -59,11 +55,7 @@ class LinuxAppImageMixin(LinuxMixin):
 
     def docker_image_tag(self, app):
         "The Docker image tag for an app"
-        return 'briefcase/{app.bundle}.{app_name}:py{self.python_version_tag}'.format(
-            app=app,
-            self=self,
-            app_name=app.app_name.lower()
-        )
+        return f'briefcase/{app.bundle}.{app.app_name.lower()}:py{self.python_version_tag}'
 
     def verify_tools(self):
         """
@@ -106,14 +98,14 @@ Linux AppImages can only be generated on Linux.
             Enter the Docker context.
             """
             self.logger.info()
-            self.logger.info("[{app.app_name}] Entering Docker context...".format(app=app))
+            self.logger.info(f"[{app.app_name}] Entering Docker context...")
             orig_subprocess = self.subprocess
             self.subprocess = self.Docker(self, app)
 
             yield self.subprocess
 
             self.logger.info()
-            self.logger.info("[{app.app_name}] Leaving Docker context.".format(app=app))
+            self.logger.info(f"[{app.app_name}] Leaving Docker context.")
             self.subprocess = orig_subprocess
         else:
             yield self.subprocess
@@ -165,7 +157,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
         :param app: The application to build
         """
         self.logger.info()
-        self.logger.info("[{app.app_name}] Building AppImage...".format(app=app))
+        self.logger.info(f"[{app.app_name}] Building AppImage...")
 
         try:
             # Build the AppImage.
@@ -194,12 +186,8 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
                     [
                         self.linuxdeploy.appimage_path,
                         "--appimage-extract-and-run",
-                        "--appdir={appdir_path}".format(appdir_path=self.appdir_path(app)),
-                        "-d", os.fsdecode(
-                            self.appdir_path(app) / "{app.bundle}.{app.app_name}.desktop".format(
-                                app=app,
-                            )
-                        ),
+                        f"--appdir={self.appdir_path(app)}",
+                        "-d", os.fsdecode(self.appdir_path(app) / f"{app.bundle}.{app.app_name}.desktop"),
                         "-o", "appimage",
                     ] + deploy_deps_args,
                     env=env,
@@ -210,9 +198,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
             # Make the binary executable.
             self.os.chmod(self.binary_path(app), 0o755)
         except subprocess.CalledProcessError:
-            raise BriefcaseCommandError(
-                "Error while building app {app.app_name}.".format(app=app)
-            )
+            raise BriefcaseCommandError(f"Error while building app {app.app_name}.")
 
 
 class LinuxAppImageRunCommand(LinuxAppImageMixin, RunCommand):
@@ -224,9 +210,7 @@ class LinuxAppImageRunCommand(LinuxAppImageMixin, RunCommand):
         """
         super().verify_tools()
         if self.host_os != 'Linux':
-            raise BriefcaseCommandError(
-                "AppImages can only be executed on Linux."
-            )
+            raise BriefcaseCommandError("AppImages can only be executed on Linux.")
 
     def run_app(self, app: BaseConfig, **kwargs):
         """
@@ -235,9 +219,7 @@ class LinuxAppImageRunCommand(LinuxAppImageMixin, RunCommand):
         :param app: The config object for the app
         """
         self.logger.info()
-        self.logger.info('[{app.app_name}] Starting app...'.format(
-            app=app
-        ))
+        self.logger.info(f'[{app.app_name}] Starting app...')
         try:
             self.subprocess.run(
                 [
@@ -246,9 +228,7 @@ class LinuxAppImageRunCommand(LinuxAppImageMixin, RunCommand):
                 check=True,
             )
         except subprocess.CalledProcessError:
-            raise BriefcaseCommandError(
-                "Unable to start app {app.app_name}.".format(app=app)
-            )
+            raise BriefcaseCommandError(f"Unable to start app {app.app_name}.")
 
 
 class LinuxAppImagePackageCommand(LinuxAppImageMixin, PackageCommand):

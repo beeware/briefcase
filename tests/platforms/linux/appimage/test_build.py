@@ -118,7 +118,7 @@ def test_build_appimage(build_command, first_app, tmp_path):
         [
             os.fsdecode(build_command.linuxdeploy.appimage_path),
             "--appimage-extract-and-run",
-            "--appdir={appdir}".format(appdir=app_dir),
+            f"--appdir={app_dir}",
             "-d", os.fsdecode(app_dir / "com.example.first-app.desktop"),
             "-o", "appimage",
             "--deploy-deps-only", os.fsdecode(app_dir / 'usr' / 'app' / 'support'),
@@ -158,7 +158,7 @@ def test_build_failure(build_command, first_app, tmp_path):
         [
             os.fsdecode(build_command.linuxdeploy.appimage_path),
             "--appimage-extract-and-run",
-            "--appdir={appdir}".format(appdir=app_dir),
+            f"--appdir={app_dir}",
             "-d", os.fsdecode(app_dir / "com.example.first-app.desktop"),
             "-o", "appimage",
             "--deploy-deps-only", os.fsdecode(app_dir / 'usr' / 'app' / 'support'),
@@ -197,16 +197,10 @@ def test_build_appimage_with_docker(build_command, first_app, tmp_path):
         [
             "docker",
             "run", "--tty",
-            '--volume', '{platform_path}:/app:z'.format(
-                platform_path=build_command.platform_path
-            ),
-            '--volume', '{dot_briefcase_path}:/home/brutus/.briefcase:z'.format(
-                dot_briefcase_path=build_command.dot_briefcase_path
-            ),
+            '--volume', f'{build_command.platform_path}:/app:z',
+            '--volume', f'{build_command.dot_briefcase_path}:/home/brutus/.briefcase:z',
             '--env', 'VERSION=0.0.1',
-            'briefcase/com.example.first-app:py3.{minor}'.format(
-                minor=sys.version_info.minor
-            ),
+            f'briefcase/com.example.first-app:py3.{sys.version_info.minor}',
             "/home/brutus/.briefcase/tools/linuxdeploy-wonky.AppImage",
             "--appimage-extract-and-run",
             "--appdir=/app/appimage/First App/First App.AppDir",

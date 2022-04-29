@@ -56,7 +56,7 @@ def test_version_only(capsys):
     assert excinfo.value.code == 0
     # Version is displayed.
     output = capsys.readouterr().out
-    assert output == '{__version__}\n'.format(__version__=__version__)
+    assert output == f'{__version__}\n'
 
 
 def test_show_output_formats_only():
@@ -217,7 +217,7 @@ def test_bare_command_version(capsys):
     assert excinfo.value.code == 0
     # Version is displayed.
     output = capsys.readouterr().out
-    assert output == '{__version__}\n'.format(__version__=__version__)
+    assert output == f'{__version__}\n'
 
 
 def test_bare_command_show_formats(monkeypatch):
@@ -329,7 +329,8 @@ def test_command_unknown_format(monkeypatch):
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, 'platform', 'darwin')
 
-    with pytest.raises(InvalidFormatError):
+    expected_exc_regex = r"Invalid format 'foobar'; \(choose from: app, homebrew, xcode\)"
+    with pytest.raises(InvalidFormatError, match=expected_exc_regex):
         parse_cmdline('create macOS foobar'.split())
 
 

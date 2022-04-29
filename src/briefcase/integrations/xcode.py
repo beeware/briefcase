@@ -62,9 +62,6 @@ def ensure_command_line_tools_are_installed(command):
     will be displayed prompting the user to install Xcode.
 
     :param command: The command that needs to perform the verification check.
-    :param min_version: The minimum allowed version of Xcode, specified as a
-        tuple of integers (e.g., (11, 2, 1)). Default: ``None``, meaning there
-        is no minimum version.
     """
     # We determine if the command line tools are installed by running:
     #
@@ -188,11 +185,10 @@ Re-run Briefcase once that installation is complete.
                     ) + (0, 0)
 
                     if version < min_version:
+                        min_version = '.'.join(str(v) for v in min_version)
+                        version = '.'.join(str(v) for v in version)
                         raise BriefcaseCommandError(
-                            "Xcode {min_version} is required; {version} is installed. Please update Xcode.".format(
-                                min_version='.'.join(str(v) for v in min_version),
-                                version='.'.join(str(v) for v in version),
-                            )
+                            f"Xcode {min_version} is required; {version} is installed. Please update Xcode."
                         )
                     else:
                         # Version number is acceptable
@@ -369,14 +365,14 @@ def get_simulators(
     # If the simulator frameworks don't exist, they will be downloaded
     # and installed. This should only occur on first execution.
     if not Path(simulator_location).exists():
-        command.input("""
+        command.input(f"""
 It looks like the {os_name} Simulator is not installed. The {os_name} Simulator
-must be installed with administrator priviliges.
+must be installed with administrator privileges.
 
 xcodebuild will prompt you for your admin password so that it can download
 and install the simulator.
 
-Press Return to continue: """.format(os_name=os_name))
+Press Return to continue: """)
 
     try:
         simctl_data = json.loads(
@@ -389,7 +385,7 @@ Press Return to continue: """.format(os_name=os_name))
         os_versions = {
             runtime['name']: runtime['identifier']
             for runtime in simctl_data['runtimes']
-            if runtime['name'].startswith('{os_name} '.format(os_name=os_name))
+            if runtime['name'].startswith(f'{os_name} ')
             and runtime['isAvailable']
         }
 
@@ -456,15 +452,9 @@ def get_device_state(command, udid):
 
         # If we fall out the bottom of the loop, the UDID didn't match
         # so we raise an error.
-        raise BriefcaseCommandError(
-            "Unable to determine status of device {udid}.".format(
-                udid=udid
-            )
-        )
+        raise BriefcaseCommandError(f"Unable to determine status of device {udid}.")
     except subprocess.CalledProcessError:
-        raise BriefcaseCommandError(
-            "Unable to run xcrun simctl."
-        )
+        raise BriefcaseCommandError("Unable to run xcrun simctl.")
 
 
 # A regex pattern that matches the content returned by `security find-identity`

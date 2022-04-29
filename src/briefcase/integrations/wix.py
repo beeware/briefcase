@@ -73,9 +73,11 @@ class WiX:
             not installed, raises MissingToolError.
         """
         if command.host_os != 'Windows':
-            raise BriefcaseCommandError("""
+            raise BriefcaseCommandError(
+                """\
 A Windows MSI installer can only be created on Windows.
-""")
+"""
+            )
 
         # Look for the WIX environment variable
         wix_env = command.os.environ.get("WIX")
@@ -86,10 +88,12 @@ A Windows MSI installer can only be created on Windows.
             wix = WiX(command=command, wix_home=wix_home)
 
             if not wix.exists():
-                raise BriefcaseCommandError("""
+                raise BriefcaseCommandError(
+                    f"""\
 The WIX environment variable does not point to an install of the
 WiX Toolset. Current value: {wix_home!r}
-""".format(wix_home=wix_home))
+"""
+                )
 
         else:
             wix = WiX(command=command, bin_install=True)
@@ -140,13 +144,13 @@ WiX Toolset. Current value: {wix_home!r}
                 extract_dir=os.fsdecode(self.wix_home)
             )
         except (shutil.ReadError, EOFError):
-            raise BriefcaseCommandError("""
+            raise BriefcaseCommandError(
+                f"""\
 Unable to unpack WiX ZIP file. The download may have been
 interrupted or corrupted.
 
-Delete {wix_zip_path} and run briefcase again.""".format(
-                    wix_zip_path=wix_zip_path
-                )
+Delete {wix_zip_path} and run briefcase again.
+"""
             )
 
         # Zip file no longer needed once unpacked.

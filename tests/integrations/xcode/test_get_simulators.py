@@ -19,7 +19,7 @@ def simulator(tmp_path):
 
 def simctl_result(name):
     """Load a simctl result file from the sample directory, and return the content"""
-    filename = Path(__file__).parent / 'simctl' / '{name}.json'.format(name=name)
+    filename = Path(__file__).parent / 'simctl' / f'{name}.json'
     with filename.open(encoding="utf-8") as f:
         return f.read()
 
