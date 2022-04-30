@@ -1,0 +1,1 @@
+Errors related to Java JDK detection now properly contain the value of JAVA_HOME instead of the word None
