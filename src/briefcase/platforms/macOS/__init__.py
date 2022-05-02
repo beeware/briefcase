@@ -192,7 +192,7 @@ class macOSSigningMixin:
                 check=True,
             )
         except subprocess.CalledProcessError as e:
-            errors = e.stderr.decode('utf-8', errors='replace')
+            errors = e.stderr
             if 'code object is not signed at all' in errors:
                 self.logger.info("... file requires a deep sign; retrying")
                 try:

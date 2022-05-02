@@ -1,5 +1,7 @@
 import os
 
+import pytest
+
 from briefcase.console import Log
 
 
@@ -8,7 +10,7 @@ def test_call(mock_sub, capsys):
 
     mock_sub.Popen(['hello', 'world'])
 
-    mock_sub._subprocess.Popen.assert_called_with(['hello', 'world'])
+    mock_sub._subprocess.Popen.assert_called_with(['hello', 'world'], text=True)
     assert capsys.readouterr().out == ""
 
 
@@ -31,7 +33,8 @@ def test_call_with_path_arg(mock_sub, capsys, tmp_path):
 
     mock_sub._subprocess.Popen.assert_called_with(
         ['hello', os.fsdecode(tmp_path / 'location')],
-        cwd=os.fsdecode(tmp_path / 'cwd')
+        cwd=os.fsdecode(tmp_path / 'cwd'),
+        text=True,
     )
     assert capsys.readouterr().out == ""
 
@@ -42,7 +45,7 @@ def test_debug_call(mock_sub, capsys):
 
     mock_sub.Popen(['hello', 'world'])
 
-    mock_sub._subprocess.Popen.assert_called_with(['hello', 'world'])
+    mock_sub._subprocess.Popen.assert_called_with(['hello', 'world'], text=True)
     assert capsys.readouterr().out == (
         "\n"
         ">>> Running Command:\n"
@@ -60,7 +63,7 @@ def test_debug_call_with_env(mock_sub, capsys):
     merged_env = mock_sub.command.os.environ.copy()
     merged_env.update(env)
 
-    mock_sub._subprocess.Popen.assert_called_with(['hello', 'world'], env=merged_env)
+    mock_sub._subprocess.Popen.assert_called_with(['hello', 'world'], env=merged_env, text=True)
 
     expected_output = (
         "\n"
@@ -79,7 +82,7 @@ def test_deep_debug_call(mock_sub, capsys):
 
     mock_sub.Popen(["hello", "world"])
 
-    mock_sub._subprocess.Popen.assert_called_with(["hello", "world"])
+    mock_sub._subprocess.Popen.assert_called_with(["hello", "world"], text=True)
 
     expected_output = (
         "\n"
@@ -107,7 +110,7 @@ def test_deep_debug_call_with_env(mock_sub, capsys):
     merged_env = mock_sub.command.os.environ.copy()
     merged_env.update(env)
 
-    mock_sub._subprocess.Popen.assert_called_with(['hello', 'world'], env=merged_env)
+    mock_sub._subprocess.Popen.assert_called_with(['hello', 'world'], env=merged_env, text=True)
 
     expected_output = (
         "\n"
@@ -124,3 +127,21 @@ def test_deep_debug_call_with_env(mock_sub, capsys):
     )
 
     assert capsys.readouterr().out == expected_output
+
+
+def test_text_eq_true_defaulting(mock_sub):
+    "text should always be passed as True if text or universal_newlines is not explicitly provided"
+
+    mock_sub.Popen(['hello', 'world'])
+    mock_sub._subprocess.Popen.assert_called_with(["hello", "world"], text=True)
+
+
+@pytest.mark.parametrize("setting", (True, False, None))
+def test_text_eq_true_default_overriding(mock_sub, setting):
+    "if text or universal_newlines is explicitly provided, those should override text=true default"
+
+    mock_sub.Popen(['hello', 'world'], text=setting)
+    mock_sub._subprocess.Popen.assert_called_with(["hello", "world"], text=setting)
+
+    mock_sub.Popen(['hello', 'world'], universal_newlines=setting)
+    mock_sub._subprocess.Popen.assert_called_with(["hello", "world"], universal_newlines=setting)

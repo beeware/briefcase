@@ -79,7 +79,6 @@ class JDK:
                 # raises an error.
                 java_home = command.subprocess.check_output(
                     ['/usr/libexec/java_home'],
-                    universal_newlines=True,
                     stderr=subprocess.STDOUT,
                 ).strip('\n')
             except subprocess.CalledProcessError:
@@ -95,7 +94,6 @@ class JDK:
                         os.fsdecode(Path(java_home) / 'bin' / 'javac'),
                         '-version',
                     ],
-                    universal_newlines=True,
                     stderr=subprocess.STDOUT,
                 )
                 # This should be a string of the form "javac 1.8.0_144\n"

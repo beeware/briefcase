@@ -1,5 +1,29 @@
+import json
 import shlex
 import subprocess
+
+from briefcase.exceptions import CommandOutputParseError
+
+
+class ParserError(Exception):
+    """Raised by parser functions to signal parsing was unsuccessful"""
+
+
+def ensure_str(text):
+    """Returns input text as a string."""
+    return text.decode() if isinstance(text, bytes) else str(text)
+
+
+def json_parser(json_output):
+    """
+    Wrapper to parse command output as JSON via parse_output.
+
+    :param json_output: command output to parse as JSON
+    """
+    try:
+        return json.loads(json_output)
+    except json.JSONDecodeError as e:
+        raise ParserError(f"Failed to parse output as JSON: {e}")
 
 
 class Subprocess:
@@ -37,6 +61,7 @@ class Subprocess:
         This involves:
          * Converting any environment overrides into a full environment
          * Converting the `cwd` into a string
+         * Default `text` to True so all outputs are strings
         """
         # If `env` has been provided, inject a full copy of the local
         # environment, with the values in `env` overriding the local
@@ -55,6 +80,12 @@ class Subprocess:
         except KeyError:
             pass
 
+        # if `text` or backwards-compatible `universal_newlines` are
+        # not provided, then default `text` to True so all output is
+        # returned as strings instead of bytes.
+        if not ('text' in kwargs or 'universal_newlines' in kwargs):
+            kwargs['text'] = True
+
         return kwargs
 
     def run(self, args, **kwargs):
@@ -62,9 +93,12 @@ class Subprocess:
         A wrapper for subprocess.run()
 
         The behavior of this method is identical to subprocess.run(),
-        except for the `env` argument. If provided, the current system
-        environment will be copied, and the contents of env overwritten
-        into that environment.
+        except for:
+         - If the `env` argument is provided, the current system environment
+           will be copied, and the contents of env overwritten into that
+           environment.
+         - The `text` argument is defaulted to True so all output
+           is returned as strings instead of bytes.
         """
         # Invoke subprocess.run().
         # Pass through all arguments as-is.
@@ -90,10 +124,13 @@ class Subprocess:
         """
         A wrapper for subprocess.check_output()
 
-        The behavior of this method is identical to subprocess.check_output(),
-        except for the `env` argument. If provided, the current system
-        environment will be copied, and the contents of env overwritten
-        into that environment.
+        The behavior of this method is identical to
+        subprocess.check_output(), except for:
+         - If the `env` is argument provided, the current system environment
+           will be copied, and the contents of env overwritten into that
+           environment.
+         - The `text` argument is defaulted to True so all output
+           is returned as strings instead of bytes.
         """
         self._log_command(args)
         self._log_environment(kwargs.get("env"))
@@ -114,14 +151,42 @@ class Subprocess:
         self._log_return_code(0)
         return cmd_output
 
+    def parse_output(self, args, output_parser, **kwargs):
+        """
+        A wrapper for check_output() where the command output is processed
+        through the supplied parser function.
+
+        If the parser fails, CommandOutputParseError is raised.
+        The parsing function should take one string argument and should
+        raise ParserError for failure modes.
+        """
+        cmd_output = self.check_output(args, **kwargs)
+
+        try:
+            return output_parser(cmd_output)
+        except ParserError as e:
+            error_reason = str(e) or f"Failed to parse command output using '{output_parser.__name__}'"
+            self.command.logger.error()
+            self.command.logger.error("Command Output Parsing Error:")
+            self.command.logger.error(f"    {error_reason}")
+            self.command.logger.error("Command:")
+            self.command.logger.error(f"    {' '.join(shlex.quote(str(arg)) for arg in args)}")
+            self.command.logger.error("Command Output:")
+            for line in ensure_str(cmd_output).splitlines():
+                self.command.logger.error(f"    {line}")
+            raise CommandOutputParseError(error_reason)
+
     def Popen(self, args, **kwargs):
         """
         A wrapper for subprocess.Popen()
 
-        The behavior of this method is identical to subprocess.Popen(),
-        except for the `env` argument. If provided, the current system
-        environment will be copied, and the contents of env overwritten
-        into that environment.
+        The behavior of this method is identical to
+        subprocess.check_output(), except for:
+         - If the `env` argument is provided, the current system environment
+           will be copied, and the contents of env overwritten into that
+           environment.
+         - The `text` argument is defaulted to True so all output
+           is returned as strings instead of bytes.
         """
         self._log_command(args)
         self._log_environment(kwargs.get("env"))
@@ -169,12 +234,12 @@ class Subprocess:
         """
         if output:
             self.command.logger.deep_debug("Command Output:")
-            for line in str(output).splitlines():
+            for line in ensure_str(output).splitlines():
                 self.command.logger.deep_debug(f"    {line}")
 
         if stderr:
             self.command.logger.deep_debug("Command Error Output (stderr):")
-            for line in str(stderr).splitlines():
+            for line in ensure_str(stderr).splitlines():
                 self.command.logger.deep_debug(f"    {line}")
 
     def _log_return_code(self, return_code):

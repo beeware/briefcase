@@ -24,6 +24,7 @@ def test_prepare(mock_docker, tmp_path):
             os.fsdecode(tmp_path / "base" / "path" / "to" / "src")
         ],
         check=True,
+        text=True,
     )
 
 
@@ -50,4 +51,5 @@ def test_prepare_failure(mock_docker, tmp_path):
             os.fsdecode(tmp_path / "base" / "path" / "to" / "src")
         ],
         check=True,
+        text=True,
     )
