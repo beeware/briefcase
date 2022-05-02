@@ -106,7 +106,6 @@ class JDK:
                     return JDK(command, java_home=Path(java_home))
                 else:
                     # It's not a Java 8 JDK.
-                    java_home = None
                     install_message = """
 *************************************************************************
 ** WARNING: JAVA_HOME does not point to a Java 8 JDK                   **
@@ -126,7 +125,6 @@ class JDK:
 """.format(java_home=java_home, version_str=version_str)
 
             except FileNotFoundError:
-                java_home = None
                 install_message = """
 *************************************************************************
 ** WARNING: JAVA_HOME does not point to a JDK                          **
@@ -145,7 +143,6 @@ class JDK:
 """.format(java_home=java_home)
 
             except subprocess.CalledProcessError:
-                java_home = None
                 install_message = """
     *************************************************************************
     ** WARNING: Unable to invoke the Java compiler                         **
@@ -173,7 +170,6 @@ class JDK:
     """.format(java_home=java_home)
 
             except IndexError:
-                java_home = None
                 install_message = """
     *************************************************************************
     ** WARNING: Unable to determine the version of Java that is installed  **
