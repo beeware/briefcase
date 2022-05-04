@@ -13,6 +13,7 @@ from briefcase.commands import (
 from briefcase.config import BaseConfig
 from briefcase.console import InputDisabled, select_option
 from briefcase.exceptions import BriefcaseCommandError, InvalidDeviceError
+from briefcase.integrations.subprocess import PopenStreamingError
 from briefcase.integrations.xcode import (
     DeviceState,
     get_device_state,
@@ -319,6 +320,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         # Try to uninstall the app first. If the app hasn't been installed
         # before, this will still succeed.
         app_identifier = '.'.join([app.bundle, app.app_name])
+        self.logger.info()
         self.logger.info(f'[{app.app_name}] Uninstalling old app version...')
         try:
             self.subprocess.run(
@@ -329,6 +331,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
             raise BriefcaseCommandError(f"Unable to uninstall old version of app {app.app_name}.")
 
         # Install the app.
+        self.logger.info()
         self.logger.info(f'[{app.app_name}] Installing new app version...')
         try:
             self.subprocess.run(
@@ -338,6 +341,21 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         except subprocess.CalledProcessError:
             raise BriefcaseCommandError(f"Unable to install new version of app {app.app_name}.")
 
+        # Start log stream for the app.
+        simulator_log_popen = self.subprocess.Popen(
+            [
+                "xcrun", "simctl", "spawn", udid,
+                "log", "stream",
+                "--style", "compact",
+                "--predicate", f'senderImagePath ENDSWITH "/{app.formal_name}"'
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            bufsize=1,
+        )
+        time.sleep(3)  # let log stream start up
+
+        self.logger.info()
         self.logger.info(f'[{app.app_name}] Starting app...')
         try:
             self.subprocess.run(
@@ -352,17 +370,9 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
             self.logger.info()
             self.logger.info(f"[{app.app_name}] Following simulator log output (type CTRL-C to stop log)...")
             self.logger.info("=" * 75)
-            self.subprocess.run(
-                [
-                    "xcrun", "simctl", "spawn", udid,
-                    "log", "stream",
-                    "--style", "compact",
-                    "--predicate", f'senderImagePath ENDSWITH "/{app.formal_name}"',
-                ],
-                check=True,
-            )
-        except subprocess.CalledProcessError:
-            raise BriefcaseCommandError(f"Unable to start log stream for app {app.app_name}.")
+            self.subprocess.stream_output(simulator_log_popen)
+        except PopenStreamingError as e:
+            raise BriefcaseCommandError(f"Encountered error during log stream for app {app.app_name}: {e}")
 
         # Preserve the device selection as state.
         return {

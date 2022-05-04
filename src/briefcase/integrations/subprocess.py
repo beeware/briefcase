@@ -9,6 +9,10 @@ class ParseError(Exception):
     """Raised by parser functions to signal parsing was unsuccessful"""
 
 
+class PopenStreamingError(Exception):
+    """Raised for errors from streaming Popen process output"""
+
+
 def ensure_str(text):
     """Returns input text as a string."""
     return text.decode() if isinstance(text, bytes) else str(text)
@@ -231,6 +235,39 @@ class Subprocess:
             ],
             **self.final_kwargs(**kwargs)
         )
+
+    def stream_output(self, popen_process):
+        """
+        Stream the output of a Popen process until the process exits.
+        If the user sends CTRL+C, the process will be terminated.
+
+        This is useful for starting a process via Popen such as tailing a
+        log file, then initiating a non-blocking process that populates that
+        log, and finally streaming the original process's output here.
+
+        :param popen_process: a running Popen process with output to print
+        """
+        try:
+            while True:
+                # readline should always return at least a newline...if it returns an
+                # empty string, that should mean the underlying process is exiting/gone
+                output_line = ensure_str(popen_process.stdout.readline())
+                return_code = popen_process.poll()
+                if output_line == "" and return_code is not None:
+                    self._log_return_code(return_code)
+                    break
+                if output_line != "":
+                    self.command.logger.info(output_line)
+
+        except KeyboardInterrupt:
+            popen_process.terminate()
+            try:
+                popen_process.wait(timeout=3)
+            except subprocess.TimeoutExpired:
+                popen_process.kill()
+
+        except Exception as e:
+            raise PopenStreamingError(f"{e!r}")
 
     def _log_command(self, args):
         """

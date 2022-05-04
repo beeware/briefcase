@@ -1,10 +1,12 @@
 import os
 import subprocess
+import time
 from pathlib import Path
 
 from briefcase.config import BaseConfig
 from briefcase.console import select_option
 from briefcase.exceptions import BriefcaseCommandError
+from briefcase.integrations.subprocess import PopenStreamingError
 from briefcase.integrations.xcode import (
     get_identities,
     verify_command_line_tools_install
@@ -32,6 +34,35 @@ class macOSRunMixin:
 
         :param app: The config object for the app
         """
+        # Start log stream for the app.
+        # Streaming the system log is... a mess. The system log contains a
+        # *lot* of noise from other processes; even if you filter by
+        # process, there's a lot of macOS-generated noise. It's very
+        # difficult to extract just the "user generated" stdout/err log
+        # messages.
+        #
+        # The following sets up a log stream filter that looks for:
+        #  1. a log sender that matches that app binary; or,
+        #  2. a log sender of libffi, and a process that matches the app binary.
+        # Case (1) works for pre-Python 3.9 static linked binaries.
+        # Case (2) works for Python 3.9+ dynamic linked binaries.
+        sender = os.fsdecode(self.binary_path(app) / "Contents" / "MacOS" / app.formal_name)
+        log_popen = self.subprocess.Popen(
+            [
+                "log",
+                "stream",
+                "--style", "compact",
+                "--predicate",
+                f'senderImagePath=="{sender}"'
+                f' OR (processImagePath=="{sender}"'
+                ' AND senderImagePath=="/usr/lib/libffi.dylib")',
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            bufsize=1,
+        )
+        time.sleep(3)  # let log stream start up
+
         self.logger.info()
         self.logger.info(f'[{app.app_name}] Starting app...')
         try:
@@ -51,32 +82,9 @@ class macOSRunMixin:
             self.logger.info()
             self.logger.info(f"[{app.app_name}] Following system log output (type CTRL-C to stop log)...")
             self.logger.info("=" * 75)
-            # Streaming the system log is... a mess. The system log contains a
-            # *lot* of noise from other processes; even if you filter by
-            # process, there's a lot of macOS-generated noise. It's very
-            # difficult to extract just the "user generated" stdout/err log
-            # messages.
-            #
-            # The following sets up a log stream filter that looks for:
-            #  1. a log sender that matches that app binary; or,
-            #  2. a log sender of libffi, and a process that matches the app binary.
-            # Case (1) works for pre-Python 3.9 static linked binaries.
-            # Case (2) works for Python 3.9+ dynamic linked binaries.
-            sender = os.fsdecode(self.binary_path(app) / "Contents" / "MacOS" / app.formal_name)
-            self.subprocess.run(
-                [
-                    "log",
-                    "stream",
-                    "--style", "compact",
-                    "--predicate",
-                    f'senderImagePath=="{sender}"'
-                    f' OR (processImagePath=="{sender}"'
-                    ' AND senderImagePath=="/usr/lib/libffi.dylib")',
-                ],
-                check=True,
-            )
-        except subprocess.CalledProcessError:
-            raise BriefcaseCommandError(f"Unable to start log stream for app {app.app_name}.")
+            self.subprocess.stream_output(log_popen)
+        except PopenStreamingError as e:
+            raise BriefcaseCommandError(f"Encountered error during log stream for app {app.app_name}: {e}")
 
 
 def is_mach_o_binary(path):

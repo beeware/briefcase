@@ -4,6 +4,7 @@ from unittest import mock
 import pytest
 
 from briefcase.exceptions import BriefcaseCommandError
+from briefcase.integrations.subprocess import PopenStreamingError
 from briefcase.integrations.xcode import DeviceState
 from briefcase.platforms.iOS.xcode import iOSXcodeRunCommand
 
@@ -66,18 +67,20 @@ def test_run_app_simulator_booted(first_app_config, tmp_path):
             ],
             check=True
         ),
-        # Start tailing the log
-        mock.call(
-            [
-                'xcrun', 'simctl', 'spawn',
-                '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-                "log", "stream",
-                "--style", "compact",
-                "--predicate", 'senderImagePath ENDSWITH "/First App"'
-            ],
-            check=True
-        )
     ])
+    # Start tailing the log
+    command.subprocess.Popen.assert_called_with(
+        [
+            'xcrun', 'simctl', 'spawn',
+            '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
+            "log", "stream",
+            "--style", "compact",
+            "--predicate", 'senderImagePath ENDSWITH "/First App"'
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        bufsize=1,
+    )
 
 
 def test_run_app_simulator_shut_down(first_app_config, tmp_path):
@@ -143,18 +146,20 @@ def test_run_app_simulator_shut_down(first_app_config, tmp_path):
             ],
             check=True
         ),
-        # Start tailing the log
-        mock.call(
-            [
-                'xcrun', 'simctl', 'spawn',
-                '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-                "log", "stream",
-                "--style", "compact",
-                "--predicate", 'senderImagePath ENDSWITH "/First App"'
-            ],
-            check=True
-        )
     ])
+    # Start tailing the log
+    command.subprocess.Popen.assert_called_with(
+        [
+            'xcrun', 'simctl', 'spawn',
+            '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
+            "log", "stream",
+            "--style", "compact",
+            "--predicate", 'senderImagePath ENDSWITH "/First App"'
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        bufsize=1,
+    )
 
 
 def test_run_app_simulator_shutting_down(first_app_config, tmp_path):
@@ -233,18 +238,20 @@ def test_run_app_simulator_shutting_down(first_app_config, tmp_path):
             ],
             check=True
         ),
-        # Start tailing the log
-        mock.call(
-            [
-                'xcrun', 'simctl', 'spawn',
-                '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-                "log", "stream",
-                "--style", "compact",
-                "--predicate", 'senderImagePath ENDSWITH "/First App"'
-            ],
-            check=True
-        )
     ])
+    # Start tailing the log
+    command.subprocess.Popen.assert_called_with(
+        [
+            'xcrun', 'simctl', 'spawn',
+            '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
+            "log", "stream",
+            "--style", "compact",
+            "--predicate", 'senderImagePath ENDSWITH "/First App"'
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        bufsize=1,
+    )
 
 
 def test_run_app_simulator_boot_failure(first_app_config, tmp_path):
@@ -547,7 +554,7 @@ def test_run_app_simulator_log_stream_failure(first_app_config, tmp_path):
     # Simulator is shut down
     command.get_device_state = mock.MagicMock(return_value=DeviceState.SHUTDOWN)
 
-    # Call to boot and open simulator, uninstall and install succeed, but launch fails.
+    # Call to boot and open simulator, uninstall and install succeed, launch success, but output streaming fails.
     command.subprocess = mock.MagicMock()
     command.subprocess.run.side_effect = [
         0,
@@ -555,14 +562,14 @@ def test_run_app_simulator_log_stream_failure(first_app_config, tmp_path):
         0,
         0,
         0,
-        subprocess.CalledProcessError(
-            cmd=['xcrun', 'simctl', 'spawn', '...'],
-            returncode=1
-        ),
     ]
+    command.subprocess.stream_output.side_effect = PopenStreamingError("error reason")
 
     # Run the app
-    with pytest.raises(BriefcaseCommandError):
+    with pytest.raises(
+            BriefcaseCommandError,
+            match="Encountered error during log stream for app first-app: error reason"
+    ):
         command.run_app(first_app_config)
 
     # The correct sequence of commands was issued.
@@ -609,15 +616,17 @@ def test_run_app_simulator_log_stream_failure(first_app_config, tmp_path):
             ],
             check=True
         ),
-        # Start tailing the log
-        mock.call(
-            [
-                'xcrun', 'simctl', 'spawn',
-                '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-                "log", "stream",
-                "--style", "compact",
-                "--predicate", 'senderImagePath ENDSWITH "/First App"'
-            ],
-            check=True
-        )
     ])
+    # Start tailing the log
+    command.subprocess.Popen.assert_called_with(
+        [
+            'xcrun', 'simctl', 'spawn',
+            '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
+            "log", "stream",
+            "--style", "compact",
+            "--predicate", 'senderImagePath ENDSWITH "/First App"'
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        bufsize=1,
+    )
