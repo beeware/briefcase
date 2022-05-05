@@ -51,17 +51,13 @@ def test_run_existing_device(run_command, first_app_config):
         run_command.binary_path(first_app_config)
     )
     run_command.mock_adb.force_stop_app.assert_called_once_with(
-        "{first_app_config.package_name}.{first_app_config.module_name}".format(
-            first_app_config=first_app_config
-        ),
+        f"{first_app_config.package_name}.{first_app_config.module_name}",
     )
 
     run_command.mock_adb.clear_log.assert_called_once()
 
     run_command.mock_adb.start_app.assert_called_once_with(
-        "{first_app_config.package_name}.{first_app_config.module_name}".format(
-            first_app_config=first_app_config
-        ),
+        f"{first_app_config.package_name}.{first_app_config.module_name}",
         "org.beeware.android.MainActivity",
     )
 

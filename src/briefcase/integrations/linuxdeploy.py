@@ -20,13 +20,13 @@ class LinuxDeploy:
 
     @property
     def appimage_name(self):
-        return 'linuxdeploy-{command.host_arch}.AppImage'.format(command=self.command)
+        return f'linuxdeploy-{self.command.host_arch}.AppImage'
 
     @property
     def linuxdeploy_download_url(self):
         return (
             'https://github.com/linuxdeploy/linuxdeploy/'
-            'releases/download/continuous/{self.appimage_name}'.format(self=self)
+            f'releases/download/continuous/{self.appimage_name}'
         )
 
     @property

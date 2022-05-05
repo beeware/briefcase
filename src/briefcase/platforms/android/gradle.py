@@ -109,11 +109,9 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
         except AttributeError:
             parsed = parsed_version(app.version)
 
-            version_triple = (list(parsed.release) + [0, 0])[:3]
-            version_code = '{v[0]:d}{v[1]:02d}{v[2]:02d}{build:02d}'.format(
-                v=version_triple,
-                build=int(getattr(app, 'build', '0'))
-            ).lstrip('0')
+            v = (list(parsed.release) + [0, 0])[:3]  # version triple
+            build = int(getattr(app, "build", "0"))
+            version_code = f'{v[0]:d}{v[1]:02d}{v[2]:02d}{build:02d}'.lstrip('0')
 
         return {
             'version_code': version_code,
@@ -134,7 +132,7 @@ class GradleBuildCommand(GradleMixin, BuildCommand):
 
         :param app: The application to build
         """
-        self.logger.info("[{app.app_name}] Building Android APK...".format(app=app))
+        self.logger.info(f"[{app.app_name}] Building Android APK...")
         try:
             self.subprocess.run(
                 # Windows needs the full path to `gradlew`; macOS & Linux can find it
@@ -192,42 +190,36 @@ class GradleRunCommand(GradleMixin, RunCommand):
             device, name = self.android_sdk.start_emulator(avd)
 
         self.logger.info()
-        self.logger.info(
-            "[{app.app_name}] Starting app on {name} (device ID {device})".format(
-                app=app,
-                name=name,
-                device=device,
-            )
-        )
+        self.logger.info(f"[{app.app_name}] Starting app on {name} (device ID {device})")
 
         # Create an ADB wrapper for the selected device
         adb = self.android_sdk.adb(device=device)
 
         # Compute Android package name. The Android template uses
         # `package_name` and `module_name`, so we use those here as well.
-        package = "{app.package_name}.{app.module_name}".format(app=app)
+        package = f"{app.package_name}.{app.module_name}"
 
         # We force-stop the app to ensure the activity launches freshly.
         self.logger.info()
-        self.logger.info("[{app.app_name}] Stopping old versions of the app...".format(app=app))
+        self.logger.info(f"[{app.app_name}] Stopping old versions of the app...")
         adb.force_stop_app(package)
 
         # Install the latest APK file onto the device.
         self.logger.info()
-        self.logger.info("[{app.app_name}] Installing app...".format(app=app))
+        self.logger.info(f"[{app.app_name}] Installing app...")
         adb.install_apk(self.binary_path(app))
 
         self.logger.info()
-        self.logger.info("[{app.app_name}] Clearing device log...".format(app=app))
+        self.logger.info(f"[{app.app_name}] Clearing device log...")
         adb.clear_log()
 
         # To start the app, we launch `org.beeware.android.MainActivity`.
         self.logger.info()
-        self.logger.info("[{app.app_name}] Launching app...".format(app=app))
+        self.logger.info(f"[{app.app_name}] Launching app...")
         adb.start_app(package, "org.beeware.android.MainActivity")
 
         self.logger.info()
-        self.logger.info("[{app.app_name}] Following device log output (type CTRL-C to stop log)...".format(app=app))
+        self.logger.info(f"[{app.app_name}] Following device log output (type CTRL-C to stop log)...")
         self.logger.info("=" * 75)
         adb.logcat()
 
@@ -243,7 +235,7 @@ class GradlePackageCommand(GradleMixin, PackageCommand):
 
         :param app: The application to build
         """
-        self.logger.info("[{app.app_name}] Building Android App Bundle and APK in release mode...".format(app=app))
+        self.logger.info(f"[{app.app_name}] Building Android App Bundle and APK in release mode...")
         try:
             self.subprocess.run(
                 # Windows needs the full path to `gradlew`; macOS & Linux can find it

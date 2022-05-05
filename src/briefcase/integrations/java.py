@@ -41,12 +41,8 @@ class JDK:
 
         return (
             'https://github.com/AdoptOpenJDK/openjdk8-binaries/'
-            'releases/download/jdk{self.release}-{self.build}/'
-            'OpenJDK8U-jdk_x64_{platform}_hotspot_{self.release}{self.build}.{extension}'
-        ).format(
-            self=self,
-            platform=platform,
-            extension=extension,
+            f'releases/download/jdk{self.release}-{self.build}/'
+            f'OpenJDK8U-jdk_x64_{platform}_hotspot_{self.release}{self.build}.{extension}'
         )
 
     @classmethod
@@ -106,7 +102,7 @@ class JDK:
                     return JDK(command, java_home=Path(java_home))
                 else:
                     # It's not a Java 8 JDK.
-                    install_message = """
+                    install_message = f"""
 *************************************************************************
 ** WARNING: JAVA_HOME does not point to a Java 8 JDK                   **
 *************************************************************************
@@ -122,10 +118,10 @@ class JDK:
 
 *************************************************************************
 
-""".format(java_home=java_home, version_str=version_str)
+"""
 
             except FileNotFoundError:
-                install_message = """
+                install_message = f"""
 *************************************************************************
 ** WARNING: JAVA_HOME does not point to a JDK                          **
 *************************************************************************
@@ -140,13 +136,13 @@ class JDK:
 
 *************************************************************************
 
-""".format(java_home=java_home)
+"""
 
             except subprocess.CalledProcessError:
-                install_message = """
-    *************************************************************************
-    ** WARNING: Unable to invoke the Java compiler                         **
-    *************************************************************************
+                install_message = f"""
+*************************************************************************
+** WARNING: Unable to invoke the Java compiler                         **
+*************************************************************************
 
     Briefcase received an unexpected error when trying to invoke javac,
     the Java compiler, at the location indicated by the JAVA_HOME
@@ -165,15 +161,15 @@ class JDK:
 
     from the command prompt.
 
-    *************************************************************************
+*************************************************************************
 
-    """.format(java_home=java_home)
+"""
 
             except IndexError:
-                install_message = """
-    *************************************************************************
-    ** WARNING: Unable to determine the version of Java that is installed  **
-    *************************************************************************
+                install_message = f"""
+*************************************************************************
+** WARNING: Unable to determine the version of Java that is installed  **
+*************************************************************************
 
     Briefcase was unable to interpret the version information returned
     by the Java compiler at the location indicated by the JAVA_HOME
@@ -192,9 +188,9 @@ class JDK:
 
     from the command prompt.
 
-    *************************************************************************
+*************************************************************************
 
-    """.format(java_home=java_home)
+"""
 
         # If we've reached this point, any user-provided JAVA_HOME is broken;
         # use the Briefcase one.
@@ -257,23 +253,19 @@ class JDK:
                 extract_dir=os.fsdecode(self.command.tools_path)
             )
         except (shutil.ReadError, EOFError):
-            raise BriefcaseCommandError(
-                """
+            raise BriefcaseCommandError(f"""\
 Unable to unpack AdoptOpenJDK ZIP file. The download may have been interrupted
 or corrupted.
 
-Delete {jdk_zip_path} and run briefcase again.""".format(
-                    jdk_zip_path=jdk_zip_path
-                )
-            )
+Delete {jdk_zip_path} and run briefcase again.
+""")
+
         jdk_zip_path.unlink()  # Zip file no longer needed once unpacked.
 
         # The tarball will unpack into ~.briefcase/tools/jdk8u242-b08
         # (or whatever name matches the current release).
         # We turn this into ~.briefcase/tools/java so we have a consistent name.
-        java_unpack_path = self.command.tools_path / "jdk{self.release}-{self.build}".format(
-            self=self
-        )
+        java_unpack_path = self.command.tools_path / f"jdk{self.release}-{self.build}"
         java_unpack_path.rename(self.command.tools_path / "java")
 
     def upgrade(self):

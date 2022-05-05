@@ -10,7 +10,7 @@ from briefcase.integrations.xcode import DeviceState, get_device_state
 
 def simctl_result(name):
     """Load a simctl result file from the sample directory, and return the content"""
-    filename = Path(__file__).parent / 'simctl' / '{name}.json'.format(name=name)
+    filename = Path(__file__).parent / 'simctl' / f'{name}.json'
     with filename.open() as f:
         return f.read()
 

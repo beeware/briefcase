@@ -29,7 +29,7 @@ def verify_git_is_installed(command):
         # installation of those tools. Customize the message to account
         # for this.
         if command.host_os == 'Darwin':
-            raise BriefcaseCommandError("""
+            raise BriefcaseCommandError("""\
 Briefcase requires git, but it is not installed. Xcode provides git; you should
 be shown a dialog prompting you to install Xcode and the Command Line Developer
 Tools. Select "Install" to install the Command Line Developer Tools.
@@ -44,7 +44,7 @@ If you have installed git recently and are still getting this error, you may
 need to restart your terminal session.
 """)
         else:
-            raise BriefcaseCommandError("""
+            raise BriefcaseCommandError("""\
 Briefcase requires git, but it is not installed (or is not on your PATH). Visit:
 
     https://git-scm.com/

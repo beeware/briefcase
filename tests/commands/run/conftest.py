@@ -8,7 +8,7 @@ from briefcase.config import AppConfig
 class DummyRunCommand(RunCommand):
     """
     A dummy run command that doesn't actually do anything.
-    It only serves to track which actions would be performend.
+    It only serves to track which actions would be performed.
     """
     platform = 'tester'
     output_format = 'dummy'
@@ -23,13 +23,10 @@ class DummyRunCommand(RunCommand):
         return self.platform_path / app.app_name
 
     def binary_path(self, app):
-        return self.platform_path / app.app_name / '{app.app_name}.bin'.format(app=app)
+        return self.platform_path / app.app_name / f'{app.app_name}.bin'
 
     def distribution_path(self, app, packaging_format):
-        return self.platform_path / '{app.app_name}.dummy.{packaging_format}'.format(
-            app=app,
-            packaging_format=packaging_format,
-        )
+        return self.platform_path / f'{app.app_name}.dummy.{packaging_format}'
 
     def verify_tools(self):
         super().verify_tools()
