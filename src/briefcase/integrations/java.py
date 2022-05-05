@@ -144,22 +144,22 @@ class JDK:
 ** WARNING: Unable to invoke the Java compiler                         **
 *************************************************************************
 
-Briefcase received an unexpected error when trying to invoke javac,
-the Java compiler, at the location indicated by the JAVA_HOME
-environment variable.
+    Briefcase received an unexpected error when trying to invoke javac,
+    the Java compiler, at the location indicated by the JAVA_HOME
+    environment variable.
 
-Briefcase will continue by downloading and using its own JDK.
+    Briefcase will continue by downloading and using its own JDK.
 
-Please report this as a bug at:
+    Please report this as a bug at:
 
-    https://github.com/beeware/briefcase/issues/new
+        https://github.com/beeware/briefcase/issues/new
 
 
-In your report, please including the output from running:
+    In your report, please including the output from running:
 
-    {java_home}/bin/javac -version
+        {java_home}/bin/javac -version
 
-from the command prompt.
+    from the command prompt.
 
 *************************************************************************
 
@@ -171,22 +171,22 @@ from the command prompt.
 ** WARNING: Unable to determine the version of Java that is installed  **
 *************************************************************************
 
-Briefcase was unable to interpret the version information returned
-by the Java compiler at the location indicated by the JAVA_HOME
-environment variable.
+    Briefcase was unable to interpret the version information returned
+    by the Java compiler at the location indicated by the JAVA_HOME
+    environment variable.
 
-Briefcase will continue by downloading and using its own JDK.
+    Briefcase will continue by downloading and using its own JDK.
 
-Please report this as a bug at:
+    Please report this as a bug at:
 
-    https://github.com/beeware/briefcase/issues/new
+        https://github.com/beeware/briefcase/issues/new
 
 
-In your report, please including the output from running:
+    In your report, please including the output from running:
 
-    {java_home}/bin/javac -version
+        {java_home}/bin/javac -version
 
-from the command prompt.
+    from the command prompt.
 
 *************************************************************************
 
@@ -253,12 +253,12 @@ from the command prompt.
                 extract_dir=os.fsdecode(self.command.tools_path)
             )
         except (shutil.ReadError, EOFError):
-            raise BriefcaseCommandError(
-                f"""\
+            raise BriefcaseCommandError(f"""\
 Unable to unpack AdoptOpenJDK ZIP file. The download may have been interrupted
 or corrupted.
 
-Delete {jdk_zip_path} and run briefcase again.""")
+Delete {jdk_zip_path} and run briefcase again.
+""")
 
         jdk_zip_path.unlink()  # Zip file no longer needed once unpacked.
 

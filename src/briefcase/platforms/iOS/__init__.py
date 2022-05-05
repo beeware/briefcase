@@ -9,9 +9,9 @@ class iOSMixin:
 
     def verify_tools(self):
         if self.host_os != 'Darwin':
-            raise BriefcaseCommandError("""
-iOS applications require Xcode, which is only available on macOS.
-""")
+            raise BriefcaseCommandError(
+                "iOS applications require Xcode, which is only available on macOS."
+            )
         # Require XCode 10.0.0. There's no particular reason for this
         # specific version, other than it's a nice round number that's
         # not *that* old at time of writing.

@@ -38,7 +38,7 @@ def verify_docker(command):
     :param command: The command that needs to perform the verification check.
     """
 
-    WRONG_DOCKER_VERSION_ERROR = """
+    WRONG_DOCKER_VERSION_ERROR = """\
 Briefcase requires Docker 19 or higher, but you are currently running
 version {docker_version}. Visit:
 
@@ -154,7 +154,7 @@ def _verify_docker_can_run(command):
     :param command: The command that needs to perform the verification check.
     """
 
-    LACKS_PERMISSION_ERROR = """
+    LACKS_PERMISSION_ERROR = """\
 Docker has been installed, but Briefcase is unable to invoke
 Docker commands. It is possible that your user does not have
 permissions to invoke Docker.
@@ -163,7 +163,7 @@ See https://docs.docker.com/engine/install/linux-postinstall/
 for details on configuring access to your Docker installation.
 """
 
-    DAEMON_NOT_RUNNING_ERROR = """
+    DAEMON_NOT_RUNNING_ERROR = """\
 Briefcase is unable to use Docker commands. It appears the Docker
 daemon is not running.
 
@@ -171,7 +171,7 @@ See https://docs.docker.com/config/daemon/ for details on how to
 configure your Docker daemon.
 """
 
-    GENERIC_DOCKER_ERROR = """
+    GENERIC_DOCKER_ERROR = """\
 Briefcase was unable to use Docker commands. Check your Docker
 installation, and try again.
 """

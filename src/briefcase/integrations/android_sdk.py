@@ -197,13 +197,12 @@ class AndroidSDK:
             # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
             self.command.shutil.unpack_archive(os.fsdecode(sdk_zip_path), extract_dir=os.fsdecode(self.root_path))
         except (shutil.ReadError, EOFError):
-            raise BriefcaseCommandError(
-                f"""\
+            raise BriefcaseCommandError(f"""\
 Unable to unpack Android SDK ZIP file. The download may have been interrupted
 or corrupted.
 
-Delete {sdk_zip_path} and run briefcase again."""
-            )
+Delete {sdk_zip_path} and run briefcase again.
+""")
 
         # Zip file no longer needed once unpacked.
         sdk_zip_path.unlink()
@@ -227,13 +226,12 @@ Delete {sdk_zip_path} and run briefcase again."""
                 [os.fsdecode(self.sdkmanager_path), "--update"], env=self.env, check=True,
             )
         except subprocess.CalledProcessError:
-            raise BriefcaseCommandError(
-                f"""
-    Error while reviewing Android SDK licenses. Please run this command and examine
-    its output for errors.
+            raise BriefcaseCommandError(f"""\
+Error while reviewing Android SDK licenses. Please run this command and examine
+its output for errors.
 
-    $ {self.root_path / 'tools' / 'bin' / 'sdkmanager'} --update"""
-            )
+    $ {self.root_path / 'tools' / 'bin' / 'sdkmanager'} --update
+""")
 
     def adb(self, device):
         """Obtain an ADB instance for managing a specific device.
@@ -266,22 +264,19 @@ Delete {sdk_zip_path} and run briefcase again."""
                 [os.fsdecode(self.sdkmanager_path), "--licenses"], env=self.env, check=True,
             )
         except subprocess.CalledProcessError:
-            raise BriefcaseCommandError(
-                f"""\
-    Error while reviewing Android SDK licenses. Please run this command and examine
-    its output for errors.
+            raise BriefcaseCommandError(f"""\
+Error while reviewing Android SDK licenses. Please run this command and examine
+its output for errors.
 
     $ {self.root_path / 'tools' / 'bin' / 'sdkmanager'} --licenses
-    """
-            )
+""")
 
         if not license_path.exists():
-            raise BriefcaseCommandError(
-                """\
-    You did not accept the Android SDK licenses. Please re-run the briefcase command
-    and accept the Android SDK license when prompted. You may need an Internet
-    connection."""
-            )
+            raise BriefcaseCommandError("""\
+You did not accept the Android SDK licenses. Please re-run the briefcase command
+and accept the Android SDK license when prompted. You may need an Internet
+connection.
+""")
 
     def verify_emulator(self):
         """Verify that Android emulator has been installed.
@@ -493,11 +488,10 @@ Delete {sdk_zip_path} and run briefcase again."""
             if len(choices) <= 2:
                 choice = choices[0][0]
             else:
-                raise BriefcaseCommandError("""
+                raise BriefcaseCommandError("""\
 Input has been disabled; can't select a device to target.
 Use the -d/--device option to explicitly specify the device to use.
-"""
-                                            )
+""")
 
         # Proces the user's choice
         if choice is None:
@@ -712,8 +706,7 @@ In future, you can specify this device by running:
                 while adb is None:
                     startup_wait_bar.update()
                     if emulator_popen.poll() is not None:
-                        raise BriefcaseCommandError(
-                            f"""
+                        raise BriefcaseCommandError(f"""\
 Android emulator was unable to start!
 
 Try starting the emulator manually by running:
@@ -724,8 +717,7 @@ Resolve any problems you discover, then try running your app again. You may
 find this page helpful in diagnosing emulator problems.
 
     https://developer.android.com/studio/run/emulator-acceleration#accel-vm
-"""
-                        )
+""")
 
                     for device, details in sorted(self.devices().items()):
                         # Only process authorized devices that we haven't seen.
@@ -750,8 +742,7 @@ find this page helpful in diagnosing emulator problems.
             with self.command.input.wait_bar("Booting...") as boot_wait_bar:
                 while not adb.has_booted():
                     if emulator_popen.poll() is not None:
-                        raise BriefcaseCommandError(
-                            f"""
+                        raise BriefcaseCommandError(f"""\
 Android emulator was unable to boot!
 
 Try starting the emulator manually by running:
@@ -762,8 +753,7 @@ Resolve any problems you discover, then try running your app again. You may
 find this page helpful in diagnosing emulator problems.
 
     https://developer.android.com/studio/run/emulator-acceleration#accel-vm
-"""
-                        )
+""")
 
                     # Try again in 2 seconds...
                     self.sleep(2)
@@ -912,14 +902,13 @@ class ADB:
                     for line in output.split("\n")
                 )
             ):
-                raise BriefcaseCommandError(
-                    f"""\
-    Activity class not found while starting app.
+                raise BriefcaseCommandError(f"""\
+Activity class not found while starting app.
 
-    `adb` output:
+`adb` output:
 
-    {output}"""
-                )
+    {output}
+""")
         except subprocess.CalledProcessError:
             raise BriefcaseCommandError(f"Unable to start {package}/{activity} on {self.device}")
 

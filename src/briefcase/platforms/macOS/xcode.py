@@ -23,10 +23,10 @@ class macOSXcodeMixin(macOSMixin):
 
     def verify_tools(self):
         if self.host_os != 'Darwin':
-            raise BriefcaseCommandError("""
-    macOS applications require the Xcode command line tools, which are
-    only available on macOS.
-    """)
+            raise BriefcaseCommandError(
+                "macOS applications require the Xcode command line tools, "
+                "which are only available on macOS."
+            )
         # Require XCode 10.0.0. There's no particular reason for this
         # specific version, other than it's a nice round number that's
         # not *that* old at time of writing.

@@ -54,8 +54,7 @@ class RunCommand(BaseCommand):
                 raise BriefcaseCommandError(f"Project doesn't define an application named '{appname}'")
         else:
             raise BriefcaseCommandError(
-                "Project specifies more than one application; "
-                "use --app to specify which one to start."
+                "Project specifies more than one application; use --app to specify which one to start."
             )
 
         template_file = self.bundle_path(app)

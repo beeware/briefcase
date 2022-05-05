@@ -79,7 +79,7 @@ def ensure_command_line_tools_are_installed(command):
             ['xcode-select', '--install'],
             stderr=subprocess.STDOUT
         )
-        raise BriefcaseCommandError("""
+        raise BriefcaseCommandError("""\
 Xcode command line developer tools are not installed.
 
 You should be shown a dialog prompting you to install Xcode and the
@@ -144,7 +144,7 @@ def ensure_xcode_is_installed(
             )
             xcode_location = output.strip()
         except subprocess.CalledProcessError:
-            raise BriefcaseCommandError("""
+            raise BriefcaseCommandError("""\
 Could not find Xcode installation.
 
 To select an existing Xcode installation, run:
@@ -155,7 +155,7 @@ or install Xcode from the macOS App Store. Re-run Briefcase afterwards.
 """)
 
     if not Path(xcode_location).exists():
-        raise BriefcaseCommandError("""
+        raise BriefcaseCommandError("""\
 Xcode is not installed.
 
 You can install Xcode from the macOS App Store.
@@ -219,7 +219,7 @@ Re-run Briefcase once that installation is complete.
 
     except subprocess.CalledProcessError as e:
         if " is a command line tools instance" in e.output:
-            raise BriefcaseCommandError("""
+            raise BriefcaseCommandError("""\
 Xcode may be installed, but the active developer directory is a
 command line tools instance. To make the default Xcode install the
 active developer directory, run:
@@ -233,7 +233,7 @@ Or, to use a version of Xcode installed in a non-default location:
 and then re-run Briefcase.
 """)
         else:
-            raise BriefcaseCommandError("""
+            raise BriefcaseCommandError("""\
 The Xcode install appears to exist, but Briefcase was unable to
 determine the current Xcode version. Running:
 
@@ -285,7 +285,7 @@ to enter your password (Briefcase will not store this password anywhere).
                 # status code 1 - sudo fail
                 # status code 69 - license not accepted.
                 if e.returncode == 1:
-                    raise BriefcaseCommandError("""
+                    raise BriefcaseCommandError("""\
 Briefcase was unable to run the Xcode licensing tool. This may be because you
 did not enter your password correctly, or because your account does not have
 administrator privileges on this computer.
@@ -293,7 +293,7 @@ administrator privileges on this computer.
 You need to accept the Xcode license before Briefcase can package your app.
 """)
                 elif e.returncode == 69:
-                    raise BriefcaseCommandError("""
+                    raise BriefcaseCommandError("""\
 Xcode license has not been accepted. Briefcase cannot continue.
 
 You need to accept the Xcode license before Briefcase can package your app.

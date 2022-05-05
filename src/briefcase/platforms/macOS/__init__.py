@@ -258,9 +258,9 @@ class macOSPackageMixin(macOSSigningMixin):
 
     def verify_tools(self):
         if self.host_os != 'Darwin':
-            raise BriefcaseCommandError("""
-        Code signing and / or building a DMG requires running on macOS.
-        """)
+            raise BriefcaseCommandError(
+                "Code signing and / or building a DMG requires running on macOS."
+            )
 
         # Require the XCode command line tools.
         verify_command_line_tools_install(self)

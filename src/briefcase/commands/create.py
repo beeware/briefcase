@@ -40,23 +40,23 @@ class MissingSupportPackage(BriefcaseCommandError):
     def __init__(self, python_version_tag, host_arch):
         self.python_version_tag = python_version_tag
         self.host_arch = host_arch
-        super().__init__(
-            "Unable to download a support package for "
-            f"Python {self.python_version_tag} on {self.host_arch}.\n\n"
-            f"This is likely because either Python {self.python_version_tag} "
-            f"and/or {self.host_arch} is not yet supported. You will need to:\n"
-            "  * Use an older version of Python; or\n"
-            "  * Compile your own custom support package.\n"
-        )
+        super().__init__(f"""\
+Unable to download a support package for Python {self.python_version_tag} on {self.host_arch}.
+
+This is likely because either Python {self.python_version_tag} and/or {self.host_arch}
+is not yet supported. You will need to:
+    * Use an older version of Python; or
+    * Compile your own custom support package.
+""")
 
 
 class DependencyInstallError(BriefcaseCommandError):
     def __init__(self):
-        super().__init__(
-            'Unable to install dependencies. This may be because one of your '
-            'dependencies is invalid, or because pip was unable to connect '
-            'to the PyPI server.'
-        )
+        super().__init__("""\
+Unable to install dependencies. This may be because one of your
+dependencies is invalid, or because pip was unable to connect
+to the PyPI server.
+""")
 
 
 class MissingAppSources(BriefcaseCommandError):

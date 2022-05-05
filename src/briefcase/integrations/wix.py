@@ -74,9 +74,7 @@ class WiX:
         """
         if command.host_os != 'Windows':
             raise BriefcaseCommandError(
-                """\
-A Windows MSI installer can only be created on Windows.
-"""
+                "A Windows MSI installer can only be created on Windows."
             )
 
         # Look for the WIX environment variable
@@ -88,12 +86,10 @@ A Windows MSI installer can only be created on Windows.
             wix = WiX(command=command, wix_home=wix_home)
 
             if not wix.exists():
-                raise BriefcaseCommandError(
-                    f"""\
+                raise BriefcaseCommandError(f"""\
 The WIX environment variable does not point to an install of the
 WiX Toolset. Current value: {wix_home!r}
-"""
-                )
+""")
 
         else:
             wix = WiX(command=command, bin_install=True)
@@ -144,14 +140,12 @@ WiX Toolset. Current value: {wix_home!r}
                 extract_dir=os.fsdecode(self.wix_home)
             )
         except (shutil.ReadError, EOFError):
-            raise BriefcaseCommandError(
-                f"""\
+            raise BriefcaseCommandError(f"""\
 Unable to unpack WiX ZIP file. The download may have been
 interrupted or corrupted.
 
 Delete {wix_zip_path} and run briefcase again.
-"""
-            )
+""")
 
         # Zip file no longer needed once unpacked.
         wix_zip_path.unlink()

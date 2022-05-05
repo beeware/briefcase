@@ -34,22 +34,23 @@ from briefcase.integrations.subprocess import Subprocess
 class TemplateUnsupportedVersion(BriefcaseCommandError):
     def __init__(self, python_version_tag):
         self.python_version_tag = python_version_tag
-        super().__init__(
-            f"Could not find template for Python {self.python_version_tag}.\n\n"
-            f"This is likely because Python {self.python_version_tag} "
-            "is not yet supported. You will need to:\n"
-            "  * Use an older version of Python; or\n"
-            "  * Define your own custom template.\n"
-        )
+        super().__init__(f"""\
+Could not find template for Python {self.python_version_tag}.
+
+This is likely because Python {self.python_version_tag}
+is not yet supported. You will need to:
+  * Use an older version of Python; or
+  * Define your own custom template.
+""")
 
 
 class UnsupportedPlatform(BriefcaseCommandError):
     def __init__(self, platform):
         self.platform = platform
-        super().__init__(
-            "App cannot be deployed on {platform}. This is probably because one or more\n"
-            f"dependencies (e.g., the GUI library) doesn't support {platform}."
-        )
+        super().__init__(f"""\
+App cannot be deployed on {platform}. This is probably because one or more
+dependencies (e.g., the GUI library) doesn't support {platform}.
+""")
 
 
 def create_config(klass, config, msg):
