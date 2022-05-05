@@ -69,7 +69,6 @@ def test_exists_but_command_line_tools_selected(xcode):
     command.subprocess.check_output.assert_called_once_with(
         ['xcodebuild', '-version'],
         stderr=subprocess.STDOUT,
-        universal_newlines=True,
     )
 
 
@@ -92,7 +91,6 @@ def test_exists_but_corrupted(xcode):
     command.subprocess.check_output.assert_called_once_with(
         ['xcodebuild', '-version'],
         stderr=subprocess.STDOUT,
-        universal_newlines=True,
     )
 
 
@@ -108,7 +106,6 @@ def test_installed_no_minimum_version(xcode):
     command.subprocess.check_output.assert_called_once_with(
         ['xcodebuild', '-version'],
         stderr=subprocess.STDOUT,
-        universal_newlines=True,
     )
 
 
@@ -131,7 +128,6 @@ def test_installed_extra_output(capsys, xcode):
     command.subprocess.check_output.assert_called_once_with(
         ['xcodebuild', '-version'],
         stderr=subprocess.STDOUT,
-        universal_newlines=True,
     )
 
     # No warning generated.
@@ -205,12 +201,10 @@ def test_installed_with_minimum_version_success(min_version, version, capsys, xc
             mock.call(
                 ['xcode-select', '-p'],
                 stderr=subprocess.STDOUT,
-                universal_newlines=True,
             ),
             mock.call(
                 ['xcodebuild', '-version'],
                 stderr=subprocess.STDOUT,
-                universal_newlines=True,
             ),
         ],
         any_order=False,
@@ -250,7 +244,6 @@ def test_installed_with_minimum_version_failure(min_version, version, xcode):
     command.subprocess.check_output.assert_called_once_with(
         ['xcodebuild', '-version'],
         stderr=subprocess.STDOUT,
-        universal_newlines=True,
     )
 
 
@@ -271,7 +264,6 @@ def test_unexpected_version_output(capsys, xcode):
     command.subprocess.check_output.assert_called_once_with(
         ['xcodebuild', '-version'],
         stderr=subprocess.STDOUT,
-        universal_newlines=True,
     )
 
     # ...but stdout contains a warning

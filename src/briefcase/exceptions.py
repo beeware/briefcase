@@ -113,3 +113,8 @@ class CorruptToolError(BriefcaseCommandError):
     def __init__(self, tool):
         self.tool = tool
         super().__init__(msg=f"{tool!r} found, but it appears to be corrupted.")
+
+
+class CommandOutputParseError(BriefcaseCommandError):
+    def __init__(self, parse_error):
+        super().__init__(msg=f"Unable to parse command output: {parse_error}")

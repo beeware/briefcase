@@ -74,7 +74,6 @@ def test_create_emulator(mock_sdk, tmp_path):
             "--device", "pixel",
         ],
         env=mock_sdk.env,
-        universal_newlines=True,
         stderr=subprocess.STDOUT,
     )
 
@@ -138,7 +137,6 @@ def test_create_preexisting_skins(mock_sdk, tmp_path):
             "--device", "pixel",
         ],
         env=mock_sdk.env,
-        universal_newlines=True,
         stderr=subprocess.STDOUT,
     )
 
@@ -178,7 +176,6 @@ def test_create_failure(mock_sdk):
             "--device", "pixel",
         ],
         env=mock_sdk.env,
-        universal_newlines=True,
         stderr=subprocess.STDOUT,
     )
 
@@ -207,7 +204,6 @@ def test_download_failure(mock_sdk, tmp_path):
             "--device", "pixel",
         ],
         env=mock_sdk.env,
-        universal_newlines=True,
         stderr=subprocess.STDOUT,
     )
 
@@ -257,7 +253,6 @@ def test_unpack_failure(mock_sdk, tmp_path):
             "--device", "pixel",
         ],
         env=mock_sdk.env,
-        universal_newlines=True,
         stderr=subprocess.STDOUT,
     )
 

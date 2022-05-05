@@ -1,10 +1,10 @@
 import enum
-import json
 import re
 import subprocess
 from pathlib import Path
 
-from briefcase.exceptions import BriefcaseCommandError
+from briefcase.integrations.subprocess import json_parser
+from briefcase.exceptions import BriefcaseCommandError, CommandOutputParseError
 
 
 class DeviceState(enum.Enum):
@@ -140,7 +140,6 @@ def ensure_xcode_is_installed(
             output = command.subprocess.check_output(
                 ['xcode-select', '-p'],
                 stderr=subprocess.STDOUT,
-                universal_newlines=True
             )
             xcode_location = output.strip()
         except subprocess.CalledProcessError:
@@ -167,7 +166,6 @@ Re-run Briefcase once that installation is complete.
         output = command.subprocess.check_output(
             ['xcodebuild', '-version'],
             stderr=subprocess.STDOUT,
-            universal_newlines=True
         )
 
         if min_version is not None:
@@ -375,11 +373,9 @@ and install the simulator.
 Press Return to continue: """)
 
     try:
-        simctl_data = json.loads(
-            command.subprocess.check_output(
-                ['xcrun', 'simctl', 'list', '-j'],
-                universal_newlines=True
-            )
+        simctl_data = command.subprocess.parse_output(
+            json_parser,
+            ['xcrun', 'simctl', 'list', '-j'],
         )
 
         os_versions = {
@@ -419,10 +415,10 @@ Press Return to continue: """)
 
         return simulators
 
+    except CommandOutputParseError:
+        raise BriefcaseCommandError("Unable to parse output of xcrun simctl")
     except subprocess.CalledProcessError:
-        raise BriefcaseCommandError(
-            "Unable to run xcrun simctl."
-        )
+        raise BriefcaseCommandError("Unable to run xcrun simctl.")
 
 
 def get_device_state(command, udid):
@@ -434,11 +430,9 @@ def get_device_state(command, udid):
     :returns: The status of the device, as a DeviceState enum.
     """
     try:
-        simctl_data = json.loads(
-            command.subprocess.check_output(
-                ['xcrun', 'simctl', 'list', 'devices', '-j', udid],
-                universal_newlines=True
-            )
+        simctl_data = command.subprocess.parse_output(
+            json_parser,
+            ['xcrun', 'simctl', 'list', 'devices', '-j', udid],
         )
 
         for runtime, devices in simctl_data['devices'].items():
@@ -453,6 +447,8 @@ def get_device_state(command, udid):
         # If we fall out the bottom of the loop, the UDID didn't match
         # so we raise an error.
         raise BriefcaseCommandError(f"Unable to determine status of device {udid}.")
+    except CommandOutputParseError:
+        raise BriefcaseCommandError("Unable to parse output of xcrun simctl")
     except subprocess.CalledProcessError:
         raise BriefcaseCommandError("Unable to run xcrun simctl.")
 
@@ -471,7 +467,6 @@ def get_identities(command, policy):
     try:
         output = command.subprocess.check_output(
             ['security', 'find-identity', '-v', '-p', policy],
-            universal_newlines=True
         )
 
         identities = dict(
@@ -482,6 +477,4 @@ def get_identities(command, policy):
 
         return identities
     except subprocess.CalledProcessError:
-        raise BriefcaseCommandError(
-            "Unable to run xcrun simctl."
-        )
+        raise BriefcaseCommandError("Unable to run security find-identity.")

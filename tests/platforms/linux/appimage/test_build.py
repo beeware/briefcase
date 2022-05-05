@@ -130,7 +130,8 @@ def test_build_appimage(build_command, first_app, tmp_path):
             'VERSION': '0.0.1',
         },
         check=True,
-        cwd=os.fsdecode(tmp_path / 'linux')
+        cwd=os.fsdecode(tmp_path / 'linux'),
+        text=True,
     )
     # Binary is marked executable
     build_command.os.chmod.assert_called_with(
@@ -170,7 +171,8 @@ def test_build_failure(build_command, first_app, tmp_path):
             'VERSION': '0.0.1',
         },
         check=True,
-        cwd=os.fsdecode(tmp_path / 'linux')
+        cwd=os.fsdecode(tmp_path / 'linux'),
+        text=True,
     )
 
     # chmod isn't invoked if the binary wasn't created.
@@ -211,7 +213,8 @@ def test_build_appimage_with_docker(build_command, first_app, tmp_path):
             "--deploy-deps-only", "/app/appimage/First App/First App.AppDir/usr/app_packages/secondlib",
         ],
         check=True,
-        cwd=os.fsdecode(tmp_path / 'linux')
+        cwd=os.fsdecode(tmp_path / 'linux'),
+        text=True,
     )
     # Binary is marked executable
     build_command.os.chmod.assert_called_with(

@@ -20,7 +20,8 @@ def test_simple_call(mock_docker, tmp_path, capsys):
             "briefcase/com.example.myapp:py3.X",
             "hello",
             "world"
-        ]
+        ],
+        text=True,
     )
     assert capsys.readouterr().out == ""
 
@@ -60,7 +61,8 @@ def test_simple_call_with_path_arg(mock_docker, tmp_path, capsys):
             "hello",
             os.fsdecode(tmp_path / "location")
         ],
-        cwd=os.fsdecode(tmp_path / "cwd")
+        cwd=os.fsdecode(tmp_path / "cwd"),
+        text=True,
     )
     assert capsys.readouterr().out == ""
 
@@ -82,7 +84,8 @@ def test_simple_call_with_sys_executable_arg(mock_docker, tmp_path, capsys, monk
             "briefcase/com.example.myapp:py3.X",
             "hello",
             "python3.X",
-        ]
+        ],
+        text=True
     )
 
     assert capsys.readouterr().out == ""
@@ -107,7 +110,8 @@ def test_simple_verbose_call(mock_docker, tmp_path, capsys):
             "briefcase/com.example.myapp:py3.X",
             "hello",
             "world",
-        ]
+        ],
+        text=True,
     )
     assert capsys.readouterr().out == (
         "\n"

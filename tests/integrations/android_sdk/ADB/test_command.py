@@ -24,7 +24,6 @@ def test_simple_command(mock_sdk, tmp_path):
             "example",
             "command",
         ],
-        universal_newlines=True,
         stderr=subprocess.STDOUT,
     )
 
@@ -66,6 +65,5 @@ def test_error_handling(mock_sdk, tmp_path, name, exception):
             "example",
             "command",
         ],
-        universal_newlines=True,
         stderr=subprocess.STDOUT,
     )

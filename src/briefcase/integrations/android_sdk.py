@@ -288,8 +288,6 @@ connection.
 
         self.command.logger.info("Downloading the Android emulator and system image...")
         try:
-            # Using `check_output` and `stderr=STDOUT` so we buffer output,
-            # displaying it only if an exception occurs.
             self.command.subprocess.run(
                 [
                     os.fsdecode(self.sdkmanager_path),
@@ -315,7 +313,6 @@ connection.
             # stderr data is in `e.output`.
             output = self.command.subprocess.check_output(
                 [os.fsdecode(self.emulator_path), "-list-avds"],
-                universal_newlines=True,
                 stderr=subprocess.STDOUT,
             ).strip()
 
@@ -335,7 +332,6 @@ connection.
             # stderr data is in `e.output`.
             output = self.command.subprocess.check_output(
                 [os.fsdecode(self.adb_path), "devices", "-l"],
-                universal_newlines=True,
                 stderr=subprocess.STDOUT,
             ).strip()
 
@@ -606,7 +602,6 @@ An emulator named '{avd}' already exists.
                     "--device", device_type,
                 ],
                 env=self.env,
-                universal_newlines=True,
                 stderr=subprocess.STDOUT,
             )
         except subprocess.CalledProcessError:
@@ -816,7 +811,7 @@ class ADB:
 
         :param arguments: List of strings to pass to `adb` as arguments.
 
-        Returns bytes of `adb` output on success; raises an exception on failure.
+        Returns `adb` output on success; raises an exception on failure.
         """
         # The ADB integration operates on the basis of running commands before
         # checking that they are valid, then parsing output to notice errors.
@@ -831,7 +826,6 @@ class ADB:
                     self.device,
                 ]
                 + [(os.fsdecode(arg) if isinstance(arg, Path) else arg) for arg in arguments],
-                universal_newlines=True,
                 stderr=subprocess.STDOUT,
             )
         except subprocess.CalledProcessError as e:

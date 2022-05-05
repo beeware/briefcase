@@ -105,7 +105,6 @@ need to restart your terminal session.
         # Try to get the version of docker that is installed.
         output = command.subprocess.check_output(
             ['docker', '--version'],
-            universal_newlines=True,
             stderr=subprocess.STDOUT,
         ).strip('\n')
 
@@ -182,9 +181,8 @@ installation, and try again.
         # We don't care about the output, just that it succeeds.
         command.subprocess.check_output(
             ['docker', 'info'],
-            universal_newlines=True,
             stderr=subprocess.STDOUT,
-        ).strip('\n')
+        )
     except subprocess.CalledProcessError as e:
         failure_output = e.output
         if 'permission denied while trying to connect' in failure_output:
