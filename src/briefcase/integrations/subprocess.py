@@ -5,7 +5,7 @@ import subprocess
 from briefcase.exceptions import CommandOutputParseError
 
 
-class ParserError(Exception):
+class ParseError(Exception):
     """Raised by parser functions to signal parsing was unsuccessful"""
 
 
@@ -23,7 +23,7 @@ def json_parser(json_output):
     try:
         return json.loads(json_output)
     except json.JSONDecodeError as e:
-        raise ParserError(f"Failed to parse output as JSON: {e}")
+        raise ParseError(f"Failed to parse output as JSON: {e}")
 
 
 class Subprocess:
@@ -151,20 +151,28 @@ class Subprocess:
         self._log_return_code(0)
         return cmd_output
 
-    def parse_output(self, args, output_parser, **kwargs):
+    def parse_output(self, output_parser, args, **kwargs):
         """
         A wrapper for check_output() where the command output is processed
         through the supplied parser function.
 
         If the parser fails, CommandOutputParseError is raised.
         The parsing function should take one string argument and should
-        raise ParserError for failure modes.
+        raise ParseError for failure modes.
+
+        :param output_parser: a function that takes str input and returns
+            parsed content, or raises ParseError in the case of a parsing
+            problem.
+        :param args: The arguments to pass to the subprocess
+        :param kwargs: The keyword arguments to pass to the subprocess
+        :returns: Parsed data read from the subprocess output; the exact
+            structure of that data is dependent on the output parser used.
         """
         cmd_output = self.check_output(args, **kwargs)
 
         try:
             return output_parser(cmd_output)
-        except ParserError as e:
+        except ParseError as e:
             error_reason = str(e) or f"Failed to parse command output using '{output_parser.__name__}'"
             self.command.logger.error()
             self.command.logger.error("Command Output Parsing Error:")

@@ -378,8 +378,8 @@ Press Return to continue: """.format(os_name=os_name))
 
     try:
         simctl_data = command.subprocess.parse_output(
+            json_parser,
             ['xcrun', 'simctl', 'list', '-j'],
-            output_parser=json_parser,
         )
 
         os_versions = {
@@ -435,8 +435,8 @@ def get_device_state(command, udid):
     """
     try:
         simctl_data = command.subprocess.parse_output(
+            json_parser,
             ['xcrun', 'simctl', 'list', 'devices', '-j', udid],
-            output_parser=json_parser,
         )
 
         for runtime, devices in simctl_data['devices'].items():

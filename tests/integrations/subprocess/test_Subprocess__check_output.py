@@ -173,19 +173,18 @@ def test_calledprocesserror_exception_logging(mock_sub, capsys):
     assert capsys.readouterr().out == expected_output
 
 
-def test_text_eq_true_defaulting(mock_sub):
-    "text should always be passed as True if text or universal_newlines is not explicitly provided"
-
-    mock_sub.check_output(['hello', 'world'])
-    mock_sub._subprocess.check_output.assert_called_with(["hello", "world"], text=True)
-
-
-@pytest.mark.parametrize("setting", (True, False, None))
-def test_text_eq_true_default_overriding(mock_sub, setting):
+@pytest.mark.parametrize(
+    "in_kwargs, kwargs",
+    [
+        ({}, {'text': True}),
+        ({'text': True}, {'text': True}),
+        ({'text': False}, {'text': False}),
+        ({'universal_newlines': False}, {'universal_newlines': False}),
+        ({'universal_newlines': True}, {'universal_newlines': True}),
+    ]
+)
+def test_text_eq_true_default_overriding(mock_sub, in_kwargs, kwargs):
     "if text or universal_newlines is explicitly provided, those should override text=true default"
 
-    mock_sub.check_output(['hello', 'world'], text=setting)
-    mock_sub._subprocess.check_output.assert_called_with(["hello", "world"], text=setting)
-
-    mock_sub.check_output(['hello', 'world'], universal_newlines=setting)
-    mock_sub._subprocess.check_output.assert_called_with(["hello", "world"], universal_newlines=setting)
+    mock_sub.check_output(['hello', 'world'], **in_kwargs)
+    mock_sub._subprocess.check_output.assert_called_with(["hello", "world"], **kwargs)

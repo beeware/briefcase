@@ -1,1 +1,1 @@
-When attempts to enumerate iOS simulators or determine device state return unexpected output, the command, command output, and failure reason will be logged to the screen.
+When the output of a wrapped command cannot be parsed, full command output, and failure reason is now logged.
