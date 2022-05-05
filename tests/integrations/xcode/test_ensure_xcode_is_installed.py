@@ -182,7 +182,7 @@ def test_installed_with_minimum_version_success(min_version, version, capsys, xc
             return xcode + "\n"
 
         if cmd_list == ['xcodebuild', '-version']:
-            return "Xcode {version}\nBuild version 11B500\n".format(version=version)
+            return f"Xcode {version}\nBuild version 11B500\n"
 
         return mock.DEFAULT
 
@@ -230,9 +230,7 @@ def test_installed_with_minimum_version_success(min_version, version, capsys, xc
 def test_installed_with_minimum_version_failure(min_version, version, xcode):
     "Check XCode fail to meet a minimum version requirement."
     command = mock.MagicMock()
-    command.subprocess.check_output.return_value = "Xcode {version}\nBuild version 11B500\n".format(
-        version=version
-    )
+    command.subprocess.check_output.return_value = f"Xcode {version}\nBuild version 11B500\n"
 
     # Check raises an error.
     with pytest.raises(BriefcaseCommandError):

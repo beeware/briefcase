@@ -106,7 +106,7 @@ def test_valid_app_name(name):
             sources=['src/' + name.replace('-', '_')]
         )
     except BriefcaseConfigError:
-        pytest.fail('{name} should be valid'.format(name=name))
+        pytest.fail(f'{name} should be valid')
 
 
 @pytest.mark.parametrize(

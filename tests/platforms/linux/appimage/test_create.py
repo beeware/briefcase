@@ -15,7 +15,7 @@ def test_support_package_url(first_app_config, tmp_path):
 
     assert command.support_package_url_query == [
         ('platform', 'tester'),
-        ('version', '3.{minor}'.format(minor=sys.version_info.minor)),
+        ('version', f'3.{sys.version_info.minor}'),
         ('arch', 'wonky'),
     ]
 
@@ -54,9 +54,7 @@ def test_install_app_dependencies(first_app_config, tmp_path):
         [
             sys.executable, '-m', 'pip',
             'install', '--upgrade', '--no-user',
-            '--target={tmp_path}/linux/appimage/First App/path/to/app_packages'.format(
-                tmp_path=tmp_path
-            ),
+            f'--target={tmp_path}/linux/appimage/First App/path/to/app_packages',
             'foo==1.2.3',
             'bar>=4.5',
         ],
@@ -99,9 +97,7 @@ def test_install_app_dependencies_no_docker(first_app_config, tmp_path):
         [
             sys.executable, '-m', 'pip',
             'install', '--upgrade', '--no-user',
-            '--target={tmp_path}/linux/appimage/First App/path/to/app_packages'.format(
-                tmp_path=tmp_path
-            ),
+            f'--target={tmp_path}/linux/appimage/First App/path/to/app_packages',
             'foo==1.2.3',
             'bar>=4.5',
         ],

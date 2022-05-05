@@ -62,9 +62,6 @@ def ensure_command_line_tools_are_installed(command):
     will be displayed prompting the user to install Xcode.
 
     :param command: The command that needs to perform the verification check.
-    :param min_version: The minimum allowed version of Xcode, specified as a
-        tuple of integers (e.g., (11, 2, 1)). Default: ``None``, meaning there
-        is no minimum version.
     """
     # We determine if the command line tools are installed by running:
     #
@@ -82,7 +79,7 @@ def ensure_command_line_tools_are_installed(command):
             ['xcode-select', '--install'],
             stderr=subprocess.STDOUT
         )
-        raise BriefcaseCommandError("""
+        raise BriefcaseCommandError("""\
 Xcode command line developer tools are not installed.
 
 You should be shown a dialog prompting you to install Xcode and the
@@ -146,7 +143,7 @@ def ensure_xcode_is_installed(
             )
             xcode_location = output.strip()
         except subprocess.CalledProcessError:
-            raise BriefcaseCommandError("""
+            raise BriefcaseCommandError("""\
 Could not find Xcode installation.
 
 To select an existing Xcode installation, run:
@@ -157,7 +154,7 @@ or install Xcode from the macOS App Store. Re-run Briefcase afterwards.
 """)
 
     if not Path(xcode_location).exists():
-        raise BriefcaseCommandError("""
+        raise BriefcaseCommandError("""\
 Xcode is not installed.
 
 You can install Xcode from the macOS App Store.
@@ -186,11 +183,10 @@ Re-run Briefcase once that installation is complete.
                     ) + (0, 0)
 
                     if version < min_version:
+                        min_version = '.'.join(str(v) for v in min_version)
+                        version = '.'.join(str(v) for v in version)
                         raise BriefcaseCommandError(
-                            "Xcode {min_version} is required; {version} is installed. Please update Xcode.".format(
-                                min_version='.'.join(str(v) for v in min_version),
-                                version='.'.join(str(v) for v in version),
-                            )
+                            f"Xcode {min_version} is required; {version} is installed. Please update Xcode."
                         )
                     else:
                         # Version number is acceptable
@@ -221,7 +217,7 @@ Re-run Briefcase once that installation is complete.
 
     except subprocess.CalledProcessError as e:
         if " is a command line tools instance" in e.output:
-            raise BriefcaseCommandError("""
+            raise BriefcaseCommandError("""\
 Xcode may be installed, but the active developer directory is a
 command line tools instance. To make the default Xcode install the
 active developer directory, run:
@@ -235,7 +231,7 @@ Or, to use a version of Xcode installed in a non-default location:
 and then re-run Briefcase.
 """)
         else:
-            raise BriefcaseCommandError("""
+            raise BriefcaseCommandError("""\
 The Xcode install appears to exist, but Briefcase was unable to
 determine the current Xcode version. Running:
 
@@ -287,7 +283,7 @@ to enter your password (Briefcase will not store this password anywhere).
                 # status code 1 - sudo fail
                 # status code 69 - license not accepted.
                 if e.returncode == 1:
-                    raise BriefcaseCommandError("""
+                    raise BriefcaseCommandError("""\
 Briefcase was unable to run the Xcode licensing tool. This may be because you
 did not enter your password correctly, or because your account does not have
 administrator privileges on this computer.
@@ -295,7 +291,7 @@ administrator privileges on this computer.
 You need to accept the Xcode license before Briefcase can package your app.
 """)
                 elif e.returncode == 69:
-                    raise BriefcaseCommandError("""
+                    raise BriefcaseCommandError("""\
 Xcode license has not been accepted. Briefcase cannot continue.
 
 You need to accept the Xcode license before Briefcase can package your app.
@@ -367,14 +363,14 @@ def get_simulators(
     # If the simulator frameworks don't exist, they will be downloaded
     # and installed. This should only occur on first execution.
     if not Path(simulator_location).exists():
-        command.input("""
+        command.input(f"""
 It looks like the {os_name} Simulator is not installed. The {os_name} Simulator
-must be installed with administrator priviliges.
+must be installed with administrator privileges.
 
 xcodebuild will prompt you for your admin password so that it can download
 and install the simulator.
 
-Press Return to continue: """.format(os_name=os_name))
+Press Return to continue: """)
 
     try:
         simctl_data = command.subprocess.parse_output(
@@ -385,7 +381,7 @@ Press Return to continue: """.format(os_name=os_name))
         os_versions = {
             runtime['name']: runtime['identifier']
             for runtime in simctl_data['runtimes']
-            if runtime['name'].startswith('{os_name} '.format(os_name=os_name))
+            if runtime['name'].startswith(f'{os_name} ')
             and runtime['isAvailable']
         }
 
@@ -420,7 +416,7 @@ Press Return to continue: """.format(os_name=os_name))
         return simulators
 
     except CommandOutputParseError:
-        raise BriefcaseCommandError("Unable to parse xcrun simctl output")
+        raise BriefcaseCommandError("Unable to parse output of xcrun simctl")
     except subprocess.CalledProcessError:
         raise BriefcaseCommandError("Unable to run xcrun simctl.")
 
@@ -450,13 +446,9 @@ def get_device_state(command, udid):
 
         # If we fall out the bottom of the loop, the UDID didn't match
         # so we raise an error.
-        raise BriefcaseCommandError(
-            "Unable to determine status of device {udid}.".format(
-                udid=udid
-            )
-        )
+        raise BriefcaseCommandError(f"Unable to determine status of device {udid}.")
     except CommandOutputParseError:
-        raise BriefcaseCommandError("Unable to parse xcrun simctl output")
+        raise BriefcaseCommandError("Unable to parse output of xcrun simctl")
     except subprocess.CalledProcessError:
         raise BriefcaseCommandError("Unable to run xcrun simctl.")
 

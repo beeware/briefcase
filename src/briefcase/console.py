@@ -109,7 +109,7 @@ class Console:
             yes_no = "[y/N]"
             default_text = 'n'
 
-        prompt = "{question} {yes_no}? ".format(question=question, yes_no=yes_no)
+        prompt = f"{question} {yes_no}? "
 
         result = self.selection_input(
             prompt=prompt,
@@ -291,7 +291,7 @@ def select_option(options, input, prompt='> ', error="Invalid selection"):
 
     if input.enabled:
         for i, (key, value) in enumerate(ordered, start=1):
-            input.prompt('  {i}) {label}'.format(i=i, label=value))
+            input.prompt(f'  {i}) {value}')
 
         input.prompt()
 

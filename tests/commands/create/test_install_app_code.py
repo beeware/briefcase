@@ -17,14 +17,17 @@ def assert_dist_info(app_path):
         assert f.read() == 'briefcase\n'
 
     with (dist_info_path / 'METADATA').open() as f:
-        assert f.read() == """Metadata-Version: 2.1
-Briefcase-Version: {version}
+        assert f.read() == f"""Metadata-Version: 2.1
+Briefcase-Version: {briefcase.__version__}
 Name: my-app
 Formal-Name: My App
 App-ID: com.example.my-app
 Version: 1.2.3
+Home-page: https://example.com
+Author: First Last
+Author-email: first@example.com
 Summary: This is a simple app
-""".format(version=briefcase.__version__)
+"""
 
 
 def test_no_code(create_command, myapp, app_path):

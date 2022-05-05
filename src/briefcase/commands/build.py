@@ -44,10 +44,7 @@ class BuildCommand(BaseCommand):
         state = self.build_app(app, **full_options(state, options))
 
         self.logger.info()
-        self.logger.info("[{app.app_name}] Built {filename}".format(
-            app=app,
-            filename=self.binary_path(app).relative_to(self.base_path),
-        ))
+        self.logger.info(f"[{app.app_name}] Built {self.binary_path(app).relative_to(self.base_path)}")
         return state
 
     def __call__(

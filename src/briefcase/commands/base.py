@@ -34,24 +34,23 @@ from briefcase.integrations.subprocess import Subprocess
 class TemplateUnsupportedVersion(BriefcaseCommandError):
     def __init__(self, python_version_tag):
         self.python_version_tag = python_version_tag
-        super().__init__(
-            f"Could not find template for Python {self.python_version_tag}.\n\n"
-            f"This is likely because Python {self.python_version_tag} "
-            "is not yet supported. You will need to:\n"
-            "  * Use an older version of Python; or\n"
-            "  * Define your own custom template.\n"
-        )
+        super().__init__(f"""\
+Could not find template for Python {self.python_version_tag}.
+
+This is likely because Python {self.python_version_tag}
+is not yet supported. You will need to:
+  * Use an older version of Python; or
+  * Define your own custom template.
+""")
 
 
 class UnsupportedPlatform(BriefcaseCommandError):
     def __init__(self, platform):
         self.platform = platform
-        super().__init__(
-            msg="App cannot be deployed on {platform}. This is probably because one or more\n"
-                "dependencies (e.g., the GUI library) doesn't support {platform}.".format(
-                    platform=platform
-                )
-        )
+        super().__init__(f"""\
+App cannot be deployed on {platform}. This is probably because one or more
+dependencies (e.g., the GUI library) doesn't support {platform}.
+""")
 
 
 def create_config(klass, config, msg):
@@ -59,8 +58,7 @@ def create_config(klass, config, msg):
         return klass(**config)
     except TypeError:
         # Inspect the GlobalConfig constructor to find which
-        # parameters are required and don't have a default
-        # value.
+        # parameters are required and don't have a default value.
         required_args = {
             name
             for name, param in inspect.signature(klass.__init__).parameters.items()
@@ -68,16 +66,8 @@ def create_config(klass, config, msg):
             and name not in {'self', 'kwargs'}
         }
         missing_args = required_args - config.keys()
-        missing = ', '.join(
-            "'{arg}'".format(arg=arg)
-            for arg in sorted(missing_args)
-        )
-        raise BriefcaseConfigError(
-            "{msg} is incomplete (missing {missing})".format(
-                msg=msg,
-                missing=missing
-            )
-        )
+        missing = ', '.join(f"'{arg}'" for arg in sorted(missing_args))
+        raise BriefcaseConfigError(f"{msg} is incomplete (missing {missing})")
 
 
 def cookiecutter_cache_path(template):
@@ -343,11 +333,11 @@ class BaseCommand(ABC):
                 path = Path(str(self.base_path), *app_home[0])
             else:
                 raise BriefcaseCommandError(
-                    "Multiple paths in sources found for application '{app.app_name}'".format(app=app)
+                    f"Multiple paths in sources found for application '{app.app_name}'"
                 )
         except IndexError:
             raise BriefcaseCommandError(
-                "Unable to find code for application '{app.app_name}'".format(app=app)
+                f"Unable to find code for application '{app.app_name}'"
             )
 
         return path
@@ -360,10 +350,7 @@ class BaseCommand(ABC):
         This is used as a repository label/tag to identify the appropriate
         templates, etc to use.
         """
-        return '{major}.{minor}'.format(
-            major=self.sys.version_info.major,
-            minor=self.sys.version_info.minor
-        )
+        return f"{self.sys.version_info.major}.{self.sys.version_info.minor}"
 
     def verify_tools(self):
         """
@@ -465,9 +452,7 @@ class BaseCommand(ABC):
                     self.apps[app_name] = create_config(
                         klass=self.APP_CONFIG_CLASS,
                         config=app_config,
-                        msg="Configuration for '{app_name}'".format(
-                            app_name=app_name
-                        )
+                        msg=f"Configuration for '{app_name}'"
                     )
 
         except FileNotFoundError:
@@ -515,7 +500,7 @@ class BaseCommand(ABC):
         if not filename.exists():
             # We have meaningful content, and it hasn't been cached previously,
             # so save it in the requested location
-            self.logger.info('Downloading {cache_name}...'.format(cache_name=cache_name))
+            self.logger.info(f'Downloading {cache_name}...')
             with filename.open('wb') as f:
                 total = response.headers.get('content-length')
                 if total is None:
@@ -528,7 +513,7 @@ class BaseCommand(ABC):
                             downloaded += len(data)
                             progress_bar.update(completed=downloaded)
         else:
-            self.logger.info('{cache_name} already downloaded'.format(cache_name=cache_name))
+            self.logger.info(f'{cache_name} already downloaded')
         return filename
 
     def update_cookiecutter_cache(self, template: str, branch='master'):
@@ -574,10 +559,9 @@ class BaseCommand(ABC):
                     # Check out the branch for the required version tag.
                     head = remote.refs[branch]
 
-                    self.logger.info("Using existing template (sha {hexsha}, updated {datestamp})".format(
-                        hexsha=head.commit.hexsha,
-                        datestamp=head.commit.committed_datetime.strftime("%c")
-                    ))
+                    self.logger.info(
+                        f"Using existing template (sha {head.commit.hexsha}, "
+                        f"updated {head.commit.committed_datetime.strftime('%c')})")
                     head.checkout()
                 except IndexError:
                     # No branch exists for the requested version.

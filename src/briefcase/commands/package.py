@@ -60,14 +60,9 @@ class PackageCommand(BaseCommand):
             **full_options(state, options)
         )
 
+        filename = self.distribution_path(app, packaging_format=packaging_format).relative_to(self.base_path)
         self.logger.info()
-        self.logger.info("[{app.app_name}] Packaged {filename}".format(
-            app=app,
-            filename=self.distribution_path(
-                app,
-                packaging_format=packaging_format,
-            ).relative_to(self.base_path),
-        ))
+        self.logger.info(f"[{app.app_name}] Packaged {filename}")
         return state
 
     def add_options(self, parser):

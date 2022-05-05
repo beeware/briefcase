@@ -23,12 +23,11 @@ class macOSAppMixin(macOSMixin):
     output_format = 'app'
 
     def binary_path(self, app):
-        return self.bundle_path(app) / '{app.formal_name}.app'.format(app=app)
+        return self.bundle_path(app) / f'{app.formal_name}.app'
 
     def distribution_path(self, app, packaging_format):
         if packaging_format == 'dmg':
-            return self.platform_path / '{app.formal_name}-{app.version}.dmg'.format(
-                app=app)
+            return self.platform_path / f'{app.formal_name}-{app.version}.dmg'
         else:
             return self.binary_path(app)
 

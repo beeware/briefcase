@@ -35,35 +35,25 @@ class UpdateCommand(CreateCommand):
         bundle_path = self.bundle_path(app)
         if not bundle_path.exists():
             self.logger.error()
-            self.logger.error("[{app.app_name}] Application does not exist; call create first!".format(
-                app=app
-            ))
+            self.logger.error(f"[{app.app_name}] Application does not exist; call create first!")
             return
 
         if update_dependencies:
             self.logger.info()
-            self.logger.info('[{app.app_name}] Updating dependencies...'.format(
-                app=app
-            ))
+            self.logger.info(f'[{app.app_name}] Updating dependencies...')
             self.install_app_dependencies(app=app)
 
         self.logger.info()
-        self.logger.info('{app.app_name}] Updating application code...'.format(
-            app=app
-        ))
+        self.logger.info(f'{app.app_name}] Updating application code...')
         self.install_app_code(app=app)
 
         if update_resources:
             self.logger.info()
-            self.logger.info('[{app.app_name}] Updating extra application resources...'.format(
-                app=app
-            ))
+            self.logger.info(f'[{app.app_name}] Updating extra application resources...')
             self.install_app_resources(app=app)
 
         self.logger.info()
-        self.logger.info('[{app.app_name}] Application updated.'.format(
-            app=app
-        ))
+        self.logger.info(f'[{app.app_name}] Application updated.')
 
     def __call__(
         self,

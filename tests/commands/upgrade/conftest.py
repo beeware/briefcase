@@ -21,16 +21,13 @@ class DummyUpgradeCommand(UpgradeCommand):
         self.sdks = sdks
 
     def bundle_path(self, app):
-        return self.platform_path / '{app.app_name}.dummy'.format(app=app)
+        return self.platform_path / f'{app.app_name}.dummy'
 
     def binary_path(self, app):
-        return self.platform_path / '{app.app_name}.dummy.bin'.format(app=app)
+        return self.platform_path / f'{app.app_name}.dummy.bin'
 
     def distribution_path(self, app, packaging_format):
-        return self.platform_path / '{app.app_name}.dummy.{packaging_format}'.format(
-            app=app,
-            packaging_format=packaging_format,
-        )
+        return self.platform_path / f'{app.app_name}.dummy.{packaging_format}'
 
 
 @pytest.fixture

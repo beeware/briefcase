@@ -47,7 +47,7 @@ def test_simple_call_with_arg(mock_docker, tmp_path, capsys):
 
 
 def test_simple_call_with_path_arg(mock_docker, tmp_path, capsys):
-    "Path-based arguments are converted to strings andpassed in as-is"
+    "Path-based arguments are converted to strings and passed in as-is"
 
     mock_docker.run(["hello", tmp_path / "location"], cwd=tmp_path / "cwd")
 
@@ -64,6 +64,30 @@ def test_simple_call_with_path_arg(mock_docker, tmp_path, capsys):
         cwd=os.fsdecode(tmp_path / "cwd"),
         text=True,
     )
+    assert capsys.readouterr().out == ""
+
+
+def test_simple_call_with_sys_executable_arg(mock_docker, tmp_path, capsys, monkeypatch):
+    "Filepath arg that are same as sys.executable are replaced with unqualified python[ver]"
+
+    test_python_path = "/path/to/python"
+    monkeypatch.setattr("sys.executable", "/path/to/python")
+
+    mock_docker.run(["hello", test_python_path])
+
+    mock_docker._subprocess._subprocess.run.assert_called_with(
+        [
+            "docker",
+            "run",  "--tty",
+            "--volume", f"{tmp_path / 'platform'}:/app:z",
+            "--volume", f"{tmp_path / '.briefcase'}:/home/brutus/.briefcase:z",
+            "briefcase/com.example.myapp:py3.X",
+            "hello",
+            "python3.X",
+        ],
+        text=True
+    )
+
     assert capsys.readouterr().out == ""
 
 

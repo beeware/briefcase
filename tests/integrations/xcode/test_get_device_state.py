@@ -20,7 +20,7 @@ def command():
 
 def simctl_result(name):
     """Load a simctl result file from the sample directory, and return the content"""
-    filename = Path(__file__).parent / 'simctl' / '{name}.json'.format(name=name)
+    filename = Path(__file__).parent / 'simctl' / f'{name}.json'
     with filename.open() as f:
         return f.read()
 
@@ -40,7 +40,7 @@ def test_simctl_output_parse_error(command):
     "If parsing simctl JSON output fails, an exception is raised"
     command.subprocess.check_output.return_value = "this is not JSON"
 
-    with pytest.raises(BriefcaseCommandError, match="Unable to parse xcrun simctl output"):
+    with pytest.raises(BriefcaseCommandError, match="Unable to parse output of xcrun simctl"):
         get_device_state(command, '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D')
 
 
