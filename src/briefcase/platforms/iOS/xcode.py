@@ -13,7 +13,6 @@ from briefcase.commands import (
 from briefcase.config import BaseConfig
 from briefcase.console import InputDisabled, select_option
 from briefcase.exceptions import BriefcaseCommandError, InvalidDeviceError
-from briefcase.integrations.subprocess import PopenStreamingError
 from briefcase.integrations.xcode import (
     DeviceState,
     get_device_state,
@@ -366,13 +365,10 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
             raise BriefcaseCommandError(f"Unable to launch app {app.app_name}.")
 
         # Start streaming logs for the app.
-        try:
-            self.logger.info()
-            self.logger.info(f"[{app.app_name}] Following simulator log output (type CTRL-C to stop log)...")
-            self.logger.info("=" * 75)
-            self.subprocess.stream_output(simulator_log_popen)
-        except PopenStreamingError as e:
-            raise BriefcaseCommandError(f"Encountered error during log stream for app {app.app_name}: {e}")
+        self.logger.info()
+        self.logger.info(f"[{app.app_name}] Following simulator log output (type CTRL-C to stop log)...")
+        self.logger.info("=" * 75)
+        self.subprocess.stream_output(simulator_log_popen)
 
         # Preserve the device selection as state.
         return {

@@ -5,7 +5,6 @@ from unittest import mock
 import pytest
 
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.integrations.subprocess import PopenStreamingError
 from briefcase.platforms.macOS.app import macOSAppRunCommand
 
 
@@ -55,39 +54,3 @@ def test_run_app_failed(first_app_config, tmp_path):
         ['open', '-n', os.fsdecode(command.binary_path(first_app_config))],
         check=True
     )
-
-
-def test_run_app_log_stream_failed(first_app_config, tmp_path):
-    "If the log can't be streamed, the app still starts"
-    command = macOSAppRunCommand(base_path=tmp_path)
-    command.subprocess = mock.MagicMock()
-    # command.subprocess.run.side_effect = 0
-    command.subprocess.stream_output.side_effect = PopenStreamingError("error reason")
-
-    # The run command raises an error because the log stream couldn't start
-    with pytest.raises(
-            BriefcaseCommandError,
-            match="Encountered error during log stream for app first-app: error reason"
-    ):
-        command.run_app(first_app_config)
-
-    # Calls were made to start the app and to start a log stream.
-    bin_path = command.binary_path(first_app_config)
-    sender = bin_path / "Contents" / "MacOS" / "First App"
-    command.subprocess.Popen.assert_called_with(
-        [
-            'log', 'stream',
-            '--style', 'compact',
-            '--predicate',
-            f'senderImagePath=="{sender}"'
-            f' OR (processImagePath=="{sender}"'
-            ' AND senderImagePath=="/usr/lib/libffi.dylib")',
-        ],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        bufsize=1,
-    )
-    command.subprocess.run.assert_called_with(
-        ['open', '-n', os.fsdecode(bin_path)],
-        check=True
-    ),

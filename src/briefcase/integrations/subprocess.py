@@ -9,10 +9,6 @@ class ParseError(Exception):
     """Raised by parser functions to signal parsing was unsuccessful"""
 
 
-class PopenStreamingError(Exception):
-    """Raised for errors from streaming Popen process output"""
-
-
 def ensure_str(text):
     """Returns input text as a string."""
     return text.decode() if isinstance(text, bytes) else str(text)
@@ -250,12 +246,15 @@ class Subprocess:
         try:
             while True:
                 # readline should always return at least a newline...if it returns an
-                # empty string, that should mean the underlying process is exiting/gone
+                # empty string, that should mean the underlying process is exiting/gone.
                 output_line = ensure_str(popen_process.stdout.readline())
+                # a return code will be available once the process returns one to the OS.
+                # by definition, that should mean the process has exited.
                 return_code = popen_process.poll()
+                # only return once all output is flushed and the process has exited.
                 if output_line == "" and return_code is not None:
                     self._log_return_code(return_code)
-                    break
+                    return
                 if output_line != "":
                     self.command.logger.info(output_line)
 
@@ -264,10 +263,10 @@ class Subprocess:
             try:
                 popen_process.wait(timeout=3)
             except subprocess.TimeoutExpired:
+                self.command.logger.warning(
+                    "Process will be forcibly killed since it did not exit gracefully when signaled."
+                )
                 popen_process.kill()
-
-        except Exception as e:
-            raise PopenStreamingError(f"{e!r}")
 
     def _log_command(self, args):
         """
