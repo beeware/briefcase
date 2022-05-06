@@ -10,7 +10,9 @@ from briefcase.console import Log
 def popen_process():
     process = mock.MagicMock()
 
-    process.stdout.readline.side_effect = ["output line 1\n", "\n", "output line 3\n", ""]
+    # there are extra empty strings at the end to simulate readline
+    # continuously returning "" once it reaches EOF
+    process.stdout.readline.side_effect = ["output line 1\n", "\n", "output line 3\n", "", "", "", "", "", ""]
     process.poll.side_effect = [None, None, None, -3]
 
     return process

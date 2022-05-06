@@ -245,18 +245,19 @@ class Subprocess:
         """
         try:
             while True:
-                # readline should always return at least a newline...if it returns an
-                # empty string, that should mean the underlying process is exiting/gone.
+                # readline should always return at least a newline (ie \n)
                 output_line = ensure_str(popen_process.stdout.readline())
-                # a return code will be available once the process returns one to the OS.
-                # by definition, that should mean the process has exited.
-                return_code = popen_process.poll()
-                # only return once all output is flushed and the process has exited.
-                if output_line == "" and return_code is not None:
-                    self._log_return_code(return_code)
-                    return
-                if output_line != "":
+                if output_line:
                     self.command.logger.info(output_line)
+                # UNLESS the underlying process is exiting/gone; then "" is returned
+                elif output_line == "":
+                    # a return code will be available once the process returns one to the OS.
+                    # by definition, that should mean the process has exited.
+                    return_code = popen_process.poll()
+                    # only return once all output has been read and the process has exited.
+                    if return_code is not None:
+                        self._log_return_code(return_code)
+                        return
 
         except KeyboardInterrupt:
             popen_process.terminate()
