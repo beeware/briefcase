@@ -80,7 +80,7 @@ class CustomGlobalConfig(BaseConfig):
         self.foo = foo
 
     def __repr__(self):
-        return '<Custom GlobalConfig {foo}>'.format(foo=self.foo)
+        return f'<Custom GlobalConfig {self.foo}>'
 
 
 class CustomAppConfig(AppConfig):
@@ -96,10 +96,7 @@ class CustomAppConfig(AppConfig):
         self.bar = bar
 
     def __repr__(self):
-        return '<Custom AppConfig {foo}, {bar}>'.format(
-            foo=self.foo,
-            bar=self.bar
-        )
+        return f'<Custom AppConfig {self.foo}, {self.bar}>'
 
 
 class OtherDummyCommand(BaseCommand):

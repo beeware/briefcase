@@ -32,9 +32,7 @@ def test_docker_image_tag(first_app_config, tmp_path):
 
     image_tag = command.docker_image_tag(first_app_config)
 
-    assert image_tag == 'briefcase/com.example.first-app:py3.{minor}'.format(
-        minor=sys.version_info.minor
-    )
+    assert image_tag == f'briefcase/com.example.first-app:py3.{sys.version_info.minor}'
 
 
 def test_docker_image_tag_uppercase_name(uppercase_app_config, tmp_path):
@@ -42,9 +40,7 @@ def test_docker_image_tag_uppercase_name(uppercase_app_config, tmp_path):
 
     image_tag = command.docker_image_tag(uppercase_app_config)
 
-    assert image_tag == 'briefcase/com.example.first-app:py3.{minor}'.format(
-        minor=sys.version_info.minor
-    )
+    assert image_tag == f'briefcase/com.example.first-app:py3.{sys.version_info.minor}'
 
 
 def test_dockerize(first_app_config, tmp_path):
@@ -98,7 +94,6 @@ def test_verify_non_linux_no_docker(tmp_path):
     command = LinuxAppImageCreateCommand(base_path=tmp_path)
     command.host_os = "WeirdOS"
     command.use_docker = False
-    command.verbosity = 0
 
     # Verify the tools
     with pytest.raises(BriefcaseCommandError):
@@ -110,7 +105,6 @@ def test_verify_linux_docker(tmp_path):
     command = LinuxAppImageCreateCommand(base_path=tmp_path)
     command.host_os = "Linux"
     command.use_docker = True
-    command.verbosity = 0
     # Mock the existence of Docker.
     command.subprocess = MagicMock()
     command.subprocess.check_output.return_value = "Docker version 19.03.8, build afacb8b\n"
@@ -127,7 +121,6 @@ def test_verify_non_linux_docker(tmp_path):
     command = LinuxAppImageCreateCommand(base_path=tmp_path)
     command.host_os = "WierdOS"
     command.use_docker = True
-    command.verbosity = 0
     # Mock the existence of Docker.
     command.subprocess = MagicMock()
     command.subprocess.check_output.return_value = "Docker version 19.03.8, build afacb8b\n"
@@ -144,7 +137,6 @@ def test_verify_windows_docker(tmp_path):
     command = LinuxAppImageCreateCommand(base_path=tmp_path)
     command.host_os = "Windows"
     command.use_docker = True
-    command.verbosity = 0
 
     # Verify the tools
     with pytest.raises(BriefcaseCommandError):

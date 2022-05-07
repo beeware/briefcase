@@ -3,6 +3,7 @@ from unittest import mock
 
 import pytest
 
+from briefcase.console import Log
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.docker import (
     Docker,
@@ -14,6 +15,7 @@ from briefcase.integrations.docker import (
 @pytest.fixture
 def test_command(tmp_path):
     command = mock.MagicMock()
+    command.logger = Log()
 
     return command
 
@@ -35,10 +37,10 @@ def test_docker_exists(test_command, capsys):
     ) = test_command.subprocess.check_output.call_args_list
 
     assert docker_version_called_with[0] == (['docker', '--version'],)
-    assert docker_version_called_with[1] == {'universal_newlines': True, 'stderr': subprocess.STDOUT}
+    assert docker_version_called_with[1] == {'stderr': subprocess.STDOUT}
 
     assert docker_info_called_with[0] == (['docker', 'info'],)
-    assert docker_info_called_with[1] == {'universal_newlines': True, 'stderr': subprocess.STDOUT}
+    assert docker_info_called_with[1] == {'stderr': subprocess.STDOUT}
 
     # No console output
     output = capsys.readouterr()
@@ -58,7 +60,6 @@ def test_docker_doesnt_exist(test_command):
     # But docker was invoked
     test_command.subprocess.check_output.assert_called_with(
         ['docker', '--version'],
-        universal_newlines=True,
         stderr=subprocess.STDOUT,
     )
 
@@ -85,10 +86,10 @@ def test_docker_failure(test_command, capsys):
     ) = test_command.subprocess.check_output.call_args_list
 
     assert docker_version_called_with[0] == (['docker', '--version'],)
-    assert docker_version_called_with[1] == {'universal_newlines': True, 'stderr': subprocess.STDOUT}
+    assert docker_version_called_with[1] == {'stderr': subprocess.STDOUT}
 
     assert docker_info_called_with[0] == (['docker', 'info'],)
-    assert docker_info_called_with[1] == {'universal_newlines': True, 'stderr': subprocess.STDOUT}
+    assert docker_info_called_with[1] == {'stderr': subprocess.STDOUT}
 
     # console output
     output = capsys.readouterr()
@@ -123,10 +124,10 @@ def test_docker_unknown_version(test_command, capsys):
     docker_version_called_with, docker_info_called_with = test_command.subprocess.check_output.call_args_list
 
     assert docker_version_called_with[0] == (['docker', '--version'],)
-    assert docker_version_called_with[1] == {'universal_newlines': True, 'stderr': subprocess.STDOUT}
+    assert docker_version_called_with[1] == {'stderr': subprocess.STDOUT}
 
     assert docker_info_called_with[0] == (['docker', 'info'],)
-    assert docker_info_called_with[1] == {'universal_newlines': True, 'stderr': subprocess.STDOUT}
+    assert docker_info_called_with[1] == {'stderr': subprocess.STDOUT}
 
     # console output
     output = capsys.readouterr()

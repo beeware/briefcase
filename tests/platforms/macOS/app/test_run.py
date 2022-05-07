@@ -17,6 +17,7 @@ def test_run_app(first_app_config, tmp_path):
 
     # Calls were made to start the app and to start a log stream.
     bin_path = command.binary_path(first_app_config)
+    sender = bin_path / "Contents" / "MacOS" / "First App"
     command.subprocess.run.assert_has_calls([
         mock.call(
             ['open', '-n', os.fsdecode(bin_path)],
@@ -27,11 +28,9 @@ def test_run_app(first_app_config, tmp_path):
                 'log', 'stream',
                 '--style', 'compact',
                 '--predicate',
-                'senderImagePath=="{sender}"'
-                ' OR (processImagePath=="{sender}"'
-                ' AND senderImagePath=="/usr/lib/libffi.dylib")'.format(
-                    sender=bin_path / "Contents" / "MacOS" / "First App"
-                )
+                f'senderImagePath=="{sender}"'
+                f' OR (processImagePath=="{sender}"'
+                ' AND senderImagePath=="/usr/lib/libffi.dylib")',
             ],
             check=True,
         )
@@ -75,6 +74,7 @@ def test_run_app_log_stream_failed(first_app_config, tmp_path):
 
     # Calls were made to start the app and to start a log stream.
     bin_path = command.binary_path(first_app_config)
+    sender = bin_path / "Contents" / "MacOS" / "First App"
     command.subprocess.run.assert_has_calls([
         mock.call(
             ['open', '-n', os.fsdecode(bin_path)],
@@ -85,11 +85,9 @@ def test_run_app_log_stream_failed(first_app_config, tmp_path):
                 'log', 'stream',
                 '--style', 'compact',
                 '--predicate',
-                'senderImagePath=="{sender}"'
-                ' OR (processImagePath=="{sender}"'
-                ' AND senderImagePath=="/usr/lib/libffi.dylib")'.format(
-                    sender=bin_path / "Contents" / "MacOS" / "First App"
-                )
+                f'senderImagePath=="{sender}"'
+                f' OR (processImagePath=="{sender}"'
+                ' AND senderImagePath=="/usr/lib/libffi.dylib")',
             ],
             check=True,
         )

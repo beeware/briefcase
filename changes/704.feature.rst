@@ -1,0 +1,1 @@
+Verbose logging via -v and -vv now includes the return code, output, and environment variables for shell commands

@@ -47,16 +47,13 @@ class DummyCreateCommand(CreateCommand):
         ]
 
     def bundle_path(self, app):
-        return self.platform_path / '{app.app_name}.bundle'.format(app=app)
+        return self.platform_path / f'{app.app_name}.bundle'
 
     def binary_path(self, app):
-        return self.platform_path / '{app.app_name}.binary'.format(app=app)
+        return self.platform_path / f'{app.app_name}.binary'
 
     def distribution_path(self, app, packaging_format):
-        return self.platform_path / '{app.app_name}.dummy.{packaging_format}'.format(
-            app=app,
-            packaging_format=packaging_format,
-        )
+        return self.platform_path / f'{app.app_name}.dummy.{packaging_format}'
 
     # Hard code the python version to make testing easier.
     @property
@@ -149,6 +146,9 @@ def myapp():
         version='1.2.3',
         description='This is a simple app',
         sources=['src/my_app'],
+        url='https://example.com',
+        author='First Last',
+        author_email='first@example.com',
     )
 
 
@@ -157,7 +157,7 @@ def bundle_path(myapp, tmp_path):
     # Return the bundle path for the app; however, as a side effect,
     # ensure that the app, app_packages and support target directories
     # exist, and the briefcase index file has been created.
-    bundle_path = tmp_path / 'tester' / '{myapp.app_name}.bundle'.format(myapp=myapp)
+    bundle_path = tmp_path / 'tester' / f'{myapp.app_name}.bundle'
     (bundle_path / 'path' / 'to' / 'app').mkdir(parents=True, exist_ok=True)
     (bundle_path / 'path' / 'to' / 'app_packages').mkdir(parents=True, exist_ok=True)
     (bundle_path / 'path' / 'to' / 'support').mkdir(parents=True, exist_ok=True)

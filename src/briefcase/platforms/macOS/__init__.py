@@ -31,12 +31,9 @@ class macOSRunMixin:
         Start the application.
 
         :param app: The config object for the app
-        :param base_path: The path to the project directory.
         """
-        print()
-        print('[{app.app_name}] Starting app...'.format(
-            app=app
-        ))
+        self.logger.info()
+        self.logger.info(f'[{app.app_name}] Starting app...')
         try:
             self.subprocess.run(
                 [
@@ -47,16 +44,13 @@ class macOSRunMixin:
                 check=True,
             )
         except subprocess.CalledProcessError:
-            print()
-            raise BriefcaseCommandError(
-                "Unable to start app {app.app_name}.".format(app=app)
-            )
+            raise BriefcaseCommandError(f"Unable to start app {app.app_name}.")
 
         # Start streaming logs for the app.
         try:
-            print()
-            print("[{app.app_name}] Following system log output (type CTRL-C to stop log)...".format(app=app))
-            print("=" * 75)
+            self.logger.info()
+            self.logger.info(f"[{app.app_name}] Following system log output (type CTRL-C to stop log)...")
+            self.logger.info("=" * 75)
             # Streaming the system log is... a mess. The system log contains a
             # *lot* of noise from other processes; even if you filter by
             # process, there's a lot of macOS-generated noise. It's very
@@ -68,25 +62,21 @@ class macOSRunMixin:
             #  2. a log sender of libffi, and a process that matches the app binary.
             # Case (1) works for pre-Python 3.9 static linked binaries.
             # Case (2) works for Python 3.9+ dynamic linked binaries.
+            sender = os.fsdecode(self.binary_path(app) / "Contents" / "MacOS" / app.formal_name)
             self.subprocess.run(
                 [
                     "log",
                     "stream",
                     "--style", "compact",
                     "--predicate",
-                    'senderImagePath=="{sender}"'
-                    ' OR (processImagePath=="{sender}"'
-                    ' AND senderImagePath=="/usr/lib/libffi.dylib")'.format(
-                        sender=os.fsdecode(self.binary_path(app) / "Contents" / "MacOS" / app.formal_name)
-                    )
+                    f'senderImagePath=="{sender}"'
+                    f' OR (processImagePath=="{sender}"'
+                    ' AND senderImagePath=="/usr/lib/libffi.dylib")',
                 ],
                 check=True,
             )
         except subprocess.CalledProcessError:
-            print()
-            raise BriefcaseCommandError(
-                "Unable to start log stream for app {app.app_name}.".format(app=app)
-            )
+            raise BriefcaseCommandError(f"Unable to start log stream for app {app.app_name}.")
 
 
 def is_mach_o_binary(path):
@@ -153,11 +143,12 @@ class macOSSigningMixin:
         elif len(identities) == 1:
             identity = list(identities.items())[0][1]
         else:
-            print()
-            print("Select code signing identity to use:")
-            print()
+            self.input.prompt()
+            self.input.prompt("Select code signing identity to use:")
+            self.input.prompt()
             selection = select_option(identities, input=self.input)
             identity = identities[selection]
+            self.logger.info(f"selected {identity}")
 
         return identity
 
@@ -185,16 +176,16 @@ class macOSSigningMixin:
             process_command.append(options)
 
         try:
-            print(f"Signing {Path(path).relative_to(self.base_path)}")
+            self.logger.info(f"Signing {Path(path).relative_to(self.base_path)}")
             self.subprocess.run(
                 process_command,
                 stderr=subprocess.PIPE,
                 check=True,
             )
         except subprocess.CalledProcessError as e:
-            errors = e.stderr.decode('utf-8', errors='replace')
+            errors = e.stderr
             if 'code object is not signed at all' in errors:
-                print("... file requires a deep sign; retrying")
+                self.logger.info("... file requires a deep sign; retrying")
                 try:
                     self.subprocess.run(
                         process_command + ['--deep'],
@@ -216,7 +207,7 @@ class macOSSigningMixin:
                 ]
             ):
                 # We should not be signing this in the first place
-                print("... no signature required")
+                self.logger.info("... no signature required")
                 return
             else:
                 raise BriefcaseCommandError(f"Unable to code sign {path}.")
@@ -267,9 +258,9 @@ class macOSPackageMixin(macOSSigningMixin):
 
     def verify_tools(self):
         if self.host_os != 'Darwin':
-            raise BriefcaseCommandError("""
-        Code signing and / or building a DMG requires running on macOS.
-        """)
+            raise BriefcaseCommandError(
+                "Code signing and / or building a DMG requires running on macOS."
+            )
 
         # Require the XCode command line tools.
         verify_command_line_tools_install(self)
@@ -310,28 +301,25 @@ class macOSPackageMixin(macOSSigningMixin):
             if adhoc_sign:
                 identity = "-"
 
-                print()
-                print("[{app.app_name}] Signing app with adhoc identity...".format(app=app))
+                self.logger.info()
+                self.logger.info(f"[{app.app_name}] Signing app with adhoc identity...")
             else:
                 identity = self.select_identity(identity=identity)
 
-                print()
-                print("[{app.app_name}] Signing app with identity {identity}...".format(
-                    app=app,
-                    identity=identity
-                ))
+                self.logger.info()
+                self.logger.info(f"[{app.app_name}] Signing app with identity {identity}...")
 
             self.sign_app(app=app, identity=identity)
 
         if packaging_format == 'dmg':
-            print()
-            print('[{app.app_name}] Building DMG...'.format(app=app))
+            self.logger.info()
+            self.logger.info(f'[{app.app_name}] Building DMG...')
 
             dmg_settings = {
                 'files': [os.fsdecode(self.binary_path(app))],
                 'symlinks': {'Applications': '/Applications'},
                 'icon_locations': {
-                    '{app.formal_name}.app'.format(app=app): (75, 75),
+                    f'{app.formal_name}.app': (75, 75),
                     'Applications': (225, 75),
                 },
                 'window_rect': ((600, 600), (350, 150)),
@@ -342,16 +330,14 @@ class macOSPackageMixin(macOSSigningMixin):
             try:
                 icon_filename = self.base_path / f'{app.installer_icon}.icns'
                 if not icon_filename.exists():
-                    print(f"Can't find {app.installer_icon}.icns to use as DMG installer icon")
+                    self.logger.warning(f"Can't find {app.installer_icon}.icns to use as DMG installer icon")
                     raise AttributeError()
             except AttributeError:
                 # No installer icon specified. Fall back to the app icon
                 if app.icon:
-                    icon_filename = self.base_path / '{icon}.icns'.format(
-                        icon=app.icon
-                    )
+                    icon_filename = self.base_path / f'{app.icon}.icns'
                     if not icon_filename.exists():
-                        print(f"Can't find {app.icon}.icns to use as fallback DMG installer icon")
+                        self.logger.warning(f"Can't find {app.icon}.icns to use as fallback DMG installer icon")
                         icon_filename = None
                 else:
                     # No app icon specified either
@@ -361,15 +347,11 @@ class macOSPackageMixin(macOSSigningMixin):
                 dmg_settings['icon'] = os.fsdecode(icon_filename)
 
             try:
-                image_filename = self.base_path / '{image}.png'.format(
-                    image=app.installer_background
-                )
+                image_filename = self.base_path / f'{app.installer_background}.png'
                 if image_filename.exists():
                     dmg_settings['background'] = os.fsdecode(image_filename)
                 else:
-                    print("Can't find {filename}.png to use as DMG background".format(
-                        filename=app.installer_background
-                    ))
+                    self.logger.warning(f"Can't find {app.installer_background}.png to use as DMG background")
             except AttributeError:
                 # No installer background image provided
                 pass
@@ -377,7 +359,7 @@ class macOSPackageMixin(macOSSigningMixin):
             dmg_path = os.fsdecode(self.distribution_path(app, packaging_format=packaging_format))
             self.dmgbuild.build_dmg(
                 filename=dmg_path,
-                volume_name='{app.formal_name} {app.version}'.format(app=app),
+                volume_name=f'{app.formal_name} {app.version}',
                 settings=dmg_settings
             )
 

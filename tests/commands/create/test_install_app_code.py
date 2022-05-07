@@ -17,27 +17,32 @@ def assert_dist_info(app_path):
         assert f.read() == 'briefcase\n'
 
     with (dist_info_path / 'METADATA').open() as f:
-        assert f.read() == """Metadata-Version: 2.1
-Briefcase-Version: {version}
+        assert f.read() == f"""Metadata-Version: 2.1
+Briefcase-Version: {briefcase.__version__}
 Name: my-app
 Formal-Name: My App
 App-ID: com.example.my-app
 Version: 1.2.3
+Home-page: https://example.com
+Author: First Last
+Author-email: first@example.com
 Summary: This is a simple app
-""".format(version=briefcase.__version__)
+"""
 
 
 def test_no_code(create_command, myapp, app_path):
     "If an app has no code (?!), install_app_code is mostly a no-op; but distinfo is created"
     # Mock shutil so we can track usage.
     create_command.shutil = mock.MagicMock()
+    create_command.os = mock.MagicMock()
 
     myapp.sources = None
 
     create_command.install_app_code(myapp)
 
     # No request was made to install dependencies
-    create_command.shutil.rmtree.assert_not_called()
+    create_command.shutil.rmtree.assert_called_once_with(app_path)
+    create_command.os.mkdir.assert_called_once_with(app_path)
     create_command.shutil.copytree.assert_not_called()
     create_command.shutil.copy.assert_not_called()
 
@@ -49,13 +54,15 @@ def test_empty_code(create_command, myapp, app_path):
     "If an app has an empty sources list (?!), install_app_code is mostly a no-op; but distinfo is created"
     # Mock shutil so we can track usage.
     create_command.shutil = mock.MagicMock()
+    create_command.os = mock.MagicMock()
 
     myapp.sources = []
 
     create_command.install_app_code(myapp)
 
     # No request was made to install dependencies
-    create_command.shutil.rmtree.assert_not_called()
+    create_command.shutil.rmtree.assert_called_once_with(app_path)
+    create_command.os.mkdir.assert_called_once_with(app_path)
     create_command.shutil.copytree.assert_not_called()
     create_command.shutil.copy.assert_not_called()
 
@@ -148,7 +155,7 @@ def test_source_file(create_command, myapp, tmp_path, app_path):
 
 
 def test_replace_sources(create_command, myapp, tmp_path, app_path):
-    "If an app defines directories of sources, the whole directory is copied."
+    "Stale sources and dist-info are removed on installation."
     # Create the mock sources
     # src /
     #   first /
@@ -173,6 +180,7 @@ def test_replace_sources(create_command, myapp, tmp_path, app_path):
     # Also create some existing sources:
     # path / to / app /
     #   demo.py
+    #   stale.py
     #   second /
     #     shallow.py
     #     stale.py
@@ -180,15 +188,22 @@ def test_replace_sources(create_command, myapp, tmp_path, app_path):
     #       deeper.py
     #     broken /
     #       other.py
+    #   my_app-1.2.2.dist-info /
 
     old_first_src = app_path / 'demo.py'
     with (old_first_src).open('w') as f:
         f.write("print('old hello first')\n")
 
+    old_stale_src = app_path / 'stale.py'
+    with (old_stale_src).open('w') as f:
+        f.write("print('stale hello first')\n")
+
+    old_dist_info_dir = app_path / 'my_app-1.2.2.dist-info'
     old_second_shallow_src = app_path / 'src' / 'second' / 'shallow.py'
     old_second_stale_src = app_path / 'src' / 'second' / 'stale.py'
     old_second_deep_src = app_path / 'src' / 'second' / 'submodule' / 'deeper.py'
     old_second_broken_src = app_path / 'src' / 'second' / 'broken' / 'other.py'
+    old_dist_info_dir.mkdir()
     old_second_deep_src.parent.mkdir(parents=True)
     old_second_broken_src.parent.mkdir(parents=True)
     with (old_second_shallow_src).open('w') as f:
@@ -221,8 +236,10 @@ def test_replace_sources(create_command, myapp, tmp_path, app_path):
         assert f.read() == "print('hello deep second')\n"
 
     # The stale/broken modules have been removed.
+    assert not (app_path / 'stale.py').exists()
     assert not (app_path / 'second' / 'stale.py').exists()
     assert not (app_path / 'second' / 'broken').exists()
 
-    # Metadata has been created
+    # Metadata has been updated.
+    assert not (app_path / 'my_app-1.2.2.dist-info').exists()
     assert_dist_info(app_path)

@@ -23,12 +23,11 @@ class macOSAppMixin(macOSMixin):
     output_format = 'app'
 
     def binary_path(self, app):
-        return self.bundle_path(app) / '{app.formal_name}.app'.format(app=app)
+        return self.bundle_path(app) / f'{app.formal_name}.app'
 
     def distribution_path(self, app, packaging_format):
         if packaging_format == 'dmg':
-            return self.platform_path / '{app.formal_name}-{app.version}.dmg'.format(
-                app=app)
+            return self.platform_path / f'{app.formal_name}-{app.version}.dmg'
         else:
             return self.binary_path(app)
 
@@ -80,8 +79,8 @@ class macOSAppBuildCommand(macOSAppMixin, macOSSigningMixin, BuildCommand):
         # signed to be able to execute on M1 hardware - even if it's only an
         # adhoc signing identity. Apply an adhoc signing identity to the
         # app bundle.
-        print()
-        print(f'[{app.app_name}] Adhoc signing app...')
+        self.logger.info()
+        self.logger.info(f'[{app.app_name}] Adhoc signing app...')
         self.sign_app(app=app, identity="-")
 
 

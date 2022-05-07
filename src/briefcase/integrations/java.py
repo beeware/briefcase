@@ -41,12 +41,8 @@ class JDK:
 
         return (
             'https://github.com/AdoptOpenJDK/openjdk8-binaries/'
-            'releases/download/jdk{self.release}-{self.build}/'
-            'OpenJDK8U-jdk_x64_{platform}_hotspot_{self.release}{self.build}.{extension}'
-        ).format(
-            self=self,
-            platform=platform,
-            extension=extension,
+            f'releases/download/jdk{self.release}-{self.build}/'
+            f'OpenJDK8U-jdk_x64_{platform}_hotspot_{self.release}{self.build}.{extension}'
         )
 
     @classmethod
@@ -79,7 +75,6 @@ class JDK:
                 # raises an error.
                 java_home = command.subprocess.check_output(
                     ['/usr/libexec/java_home'],
-                    universal_newlines=True,
                     stderr=subprocess.STDOUT,
                 ).strip('\n')
             except subprocess.CalledProcessError:
@@ -95,7 +90,6 @@ class JDK:
                         os.fsdecode(Path(java_home) / 'bin' / 'javac'),
                         '-version',
                     ],
-                    universal_newlines=True,
                     stderr=subprocess.STDOUT,
                 )
                 # This should be a string of the form "javac 1.8.0_144\n"
@@ -106,8 +100,7 @@ class JDK:
                     return JDK(command, java_home=Path(java_home))
                 else:
                     # It's not a Java 8 JDK.
-                    java_home = None
-                    install_message = """
+                    install_message = f"""
 *************************************************************************
 ** WARNING: JAVA_HOME does not point to a Java 8 JDK                   **
 *************************************************************************
@@ -123,11 +116,10 @@ class JDK:
 
 *************************************************************************
 
-""".format(java_home=java_home, version_str=version_str)
+"""
 
             except FileNotFoundError:
-                java_home = None
-                install_message = """
+                install_message = f"""
 *************************************************************************
 ** WARNING: JAVA_HOME does not point to a JDK                          **
 *************************************************************************
@@ -142,14 +134,13 @@ class JDK:
 
 *************************************************************************
 
-""".format(java_home=java_home)
+"""
 
             except subprocess.CalledProcessError:
-                java_home = None
-                install_message = """
-    *************************************************************************
-    ** WARNING: Unable to invoke the Java compiler                         **
-    *************************************************************************
+                install_message = f"""
+*************************************************************************
+** WARNING: Unable to invoke the Java compiler                         **
+*************************************************************************
 
     Briefcase received an unexpected error when trying to invoke javac,
     the Java compiler, at the location indicated by the JAVA_HOME
@@ -168,16 +159,15 @@ class JDK:
 
     from the command prompt.
 
-    *************************************************************************
+*************************************************************************
 
-    """.format(java_home=java_home)
+"""
 
             except IndexError:
-                java_home = None
-                install_message = """
-    *************************************************************************
-    ** WARNING: Unable to determine the version of Java that is installed  **
-    *************************************************************************
+                install_message = f"""
+*************************************************************************
+** WARNING: Unable to determine the version of Java that is installed  **
+*************************************************************************
 
     Briefcase was unable to interpret the version information returned
     by the Java compiler at the location indicated by the JAVA_HOME
@@ -196,9 +186,9 @@ class JDK:
 
     from the command prompt.
 
-    *************************************************************************
+*************************************************************************
 
-    """.format(java_home=java_home)
+"""
 
         # If we've reached this point, any user-provided JAVA_HOME is broken;
         # use the Briefcase one.
@@ -219,7 +209,7 @@ class JDK:
                 # We only display the warning messages on the pass where we actually
                 # install the JDK.
                 if install_message:
-                    print(install_message)
+                    command.logger.warning(install_message)
 
                 jdk.install()
 
@@ -254,30 +244,26 @@ class JDK:
             raise NetworkFailure("download Java 8 JDK")
 
         try:
-            print("Installing AdoptOpenJDK...")
+            self.command.logger.info("Installing AdoptOpenJDK...")
             # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
             self.command.shutil.unpack_archive(
                 os.fsdecode(jdk_zip_path),
                 extract_dir=os.fsdecode(self.command.tools_path)
             )
         except (shutil.ReadError, EOFError):
-            raise BriefcaseCommandError(
-                """\
+            raise BriefcaseCommandError(f"""\
 Unable to unpack AdoptOpenJDK ZIP file. The download may have been interrupted
 or corrupted.
 
-Delete {jdk_zip_path} and run briefcase again.""".format(
-                    jdk_zip_path=jdk_zip_path
-                )
-            )
+Delete {jdk_zip_path} and run briefcase again.
+""")
+
         jdk_zip_path.unlink()  # Zip file no longer needed once unpacked.
 
         # The tarball will unpack into ~.briefcase/tools/jdk8u242-b08
         # (or whatever name matches the current release).
         # We turn this into ~.briefcase/tools/java so we have a consistent name.
-        java_unpack_path = self.command.tools_path / "jdk{self.release}-{self.build}".format(
-            self=self
-        )
+        java_unpack_path = self.command.tools_path / f"jdk{self.release}-{self.build}"
         java_unpack_path.rename(self.command.tools_path / "java")
 
     def upgrade(self):
@@ -286,14 +272,14 @@ Delete {jdk_zip_path} and run briefcase again.""".format(
         """
         if self.managed_install:
             if self.exists():
-                print("Removing old JDK install...")
+                self.command.logger.info("Removing old JDK install...")
                 if self.command.host_os == 'Darwin':
                     self.command.shutil.rmtree(self.java_home.parent.parent)
                 else:
                     self.command.shutil.rmtree(self.java_home)
 
                 self.install()
-                print("...done.")
+                self.command.logger.info("...done.")
             else:
                 raise MissingToolError('Java')
         else:

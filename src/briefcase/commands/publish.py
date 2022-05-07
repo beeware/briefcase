@@ -31,12 +31,9 @@ class PublishCommand(BaseCommand):
         Publish an application.
 
         :param app: The application to publish
-        :param str: The publication channel to use
+        :param channel: The publication channel to use
         """
-        print("TODO: Publish {app.app_name} to {channel}".format(
-            app=app,
-            channel=channel,
-        ))
+        self.logger.info(f"TODO: Publish {app.app_name} to {channel}")
 
     def __call__(self, channel=None, **options):
         # Confirm all required tools are available
@@ -47,10 +44,8 @@ class PublishCommand(BaseCommand):
             binary_file = self.binary_path(app)
             if not binary_file.exists():
                 raise BriefcaseCommandError(
-                    "Application {app_name} has not been built. "
-                    "Build (and test!) the app before publishing.".format(
-                        app_name=app_name
-                    )
+                    f"Application {app_name} has not been built. "
+                    "Build (and test!) the app before publishing."
                 )
 
         # Then publish them all to the selected channel.

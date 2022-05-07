@@ -11,6 +11,7 @@ def main():
         command(**options)
         result = 0
     except BriefcaseError as e:
+        print()
         print(e, file=sys.stdout if e.error_code == 0 else sys.stderr)
         result = e.error_code
     except KeyboardInterrupt:

@@ -85,7 +85,7 @@ def mock_codesign(results):
             raise subprocess.CalledProcessError(
                 returncode=1,
                 cmd=args,
-                stderr=(f'{args[1]}: {result}').encode('utf-8')
+                stderr=f'{args[1]}: {result}'
             )
 
     return _codesign

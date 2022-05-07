@@ -3,6 +3,7 @@ from unittest import mock
 
 import pytest
 
+from briefcase.console import Log
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.xcode import (
     ensure_command_line_tools_are_installed
@@ -12,7 +13,7 @@ from briefcase.integrations.xcode import (
 def test_not_installed():
     "If cmdline dev tools are not installed, raise an error."
     command = mock.MagicMock()
-
+    command.logger = Log()
     with pytest.raises(BriefcaseCommandError):
         ensure_command_line_tools_are_installed(command)
 
@@ -26,6 +27,7 @@ def test_not_installed():
 def test_installed(capsys):
     "If cmdline dev tools *are* installed, check passes without comment."
     command = mock.MagicMock()
+    command.logger = Log()
     command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
         cmd=['xcode-select', '--install'],
         returncode=1
@@ -48,6 +50,7 @@ def test_installed(capsys):
 def test_unsure_if_installed(capsys):
     "If xcode-select returns something odd, mention it but don't break."
     command = mock.MagicMock()
+    command.logger = Log()
     command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
         cmd=['xcode-select', '--install'],
         returncode=69

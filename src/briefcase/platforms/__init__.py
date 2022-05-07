@@ -15,8 +15,5 @@ def get_output_formats(platform):
     # actual entry point names preserve case.
     return {
         entry_point.name: entry_point.load()
-        for entry_point
-        in pkg_resources.iter_entry_points('briefcase.formats.{platform}'.format(
-            platform=platform.lower()
-        ))
+        for entry_point in pkg_resources.iter_entry_points(f'briefcase.formats.{platform.lower()}')
     }

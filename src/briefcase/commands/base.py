@@ -1,4 +1,3 @@
-
 import argparse
 import importlib
 import inspect
@@ -22,7 +21,7 @@ except ModuleNotFoundError:
 
 from briefcase import __version__, integrations
 from briefcase.config import AppConfig, BaseConfig, GlobalConfig, parse_config
-from briefcase.console import Console
+from briefcase.console import Console, Log
 from briefcase.exceptions import (
     BadNetworkResourceError,
     BriefcaseCommandError,
@@ -35,24 +34,23 @@ from briefcase.integrations.subprocess import Subprocess
 class TemplateUnsupportedVersion(BriefcaseCommandError):
     def __init__(self, python_version_tag):
         self.python_version_tag = python_version_tag
-        super().__init__(
-            f"Could not find template for Python {self.python_version_tag}.\n\n"
-            f"This is likely because Python {self.python_version_tag} "
-            "is not yet supported. You will need to:\n"
-            "  * Use an older version of Python; or\n"
-            "  * Define your own custom template.\n"
-        )
+        super().__init__(f"""\
+Could not find template for Python {self.python_version_tag}.
+
+This is likely because Python {self.python_version_tag}
+is not yet supported. You will need to:
+  * Use an older version of Python; or
+  * Define your own custom template.
+""")
 
 
 class UnsupportedPlatform(BriefcaseCommandError):
     def __init__(self, platform):
         self.platform = platform
-        super().__init__(
-            msg="App cannot be deployed on {platform}. This is probably because one or more\n"
-                "dependencies (e.g., the GUI library) doesn't support {platform}.".format(
-                    platform=platform
-                )
-        )
+        super().__init__(f"""\
+App cannot be deployed on {platform}. This is probably because one or more
+dependencies (e.g., the GUI library) doesn't support {platform}.
+""")
 
 
 def create_config(klass, config, msg):
@@ -60,8 +58,7 @@ def create_config(klass, config, msg):
         return klass(**config)
     except TypeError:
         # Inspect the GlobalConfig constructor to find which
-        # parameters are required and don't have a default
-        # value.
+        # parameters are required and don't have a default value.
         required_args = {
             name
             for name, param in inspect.signature(klass.__init__).parameters.items()
@@ -69,16 +66,8 @@ def create_config(klass, config, msg):
             and name not in {'self', 'kwargs'}
         }
         missing_args = required_args - config.keys()
-        missing = ', '.join(
-            "'{arg}'".format(arg=arg)
-            for arg in sorted(missing_args)
-        )
-        raise BriefcaseConfigError(
-            "{msg} is incomplete (missing {missing})".format(
-                msg=msg,
-                missing=missing
-            )
-        )
+        missing = ', '.join(f"'{arg}'" for arg in sorted(missing_args))
+        raise BriefcaseConfigError(f"{msg} is incomplete (missing {missing})")
 
 
 def cookiecutter_cache_path(template):
@@ -148,6 +137,9 @@ class BaseCommand(ABC):
 
         # The internal Briefcase integrations API.
         self.integrations = integrations
+
+        # Initialize default logger (replaced when options are parsed).
+        self.logger = Log()
 
     @property
     def create_command(self):
@@ -341,11 +333,11 @@ class BaseCommand(ABC):
                 path = Path(str(self.base_path), *app_home[0])
             else:
                 raise BriefcaseCommandError(
-                    "Multiple paths in sources found for application '{app.app_name}'".format(app=app)
+                    f"Multiple paths in sources found for application '{app.app_name}'"
                 )
         except IndexError:
             raise BriefcaseCommandError(
-                "Unable to find code for application '{app.app_name}'".format(app=app)
+                f"Unable to find code for application '{app.app_name}'"
             )
 
         return path
@@ -358,10 +350,7 @@ class BaseCommand(ABC):
         This is used as a repository label/tag to identify the appropriate
         templates, etc to use.
         """
-        return '{major}.{minor}'.format(
-            major=self.sys.version_info.major,
-            minor=self.sys.version_info.minor
-        )
+        return f"{self.sys.version_info.major}.{self.sys.version_info.minor}"
 
     def verify_tools(self):
         """
@@ -391,7 +380,7 @@ class BaseCommand(ABC):
 
         # Extract the base default options onto the command
         self.input.enabled = options.pop('input_enabled')
-        self.verbosity = options.pop('verbosity')
+        self.logger = Log(verbosity=options.pop('verbosity'))
 
         return options
 
@@ -402,7 +391,7 @@ class BaseCommand(ABC):
         :param command: The command whose options are to be cloned
         """
         self.input.enabled = command.input.enabled
-        self.verbosity = command.verbosity
+        self.logger = command.logger
 
     def add_default_options(self, parser):
         """
@@ -414,7 +403,7 @@ class BaseCommand(ABC):
             '-v', '--verbosity',
             action='count',
             default=1,
-            help="set the verbosity of output"
+            help="set the verbosity of output (use -vv for additional debug output)"
         )
         parser.add_argument(
             '-V', '--version',
@@ -463,9 +452,7 @@ class BaseCommand(ABC):
                     self.apps[app_name] = create_config(
                         klass=self.APP_CONFIG_CLASS,
                         config=app_config,
-                        msg="Configuration for '{app_name}'".format(
-                            app_name=app_name
-                        )
+                        msg=f"Configuration for '{app_name}'"
                     )
 
         except FileNotFoundError:
@@ -513,22 +500,20 @@ class BaseCommand(ABC):
         if not filename.exists():
             # We have meaningful content, and it hasn't been cached previously,
             # so save it in the requested location
-            print('Downloading {cache_name}...'.format(cache_name=cache_name))
+            self.logger.info(f'Downloading {cache_name}...')
             with filename.open('wb') as f:
                 total = response.headers.get('content-length')
                 if total is None:
                     f.write(response.content)
                 else:
                     downloaded = 0
-                    total = int(total)
-                    for data in response.iter_content(chunk_size=1024 * 1024):
-                        downloaded += len(data)
-                        f.write(data)
-                        done = int(50 * downloaded / total)
-                        print('\r{}{} {}%'.format('#' * done, '.' * (50-done), 2*done), end='', flush=True)
-            print()
+                    with self.input.progress_bar(total=int(total)) as progress_bar:
+                        for data in response.iter_content(chunk_size=1024 * 1024):
+                            f.write(data)
+                            downloaded += len(data)
+                            progress_bar.update(completed=downloaded)
         else:
-            print('{cache_name} already downloaded'.format(cache_name=cache_name))
+            self.logger.info(f'{cache_name} already downloaded')
         return filename
 
     def update_cookiecutter_cache(self, template: str, branch='master'):
@@ -566,18 +551,17 @@ class BaseCommand(ABC):
                     # We are offline, or otherwise unable to contact
                     # the origin git repo. It's OK to continue; but warn
                     # the user that the template may be stale.
-                    print("***************************************************************************")
-                    print("WARNING: Unable to update template (is your computer offline?)")
-                    print("WARNING: Briefcase will use existing template without updating.")
-                    print("***************************************************************************")
+                    self.logger.warning("***************************************************************************")
+                    self.logger.warning("WARNING: Unable to update template (is your computer offline?)")
+                    self.logger.warning("WARNING: Briefcase will use existing template without updating.")
+                    self.logger.warning("***************************************************************************")
                 try:
                     # Check out the branch for the required version tag.
                     head = remote.refs[branch]
 
-                    print("Using existing template (sha {hexsha}, updated {datestamp})".format(
-                        hexsha=head.commit.hexsha,
-                        datestamp=head.commit.committed_datetime.strftime("%c")
-                    ))
+                    self.logger.info(
+                        f"Using existing template (sha {head.commit.hexsha}, "
+                        f"updated {head.commit.committed_datetime.strftime('%c')})")
                     head.checkout()
                 except IndexError:
                     # No branch exists for the requested version.

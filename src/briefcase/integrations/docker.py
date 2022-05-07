@@ -38,7 +38,7 @@ def verify_docker(command):
     :param command: The command that needs to perform the verification check.
     """
 
-    WRONG_DOCKER_VERSION_ERROR = """
+    WRONG_DOCKER_VERSION_ERROR = """\
 Briefcase requires Docker 19 or higher, but you are currently running
 version {docker_version}. Visit:
 
@@ -105,7 +105,6 @@ need to restart your terminal session.
         # Try to get the version of docker that is installed.
         output = command.subprocess.check_output(
             ['docker', '--version'],
-            universal_newlines=True,
             stderr=subprocess.STDOUT,
         ).strip('\n')
 
@@ -125,9 +124,9 @@ need to restart your terminal session.
                 )
 
         else:
-            print(UNKNOWN_DOCKER_VERSION_WARNING)
+            command.logger.warning(UNKNOWN_DOCKER_VERSION_WARNING)
     except subprocess.CalledProcessError:
-        print(DOCKER_INSTALLATION_STATUS_UNKNOWN_WARNING)
+        command.logger.warning(DOCKER_INSTALLATION_STATUS_UNKNOWN_WARNING)
     except FileNotFoundError:
         # Docker executable doesn't exist.
         raise BriefcaseCommandError(
@@ -154,7 +153,7 @@ def _verify_docker_can_run(command):
     :param command: The command that needs to perform the verification check.
     """
 
-    LACKS_PERMISSION_ERROR = """
+    LACKS_PERMISSION_ERROR = """\
 Docker has been installed, but Briefcase is unable to invoke
 Docker commands. It is possible that your user does not have
 permissions to invoke Docker.
@@ -163,7 +162,7 @@ See https://docs.docker.com/engine/install/linux-postinstall/
 for details on configuring access to your Docker installation.
 """
 
-    DAEMON_NOT_RUNNING_ERROR = """
+    DAEMON_NOT_RUNNING_ERROR = """\
 Briefcase is unable to use Docker commands. It appears the Docker
 daemon is not running.
 
@@ -171,7 +170,7 @@ See https://docs.docker.com/config/daemon/ for details on how to
 configure your Docker daemon.
 """
 
-    GENERIC_DOCKER_ERROR = """
+    GENERIC_DOCKER_ERROR = """\
 Briefcase was unable to use Docker commands. Check your Docker
 installation, and try again.
 """
@@ -182,9 +181,8 @@ installation, and try again.
         # We don't care about the output, just that it succeeds.
         command.subprocess.check_output(
             ['docker', 'info'],
-            universal_newlines=True,
             stderr=subprocess.STDOUT,
-        ).strip('\n')
+        )
     except subprocess.CalledProcessError as e:
         failure_output = e.output
         if 'permission denied while trying to connect' in failure_output:
@@ -208,9 +206,9 @@ class Docker:
 
     def prepare(self):
         try:
-            print()
-            print("[{app.app_name}] Building Docker container image...".format(app=self.app))
-            print()
+            self.command.logger.info()
+            self.command.logger.info(f"[{self.app.app_name}] Building Docker container image...")
+            self.command.logger.info()
             try:
                 system_requires = ' '.join(self.app.system_requires)
             except AttributeError:
@@ -221,24 +219,17 @@ class Docker:
                     "docker", "build",
                     "--tag", self.command.docker_image_tag(self.app),
                     "--file", self.command.bundle_path(self.app) / 'Dockerfile',
-                    "--build-arg", "PY_VERSION={command.python_version_tag}".format(
-                        command=self.command
-                    ),
-                    "--build-arg", "SYSTEM_REQUIRES={system_requires}".format(
-                        system_requires=system_requires
-                    ),
-                    "--build-arg", "HOST_UID={uid}".format(uid=self.command.os.getuid()),
-                    "--build-arg", "HOST_GID={gid}".format(gid=self.command.os.getgid()),
+                    "--build-arg", f"PY_VERSION={self.command.python_version_tag}",
+                    "--build-arg", f"SYSTEM_REQUIRES={system_requires}",
+                    "--build-arg", f"HOST_UID={self.command.os.getuid()}",
+                    "--build-arg", f"HOST_GID={self.command.os.getgid()}",
                     Path(self.command.base_path, *self.app.sources[0].split('/')[:-1])
                 ],
                 check=True,
             )
 
         except subprocess.CalledProcessError:
-            print()
-            raise BriefcaseCommandError(
-                "Error building Docker container for {app.app_name}.".format(app=self.app)
-            )
+            raise BriefcaseCommandError(f"Error building Docker container for {self.app.app_name}.")
 
     def run(self, args, env=None, **kwargs):
         "Run a process inside the Docker container"
@@ -249,21 +240,15 @@ class Docker:
         docker_args = [
             "docker", "run",
             "--tty",
-            "--volume", "{self.command.platform_path}:/app:z".format(
-                self=self
-            ),
-            "--volume", "{self.command.dot_briefcase_path}:/home/brutus/.briefcase:z".format(
-                self=self
-            ),
+            "--volume", f"{self.command.platform_path}:/app:z",
+            "--volume", f"{self.command.dot_briefcase_path}:/home/brutus/.briefcase:z",
         ]
 
         # If any environment variables have been defined, pass them in
         # as --env arguments to Docker.
         if env:
             for key, value in env.items():
-                docker_args.extend([
-                    '--env', "{key}={value}".format(key=key, value=value)
-                ])
+                docker_args.extend(['--env', f"{key}={value}"])
 
         # ... then the image name.
         docker_args.append(self.command.docker_image_tag(self.app))
@@ -272,11 +257,7 @@ class Docker:
         for arg in args:
             arg = str(arg)
             if arg == sys.executable:
-                docker_args.append(
-                    'python{command.python_version_tag}'.format(
-                        command=self.command
-                    )
-                )
+                docker_args.append(f'python{self.command.python_version_tag}')
             elif os.fsdecode(self.command.platform_path) in arg:
                 docker_args.append(
                     arg.replace(os.fsdecode(self.command.platform_path), '/app')

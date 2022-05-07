@@ -23,11 +23,8 @@ class ShowOutputFormats(BriefcaseError):
     def __str__(self):
         choices = ', '.join(sorted(self.choices))
         return (
-            "Available formats for {self.platform}: {choices}\n"
-            "Default format: {self.default}".format(
-                self=self,
-                choices=choices,
-            )
+            f"Available formats for {self.platform}: {choices}\n"
+            f"Default format: {self.default}"
         )
 
 
@@ -39,10 +36,7 @@ class InvalidFormatError(BriefcaseError):
 
     def __str__(self):
         choices = ', '.join(sorted(self.choices))
-        return "Invalid format '{self.requested}'; (choose from: {choices})".format(
-            self=self,
-            choices=choices,
-        )
+        return f"Invalid format '{self.requested}'; (choose from: {choices})"
 
 
 class UnsupportedCommandError(BriefcaseError):
@@ -54,10 +48,8 @@ class UnsupportedCommandError(BriefcaseError):
 
     def __str__(self):
         return (
-            "The {self.command} command for the {self.platform} {self.output_format} format "
-            "has not been implemented (yet!).".format(
-                self=self,
-            )
+            f"The {self.command} command for the {self.platform} {self.output_format} format "
+            "has not been implemented (yet!)."
         )
 
 
@@ -67,7 +59,7 @@ class BriefcaseConfigError(BriefcaseError):
         self.msg = msg
 
     def __str__(self):
-        return "Briefcase configuration error: {self.msg}".format(self=self)
+        return f"Briefcase configuration error: {self.msg}"
 
 
 class BriefcaseCommandError(BriefcaseError):
@@ -82,70 +74,47 @@ class BriefcaseCommandError(BriefcaseError):
 class NetworkFailure(BriefcaseCommandError):
     def __init__(self, action):
         self.action = action
-        super().__init__(msg="Unable to {action}; is your computer offline?".format(
-            action=action
-        ))
+        super().__init__(msg=f"Unable to {action}; is your computer offline?")
 
 
 class MissingNetworkResourceError(BriefcaseCommandError):
     def __init__(self, url):
         self.url = url
-        super().__init__(
-            msg="Unable to download {url}; is the URL correct?".format(
-                url=url
-            )
-        )
+        super().__init__(msg=f"Unable to download {url}; is the URL correct?")
 
 
 class BadNetworkResourceError(BriefcaseCommandError):
     def __init__(self, url, status_code):
         self.url = url
         self.status_code = status_code
-        super().__init__(
-            msg="Unable to download {url} (status code {status_code})".format(
-                url=url,
-                status_code=status_code,
-            )
-        )
+        super().__init__(msg=f"Unable to download {url} (status code {status_code})")
 
 
 class MissingToolError(BriefcaseCommandError):
     def __init__(self, tool):
         self.tool = tool
-        super().__init__(
-            msg="Unable to locate {tool!r}. Has it been installed?".format(
-                tool=tool,
-            )
-        )
+        super().__init__(msg=f"Unable to locate {tool!r}. Has it been installed?")
 
 
 class NonManagedToolError(BriefcaseCommandError):
     def __init__(self, tool):
         self.tool = tool
-        super().__init__(
-            msg="{tool!r} is using an install that is user managed.".format(
-                tool=tool,
-            )
-        )
+        super().__init__(msg=f"{tool!r} is using an install that is user managed.")
 
 
 class InvalidDeviceError(BriefcaseCommandError):
     def __init__(self, id_type, device):
         self.id_type = id_type
         self.device = device
-        super().__init__(
-            "Invalid device {id_type} '{device}'".format(
-                id_type=id_type,
-                device=device,
-            )
-        )
+        super().__init__(msg=f"Invalid device {id_type} '{device}'")
 
 
 class CorruptToolError(BriefcaseCommandError):
     def __init__(self, tool):
         self.tool = tool
-        super().__init__(
-            msg="{tool!r} found, but it appears to be corrupted.".format(
-                tool=tool,
-            )
-        )
+        super().__init__(msg=f"{tool!r} found, but it appears to be corrupted.")
+
+
+class CommandOutputParseError(BriefcaseCommandError):
+    def __init__(self, parse_error):
+        super().__init__(msg=f"Unable to parse command output: {parse_error}")

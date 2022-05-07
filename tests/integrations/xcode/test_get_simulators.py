@@ -6,7 +6,17 @@ from unittest import mock
 import pytest
 
 from briefcase.exceptions import BriefcaseCommandError
+from briefcase.integrations.subprocess import Subprocess
 from briefcase.integrations.xcode import get_simulators
+
+
+@pytest.fixture
+def command():
+    command = mock.MagicMock()
+    command.subprocess = Subprocess(command)
+    command.subprocess._subprocess = mock.MagicMock()
+    command.subprocess.check_output = mock.MagicMock()
+    return command
 
 
 @pytest.fixture
@@ -19,14 +29,13 @@ def simulator(tmp_path):
 
 def simctl_result(name):
     """Load a simctl result file from the sample directory, and return the content"""
-    filename = Path(__file__).parent / 'simctl' / '{name}.json'.format(name=name)
+    filename = Path(__file__).parent / 'simctl' / f'{name}.json'
     with filename.open(encoding="utf-8") as f:
         return f.read()
 
 
-def test_simulator_is_missing(tmp_path):
+def test_simulator_is_missing(command, tmp_path):
     "If the simulator is not installed, a prompt is shown to the user"
-    command = mock.MagicMock()
     command.subprocess.check_output.return_value = simctl_result('no-runtimes')
 
     simulators = get_simulators(
@@ -42,21 +51,27 @@ def test_simulator_is_missing(tmp_path):
     assert simulators == {}
 
 
-def test_simctl_missing(simulator):
+def test_simctl_missing(command, simulator):
     "If simctl is missing or fails to start, an exception is raised."
-    command = mock.MagicMock()
     command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
         cmd=['xcrun', 'simctl', 'list', '-j'],
         returncode=1
     )
 
-    with pytest.raises(BriefcaseCommandError):
+    with pytest.raises(BriefcaseCommandError, match="Unable to run xcrun simctl."):
         get_simulators(command, 'iOS', simulator_location=simulator)
 
 
-def test_no_runtimes(simulator):
+def test_simctl_output_parse_error(command, simulator):
+    "If parsing simctl JSON output fails, an exception is raised"
+    command.subprocess.check_output.return_value = "this is not JSON"
+
+    with pytest.raises(BriefcaseCommandError, match="Unable to parse output of xcrun simctl"):
+        get_simulators(command, 'iOS', simulator_location=simulator)
+
+
+def test_no_runtimes(command, simulator):
     "If there are no runtimes available, no simulators will be found"
-    command = mock.MagicMock()
     command.subprocess.check_output.return_value = simctl_result('no-runtimes')
 
     simulators = get_simulators(
@@ -71,9 +86,8 @@ def test_no_runtimes(simulator):
     command.input.assert_not_called()
 
 
-def test_single_iOS_runtime(simulator):
+def test_single_iOS_runtime(command, simulator):
     "If an iOS version is installed, devices can be found"
-    command = mock.MagicMock()
     command.subprocess.check_output.return_value = simctl_result('iOS-13.2-only')
 
     simulators = get_simulators(
@@ -101,9 +115,8 @@ def test_single_iOS_runtime(simulator):
     command.input.assert_not_called()
 
 
-def test_watchOS_runtime(simulator):
+def test_watchOS_runtime(command, simulator):
     "Runtimes other than iOS can be requested."
-    command = mock.MagicMock()
     command.subprocess.check_output.return_value = simctl_result('iOS-13.2-only')
 
     simulators = get_simulators(
@@ -125,9 +138,8 @@ def test_watchOS_runtime(simulator):
     command.input.assert_not_called()
 
 
-def test_multiple_iOS_runtime(simulator):
+def test_multiple_iOS_runtime(command, simulator):
     "If multiple iOS versions are installed, this will be reflected in results"
-    command = mock.MagicMock()
     command.subprocess.check_output.return_value = simctl_result('multiple-iOS-versions')
 
     simulators = get_simulators(
@@ -173,9 +185,8 @@ def test_multiple_iOS_runtime(simulator):
     command.input.assert_not_called()
 
 
-def test_unknown_runtime(simulator):
+def test_unknown_runtime(command, simulator):
     "If an unknown runtime is requested, no devices will be found"
-    command = mock.MagicMock()
     command.subprocess.check_output.return_value = simctl_result('multiple-iOS-versions')
 
     simulators = get_simulators(
@@ -190,11 +201,10 @@ def test_unknown_runtime(simulator):
     command.input.assert_not_called()
 
 
-def test_alternate_format(simulator):
+def test_alternate_format(command, simulator):
     "The alternate format for device versions can be parsed"
     mock_input = mock.MagicMock()
 
-    command = mock.MagicMock()
     command.subprocess.check_output.return_value = simctl_result('alternate-format')
 
     simulators = get_simulators(

@@ -176,9 +176,7 @@ def test_download_sdk(mock_command, tmp_path, host_os):
     sdk = AndroidSDK.verify(mock_command, jdk=MagicMock())
 
     # Validate that the SDK was downloaded and unpacked
-    url = "https://dl.google.com/android/repository/sdk-tools-{host_os}-4333796.zip".format(
-        host_os=host_os.lower()
-    )
+    url = f"https://dl.google.com/android/repository/sdk-tools-{host_os.lower()}-4333796.zip"
     mock_command.download_url.assert_called_once_with(
         url=url,
         download_path=mock_command.tools_path,

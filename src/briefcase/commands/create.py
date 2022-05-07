@@ -26,51 +26,43 @@ class InvalidTemplateRepository(BriefcaseCommandError):
     def __init__(self, template):
         self.template = template
         super().__init__(
-            'Unable to clone application template; is the template path {template!r} correct?'.format(
-                template=template
-            )
+            f'Unable to clone application template; is the template path {template!r} correct?'
         )
 
 
 class InvalidSupportPackage(BriefcaseCommandError):
     def __init__(self, filename):
         self.filename = filename
-        super().__init__(
-            'Unable to unpack support package {filename!r}'.format(
-                filename=filename
-            )
-        )
+        super().__init__(f'Unable to unpack support package {filename!r}')
 
 
 class MissingSupportPackage(BriefcaseCommandError):
     def __init__(self, python_version_tag, host_arch):
         self.python_version_tag = python_version_tag
         self.host_arch = host_arch
-        super().__init__(
-            "Unable to download a support package for "
-            f"Python {self.python_version_tag} on {self.host_arch}.\n\n"
-            f"This is likely because either Python {self.python_version_tag} "
-            f"and/or {self.host_arch} is not yet supported. You will need to:\n"
-            "  * Use an older version of Python; or\n"
-            "  * Compile your own custom support package.\n"
-        )
+        super().__init__(f"""\
+Unable to download a support package for Python {self.python_version_tag} on {self.host_arch}.
+
+This is likely because either Python {self.python_version_tag} and/or {self.host_arch}
+is not yet supported. You will need to:
+    * Use an older version of Python; or
+    * Compile your own custom support package.
+""")
 
 
 class DependencyInstallError(BriefcaseCommandError):
     def __init__(self):
-        super().__init__(
-            'Unable to install dependencies. This may be because one of your '
-            'dependencies is invalid, or because pip was unable to connect '
-            'to the PyPI server.'
-        )
+        super().__init__("""\
+Unable to install dependencies. This may be because one of your
+dependencies is invalid, or because pip was unable to connect
+to the PyPI server.
+""")
 
 
 class MissingAppSources(BriefcaseCommandError):
     def __init__(self, src):
         self.src = src
-        super().__init__(
-            'Application source {src!r} does not exist.'.format(src=src)
-        )
+        super().__init__(f'Application source {src!r} does not exist.')
 
 
 def cookiecutter_cache_path(template):
@@ -102,18 +94,18 @@ def write_dist_info(app: BaseConfig, dist_info_path: Path):
         f.write('briefcase\n')
     with (dist_info_path / 'METADATA').open('w') as f:
         f.write('Metadata-Version: 2.1\n')
-        f.write('Briefcase-Version: {}\n'.format(briefcase.__version__))
-        f.write('Name: {app.app_name}\n'.format(app=app))
-        f.write('Formal-Name: {app.formal_name}\n'.format(app=app))
-        f.write('App-ID: {app.bundle}.{app.app_name}\n'.format(app=app))
-        f.write('Version: {app.version}\n'.format(app=app))
+        f.write(f'Briefcase-Version: {briefcase.__version__}\n')
+        f.write(f'Name: {app.app_name}\n')
+        f.write(f'Formal-Name: {app.formal_name}\n')
+        f.write(f'App-ID: {app.bundle}.{app.app_name}\n')
+        f.write(f'Version: {app.version}\n')
         if app.url:
-            f.write('Home-page: {app.url}\n'.format(app=app))
+            f.write(f'Home-page: {app.url}\n')
         if app.author:
-            f.write('Author: {app.author}\n'.format(app=app))
+            f.write(f'Author: {app.author}\n')
         if app.author_email:
-            f.write('Author-email: {app.author_email}\n'.format(app=app))
-        f.write('Summary: {app.description}\n'.format(app=app))
+            f.write(f'Author-email: {app.author_email}\n')
+        f.write(f'Summary: {app.description}\n')
 
 
 class CreateCommand(BaseCommand):
@@ -126,9 +118,7 @@ class CreateCommand(BaseCommand):
     @property
     def app_template_url(self):
         "The URL for a cookiecutter repository to use when creating apps"
-        return 'https://github.com/beeware/briefcase-{self.platform}-{self.output_format}-template.git'.format(
-            self=self
-        )
+        return f'https://github.com/beeware/briefcase-{self.platform}-{self.output_format}-template.git'
 
     @property
     def support_package_url_query(self):
@@ -143,9 +133,7 @@ class CreateCommand(BaseCommand):
     @property
     def support_package_url(self):
         "The URL of the support package to use for apps of this type."
-        return "https://briefcase-support.org/python?{query}".format(
-            query=urlencode(self.support_package_url_query)
-        )
+        return f"https://briefcase-support.org/python?{urlencode(self.support_package_url_query)}"
 
     def icon_targets(self, app: BaseConfig):
         """
@@ -263,10 +251,7 @@ class CreateCommand(BaseCommand):
         if app.template_branch is None:
             app.template_branch = self.python_version_tag
 
-        print("Using app template: {app_template}, branch {template_branch}".format(
-            app_template=app.template,
-            template_branch=app.template_branch,
-        ))
+        self.logger.info(f"Using app template: {app.template}, branch {app.template_branch}")
 
         # Make sure we have an updated cookiecutter template,
         # checked out to the right branch
@@ -327,23 +312,17 @@ class CreateCommand(BaseCommand):
             try:
                 support_package_url = app.support_package
                 custom_support_package = True
-                print("Using custom support package {support_package_url}".format(
-                    support_package_url=support_package_url
-                ))
+                self.logger.info(f"Using custom support package {support_package_url}")
             except AttributeError:
                 support_package_url = self.support_package_url
                 custom_support_package = False
-                print("Using support package {support_package_url}".format(
-                    support_package_url=support_package_url
-                ))
+                self.logger.info(f"Using support package {support_package_url}")
 
             if support_package_url.startswith('https://') or support_package_url.startswith('http://'):
                 try:
-                    print("... pinned to revision {app.support_revision}".format(
-                        app=app
-                    ))
+                    self.logger.info(f"... pinned to revision {app.support_revision}")
                     # If a revision has been specified, add the revision
-                    # as an query argument in the support package URL.
+                    # as a query argument in the support package URL.
                     # This is a lot more painful than "add arg to query" should
                     # be because (a) url splits aren't appendable, and
                     # (b) Python 3.5 doesn't guarantee dictionary order.
@@ -357,7 +336,7 @@ class CreateCommand(BaseCommand):
 
                 except AttributeError:
                     # No support revision specified.
-                    print("... using most recent revision")
+                    self.logger.info("... using most recent revision")
 
                 # Download the support file, caching the result
                 # in the user's briefcase support cache directory.
@@ -380,7 +359,7 @@ class CreateCommand(BaseCommand):
             raise NetworkFailure('downloading support package')
 
         try:
-            print("Unpacking support package...")
+            self.logger.info("Unpacking support package...")
             support_path = self.support_path(app)
             support_path.mkdir(parents=True, exist_ok=True)
             # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
@@ -389,7 +368,6 @@ class CreateCommand(BaseCommand):
                 extract_dir=os.fsdecode(support_path)
             )
         except (shutil.ReadError, EOFError):
-            print()
             raise InvalidSupportPackage(support_package_url)
 
     def install_app_dependencies(self, app: BaseConfig):
@@ -415,14 +393,14 @@ class CreateCommand(BaseCommand):
                         "pip", "install",
                         "--upgrade",
                         "--no-user",
-                        "--target={}".format(target),
+                        f"--target={target}",
                     ] + app.requires,
                     check=True,
                 )
             except subprocess.CalledProcessError:
                 raise DependencyInstallError()
         else:
-            print("No application dependencies.")
+            self.logger.info("No application dependencies.")
 
     def install_app_code(self, app: BaseConfig):
         """
@@ -430,18 +408,19 @@ class CreateCommand(BaseCommand):
 
         :param app: The config object for the app
         """
+
+        # Remove existing app folder
+        app_path = self.app_path(app)
+        if app_path.is_dir():
+            self.shutil.rmtree(app_path)
+            self.os.mkdir(app_path)
+
+        # Install app code.
         if app.sources:
             for src in app.sources:
-                print("Installing {src}...".format(src=src))
+                self.logger.info(f"Installing {src}...")
                 original = self.base_path / src
-                target = self.app_path(app) / original.name
-
-                # Remove existing versions of the code
-                if target.exists():
-                    if target.is_dir():
-                        self.shutil.rmtree(target)
-                    else:
-                        target.unlink()
+                target = app_path / original.name
 
                 # Install the new copy of the app code.
                 if not original.exists():
@@ -451,14 +430,12 @@ class CreateCommand(BaseCommand):
                 else:
                     self.shutil.copy(original, target)
         else:
-            print("No sources defined for {app.app_name}.".format(app=app))
+            self.logger.info(f"No sources defined for {app.app_name}.")
 
         # Write the dist-info folder for the application.
         write_dist_info(
             app=app,
-            dist_info_path=self.app_path(app) / '{app.module_name}-{app.version}.dist-info'.format(
-                app=app,
-            )
+            dist_info_path=self.app_path(app) / f'{app.module_name}-{app.version}.dist-info'
         )
 
     def install_image(self, role, variant, size, source, target):
@@ -480,28 +457,15 @@ class CreateCommand(BaseCommand):
         if source is not None:
             if size is None:
                 if variant is None:
-                    source_filename = '{source}{target.suffix}'.format(
-                        source=source,
-                        target=target,
-                    )
+                    source_filename = f'{source}{target.suffix}'
                     full_role = role
                 else:
                     try:
-                        source_filename = '{source}{target.suffix}'.format(
-                            source=source[variant],
-                            target=target,
-                        )
-                        full_role = '{variant} {role}'.format(
-                            variant=variant,
-                            role=role,
-                        )
+                        source_filename = f'{source[variant]}{target.suffix}'
+                        full_role = f'{variant} {role}'
                     except (TypeError, KeyError):
-                        print(
-                            "Unable to find {variant} variant for {role}; "
-                            "using default".format(
-                                variant=variant,
-                                role=role,
-                            )
+                        self.logger.info(
+                            f"Unable to find {variant} variant for {role}; using default"
                         )
                         return
             else:
@@ -512,68 +476,32 @@ class CreateCommand(BaseCommand):
                     # lookup; if it fails, we have a sized image with no
                     # variant.
                     try:
-                        source_filename = '{source}{target.suffix}'.format(
-                            source=source[size],
-                            target=target,
-                        )
-                        full_role = '{size} {role}'.format(
-                            size=size,
-                            role=role,
-                        )
+                        source_filename = f'{source[size]}{target.suffix}'
+                        full_role = f'{size} {role}'
                     except TypeError:
                         # The lookup on the source failed; that means we
-                        # have an sized image without variants.
-                        source_filename = '{source}-{size}{target.suffix}'.format(
-                            source=source,
-                            size=size,
-                            target=target,
-                        )
-                        full_role = '{size}px {role}'.format(
-                            size=size,
-                            role=role,
-                        )
-
+                        # have a sized image without variants.
+                        source_filename = f'{source}-{size}{target.suffix}'
+                        full_role = f'{size}px {role}'
                 else:
                     try:
-                        source_filename = '{source}-{size}{target.suffix}'.format(
-                            source=source[variant],
-                            size=size,
-                            target=target,
-                        )
-                        full_role = '{size}px {variant} {role}'.format(
-                            size=size,
-                            variant=variant,
-                            role=role,
-                        )
+                        source_filename = f'{source[variant]}-{size}{target.suffix}'
+                        full_role = f'{size}px {variant} {role}'
                     except (TypeError, KeyError):
-                        print(
-                            "Unable to find {size}px {variant} variant for {role}; "
-                            "using default".format(
-                                size=size,
-                                variant=variant,
-                                role=role,
-                            )
+                        self.logger.info(
+                            f"Unable to find {size}px {variant} variant for {role}; using default"
                         )
                         return
 
             full_source = self.base_path / source_filename
             if full_source.exists():
-                print("Installing {source_filename} as {full_role}...".format(
-                    source_filename=source_filename,
-                    full_role=full_role,
-                ))
-
+                self.logger.info(f"Installing {source_filename} as {full_role}...")
                 # Make sure the target directory exists
                 target.parent.mkdir(parents=True, exist_ok=True)
                 # Copy the source image to the target location
                 self.shutil.copy(full_source, target)
             else:
-                print(
-                    "Unable to find {source_filename} for {full_role}; using default".format(
-                        full_role=full_role,
-                        source_filename=source_filename,
-                    )
-                )
+                self.logger.info(f"Unable to find {source_filename} for {full_role}; using default")
 
     def install_app_resources(self, app: BaseConfig):
         """
@@ -629,7 +557,7 @@ class CreateCommand(BaseCommand):
         for extension, doctype in self.document_type_icon_targets(app).items():
             for size, target in doctype.items():
                 self.install_image(
-                    'icon for .{extension} documents'.format(extension=extension),
+                    f'icon for .{extension} documents',
                     size=size,
                     source=app.document_types[extension]['icon'],
                     variant=None,
@@ -647,57 +575,42 @@ class CreateCommand(BaseCommand):
 
         bundle_path = self.bundle_path(app)
         if bundle_path.exists():
-            print()
+            self.logger.info()
             confirm = self.input.boolean_input(
-                'Application {app.app_name} already exists; overwrite'.format(app=app),
+                f'Application {app.app_name} already exists; overwrite',
                 default=False
             )
             if not confirm:
-                print("Aborting creation of app {app.app_name}".format(
-                    app=app
-                ))
+                self.logger.error(
+                    f"Aborting creation of app {app.app_name}; existing application will not be overwritten."
+                )
                 return
-            print()
-            print("[{app.app_name}] Removing old application bundle...".format(
-                app=app
-            ))
+            self.logger.info()
+            self.logger.info(f"[{app.app_name}] Removing old application bundle...")
             self.shutil.rmtree(bundle_path)
 
-        print()
-        print('[{app.app_name}] Generating application template...'.format(
-            app=app
-        ))
+        self.logger.info()
+        self.logger.info(f'[{app.app_name}] Generating application template...')
         self.generate_app_template(app=app)
 
-        print()
-        print('[{app.app_name}] Installing support package...'.format(
-            app=app
-        ))
+        self.logger.info()
+        self.logger.info(f'[{app.app_name}] Installing support package...')
         self.install_app_support_package(app=app)
 
-        print()
-        print('[{app.app_name}] Installing dependencies...'.format(
-            app=app
-        ))
+        self.logger.info()
+        self.logger.info(f'[{app.app_name}] Installing dependencies...')
         self.install_app_dependencies(app=app)
 
-        print()
-        print('[{app.app_name}] Installing application code...'.format(
-            app=app
-        ))
+        self.logger.info()
+        self.logger.info(f'[{app.app_name}] Installing application code...')
         self.install_app_code(app=app)
 
-        print()
-        print('[{app.app_name}] Installing application resources...'.format(
-            app=app
-        ))
+        self.logger.info()
+        self.logger.info(f'[{app.app_name}] Installing application resources...')
         self.install_app_resources(app=app)
-        print()
 
-        print("[{app.app_name}] Created {filename}".format(
-            app=app,
-            filename=self.bundle_path(app).relative_to(self.base_path),
-        ))
+        self.logger.info()
+        self.logger.info(f"[{app.app_name}] Created {self.bundle_path(app).relative_to(self.base_path)}")
 
     def verify_tools(self):
         """

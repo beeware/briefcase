@@ -73,9 +73,9 @@ class WiX:
             not installed, raises MissingToolError.
         """
         if command.host_os != 'Windows':
-            raise BriefcaseCommandError("""
-A Windows MSI installer can only be created on Windows.
-""")
+            raise BriefcaseCommandError(
+                "A Windows MSI installer can only be created on Windows."
+            )
 
         # Look for the WIX environment variable
         wix_env = command.os.environ.get("WIX")
@@ -86,10 +86,10 @@ A Windows MSI installer can only be created on Windows.
             wix = WiX(command=command, wix_home=wix_home)
 
             if not wix.exists():
-                raise BriefcaseCommandError("""
+                raise BriefcaseCommandError(f"""\
 The WIX environment variable does not point to an install of the
 WiX Toolset. Current value: {wix_home!r}
-""".format(wix_home=wix_home))
+""")
 
         else:
             wix = WiX(command=command, bin_install=True)
@@ -133,21 +133,19 @@ WiX Toolset. Current value: {wix_home!r}
             raise NetworkFailure("download WiX")
 
         try:
-            print("Installing WiX...")
+            self.command.logger.info("Installing WiX...")
             # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
             self.command.shutil.unpack_archive(
                 os.fsdecode(wix_zip_path),
                 extract_dir=os.fsdecode(self.wix_home)
             )
         except (shutil.ReadError, EOFError):
-            raise BriefcaseCommandError("""
+            raise BriefcaseCommandError(f"""\
 Unable to unpack WiX ZIP file. The download may have been
 interrupted or corrupted.
 
-Delete {wix_zip_path} and run briefcase again.""".format(
-                    wix_zip_path=wix_zip_path
-                )
-            )
+Delete {wix_zip_path} and run briefcase again.
+""")
 
         # Zip file no longer needed once unpacked.
         wix_zip_path.unlink()
@@ -158,11 +156,11 @@ Delete {wix_zip_path} and run briefcase again.""".format(
         """
         if self.managed_install:
             if self.exists():
-                print("Removing old WiX install...")
+                self.command.logger.info("Removing old WiX install...")
                 self.command.shutil.rmtree(self.wix_home)
 
                 self.install()
-                print("...done.")
+                self.command.logger.info("...done.")
             else:
                 raise MissingToolError('WiX')
         else:

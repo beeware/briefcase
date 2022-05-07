@@ -146,7 +146,7 @@ class NewCommand(BaseCommand):
 
         if (self.base_path / candidate).exists():
             raise ValueError(
-                f"A '{candidate!r}' directory already exists. Select a different "
+                f"A {candidate!r} directory already exists. Select a different "
                 "name, move to a different parent directory, or delete the "
                 "existing folder."
             )
@@ -207,10 +207,7 @@ class NewCommand(BaseCommand):
         :param bundle: The bundle identifier.
         :returns: The candidate author's name
         """
-        return '{first_name}@{domain}'.format(
-            first_name=author.split(' ')[0].lower(),
-            domain=self.make_domain(bundle),
-        )
+        return f"{author.split(' ')[0].lower()}@{self.make_domain(bundle)}"
 
     def validate_email(self, candidate):
         """
@@ -235,10 +232,7 @@ class NewCommand(BaseCommand):
         :param app_name: The app name.
         :returns: The candidate project URL
         """
-        return 'https://{domain}/{app_name}'.format(
-            domain=self.make_domain(bundle),
-            app_name=app_name
-        )
+        return f'https://{self.make_domain(bundle)}/{app_name}'
 
     def validate_url(self, candidate):
         """
@@ -269,17 +263,13 @@ class NewCommand(BaseCommand):
         :returns: a string, guaranteed to meet the validation criteria of
             ``validator``.
         """
-        if self.input.enabled:
-            print(intro)
+        self.input.prompt(intro)
+
         while True:
-            if self.input.enabled:
-                print()
+            self.input.prompt()
 
             answer = self.input.text_input(
-                "{variable} [{default}]: ".format(
-                    variable=titlecase(variable),
-                    default=default,
-                ),
+                f"{titlecase(variable)} [{default}]: ",
                 default=default
             )
 
@@ -293,8 +283,8 @@ class NewCommand(BaseCommand):
                 if not self.input.enabled:
                     raise BriefcaseCommandError(str(e))
 
-                print()
-                print("Invalid value; {e}".format(e=e))
+                self.input.prompt()
+                self.input.prompt(f"Invalid value; {e}")
 
     def input_select(self, intro, variable, options):
         """
@@ -309,28 +299,20 @@ class NewCommand(BaseCommand):
             options.
         :returns: The string content of the selected option.
         """
-        if self.input.enabled:
-            print(intro)
+        self.input.prompt(intro)
 
         index_choices = [str(key) for key in range(1, len(options) + 1)]
         display_options = '\n'.join(
-            "    [{index}] {option}".format(
-                index=index, option=option
-            )
+            f"    [{index}] {option}"
             for index, option in zip(index_choices, options)
         )
-        error_message = "Invalid selection; please enter a number between 1 and {n}".format(
-            n=len(options)
-        )
-        prompt = """
+        error_message = f"Invalid selection; please enter a number between 1 and {len(options)}"
+        prompt = f"""
 Select one of the following:
 
 {display_options}
 
-{variable} [1]: """.format(
-            display_options=display_options,
-            variable=titlecase(variable)
-        )
+{titlecase(variable)} [1]: """
         selection = self.input.selection_input(
             prompt=prompt,
             choices=index_choices,
@@ -361,16 +343,14 @@ used as you type it.""",
 
         default_app_name = self.make_app_name(formal_name)
         app_name = self.input_text(
-            intro="""
+            intro=f"""
 Next, we need a name that can serve as a machine-readable Python package name
 for your application. This name must be PEP508-compliant - that means the name
 may only contain letters, numbers, hyphens and underscores; it can't contain
 spaces or punctuation, and it can't start with a hyphen or underscore.
 
 Based on your formal name, we suggest an app name of '{default_app_name}',
-but you can use another name if you want.""".format(
-                default_app_name=default_app_name
-            ),
+but you can use another name if you want.""",
             variable="app name",
             default=default_app_name,
             validator=self.validate_app_name,
@@ -380,7 +360,7 @@ but you can use another name if you want.""".format(
         module_name = self.make_module_name(app_name)
 
         bundle = self.input_text(
-            intro="""
+            intro=f"""
 Now we need a bundle identifier for your application. App stores need to
 protect against having multiple applications with the same name; the bundle
 identifier is the namespace they use to identify applications that come from
@@ -390,9 +370,7 @@ project, in reverse order.
 For example, if you are writing an application for Example Corp, whose website
 is example.com, your bundle would be ``com.example``. The bundle will be
 combined with your application's machine readable name to form a complete
-application identifier (e.g., com.example.{app_name}).""".format(
-                app_name=app_name,
-            ),
+application identifier (e.g., com.example.{app_name}).""",
             variable="bundle identifier",
             default='com.example',
             validator=self.validate_bundle,
@@ -444,7 +422,7 @@ up yet, you can put in a dummy URL.""",
         project_license = self.input_select(
             intro="""
 What license do you want to use for this project's code?""",
-            variable="project license""",
+            variable="project license",
             options=[
                 "BSD license",
                 "MIT license",
@@ -454,7 +432,7 @@ What license do you want to use for this project's code?""",
                 "GNU General Public License v3 (GPLv3)",
                 "GNU General Public License v3 or later (GPLv3+)",
                 "Proprietary",
-                "Other"
+                "Other",
             ],
         )
 
@@ -463,11 +441,11 @@ What license do you want to use for this project's code?""",
 What GUI toolkit do you want to use for this project?""",
             variable="GUI framework",
             options=[
-                'Toga',
-                'PySide2 (does not support iOS/Android deployment)',
-                'PySide6 (does not support iOS/Android deployment)',
-                'PursuedPyBear (does not support iOS/Android deployment)',
-                'None',
+                "Toga",
+                "PySide2 (does not support iOS/Android deployment)",
+                "PySide6 (does not support iOS/Android deployment)",
+                "PursuedPyBear (does not support iOS/Android deployment)",
+                "None",
             ],
         )
 
@@ -494,17 +472,14 @@ What GUI toolkit do you want to use for this project?""",
         if template is None:
             template = 'https://github.com/beeware/briefcase-template'
 
-        if self.input.enabled:
-            print()
-            print("Let's build a new Briefcase app!")
-            print()
+        self.input.prompt()
+        self.input.prompt("Let's build a new Briefcase app!")
+        self.input.prompt()
 
         context = self.build_app_context()
 
-        print()
-        print("Generating a new application '{formal_name}'".format(
-            **context
-        ))
+        self.logger.info()
+        self.logger.info(f"Generating a new application '{context['formal_name']}'")
 
         cached_template = self.update_cookiecutter_cache(
             template=template,
@@ -513,12 +488,7 @@ What GUI toolkit do you want to use for this project?""",
 
         # Make extra sure we won't clobber an existing application.
         if (self.base_path / context['app_name']).exists():
-            print()
-            raise BriefcaseCommandError(
-                "A directory named '{app_name}' already exists.".format(
-                    **context
-                )
-            )
+            raise BriefcaseCommandError(f"A directory named '{context['app_name']}' already exists.")
 
         try:
             # Unroll the new app template
@@ -538,12 +508,12 @@ What GUI toolkit do you want to use for this project?""",
             # or it isn't a cookiecutter template (i.e., no cookiecutter.json)
             raise InvalidTemplateRepository(template)
 
-        print("""
-Application '{formal_name}' has been generated. To run your application, type:
+        self.logger.info(f"""
+Application '{context['formal_name']}' has been generated. To run your application, type:
 
-    cd {app_name}
+    cd {context['app_name']}
     briefcase dev
-""".format(**context))
+""")
 
     def verify_tools(self):
         """

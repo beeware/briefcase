@@ -77,7 +77,7 @@ class DevCommand(BaseCommand):
             except subprocess.CalledProcessError:
                 raise DependencyInstallError()
         else:
-            print("No application dependencies.")
+            self.logger.info("No application dependencies.")
 
     def run_dev_app(self, app: BaseConfig, env: dict, **options):
         """
@@ -94,11 +94,7 @@ class DevCommand(BaseCommand):
                 check=True,
             )
         except subprocess.CalledProcessError:
-            print()
-            raise BriefcaseCommandError(
-                "Unable to start application '{app.app_name}'".format(
-                    app=app
-                ))
+            raise BriefcaseCommandError(f"Unable to start application '{app.app_name}'")
 
     def get_environment(self, app):
         # Create a shell environment where PYTHONPATH points to the source
@@ -126,37 +122,29 @@ class DevCommand(BaseCommand):
             try:
                 app = self.apps[appname]
             except KeyError:
-                raise BriefcaseCommandError(
-                    "Project doesn't define an application named '{appname}'".format(
-                        appname=appname
-                    ))
+                raise BriefcaseCommandError(f"Project doesn't define an application named '{appname}'")
         else:
             raise BriefcaseCommandError(
-                "Project specifies more than one application; "
-                "use --app to specify which one to start."
+                "Project specifies more than one application; use --app to specify which one to start."
             )
 
         # Look for the existence of a dist-info file.
         # If one exists, assume that the dependencies have already been
         # installed. If a dependency update has been manually requested,
         # do it regardless.
-        dist_info_path = self.app_module_path(app).parent / '{app.module_name}.dist-info'.format(app=app)
+        dist_info_path = self.app_module_path(app).parent / f'{app.module_name}.dist-info'
         if not run_app:
             # If we are not running the app, it means we should update dependencies.
             update_dependencies = True
         if update_dependencies or not dist_info_path.exists():
-            print()
-            print('[{app.app_name}] Installing dependencies...'.format(
-                app=app
-            ))
+            self.logger.info()
+            self.logger.info(f'[{app.app_name}] Installing dependencies...')
             self.install_dev_dependencies(app, **options)
             write_dist_info(app, dist_info_path)
 
         if run_app:
-            print()
-            print('[{app.app_name}] Starting in dev mode...'.format(
-                app=app
-            ))
+            self.logger.info()
+            self.logger.info(f'[{app.app_name}] Starting in dev mode...')
             env = self.get_environment(app)
             state = self.run_dev_app(app, env, **options)
             return state

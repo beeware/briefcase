@@ -2,6 +2,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from briefcase.console import Log
 from briefcase.exceptions import BriefcaseCommandError, InvalidDeviceError
 from briefcase.integrations.android_sdk import (
     AndroidDeviceNotAuthorized,
@@ -13,6 +14,7 @@ from tests.utils import DummyConsole
 @pytest.fixture
 def mock_sdk(tmp_path):
     command = MagicMock()
+    command.logger = Log()
     command.input = DummyConsole()
 
     sdk = AndroidSDK(command, jdk=MagicMock(), root_path=tmp_path)

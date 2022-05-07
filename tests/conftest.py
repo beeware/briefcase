@@ -1,3 +1,4 @@
+import inspect
 from unittest import mock
 
 import pytest
@@ -10,3 +11,25 @@ def mock_git():
     git.exc = git_exceptions
 
     return git
+
+
+# preserve print so sanctioned callers can still use it
+_print = print
+
+
+def monkeypatched_print(*arg, **kwargs):
+    "Allow print calls from console.py...raise an error for all other callers"
+    frame = inspect.currentframe().f_back
+    module = inspect.getmodule(frame.f_code)
+    if module.__name__ == "briefcase.console":
+        _print(*arg, **kwargs)
+    else:
+        pytest.fail(
+            "print() should not be invoked directly. Use Log or Console for printing."
+        )
+
+
+@pytest.fixture(autouse=True)
+def no_print(monkeypatch):
+    "Replace builtin print function for ALL tests"
+    monkeypatch.setattr("builtins.print", monkeypatched_print)

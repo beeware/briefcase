@@ -31,13 +31,10 @@ class DummyPackageCommand(PackageCommand):
         return self.platform_path / app.app_name
 
     def binary_path(self, app):
-        return self.platform_path / app.app_name / '{app.app_name}.bin'.format(app=app)
+        return self.platform_path / app.app_name / f'{app.app_name}.bin'
 
     def distribution_path(self, app, packaging_format):
-        return self.platform_path / '{app.app_name}.{packaging_format}'.format(
-            app=app,
-            packaging_format=packaging_format,
-        )
+        return self.platform_path / f'{app.app_name}.{packaging_format}'
 
     def verify_tools(self):
         super().verify_tools()

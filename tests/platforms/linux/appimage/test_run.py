@@ -10,7 +10,6 @@ from briefcase.platforms.linux.appimage import LinuxAppImageRunCommand
 def test_verify_linux(tmp_path):
     "A linux App can be started on linux"
     command = LinuxAppImageRunCommand(base_path=tmp_path)
-    command.verbosity = 0
     command.use_docker = True
     command.host_os = "Linux"
 
@@ -24,7 +23,6 @@ def test_verify_linux(tmp_path):
 def test_verify_non_linux(tmp_path):
     "A linux App can be started on linux, even if Docker is enabled"
     command = LinuxAppImageRunCommand(base_path=tmp_path)
-    command.verbosity = 0
     command.use_docker = True
     command.host_os = "WierdOS"
 
