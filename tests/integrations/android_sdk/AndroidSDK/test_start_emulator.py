@@ -112,6 +112,7 @@ def test_start_emulator(mock_sdk):
         env=mock_sdk.env,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
+        start_new_session=True,
     )
 
     # There were 5 calls to run
@@ -200,6 +201,7 @@ def test_emulator_fail_to_start(mock_sdk):
         env=mock_sdk.env,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
+        start_new_session=True,
     )
 
     # There were 2 calls to run, both to get AVD name
@@ -282,6 +284,7 @@ def test_emulator_fail_to_boot(mock_sdk):
         env=mock_sdk.env,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
+        start_new_session=True,
     )
 
     # There were 4 calls to run before failure
