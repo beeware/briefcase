@@ -99,9 +99,9 @@ class DevCommand(BaseCommand):
     def get_environment(self, app):
         # Create a shell environment where PYTHONPATH points to the source
         # directories described by the app config.
-        env = os.environ.copy()
-        env['PYTHONPATH'] = os.pathsep.join(app.PYTHONPATH)
-        return env
+        return {
+            'PYTHONPATH': os.pathsep.join(app.PYTHONPATH)
+        }
 
     def __call__(
         self,

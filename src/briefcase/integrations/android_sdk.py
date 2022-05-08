@@ -82,7 +82,6 @@ class AndroidSDK:
     @property
     def env(self):
         return {
-            **self.command.os.environ,
             "ANDROID_SDK_ROOT": os.fsdecode(self.root_path),
             "JAVA_HOME": str(self.jdk.java_home),
         }
