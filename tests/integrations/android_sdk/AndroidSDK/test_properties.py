@@ -99,21 +99,6 @@ def test_simple_env(mock_sdk, tmp_path):
     }
 
 
-def test_override_env(mock_sdk, tmp_path):
-    "The existing environment is preserved, but overwritten by SDK variables"
-    mock_sdk.command.os.environ = {
-        'other': 'stuff',
-        'JAVA_HOME': '/other/jdk',
-        'ANDROID_SDK_ROOT': '/other/android_sdk',
-    }
-
-    assert mock_sdk.env == {
-        'other': 'stuff',
-        'JAVA_HOME': os.fsdecode(Path('/path/to/jdk')),
-        'ANDROID_SDK_ROOT': os.fsdecode(tmp_path / 'sdk')
-    }
-
-
 def test_managed_install(mock_sdk):
     "All Android SDK installs are managed"
     assert mock_sdk.managed_install
