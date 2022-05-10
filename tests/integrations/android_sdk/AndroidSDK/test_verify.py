@@ -78,7 +78,7 @@ def test_succeeds_immediately_in_happy_path(mock_command, tmp_path):
     android_sdk_root_path = tmp_path / "tools" / "android_sdk"
     tools_bin = android_sdk_root_path / "cmdline-tools" / "latest" / "bin"
     tools_bin.mkdir(parents=True, mode=0o755)
-    if mock_command.host_os == "Windows":
+    if platform.system() == "Windows":
         (tools_bin / "sdkmanager.bat").touch()
     else:
         (tools_bin / "sdkmanager").touch(mode=0o755)
@@ -116,7 +116,7 @@ def test_succeeds_immediately_in_happy_path_with_debug(mock_command, tmp_path):
     android_sdk_root_path = tmp_path / "tools" / "android_sdk"
     tools_bin = android_sdk_root_path / "cmdline-tools" / "latest" / "bin"
     tools_bin.mkdir(parents=True, mode=0o755)
-    if mock_command.host_os == "Windows":
+    if platform.system() == "Windows":
         sdk_manager = (tools_bin / "sdkmanager.bat")
         sdk_manager.touch()
     else:
@@ -159,7 +159,12 @@ def test_user_provided_sdk(mock_command, tmp_path):
     existing_android_sdk_root_path = tmp_path / "other_sdk"
     tools_bin = existing_android_sdk_root_path / "cmdline-tools" / "latest" / "bin"
     tools_bin.mkdir(parents=True, mode=0o755)
-    (tools_bin / "sdkmanager").touch(mode=0o755)
+    if platform.system() == "Windows":
+        sdk_manager = (tools_bin / "sdkmanager.bat")
+        sdk_manager.touch()
+    else:
+        sdk_manager = (tools_bin / "sdkmanager")
+        sdk_manager.touch(mode=0o755)
 
     # Pre-accept the license
     accept_license(existing_android_sdk_root_path)()
@@ -198,7 +203,12 @@ def test_user_provided_sdk_with_debug(mock_command, tmp_path):
     existing_android_sdk_root_path = tmp_path / "other_sdk"
     tools_bin = existing_android_sdk_root_path / "cmdline-tools" / "latest" / "bin"
     tools_bin.mkdir(parents=True, mode=0o755)
-    (tools_bin / "sdkmanager").touch(mode=0o755)
+    if platform.system() == "Windows":
+        sdk_manager = (tools_bin / "sdkmanager.bat")
+        sdk_manager.touch()
+    else:
+        sdk_manager = (tools_bin / "sdkmanager")
+        sdk_manager.touch(mode=0o755)
 
     # Pre-accept the license
     accept_license(existing_android_sdk_root_path)()
@@ -229,7 +239,12 @@ def test_invalid_user_provided_sdk(mock_command, tmp_path):
     android_sdk_root_path = tmp_path / "tools" / "android_sdk"
     tools_bin = android_sdk_root_path / "cmdline-tools" / "latest" / "bin"
     tools_bin.mkdir(parents=True, mode=0o755)
-    (tools_bin / "sdkmanager").touch(mode=0o755)
+    if platform.system() == "Windows":
+        sdk_manager = (tools_bin / "sdkmanager.bat")
+        sdk_manager.touch()
+    else:
+        sdk_manager = (tools_bin / "sdkmanager")
+        sdk_manager.touch(mode=0o755)
 
     # Pre-accept the license
     accept_license(android_sdk_root_path)()
