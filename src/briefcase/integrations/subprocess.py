@@ -232,7 +232,7 @@ class Subprocess:
             **self.final_kwargs(**kwargs)
         )
 
-    def stream_output(self, popen_process):
+    def stream_output(self, label, popen_process):
         """
         Stream the output of a Popen process until the process exits.
         If the user sends CTRL+C, the process will be terminated.
@@ -241,15 +241,17 @@ class Subprocess:
         log file, then initiating a non-blocking process that populates that
         log, and finally streaming the original process's output here.
 
+        :param label: A description of the content being streamed; used for
+            to provide context in logging messages.
         :param popen_process: a running Popen process with output to print
         """
         try:
             while True:
                 # readline should always return at least a newline (ie \n)
+                # UNLESS the underlying process is exiting/gone; then "" is returned
                 output_line = ensure_str(popen_process.stdout.readline())
                 if output_line:
                     self.command.logger.info(output_line)
-                # UNLESS the underlying process is exiting/gone; then "" is returned
                 elif output_line == "":
                     # a return code will be available once the process returns one to the OS.
                     # by definition, that should mean the process has exited.
@@ -260,14 +262,22 @@ class Subprocess:
                         return
 
         except KeyboardInterrupt:
-            popen_process.terminate()
-            try:
-                popen_process.wait(timeout=3)
-            except subprocess.TimeoutExpired:
-                self.command.logger.warning(
-                    "Process will be forcibly killed since it did not exit gracefully when signaled."
-                )
-                popen_process.kill()
+            self.cleanup(label, popen_process)
+
+    def cleanup(self, label, popen_process):
+        """
+        Clean up after a Popen process, gracefully terminating if possible; forcibly if not.
+
+        :param label: A description of the content being streamed; used for
+            to provide context in logging messages.
+        :param popen_process: The Popen instance to clean up.
+        """
+        popen_process.terminate()
+        try:
+            popen_process.wait(timeout=3)
+        except subprocess.TimeoutExpired:
+            self.command.logger.warning(f"Forcibly killing {label}...")
+            popen_process.kill()
 
     def _log_command(self, args):
         """
