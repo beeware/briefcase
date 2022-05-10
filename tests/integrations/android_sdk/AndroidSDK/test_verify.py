@@ -175,7 +175,10 @@ def test_download_sdk(mock_command, tmp_path):
     sdk = AndroidSDK.verify(mock_command, jdk=MagicMock())
 
     # Validate that the SDK was downloaded and unpacked
-    url = f"https://dl.google.com/android/repository/commandlinetools-{mock_command._test_download_tag}-8092744_latest.zip"
+    url = (
+        "https://dl.google.com/android/repository/"
+        f"commandlinetools-{mock_command._test_download_tag}-8092744_latest.zip"
+    )
     mock_command.download_url.assert_called_once_with(
         url=url,
         download_path=mock_command.tools_path,
@@ -192,7 +195,6 @@ def test_download_sdk(mock_command, tmp_path):
     # The commandline tools path exists, in both "latest" and versioned form
     assert sdk.cmdline_tools_path.exists()
     assert sdk.cmdline_tools_version_path.exists()
-
 
     if platform.system() == 'Windows':
         # Windows uses a marker file, rather than symlinks.
@@ -248,7 +250,10 @@ def test_download_sdk_legacy_install(mock_command, tmp_path):
     sdk = AndroidSDK.verify(mock_command, jdk=MagicMock())
 
     # Validate that the SDK was downloaded and unpacked
-    url = f"https://dl.google.com/android/repository/commandlinetools-{mock_command._test_download_tag}-8092744_latest.zip"
+    url = (
+        "https://dl.google.com/android/repository/"
+        f"commandlinetools-{mock_command._test_download_tag}-8092744_latest.zip"
+    )
     mock_command.download_url.assert_called_once_with(
         url=url,
         download_path=mock_command.tools_path,
@@ -331,7 +336,10 @@ def test_download_sdk_if_sdkmanager_not_executable(mock_command, tmp_path):
     sdk = AndroidSDK.verify(mock_command, jdk=MagicMock())
 
     # Validate that the SDK was downloaded and unpacked
-    url = f"https://dl.google.com/android/repository/commandlinetools-{mock_command._test_download_tag}-8092744_latest.zip"
+    url = (
+        "https://dl.google.com/android/repository/"
+        f"commandlinetools-{mock_command._test_download_tag}-8092744_latest.zip"
+    )
     mock_command.download_url.assert_called_once_with(
         url=url,
         download_path=mock_command.tools_path,
@@ -360,7 +368,10 @@ def test_raises_networkfailure_on_connectionerror(mock_command):
         AndroidSDK.verify(mock_command, jdk=MagicMock())
 
     # The download was attempted
-    url = f"https://dl.google.com/android/repository/commandlinetools-{mock_command._test_download_tag}-8092744_latest.zip"
+    url = (
+        "https://dl.google.com/android/repository/"
+        f"commandlinetools-{mock_command._test_download_tag}-8092744_latest.zip"
+    )
     mock_command.download_url.assert_called_once_with(
         url=url,
         download_path=mock_command.tools_path,
@@ -383,7 +394,10 @@ def test_detects_bad_zipfile(mock_command, tmp_path):
         AndroidSDK.verify(mock_command, jdk=MagicMock())
 
     # The download attempt was made.
-    url = f"https://dl.google.com/android/repository/commandlinetools-{mock_command._test_download_tag}-8092744_latest.zip"
+    url = (
+        "https://dl.google.com/android/repository/"
+        f"commandlinetools-{mock_command._test_download_tag}-8092744_latest.zip"
+    )
     mock_command.download_url.assert_called_once_with(
         url=url,
         download_path=mock_command.tools_path,
