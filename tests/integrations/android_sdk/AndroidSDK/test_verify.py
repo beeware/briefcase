@@ -7,6 +7,7 @@ from unittest.mock import MagicMock
 import pytest
 from requests import exceptions as requests_exceptions
 
+from briefcase.console import Log
 from briefcase.exceptions import (
     BriefcaseCommandError,
     MissingToolError,
@@ -18,6 +19,8 @@ from briefcase.integrations.android_sdk import AndroidSDK
 @pytest.fixture
 def mock_command(tmp_path):
     command = MagicMock()
+
+    command.logger = Log(verbosity=1)
 
     # Mock-out the `sys` module so we can mock out the Python version in some tests.
     command.sys = MagicMock()
@@ -96,8 +99,101 @@ def test_succeeds_immediately_in_happy_path(mock_command, tmp_path):
     assert sdk.root_path == android_sdk_root_path
 
 
+def test_succeeds_immediately_in_happy_path_with_debug(mock_command, tmp_path):
+    "If debug is enabled, a verify call will display the installed packages."
+    # Increase the log level.
+    mock_command.logger.verbosity = 2
+
+    # If `sdkmanager` exists and has the right permissions, and
+    # `android-sdk-license` exists, verify() should
+    # succeed, create no subprocesses, make no requests, and return a
+    # SDK wrapper.
+
+    # On Windows, this requires `sdkmanager.bat`; on non-Windows, it requires
+    # `sdkmanager`.
+
+    # Create `sdkmanager` and the license file.
+    android_sdk_root_path = tmp_path / "tools" / "android_sdk"
+    tools_bin = android_sdk_root_path / "cmdline-tools" / "latest" / "bin"
+    tools_bin.mkdir(parents=True, mode=0o755)
+    if mock_command.host_os == "Windows":
+        sdk_manager = (tools_bin / "sdkmanager.bat")
+        sdk_manager.touch()
+    else:
+        sdk_manager = (tools_bin / "sdkmanager")
+        sdk_manager.touch(mode=0o755)
+
+    # Pre-accept the license
+    accept_license(android_sdk_root_path)()
+
+    # Expect verify() to succeed
+    jdk = MagicMock()
+    jdk.java_home = "/path/to/java"
+    sdk = AndroidSDK.verify(mock_command, jdk=jdk)
+
+    # No calls to download or unpack anything.
+    mock_command.download_url.assert_not_called()
+    mock_command.subprocess.check_output.assert_not_called()
+    mock_command.shutil.unpack_archive.assert_not_called()
+
+    # One call to run to dump the installed packages
+    mock_command.subprocess.run.assert_called_once_with(
+        [os.fsdecode(sdk_manager), "--list_installed"],
+        env={
+            "ANDROID_SDK_ROOT": os.fsdecode(android_sdk_root_path),
+            "JAVA_HOME": "/path/to/java"
+        },
+        check=True,
+    )
+
+    # The returned SDK has the expected root path.
+    assert sdk.root_path == android_sdk_root_path
+
+
 def test_user_provided_sdk(mock_command, tmp_path):
     "If the user specifies a valid ANDROID_SDK_ROOT, it is used"
+    # Increase the log level.
+    mock_command.logger.verbosity = 2
+
+    # Create `sdkmanager` and the license file.
+    existing_android_sdk_root_path = tmp_path / "other_sdk"
+    tools_bin = existing_android_sdk_root_path / "cmdline-tools" / "latest" / "bin"
+    tools_bin.mkdir(parents=True, mode=0o755)
+    (tools_bin / "sdkmanager").touch(mode=0o755)
+
+    # Pre-accept the license
+    accept_license(existing_android_sdk_root_path)()
+
+    # Set the environment to specify ANDROID_SDK_ROOT
+    mock_command.os.environ = {
+        'ANDROID_SDK_ROOT': os.fsdecode(existing_android_sdk_root_path)
+    }
+
+    # Expect verify() to succeed
+    jdk = MagicMock()
+    jdk.java_home = "/path/to/java"
+    sdk = AndroidSDK.verify(mock_command, jdk=jdk)
+
+    # No calls to download or unpack anything.
+    mock_command.download_url.assert_not_called()
+    mock_command.subprocess.check_output.assert_not_called()
+    mock_command.shutil.unpack_archive.assert_not_called()
+
+    # One call to run to dump the installed packages
+    mock_command.subprocess.run.assert_called_once_with(
+        [os.fsdecode(sdk.sdkmanager_path), "--list_installed"],
+        env={
+            "ANDROID_SDK_ROOT": os.fsdecode(existing_android_sdk_root_path),
+            "JAVA_HOME": "/path/to/java"
+        },
+        check=True,
+    )
+    # The returned SDK has the expected root path.
+    assert sdk.root_path == existing_android_sdk_root_path
+
+
+def test_user_provided_sdk_with_debug(mock_command, tmp_path):
+    "If the has debug with a user-specified ANDROID_SDK_ROOT, the packages are listed."
     # Create `sdkmanager` and the license file.
     existing_android_sdk_root_path = tmp_path / "other_sdk"
     tools_bin = existing_android_sdk_root_path / "cmdline-tools" / "latest" / "bin"

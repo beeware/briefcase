@@ -156,6 +156,12 @@ class AndroidSDK:
             if sdk.exists():
                 # Ensure licenses have been accepted
                 sdk.verify_license()
+
+                # If the user has requested debug output, output the current
+                # list of packages managed by the SDK manager
+                if command.logger.verbosity >= command.logger.DEBUG:
+                    sdk.list_packages()
+
                 return sdk
             else:
                 command.logger.warning(
@@ -191,6 +197,12 @@ class AndroidSDK:
             # The sdkmanager binary exists in the `latest` location, and is executable.
             # Ensure licenses have been accepted
             sdk.verify_license()
+
+            # If the user has requested debug output, output the current
+            # list of packages managed by the SDK manager
+            if command.logger.verbosity >= command.logger.DEBUG:
+                sdk.list_packages()
+
             return sdk
         elif (sdk_root_path / "tools").exists():
             # The legacy SDK Tools exist. Delete them.
@@ -332,6 +344,19 @@ its output for errors.
     $ {self.sdkmanager_path} --update
 """)
 
+    def list_packages(self):
+        """List the packages currently manged by the Android SDK"""
+        try:
+            # Using subprocess.run() with no I/O redirection so the user sees
+            # the full output and can send input.
+            self.command.subprocess.run(
+                [os.fsdecode(self.sdkmanager_path), "--list_installed"],
+                env=self.env,
+                check=True,
+            )
+        except subprocess.CalledProcessError:
+            raise BriefcaseCommandError("Unable to invoke the Android SDK manager")
+
     def adb(self, device):
         """Obtain an ADB instance for managing a specific device.
 
@@ -383,6 +408,11 @@ connection.
         Raises an error if the emulator can't be installed.
         """
         if (self.root_path / "emulator").exists():
+            # If the user has requested debug output, output the current
+            # list of packages managed by the SDK manager
+            if self.command.logger.verbosity >= self.command.logger.DEBUG:
+                self.list_packages()
+
             return
 
         self.command.logger.info("Downloading the Android emulator and system image...")

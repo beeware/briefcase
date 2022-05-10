@@ -3,7 +3,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from briefcase.console import Log
 from briefcase.integrations.android_sdk import AndroidSDK
+
 from tests.utils import DummyConsole
 
 
@@ -13,6 +15,7 @@ def mock_sdk(tmp_path):
     command.home_path = tmp_path
     command.subprocess = MagicMock()
     command.input = DummyConsole()
+    command.logger = Log(verbosity=1)
 
     # For default test purposes, assume we're on macOS x86_64
     command.host_os = 'Darwin'

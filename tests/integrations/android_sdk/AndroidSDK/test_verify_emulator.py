@@ -18,6 +18,30 @@ def test_succeeds_immediately_if_emulator_installed(mock_sdk):
     mock_sdk.command.requests.get.assert_not_called()
 
 
+def test_succeeds_immediately_if_emulator_installed_with_debug(mock_sdk, tmp_path):
+    """If the emulator exist and debug is turned on, the list of packages is displayed"""
+    # Turn up logging to debug levels
+    mock_sdk.command.logger.verbosity = 2
+
+    # Create `emulator` within `root_path`.
+    (mock_sdk.root_path / "emulator").mkdir(parents=True)
+
+    mock_sdk.verify_emulator()
+
+    # No extra calls made
+    mock_sdk.command.requests.get.assert_not_called()
+
+    # But a call to run is made to dump the installed packages
+    mock_sdk.command.subprocess.run.assert_called_once_with(
+        [os.fsdecode(mock_sdk.sdkmanager_path), "--list_installed"],
+        env={
+            "ANDROID_SDK_ROOT": os.fsdecode(tmp_path / 'sdk'),
+            "JAVA_HOME": "/path/to/jdk"
+        },
+        check=True,
+    )
+
+
 @pytest.mark.parametrize(
     "host_os, host_arch, emulator_abi",
     [
