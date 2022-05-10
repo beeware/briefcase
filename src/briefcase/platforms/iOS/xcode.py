@@ -298,8 +298,8 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         # if it's shut down, start it again.
         if device_state == DeviceState.SHUTDOWN:
             try:
-                self.logger.info(f"Booting {device} simulator running iOS {iOS_version}...")
-                self.subprocess.run(
+                self.subprocess.run_with_waitbar(
+                    f"Booting {device} simulator running iOS {iOS_version}...",
                     ['xcrun', 'simctl', 'boot', udid],
                     check=True
                 )
@@ -308,8 +308,8 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
 
         # We now know the simulator is *running*, so we can open it.
         try:
-            self.logger.info(f"Opening {device} simulator running iOS {iOS_version}...")
-            self.subprocess.run(
+            self.subprocess.run_with_waitbar(
+                f"Opening {device} simulator running iOS {iOS_version}...",
                 ['open', '-a', 'Simulator', '--args', '-CurrentDeviceUDID', udid],
                 check=True
             )
@@ -319,9 +319,9 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         # Try to uninstall the app first. If the app hasn't been installed
         # before, this will still succeed.
         app_identifier = '.'.join([app.bundle, app.app_name])
-        self.logger.info(f'[{app.app_name}] Uninstalling old app version...')
         try:
-            self.subprocess.run(
+            self.subprocess.run_with_waitbar(
+                f'[{app.app_name}] Uninstalling old app version...',
                 ['xcrun', 'simctl', 'uninstall', udid, app_identifier],
                 check=True
             )
@@ -329,18 +329,18 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
             raise BriefcaseCommandError(f"Unable to uninstall old version of app {app.app_name}.")
 
         # Install the app.
-        self.logger.info(f'[{app.app_name}] Installing new app version...')
         try:
-            self.subprocess.run(
+            self.subprocess.run_with_waitbar(
+                f'[{app.app_name}] Installing new app version...',
                 ['xcrun', 'simctl', 'install', udid, self.binary_path(app)],
                 check=True
             )
         except subprocess.CalledProcessError:
             raise BriefcaseCommandError(f"Unable to install new version of app {app.app_name}.")
 
-        self.logger.info(f'[{app.app_name}] Starting app...')
         try:
-            self.subprocess.run(
+            self.subprocess.run_with_waitbar(
+                f'[{app.app_name}] Starting app...',
                 ['xcrun', 'simctl', 'launch', udid, app_identifier],
                 check=True
             )

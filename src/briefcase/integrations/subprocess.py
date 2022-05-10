@@ -1,6 +1,7 @@
 import json
 import shlex
 import subprocess
+from time import sleep
 
 from briefcase.exceptions import CommandOutputParseError
 
@@ -145,6 +146,34 @@ class Subprocess:
 
         self._log_return_code(command_result.returncode)
         return command_result
+
+    def run_with_waitbar(self, title, args, check=False, **kwargs):
+        """
+        Simulates calling subprocess.run() while showing a WaitBar.
+        """
+
+        # don't let the command write anything to the screen
+        kwargs['stdout'] = self._subprocess.PIPE
+        kwargs['stderr'] = self._subprocess.PIPE
+
+        with self.command.input.wait_bar(title) as wait_bar:
+            with self.Popen(args, **kwargs) as process:
+                while process.poll() is None:
+                    sleep(1)
+                    wait_bar.update()
+                stdout, stderr = process.communicate()
+                result = subprocess.CompletedProcess(
+                    args=args,
+                    returncode=process.poll(),
+                    stdout=stdout,
+                    stderr=stderr
+                )
+        self._log_output(result.stdout, result.stderr)
+        self._log_return_code(result.returncode)
+        if check:
+            # raise CalledProcessError for returncode != 0
+            result.check_returncode()
+        return result
 
     def check_output(self, args, **kwargs):
         """
