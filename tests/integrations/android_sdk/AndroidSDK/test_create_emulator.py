@@ -15,7 +15,10 @@ from tests.utils import FsPathMock
 def mock_sdk(tmp_path):
     command = MagicMock()
     command.home_path = tmp_path
-    command.host_platform = 'unknown'
+
+    # For default test purposes, assume we're on macOS x86_64
+    command.host_os = 'Darwin'
+    command.host_arch = 'x86_64'
 
     sdk = AndroidSDK(command, jdk=MagicMock(), root_path=tmp_path)
 
@@ -31,10 +34,10 @@ def mock_sdk(tmp_path):
 @pytest.mark.parametrize(
     "host_os, host_arch, emulator_abi",
     [
-        ("Darwin", "x86_64", "x86"),
+        ("Darwin", "x86_64", "x86_64"),
         ("Darwin", "arm64", "arm64-v8a"),
-        ("Windows", "x86_64", "x86"),
-        ("Linux", "x86_64", "x86"),
+        ("Windows", "x86_64", "x86_64"),
+        ("Linux", "x86_64", "x86_64"),
     ]
 )
 def test_create_emulator(mock_sdk, tmp_path, host_os, host_arch, emulator_abi):
@@ -42,7 +45,7 @@ def test_create_emulator(mock_sdk, tmp_path, host_os, host_arch, emulator_abi):
     # This test validates everything going well on first run.
     # This means the skin will be downloaded and unpacked.
 
-    # Mock the hardware and operating system
+    # Mock the hardware and operating system to specific values
     mock_sdk.command.host_os = host_os
     mock_sdk.command.host_arch = host_arch
 
@@ -83,7 +86,7 @@ def test_create_emulator(mock_sdk, tmp_path, host_os, host_arch, emulator_abi):
             "create", "avd",
             "--name", "new-emulator",
             "--abi", emulator_abi,
-            "--package", f'system-images;android-28;default;{emulator_abi}',
+            "--package", f'system-images;android-31;default;{emulator_abi}',
             "--device", "pixel",
         ],
         env=mock_sdk.env,
@@ -99,10 +102,9 @@ def test_create_emulator(mock_sdk, tmp_path, host_os, host_arch, emulator_abi):
     )
 
     # Skin is unpacked.
-    # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
     mock_sdk.command.shutil.unpack_archive.assert_called_once_with(
-        os.fsdecode(skin_tgz_path),
-        extract_dir=os.fsdecode(mock_sdk.root_path / "skins" / "pixel_3a")
+        skin_tgz_path,
+        extract_dir=mock_sdk.root_path / "skins" / "pixel_3a"
     )
 
     # Original file was deleted.
@@ -119,6 +121,10 @@ def test_create_preexisting_skins(mock_sdk, tmp_path):
     "Test that if skins already exist, they're not re-downloaded."
     # This test validates that if skins are already cached,
     # they're not re-downloaded
+
+    # Mock the hardware and operating system
+    mock_sdk.command.host_os = 'Darwin'
+    mock_sdk.command.host_arch = 'x86_64'
 
     # Mock the user getting a valid name first time
     mock_sdk.command.input.return_value = 'new-emulator'
@@ -145,8 +151,8 @@ def test_create_preexisting_skins(mock_sdk, tmp_path):
             "--verbose",
             "create", "avd",
             "--name", "new-emulator",
-            "--abi", "x86",
-            "--package", 'system-images;android-28;default;x86',
+            "--abi", "x86_64",
+            "--package", 'system-images;android-31;default;x86_64',
             "--device", "pixel",
         ],
         env=mock_sdk.env,
@@ -184,8 +190,8 @@ def test_create_failure(mock_sdk):
             "--verbose",
             "create", "avd",
             "--name", "new-emulator",
-            "--abi", "x86",
-            "--package", 'system-images;android-28;default;x86',
+            "--abi", "x86_64",
+            "--package", 'system-images;android-31;default;x86_64',
             "--device", "pixel",
         ],
         env=mock_sdk.env,
@@ -212,8 +218,8 @@ def test_download_failure(mock_sdk, tmp_path):
             "--verbose",
             "create", "avd",
             "--name", "new-emulator",
-            "--abi", "x86",
-            "--package", 'system-images;android-28;default;x86',
+            "--abi", "x86_64",
+            "--package", 'system-images;android-31;default;x86_64',
             "--device", "pixel",
         ],
         env=mock_sdk.env,
@@ -261,8 +267,8 @@ def test_unpack_failure(mock_sdk, tmp_path):
             "--verbose",
             "create", "avd",
             "--name", "new-emulator",
-            "--abi", "x86",
-            "--package", 'system-images;android-28;default;x86',
+            "--abi", "x86_64",
+            "--package", 'system-images;android-31;default;x86_64',
             "--device", "pixel",
         ],
         env=mock_sdk.env,
@@ -278,10 +284,9 @@ def test_unpack_failure(mock_sdk, tmp_path):
     )
 
     # An attempt to unpack the skin was made.
-    # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
     mock_sdk.command.shutil.unpack_archive.assert_called_once_with(
-        os.fsdecode(skin_tgz_path),
-        extract_dir=os.fsdecode(mock_sdk.root_path / "skins" / "pixel_3a")
+        skin_tgz_path,
+        extract_dir=mock_sdk.root_path / "skins" / "pixel_3a"
     )
 
     # Original file wasn't deleted.

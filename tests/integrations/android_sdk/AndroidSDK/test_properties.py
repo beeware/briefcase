@@ -3,15 +3,24 @@ from pathlib import Path
 
 import pytest
 
+from briefcase.exceptions import BriefcaseCommandError
 
-def test_sdk_url(mock_sdk):
+
+@pytest.mark.parametrize(
+    "host_os, name",
+    [
+        ("windows", "windows"),
+        ("Windows", "windows"),
+        ("darwin", "mac"),
+        ("Darwin", "mac"),
+    ]
+)
+def test_cmdline_tools_url(mock_sdk, host_os, name):
     "Validate that the SDK URL is computed using `host_os`."
-    # We set `host_os` to a sentinel value in order to validate that
-    # `build_command.sdk_url` uses `host_os`.
-    mock_sdk.command.host_os = "sAMple"
+    mock_sdk.command.host_os = host_os
 
-    assert mock_sdk.sdk_url == (
-        "https://dl.google.com/android/repository/sdk-tools-sample-4333796.zip"
+    assert mock_sdk.cmdline_tools_url == (
+        f"https://dl.google.com/android/repository/commandlinetools-{name}-8092744_latest.zip"
     )
 
 
@@ -29,7 +38,7 @@ def test_sdkmanager_path(mock_sdk, host_os, sdkmanager_name):
     mock_sdk.command.host_os = host_os
 
     assert mock_sdk.sdkmanager_path == (
-        mock_sdk.root_path / "tools" / "bin" / sdkmanager_name
+        mock_sdk.root_path / "cmdline-tools" / "latest" / "bin" / sdkmanager_name
     )
 
 
@@ -65,7 +74,7 @@ def test_avdmanager_path(mock_sdk, host_os, avdmanager_name):
     mock_sdk.command.host_os = host_os
 
     assert mock_sdk.avdmanager_path == (
-        mock_sdk.root_path / "tools" / "bin" / avdmanager_name
+        mock_sdk.root_path / "cmdline-tools" / "latest" / "bin" / avdmanager_name
     )
 
 
@@ -102,3 +111,44 @@ def test_simple_env(mock_sdk, tmp_path):
 def test_managed_install(mock_sdk):
     "All Android SDK installs are managed"
     assert mock_sdk.managed_install
+
+
+@pytest.mark.parametrize(
+    "host_os, host_arch, emulator_abi",
+    [
+        ("Darwin", "x86_64", "x86_64"),
+        ("Darwin", "arm64", "arm64-v8a"),
+        ("Windows", "x86_64", "x86_64"),
+        ("Linux", "x86_64", "x86_64"),
+    ]
+)
+def test_emulator_abi(mock_sdk, host_os, host_arch, emulator_abi):
+    "The emulator API can be determined from the host OS and architecture"
+    # Mock the hardware and operating system
+    mock_sdk.command.host_os = host_os
+    mock_sdk.command.host_arch = host_arch
+
+    assert mock_sdk.emulator_abi == emulator_abi
+
+
+@pytest.mark.parametrize(
+    "host_os, host_arch",
+    [
+        ("Darwin", "powerpc"),
+        ("Windows", "arm64"),
+        ("Windows", "powerpc"),
+        ("Linux", "arm64"),
+        ("Linux", "powerpc"),
+    ]
+)
+def test_bad_emulator_abi(mock_sdk, host_os, host_arch):
+    "If the host OS/architecture isn't supported by Android, an error is raised"
+    # Mock the hardware and operating system
+    mock_sdk.command.host_os = host_os
+    mock_sdk.command.host_arch = host_arch
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=rf"The Android emulator does not currently support {host_os} {host_arch} hardware."
+    ):
+        mock_sdk.emulator_abi

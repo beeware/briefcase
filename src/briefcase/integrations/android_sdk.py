@@ -52,11 +52,38 @@ class AndroidSDK:
         self.sleep = time.sleep
 
     @property
+    def cmdline_tools_url(self):
+        """The Android SDK Command-Line Tools URL appropriate to the current operating system."""
+        platform_name = self.command.host_os.lower()
+        if self.command.host_os.lower() == 'darwin':
+            platform_name = 'mac'
+
+        return f"https://dl.google.com/android/repository/commandlinetools-{platform_name}-{self.cmdline_tools_version}_latest.zip"  # noqa: E501
+
+    @property
+    def cmdline_tools_path(self):
+        return self.root_path / 'cmdline-tools' / 'latest'
+
+    @property
+    def cmdline_tools_version(self):
+        # This is the version of the Android SDK Command-line tools that
+        # are current as of May 2022. These tools can generally self-update,
+        # so using an fixed download URL isn't a problem.
+        # However, if/when this version number is changed, ensure that the
+        # checks done during verification include any required upgrade
+        # steps.
+        return "8092744"
+
+    @property
+    def cmdline_tools_version_path(self):
+        return self.root_path / 'cmdline-tools' / self.cmdline_tools_version
+
+    @property
     def sdkmanager_path(self):
         sdkmanager = (
             "sdkmanager.bat" if self.command.host_os == "Windows" else "sdkmanager"
         )
-        return self.root_path / "tools" / "bin" / sdkmanager
+        return self.cmdline_tools_path / "bin" / sdkmanager
 
     @property
     def adb_path(self):
@@ -68,7 +95,7 @@ class AndroidSDK:
         avdmanager = (
             "avdmanager.bat" if self.command.host_os == "Windows" else "avdmanager"
         )
-        return self.root_path / "tools" / "bin" / avdmanager
+        return self.cmdline_tools_path / "bin" / avdmanager
 
     @property
     def emulator_path(self):
@@ -87,26 +114,18 @@ class AndroidSDK:
         }
 
     @property
-    def sdk_url(self):
-        """The Android SDK URL appropriate to the current operating system."""
-        # The URLs described by the pattern below have existed since
-        # approximately 2017, and the code they download has a built-in
-        # updater. I hope they will work for many years.
-        return f"https://dl.google.com/android/repository/sdk-tools-{self.command.host_os.lower()}-4333796.zip"
-
-    @property
     def emulator_abi(self):
         """The ABI to use for the Android emulator"""
         if self.command.host_arch == "arm64":
             if self.command.host_os == "Darwin":
                 return 'arm64-v8a'
-            else:
-                raise BriefcaseCommandError(
-                    "The Android emulator does not currently support "
-                    f"{self.command.host_os} {self.command.host_arch} hardware."
-                )
-        else:
-            return 'x86'
+        if self.command.host_arch == 'x86_64':
+            return 'x86_64'
+
+        raise BriefcaseCommandError(
+            "The Android emulator does not currently support "
+            f"{self.command.host_os} {self.command.host_arch} hardware."
+        )
 
     @classmethod
     def verify(cls, command, install=True, jdk=None):
@@ -153,21 +172,43 @@ class AndroidSDK:
     Briefcase will use its own SDK instance.
 
 *************************************************************************
-
-"""
-                )
+""")
 
         # Build an SDK wrapper for the Briefcase SDK instance.
+        sdk_root_path = command.tools_path / "android_sdk"
         sdk = AndroidSDK(
             command=command,
             jdk=jdk,
-            root_path=command.tools_path / "android_sdk"
+            root_path=sdk_root_path,
         )
 
         if sdk.exists():
+            # NOTE: For now, there's only one version of the cmdline-tools in the wild.
+            # If/when that ever changes, do a verification check here.
+
+            # The sdkmanager binary exists in the `latest` location, and is executable.
             # Ensure licenses have been accepted
             sdk.verify_license()
             return sdk
+        elif (sdk_root_path / "tools").exists():
+            # The legacy SDK Tools exist. Delete them.
+            command.logger.info("""
+*************************************************************************
+** WARNING: Upgrading Android SDK tools                                **
+*************************************************************************
+
+    Briefcase needs to replace the older Android SDK Tools with the
+    newer Android SDK Command-Line Tools. This will involve some large
+    downloads, as well as re-accepting the licenses for the Android
+    SDKs.
+
+    You will also need to re-create any emulators that were created
+    with the old tools.
+
+*************************************************************************
+
+""")
+            command.shutil.rmtree(sdk_root_path)
 
         if install:
             sdk.install()
@@ -199,31 +240,56 @@ class AndroidSDK:
         Download and install the Android SDK.
         """
         try:
-            sdk_zip_path = self.command.download_url(
-                url=self.sdk_url, download_path=self.command.tools_path,
+            cmdline_tools_zip_path = self.command.download_url(
+                url=self.cmdline_tools_url,
+                download_path=self.command.tools_path,
             )
         except requests_exceptions.ConnectionError:
-            raise NetworkFailure("download Android SDK")
+            raise NetworkFailure("download Android SDK Command-Line Tools")
 
+        # The cmdline-tools package *must* be installed as:
+        #     <sdk_path>/cmdline-tools/latest
+        #
+        # However, the zip file unpacks a top-level folder named `cmdline-tools`.
+        # So, the unpacking process is:
+        #
+        #  1. Make a <sdk_path>/cmdline-tools folder
+        #  2. Unpack the zip file into that folder, creating <sdk_path>/cmdline-tools/cmdline-tools
+        #  3. Move <sdk_path>/cmdline-tools/cmdline-tools to <sdk_path>/cmdline-tools/<version>
+        #  4. Create a symlink of <sdk_path>/cmdline-tools/latest to <sdk_path>/cmdline-tools/<version>
+
+        self.command.logger.info("Install Android SDK Command-Line Tools...")
+        self.cmdline_tools_path.parent.mkdir(parents=True, exist_ok=True)
         try:
-            self.command.logger.info("Install Android SDK...")
-            # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
-            self.command.shutil.unpack_archive(os.fsdecode(sdk_zip_path), extract_dir=os.fsdecode(self.root_path))
+            self.command.shutil.unpack_archive(
+                cmdline_tools_zip_path,
+                extract_dir=self.cmdline_tools_path.parent
+            )
         except (shutil.ReadError, EOFError):
             raise BriefcaseCommandError(f"""\
-Unable to unpack Android SDK ZIP file. The download may have been interrupted
+Unable to unpack Android SDK Command-Line Tools ZIP file. The download may have been interrupted
 or corrupted.
 
-Delete {sdk_zip_path} and run briefcase again.
+Delete {cmdline_tools_zip_path} and run briefcase again.
 """)
+        # If there's an existing version of the cmdline tools (or the symlink), delete them.
+        if self.cmdline_tools_path.exists():
+            self.command.os.unlink(self.cmdline_tools_path)
+        if self.cmdline_tools_version_path.exists():
+            self.command.shutil.rmtree(self.cmdline_tools_version_path)
+
+        # Rename the top level zip content to the version name
+        (self.cmdline_tools_path.parent / "cmdline-tools").rename(self.cmdline_tools_version_path)
+        # Symlink the `latest` name to the version name
+        self.cmdline_tools_path.symlink_to(self.cmdline_tools_version_path)
 
         # Zip file no longer needed once unpacked.
-        sdk_zip_path.unlink()
+        cmdline_tools_zip_path.unlink()
 
         # Python zip unpacking ignores permission metadata.
         # On non-Windows, we manually fix permissions.
         if self.command.host_os != "Windows":
-            for binpath in (self.root_path / "tools" / "bin").glob("*"):
+            for binpath in (self.cmdline_tools_path / "bin").glob("*"):
                 if not self.command.os.access(binpath, self.command.os.X_OK):
                     binpath.chmod(0o755)
 
@@ -236,14 +302,16 @@ Delete {sdk_zip_path} and run briefcase again.
             # Using subprocess.run() with no I/O redirection so the user sees
             # the full output and can send input.
             self.command.subprocess.run(
-                [os.fsdecode(self.sdkmanager_path), "--update"], env=self.env, check=True,
+                [os.fsdecode(self.sdkmanager_path), "--update"],
+                env=self.env,
+                check=True,
             )
         except subprocess.CalledProcessError:
             raise BriefcaseCommandError(f"""\
-Error while reviewing Android SDK licenses. Please run this command and examine
+Error while updating the Android SDK manager. Please run this command and examine
 its output for errors.
 
-    $ {self.root_path / 'tools' / 'bin' / 'sdkmanager'} --update
+    $ {self.sdkmanager_path} --update
 """)
 
     def adb(self, device):
@@ -281,7 +349,7 @@ its output for errors.
 Error while reviewing Android SDK licenses. Please run this command and examine
 its output for errors.
 
-    $ {self.root_path / 'tools' / 'bin' / 'sdkmanager'} --licenses
+    $ {self.sdkmanager_path} --licenses
 """)
 
         if not license_path.exists():
@@ -304,10 +372,9 @@ connection.
             self.command.subprocess.run(
                 [
                     os.fsdecode(self.sdkmanager_path),
-                    "platforms;android-28",
-                    f"system-images;android-28;default;{self.emulator_abi}",
-                    "emulator",
                     "platform-tools",
+                    "emulator",
+                    f"system-images;android-31;default;{self.emulator_abi}",
                 ],
                 env=self.env,
                 check=True,
@@ -611,7 +678,7 @@ An emulator named '{avd}' already exists.
                     "create", "avd",
                     "--name", avd,
                     "--abi", self.emulator_abi,
-                    "--package", f'system-images;android-28;default;{self.emulator_abi}',
+                    "--package", f'system-images;android-31;default;{self.emulator_abi}',
                     "--device", device_type,
                 ],
                 env=self.env,
@@ -642,10 +709,9 @@ An emulator named '{avd}' already exists.
 
             # Unpack skin archive
             try:
-                # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
                 self.command.shutil.unpack_archive(
-                    os.fsdecode(skin_tgz_path),
-                    extract_dir=os.fsdecode(skin_path)
+                    skin_tgz_path,
+                    extract_dir=skin_path
                 )
             except (shutil.ReadError, EOFError):
                 raise BriefcaseCommandError(f"Unable to unpack {skin} device skin")
@@ -654,31 +720,58 @@ An emulator named '{avd}' already exists.
             skin_tgz_path.unlink()
 
         self.command.logger.info("Adding extra device configuration...")
-        with (
-            self.avd_path / f'{avd}.avd' / 'config.ini'
-        ).open('a') as f:
-            f.write(
-                f"""
-disk.dataPartition.size=4096M
-hw.keyboard=yes
-skin.dynamic=yes
-skin.name={skin}
-skin.path=skins/{skin}
-showDeviceFrame=yes
-"""
-            )
+        self.update_emulator_config(
+            avd,
+            {
+                "avd.id": avd,
+                "avd.name": avd,
+                "disk.dataPartition.size": "4096M",
+                "hw.keyboard": "yes",
+                "skin.dynamic": "yes",
+                "skin.name": skin,
+                "skin.path": f"skins/{skin}",
+                "showDeviceFrame": "yes",
+            }
+        )
 
-            self.command.logger.info(
-                f"""
+        self.command.logger.info(
+            f"""
 Android emulator '{avd}' created.
 
 In future, you can specify this device by running:
 
-    briefcase run android -d @{avd}
+briefcase run android -d @{avd}
 """
-            )
+        )
 
         return avd
+
+    def update_emulator_config(self, avd, updates):
+        """
+        Update the AVD configuration with specific values.
+
+        :params avd: The AVD whose config will be updated
+        :params updates: A dictionary containing the new key-value to
+            add to the device configuration.
+        """
+        # Parse the existing config into key-value pairs
+        avd_config_filename = self.avd_path / f'{avd}.avd' / 'config.ini'
+        avd_config = {}
+        with avd_config_filename.open('r') as f:
+            for line in f:
+                try:
+                    key, value = line.rstrip().split("=", 1)
+                    avd_config[key] = value
+                except ValueError:
+                    pass
+
+        # Augment the config with the new new key-values pairs
+        avd_config.update(updates)
+
+        # Write the update configuration.
+        with avd_config_filename.open('w') as f:
+            for key, value in avd_config.items():
+                f.write(f"{key}={value}\n")
 
     def start_emulator(self, avd):
         """Start an existing Android emulator.

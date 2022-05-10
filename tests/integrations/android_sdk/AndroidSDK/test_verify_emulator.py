@@ -21,10 +21,10 @@ def test_succeeds_immediately_if_emulator_installed(mock_sdk):
 @pytest.mark.parametrize(
     "host_os, host_arch, emulator_abi",
     [
-        ("Darwin", "x86_64", "x86"),
+        ("Darwin", "x86_64", "x86_64"),
         ("Darwin", "arm64", "arm64-v8a"),
-        ("Windows", "x86_64", "x86"),
-        ("Linux", "x86_64", "x86"),
+        ("Windows", "x86_64", "x86_64"),
+        ("Linux", "x86_64", "x86_64"),
     ]
 )
 def test_installs_android_emulator(mock_sdk, host_os, host_arch, emulator_abi):
@@ -38,10 +38,9 @@ def test_installs_android_emulator(mock_sdk, host_os, host_arch, emulator_abi):
     mock_sdk.command.subprocess.run.assert_called_once_with(
         [
             os.fsdecode(mock_sdk.sdkmanager_path),
-            "platforms;android-28",
-            f"system-images;android-28;default;{emulator_abi}",
-            "emulator",
             "platform-tools",
+            "emulator",
+            f"system-images;android-31;default;{emulator_abi}",
         ],
         env=mock_sdk.env,
         check=True,

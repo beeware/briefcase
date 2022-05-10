@@ -14,6 +14,10 @@ def mock_sdk(tmp_path):
     command.subprocess = MagicMock()
     command.input = DummyConsole()
 
+    # For default test purposes, assume we're on macOS x86_64
+    command.host_os = 'Darwin'
+    command.host_arch = 'x86_64'
+
     # Mock an empty environment
     command.os.environ = {}
 
