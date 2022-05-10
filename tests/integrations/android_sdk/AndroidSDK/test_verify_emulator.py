@@ -1,5 +1,6 @@
 import os
 import subprocess
+from pathlib import Path
 
 import pytest
 
@@ -36,7 +37,7 @@ def test_succeeds_immediately_if_emulator_installed_with_debug(mock_sdk, tmp_pat
         [os.fsdecode(mock_sdk.sdkmanager_path), "--list_installed"],
         env={
             "ANDROID_SDK_ROOT": os.fsdecode(tmp_path / 'sdk'),
-            "JAVA_HOME": "/path/to/jdk"
+            "JAVA_HOME": os.fsdecode(Path("/path/to/jdk")),
         },
         check=True,
     )
