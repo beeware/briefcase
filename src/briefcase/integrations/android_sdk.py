@@ -121,7 +121,7 @@ class AndroidSDK:
         if self.command.host_arch == "arm64":
             if self.command.host_os == "Darwin":
                 return 'arm64-v8a'
-        if self.command.host_arch == 'x86_64':
+        if self.command.host_arch in ('x86_64', 'AMD64'):
             return 'x86_64'
 
         raise BriefcaseCommandError(
