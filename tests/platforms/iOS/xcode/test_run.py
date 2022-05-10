@@ -23,6 +23,8 @@ def test_run_app_simulator_booted(first_app_config, tmp_path):
     command.get_device_state = mock.MagicMock(return_value=DeviceState.BOOTED)
 
     command.subprocess = mock.MagicMock()
+    log_stream_process = mock.MagicMock()
+    command.subprocess.Popen.return_value = log_stream_process
 
     # Run the app
     command.run_app(first_app_config)
@@ -67,7 +69,7 @@ def test_run_app_simulator_booted(first_app_config, tmp_path):
             check=True
         ),
     ])
-    # Start tailing the log
+    # The log is being tailed; no process cleanup is triggered
     command.subprocess.Popen.assert_called_with(
         [
             'xcrun', 'simctl', 'spawn',
@@ -80,6 +82,8 @@ def test_run_app_simulator_booted(first_app_config, tmp_path):
         stderr=subprocess.STDOUT,
         bufsize=1,
     )
+    command.subprocess.stream_output.assert_called_with("log stream", log_stream_process)
+    command.subprocess.cleanup.assert_not_called()
 
 
 def test_run_app_simulator_shut_down(first_app_config, tmp_path):
@@ -97,6 +101,8 @@ def test_run_app_simulator_shut_down(first_app_config, tmp_path):
     command.get_device_state = mock.MagicMock(return_value=DeviceState.SHUTDOWN)
 
     command.subprocess = mock.MagicMock()
+    log_stream_process = mock.MagicMock()
+    command.subprocess.Popen.return_value = log_stream_process
 
     # Run the app
     command.run_app(first_app_config)
@@ -146,7 +152,7 @@ def test_run_app_simulator_shut_down(first_app_config, tmp_path):
             check=True
         ),
     ])
-    # Start tailing the log
+    # The log is being tailed; no process cleanup is triggered
     command.subprocess.Popen.assert_called_with(
         [
             'xcrun', 'simctl', 'spawn',
@@ -159,6 +165,8 @@ def test_run_app_simulator_shut_down(first_app_config, tmp_path):
         stderr=subprocess.STDOUT,
         bufsize=1,
     )
+    command.subprocess.stream_output.assert_called_with("log stream", log_stream_process)
+    command.subprocess.cleanup.assert_not_called()
 
 
 def test_run_app_simulator_shutting_down(first_app_config, tmp_path):
@@ -186,6 +194,8 @@ def test_run_app_simulator_shutting_down(first_app_config, tmp_path):
 
     command.sleep = mock.MagicMock()
     command.subprocess = mock.MagicMock()
+    log_stream_process = mock.MagicMock()
+    command.subprocess.Popen.return_value = log_stream_process
 
     # Run the app
     command.run_app(first_app_config)
@@ -238,7 +248,7 @@ def test_run_app_simulator_shutting_down(first_app_config, tmp_path):
             check=True
         ),
     ])
-    # Start tailing the log
+    # The log is being tailed; no process cleanup has occurred
     command.subprocess.Popen.assert_called_with(
         [
             'xcrun', 'simctl', 'spawn',
@@ -251,6 +261,8 @@ def test_run_app_simulator_shutting_down(first_app_config, tmp_path):
         stderr=subprocess.STDOUT,
         bufsize=1,
     )
+    command.subprocess.stream_output.assert_called_with("log stream", log_stream_process)
+    command.subprocess.cleanup.assert_not_called()
 
 
 def test_run_app_simulator_boot_failure(first_app_config, tmp_path):
@@ -285,6 +297,10 @@ def test_run_app_simulator_boot_failure(first_app_config, tmp_path):
             check=True,
         ),
     ])
+    # The log will not be tailed
+    command.subprocess.Popen.assert_not_called()
+    command.subprocess.stream_output.assert_not_called()
+    command.subprocess.cleanup.assert_not_called()
 
 
 def test_run_app_simulator_open_failure(first_app_config, tmp_path):
@@ -333,6 +349,10 @@ def test_run_app_simulator_open_failure(first_app_config, tmp_path):
             check=True
         ),
     ])
+    # The log will not be tailed
+    command.subprocess.Popen.assert_not_called()
+    command.subprocess.stream_output.assert_not_called()
+    command.subprocess.cleanup.assert_not_called()
 
 
 def test_run_app_simulator_uninstall_failure(first_app_config, tmp_path):
@@ -391,6 +411,10 @@ def test_run_app_simulator_uninstall_failure(first_app_config, tmp_path):
             check=True
         ),
     ])
+    # The log will not be tailed
+    command.subprocess.Popen.assert_not_called()
+    command.subprocess.stream_output.assert_not_called()
+    command.subprocess.cleanup.assert_not_called()
 
 
 def test_run_app_simulator_install_failure(first_app_config, tmp_path):
@@ -459,6 +483,10 @@ def test_run_app_simulator_install_failure(first_app_config, tmp_path):
             check=True
         ),
     ])
+    # The log will not be tailed
+    command.subprocess.Popen.assert_not_called()
+    command.subprocess.stream_output.assert_not_called()
+    command.subprocess.cleanup.assert_not_called()
 
 
 def test_run_app_simulator_launch_failure(first_app_config, tmp_path):
@@ -483,10 +511,12 @@ def test_run_app_simulator_launch_failure(first_app_config, tmp_path):
         0,
         0,
         subprocess.CalledProcessError(
-            cmd=['xcrun', 'simctl', 'uninstall', '...'],
+            cmd=['xcrun', 'simctl', 'launch', '...'],
             returncode=1
         ),
     ]
+    log_stream_process = mock.MagicMock()
+    command.subprocess.Popen.return_value = log_stream_process
 
     # Run the app
     with pytest.raises(BriefcaseCommandError):
@@ -537,3 +567,20 @@ def test_run_app_simulator_launch_failure(first_app_config, tmp_path):
             check=True
         )
     ])
+    # The log stream process will have been started; but will not be tailed
+    command.subprocess.Popen.assert_called_with(
+        [
+            'xcrun', 'simctl', 'spawn',
+            '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
+            "log", "stream",
+            "--style", "compact",
+            "--predicate", 'senderImagePath ENDSWITH "/First App"'
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        bufsize=1,
+    )
+    command.subprocess.stream_output.assert_not_called()
+
+    # The log process was cleaned up.
+    command.subprocess.cleanup.assert_called_once_with('log stream', log_stream_process)

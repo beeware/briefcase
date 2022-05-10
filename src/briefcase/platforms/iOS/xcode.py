@@ -352,7 +352,9 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
             stderr=subprocess.STDOUT,
             bufsize=1,
         )
-        self.sleep(0.25)  # let log stream start up
+
+        # Wait for the log stream start up
+        self.sleep(0.25)
 
         self.logger.info()
         self.logger.info(f'[{app.app_name}] Starting app...')
@@ -362,13 +364,14 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                 check=True
             )
         except subprocess.CalledProcessError:
+            self.subprocess.cleanup("log stream", simulator_log_popen)
             raise BriefcaseCommandError(f"Unable to launch app {app.app_name}.")
 
         # Start streaming logs for the app.
         self.logger.info()
         self.logger.info(f"[{app.app_name}] Following simulator log output (type CTRL-C to stop log)...")
         self.logger.info("=" * 75)
-        self.subprocess.stream_output(simulator_log_popen)
+        self.subprocess.stream_output("log stream", simulator_log_popen)
 
         # Preserve the device selection as state.
         return {
