@@ -684,6 +684,7 @@ In future, you can specify this device by running:
                 env=self.env,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
+                start_new_session=True,
             )
 
             # The boot process happens in 2 phases.

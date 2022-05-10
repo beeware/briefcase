@@ -62,6 +62,7 @@ class Subprocess:
          * Converting any environment overrides into a full environment
          * Converting the `cwd` into a string
          * Default `text` to True so all outputs are strings
+         * Convert start_new_session=True to creationflags on Windows
         """
         # If `env` has been provided, inject a full copy of the local
         # environment, with the values in `env` overriding the local
@@ -85,6 +86,31 @@ class Subprocess:
         # returned as strings instead of bytes.
         if not ('text' in kwargs or 'universal_newlines' in kwargs):
             kwargs['text'] = True
+
+        # For Windows, convert start_new_session=True to creation flags
+        if self.command.host_os == 'Windows':
+            try:
+                if kwargs.pop('start_new_session') is True:
+                    if 'creationflags' in kwargs:
+                        raise AssertionError(
+                            "Subprocess called with creationflags set and start_new_session=True.\n"
+                            "This will result in CREATE_NEW_PROCESS_GROUP and CREATE_NO_WINDOW being "
+                            "merged in to the creationflags.\n\n"
+                            "Ensure this is desired configuration or don't set start_new_session=True."
+                        )
+                    # CREATE_NEW_PROCESS_GROUP: Makes the new process the root process
+                    #     of a new process group. This also disables CTRL+C signal handlers
+                    #     for all processes of the new process group.
+                    # CREATE_NO_WINDOW: Creates a new console for the process but does not
+                    #     open a visible window for that console. This flag is used instead
+                    #     of DETACHED_PROCESS since the new process can spawn a new console
+                    #     itself (in the absence of one being available) but that console
+                    #     creation will also spawn a visible console window.
+                    new_session_flags = self._subprocess.CREATE_NEW_PROCESS_GROUP | self._subprocess.CREATE_NO_WINDOW
+                    # merge these flags in to any existing flags already provided
+                    kwargs['creationflags'] = kwargs.get('creationflags', 0) | new_session_flags
+            except KeyError:
+                pass
 
         return kwargs
 
