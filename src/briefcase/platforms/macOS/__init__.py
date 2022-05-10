@@ -60,7 +60,7 @@ class macOSRunMixin:
             stderr=subprocess.STDOUT,
             bufsize=1,
         )
-        time.sleep(3)  # let log stream start up
+        time.sleep(.25)  # let log stream start up
 
         self.logger.info()
         self.logger.info(f'[{app.app_name}] Starting app...')

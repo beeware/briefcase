@@ -190,8 +190,8 @@ def test_run_app_simulator_shutting_down(first_app_config, tmp_path):
     # Run the app
     command.run_app(first_app_config)
 
-    # We should have slept 3 times
-    assert command.sleep.call_count == 3
+    # We should have slept 4 times
+    assert command.sleep.call_count == 4
 
     # The correct sequence of commands was issued.
     command.subprocess.run.assert_has_calls([
