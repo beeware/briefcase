@@ -155,8 +155,15 @@ def test_invalid_user_provided_sdk(mock_command, tmp_path):
     assert sdk.root_path == android_sdk_root_path
 
 
-@pytest.mark.parametrize("host_os", ["ArbitraryNotWindows", "Windows"])
-def test_download_sdk(mock_command, tmp_path, host_os):
+@pytest.mark.parametrize(
+    "host_os, dl_name",
+    [
+        ("Darwin", "mac"),
+        ("Windows", "win"),
+        ("Linux", "linux"),
+    ]
+)
+def test_download_sdk(mock_command, tmp_path, host_os, dl_name):
     "If an SDK is not available, one will be downloaded"
     android_sdk_root_path = tmp_path / "tools" / "android_sdk"
     cmdline_tools_base_path = android_sdk_root_path / "cmdline-tools"
@@ -178,7 +185,7 @@ def test_download_sdk(mock_command, tmp_path, host_os):
     sdk = AndroidSDK.verify(mock_command, jdk=MagicMock())
 
     # Validate that the SDK was downloaded and unpacked
-    url = f"https://dl.google.com/android/repository/commandlinetools-{host_os.lower()}-8092744_latest.zip"
+    url = f"https://dl.google.com/android/repository/commandlinetools-{dl_name}-8092744_latest.zip"
     mock_command.download_url.assert_called_once_with(
         url=url,
         download_path=mock_command.tools_path,
@@ -214,8 +221,15 @@ def test_download_sdk(mock_command, tmp_path, host_os):
     assert sdk.root_path == android_sdk_root_path
 
 
-@pytest.mark.parametrize("host_os", ["ArbitraryNotWindows", "Windows"])
-def test_download_sdk_legacy_install(mock_command, tmp_path, host_os):
+@pytest.mark.parametrize(
+    "host_os, dl_name",
+    [
+        ("Darwin", "mac"),
+        ("Windows", "win"),
+        ("Linux", "linux"),
+    ]
+)
+def test_download_sdk_legacy_install(mock_command, tmp_path, host_os, dl_name):
     "If the legacy SDK tools are present, they will be deleted"
     android_sdk_root_path = tmp_path / "tools" / "android_sdk"
     cmdline_tools_base_path = android_sdk_root_path / "cmdline-tools"
@@ -249,7 +263,7 @@ def test_download_sdk_legacy_install(mock_command, tmp_path, host_os):
     sdk = AndroidSDK.verify(mock_command, jdk=MagicMock())
 
     # Validate that the SDK was downloaded and unpacked
-    url = f"https://dl.google.com/android/repository/commandlinetools-{host_os.lower()}-8092744_latest.zip"
+    url = f"https://dl.google.com/android/repository/commandlinetools-{dl_name}-8092744_latest.zip"
     mock_command.download_url.assert_called_once_with(
         url=url,
         download_path=mock_command.tools_path,

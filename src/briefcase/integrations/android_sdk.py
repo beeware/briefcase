@@ -57,6 +57,8 @@ class AndroidSDK:
         platform_name = self.command.host_os.lower()
         if self.command.host_os.lower() == 'darwin':
             platform_name = 'mac'
+        elif self.command.host_os.lower() == 'windows':
+            platform_name = 'win'
 
         return f"https://dl.google.com/android/repository/commandlinetools-{platform_name}-{self.cmdline_tools_version}_latest.zip"  # noqa: E501
 

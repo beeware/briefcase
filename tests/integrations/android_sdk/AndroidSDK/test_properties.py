@@ -9,8 +9,8 @@ from briefcase.exceptions import BriefcaseCommandError
 @pytest.mark.parametrize(
     "host_os, name",
     [
-        ("windows", "windows"),
-        ("Windows", "windows"),
+        ("windows", "win"),
+        ("Windows", "win"),
         ("darwin", "mac"),
         ("Darwin", "mac"),
     ]
