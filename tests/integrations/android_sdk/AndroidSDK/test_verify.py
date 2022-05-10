@@ -1,4 +1,5 @@
 import os
+import platform
 import shutil
 import sys
 from unittest.mock import MagicMock
@@ -25,9 +26,13 @@ def mock_command(tmp_path):
     # Make the `os` module and `host_os` live.
     command.os = os
 
-    # Mock a host platform
-    command.host_os = 'Unknown'
-
+    # Identify the host platform
+    command.host_os = platform.system()
+    command._test_download_tag = {
+        'Windows': 'win',
+        'Darwin': 'mac',
+        'Linux': 'linux',
+    }[command.host_os]
     # Override some other modules so we can test side-effects.
     command.download_url = MagicMock()
     command.subprocess = MagicMock()
@@ -56,8 +61,7 @@ def accept_license(android_sdk_root_path):
     return _side_effect
 
 
-@pytest.mark.parametrize("host_os", ("ArbitraryNotWindows", "Windows"))
-def test_succeeds_immediately_in_happy_path(mock_command, host_os, tmp_path):
+def test_succeeds_immediately_in_happy_path(mock_command, tmp_path):
     "If verify is invoked on a path containing an Android SDK, it does nothing."
     # If `sdkmanager` exists and has the right permissions, and
     # `android-sdk-license` exists, verify() should
@@ -71,16 +75,13 @@ def test_succeeds_immediately_in_happy_path(mock_command, host_os, tmp_path):
     android_sdk_root_path = tmp_path / "tools" / "android_sdk"
     tools_bin = android_sdk_root_path / "cmdline-tools" / "latest" / "bin"
     tools_bin.mkdir(parents=True, mode=0o755)
-    if host_os == "Windows":
+    if mock_command.host_os == "Windows":
         (tools_bin / "sdkmanager.bat").touch()
     else:
         (tools_bin / "sdkmanager").touch(mode=0o755)
 
     # Pre-accept the license
     accept_license(android_sdk_root_path)()
-
-    # Configure `mock_command` to assume the `host_os` we parameterized with.
-    mock_command.host_os = host_os
 
     # Expect verify() to succeed
     sdk = AndroidSDK.verify(mock_command, jdk=MagicMock())
@@ -155,21 +156,10 @@ def test_invalid_user_provided_sdk(mock_command, tmp_path):
     assert sdk.root_path == android_sdk_root_path
 
 
-@pytest.mark.parametrize(
-    "host_os, dl_name",
-    [
-        ("Darwin", "mac"),
-        ("Windows", "win"),
-        ("Linux", "linux"),
-    ]
-)
-def test_download_sdk(mock_command, tmp_path, host_os, dl_name):
+def test_download_sdk(mock_command, tmp_path):
     "If an SDK is not available, one will be downloaded"
     android_sdk_root_path = tmp_path / "tools" / "android_sdk"
     cmdline_tools_base_path = android_sdk_root_path / "cmdline-tools"
-
-    # Mock-out `host_os` so we only do our permission check on non-Windows.
-    mock_command.host_os = host_os
 
     # The download will produce a cached file.
     cache_file = MagicMock()
@@ -185,7 +175,7 @@ def test_download_sdk(mock_command, tmp_path, host_os, dl_name):
     sdk = AndroidSDK.verify(mock_command, jdk=MagicMock())
 
     # Validate that the SDK was downloaded and unpacked
-    url = f"https://dl.google.com/android/repository/commandlinetools-{dl_name}-8092744_latest.zip"
+    url = f"https://dl.google.com/android/repository/commandlinetools-{mock_command._test_download_tag}-8092744_latest.zip"
     mock_command.download_url.assert_called_once_with(
         url=url,
         download_path=mock_command.tools_path,
@@ -203,15 +193,21 @@ def test_download_sdk(mock_command, tmp_path, host_os, dl_name):
     assert sdk.cmdline_tools_path.exists()
     assert sdk.cmdline_tools_version_path.exists()
 
-    # The "latest" path is a symlink; the versioned form is not.
-    assert sdk.cmdline_tools_path.is_symlink()
-    assert not sdk.cmdline_tools_version_path.is_symlink()
 
-    # The "latest" symlink points at the versioned form.
-    assert sdk.cmdline_tools_path.resolve() == sdk.cmdline_tools_version_path
+    if platform.system() == 'Windows':
+        # Windows uses a marker file, rather than symlinks.
+        assert sdk.cmdline_tools_path.is_dir()
+        assert sdk.cmdline_tools_version_path.is_file()
+    else:
+        # The "latest" path is a symlink; the versioned form is not.
+        assert sdk.cmdline_tools_path.is_symlink()
+        assert sdk.cmdline_tools_version_path.is_dir()
+        assert not sdk.cmdline_tools_version_path.is_symlink()
 
-    # On non-Windows, ensure the unpacked binary was made executable
-    if host_os != 'Windows':
+        # The "latest" symlink points at the versioned form.
+        assert sdk.cmdline_tools_path.resolve() == sdk.cmdline_tools_version_path
+
+        # On non-Windows, ensure the unpacked binary was made executable
         assert os.access(cmdline_tools_base_path / 'latest' / 'bin' / 'sdkmanager', os.X_OK)
 
     # The license has been accepted
@@ -221,15 +217,7 @@ def test_download_sdk(mock_command, tmp_path, host_os, dl_name):
     assert sdk.root_path == android_sdk_root_path
 
 
-@pytest.mark.parametrize(
-    "host_os, dl_name",
-    [
-        ("Darwin", "mac"),
-        ("Windows", "win"),
-        ("Linux", "linux"),
-    ]
-)
-def test_download_sdk_legacy_install(mock_command, tmp_path, host_os, dl_name):
+def test_download_sdk_legacy_install(mock_command, tmp_path):
     "If the legacy SDK tools are present, they will be deleted"
     android_sdk_root_path = tmp_path / "tools" / "android_sdk"
     cmdline_tools_base_path = android_sdk_root_path / "cmdline-tools"
@@ -246,9 +234,6 @@ def test_download_sdk_legacy_install(mock_command, tmp_path, host_os, dl_name):
     emulator_path.mkdir(parents=True)
     (emulator_path / "emulator").touch(mode=0o755)
 
-    # Mock-out `host_os` so we only do our permission check on non-Windows.
-    mock_command.host_os = host_os
-
     # The download will produce a cached file.
     cache_file = MagicMock()
     mock_command.download_url.return_value = cache_file
@@ -263,7 +248,7 @@ def test_download_sdk_legacy_install(mock_command, tmp_path, host_os, dl_name):
     sdk = AndroidSDK.verify(mock_command, jdk=MagicMock())
 
     # Validate that the SDK was downloaded and unpacked
-    url = f"https://dl.google.com/android/repository/commandlinetools-{dl_name}-8092744_latest.zip"
+    url = f"https://dl.google.com/android/repository/commandlinetools-{mock_command._test_download_tag}-8092744_latest.zip"
     mock_command.download_url.assert_called_once_with(
         url=url,
         download_path=mock_command.tools_path,
@@ -281,20 +266,25 @@ def test_download_sdk_legacy_install(mock_command, tmp_path, host_os, dl_name):
     assert sdk.cmdline_tools_path.exists()
     assert sdk.cmdline_tools_version_path.exists()
 
-    # The "latest" path is a symlink; the versioned form is not.
-    assert sdk.cmdline_tools_path.is_symlink()
-    assert not sdk.cmdline_tools_version_path.is_symlink()
+    if platform.system() == 'Windows':
+        # Windows uses a marker file, rather than symlinks.
+        assert sdk.cmdline_tools_path.is_dir()
+        assert sdk.cmdline_tools_version_path.is_file()
+    else:
+        # The "latest" path is a symlink; the versioned form is not.
+        assert sdk.cmdline_tools_path.is_symlink()
+        assert sdk.cmdline_tools_version_path.is_dir()
+        assert not sdk.cmdline_tools_version_path.is_symlink()
 
-    # The "latest" symlink points at the versioned form.
-    assert sdk.cmdline_tools_path.resolve() == sdk.cmdline_tools_version_path
+        # The "latest" symlink points at the versioned form.
+        assert sdk.cmdline_tools_path.resolve() == sdk.cmdline_tools_version_path
+
+        # On non-Windows, ensure the unpacked binary was made executable
+        assert os.access(cmdline_tools_base_path / 'latest' / 'bin' / 'sdkmanager', os.X_OK)
 
     # The legacy SDK tools have been removed
     assert not sdk_tools_base_path.exists()
     assert not emulator_path.exists()
-
-    # On non-Windows, ensure the unpacked binary was made executable
-    if host_os != 'Windows':
-        assert os.access(cmdline_tools_base_path / 'latest' / 'bin' / 'sdkmanager', os.X_OK)
 
     # The license has been accepted
     assert (android_sdk_root_path / "licenses" / "android-sdk-license").exists()
@@ -341,8 +331,9 @@ def test_download_sdk_if_sdkmanager_not_executable(mock_command, tmp_path):
     sdk = AndroidSDK.verify(mock_command, jdk=MagicMock())
 
     # Validate that the SDK was downloaded and unpacked
+    url = f"https://dl.google.com/android/repository/commandlinetools-{mock_command._test_download_tag}-8092744_latest.zip"
     mock_command.download_url.assert_called_once_with(
-        url="https://dl.google.com/android/repository/commandlinetools-unknown-8092744_latest.zip",
+        url=url,
         download_path=mock_command.tools_path,
     )
 
@@ -369,8 +360,9 @@ def test_raises_networkfailure_on_connectionerror(mock_command):
         AndroidSDK.verify(mock_command, jdk=MagicMock())
 
     # The download was attempted
+    url = f"https://dl.google.com/android/repository/commandlinetools-{mock_command._test_download_tag}-8092744_latest.zip"
     mock_command.download_url.assert_called_once_with(
-        url="https://dl.google.com/android/repository/commandlinetools-unknown-8092744_latest.zip",
+        url=url,
         download_path=mock_command.tools_path,
     )
     # But no unpack occurred
@@ -391,8 +383,9 @@ def test_detects_bad_zipfile(mock_command, tmp_path):
         AndroidSDK.verify(mock_command, jdk=MagicMock())
 
     # The download attempt was made.
+    url = f"https://dl.google.com/android/repository/commandlinetools-{mock_command._test_download_tag}-8092744_latest.zip"
     mock_command.download_url.assert_called_once_with(
-        url="https://dl.google.com/android/repository/commandlinetools-unknown-8092744_latest.zip",
+        url=url,
         download_path=mock_command.tools_path,
     )
     mock_command.shutil.unpack_archive.assert_called_once_with(

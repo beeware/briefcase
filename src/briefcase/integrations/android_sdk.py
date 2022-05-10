@@ -259,6 +259,10 @@ class AndroidSDK:
         #  2. Unpack the zip file into that folder, creating <sdk_path>/cmdline-tools/cmdline-tools
         #  3. Move <sdk_path>/cmdline-tools/cmdline-tools to <sdk_path>/cmdline-tools/<version>
         #  4. Create a symlink of <sdk_path>/cmdline-tools/latest to <sdk_path>/cmdline-tools/<version>
+        #
+        # Windows doesn't support symlinks for all users, so instead we *move* the <version>
+        # folder to `latest`, and create an empty file named <version> to track the version.
+        # that was installed.
 
         self.command.logger.info("Install Android SDK Command-Line Tools...")
         self.cmdline_tools_path.parent.mkdir(parents=True, exist_ok=True)
@@ -274,16 +278,28 @@ or corrupted.
 
 Delete {cmdline_tools_zip_path} and run briefcase again.
 """)
-        # If there's an existing version of the cmdline tools (or the symlink), delete them.
-        if self.cmdline_tools_path.exists():
-            self.command.os.unlink(self.cmdline_tools_path)
-        if self.cmdline_tools_version_path.exists():
-            self.command.shutil.rmtree(self.cmdline_tools_version_path)
+        if self.command.host_os == "Windows":
+            # If there's an existing version of the cmdline tools (or the version marker), delete them.
+            if self.cmdline_tools_path.exists():
+                self.command.shutil.rmtree(self.cmdline_tools_path)
+            if self.cmdline_tools_version_path.exists():
+                self.command.os.unlink(self.cmdline_tools_version_path)
 
-        # Rename the top level zip content to the version name
-        (self.cmdline_tools_path.parent / "cmdline-tools").rename(self.cmdline_tools_version_path)
-        # Symlink the `latest` name to the version name
-        self.cmdline_tools_path.symlink_to(self.cmdline_tools_version_path)
+            # Rename the top level zip content to the version name
+            (self.cmdline_tools_path.parent / "cmdline-tools").rename(self.cmdline_tools_path)
+            # Touch a file with the version that was installed.
+            self.cmdline_tools_version_path.touch()
+        else:
+            # If there's an existing version of the cmdline tools (or the symlink), delete them.
+            if self.cmdline_tools_path.exists():
+                self.command.os.unlink(self.cmdline_tools_path)
+            if self.cmdline_tools_version_path.exists():
+                self.command.shutil.rmtree(self.cmdline_tools_version_path)
+
+            # Rename the top level zip content to the version name
+            (self.cmdline_tools_path.parent / "cmdline-tools").rename(self.cmdline_tools_version_path)
+            # Symlink the `latest` name to the version name
+            self.cmdline_tools_path.symlink_to(self.cmdline_tools_version_path)
 
         # Zip file no longer needed once unpacked.
         cmdline_tools_zip_path.unlink()
