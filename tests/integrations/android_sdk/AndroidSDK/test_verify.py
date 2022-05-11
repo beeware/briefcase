@@ -416,6 +416,7 @@ def test_download_sdk_if_sdkmanager_not_executable(mock_command, tmp_path):
     # Create pre-existing non-executable `sdkmanager`.
     (cmdline_tools_base_path / "latest" / "bin").mkdir(parents=True)
     (cmdline_tools_base_path / "latest" / "bin" / "sdkmanager").touch(mode=0o644)
+    (cmdline_tools_base_path / "8092744").touch()
 
     # The download will produce a cached file
     cache_file = MagicMock()
