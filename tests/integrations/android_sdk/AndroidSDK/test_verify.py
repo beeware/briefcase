@@ -307,19 +307,11 @@ def test_download_sdk(mock_command, tmp_path):
     assert sdk.cmdline_tools_path.exists()
     assert sdk.cmdline_tools_version_path.exists()
 
-    if platform.system() == 'Windows':
-        # Windows uses a marker file, rather than symlinks.
-        assert sdk.cmdline_tools_path.is_dir()
-        assert sdk.cmdline_tools_version_path.is_file()
-    else:
-        # The "latest" path is a symlink; the versioned form is not.
-        assert sdk.cmdline_tools_path.is_symlink()
-        assert sdk.cmdline_tools_version_path.is_dir()
-        assert not sdk.cmdline_tools_version_path.is_symlink()
+    # The versioned form is a marker file; the tools path is a live directory
+    assert sdk.cmdline_tools_path.is_dir()
+    assert sdk.cmdline_tools_version_path.is_file()
 
-        # The "latest" symlink points at the versioned form.
-        assert sdk.cmdline_tools_path.resolve() == sdk.cmdline_tools_version_path
-
+    if platform.system() != 'Windows':
         # On non-Windows, ensure the unpacked binary was made executable
         assert os.access(cmdline_tools_base_path / 'latest' / 'bin' / 'sdkmanager', os.X_OK)
 
@@ -382,19 +374,11 @@ def test_download_sdk_legacy_install(mock_command, tmp_path):
     assert sdk.cmdline_tools_path.exists()
     assert sdk.cmdline_tools_version_path.exists()
 
-    if platform.system() == 'Windows':
-        # Windows uses a marker file, rather than symlinks.
-        assert sdk.cmdline_tools_path.is_dir()
-        assert sdk.cmdline_tools_version_path.is_file()
-    else:
-        # The "latest" path is a symlink; the versioned form is not.
-        assert sdk.cmdline_tools_path.is_symlink()
-        assert sdk.cmdline_tools_version_path.is_dir()
-        assert not sdk.cmdline_tools_version_path.is_symlink()
+    # The versioned form is a marker file; the tools path is a live directory
+    assert sdk.cmdline_tools_path.is_dir()
+    assert sdk.cmdline_tools_version_path.is_file()
 
-        # The "latest" symlink points at the versioned form.
-        assert sdk.cmdline_tools_path.resolve() == sdk.cmdline_tools_version_path
-
+    if platform.system() != 'Windows':
         # On non-Windows, ensure the unpacked binary was made executable
         assert os.access(cmdline_tools_base_path / 'latest' / 'bin' / 'sdkmanager', os.X_OK)
 
@@ -420,7 +404,8 @@ def test_no_install(mock_command, tmp_path):
 
 
 @pytest.mark.skipif(
-    sys.platform == "win32", reason="executable permission doesn't make sense on Windows"
+    sys.platform == "win32",
+    reason="executable permission doesn't make sense on Windows"
 )
 def test_download_sdk_if_sdkmanager_not_executable(mock_command, tmp_path):
     """An SDK will be downloaded and unpackged if `tools/bin/sdkmanager` exists
@@ -429,9 +414,8 @@ def test_download_sdk_if_sdkmanager_not_executable(mock_command, tmp_path):
     cmdline_tools_base_path = android_sdk_root_path / "cmdline-tools"
 
     # Create pre-existing non-executable `sdkmanager`.
-    (cmdline_tools_base_path / "8092744" / "bin").mkdir(parents=True)
-    (cmdline_tools_base_path / "8092744" / "bin" / "sdkmanager").touch(mode=0o644)
-    (cmdline_tools_base_path / "latest").symlink_to(cmdline_tools_base_path / "8092744")
+    (cmdline_tools_base_path / "latest" / "bin").mkdir(parents=True)
+    (cmdline_tools_base_path / "latest" / "bin" / "sdkmanager").touch(mode=0o644)
 
     # The download will produce a cached file
     cache_file = MagicMock()
