@@ -206,7 +206,7 @@ class AndroidSDK:
             return sdk
         elif (sdk_root_path / "tools").exists():
             # The legacy SDK Tools exist. Delete them.
-            command.logger.info("""
+            command.logger.info(f"""
 *************************************************************************
 ** WARNING: Upgrading Android SDK tools                                **
 *************************************************************************
@@ -216,8 +216,10 @@ class AndroidSDK:
     downloads, as well as re-accepting the licenses for the Android
     SDKs.
 
-    You will also need to re-create any emulators that were created
-    with the old tools.
+    Any emulators created with the older Android SDK Tools will not be
+    compatible with the new tools. You will need to create new
+    emulators. Old emulators can be removed by deleting the files
+    in {sdk.avd_path} matching the emulator name.
 
 *************************************************************************
 
@@ -839,7 +841,6 @@ briefcase run android -d @{avd}
                 env=self.env,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                start_new_session=True,
             )
 
             # The boot process happens in 2 phases.
