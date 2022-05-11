@@ -21,12 +21,14 @@ def monkeypatched_print(*arg, **kwargs):
     "Allow print calls from console.py...raise an error for all other callers"
     frame = inspect.currentframe().f_back
     module = inspect.getmodule(frame.f_code)
-    if module.__name__ == "briefcase.console":
-        _print(*arg, **kwargs)
-    else:
+
+    # Disallow any use of a bare print() in the briefcase codebase
+    if module.__name__.startswith("briefcase.") and module.__name__ != "briefcase.console":
         pytest.fail(
             "print() should not be invoked directly. Use Log or Console for printing."
         )
+    else:
+        _print(*arg, **kwargs)
 
 
 @pytest.fixture(autouse=True)
