@@ -62,6 +62,7 @@ class Subprocess:
          * Converting any environment overrides into a full environment
          * Converting the `cwd` into a string
          * Default `text` to True so all outputs are strings
+         * Convert start_new_session=True to creationflags on Windows
         """
         # If `env` has been provided, inject a full copy of the local
         # environment, with the values in `env` overriding the local
@@ -85,6 +86,31 @@ class Subprocess:
         # returned as strings instead of bytes.
         if not ('text' in kwargs or 'universal_newlines' in kwargs):
             kwargs['text'] = True
+
+        # For Windows, convert start_new_session=True to creation flags
+        if self.command.host_os == 'Windows':
+            try:
+                if kwargs.pop('start_new_session') is True:
+                    if 'creationflags' in kwargs:
+                        raise AssertionError(
+                            "Subprocess called with creationflags set and start_new_session=True.\n"
+                            "This will result in CREATE_NEW_PROCESS_GROUP and CREATE_NO_WINDOW being "
+                            "merged in to the creationflags.\n\n"
+                            "Ensure this is desired configuration or don't set start_new_session=True."
+                        )
+                    # CREATE_NEW_PROCESS_GROUP: Makes the new process the root process
+                    #     of a new process group. This also disables CTRL+C signal handlers
+                    #     for all processes of the new process group.
+                    # CREATE_NO_WINDOW: Creates a new console for the process but does not
+                    #     open a visible window for that console. This flag is used instead
+                    #     of DETACHED_PROCESS since the new process can spawn a new console
+                    #     itself (in the absence of one being available) but that console
+                    #     creation will also spawn a visible console window.
+                    new_session_flags = self._subprocess.CREATE_NEW_PROCESS_GROUP | self._subprocess.CREATE_NO_WINDOW
+                    # merge these flags in to any existing flags already provided
+                    kwargs['creationflags'] = kwargs.get('creationflags', 0) | new_session_flags
+            except KeyError:
+                pass
 
         return kwargs
 
@@ -205,6 +231,53 @@ class Subprocess:
             ],
             **self.final_kwargs(**kwargs)
         )
+
+    def stream_output(self, label, popen_process):
+        """
+        Stream the output of a Popen process until the process exits.
+        If the user sends CTRL+C, the process will be terminated.
+
+        This is useful for starting a process via Popen such as tailing a
+        log file, then initiating a non-blocking process that populates that
+        log, and finally streaming the original process's output here.
+
+        :param label: A description of the content being streamed; used for
+            to provide context in logging messages.
+        :param popen_process: a running Popen process with output to print
+        """
+        try:
+            while True:
+                # readline should always return at least a newline (ie \n)
+                # UNLESS the underlying process is exiting/gone; then "" is returned
+                output_line = ensure_str(popen_process.stdout.readline())
+                if output_line:
+                    self.command.logger.info(output_line)
+                elif output_line == "":
+                    # a return code will be available once the process returns one to the OS.
+                    # by definition, that should mean the process has exited.
+                    return_code = popen_process.poll()
+                    # only return once all output has been read and the process has exited.
+                    if return_code is not None:
+                        self._log_return_code(return_code)
+                        return
+
+        except KeyboardInterrupt:
+            self.cleanup(label, popen_process)
+
+    def cleanup(self, label, popen_process):
+        """
+        Clean up after a Popen process, gracefully terminating if possible; forcibly if not.
+
+        :param label: A description of the content being streamed; used for
+            to provide context in logging messages.
+        :param popen_process: The Popen instance to clean up.
+        """
+        popen_process.terminate()
+        try:
+            popen_process.wait(timeout=3)
+        except subprocess.TimeoutExpired:
+            self.command.logger.warning(f"Forcibly killing {label}...")
+            popen_process.kill()
 
     def _log_command(self, args):
         """

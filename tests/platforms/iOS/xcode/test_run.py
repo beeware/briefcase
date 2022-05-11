@@ -23,6 +23,8 @@ def test_run_app_simulator_booted(first_app_config, tmp_path):
     command.get_device_state = mock.MagicMock(return_value=DeviceState.BOOTED)
 
     command.subprocess = mock.MagicMock()
+    log_stream_process = mock.MagicMock()
+    command.subprocess.Popen.return_value = log_stream_process
 
     # Run the app
     command.run_app(first_app_config)
@@ -66,18 +68,22 @@ def test_run_app_simulator_booted(first_app_config, tmp_path):
             ],
             check=True
         ),
-        # Start tailing the log
-        mock.call(
-            [
-                'xcrun', 'simctl', 'spawn',
-                '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-                "log", "stream",
-                "--style", "compact",
-                "--predicate", 'senderImagePath ENDSWITH "/First App"'
-            ],
-            check=True
-        )
     ])
+    # The log is being tailed; no process cleanup is triggered
+    command.subprocess.Popen.assert_called_with(
+        [
+            'xcrun', 'simctl', 'spawn',
+            '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
+            "log", "stream",
+            "--style", "compact",
+            "--predicate", 'senderImagePath ENDSWITH "/First App"'
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        bufsize=1,
+    )
+    command.subprocess.stream_output.assert_called_with("log stream", log_stream_process)
+    command.subprocess.cleanup.assert_not_called()
 
 
 def test_run_app_simulator_shut_down(first_app_config, tmp_path):
@@ -95,6 +101,8 @@ def test_run_app_simulator_shut_down(first_app_config, tmp_path):
     command.get_device_state = mock.MagicMock(return_value=DeviceState.SHUTDOWN)
 
     command.subprocess = mock.MagicMock()
+    log_stream_process = mock.MagicMock()
+    command.subprocess.Popen.return_value = log_stream_process
 
     # Run the app
     command.run_app(first_app_config)
@@ -143,18 +151,22 @@ def test_run_app_simulator_shut_down(first_app_config, tmp_path):
             ],
             check=True
         ),
-        # Start tailing the log
-        mock.call(
-            [
-                'xcrun', 'simctl', 'spawn',
-                '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-                "log", "stream",
-                "--style", "compact",
-                "--predicate", 'senderImagePath ENDSWITH "/First App"'
-            ],
-            check=True
-        )
     ])
+    # The log is being tailed; no process cleanup is triggered
+    command.subprocess.Popen.assert_called_with(
+        [
+            'xcrun', 'simctl', 'spawn',
+            '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
+            "log", "stream",
+            "--style", "compact",
+            "--predicate", 'senderImagePath ENDSWITH "/First App"'
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        bufsize=1,
+    )
+    command.subprocess.stream_output.assert_called_with("log stream", log_stream_process)
+    command.subprocess.cleanup.assert_not_called()
 
 
 def test_run_app_simulator_shutting_down(first_app_config, tmp_path):
@@ -182,12 +194,14 @@ def test_run_app_simulator_shutting_down(first_app_config, tmp_path):
 
     command.sleep = mock.MagicMock()
     command.subprocess = mock.MagicMock()
+    log_stream_process = mock.MagicMock()
+    command.subprocess.Popen.return_value = log_stream_process
 
     # Run the app
     command.run_app(first_app_config)
 
-    # We should have slept 3 times
-    assert command.sleep.call_count == 3
+    # We should have slept 4 times
+    assert command.sleep.call_count == 4
 
     # The correct sequence of commands was issued.
     command.subprocess.run.assert_has_calls([
@@ -233,18 +247,22 @@ def test_run_app_simulator_shutting_down(first_app_config, tmp_path):
             ],
             check=True
         ),
-        # Start tailing the log
-        mock.call(
-            [
-                'xcrun', 'simctl', 'spawn',
-                '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-                "log", "stream",
-                "--style", "compact",
-                "--predicate", 'senderImagePath ENDSWITH "/First App"'
-            ],
-            check=True
-        )
     ])
+    # The log is being tailed; no process cleanup has occurred
+    command.subprocess.Popen.assert_called_with(
+        [
+            'xcrun', 'simctl', 'spawn',
+            '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
+            "log", "stream",
+            "--style", "compact",
+            "--predicate", 'senderImagePath ENDSWITH "/First App"'
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        bufsize=1,
+    )
+    command.subprocess.stream_output.assert_called_with("log stream", log_stream_process)
+    command.subprocess.cleanup.assert_not_called()
 
 
 def test_run_app_simulator_boot_failure(first_app_config, tmp_path):
@@ -279,6 +297,10 @@ def test_run_app_simulator_boot_failure(first_app_config, tmp_path):
             check=True,
         ),
     ])
+    # The log will not be tailed
+    command.subprocess.Popen.assert_not_called()
+    command.subprocess.stream_output.assert_not_called()
+    command.subprocess.cleanup.assert_not_called()
 
 
 def test_run_app_simulator_open_failure(first_app_config, tmp_path):
@@ -327,6 +349,10 @@ def test_run_app_simulator_open_failure(first_app_config, tmp_path):
             check=True
         ),
     ])
+    # The log will not be tailed
+    command.subprocess.Popen.assert_not_called()
+    command.subprocess.stream_output.assert_not_called()
+    command.subprocess.cleanup.assert_not_called()
 
 
 def test_run_app_simulator_uninstall_failure(first_app_config, tmp_path):
@@ -385,6 +411,10 @@ def test_run_app_simulator_uninstall_failure(first_app_config, tmp_path):
             check=True
         ),
     ])
+    # The log will not be tailed
+    command.subprocess.Popen.assert_not_called()
+    command.subprocess.stream_output.assert_not_called()
+    command.subprocess.cleanup.assert_not_called()
 
 
 def test_run_app_simulator_install_failure(first_app_config, tmp_path):
@@ -453,6 +483,10 @@ def test_run_app_simulator_install_failure(first_app_config, tmp_path):
             check=True
         ),
     ])
+    # The log will not be tailed
+    command.subprocess.Popen.assert_not_called()
+    command.subprocess.stream_output.assert_not_called()
+    command.subprocess.cleanup.assert_not_called()
 
 
 def test_run_app_simulator_launch_failure(first_app_config, tmp_path):
@@ -477,10 +511,12 @@ def test_run_app_simulator_launch_failure(first_app_config, tmp_path):
         0,
         0,
         subprocess.CalledProcessError(
-            cmd=['xcrun', 'simctl', 'uninstall', '...'],
+            cmd=['xcrun', 'simctl', 'launch', '...'],
             returncode=1
         ),
     ]
+    log_stream_process = mock.MagicMock()
+    command.subprocess.Popen.return_value = log_stream_process
 
     # Run the app
     with pytest.raises(BriefcaseCommandError):
@@ -531,93 +567,20 @@ def test_run_app_simulator_launch_failure(first_app_config, tmp_path):
             check=True
         )
     ])
-
-
-def test_run_app_simulator_log_stream_failure(first_app_config, tmp_path):
-    "If the log stream fails to start, raise an error"
-    command = iOSXcodeRunCommand(base_path=tmp_path)
-
-    # A valid target device will be selected.
-    command.select_target_device = mock.MagicMock(
-        return_value=(
-            '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D', '13.2', 'iPhone 11'
-        )
+    # The log stream process will have been started; but will not be tailed
+    command.subprocess.Popen.assert_called_with(
+        [
+            'xcrun', 'simctl', 'spawn',
+            '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
+            "log", "stream",
+            "--style", "compact",
+            "--predicate", 'senderImagePath ENDSWITH "/First App"'
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        bufsize=1,
     )
+    command.subprocess.stream_output.assert_not_called()
 
-    # Simulator is shut down
-    command.get_device_state = mock.MagicMock(return_value=DeviceState.SHUTDOWN)
-
-    # Call to boot and open simulator, uninstall and install succeed, but launch fails.
-    command.subprocess = mock.MagicMock()
-    command.subprocess.run.side_effect = [
-        0,
-        0,
-        0,
-        0,
-        0,
-        subprocess.CalledProcessError(
-            cmd=['xcrun', 'simctl', 'spawn', '...'],
-            returncode=1
-        ),
-    ]
-
-    # Run the app
-    with pytest.raises(BriefcaseCommandError):
-        command.run_app(first_app_config)
-
-    # The correct sequence of commands was issued.
-    command.subprocess.run.assert_has_calls([
-        # Boot the device
-        mock.call(
-            ['xcrun', 'simctl', 'boot', '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D'],
-            check=True,
-        ),
-        # Open the simulator
-        mock.call(
-            [
-                'open',
-                '-a', 'Simulator',
-                '--args',
-                '-CurrentDeviceUDID', '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D'
-            ],
-            check=True
-        ),
-        # Uninstall the old app
-        mock.call(
-            [
-                'xcrun', 'simctl', 'uninstall',
-                '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-                'com.example.first-app'
-            ],
-            check=True
-        ),
-        # Install the new app
-        mock.call(
-            [
-                'xcrun', 'simctl', 'install',
-                '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-                tmp_path / 'iOS' / 'Xcode' / 'First App' / 'build' / 'Debug-iphonesimulator' / 'First App.app'
-            ],
-            check=True
-        ),
-        # Launch the new app
-        mock.call(
-            [
-                'xcrun', 'simctl', 'launch',
-                '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-                'com.example.first-app'
-            ],
-            check=True
-        ),
-        # Start tailing the log
-        mock.call(
-            [
-                'xcrun', 'simctl', 'spawn',
-                '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-                "log", "stream",
-                "--style", "compact",
-                "--predicate", 'senderImagePath ENDSWITH "/First App"'
-            ],
-            check=True
-        )
-    ])
+    # The log process was cleaned up.
+    command.subprocess.cleanup.assert_called_once_with('log stream', log_stream_process)

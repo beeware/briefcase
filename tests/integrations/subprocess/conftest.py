@@ -5,6 +5,10 @@ import pytest
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.console import Log
 
+# hardcoded here since subprocess will only include these constants if Python is literally on Windows
+CREATE_NO_WINDOW = 0x8000000
+CREATE_NEW_PROCESS_GROUP = 0x200
+
 
 @pytest.fixture
 def mock_sub():
@@ -26,5 +30,8 @@ def mock_sub():
     sub._subprocess.run.return_value = run_result
 
     sub._subprocess.check_output.return_value = "some output line 1\nmore output line 2"
+
+    sub._subprocess.CREATE_NO_WINDOW = CREATE_NO_WINDOW
+    sub._subprocess.CREATE_NEW_PROCESS_GROUP = CREATE_NEW_PROCESS_GROUP
 
     return sub
