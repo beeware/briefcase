@@ -238,7 +238,7 @@ class iOSXcodeBuildCommand(iOSXcodeMixin, BuildCommand):
                     f'platform="iOS Simulator,name={device},OS={iOS_version}"',
                     '-quiet',
                     '-configuration', 'Debug',
-                    '-arch', 'x86_64',
+                    '-arch', self.host_arch,
                     '-sdk', 'iphonesimulator',
                     'build'
                 ],
