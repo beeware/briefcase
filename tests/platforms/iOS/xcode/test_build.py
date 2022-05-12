@@ -19,6 +19,9 @@ def test_build_app(first_app_config, tmp_path):
     )
     command.subprocess = mock.MagicMock()
 
+    # Mock the host's CPU architecture to ensure it's reflected in the Xcode call
+    command.host_arch = 'weird'
+
     command.build_app(first_app_config)
 
     command.subprocess.run.assert_called_with(
@@ -29,7 +32,7 @@ def test_build_app(first_app_config, tmp_path):
             'platform="iOS Simulator,name=iPhone 11,OS=13.2"',
             '-quiet',
             '-configuration', 'Debug',
-            '-arch', 'x86_64',
+            '-arch', 'weird',
             '-sdk', 'iphonesimulator',
             'build'
         ],
@@ -54,6 +57,9 @@ def test_build_app_failed(first_app_config, tmp_path):
         returncode=1
     )
 
+    # Mock the host's CPU architecture to ensure it's reflected in the Xcode call
+    command.host_arch = 'weird'
+
     with pytest.raises(BriefcaseCommandError):
         command.build_app(first_app_config)
 
@@ -65,7 +71,7 @@ def test_build_app_failed(first_app_config, tmp_path):
             'platform="iOS Simulator,name=iPhone 11,OS=13.2"',
             '-quiet',
             '-configuration', 'Debug',
-            '-arch', 'x86_64',
+            '-arch', 'weird',
             '-sdk', 'iphonesimulator',
             'build'
         ],

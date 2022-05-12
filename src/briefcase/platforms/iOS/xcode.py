@@ -165,7 +165,7 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
         devices = simulators[iOS_version]
 
         if len(devices) == 0:
-            raise BriefcaseCommandError(f"No simulators available for iOS {iOS_version}.")
+            raise BriefcaseCommandError(f"No simulators available for {iOS_version}.")
         elif len(devices) == 1:
             udid = list(devices.keys())[0]
         else:
@@ -238,7 +238,7 @@ class iOSXcodeBuildCommand(iOSXcodeMixin, BuildCommand):
                     f'platform="iOS Simulator,name={device},OS={iOS_version}"',
                     '-quiet',
                     '-configuration', 'Debug',
-                    '-arch', 'x86_64',
+                    '-arch', self.host_arch,
                     '-sdk', 'iphonesimulator',
                     'build'
                 ],
@@ -280,7 +280,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
 
         self.logger.info()
         self.logger.info(
-            f"[{app.app_name}] Starting app on an {device} running iOS {iOS_version} (device UDID {udid})"
+            f"[{app.app_name}] Starting app on an {device} running {iOS_version} (device UDID {udid})"
         )
 
         # The simulator needs to be booted before being started.
@@ -298,23 +298,23 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         # if it's shut down, start it again.
         if device_state == DeviceState.SHUTDOWN:
             try:
-                self.logger.info(f"Booting {device} simulator running iOS {iOS_version}...")
+                self.logger.info(f"Booting {device} simulator running {iOS_version}...")
                 self.subprocess.run(
                     ['xcrun', 'simctl', 'boot', udid],
                     check=True
                 )
             except subprocess.CalledProcessError:
-                raise BriefcaseCommandError(f"Unable to boot {device} simulator running iOS {iOS_version}")
+                raise BriefcaseCommandError(f"Unable to boot {device} simulator running {iOS_version}")
 
         # We now know the simulator is *running*, so we can open it.
         try:
-            self.logger.info(f"Opening {device} simulator running iOS {iOS_version}...")
+            self.logger.info(f"Opening {device} simulator running {iOS_version}...")
             self.subprocess.run(
                 ['open', '-a', 'Simulator', '--args', '-CurrentDeviceUDID', udid],
                 check=True
             )
         except subprocess.CalledProcessError:
-            raise BriefcaseCommandError(f"Unable to open {device} simulator running iOS {iOS_version}")
+            raise BriefcaseCommandError(f"Unable to open {device} simulator running {iOS_version}")
 
         # Try to uninstall the app first. If the app hasn't been installed
         # before, this will still succeed.
