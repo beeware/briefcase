@@ -1,4 +1,16 @@
+import contextlib
 import operator
+
+from rich.console import Console as RichConsole
+from rich.highlighter import RegexHighlighter
+from rich.markup import escape
+from rich.progress import (
+    BarColumn,
+    Progress,
+    SpinnerColumn,
+    TextColumn,
+    TimeRemainingColumn,
+)
 
 
 class InputDisabled(Exception):
@@ -8,6 +20,24 @@ class InputDisabled(Exception):
         )
 
 
+class RichConsoleHighlighter(RegexHighlighter):
+    """Custom Rich highlighter for printing to the terminal.
+
+    This highlighter limits text highlighting to only URLs.
+
+    By default, Rich applies several highlighting rules to anything it
+    prints for concepts like UUIDs, markup, IP addresses, numbers, etc.
+    All these colorful additions to the text can become overbearing and
+    distracting given much of the output does not benefit from coloring.
+    """
+
+    base_style = "repr."
+    highlights = [r"(?P<url>(file|https|http|ws|wss)://[-0-9a-zA-Z$_+!`(),.?/;:&=%#]*)"]
+
+
+rich_console = RichConsole(highlighter=RichConsoleHighlighter(), emoji=False)
+
+
 class Log:
     """Manage logging output driven by verbosity flags."""
 
@@ -15,69 +45,80 @@ class Log:
     DEEP_DEBUG = 3
 
     def __init__(self, verbosity=1):
+        self.rich_console = rich_console
         # verbosity will be 1 more than the number of v flags from invocation
         self.verbosity = verbosity
         # value to be printed at the beginning of all debug output
         self.debug_preface = ">>> "
 
-    def _log(self, preface="", msg=""):
-        """Funnel to log all messages."""
-        # print each line of message; ensure a line is printed when msg is empty
-        for line in msg.splitlines() or ("",):
-            print(f"{preface}{line}")
+    def _log(self, preface="", prefix="", message="", markup=False, style=None):
+        """Funnel to log all messages.
 
-    def deep_debug(self, msg=None):
-        """Log messages at deep debug level.
-
-        Included in output if verbosity>=3.
+        :param preface: value to be printed on the far left of the message and
+            symbolic of the type of message being printed.
+        :param prefix: text prepended to the message wrapped in brackets and will
+            be presented as dimmer compared to the styling of the message text.
+        :param message: text to log; can contain Rich tags if markup=True.
+        :param markup: whether to interpret Rich markup in the prefix, preface,
+            and message; if True, all text must already be escaped; defaults False.
+        :param style: Rich style to apply to everything printed for message.
         """
+        if not message:
+            # When a message is not provided, do not output anything;
+            # This type of call is just clearing some vertical space.
+            self.rich_console.print()
+        else:
+            if prefix:
+                if not markup:
+                    preface, prefix, message = (
+                        escape(text) for text in (preface, prefix, message)
+                    )
+                prefix = f"[dim]\\[{prefix}][/dim] "
+                markup = True
+            for line in message.splitlines():
+                self.rich_console.print(
+                    f"{preface}{prefix}{line}", markup=markup, style=style
+                )
+
+    def deep_debug(self, message="", *, prefix="", markup=False):
+        """Log messages at deep debug level; included if verbosity>=3."""
         if self.verbosity >= self.DEEP_DEBUG:
-            if msg is None:
-                # On a completely no-args debug() call, don't output the preface;
-                # This type of call is just clearing some vertical space.
-                self._log()
-            else:
-                self._log(preface=self.debug_preface, msg=msg)
+            self._log(
+                preface=self.debug_preface,
+                prefix=prefix,
+                message=message,
+                markup=markup,
+                style="dim",
+            )
 
-    def debug(self, msg=None):
-        """Log messages at debug level.
-
-        Included in output if verbosity>=2.
-        """
+    def debug(self, message="", *, prefix="", markup=False):
+        """Log messages at debug level; included if verbosity>=2."""
         if self.verbosity >= self.DEBUG:
-            if msg is None:
-                # On a completely no-args debug() call, don't output the preface;
-                # This type of call is just clearing some vertical space.
-                self._log()
-            else:
-                self._log(preface=self.debug_preface, msg=msg)
+            self._log(
+                preface=self.debug_preface,
+                prefix=prefix,
+                message=message,
+                markup=markup,
+                style="dim",
+            )
 
-    def info(self, msg=""):
-        """Log message at info level.
+    def info(self, message="", *, prefix="", markup=False):
+        """Log message at info level; always included in output."""
+        self._log(prefix=prefix, message=message, markup=markup)
 
-        Always included in output.
-        """
-        self._log(msg=msg)
+    def warning(self, message="", *, prefix="", markup=False):
+        """Log message at warning level; always included in output."""
+        self._log(prefix=prefix, message=message, markup=markup)
 
-    def warning(self, msg=""):
-        """Log message at warning level.
-
-        Always included in output.
-        """
-        self._log(msg=msg)
-
-    def error(self, msg=""):
-        """Log message at error level.
-
-        Always included in output.
-        """
-        self._log(msg=msg)
+    def error(self, message="", *, prefix="", markup=False):
+        """Log message at error level; always included in output."""
+        self._log(prefix=prefix, message=message, markup=markup)
 
 
 class Console:
     def __init__(self, enabled=True):
+        self.rich_console = rich_console
         self._enabled = enabled
-        self._input = input
 
     @property
     def enabled(self):
@@ -87,18 +128,63 @@ class Console:
     def enabled(self, enabled):
         self._enabled = enabled
 
-    def prompt(self, *values, **kwargs):
-        """Print to the screen for soliciting user interaction."""
+    def prompt(self, *values, markup=False, **kwargs):
+        """Print to the screen for soliciting user interaction.
+
+        :param values: strings to print as the user prompt
+        :param markup: True if prompt contains Rich markup
+        """
         if self.enabled:
-            print(*values, **kwargs)
+            self.rich_console.print(*values, markup=markup, **kwargs)
 
-    def progress_bar(self, total: int):
+    def progress_bar(self):
         """Returns a progress bar as a context manager."""
-        return ProgressBar(total=total)
+        return Progress(
+            TextColumn("  "),
+            SpinnerColumn("line", speed=1.5, style="default"),
+            BarColumn(bar_width=50),
+            TextColumn("{task.percentage:>3.1f}%", style="default"),
+            TextColumn("•", style="default"),
+            TimeRemainingColumn(compact=True, elapsed_when_finished=True),
+            console=self.rich_console,
+        )
 
-    def wait_bar(self, message: str = ""):
-        """Returns a wait bar as a context manager."""
-        return WaitBar(message=message)
+    @contextlib.contextmanager
+    def wait_bar(
+        self, message="", done_message="done", *, transient=False, markup=False
+    ):
+        """Returns a wait bar as a context manager.
+
+        :param message: text explaining what is being awaited
+        :param done_message: text appended to the message after exiting
+        :param transient: if True, remove bar and message from screen after exiting;
+            if False (default), the message will remain on the screen without pulsing bar.
+        :param markup: whether to interpret Rich styling markup in the message; if True,
+            the message must already be escaped; defaults False.
+        """
+        wait_bar = Progress(
+            TextColumn("     "),
+            BarColumn(bar_width=40, style="black", pulse_style="white"),
+            TextColumn(message),
+            transient=True,
+            console=self.rich_console,
+        )
+        # setting start=False causes the progress bar to pulse
+        wait_bar.add_task("", start=False)
+        try:
+            with wait_bar:
+                yield
+        except BaseException:
+            # ensure the message is left on the screen even if user sends CTRL+C
+            if message and not transient:
+                self.rich_console.print(message, markup=markup)
+            raise
+        else:
+            if message and not transient:
+                self.rich_console.print(
+                    f'{message}{f" {done_message}" if done_message else ""}',
+                    markup=markup,
+                )
 
     def boolean_input(self, question, default=False):
         """Get a boolean input from user, in the form of y/n.
@@ -189,79 +275,14 @@ class Console:
 
         return user_input
 
-    def __call__(self, prompt):
+    def __call__(self, prompt, *, markup=False):
         """Make Console present the same interface as input()"""
         if not self.enabled:
             raise InputDisabled()
         try:
-            return self._input(prompt)
-        except EOFError as e:
-            raise KeyboardInterrupt from e
-
-
-class ProgressBar:
-    def __init__(self, total: int):
-        """Context manager to display a progress bar in the console.
-
-        Continuously call update() on the yielded object to redraw the progress bar.
-        The progress bar will reach 100% when completed == total.
-
-        :param total: integer representing 100% of progress
-        """
-        self.bar_width = 50
-        self.completed_char = "#"
-        self.remaining_char = "."
-
-        self.total = total
-
-    def __enter__(self):
-        """Initialize the progress bar at 0 and return it to the caller."""
-        self.update(completed=0)
-        return self
-
-    def __exit__(self, *args):
-        """On exit, flush the output and add a clearing line."""
-        print()
-        print()
-
-    def update(self, completed: int):
-        """Build the progress bar and (re)draw it on the console.
-
-        :param completed: amount of the total to show as completed.
-        """
-        completed_count = int(self.bar_width * completed / self.total)
-        bar_completed = self.completed_char * completed_count
-        bar_remaining = self.remaining_char * (self.bar_width - completed_count)
-        percent_done = int(completed_count * (100 / self.bar_width))
-        print(f"\r{bar_completed}{bar_remaining} {percent_done}%", end="", flush=True)
-
-
-class WaitBar:
-    def __init__(self, message: str = ""):
-        """Context manager to inform a user a process is being awaited. Call
-        update() on the yielded object to print a new period character after
-        the message.
-
-        :param message: message to inform the user what's being awaited
-        """
-        self.alive_char = "."
-
-        self.input = input
-        self.message = message
-
-    def __enter__(self):
-        """Show message to user and return bar to the caller."""
-        print(self.message, end="", flush=True)
-        return self
-
-    def __exit__(self, *args):
-        """On exit, flush the output and add a clearing line."""
-        print()
-        print()
-
-    def update(self):
-        """Add another period at the end of the bar."""
-        print(self.alive_char, end="", flush=True)
+            return self.rich_console.input(prompt, markup=markup)
+        except EOFError:
+            raise KeyboardInterrupt
 
 
 def select_option(options, input, prompt="> ", error="Invalid selection"):

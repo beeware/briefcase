@@ -232,7 +232,7 @@ class iOSXcodeBuildCommand(iOSXcodeMixin, BuildCommand):
         )
 
         self.logger.info()
-        self.logger.info(f"[{app.app_name}] Building XCode project...")
+        self.logger.info("Building XCode project...", prefix=app.app_name)
 
         try:
             self.subprocess.run(
@@ -288,7 +288,8 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
 
         self.logger.info()
         self.logger.info(
-            f"[{app.app_name}] Starting app on an {device} running {iOS_version} (device UDID {udid})"
+            f"Starting app on an {device} running {iOS_version} (device UDID {udid})",
+            prefix=app.app_name,
         )
 
         # The simulator needs to be booted before being started.
@@ -296,10 +297,9 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         # shutting down, we need to wait for it to shut down before restarting.
         device_state = self.get_device_state(self, udid)
         if device_state not in {DeviceState.SHUTDOWN, DeviceState.BOOTED}:
-            with self.input.wait_bar("Waiting for simulator...") as wait_bar:
+            with self.input.wait_bar("Waiting for simulator..."):
                 while device_state not in {DeviceState.SHUTDOWN, DeviceState.BOOTED}:
                     self.sleep(2)
-                    wait_bar.update()
                     device_state = self.get_device_state(self, udid)
 
         # We now know the simulator is either shut down or booted;
@@ -329,7 +329,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         # before, this will still succeed.
         app_identifier = ".".join([app.bundle, app.app_name])
         self.logger.info()
-        self.logger.info(f"[{app.app_name}] Uninstalling old app version...")
+        self.logger.info("Uninstalling old app version...", prefix=app.app_name)
         try:
             self.subprocess.run(
                 ["xcrun", "simctl", "uninstall", udid, app_identifier], check=True
@@ -341,10 +341,11 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
 
         # Install the app.
         self.logger.info()
-        self.logger.info(f"[{app.app_name}] Installing new app version...")
+        self.logger.info("Installing new app version...", prefix=app.app_name)
         try:
             self.subprocess.run(
-                ["xcrun", "simctl", "install", udid, self.binary_path(app)], check=True
+                ["xcrun", "simctl", "install", udid, self.binary_path(app)],
+                check=True,
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(
@@ -374,7 +375,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         self.sleep(0.25)
 
         self.logger.info()
-        self.logger.info(f"[{app.app_name}] Starting app...")
+        self.logger.info("Starting app...", prefix=app.app_name)
         try:
             self.subprocess.run(
                 ["xcrun", "simctl", "launch", udid, app_identifier], check=True
@@ -386,7 +387,8 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         # Start streaming logs for the app.
         self.logger.info()
         self.logger.info(
-            f"[{app.app_name}] Following simulator log output (type CTRL-C to stop log)..."
+            "Following simulator log output (type CTRL-C to stop log)...",
+            prefix=app.app_name,
         )
         self.logger.info("=" * 75)
         self.subprocess.stream_output("log stream", simulator_log_popen)

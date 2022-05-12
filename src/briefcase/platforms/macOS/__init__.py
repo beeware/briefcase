@@ -69,7 +69,7 @@ class macOSRunMixin:
 
         try:
             self.logger.info()
-            self.logger.info(f"[{app.app_name}] Starting app...")
+            self.logger.info("Starting app...", prefix=app.app_name)
             try:
                 self.subprocess.run(
                     [
@@ -95,7 +95,8 @@ class macOSRunMixin:
                 # Start streaming logs for the app.
                 self.logger.info()
                 self.logger.info(
-                    f"[{app.app_name}] Following system log output (type CTRL-C to stop log)..."
+                    "Following system log output (type CTRL-C to stop log)...",
+                    prefix=app.app_name,
                 )
                 self.logger.info("=" * 75)
                 self.subprocess.stream_output(
@@ -327,20 +328,22 @@ class macOSPackageMixin(macOSSigningMixin):
                 identity = "-"
 
                 self.logger.info()
-                self.logger.info(f"[{app.app_name}] Signing app with adhoc identity...")
+                self.logger.info(
+                    "Signing app with adhoc identity...", prefix=app.app_name
+                )
             else:
                 identity = self.select_identity(identity=identity)
 
                 self.logger.info()
                 self.logger.info(
-                    f"[{app.app_name}] Signing app with identity {identity}..."
+                    f"Signing app with identity {identity}...", prefix=app.app_name
                 )
 
             self.sign_app(app=app, identity=identity)
 
         if packaging_format == "dmg":
             self.logger.info()
-            self.logger.info(f"[{app.app_name}] Building DMG...")
+            self.logger.info("Building DMG...", prefix=app.app_name)
 
             dmg_settings = {
                 "files": [os.fsdecode(self.binary_path(app))],

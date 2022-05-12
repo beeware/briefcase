@@ -56,7 +56,7 @@ class PackageCommand(BaseCommand):
             app, packaging_format=packaging_format
         ).relative_to(self.base_path)
         self.logger.info()
-        self.logger.info(f"[{app.app_name}] Packaged {filename}")
+        self.logger.info(f"Packaged {filename}", prefix=app.app_name)
         return state
 
     def add_options(self, parser):

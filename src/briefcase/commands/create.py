@@ -570,40 +570,41 @@ class CreateCommand(BaseCommand):
         if bundle_path.exists():
             self.logger.info()
             confirm = self.input.boolean_input(
-                f"Application {app.app_name} already exists; overwrite", default=False
+                f"Application {app.app_name!r} already exists; overwrite", default=False
             )
             if not confirm:
                 self.logger.error(
-                    f"Aborting creation of app {app.app_name}; existing application will not be overwritten."
+                    f"Aborting creation of app {app.app_name!r}; existing application will not be overwritten."
                 )
                 return
             self.logger.info()
-            self.logger.info(f"[{app.app_name}] Removing old application bundle...")
+            self.logger.info("Removing old application bundle...", prefix=app.app_name)
             self.shutil.rmtree(bundle_path)
 
         self.logger.info()
-        self.logger.info(f"[{app.app_name}] Generating application template...")
+        self.logger.info("Generating application template...", prefix=app.app_name)
         self.generate_app_template(app=app)
 
         self.logger.info()
-        self.logger.info(f"[{app.app_name}] Installing support package...")
+        self.logger.info("Installing support package...", prefix=app.app_name)
         self.install_app_support_package(app=app)
 
         self.logger.info()
-        self.logger.info(f"[{app.app_name}] Installing dependencies...")
+        self.logger.info("Installing dependencies...", prefix=app.app_name)
         self.install_app_dependencies(app=app)
 
         self.logger.info()
-        self.logger.info(f"[{app.app_name}] Installing application code...")
+        self.logger.info("Installing application code...", prefix=app.app_name)
         self.install_app_code(app=app)
 
         self.logger.info()
-        self.logger.info(f"[{app.app_name}] Installing application resources...")
+        self.logger.info("Installing application resources...", prefix=app.app_name)
         self.install_app_resources(app=app)
 
         self.logger.info()
         self.logger.info(
-            f"[{app.app_name}] Created {self.bundle_path(app).relative_to(self.base_path)}"
+            f"Created {self.bundle_path(app).relative_to(self.base_path)}",
+            prefix=app.app_name,
         )
 
     def verify_tools(self):

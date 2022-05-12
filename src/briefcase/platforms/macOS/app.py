@@ -77,7 +77,7 @@ class macOSAppBuildCommand(macOSAppMixin, macOSSigningMixin, BuildCommand):
         # adhoc signing identity. Apply an adhoc signing identity to the
         # app bundle.
         self.logger.info()
-        self.logger.info(f"[{app.app_name}] Adhoc signing app...")
+        self.logger.info("Adhoc signing app...", prefix=app.app_name)
         self.sign_app(app=app, identity="-")
 
 

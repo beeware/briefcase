@@ -98,14 +98,14 @@ class LinuxAppImageMixin(LinuxMixin):
         if self.use_docker:
             # Enter the Docker context.
             self.logger.info()
-            self.logger.info(f"[{app.app_name}] Entering Docker context...")
+            self.logger.info("Entering Docker context...", prefix=app.app_name)
             orig_subprocess = self.subprocess
             self.subprocess = self.Docker(self, app)
 
             yield self.subprocess
 
             self.logger.info()
-            self.logger.info(f"[{app.app_name}] Leaving Docker context.")
+            self.logger.info("Leaving Docker context.", prefix=app.app_name)
             self.subprocess = orig_subprocess
         else:
             yield self.subprocess
@@ -153,7 +153,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
         :param app: The application to build
         """
         self.logger.info()
-        self.logger.info(f"[{app.app_name}] Building AppImage...")
+        self.logger.info("Building AppImage...", prefix=app.app_name)
 
         try:
             # Build the AppImage.
@@ -218,7 +218,7 @@ class LinuxAppImageRunCommand(LinuxAppImageMixin, RunCommand):
         :param app: The config object for the app
         """
         self.logger.info()
-        self.logger.info(f"[{app.app_name}] Starting app...")
+        self.logger.info("Starting app...", prefix=app.app_name)
         try:
             self.subprocess.run(
                 [

@@ -471,9 +471,7 @@ class BaseCommand(ABC):
 
         response = self.requests.get(url, stream=True)
         if response.status_code == 404:
-            raise MissingNetworkResourceError(
-                url=url,
-            )
+            raise MissingNetworkResourceError(url=url)
         elif response.status_code != 200:
             raise BadNetworkResourceError(url=url, status_code=response.status_code)
 
@@ -485,9 +483,8 @@ class BaseCommand(ABC):
         if header_value:
             # See also https://tools.ietf.org/html/rfc6266
             value, parameters = parse_header(header_value)
-            if value.split(":", 1)[
-                -1
-            ].strip().lower() == "attachment" and parameters.get("filename"):
+            content_type = value.split(":", 1)[-1].strip().lower()
+            if content_type == "attachment" and parameters.get("filename"):
                 cache_full_name = parameters["filename"]
         cache_name = cache_full_name.split("/")[-1]
         filename = download_path / cache_name
@@ -500,12 +497,12 @@ class BaseCommand(ABC):
                 if total is None:
                     f.write(response.content)
                 else:
-                    downloaded = 0
-                    with self.input.progress_bar(total=int(total)) as progress_bar:
+                    progress_bar = self.input.progress_bar()
+                    task_id = progress_bar.add_task("Downloader", total=int(total))
+                    with progress_bar:
                         for data in response.iter_content(chunk_size=1024 * 1024):
                             f.write(data)
-                            downloaded += len(data)
-                            progress_bar.update(completed=downloaded)
+                            progress_bar.update(task_id, advance=len(data))
         else:
             self.logger.info(f"{cache_name} already downloaded")
         return filename
