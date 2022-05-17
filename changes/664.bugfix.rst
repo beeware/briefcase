@@ -1,1 +1,0 @@
-macOS app binaries are now adhoc signed by default, ensuring they can run on M1 hardware.

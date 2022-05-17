@@ -1,1 +1,0 @@
-When the output of a wrapped command cannot be parsed, full command output, and failure reason is now logged.

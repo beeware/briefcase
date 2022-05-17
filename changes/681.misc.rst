@@ -1,1 +1,0 @@
-Switch to using tomli instead of toml, to support Python 3.11 transition.

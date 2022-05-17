@@ -1,1 +1,0 @@
-Bundle name validation no longer excludes valid country identifiers (like ``in.example``).

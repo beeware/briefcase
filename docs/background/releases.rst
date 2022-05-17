@@ -4,6 +4,44 @@ Release History
 
 .. towncrier release notes start
 
+0.3.7 (2022-05-17)
+==================
+
+Features
+--------
+
+* Apps can be updated as part of a call to package. (#473)
+* The Android emulator can now be used on Apple M1 hardware. (#616)
+* Names that are reserved words in Python (or other common programming languages) are now prevented when creating apps. (#617)
+* Names that are invalid on Windows as filenames (such as CON and LPT0) are now invalid as app names. (#685)
+* Verbose logging via -v and -vv now includes the return code, output, and environment variables for shell commands (#704)
+* When the output of a wrapped command cannot be parsed, full command output, and failure reason is now logged. (#728)
+* The iOS emulator will now run apps natively on M1 hardware, rather than through Rosetta emulation. (#739)
+
+
+Bugfixes
+--------
+
+* Bundle identifiers are now validated to ensure they don't contain reserved words. (#460)
+* The error reporting when the user is on an unsupported platform or Python version has been improved. (#541)
+* When the formal name uses non-Latin characters, the suggested Class and App names are now valid. (#612)
+* The code signing process for macOS apps has been made more robust. (#652)
+* macOS app binaries are now adhoc signed by default, ensuring they can run on M1 hardware. (#664)
+* Xcode version checks are now more robust. (#668)
+* Android projects that have punctuation in their formal names can now build without error. (#696)
+* Bundle name validation no longer excludes valid country identifiers (like ``in.example``). (#709)
+* Application code and dist-info is now fully replaced during an update. (#720)
+* Errors related to Java JDK detection now properly contain the value of JAVA_HOME instead of the word None (#727)
+* All log entries will now be displayed for the run command on iOS and macOS; previously, initial log entries may have been omitted. (#731)
+* Using CTRL+C to stop showing Android emulator logs while running the app will no longer cause the emulator to shutdown. (#733)
+
+
+Misc
+----
+
+* #680, #681, #699, #726, #734
+
+
 0.3.6 (2022-02-28)
 ==================
 

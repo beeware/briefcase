@@ -1,1 +1,0 @@
-Using CTRL+C to stop showing Android emulator logs while running the app will no longer cause the emulator to shutdown.

@@ -1,1 +1,0 @@
-All log entries will now be displayed for the run command on iOS and macOS; previously, initial log entries may have been omitted.

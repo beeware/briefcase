@@ -1,1 +1,0 @@
-Error reporting when the user is on an unsupported platform or Python version has been improved.

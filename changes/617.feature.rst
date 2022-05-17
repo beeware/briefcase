@@ -1,1 +1,0 @@
-Names that are reserved words in Python (or other common programming languages) are now prevented when creating apps.

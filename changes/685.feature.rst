@@ -1,1 +1,0 @@
-Names that are invalid on Windows as filenames (such as CON and LPT0) are now invalid as app names.

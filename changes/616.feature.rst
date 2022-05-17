@@ -1,1 +1,0 @@
-The Android emulator can now be used on Apple M1 hardware.

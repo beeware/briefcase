@@ -1,1 +1,0 @@
-When the formal name uses non-Latin characters, the suggested Class and App names are now valid.

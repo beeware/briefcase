@@ -1,1 +1,0 @@
-Added CI test harness to verify tooling able to generate complete apps.

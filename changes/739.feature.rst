@@ -1,1 +1,0 @@
-The iOS emulator will now run apps natively on M1 hardware, rather than through Rosetta emulation.
