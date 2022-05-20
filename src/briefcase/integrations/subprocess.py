@@ -1,6 +1,11 @@
 import json
+import operator
 import shlex
 import subprocess
+import time
+import threading
+
+import psutil
 
 from briefcase.exceptions import CommandOutputParseError
 
@@ -23,6 +28,53 @@ def json_parser(json_output):
         return json.loads(json_output)
     except json.JSONDecodeError as e:
         raise ParseError(f"Failed to parse output as JSON: {e}") from e
+
+
+def is_process_dead(pid: int):
+    """
+    Returns True if a PID is not assigned to a process.
+
+    Checking if a PID exists is only a semi-safe proxy to determine
+    if a process is dead since PIDs can be re-used. Therefore, this
+    function should only be used via constant monitoring of a PID
+    to identify when the process goes from existing to not existing.
+
+    :param pid: integer value to be checked if assigned as a PID.
+    :return: True if PID doesn't exist; defaults to False if PID=None.
+    """
+    if pid is None:
+        return False
+    return not psutil.pid_exists(pid)
+
+
+def get_process_id_by_command(command_list: list = None, command: str = ""):
+    """
+    Find a Process ID (PID) a by its command.
+    If multiple processes are found, then the most recently created
+    process ID is returned.
+
+    :param command_list: list of a command's fully qualified path and its arguments.
+    :param command: a partial or complete fully-qualified filepath to a command.
+        This is primarily intended for use on macOS where the `open` command
+        takes a filepath to a directory for an application; therefore, the actual
+        running process will be running a command within that directory.
+    :return: PID if found else None
+    """
+    matching_processes = []
+    for proc in psutil.process_iter(["cmdline", "create_time", "pid"]):
+        proc_cmdline = proc.info['cmdline']
+        if command_list and proc_cmdline == command_list:
+            matching_processes.append(proc.info)
+        if command and proc_cmdline and proc_cmdline[0].startswith(command):
+            matching_processes.append(proc.info)
+
+    if len(matching_processes) == 1:
+        return matching_processes[0]["pid"]
+    elif len(matching_processes) > 1:
+        # return the ID of the most recently created matching process
+        return sorted(matching_processes, key=operator.itemgetter("create_time"))[-1]["pid"]
+
+    return None
 
 
 class Subprocess:
@@ -224,9 +276,10 @@ class Subprocess:
             [str(arg) for arg in args], **self.final_kwargs(**kwargs)
         )
 
-    def stream_output(self, label, popen_process):
-        """Stream the output of a Popen process until the process exits. If the
-        user sends CTRL+C, the process will be terminated.
+    def stream_output(self, label, popen_process, stop_func=None):
+        """
+        Stream the output of a Popen process until the process exits.
+        If the user sends CTRL+C, the process will be terminated.
 
         This is useful for starting a process via Popen such as tailing a
         log file, then initiating a non-blocking process that populates that
@@ -235,25 +288,46 @@ class Subprocess:
         :param label: A description of the content being streamed; used for
             to provide context in logging messages.
         :param popen_process: a running Popen process with output to print
+        :param stop_func: a Callable that returns True when output streaming
+            should stop and the popen_process should be terminated.
         """
+        output_streamer = threading.Thread(
+            name=f"{label} output streamer",
+            target=self._stream_output_thread,
+            args=(popen_process,),
+        )
         try:
-            while True:
-                # readline should always return at least a newline (ie \n)
-                # UNLESS the underlying process is exiting/gone; then "" is returned
-                output_line = ensure_str(popen_process.stdout.readline())
-                if output_line:
-                    self.command.logger.info(output_line)
-                elif output_line == "":
-                    # a return code will be available once the process returns one to the OS.
-                    # by definition, that should mean the process has exited.
-                    return_code = popen_process.poll()
-                    # only return once all output has been read and the process has exited.
-                    if return_code is not None:
-                        self._log_return_code(return_code)
-                        return
-
+            output_streamer.start()
+            if stop_func:
+                while output_streamer.is_alive():
+                    if stop_func():
+                        self.cleanup(label, popen_process)
+                    time.sleep(0.5)
+            else:
+                output_streamer.join()
         except KeyboardInterrupt:
             self.cleanup(label, popen_process)
+
+    def _stream_output_thread(self, popen_process):
+        """
+        Stream output for a Popen process in a Thread.
+
+        :param popen_process: popen process to stream stdout
+        """
+        while True:
+            # readline should always return at least a newline (ie \n)
+            # UNLESS the underlying process is exiting/gone; then "" is returned
+            output_line = ensure_str(popen_process.stdout.readline())
+            if output_line:
+                self.command.logger.info(output_line)
+            elif output_line == "":
+                # a return code will be available once the process returns one to the OS.
+                # by definition, that should mean the process has exited.
+                return_code = popen_process.poll()
+                # only return once all output has been read and the process has exited.
+                if return_code is not None:
+                    self._log_return_code(return_code)
+                    return
 
     def cleanup(self, label, popen_process):
         """Clean up after a Popen process, gracefully terminating if possible;

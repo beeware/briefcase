@@ -6,6 +6,7 @@ from pathlib import Path
 from briefcase.config import BaseConfig
 from briefcase.console import select_option
 from briefcase.exceptions import BriefcaseCommandError
+from briefcase.integrations.subprocess import get_process_id_by_command, is_process_dead
 from briefcase.integrations.xcode import (
     get_identities,
     verify_command_line_tools_install,
@@ -87,7 +88,8 @@ class macOSRunMixin:
             f"[{app.app_name}] Following system log output (type CTRL-C to stop log)..."
         )
         self.logger.info("=" * 75)
-        self.subprocess.stream_output("log stream", log_popen)
+        app_pid = get_process_id_by_command(command=str(self.binary_path(app)))
+        self.subprocess.stream_output("log stream", log_popen, stop_func=lambda: is_process_dead(app_pid))
 
 
 def is_mach_o_binary(path):
