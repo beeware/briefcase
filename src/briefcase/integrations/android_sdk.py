@@ -281,14 +281,13 @@ class AndroidSDK:
                 cmdline_tools_zip_path,
                 extract_dir=self.cmdline_tools_path.parent
             )
-        except (shutil.ReadError, EOFError) as exc:
+        except (shutil.ReadError, EOFError) as e:
             raise BriefcaseCommandError(f"""\
 Unable to unpack Android SDK Command-Line Tools ZIP file. The download may have been interrupted
 or corrupted.
 
 Delete {cmdline_tools_zip_path} and run briefcase again.
-""") from exc
-
+""") from e
 
         # If there's an existing version of the cmdline tools (or the version marker), delete them.
         if self.cmdline_tools_path.exists():
@@ -382,7 +381,6 @@ its output for errors.
 
     $ {self.sdkmanager_path} --licenses
 """) from e
-
 
         if not license_path.exists():
             raise BriefcaseCommandError("""\
@@ -600,7 +598,6 @@ Input has been disabled; can't select a device to target.
 Use the -d/--device option to explicitly specify the device to use.
 """) from e
 
-
         # Proces the user's choice
         if choice is None:
             # Create a new emulator. No device ID or AVD.
@@ -625,8 +622,8 @@ Use the -d/--device option to explicitly specify the device to use.
                 device = choice
                 name = device_choices[choice]
                 avd = details.get("avd")
-            except KeyError as exc:
-                raise InvalidDeviceError("device ID", choice) from exc
+            except KeyError as e:
+                raise InvalidDeviceError("device ID", choice) from e
 
         if avd:
             self.command.logger.info(f"""
@@ -736,8 +733,8 @@ An emulator named '{avd}' already exists.
                     url=skin_url,
                     download_path=self.root_path,
                 )
-            except requests_exceptions.ConnectionError as exc:
-                raise NetworkFailure(f"download {skin} device skin") from exc
+            except requests_exceptions.ConnectionError as e:
+                raise NetworkFailure(f"download {skin} device skin") from e
 
             # Unpack skin archive
             try:
@@ -798,7 +795,7 @@ briefcase run android -d @{avd}
                     pass
 
         # Augment the config with the new key-values pairs
-        avd_config |= updates
+        avd_config.update(updates)
 
         # Write the update configuration.
         with avd_config_filename.open('w') as f:
@@ -815,8 +812,10 @@ briefcase run android -d @{avd}
         if avd not in set(self.emulators()):
             raise InvalidDeviceError("emulator AVD", avd)
         self.command.logger.info(f"Starting emulator {avd}...")
-        emulator_popen = self.command.subprocess.Popen([os.fsdecode(self.emulator_path), f'@{avd}', '-dns-server', '8.8.8.8'], env=self.env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, start_new_session=True)
-
+        emulator_popen = self.command.subprocess.Popen(
+            [os.fsdecode(self.emulator_path), f'@{avd}', '-dns-server', '8.8.8.8'],
+            env=self.env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, start_new_session=True
+        )
 
         # The boot process happens in 2 phases.
         # First, the emulator appears in the device list. However, it's

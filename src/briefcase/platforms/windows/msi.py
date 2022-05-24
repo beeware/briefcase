@@ -43,7 +43,7 @@ class WindowsMSICreateCommand(WindowsMSIMixin, CreateCommand):
         return [
             ('platform', self.platform),
             ('version', self.python_version_tag),
-            ('arch', "amd64" if struct.calcsize("P") == 8 else "win32"),
+            ('arch', "amd64" if (struct.calcsize("P") * 8) == 64 else "win32"),
         ]
 
     def output_format_template_context(self, app: BaseConfig):
@@ -176,7 +176,6 @@ class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(f"Unable to generate manifest for app {app.app_name}.") from e
 
-
         try:
             self.logger.info()
             self.logger.info("Compiling application installer...")
@@ -193,8 +192,8 @@ class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
                 check=True,
                 cwd=self.bundle_path(app)
             )
-        except subprocess.CalledProcessError as exc:
-            raise BriefcaseCommandError(f"Unable to compile app {app.app_name}.") from exc
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(f"Unable to compile app {app.app_name}.") from e
 
         try:
             self.logger.info()

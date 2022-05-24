@@ -249,14 +249,13 @@ class JDK:
                 os.fsdecode(jdk_zip_path),
                 extract_dir=os.fsdecode(self.command.tools_path)
             )
-        except (shutil.ReadError, EOFError) as exc:
+        except (shutil.ReadError, EOFError) as e:
             raise BriefcaseCommandError(f"""\
 Unable to unpack AdoptOpenJDK ZIP file. The download may have been interrupted
 or corrupted.
 
 Delete {jdk_zip_path} and run briefcase again.
-""") from exc
-
+""") from e
 
         jdk_zip_path.unlink()  # Zip file no longer needed once unpacked.
 

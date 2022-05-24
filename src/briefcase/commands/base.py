@@ -338,7 +338,6 @@ class BaseCommand(ABC):
         except IndexError as e:
             raise BriefcaseCommandError(f"Unable to find code for application '{app.app_name}'") from e
 
-
         return path
 
     @property

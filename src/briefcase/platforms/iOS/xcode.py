@@ -120,8 +120,8 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
                         # normalize back to the official name and return.
                         device = devices[udid]
                         return udid, iOS_version, device
-                    except KeyError as exc:
-                        raise InvalidDeviceError('device name', device) from exc
+                    except KeyError as e:
+                        raise InvalidDeviceError('device name', device) from e
                 except KeyError as err:
                     raise InvalidDeviceError('iOS Version', iOS_version) from err
             elif udid_or_device:
@@ -245,8 +245,8 @@ class iOSXcodeBuildCommand(iOSXcodeMixin, BuildCommand):
                 check=True,
             )
             self.logger.info('Build succeeded.')
-        except subprocess.CalledProcessError as exc:
-            raise BriefcaseCommandError(f"Unable to build app {app.app_name}.") from exc
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(f"Unable to build app {app.app_name}.") from e
 
         # Preserve the device selection as state.
         return {
@@ -303,8 +303,8 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                     ['xcrun', 'simctl', 'boot', udid],
                     check=True
                 )
-            except subprocess.CalledProcessError as exc:
-                raise BriefcaseCommandError(f"Unable to boot {device} simulator running {iOS_version}") from exc
+            except subprocess.CalledProcessError as e:
+                raise BriefcaseCommandError(f"Unable to boot {device} simulator running {iOS_version}") from e
 
         # We now know the simulator is *running*, so we can open it.
         try:
@@ -326,8 +326,8 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                 ['xcrun', 'simctl', 'uninstall', udid, app_identifier],
                 check=True
             )
-        except subprocess.CalledProcessError as exception:
-            raise BriefcaseCommandError(f"Unable to uninstall old version of app {app.app_name}.") from exception
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(f"Unable to uninstall old version of app {app.app_name}.") from e
 
         # Install the app.
         self.logger.info()
@@ -337,8 +337,8 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                 ['xcrun', 'simctl', 'install', udid, self.binary_path(app)],
                 check=True
             )
-        except subprocess.CalledProcessError as error:
-            raise BriefcaseCommandError(f"Unable to install new version of app {app.app_name}.") from error
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(f"Unable to install new version of app {app.app_name}.") from e
 
         # Start log stream for the app.
         simulator_log_popen = self.subprocess.Popen(

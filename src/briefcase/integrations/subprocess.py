@@ -139,8 +139,8 @@ class Subprocess:
                 ],
                 **self.final_kwargs(**kwargs)
             )
-        except subprocess.CalledProcessError as exc:
-            self._log_return_code(exc.returncode)
+        except subprocess.CalledProcessError as e:
+            self._log_return_code(e.returncode)
             raise
 
         self._log_return_code(command_result.returncode)
@@ -168,9 +168,9 @@ class Subprocess:
                 ],
                 **self.final_kwargs(**kwargs)
             )
-        except subprocess.CalledProcessError as exc:
-            self._log_output(exc.output, exc.stderr)
-            self._log_return_code(exc.returncode)
+        except subprocess.CalledProcessError as e:
+            self._log_output(e.output, e.stderr)
+            self._log_return_code(e.returncode)
             raise
 
         self._log_output(cmd_output)

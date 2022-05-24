@@ -185,7 +185,7 @@ def is_reserved_keyword(app_name):
 
 
 def is_valid_app_name(app_name):
-    return bool(not is_reserved_keyword(app_name) and is_valid_pep508_name(app_name))
+    return not is_reserved_keyword(app_name) and is_valid_pep508_name(app_name)
 
 
 VALID_BUNDLE_RE = re.compile(r'[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$')
@@ -464,8 +464,8 @@ def parse_config(config_file, platform, output_format):
 
     try:
         all_apps = global_config.pop('app')
-    except KeyError as exc:
-        raise BriefcaseConfigError('No Briefcase apps defined in pyproject.toml') from exc
+    except KeyError as e:
+        raise BriefcaseConfigError('No Briefcase apps defined in pyproject.toml') from e
 
     # Build the flat configuration for each app,
     # based on the requested platform and output format

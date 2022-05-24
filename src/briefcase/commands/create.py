@@ -216,7 +216,10 @@ class CreateCommand(BaseCommand):
         #   without a size specification, return a dictionary with a single
         #   ``None`` key. Otherwise, return the full size-keyed dictionary.
         try:
-            return {extension: {None: targets} if isinstance(targets, str) else targets for extension, targets in path_index['document_type_icon'].items()}
+            return {
+                extension: {None: targets} if isinstance(targets, str) else targets
+                for extension, targets in path_index['document_type_icon'].items()
+            }
 
         except KeyError:
             return {}
@@ -339,7 +342,9 @@ class CreateCommand(BaseCommand):
             if custom_support_package:
                 raise
             else:
-                raise MissingSupportPackage(python_version_tag=self.python_version_tag, host_arch=self.host_arch) from e
+                raise MissingSupportPackage(
+                    python_version_tag=self.python_version_tag, host_arch=self.host_arch
+                ) from e
 
         except requests_exceptions.ConnectionError as e:
             raise NetworkFailure('downloading support package') from e
@@ -352,8 +357,8 @@ class CreateCommand(BaseCommand):
                 os.fsdecode(support_filename),
                 extract_dir=os.fsdecode(support_path)
             )
-        except (shutil.ReadError, EOFError) as exc:
-            raise InvalidSupportPackage(support_package_url) from exc
+        except (shutil.ReadError, EOFError) as e:
+            raise InvalidSupportPackage(support_package_url) from e
 
     def install_app_dependencies(self, app: BaseConfig):
         """

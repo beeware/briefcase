@@ -199,8 +199,8 @@ class macOSSigningMixin:
                         stderr=subprocess.PIPE,
                         check=True,
                     )
-                except subprocess.CalledProcessError as exc:
-                    raise BriefcaseCommandError(f"Unable to deep code sign {path}.") from exc
+                except subprocess.CalledProcessError as e:
+                    raise BriefcaseCommandError(f"Unable to deep code sign {path}.") from e
 
             elif any(
                 msg in errors

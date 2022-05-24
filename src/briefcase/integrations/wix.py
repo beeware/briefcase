@@ -29,7 +29,10 @@ class WiX:
             binaries-only install does not.
         """
         self.command = command
-        self.wix_home = wix_home or command.tools_path / 'wix'
+        if wix_home:
+            self.wix_home = wix_home
+        else:
+            self.wix_home = command.tools_path / 'wix'
         self.bin_install = bin_install
 
     @property
@@ -136,14 +139,13 @@ WiX Toolset. Current value: {wix_home!r}
                 os.fsdecode(wix_zip_path),
                 extract_dir=os.fsdecode(self.wix_home)
             )
-        except (shutil.ReadError, EOFError) as exc:
+        except (shutil.ReadError, EOFError) as e:
             raise BriefcaseCommandError(f"""\
 Unable to unpack WiX ZIP file. The download may have been
 interrupted or corrupted.
 
 Delete {wix_zip_path} and run briefcase again.
-""") from exc
-
+""") from e
 
         # Zip file no longer needed once unpacked.
         wix_zip_path.unlink()
