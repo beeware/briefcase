@@ -577,12 +577,8 @@ connection.
 
             except KeyError as e:
                 # Provided device_or_id isn't a valid device identifier.
-                if device_or_avd.startswith("@"):
-                    id_type = "emulator AVD"
-                else:
-                    id_type = "device ID"
+                id_type = "emulator AVD" if device_or_avd.startswith("@") else "device ID"
                 raise InvalidDeviceError(id_type, device_or_avd) from e
-
         # We weren't given a device/AVD; we have to select from the list.
         # If we're selecting from a list, there's always one last choice
         choices.append((None, "Create a new Android emulator"))

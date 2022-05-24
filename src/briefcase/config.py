@@ -251,11 +251,7 @@ def parsed_version(version):
 
     tag = groupdict.pop('pre_tag')
     value = groupdict.pop('pre_value')
-    if tag is not None:
-        groupdict['pre'] = (tag, value)
-    else:
-        groupdict['pre'] = None
-
+    groupdict['pre'] = (tag, value) if tag is not None else None
     return SimpleNamespace(**groupdict)
 
 

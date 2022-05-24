@@ -29,10 +29,7 @@ class WiX:
             binaries-only install does not.
         """
         self.command = command
-        if wix_home:
-            self.wix_home = wix_home
-        else:
-            self.wix_home = command.tools_path / 'wix'
+        self.wix_home = wix_home or command.tools_path / 'wix'
         self.bin_install = bin_install
 
     @property

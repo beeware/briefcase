@@ -78,10 +78,7 @@ class WindowsMSICreateCommand(WindowsMSIMixin, CreateCommand):
             self.logger.info(f"Assigning {app.app_name} an application GUID of {guid}")
 
         try:
-            if app.system_installer:
-                install_scope = "perMachine"
-            else:
-                install_scope = "perUser"
+            install_scope = "perMachine" if app.system_installer else "perUser"
         except AttributeError:
             # system_installer not defined in config; default to perUser install.
             install_scope = "perUser"
