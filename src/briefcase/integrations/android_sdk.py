@@ -532,7 +532,7 @@ connection.
 
                 # Device can be looked up by device ID or AVD
                 device_choices[d] = full_name
-                device_choices["@" + avd] = full_name
+                device_choices[f"@{avd}"] = full_name
             else:
                 # It's a physical device (might be disabled)
                 full_name = f"{name} ({d})"
@@ -543,8 +543,8 @@ connection.
         for avd in self.emulators():
             if avd not in running_avds:
                 name = f"@{avd} (emulator)"
-                choices.append(("@" + avd, name))
-                device_choices["@" + avd] = name
+                choices.append((f"@{avd}", name))
+                device_choices[f"@{avd}"] = name
 
         # If a device or AVD has been provided, check it against the available
         # device list.
