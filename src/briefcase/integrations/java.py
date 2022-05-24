@@ -204,18 +204,17 @@ class JDK:
         if jdk.exists():
             # Using briefcase-managed Java version
             return jdk
+        if install:
+            # We only display the warning messages on the pass where we actually
+            # install the JDK.
+            if install_message:
+                command.logger.warning(install_message)
+
+            jdk.install()
+
+            return jdk
         else:
-            if install:
-                # We only display the warning messages on the pass where we actually
-                # install the JDK.
-                if install_message:
-                    command.logger.warning(install_message)
-
-                jdk.install()
-
-                return jdk
-            else:
-                raise MissingToolError('Java')
+            raise MissingToolError('Java')
 
     def exists(self):
         return (self.java_home / 'bin').exists()

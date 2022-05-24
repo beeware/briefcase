@@ -67,12 +67,11 @@ class LinuxAppImageMixin(LinuxMixin):
                 raise BriefcaseCommandError("Linux AppImages cannot be generated on Windows.")
             else:
                 self.Docker = verify_docker(self)
+        elif self.host_os == 'Linux':
+            # Use subprocess natively. No Docker wrapper is needed
+            self.Docker = None
         else:
-            if self.host_os == 'Linux':
-                # Use subprocess natively. No Docker wrapper is needed
-                self.Docker = None
-            else:
-                raise BriefcaseCommandError("Linux AppImages can only be generated on Linux.")
+            raise BriefcaseCommandError("Linux AppImages can only be generated on Linux.")
 
     @contextmanager
     def dockerize(self, app):
