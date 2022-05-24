@@ -156,11 +156,11 @@ Delete {wix_zip_path} and run briefcase again.
         """
         if not self.managed_install:
             raise NonManagedToolError('WiX')
-        if self.exists():
+        elif not self.exists():
+            raise MissingToolError('WiX')
+        else:
             self.command.logger.info("Removing old WiX install...")
             self.command.shutil.rmtree(self.wix_home)
 
             self.install()
             self.command.logger.info("...done.")
-        else:
-            raise MissingToolError('WiX')
