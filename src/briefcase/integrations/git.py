@@ -23,7 +23,7 @@ def verify_git_is_installed(command):
     try:
         import git
         return git
-    except ImportError:
+    except ImportError as e:
         # macOS provides git as part of the Xcode command line tools,
         # and also hijacks /usr/bin/git with a trigger that prompts the
         # installation of those tools. Customize the message to account
@@ -42,7 +42,8 @@ to download and install git manually.
 
 If you have installed git recently and are still getting this error, you may
 need to restart your terminal session.
-""")
+""") from e
+
         else:
             raise BriefcaseCommandError("""\
 Briefcase requires git, but it is not installed (or is not on your PATH). Visit:
@@ -53,4 +54,4 @@ to download and install git manually.
 
 If you have installed git recently and are still getting this error, you may
 need to restart your terminal session.
-""")
+""") from e

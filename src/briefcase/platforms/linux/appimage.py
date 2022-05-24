@@ -193,8 +193,8 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
 
             # Make the binary executable.
             self.os.chmod(self.binary_path(app), 0o755)
-        except subprocess.CalledProcessError:
-            raise BriefcaseCommandError(f"Error while building app {app.app_name}.")
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(f"Error while building app {app.app_name}.") from e
 
 
 class LinuxAppImageRunCommand(LinuxAppImageMixin, RunCommand):
@@ -223,8 +223,8 @@ class LinuxAppImageRunCommand(LinuxAppImageMixin, RunCommand):
                 ],
                 check=True,
             )
-        except subprocess.CalledProcessError:
-            raise BriefcaseCommandError(f"Unable to start app {app.app_name}.")
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(f"Unable to start app {app.app_name}.") from e
 
 
 class LinuxAppImagePackageCommand(LinuxAppImageMixin, PackageCommand):

@@ -100,7 +100,7 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
             # found no match; return an error.
             raise InvalidDeviceError('device UDID', udid)
 
-        except (ValueError, TypeError):
+        except (ValueError, TypeError) as e:
             # Provided value wasn't a UDID.
             # It must be a device or device+version
             if udid_or_device and '::' in udid_or_device:
@@ -120,10 +120,10 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
                         # normalize back to the official name and return.
                         device = devices[udid]
                         return udid, iOS_version, device
-                    except KeyError:
-                        raise InvalidDeviceError('device name', device)
-                except KeyError:
-                    raise InvalidDeviceError('iOS Version', iOS_version)
+                    except KeyError as exc:
+                        raise InvalidDeviceError('device name', device) from exc
+                except KeyError as err:
+                    raise InvalidDeviceError('iOS Version', iOS_version) from err
             elif udid_or_device:
                 # Just a device name
                 device = udid_or_device
@@ -147,7 +147,7 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
                     except KeyError:
                         # UDID doesn't exist in this iOS version; try another.
                         pass
-                raise InvalidDeviceError('device name', device)
+                raise InvalidDeviceError('device name', device) from e
 
         if len(simulators) == 0:
             raise BriefcaseCommandError("No iOS simulators available.")
@@ -211,8 +211,8 @@ class iOSXcodeBuildCommand(iOSXcodeMixin, BuildCommand):
         """
         try:
             udid, iOS_version, device = self.select_target_device(udid)
-        except InputDisabled:
-            raise BriefcaseCommandError("Input has been disabled; can't select a device to target.")
+        except InputDisabled as e:
+            raise BriefcaseCommandError("Input has been disabled; can't select a device to target.") from e
 
         self.logger.info()
         self.logger.info(f"Targeting an {device} running {iOS_version} (device UDID {udid})")
@@ -245,8 +245,8 @@ class iOSXcodeBuildCommand(iOSXcodeMixin, BuildCommand):
                 check=True,
             )
             self.logger.info('Build succeeded.')
-        except subprocess.CalledProcessError:
-            raise BriefcaseCommandError(f"Unable to build app {app.app_name}.")
+        except subprocess.CalledProcessError as exc:
+            raise BriefcaseCommandError(f"Unable to build app {app.app_name}.") from exc
 
         # Preserve the device selection as state.
         return {
@@ -275,8 +275,8 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         """
         try:
             udid, iOS_version, device = self.select_target_device(udid)
-        except InputDisabled:
-            raise BriefcaseCommandError("Input has been disabled; can't select a device to target.")
+        except InputDisabled as e:
+            raise BriefcaseCommandError("Input has been disabled; can't select a device to target.") from e
 
         self.logger.info()
         self.logger.info(
@@ -303,8 +303,8 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                     ['xcrun', 'simctl', 'boot', udid],
                     check=True
                 )
-            except subprocess.CalledProcessError:
-                raise BriefcaseCommandError(f"Unable to boot {device} simulator running {iOS_version}")
+            except subprocess.CalledProcessError as exc:
+                raise BriefcaseCommandError(f"Unable to boot {device} simulator running {iOS_version}") from exc
 
         # We now know the simulator is *running*, so we can open it.
         try:
@@ -313,8 +313,8 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                 ['open', '-a', 'Simulator', '--args', '-CurrentDeviceUDID', udid],
                 check=True
             )
-        except subprocess.CalledProcessError:
-            raise BriefcaseCommandError(f"Unable to open {device} simulator running {iOS_version}")
+        except subprocess.CalledProcessError as err:
+            raise BriefcaseCommandError(f"Unable to open {device} simulator running {iOS_version}") from err
 
         # Try to uninstall the app first. If the app hasn't been installed
         # before, this will still succeed.
@@ -326,8 +326,8 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                 ['xcrun', 'simctl', 'uninstall', udid, app_identifier],
                 check=True
             )
-        except subprocess.CalledProcessError:
-            raise BriefcaseCommandError(f"Unable to uninstall old version of app {app.app_name}.")
+        except subprocess.CalledProcessError as exception:
+            raise BriefcaseCommandError(f"Unable to uninstall old version of app {app.app_name}.") from exception
 
         # Install the app.
         self.logger.info()
@@ -337,8 +337,8 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                 ['xcrun', 'simctl', 'install', udid, self.binary_path(app)],
                 check=True
             )
-        except subprocess.CalledProcessError:
-            raise BriefcaseCommandError(f"Unable to install new version of app {app.app_name}.")
+        except subprocess.CalledProcessError as error:
+            raise BriefcaseCommandError(f"Unable to install new version of app {app.app_name}.") from error
 
         # Start log stream for the app.
         simulator_log_popen = self.subprocess.Popen(
@@ -363,9 +363,9 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                 ['xcrun', 'simctl', 'launch', udid, app_identifier],
                 check=True
             )
-        except subprocess.CalledProcessError:
+        except subprocess.CalledProcessError as an_exception:
             self.subprocess.cleanup("log stream", simulator_log_popen)
-            raise BriefcaseCommandError(f"Unable to launch app {app.app_name}.")
+            raise BriefcaseCommandError(f"Unable to launch app {app.app_name}.") from an_exception
 
         # Start streaming logs for the app.
         self.logger.info()

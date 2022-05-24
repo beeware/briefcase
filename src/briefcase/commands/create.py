@@ -288,17 +288,17 @@ class CreateCommand(BaseCommand):
                 checkout=app.template_branch,
                 extra_context=extra_context
             )
-        except subprocess.CalledProcessError:
+        except subprocess.CalledProcessError as e:
             # Computer is offline
             # status code == 128 - certificate validation error.
-            raise NetworkFailure("clone template repository")
-        except cookiecutter_exceptions.RepositoryNotFound:
+            raise NetworkFailure("clone template repository") from e
+        except cookiecutter_exceptions.RepositoryNotFound as e:
             # Either the template path is invalid,
             # or it isn't a cookiecutter template (i.e., no cookiecutter.json)
-            raise InvalidTemplateRepository(app.template)
-        except cookiecutter_exceptions.RepositoryCloneFailed:
+            raise InvalidTemplateRepository(app.template) from e
+        except cookiecutter_exceptions.RepositoryCloneFailed as e:
             # Branch does not exist for python version
-            raise TemplateUnsupportedVersion(app.template_branch)
+            raise TemplateUnsupportedVersion(app.template_branch) from e
 
     def install_app_support_package(self, app: BaseConfig):
         """
@@ -346,17 +346,15 @@ class CreateCommand(BaseCommand):
                 )
             else:
                 support_filename = Path(support_package_url)
-        except MissingNetworkResourceError:
+        except MissingNetworkResourceError as e:
             # If there is a custom support package, report the missing resource as-is.
             if custom_support_package:
                 raise
             else:
-                raise MissingSupportPackage(
-                    python_version_tag=self.python_version_tag,
-                    host_arch=self.host_arch,
-                )
-        except requests_exceptions.ConnectionError:
-            raise NetworkFailure('downloading support package')
+                raise MissingSupportPackage(python_version_tag=self.python_version_tag, host_arch=self.host_arch,) from e
+
+        except requests_exceptions.ConnectionError as e:
+            raise NetworkFailure('downloading support package') from e
 
         try:
             self.logger.info("Unpacking support package...")
@@ -367,8 +365,8 @@ class CreateCommand(BaseCommand):
                 os.fsdecode(support_filename),
                 extract_dir=os.fsdecode(support_path)
             )
-        except (shutil.ReadError, EOFError):
-            raise InvalidSupportPackage(support_package_url)
+        except (shutil.ReadError, EOFError) as exc:
+            raise InvalidSupportPackage(support_package_url) from exc
 
     def install_app_dependencies(self, app: BaseConfig):
         """
@@ -397,8 +395,8 @@ class CreateCommand(BaseCommand):
                     ] + app.requires,
                     check=True,
                 )
-            except subprocess.CalledProcessError:
-                raise DependencyInstallError()
+            except subprocess.CalledProcessError as e:
+                raise DependencyInstallError() from e
         else:
             self.logger.info("No application dependencies.")
 

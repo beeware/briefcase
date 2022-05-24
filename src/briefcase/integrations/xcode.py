@@ -142,7 +142,7 @@ def ensure_xcode_is_installed(
                 stderr=subprocess.STDOUT,
             )
             xcode_location = output.strip()
-        except subprocess.CalledProcessError:
+        except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError("""\
 Could not find Xcode installation.
 
@@ -151,7 +151,8 @@ To select an existing Xcode installation, run:
     $ sudo xcode-select --switch path/to/Xcode.app
 
 or install Xcode from the macOS App Store. Re-run Briefcase afterwards.
-""")
+""") from e
+
 
     if not Path(xcode_location).exists():
         raise BriefcaseCommandError("""\
@@ -229,7 +230,8 @@ Or, to use a version of Xcode installed in a non-default location:
     $ sudo xcode-select --switch /path/to/Xcode.app
 
 and then re-run Briefcase.
-""")
+""") from e
+
         else:
             raise BriefcaseCommandError("""\
 The Xcode install appears to exist, but Briefcase was unable to
@@ -241,7 +243,7 @@ should return the current Xcode version, but it raised an error.
 
 You may need to re-install Xcode. Re-run Briefcase once that
 installation is complete.
-""")
+""") from e
 
 
 def confirm_xcode_license_accepted(command):
@@ -415,10 +417,10 @@ Press Return to continue: """)
 
         return simulators
 
-    except CommandOutputParseError:
-        raise BriefcaseCommandError("Unable to parse output of xcrun simctl")
-    except subprocess.CalledProcessError:
-        raise BriefcaseCommandError("Unable to run xcrun simctl.")
+    except CommandOutputParseError as e:
+        raise BriefcaseCommandError("Unable to parse output of xcrun simctl") from e
+    except subprocess.CalledProcessError as e:
+        raise BriefcaseCommandError("Unable to run xcrun simctl.") from e
 
 
 def get_device_state(command, udid):
@@ -447,10 +449,10 @@ def get_device_state(command, udid):
         # If we fall out the bottom of the loop, the UDID didn't match
         # so we raise an error.
         raise BriefcaseCommandError(f"Unable to determine status of device {udid}.")
-    except CommandOutputParseError:
-        raise BriefcaseCommandError("Unable to parse output of xcrun simctl")
-    except subprocess.CalledProcessError:
-        raise BriefcaseCommandError("Unable to run xcrun simctl.")
+    except CommandOutputParseError as e:
+        raise BriefcaseCommandError("Unable to parse output of xcrun simctl") from e
+    except subprocess.CalledProcessError as e:
+        raise BriefcaseCommandError("Unable to run xcrun simctl.") from e
 
 
 # A regex pattern that matches the content returned by `security find-identity`
@@ -476,5 +478,5 @@ def get_identities(command, policy):
         )
 
         return identities
-    except subprocess.CalledProcessError:
-        raise BriefcaseCommandError("Unable to run security find-identity.")
+    except subprocess.CalledProcessError as e:
+        raise BriefcaseCommandError("Unable to run security find-identity.") from e

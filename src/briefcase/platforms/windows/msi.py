@@ -138,8 +138,8 @@ class WindowsMSIRunCommand(WindowsMSIMixin, RunCommand):
                 ],
                 check=True,
             )
-        except subprocess.CalledProcessError:
-            raise BriefcaseCommandError(f"Unable to start app {app.app_name}.")
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(f"Unable to start app {app.app_name}.") from e
 
 
 class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
@@ -176,8 +176,9 @@ class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
                 check=True,
                 cwd=self.bundle_path(app)
             )
-        except subprocess.CalledProcessError:
-            raise BriefcaseCommandError(f"Unable to generate manifest for app {app.app_name}.")
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(f"Unable to generate manifest for app {app.app_name}.") from e
+
 
         try:
             self.logger.info()
@@ -195,8 +196,8 @@ class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
                 check=True,
                 cwd=self.bundle_path(app)
             )
-        except subprocess.CalledProcessError:
-            raise BriefcaseCommandError(f"Unable to compile app {app.app_name}.")
+        except subprocess.CalledProcessError as exc:
+            raise BriefcaseCommandError(f"Unable to compile app {app.app_name}.") from exc
 
         try:
             self.logger.info()
@@ -214,8 +215,8 @@ class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
                 check=True,
                 cwd=self.bundle_path(app)
             )
-        except subprocess.CalledProcessError:
-            raise BriefcaseCommandError(f"Unable to link app {app.app_name}.")
+        except subprocess.CalledProcessError as err:
+            raise BriefcaseCommandError(f"Unable to link app {app.app_name}.") from err
 
 
 class WindowsMSIPublishCommand(WindowsMSIMixin, PublishCommand):

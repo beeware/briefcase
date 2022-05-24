@@ -23,7 +23,7 @@ def json_parser(json_output):
     try:
         return json.loads(json_output)
     except json.JSONDecodeError as e:
-        raise ParseError(f"Failed to parse output as JSON: {e}")
+        raise ParseError(f"Failed to parse output as JSON: {e}") from e
 
 
 class Subprocess:
@@ -208,7 +208,7 @@ class Subprocess:
             self.command.logger.error("Command Output:")
             for line in ensure_str(cmd_output).splitlines():
                 self.command.logger.error(f"    {line}")
-            raise CommandOutputParseError(error_reason)
+            raise CommandOutputParseError(error_reason) from e
 
     def Popen(self, args, **kwargs):
         """

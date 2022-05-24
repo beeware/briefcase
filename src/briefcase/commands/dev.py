@@ -74,8 +74,8 @@ class DevCommand(BaseCommand):
                     ] + app.requires,
                     check=True,
                 )
-            except subprocess.CalledProcessError:
-                raise DependencyInstallError()
+            except subprocess.CalledProcessError as e:
+                raise DependencyInstallError() from e
         else:
             self.logger.info("No application dependencies.")
 
@@ -93,8 +93,8 @@ class DevCommand(BaseCommand):
                 env=env,
                 check=True,
             )
-        except subprocess.CalledProcessError:
-            raise BriefcaseCommandError(f"Unable to start application '{app.app_name}'")
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(f"Unable to start application '{app.app_name}'") from e
 
     def get_environment(self, app):
         # Create a shell environment where PYTHONPATH points to the source
@@ -121,8 +121,9 @@ class DevCommand(BaseCommand):
         elif appname:
             try:
                 app = self.apps[appname]
-            except KeyError:
-                raise BriefcaseCommandError(f"Project doesn't define an application named '{appname}'")
+            except KeyError as e:
+                raise BriefcaseCommandError(f"Project doesn't define an application named '{appname}'") from e
+
         else:
             raise BriefcaseCommandError(
                 "Project specifies more than one application; use --app to specify which one to start."

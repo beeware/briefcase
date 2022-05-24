@@ -240,8 +240,8 @@ class JDK:
                 url=self.adoptOpenJDK_download_url,
                 download_path=self.command.tools_path,
             )
-        except requests_exceptions.ConnectionError:
-            raise NetworkFailure("download Java 8 JDK")
+        except requests_exceptions.ConnectionError as e:
+            raise NetworkFailure("download Java 8 JDK") from e
 
         try:
             self.command.logger.info("Installing AdoptOpenJDK...")
@@ -250,13 +250,14 @@ class JDK:
                 os.fsdecode(jdk_zip_path),
                 extract_dir=os.fsdecode(self.command.tools_path)
             )
-        except (shutil.ReadError, EOFError):
+        except (shutil.ReadError, EOFError) as exc:
             raise BriefcaseCommandError(f"""\
 Unable to unpack AdoptOpenJDK ZIP file. The download may have been interrupted
 or corrupted.
 
 Delete {jdk_zip_path} and run briefcase again.
-""")
+""") from exc
+
 
         jdk_zip_path.unlink()  # Zip file no longer needed once unpacked.
 

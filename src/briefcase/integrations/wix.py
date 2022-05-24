@@ -129,8 +129,8 @@ WiX Toolset. Current value: {wix_home!r}
                 url=WIX_DOWNLOAD_URL,
                 download_path=self.command.tools_path,
             )
-        except requests_exceptions.ConnectionError:
-            raise NetworkFailure("download WiX")
+        except requests_exceptions.ConnectionError as e:
+            raise NetworkFailure("download WiX") from e
 
         try:
             self.command.logger.info("Installing WiX...")
@@ -139,13 +139,14 @@ WiX Toolset. Current value: {wix_home!r}
                 os.fsdecode(wix_zip_path),
                 extract_dir=os.fsdecode(self.wix_home)
             )
-        except (shutil.ReadError, EOFError):
+        except (shutil.ReadError, EOFError) as exc:
             raise BriefcaseCommandError(f"""\
 Unable to unpack WiX ZIP file. The download may have been
 interrupted or corrupted.
 
 Delete {wix_zip_path} and run briefcase again.
-""")
+""") from exc
+
 
         # Zip file no longer needed once unpacked.
         wix_zip_path.unlink()

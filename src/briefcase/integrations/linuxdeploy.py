@@ -71,8 +71,8 @@ class LinuxDeploy:
             )
             self.command.os.chmod(linuxdeploy_appimage_path, 0o755)
             self.patch_elf_header()
-        except requests_exceptions.ConnectionError:
-            raise NetworkFailure('downloading linuxdeploy AppImage')
+        except requests_exceptions.ConnectionError as e:
+            raise NetworkFailure('downloading linuxdeploy AppImage') from e
 
     def upgrade(self):
         """

@@ -281,8 +281,7 @@ class NewCommand(BaseCommand):
                 return answer
             except ValueError as e:
                 if not self.input.enabled:
-                    raise BriefcaseCommandError(str(e))
-
+                    raise BriefcaseCommandError(str(e)) from e
                 self.input.prompt()
                 self.input.prompt(f"Invalid value; {e}")
 
@@ -499,14 +498,14 @@ What GUI toolkit do you want to use for this project?""",
                 checkout="v0.3",
                 extra_context=context
             )
-        except subprocess.CalledProcessError:
+        except subprocess.CalledProcessError as e:
             # Computer is offline
             # status code == 128 - certificate validation error.
-            raise NetworkFailure("clone template repository")
-        except cookiecutter_exceptions.RepositoryNotFound:
+            raise NetworkFailure("clone template repository") from e
+        except cookiecutter_exceptions.RepositoryNotFound as e:
             # Either the template path is invalid,
             # or it isn't a cookiecutter template (i.e., no cookiecutter.json)
-            raise InvalidTemplateRepository(template)
+            raise InvalidTemplateRepository(template) from e
 
         self.logger.info(f"""
 Application '{context['formal_name']}' has been generated. To run your application, type:

@@ -184,8 +184,8 @@ class Console:
             raise InputDisabled()
         try:
             return self._input(prompt)
-        except EOFError:
-            raise KeyboardInterrupt
+        except EOFError as e:
+            raise KeyboardInterrupt from e
 
 
 class ProgressBar:
