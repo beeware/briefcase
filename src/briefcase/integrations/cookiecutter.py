@@ -12,7 +12,7 @@ class RGBExtension(Extension):
 
         def float_red(obj):
             try:
-                return int(obj.lstrip('#')[0:2], 16) / 255.0
+                return int(obj.lstrip('#')[:2], 16) / 255.0
             except ValueError:
                 return 1.0
 
