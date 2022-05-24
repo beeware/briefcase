@@ -471,11 +471,9 @@ def get_identities(command, policy):
         )
 
         return {
-            (
                 IDENTITY_RE.match(line).groups()
                 for line in output.split('\n')
                 if IDENTITY_RE.match(line)
-            )
         }
 
     except subprocess.CalledProcessError as e:
