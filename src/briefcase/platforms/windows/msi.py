@@ -211,8 +211,8 @@ class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
                 check=True,
                 cwd=self.bundle_path(app)
             )
-        except subprocess.CalledProcessError as err:
-            raise BriefcaseCommandError(f"Unable to link app {app.app_name}.") from err
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(f"Unable to link app {app.app_name}.") from e
 
 
 class WindowsMSIPublishCommand(WindowsMSIMixin, PublishCommand):

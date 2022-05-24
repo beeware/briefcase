@@ -415,7 +415,9 @@ connection.
                 check=True,
             )
         except subprocess.CalledProcessError as e:
-            raise BriefcaseCommandError("Error while installing Android emulator and system image.") from e
+            raise BriefcaseCommandError(
+                "Error while installing Android emulator and system image."
+            ) from e
 
     def emulators(self):
         """Find the list of emulators that are available
@@ -813,8 +815,15 @@ briefcase run android -d @{avd}
             raise InvalidDeviceError("emulator AVD", avd)
         self.command.logger.info(f"Starting emulator {avd}...")
         emulator_popen = self.command.subprocess.Popen(
-            [os.fsdecode(self.emulator_path), f'@{avd}', '-dns-server', '8.8.8.8'],
-            env=self.env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, start_new_session=True
+            [
+                os.fsdecode(self.emulator_path),
+                f'@{avd}',
+                '-dns-server', '8.8.8.8',
+            ],
+            env=self.env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            start_new_session=True
         )
 
         # The boot process happens in 2 phases.
@@ -988,7 +997,9 @@ class ADB:
         try:
             self.run("shell", "am", "force-stop", package)
         except subprocess.CalledProcessError as e:
-            raise BriefcaseCommandError(f"Unable to force stop app {package} on {self.device}") from e
+            raise BriefcaseCommandError(
+                f"Unable to force stop app {package} on {self.device}"
+            ) from e
 
     def start_app(self, package, activity):
         """

@@ -336,7 +336,9 @@ class BaseCommand(ABC):
                     f"Multiple paths in sources found for application '{app.app_name}'"
                 )
         except IndexError as e:
-            raise BriefcaseCommandError(f"Unable to find code for application '{app.app_name}'") from e
+            raise BriefcaseCommandError(
+                f"Unable to find code for application '{app.app_name}'"
+            ) from e
 
         return path
 

@@ -339,11 +339,13 @@ class CreateCommand(BaseCommand):
             else:
                 support_filename = Path(support_package_url)
         except MissingNetworkResourceError as e:
+            # If there is a custom support package, report the missing resource as-is.
             if custom_support_package:
                 raise
             else:
                 raise MissingSupportPackage(
-                    python_version_tag=self.python_version_tag, host_arch=self.host_arch
+                    python_version_tag=self.python_version_tag,
+                    host_arch=self.host_arch,
                 ) from e
 
         except requests_exceptions.ConnectionError as e:

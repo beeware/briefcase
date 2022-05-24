@@ -51,7 +51,9 @@ class RunCommand(BaseCommand):
             try:
                 app = self.apps[appname]
             except KeyError as e:
-                raise BriefcaseCommandError(f"Project doesn't define an application named '{appname}'") from e
+                raise BriefcaseCommandError(
+                    f"Project doesn't define an application named '{appname}'"
+                ) from e
         else:
             raise BriefcaseCommandError(
                 "Project specifies more than one application; use --app to specify which one to start."

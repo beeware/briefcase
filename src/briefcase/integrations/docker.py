@@ -130,7 +130,9 @@ need to restart your terminal session.
     except FileNotFoundError as e:
         # Docker executable doesn't exist.
         raise BriefcaseCommandError(
-            DOCKER_NOT_INSTALLED_ERROR.format(**docker_install_details(command.host_os))
+            DOCKER_NOT_INSTALLED_ERROR.format(
+                **docker_install_details(command.host_os)
+            )
         ) from e
 
     # Check that docker commands can actually run.
@@ -186,7 +188,9 @@ installation, and try again.
         if 'permission denied while trying to connect' in failure_output:
             raise BriefcaseCommandError(LACKS_PERMISSION_ERROR) from e
         elif (
+                # error message on Ubuntu
                 'Is the docker daemon running?' in failure_output
+                # error message on macOS
                 or 'connect: connection refused' in failure_output
         ):
             raise BriefcaseCommandError(DAEMON_NOT_RUNNING_ERROR) from e
@@ -225,7 +229,9 @@ class Docker:
             )
 
         except subprocess.CalledProcessError as e:
-            raise BriefcaseCommandError(f"Error building Docker container for {self.app.app_name}.") from e
+            raise BriefcaseCommandError(
+                f"Error building Docker container for {self.app.app_name}."
+            ) from e
 
     def run(self, args, env=None, **kwargs):
         "Run a process inside the Docker container"

@@ -212,7 +212,9 @@ class iOSXcodeBuildCommand(iOSXcodeMixin, BuildCommand):
         try:
             udid, iOS_version, device = self.select_target_device(udid)
         except InputDisabled as e:
-            raise BriefcaseCommandError("Input has been disabled; can't select a device to target.") from e
+            raise BriefcaseCommandError(
+                "Input has been disabled; can't select a device to target."
+            ) from e
 
         self.logger.info()
         self.logger.info(f"Targeting an {device} running {iOS_version} (device UDID {udid})")
@@ -276,7 +278,9 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         try:
             udid, iOS_version, device = self.select_target_device(udid)
         except InputDisabled as e:
-            raise BriefcaseCommandError("Input has been disabled; can't select a device to target.") from e
+            raise BriefcaseCommandError(
+                "Input has been disabled; can't select a device to target."
+            ) from e
 
         self.logger.info()
         self.logger.info(
@@ -313,8 +317,10 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                 ['open', '-a', 'Simulator', '--args', '-CurrentDeviceUDID', udid],
                 check=True
             )
-        except subprocess.CalledProcessError as err:
-            raise BriefcaseCommandError(f"Unable to open {device} simulator running {iOS_version}") from err
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(
+                f"Unable to open {device} simulator running {iOS_version}"
+            ) from e
 
         # Try to uninstall the app first. If the app hasn't been installed
         # before, this will still succeed.
@@ -363,9 +369,9 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                 ['xcrun', 'simctl', 'launch', udid, app_identifier],
                 check=True
             )
-        except subprocess.CalledProcessError as an_exception:
+        except subprocess.CalledProcessError as e:
             self.subprocess.cleanup("log stream", simulator_log_popen)
-            raise BriefcaseCommandError(f"Unable to launch app {app.app_name}.") from an_exception
+            raise BriefcaseCommandError(f"Unable to launch app {app.app_name}.") from e
 
         # Start streaming logs for the app.
         self.logger.info()
