@@ -327,9 +327,7 @@ class CreateCommand(BaseCommand):
                     # be because (a) url splits aren't appendable, and
                     # (b) Python 3.5 doesn't guarantee dictionary order.
                     url_parts = list(urlsplit(support_package_url))
-                    query = []
-                    for key, value in parse_qsl(url_parts[3]):
-                        query.append((key, value))
+                    query = list(parse_qsl(url_parts[3]))
                     query.append(('revision', app.support_revision))
                     url_parts[3] = urlencode(query)
                     support_package_url = urlunsplit(url_parts)
@@ -347,15 +345,13 @@ class CreateCommand(BaseCommand):
             else:
                 support_filename = Path(support_package_url)
         except MissingNetworkResourceError as e:
-            # If there is a custom support package, report the missing resource as-is.
             if custom_support_package:
                 raise
             else:
-                raise MissingSupportPackage(python_version_tag=self.python_version_tag, host_arch=self.host_arch,) from e
+                raise MissingSupportPackage(python_version_tag=self.python_version_tag, host_arch=self.host_arch) from e
 
         except requests_exceptions.ConnectionError as e:
             raise NetworkFailure('downloading support package') from e
-
         try:
             self.logger.info("Unpacking support package...")
             support_path = self.support_path(app)
