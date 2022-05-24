@@ -84,7 +84,7 @@ class Subprocess:
         # if `text` or backwards-compatible `universal_newlines` are
         # not provided, then default `text` to True so all output is
         # returned as strings instead of bytes.
-        if not ('text' in kwargs or 'universal_newlines' in kwargs):
+        if 'text' not in kwargs and 'universal_newlines' not in kwargs:
             kwargs['text'] = True
 
         # For Windows, convert start_new_session=True to creation flags
