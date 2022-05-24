@@ -160,8 +160,7 @@ class NewCommand(BaseCommand):
         :param app_name: The app name
         :returns: The app's module name.
         """
-        module_name = app_name.replace('-', '_')
-        return module_name
+        return app_name.replace('-', '_')
 
     def validate_bundle(self, candidate):
         """
@@ -530,5 +529,4 @@ Application '{context['formal_name']}' has been generated. To run your applicati
         # Confirm all required tools are available
         self.verify_tools()
 
-        state = self.new_app(template=template, **options)
-        return state
+        return self.new_app(template=template, **options)

@@ -185,9 +185,7 @@ def is_reserved_keyword(app_name):
 
 
 def is_valid_app_name(app_name):
-    if not is_reserved_keyword(app_name) and is_valid_pep508_name(app_name):
-        return True
-    return False
+    return bool(not is_reserved_keyword(app_name) and is_valid_pep508_name(app_name))
 
 
 VALID_BUNDLE_RE = re.compile(r'[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$')

@@ -147,5 +147,4 @@ class DevCommand(BaseCommand):
             self.logger.info()
             self.logger.info(f'[{app.app_name}] Starting in dev mode...')
             env = self.get_environment(app)
-            state = self.run_dev_app(app, env, **options)
-            return state
+            return self.run_dev_app(app, env, **options)

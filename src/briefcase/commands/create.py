@@ -216,17 +216,8 @@ class CreateCommand(BaseCommand):
         #   without a size specification, return a dictionary with a single
         #   ``None`` key. Otherwise, return the full size-keyed dictionary.
         try:
-            document_type_icon_targets = {}
-            for extension, targets in path_index['document_type_icon'].items():
-                # Convert string-specified icons into an "unknown size" icon form
-                if isinstance(targets, str):
-                    document_type_icon_targets[extension] = {
-                        None: targets
-                    }
-                else:
-                    document_type_icon_targets[extension] = targets
+            return {extension: {None: targets} if isinstance(targets, str) else targets for extension, targets in path_index['document_type_icon'].items()}
 
-            return document_type_icon_targets
         except KeyError:
             return {}
 
