@@ -43,7 +43,7 @@ class WindowsMSICreateCommand(WindowsMSIMixin, CreateCommand):
         return [
             ('platform', self.platform),
             ('version', self.python_version_tag),
-            ('arch', "amd64" if (struct.calcsize("P") * 8) == 64 else "win32"),
+            ('arch', "amd64" if struct.calcsize("P") == 8 else "win32"),
         ]
 
     def output_format_template_context(self, app: BaseConfig):
