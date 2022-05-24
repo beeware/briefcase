@@ -270,17 +270,15 @@ Delete {jdk_zip_path} and run briefcase again.
         """
         Upgrade an existing JDK install.
         """
-        if self.managed_install:
-            if self.exists():
-                self.command.logger.info("Removing old JDK install...")
-                if self.command.host_os == 'Darwin':
-                    self.command.shutil.rmtree(self.java_home.parent.parent)
-                else:
-                    self.command.shutil.rmtree(self.java_home)
-
-                self.install()
-                self.command.logger.info("...done.")
-            else:
-                raise MissingToolError('Java')
-        else:
+        if not self.managed_install:
             raise NonManagedToolError('Java')
+        if not self.exists():
+            raise MissingToolError('Java')
+        self.command.logger.info("Removing old JDK install...")
+        if self.command.host_os == 'Darwin':
+            self.command.shutil.rmtree(self.java_home.parent.parent)
+        else:
+            self.command.shutil.rmtree(self.java_home)
+
+        self.install()
+        self.command.logger.info("...done.")
