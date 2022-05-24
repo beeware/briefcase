@@ -801,8 +801,8 @@ briefcase run android -d @{avd}
                 except ValueError:
                     pass
 
-        # Augment the config with the new new key-values pairs
-        avd_config.update(updates)
+        # Augment the config with the new key-values pairs
+        avd_config |= updates
 
         # Write the update configuration.
         with avd_config_filename.open('w') as f:
