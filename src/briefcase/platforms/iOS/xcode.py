@@ -8,12 +8,16 @@ from briefcase.commands import (
     PackageCommand,
     PublishCommand,
     RunCommand,
-    UpdateCommand,
+    UpdateCommand
 )
 from briefcase.config import BaseConfig
 from briefcase.console import InputDisabled, select_option
 from briefcase.exceptions import BriefcaseCommandError, InvalidDeviceError
-from briefcase.integrations.xcode import DeviceState, get_device_state, get_simulators
+from briefcase.integrations.xcode import (
+    DeviceState,
+    get_device_state,
+    get_simulators
+)
 from briefcase.platforms.iOS import iOSMixin
 
 
