@@ -23,12 +23,12 @@ import pytest
         ("\u02EC World", "\u02ECWorld"),  # Unicode category Lm
         ("\u3006 World", "\u3006World"),  # Unicode category Lo
         ("\u3021 World", "\u3021World"),  # Unicode category Nl
-        # ('\u2118 World', '\u2118World'),  # in Other_ID_Start
+        # ('\u2118 World', '\u2118World'),  # in Other_ID_Start noqa
         # Unicode codepoints that cannot be at the start of an identifer
         ("\u20E1 World", "_\u20E1World"),  # Unicode Category Mn
         ("\u0903 World", "_\u0903World"),  # Unicode Category Mc
         ("\u2040 World", "_\u2040World"),  # Category Pc
-        # ('\u00B7 World', '_\u00B7World'),  # in Other_ID_Continue
+        # ('\u00B7 World', '_\u00B7World'),  # in Other_ID_Continue noqa
         # Characters that are converted by NFKC normalization
         ("\u2135 World", "\u05d0World"),  # Unicode category Lo
     ],
