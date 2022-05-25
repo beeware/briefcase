@@ -108,13 +108,6 @@ def test_call_windows_with_start_new_session_and_creationflags(
             ["hello", "world"], start_new_session=True, creationflags=creationflags
         )
 
-    # mock_sub._subprocess.run.assert_called_with(
-    #     ['hello', 'world'],
-    #     creationflags=final_creationflags,
-    #     text=True,
-    # )
-    # assert capsys.readouterr().out == ""
-
 
 def test_debug_call(mock_sub, capsys):
     "If verbosity is turned up, there is output"

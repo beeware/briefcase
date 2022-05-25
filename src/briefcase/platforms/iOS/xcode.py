@@ -222,15 +222,6 @@ class iOSXcodeBuildCommand(iOSXcodeMixin, BuildCommand):
         self.logger.info()
         self.logger.info(f"[{app.app_name}] Building XCode project...")
 
-        # build_settings = [
-        #     ('AD_HOC_CODE_SIGNING_ALLOWED', 'YES'),
-        #     ('CODE_SIGN_IDENTITY', '-'),
-        #     ('VALID_ARCHS', '"i386 x86_64"'),
-        #     ('ARCHS', 'x86_64'),
-        #     ('ONLY_ACTIVE_ARCHS', 'NO')
-        # ]
-        # build_settings_str = [f'{setting}={value}' for setting, value in build_settings]
-
         try:
             self.subprocess.run(
                 [
