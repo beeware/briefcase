@@ -13,7 +13,7 @@ and
 
 ## Development Environment
 
-Run `pip install pre-commit` to install pre-commit hooks in to your git hooks.
+Run `pip install -r requirements.dev.txt` to install pre-commit hooks in to your git hooks.
 pre-commit will now run on every commit. Every time you clone a project using
 pre-commit running pre-commit install should always be the first thing you do.
 
