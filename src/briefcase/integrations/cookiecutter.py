@@ -8,7 +8,7 @@ class RGBExtension(Extension):
 
     def __init__(self, environment):
         """Initialize the extension with the given environment."""
-        super(RGBExtension, self).__init__(environment)
+        super().__init__(environment)
 
         def float_red(obj):
             try:
