@@ -2,3 +2,4 @@ pytest
 pytest-tldr
 pytest-cov
 tomli_w
+pre-commit
