@@ -5,7 +5,11 @@ import pytest
 
 from briefcase.console import Log
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.integrations.docker import Docker, _verify_docker_can_run, verify_docker
+from briefcase.integrations.docker import (
+    Docker,
+    _verify_docker_can_run,
+    verify_docker
+)
 
 
 @pytest.fixture

@@ -1,7 +1,6 @@
 import os
 import shutil
 import sys
-
 from unittest.mock import MagicMock
 
 import pytest
@@ -11,7 +10,7 @@ from briefcase.exceptions import (
     BriefcaseCommandError,
     MissingToolError,
     NetworkFailure,
-    NonManagedToolError,
+    NonManagedToolError
 )
 from briefcase.integrations.java import JDK
 from tests.utils import FsPathMock

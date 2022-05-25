@@ -4,8 +4,8 @@ from unittest import mock
 
 import pytest
 
-from briefcase.exceptions import BriefcaseCommandError
 from briefcase.commands.base import BaseCommand
+from briefcase.exceptions import BriefcaseCommandError
 from briefcase.platforms.macOS import macOSSigningMixin
 from briefcase.platforms.macOS.app import macOSAppMixin
 from tests.utils import DummyConsole

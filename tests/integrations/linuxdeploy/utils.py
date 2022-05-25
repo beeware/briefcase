@@ -1,9 +1,9 @@
-from random import randrange
 from pathlib import Path
+from random import randrange
 
 from briefcase.integrations.linuxdeploy import (
     ELF_PATCH_OFFSET,
-    ELF_PATCH_ORIGINAL_BYTES,
+    ELF_PATCH_ORIGINAL_BYTES
 )
 
 
