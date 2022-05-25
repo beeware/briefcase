@@ -34,7 +34,7 @@ def test_boolean_input(console, user_input, expected):
 
 
 def test_boolean_default_true(console):
-    "If True is the default, it is returned"
+    """If True is the default, it is returned."""
     question = "Are you handsome"
     prompt = "Are you handsome [Y/n]? "
     console._input.side_effect = [""]
@@ -46,7 +46,7 @@ def test_boolean_default_true(console):
 
 
 def test_boolean_default_false(console):
-    "If False is the default, it is returned"
+    """If False is the default, it is returned."""
     question = "Are you handsome"
     prompt = "Are you handsome [y/N]? "
     console._input.side_effect = [""]
@@ -58,7 +58,7 @@ def test_boolean_default_false(console):
 
 
 def test_boolean_default_None(console):
-    "If no default is specified, no response is not accepted"
+    """If no default is specified, no response is not accepted."""
     question = "Are you handsome"
     console._input.side_effect = ["", "y"]
 
@@ -79,7 +79,7 @@ def test_bad_input(console):
 
 
 def test_disabled(disabled_console):
-    "If input is disabled, the default is returned"
+    """If input is disabled, the default is returned."""
     question = "Are you handsome "
 
     result = disabled_console.boolean_input(question=question)
@@ -89,7 +89,7 @@ def test_disabled(disabled_console):
 
 
 def test_disabled_no_default(disabled_console):
-    "If input is disabled and there is no default, an error is raised"
+    """If input is disabled and there is no default, an error is raised."""
     question = "Are you handsome "
 
     with pytest.raises(InputDisabled):

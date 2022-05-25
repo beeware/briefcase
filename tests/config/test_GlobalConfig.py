@@ -5,7 +5,7 @@ from briefcase.exceptions import BriefcaseConfigError
 
 
 def test_minimal_GlobalConfig():
-    "A simple config can be defined"
+    """A simple config can be defined."""
     config = GlobalConfig(
         project_name="My Project",
         version="1.2.3",
@@ -21,7 +21,7 @@ def test_minimal_GlobalConfig():
 
 
 def test_extra_attrs():
-    "A config can contain attributes in addition to those required"
+    """A config can contain attributes in addition to those required."""
     config = GlobalConfig(
         project_name="My Project",
         version="1.2.3",

@@ -19,14 +19,15 @@ def command():
 
 
 def simctl_result(name):
-    """Load a simctl result file from the sample directory, and return the content"""
+    """Load a simctl result file from the sample directory, and return the
+    content."""
     filename = Path(__file__).parent / "simctl" / f"{name}.json"
     with filename.open() as f:
         return f.read()
 
 
 def test_simctl_missing(command):
-    "If simctl is missing or fails to start, an exception is raised."
+    """If simctl is missing or fails to start, an exception is raised."""
     command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
         cmd=["xcrun", "simctl", "list", "-j"], returncode=1
     )
@@ -36,7 +37,7 @@ def test_simctl_missing(command):
 
 
 def test_simctl_output_parse_error(command):
-    "If parsing simctl JSON output fails, an exception is raised"
+    """If parsing simctl JSON output fails, an exception is raised."""
     command.subprocess.check_output.return_value = "this is not JSON"
 
     with pytest.raises(
@@ -46,7 +47,7 @@ def test_simctl_output_parse_error(command):
 
 
 def test_unknown_device(command):
-    "If you ask for an invalid device UDID, an exception is raised."
+    """If you ask for an invalid device UDID, an exception is raised."""
     command.subprocess.check_output.return_value = simctl_result("no-devices")
 
     with pytest.raises(BriefcaseCommandError):
@@ -54,7 +55,7 @@ def test_unknown_device(command):
 
 
 def test_known_device_booted(command):
-    "A valid, booted device can be inspected"
+    """A valid, booted device can be inspected."""
     command.subprocess.check_output.return_value = simctl_result("single-device-booted")
 
     state = get_device_state(command, "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D")
@@ -63,7 +64,7 @@ def test_known_device_booted(command):
 
 
 def test_known_device_shutdown(command):
-    "A valid, shut down device can be inspected"
+    """A valid, shut down device can be inspected."""
     command.subprocess.check_output.return_value = simctl_result(
         "single-device-shutdown"
     )
@@ -74,7 +75,7 @@ def test_known_device_shutdown(command):
 
 
 def test_known_device_shutting_down(command):
-    "A valid device that is shutting down can be inspected"
+    """A valid device that is shutting down can be inspected."""
     command.subprocess.check_output.return_value = simctl_result(
         "single-device-shutting-down"
     )
@@ -85,7 +86,7 @@ def test_known_device_shutting_down(command):
 
 
 def test_known_device_unknown_status(command):
-    "If simctl returns something unexpected as status, we can recover"
+    """If simctl returns something unexpected as status, we can recover."""
     command.subprocess.check_output.return_value = simctl_result(
         "single-device-unknown"
     )

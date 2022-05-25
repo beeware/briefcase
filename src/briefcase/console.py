@@ -9,9 +9,7 @@ class InputDisabled(Exception):
 
 
 class Log:
-    """
-    Manage logging output driven by verbosity flags.
-    """
+    """Manage logging output driven by verbosity flags."""
 
     DEBUG = 2
     DEEP_DEBUG = 3
@@ -29,7 +27,10 @@ class Log:
             print(f"{preface}{line}")
 
     def deep_debug(self, msg=None):
-        """Log messages at deep debug level. Included in output if verbosity>=3."""
+        """Log messages at deep debug level.
+
+        Included in output if verbosity>=3.
+        """
         if self.verbosity >= self.DEEP_DEBUG:
             if msg is None:
                 # On a completely no-args debug() call, don't output the preface;
@@ -39,7 +40,10 @@ class Log:
                 self._log(preface=self.debug_preface, msg=msg)
 
     def debug(self, msg=None):
-        """Log messages at debug level. Included in output if verbosity>=2."""
+        """Log messages at debug level.
+
+        Included in output if verbosity>=2.
+        """
         if self.verbosity >= self.DEBUG:
             if msg is None:
                 # On a completely no-args debug() call, don't output the preface;
@@ -49,15 +53,24 @@ class Log:
                 self._log(preface=self.debug_preface, msg=msg)
 
     def info(self, msg=""):
-        """Log message at info level. Always included in output."""
+        """Log message at info level.
+
+        Always included in output.
+        """
         self._log(msg=msg)
 
     def warning(self, msg=""):
-        """Log message at warning level. Always included in output."""
+        """Log message at warning level.
+
+        Always included in output.
+        """
         self._log(msg=msg)
 
     def error(self, msg=""):
-        """Log message at error level. Always included in output."""
+        """Log message at error level.
+
+        Always included in output.
+        """
         self._log(msg=msg)
 
 
@@ -88,8 +101,7 @@ class Console:
         return WaitBar(message=message)
 
     def boolean_input(self, question, default=False):
-        """
-        Get a boolean input from user, in the form of y/n.
+        """Get a boolean input from user, in the form of y/n.
 
         The user might press "y" for true or "n" for false.
         If input is disabled, returns default. If input is disabled and default
@@ -132,8 +144,7 @@ class Console:
         error_message="Invalid Selection",
         transform=None,
     ):
-        """
-        Prompt the user to select an option from a list of choices.
+        """Prompt the user to select an option from a list of choices.
 
         :param prompt: The text prompt to display
         :param choices: The list of available choices
@@ -155,8 +166,7 @@ class Console:
             self.prompt(error_message)
 
     def text_input(self, prompt, default=None):
-        """
-        Prompt the user for text input.
+        """Prompt the user for text input.
 
         If no default is specified, the input will be returned as entered.
 
@@ -180,7 +190,7 @@ class Console:
         return user_input
 
     def __call__(self, prompt):
-        "Make Console present the same interface as input()"
+        """Make Console present the same interface as input()"""
         if not self.enabled:
             raise InputDisabled()
         try:
@@ -191,8 +201,7 @@ class Console:
 
 class ProgressBar:
     def __init__(self, total: int):
-        """
-        Context manager to display a progress bar in the console.
+        """Context manager to display a progress bar in the console.
 
         Continuously call update() on the yielded object to redraw the progress bar.
         The progress bar will reach 100% when completed == total.
@@ -216,8 +225,7 @@ class ProgressBar:
         print()
 
     def update(self, completed: int):
-        """
-        Build the progress bar and (re)draw it on the console.
+        """Build the progress bar and (re)draw it on the console.
 
         :param completed: amount of the total to show as completed.
         """
@@ -230,9 +238,9 @@ class ProgressBar:
 
 class WaitBar:
     def __init__(self, message: str = ""):
-        """
-        Context manager to inform a user a process is being awaited.
-        Call update() on the yielded object to print a new period character after the message.
+        """Context manager to inform a user a process is being awaited. Call
+        update() on the yielded object to print a new period character after
+        the message.
 
         :param message: message to inform the user what's being awaited
         """
@@ -257,8 +265,7 @@ class WaitBar:
 
 
 def select_option(options, input, prompt="> ", error="Invalid selection"):
-    """
-    Prompt the user for a choice from a list of options.
+    """Prompt the user for a choice from a list of options.
 
     The options are provided as a dictionary; the values are the
     human-readable options, and the keys are the values that will

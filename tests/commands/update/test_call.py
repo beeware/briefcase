@@ -6,7 +6,7 @@ from briefcase.exceptions import BriefcaseCommandError
 
 
 def test_no_git(update_command):
-    "If Git is not installed, an error is raised"
+    """If Git is not installed, an error is raised."""
     # Mock a non-existent git
     integrations = mock.MagicMock()
     integrations.git.verify_git_is_installed.side_effect = BriefcaseCommandError(
@@ -22,7 +22,7 @@ def test_no_git(update_command):
 
 
 def test_update(update_command, first_app, second_app):
-    "The update command can be called"
+    """The update command can be called."""
     # Configure no command line options
     options = update_command.parse_options([])
 
@@ -39,7 +39,8 @@ def test_update(update_command, first_app, second_app):
 
 
 def test_update_single(update_command, first_app, second_app):
-    "The update command can be called to update a single app from the config"
+    """The update command can be called to update a single app from the
+    config."""
     # Configure no command line options
     options = update_command.parse_options([])
 
@@ -54,7 +55,7 @@ def test_update_single(update_command, first_app, second_app):
 
 
 def test_update_with_dependencies(update_command, first_app, second_app):
-    "The update command can be called, requesting a dependencies update"
+    """The update command can be called, requesting a dependencies update."""
     # Configure no command line options
     options = update_command.parse_options(["-d"])
 
@@ -73,7 +74,7 @@ def test_update_with_dependencies(update_command, first_app, second_app):
 
 
 def test_update_with_resources(update_command, first_app, second_app):
-    "The update command can be called, requesting a resources update"
+    """The update command can be called, requesting a resources update."""
     # Configure no command line options
     options = update_command.parse_options(["-r"])
 

@@ -44,7 +44,7 @@ class LinuxAppImageMixin(LinuxMixin):
         )
 
     def parse_options(self, extra):
-        """Extract the use_docker option"""
+        """Extract the use_docker option."""
         options = super().parse_options(extra)
 
         self.use_docker = options.pop("use_docker")
@@ -52,20 +52,19 @@ class LinuxAppImageMixin(LinuxMixin):
         return options
 
     def clone_options(self, command):
-        """Clone the use_docker option"""
+        """Clone the use_docker option."""
         super().clone_options(command)
         self.use_docker = command.use_docker
 
     def docker_image_tag(self, app):
-        "The Docker image tag for an app"
+        """The Docker image tag for an app."""
         return (
             f"briefcase/{app.bundle}.{app.app_name.lower()}:py{self.python_version_tag}"
         )
 
     def verify_tools(self):
-        """
-        Verify that Docker is available; and if it isn't that we're on Linux.
-        """
+        """Verify that Docker is available; and if it isn't that we're on
+        Linux."""
         super().verify_tools()
         if self.use_docker:
             if self.host_os == "Windows":
@@ -84,8 +83,7 @@ class LinuxAppImageMixin(LinuxMixin):
 
     @contextmanager
     def dockerize(self, app):
-        """
-        Enter a Docker container based on the properties of the app.
+        """Enter a Docker container based on the properties of the app.
 
         Provides a context manager for the Docker context. The context
         object is an object that exposes subprocess-analog calls.
@@ -98,9 +96,7 @@ class LinuxAppImageMixin(LinuxMixin):
         :param app: The application that will determine the container image.
         """
         if self.use_docker:
-            """
-            Enter the Docker context.
-            """
+            """Enter the Docker context."""
             self.logger.info()
             self.logger.info(f"[{app.app_name}] Entering Docker context...")
             orig_subprocess = self.subprocess
@@ -120,9 +116,7 @@ class LinuxAppImageCreateCommand(LinuxAppImageMixin, CreateCommand):
 
     @property
     def support_package_url_query(self):
-        """
-        The query arguments to use in a support package query request.
-        """
+        """The query arguments to use in a support package query request."""
         return [
             ("platform", self.platform),
             ("version", self.python_version_tag),
@@ -130,8 +124,7 @@ class LinuxAppImageCreateCommand(LinuxAppImageMixin, CreateCommand):
         ]
 
     def install_app_dependencies(self, app: BaseConfig):
-        """
-        Install application dependencies.
+        """Install application dependencies.
 
         This will be containerized in Docker to ensure that the right
         binary versions are installed.
@@ -155,8 +148,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
         self.linuxdeploy = LinuxDeploy.verify(self)
 
     def build_app(self, app: BaseConfig, **kwargs):
-        """
-        Build an application.
+        """Build an application.
 
         :param app: The application to build
         """
@@ -215,16 +207,13 @@ class LinuxAppImageRunCommand(LinuxAppImageMixin, RunCommand):
     description = "Run a Linux AppImage."
 
     def verify_tools(self):
-        """
-        Verify that we're on Linux.
-        """
+        """Verify that we're on Linux."""
         super().verify_tools()
         if self.host_os != "Linux":
             raise BriefcaseCommandError("AppImages can only be executed on Linux.")
 
     def run_app(self, app: BaseConfig, **kwargs):
-        """
-        Start the application.
+        """Start the application.
 
         :param app: The config object for the app
         """

@@ -9,10 +9,8 @@ from tests.utils import DummyConsole
 
 
 class DummyCreateCommand(CreateCommand):
-    """
-    A dummy create command that stubs out all the required interfaces
-    of the Create command.
-    """
+    """A dummy create command that stubs out all the required interfaces of the
+    Create command."""
 
     platform = "tester"
     output_format = "dummy"
@@ -38,9 +36,7 @@ class DummyCreateCommand(CreateCommand):
 
     @property
     def support_package_url_query(self):
-        """
-        The query arguments to use in a support package query request.
-        """
+        """The query arguments to use in a support package query request."""
         return [
             ("platform", self.platform),
             ("version", self.python_version_tag),
@@ -67,8 +63,8 @@ class DummyCreateCommand(CreateCommand):
 
 
 class TrackingCreateCommand(DummyCreateCommand):
-    """
-    A dummy creation command that doesn't actually do anything.
+    """A dummy creation command that doesn't actually do anything.
+
     It only serves to track which actions would be performend.
     """
 

@@ -44,8 +44,7 @@ class GradleMixin:
         super().__init__(*args, **kwargs)
 
     def bundle_path(self, app):
-        """
-        The path to the bundle for the app in the output format.
+        """The path to the bundle for the app in the output format.
 
         The bundle is the template-generated source form of the app.
         The path will usually be a directory, the existence of which is
@@ -86,10 +85,8 @@ class GradleMixin:
         return self.bundle_path(app) / gradlew
 
     def verify_tools(self):
-        """
-        Verify that we the Android APK tools in `briefcase` will operate on
-        this system, downloading tools as needed.
-        """
+        """Verify that we the Android APK tools in `briefcase` will operate on
+        this system, downloading tools as needed."""
         super().verify_tools()
         self.android_sdk = AndroidSDK.verify(self)
 
@@ -98,8 +95,7 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
     description = "Create and populate an Android APK."
 
     def output_format_template_context(self, app: BaseConfig):
-        """
-        Additional template context required by the output format.
+        """Additional template context required by the output format.
 
         :param app: The config object for the app
         """
@@ -129,8 +125,7 @@ class GradleBuildCommand(GradleMixin, BuildCommand):
     description = "Build an Android debug APK."
 
     def build_app(self, app: BaseConfig, **kwargs):
-        """
-        Build an application.
+        """Build an application.
 
         :param app: The application to build
         """
@@ -170,8 +165,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
         )
 
     def run_app(self, app: BaseConfig, device_or_avd=None, **kwargs):
-        """
-        Start the application.
+        """Start the application.
 
         :param app: The config object for the app
         :param device: The device to target. If ``None``, the user will
@@ -234,8 +228,7 @@ class GradlePackageCommand(GradleMixin, PackageCommand):
     description = "Create an Android App Bundle and APK in release mode."
 
     def package_app(self, app: BaseConfig, **kwargs):
-        """
-        Package the app for distribution.
+        """Package the app for distribution.
 
         This involves building the release app bundle.
 

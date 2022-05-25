@@ -39,8 +39,7 @@ class macOSAppCreateCommand(macOSAppMixin, CreateCommand):
     description = "Create and populate a macOS app."
 
     def install_app_support_package(self, app: BaseConfig):
-        """
-        Install the application support package.
+        """Install the application support package.
 
         :param app: The config object for the app
         """
@@ -69,8 +68,7 @@ class macOSAppBuildCommand(macOSAppMixin, macOSSigningMixin, BuildCommand):
     description = "Build a macOS app."
 
     def build_app(self, app: BaseConfig, **kwargs):
-        """
-        Build the macOS app.
+        """Build the macOS app.
 
         :param app: The application to build
         """

@@ -1,2 +1,5 @@
 # Migrate code style to Black
-bb631d45d7ae13cf6e3fe0e239289ddc103109ba
+265d714f4992f1fe1bbb0ea10dd4fd1ce3e5991d
+
+# Docformatter enabled
+269374de49e688e771b8a3e9dab7f6d967f9a634

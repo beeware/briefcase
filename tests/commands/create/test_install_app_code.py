@@ -34,7 +34,8 @@ Summary: This is a simple app
 
 
 def test_no_code(create_command, myapp, app_path):
-    "If an app has no code (?!), install_app_code is mostly a no-op; but distinfo is created"
+    """If an app has no code (?!), install_app_code is mostly a no-op; but
+    distinfo is created."""
     # Mock shutil so we can track usage.
     create_command.shutil = mock.MagicMock()
     create_command.os = mock.MagicMock()
@@ -54,7 +55,8 @@ def test_no_code(create_command, myapp, app_path):
 
 
 def test_empty_code(create_command, myapp, app_path):
-    "If an app has an empty sources list (?!), install_app_code is mostly a no-op; but distinfo is created"
+    """If an app has an empty sources list (?!), install_app_code is mostly a
+    no-op; but distinfo is created."""
     # Mock shutil so we can track usage.
     create_command.shutil = mock.MagicMock()
     create_command.os = mock.MagicMock()
@@ -74,7 +76,7 @@ def test_empty_code(create_command, myapp, app_path):
 
 
 def test_source_missing(create_command, myapp, app_path):
-    "If an app defines sources that are missing, an error is raised"
+    """If an app defines sources that are missing, an error is raised."""
     # Set the app definition to point at sources that don't exsit
     myapp.sources = ["missing"]
 
@@ -87,7 +89,8 @@ def test_source_missing(create_command, myapp, app_path):
 
 
 def test_source_dir(create_command, myapp, tmp_path, app_path):
-    "If an app defines directories of sources, the whole directory is copied."
+    """If an app defines directories of sources, the whole directory is
+    copied."""
     # Create the mock sources
     # src /
     #   first /
@@ -129,7 +132,7 @@ def test_source_dir(create_command, myapp, tmp_path, app_path):
 
 
 def test_source_file(create_command, myapp, tmp_path, app_path):
-    "If an app defines single file sources, the files are copied."
+    """If an app defines single file sources, the files are copied."""
     # Create the mock sources
     # src /
     #   first /
@@ -158,7 +161,7 @@ def test_source_file(create_command, myapp, tmp_path, app_path):
 
 
 def test_replace_sources(create_command, myapp, tmp_path, app_path):
-    "Stale sources and dist-info are removed on installation."
+    """Stale sources and dist-info are removed on installation."""
     # Create the mock sources
     # src /
     #   first /

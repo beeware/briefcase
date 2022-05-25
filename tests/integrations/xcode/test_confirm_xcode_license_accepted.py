@@ -9,7 +9,7 @@ from briefcase.integrations.xcode import confirm_xcode_license_accepted
 
 
 def test_license_accepted(capsys):
-    "If the Xcode license has been accepted, pass without comment."
+    """If the Xcode license has been accepted, pass without comment."""
     command = mock.MagicMock()
     command.logger = Log()
 
@@ -28,7 +28,8 @@ def test_license_accepted(capsys):
 
 
 def test_unknown_error(capsys):
-    "If an unexpected problem occurred accepting the license, warn the user."
+    """If an unexpected problem occurred accepting the license, warn the
+    user."""
     command = mock.MagicMock()
     command.logger = Log()
     command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
@@ -50,7 +51,7 @@ def test_unknown_error(capsys):
 
 
 def test_accept_license():
-    "If the user accepts the license, continue without error"
+    """If the user accepts the license, continue without error."""
     command = mock.MagicMock()
     command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
         cmd=["/usr/bin/clang", "--version"], returncode=69
@@ -71,7 +72,7 @@ def test_accept_license():
 
 
 def test_sudo_fail():
-    "If the sudo call fails, an exception is raised."
+    """If the sudo call fails, an exception is raised."""
     command = mock.MagicMock()
     command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
         cmd=["/usr/bin/clang", "--version"], returncode=69
@@ -99,7 +100,7 @@ def test_sudo_fail():
 
 
 def test_license_not_accepted():
-    "If the sudo call fails, an exception is raised."
+    """If the sudo call fails, an exception is raised."""
     command = mock.MagicMock()
     command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
         cmd=["/usr/bin/clang", "--version"], returncode=69
@@ -126,7 +127,7 @@ def test_license_not_accepted():
 
 
 def test_license_status_unknown(capsys):
-    "If we get an unusual response from the license, warn but continue."
+    """If we get an unusual response from the license, warn but continue."""
     command = mock.MagicMock()
     command.logger = Log()
     command.subprocess.check_output.side_effect = subprocess.CalledProcessError(

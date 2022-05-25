@@ -37,14 +37,14 @@ def mock_sdk(tmp_path):
 
 
 def test_invalid_emulator(mock_sdk):
-    "Attempting to start an invalid emulator raises an error."
+    """Attempting to start an invalid emulator raises an error."""
 
     with pytest.raises(InvalidDeviceError):
         mock_sdk.start_emulator("no-such-avd")
 
 
 def test_start_emulator(mock_sdk):
-    "An emulator can be started"
+    """An emulator can be started."""
     # Mock 4 calls to devices.
     # First call returns 3 devices, but not the new emulator.
     # Second call returns the same thing.
@@ -141,7 +141,7 @@ def test_start_emulator(mock_sdk):
 
 
 def test_emulator_fail_to_start(mock_sdk):
-    "If the emulator fails to start, and error is displayed"
+    """If the emulator fails to start, and error is displayed."""
     # Mock 4 calls to devices.
     # First call returns 3 devices, but not the new emulator.
     # Second call returns the same thing.
@@ -232,7 +232,7 @@ def test_emulator_fail_to_start(mock_sdk):
 
 
 def test_emulator_fail_to_boot(mock_sdk):
-    "If the emulator fails to boot, and error is displayed"
+    """If the emulator fails to boot, and error is displayed."""
     # Mock 4 calls to devices.
     # First call returns 3 devices, but not the new emulator.
     # Second call returns the same thing.

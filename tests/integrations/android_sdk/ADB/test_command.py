@@ -40,7 +40,7 @@ def test_simple_command(mock_sdk, tmp_path):
     ],
 )
 def test_error_handling(mock_sdk, tmp_path, name, exception):
-    "ADB.command() can parse errors returned by adb."
+    """ADB.command() can parse errors returned by adb."""
     # Set up a mock command with a subprocess module that has with sample data loaded.
     adb_samples = Path(__file__).parent / "adb_errors"
     with (adb_samples / (name + ".out")).open("r") as adb_output_file:

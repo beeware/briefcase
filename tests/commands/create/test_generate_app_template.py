@@ -14,7 +14,7 @@ from briefcase.exceptions import NetworkFailure
 
 
 def full_context(extra):
-    "The full context associated with myapp"
+    """The full context associated with myapp."""
     context = {
         "app_name": "my-app",
         "formal_name": "My App",
@@ -44,7 +44,7 @@ def full_context(extra):
 
 
 def test_default_template(create_command, myapp):
-    "Absent of other information, the default template is used"
+    """Absent of other information, the default template is used."""
     # There won't be a cookiecutter cache, so there won't be
     # a cache path (yet).
     create_command.git.Repo.side_effect = git_exceptions.NoSuchPathError
@@ -74,7 +74,7 @@ def test_default_template(create_command, myapp):
 
 
 def test_explicit_branch(create_command, myapp):
-    "user can choose which branch to take the template from."
+    """user can choose which branch to take the template from."""
     branch = "some_branch"
     myapp.template_branch = branch
     create_command.git.Repo.side_effect = git_exceptions.NoSuchPathError
@@ -104,7 +104,7 @@ def test_explicit_branch(create_command, myapp):
 
 
 def test_platform_exists(create_command, myapp):
-    "If the platform directory already exists, it's ok"
+    """If the platform directory already exists, it's ok."""
     # There won't be a cookiecutter cache, so there won't be
     # a cache path (yet).
     create_command.git.Repo.side_effect = git_exceptions.NoSuchPathError
@@ -137,7 +137,7 @@ def test_platform_exists(create_command, myapp):
 
 
 def test_explicit_repo_template(create_command, myapp):
-    "If a template is specified in the app config, it is used"
+    """If a template is specified in the app config, it is used."""
     myapp.template = "https://example.com/magic/special-template.git"
 
     # There won't be a cookiecutter cache, so there won't be
@@ -166,7 +166,7 @@ def test_explicit_repo_template(create_command, myapp):
 
 
 def test_explicit_local_template(create_command, myapp):
-    "If a local template path is specified in the app config, it is used"
+    """If a local template path is specified in the app config, it is used."""
     myapp.template = "/path/to/special-template"
 
     # Generate the template.
@@ -194,7 +194,8 @@ def test_explicit_local_template(create_command, myapp):
 
 
 def test_offline_repo_template(create_command, myapp):
-    "If the user is offline the first time a repo template is requested, an error is raised"
+    """If the user is offline the first time a repo template is requested, an
+    error is raised."""
     # There won't be a cookiecutter cache, so there won't be
     # a repo path (yet).
     create_command.git.Repo.side_effect = git_exceptions.NoSuchPathError
@@ -235,7 +236,7 @@ def test_offline_repo_template(create_command, myapp):
 
 
 def test_invalid_repo_template(create_command, myapp):
-    "If the provided template URL isn't valid, an error is raised"
+    """If the provided template URL isn't valid, an error is raised."""
     myapp.template = "https://example.com/somewhere/not-a-repo.git"
 
     # There won't be a cookiecutter cache, so there won't be
@@ -268,7 +269,8 @@ def test_invalid_repo_template(create_command, myapp):
 
 
 def test_missing_branch_template(create_command, myapp):
-    "If the repo at the provided template URL doesn't have a branch for this Python version, an error is raised"
+    """If the repo at the provided template URL doesn't have a branch for this
+    Python version, an error is raised."""
     myapp.template = "https://example.com/somewhere/missing-branch.git"
 
     # There won't be a cookiecutter cache, so there won't be
@@ -304,7 +306,7 @@ def test_missing_branch_template(create_command, myapp):
 
 
 def test_cached_template(create_command, myapp):
-    "If a template has already been used, the cached version will be used"
+    """If a template has already been used, the cached version will be used."""
     mock_repo = mock.MagicMock()
     mock_remote = mock.MagicMock()
     mock_remote_head = mock.MagicMock()
@@ -347,7 +349,8 @@ def test_cached_template(create_command, myapp):
 
 
 def test_cached_template_offline(create_command, myapp, capsys):
-    "If the user is offline, a cached template won't be updated, but will still work"
+    """If the user is offline, a cached template won't be updated, but will
+    still work."""
     mock_repo = mock.MagicMock()
     mock_remote = mock.MagicMock()
     mock_remote_head = mock.MagicMock()
@@ -396,7 +399,8 @@ def test_cached_template_offline(create_command, myapp, capsys):
 
 
 def test_cached_missing_branch_template(create_command, myapp):
-    "If the cached repo doesn't have a branch for this Python version, an error is raised"
+    """If the cached repo doesn't have a branch for this Python version, an
+    error is raised."""
     mock_repo = mock.MagicMock()
     mock_remote = mock.MagicMock()
 

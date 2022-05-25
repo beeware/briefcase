@@ -26,7 +26,7 @@ def run_command(tmp_path, first_app_config):
 
 
 def test_run_existing_device(run_command, first_app_config):
-    "An app can be run on an existing device"
+    """An app can be run on an existing device."""
     # Set up device selection to return a running physical device.
     run_command.android_sdk.select_target_device = MagicMock(
         return_value=("exampleDevice", "ExampleDevice", None)
@@ -65,7 +65,8 @@ def test_run_existing_device(run_command, first_app_config):
 
 
 def test_run_created_device(run_command, first_app_config):
-    "If the user chooses to run on a newly created device, an error is raised (for now)"
+    """If the user chooses to run on a newly created device, an error is raised
+    (for now)"""
     # Set up device selection to return a completely new device
     run_command.android_sdk.select_target_device = MagicMock(
         return_value=(None, None, None)
@@ -80,7 +81,8 @@ def test_run_created_device(run_command, first_app_config):
 
 
 def test_run_idle_device(run_command, first_app_config):
-    "If the user chooses to run on an idle device, an error is raised (for now)"
+    """If the user chooses to run on an idle device, an error is raised (for
+    now)"""
     # Set up device selection to return a new device that has an AVD,
     # but not a device ID.
     run_command.android_sdk.select_target_device = MagicMock(

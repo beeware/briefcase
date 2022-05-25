@@ -9,12 +9,13 @@ class PublishCommand(BaseCommand):
 
     @property
     def publication_channels(self):
-        "The list of publication channel backends that are available for this format"
+        """The list of publication channel backends that are available for this
+        format."""
         return ["s3"]
 
     @property
     def default_publication_channel(self):
-        "The default publication channel for this format"
+        """The default publication channel for this format."""
         return "s3"
 
     def add_options(self, parser):
@@ -27,8 +28,7 @@ class PublishCommand(BaseCommand):
         )
 
     def publish_app(self, app: BaseConfig, channel: str, **options):
-        """
-        Publish an application.
+        """Publish an application.
 
         :param app: The application to publish
         :param channel: The publication channel to use

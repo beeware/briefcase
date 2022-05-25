@@ -30,15 +30,15 @@ class UpgradeCommand(BaseCommand):
         }[sys.platform]
 
     def bundle_path(self, app):
-        "A placeholder; Upgrade command doesn't have a bundle path"
+        """A placeholder; Upgrade command doesn't have a bundle path."""
         raise NotImplementedError()
 
     def binary_path(self, app):
-        "A placeholder; Upgrade command doesn't have a binary path"
+        """A placeholder; Upgrade command doesn't have a binary path."""
         raise NotImplementedError()
 
     def distribution_path(self, app, packaging_format):
-        "A placeholder; Upgrade command doesn't have a distribution path"
+        """A placeholder; Upgrade command doesn't have a distribution path."""
         raise NotImplementedError()
 
     def add_options(self, parser):

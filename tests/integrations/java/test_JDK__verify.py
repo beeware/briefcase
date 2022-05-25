@@ -31,7 +31,7 @@ def test_command(tmp_path):
 
 
 def test_macos_tool_java_home(test_command, capsys):
-    "On macOS, the /usr/libexec/java_home utility is checked"
+    """On macOS, the /usr/libexec/java_home utility is checked."""
     # Mock being on macOS
     test_command.host_os = "Darwin"
 
@@ -69,7 +69,7 @@ def test_macos_tool_java_home(test_command, capsys):
 
 
 def test_macos_tool_failure(test_command, tmp_path, capsys):
-    "On macOS, if the libexec tool fails, the Briefcase JDK is used"
+    """On macOS, if the libexec tool fails, the Briefcase JDK is used."""
     # Mock being on macOS
     test_command.host_os = "Darwin"
 
@@ -104,7 +104,7 @@ def test_macos_tool_failure(test_command, tmp_path, capsys):
 
 
 def test_macos_provided_overrides_tool_java_home(test_command, capsys):
-    "On macOS, an explicit JAVA_HOME overrides /usr/libexec/java_home"
+    """On macOS, an explicit JAVA_HOME overrides /usr/libexec/java_home."""
     # Mock being on macOS
     test_command.host_os = "Darwin"
 
@@ -133,7 +133,7 @@ def test_macos_provided_overrides_tool_java_home(test_command, capsys):
 
 
 def test_valid_provided_java_home(test_command, capsys):
-    "If a valid JAVA_HOME is provided, it is used."
+    """If a valid JAVA_HOME is provided, it is used."""
     # Mock environ.get returning an explicit JAVA_HOME
     test_command.os.environ.get = mock.MagicMock(return_value="/path/to/java")
 
@@ -159,7 +159,8 @@ def test_valid_provided_java_home(test_command, capsys):
 
 
 def test_invalid_jdk_version(test_command, tmp_path, capsys):
-    "If the JDK pointed to by JAVA_HOME isn't a Java 8 JDK, the briefcase JDK is used"
+    """If the JDK pointed to by JAVA_HOME isn't a Java 8 JDK, the briefcase JDK
+    is used."""
     # Mock environ.get returning an explicit JAVA_HOME
     test_command.os.environ.get = mock.MagicMock(return_value="/path/to/java")
 
@@ -188,7 +189,8 @@ def test_invalid_jdk_version(test_command, tmp_path, capsys):
 
 
 def test_no_javac(test_command, tmp_path, capsys):
-    "If the JAVA_HOME doesn't point to a location with a bin/javac, the briefcase JDK is used"
+    """If the JAVA_HOME doesn't point to a location with a bin/javac, the
+    briefcase JDK is used."""
     # Mock environ.get returning an explicit JAVA_HOME
     test_command.os.environ.get = mock.MagicMock(return_value="/path/to/nowhere")
 
@@ -217,7 +219,7 @@ def test_no_javac(test_command, tmp_path, capsys):
 
 
 def test_javac_error(test_command, tmp_path, capsys):
-    "If javac can't be executed, the briefcase JDK is used"
+    """If javac can't be executed, the briefcase JDK is used."""
     # Mock environ.get returning an explicit JAVA_HOME
     test_command.os.environ.get = mock.MagicMock(return_value="/path/to/java")
 
@@ -248,7 +250,7 @@ def test_javac_error(test_command, tmp_path, capsys):
 
 
 def test_unparseable_javac_version(test_command, tmp_path, capsys):
-    "If the javac version can't be parsed, the briefcase JDK is used"
+    """If the javac version can't be parsed, the briefcase JDK is used."""
     # Mock environ.get returning an explicit JAVA_HOME
     test_command.os.environ.get = mock.MagicMock(return_value="/path/to/java")
 
@@ -302,7 +304,7 @@ def test_unparseable_javac_version(test_command, tmp_path, capsys):
 def test_successful_jdk_download(
     test_command, tmp_path, capsys, host_os, jdk_url, jhome
 ):
-    "If needed, a JDK can be downloaded."
+    """If needed, a JDK can be downloaded."""
     # Mock host OS
     test_command.host_os = host_os
 
@@ -348,7 +350,8 @@ def test_successful_jdk_download(
 
 
 def test_not_installed(test_command, tmp_path):
-    "If the JDK isn't installed, and install isn't requested, an error is raised."
+    """If the JDK isn't installed, and install isn't requested, an error is
+    raised."""
     # Mock host OS
     test_command.host_os = "Linux"
 
@@ -361,7 +364,7 @@ def test_not_installed(test_command, tmp_path):
 
 
 def test_jdk_download_failure(test_command, tmp_path):
-    "If an error occurs downloading the JDK, an error is raised"
+    """If an error occurs downloading the JDK, an error is raised."""
     # Mock Linux as the host
     test_command.host_os = "Linux"
 
@@ -383,7 +386,7 @@ def test_jdk_download_failure(test_command, tmp_path):
 
 
 def test_invalid_jdk_archive(test_command, tmp_path):
-    "If the JDK download isn't a valid archive, raise an error"
+    """If the JDK download isn't a valid archive, raise an error."""
     # Mock Linux as the host
     test_command.host_os = "Linux"
 

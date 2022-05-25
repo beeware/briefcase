@@ -9,7 +9,7 @@ from briefcase.platforms.macOS.xcode import macOSXcodeRunCommand
 
 
 def test_run_app(first_app_config, tmp_path):
-    "A macOS Xcode app can be started"
+    """A macOS Xcode app can be started."""
     command = macOSXcodeRunCommand(base_path=tmp_path)
     command.subprocess = mock.MagicMock()
 

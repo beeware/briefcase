@@ -7,7 +7,7 @@ from briefcase.integrations.android_sdk import ADB
 
 
 def test_start_app_launches_app(mock_sdk, capsys):
-    "Invoking `start_app()` calls `run()` with the appropriate parameters."
+    """Invoking `start_app()` calls `run()` with the appropriate parameters."""
     # Mock out the run command on an adb instance
     adb = ADB(mock_sdk, "exampleDevice")
     adb.run = MagicMock(return_value="example normal adb output")
@@ -33,7 +33,7 @@ def test_start_app_launches_app(mock_sdk, capsys):
 
 
 def test_missing_activity(mock_sdk):
-    "If the activity doesn't exist, the error is caught."
+    """If the activity doesn't exist, the error is caught."""
     # Use real `adb` output from launching an activity that does not exist.
     # Mock out the run command on an adb instance
     adb = ADB(mock_sdk, "exampleDevice")
@@ -54,7 +54,7 @@ MainActivity} does not exist.
 
 
 def test_invalid_device(mock_sdk):
-    "If the device doesn't exist, the error is caught."
+    """If the device doesn't exist, the error is caught."""
     # Use real `adb` output from launching an activity that does not exist.
     # Mock out the run command on an adb instance
     adb = ADB(mock_sdk, "exampleDevice")

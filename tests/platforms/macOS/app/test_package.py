@@ -20,7 +20,7 @@ def package_command(tmp_path):
 
 
 def test_package_app(package_command, first_app_with_binaries, tmp_path, capsys):
-    "A macOS App can be packaged"
+    """A macOS App can be packaged."""
     # Select a codesigning identity
     package_command.select_identity.return_value = "Sekrit identity (DEADBEEF)"
 
@@ -65,7 +65,7 @@ def test_package_app(package_command, first_app_with_binaries, tmp_path, capsys)
 
 
 def test_package_app_sign_failure(package_command, first_app_with_binaries, tmp_path):
-    "If the signing process can't be completed, an error is raised"
+    """If the signing process can't be completed, an error is raised."""
 
     # Select a codesigning identity
     package_command.select_identity.return_value = "Sekrit identity (DEADBEEF)"
@@ -92,7 +92,7 @@ def test_package_app_sign_failure(package_command, first_app_with_binaries, tmp_
 
 
 def test_package_app_no_sign(package_command, first_app_with_binaries, tmp_path):
-    "A macOS App can be packaged without signing"
+    """A macOS App can be packaged without signing."""
 
     # Package the app without code signing
     package_command.package_app(first_app_with_binaries, sign_app=False)
@@ -104,7 +104,7 @@ def test_package_app_no_sign(package_command, first_app_with_binaries, tmp_path)
 
 
 def test_package_app_adhoc_sign(package_command, first_app_with_binaries, tmp_path):
-    "A macOS App can be packaged and signed with adhoc identity"
+    """A macOS App can be packaged and signed with adhoc identity."""
 
     # Package the app with an adhoc identity
     package_command.package_app(first_app_with_binaries, adhoc_sign=True)
@@ -142,7 +142,7 @@ def test_package_app_adhoc_sign(package_command, first_app_with_binaries, tmp_pa
 
 
 def test_package_app_no_dmg(package_command, first_app_with_binaries, tmp_path):
-    "A macOS App can be packaged without building dmg"
+    """A macOS App can be packaged without building dmg."""
     # Select a code signing identity
     package_command.select_identity.return_value = "Sekrit identity (DEADBEEF)"
 
@@ -164,7 +164,7 @@ def test_package_app_no_dmg(package_command, first_app_with_binaries, tmp_path):
 
 
 def test_dmg_with_installer_icon(package_command, first_app_with_binaries, tmp_path):
-    "An installer icon can be specified for a DMG"
+    """An installer icon can be specified for a DMG."""
     # Specify an installer icon, and create the matching file.
     first_app_with_binaries.installer_icon = "pretty"
     with open(tmp_path / "pretty.icns", "wb") as f:
@@ -197,7 +197,8 @@ def test_dmg_with_installer_icon(package_command, first_app_with_binaries, tmp_p
 def test_dmg_with_missing_installer_icon(
     package_command, first_app_with_binaries, tmp_path, capsys
 ):
-    "If an installer icon is specified, but the specific file is missing, there is a warning"
+    """If an installer icon is specified, but the specific file is missing,
+    there is a warning."""
     # Specify an installer icon, but don't create the matching file.
     first_app_with_binaries.installer_icon = "pretty"
 
@@ -233,7 +234,7 @@ def test_dmg_with_missing_installer_icon(
 def test_dmg_with_app_installer_icon(
     package_command, first_app_with_binaries, tmp_path
 ):
-    "An installer will fall back to an app icon for a DMG"
+    """An installer will fall back to an app icon for a DMG."""
     # Specify an app icon, and create the matching file.
     first_app_with_binaries.icon = "pretty_app"
     with open(tmp_path / "pretty_app.icns", "wb") as f:
@@ -266,7 +267,8 @@ def test_dmg_with_app_installer_icon(
 def test_dmg_with_missing_app_installer_icon(
     package_command, first_app_with_binaries, tmp_path, capsys
 ):
-    "If an app icon is specified, but the specific file is missing, there is a warning"
+    """If an app icon is specified, but the specific file is missing, there is
+    a warning."""
     # Specify an app icon, but don't create the matching file.
     first_app_with_binaries.icon = "pretty_app"
 
@@ -302,7 +304,7 @@ def test_dmg_with_missing_app_installer_icon(
 def test_dmg_with_installer_background(
     package_command, first_app_with_binaries, tmp_path
 ):
-    "An installer can be built with an installer background"
+    """An installer can be built with an installer background."""
     # Specify an installer background, and create the matching file.
     first_app_with_binaries.installer_background = "pretty_background"
     with open(tmp_path / "pretty_background.png", "wb") as f:
@@ -335,7 +337,8 @@ def test_dmg_with_installer_background(
 def test_dmg_with_missing_installer_background(
     package_command, first_app_with_binaries, tmp_path, capsys
 ):
-    "If an installer image is specified, but the specific file is missing, there is a warning"
+    """If an installer image is specified, but the specific file is missing,
+    there is a warning."""
     # Specify an installer background, but don't create the matching file.
     first_app_with_binaries.installer_background = "pretty_background"
 

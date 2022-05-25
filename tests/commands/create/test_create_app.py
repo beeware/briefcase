@@ -5,7 +5,7 @@ from briefcase.config import AppConfig
 
 
 def test_create_app(tracking_create_command):
-    "If the app doesn't already exist, it will be created"
+    """If the app doesn't already exist, it will be created."""
     tracking_create_command.create_app(tracking_create_command.apps["first"])
 
     # Input wasn't required by the user
@@ -25,7 +25,7 @@ def test_create_app(tracking_create_command):
 
 
 def test_create_existing_app_overwrite(tracking_create_command):
-    "An existing app can be overwritten if requested"
+    """An existing app can be overwritten if requested."""
     # Answer yes when asked
     tracking_create_command.input.values = ["y"]
 
@@ -59,7 +59,7 @@ def test_create_existing_app_overwrite(tracking_create_command):
 
 
 def test_create_existing_app_no_overwrite(tracking_create_command):
-    "If you say no, the existing app won't be overwritten"
+    """If you say no, the existing app won't be overwritten."""
     # Answer no when asked
     tracking_create_command.input.values = ["n"]
 
@@ -85,7 +85,7 @@ def test_create_existing_app_no_overwrite(tracking_create_command):
 
 
 def test_create_existing_app_no_overwrite_default(tracking_create_command):
-    "By default, the existing app won't be overwritten"
+    """By default, the existing app won't be overwritten."""
     # Answer '' (i.e., just press return) when asked
     tracking_create_command.input.values = [""]
 
@@ -112,7 +112,8 @@ def test_create_existing_app_no_overwrite_default(tracking_create_command):
 
 
 def test_create_existing_app_input_disabled(tracking_create_command):
-    "If input is disabled, fallback to default without get input from user"
+    """If input is disabled, fallback to default without get input from
+    user."""
     # Answer '' (i.e., just press return) when asked
     tracking_create_command.input.enabled = False
 
@@ -137,7 +138,8 @@ def test_create_existing_app_input_disabled(tracking_create_command):
 
 
 def test_create_app_not_supported(tracking_create_command):
-    "If the supported attribute is false, the command will terminate with an error message"
+    """If the supported attribute is false, the command will terminate with an
+    error message."""
 
     with pytest.raises(UnsupportedPlatform):
         tracking_create_command.create_app(

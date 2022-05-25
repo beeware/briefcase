@@ -2,7 +2,7 @@ from unittest import mock
 
 
 def test_no_source(create_command, tmp_path):
-    "If the app doesn't define a source, no image is installed"
+    """If the app doesn't define a source, no image is installed."""
     create_command.shutil = mock.MagicMock()
 
     # Try to install the image from no source.
@@ -16,7 +16,8 @@ def test_no_source(create_command, tmp_path):
 
 
 def test_no_source_with_size(create_command, tmp_path):
-    "If the app doesn't define a source, and a size is requested, no image is installed"
+    """If the app doesn't define a source, and a size is requested, no image is
+    installed."""
     create_command.shutil = mock.MagicMock()
 
     # Try to install the image from no source.
@@ -30,7 +31,7 @@ def test_no_source_with_size(create_command, tmp_path):
 
 
 def test_no_requested_size(create_command, tmp_path, capsys):
-    "If the app specifies a no-size image, an un-annotated image is used."
+    """If the app specifies a no-size image, an un-annotated image is used."""
     create_command.shutil = mock.MagicMock()
 
     # Create the source image
@@ -62,7 +63,8 @@ def test_no_requested_size(create_command, tmp_path, capsys):
 
 
 def test_no_requested_size_invalid_path(create_command, tmp_path, capsys):
-    "If the app specifies an no-size image that doesn't exist, an error is raised."
+    """If the app specifies an no-size image that doesn't exist, an error is
+    raised."""
     create_command.shutil = mock.MagicMock()
     create_command.shutil.copy.side_effect = FileNotFoundError
 
@@ -86,7 +88,8 @@ def test_no_requested_size_invalid_path(create_command, tmp_path, capsys):
 
 
 def test_requested_size(create_command, tmp_path, capsys):
-    "If the app specifies a sized image, an anoated image filename is used."
+    """If the app specifies a sized image, an anoated image filename is
+    used."""
     create_command.shutil = mock.MagicMock()
 
     # Create the source image
@@ -119,7 +122,8 @@ def test_requested_size(create_command, tmp_path, capsys):
 
 
 def test_requested_size_invalid_path(create_command, tmp_path, capsys):
-    "If the app specifies an sized image that doesn't exist, an error is raised."
+    """If the app specifies an sized image that doesn't exist, an error is
+    raised."""
     create_command.shutil = mock.MagicMock()
     create_command.shutil.copy.side_effect = FileNotFoundError
 
@@ -143,7 +147,8 @@ def test_requested_size_invalid_path(create_command, tmp_path, capsys):
 
 
 def test_variant_with_no_requested_size(create_command, tmp_path, capsys):
-    "If the app specifies a variant with no size, the variant is used unsized."
+    """If the app specifies a variant with no size, the variant is used
+    unsized."""
     create_command.shutil = mock.MagicMock()
 
     # Create the source image
@@ -211,7 +216,7 @@ def test_variant_without_variant_source_and_no_requested_size(
 
 
 def test_unknown_variant_with_no_requested_size(create_command, tmp_path, capsys):
-    "If the app specifies an unknown variant, an message is reported."
+    """If the app specifies an unknown variant, an message is reported."""
     create_command.shutil = mock.MagicMock()
 
     # Create the source image
@@ -243,7 +248,8 @@ def test_unknown_variant_with_no_requested_size(create_command, tmp_path, capsys
 
 
 def test_variant_with_size(create_command, tmp_path, capsys):
-    "If the app specifies a variant with a size, the sized variant is used."
+    """If the app specifies a variant with a size, the sized variant is
+    used."""
     create_command.shutil = mock.MagicMock()
 
     # Create the source image
@@ -278,8 +284,8 @@ def test_variant_with_size(create_command, tmp_path, capsys):
 
 
 def test_variant_with_size_without_variants(create_command, tmp_path, capsys):
-    """If the app specifies a variant with a size, but no variants are specified,
-    a message is output."""
+    """If the app specifies a variant with a size, but no variants are
+    specified, a message is output."""
     create_command.shutil = mock.MagicMock()
 
     # Create the source image
@@ -309,7 +315,7 @@ def test_variant_with_size_without_variants(create_command, tmp_path, capsys):
 
 
 def test_unsized_variant(create_command, tmp_path, capsys):
-    "If the app specifies an unsized variant, it is used."
+    """If the app specifies an unsized variant, it is used."""
     create_command.shutil = mock.MagicMock()
 
     # Create the source image

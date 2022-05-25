@@ -7,8 +7,7 @@ from briefcase.exceptions import BriefcaseCommandError
 
 
 def docker_install_details(host_os):
-    """
-    Obtain a platform-specific template context dictionary for Docker
+    """Obtain a platform-specific template context dictionary for Docker
     installation details.
 
     :param host_os: The host OS for which installation details are required.
@@ -32,8 +31,7 @@ def docker_install_details(host_os):
 
 
 def verify_docker(command):
-    """
-    Verify that docker is available.
+    """Verify that docker is available.
 
     :param command: The command that needs to perform the verification check.
     """
@@ -141,8 +139,7 @@ need to restart your terminal session.
 
 
 def _verify_docker_can_run(command):
-    """
-    Verify that the user has sufficient permissions, and that the Docker
+    """Verify that the user has sufficient permissions, and that the Docker
     daemon is running.
 
     This is done by attempting to run a low-impact command (docker info)
@@ -241,7 +238,7 @@ class Docker:
             ) from e
 
     def run(self, args, env=None, **kwargs):
-        "Run a process inside the Docker container"
+        """Run a process inside the Docker container."""
         # Set up the `docker run` invocation in interactive mode,
         # with volume mounts for the platform and .briefcase directories.
         # The :z suffix allows SELinux to modify the host mount; it is ignored

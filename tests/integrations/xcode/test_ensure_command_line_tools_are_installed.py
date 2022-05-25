@@ -11,7 +11,7 @@ from briefcase.integrations.xcode import (
 
 
 def test_not_installed():
-    "If cmdline dev tools are not installed, raise an error."
+    """If cmdline dev tools are not installed, raise an error."""
     command = mock.MagicMock()
     command.logger = Log()
     with pytest.raises(BriefcaseCommandError):
@@ -25,7 +25,7 @@ def test_not_installed():
 
 
 def test_installed(capsys):
-    "If cmdline dev tools *are* installed, check passes without comment."
+    """If cmdline dev tools *are* installed, check passes without comment."""
     command = mock.MagicMock()
     command.logger = Log()
     command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
@@ -47,7 +47,7 @@ def test_installed(capsys):
 
 
 def test_unsure_if_installed(capsys):
-    "If xcode-select returns something odd, mention it but don't break."
+    """If xcode-select returns something odd, mention it but don't break."""
     command = mock.MagicMock()
     command.logger = Log()
     command.subprocess.check_output.side_effect = subprocess.CalledProcessError(

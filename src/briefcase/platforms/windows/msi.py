@@ -37,9 +37,7 @@ class WindowsMSICreateCommand(WindowsMSIMixin, CreateCommand):
 
     @property
     def support_package_url_query(self):
-        """
-        The query arguments to use in a support package query request.
-        """
+        """The query arguments to use in a support package query request."""
         return [
             ("platform", self.platform),
             ("version", self.python_version_tag),
@@ -47,8 +45,7 @@ class WindowsMSICreateCommand(WindowsMSIMixin, CreateCommand):
         ]
 
     def output_format_template_context(self, app: BaseConfig):
-        """
-        Additional template context required by the output format.
+        """Additional template context required by the output format.
 
         :param app: The config object for the app
         """
@@ -90,9 +87,7 @@ class WindowsMSICreateCommand(WindowsMSIMixin, CreateCommand):
         }
 
     def install_app_support_package(self, app: BaseConfig):
-        """
-        Install, then modify the default support package.
-        """
+        """Install, then modify the default support package."""
         # Install the support package using the normal install logic.
         super().install_app_support_package(app)
 
@@ -120,8 +115,7 @@ class WindowsMSIRunCommand(WindowsMSIMixin, RunCommand):
     description = "Run a Windows app."
 
     def run_app(self, app: BaseConfig, **kwargs):
-        """
-        Start the application.
+        """Start the application.
 
         :param app: The config object for the app
         """
@@ -146,8 +140,7 @@ class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
     description = "Package an MSI for a Windows app."
 
     def package_app(self, app: BaseConfig, **kwargs):
-        """
-        Build an application.
+        """Build an application.
 
         :param app: The application to build
         """

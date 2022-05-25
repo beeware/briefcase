@@ -16,7 +16,7 @@ from briefcase.exceptions import BriefcaseCommandError
     ],
 )
 def test_cmdline_tools_url(mock_sdk, host_os, name):
-    "Validate that the SDK URL is computed using `host_os`."
+    """Validate that the SDK URL is computed using `host_os`."""
     mock_sdk.command.host_os = host_os
 
     assert mock_sdk.cmdline_tools_url == (
@@ -44,8 +44,8 @@ def test_sdkmanager_path(mock_sdk, host_os, sdkmanager_name):
     [("Windows", "adb.exe"), ("NonWindows", "adb")],
 )
 def test_adb_path(mock_sdk, host_os, adb_name):
-    """Validate that if the user is on Windows, we run `adb.bat`,
-    otherwise, `adb`."""
+    """Validate that if the user is on Windows, we run `adb.bat`, otherwise,
+    `adb`."""
     # Mock out `host_os` so we can test Windows when not on Windows.
     mock_sdk.command.host_os = host_os
 
@@ -85,7 +85,7 @@ def test_avd_path(mock_sdk, tmp_path):
 
 
 def test_simple_env(mock_sdk, tmp_path):
-    "The SDK Environment can be constructed"
+    """The SDK Environment can be constructed."""
     assert mock_sdk.env == {
         "JAVA_HOME": os.fsdecode(Path("/path/to/jdk")),
         "ANDROID_SDK_ROOT": os.fsdecode(tmp_path / "sdk"),
@@ -93,7 +93,7 @@ def test_simple_env(mock_sdk, tmp_path):
 
 
 def test_managed_install(mock_sdk):
-    "All Android SDK installs are managed"
+    """All Android SDK installs are managed."""
     assert mock_sdk.managed_install
 
 
@@ -108,7 +108,7 @@ def test_managed_install(mock_sdk):
     ],
 )
 def test_emulator_abi(mock_sdk, host_os, host_arch, emulator_abi):
-    "The emulator API can be determined from the host OS and architecture"
+    """The emulator API can be determined from the host OS and architecture."""
     # Mock the hardware and operating system
     mock_sdk.command.host_os = host_os
     mock_sdk.command.host_arch = host_arch
@@ -127,7 +127,8 @@ def test_emulator_abi(mock_sdk, host_os, host_arch, emulator_abi):
     ],
 )
 def test_bad_emulator_abi(mock_sdk, host_os, host_arch):
-    "If the host OS/architecture isn't supported by Android, an error is raised"
+    """If the host OS/architecture isn't supported by Android, an error is
+    raised."""
     # Mock the hardware and operating system
     mock_sdk.command.host_os = host_os
     mock_sdk.command.host_arch = host_arch

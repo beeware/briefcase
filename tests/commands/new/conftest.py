@@ -6,8 +6,8 @@ from tests.utils import DummyConsole
 
 
 class DummyNewCommand(NewCommand):
-    """
-    A dummy new command that doesn't actually do anything.
+    """A dummy new command that doesn't actually do anything.
+
     It only serves to track which actions would be performend.
     """
 

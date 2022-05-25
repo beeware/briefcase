@@ -15,7 +15,8 @@ class DeviceState(enum.Enum):
 
 
 def verify_command_line_tools_install(command):
-    """Verify that command line developer tools are installed and ready for use.
+    """Verify that command line developer tools are installed and ready for
+    use.
 
     A completely clean machine will have neither Xcode *or* the Command Line
     Tools. However, it's possible to install Xcode and *not* install the command
@@ -55,8 +56,7 @@ def verify_xcode_install(command, min_version=None):
 
 
 def ensure_command_line_tools_are_installed(command):
-    """
-    Determine if the Xcode command line tools are installed.
+    """Determine if the Xcode command line tools are installed.
 
     If they are not installed, an exception is raised; in addition, a OS dialog
     will be displayed prompting the user to install Xcode.
@@ -120,9 +120,8 @@ def ensure_xcode_is_installed(
     xcode_location=None,
     min_version=None,
 ):
-    """
-    Determine if Xcode is installed; and if so, that it meets minimum version
-    requirements.
+    """Determine if Xcode is installed; and if so, that it meets minimum
+    version requirements.
 
     Raises an exception if XCode isn't installed, or if the version of Xcode
     that is installed doesn't meet the minimum requirement.
@@ -260,8 +259,7 @@ installation is complete.
 
 
 def confirm_xcode_license_accepted(command):
-    """
-    Confirm if the Xcode license has been accepted.
+    """Confirm if the Xcode license has been accepted.
 
     :param command: The command that needs to perform the verification check.
     """
@@ -369,8 +367,7 @@ def get_simulators(
     os_name,
     simulator_location="/Library/Developer/PrivateFrameworks/CoreSimulator.framework/",
 ):
-    """
-    Obtain the simulators available on this machine.
+    """Obtain the simulators available on this machine.
 
     The return value is a 2 level dictionary. The outer dictionary is
     keyed by OS version; the inner dictionary for each OS version
@@ -444,8 +441,7 @@ Press Return to continue: """
 
 
 def get_device_state(command, udid):
-    """
-    Determine the state of an iOS simulator device.
+    """Determine the state of an iOS simulator device.
 
     :param command: The command that needs to know the simulator device state.
     :param udid: The UDID of the device to inspect
@@ -480,8 +476,7 @@ IDENTITY_RE = re.compile(r"\s*\d+\) ([0-9A-F]{40}) \"(.*)\"")
 
 
 def get_identities(command, policy):
-    """
-    Obtain a set of valid identities for the given policy
+    """Obtain a set of valid identities for the given policy.
 
     :param command: The command that needs the identities.
     :param policy: The identity policy to evaluate (e.g., ``codesigning``)

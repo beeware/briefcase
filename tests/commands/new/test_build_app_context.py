@@ -1,5 +1,5 @@
 def test_question_sequence(new_command):
-    "Questions are asked, a context is constructed."
+    """Questions are asked, a context is constructed."""
 
     # Prime answers for all the questions.
     new_command.input.values = [
@@ -32,7 +32,8 @@ def test_question_sequence(new_command):
 
 
 def test_question_sequence_with_nondefault_gui(new_command):
-    "Questions are asked, a context is constructed, but the GUI option is formatted to extract the GUI name."
+    """Questions are asked, a context is constructed, but the GUI option is
+    formatted to extract the GUI name."""
 
     # Prime answers for all the questions.
     new_command.input.values = [
@@ -65,7 +66,7 @@ def test_question_sequence_with_nondefault_gui(new_command):
 
 
 def test_question_sequence_with_no_user_input(new_command):
-    "If no user input is provided, all user inputs are taken as default"
+    """If no user input is provided, all user inputs are taken as default."""
 
     new_command.input.enabled = False
 

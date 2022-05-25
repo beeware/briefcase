@@ -13,7 +13,7 @@ def new_command(tmp_path):
 
 
 def test_new_app(new_command, tmp_path):
-    "A new app can be created with the default template"
+    """A new app can be created with the default template."""
     app_context = {
         "formal_name": "My Application",
         "class_name": "MyApplication",
@@ -46,7 +46,7 @@ def test_new_app(new_command, tmp_path):
 
 
 def test_new_app_with_template(new_command, tmp_path):
-    "A specific template can be requested"
+    """A specific template can be requested."""
     app_context = {
         "formal_name": "My Application",
         "class_name": "MyApplication",
@@ -79,7 +79,7 @@ def test_new_app_with_template(new_command, tmp_path):
 
 
 def test_abort_if_directory_exists(new_command, tmp_path):
-    "If the application name directory exists, the create aborts"
+    """If the application name directory exists, the create aborts."""
     # Create a colliding app name.
     (tmp_path / "myapplication").mkdir()
 

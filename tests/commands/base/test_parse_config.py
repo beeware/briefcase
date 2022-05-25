@@ -4,14 +4,15 @@ from briefcase.exceptions import BriefcaseConfigError
 
 
 def test_missing_config(base_command):
-    "If the configuration file doesn't exit, raise an error"
+    """If the configuration file doesn't exit, raise an error."""
     filename = base_command.base_path / "does_not_exist.toml"
     with pytest.raises(BriefcaseConfigError, match="configuration file not found"):
         base_command.parse_config(filename)
 
 
 def test_incomplete_global_config(base_command):
-    "If the global configuration is missing a required argument, an error is raised"
+    """If the global configuration is missing a required argument, an error is
+    raised."""
     # Provide a configuration that is missing `bundle`, a required attribute
     filename = base_command.base_path / "pyproject.toml"
     with open(filename, "w") as config_file:
@@ -33,7 +34,8 @@ def test_incomplete_global_config(base_command):
 
 
 def test_incomplete_config(base_command):
-    "If the configuration is missing a required argument, an error is raised"
+    """If the configuration is missing a required argument, an error is
+    raised."""
     # Provide a configuration that is missing `bundle`, a required attribute
     filename = base_command.base_path / "pyproject.toml"
     with open(filename, "w") as config_file:
@@ -57,7 +59,8 @@ def test_incomplete_config(base_command):
 
 
 def test_parse_config(base_command):
-    "A well formed configuration file can be augmented by the command line"
+    """A well formed configuration file can be augmented by the command
+    line."""
     filename = base_command.base_path / "pyproject.toml"
     with open(filename, "w") as config_file:
         config_file.write(
@@ -113,7 +116,8 @@ def test_parse_config(base_command):
 
 
 def test_parse_config_custom_config_classes_missing_global_arg(other_command):
-    "A command that defines custom config classes can enforce global arguments"
+    """A command that defines custom config classes can enforce global
+    arguments."""
     filename = other_command.base_path / "pyproject.toml"
     with open(filename, "w") as config_file:
         config_file.write(
@@ -141,7 +145,8 @@ def test_parse_config_custom_config_classes_missing_global_arg(other_command):
 
 
 def test_parse_config_custom_config_classes_missing_app_arg(other_command):
-    "A command that defines custom config classes can enforce app arguments"
+    """A command that defines custom config classes can enforce app
+    arguments."""
     filename = other_command.base_path / "pyproject.toml"
     with open(filename, "w") as config_file:
         config_file.write(
@@ -165,7 +170,8 @@ def test_parse_config_custom_config_classes_missing_app_arg(other_command):
 
 
 def test_parse_config_custom_config_classes(other_command):
-    "A well formed configuration file can be augmented by the command line"
+    """A well formed configuration file can be augmented by the command
+    line."""
     filename = other_command.base_path / "pyproject.toml"
     with open(filename, "w") as config_file:
         config_file.write(

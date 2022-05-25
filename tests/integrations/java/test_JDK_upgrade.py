@@ -26,7 +26,8 @@ def test_command(tmp_path):
 
 
 def test_non_managed_install(test_command, tmp_path, capsys):
-    "If the Java install points to a non-managed install, no upgrade is attempted"
+    """If the Java install points to a non-managed install, no upgrade is
+    attempted."""
 
     # Make the installation point to somewhere else.
     jdk = JDK(test_command, java_home=tmp_path / "other-jdk")
@@ -40,7 +41,7 @@ def test_non_managed_install(test_command, tmp_path, capsys):
 
 
 def test_non_existing_install(test_command, tmp_path):
-    "If there's no existing managed JDK install, upgrading is an error"
+    """If there's no existing managed JDK install, upgrading is an error."""
     # Create an SDK wrapper around a non-existing managed install
     jdk = JDK(test_command, java_home=tmp_path / "tools" / "java")
 
@@ -52,7 +53,8 @@ def test_non_existing_install(test_command, tmp_path):
 
 
 def test_existing_install(test_command, tmp_path):
-    "If there's an existing managed JDK install, it is deleted and redownloaded"
+    """If there's an existing managed JDK install, it is deleted and
+    redownloaded."""
     # Create a mock of a previously installed Java version.
     java_home = tmp_path / "tools" / "java"
     (java_home / "bin").mkdir(parents=True)
@@ -102,7 +104,8 @@ def test_existing_install(test_command, tmp_path):
 
 
 def test_macOS_existing_install(test_command, tmp_path):
-    "If there's an existing managed macOS JDK install, it is deleted and redownloaded"
+    """If there's an existing managed macOS JDK install, it is deleted and
+    redownloaded."""
     # Force mocking on macOS
     test_command.host_os = "Darwin"
 
@@ -155,7 +158,8 @@ def test_macOS_existing_install(test_command, tmp_path):
 
 
 def test_download_fail(test_command, tmp_path):
-    "If there's an existing managed JDK install, it is deleted and redownloaded"
+    """If there's an existing managed JDK install, it is deleted and
+    redownloaded."""
     # Create a mock of a previously installed Java version.
     java_home = tmp_path / "tools" / "java"
     (java_home / "bin").mkdir(parents=True)
@@ -191,7 +195,8 @@ def test_download_fail(test_command, tmp_path):
 
 
 def test_unpack_fail(test_command, tmp_path):
-    "If there's an existing managed JDK install, it is deleted and redownloaded"
+    """If there's an existing managed JDK install, it is deleted and
+    redownloaded."""
     # Create a mock of a previously installed Java version.
     java_home = tmp_path / "tools" / "java"
     (java_home / "bin").mkdir(parents=True)

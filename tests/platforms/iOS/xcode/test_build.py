@@ -8,7 +8,7 @@ from briefcase.platforms.iOS.xcode import iOSXcodeBuildCommand
 
 
 def test_build_app(first_app_config, tmp_path):
-    "An iOS App can be built"
+    """An iOS App can be built."""
     command = iOSXcodeBuildCommand(base_path=tmp_path)
 
     # A valid target device will be selected.
@@ -43,7 +43,7 @@ def test_build_app(first_app_config, tmp_path):
 
 
 def test_build_app_failed(first_app_config, tmp_path):
-    "If xcodebuild fails, an error is raised."
+    """If xcodebuild fails, an error is raised."""
     command = iOSXcodeBuildCommand(base_path=tmp_path)
 
     # A valid target device will be selected.

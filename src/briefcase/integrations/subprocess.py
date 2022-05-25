@@ -6,7 +6,7 @@ from briefcase.exceptions import CommandOutputParseError
 
 
 class ParseError(Exception):
-    """Raised by parser functions to signal parsing was unsuccessful"""
+    """Raised by parser functions to signal parsing was unsuccessful."""
 
 
 def ensure_str(text):
@@ -15,8 +15,7 @@ def ensure_str(text):
 
 
 def json_parser(json_output):
-    """
-    Wrapper to parse command output as JSON via parse_output.
+    """Wrapper to parse command output as JSON via parse_output.
 
     :param json_output: command output to parse as JSON
     """
@@ -27,25 +26,21 @@ def json_parser(json_output):
 
 
 class Subprocess:
-    """
-    A wrapper around subprocess that can be used as a logging point for
-    commands that are executed.
-    """
+    """A wrapper around subprocess that can be used as a logging point for
+    commands that are executed."""
 
     def __init__(self, command):
         self.command = command
         self._subprocess = subprocess
 
     def prepare(self):
-        """
-        Perform any environment preparation required to execute processes.
-        """
+        """Perform any environment preparation required to execute
+        processes."""
         # This is a no-op; the native subprocess environment is ready-to-use.
         pass
 
     def full_env(self, overrides):
-        """
-        Generate the full environment in which the command will run.
+        """Generate the full environment in which the command will run.
 
         :param overrides: The environment passed to the subprocess call;
             can be `None` if there are no explicit environment changes.
@@ -56,8 +51,7 @@ class Subprocess:
         return env
 
     def final_kwargs(self, **kwargs):
-        """
-        Convert subprocess keyword arguments into their final form.
+        """Convert subprocess keyword arguments into their final form.
 
         This involves:
          * Converting any environment overrides into a full environment
@@ -121,8 +115,7 @@ class Subprocess:
         return kwargs
 
     def run(self, args, **kwargs):
-        """
-        A wrapper for subprocess.run()
+        """A wrapper for subprocess.run()
 
         The behavior of this method is identical to subprocess.run(),
         except for:
@@ -150,8 +143,7 @@ class Subprocess:
         return command_result
 
     def check_output(self, args, **kwargs):
-        """
-        A wrapper for subprocess.check_output()
+        """A wrapper for subprocess.check_output()
 
         The behavior of this method is identical to
         subprocess.check_output(), except for:
@@ -178,8 +170,7 @@ class Subprocess:
         return cmd_output
 
     def parse_output(self, output_parser, args, **kwargs):
-        """
-        A wrapper for check_output() where the command output is processed
+        """A wrapper for check_output() where the command output is processed
         through the supplied parser function.
 
         If the parser fails, CommandOutputParseError is raised.
@@ -216,8 +207,7 @@ class Subprocess:
             raise CommandOutputParseError(error_reason) from e
 
     def Popen(self, args, **kwargs):
-        """
-        A wrapper for subprocess.Popen()
+        """A wrapper for subprocess.Popen()
 
         The behavior of this method is identical to
         subprocess.check_output(), except for:
@@ -235,9 +225,8 @@ class Subprocess:
         )
 
     def stream_output(self, label, popen_process):
-        """
-        Stream the output of a Popen process until the process exits.
-        If the user sends CTRL+C, the process will be terminated.
+        """Stream the output of a Popen process until the process exits. If the
+        user sends CTRL+C, the process will be terminated.
 
         This is useful for starting a process via Popen such as tailing a
         log file, then initiating a non-blocking process that populates that
@@ -267,8 +256,8 @@ class Subprocess:
             self.cleanup(label, popen_process)
 
     def cleanup(self, label, popen_process):
-        """
-        Clean up after a Popen process, gracefully terminating if possible; forcibly if not.
+        """Clean up after a Popen process, gracefully terminating if possible;
+        forcibly if not.
 
         :param label: A description of the content being streamed; used for
             to provide context in logging messages.
@@ -282,9 +271,7 @@ class Subprocess:
             popen_process.kill()
 
     def _log_command(self, args):
-        """
-        Log the entire console command being executed.
-        """
+        """Log the entire console command being executed."""
         self.command.logger.debug()
         self.command.logger.debug("Running Command:")
         self.command.logger.debug(
@@ -292,8 +279,7 @@ class Subprocess:
         )
 
     def _log_environment(self, overrides):
-        """
-        Log the state of environment variables prior to command execution.
+        """Log the state of environment variables prior to command execution.
 
         In debug mode, only the updates to the current environment are logged.
         In deep debug, the entire environment for the command is logged.
@@ -314,9 +300,7 @@ class Subprocess:
                     self.command.logger.debug(f"    {env_var}={value}")
 
     def _log_output(self, output, stderr=None):
-        """
-        Log the output of the executed command.
-        """
+        """Log the output of the executed command."""
         if output:
             self.command.logger.deep_debug("Command Output:")
             for line in ensure_str(output).splitlines():
@@ -328,7 +312,5 @@ class Subprocess:
                 self.command.logger.deep_debug(f"    {line}")
 
     def _log_return_code(self, return_code):
-        """
-        Log the output value of the executed command.
-        """
+        """Log the output value of the executed command."""
         self.command.logger.deep_debug(f"Return code: {return_code}")

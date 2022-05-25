@@ -9,7 +9,7 @@ from briefcase.platforms.macOS.app import macOSAppRunCommand
 
 
 def test_run_app(first_app_config, tmp_path):
-    "A macOS app can be started"
+    """A macOS app can be started."""
     command = macOSAppRunCommand(base_path=tmp_path)
     command.subprocess = mock.MagicMock()
     log_stream_process = mock.MagicMock()
@@ -44,7 +44,7 @@ def test_run_app(first_app_config, tmp_path):
 
 
 def test_run_app_failed(first_app_config, tmp_path):
-    "If there's a problem started the app, an exception is raised"
+    """If there's a problem started the app, an exception is raised."""
     command = macOSAppRunCommand(base_path=tmp_path)
     command.subprocess = mock.MagicMock()
     log_stream_process = mock.MagicMock()

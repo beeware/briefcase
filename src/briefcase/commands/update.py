@@ -30,8 +30,7 @@ class UpdateCommand(CreateCommand):
         update_resources=False,
         **options,
     ):
-        """
-        Update an existing application bundle.
+        """Update an existing application bundle.
 
         :param app: The config object for the app
         :param update_dependencies: Should dependencies be updated? (default: False)

@@ -32,7 +32,7 @@ def test_selection_input(console, value, expected, default, transform):
 
 
 def test_bad_input(console):
-    "If the user enters bad input, they are shown an error and reprompted"
+    """If the user enters bad input, they are shown an error and reprompted."""
     prompt = "> "
     options = ["A", "B", "C", "D", "E", "F"]
 

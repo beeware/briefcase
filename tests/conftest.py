@@ -18,7 +18,8 @@ _print = print
 
 
 def monkeypatched_print(*arg, **kwargs):
-    "Allow print calls from console.py...raise an error for all other callers"
+    """Allow print calls from console.py...raise an error for all other
+    callers."""
     frame = inspect.currentframe().f_back
     module = inspect.getmodule(frame.f_code)
 
@@ -36,5 +37,5 @@ def monkeypatched_print(*arg, **kwargs):
 
 @pytest.fixture(autouse=True)
 def no_print(monkeypatch):
-    "Replace builtin print function for ALL tests"
+    """Replace builtin print function for ALL tests."""
     monkeypatch.setattr("builtins.print", monkeypatched_print)

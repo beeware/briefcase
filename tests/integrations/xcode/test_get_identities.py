@@ -9,14 +9,15 @@ from briefcase.integrations.xcode import get_identities
 
 
 def security_result(name):
-    """Load a security result file from the sample directory, and return the content"""
+    """Load a security result file from the sample directory, and return the
+    content."""
     filename = Path(__file__).parent / "security" / f"{name}.out"
     with filename.open() as f:
         return f.read()
 
 
 def test_security_missing():
-    "If security is missing or fails to start, an exception is raised."
+    """If security is missing or fails to start, an exception is raised."""
     command = mock.MagicMock()
     command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
         cmd=["security", "find-identities", "-v", "-p", "codesigning"], returncode=1
@@ -27,7 +28,7 @@ def test_security_missing():
 
 
 def test_invalid_profile():
-    "If the requested profile is invalid, an exception is raised."
+    """If the requested profile is invalid, an exception is raised."""
     command = mock.MagicMock()
     command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
         cmd=["security", "find-identities", "-v", "-p", "jabberwock"], returncode=2
@@ -38,7 +39,7 @@ def test_invalid_profile():
 
 
 def test_no_identities():
-    "If there are no identities available, no simulators will be found"
+    """If there are no identities available, no simulators will be found."""
     command = mock.MagicMock()
     command.subprocess.check_output.return_value = security_result("no-identities")
 
@@ -48,7 +49,7 @@ def test_no_identities():
 
 
 def test_one_identity():
-    "If there is one identity available, it is returned"
+    """If there is one identity available, it is returned."""
     command = mock.MagicMock()
     command.subprocess.check_output.return_value = security_result("one-identity")
 
@@ -60,7 +61,7 @@ def test_one_identity():
 
 
 def test_multiple_identities():
-    "If there are multiple identities available, they are all returned"
+    """If there are multiple identities available, they are all returned."""
     command = mock.MagicMock()
     command.subprocess.check_output.return_value = security_result(
         "multiple-identities"

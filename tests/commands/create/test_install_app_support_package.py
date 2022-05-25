@@ -13,7 +13,7 @@ from briefcase.exceptions import MissingNetworkResourceError, NetworkFailure
 
 
 def test_install_app_support_package(create_command, myapp, tmp_path, support_path):
-    "A support package can be downloaded and unpacked where it is needed"
+    """A support package can be downloaded and unpacked where it is needed."""
     # Write a temporary support zip file
     support_file = tmp_path / "out.zip"
     with zipfile.ZipFile(support_file, "w") as support_zip:
@@ -39,7 +39,8 @@ def test_install_app_support_package(create_command, myapp, tmp_path, support_pa
 def test_install_pinned_app_support_package(
     create_command, myapp, tmp_path, support_path
 ):
-    "A pinned support package can be downloaded and unpacked where it is needed"
+    """A pinned support package can be downloaded and unpacked where it is
+    needed."""
     # Pin the support revision
     myapp.support_revision = "42"
 
@@ -68,7 +69,7 @@ def test_install_pinned_app_support_package(
 def test_install_custom_app_support_package_file(
     create_command, myapp, tmp_path, support_path
 ):
-    "A custom support package can be specified as a local file"
+    """A custom support package can be specified as a local file."""
     # Provide an app-specific override of the package URL
     myapp.support_package = os.fsdecode(tmp_path / "custom" / "support.zip")
 
@@ -96,7 +97,8 @@ def test_install_custom_app_support_package_file(
 def test_support_package_url_with_invalid_custom_support_packge_url(
     create_command, myapp
 ):
-    "Invalid URL for a custom support package raises MissingNetworkResourceError"
+    """Invalid URL for a custom support package raises
+    MissingNetworkResourceError."""
 
     # Provide an custom support URL
     url = "https://example.com/custom/support.zip"
@@ -119,7 +121,7 @@ def test_support_package_url_with_invalid_custom_support_packge_url(
 
 
 def test_support_package_url_with_unsupported_platform(create_command, myapp):
-    "An unsupported platform raises MissingSupportPackage"
+    """An unsupported platform raises MissingSupportPackage."""
     # Set the host architecture to something unsupported
     create_command.host_arch = "unknown"
 
@@ -144,7 +146,7 @@ def test_support_package_url_with_unsupported_platform(create_command, myapp):
 def test_install_custom_app_support_package_url(
     create_command, myapp, tmp_path, support_path
 ):
-    "A custom support package can be specified as URL"
+    """A custom support package can be specified as URL."""
     # Provide an app-specific override of the package URL
     myapp.support_package = "https://example.com/custom/support.zip"
 
@@ -173,7 +175,8 @@ def test_install_custom_app_support_package_url(
 def test_install_pinned_custom_app_support_package_url(
     create_command, myapp, tmp_path, support_path
 ):
-    "A custom support package can be specified as URL, and pinned to a revision"
+    """A custom support package can be specified as URL, and pinned to a
+    revision."""
     # Pin the support revision
     myapp.support_revision = "42"
 
@@ -205,7 +208,8 @@ def test_install_pinned_custom_app_support_package_url(
 def test_install_pinned_custom_app_support_package_url_with_args(
     create_command, myapp, tmp_path, support_path
 ):
-    "A custom support package can be specified as URL with args, and pinned to a revision"
+    """A custom support package can be specified as URL with args, and pinned
+    to a revision."""
     # Pin the support revision
     myapp.support_revision = "42"
 
@@ -235,7 +239,7 @@ def test_install_pinned_custom_app_support_package_url_with_args(
 
 
 def test_offline_install(create_command, myapp, support_path):
-    "If the computer is offline, an error is raised"
+    """If the computer is offline, an error is raised."""
     create_command.download_url = mock.MagicMock(
         side_effect=requests_exceptions.ConnectionError
     )
@@ -246,7 +250,7 @@ def test_offline_install(create_command, myapp, support_path):
 
 
 def test_invalid_support_package(create_command, myapp, tmp_path, support_path):
-    "If the support package isn't a valid zipfile, an error is raised"
+    """If the support package isn't a valid zipfile, an error is raised."""
     # Create a support package that isn't a zipfile
     support_file = tmp_path / "out.zip"
     with open(support_file, "w") as bad_support_zip:
@@ -261,7 +265,8 @@ def test_invalid_support_package(create_command, myapp, tmp_path, support_path):
 
 
 def test_missing_support_package(create_command, myapp, tmp_path, support_path):
-    "If the path provided for the support package is bad, an error is raised"
+    """If the path provided for the support package is bad, an error is
+    raised."""
     # Set a custom support package that doesn't exist
     myapp.support_package = "/path/does/not/exist.zip"
 

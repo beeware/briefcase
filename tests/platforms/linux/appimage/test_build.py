@@ -14,7 +14,7 @@ from briefcase.platforms.linux.appimage import LinuxAppImageBuildCommand
 
 @pytest.fixture
 def first_app(first_app_config, tmp_path):
-    "A fixture for the first app, rolled out on disk"
+    """A fixture for the first app, rolled out on disk."""
     # Make it look like the template has been generated
     app_dir = tmp_path / "linux" / "appimage" / "First App" / "First App.AppDir"
     (app_dir / "usr" / "app" / "support").mkdir(parents=True, exist_ok=True)
@@ -61,7 +61,7 @@ def build_command(tmp_path, first_app_config):
 
 
 def test_verify_tools_wrong_platform(build_command):
-    "If we're not on Linux, the build fails"
+    """If we're not on Linux, the build fails."""
 
     build_command.host_os = "TestOS"
     build_command.build_app = mock.MagicMock()
@@ -82,7 +82,7 @@ def test_verify_tools_wrong_platform(build_command):
 
 
 def test_verify_tools_download_failure(build_command):
-    "If the build tools can't be retrieved, the build fails"
+    """If the build tools can't be retrieved, the build fails."""
     build_command.build_app = mock.MagicMock()
     build_command.download_url = mock.MagicMock(
         side_effect=requests_exceptions.ConnectionError
@@ -106,7 +106,7 @@ def test_verify_tools_download_failure(build_command):
 
 
 def test_build_appimage(build_command, first_app, tmp_path):
-    "A Linux app can be packaged as an AppImage"
+    """A Linux app can be packaged as an AppImage."""
 
     build_command.build_app(first_app)
 
@@ -143,7 +143,7 @@ def test_build_appimage(build_command, first_app, tmp_path):
 
 
 def test_build_failure(build_command, first_app, tmp_path):
-    "If linuxdeploy fails, the build is stopped."
+    """If linuxdeploy fails, the build is stopped."""
 
     # Mock a failure in the build
     build_command._subprocess.run.side_effect = subprocess.CalledProcessError(
@@ -189,7 +189,7 @@ def test_build_failure(build_command, first_app, tmp_path):
     sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
 )
 def test_build_appimage_with_docker(build_command, first_app, tmp_path):
-    "A Linux app can be packaged as an AppImage"
+    """A Linux app can be packaged as an AppImage."""
     # Enable docker, and move to a non-Linux OS.
     build_command.host_os = "TestOS"
     build_command.use_docker = True

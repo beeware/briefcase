@@ -7,8 +7,8 @@ from briefcase.exceptions import MissingToolError
 
 
 class DummyUpgradeCommand(UpgradeCommand):
-    """
-    A dummy upgrade command that doesn't actually do anything.
+    """A dummy upgrade command that doesn't actually do anything.
+
     It only serves to track which actions would be performend.
     """
 

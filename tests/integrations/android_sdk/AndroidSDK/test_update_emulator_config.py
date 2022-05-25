@@ -3,7 +3,7 @@ import pytest
 
 @pytest.fixture
 def test_device(tmp_path):
-    "Create an AVD configuration file"
+    """Create an AVD configuration file."""
     config_file = tmp_path / ".android" / "avd" / "testDevice.avd" / "config.ini"
     config_file.parent.mkdir(parents=True)
 
@@ -29,7 +29,7 @@ disk.cachePartition.size=42M
 
 
 def test_update_existing(mock_sdk, test_device):
-    "Existing keys in an Android AVD config can be updated"
+    """Existing keys in an Android AVD config can be updated."""
     # Update 2 keys in the config
     mock_sdk.update_emulator_config(
         "testDevice",
@@ -59,7 +59,7 @@ disk.cachePartition.size=37MB
 
 
 def test_new_content(mock_sdk, test_device):
-    "New keys can be added to an Android AVD config"
+    """New keys can be added to an Android AVD config."""
     # Add 2 new keys to the config
     mock_sdk.update_emulator_config(
         "testDevice",

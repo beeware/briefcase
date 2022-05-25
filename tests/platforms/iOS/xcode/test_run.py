@@ -9,7 +9,7 @@ from briefcase.platforms.iOS.xcode import iOSXcodeRunCommand
 
 
 def test_run_app_simulator_booted(first_app_config, tmp_path):
-    "An iOS App can be started when the simulator is already booted"
+    """An iOS App can be started when the simulator is already booted."""
     command = iOSXcodeRunCommand(base_path=tmp_path)
 
     # A valid target device will be selected.
@@ -108,7 +108,7 @@ def test_run_app_simulator_booted(first_app_config, tmp_path):
 
 
 def test_run_app_simulator_shut_down(first_app_config, tmp_path):
-    "An iOS App can be started when the simulator is shut down"
+    """An iOS App can be started when the simulator is shut down."""
     command = iOSXcodeRunCommand(base_path=tmp_path)
 
     # A valid target device will be selected.
@@ -212,7 +212,7 @@ def test_run_app_simulator_shut_down(first_app_config, tmp_path):
 
 
 def test_run_app_simulator_shutting_down(first_app_config, tmp_path):
-    "An iOS App can be started when the simulator is shutting down"
+    """An iOS App can be started when the simulator is shutting down."""
     command = iOSXcodeRunCommand(base_path=tmp_path)
 
     # A valid target device will be selected.
@@ -329,7 +329,7 @@ def test_run_app_simulator_shutting_down(first_app_config, tmp_path):
 
 
 def test_run_app_simulator_boot_failure(first_app_config, tmp_path):
-    "If the simulator fails to boot, raise an error"
+    """If the simulator fails to boot, raise an error."""
     command = iOSXcodeRunCommand(base_path=tmp_path)
 
     # A valid target device will be selected.
@@ -366,7 +366,7 @@ def test_run_app_simulator_boot_failure(first_app_config, tmp_path):
 
 
 def test_run_app_simulator_open_failure(first_app_config, tmp_path):
-    "If the simulator can't be opened, raise an error"
+    """If the simulator can't be opened, raise an error."""
     command = iOSXcodeRunCommand(base_path=tmp_path)
 
     # A valid target device will be selected.
@@ -419,7 +419,7 @@ def test_run_app_simulator_open_failure(first_app_config, tmp_path):
 
 
 def test_run_app_simulator_uninstall_failure(first_app_config, tmp_path):
-    "If the old app can't be uninstalled, raise an error"
+    """If the old app can't be uninstalled, raise an error."""
     command = iOSXcodeRunCommand(base_path=tmp_path)
 
     # A valid target device will be selected.
@@ -484,7 +484,7 @@ def test_run_app_simulator_uninstall_failure(first_app_config, tmp_path):
 
 
 def test_run_app_simulator_install_failure(first_app_config, tmp_path):
-    "If the app fails to install in the simulator, raise an error"
+    """If the app fails to install in the simulator, raise an error."""
     command = iOSXcodeRunCommand(base_path=tmp_path)
 
     # A valid target device will be selected.
@@ -567,7 +567,7 @@ def test_run_app_simulator_install_failure(first_app_config, tmp_path):
 
 
 def test_run_app_simulator_launch_failure(first_app_config, tmp_path):
-    "If the app fails to launch, raise an error"
+    """If the app fails to launch, raise an error."""
     command = iOSXcodeRunCommand(base_path=tmp_path)
 
     # A valid target device will be selected.

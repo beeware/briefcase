@@ -16,7 +16,7 @@ from briefcase.config import is_valid_bundle_identifier
     ],
 )
 def test_valid_bundle(bundle):
-    "Test that valid bundles are accepted"
+    """Test that valid bundles are accepted."""
     assert is_valid_bundle_identifier(bundle)
 
 
@@ -37,5 +37,5 @@ def test_valid_bundle(bundle):
     ],
 )
 def test_invalid_bundle(bundle):
-    "Test that invalid bundles are rejected"
+    """Test that invalid bundles are rejected."""
     assert not is_valid_bundle_identifier(bundle)

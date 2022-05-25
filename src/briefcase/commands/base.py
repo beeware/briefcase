@@ -74,8 +74,8 @@ def create_config(klass, config, msg):
 
 
 def cookiecutter_cache_path(template):
-    """
-    Determine the cookiecutter template cache directory given a template URL.
+    """Determine the cookiecutter template cache directory given a template
+    URL.
 
     This will return a valid path, regardless of whether `template`
 
@@ -90,8 +90,7 @@ def cookiecutter_cache_path(template):
 
 
 def full_options(state, options):
-    """
-    Merge command state with keyword arguments.
+    """Merge command state with keyword arguments.
 
     Command state takes precedence over any keyword argument.
 
@@ -146,7 +145,8 @@ class BaseCommand(ABC):
 
     @property
     def create_command(self):
-        "Factory property; return an instance of a create command for the same format"
+        """Factory property; return an instance of a create command for the
+        same format."""
         format_module = importlib.import_module(self.__module__)
         command = format_module.create(
             base_path=self.base_path,
@@ -158,7 +158,8 @@ class BaseCommand(ABC):
 
     @property
     def update_command(self):
-        "Factory property; return an instance of an update command for the same format"
+        """Factory property; return an instance of an update command for the
+        same format."""
         format_module = importlib.import_module(self.__module__)
         command = format_module.update(
             base_path=self.base_path,
@@ -170,7 +171,8 @@ class BaseCommand(ABC):
 
     @property
     def build_command(self):
-        "Factory property; return an instance of a build command for the same format"
+        """Factory property; return an instance of a build command for the same
+        format."""
         format_module = importlib.import_module(self.__module__)
         command = format_module.build(
             base_path=self.base_path,
@@ -182,7 +184,8 @@ class BaseCommand(ABC):
 
     @property
     def run_command(self):
-        "Factory property; return an instance of a run command for the same format"
+        """Factory property; return an instance of a run command for the same
+        format."""
         format_module = importlib.import_module(self.__module__)
         command = format_module.run(
             base_path=self.base_path,
@@ -194,7 +197,8 @@ class BaseCommand(ABC):
 
     @property
     def package_command(self):
-        "Factory property; return an instance of a package command for the same format"
+        """Factory property; return an instance of a package command for the
+        same format."""
         format_module = importlib.import_module(self.__module__)
         command = format_module.package(
             base_path=self.base_path,
@@ -206,7 +210,8 @@ class BaseCommand(ABC):
 
     @property
     def publish_command(self):
-        "Factory property; return an instance of a publish command for the same format"
+        """Factory property; return an instance of a publish command for the
+        same format."""
         format_module = importlib.import_module(self.__module__)
         command = format_module.publish(
             base_path=self.base_path,
@@ -218,14 +223,11 @@ class BaseCommand(ABC):
 
     @property
     def platform_path(self):
-        """
-        The path for all applications for this command's platform
-        """
+        """The path for all applications for this command's platform."""
         return self.base_path / self.platform
 
     def bundle_path(self, app):
-        """
-        The path to the bundle for the app in the output format.
+        """The path to the bundle for the app in the output format.
 
         The bundle is the template-generated source form of the app.
         The path will usually be a directory, the existence of which is
@@ -237,8 +239,8 @@ class BaseCommand(ABC):
 
     @abstractmethod
     def binary_path(self, app):
-        """
-        The path to the executable artefact for the app in the output format.
+        """The path to the executable artefact for the app in the output
+        format.
 
         This may be a binary file produced by compilation; however, if
         the output format doesn't require compilation, it may be the same
@@ -252,8 +254,7 @@ class BaseCommand(ABC):
 
     @abstractmethod
     def distribution_path(self, app, packaging_format):
-        """
-        The path to the distributable artefact for the app in the given
+        """The path to the distributable artefact for the app in the given
         packaging format.
 
         This is the single file that should be uploaded for distribution.
@@ -267,8 +268,8 @@ class BaseCommand(ABC):
         ...
 
     def _load_path_index(self, app: BaseConfig):
-        """
-        Load the path index from the index file provided by the app template
+        """Load the path index from the index file provided by the app
+        template.
 
         :param app: The config object for the app
         :return: The contents of the application path index.
@@ -278,8 +279,7 @@ class BaseCommand(ABC):
         return self._path_index[app]
 
     def support_path(self, app: BaseConfig):
-        """
-        Obtain the path into which the support package should be unpacked
+        """Obtain the path into which the support package should be unpacked.
 
         :param app: The config object for the app
         :return: The full path where the support package should be unpacked.
@@ -292,8 +292,7 @@ class BaseCommand(ABC):
         return self.bundle_path(app) / path_index["support_path"]
 
     def app_packages_path(self, app: BaseConfig):
-        """
-        Obtain the path into which dependencies should be installed
+        """Obtain the path into which dependencies should be installed.
 
         :param app: The config object for the app
         :return: The full path where application dependencies should be installed.
@@ -306,8 +305,7 @@ class BaseCommand(ABC):
         return self.bundle_path(app) / path_index["app_packages_path"]
 
     def app_path(self, app: BaseConfig):
-        """
-        Obtain the path into which the application should be installed.
+        """Obtain the path into which the application should be installed.
 
         :param app: The config object for the app
         :return: The full path where application code should be installed.
@@ -320,8 +318,7 @@ class BaseCommand(ABC):
         return self.bundle_path(app) / path_index["app_path"]
 
     def app_module_path(self, app):
-        """
-        Find the path for the application module for an app.
+        """Find the path for the application module for an app.
 
         :param app: The config object for the app
         :returns: The Path to the dist-info folder.
@@ -347,19 +344,18 @@ class BaseCommand(ABC):
 
     @property
     def python_version_tag(self):
-        """
-        The major.minor of the Python version in use, as a string.
+        """The major.minor of the Python version in use, as a string.
 
-        This is used as a repository label/tag to identify the appropriate
-        templates, etc to use.
+        This is used as a repository label/tag to identify the
+        appropriate templates, etc to use.
         """
         return f"{self.sys.version_info.major}.{self.sys.version_info.minor}"
 
     def verify_tools(self):
-        """
-        Verify that the tools needed to run this command exist
+        """Verify that the tools needed to run this command exist.
 
-        Raises MissingToolException if a required system tool is missing.
+        Raises MissingToolException if a required system tool is
+        missing.
         """
         pass
 
@@ -388,8 +384,7 @@ class BaseCommand(ABC):
         return options
 
     def clone_options(self, command):
-        """
-        Clone options from one command to this one.
+        """Clone options from one command to this one.
 
         :param command: The command whose options are to be cloned
         """
@@ -397,8 +392,7 @@ class BaseCommand(ABC):
         self.logger = command.logger
 
     def add_default_options(self, parser):
-        """
-        Add the default options that exist on *all* commands
+        """Add the default options that exist on *all* commands.
 
         :param parser: a stub argparse parser for the command.
         """
@@ -421,8 +415,8 @@ class BaseCommand(ABC):
         )
 
     def add_options(self, parser):
-        """
-        Add any options that this command needs to parse from the command line.
+        """Add any options that this command needs to parse from the command
+        line.
 
         :param parser: a stub argparse parser for the command.
         """
@@ -459,8 +453,7 @@ class BaseCommand(ABC):
             raise BriefcaseConfigError("configuration file not found") from e
 
     def download_url(self, url, download_path):
-        """
-        Download a given URL, caching it. If it has already been downloaded,
+        """Download a given URL, caching it. If it has already been downloaded,
         return the value that has been cached.
 
         This is a utility method used to obtain assets used by the
@@ -516,8 +509,7 @@ class BaseCommand(ABC):
         return filename
 
     def update_cookiecutter_cache(self, template: str, branch="master"):
-        """
-        Ensure that we have a current checkout of a template path.
+        """Ensure that we have a current checkout of a template path.
 
         If the path is a local path, use the path as is.
 

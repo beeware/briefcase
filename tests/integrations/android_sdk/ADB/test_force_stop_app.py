@@ -8,7 +8,8 @@ from briefcase.integrations.android_sdk import ADB
 
 
 def test_force_stop_app(mock_sdk, capsys):
-    "Invoking `force_stop_app()` calls `run()` with the appropriate parameters."
+    """Invoking `force_stop_app()` calls `run()` with the appropriate
+    parameters."""
     # Mock out the run command on an adb instance
     adb = ADB(mock_sdk, "exampleDevice")
     adb.run = MagicMock(return_value="example normal adb output")
@@ -27,7 +28,7 @@ def test_force_stop_app(mock_sdk, capsys):
 
 
 def test_force_top_fail(mock_sdk, capsys):
-    "If `force_stop_app()` fails, an error is raised."
+    """If `force_stop_app()` fails, an error is raised."""
     # Mock out the run command on an adb instance
     adb = ADB(mock_sdk, "exampleDevice")
     adb.run = MagicMock(
@@ -45,7 +46,7 @@ def test_force_top_fail(mock_sdk, capsys):
 
 
 def test_invalid_device(mock_sdk, capsys):
-    "Invoking `force_stop_app()` on an invalid device raises an error."
+    """Invoking `force_stop_app()` on an invalid device raises an error."""
     # Mock out the run command on an adb instance
     adb = ADB(mock_sdk, "exampleDevice")
     adb.run = MagicMock(side_effect=InvalidDeviceError("device", "exampleDevice"))

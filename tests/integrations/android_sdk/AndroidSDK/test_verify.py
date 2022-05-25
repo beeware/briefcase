@@ -55,7 +55,7 @@ def mock_unpack(filename, extract_dir):
 
 
 def accept_license(android_sdk_root_path):
-    "Generate a side effect method that will accept a license."
+    """Generate a side effect method that will accept a license."""
 
     def _side_effect(*args, **kwargs):
         license_dir = android_sdk_root_path / "licenses"
@@ -66,7 +66,8 @@ def accept_license(android_sdk_root_path):
 
 
 def test_succeeds_immediately_in_happy_path(mock_command, tmp_path):
-    "If verify is invoked on a path containing an Android SDK, it does nothing."
+    """If verify is invoked on a path containing an Android SDK, it does
+    nothing."""
     # If `sdkmanager` exists and has the right permissions, and
     # `android-sdk-license` exists, verify() should
     # succeed, create no subprocesses, make no requests, and return a
@@ -101,7 +102,8 @@ def test_succeeds_immediately_in_happy_path(mock_command, tmp_path):
 
 
 def test_succeeds_immediately_in_happy_path_with_debug(mock_command, tmp_path):
-    "If debug is enabled, a verify call will display the installed packages."
+    """If debug is enabled, a verify call will display the installed
+    packages."""
     # Increase the log level.
     mock_command.logger.verbosity = 2
 
@@ -152,7 +154,7 @@ def test_succeeds_immediately_in_happy_path_with_debug(mock_command, tmp_path):
 
 
 def test_user_provided_sdk(mock_command, tmp_path):
-    "If the user specifies a valid ANDROID_SDK_ROOT, it is used"
+    """If the user specifies a valid ANDROID_SDK_ROOT, it is used."""
     # Increase the log level.
     mock_command.logger.verbosity = 2
 
@@ -199,7 +201,8 @@ def test_user_provided_sdk(mock_command, tmp_path):
 
 
 def test_user_provided_sdk_with_debug(mock_command, tmp_path):
-    "If the has debug with a user-specified ANDROID_SDK_ROOT, the packages are listed."
+    """If the has debug with a user-specified ANDROID_SDK_ROOT, the packages
+    are listed."""
     # Create `sdkmanager` and the license file.
     existing_android_sdk_root_path = tmp_path / "other_sdk"
     tools_bin = existing_android_sdk_root_path / "cmdline-tools" / "latest" / "bin"
@@ -233,7 +236,7 @@ def test_user_provided_sdk_with_debug(mock_command, tmp_path):
 
 
 def test_invalid_user_provided_sdk(mock_command, tmp_path):
-    "If the user specifies an invalid ANDROID_SDK_ROOT, it is ignored"
+    """If the user specifies an invalid ANDROID_SDK_ROOT, it is ignored."""
 
     # Create `sdkmanager` and the license file
     # for the *briefcase* managed version of the SDK.
@@ -267,7 +270,7 @@ def test_invalid_user_provided_sdk(mock_command, tmp_path):
 
 
 def test_download_sdk(mock_command, tmp_path):
-    "If an SDK is not available, one will be downloaded"
+    """If an SDK is not available, one will be downloaded."""
     android_sdk_root_path = tmp_path / "tools" / "android_sdk"
     cmdline_tools_base_path = android_sdk_root_path / "cmdline-tools"
 
@@ -323,7 +326,7 @@ def test_download_sdk(mock_command, tmp_path):
 
 
 def test_download_sdk_legacy_install(mock_command, tmp_path):
-    "If the legacy SDK tools are present, they will be deleted"
+    """If the legacy SDK tools are present, they will be deleted."""
     android_sdk_root_path = tmp_path / "tools" / "android_sdk"
     cmdline_tools_base_path = android_sdk_root_path / "cmdline-tools"
 
@@ -395,7 +398,8 @@ def test_download_sdk_legacy_install(mock_command, tmp_path):
 
 
 def test_no_install(mock_command, tmp_path):
-    "If an SDK is not available, and install is not requested, an error is raised"
+    """If an SDK is not available, and install is not requested, an error is
+    raised."""
 
     # Call `verify()`
     with pytest.raises(MissingToolError):
@@ -457,7 +461,7 @@ def test_download_sdk_if_sdkmanager_not_executable(mock_command, tmp_path):
 
 
 def test_raises_networkfailure_on_connectionerror(mock_command):
-    "If an error occurs downloading the ZIP file, and error is raised."
+    """If an error occurs downloading the ZIP file, and error is raised."""
     mock_command.download_url.side_effect = requests_exceptions.ConnectionError()
 
     with pytest.raises(NetworkFailure):
@@ -477,7 +481,7 @@ def test_raises_networkfailure_on_connectionerror(mock_command):
 
 
 def test_detects_bad_zipfile(mock_command, tmp_path):
-    "If the ZIP file is corrupted, an error is raised."
+    """If the ZIP file is corrupted, an error is raised."""
     android_sdk_root_path = tmp_path / "tools" / "android_sdk"
 
     cache_file = MagicMock()

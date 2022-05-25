@@ -38,7 +38,8 @@ def test_publish_command(base_command):
 
 
 def test_input_state_transferred(tmp_path):
-    "If input is disabled, that status is transferred to created subcommands"
+    """If input is disabled, that status is transferred to created
+    subcommands."""
     command = DummyCommand(base_path=tmp_path, input_enabled=False)
 
     # Check the enabled state of subcommands

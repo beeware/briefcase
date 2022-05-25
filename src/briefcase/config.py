@@ -169,12 +169,12 @@ NON_PYTHON_RESERVED_WORDS = set.union(
 
 
 def is_valid_pep508_name(app_name):
-    "Determine if the name is valid by PEP508 rules"
+    """Determine if the name is valid by PEP508 rules."""
     return PEP508_NAME_RE.match(app_name)
 
 
 def is_reserved_keyword(app_name):
-    "Determine if the name is a reserved keyword"
+    """Determine if the name is a reserved keyword."""
     return (
         keyword.iskeyword(app_name.lower())
         or app_name.lower() in NON_PYTHON_RESERVED_WORDS
@@ -216,8 +216,8 @@ PEP440_CANONICAL_VERSION_PATTERN_RE = re.compile(
 
 
 def is_pep440_canonical_version(version):
-    """
-    Determine if the string describes a valid PEP440 canonical version specifier.
+    """Determine if the string describes a valid PEP440 canonical version
+    specifier.
 
     This implementation comes directly from PEP440 itself.
 
@@ -227,8 +227,7 @@ def is_pep440_canonical_version(version):
 
 
 def parsed_version(version):
-    """
-    Return a parsed version string
+    """Return a parsed version string.
 
     :param version: The parsed version string
     """
@@ -372,8 +371,7 @@ class AppConfig(BaseConfig):
 
     @property
     def module_name(self):
-        """
-        The module name for the app.
+        """The module name for the app.
 
         This is derived from the name, but:
         * all `-` have been replaced with `_`.
@@ -382,16 +380,14 @@ class AppConfig(BaseConfig):
 
     @property
     def package_name(self):
-        """
-        The bundle name of the app, with `-` replaced with `_` to create
+        """The bundle name of the app, with `-` replaced with `_` to create
         something that can be used a namespace identifier on Python or Java,
-        similar to `module_name`.
-        """
+        similar to `module_name`."""
         return self.bundle.replace("-", "_")
 
     @property
     def PYTHONPATH(self):
-        "The PYTHONPATH modifications needed to run this app."
+        """The PYTHONPATH modifications needed to run this app."""
         paths = []
         for source in self.sources:
             path = source.rsplit("/", 1)[0]
@@ -401,8 +397,7 @@ class AppConfig(BaseConfig):
 
 
 def merge_config(config, data):
-    """
-    Merge a new set of configuration requirements into a base configuration.
+    """Merge a new set of configuration requirements into a base configuration.
 
     :param config: the base configuration to update. This configuration
         is modified in-situ.
@@ -418,8 +413,7 @@ def merge_config(config, data):
 
 
 def parse_config(config_file, platform, output_format):
-    """
-    Parse the briefcase section of the pyproject.toml configuration file.
+    """Parse the briefcase section of the pyproject.toml configuration file.
 
     This method only does basic structural parsing of the TOML, looking for,
     at a minimum, a ``[tool.briefcase.app.<appname>]`` section declaring the

@@ -1,5 +1,5 @@
 def test_specific_app(build_command, first_app, second_app):
-    "If a specific app is requested, build it"
+    """If a specific app is requested, build it."""
     # Add two apps
     build_command.apps = {
         "first": first_app,
@@ -22,7 +22,7 @@ def test_specific_app(build_command, first_app, second_app):
 
 
 def test_multiple_apps(build_command, first_app, second_app):
-    "If there are multiple apps, build all of them"
+    """If there are multiple apps, build all of them."""
     # Add two apps
     build_command.apps = {
         "first": first_app,
@@ -47,7 +47,7 @@ def test_multiple_apps(build_command, first_app, second_app):
 
 
 def test_non_existent(build_command, first_app_config, second_app):
-    "Requesting a build of a non-existent app causes a create"
+    """Requesting a build of a non-existent app causes a create."""
     # Add two apps; use the "config only" version of the first app.
     build_command.apps = {
         "first": first_app_config,
@@ -73,7 +73,8 @@ def test_non_existent(build_command, first_app_config, second_app):
 
 
 def test_unbuilt(build_command, first_app_unbuilt, second_app):
-    "Requesting a build of an app that has been created, but not build, just causes a build"
+    """Requesting a build of an app that has been created, but not build, just
+    causes a build."""
     # Add two apps; use the "unbuilt" version of the first app.
     build_command.apps = {
         "first": first_app_unbuilt,
@@ -98,7 +99,7 @@ def test_unbuilt(build_command, first_app_unbuilt, second_app):
 
 
 def test_update_app(build_command, first_app, second_app):
-    "If an update is requested, app is updated before build"
+    """If an update is requested, app is updated before build."""
     # Add two apps
     build_command.apps = {
         "first": first_app,
@@ -125,7 +126,7 @@ def test_update_app(build_command, first_app, second_app):
 
 
 def test_update_non_existent(build_command, first_app_config, second_app):
-    "Requesting an update of a non-existent app causes a create"
+    """Requesting an update of a non-existent app causes a create."""
     # Add two apps; use the "config only" version of the first app.
     build_command.apps = {
         "first": first_app_config,
@@ -156,7 +157,7 @@ def test_update_non_existent(build_command, first_app_config, second_app):
 
 
 def test_update_unbuilt(build_command, first_app_unbuilt, second_app):
-    "Requesting an update of an upbuilt app causes an update before build"
+    """Requesting an update of an upbuilt app causes an update before build."""
     # Add two apps; use the "unbuilt" version of the first app.
     build_command.apps = {
         "first": first_app_unbuilt,

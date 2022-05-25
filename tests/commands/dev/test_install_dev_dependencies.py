@@ -7,7 +7,7 @@ from briefcase.commands.create import DependencyInstallError
 
 
 def test_install_dependencies_no_error(dev_command, first_app):
-    "Ensure run is executed properly to install dependencies"
+    """Ensure run is executed properly to install dependencies."""
     first_app.requires = ["package-one", "package_two", "packagethree"]
 
     dev_command.install_dev_dependencies(app=first_app)
@@ -28,7 +28,7 @@ def test_install_dependencies_no_error(dev_command, first_app):
 
 
 def test_install_dependencies_error(dev_command, first_app):
-    "Ensure DependencyInstallError exception is raised for install errors"
+    """Ensure DependencyInstallError exception is raised for install errors."""
     first_app.requires = ["package-one", "package_two", "packagethree"]
 
     dev_command.subprocess.run.side_effect = CalledProcessError(
@@ -54,7 +54,8 @@ def test_install_dependencies_error(dev_command, first_app):
 
 
 def test_no_dependencies(dev_command, first_app):
-    "Ensure dependency installation is not attempted when nothing to install"
+    """Ensure dependency installation is not attempted when nothing to
+    install."""
     first_app.requires = []
 
     dev_command.install_dev_dependencies(app=first_app)
