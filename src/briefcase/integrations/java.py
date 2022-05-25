@@ -9,7 +9,7 @@ from briefcase.exceptions import (
     BriefcaseCommandError,
     MissingToolError,
     NetworkFailure,
-    NonManagedToolError
+    NonManagedToolError,
 )
 
 
@@ -47,8 +47,7 @@ class JDK:
 
     @classmethod
     def verify(cls, command, install=True):
-        """
-        Verify that a Java 8 JDK exists.
+        """Verify that a Java 8 JDK exists.
 
         If ``JAVA_HOME`` is set, try that version. If it is a JRE, or its *not*
         a Java 8 JDK, download one.
@@ -231,9 +230,7 @@ class JDK:
             return False
 
     def install(self):
-        """
-        Download and install a JDK.
-        """
+        """Download and install a JDK."""
         try:
             jdk_zip_path = self.command.download_url(
                 url=self.adoptOpenJDK_download_url,
@@ -268,9 +265,7 @@ Delete {jdk_zip_path} and run briefcase again.
         java_unpack_path.rename(self.command.tools_path / "java")
 
     def upgrade(self):
-        """
-        Upgrade an existing JDK install.
-        """
+        """Upgrade an existing JDK install."""
         if not self.managed_install:
             raise NonManagedToolError("Java")
         if not self.exists():

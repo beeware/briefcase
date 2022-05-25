@@ -15,14 +15,14 @@ from briefcase.config import BaseConfig
 from briefcase.exceptions import (
     BriefcaseCommandError,
     MissingNetworkResourceError,
-    NetworkFailure
+    NetworkFailure,
 )
 
 from .base import (
     BaseCommand,
     TemplateUnsupportedVersion,
     UnsupportedPlatform,
-    full_options
+    full_options,
 )
 
 
@@ -74,8 +74,8 @@ class MissingAppSources(BriefcaseCommandError):
 
 
 def cookiecutter_cache_path(template):
-    """
-    Determine the cookiecutter template cache directory given a template URL.
+    """Determine the cookiecutter template cache directory given a template
+    URL.
 
     This will return a valid path, regardless of whether `template`
 
@@ -90,8 +90,7 @@ def cookiecutter_cache_path(template):
 
 
 def write_dist_info(app: BaseConfig, dist_info_path: Path):
-    """
-    Install the dist-info folder for the application.
+    """Install the dist-info folder for the application.
 
     :param app: The config object for the app
     :param path: The path into which the dist-info folder should be written.
@@ -125,14 +124,12 @@ class CreateCommand(BaseCommand):
 
     @property
     def app_template_url(self):
-        "The URL for a cookiecutter repository to use when creating apps"
+        """The URL for a cookiecutter repository to use when creating apps."""
         return f"https://github.com/beeware/briefcase-{self.platform}-{self.output_format}-template.git"
 
     @property
     def support_package_url_query(self):
-        """
-        The query arguments to use in a support package query request.
-        """
+        """The query arguments to use in a support package query request."""
         return [
             ("platform", self.platform),
             ("version", self.python_version_tag),
@@ -140,12 +137,11 @@ class CreateCommand(BaseCommand):
 
     @property
     def support_package_url(self):
-        "The URL of the support package to use for apps of this type."
+        """The URL of the support package to use for apps of this type."""
         return f"https://briefcase-support.org/python?{urlencode(self.support_package_url_query)}"
 
     def icon_targets(self, app: BaseConfig):
-        """
-        Obtain the dictionary of icon targets that the template requires.
+        """Obtain the dictionary of icon targets that the template requires.
 
         :param app: The config object for the app
         :return: A dictionary of icons that the template supports. The keys
@@ -172,8 +168,8 @@ class CreateCommand(BaseCommand):
         return icon_targets
 
     def splash_image_targets(self, app: BaseConfig):
-        """
-        Obtain the dictionary of splash image targets that the template requires.
+        """Obtain the dictionary of splash image targets that the template
+        requires.
 
         :param app: The config object for the app
         :return: A dictionary of splash images that the template supports. The keys
@@ -200,8 +196,8 @@ class CreateCommand(BaseCommand):
         return splash_targets
 
     def document_type_icon_targets(self, app: BaseConfig):
-        """
-        Obtain the dictionary of document type icon targets that the template requires.
+        """Obtain the dictionary of document type icon targets that the
+        template requires.
 
         :param app: The config object for the app
         :return: A dictionary of document types, with the values being dictionaries
@@ -229,16 +225,14 @@ class CreateCommand(BaseCommand):
             return {}
 
     def output_format_template_context(self, app: BaseConfig):
-        """
-        Additional template context required by the output format.
+        """Additional template context required by the output format.
 
         :param app: The config object for the app
         """
         return {}
 
     def generate_app_template(self, app: BaseConfig):
-        """
-        Create an application bundle.
+        """Create an application bundle.
 
         :param app: The config object for the app
         """
@@ -301,8 +295,7 @@ class CreateCommand(BaseCommand):
             raise TemplateUnsupportedVersion(app.template_branch) from e
 
     def install_app_support_package(self, app: BaseConfig):
-        """
-        Install the application support package.
+        """Install the application support package.
 
         :param app: The config object for the app
         """
@@ -370,8 +363,7 @@ class CreateCommand(BaseCommand):
             raise InvalidSupportPackage(support_package_url) from e
 
     def install_app_dependencies(self, app: BaseConfig):
-        """
-        Install the dependencies for the app.
+        """Install the dependencies for the app.
 
         :param app: The config object for the app
         """
@@ -405,8 +397,7 @@ class CreateCommand(BaseCommand):
             self.logger.info("No application dependencies.")
 
     def install_app_code(self, app: BaseConfig):
-        """
-        Install the application code into the bundle.
+        """Install the application code into the bundle.
 
         :param app: The config object for the app
         """
@@ -442,9 +433,8 @@ class CreateCommand(BaseCommand):
         )
 
     def install_image(self, role, variant, size, source, target):
-        """
-        Install an icon/image of the requested size at a target location, using
-        the source images defined by the app config.
+        """Install an icon/image of the requested size at a target location,
+        using the source images defined by the app config.
 
         :param role: A string describing the role the of the image.
         :param variant: The image variant. A variant of ``None`` means the image
@@ -509,9 +499,8 @@ class CreateCommand(BaseCommand):
                 )
 
     def install_app_resources(self, app: BaseConfig):
-        """
-        Install the application resources (such as icons and splash screens) into
-        the bundle.
+        """Install the application resources (such as icons and splash screens)
+        into the bundle.
 
         :param app: The config object for the app
         """
@@ -570,8 +559,7 @@ class CreateCommand(BaseCommand):
                 )
 
     def create_app(self, app: BaseConfig, **options):
-        """
-        Create an application bundle.
+        """Create an application bundle.
 
         :param app: The config object for the app
         """
@@ -619,10 +607,10 @@ class CreateCommand(BaseCommand):
         )
 
     def verify_tools(self):
-        """
-        Verify that the tools needed to run this command exist
+        """Verify that the tools needed to run this command exist.
 
-        Raises MissingToolException if a required system tool is missing.
+        Raises MissingToolException if a required system tool is
+        missing.
         """
         self.git = self.integrations.git.verify_git_is_installed(self)
 

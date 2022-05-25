@@ -5,10 +5,7 @@ from unittest import mock
 import pytest
 from requests import exceptions as requests_exceptions
 
-from briefcase.commands.create import (
-    InvalidSupportPackage,
-    MissingSupportPackage
-)
+from briefcase.commands.create import InvalidSupportPackage, MissingSupportPackage
 from briefcase.exceptions import MissingNetworkResourceError, NetworkFailure
 
 

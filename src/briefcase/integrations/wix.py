@@ -8,7 +8,7 @@ from briefcase.exceptions import (
     BriefcaseCommandError,
     MissingToolError,
     NetworkFailure,
-    NonManagedToolError
+    NonManagedToolError,
 )
 
 WIX_DOWNLOAD_URL = "https://github.com/wixtoolset/wix3/releases/download/wix3112rtm/wix311-binaries.zip"
@@ -19,8 +19,7 @@ class WiX:
     full_name = "WiX"
 
     def __init__(self, command, wix_home=None, bin_install=False):
-        """
-        Create a wrapper around a WiX install.
+        """Create a wrapper around a WiX install.
 
         :param command: The command using the wrapper.
         :param wix_home: The path of the WiX installation.
@@ -58,8 +57,7 @@ class WiX:
 
     @classmethod
     def verify(cls, command, install=True):
-        """
-        Verify that there is a WiX install available.
+        """Verify that there is a WiX install available.
 
         If the WIX environment variable is set, that location will be checked
         for a valid WiX installation.
@@ -123,9 +121,7 @@ WiX Toolset. Current value: {wix_home!r}
             return False
 
     def install(self):
-        """
-        Download and install WiX.
-        """
+        """Download and install WiX."""
         try:
             wix_zip_path = self.command.download_url(
                 url=WIX_DOWNLOAD_URL,
@@ -154,9 +150,7 @@ Delete {wix_zip_path} and run briefcase again.
         wix_zip_path.unlink()
 
     def upgrade(self):
-        """
-        Upgrade an existing WiX install.
-        """
+        """Upgrade an existing WiX install."""
         if not self.managed_install:
             raise NonManagedToolError("WiX")
         elif not self.exists():

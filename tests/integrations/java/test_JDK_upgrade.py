@@ -10,7 +10,7 @@ from briefcase.exceptions import (
     BriefcaseCommandError,
     MissingToolError,
     NetworkFailure,
-    NonManagedToolError
+    NonManagedToolError,
 )
 from briefcase.integrations.java import JDK
 from tests.utils import FsPathMock

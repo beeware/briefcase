@@ -9,13 +9,10 @@ from briefcase.exceptions import (
     InvalidFormatError,
     NoCommandError,
     ShowOutputFormats,
-    UnsupportedCommandError
+    UnsupportedCommandError,
 )
 from briefcase.platforms.linux.appimage import LinuxAppImageCreateCommand
-from briefcase.platforms.macOS.app import (
-    macOSAppCreateCommand,
-    macOSAppPublishCommand
-)
+from briefcase.platforms.macOS.app import macOSAppCreateCommand, macOSAppPublishCommand
 from briefcase.platforms.windows.msi import WindowsMSICreateCommand
 
 

@@ -13,7 +13,7 @@ from briefcase.exceptions import (
     BriefcaseCommandError,
     InvalidDeviceError,
     MissingToolError,
-    NetworkFailure
+    NetworkFailure,
 )
 from briefcase.integrations.java import JDK
 
@@ -53,7 +53,8 @@ class AndroidSDK:
 
     @property
     def cmdline_tools_url(self):
-        """The Android SDK Command-Line Tools URL appropriate to the current operating system."""
+        """The Android SDK Command-Line Tools URL appropriate to the current
+        operating system."""
         platform_name = self.command.host_os.lower()
         if self.command.host_os.lower() == "darwin":
             platform_name = "mac"
@@ -117,7 +118,7 @@ class AndroidSDK:
 
     @property
     def emulator_abi(self):
-        """The ABI to use for the Android emulator"""
+        """The ABI to use for the Android emulator."""
         if self.command.host_arch == "arm64" and self.command.host_os == "Darwin":
             return "arm64-v8a"
         if self.command.host_arch in ("x86_64", "AMD64"):
@@ -130,8 +131,7 @@ class AndroidSDK:
 
     @classmethod
     def verify(cls, command, install=True, jdk=None):
-        """
-        Verify an Android SDK is available.
+        """Verify an Android SDK is available.
 
         If the ANDROID_SDK_ROOT environment variable is set, that location will
         be checked for a valid SDK.
@@ -247,16 +247,14 @@ class AndroidSDK:
 
     @property
     def managed_install(self):
-        "Is the Android SDK install managed by Briefcase?"
+        """Is the Android SDK install managed by Briefcase?"""
         # Although the end-user can provide their own SDK, the SDK also
         # provides a built-in upgrade mechanism. Therefore, all Android SDKs
         # are managed installs.
         return True
 
     def install(self):
-        """
-        Download and install the Android SDK.
-        """
+        """Download and install the Android SDK."""
         try:
             cmdline_tools_zip_path = self.command.download_url(
                 url=self.cmdline_tools_url,
@@ -320,7 +318,7 @@ Delete {cmdline_tools_zip_path} and run briefcase again.
         self.verify_license()
 
     def upgrade(self):
-        """Upgrade the Android SDK"""
+        """Upgrade the Android SDK."""
         try:
             # Using subprocess.run() with no I/O redirection so the user sees
             # the full output and can send input.
@@ -340,7 +338,7 @@ its output for errors.
             ) from e
 
     def list_packages(self):
-        """List the packages currently manged by the Android SDK"""
+        """List the packages currently manged by the Android SDK."""
         try:
             # Using subprocess.run() with no I/O redirection so the user sees
             # the full output and can send input.
@@ -436,7 +434,7 @@ connection.
             ) from e
 
     def emulators(self):
-        """Find the list of emulators that are available"""
+        """Find the list of emulators that are available."""
         try:
             # Capture `stderr` so that if the process exits with failure, the
             # stderr data is in `e.output`.
@@ -453,7 +451,7 @@ connection.
             raise BriefcaseCommandError("Unable to obtain Android emulator list") from e
 
     def devices(self):
-        """Find the devices that are attached and available to ADB"""
+        """Find the devices that are attached and available to ADB."""
         try:
             # Capture `stderr` so that if the process exits with failure, the
             # stderr data is in `e.output`.
@@ -498,8 +496,7 @@ connection.
             raise BriefcaseCommandError("Unable to obtain Android device list") from e
 
     def select_target_device(self, device_or_avd):
-        """
-        Select a device to be the target for actions.
+        """Select a device to be the target for actions.
 
         Interrogates the system to get the list of available devices.
 
@@ -804,8 +801,7 @@ briefcase run android -d @{avd}
         return avd
 
     def update_emulator_config(self, avd, updates):
-        """
-        Update the AVD configuration with specific values.
+        """Update the AVD configuration with specific values.
 
         :params avd: The AVD whose config will be updated
         :params updates: A dictionary containing the new key-value to
@@ -932,8 +928,7 @@ find this page helpful in diagnosing emulator problems.
 
 class ADB:
     def __init__(self, android_sdk, device):
-        """
-        An API integration for the Android Debug Bridge (ADB).
+        """An API integration for the Android Debug Bridge (ADB).
 
         :param android_sdk: The Android SDK providing ADB.
         :param device: The ID of the device to target (in a format usable by
@@ -978,10 +973,9 @@ class ADB:
             ) from e
 
     def run(self, *arguments):
-        """
-        Run a command on a device using Android debug bridge, `adb`. The device
-        name is mandatory to ensure clarity in the case of multiple attached
-        devices.
+        """Run a command on a device using Android debug bridge, `adb`. The
+        device name is mandatory to ensure clarity in the case of multiple
+        attached devices.
 
         :param arguments: List of strings to pass to `adb` as arguments.
 
@@ -1011,8 +1005,7 @@ class ADB:
             raise
 
     def install_apk(self, apk_path):
-        """
-        Install an APK file on an Android device.
+        """Install an APK file on an Android device.
 
         :param apk_path: The path of the Android APK file to install.
 
@@ -1026,8 +1019,7 @@ class ADB:
             ) from e
 
     def force_stop_app(self, package):
-        """
-        Force-stop an app, specified as a package name.
+        """Force-stop an app, specified as a package name.
 
         :param package: The name of the Android package, e.g., com.username.myapp.
 
@@ -1044,8 +1036,7 @@ class ADB:
             ) from e
 
     def start_app(self, package, activity):
-        """
-        Start an app, specified as a package name & activity name.
+        """Start an app, specified as a package name & activity name.
 
         :param package: The name of the Android package, e.g., com.username.myapp.
         :param activity: The activity of the APK to start.
@@ -1071,9 +1062,9 @@ class ADB:
             )
 
             if any(
-                    line.startswith("Error: Activity class ")
-                    and line.endswith("does not exist.")
-                    for line in output.split("\n")
+                line.startswith("Error: Activity class ")
+                and line.endswith("does not exist.")
+                for line in output.split("\n")
             ):
                 raise BriefcaseCommandError(
                     f"""\
@@ -1090,8 +1081,7 @@ Activity class not found while starting app.
             ) from e
 
     def clear_log(self):
-        """
-        Clear the log for the device.
+        """Clear the log for the device.
 
         Returns `None` on success; raises an exception on failure.
         """
@@ -1102,9 +1092,7 @@ Activity class not found while starting app.
             raise BriefcaseCommandError(f"Unable to clear log on {self.device}") from e
 
     def logcat(self):
-        """
-        Start tailing the adb log for the device.
-        """
+        """Start tailing the adb log for the device."""
         try:
             # Using subprocess.run() with no I/O redirection so the user sees
             # the full output and can send input.
