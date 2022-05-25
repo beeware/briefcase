@@ -13,7 +13,6 @@ jobs:
       max-parallel: 4
       matrix:
         task:
-        - 'flake8'
         - 'towncrier-check'
         - 'docs'
         - 'package'
