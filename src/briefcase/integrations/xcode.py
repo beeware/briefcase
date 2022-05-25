@@ -470,11 +470,11 @@ def get_identities(command, policy):
             ['security', 'find-identity', '-v', '-p', policy],
         )
 
-        return {
+        return dict(
             IDENTITY_RE.match(line).groups()
             for line in output.split('\n')
             if IDENTITY_RE.match(line)
-        }
+        )
 
     except subprocess.CalledProcessError as e:
         raise BriefcaseCommandError("Unable to run security find-identity.") from e
