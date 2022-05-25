@@ -131,7 +131,7 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
                 # Search iOS versions, looking for most recent version first.
                 for iOS_version, devices in sorted(
                     simulators.items(),
-                    key=lambda item: tuple(int(v) for v in item[0].split('.')),
+                    key=lambda item: tuple(int(v) for v in item[0].split()[1].split('.')),
                     reverse=True
                 ):
                     try:
