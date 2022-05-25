@@ -9,7 +9,7 @@ from briefcase.exceptions import (
     BriefcaseCommandError,
     MissingToolError,
     NetworkFailure,
-    NonManagedToolError,
+    NonManagedToolError
 )
 
 

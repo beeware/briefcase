@@ -8,7 +8,7 @@ from briefcase.commands import (
     PackageCommand,
     PublishCommand,
     RunCommand,
-    UpdateCommand,
+    UpdateCommand
 )
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError

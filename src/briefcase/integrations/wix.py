@@ -8,7 +8,7 @@ from briefcase.exceptions import (
     BriefcaseCommandError,
     MissingToolError,
     NetworkFailure,
-    NonManagedToolError,
+    NonManagedToolError
 )
 
 WIX_DOWNLOAD_URL = "https://github.com/wixtoolset/wix3/releases/download/wix3112rtm/wix311-binaries.zip"

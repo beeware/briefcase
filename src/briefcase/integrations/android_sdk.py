@@ -13,7 +13,7 @@ from briefcase.exceptions import (
     BriefcaseCommandError,
     InvalidDeviceError,
     MissingToolError,
-    NetworkFailure,
+    NetworkFailure
 )
 from briefcase.integrations.java import JDK
 
@@ -1071,11 +1071,9 @@ class ADB:
             )
 
             if any(
-                (
                     line.startswith("Error: Activity class ")
                     and line.endswith("does not exist.")
                     for line in output.split("\n")
-                )
             ):
                 raise BriefcaseCommandError(
                     f"""\
