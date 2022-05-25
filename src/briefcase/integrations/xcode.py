@@ -3,8 +3,8 @@ import re
 import subprocess
 from pathlib import Path
 
-from briefcase.integrations.subprocess import json_parser
 from briefcase.exceptions import BriefcaseCommandError, CommandOutputParseError
+from briefcase.integrations.subprocess import json_parser
 
 
 class DeviceState(enum.Enum):

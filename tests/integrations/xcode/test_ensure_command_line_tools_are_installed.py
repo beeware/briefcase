@@ -5,7 +5,9 @@ import pytest
 
 from briefcase.console import Log
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.integrations.xcode import ensure_command_line_tools_are_installed
+from briefcase.integrations.xcode import (
+    ensure_command_line_tools_are_installed
+)
 
 
 def test_not_installed():

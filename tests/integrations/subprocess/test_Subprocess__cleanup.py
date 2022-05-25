@@ -1,5 +1,4 @@
 import subprocess
-
 from unittest import mock
 
 

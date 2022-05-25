@@ -5,7 +5,6 @@ import pytest
 
 from briefcase.console import Log
 from briefcase.integrations.android_sdk import AndroidSDK
-
 from tests.utils import DummyConsole
 
 

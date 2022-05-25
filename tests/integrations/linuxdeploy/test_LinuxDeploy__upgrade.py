@@ -5,7 +5,6 @@ from requests import exceptions as requests_exceptions
 
 from briefcase.exceptions import MissingToolError, NetworkFailure
 from briefcase.integrations.linuxdeploy import LinuxDeploy
-
 from tests.integrations.linuxdeploy.utils import create_mock_appimage
 
 

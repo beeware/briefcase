@@ -9,7 +9,11 @@ import pytest
 from requests import exceptions as requests_exceptions
 
 from briefcase.console import Log
-from briefcase.exceptions import BriefcaseCommandError, MissingToolError, NetworkFailure
+from briefcase.exceptions import (
+    BriefcaseCommandError,
+    MissingToolError,
+    NetworkFailure
+)
 from briefcase.integrations.java import JDK
 from tests.utils import FsPathMock
 

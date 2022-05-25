@@ -3,6 +3,7 @@ import os
 import pytest
 
 from briefcase.console import Log
+
 from .conftest import CREATE_NEW_PROCESS_GROUP, CREATE_NO_WINDOW
 
 
