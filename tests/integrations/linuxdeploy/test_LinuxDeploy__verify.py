@@ -19,7 +19,7 @@ def mock_command(tmp_path):
 
 
 def test_verify_exists(mock_command, tmp_path):
-    "If linuxdeploy already exists, verification doesn't download"
+    """If linuxdeploy already exists, verification doesn't download."""
     appimage_path = tmp_path / "tools" / "linuxdeploy-wonky.AppImage"
 
     # Mock the existence of an install
@@ -37,7 +37,8 @@ def test_verify_exists(mock_command, tmp_path):
 
 
 def test_verify_does_not_exist_dont_install(mock_command, tmp_path):
-    "If linuxdeploy doesn't exist, and install=False, it is *not* downloaded"
+    """If linuxdeploy doesn't exist, and install=False, it is *not*
+    downloaded."""
     # Mock a successful download
     mock_command.download_url.return_value = "new-downloaded-file"
 
@@ -52,7 +53,7 @@ def test_verify_does_not_exist_dont_install(mock_command, tmp_path):
 
 
 def test_verify_does_not_exist(mock_command, tmp_path):
-    "If linuxdeploy doesn't exist, it is downloaded"
+    """If linuxdeploy doesn't exist, it is downloaded."""
     appimage_path = tmp_path / "tools" / "linuxdeploy-wonky.AppImage"
 
     # Mock a successful download
@@ -79,7 +80,8 @@ def test_verify_does_not_exist(mock_command, tmp_path):
 
 
 def test_verify_linuxdeploy_download_failure(mock_command, tmp_path):
-    "If linuxdeploy doesn't exist, but a download failure occurs, an error is raised"
+    """If linuxdeploy doesn't exist, but a download failure occurs, an error is
+    raised."""
     mock_command.download_url.side_effect = requests_exceptions.ConnectionError
 
     with pytest.raises(NetworkFailure):

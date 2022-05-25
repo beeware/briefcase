@@ -6,8 +6,8 @@ from briefcase.config import AppConfig
 
 
 class DummyRunCommand(RunCommand):
-    """
-    A dummy run command that doesn't actually do anything.
+    """A dummy run command that doesn't actually do anything.
+
     It only serves to track which actions would be performed.
     """
 

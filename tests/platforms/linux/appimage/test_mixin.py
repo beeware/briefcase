@@ -60,7 +60,7 @@ def test_dockerize(first_app_config, tmp_path):
 
 
 def test_dockerize_nodocker(first_app_config, tmp_path):
-    "If docker is not in use, dockerize() is a no-op."
+    """If docker is not in use, dockerize() is a no-op."""
     command = LinuxAppImageCreateCommand(base_path=tmp_path)
     command.Docker = Docker
     command.use_docker = False
@@ -77,7 +77,7 @@ def test_dockerize_nodocker(first_app_config, tmp_path):
 
 
 def test_verify_linux_no_docker(tmp_path):
-    "If Docker is disabled on Linux, the Docker alias is not set"
+    """If Docker is disabled on Linux, the Docker alias is not set."""
     command = LinuxAppImageCreateCommand(base_path=tmp_path)
     command.host_os = "Linux"
     command.use_docker = False
@@ -90,7 +90,7 @@ def test_verify_linux_no_docker(tmp_path):
 
 
 def test_verify_non_linux_no_docker(tmp_path):
-    "If Docker is disabled on non-Linux, an error is raised"
+    """If Docker is disabled on non-Linux, an error is raised."""
     command = LinuxAppImageCreateCommand(base_path=tmp_path)
     command.host_os = "WeirdOS"
     command.use_docker = False
@@ -101,7 +101,7 @@ def test_verify_non_linux_no_docker(tmp_path):
 
 
 def test_verify_linux_docker(tmp_path):
-    "If Docker is enabled on Linux, the Docker alias is set"
+    """If Docker is enabled on Linux, the Docker alias is set."""
     command = LinuxAppImageCreateCommand(base_path=tmp_path)
     command.host_os = "Linux"
     command.use_docker = True
@@ -119,7 +119,7 @@ def test_verify_linux_docker(tmp_path):
 
 
 def test_verify_non_linux_docker(tmp_path):
-    "If Docker is enabled on non-Linux, the Docker alias is set"
+    """If Docker is enabled on non-Linux, the Docker alias is set."""
     command = LinuxAppImageCreateCommand(base_path=tmp_path)
     command.host_os = "WierdOS"
     command.use_docker = True
@@ -137,7 +137,7 @@ def test_verify_non_linux_docker(tmp_path):
 
 
 def test_verify_windows_docker(tmp_path):
-    "Docker cannot currently be used on Windows due to path issues"
+    """Docker cannot currently be used on Windows due to path issues."""
     command = LinuxAppImageCreateCommand(base_path=tmp_path)
     command.host_os = "Windows"
     command.use_docker = True

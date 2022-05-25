@@ -6,8 +6,8 @@ from briefcase.exceptions import BriefcaseCommandError
 
 
 class DummyDevCommand(DevCommand):
-    """
-    A dummy Dev command that doesn't actually do anything.
+    """A dummy Dev command that doesn't actually do anything.
+
     It only serves to track which actions would be performend.
     """
 
@@ -42,7 +42,7 @@ def dev_command(tmp_path):
 
 
 def test_no_args_one_app(dev_command, first_app):
-    "If there is one app, dev starts that app by default"
+    """If there is one app, dev starts that app by default."""
     # Add a single app
     dev_command.apps = {
         "first": first_app,
@@ -64,7 +64,7 @@ def test_no_args_one_app(dev_command, first_app):
 
 
 def test_no_args_two_apps(dev_command, first_app, second_app):
-    "If there are one app, dev starts that app by default"
+    """If there are one app, dev starts that app by default."""
     # Add two apps
     dev_command.apps = {
         "first": first_app,
@@ -86,7 +86,7 @@ def test_no_args_two_apps(dev_command, first_app, second_app):
 
 
 def test_with_arg_one_app(dev_command, first_app):
-    "If there is one app, and a -a argument, dev starts that app"
+    """If there is one app, and a -a argument, dev starts that app."""
     # Add a single app
     dev_command.apps = {
         "first": first_app,
@@ -108,7 +108,7 @@ def test_with_arg_one_app(dev_command, first_app):
 
 
 def test_with_arg_two_apps(dev_command, first_app, second_app):
-    "If there are multiple apps, the --app argument starts app nominated"
+    """If there are multiple apps, the --app argument starts app nominated."""
     # Add two apps
     dev_command.apps = {
         "first": first_app,
@@ -131,7 +131,8 @@ def test_with_arg_two_apps(dev_command, first_app, second_app):
 
 
 def test_bad_app_reference(dev_command, first_app, second_app):
-    "If the command line argument refers to an app that doesn't exist, raise an error"
+    """If the command line argument refers to an app that doesn't exist, raise
+    an error."""
     # Add two apps
     dev_command.apps = {
         "first": first_app,
@@ -153,7 +154,7 @@ def test_bad_app_reference(dev_command, first_app, second_app):
 
 
 def test_update_dependencies(dev_command, first_app):
-    "The dev command can request that the app is updated first"
+    """The dev command can request that the app is updated first."""
     # Add a single app
     dev_command.apps = {
         "first": first_app,
@@ -177,7 +178,7 @@ def test_update_dependencies(dev_command, first_app):
 
 
 def test_run_uninstalled(dev_command, first_app_uninstalled):
-    "The dev command will install first if the app hasn't been installed"
+    """The dev command will install first if the app hasn't been installed."""
     # Add a single app
     dev_command.apps = {
         "first": first_app_uninstalled,
@@ -201,7 +202,8 @@ def test_run_uninstalled(dev_command, first_app_uninstalled):
 
 
 def test_update_uninstalled(dev_command, first_app_uninstalled):
-    "A request to update dependencies is redundant if the app hasn't been installed"
+    """A request to update dependencies is redundant if the app hasn't been
+    installed."""
     # Add a single app
     dev_command.apps = {
         "first": first_app_uninstalled,
@@ -225,7 +227,7 @@ def test_update_uninstalled(dev_command, first_app_uninstalled):
 
 
 def test_no_run(dev_command, first_app_uninstalled):
-    "Install dependencies without running the app"
+    """Install dependencies without running the app."""
     # Add a single app
     dev_command.apps = {
         "first": first_app_uninstalled,

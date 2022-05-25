@@ -8,7 +8,8 @@ from briefcase.exceptions import BriefcaseCommandError
 
 
 def test_succeeds_immediately_if_emulator_installed(mock_sdk):
-    """`verify_emulator()` exits early if the emulator exists in its root_path."""
+    """`verify_emulator()` exits early if the emulator exists in its
+    root_path."""
     # Create `emulator` within `root_path`.
     (mock_sdk.root_path / "emulator").mkdir(parents=True)
 
@@ -20,7 +21,8 @@ def test_succeeds_immediately_if_emulator_installed(mock_sdk):
 
 
 def test_succeeds_immediately_if_emulator_installed_with_debug(mock_sdk, tmp_path):
-    """If the emulator exist and debug is turned on, the list of packages is displayed"""
+    """If the emulator exist and debug is turned on, the list of packages is
+    displayed."""
     # Turn up logging to debug levels
     mock_sdk.command.logger.verbosity = 2
 
@@ -53,7 +55,7 @@ def test_succeeds_immediately_if_emulator_installed_with_debug(mock_sdk, tmp_pat
     ],
 )
 def test_installs_android_emulator(mock_sdk, host_os, host_arch, emulator_abi):
-    "The emulator tools will be installed if needed"
+    """The emulator tools will be installed if needed."""
     # Mock the hardware and OS
     mock_sdk.command.host_os = host_os
     mock_sdk.command.host_arch = host_arch
@@ -80,7 +82,8 @@ def test_installs_android_emulator(mock_sdk, host_os, host_arch, emulator_abi):
     ],
 )
 def test_unsupported_emulator_platform(mock_sdk, host_os, host_arch):
-    "If the platform isn't supported by the Android emulator, an error is raised"
+    """If the platform isn't supported by the Android emulator, an error is
+    raised."""
 
     mock_sdk.command.host_os = host_os
     mock_sdk.command.host_arch = host_arch
@@ -95,7 +98,8 @@ def test_unsupported_emulator_platform(mock_sdk, host_os, host_arch):
 
 
 def test_install_problems_are_reported(mock_sdk):
-    "If the sdkmanager fails to properly install the Android emulator, an exception is raised."
+    """If the sdkmanager fails to properly install the Android emulator, an
+    exception is raised."""
     # Configure `subprocess` module to crash as though it were a sad sdkmanager.
     mock_sdk.command.subprocess.run.side_effect = subprocess.CalledProcessError(
         returncode=1,

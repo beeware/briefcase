@@ -28,13 +28,13 @@ def popen_process():
 
 
 def test_output(mock_sub, popen_process, capsys):
-    "Readline output is printed"
+    """Readline output is printed."""
     mock_sub.stream_output("testing", popen_process)
     assert capsys.readouterr().out == ("output line 1\n" "\n" "output line 3\n")
 
 
 def test_output_debug(mock_sub, popen_process, capsys):
-    "Readline output is printed; debug mode should not add extra output"
+    """Readline output is printed; debug mode should not add extra output."""
     mock_sub.command.logger = Log(verbosity=2)
 
     mock_sub.stream_output("testing", popen_process)
@@ -42,7 +42,7 @@ def test_output_debug(mock_sub, popen_process, capsys):
 
 
 def test_output_deep_debug(mock_sub, popen_process, capsys):
-    "Readline output is printed with debug return code in deep debug mode"
+    """Readline output is printed with debug return code in deep debug mode."""
     mock_sub.command.logger = Log(verbosity=3)
 
     mock_sub.stream_output("testing", popen_process)
@@ -52,7 +52,7 @@ def test_output_deep_debug(mock_sub, popen_process, capsys):
 
 
 def test_keyboard_interrupt(mock_sub, popen_process, capsys):
-    "Process is terminated if user sends CTRL+C"
+    """Process is terminated if user sends CTRL+C."""
     popen_process.stdout.readline.side_effect = [
         "output line 1\n",
         "\n",
@@ -69,7 +69,7 @@ def test_keyboard_interrupt(mock_sub, popen_process, capsys):
 
 
 def test_process_exit_with_queued_output(mock_sub, popen_process, capsys):
-    "All output is printed despite the process exiting early"
+    """All output is printed despite the process exiting early."""
     popen_process.poll.side_effect = [None, -3, -3, -3]
 
     mock_sub.stream_output("testing", popen_process)

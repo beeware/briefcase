@@ -9,7 +9,7 @@ from .conftest import CREATE_NEW_PROCESS_GROUP, CREATE_NO_WINDOW
 
 @pytest.mark.parametrize("platform", ["Linux", "Darwin", "Windows"])
 def test_call(mock_sub, capsys, platform):
-    "A simple call will be invoked"
+    """A simple call will be invoked."""
 
     mock_sub.command.host_os = platform
     mock_sub.Popen(["hello", "world"])
@@ -19,7 +19,7 @@ def test_call(mock_sub, capsys, platform):
 
 
 def test_call_with_arg(mock_sub, capsys):
-    "Any extra keyword arguments are passed through as-is"
+    """Any extra keyword arguments are passed through as-is."""
 
     mock_sub.Popen(["hello", "world"], universal_newlines=True)
 
@@ -30,7 +30,7 @@ def test_call_with_arg(mock_sub, capsys):
 
 
 def test_call_with_path_arg(mock_sub, capsys, tmp_path):
-    "Path-based arguments are converted to strings andpassed in as-is"
+    """Path-based arguments are converted to strings andpassed in as-is."""
 
     mock_sub.Popen(["hello", tmp_path / "location"], cwd=tmp_path / "cwd")
 
@@ -63,7 +63,8 @@ def test_call_with_path_arg(mock_sub, capsys, tmp_path):
 def test_call_with_start_new_session(
     mock_sub, capsys, platform, start_new_session, popen_kwargs
 ):
-    "start_new_session is passed thru on Linux and macOS but converted for Windows"
+    """start_new_session is passed thru on Linux and macOS but converted for
+    Windows."""
 
     mock_sub.command.host_os = platform
     mock_sub.Popen(["hello", "world"], start_new_session=start_new_session)
@@ -96,7 +97,8 @@ def test_call_with_start_new_session(
 def test_call_windows_with_start_new_session_and_creationflags(
     mock_sub, capsys, creationflags, final_creationflags
 ):
-    "creationflags used to simulate start_new_session=True should be merged with any existing flags"
+    """creationflags used to simulate start_new_session=True should be merged
+    with any existing flags."""
 
     mock_sub.command.host_os = "Windows"
 
@@ -110,7 +112,7 @@ def test_call_windows_with_start_new_session_and_creationflags(
 
 
 def test_debug_call(mock_sub, capsys):
-    "If verbosity is turned up, there is output"
+    """If verbosity is turned up, there is output."""
     mock_sub.command.logger = Log(verbosity=2)
 
     mock_sub.Popen(["hello", "world"])
@@ -122,7 +124,7 @@ def test_debug_call(mock_sub, capsys):
 
 
 def test_debug_call_with_env(mock_sub, capsys):
-    "If verbosity is turned up, and injected env vars are included output"
+    """If verbosity is turned up, and injected env vars are included output."""
     mock_sub.command.logger = Log(verbosity=2)
 
     env = {"NewVar": "NewVarValue"}
@@ -147,7 +149,8 @@ def test_debug_call_with_env(mock_sub, capsys):
 
 
 def test_deep_debug_call(mock_sub, capsys):
-    "If verbosity is at the max, the full environment and return is output"
+    """If verbosity is at the max, the full environment and return is
+    output."""
     mock_sub.command.logger = Log(verbosity=3)
 
     mock_sub.Popen(["hello", "world"])
@@ -171,7 +174,8 @@ def test_deep_debug_call(mock_sub, capsys):
 
 
 def test_deep_debug_call_with_env(mock_sub, capsys):
-    "If verbosity is at the max, the full environment and return is output, and the environment is merged"
+    """If verbosity is at the max, the full environment and return is output,
+    and the environment is merged."""
     mock_sub.command.logger = Log(verbosity=3)
 
     env = {"NewVar": "NewVarValue"}
@@ -212,7 +216,8 @@ def test_deep_debug_call_with_env(mock_sub, capsys):
     ],
 )
 def test_text_eq_true_default_overriding(mock_sub, in_kwargs, kwargs):
-    "if text or universal_newlines is explicitly provided, those should override text=true default"
+    """if text or universal_newlines is explicitly provided, those should
+    override text=true default."""
 
     mock_sub.Popen(["hello", "world"], **in_kwargs)
     mock_sub._subprocess.Popen.assert_called_with(["hello", "world"], **kwargs)

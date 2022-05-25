@@ -25,7 +25,8 @@ def mock_command(tmp_path):
 
 
 def test_non_managed_install(mock_command, tmp_path, capsys):
-    "If the WiX install points to a non-managed install, no upgrade is attempted"
+    """If the WiX install points to a non-managed install, no upgrade is
+    attempted."""
 
     # Make the installation point to somewhere else.
     wix = WiX(mock_command, wix_home=tmp_path / "other-WiX")
@@ -39,7 +40,7 @@ def test_non_managed_install(mock_command, tmp_path, capsys):
 
 
 def test_non_existing_wix_install(mock_command, tmp_path):
-    "If there's no existing managed WiX install, upgrading is an error"
+    """If there's no existing managed WiX install, upgrading is an error."""
     # Create an SDK wrapper around a non-existing managed install
     wix = WiX(mock_command, wix_home=tmp_path / "tools" / "wix")
 
@@ -51,7 +52,8 @@ def test_non_existing_wix_install(mock_command, tmp_path):
 
 
 def test_existing_wix_install(mock_command, tmp_path):
-    "If there's an existing managed WiX install, it is deleted and redownloaded"
+    """If there's an existing managed WiX install, it is deleted and
+    redownloaded."""
     # Create a mock of a previously installed WiX version.
     wix_path = tmp_path / "tools" / "wix"
     wix_path.mkdir(parents=True)
@@ -99,7 +101,7 @@ def test_existing_wix_install(mock_command, tmp_path):
 
 
 def test_download_fail(mock_command, tmp_path):
-    "If the download doesn't complete, the upgrade fails"
+    """If the download doesn't complete, the upgrade fails."""
     # Create a mock of a previously installed WiX version.
     wix_path = tmp_path / "tools" / "wix"
     wix_path.mkdir(parents=True)
@@ -128,7 +130,7 @@ def test_download_fail(mock_command, tmp_path):
 
 
 def test_unpack_fail(mock_command, tmp_path):
-    "If the download archive is corrupted, the validator fails"
+    """If the download archive is corrupted, the validator fails."""
     # Create a mock of a previously installed WiX version.
     wix_path = tmp_path / "tools" / "wix"
     wix_path.mkdir(parents=True)

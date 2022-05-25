@@ -41,7 +41,7 @@ def test_explicit_version_triple(first_app_config, tmp_path):
 
 
 def test_guid(first_app_config, tmp_path):
-    "A preictable GUID will be generated from the bundle."
+    """A preictable GUID will be generated from the bundle."""
     command = WindowsMSICreateCommand(base_path=tmp_path)
 
     context = command.output_format_template_context(first_app_config)
@@ -50,7 +50,7 @@ def test_guid(first_app_config, tmp_path):
 
 
 def test_explicit_guid(first_app_config, tmp_path):
-    "If a GUID is explicitly provided, it is used."
+    """If a GUID is explicitly provided, it is used."""
     command = WindowsMSICreateCommand(base_path=tmp_path)
 
     first_app_config.guid = "e822176f-b755-589f-849c-6c6600f7efb1"
@@ -78,7 +78,7 @@ def test_support_package_url(first_app_config, tmp_path):
 
 
 def test_default_install_scope(first_app_config, tmp_path):
-    "By default, app should be installed per user."
+    """By default, app should be installed per user."""
     command = WindowsMSICreateCommand(base_path=tmp_path)
 
     context = command.output_format_template_context(first_app_config)
@@ -87,7 +87,7 @@ def test_default_install_scope(first_app_config, tmp_path):
 
 
 def test_per_machine_install_scope(first_app_config, tmp_path):
-    "By default, app should be installed per user."
+    """By default, app should be installed per user."""
     command = WindowsMSICreateCommand(base_path=tmp_path)
     first_app_config.system_installer = True
 
@@ -97,7 +97,7 @@ def test_per_machine_install_scope(first_app_config, tmp_path):
 
 
 def test_per_user_install_scope(first_app_config, tmp_path):
-    "App can be set to have explocit per-user scope."
+    """App can be set to have explocit per-user scope."""
     command = WindowsMSICreateCommand(base_path=tmp_path)
     first_app_config.system_installer = False
 

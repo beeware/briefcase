@@ -6,7 +6,7 @@ from briefcase.exceptions import BriefcaseCommandError
 def test_list_tools(
     upgrade_command, ManagedSDK1, ManagedSDK2, NonManagedSDK, NonInstalledSDK, capsys
 ):
-    "The tools for upgrade can be listed"
+    """The tools for upgrade can be listed."""
 
     upgrade_command(tool_list=[], list_tools=True)
 
@@ -28,7 +28,7 @@ def test_list_tools(
 def test_list_specific_tools(
     upgrade_command, ManagedSDK1, ManagedSDK2, NonManagedSDK, NonInstalledSDK, capsys
 ):
-    "If a list of tools is provided, only those are listed"
+    """If a list of tools is provided, only those are listed."""
 
     upgrade_command(
         tool_list=["managed-1", "non-managed", "non-installed"], list_tools=True
@@ -52,7 +52,7 @@ def test_list_specific_tools(
 def test_upgrade_tools(
     upgrade_command, ManagedSDK1, ManagedSDK2, NonManagedSDK, NonInstalledSDK, capsys
 ):
-    "All managed tools can be upgraded"
+    """All managed tools can be upgraded."""
     upgrade_command(tool_list=[])
 
     # All tools are verified
@@ -83,7 +83,7 @@ def test_upgrade_tools(
 def test_upgrade_specific_tools(
     upgrade_command, ManagedSDK1, ManagedSDK2, NonManagedSDK, NonInstalledSDK, capsys
 ):
-    "If a list of tools is provided, only those are listed"
+    """If a list of tools is provided, only those are listed."""
 
     upgrade_command(
         tool_list=["managed-1", "non-managed", "non-installed"],
@@ -116,7 +116,7 @@ def test_upgrade_specific_tools(
 def test_upgrade_no__tools(
     upgrade_command, ManagedSDK1, ManagedSDK2, NonManagedSDK, NonInstalledSDK, capsys
 ):
-    "If there is nothing up upgrade, a message is returned"
+    """If there is nothing up upgrade, a message is returned."""
 
     upgrade_command(
         tool_list=["non-managed", "non-installed"],
@@ -148,7 +148,7 @@ def test_upgrade_no__tools(
 def test_unknown_tool(
     upgrade_command, ManagedSDK1, ManagedSDK2, NonManagedSDK, NonInstalledSDK, capsys
 ):
-    "If a list of tools is provided, only those are listed"
+    """If a list of tools is provided, only those are listed."""
 
     # Requesting an unknown tool raises an error
     with pytest.raises(BriefcaseCommandError):

@@ -5,9 +5,7 @@ from briefcase.config import AppConfig, BaseConfig
 
 
 class DummyCommand(BaseCommand):
-    """
-    A dummy command to test the BaseCommand interface.
-    """
+    """A dummy command to test the BaseCommand interface."""
 
     command = ("dummy",)
     platform = "tester"

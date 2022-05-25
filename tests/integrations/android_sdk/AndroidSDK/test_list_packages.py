@@ -7,7 +7,8 @@ from briefcase.exceptions import BriefcaseCommandError
 
 
 def test_list_packages(mock_sdk):
-    "sdkmanager can be use to list the packages managed by the Android SDK"
+    """sdkmanager can be use to list the packages managed by the Android
+    SDK."""
     mock_sdk.list_packages()
 
     mock_sdk.command.subprocess.run.assert_called_once_with(
@@ -18,7 +19,7 @@ def test_list_packages(mock_sdk):
 
 
 def test_list_packages_failure(mock_sdk):
-    "If sdkmanager fails, an error is raised"
+    """If sdkmanager fails, an error is raised."""
     mock_sdk.command.subprocess.run.side_effect = subprocess.CalledProcessError(1, "")
     with pytest.raises(BriefcaseCommandError):
         mock_sdk.list_packages()

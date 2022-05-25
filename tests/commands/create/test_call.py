@@ -6,7 +6,7 @@ from briefcase.exceptions import BriefcaseCommandError
 
 
 def test_no_git(tracking_create_command):
-    "If Git is not installed, an error is raised"
+    """If Git is not installed, an error is raised."""
     # Mock a non-existent git
     integrations = mock.MagicMock()
     integrations.git.verify_git_is_installed.side_effect = BriefcaseCommandError(
@@ -22,7 +22,7 @@ def test_no_git(tracking_create_command):
 
 
 def test_create(tracking_create_command):
-    "The create command can be called"
+    """The create command can be called."""
     tracking_create_command()
 
     # The right sequence of things will be done
@@ -48,7 +48,8 @@ def test_create(tracking_create_command):
 
 
 def test_create_single(tracking_create_command):
-    "The create command can be called to create a single app from the config"
+    """The create command can be called to create a single app from the
+    config."""
     tracking_create_command(app=tracking_create_command.apps["first"])
 
     # The right sequence of things will be done

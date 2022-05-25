@@ -11,7 +11,7 @@ import pytest
     ],
 )
 def test_valid_bundle(new_command, bundle):
-    "Test that valid bundles are accepted"
+    """Test that valid bundles are accepted."""
     assert new_command.validate_bundle(bundle)
 
 
@@ -27,6 +27,6 @@ def test_valid_bundle(new_command, bundle):
     ],
 )
 def test_invalid_bundle(new_command, bundle):
-    "Test that invalid bundles are rejected"
+    """Test that invalid bundles are rejected."""
     with pytest.raises(ValueError):
         new_command.validate_bundle(bundle)

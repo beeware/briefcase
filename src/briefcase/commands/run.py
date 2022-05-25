@@ -21,8 +21,7 @@ class RunCommand(BaseCommand):
 
     @abstractmethod
     def run_app(self, app: BaseConfig, **options):
-        """
-        Start an application.
+        """Start an application.
 
         :param app: The application to start
         """

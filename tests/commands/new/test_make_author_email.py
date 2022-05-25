@@ -10,7 +10,8 @@ import pytest
     ],
 )
 def test_make_author_email(new_command, name, bundle, candidate):
-    "An author name and bundle can be converted into a valid email address."
+    """An author name and bundle can be converted into a valid email
+    address."""
     email = new_command.make_author_email(name, bundle)
     assert email == candidate
     # Double check - the app name passes the validity check.

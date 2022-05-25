@@ -8,8 +8,7 @@ from briefcase.integrations.linuxdeploy import (
 
 
 def create_mock_appimage(appimage_path: Path, mock_appimage_kind: str = "original"):
-    """
-    Create a mock AppImage for testing purposes.
+    """Create a mock AppImage for testing purposes.
 
     :param appimage_path: Path to the appimage to create.
     :param mock_appimage_kind: The kind of mock appimage to create.

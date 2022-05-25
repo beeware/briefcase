@@ -20,7 +20,7 @@ from briefcase.platforms.windows.msi import WindowsMSICreateCommand
 
 
 def test_empty():
-    "``briefcase`` returns basic usage"
+    """``briefcase`` returns basic usage."""
     with pytest.raises(NoCommandError) as excinfo:
         parse_cmdline("".split())
 
@@ -34,7 +34,7 @@ def test_empty():
 
 
 def test_help_only():
-    "``briefcase -h`` returns basic usage"
+    """``briefcase -h`` returns basic usage."""
     with pytest.raises(NoCommandError) as excinfo:
         parse_cmdline("-h".split())
 
@@ -48,7 +48,7 @@ def test_help_only():
 
 
 def test_version_only(capsys):
-    "``briefcase -V`` returns current version"
+    """``briefcase -V`` returns current version."""
     with pytest.raises(SystemExit) as excinfo:
         parse_cmdline("-V".split())
 
@@ -60,7 +60,7 @@ def test_version_only(capsys):
 
 
 def test_show_output_formats_only():
-    "``briefcase -f`` returns basic usage as a command is needed"
+    """``briefcase -f`` returns basic usage as a command is needed."""
     with pytest.raises(NoCommandError) as excinfo:
         parse_cmdline("-f".split())
 
@@ -74,7 +74,7 @@ def test_show_output_formats_only():
 
 
 def test_unknown_command():
-    "``briefcase foobar`` fails as an invalid command"
+    """``briefcase foobar`` fails as an invalid command."""
     with pytest.raises(SystemExit) as excinfo:
         parse_cmdline("foobar".split())
 
@@ -86,7 +86,7 @@ def test_unknown_command():
 
 
 def test_new_command():
-    "``briefcase new`` returns the New command"
+    """``briefcase new`` returns the New command."""
     cmd, options = parse_cmdline("new".split())
 
     assert isinstance(cmd, NewCommand)
@@ -98,7 +98,7 @@ def test_new_command():
 
 
 def test_dev_command(monkeypatch):
-    "``briefcase dev`` returns the Dev command"
+    """``briefcase dev`` returns the Dev command."""
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, "platform", "darwin")
 
@@ -113,7 +113,7 @@ def test_dev_command(monkeypatch):
 
 
 def test_upgrade_command(monkeypatch):
-    "``briefcase upgrade`` returns the upgrade command"
+    """``briefcase upgrade`` returns the upgrade command."""
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, "platform", "darwin")
 
@@ -131,7 +131,7 @@ def test_upgrade_command(monkeypatch):
 
 
 def test_bare_command(monkeypatch):
-    "``briefcase create`` returns the macOS create app command"
+    """``briefcase create`` returns the macOS create app command."""
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, "platform", "darwin")
 
@@ -147,7 +147,8 @@ def test_bare_command(monkeypatch):
 
 @pytest.mark.skipif(sys.platform != "linux", reason="requires Linux")
 def test_linux_default():
-    "``briefcase create`` returns the linux create appimage command on Linux"
+    """``briefcase create`` returns the linux create appimage command on
+    Linux."""
 
     cmd, options = parse_cmdline("create".split())
 
@@ -161,7 +162,8 @@ def test_linux_default():
 
 @pytest.mark.skipif(sys.platform != "darwin", reason="requires macOS")
 def test_macOS_default():
-    "``briefcase create`` returns the linux create appimage command on Linux"
+    """``briefcase create`` returns the linux create appimage command on
+    Linux."""
 
     cmd, options = parse_cmdline("create".split())
 
@@ -175,7 +177,8 @@ def test_macOS_default():
 
 @pytest.mark.skipif(sys.platform != "win32", reason="requires Windows")
 def test_windows_default():
-    "``briefcase create`` returns the Windows create msi command on Windows"
+    """``briefcase create`` returns the Windows create msi command on
+    Windows."""
 
     cmd, options = parse_cmdline("create".split())
 
@@ -188,7 +191,7 @@ def test_windows_default():
 
 
 def test_bare_command_help(monkeypatch, capsys):
-    "``briefcase create -h`` returns the macOS create app command help"
+    """``briefcase create -h`` returns the macOS create app command help."""
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, "platform", "darwin")
 
@@ -207,7 +210,7 @@ def test_bare_command_help(monkeypatch, capsys):
 
 
 def test_bare_command_version(capsys):
-    "``briefcase create -V`` returns the version"
+    """``briefcase create -V`` returns the version."""
     with pytest.raises(SystemExit) as excinfo:
         parse_cmdline("create -V".split())
 
@@ -219,7 +222,8 @@ def test_bare_command_version(capsys):
 
 
 def test_bare_command_show_formats(monkeypatch):
-    "``briefcase create -f`` returns an error indicating a platform is needed"
+    """``briefcase create -f`` returns an error indicating a platform is
+    needed."""
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, "platform", "darwin")
 
@@ -232,7 +236,7 @@ def test_bare_command_show_formats(monkeypatch):
 
 
 def test_command_unknown_platform(monkeypatch):
-    "``briefcase create foobar`` raises an unknown platform error"
+    """``briefcase create foobar`` raises an unknown platform error."""
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, "platform", "darwin")
 
@@ -247,7 +251,7 @@ def test_command_unknown_platform(monkeypatch):
 
 
 def test_command_explicit_platform(monkeypatch):
-    "``briefcase create linux`` returns linux create app command"
+    """``briefcase create linux`` returns linux create app command."""
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, "platform", "darwin")
 
@@ -262,7 +266,7 @@ def test_command_explicit_platform(monkeypatch):
 
 
 def test_command_explicit_platform_case_handling(monkeypatch):
-    "``briefcase create macOS`` returns macOS create app command"
+    """``briefcase create macOS`` returns macOS create app command."""
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, "platform", "darwin")
 
@@ -278,7 +282,8 @@ def test_command_explicit_platform_case_handling(monkeypatch):
 
 
 def test_command_explicit_platform_help(monkeypatch, capsys):
-    "``briefcase create macOS -h`` returns the macOS create app command help"
+    """``briefcase create macOS -h`` returns the macOS create app command
+    help."""
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, "platform", "darwin")
 
@@ -297,7 +302,7 @@ def test_command_explicit_platform_help(monkeypatch, capsys):
 
 
 def test_command_explicit_platform_show_formats(monkeypatch):
-    "``briefcase create macOS -f`` shows formats for the platform"
+    """``briefcase create macOS -f`` shows formats for the platform."""
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, "platform", "darwin")
 
@@ -310,7 +315,7 @@ def test_command_explicit_platform_show_formats(monkeypatch):
 
 
 def test_command_explicit_format(monkeypatch):
-    "``briefcase create macOS app`` returns the macOS create app command"
+    """``briefcase create macOS app`` returns the macOS create app command."""
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, "platform", "darwin")
 
@@ -325,7 +330,7 @@ def test_command_explicit_format(monkeypatch):
 
 
 def test_command_unknown_format(monkeypatch):
-    "``briefcase create macOS foobar`` returns an invalid format error"
+    """``briefcase create macOS foobar`` returns an invalid format error."""
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, "platform", "darwin")
 
@@ -337,7 +342,8 @@ def test_command_unknown_format(monkeypatch):
 
 
 def test_command_explicit_unsupported_format(monkeypatch):
-    "``briefcase create macOS homebrew`` raises an error because the format isn't supported (yet)"
+    """``briefcase create macOS homebrew`` raises an error because the format
+    isn't supported (yet)"""
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, "platform", "darwin")
 
@@ -346,7 +352,7 @@ def test_command_explicit_unsupported_format(monkeypatch):
 
 
 def test_command_explicit_format_help(monkeypatch, capsys):
-    "``briefcase create macOS app -h`` returns the macOS create app help"
+    """``briefcase create macOS app -h`` returns the macOS create app help."""
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, "platform", "darwin")
 
@@ -365,7 +371,7 @@ def test_command_explicit_format_help(monkeypatch, capsys):
 
 
 def test_command_explicit_format_show_formats(monkeypatch):
-    "``briefcase create macOS app -f`` shows formats for the platform"
+    """``briefcase create macOS app -f`` shows formats for the platform."""
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, "platform", "darwin")
 
@@ -378,7 +384,7 @@ def test_command_explicit_format_show_formats(monkeypatch):
 
 
 def test_command_disable_input(monkeypatch):
-    "``briefcase create --no-input`` disables console input"
+    """``briefcase create --no-input`` disables console input."""
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, "platform", "darwin")
 
@@ -393,7 +399,7 @@ def test_command_disable_input(monkeypatch):
 
 
 def test_command_options(monkeypatch, capsys):
-    "Commands can provide their own arguments"
+    """Commands can provide their own arguments."""
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, "platform", "darwin")
 
@@ -408,7 +414,7 @@ def test_command_options(monkeypatch, capsys):
 
 
 def test_unknown_command_options(monkeypatch, capsys):
-    "Commands can provide their own arguments"
+    """Commands can provide their own arguments."""
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, "platform", "darwin")
 

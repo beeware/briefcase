@@ -34,8 +34,8 @@ def test_default_packaging_format(package_command):
 )
 def test_execute_gradle(package_command, first_app_config, host_os, gradlew_name):
     """Validate that package_app() will launch `gradlew bundleRelease` with the
-    appropriate environment & cwd, and that it will use `gradlew.bat` on Windows
-    but `gradlew` elsewhere."""
+    appropriate environment & cwd, and that it will use `gradlew.bat` on
+    Windows but `gradlew` elsewhere."""
     # Mock out `host_os` so we can validate which name is used for gradlew.
     package_command.host_os = host_os
     # Create mock environment with `key`, which we expect to be preserved, and

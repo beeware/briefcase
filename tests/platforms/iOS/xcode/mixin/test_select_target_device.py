@@ -9,9 +9,7 @@ from tests.utils import DummyConsole
 
 
 class DummyCommand(iOSXcodeMixin, BaseCommand):
-    """
-    A dummy command that includes the iOS XCode mixin.
-    """
+    """A dummy command that includes the iOS XCode mixin."""
 
     command = "dummy"
 
@@ -36,7 +34,7 @@ def dummy_command(tmp_path):
 
 
 def test_explicit_device_udid(dummy_command):
-    "If the user nominates a device UDID at the command line, it is used."
+    """If the user nominates a device UDID at the command line, it is used."""
     # get_simulators will return some options.
     dummy_command.get_simulators.return_value = {
         "13.2": {
@@ -56,7 +54,7 @@ def test_explicit_device_udid(dummy_command):
 
 
 def test_explicit_device_name(dummy_command):
-    "If an explicit device name is provided (case insensitive) it is used."
+    """If an explicit device name is provided (case insensitive) it is used."""
     # get_simulators will return multiple options on 2 iOS versions.
     dummy_command.get_simulators.return_value = {
         "10.3": {
@@ -85,7 +83,8 @@ def test_explicit_device_name(dummy_command):
 
 
 def test_explicit_device_name_and_version(dummy_command):
-    "If there are multiple options on multiple devices, two user inputs are needed."
+    """If there are multiple options on multiple devices, two user inputs are
+    needed."""
     # get_simulators will return multiple options on 2 iOS versions.
     dummy_command.get_simulators.return_value = {
         "10.3": {
@@ -114,7 +113,7 @@ def test_explicit_device_name_and_version(dummy_command):
 
 
 def test_invalid_explicit_device_udid(dummy_command):
-    "If the user nominates an invalid device UDID, an error is raised"
+    """If the user nominates an invalid device UDID, an error is raised."""
     # get_simulators will some options.
     dummy_command.get_simulators.return_value = {
         "13.2": {
@@ -133,7 +132,7 @@ def test_invalid_explicit_device_udid(dummy_command):
 
 
 def test_invalid_explicit_device_name(dummy_command):
-    "If the user nominates an invalid device name, an error is raised"
+    """If the user nominates an invalid device name, an error is raised."""
     # get_simulators will some options.
     dummy_command.get_simulators.return_value = {
         "13.2": {
@@ -152,7 +151,8 @@ def test_invalid_explicit_device_name(dummy_command):
 
 
 def test_invalid_explicit_device_name_and_version(dummy_command):
-    "If the user nominates an invalid device name and version, an error is raised"
+    """If the user nominates an invalid device name and version, an error is
+    raised."""
     # get_simulators will some options.
     dummy_command.get_simulators.return_value = {
         "13.2": {
@@ -169,7 +169,8 @@ def test_invalid_explicit_device_name_and_version(dummy_command):
 
 
 def test_implied_device(dummy_command):
-    "If there's only one device, no input is required; the device is returned."
+    """If there's only one device, no input is required; the device is
+    returned."""
     # get_simulators will return one option.
     dummy_command.get_simulators.return_value = {
         "13.2": {
@@ -188,7 +189,7 @@ def test_implied_device(dummy_command):
 
 
 def test_implied_os(dummy_command):
-    "If there is only one OS option, it's implied."
+    """If there is only one OS option, it's implied."""
     # get_simulators will return multiple options on 1 iOS version.
     dummy_command.get_simulators.return_value = {
         "13.2": {
@@ -212,7 +213,8 @@ def test_implied_os(dummy_command):
 
 
 def test_multiple_os_implied_device(dummy_command):
-    "If there are multiple OS options, but only one device on the chosen OS, device is implied."
+    """If there are multiple OS options, but only one device on the chosen OS,
+    device is implied."""
     # get_simulators will return multiple options on 1 iOS version.
     dummy_command.get_simulators.return_value = {
         "10.3": {
@@ -240,7 +242,8 @@ def test_multiple_os_implied_device(dummy_command):
 
 
 def test_os_and_device_options(dummy_command):
-    "If there are multiple options on multiple devices, two user inputs are needed."
+    """If there are multiple options on multiple devices, two user inputs are
+    needed."""
     # get_simulators will return multiple options on 2 iOS versions.
     dummy_command.get_simulators.return_value = {
         "10.3": {
@@ -269,7 +272,7 @@ def test_os_and_device_options(dummy_command):
 
 
 def test_no_os_versions(dummy_command):
-    "If there are no supported OS versions, raise an error."
+    """If there are no supported OS versions, raise an error."""
     # get_simulators returns no valid iOS versions.
     dummy_command.get_simulators.return_value = {}
 
@@ -278,7 +281,7 @@ def test_no_os_versions(dummy_command):
 
 
 def test_no_devices_for_os(dummy_command):
-    "If there are no devices for an OS version, raise an error."
+    """If there are no devices for an OS version, raise an error."""
     # get_simulators returns no devices for iOS 13.2
     dummy_command.get_simulators.return_value = {"13.2": {}}
 

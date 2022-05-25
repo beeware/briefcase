@@ -4,7 +4,8 @@ from briefcase.exceptions import BriefcaseCommandError
 
 
 def test_unvalidated_input(new_command):
-    "If the user enters text and there's no validation, the text is returned"
+    """If the user enters text and there's no validation, the text is
+    returned."""
     new_command.input.values = ["hello"]
 
     value = new_command.input_text(
@@ -16,7 +17,8 @@ def test_unvalidated_input(new_command):
 
 
 def test_validated_input(new_command):
-    "If the user enters text and there's validation, the user is prompted until valid text is entered"
+    """If the user enters text and there's validation, the user is prompted
+    until valid text is entered."""
     new_command.input.values = ["bad", "hello"]
 
     def validator(text):
@@ -38,7 +40,8 @@ def test_validated_input(new_command):
 
 
 def test_input_with_default(new_command):
-    "If the user enters text and there's no validation, the text is returned"
+    """If the user enters text and there's no validation, the text is
+    returned."""
     new_command.input.values = [""]
 
     value = new_command.input_text(
@@ -50,7 +53,7 @@ def test_input_with_default(new_command):
 
 
 def test_input_disabled(new_command):
-    "If input is disabled, the default is returned."
+    """If input is disabled, the default is returned."""
     new_command.input.enabled = False
 
     value = new_command.input_text(
@@ -64,7 +67,7 @@ def test_input_disabled(new_command):
 
 
 def test_input_disabled_validation_failure(new_command):
-    "If input is disabled, and validation fails, an error is raised"
+    """If input is disabled, and validation fails, an error is raised."""
     new_command.input.enabled = False
 
     with pytest.raises(BriefcaseCommandError):
@@ -83,7 +86,7 @@ def test_input_disabled_validation_failure(new_command):
 
 
 def test_prompt_capitalization(new_command):
-    "The prompt is capitalized appropriately"
+    """The prompt is capitalized appropriately."""
     new_command.input.values = ["hello"]
 
     new_command.input_text(

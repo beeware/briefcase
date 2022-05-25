@@ -8,7 +8,7 @@ from briefcase.integrations.android_sdk import ADB
 
 
 def test_emulator(mock_sdk, capsys):
-    "Invoking `avd_name()` on an emulator returns the AVD."
+    """Invoking `avd_name()` on an emulator returns the AVD."""
     # Mock out the adb response for an emulator
     adb = ADB(mock_sdk, "deafbeefcafe")
     adb.run = MagicMock(return_value="exampledevice\nOK\n")
@@ -21,7 +21,7 @@ def test_emulator(mock_sdk, capsys):
 
 
 def test_device(mock_sdk, capsys):
-    "Invoking `avd_name()` on a device returns None."
+    """Invoking `avd_name()` on a device returns None."""
     # Mock out the adb response for a physical device
     adb = ADB(mock_sdk, "deafbeefcafe")
     adb.run = MagicMock(
@@ -36,7 +36,7 @@ def test_device(mock_sdk, capsys):
 
 
 def test_adb_failure(mock_sdk, capsys):
-    "If `adb()` fails for a miscellaneous reason, an error is raised."
+    """If `adb()` fails for a miscellaneous reason, an error is raised."""
     # Mock out the run command on an adb instance
     adb = ADB(mock_sdk, "exampleDevice")
     adb.run = MagicMock(
@@ -52,7 +52,7 @@ def test_adb_failure(mock_sdk, capsys):
 
 
 def test_invalid_device(mock_sdk, capsys):
-    "Invoking `avd_name()` on an invalid device raises an error."
+    """Invoking `avd_name()` on an invalid device raises an error."""
     # Mock out the run command on an adb instance
     adb = ADB(mock_sdk, "exampleDevice")
     adb.run = MagicMock(side_effect=InvalidDeviceError("device", "exampleDevice"))

@@ -26,8 +26,8 @@ def build_command(tmp_path, first_app_config):
 )
 def test_execute_gradle(build_command, first_app_config, host_os, gradlew_name):
     """Validate that build_app() will launch `gradlew assembleDebug` with the
-    appropriate environment & cwd, and that it will use `gradlew.bat` on Windows
-    but `gradlew` elsewhere."""
+    appropriate environment & cwd, and that it will use `gradlew.bat` on
+    Windows but `gradlew` elsewhere."""
     # Mock out `host_os` so we can validate which name is used for gradlew.
     build_command.host_os = host_os
     # Create mock environment with `key`, which we expect to be preserved, and

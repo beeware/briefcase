@@ -28,8 +28,7 @@ class macOSMixin:
 
 class macOSRunMixin:
     def run_app(self, app: BaseConfig, **kwargs):
-        """
-        Start the application.
+        """Start the application.
 
         :param app: The config object for the app
         """
@@ -124,8 +123,7 @@ class macOSSigningMixin:
         self.get_identities = get_identities
 
     def select_identity(self, identity=None):
-        """
-        Get the codesigning identity to use.
+        """Get the codesigning identity to use.
 
         :param identity: A pre-specified identity (either the 40-digit
             hex checksum, or the string name of the identity). If provided, it
@@ -165,8 +163,7 @@ class macOSSigningMixin:
         return identity
 
     def sign_file(self, path, identity, entitlements=None):
-        """
-        Code sign a file.
+        """Code sign a file.
 
         :param path: The path to the file to sign.
         :param identity: The code signing identity to use. Either the 40-digit
@@ -227,7 +224,7 @@ class macOSSigningMixin:
                 raise BriefcaseCommandError(f"Unable to code sign {path}.")
 
     def sign_app(self, app, identity):
-        """Sign an entire app with a specific identity
+        """Sign an entire app with a specific identity.
 
         :param app: The app to sign
         :param identity: The signing identity to use
@@ -299,8 +296,7 @@ class macOSPackageMixin(macOSSigningMixin):
         packaging_format="dmg",
         **kwargs,
     ):
-        """
-        Package an app bundle.
+        """Package an app bundle.
 
         :param app: The application to package
         :param sign_app: Should the application be signed?

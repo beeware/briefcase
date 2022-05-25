@@ -24,7 +24,7 @@ def mock_command(tmp_path):
 
 
 def test_non_windows_host(mock_command):
-    "If the host OS isn't Windows, the validator fails"
+    """If the host OS isn't Windows, the validator fails."""
 
     # Set the host OS to something not Windows
     mock_command.host_os = "Other OS"
@@ -34,7 +34,8 @@ def test_non_windows_host(mock_command):
 
 
 def test_valid_wix_envvar(mock_command, tmp_path):
-    "If the WiX envvar points to a valid WiX install, the validator succeeds"
+    """If the WiX envvar points to a valid WiX install, the validator
+    succeeds."""
     # Mock the environment for a WiX install
     wix_path = tmp_path / "wix"
     mock_command.os.environ.get.return_value = os.fsdecode(wix_path)
@@ -58,7 +59,8 @@ def test_valid_wix_envvar(mock_command, tmp_path):
 
 
 def test_invalid_wix_envvar(mock_command, tmp_path):
-    "If the WiX envvar points to an invalid WiX install, the validator fails"
+    """If the WiX envvar points to an invalid WiX install, the validator
+    fails."""
     # Mock the environment for a WiX install
     wix_path = tmp_path / "wix"
     mock_command.os.environ.get.return_value = os.fsdecode(wix_path)
@@ -69,7 +71,7 @@ def test_invalid_wix_envvar(mock_command, tmp_path):
 
 
 def test_existing_wix_install(mock_command, tmp_path):
-    "If there's an existing managed WiX install, the validator succeeds"
+    """If there's an existing managed WiX install, the validator succeeds."""
     # Mock the environment as if there is not WiX variable
     mock_command.os.environ.get.return_value = None
 
@@ -95,7 +97,8 @@ def test_existing_wix_install(mock_command, tmp_path):
 
 
 def test_download_wix(mock_command, tmp_path):
-    "If there's no existing managed WiX install, it is downloaded and unpacked"
+    """If there's no existing managed WiX install, it is downloaded and
+    unpacked."""
     # Mock the environment as if there is not WiX variable
     mock_command.os.environ.get.return_value = None
 
@@ -141,7 +144,8 @@ def test_download_wix(mock_command, tmp_path):
 
 
 def test_dont_install(mock_command, tmp_path):
-    "If there's no existing managed WiX install, an install is not requested, verify fails"
+    """If there's no existing managed WiX install, an install is not requested,
+    verify fails."""
     # Mock the environment as if there is not WiX variable
     mock_command.os.environ.get.return_value = None
 
@@ -157,7 +161,7 @@ def test_dont_install(mock_command, tmp_path):
 
 
 def test_download_fail(mock_command, tmp_path):
-    "If the download doesn't complete, the validator fails"
+    """If the download doesn't complete, the validator fails."""
     # Mock the environment as if there is not WiX variable
     mock_command.os.environ.get.return_value = None
 
@@ -182,7 +186,7 @@ def test_download_fail(mock_command, tmp_path):
 
 
 def test_unpack_fail(mock_command, tmp_path):
-    "If the download archive is corrupted, the validator fails"
+    """If the download archive is corrupted, the validator fails."""
     # Mock the environment as if there is not WiX variable
     mock_command.os.environ.get.return_value = None
 

@@ -43,7 +43,7 @@ def mock_sdk(tmp_path):
     ],
 )
 def test_create_emulator(mock_sdk, tmp_path, host_os, host_arch, emulator_abi):
-    "A new emulator can be created."
+    """A new emulator can be created."""
     # This test validates everything going well on first run.
     # This means the skin will be downloaded and unpacked.
 
@@ -124,7 +124,7 @@ def test_create_emulator(mock_sdk, tmp_path, host_os, host_arch, emulator_abi):
 
 
 def test_create_preexisting_skins(mock_sdk, tmp_path):
-    "Test that if skins already exist, they're not re-downloaded."
+    """Test that if skins already exist, they're not re-downloaded."""
     # This test validates that if skins are already cached,
     # they're not re-downloaded
 
@@ -181,7 +181,7 @@ def test_create_preexisting_skins(mock_sdk, tmp_path):
 
 
 def test_create_failure(mock_sdk):
-    "If avdmanager fails, an error is raised"
+    """If avdmanager fails, an error is raised."""
     # Mock the user getting a valid name first time
     mock_sdk.command.input.return_value = "new-emulator"
 
@@ -216,7 +216,7 @@ def test_create_failure(mock_sdk):
 
 
 def test_download_failure(mock_sdk, tmp_path):
-    "If the skin download fails, an error is raised"
+    """If the skin download fails, an error is raised."""
     # Mock a valid user response.
     mock_sdk.command.input.return_value = "new-emulator"
 
@@ -260,7 +260,7 @@ def test_download_failure(mock_sdk, tmp_path):
 
 
 def test_unpack_failure(mock_sdk, tmp_path):
-    "If the download is corrupted and unpacking fails, an error is raised"
+    """If the download is corrupted and unpacking fails, an error is raised."""
     # Mock a valid user response.
     mock_sdk.command.input.return_value = "new-emulator"
 
@@ -319,7 +319,7 @@ def test_unpack_failure(mock_sdk, tmp_path):
 
 
 def test_default_name(mock_sdk, tmp_path):
-    "A new emulator can be created with the default name."
+    """A new emulator can be created with the default name."""
     # This test doesn't validate most of the test process;
     # it only checks that the emulator is created with the default name.
 
@@ -346,7 +346,7 @@ def test_default_name(mock_sdk, tmp_path):
 
 
 def test_default_name_with_collisions(mock_sdk, tmp_path):
-    "The default name will avoid collisions with existing emulators."
+    """The default name will avoid collisions with existing emulators."""
     # This test doesn't validate most of the test process;
     # it only checks that the emulator is created with the default name.
 

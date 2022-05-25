@@ -8,7 +8,7 @@ from briefcase.platforms.windows.msi import WindowsMSIRunCommand
 
 
 def test_run_app(first_app_config, tmp_path):
-    "A windows MSI can be started"
+    """A windows MSI can be started."""
     command = WindowsMSIRunCommand(base_path=tmp_path)
     command.subprocess = mock.MagicMock()
 
@@ -33,7 +33,7 @@ def test_run_app(first_app_config, tmp_path):
 
 
 def test_run_app_failed(first_app_config, tmp_path):
-    "If there's a problem started the app, an exception is raised"
+    """If there's a problem started the app, an exception is raised."""
     command = WindowsMSIRunCommand(base_path=tmp_path)
     command.subprocess = mock.MagicMock()
     command.subprocess.run.side_effect = BriefcaseCommandError("problem")

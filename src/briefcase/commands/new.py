@@ -16,8 +16,7 @@ from .create import InvalidTemplateRepository
 
 
 def titlecase(s):
-    """
-    Convert a string to titlecase.
+    """Convert a string to titlecase.
 
     Follow Chicago Manual of Style rules for capitalization (roughly).
 
@@ -66,22 +65,20 @@ class NewCommand(BaseCommand):
     description = "Create a new briefcase project"
 
     def bundle_path(self, app):
-        "A placeholder; New command doesn't have a bundle path"
+        """A placeholder; New command doesn't have a bundle path."""
         raise NotImplementedError()
 
     def binary_path(self, app):
-        "A placeholder; New command doesn't have a binary path"
+        """A placeholder; New command doesn't have a binary path."""
         raise NotImplementedError()
 
     def distribution_path(self, app, packaging_format):
-        "A placeholder; New command doesn't have a distribution path"
+        """A placeholder; New command doesn't have a distribution path."""
         raise NotImplementedError()
 
     def parse_config(self, filename):
-        """
-        There is no configuration when starting a new project;
-        this implementation overrides the base so that no config is parsed.
-        """
+        """There is no configuration when starting a new project; this
+        implementation overrides the base so that no config is parsed."""
         pass
 
     def add_options(self, parser):
@@ -93,8 +90,7 @@ class NewCommand(BaseCommand):
         )
 
     def make_class_name(self, formal_name):
-        """
-        Construct a valid class name from a formal name.
+        """Construct a valid class name from a formal name.
 
         :param formal_name: The formal name
         :returns: The app's class name
@@ -137,8 +133,7 @@ class NewCommand(BaseCommand):
         return class_name
 
     def make_app_name(self, formal_name):
-        """
-        Construct a candidate app name from a formal name.
+        """Construct a candidate app name from a formal name.
 
         :param formal_name: The formal name
         :returns: The candidate app name
@@ -153,8 +148,7 @@ class NewCommand(BaseCommand):
             return "myapp"
 
     def validate_app_name(self, candidate):
-        """
-        Determine if the app name is valid.
+        """Determine if the app name is valid.
 
         :param candidate: The candidate name
         :returns: True. If there are any validation problems, raises ValueError
@@ -178,8 +172,7 @@ class NewCommand(BaseCommand):
         return True
 
     def make_module_name(self, app_name):
-        """
-        Construct a valid module name from an app name.
+        """Construct a valid module name from an app name.
 
         :param app_name: The app name
         :returns: The app's module name.
@@ -187,8 +180,7 @@ class NewCommand(BaseCommand):
         return app_name.replace("-", "_")
 
     def validate_bundle(self, candidate):
-        """
-        Determine if the bundle identifier is valid.
+        """Determine if the bundle identifier is valid.
 
         :param candidate: The candidate bundle identifier
         :returns: True. If there are any validation problems, raises ValueError
@@ -206,8 +198,7 @@ class NewCommand(BaseCommand):
         return True
 
     def make_domain(self, bundle):
-        """
-        Construct a candidate domain from a bundle identifier.
+        """Construct a candidate domain from a bundle identifier.
 
         :param bundle: The bundle identifier
         :returns: The candidate domain
@@ -215,9 +206,8 @@ class NewCommand(BaseCommand):
         return ".".join(bundle.split(".")[::-1])
 
     def make_author_email(self, author, bundle):
-        """
-        Construct a candidate email address from the authors name and the bundle
-        identifier.
+        """Construct a candidate email address from the authors name and the
+        bundle identifier.
 
         The candidate is based on the assumption that the author's name is in
         "first/last" format, or it a corporate name; the "first" part is split
@@ -233,8 +223,7 @@ class NewCommand(BaseCommand):
         return f"{author.split(' ')[0].lower()}@{self.make_domain(bundle)}"
 
     def validate_email(self, candidate):
-        """
-        Determine if the email address is valid.
+        """Determine if the email address is valid.
 
         :param candidate: The candidate email address
         :returns: True. If there are any validation problems, raises ValueError
@@ -245,8 +234,7 @@ class NewCommand(BaseCommand):
         return True
 
     def make_project_url(self, bundle, app_name):
-        """
-        Construct a candidate project URL from the bundle and app name.
+        """Construct a candidate project URL from the bundle and app name.
 
         It's not a perfect guess, but it's better than having
         "https://example.com".
@@ -258,8 +246,7 @@ class NewCommand(BaseCommand):
         return f"https://{self.make_domain(bundle)}/{app_name}"
 
     def validate_url(self, candidate):
-        """
-        Determine if the URL is valid.
+        """Determine if the URL is valid.
 
         :param candidate: The candidate URL
         :returns: True. If there are any validation problems, raises ValueError
@@ -271,8 +258,7 @@ class NewCommand(BaseCommand):
         return True
 
     def input_text(self, intro, variable, default, validator=None):
-        """
-        Read a text answer from the user.
+        """Read a text answer from the user.
 
         :param intro: An introductory paragraph explaining the question being
             asked.
@@ -308,8 +294,7 @@ class NewCommand(BaseCommand):
                 self.input.prompt(f"Invalid value; {e}")
 
     def input_select(self, intro, variable, options):
-        """
-        Select one from a list of options.
+        """Select one from a list of options.
 
         The first option is assumed to be the default.
 
@@ -344,8 +329,7 @@ Select one of the following:
         return options[int(selection) - 1]
 
     def build_app_context(self):
-        """
-        Ask the user for details about the app to be created.
+        """Ask the user for details about the app to be created.
 
         :returns: A context dictionary to be used in the cookiecutter project
             template.
@@ -487,10 +471,8 @@ What GUI toolkit do you want to use for this project?""",
         }
 
     def new_app(self, template: Optional[str] = None, **options):
-        """
-        Ask questions to generate a new application, and generate a stub
-        project from the briefcase-template.
-        """
+        """Ask questions to generate a new application, and generate a stub
+        project from the briefcase-template."""
         if template is None:
             template = "https://github.com/beeware/briefcase-template"
 
@@ -541,10 +523,10 @@ Application '{context['formal_name']}' has been generated. To run your applicati
         )
 
     def verify_tools(self):
-        """
-        Verify that the tools needed to run this command exist
+        """Verify that the tools needed to run this command exist.
 
-        Raises MissingToolException if a required system tool is missing.
+        Raises MissingToolException if a required system tool is
+        missing.
         """
         self.git = self.integrations.git.verify_git_is_installed(self)
 

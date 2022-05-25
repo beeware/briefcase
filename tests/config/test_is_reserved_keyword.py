@@ -17,7 +17,7 @@ from briefcase.config import is_reserved_keyword
     ],
 )
 def test_is_not_reserved_keyword_violation(name):
-    "Test that names not in the keywords list return false."
+    """Test that names not in the keywords list return false."""
     assert not is_reserved_keyword(name)
 
 
@@ -48,5 +48,5 @@ def test_is_not_reserved_keyword_violation(name):
     ],
 )
 def test_is_reserved_keyword(name):
-    "Test that names in the reserved_keywords list returns true"
+    """Test that names in the reserved_keywords list returns true."""
     assert is_reserved_keyword(name)

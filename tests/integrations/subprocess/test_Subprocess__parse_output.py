@@ -7,12 +7,12 @@ from briefcase.integrations.subprocess import (
 
 
 def splitlines_parser(data):
-    "A test parser that returns the input data, split by line"
+    """A test parser that returns the input data, split by line."""
     return data.splitlines()
 
 
 def second_line_parser(data):
-    "A test parser that returns the second line of input."
+    """A test parser that returns the second line of input."""
     try:
         return data.splitlines()[1]
     except IndexError:
@@ -20,7 +20,7 @@ def second_line_parser(data):
 
 
 def third_line_parser(data):
-    "A test parser that returns the third line of input."
+    """A test parser that returns the third line of input."""
     try:
         return data.splitlines()[2]
     except IndexError:
@@ -28,7 +28,7 @@ def third_line_parser(data):
 
 
 def test_call(mock_sub, capsys):
-    "A simple call to check_output will be invoked"
+    """A simple call to check_output will be invoked."""
 
     output = mock_sub.parse_output(splitlines_parser, ["hello", "world"])
 
@@ -39,7 +39,7 @@ def test_call(mock_sub, capsys):
 
 
 def test_call_with_arg(mock_sub, capsys):
-    "Any extra keyword arguments are passed through as-is to check_output"
+    """Any extra keyword arguments are passed through as-is to check_output."""
 
     output = mock_sub.parse_output(
         splitlines_parser, ["hello", "world"], extra_arg="asdf"
@@ -56,7 +56,7 @@ def test_call_with_arg(mock_sub, capsys):
 
 
 def test_call_with_parser_success(mock_sub, capsys):
-    "Parser returns expected portion of check_output's output"
+    """Parser returns expected portion of check_output's output."""
 
     output = mock_sub.parse_output(second_line_parser, ["hello", "world"])
 
@@ -65,7 +65,7 @@ def test_call_with_parser_success(mock_sub, capsys):
 
 
 def test_call_with_parser_error(mock_sub, capsys):
-    "Parser errors on output from check_output"
+    """Parser errors on output from check_output."""
 
     with pytest.raises(
         CommandOutputParseError,
@@ -98,7 +98,8 @@ def test_call_with_parser_error(mock_sub, capsys):
     ],
 )
 def test_text_eq_true_default_overriding(mock_sub, in_kwargs, kwargs):
-    "if text or universal_newlines is explicitly provided, those should override text=true default"
+    """if text or universal_newlines is explicitly provided, those should
+    override text=true default."""
 
     mock_sub.parse_output(splitlines_parser, ["hello", "world"], **in_kwargs)
     mock_sub._subprocess.check_output.assert_called_with(["hello", "world"], **kwargs)

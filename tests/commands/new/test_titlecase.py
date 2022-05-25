@@ -19,5 +19,5 @@ from briefcase.commands.new import titlecase
     ],
 )
 def test_titlecase(raw, converted):
-    "Test that a string can be capitalized"
+    """Test that a string can be capitalized."""
     assert titlecase(raw) == converted

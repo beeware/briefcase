@@ -8,7 +8,7 @@ import pytest
     ],
 )
 def test_valid_url(new_command, url):
-    "Test that valid URLs are accepted"
+    """Test that valid URLs are accepted."""
     assert new_command.validate_url(url)
 
 
@@ -19,6 +19,6 @@ def test_valid_url(new_command, url):
     ],
 )
 def test_invalid_url(new_command, url):
-    "Test that invalid URLs are rejected"
+    """Test that invalid URLs are rejected."""
     with pytest.raises(ValueError):
         new_command.validate_url(url)

@@ -1,5 +1,5 @@
 def test_update_app(update_command, first_app):
-    "If the app already exists, it will be updated"
+    """If the app already exists, it will be updated."""
     update_command.update_app(update_command.apps["first"])
 
     # The right sequence of things will be done
@@ -17,7 +17,7 @@ def test_update_app(update_command, first_app):
 
 
 def test_update_non_existing_app(update_command):
-    "If the app hasn't been generated yet, it won't be created"
+    """If the app hasn't been generated yet, it won't be created."""
 
     update_command.update_app(update_command.apps["first"])
 
@@ -30,7 +30,7 @@ def test_update_non_existing_app(update_command):
 
 
 def test_update_app_with_dependencies(update_command, first_app):
-    "If the user requests a dependency update, they are updated"
+    """If the user requests a dependency update, they are updated."""
     update_command.update_app(
         update_command.apps["first"],
         update_dependencies=True,
@@ -52,7 +52,7 @@ def test_update_app_with_dependencies(update_command, first_app):
 
 
 def test_update_app_with_resources(update_command, first_app):
-    "If the user requests a resources update, they are updated"
+    """If the user requests a resources update, they are updated."""
     update_command.update_app(
         update_command.apps["first"],
         update_resources=True,

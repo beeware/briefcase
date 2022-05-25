@@ -12,9 +12,7 @@ from tests.utils import DummyConsole
 
 
 class DummySigningCommand(macOSAppMixin, macOSSigningMixin, BaseCommand):
-    """
-    A dummy command to expose code signing capapbilities.
-    """
+    """A dummy command to expose code signing capapbilities."""
 
     def __init__(self, base_path, **kwargs):
         super().__init__(base_path=base_path, **kwargs)
@@ -46,7 +44,8 @@ def sign_call(
     runtime=True,
     deep=False,
 ):
-    "A test utility method to quickly construct a subprocess call to invoke codesign on a file"
+    """A test utility method to quickly construct a subprocess call to invoke
+    codesign on a file."""
     args = [
         "codesign",
         os.fsdecode(filepath),
@@ -77,7 +76,7 @@ def sign_call(
 
 
 def mock_codesign(results):
-    """A utilty method for generating codesign side effects
+    """A utilty method for generating codesign side effects.
 
     :param results: A single error string; or a list of error strings to be returned
         on successive calls. If `None` is included in the list of results, no
@@ -99,7 +98,7 @@ def mock_codesign(results):
 
 
 def test_explicit_identity_checksum(dummy_command):
-    "If the user nominates an identity by checksum, it is used."
+    """If the user nominates an identity by checksum, it is used."""
     # get_identities will return some options.
     dummy_command.get_identities.return_value = {
         "38EBD6F8903EC63C238B04C1067833814CE47CA3": "Developer ID Application: Example Corporation Ltd (Z2K4383DLE)",
@@ -116,7 +115,7 @@ def test_explicit_identity_checksum(dummy_command):
 
 
 def test_explicit_identity_name(dummy_command):
-    "If the user nominates an identity by name, it is used."
+    """If the user nominates an identity by name, it is used."""
     # get_identities will return some options.
     dummy_command.get_identities.return_value = {
         "38EBD6F8903EC63C238B04C1067833814CE47CA3": "Developer ID Application: Example Corporation Ltd (Z2K4383DLE)",
@@ -133,7 +132,7 @@ def test_explicit_identity_name(dummy_command):
 
 
 def test_invalid_identity_name(dummy_command):
-    "If the user nominates an identity by name, it is used."
+    """If the user nominates an identity by name, it is used."""
     # get_identities will return some options.
     dummy_command.get_identities.return_value = {
         "38EBD6F8903EC63C238B04C1067833814CE47CA3": "Developer ID Application: Example Corporation Ltd (Z2K4383DLE)",
@@ -149,7 +148,7 @@ def test_invalid_identity_name(dummy_command):
 
 
 def test_implied_identity(dummy_command):
-    "If there is only one identity, it is automatically picked."
+    """If there is only one identity, it is automatically picked."""
     # get_identities will return some options.
     dummy_command.get_identities.return_value = {
         "11E77FB58F13F6108B38110D5D92233C58ED38C5": "iPhone Developer: Jane Smith (BXAH5H869S)",
@@ -165,7 +164,7 @@ def test_implied_identity(dummy_command):
 
 
 def test_selected_identity(dummy_command):
-    "If there is only one identity, it is automatically picked."
+    """If there is only one identity, it is automatically picked."""
     # get_identities will return some options.
     dummy_command.get_identities.return_value = {
         "38EBD6F8903EC63C238B04C1067833814CE47CA3": "Developer ID Application: Example Corporation Ltd (Z2K4383DLE)",
@@ -185,7 +184,7 @@ def test_selected_identity(dummy_command):
 
 
 def test_sign_file_adhoc_identity(dummy_command, tmp_path):
-    "If an adhoc identity is used, the runtime option isn't used"
+    """If an adhoc identity is used, the runtime option isn't used."""
     # Sign the file with an adhoc identity
     dummy_command.sign_file(tmp_path / "random.file", identity="-")
 
@@ -205,7 +204,7 @@ def test_sign_file_adhoc_identity(dummy_command, tmp_path):
 
 
 def test_sign_file_entitlements(dummy_command, tmp_path):
-    "Entitlements can be included in a signing call"
+    """Entitlements can be included in a signing call."""
     # Sign the file with an adhoc identity
     dummy_command.sign_file(
         tmp_path / "random.file",
@@ -223,7 +222,7 @@ def test_sign_file_entitlements(dummy_command, tmp_path):
 
 
 def test_sign_file_deep_sign(dummy_command, tmp_path, capsys):
-    "A file can be identified as needing a deep sign"
+    """A file can be identified as needing a deep sign."""
     # First call raises the deep sign warning; second call succeeds
     dummy_command.subprocess.run.side_effect = mock_codesign(
         [" code object is not signed at all", None]
@@ -250,7 +249,7 @@ def test_sign_file_deep_sign(dummy_command, tmp_path, capsys):
 
 
 def test_sign_file_deep_sign_failure(dummy_command, tmp_path, capsys):
-    "If deep signing fails, an error is raised"
+    """If deep signing fails, an error is raised."""
     # First invocation raises the deep sign error; second invocation raises some other error
     dummy_command.subprocess.run.side_effect = mock_codesign(
         [
@@ -278,7 +277,8 @@ def test_sign_file_deep_sign_failure(dummy_command, tmp_path, capsys):
 
 
 def test_sign_file_unsupported_format(dummy_command, tmp_path, capsys):
-    "If codesign reports an unsupported format, the signing attempt is ignored with a warning"
+    """If codesign reports an unsupported format, the signing attempt is
+    ignored with a warning."""
     # FIXME: I'm not sure how to manufacture this in practice.
     dummy_command.subprocess.run.side_effect = mock_codesign(
         "unsupported format for signature"
@@ -302,7 +302,8 @@ def test_sign_file_unsupported_format(dummy_command, tmp_path, capsys):
 
 
 def test_sign_file_unknown_bundle_format(dummy_command, tmp_path, capsys):
-    "If a folder happens to have a .framework extension, the signing attempt is ignored with a warning"
+    """If a folder happens to have a .framework extension, the signing attempt
+    is ignored with a warning."""
     # Raise an error caused by an unknown bundle format during codesign
     dummy_command.subprocess.run.side_effect = mock_codesign(
         "bundle format unrecognized, invalid, or unsuitable"
@@ -326,7 +327,7 @@ def test_sign_file_unknown_bundle_format(dummy_command, tmp_path, capsys):
 
 
 def test_sign_file_unknown_error(dummy_command, tmp_path):
-    "Any other codesigning error raises an error"
+    """Any other codesigning error raises an error."""
     # Raise an unknown error during codesign
     dummy_command.subprocess.run.side_effect = mock_codesign("Unknown error")
 
@@ -345,7 +346,7 @@ def test_sign_file_unknown_error(dummy_command, tmp_path):
 
 
 def test_sign_app(dummy_command, first_app_with_binaries, tmp_path):
-    "An app bundle can be signed"
+    """An app bundle can be signed."""
     # Sign the app
     dummy_command.sign_app(
         first_app_with_binaries, identity="Sekrit identity (DEADBEEF)"

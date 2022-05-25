@@ -34,6 +34,6 @@ import pytest
     ],
 )
 def test_make_class_name(new_command, formal_name, candidate):
-    "A formal name can be converted into a valid class name."
+    """A formal name can be converted into a valid class name."""
     class_name = new_command.make_class_name(formal_name)
     assert class_name == candidate

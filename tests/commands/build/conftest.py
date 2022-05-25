@@ -6,8 +6,8 @@ from briefcase.config import AppConfig
 
 
 class DummyBuildCommand(BuildCommand):
-    """
-    A dummy build command that doesn't actually do anything.
+    """A dummy build command that doesn't actually do anything.
+
     It only serves to track which actions would be performend.
     """
 

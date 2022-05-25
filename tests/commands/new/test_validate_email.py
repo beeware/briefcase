@@ -8,7 +8,7 @@ import pytest
     ],
 )
 def test_valid_email(new_command, email):
-    "Test that valid email addresses are accepted"
+    """Test that valid email addresses are accepted."""
     assert new_command.validate_email(email)
 
 
@@ -19,6 +19,6 @@ def test_valid_email(new_command, email):
     ],
 )
 def test_invalid_email(new_command, email):
-    "Test that invalid email addresses are rejected"
+    """Test that invalid email addresses are rejected."""
     with pytest.raises(ValueError):
         new_command.validate_email(email)

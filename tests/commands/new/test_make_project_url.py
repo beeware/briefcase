@@ -10,7 +10,7 @@ import pytest
     ],
 )
 def test_make_project_url(new_command, app_name, bundle, candidate):
-    "An app name and bundle can be converted into a valid URL."
+    """An app name and bundle can be converted into a valid URL."""
     url = new_command.make_project_url(bundle, app_name)
     assert url == candidate
     # Double check - the app name passes the validity check.

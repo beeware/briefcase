@@ -7,7 +7,8 @@ from briefcase.commands.create import DependencyInstallError
 
 
 def create_installation_artefacts(app_packages_path, packages):
-    """Utility method for generating a function that will mock installation artefacts.
+    """Utility method for generating a function that will mock installation
+    artefacts.
 
     Creates a function that when invoked, creates a dummy ``__init__.py``
     and ``__main__.py`` for each package named in ``packages``.
@@ -29,7 +30,7 @@ def create_installation_artefacts(app_packages_path, packages):
 
 
 def test_no_requires(create_command, myapp, app_packages_path):
-    "If an app has no requirements, install_app_dependencies is a no-op."
+    """If an app has no requirements, install_app_dependencies is a no-op."""
     myapp.requires = None
 
     create_command.install_app_dependencies(myapp)
@@ -39,7 +40,8 @@ def test_no_requires(create_command, myapp, app_packages_path):
 
 
 def test_empty_requires(create_command, myapp, app_packages_path):
-    "If an app has an empty requirements list, install_app_dependencies is a no-op."
+    """If an app has an empty requirements list, install_app_dependencies is a
+    no-op."""
     myapp.requires = []
 
     create_command.install_app_dependencies(myapp)
@@ -49,7 +51,7 @@ def test_empty_requires(create_command, myapp, app_packages_path):
 
 
 def test_valid_requires(create_command, myapp, app_packages_path):
-    "If an app has an valid list of requirements, pip is invoked."
+    """If an app has an valid list of requirements, pip is invoked."""
     myapp.requires = ["first", "second", "third"]
 
     create_command.install_app_dependencies(myapp)
@@ -73,7 +75,7 @@ def test_valid_requires(create_command, myapp, app_packages_path):
 
 
 def test_invalid_requires(create_command, myapp, app_packages_path):
-    "If an app has an valid list of requirements, pip is invoked."
+    """If an app has an valid list of requirements, pip is invoked."""
     myapp.requires = ["does-not-exist"]
 
     # Unfortunately, no way to tell the difference between "offline" and
@@ -103,7 +105,7 @@ def test_invalid_requires(create_command, myapp, app_packages_path):
 
 
 def test_offline(create_command, myapp, app_packages_path):
-    "If user is offline, pip fails."
+    """If user is offline, pip fails."""
     myapp.requires = ["first", "second", "third"]
 
     # Unfortunately, no way to tell the difference between "offline" and
@@ -135,7 +137,7 @@ def test_offline(create_command, myapp, app_packages_path):
 
 
 def test_install_dependencies(create_command, myapp, app_packages_path):
-    "Dependencies can be installed."
+    """Dependencies can be installed."""
 
     # Set up the app requirements
     myapp.requires = ["first", "second", "third"]
@@ -175,7 +177,8 @@ def test_install_dependencies(create_command, myapp, app_packages_path):
 
 
 def test_replace_existing_dependencies(create_command, myapp, app_packages_path):
-    "If the app has already had dependencies installed, they are removed first."
+    """If the app has already had dependencies installed, they are removed
+    first."""
     # Create some existing dependencies
     create_installation_artefacts(app_packages_path, ["old", "ancient"])()
 

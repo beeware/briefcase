@@ -5,7 +5,7 @@ from briefcase.exceptions import BriefcaseConfigError
 
 
 def test_minimal_AppConfig():
-    "A simple config can be defined"
+    """A simple config can be defined."""
     config = AppConfig(
         app_name="myapp",
         version="1.2.3",
@@ -37,7 +37,7 @@ def test_minimal_AppConfig():
 
 
 def test_extra_attrs():
-    "A config can contain attributes in addition to those required"
+    """A config can contain attributes in addition to those required."""
     config = AppConfig(
         app_name="myapp",
         formal_name="My App",

@@ -65,8 +65,7 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
         )
 
     def select_target_device(self, udid_or_device=None):
-        """
-        Select the target device to use for iOS builds.
+        """Select the target device to use for iOS builds.
 
         Interrogates the system to get the list of available simulators
 
@@ -204,8 +203,7 @@ class iOSXcodeBuildCommand(iOSXcodeMixin, BuildCommand):
     description = "Build an iOS Xcode project."
 
     def build_app(self, app: BaseConfig, udid=None, **kwargs):
-        """
-        Build the Xcode project for the application.
+        """Build the Xcode project for the application.
 
         :param app: The application to build
         :param udid: The device UDID to target. If ``None``, the user will
@@ -265,8 +263,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         self.sleep = time.sleep
 
     def run_app(self, app: BaseConfig, udid=None, **kwargs):
-        """
-        Start the application.
+        """Start the application.
 
         :param app: The config object for the app
         :param udid: The device UDID to target. If ``None``, the user will

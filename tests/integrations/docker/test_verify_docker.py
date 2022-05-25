@@ -21,7 +21,7 @@ def test_command(tmp_path):
 
 
 def test_docker_exists(test_command, capsys):
-    "If docker exists, the Docker wrapper is returned."
+    """If docker exists, the Docker wrapper is returned."""
     # Mock the return value of Docker Version
     test_command.subprocess.check_output.return_value = (
         "Docker version 19.03.8, build afacb8b\n"
@@ -51,7 +51,7 @@ def test_docker_exists(test_command, capsys):
 
 
 def test_docker_doesnt_exist(test_command):
-    "If docker doesn't exist, an error is raised."
+    """If docker doesn't exist, an error is raised."""
     # Mock the return value of Docker Version
     test_command.subprocess.check_output.side_effect = FileNotFoundError
 
@@ -67,7 +67,8 @@ def test_docker_doesnt_exist(test_command):
 
 
 def test_docker_failure(test_command, capsys):
-    "If docker failed during execution, the Docker wrapper is returned with a warning"
+    """If docker failed during execution, the Docker wrapper is returned with a
+    warning."""
     # Mock the return value of Docker Version
     test_command.subprocess.check_output.side_effect = [
         subprocess.CalledProcessError(
@@ -101,7 +102,8 @@ def test_docker_failure(test_command, capsys):
 
 
 def test_docker_bad_version(test_command, capsys):
-    "If docker exists but the version string doesn't make sense, the Docker wrapper is returned with a warning."
+    """If docker exists but the version string doesn't make sense, the Docker
+    wrapper is returned with a warning."""
     # Mock a bad return value of `docker --version`
     test_command.subprocess.check_output.return_value = "Docker version 17.2\n"
 
@@ -113,7 +115,8 @@ def test_docker_bad_version(test_command, capsys):
 
 
 def test_docker_unknown_version(test_command, capsys):
-    "If docker exists but the version string doesn't make sense, the Docker wrapper is returned with a warning."
+    """If docker exists but the version string doesn't make sense, the Docker
+    wrapper is returned with a warning."""
     # Mock a bad return value of `docker --version`
     test_command.subprocess.check_output.return_value = "ceci nest pas un Docker\n"
 
@@ -141,7 +144,7 @@ def test_docker_unknown_version(test_command, capsys):
 
 
 def test_docker_exists_but_process_lacks_permission_to_use_it(test_command):
-    "If the docker daemon isn't running, the check fails."
+    """If the docker daemon isn't running, the check fails."""
     message1 = """
 Client:
  Debug Mode: false
@@ -185,7 +188,7 @@ docker_not_running_error_messages = [
 
 @pytest.mark.parametrize("error_message", docker_not_running_error_messages)
 def test_docker_exists_but_is_not_running(error_message, test_command):
-    "If the docker daemon isn't running, the check fails."
+    """If the docker daemon isn't running, the check fails."""
     test_command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
         returncode=1,
         cmd="docker info",
@@ -198,7 +201,7 @@ def test_docker_exists_but_is_not_running(error_message, test_command):
 
 
 def test_docker_exists_but_unknown_error_when_running_command(test_command):
-    "If docker info fails in unknown ways, the check fails."
+    """If docker info fails in unknown ways, the check fails."""
     test_command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
         returncode=1,
         cmd="docker info",

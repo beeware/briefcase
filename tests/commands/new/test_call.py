@@ -6,7 +6,7 @@ from briefcase.exceptions import BriefcaseCommandError
 
 
 def test_no_git(new_command):
-    "If Git is not installed, an error is raised"
+    """If Git is not installed, an error is raised."""
     # Mock a non-existent git
     integrations = mock.MagicMock()
     integrations.git.verify_git_is_installed.side_effect = BriefcaseCommandError(
@@ -22,7 +22,7 @@ def test_no_git(new_command):
 
 
 def test_new_app(new_command):
-    "A new application can be created."
+    """A new application can be created."""
 
     # Configure no command line options
     options = new_command.parse_options([])

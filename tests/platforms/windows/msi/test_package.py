@@ -15,7 +15,7 @@ def package_command(tmp_path):
 
 
 def test_package_msi(package_command, first_app_config, tmp_path):
-    "A Wwindows app can be packaged as an MSI"
+    """A Wwindows app can be packaged as an MSI."""
 
     package_command.package_app(first_app_config)
 

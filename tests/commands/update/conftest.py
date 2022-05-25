@@ -5,8 +5,8 @@ from briefcase.config import AppConfig
 
 
 class DummyUpdateCommand(UpdateCommand):
-    """
-    A dummy update command that doesn't actually do anything.
+    """A dummy update command that doesn't actually do anything.
+
     It only serves to track which actions would be performend.
     """
 
@@ -75,7 +75,7 @@ def update_command(tmp_path):
 
 @pytest.fixture
 def first_app(tmp_path):
-    "Populate skeleton app content for the first app"
+    """Populate skeleton app content for the first app."""
     bundle_dir = tmp_path / "tester" / "first.dummy"
     bundle_dir.mkdir(parents=True)
     with (bundle_dir / "Content").open("w") as f:
@@ -84,7 +84,7 @@ def first_app(tmp_path):
 
 @pytest.fixture
 def second_app(tmp_path):
-    "Populate skeleton app content for the second app"
+    """Populate skeleton app content for the second app."""
     bundle_dir = tmp_path / "tester" / "second.dummy"
     bundle_dir.mkdir(parents=True)
     with (bundle_dir / "Content").open("w") as f:

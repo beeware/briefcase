@@ -35,8 +35,7 @@ class LinuxDeploy:
 
     @classmethod
     def verify(cls, command, install=True):
-        """
-        Verify that LinuxDeploy is available.
+        """Verify that LinuxDeploy is available.
 
         :param command: The command that needs to use linuxdeploy
         :param install: Should the tool be installed if it is not found?
@@ -61,9 +60,7 @@ class LinuxDeploy:
         return True
 
     def install(self):
-        """
-        Download and install linuxdeploy.
-        """
+        """Download and install linuxdeploy."""
         try:
             linuxdeploy_appimage_path = self.command.download_url(
                 url=self.linuxdeploy_download_url, download_path=self.command.tools_path
@@ -74,9 +71,7 @@ class LinuxDeploy:
             raise NetworkFailure("downloading linuxdeploy AppImage") from e
 
     def upgrade(self):
-        """
-        Upgrade an existing linuxdeploy install.
-        """
+        """Upgrade an existing linuxdeploy install."""
         if self.exists():
             self.command.logger.info("Removing old LinuxDeploy install...")
             self.appimage_path.unlink()
@@ -87,8 +82,8 @@ class LinuxDeploy:
             raise MissingToolError("linuxdeploy")
 
     def patch_elf_header(self):
-        """
-        Patch the ELF header of the AppImage to ensure it's always executable.
+        """Patch the ELF header of the AppImage to ensure it's always
+        executable.
 
         This patch is necessary on Linux hosts that use AppImageLauncher.
         AppImages use a modified ELF binary header starting at offset 0x08

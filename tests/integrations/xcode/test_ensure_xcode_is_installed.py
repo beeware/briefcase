@@ -11,14 +11,14 @@ from briefcase.integrations.xcode import ensure_xcode_is_installed
 
 @pytest.fixture
 def xcode(tmp_path):
-    "Create a dummy location for Xcode"
+    """Create a dummy location for Xcode."""
     xcode_location = tmp_path / "Xcode.app"
     xcode_location.mkdir(parents=True, exist_ok=True)
     return os.fsdecode(xcode_location)
 
 
 def test_not_installed(tmp_path):
-    "If Xcode is not installed, raise an error."
+    """If Xcode is not installed, raise an error."""
     command = mock.MagicMock()
     command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
         cmd=["xcode-select", "-p"], returncode=2
@@ -30,7 +30,7 @@ def test_not_installed(tmp_path):
 
 
 def test_not_installed_hardcoded_path(tmp_path):
-    "If Xcode is not installed at the given location, raise an error."
+    """If Xcode is not installed at the given location, raise an error."""
     command = mock.MagicMock()
     command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
         cmd=["xcodebuild", "-version"], returncode=1
@@ -48,7 +48,8 @@ def test_not_installed_hardcoded_path(tmp_path):
 
 
 def test_exists_but_command_line_tools_selected(xcode):
-    "If the Xcode folder exists, but cmd-line tools are selected, raise an error."
+    """If the Xcode folder exists, but cmd-line tools are selected, raise an
+    error."""
     command = mock.MagicMock()
     command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
         cmd=["xcodebuild", "-version"], returncode=1
@@ -70,7 +71,7 @@ def test_exists_but_command_line_tools_selected(xcode):
 
 
 def test_exists_but_corrupted(xcode):
-    "If the Xcode folder exists, but xcodebuild breaks, raise an error."
+    """If the Xcode folder exists, but xcodebuild breaks, raise an error."""
     command = mock.MagicMock()
     command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
         cmd=["xcodebuild", "-version"], returncode=1
@@ -90,7 +91,8 @@ def test_exists_but_corrupted(xcode):
 
 
 def test_installed_no_minimum_version(xcode):
-    "If Xcode is installed, but there's no minimum version, check is satisfied."
+    """If Xcode is installed, but there's no minimum version, check is
+    satisfied."""
     command = mock.MagicMock()
     command.subprocess.check_output.return_value = (
         "Xcode 11.2.1\nBuild version 11B500\n"
@@ -107,7 +109,7 @@ def test_installed_no_minimum_version(xcode):
 
 
 def test_installed_extra_output(capsys, xcode):
-    "If Xcode but outputs extra content, the check is still satisfied."
+    """If Xcode but outputs extra content, the check is still satisfied."""
     # This specific output was seen in the wild with Xcode 13.2.1; see #668
     command = mock.MagicMock()
     command.logger = Log()
@@ -167,7 +169,7 @@ def test_installed_extra_output(capsys, xcode):
     ],
 )
 def test_installed_with_minimum_version_success(min_version, version, capsys, xcode):
-    "Check XCode can meet a minimum version requirement."
+    """Check XCode can meet a minimum version requirement."""
 
     def check_output_mock(cmd_list, *args, **kwargs):
 
@@ -220,7 +222,7 @@ def test_installed_with_minimum_version_success(min_version, version, capsys, xc
     ],
 )
 def test_installed_with_minimum_version_failure(min_version, version, xcode):
-    "Check XCode fail to meet a minimum version requirement."
+    """Check XCode fail to meet a minimum version requirement."""
     command = mock.MagicMock()
     command.subprocess.check_output.return_value = (
         f"Xcode {version}\nBuild version 11B500\n"
@@ -242,7 +244,7 @@ def test_installed_with_minimum_version_failure(min_version, version, xcode):
 
 
 def test_unexpected_version_output(capsys, xcode):
-    "If xcodebuild returns unexpected output, assume it's ok..."
+    """If xcodebuild returns unexpected output, assume it's ok..."""
     command = mock.MagicMock()
     command.logger = Log()
     command.subprocess.check_output.return_value = "Wibble Wibble Wibble\n"

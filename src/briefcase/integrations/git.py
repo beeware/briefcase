@@ -2,8 +2,7 @@ from briefcase.exceptions import BriefcaseCommandError
 
 
 def verify_git_is_installed(command):
-    """
-    Verify if git is installed.
+    """Verify if git is installed.
 
     Unfortunately, `import git` triggers a call on the operating system
     to run the git executable. On some platforms (notably macOS), the git

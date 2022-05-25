@@ -9,7 +9,7 @@ from briefcase.integrations.android_sdk import ADB
 
 
 def test_logcat(mock_sdk):
-    "Invoking `logcat()` calls `run()` with the appropriate parameters."
+    """Invoking `logcat()` calls `run()` with the appropriate parameters."""
     # Mock out the run command on an adb instance
     adb = ADB(mock_sdk, "exampleDevice")
 
@@ -34,7 +34,7 @@ def test_logcat(mock_sdk):
 
 
 def test_adb_failure(mock_sdk):
-    "If adb logcat fails, the error is caught."
+    """If adb logcat fails, the error is caught."""
     # Mock out the run command on an adb instance
     adb = ADB(mock_sdk, "exampleDevice")
     mock_sdk.command.subprocess.run = MagicMock(

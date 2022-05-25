@@ -21,21 +21,22 @@ def command():
 
 @pytest.fixture
 def simulator(tmp_path):
-    "Create a dummy location for the simulator"
+    """Create a dummy location for the simulator."""
     simulator_location = tmp_path / "CoreSimulator.framework"
     simulator_location.mkdir(parents=True, exist_ok=True)
     return os.fsdecode(simulator_location)
 
 
 def simctl_result(name):
-    """Load a simctl result file from the sample directory, and return the content"""
+    """Load a simctl result file from the sample directory, and return the
+    content."""
     filename = Path(__file__).parent / "simctl" / f"{name}.json"
     with filename.open(encoding="utf-8") as f:
         return f.read()
 
 
 def test_simulator_is_missing(command, tmp_path):
-    "If the simulator is not installed, a prompt is shown to the user"
+    """If the simulator is not installed, a prompt is shown to the user."""
     command.subprocess.check_output.return_value = simctl_result("no-runtimes")
 
     simulators = get_simulators(
@@ -52,7 +53,7 @@ def test_simulator_is_missing(command, tmp_path):
 
 
 def test_simctl_missing(command, simulator):
-    "If simctl is missing or fails to start, an exception is raised."
+    """If simctl is missing or fails to start, an exception is raised."""
     command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
         cmd=["xcrun", "simctl", "list", "-j"], returncode=1
     )
@@ -62,7 +63,7 @@ def test_simctl_missing(command, simulator):
 
 
 def test_simctl_output_parse_error(command, simulator):
-    "If parsing simctl JSON output fails, an exception is raised"
+    """If parsing simctl JSON output fails, an exception is raised."""
     command.subprocess.check_output.return_value = "this is not JSON"
 
     with pytest.raises(
@@ -72,7 +73,7 @@ def test_simctl_output_parse_error(command, simulator):
 
 
 def test_no_runtimes(command, simulator):
-    "If there are no runtimes available, no simulators will be found"
+    """If there are no runtimes available, no simulators will be found."""
     command.subprocess.check_output.return_value = simctl_result("no-runtimes")
 
     simulators = get_simulators(
@@ -88,7 +89,7 @@ def test_no_runtimes(command, simulator):
 
 
 def test_single_iOS_runtime(command, simulator):
-    "If an iOS version is installed, devices can be found"
+    """If an iOS version is installed, devices can be found."""
     command.subprocess.check_output.return_value = simctl_result("iOS-13.2-only")
 
     simulators = get_simulators(
@@ -117,7 +118,7 @@ def test_single_iOS_runtime(command, simulator):
 
 
 def test_watchOS_runtime(command, simulator):
-    "Runtimes other than iOS can be requested."
+    """Runtimes other than iOS can be requested."""
     command.subprocess.check_output.return_value = simctl_result("iOS-13.2-only")
 
     simulators = get_simulators(
@@ -140,7 +141,8 @@ def test_watchOS_runtime(command, simulator):
 
 
 def test_multiple_iOS_runtime(command, simulator):
-    "If multiple iOS versions are installed, this will be reflected in results"
+    """If multiple iOS versions are installed, this will be reflected in
+    results."""
     command.subprocess.check_output.return_value = simctl_result(
         "multiple-iOS-versions"
     )
@@ -189,7 +191,7 @@ def test_multiple_iOS_runtime(command, simulator):
 
 
 def test_unknown_runtime(command, simulator):
-    "If an unknown runtime is requested, no devices will be found"
+    """If an unknown runtime is requested, no devices will be found."""
     command.subprocess.check_output.return_value = simctl_result(
         "multiple-iOS-versions"
     )
@@ -207,7 +209,7 @@ def test_unknown_runtime(command, simulator):
 
 
 def test_alternate_format(command, simulator):
-    "The alternate format for device versions can be parsed"
+    """The alternate format for device versions can be parsed."""
     mock_input = mock.MagicMock()
 
     command.subprocess.check_output.return_value = simctl_result("alternate-format")

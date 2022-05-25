@@ -8,7 +8,7 @@ from briefcase.platforms.macOS.xcode import macOSXcodeBuildCommand
 
 
 def test_build_app(first_app_config, tmp_path):
-    "An macOS App can be built"
+    """An macOS App can be built."""
     command = macOSXcodeBuildCommand(base_path=tmp_path)
 
     command.subprocess = mock.MagicMock()
@@ -29,7 +29,7 @@ def test_build_app(first_app_config, tmp_path):
 
 
 def test_build_app_failed(first_app_config, tmp_path):
-    "If xcodebuild fails, an error is raised."
+    """If xcodebuild fails, an error is raised."""
     command = macOSXcodeBuildCommand(base_path=tmp_path)
 
     # The subprocess.run() call will raise an error

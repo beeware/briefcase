@@ -2,7 +2,7 @@ import pytest
 
 
 def test_parse_options(base_command):
-    "Command line options are parsed if provided"
+    """Command line options are parsed if provided."""
     options = base_command.parse_options(extra=("-x", "wibble", "-r", "important"))
 
     assert options == {
@@ -15,7 +15,7 @@ def test_parse_options(base_command):
 
 
 def test_missing_option(base_command, capsys):
-    "If a required option isn't provided, an error is raised"
+    """If a required option isn't provided, an error is raised."""
     with pytest.raises(SystemExit) as excinfo:
         base_command.parse_options(extra=("-x", "wibble"))
 
@@ -27,7 +27,7 @@ def test_missing_option(base_command, capsys):
 
 
 def test_unknown_option(other_command, capsys):
-    "If an unknown command is provided, it rasises an error"
+    """If an unknown command is provided, it rasises an error."""
     with pytest.raises(SystemExit) as excinfo:
         other_command.parse_options(extra=("-y", "because"))
 
@@ -39,7 +39,7 @@ def test_unknown_option(other_command, capsys):
 
 
 def test_no_options(other_command, capsys):
-    "If a command doesn't define options, any option is an error"
+    """If a command doesn't define options, any option is an error."""
     with pytest.raises(SystemExit) as excinfo:
         other_command.parse_options(extra=("-x", "wibble"))
 

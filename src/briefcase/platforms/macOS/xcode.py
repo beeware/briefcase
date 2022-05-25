@@ -72,8 +72,7 @@ class macOSXcodeBuildCommand(macOSXcodeMixin, BuildCommand):
     description = "Build a macOS Xcode project."
 
     def build_app(self, app: BaseConfig, **kwargs):
-        """
-        Build the Xcode project for the application.
+        """Build the Xcode project for the application.
 
         :param app: The application to build
         """

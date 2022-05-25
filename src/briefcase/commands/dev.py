@@ -26,15 +26,15 @@ class DevCommand(BaseCommand):
         }[sys.platform]
 
     def bundle_path(self, app):
-        "A placeholder; Dev command doesn't have a bundle path"
+        """A placeholder; Dev command doesn't have a bundle path."""
         raise NotImplementedError()
 
     def binary_path(self, app):
-        "A placeholder; Dev command doesn't have a binary path"
+        """A placeholder; Dev command doesn't have a binary path."""
         raise NotImplementedError()
 
     def distribution_path(self, app, packaging_format):
-        "A placeholder; Dev command doesn't have a distribution path"
+        """A placeholder; Dev command doesn't have a distribution path."""
         raise NotImplementedError()
 
     def add_options(self, parser):
@@ -54,8 +54,7 @@ class DevCommand(BaseCommand):
         )
 
     def install_dev_dependencies(self, app: BaseConfig, **options):
-        """
-        Install the dependencies for the app devly.
+        """Install the dependencies for the app devly.
 
         :param app: The config object for the app
         """
@@ -78,8 +77,7 @@ class DevCommand(BaseCommand):
             self.logger.info("No application dependencies.")
 
     def run_dev_app(self, app: BaseConfig, env: dict, **options):
-        """
-        Run the app in the dev environment.
+        """Run the app in the dev environment.
 
         :param app: The config object for the app
         :param env: environment dictionary for sub command
