@@ -9,7 +9,7 @@ from briefcase.exceptions import (
     BriefcaseCommandError,
     MissingToolError,
     NetworkFailure,
-    NonManagedToolError
+    NonManagedToolError,
 )
 from briefcase.integrations.wix import WIX_DOWNLOAD_URL, WiX
 from tests.utils import FsPathMock

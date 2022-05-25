@@ -5,11 +5,7 @@ from unittest.mock import MagicMock
 import pytest
 from requests import exceptions as requests_exceptions
 
-from briefcase.exceptions import (
-    BriefcaseCommandError,
-    MissingToolError,
-    NetworkFailure
-)
+from briefcase.exceptions import BriefcaseCommandError, MissingToolError, NetworkFailure
 from briefcase.integrations.wix import WIX_DOWNLOAD_URL, WiX
 from tests.utils import FsPathMock
 

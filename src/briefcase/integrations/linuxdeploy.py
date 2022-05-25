@@ -1,10 +1,6 @@
 from requests import exceptions as requests_exceptions
 
-from briefcase.exceptions import (
-    CorruptToolError,
-    MissingToolError,
-    NetworkFailure
-)
+from briefcase.exceptions import CorruptToolError, MissingToolError, NetworkFailure
 
 ELF_PATCH_OFFSET = 0x08
 ELF_PATCH_ORIGINAL_BYTES = bytes.fromhex("414902")

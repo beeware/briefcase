@@ -1,9 +1,6 @@
 import pytest
 
-from briefcase.integrations.subprocess import (
-    CommandOutputParseError,
-    ParseError
-)
+from briefcase.integrations.subprocess import CommandOutputParseError, ParseError
 
 
 def splitlines_parser(data):

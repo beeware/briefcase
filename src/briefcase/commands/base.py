@@ -26,7 +26,7 @@ from briefcase.exceptions import (
     BadNetworkResourceError,
     BriefcaseCommandError,
     BriefcaseConfigError,
-    MissingNetworkResourceError
+    MissingNetworkResourceError,
 )
 from briefcase.integrations.subprocess import Subprocess
 

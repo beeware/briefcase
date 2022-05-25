@@ -8,14 +8,14 @@ from briefcase.commands import (
     PackageCommand,
     PublishCommand,
     RunCommand,
-    UpdateCommand
+    UpdateCommand,
 )
 from briefcase.config import BaseConfig
 from briefcase.platforms.macOS import (
     macOSMixin,
     macOSPackageMixin,
     macOSRunMixin,
-    macOSSigningMixin
+    macOSSigningMixin,
 )
 
 

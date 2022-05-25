@@ -15,14 +15,14 @@ from briefcase.config import BaseConfig
 from briefcase.exceptions import (
     BriefcaseCommandError,
     MissingNetworkResourceError,
-    NetworkFailure
+    NetworkFailure,
 )
 
 from .base import (
     BaseCommand,
     TemplateUnsupportedVersion,
     UnsupportedPlatform,
-    full_options
+    full_options,
 )
 
 

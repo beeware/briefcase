@@ -10,7 +10,7 @@ from .exceptions import (
     InvalidFormatError,
     NoCommandError,
     ShowOutputFormats,
-    UnsupportedCommandError
+    UnsupportedCommandError,
 )
 
 

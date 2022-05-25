@@ -3,10 +3,7 @@ from unittest import mock
 import pytest
 from urllib3.response import HTTPHeaderDict
 
-from briefcase.exceptions import (
-    BadNetworkResourceError,
-    MissingNetworkResourceError
-)
+from briefcase.exceptions import BadNetworkResourceError, MissingNetworkResourceError
 
 
 @pytest.mark.parametrize(

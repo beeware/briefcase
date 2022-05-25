@@ -7,7 +7,7 @@ from briefcase.integrations.linuxdeploy import (
     ELF_PATCH_OFFSET,
     ELF_PATCH_ORIGINAL_BYTES,
     ELF_PATCH_PATCHED_BYTES,
-    LinuxDeploy
+    LinuxDeploy,
 )
 from tests.integrations.linuxdeploy.utils import create_mock_appimage
 

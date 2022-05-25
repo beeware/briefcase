@@ -4,10 +4,7 @@ import pytest
 
 from briefcase.console import Log
 from briefcase.exceptions import BriefcaseCommandError, InvalidDeviceError
-from briefcase.integrations.android_sdk import (
-    AndroidDeviceNotAuthorized,
-    AndroidSDK
-)
+from briefcase.integrations.android_sdk import AndroidDeviceNotAuthorized, AndroidSDK
 from tests.utils import DummyConsole
 
 

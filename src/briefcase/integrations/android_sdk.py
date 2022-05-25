@@ -13,7 +13,7 @@ from briefcase.exceptions import (
     BriefcaseCommandError,
     InvalidDeviceError,
     MissingToolError,
-    NetworkFailure
+    NetworkFailure,
 )
 from briefcase.integrations.java import JDK
 
