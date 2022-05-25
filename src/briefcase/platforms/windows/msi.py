@@ -78,10 +78,7 @@ class WindowsMSICreateCommand(WindowsMSIMixin, CreateCommand):
             self.logger.info(f"Assigning {app.app_name} an application GUID of {guid}")
 
         try:
-            if app.system_installer:
-                install_scope = "perMachine"
-            else:
-                install_scope = "perUser"
+            install_scope = "perMachine" if app.system_installer else "perUser"
         except AttributeError:
             # system_installer not defined in config; default to perUser install.
             install_scope = "perUser"
@@ -138,8 +135,8 @@ class WindowsMSIRunCommand(WindowsMSIMixin, RunCommand):
                 ],
                 check=True,
             )
-        except subprocess.CalledProcessError:
-            raise BriefcaseCommandError(f"Unable to start app {app.app_name}.")
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(f"Unable to start app {app.app_name}.") from e
 
 
 class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
@@ -176,8 +173,8 @@ class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
                 check=True,
                 cwd=self.bundle_path(app)
             )
-        except subprocess.CalledProcessError:
-            raise BriefcaseCommandError(f"Unable to generate manifest for app {app.app_name}.")
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(f"Unable to generate manifest for app {app.app_name}.") from e
 
         try:
             self.logger.info()
@@ -195,8 +192,8 @@ class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
                 check=True,
                 cwd=self.bundle_path(app)
             )
-        except subprocess.CalledProcessError:
-            raise BriefcaseCommandError(f"Unable to compile app {app.app_name}.")
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(f"Unable to compile app {app.app_name}.") from e
 
         try:
             self.logger.info()
@@ -214,8 +211,8 @@ class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
                 check=True,
                 cwd=self.bundle_path(app)
             )
-        except subprocess.CalledProcessError:
-            raise BriefcaseCommandError(f"Unable to link app {app.app_name}.")
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(f"Unable to link app {app.app_name}.") from e
 
 
 class WindowsMSIPublishCommand(WindowsMSIMixin, PublishCommand):

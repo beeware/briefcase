@@ -127,13 +127,13 @@ need to restart your terminal session.
             command.logger.warning(UNKNOWN_DOCKER_VERSION_WARNING)
     except subprocess.CalledProcessError:
         command.logger.warning(DOCKER_INSTALLATION_STATUS_UNKNOWN_WARNING)
-    except FileNotFoundError:
+    except FileNotFoundError as e:
         # Docker executable doesn't exist.
         raise BriefcaseCommandError(
             DOCKER_NOT_INSTALLED_ERROR.format(
                 **docker_install_details(command.host_os)
             )
-        )
+        ) from e
 
     # Check that docker commands can actually run.
     _verify_docker_can_run(command)
@@ -186,16 +186,16 @@ installation, and try again.
     except subprocess.CalledProcessError as e:
         failure_output = e.output
         if 'permission denied while trying to connect' in failure_output:
-            raise BriefcaseCommandError(LACKS_PERMISSION_ERROR)
+            raise BriefcaseCommandError(LACKS_PERMISSION_ERROR) from e
         elif (
-            # error message on Ubuntu
-            'Is the docker daemon running?' in failure_output
-            # error message on macOS
-            or 'connect: connection refused' in failure_output
+                # error message on Ubuntu
+                'Is the docker daemon running?' in failure_output
+                # error message on macOS
+                or 'connect: connection refused' in failure_output
         ):
-            raise BriefcaseCommandError(DAEMON_NOT_RUNNING_ERROR)
+            raise BriefcaseCommandError(DAEMON_NOT_RUNNING_ERROR) from e
         else:
-            raise BriefcaseCommandError(GENERIC_DOCKER_ERROR)
+            raise BriefcaseCommandError(GENERIC_DOCKER_ERROR) from e
 
 
 class Docker:
@@ -228,8 +228,10 @@ class Docker:
                 check=True,
             )
 
-        except subprocess.CalledProcessError:
-            raise BriefcaseCommandError(f"Error building Docker container for {self.app.app_name}.")
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(
+                f"Error building Docker container for {self.app.app_name}."
+            ) from e
 
     def run(self, args, env=None, **kwargs):
         "Run a process inside the Docker container"

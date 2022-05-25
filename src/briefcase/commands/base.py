@@ -56,7 +56,7 @@ dependencies (e.g., the GUI library) doesn't support {platform}.
 def create_config(klass, config, msg):
     try:
         return klass(**config)
-    except TypeError:
+    except TypeError as e:
         # Inspect the GlobalConfig constructor to find which
         # parameters are required and don't have a default value.
         required_args = {
@@ -67,7 +67,7 @@ def create_config(klass, config, msg):
         }
         missing_args = required_args - config.keys()
         missing = ', '.join(f"'{arg}'" for arg in sorted(missing_args))
-        raise BriefcaseConfigError(f"{msg} is incomplete (missing {missing})")
+        raise BriefcaseConfigError(f"{msg} is incomplete (missing {missing})") from e
 
 
 def cookiecutter_cache_path(template):
@@ -335,10 +335,10 @@ class BaseCommand(ABC):
                 raise BriefcaseCommandError(
                     f"Multiple paths in sources found for application '{app.app_name}'"
                 )
-        except IndexError:
+        except IndexError as e:
             raise BriefcaseCommandError(
                 f"Unable to find code for application '{app.app_name}'"
-            )
+            ) from e
 
         return path
 
@@ -455,8 +455,8 @@ class BaseCommand(ABC):
                         msg=f"Configuration for '{app_name}'"
                     )
 
-        except FileNotFoundError:
-            raise BriefcaseConfigError('configuration file not found')
+        except FileNotFoundError as e:
+            raise BriefcaseConfigError('configuration file not found') from e
 
     def download_url(self, url, download_path):
         """
@@ -563,9 +563,9 @@ class BaseCommand(ABC):
                         f"Using existing template (sha {head.commit.hexsha}, "
                         f"updated {head.commit.committed_datetime.strftime('%c')})")
                     head.checkout()
-                except IndexError:
+                except IndexError as e:
                     # No branch exists for the requested version.
-                    raise TemplateUnsupportedVersion(branch)
+                    raise TemplateUnsupportedVersion(branch) from e
             except self.git.exc.NoSuchPathError:
                 # Template cache path doesn't exist.
                 # Just use the template directly, rather than attempting an update.

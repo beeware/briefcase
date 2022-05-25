@@ -101,8 +101,8 @@ class macOSXcodeBuildCommand(macOSXcodeMixin, BuildCommand):
                 check=True,
             )
             self.logger.info('Build succeeded.')
-        except subprocess.CalledProcessError:
-            raise BriefcaseCommandError(f"Unable to build app {app.app_name}.")
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(f"Unable to build app {app.app_name}.") from e
 
 
 class macOSXcodeRunCommand(macOSRunMixin, macOSXcodeMixin, RunCommand):

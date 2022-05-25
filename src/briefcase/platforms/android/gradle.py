@@ -145,8 +145,8 @@ class GradleBuildCommand(GradleMixin, BuildCommand):
                 cwd=self.bundle_path(app),
                 check=True
             )
-        except subprocess.CalledProcessError:
-            raise BriefcaseCommandError("Error while building project.")
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError("Error while building project.") from e
 
 
 class GradleRunCommand(GradleMixin, RunCommand):
@@ -248,8 +248,8 @@ class GradlePackageCommand(GradleMixin, PackageCommand):
                 cwd=self.bundle_path(app),
                 check=True
             )
-        except subprocess.CalledProcessError:
-            raise BriefcaseCommandError("Error while building project.")
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError("Error while building project.") from e
 
 
 class GradlePublishCommand(GradleMixin, PublishCommand):

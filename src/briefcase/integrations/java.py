@@ -204,18 +204,17 @@ class JDK:
         if jdk.exists():
             # Using briefcase-managed Java version
             return jdk
+        if install:
+            # We only display the warning messages on the pass where we actually
+            # install the JDK.
+            if install_message:
+                command.logger.warning(install_message)
+
+            jdk.install()
+
+            return jdk
         else:
-            if install:
-                # We only display the warning messages on the pass where we actually
-                # install the JDK.
-                if install_message:
-                    command.logger.warning(install_message)
-
-                jdk.install()
-
-                return jdk
-            else:
-                raise MissingToolError('Java')
+            raise MissingToolError('Java')
 
     def exists(self):
         return (self.java_home / 'bin').exists()
@@ -240,8 +239,8 @@ class JDK:
                 url=self.adoptOpenJDK_download_url,
                 download_path=self.command.tools_path,
             )
-        except requests_exceptions.ConnectionError:
-            raise NetworkFailure("download Java 8 JDK")
+        except requests_exceptions.ConnectionError as e:
+            raise NetworkFailure("download Java 8 JDK") from e
 
         try:
             self.command.logger.info("Installing AdoptOpenJDK...")
@@ -250,13 +249,13 @@ class JDK:
                 os.fsdecode(jdk_zip_path),
                 extract_dir=os.fsdecode(self.command.tools_path)
             )
-        except (shutil.ReadError, EOFError):
+        except (shutil.ReadError, EOFError) as e:
             raise BriefcaseCommandError(f"""\
 Unable to unpack AdoptOpenJDK ZIP file. The download may have been interrupted
 or corrupted.
 
 Delete {jdk_zip_path} and run briefcase again.
-""")
+""") from e
 
         jdk_zip_path.unlink()  # Zip file no longer needed once unpacked.
 
@@ -270,17 +269,15 @@ Delete {jdk_zip_path} and run briefcase again.
         """
         Upgrade an existing JDK install.
         """
-        if self.managed_install:
-            if self.exists():
-                self.command.logger.info("Removing old JDK install...")
-                if self.command.host_os == 'Darwin':
-                    self.command.shutil.rmtree(self.java_home.parent.parent)
-                else:
-                    self.command.shutil.rmtree(self.java_home)
-
-                self.install()
-                self.command.logger.info("...done.")
-            else:
-                raise MissingToolError('Java')
-        else:
+        if not self.managed_install:
             raise NonManagedToolError('Java')
+        if not self.exists():
+            raise MissingToolError('Java')
+        self.command.logger.info("Removing old JDK install...")
+        if self.command.host_os == 'Darwin':
+            self.command.shutil.rmtree(self.java_home.parent.parent)
+        else:
+            self.command.shutil.rmtree(self.java_home)
+
+        self.install()
+        self.command.logger.info("...done.")

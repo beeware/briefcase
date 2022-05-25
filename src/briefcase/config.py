@@ -185,9 +185,7 @@ def is_reserved_keyword(app_name):
 
 
 def is_valid_app_name(app_name):
-    if not is_reserved_keyword(app_name) and is_valid_pep508_name(app_name):
-        return True
-    return False
+    return not is_reserved_keyword(app_name) and is_valid_pep508_name(app_name)
 
 
 VALID_BUNDLE_RE = re.compile(r'[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$')
@@ -251,11 +249,7 @@ def parsed_version(version):
 
     tag = groupdict.pop('pre_tag')
     value = groupdict.pop('pre_value')
-    if tag is not None:
-        groupdict['pre'] = (tag, value)
-    else:
-        groupdict['pre'] = None
-
+    groupdict['pre'] = (tag, value) if tag is not None else None
     return SimpleNamespace(**groupdict)
 
 
@@ -460,9 +454,9 @@ def parse_config(config_file, platform, output_format):
 
         global_config = pyproject['tool']['briefcase']
     except tomllib.TOMLDecodeError as e:
-        raise BriefcaseConfigError(f'Invalid pyproject.toml: {e}')
-    except KeyError:
-        raise BriefcaseConfigError('No tool.briefcase section in pyproject.toml')
+        raise BriefcaseConfigError(f'Invalid pyproject.toml: {e}') from e
+    except KeyError as e:
+        raise BriefcaseConfigError('No tool.briefcase section in pyproject.toml') from e
 
     # For consistent results, sort the platforms and formats
     all_platforms = sorted(get_platforms().keys())
@@ -470,8 +464,8 @@ def parse_config(config_file, platform, output_format):
 
     try:
         all_apps = global_config.pop('app')
-    except KeyError:
-        raise BriefcaseConfigError('No Briefcase apps defined in pyproject.toml')
+    except KeyError as e:
+        raise BriefcaseConfigError('No Briefcase apps defined in pyproject.toml') from e
 
     # Build the flat configuration for each app,
     # based on the requested platform and output format

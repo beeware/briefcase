@@ -75,9 +75,9 @@ class macOSRunMixin:
                 ],
                 check=True,
             )
-        except subprocess.CalledProcessError:
+        except subprocess.CalledProcessError as e:
             self.subprocess.cleanup("log stream", log_popen)
-            raise BriefcaseCommandError(f"Unable to start app {app.app_name}.")
+            raise BriefcaseCommandError(f"Unable to start app {app.app_name}.") from e
 
         # Start streaming logs for the app.
         self.logger.info()
@@ -135,13 +135,13 @@ class macOSSigningMixin:
             try:
                 # Try to look up the identity as a hex checksum
                 return identities[identity]
-            except KeyError:
+            except KeyError as e:
                 # Try to look up the identity as readable name
                 if identity in identities.values():
                     return identity
 
                 # Not found
-                raise BriefcaseCommandError(f"Invalid code signing identity {identity!r}")
+                raise BriefcaseCommandError(f"Invalid code signing identity {identity!r}") from e
 
         if len(identities) == 0:
             raise BriefcaseCommandError(
@@ -199,8 +199,8 @@ class macOSSigningMixin:
                         stderr=subprocess.PIPE,
                         check=True,
                     )
-                except subprocess.CalledProcessError:
-                    raise BriefcaseCommandError(f"Unable to deep code sign {path}.")
+                except subprocess.CalledProcessError as e:
+                    raise BriefcaseCommandError(f"Unable to deep code sign {path}.") from e
 
             elif any(
                 msg in errors

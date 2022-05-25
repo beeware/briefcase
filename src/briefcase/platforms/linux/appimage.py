@@ -67,12 +67,11 @@ class LinuxAppImageMixin(LinuxMixin):
                 raise BriefcaseCommandError("Linux AppImages cannot be generated on Windows.")
             else:
                 self.Docker = verify_docker(self)
+        elif self.host_os == 'Linux':
+            # Use subprocess natively. No Docker wrapper is needed
+            self.Docker = None
         else:
-            if self.host_os == 'Linux':
-                # Use subprocess natively. No Docker wrapper is needed
-                self.Docker = None
-            else:
-                raise BriefcaseCommandError("Linux AppImages can only be generated on Linux.")
+            raise BriefcaseCommandError("Linux AppImages can only be generated on Linux.")
 
     @contextmanager
     def dockerize(self, app):
@@ -193,8 +192,8 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
 
             # Make the binary executable.
             self.os.chmod(self.binary_path(app), 0o755)
-        except subprocess.CalledProcessError:
-            raise BriefcaseCommandError(f"Error while building app {app.app_name}.")
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(f"Error while building app {app.app_name}.") from e
 
 
 class LinuxAppImageRunCommand(LinuxAppImageMixin, RunCommand):
@@ -223,8 +222,8 @@ class LinuxAppImageRunCommand(LinuxAppImageMixin, RunCommand):
                 ],
                 check=True,
             )
-        except subprocess.CalledProcessError:
-            raise BriefcaseCommandError(f"Unable to start app {app.app_name}.")
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(f"Unable to start app {app.app_name}.") from e
 
 
 class LinuxAppImagePackageCommand(LinuxAppImageMixin, PackageCommand):

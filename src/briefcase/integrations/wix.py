@@ -129,8 +129,8 @@ WiX Toolset. Current value: {wix_home!r}
                 url=WIX_DOWNLOAD_URL,
                 download_path=self.command.tools_path,
             )
-        except requests_exceptions.ConnectionError:
-            raise NetworkFailure("download WiX")
+        except requests_exceptions.ConnectionError as e:
+            raise NetworkFailure("download WiX") from e
 
         try:
             self.command.logger.info("Installing WiX...")
@@ -139,13 +139,13 @@ WiX Toolset. Current value: {wix_home!r}
                 os.fsdecode(wix_zip_path),
                 extract_dir=os.fsdecode(self.wix_home)
             )
-        except (shutil.ReadError, EOFError):
+        except (shutil.ReadError, EOFError) as e:
             raise BriefcaseCommandError(f"""\
 Unable to unpack WiX ZIP file. The download may have been
 interrupted or corrupted.
 
 Delete {wix_zip_path} and run briefcase again.
-""")
+""") from e
 
         # Zip file no longer needed once unpacked.
         wix_zip_path.unlink()
@@ -154,14 +154,13 @@ Delete {wix_zip_path} and run briefcase again.
         """
         Upgrade an existing WiX install.
         """
-        if self.managed_install:
-            if self.exists():
-                self.command.logger.info("Removing old WiX install...")
-                self.command.shutil.rmtree(self.wix_home)
-
-                self.install()
-                self.command.logger.info("...done.")
-            else:
-                raise MissingToolError('WiX')
-        else:
+        if not self.managed_install:
             raise NonManagedToolError('WiX')
+        elif not self.exists():
+            raise MissingToolError('WiX')
+        else:
+            self.command.logger.info("Removing old WiX install...")
+            self.command.shutil.rmtree(self.wix_home)
+
+            self.install()
+            self.command.logger.info("...done.")

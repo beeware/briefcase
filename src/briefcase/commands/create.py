@@ -216,17 +216,11 @@ class CreateCommand(BaseCommand):
         #   without a size specification, return a dictionary with a single
         #   ``None`` key. Otherwise, return the full size-keyed dictionary.
         try:
-            document_type_icon_targets = {}
-            for extension, targets in path_index['document_type_icon'].items():
-                # Convert string-specified icons into an "unknown size" icon form
-                if isinstance(targets, str):
-                    document_type_icon_targets[extension] = {
-                        None: targets
-                    }
-                else:
-                    document_type_icon_targets[extension] = targets
+            return {
+                extension: {None: targets} if isinstance(targets, str) else targets
+                for extension, targets in path_index['document_type_icon'].items()
+            }
 
-            return document_type_icon_targets
         except KeyError:
             return {}
 
@@ -288,17 +282,17 @@ class CreateCommand(BaseCommand):
                 checkout=app.template_branch,
                 extra_context=extra_context
             )
-        except subprocess.CalledProcessError:
+        except subprocess.CalledProcessError as e:
             # Computer is offline
             # status code == 128 - certificate validation error.
-            raise NetworkFailure("clone template repository")
-        except cookiecutter_exceptions.RepositoryNotFound:
+            raise NetworkFailure("clone template repository") from e
+        except cookiecutter_exceptions.RepositoryNotFound as e:
             # Either the template path is invalid,
             # or it isn't a cookiecutter template (i.e., no cookiecutter.json)
-            raise InvalidTemplateRepository(app.template)
-        except cookiecutter_exceptions.RepositoryCloneFailed:
+            raise InvalidTemplateRepository(app.template) from e
+        except cookiecutter_exceptions.RepositoryCloneFailed as e:
             # Branch does not exist for python version
-            raise TemplateUnsupportedVersion(app.template_branch)
+            raise TemplateUnsupportedVersion(app.template_branch) from e
 
     def install_app_support_package(self, app: BaseConfig):
         """
@@ -327,9 +321,7 @@ class CreateCommand(BaseCommand):
                     # be because (a) url splits aren't appendable, and
                     # (b) Python 3.5 doesn't guarantee dictionary order.
                     url_parts = list(urlsplit(support_package_url))
-                    query = []
-                    for key, value in parse_qsl(url_parts[3]):
-                        query.append((key, value))
+                    query = list(parse_qsl(url_parts[3]))
                     query.append(('revision', app.support_revision))
                     url_parts[3] = urlencode(query)
                     support_package_url = urlunsplit(url_parts)
@@ -346,7 +338,7 @@ class CreateCommand(BaseCommand):
                 )
             else:
                 support_filename = Path(support_package_url)
-        except MissingNetworkResourceError:
+        except MissingNetworkResourceError as e:
             # If there is a custom support package, report the missing resource as-is.
             if custom_support_package:
                 raise
@@ -354,10 +346,10 @@ class CreateCommand(BaseCommand):
                 raise MissingSupportPackage(
                     python_version_tag=self.python_version_tag,
                     host_arch=self.host_arch,
-                )
-        except requests_exceptions.ConnectionError:
-            raise NetworkFailure('downloading support package')
+                ) from e
 
+        except requests_exceptions.ConnectionError as e:
+            raise NetworkFailure('downloading support package') from e
         try:
             self.logger.info("Unpacking support package...")
             support_path = self.support_path(app)
@@ -367,8 +359,8 @@ class CreateCommand(BaseCommand):
                 os.fsdecode(support_filename),
                 extract_dir=os.fsdecode(support_path)
             )
-        except (shutil.ReadError, EOFError):
-            raise InvalidSupportPackage(support_package_url)
+        except (shutil.ReadError, EOFError) as e:
+            raise InvalidSupportPackage(support_package_url) from e
 
     def install_app_dependencies(self, app: BaseConfig):
         """
@@ -397,8 +389,8 @@ class CreateCommand(BaseCommand):
                     ] + app.requires,
                     check=True,
                 )
-            except subprocess.CalledProcessError:
-                raise DependencyInstallError()
+            except subprocess.CalledProcessError as e:
+                raise DependencyInstallError() from e
         else:
             self.logger.info("No application dependencies.")
 

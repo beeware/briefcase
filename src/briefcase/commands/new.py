@@ -108,7 +108,7 @@ class NewCommand(BaseCommand):
         # If the first character isn't in the 'start' character set,
         # and it isn't already an underscore, prepend an underscore.
         if unicodedata.category(class_name[0]) not in xid_start and class_name[0] != '_':
-            class_name = '_' + class_name
+            class_name = f'_{class_name}'
 
         return class_name
 
@@ -160,8 +160,7 @@ class NewCommand(BaseCommand):
         :param app_name: The app name
         :returns: The app's module name.
         """
-        module_name = app_name.replace('-', '_')
-        return module_name
+        return app_name.replace('-', '_')
 
     def validate_bundle(self, candidate):
         """
@@ -281,8 +280,7 @@ class NewCommand(BaseCommand):
                 return answer
             except ValueError as e:
                 if not self.input.enabled:
-                    raise BriefcaseCommandError(str(e))
-
+                    raise BriefcaseCommandError(str(e)) from e
                 self.input.prompt()
                 self.input.prompt(f"Invalid value; {e}")
 
@@ -499,14 +497,14 @@ What GUI toolkit do you want to use for this project?""",
                 checkout="v0.3",
                 extra_context=context
             )
-        except subprocess.CalledProcessError:
+        except subprocess.CalledProcessError as e:
             # Computer is offline
             # status code == 128 - certificate validation error.
-            raise NetworkFailure("clone template repository")
-        except cookiecutter_exceptions.RepositoryNotFound:
+            raise NetworkFailure("clone template repository") from e
+        except cookiecutter_exceptions.RepositoryNotFound as e:
             # Either the template path is invalid,
             # or it isn't a cookiecutter template (i.e., no cookiecutter.json)
-            raise InvalidTemplateRepository(template)
+            raise InvalidTemplateRepository(template) from e
 
         self.logger.info(f"""
 Application '{context['formal_name']}' has been generated. To run your application, type:
@@ -531,5 +529,4 @@ Application '{context['formal_name']}' has been generated. To run your applicati
         # Confirm all required tools are available
         self.verify_tools()
 
-        state = self.new_app(template=template, **options)
-        return state
+        return self.new_app(template=template, **options)
