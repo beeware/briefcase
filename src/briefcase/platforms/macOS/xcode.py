@@ -6,23 +6,19 @@ from briefcase.commands import (
     PackageCommand,
     PublishCommand,
     RunCommand,
-    UpdateCommand
+    UpdateCommand,
 )
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.xcode import verify_xcode_install
-from briefcase.platforms.macOS import (
-    macOSMixin,
-    macOSPackageMixin,
-    macOSRunMixin
-)
+from briefcase.platforms.macOS import macOSMixin, macOSPackageMixin, macOSRunMixin
 
 
 class macOSXcodeMixin(macOSMixin):
-    output_format = 'Xcode'
+    output_format = "Xcode"
 
     def verify_tools(self):
-        if self.host_os != 'Darwin':
+        if self.host_os != "Darwin":
             raise BriefcaseCommandError(
                 "macOS applications require the Xcode command line tools, "
                 "which are only available on macOS."
@@ -40,22 +36,23 @@ class macOSXcodeMixin(macOSMixin):
         return (
             self.platform_path
             / self.output_format
-            / f'{app.formal_name}'
-            / 'build' / 'Release'
-            / f'{app.formal_name}.app'
+            / f"{app.formal_name}"
+            / "build"
+            / "Release"
+            / f"{app.formal_name}.app"
         )
 
     def distribution_path(self, app, packaging_format):
-        if packaging_format == 'dmg':
-            return self.platform_path / f'{app.formal_name}-{app.version}.dmg'
+        if packaging_format == "dmg":
+            return self.platform_path / f"{app.formal_name}-{app.version}.dmg"
         else:
             return self.binary_path(app)
 
     def entitlements_path(self, app):
         return (
-                self.bundle_path(app)
-                / f'{app.formal_name}'
-                / f'{app.app_name}.entitlements'
+            self.bundle_path(app)
+            / f"{app.formal_name}"
+            / f"{app.app_name}.entitlements"
         )
 
 
@@ -78,7 +75,7 @@ class macOSXcodeBuildCommand(macOSXcodeMixin, BuildCommand):
         """
 
         self.logger.info()
-        self.logger.info(f'[{app.app_name}] Building XCode project...')
+        self.logger.info(f"[{app.app_name}] Building XCode project...")
 
         # build_settings = [
         #     ('AD_HOC_CODE_SIGNING_ALLOWED', 'YES'),
@@ -92,15 +89,17 @@ class macOSXcodeBuildCommand(macOSXcodeMixin, BuildCommand):
         try:
             self.subprocess.run(
                 [
-                    'xcodebuild',  # ' '.join(build_settings_str),
-                    '-project', self.bundle_path(app) / f'{app.formal_name}.xcodeproj',
-                    '-quiet',
-                    '-configuration', 'Release',
-                    'build'
+                    "xcodebuild",  # ' '.join(build_settings_str),
+                    "-project",
+                    self.bundle_path(app) / f"{app.formal_name}.xcodeproj",
+                    "-quiet",
+                    "-configuration",
+                    "Release",
+                    "build",
                 ],
                 check=True,
             )
-            self.logger.info('Build succeeded.')
+            self.logger.info("Build succeeded.")
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(f"Unable to build app {app.app_name}.") from e
 

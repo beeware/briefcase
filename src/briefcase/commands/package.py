@@ -6,7 +6,7 @@ from .base import BaseCommand, full_options
 
 
 class PackageCommand(BaseCommand):
-    command = 'package'
+    command = "package"
 
     @property
     def packaging_formats(self):
@@ -25,11 +25,7 @@ class PackageCommand(BaseCommand):
         # Default implementation; nothing to do.
 
     def _package_app(
-        self,
-        app: BaseConfig,
-        update: bool,
-        packaging_format: str,
-        **options
+        self, app: BaseConfig, update: bool, packaging_format: str, **options
     ):
         """
         Internal method to invoke packaging on a single app.
@@ -55,56 +51,50 @@ class PackageCommand(BaseCommand):
             state = None
 
         state = self.package_app(
-            app,
-            packaging_format=packaging_format,
-            **full_options(state, options)
+            app, packaging_format=packaging_format, **full_options(state, options)
         )
 
-        filename = self.distribution_path(app, packaging_format=packaging_format).relative_to(self.base_path)
+        filename = self.distribution_path(
+            app, packaging_format=packaging_format
+        ).relative_to(self.base_path)
         self.logger.info()
         self.logger.info(f"[{app.app_name}] Packaged {filename}")
         return state
 
     def add_options(self, parser):
         parser.add_argument(
-            '-u',
-            '--update',
-            action="store_true",
-            help='Update the app before building'
+            "-u", "--update", action="store_true", help="Update the app before building"
         )
         parser.add_argument(
-            '-p',
-            '--packaging-format',
-            dest='packaging_format',
-            help='Packaging format to use.',
+            "-p",
+            "--packaging-format",
+            dest="packaging_format",
+            help="Packaging format to use.",
             default=self.default_packaging_format,
             choices=self.packaging_formats,
         )
         parser.add_argument(
-            '--no-sign',
-            dest='sign_app',
-            help='Disable code signing of the app.',
-            action='store_false',
+            "--no-sign",
+            dest="sign_app",
+            help="Disable code signing of the app.",
+            action="store_false",
         )
         parser.add_argument(
-            '--adhoc-sign',
-            help='Sign the app with adhoc identity.',
-            action='store_true',
+            "--adhoc-sign",
+            help="Sign the app with adhoc identity.",
+            action="store_true",
         )
         parser.add_argument(
-            '-i',
-            '--identity',
-            dest='identity',
-            help='The code signing identity to use; either the 40-digit hex '
-                 'checksum, or the full name of the identity.',
+            "-i",
+            "--identity",
+            dest="identity",
+            help="The code signing identity to use; either the 40-digit hex "
+            "checksum, or the full name of the identity.",
             required=False,
         )
 
     def __call__(
-        self,
-        app: Optional[BaseConfig] = None,
-        update: bool = False,
-        **options
+        self, app: Optional[BaseConfig] = None, update: bool = False, **options
     ):
         # Confirm all required tools are available
         self.verify_tools()
@@ -115,9 +105,7 @@ class PackageCommand(BaseCommand):
             state = None
             for app_name, app in sorted(self.apps.items()):
                 state = self._package_app(
-                    app,
-                    update=update,
-                    **full_options(state, options)
+                    app, update=update, **full_options(state, options)
                 )
 
         return state

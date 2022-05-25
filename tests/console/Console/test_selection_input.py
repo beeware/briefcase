@@ -6,12 +6,13 @@ from briefcase.console import InputDisabled
 
 
 @pytest.mark.parametrize(
-    "value, expected, default, transform", [
+    "value, expected, default, transform",
+    [
         ("A", "A", None, None),
         ("C", "C", None, None),
         ("", "D", "D", None),
         ("c", "C", None, str.upper),
-    ]
+    ],
 )
 def test_selection_input(console, value, expected, default, transform):
     prompt = "> "
@@ -51,9 +52,7 @@ def test_disabled(disabled_console):
     options = ["A", "B", "C", "D", "E", "F"]
 
     actual = disabled_console.selection_input(
-        prompt=prompt,
-        choices=options,
-        default="C"
+        prompt=prompt, choices=options, default="C"
     )
 
     assert actual == "C"

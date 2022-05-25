@@ -1,4 +1,3 @@
-
 def test_build_image(mock_sub):
     "Building an image is a no-op"
 

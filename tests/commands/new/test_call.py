@@ -16,8 +16,7 @@ def test_no_git(new_command):
 
     # The command will fail tool verification.
     with pytest.raises(
-        BriefcaseCommandError,
-        match=r"Briefcase requires git, but it is not installed"
+        BriefcaseCommandError, match=r"Briefcase requires git, but it is not installed"
     ):
         new_command()
 
@@ -34,8 +33,7 @@ def test_new_app(new_command):
     # The right sequence of things will be done
     assert new_command.actions == [
         # Tools are verified
-        ('verify', ),
-
+        ("verify",),
         # Run the first app
-        ('new', {'template': None}),
+        ("new", {"template": None}),
     ]

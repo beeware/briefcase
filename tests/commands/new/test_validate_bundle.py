@@ -2,13 +2,13 @@ import pytest
 
 
 @pytest.mark.parametrize(
-    'bundle',
+    "bundle",
     [
-        'com.example',
-        'com.example.more',
-        'com.example42.more',
-        'com.example-42.more',
-    ]
+        "com.example",
+        "com.example.more",
+        "com.example42.more",
+        "com.example-42.more",
+    ],
 )
 def test_valid_bundle(new_command, bundle):
     "Test that valid bundles are accepted"
@@ -16,15 +16,15 @@ def test_valid_bundle(new_command, bundle):
 
 
 @pytest.mark.parametrize(
-    'bundle',
+    "bundle",
     [
-        'not a bundle!',  # Free text.
-        'home',  # Only one section.
-        'com.hello_world',  # underscore
-        'com.hello,world',  # comma
-        'com.hello world!',  # exclamation point
-        'com.pass.example',  # Reserved word
-    ]
+        "not a bundle!",  # Free text.
+        "home",  # Only one section.
+        "com.hello_world",  # underscore
+        "com.hello,world",  # comma
+        "com.hello world!",  # exclamation point
+        "com.pass.example",  # Reserved word
+    ],
 )
 def test_invalid_bundle(new_command, bundle):
     "Test that invalid bundles are rejected"

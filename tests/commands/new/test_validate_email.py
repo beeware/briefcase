@@ -2,10 +2,10 @@ import pytest
 
 
 @pytest.mark.parametrize(
-    'email',
+    "email",
     [
-        'foo@example.com',
-    ]
+        "foo@example.com",
+    ],
 )
 def test_valid_email(new_command, email):
     "Test that valid email addresses are accepted"
@@ -13,10 +13,10 @@ def test_valid_email(new_command, email):
 
 
 @pytest.mark.parametrize(
-    'email',
+    "email",
     [
-        'not a email address!',  # Free text.
-    ]
+        "not a email address!",  # Free text.
+    ],
 )
 def test_invalid_email(new_command, email):
     "Test that invalid email addresses are rejected"

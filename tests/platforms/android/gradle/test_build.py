@@ -21,7 +21,8 @@ def build_command(tmp_path, first_app_config):
 
 
 @pytest.mark.parametrize(
-    "host_os,gradlew_name", [("Windows", "gradlew.bat"), ("NonWindows", "gradlew")],
+    "host_os,gradlew_name",
+    [("Windows", "gradlew.bat"), ("NonWindows", "gradlew")],
 )
 def test_execute_gradle(build_command, first_app_config, host_os, gradlew_name):
     """Validate that build_app() will launch `gradlew assembleDebug` with the
@@ -49,7 +50,8 @@ def test_print_gradle_errors(build_command, first_app_config):
     into exception text."""
     # Create a mock subprocess that crashes, printing text partly in non-ASCII.
     build_command.subprocess.run.side_effect = CalledProcessError(
-        returncode=1, cmd=["ignored"],
+        returncode=1,
+        cmd=["ignored"],
     )
     with pytest.raises(BriefcaseCommandError):
         build_command.build_app(first_app_config)

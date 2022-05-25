@@ -1,14 +1,14 @@
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.xcode import verify_xcode_install
 
-DEFAULT_OUTPUT_FORMAT = 'xcode'
+DEFAULT_OUTPUT_FORMAT = "xcode"
 
 
 class iOSMixin:
-    platform = 'iOS'
+    platform = "iOS"
 
     def verify_tools(self):
-        if self.host_os != 'Darwin':
+        if self.host_os != "Darwin":
             raise BriefcaseCommandError(
                 "iOS applications require Xcode, which is only available on macOS."
             )

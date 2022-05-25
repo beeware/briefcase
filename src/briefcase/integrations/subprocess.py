@@ -31,6 +31,7 @@ class Subprocess:
     A wrapper around subprocess that can be used as a logging point for
     commands that are executed.
     """
+
     def __init__(self, command):
         self.command = command
         self._subprocess = subprocess
@@ -68,30 +69,30 @@ class Subprocess:
         # environment, with the values in `env` overriding the local
         # environment.
         try:
-            overrides = kwargs.pop('env')
-            kwargs['env'] = self.full_env(overrides)
+            overrides = kwargs.pop("env")
+            kwargs["env"] = self.full_env(overrides)
         except KeyError:
             # No explicit environment provided.
             pass
 
         # If `cwd` has been provided, ensure it is in string form.
         try:
-            cwd = kwargs.pop('cwd')
-            kwargs['cwd'] = str(cwd)
+            cwd = kwargs.pop("cwd")
+            kwargs["cwd"] = str(cwd)
         except KeyError:
             pass
 
         # if `text` or backwards-compatible `universal_newlines` are
         # not provided, then default `text` to True so all output is
         # returned as strings instead of bytes.
-        if 'text' not in kwargs and 'universal_newlines' not in kwargs:
-            kwargs['text'] = True
+        if "text" not in kwargs and "universal_newlines" not in kwargs:
+            kwargs["text"] = True
 
         # For Windows, convert start_new_session=True to creation flags
-        if self.command.host_os == 'Windows':
+        if self.command.host_os == "Windows":
             try:
-                if kwargs.pop('start_new_session') is True:
-                    if 'creationflags' in kwargs:
+                if kwargs.pop("start_new_session") is True:
+                    if "creationflags" in kwargs:
                         raise AssertionError(
                             "Subprocess called with creationflags set and start_new_session=True.\n"
                             "This will result in CREATE_NEW_PROCESS_GROUP and CREATE_NO_WINDOW being "
@@ -106,9 +107,14 @@ class Subprocess:
                     #     of DETACHED_PROCESS since the new process can spawn a new console
                     #     itself (in the absence of one being available) but that console
                     #     creation will also spawn a visible console window.
-                    new_session_flags = self._subprocess.CREATE_NEW_PROCESS_GROUP | self._subprocess.CREATE_NO_WINDOW
+                    new_session_flags = (
+                        self._subprocess.CREATE_NEW_PROCESS_GROUP
+                        | self._subprocess.CREATE_NO_WINDOW
+                    )
                     # merge these flags in to any existing flags already provided
-                    kwargs['creationflags'] = kwargs.get('creationflags', 0) | new_session_flags
+                    kwargs["creationflags"] = (
+                        kwargs.get("creationflags", 0) | new_session_flags
+                    )
             except KeyError:
                 pass
 
@@ -134,10 +140,7 @@ class Subprocess:
 
         try:
             command_result = self._subprocess.run(
-                [
-                    str(arg) for arg in args
-                ],
-                **self.final_kwargs(**kwargs)
+                [str(arg) for arg in args], **self.final_kwargs(**kwargs)
             )
         except subprocess.CalledProcessError as e:
             self._log_return_code(e.returncode)
@@ -163,10 +166,7 @@ class Subprocess:
 
         try:
             cmd_output = self._subprocess.check_output(
-                [
-                    str(arg) for arg in args
-                ],
-                **self.final_kwargs(**kwargs)
+                [str(arg) for arg in args], **self.final_kwargs(**kwargs)
             )
         except subprocess.CalledProcessError as e:
             self._log_output(e.output, e.stderr)
@@ -199,12 +199,17 @@ class Subprocess:
         try:
             return output_parser(cmd_output)
         except ParseError as e:
-            error_reason = str(e) or f"Failed to parse command output using '{output_parser.__name__}'"
+            error_reason = (
+                str(e)
+                or f"Failed to parse command output using '{output_parser.__name__}'"
+            )
             self.command.logger.error()
             self.command.logger.error("Command Output Parsing Error:")
             self.command.logger.error(f"    {error_reason}")
             self.command.logger.error("Command:")
-            self.command.logger.error(f"    {' '.join(shlex.quote(str(arg)) for arg in args)}")
+            self.command.logger.error(
+                f"    {' '.join(shlex.quote(str(arg)) for arg in args)}"
+            )
             self.command.logger.error("Command Output:")
             for line in ensure_str(cmd_output).splitlines():
                 self.command.logger.error(f"    {line}")
@@ -226,10 +231,7 @@ class Subprocess:
         self._log_environment(kwargs.get("env"))
 
         return self._subprocess.Popen(
-            [
-                str(arg) for arg in args
-            ],
-            **self.final_kwargs(**kwargs)
+            [str(arg) for arg in args], **self.final_kwargs(**kwargs)
         )
 
     def stream_output(self, label, popen_process):
@@ -285,7 +287,9 @@ class Subprocess:
         """
         self.command.logger.debug()
         self.command.logger.debug("Running Command:")
-        self.command.logger.debug(f"    {' '.join(shlex.quote(str(arg)) for arg in args)}")
+        self.command.logger.debug(
+            f"    {' '.join(shlex.quote(str(arg)) for arg in args)}"
+        )
 
     def _log_environment(self, overrides):
         """

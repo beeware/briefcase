@@ -4,7 +4,8 @@ from briefcase.console import InputDisabled
 
 
 @pytest.mark.parametrize(
-    "user_input, expected", [
+    "user_input, expected",
+    [
         ("y", True),
         ("Y", True),
         ("yes", True),
@@ -13,14 +14,13 @@ from briefcase.console import InputDisabled
         ("YeS", True),
         ("Yay", True),
         ("Yaaaas!", True),
-
         ("n", False),
         ("N", False),
         ("No", False),
         ("NO", False),
         ("Nay", False),
         ("never!", False),
-    ]
+    ],
 )
 def test_boolean_input(console, user_input, expected):
     question = "Are you handsome"
@@ -60,7 +60,7 @@ def test_boolean_default_false(console):
 def test_boolean_default_None(console):
     "If no default is specified, no response is not accepted"
     question = "Are you handsome"
-    console._input.side_effect = ["", 'y']
+    console._input.side_effect = ["", "y"]
 
     result = console.boolean_input(question=question, default=None)
 

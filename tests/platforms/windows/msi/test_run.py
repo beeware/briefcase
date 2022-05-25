@@ -16,10 +16,19 @@ def test_run_app(first_app_config, tmp_path):
 
     command.subprocess.run.assert_called_with(
         [
-            os.fsdecode(tmp_path / 'windows' / 'msi' / 'First App' / 'src' / 'python' / 'pythonw.exe'),
-            "-m", "first_app"
+            os.fsdecode(
+                tmp_path
+                / "windows"
+                / "msi"
+                / "First App"
+                / "src"
+                / "python"
+                / "pythonw.exe"
+            ),
+            "-m",
+            "first_app",
         ],
-        check=True
+        check=True,
     )
 
 
@@ -27,7 +36,7 @@ def test_run_app_failed(first_app_config, tmp_path):
     "If there's a problem started the app, an exception is raised"
     command = WindowsMSIRunCommand(base_path=tmp_path)
     command.subprocess = mock.MagicMock()
-    command.subprocess.run.side_effect = BriefcaseCommandError('problem')
+    command.subprocess.run.side_effect = BriefcaseCommandError("problem")
 
     with pytest.raises(BriefcaseCommandError):
         command.run_app(first_app_config)
@@ -35,8 +44,17 @@ def test_run_app_failed(first_app_config, tmp_path):
     # The run command was still invoked, though
     command.subprocess.run.assert_called_with(
         [
-            os.fsdecode(tmp_path / 'windows' / 'msi' / 'First App' / 'src' / 'python' / 'pythonw.exe'),
-            "-m", "first_app"
+            os.fsdecode(
+                tmp_path
+                / "windows"
+                / "msi"
+                / "First App"
+                / "src"
+                / "python"
+                / "pythonw.exe"
+            ),
+            "-m",
+            "first_app",
         ],
-        check=True
+        check=True,
     )

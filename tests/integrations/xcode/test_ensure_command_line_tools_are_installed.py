@@ -5,9 +5,7 @@ import pytest
 
 from briefcase.console import Log
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.integrations.xcode import (
-    ensure_command_line_tools_are_installed
-)
+from briefcase.integrations.xcode import ensure_command_line_tools_are_installed
 
 
 def test_not_installed():
@@ -19,7 +17,7 @@ def test_not_installed():
 
     # xcode-select was invoked
     command.subprocess.check_output.assert_called_once_with(
-        ['xcode-select', '--install'],
+        ["xcode-select", "--install"],
         stderr=subprocess.STDOUT,
     )
 
@@ -29,8 +27,7 @@ def test_installed(capsys):
     command = mock.MagicMock()
     command.logger = Log()
     command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
-        cmd=['xcode-select', '--install'],
-        returncode=1
+        cmd=["xcode-select", "--install"], returncode=1
     )
 
     # Check passes without an error...
@@ -38,7 +35,7 @@ def test_installed(capsys):
 
     # ... xcode-select was invoked
     command.subprocess.check_output.assert_called_once_with(
-        ['xcode-select', '--install'],
+        ["xcode-select", "--install"],
         stderr=subprocess.STDOUT,
     )
 
@@ -52,8 +49,7 @@ def test_unsure_if_installed(capsys):
     command = mock.MagicMock()
     command.logger = Log()
     command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
-        cmd=['xcode-select', '--install'],
-        returncode=69
+        cmd=["xcode-select", "--install"], returncode=69
     )
 
     # Check passes without an error...
@@ -61,10 +57,10 @@ def test_unsure_if_installed(capsys):
 
     # ... xcode-select was invoked
     command.subprocess.check_output.assert_called_once_with(
-        ['xcode-select', '--install'],
+        ["xcode-select", "--install"],
         stderr=subprocess.STDOUT,
     )
 
     # ...but stdout contains a warning
     out = capsys.readouterr().out
-    assert '************' in out
+    assert "************" in out

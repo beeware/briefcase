@@ -1,32 +1,28 @@
 from requests import exceptions as requests_exceptions
 
-from briefcase.exceptions import (
-    CorruptToolError,
-    MissingToolError,
-    NetworkFailure
-)
+from briefcase.exceptions import CorruptToolError, MissingToolError, NetworkFailure
 
 ELF_PATCH_OFFSET = 0x08
-ELF_PATCH_ORIGINAL_BYTES = bytes.fromhex('414902')
-ELF_PATCH_PATCHED_BYTES = bytes.fromhex('000000')
+ELF_PATCH_ORIGINAL_BYTES = bytes.fromhex("414902")
+ELF_PATCH_PATCHED_BYTES = bytes.fromhex("000000")
 
 
 class LinuxDeploy:
-    name = 'linuxdeploy'
-    full_name = 'linuxdeploy'
+    name = "linuxdeploy"
+    full_name = "linuxdeploy"
 
     def __init__(self, command):
         self.command = command
 
     @property
     def appimage_name(self):
-        return f'linuxdeploy-{self.command.host_arch}.AppImage'
+        return f"linuxdeploy-{self.command.host_arch}.AppImage"
 
     @property
     def linuxdeploy_download_url(self):
         return (
-            'https://github.com/linuxdeploy/linuxdeploy/'
-            f'releases/download/continuous/{self.appimage_name}'
+            "https://github.com/linuxdeploy/linuxdeploy/"
+            f"releases/download/continuous/{self.appimage_name}"
         )
 
     @property
@@ -49,7 +45,7 @@ class LinuxDeploy:
             if install:
                 linuxdeploy.install()
             else:
-                raise MissingToolError('linuxdeploy')
+                raise MissingToolError("linuxdeploy")
 
         return LinuxDeploy(command)
 
@@ -66,13 +62,12 @@ class LinuxDeploy:
         """
         try:
             linuxdeploy_appimage_path = self.command.download_url(
-                url=self.linuxdeploy_download_url,
-                download_path=self.command.tools_path
+                url=self.linuxdeploy_download_url, download_path=self.command.tools_path
             )
             self.command.os.chmod(linuxdeploy_appimage_path, 0o755)
             self.patch_elf_header()
         except requests_exceptions.ConnectionError as e:
-            raise NetworkFailure('downloading linuxdeploy AppImage') from e
+            raise NetworkFailure("downloading linuxdeploy AppImage") from e
 
     def upgrade(self):
         """
@@ -85,7 +80,7 @@ class LinuxDeploy:
             self.install()
             self.command.logger.info("...done.")
         else:
-            raise MissingToolError('linuxdeploy')
+            raise MissingToolError("linuxdeploy")
 
     def patch_elf_header(self):
         """
@@ -107,7 +102,7 @@ class LinuxDeploy:
 
         if not self.exists():
             raise MissingToolError("linuxdeploy")
-        with open(self.appimage_path, 'r+b') as appimage:
+        with open(self.appimage_path, "r+b") as appimage:
             appimage.seek(ELF_PATCH_OFFSET)
             # Check if the header at the offset is the original value
             # If so, patch it.
@@ -118,8 +113,12 @@ class LinuxDeploy:
                 appimage.seek(0)
                 self.command.logger.info("Patched ELF header of linuxdeploy AppImage.")
             # Else if the header is the patched value, do nothing.
-            elif appimage.read(len(ELF_PATCH_ORIGINAL_BYTES)) == ELF_PATCH_PATCHED_BYTES:
-                self.command.logger.info("ELF header of linuxdeploy AppImage is already patched.")
+            elif (
+                appimage.read(len(ELF_PATCH_ORIGINAL_BYTES)) == ELF_PATCH_PATCHED_BYTES
+            ):
+                self.command.logger.info(
+                    "ELF header of linuxdeploy AppImage is already patched."
+                )
             else:
                 # We should only get here if the file at the AppImage patch doesn't have
                 # The original or patched value. If this is the case, the file is likely

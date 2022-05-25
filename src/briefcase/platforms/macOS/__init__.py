@@ -8,7 +8,7 @@ from briefcase.console import select_option
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.xcode import (
     get_identities,
-    verify_command_line_tools_install
+    verify_command_line_tools_install,
 )
 
 try:
@@ -19,11 +19,11 @@ except ImportError:
     dmgbuild = None
 
 
-DEFAULT_OUTPUT_FORMAT = 'app'
+DEFAULT_OUTPUT_FORMAT = "app"
 
 
 class macOSMixin:
-    platform = 'macOS'
+    platform = "macOS"
 
 
 class macOSRunMixin:
@@ -45,12 +45,15 @@ class macOSRunMixin:
         #  2. a log sender of libffi, and a process that matches the app binary.
         # Case (1) works for pre-Python 3.9 static linked binaries.
         # Case (2) works for Python 3.9+ dynamic linked binaries.
-        sender = os.fsdecode(self.binary_path(app) / "Contents" / "MacOS" / app.formal_name)
+        sender = os.fsdecode(
+            self.binary_path(app) / "Contents" / "MacOS" / app.formal_name
+        )
         log_popen = self.subprocess.Popen(
             [
                 "log",
                 "stream",
-                "--style", "compact",
+                "--style",
+                "compact",
                 "--predicate",
                 f'senderImagePath=="{sender}"'
                 f' OR (processImagePath=="{sender}"'
@@ -65,12 +68,12 @@ class macOSRunMixin:
         time.sleep(0.25)
 
         self.logger.info()
-        self.logger.info(f'[{app.app_name}] Starting app...')
+        self.logger.info(f"[{app.app_name}] Starting app...")
         try:
             self.subprocess.run(
                 [
-                    'open',
-                    '-n',  # Force a new app to be launched
+                    "open",
+                    "-n",  # Force a new app to be launched
                     os.fsdecode(self.binary_path(app)),
                 ],
                 check=True,
@@ -81,7 +84,9 @@ class macOSRunMixin:
 
         # Start streaming logs for the app.
         self.logger.info()
-        self.logger.info(f"[{app.app_name}] Following system log output (type CTRL-C to stop log)...")
+        self.logger.info(
+            f"[{app.app_name}] Following system log output (type CTRL-C to stop log)..."
+        )
         self.logger.info("=" * 75)
         self.subprocess.stream_output("log stream", log_popen)
 
@@ -93,17 +98,17 @@ def is_mach_o_binary(path):
     :returns: True if the file at the given location is a Mach-O binary.
     """
     # A binary is any file that is executable, or has a suffix from a known list
-    if os.access(path, os.X_OK) or path.suffix.lower() in {'.dylib', '.o', '.so', ''}:
+    if os.access(path, os.X_OK) or path.suffix.lower() in {".dylib", ".o", ".so", ""}:
         # File is a binary; read the file magic to determine if it's Mach-O.
-        with path.open('rb') as f:
+        with path.open("rb") as f:
             magic = f.read(4)
             return magic in (
-                b'\xCA\xFE\xBA\xBE',
-                b'\xCF\xFA\xED\xFE',
-                b'\xCE\xFA\xED\xFE',
-                b'\xBE\xBA\xFE\xCA',
-                b'\xFE\xED\xFA\xCF',
-                b'\xFE\xED\xFA\xCE',
+                b"\xCA\xFE\xBA\xBE",
+                b"\xCF\xFA\xED\xFE",
+                b"\xCE\xFA\xED\xFE",
+                b"\xBE\xBA\xFE\xCA",
+                b"\xFE\xED\xFA\xCF",
+                b"\xFE\xED\xFA\xCE",
             )
     else:
         # Not a binary
@@ -129,7 +134,7 @@ class macOSSigningMixin:
         :returns: The final identity to use
         """
         # Obtain the valid codesigning identities.
-        identities = self.get_identities(self, 'codesigning')
+        identities = self.get_identities(self, "codesigning")
 
         if identity:
             try:
@@ -141,12 +146,12 @@ class macOSSigningMixin:
                     return identity
 
                 # Not found
-                raise BriefcaseCommandError(f"Invalid code signing identity {identity!r}") from e
+                raise BriefcaseCommandError(
+                    f"Invalid code signing identity {identity!r}"
+                ) from e
 
         if len(identities) == 0:
-            raise BriefcaseCommandError(
-                "No code signing identities are available."
-            )
+            raise BriefcaseCommandError("No code signing identities are available.")
         elif len(identities) == 1:
             identity = list(identities.items())[0][1]
         else:
@@ -168,18 +173,19 @@ class macOSSigningMixin:
             hex checksum, or the string name of the identity.
         :param entitlements: The path to the entitlements file to use.
         """
-        options = 'runtime' if identity != '-' else None
+        options = "runtime" if identity != "-" else None
         process_command = [
-            'codesign',
+            "codesign",
             os.fsdecode(path),
-            '--sign', identity,
-            '--force',
+            "--sign",
+            identity,
+            "--force",
         ]
         if entitlements:
-            process_command.append('--entitlements')
+            process_command.append("--entitlements")
             process_command.append(os.fsdecode(entitlements))
         if options:
-            process_command.append('--options')
+            process_command.append("--options")
             process_command.append(options)
 
         try:
@@ -191,26 +197,27 @@ class macOSSigningMixin:
             )
         except subprocess.CalledProcessError as e:
             errors = e.stderr
-            if 'code object is not signed at all' in errors:
+            if "code object is not signed at all" in errors:
                 self.logger.info("... file requires a deep sign; retrying")
                 try:
                     self.subprocess.run(
-                        process_command + ['--deep'],
+                        process_command + ["--deep"],
                         stderr=subprocess.PIPE,
                         check=True,
                     )
                 except subprocess.CalledProcessError as e:
-                    raise BriefcaseCommandError(f"Unable to deep code sign {path}.") from e
+                    raise BriefcaseCommandError(
+                        f"Unable to deep code sign {path}."
+                    ) from e
 
             elif any(
                 msg in errors
                 for msg in [
                     # File has a signature matching the Mach-O magic,
                     # but isn't actually a Mach-O binary
-                    'unsupported format for signature',
-
+                    "unsupported format for signature",
                     # A folder named ``.framework`, but not actually a macOS Framework`
-                    'bundle format unrecognized, invalid, or unsuitable',
+                    "bundle format unrecognized, invalid, or unsuitable",
                 ]
             ):
                 # We should not be signing this in the first place
@@ -226,20 +233,20 @@ class macOSSigningMixin:
         :param identity: The signing identity to use
         """
         bundle_path = self.binary_path(app)
-        resources_path = bundle_path / 'Contents' / 'Resources'
+        resources_path = bundle_path / "Contents" / "Resources"
 
         # Sign all Mach-O executable objects
         sign_targets = [
             path
-            for path in resources_path.rglob('*')
+            for path in resources_path.rglob("*")
             if not path.is_dir() and is_mach_o_binary(path)
         ]
 
         # Sign all embedded frameworks
-        sign_targets.extend(resources_path.rglob('*.framework'))
+        sign_targets.extend(resources_path.rglob("*.framework"))
 
         # Sign all embedded app objets
-        sign_targets.extend(resources_path.rglob('*.app'))
+        sign_targets.extend(resources_path.rglob("*.app"))
 
         # Sign the bundle path itself
         sign_targets.append(bundle_path)
@@ -257,14 +264,14 @@ class macOSSigningMixin:
 class macOSPackageMixin(macOSSigningMixin):
     @property
     def packaging_formats(self):
-        return ['app', 'dmg']
+        return ["app", "dmg"]
 
     @property
     def default_packaging_format(self):
-        return 'dmg'
+        return "dmg"
 
     def verify_tools(self):
-        if self.host_os != 'Darwin':
+        if self.host_os != "Darwin":
             raise BriefcaseCommandError(
                 "Code signing and / or building a DMG requires running on macOS."
             )
@@ -289,8 +296,8 @@ class macOSPackageMixin(macOSSigningMixin):
         sign_app=True,
         identity=None,
         adhoc_sign=False,
-        packaging_format='dmg',
-        **kwargs
+        packaging_format="dmg",
+        **kwargs,
     ):
         """
         Package an app bundle.
@@ -314,60 +321,70 @@ class macOSPackageMixin(macOSSigningMixin):
                 identity = self.select_identity(identity=identity)
 
                 self.logger.info()
-                self.logger.info(f"[{app.app_name}] Signing app with identity {identity}...")
+                self.logger.info(
+                    f"[{app.app_name}] Signing app with identity {identity}..."
+                )
 
             self.sign_app(app=app, identity=identity)
 
-        if packaging_format == 'dmg':
+        if packaging_format == "dmg":
             self.logger.info()
-            self.logger.info(f'[{app.app_name}] Building DMG...')
+            self.logger.info(f"[{app.app_name}] Building DMG...")
 
             dmg_settings = {
-                'files': [os.fsdecode(self.binary_path(app))],
-                'symlinks': {'Applications': '/Applications'},
-                'icon_locations': {
-                    f'{app.formal_name}.app': (75, 75),
-                    'Applications': (225, 75),
+                "files": [os.fsdecode(self.binary_path(app))],
+                "symlinks": {"Applications": "/Applications"},
+                "icon_locations": {
+                    f"{app.formal_name}.app": (75, 75),
+                    "Applications": (225, 75),
                 },
-                'window_rect': ((600, 600), (350, 150)),
-                'icon_size': 64,
-                'text_size': 12,
+                "window_rect": ((600, 600), (350, 150)),
+                "icon_size": 64,
+                "text_size": 12,
             }
 
             try:
-                icon_filename = self.base_path / f'{app.installer_icon}.icns'
+                icon_filename = self.base_path / f"{app.installer_icon}.icns"
                 if not icon_filename.exists():
-                    self.logger.warning(f"Can't find {app.installer_icon}.icns to use as DMG installer icon")
+                    self.logger.warning(
+                        f"Can't find {app.installer_icon}.icns to use as DMG installer icon"
+                    )
                     raise AttributeError()
             except AttributeError:
                 # No installer icon specified. Fall back to the app icon
                 if app.icon:
-                    icon_filename = self.base_path / f'{app.icon}.icns'
+                    icon_filename = self.base_path / f"{app.icon}.icns"
                     if not icon_filename.exists():
-                        self.logger.warning(f"Can't find {app.icon}.icns to use as fallback DMG installer icon")
+                        self.logger.warning(
+                            f"Can't find {app.icon}.icns to use as fallback DMG installer icon"
+                        )
                         icon_filename = None
                 else:
                     # No app icon specified either
                     icon_filename = None
 
             if icon_filename:
-                dmg_settings['icon'] = os.fsdecode(icon_filename)
+                dmg_settings["icon"] = os.fsdecode(icon_filename)
 
             try:
-                image_filename = self.base_path / f'{app.installer_background}.png'
+                image_filename = self.base_path / f"{app.installer_background}.png"
                 if image_filename.exists():
-                    dmg_settings['background'] = os.fsdecode(image_filename)
+                    dmg_settings["background"] = os.fsdecode(image_filename)
                 else:
-                    self.logger.warning(f"Can't find {app.installer_background}.png to use as DMG background")
+                    self.logger.warning(
+                        f"Can't find {app.installer_background}.png to use as DMG background"
+                    )
             except AttributeError:
                 # No installer background image provided
                 pass
 
-            dmg_path = os.fsdecode(self.distribution_path(app, packaging_format=packaging_format))
+            dmg_path = os.fsdecode(
+                self.distribution_path(app, packaging_format=packaging_format)
+            )
             self.dmgbuild.build_dmg(
                 filename=dmg_path,
-                volume_name=f'{app.formal_name} {app.version}',
-                settings=dmg_settings
+                volume_name=f"{app.formal_name} {app.version}",
+                settings=dmg_settings,
             )
 
             if sign_app:

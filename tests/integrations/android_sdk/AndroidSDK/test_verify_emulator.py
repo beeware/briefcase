@@ -36,7 +36,7 @@ def test_succeeds_immediately_if_emulator_installed_with_debug(mock_sdk, tmp_pat
     mock_sdk.command.subprocess.run.assert_called_once_with(
         [os.fsdecode(mock_sdk.sdkmanager_path), "--list_installed"],
         env={
-            "ANDROID_SDK_ROOT": os.fsdecode(tmp_path / 'sdk'),
+            "ANDROID_SDK_ROOT": os.fsdecode(tmp_path / "sdk"),
             "JAVA_HOME": os.fsdecode(Path("/path/to/jdk")),
         },
         check=True,
@@ -50,7 +50,7 @@ def test_succeeds_immediately_if_emulator_installed_with_debug(mock_sdk, tmp_pat
         ("Darwin", "arm64", "arm64-v8a"),
         ("Windows", "x86_64", "x86_64"),
         ("Linux", "x86_64", "x86_64"),
-    ]
+    ],
 )
 def test_installs_android_emulator(mock_sdk, host_os, host_arch, emulator_abi):
     "The emulator tools will be installed if needed"
@@ -77,7 +77,7 @@ def test_installs_android_emulator(mock_sdk, host_os, host_arch, emulator_abi):
     [
         ("Windows", "arm64"),
         ("Linux", "arm64"),
-    ]
+    ],
 )
 def test_unsupported_emulator_platform(mock_sdk, host_os, host_arch):
     "If the platform isn't supported by the Android emulator, an error is raised"
@@ -87,7 +87,7 @@ def test_unsupported_emulator_platform(mock_sdk, host_os, host_arch):
 
     with pytest.raises(
         BriefcaseCommandError,
-        match=f"The Android emulator does not currently support {host_os} {host_arch} hardware"
+        match=f"The Android emulator does not currently support {host_os} {host_arch} hardware",
     ):
         mock_sdk.verify_emulator()
 

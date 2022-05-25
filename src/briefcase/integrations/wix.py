@@ -8,15 +8,15 @@ from briefcase.exceptions import (
     BriefcaseCommandError,
     MissingToolError,
     NetworkFailure,
-    NonManagedToolError
+    NonManagedToolError,
 )
 
 WIX_DOWNLOAD_URL = "https://github.com/wixtoolset/wix3/releases/download/wix3112rtm/wix311-binaries.zip"
 
 
 class WiX:
-    name = 'wix'
-    full_name = 'WiX'
+    name = "wix"
+    full_name = "WiX"
 
     def __init__(self, command, wix_home=None, bin_install=False):
         """
@@ -32,29 +32,29 @@ class WiX:
         if wix_home:
             self.wix_home = wix_home
         else:
-            self.wix_home = command.tools_path / 'wix'
+            self.wix_home = command.tools_path / "wix"
         self.bin_install = bin_install
 
     @property
     def heat_exe(self):
         if self.bin_install:
-            return self.wix_home / 'heat.exe'
+            return self.wix_home / "heat.exe"
         else:
-            return self.wix_home / 'bin' / 'heat.exe'
+            return self.wix_home / "bin" / "heat.exe"
 
     @property
     def light_exe(self):
         if self.bin_install:
-            return self.wix_home / 'light.exe'
+            return self.wix_home / "light.exe"
         else:
-            return self.wix_home / 'bin' / 'light.exe'
+            return self.wix_home / "bin" / "light.exe"
 
     @property
     def candle_exe(self):
         if self.bin_install:
-            return self.wix_home / 'candle.exe'
+            return self.wix_home / "candle.exe"
         else:
-            return self.wix_home / 'bin' / 'candle.exe'
+            return self.wix_home / "bin" / "candle.exe"
 
     @classmethod
     def verify(cls, command, install=True):
@@ -72,7 +72,7 @@ class WiX:
         :returns: A valid WiX SDK wrapper. If WiX is not available, and was
             not installed, raises MissingToolError.
         """
-        if command.host_os != 'Windows':
+        if command.host_os != "Windows":
             raise BriefcaseCommandError(
                 "A Windows MSI installer can only be created on Windows."
             )
@@ -86,10 +86,12 @@ class WiX:
             wix = WiX(command=command, wix_home=wix_home)
 
             if not wix.exists():
-                raise BriefcaseCommandError(f"""\
+                raise BriefcaseCommandError(
+                    f"""\
 The WIX environment variable does not point to an install of the
 WiX Toolset. Current value: {wix_home!r}
-""")
+"""
+                )
 
         else:
             wix = WiX(command=command, bin_install=True)
@@ -98,7 +100,7 @@ WiX Toolset. Current value: {wix_home!r}
                 if install:
                     wix.install()
                 else:
-                    raise MissingToolError('WiX')
+                    raise MissingToolError("WiX")
 
         return wix
 
@@ -136,16 +138,17 @@ WiX Toolset. Current value: {wix_home!r}
             self.command.logger.info("Installing WiX...")
             # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
             self.command.shutil.unpack_archive(
-                os.fsdecode(wix_zip_path),
-                extract_dir=os.fsdecode(self.wix_home)
+                os.fsdecode(wix_zip_path), extract_dir=os.fsdecode(self.wix_home)
             )
         except (shutil.ReadError, EOFError) as e:
-            raise BriefcaseCommandError(f"""\
+            raise BriefcaseCommandError(
+                f"""\
 Unable to unpack WiX ZIP file. The download may have been
 interrupted or corrupted.
 
 Delete {wix_zip_path} and run briefcase again.
-""") from e
+"""
+            ) from e
 
         # Zip file no longer needed once unpacked.
         wix_zip_path.unlink()
@@ -155,9 +158,9 @@ Delete {wix_zip_path} and run briefcase again.
         Upgrade an existing WiX install.
         """
         if not self.managed_install:
-            raise NonManagedToolError('WiX')
+            raise NonManagedToolError("WiX")
         elif not self.exists():
-            raise MissingToolError('WiX')
+            raise MissingToolError("WiX")
         else:
             self.command.logger.info("Removing old WiX install...")
             self.command.shutil.rmtree(self.wix_home)

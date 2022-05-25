@@ -27,24 +27,43 @@ def titlecase(s):
     :param s: The input string
     :returns: A capitalized string.
     """
-    return ' '.join(
-        word if (
+    return " ".join(
+        word
+        if (
             word.isupper()
-            or word in {
-                'a', 'an', 'and', 'as', 'at', 'but', 'by', 'en', 'for',
-                'if', 'in', 'of', 'on', 'or', 'the', 'to', 'via', 'vs'
+            or word
+            in {
+                "a",
+                "an",
+                "and",
+                "as",
+                "at",
+                "but",
+                "by",
+                "en",
+                "for",
+                "if",
+                "in",
+                "of",
+                "on",
+                "or",
+                "the",
+                "to",
+                "via",
+                "vs",
             }
-        ) else word.capitalize()
-        for word in s.split(' ')
+        )
+        else word.capitalize()
+        for word in s.split(" ")
     )
 
 
 class NewCommand(BaseCommand):
-    cmd_line = 'briefcase new'
-    command = 'new'
-    platform = 'all'
+    cmd_line = "briefcase new"
+    command = "new"
+    platform = "all"
     output_format = None
-    description = 'Create a new briefcase project'
+    description = "Create a new briefcase project"
 
     def bundle_path(self, app):
         "A placeholder; New command doesn't have a bundle path"
@@ -67,10 +86,10 @@ class NewCommand(BaseCommand):
 
     def add_options(self, parser):
         parser.add_argument(
-            '-t',
-            '--template',
-            dest='template',
-            help='The cookiecutter template to use for the new project'
+            "-t",
+            "--template",
+            dest="template",
+            help="The cookiecutter template to use for the new project",
         )
 
     def make_class_name(self, formal_name):
@@ -90,25 +109,30 @@ class NewCommand(BaseCommand):
             "Lo",  # other letters
             "Nl",  # letter numbers
         }
-        xid_continue = xid_start.union({
-            "Mn",  # nonspacing marks
-            "Mc",  # spacing combining marks
-            "Nd",  # decimal number
-            "Pc",  # connector punctuations
-        })
+        xid_continue = xid_start.union(
+            {
+                "Mn",  # nonspacing marks
+                "Mc",  # spacing combining marks
+                "Nd",  # decimal number
+                "Pc",  # connector punctuations
+            }
+        )
 
         # Normalize to NFKC form, then remove any character that isn't
         # in the allowed categories, or is the underscore character
-        class_name = ''.join(
-            ch for ch in unicodedata.normalize('NFKC', formal_name)
-            if unicodedata.category(ch) in xid_continue
-            or ch in {'_'}
+        class_name = "".join(
+            ch
+            for ch in unicodedata.normalize("NFKC", formal_name)
+            if unicodedata.category(ch) in xid_continue or ch in {"_"}
         )
 
         # If the first character isn't in the 'start' character set,
         # and it isn't already an underscore, prepend an underscore.
-        if unicodedata.category(class_name[0]) not in xid_start and class_name[0] != '_':
-            class_name = f'_{class_name}'
+        if (
+            unicodedata.category(class_name[0]) not in xid_start
+            and class_name[0] != "_"
+        ):
+            class_name = f"_{class_name}"
 
         return class_name
 
@@ -119,14 +143,14 @@ class NewCommand(BaseCommand):
         :param formal_name: The formal name
         :returns: The candidate app name
         """
-        normalized = unicodedata.normalize('NFKD', formal_name)
-        stripped = re.sub('[^0-9a-zA-Z_]+', '', normalized).lstrip('_')
+        normalized = unicodedata.normalize("NFKD", formal_name)
+        stripped = re.sub("[^0-9a-zA-Z_]+", "", normalized).lstrip("_")
         if stripped:
             return stripped.lower()
         else:
             # If stripping removes all the content,
             # use a dummy app name as the suggestion.
-            return 'myapp'
+            return "myapp"
 
     def validate_app_name(self, candidate):
         """
@@ -160,7 +184,7 @@ class NewCommand(BaseCommand):
         :param app_name: The app name
         :returns: The app's module name.
         """
-        return app_name.replace('-', '_')
+        return app_name.replace("-", "_")
 
     def validate_bundle(self, candidate):
         """
@@ -188,7 +212,7 @@ class NewCommand(BaseCommand):
         :param bundle: The bundle identifier
         :returns: The candidate domain
         """
-        return '.'.join(bundle.split('.')[::-1])
+        return ".".join(bundle.split(".")[::-1])
 
     def make_author_email(self, author, bundle):
         """
@@ -217,7 +241,7 @@ class NewCommand(BaseCommand):
             with a diagnostic message.
         """
         if parseaddr(candidate)[1] != candidate:
-            raise ValueError('Not a valid email address')
+            raise ValueError("Not a valid email address")
         return True
 
     def make_project_url(self, bundle, app_name):
@@ -231,7 +255,7 @@ class NewCommand(BaseCommand):
         :param app_name: The app name.
         :returns: The candidate project URL
         """
-        return f'https://{self.make_domain(bundle)}/{app_name}'
+        return f"https://{self.make_domain(bundle)}/{app_name}"
 
     def validate_url(self, candidate):
         """
@@ -243,7 +267,7 @@ class NewCommand(BaseCommand):
         """
         result = urlparse(candidate)
         if not all([result.scheme, result.netloc]):
-            raise ValueError('Not a valid URL!')
+            raise ValueError("Not a valid URL!")
         return True
 
     def input_text(self, intro, variable, default, validator=None):
@@ -268,8 +292,7 @@ class NewCommand(BaseCommand):
             self.input.prompt()
 
             answer = self.input.text_input(
-                f"{titlecase(variable)} [{default}]: ",
-                default=default
+                f"{titlecase(variable)} [{default}]: ", default=default
             )
 
             if validator is None:
@@ -300,11 +323,12 @@ class NewCommand(BaseCommand):
         self.input.prompt(intro)
 
         index_choices = [str(key) for key in range(1, len(options) + 1)]
-        display_options = '\n'.join(
-            f"    [{index}] {option}"
-            for index, option in zip(index_choices, options)
+        display_options = "\n".join(
+            f"    [{index}] {option}" for index, option in zip(index_choices, options)
         )
-        error_message = f"Invalid selection; please enter a number between 1 and {len(options)}"
+        error_message = (
+            f"Invalid selection; please enter a number between 1 and {len(options)}"
+        )
         prompt = f"""
 Select one of the following:
 
@@ -315,7 +339,7 @@ Select one of the following:
             prompt=prompt,
             choices=index_choices,
             default="1",
-            error_message=error_message
+            error_message=error_message,
         )
         return options[int(selection) - 1]
 
@@ -333,7 +357,7 @@ be displayed to humans whenever the name of the application is displayed. It
 can have spaces and punctuation if you like, and any capitalization will be
 used as you type it.""",
             variable="formal name",
-            default='Hello World',
+            default="Hello World",
         )
 
         # The class name can be completely derived from the formal name.
@@ -370,7 +394,7 @@ is example.com, your bundle would be ``com.example``. The bundle will be
 combined with your application's machine readable name to form a complete
 application identifier (e.g., com.example.{app_name}).""",
             variable="bundle identifier",
-            default='com.example',
+            default="com.example",
             validator=self.validate_bundle,
         )
 
@@ -380,14 +404,14 @@ Briefcase can manage projects that contain multiple applications, so we need a
 Project name. If you're only planning to have one application in this
 project, you can use the formal name as the project name.""",
             variable="project name",
-            default=formal_name
+            default=formal_name,
         )
 
         description = self.input_text(
             intro="""
 Now, we need a one line description for your application.""",
             variable="description",
-            default="My first application"
+            default="My first application",
         )
 
         author = self.input_text(
@@ -405,7 +429,7 @@ application? This might be your own email address, or a generic contact address
 you set up specifically for this application.""",
             variable="author's email",
             default=self.make_author_email(author, bundle),
-            validator=self.validate_email
+            validator=self.validate_email,
         )
 
         url = self.input_text(
@@ -414,7 +438,7 @@ What is the website URL for this application? If you don't have a website set
 up yet, you can put in a dummy URL.""",
             variable="application URL",
             default=self.make_project_url(bundle, app_name),
-            validator=self.validate_url
+            validator=self.validate_url,
         )
 
         project_license = self.input_select(
@@ -468,7 +492,7 @@ What GUI toolkit do you want to use for this project?""",
         project from the briefcase-template.
         """
         if template is None:
-            template = 'https://github.com/beeware/briefcase-template'
+            template = "https://github.com/beeware/briefcase-template"
 
         self.input.prompt()
         self.input.prompt("Let's build a new Briefcase app!")
@@ -480,13 +504,14 @@ What GUI toolkit do you want to use for this project?""",
         self.logger.info(f"Generating a new application '{context['formal_name']}'")
 
         cached_template = self.update_cookiecutter_cache(
-            template=template,
-            branch='v0.3'
+            template=template, branch="v0.3"
         )
 
         # Make extra sure we won't clobber an existing application.
-        if (self.base_path / context['app_name']).exists():
-            raise BriefcaseCommandError(f"A directory named '{context['app_name']}' already exists.")
+        if (self.base_path / context["app_name"]).exists():
+            raise BriefcaseCommandError(
+                f"A directory named '{context['app_name']}' already exists."
+            )
 
         try:
             # Unroll the new app template
@@ -495,7 +520,7 @@ What GUI toolkit do you want to use for this project?""",
                 no_input=True,
                 output_dir=os.fsdecode(self.base_path),
                 checkout="v0.3",
-                extra_context=context
+                extra_context=context,
             )
         except subprocess.CalledProcessError as e:
             # Computer is offline
@@ -506,12 +531,14 @@ What GUI toolkit do you want to use for this project?""",
             # or it isn't a cookiecutter template (i.e., no cookiecutter.json)
             raise InvalidTemplateRepository(template) from e
 
-        self.logger.info(f"""
+        self.logger.info(
+            f"""
 Application '{context['formal_name']}' has been generated. To run your application, type:
 
     cd {context['app_name']}
     briefcase dev
-""")
+"""
+        )
 
     def verify_tools(self):
         """
@@ -521,11 +548,7 @@ Application '{context['formal_name']}' has been generated. To run your applicati
         """
         self.git = self.integrations.git.verify_git_is_installed(self)
 
-    def __call__(
-        self,
-        template: Optional[str] = None,
-        **options
-    ):
+    def __call__(self, template: Optional[str] = None, **options):
         # Confirm all required tools are available
         self.verify_tools()
 

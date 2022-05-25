@@ -10,8 +10,9 @@ def test_device(tmp_path):
     # Write a default config. It contains:
     # * blank lines
     # * a key whose value explicitly contains an equals sign.
-    with config_file.open('w') as f:
-        f.write("""
+    with config_file.open("w") as f:
+        f.write(
+            """
 avd.ini.encoding=UTF-8
 hw.device.manufacturer=Google
 hw.device.name=pixel
@@ -21,7 +22,8 @@ PlayStore.enabled=no
 avd.name=beePhone
 disk.cachePartition=yes
 disk.cachePartition.size=42M
-""")
+"""
+        )
 
     return config_file
 
@@ -29,17 +31,22 @@ disk.cachePartition.size=42M
 def test_update_existing(mock_sdk, test_device):
     "Existing keys in an Android AVD config can be updated"
     # Update 2 keys in the config
-    mock_sdk.update_emulator_config("testDevice", {
-        'avd.name': 'testDevice',
-        'disk.cachePartition.size': '37MB',
-    })
+    mock_sdk.update_emulator_config(
+        "testDevice",
+        {
+            "avd.name": "testDevice",
+            "disk.cachePartition.size": "37MB",
+        },
+    )
 
     with test_device.open() as f:
         content = f.read()
 
     # Keys have been updated, order is preserved.
     # Blank lines have been dropped.
-    assert content == """avd.ini.encoding=UTF-8
+    assert (
+        content
+        == """avd.ini.encoding=UTF-8
 hw.device.manufacturer=Google
 hw.device.name=pixel
 weird.key=good=bad
@@ -48,22 +55,28 @@ avd.name=testDevice
 disk.cachePartition=yes
 disk.cachePartition.size=37MB
 """
+    )
 
 
 def test_new_content(mock_sdk, test_device):
     "New keys can be added to an Android AVD config"
     # Add 2 new keys to the config
-    mock_sdk.update_emulator_config("testDevice", {
-        'skin.name': 'pixel_3a',
-        'skin.path': 'skins/pixel_3a',
-    })
+    mock_sdk.update_emulator_config(
+        "testDevice",
+        {
+            "skin.name": "pixel_3a",
+            "skin.path": "skins/pixel_3a",
+        },
+    )
 
     with test_device.open() as f:
         content = f.read()
 
     # New keys are appended to the end of the file
     # Newlines have been dropped
-    assert content == """avd.ini.encoding=UTF-8
+    assert (
+        content
+        == """avd.ini.encoding=UTF-8
 hw.device.manufacturer=Google
 hw.device.name=pixel
 weird.key=good=bad
@@ -74,3 +87,4 @@ disk.cachePartition.size=42M
 skin.name=pixel_3a
 skin.path=skins/pixel_3a
 """
+    )
