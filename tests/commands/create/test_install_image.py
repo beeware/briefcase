@@ -6,13 +6,9 @@ def test_no_source(create_command, tmp_path):
     create_command.shutil = mock.MagicMock()
 
     # Try to install the image from no source.
-    out_path = tmp_path / 'output.png'
+    out_path = tmp_path / "output.png"
     create_command.install_image(
-        'sample image',
-        source=None,
-        variant=None,
-        size=None,
-        target=out_path
+        "sample image", source=None, variant=None, size=None, target=out_path
     )
 
     # No file was installed.
@@ -24,13 +20,9 @@ def test_no_source_with_size(create_command, tmp_path):
     create_command.shutil = mock.MagicMock()
 
     # Try to install the image from no source.
-    out_path = tmp_path / 'output.png'
+    out_path = tmp_path / "output.png"
     create_command.install_image(
-        'sample image',
-        source=None,
-        variant=None,
-        size='3742',
-        target=out_path
+        "sample image", source=None, variant=None, size="3742", target=out_path
     )
 
     # No file was installed.
@@ -42,27 +34,29 @@ def test_no_requested_size(create_command, tmp_path, capsys):
     create_command.shutil = mock.MagicMock()
 
     # Create the source image
-    source_file = tmp_path / 'input' / 'original.png'
+    source_file = tmp_path / "input" / "original.png"
     source_file.parent.mkdir(parents=True, exist_ok=True)
-    with source_file.open('w') as f:
-        f.write('image')
+    with source_file.open("w") as f:
+        f.write("image")
 
     # Try to install the image
-    out_path = tmp_path / 'output.png'
+    out_path = tmp_path / "output.png"
     create_command.install_image(
-        'sample image',
-        source='input/original',
+        "sample image",
+        source="input/original",
         variant=None,
         size=None,
-        target=out_path
+        target=out_path,
     )
 
     # The right message was written to output
-    assert capsys.readouterr().out == "Installing input/original.png as sample image...\n"
+    assert (
+        capsys.readouterr().out == "Installing input/original.png as sample image...\n"
+    )
 
     # The file was copied into position
     create_command.shutil.copy.assert_called_with(
-        create_command.base_path / 'input' / 'original.png',
+        create_command.base_path / "input" / "original.png",
         out_path,
     )
 
@@ -73,13 +67,13 @@ def test_no_requested_size_invalid_path(create_command, tmp_path, capsys):
     create_command.shutil.copy.side_effect = FileNotFoundError
 
     # Try to install the image
-    out_path = tmp_path / 'output.png'
+    out_path = tmp_path / "output.png"
     create_command.install_image(
-        'sample image',
-        source='input/original',
+        "sample image",
+        source="input/original",
         variant=None,
         size=None,
-        target=out_path
+        target=out_path,
     )
 
     # The right message was written to output
@@ -96,27 +90,30 @@ def test_requested_size(create_command, tmp_path, capsys):
     create_command.shutil = mock.MagicMock()
 
     # Create the source image
-    source_file = tmp_path / 'input' / 'original-3742.png'
+    source_file = tmp_path / "input" / "original-3742.png"
     source_file.parent.mkdir(parents=True, exist_ok=True)
-    with source_file.open('w') as f:
-        f.write('image')
+    with source_file.open("w") as f:
+        f.write("image")
 
     # Try to install the image
-    out_path = tmp_path / 'output.png'
+    out_path = tmp_path / "output.png"
     create_command.install_image(
-        'sample image',
-        source='input/original',
+        "sample image",
+        source="input/original",
         variant=None,
-        size='3742',
-        target=out_path
+        size="3742",
+        target=out_path,
     )
 
     # The right message was written to output
-    assert capsys.readouterr().out == "Installing input/original-3742.png as 3742px sample image...\n"
+    assert (
+        capsys.readouterr().out
+        == "Installing input/original-3742.png as 3742px sample image...\n"
+    )
 
     # The file was copied into position
     create_command.shutil.copy.assert_called_with(
-        create_command.base_path / 'input' / 'original-3742.png',
+        create_command.base_path / "input" / "original-3742.png",
         out_path,
     )
 
@@ -127,13 +124,13 @@ def test_requested_size_invalid_path(create_command, tmp_path, capsys):
     create_command.shutil.copy.side_effect = FileNotFoundError
 
     # Try to install the image
-    out_path = tmp_path / 'output.png'
+    out_path = tmp_path / "output.png"
     create_command.install_image(
-        'sample image',
-        source='input/original',
+        "sample image",
+        source="input/original",
         variant=None,
-        size='3742',
-        target=out_path
+        size="3742",
+        target=out_path,
     )
 
     # The right message was written to output
@@ -150,56 +147,64 @@ def test_variant_with_no_requested_size(create_command, tmp_path, capsys):
     create_command.shutil = mock.MagicMock()
 
     # Create the source image
-    source_file = tmp_path / 'input' / 'original.png'
+    source_file = tmp_path / "input" / "original.png"
     source_file.parent.mkdir(parents=True, exist_ok=True)
-    with source_file.open('w') as f:
-        f.write('image')
+    with source_file.open("w") as f:
+        f.write("image")
 
     # Try to install the image
-    out_path = tmp_path / 'output.png'
+    out_path = tmp_path / "output.png"
     create_command.install_image(
-        'sample image',
+        "sample image",
         source={
-            'round': 'input/original',
+            "round": "input/original",
         },
-        variant='round',
+        variant="round",
         size=None,
-        target=out_path
+        target=out_path,
     )
 
     # The right message was written to output
-    assert capsys.readouterr().out == "Installing input/original.png as round sample image...\n"
+    assert (
+        capsys.readouterr().out
+        == "Installing input/original.png as round sample image...\n"
+    )
 
     # The file was copied into position
     create_command.shutil.copy.assert_called_with(
-        create_command.base_path / 'input' / 'original.png',
+        create_command.base_path / "input" / "original.png",
         out_path,
     )
 
 
-def test_variant_without_variant_source_and_no_requested_size(create_command, tmp_path, capsys):
+def test_variant_without_variant_source_and_no_requested_size(
+    create_command, tmp_path, capsys
+):
     """If the template specifies a variant with no size, but app doesn't have
     variants, a message is reported."""
     create_command.shutil = mock.MagicMock()
 
     # Create the source image
-    source_file = tmp_path / 'input' / 'original.png'
+    source_file = tmp_path / "input" / "original.png"
     source_file.parent.mkdir(parents=True, exist_ok=True)
-    with source_file.open('w') as f:
-        f.write('image')
+    with source_file.open("w") as f:
+        f.write("image")
 
     # Try to install the image
-    out_path = tmp_path / 'output.png'
+    out_path = tmp_path / "output.png"
     create_command.install_image(
-        'sample image',
-        source='input/original',
-        variant='round',
+        "sample image",
+        source="input/original",
+        variant="round",
         size=None,
-        target=out_path
+        target=out_path,
     )
 
     # The right message was written to output
-    assert capsys.readouterr().out == "Unable to find round variant for sample image; using default\n"
+    assert (
+        capsys.readouterr().out
+        == "Unable to find round variant for sample image; using default\n"
+    )
 
     # No file was installed.
     create_command.shutil.copy.assert_not_called()
@@ -210,25 +215,28 @@ def test_unknown_variant_with_no_requested_size(create_command, tmp_path, capsys
     create_command.shutil = mock.MagicMock()
 
     # Create the source image
-    source_file = tmp_path / 'input' / 'original.png'
+    source_file = tmp_path / "input" / "original.png"
     source_file.parent.mkdir(parents=True, exist_ok=True)
-    with source_file.open('w') as f:
-        f.write('image')
+    with source_file.open("w") as f:
+        f.write("image")
 
     # Try to install the image
-    out_path = tmp_path / 'output.png'
+    out_path = tmp_path / "output.png"
     create_command.install_image(
-        'sample image',
+        "sample image",
         source={
-            'round': 'input/original',
+            "round": "input/original",
         },
-        variant='unknown',
+        variant="unknown",
         size=None,
-        target=out_path
+        target=out_path,
     )
 
     # The right message was written to output
-    assert capsys.readouterr().out == "Unable to find unknown variant for sample image; using default\n"
+    assert (
+        capsys.readouterr().out
+        == "Unable to find unknown variant for sample image; using default\n"
+    )
 
     # No file was installed.
     create_command.shutil.copy.assert_not_called()
@@ -239,21 +247,21 @@ def test_variant_with_size(create_command, tmp_path, capsys):
     create_command.shutil = mock.MagicMock()
 
     # Create the source image
-    source_file = tmp_path / 'input' / 'original-3742.png'
+    source_file = tmp_path / "input" / "original-3742.png"
     source_file.parent.mkdir(parents=True, exist_ok=True)
-    with source_file.open('w') as f:
-        f.write('image')
+    with source_file.open("w") as f:
+        f.write("image")
 
     # Try to install the image
-    out_path = tmp_path / 'output.png'
+    out_path = tmp_path / "output.png"
     create_command.install_image(
-        'sample image',
+        "sample image",
         source={
-            'round': 'input/original',
+            "round": "input/original",
         },
-        variant='round',
-        size='3742',
-        target=out_path
+        variant="round",
+        size="3742",
+        target=out_path,
     )
 
     # The right message was written to output
@@ -264,7 +272,7 @@ def test_variant_with_size(create_command, tmp_path, capsys):
 
     # The file was copied into position
     create_command.shutil.copy.assert_called_with(
-        create_command.base_path / 'input' / 'original-3742.png',
+        create_command.base_path / "input" / "original-3742.png",
         out_path,
     )
 
@@ -275,19 +283,19 @@ def test_variant_with_size_without_variants(create_command, tmp_path, capsys):
     create_command.shutil = mock.MagicMock()
 
     # Create the source image
-    source_file = tmp_path / 'input' / 'original-3742.png'
+    source_file = tmp_path / "input" / "original-3742.png"
     source_file.parent.mkdir(parents=True, exist_ok=True)
-    with source_file.open('w') as f:
-        f.write('image')
+    with source_file.open("w") as f:
+        f.write("image")
 
     # Try to install the image
-    out_path = tmp_path / 'output.png'
+    out_path = tmp_path / "output.png"
     create_command.install_image(
-        'sample image',
-        source='input/original',
-        variant='round',
-        size='3742',
-        target=out_path
+        "sample image",
+        source="input/original",
+        variant="round",
+        size="3742",
+        target=out_path,
     )
 
     # The right message was written to output
@@ -305,23 +313,23 @@ def test_unsized_variant(create_command, tmp_path, capsys):
     create_command.shutil = mock.MagicMock()
 
     # Create the source image
-    source_file = tmp_path / 'input' / 'original.png'
+    source_file = tmp_path / "input" / "original.png"
     source_file.parent.mkdir(parents=True, exist_ok=True)
-    with source_file.open('w') as f:
-        f.write('image')
+    with source_file.open("w") as f:
+        f.write("image")
 
     # Try to install the image
     # Unsized variants are an annoying edge case; they get the *variant*
     # as the *size*.
-    out_path = tmp_path / 'output.png'
+    out_path = tmp_path / "output.png"
     create_command.install_image(
-        'sample image',
+        "sample image",
         source={
-            'round': 'input/original',
+            "round": "input/original",
         },
         variant=None,
-        size='round',
-        target=out_path
+        size="round",
+        target=out_path,
     )
 
     # The right message was written to output
@@ -332,6 +340,6 @@ def test_unsized_variant(create_command, tmp_path, capsys):
 
     # The file was copied into position
     create_command.shutil.copy.assert_called_with(
-        create_command.base_path / 'input' / 'original.png',
+        create_command.base_path / "input" / "original.png",
         out_path,
     )

@@ -8,11 +8,7 @@ import pytest
 from requests import exceptions as requests_exceptions
 
 from briefcase.console import Log
-from briefcase.exceptions import (
-    BriefcaseCommandError,
-    MissingToolError,
-    NetworkFailure
-)
+from briefcase.exceptions import BriefcaseCommandError, MissingToolError, NetworkFailure
 from briefcase.integrations.android_sdk import AndroidSDK
 
 
@@ -32,9 +28,9 @@ def mock_command(tmp_path):
     # Identify the host platform
     command.host_os = platform.system()
     command._test_download_tag = {
-        'Windows': 'win',
-        'Darwin': 'mac',
-        'Linux': 'linux',
+        "Windows": "win",
+        "Darwin": "mac",
+        "Linux": "linux",
     }[command.host_os]
     # Override some other modules so we can test side-effects.
     command.download_url = MagicMock()
@@ -56,6 +52,7 @@ def mock_unpack(filename, extract_dir):
 
 def accept_license(android_sdk_root_path):
     "Generate a side effect method that will accept a license."
+
     def _side_effect(*args, **kwargs):
         license_dir = android_sdk_root_path / "licenses"
         license_dir.mkdir(parents=True)
@@ -117,10 +114,10 @@ def test_succeeds_immediately_in_happy_path_with_debug(mock_command, tmp_path):
     tools_bin = android_sdk_root_path / "cmdline-tools" / "latest" / "bin"
     tools_bin.mkdir(parents=True, mode=0o755)
     if platform.system() == "Windows":
-        sdk_manager = (tools_bin / "sdkmanager.bat")
+        sdk_manager = tools_bin / "sdkmanager.bat"
         sdk_manager.touch()
     else:
-        sdk_manager = (tools_bin / "sdkmanager")
+        sdk_manager = tools_bin / "sdkmanager"
         sdk_manager.touch(mode=0o755)
 
     # Pre-accept the license
@@ -141,7 +138,7 @@ def test_succeeds_immediately_in_happy_path_with_debug(mock_command, tmp_path):
         [os.fsdecode(sdk_manager), "--list_installed"],
         env={
             "ANDROID_SDK_ROOT": os.fsdecode(android_sdk_root_path),
-            "JAVA_HOME": "/path/to/java"
+            "JAVA_HOME": "/path/to/java",
         },
         check=True,
     )
@@ -160,10 +157,10 @@ def test_user_provided_sdk(mock_command, tmp_path):
     tools_bin = existing_android_sdk_root_path / "cmdline-tools" / "latest" / "bin"
     tools_bin.mkdir(parents=True, mode=0o755)
     if platform.system() == "Windows":
-        sdk_manager = (tools_bin / "sdkmanager.bat")
+        sdk_manager = tools_bin / "sdkmanager.bat"
         sdk_manager.touch()
     else:
-        sdk_manager = (tools_bin / "sdkmanager")
+        sdk_manager = tools_bin / "sdkmanager"
         sdk_manager.touch(mode=0o755)
 
     # Pre-accept the license
@@ -171,7 +168,7 @@ def test_user_provided_sdk(mock_command, tmp_path):
 
     # Set the environment to specify ANDROID_SDK_ROOT
     mock_command.os.environ = {
-        'ANDROID_SDK_ROOT': os.fsdecode(existing_android_sdk_root_path)
+        "ANDROID_SDK_ROOT": os.fsdecode(existing_android_sdk_root_path)
     }
 
     # Expect verify() to succeed
@@ -189,7 +186,7 @@ def test_user_provided_sdk(mock_command, tmp_path):
         [os.fsdecode(sdk.sdkmanager_path), "--list_installed"],
         env={
             "ANDROID_SDK_ROOT": os.fsdecode(existing_android_sdk_root_path),
-            "JAVA_HOME": "/path/to/java"
+            "JAVA_HOME": "/path/to/java",
         },
         check=True,
     )
@@ -204,10 +201,10 @@ def test_user_provided_sdk_with_debug(mock_command, tmp_path):
     tools_bin = existing_android_sdk_root_path / "cmdline-tools" / "latest" / "bin"
     tools_bin.mkdir(parents=True, mode=0o755)
     if platform.system() == "Windows":
-        sdk_manager = (tools_bin / "sdkmanager.bat")
+        sdk_manager = tools_bin / "sdkmanager.bat"
         sdk_manager.touch()
     else:
-        sdk_manager = (tools_bin / "sdkmanager")
+        sdk_manager = tools_bin / "sdkmanager"
         sdk_manager.touch(mode=0o755)
 
     # Pre-accept the license
@@ -215,7 +212,7 @@ def test_user_provided_sdk_with_debug(mock_command, tmp_path):
 
     # Set the environment to specify ANDROID_SDK_ROOT
     mock_command.os.environ = {
-        'ANDROID_SDK_ROOT': os.fsdecode(existing_android_sdk_root_path)
+        "ANDROID_SDK_ROOT": os.fsdecode(existing_android_sdk_root_path)
     }
 
     # Expect verify() to succeed
@@ -240,19 +237,17 @@ def test_invalid_user_provided_sdk(mock_command, tmp_path):
     tools_bin = android_sdk_root_path / "cmdline-tools" / "latest" / "bin"
     tools_bin.mkdir(parents=True, mode=0o755)
     if platform.system() == "Windows":
-        sdk_manager = (tools_bin / "sdkmanager.bat")
+        sdk_manager = tools_bin / "sdkmanager.bat"
         sdk_manager.touch()
     else:
-        sdk_manager = (tools_bin / "sdkmanager")
+        sdk_manager = tools_bin / "sdkmanager"
         sdk_manager.touch(mode=0o755)
 
     # Pre-accept the license
     accept_license(android_sdk_root_path)()
 
     # Set the environment to specify an ANDROID_SDK_ROOT that doesn't exist
-    mock_command.os.environ = {
-        'ANDROID_SDK_ROOT': os.fsdecode(tmp_path / "other_sdk")
-    }
+    mock_command.os.environ = {"ANDROID_SDK_ROOT": os.fsdecode(tmp_path / "other_sdk")}
 
     # Expect verify() to succeed
     sdk = AndroidSDK.verify(mock_command, jdk=MagicMock())
@@ -296,8 +291,7 @@ def test_download_sdk(mock_command, tmp_path):
     )
 
     mock_command.shutil.unpack_archive.assert_called_once_with(
-        cache_file,
-        extract_dir=cmdline_tools_base_path
+        cache_file, extract_dir=cmdline_tools_base_path
     )
 
     # The cached file will be deleted
@@ -311,9 +305,11 @@ def test_download_sdk(mock_command, tmp_path):
     assert sdk.cmdline_tools_path.is_dir()
     assert sdk.cmdline_tools_version_path.is_file()
 
-    if platform.system() != 'Windows':
+    if platform.system() != "Windows":
         # On non-Windows, ensure the unpacked binary was made executable
-        assert os.access(cmdline_tools_base_path / 'latest' / 'bin' / 'sdkmanager', os.X_OK)
+        assert os.access(
+            cmdline_tools_base_path / "latest" / "bin" / "sdkmanager", os.X_OK
+        )
 
     # The license has been accepted
     assert (android_sdk_root_path / "licenses" / "android-sdk-license").exists()
@@ -363,8 +359,7 @@ def test_download_sdk_legacy_install(mock_command, tmp_path):
     )
 
     mock_command.shutil.unpack_archive.assert_called_once_with(
-        cache_file,
-        extract_dir=cmdline_tools_base_path
+        cache_file, extract_dir=cmdline_tools_base_path
     )
 
     # The cached file will be deleted
@@ -378,9 +373,11 @@ def test_download_sdk_legacy_install(mock_command, tmp_path):
     assert sdk.cmdline_tools_path.is_dir()
     assert sdk.cmdline_tools_version_path.is_file()
 
-    if platform.system() != 'Windows':
+    if platform.system() != "Windows":
         # On non-Windows, ensure the unpacked binary was made executable
-        assert os.access(cmdline_tools_base_path / 'latest' / 'bin' / 'sdkmanager', os.X_OK)
+        assert os.access(
+            cmdline_tools_base_path / "latest" / "bin" / "sdkmanager", os.X_OK
+        )
 
     # The legacy SDK tools have been removed
     assert not sdk_tools_base_path.exists()
@@ -405,7 +402,7 @@ def test_no_install(mock_command, tmp_path):
 
 @pytest.mark.skipif(
     sys.platform == "win32",
-    reason="executable permission doesn't make sense on Windows"
+    reason="executable permission doesn't make sense on Windows",
 )
 def test_download_sdk_if_sdkmanager_not_executable(mock_command, tmp_path):
     """An SDK will be downloaded and unpackged if `tools/bin/sdkmanager` exists
@@ -442,8 +439,7 @@ def test_download_sdk_if_sdkmanager_not_executable(mock_command, tmp_path):
     )
 
     mock_command.shutil.unpack_archive.assert_called_once_with(
-        cache_file,
-        extract_dir=cmdline_tools_base_path
+        cache_file, extract_dir=cmdline_tools_base_path
     )
 
     # The cached file will be deleted
@@ -499,6 +495,5 @@ def test_detects_bad_zipfile(mock_command, tmp_path):
         download_path=mock_command.tools_path,
     )
     mock_command.shutil.unpack_archive.assert_called_once_with(
-        cache_file,
-        extract_dir=android_sdk_root_path / "cmdline-tools"
+        cache_file, extract_dir=android_sdk_root_path / "cmdline-tools"
     )

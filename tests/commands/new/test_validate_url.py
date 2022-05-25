@@ -2,10 +2,10 @@ import pytest
 
 
 @pytest.mark.parametrize(
-    'url',
+    "url",
     [
-        'https://example.com',
-    ]
+        "https://example.com",
+    ],
 )
 def test_valid_url(new_command, url):
     "Test that valid URLs are accepted"
@@ -13,10 +13,10 @@ def test_valid_url(new_command, url):
 
 
 @pytest.mark.parametrize(
-    'url',
+    "url",
     [
-        'not a URL!',  # Free text.
-    ]
+        "not a URL!",  # Free text.
+    ],
 )
 def test_invalid_url(new_command, url):
     "Test that invalid URLs are rejected"

@@ -9,7 +9,7 @@ from briefcase.exceptions import (
     BriefcaseCommandError,
     MissingToolError,
     NetworkFailure,
-    NonManagedToolError
+    NonManagedToolError,
 )
 from briefcase.integrations.wix import WIX_DOWNLOAD_URL, WiX
 from tests.utils import FsPathMock
@@ -18,8 +18,8 @@ from tests.utils import FsPathMock
 @pytest.fixture
 def mock_command(tmp_path):
     command = MagicMock()
-    command.host_os = 'Windows'
-    command.tools_path = tmp_path / 'tools'
+    command.host_os = "Windows"
+    command.tools_path = tmp_path / "tools"
 
     return command
 
@@ -28,7 +28,7 @@ def test_non_managed_install(mock_command, tmp_path, capsys):
     "If the WiX install points to a non-managed install, no upgrade is attempted"
 
     # Make the installation point to somewhere else.
-    wix = WiX(mock_command, wix_home=tmp_path / 'other-WiX')
+    wix = WiX(mock_command, wix_home=tmp_path / "other-WiX")
 
     # Attempt an upgrade. This will fail because the install is non-managed
     with pytest.raises(NonManagedToolError):
@@ -41,7 +41,7 @@ def test_non_managed_install(mock_command, tmp_path, capsys):
 def test_non_existing_wix_install(mock_command, tmp_path):
     "If there's no existing managed WiX install, upgrading is an error"
     # Create an SDK wrapper around a non-existing managed install
-    wix = WiX(mock_command, wix_home=tmp_path / 'tools' / 'wix')
+    wix = WiX(mock_command, wix_home=tmp_path / "tools" / "wix")
 
     with pytest.raises(MissingToolError):
         wix.upgrade()
@@ -53,16 +53,16 @@ def test_non_existing_wix_install(mock_command, tmp_path):
 def test_existing_wix_install(mock_command, tmp_path):
     "If there's an existing managed WiX install, it is deleted and redownloaded"
     # Create a mock of a previously installed WiX version.
-    wix_path = tmp_path / 'tools' / 'wix'
+    wix_path = tmp_path / "tools" / "wix"
     wix_path.mkdir(parents=True)
-    (wix_path / 'heat.exe').touch()
-    (wix_path / 'light.exe').touch()
-    (wix_path / 'candle.exe').touch()
+    (wix_path / "heat.exe").touch()
+    (wix_path / "light.exe").touch()
+    (wix_path / "candle.exe").touch()
 
     # Mock the download
-    wix_path = tmp_path / 'tools' / 'wix'
+    wix_path = tmp_path / "tools" / "wix"
 
-    wix_zip_path = os.fsdecode(tmp_path / 'tools' / 'wix.zip')
+    wix_zip_path = os.fsdecode(tmp_path / "tools" / "wix.zip")
     # Consider to remove if block when we drop py3.7 support, only keep statements from else.
     # MagicMock below py3.8 doesn't has __fspath__ attribute.
     if sys.version_info < (3, 8):
@@ -85,14 +85,13 @@ def test_existing_wix_install(mock_command, tmp_path):
     # A download was initiated
     mock_command.download_url.assert_called_with(
         url=WIX_DOWNLOAD_URL,
-        download_path=tmp_path / 'tools',
+        download_path=tmp_path / "tools",
     )
 
     # The download was unpacked
     # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
     mock_command.shutil.unpack_archive.assert_called_with(
-        os.fsdecode(wix_zip_path),
-        extract_dir=os.fsdecode(wix_path)
+        os.fsdecode(wix_zip_path), extract_dir=os.fsdecode(wix_path)
     )
 
     # The zip file was removed
@@ -102,11 +101,11 @@ def test_existing_wix_install(mock_command, tmp_path):
 def test_download_fail(mock_command, tmp_path):
     "If the download doesn't complete, the upgrade fails"
     # Create a mock of a previously installed WiX version.
-    wix_path = tmp_path / 'tools' / 'wix'
+    wix_path = tmp_path / "tools" / "wix"
     wix_path.mkdir(parents=True)
-    (wix_path / 'heat.exe').touch()
-    (wix_path / 'light.exe').touch()
-    (wix_path / 'candle.exe').touch()
+    (wix_path / "heat.exe").touch()
+    (wix_path / "light.exe").touch()
+    (wix_path / "candle.exe").touch()
 
     # Mock the download failure
     mock_command.download_url.side_effect = requests_exceptions.ConnectionError
@@ -121,7 +120,7 @@ def test_download_fail(mock_command, tmp_path):
     # A download was initiated
     mock_command.download_url.assert_called_with(
         url=WIX_DOWNLOAD_URL,
-        download_path=tmp_path / 'tools',
+        download_path=tmp_path / "tools",
     )
 
     # ... but the unpack didn't happen
@@ -131,14 +130,14 @@ def test_download_fail(mock_command, tmp_path):
 def test_unpack_fail(mock_command, tmp_path):
     "If the download archive is corrupted, the validator fails"
     # Create a mock of a previously installed WiX version.
-    wix_path = tmp_path / 'tools' / 'wix'
+    wix_path = tmp_path / "tools" / "wix"
     wix_path.mkdir(parents=True)
-    (wix_path / 'heat.exe').touch()
-    (wix_path / 'light.exe').touch()
-    (wix_path / 'candle.exe').touch()
+    (wix_path / "heat.exe").touch()
+    (wix_path / "light.exe").touch()
+    (wix_path / "candle.exe").touch()
 
     # Mock the download
-    wix_zip_path = os.fsdecode(tmp_path / 'tools' / 'wix.zip')
+    wix_zip_path = os.fsdecode(tmp_path / "tools" / "wix.zip")
     # Consider to remove if block when we drop py3.7 support, only keep statements from else.
     # MagicMock below py3.8 doesn't has __fspath__ attribute.
     if sys.version_info < (3, 8):
@@ -163,14 +162,13 @@ def test_unpack_fail(mock_command, tmp_path):
     # A download was initiated
     mock_command.download_url.assert_called_with(
         url=WIX_DOWNLOAD_URL,
-        download_path=tmp_path / 'tools',
+        download_path=tmp_path / "tools",
     )
 
     # The download was unpacked.
     # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
     mock_command.shutil.unpack_archive.assert_called_with(
-        os.fsdecode(wix_zip_path),
-        extract_dir=os.fsdecode(wix_path)
+        os.fsdecode(wix_zip_path), extract_dir=os.fsdecode(wix_path)
     )
 
     # The zip file was not removed

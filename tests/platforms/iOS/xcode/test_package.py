@@ -11,8 +11,8 @@ def package_command(tmp_path, first_app_config):
 
 
 def test_packaging_formats(package_command):
-    assert package_command.packaging_formats == ['ipa']
+    assert package_command.packaging_formats == ["ipa"]
 
 
 def test_default_packaging_format(package_command):
-    assert package_command.default_packaging_format == 'ipa'
+    assert package_command.default_packaging_format == "ipa"

@@ -23,7 +23,10 @@ def monkeypatched_print(*arg, **kwargs):
     module = inspect.getmodule(frame.f_code)
 
     # Disallow any use of a bare print() in the briefcase codebase
-    if module.__name__.startswith("briefcase.") and module.__name__ != "briefcase.console":
+    if (
+        module.__name__.startswith("briefcase.")
+        and module.__name__ != "briefcase.console"
+    ):
         pytest.fail(
             "print() should not be invoked directly. Use Log or Console for printing."
         )

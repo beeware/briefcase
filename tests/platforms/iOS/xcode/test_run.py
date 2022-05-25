@@ -14,9 +14,7 @@ def test_run_app_simulator_booted(first_app_config, tmp_path):
 
     # A valid target device will be selected.
     command.select_target_device = mock.MagicMock(
-        return_value=(
-            '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D', '13.2', 'iPhone 11'
-        )
+        return_value=("2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D", "13.2", "iPhone 11")
     )
 
     # Simulator is already booted
@@ -30,59 +28,82 @@ def test_run_app_simulator_booted(first_app_config, tmp_path):
     command.run_app(first_app_config)
 
     # The correct sequence of commands was issued.
-    command.subprocess.run.assert_has_calls([
-        # Open the simulator
-        mock.call(
-            [
-                'open',
-                '-a', 'Simulator',
-                '--args',
-                '-CurrentDeviceUDID', '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D'
-            ],
-            check=True
-        ),
-        # Uninstall the old app
-        mock.call(
-            [
-                'xcrun', 'simctl', 'uninstall',
-                '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-                'com.example.first-app'
-            ],
-            check=True
-        ),
-        # Install the new app
-        mock.call(
-            [
-                'xcrun', 'simctl', 'install',
-                '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-                tmp_path / 'iOS' / 'Xcode' / 'First App' / 'build' / 'Debug-iphonesimulator' / 'First App.app'
-            ],
-            check=True
-        ),
-        # Launch the new app
-        mock.call(
-            [
-                'xcrun', 'simctl', 'launch',
-                '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-                'com.example.first-app'
-            ],
-            check=True
-        ),
-    ])
+    command.subprocess.run.assert_has_calls(
+        [
+            # Open the simulator
+            mock.call(
+                [
+                    "open",
+                    "-a",
+                    "Simulator",
+                    "--args",
+                    "-CurrentDeviceUDID",
+                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                ],
+                check=True,
+            ),
+            # Uninstall the old app
+            mock.call(
+                [
+                    "xcrun",
+                    "simctl",
+                    "uninstall",
+                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                    "com.example.first-app",
+                ],
+                check=True,
+            ),
+            # Install the new app
+            mock.call(
+                [
+                    "xcrun",
+                    "simctl",
+                    "install",
+                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                    tmp_path
+                    / "iOS"
+                    / "Xcode"
+                    / "First App"
+                    / "build"
+                    / "Debug-iphonesimulator"
+                    / "First App.app",
+                ],
+                check=True,
+            ),
+            # Launch the new app
+            mock.call(
+                [
+                    "xcrun",
+                    "simctl",
+                    "launch",
+                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                    "com.example.first-app",
+                ],
+                check=True,
+            ),
+        ]
+    )
     # The log is being tailed; no process cleanup is triggered
     command.subprocess.Popen.assert_called_with(
         [
-            'xcrun', 'simctl', 'spawn',
-            '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-            "log", "stream",
-            "--style", "compact",
-            "--predicate", 'senderImagePath ENDSWITH "/First App"'
+            "xcrun",
+            "simctl",
+            "spawn",
+            "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+            "log",
+            "stream",
+            "--style",
+            "compact",
+            "--predicate",
+            'senderImagePath ENDSWITH "/First App"',
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         bufsize=1,
     )
-    command.subprocess.stream_output.assert_called_with("log stream", log_stream_process)
+    command.subprocess.stream_output.assert_called_with(
+        "log stream", log_stream_process
+    )
     command.subprocess.cleanup.assert_not_called()
 
 
@@ -92,9 +113,7 @@ def test_run_app_simulator_shut_down(first_app_config, tmp_path):
 
     # A valid target device will be selected.
     command.select_target_device = mock.MagicMock(
-        return_value=(
-            '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D', '13.2', 'iPhone 11'
-        )
+        return_value=("2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D", "13.2", "iPhone 11")
     )
 
     # Simulator is shut down
@@ -108,64 +127,87 @@ def test_run_app_simulator_shut_down(first_app_config, tmp_path):
     command.run_app(first_app_config)
 
     # The correct sequence of commands was issued.
-    command.subprocess.run.assert_has_calls([
-        # Boot the device
-        mock.call(
-            ['xcrun', 'simctl', 'boot', '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D'],
-            check=True,
-        ),
-        # Open the simulator
-        mock.call(
-            [
-                'open',
-                '-a', 'Simulator',
-                '--args',
-                '-CurrentDeviceUDID', '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D'
-            ],
-            check=True
-        ),
-        # Uninstall the old app
-        mock.call(
-            [
-                'xcrun', 'simctl', 'uninstall',
-                '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-                'com.example.first-app'
-            ],
-            check=True
-        ),
-        # Install the new app
-        mock.call(
-            [
-                'xcrun', 'simctl', 'install',
-                '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-                tmp_path / 'iOS' / 'Xcode' / 'First App' / 'build' / 'Debug-iphonesimulator' / 'First App.app'
-            ],
-            check=True
-        ),
-        # Launch the new app
-        mock.call(
-            [
-                'xcrun', 'simctl', 'launch',
-                '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-                'com.example.first-app'
-            ],
-            check=True
-        ),
-    ])
+    command.subprocess.run.assert_has_calls(
+        [
+            # Boot the device
+            mock.call(
+                ["xcrun", "simctl", "boot", "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D"],
+                check=True,
+            ),
+            # Open the simulator
+            mock.call(
+                [
+                    "open",
+                    "-a",
+                    "Simulator",
+                    "--args",
+                    "-CurrentDeviceUDID",
+                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                ],
+                check=True,
+            ),
+            # Uninstall the old app
+            mock.call(
+                [
+                    "xcrun",
+                    "simctl",
+                    "uninstall",
+                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                    "com.example.first-app",
+                ],
+                check=True,
+            ),
+            # Install the new app
+            mock.call(
+                [
+                    "xcrun",
+                    "simctl",
+                    "install",
+                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                    tmp_path
+                    / "iOS"
+                    / "Xcode"
+                    / "First App"
+                    / "build"
+                    / "Debug-iphonesimulator"
+                    / "First App.app",
+                ],
+                check=True,
+            ),
+            # Launch the new app
+            mock.call(
+                [
+                    "xcrun",
+                    "simctl",
+                    "launch",
+                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                    "com.example.first-app",
+                ],
+                check=True,
+            ),
+        ]
+    )
     # The log is being tailed; no process cleanup is triggered
     command.subprocess.Popen.assert_called_with(
         [
-            'xcrun', 'simctl', 'spawn',
-            '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-            "log", "stream",
-            "--style", "compact",
-            "--predicate", 'senderImagePath ENDSWITH "/First App"'
+            "xcrun",
+            "simctl",
+            "spawn",
+            "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+            "log",
+            "stream",
+            "--style",
+            "compact",
+            "--predicate",
+            'senderImagePath ENDSWITH "/First App"',
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         bufsize=1,
     )
-    command.subprocess.stream_output.assert_called_with("log stream", log_stream_process)
+    command.subprocess.stream_output.assert_called_with(
+        "log stream", log_stream_process
+    )
     command.subprocess.cleanup.assert_not_called()
 
 
@@ -175,9 +217,7 @@ def test_run_app_simulator_shutting_down(first_app_config, tmp_path):
 
     # A valid target device will be selected.
     command.select_target_device = mock.MagicMock(
-        return_value=(
-            '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D', '13.2', 'iPhone 11'
-        )
+        return_value=("2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D", "13.2", "iPhone 11")
     )
 
     # Simulator is shutting down. This will be returned a couple of times,
@@ -188,7 +228,7 @@ def test_run_app_simulator_shutting_down(first_app_config, tmp_path):
             DeviceState.SHUTTING_DOWN,
             DeviceState.SHUTTING_DOWN,
             DeviceState.SHUTTING_DOWN,
-            DeviceState.SHUTDOWN
+            DeviceState.SHUTDOWN,
         ]
     )
 
@@ -204,64 +244,87 @@ def test_run_app_simulator_shutting_down(first_app_config, tmp_path):
     assert command.sleep.call_count == 4
 
     # The correct sequence of commands was issued.
-    command.subprocess.run.assert_has_calls([
-        # Boot the device
-        mock.call(
-            ['xcrun', 'simctl', 'boot', '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D'],
-            check=True,
-        ),
-        # Open the simulator
-        mock.call(
-            [
-                'open',
-                '-a', 'Simulator',
-                '--args',
-                '-CurrentDeviceUDID', '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D'
-            ],
-            check=True
-        ),
-        # Uninstall the old app
-        mock.call(
-            [
-                'xcrun', 'simctl', 'uninstall',
-                '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-                'com.example.first-app'
-            ],
-            check=True
-        ),
-        # Install the new app
-        mock.call(
-            [
-                'xcrun', 'simctl', 'install',
-                '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-                tmp_path / 'iOS' / 'Xcode' / 'First App' / 'build' / 'Debug-iphonesimulator' / 'First App.app'
-            ],
-            check=True
-        ),
-        # Launch the new app
-        mock.call(
-            [
-                'xcrun', 'simctl', 'launch',
-                '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-                'com.example.first-app'
-            ],
-            check=True
-        ),
-    ])
+    command.subprocess.run.assert_has_calls(
+        [
+            # Boot the device
+            mock.call(
+                ["xcrun", "simctl", "boot", "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D"],
+                check=True,
+            ),
+            # Open the simulator
+            mock.call(
+                [
+                    "open",
+                    "-a",
+                    "Simulator",
+                    "--args",
+                    "-CurrentDeviceUDID",
+                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                ],
+                check=True,
+            ),
+            # Uninstall the old app
+            mock.call(
+                [
+                    "xcrun",
+                    "simctl",
+                    "uninstall",
+                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                    "com.example.first-app",
+                ],
+                check=True,
+            ),
+            # Install the new app
+            mock.call(
+                [
+                    "xcrun",
+                    "simctl",
+                    "install",
+                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                    tmp_path
+                    / "iOS"
+                    / "Xcode"
+                    / "First App"
+                    / "build"
+                    / "Debug-iphonesimulator"
+                    / "First App.app",
+                ],
+                check=True,
+            ),
+            # Launch the new app
+            mock.call(
+                [
+                    "xcrun",
+                    "simctl",
+                    "launch",
+                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                    "com.example.first-app",
+                ],
+                check=True,
+            ),
+        ]
+    )
     # The log is being tailed; no process cleanup has occurred
     command.subprocess.Popen.assert_called_with(
         [
-            'xcrun', 'simctl', 'spawn',
-            '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-            "log", "stream",
-            "--style", "compact",
-            "--predicate", 'senderImagePath ENDSWITH "/First App"'
+            "xcrun",
+            "simctl",
+            "spawn",
+            "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+            "log",
+            "stream",
+            "--style",
+            "compact",
+            "--predicate",
+            'senderImagePath ENDSWITH "/First App"',
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         bufsize=1,
     )
-    command.subprocess.stream_output.assert_called_with("log stream", log_stream_process)
+    command.subprocess.stream_output.assert_called_with(
+        "log stream", log_stream_process
+    )
     command.subprocess.cleanup.assert_not_called()
 
 
@@ -271,9 +334,7 @@ def test_run_app_simulator_boot_failure(first_app_config, tmp_path):
 
     # A valid target device will be selected.
     command.select_target_device = mock.MagicMock(
-        return_value=(
-            '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D', '13.2', 'iPhone 11'
-        )
+        return_value=("2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D", "13.2", "iPhone 11")
     )
 
     # Simulator is shut down
@@ -281,8 +342,7 @@ def test_run_app_simulator_boot_failure(first_app_config, tmp_path):
 
     command.subprocess = mock.MagicMock()
     command.subprocess.run.side_effect = subprocess.CalledProcessError(
-        cmd=['xcrun', 'simclt', 'boot', '...'],
-        returncode=1
+        cmd=["xcrun", "simclt", "boot", "..."], returncode=1
     )
 
     # Run the app
@@ -290,13 +350,15 @@ def test_run_app_simulator_boot_failure(first_app_config, tmp_path):
         command.run_app(first_app_config)
 
     # The correct sequence of commands was issued.
-    command.subprocess.run.assert_has_calls([
-        # Boot the device
-        mock.call(
-            ['xcrun', 'simctl', 'boot', '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D'],
-            check=True,
-        ),
-    ])
+    command.subprocess.run.assert_has_calls(
+        [
+            # Boot the device
+            mock.call(
+                ["xcrun", "simctl", "boot", "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D"],
+                check=True,
+            ),
+        ]
+    )
     # The log will not be tailed
     command.subprocess.Popen.assert_not_called()
     command.subprocess.stream_output.assert_not_called()
@@ -309,9 +371,7 @@ def test_run_app_simulator_open_failure(first_app_config, tmp_path):
 
     # A valid target device will be selected.
     command.select_target_device = mock.MagicMock(
-        return_value=(
-            '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D', '13.2', 'iPhone 11'
-        )
+        return_value=("2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D", "13.2", "iPhone 11")
     )
 
     # Simulator is shut down
@@ -322,8 +382,7 @@ def test_run_app_simulator_open_failure(first_app_config, tmp_path):
     command.subprocess.run.side_effect = [
         0,
         subprocess.CalledProcessError(
-            cmd=['open', '-a', 'Simulator', '...'],
-            returncode=1
+            cmd=["open", "-a", "Simulator", "..."], returncode=1
         ),
     ]
 
@@ -332,23 +391,27 @@ def test_run_app_simulator_open_failure(first_app_config, tmp_path):
         command.run_app(first_app_config)
 
     # The correct sequence of commands was issued.
-    command.subprocess.run.assert_has_calls([
-        # Boot the device
-        mock.call(
-            ['xcrun', 'simctl', 'boot', '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D'],
-            check=True,
-        ),
-        # Open the simulator
-        mock.call(
-            [
-                'open',
-                '-a', 'Simulator',
-                '--args',
-                '-CurrentDeviceUDID', '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D'
-            ],
-            check=True
-        ),
-    ])
+    command.subprocess.run.assert_has_calls(
+        [
+            # Boot the device
+            mock.call(
+                ["xcrun", "simctl", "boot", "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D"],
+                check=True,
+            ),
+            # Open the simulator
+            mock.call(
+                [
+                    "open",
+                    "-a",
+                    "Simulator",
+                    "--args",
+                    "-CurrentDeviceUDID",
+                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                ],
+                check=True,
+            ),
+        ]
+    )
     # The log will not be tailed
     command.subprocess.Popen.assert_not_called()
     command.subprocess.stream_output.assert_not_called()
@@ -361,9 +424,7 @@ def test_run_app_simulator_uninstall_failure(first_app_config, tmp_path):
 
     # A valid target device will be selected.
     command.select_target_device = mock.MagicMock(
-        return_value=(
-            '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D', '13.2', 'iPhone 11'
-        )
+        return_value=("2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D", "13.2", "iPhone 11")
     )
 
     # Simulator is shut down
@@ -375,8 +436,7 @@ def test_run_app_simulator_uninstall_failure(first_app_config, tmp_path):
         0,
         0,
         subprocess.CalledProcessError(
-            cmd=['xcrun', 'simctl', 'uninstall', '...'],
-            returncode=1
+            cmd=["xcrun", "simctl", "uninstall", "..."], returncode=1
         ),
     ]
 
@@ -385,32 +445,38 @@ def test_run_app_simulator_uninstall_failure(first_app_config, tmp_path):
         command.run_app(first_app_config)
 
     # The correct sequence of commands was issued.
-    command.subprocess.run.assert_has_calls([
-        # Boot the device
-        mock.call(
-            ['xcrun', 'simctl', 'boot', '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D'],
-            check=True,
-        ),
-        # Open the simulator
-        mock.call(
-            [
-                'open',
-                '-a', 'Simulator',
-                '--args',
-                '-CurrentDeviceUDID', '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D'
-            ],
-            check=True
-        ),
-        # Uninstall the old app
-        mock.call(
-            [
-                'xcrun', 'simctl', 'uninstall',
-                '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-                'com.example.first-app'
-            ],
-            check=True
-        ),
-    ])
+    command.subprocess.run.assert_has_calls(
+        [
+            # Boot the device
+            mock.call(
+                ["xcrun", "simctl", "boot", "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D"],
+                check=True,
+            ),
+            # Open the simulator
+            mock.call(
+                [
+                    "open",
+                    "-a",
+                    "Simulator",
+                    "--args",
+                    "-CurrentDeviceUDID",
+                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                ],
+                check=True,
+            ),
+            # Uninstall the old app
+            mock.call(
+                [
+                    "xcrun",
+                    "simctl",
+                    "uninstall",
+                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                    "com.example.first-app",
+                ],
+                check=True,
+            ),
+        ]
+    )
     # The log will not be tailed
     command.subprocess.Popen.assert_not_called()
     command.subprocess.stream_output.assert_not_called()
@@ -423,9 +489,7 @@ def test_run_app_simulator_install_failure(first_app_config, tmp_path):
 
     # A valid target device will be selected.
     command.select_target_device = mock.MagicMock(
-        return_value=(
-            '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D', '13.2', 'iPhone 11'
-        )
+        return_value=("2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D", "13.2", "iPhone 11")
     )
 
     # Simulator is shut down
@@ -438,8 +502,7 @@ def test_run_app_simulator_install_failure(first_app_config, tmp_path):
         0,
         0,
         subprocess.CalledProcessError(
-            cmd=['xcrun', 'simctl', 'uninstall', '...'],
-            returncode=1
+            cmd=["xcrun", "simctl", "uninstall", "..."], returncode=1
         ),
     ]
 
@@ -448,41 +511,55 @@ def test_run_app_simulator_install_failure(first_app_config, tmp_path):
         command.run_app(first_app_config)
 
     # The correct sequence of commands was issued.
-    command.subprocess.run.assert_has_calls([
-        # Boot the device
-        mock.call(
-            ['xcrun', 'simctl', 'boot', '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D'],
-            check=True,
-        ),
-        # Open the simulator
-        mock.call(
-            [
-                'open',
-                '-a', 'Simulator',
-                '--args',
-                '-CurrentDeviceUDID', '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D'
-            ],
-            check=True
-        ),
-        # Uninstall the old app
-        mock.call(
-            [
-                'xcrun', 'simctl', 'uninstall',
-                '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-                'com.example.first-app'
-            ],
-            check=True
-        ),
-        # Install the new app
-        mock.call(
-            [
-                'xcrun', 'simctl', 'install',
-                '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-                tmp_path / 'iOS' / 'Xcode' / 'First App' / 'build' / 'Debug-iphonesimulator' / 'First App.app'
-            ],
-            check=True
-        ),
-    ])
+    command.subprocess.run.assert_has_calls(
+        [
+            # Boot the device
+            mock.call(
+                ["xcrun", "simctl", "boot", "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D"],
+                check=True,
+            ),
+            # Open the simulator
+            mock.call(
+                [
+                    "open",
+                    "-a",
+                    "Simulator",
+                    "--args",
+                    "-CurrentDeviceUDID",
+                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                ],
+                check=True,
+            ),
+            # Uninstall the old app
+            mock.call(
+                [
+                    "xcrun",
+                    "simctl",
+                    "uninstall",
+                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                    "com.example.first-app",
+                ],
+                check=True,
+            ),
+            # Install the new app
+            mock.call(
+                [
+                    "xcrun",
+                    "simctl",
+                    "install",
+                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                    tmp_path
+                    / "iOS"
+                    / "Xcode"
+                    / "First App"
+                    / "build"
+                    / "Debug-iphonesimulator"
+                    / "First App.app",
+                ],
+                check=True,
+            ),
+        ]
+    )
     # The log will not be tailed
     command.subprocess.Popen.assert_not_called()
     command.subprocess.stream_output.assert_not_called()
@@ -495,9 +572,7 @@ def test_run_app_simulator_launch_failure(first_app_config, tmp_path):
 
     # A valid target device will be selected.
     command.select_target_device = mock.MagicMock(
-        return_value=(
-            '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D', '13.2', 'iPhone 11'
-        )
+        return_value=("2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D", "13.2", "iPhone 11")
     )
 
     # Simulator is shut down
@@ -511,8 +586,7 @@ def test_run_app_simulator_launch_failure(first_app_config, tmp_path):
         0,
         0,
         subprocess.CalledProcessError(
-            cmd=['xcrun', 'simctl', 'launch', '...'],
-            returncode=1
+            cmd=["xcrun", "simctl", "launch", "..."], returncode=1
         ),
     ]
     log_stream_process = mock.MagicMock()
@@ -523,58 +597,79 @@ def test_run_app_simulator_launch_failure(first_app_config, tmp_path):
         command.run_app(first_app_config)
 
     # The correct sequence of commands was issued.
-    command.subprocess.run.assert_has_calls([
-        # Boot the device
-        mock.call(
-            ['xcrun', 'simctl', 'boot', '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D'],
-            check=True,
-        ),
-        # Open the simulator
-        mock.call(
-            [
-                'open',
-                '-a', 'Simulator',
-                '--args',
-                '-CurrentDeviceUDID', '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D'
-            ],
-            check=True
-        ),
-        # Uninstall the old app
-        mock.call(
-            [
-                'xcrun', 'simctl', 'uninstall',
-                '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-                'com.example.first-app'
-            ],
-            check=True
-        ),
-        # Install the new app
-        mock.call(
-            [
-                'xcrun', 'simctl', 'install',
-                '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-                tmp_path / 'iOS' / 'Xcode' / 'First App' / 'build' / 'Debug-iphonesimulator' / 'First App.app'
-            ],
-            check=True
-        ),
-        # Launch the new app
-        mock.call(
-            [
-                'xcrun', 'simctl', 'launch',
-                '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-                'com.example.first-app'
-            ],
-            check=True
-        )
-    ])
+    command.subprocess.run.assert_has_calls(
+        [
+            # Boot the device
+            mock.call(
+                ["xcrun", "simctl", "boot", "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D"],
+                check=True,
+            ),
+            # Open the simulator
+            mock.call(
+                [
+                    "open",
+                    "-a",
+                    "Simulator",
+                    "--args",
+                    "-CurrentDeviceUDID",
+                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                ],
+                check=True,
+            ),
+            # Uninstall the old app
+            mock.call(
+                [
+                    "xcrun",
+                    "simctl",
+                    "uninstall",
+                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                    "com.example.first-app",
+                ],
+                check=True,
+            ),
+            # Install the new app
+            mock.call(
+                [
+                    "xcrun",
+                    "simctl",
+                    "install",
+                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                    tmp_path
+                    / "iOS"
+                    / "Xcode"
+                    / "First App"
+                    / "build"
+                    / "Debug-iphonesimulator"
+                    / "First App.app",
+                ],
+                check=True,
+            ),
+            # Launch the new app
+            mock.call(
+                [
+                    "xcrun",
+                    "simctl",
+                    "launch",
+                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                    "com.example.first-app",
+                ],
+                check=True,
+            ),
+        ]
+    )
     # The log stream process will have been started; but will not be tailed
     command.subprocess.Popen.assert_called_with(
         [
-            'xcrun', 'simctl', 'spawn',
-            '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D',
-            "log", "stream",
-            "--style", "compact",
-            "--predicate", 'senderImagePath ENDSWITH "/First App"'
+            "xcrun",
+            "simctl",
+            "spawn",
+            "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+            "log",
+            "stream",
+            "--style",
+            "compact",
+            "--predicate",
+            'senderImagePath ENDSWITH "/First App"',
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -583,4 +678,4 @@ def test_run_app_simulator_launch_failure(first_app_config, tmp_path):
     command.subprocess.stream_output.assert_not_called()
 
     # The log process was cleaned up.
-    command.subprocess.cleanup.assert_called_once_with('log stream', log_stream_process)
+    command.subprocess.cleanup.assert_called_once_with("log stream", log_stream_process)

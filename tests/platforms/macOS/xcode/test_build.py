@@ -16,13 +16,15 @@ def test_build_app(first_app_config, tmp_path):
 
     command.subprocess.run.assert_called_with(
         [
-            'xcodebuild',
-            '-project', tmp_path / 'macOS' / 'Xcode' / 'First App' / 'First App.xcodeproj',
-            '-quiet',
-            '-configuration', 'Release',
-            'build'
+            "xcodebuild",
+            "-project",
+            tmp_path / "macOS" / "Xcode" / "First App" / "First App.xcodeproj",
+            "-quiet",
+            "-configuration",
+            "Release",
+            "build",
         ],
-        check=True
+        check=True,
     )
 
 
@@ -33,8 +35,7 @@ def test_build_app_failed(first_app_config, tmp_path):
     # The subprocess.run() call will raise an error
     command.subprocess = mock.MagicMock()
     command.subprocess.run.side_effect = subprocess.CalledProcessError(
-        cmd=['xcodebuild', '...'],
-        returncode=1
+        cmd=["xcodebuild", "..."], returncode=1
     )
 
     with pytest.raises(BriefcaseCommandError):
@@ -42,11 +43,13 @@ def test_build_app_failed(first_app_config, tmp_path):
 
     command.subprocess.run.assert_called_with(
         [
-            'xcodebuild',
-            '-project', tmp_path / 'macOS' / 'Xcode' / 'First App' / 'First App.xcodeproj',
-            '-quiet',
-            '-configuration', 'Release',
-            'build'
+            "xcodebuild",
+            "-project",
+            tmp_path / "macOS" / "Xcode" / "First App" / "First App.xcodeproj",
+            "-quiet",
+            "-configuration",
+            "Release",
+            "build",
         ],
-        check=True
+        check=True,
     )

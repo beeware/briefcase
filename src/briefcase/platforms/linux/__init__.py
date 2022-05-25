@@ -1,6 +1,5 @@
-
-DEFAULT_OUTPUT_FORMAT = 'appimage'
+DEFAULT_OUTPUT_FORMAT = "appimage"
 
 
 class LinuxMixin:
-    platform = 'linux'
+    platform = "linux"

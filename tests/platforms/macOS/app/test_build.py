@@ -23,8 +23,7 @@ def test_build_app(build_command, first_app_with_binaries):
 
     # A request has been made to sign the app
     build_command.sign_app.assert_called_once_with(
-        app=first_app_with_binaries,
-        identity='-'
+        app=first_app_with_binaries, identity="-"
     )
 
     # No request to select a signing identity was made

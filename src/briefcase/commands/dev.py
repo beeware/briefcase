@@ -11,18 +11,18 @@ from .create import DependencyInstallError, write_dist_info
 
 
 class DevCommand(BaseCommand):
-    cmd_line = 'briefcase dev'
-    command = 'dev'
+    cmd_line = "briefcase dev"
+    command = "dev"
     output_format = None
-    description = 'Run a briefcase project in the dev environment'
+    description = "Run a briefcase project in the dev environment"
 
     @property
     def platform(self):
         """The dev command always reports as the local platform."""
         return {
-            'darwin': 'macOS',
-            'linux': 'linux',
-            'win32': 'windows',
+            "darwin": "macOS",
+            "linux": "linux",
+            "win32": "windows",
         }[sys.platform]
 
     def bundle_path(self, app):
@@ -38,24 +38,19 @@ class DevCommand(BaseCommand):
         raise NotImplementedError()
 
     def add_options(self, parser):
+        parser.add_argument("-a", "--app", dest="appname", help="The app to run")
         parser.add_argument(
-            '-a',
-            '--app',
-            dest='appname',
-            help='The app to run'
-        )
-        parser.add_argument(
-            '-d',
-            '--update-dependencies',
+            "-d",
+            "--update-dependencies",
             action="store_true",
-            help='Update dependencies for app'
+            help="Update dependencies for app",
         )
         parser.add_argument(
-            '--no-run',
+            "--no-run",
             dest="run_app",
             action="store_false",
             default=True,
-            help='Do not run the app, just install dependencies.'
+            help="Do not run the app, just install dependencies.",
         )
 
     def install_dev_dependencies(self, app: BaseConfig, **options):
@@ -68,10 +63,13 @@ class DevCommand(BaseCommand):
             try:
                 self.subprocess.run(
                     [
-                        sys.executable, "-m",
-                        "pip", "install",
+                        sys.executable,
+                        "-m",
+                        "pip",
+                        "install",
                         "--upgrade",
-                    ] + app.requires,
+                    ]
+                    + app.requires,
                     check=True,
                 )
             except subprocess.CalledProcessError as e:
@@ -94,21 +92,21 @@ class DevCommand(BaseCommand):
                 check=True,
             )
         except subprocess.CalledProcessError as e:
-            raise BriefcaseCommandError(f"Unable to start application '{app.app_name}'") from e
+            raise BriefcaseCommandError(
+                f"Unable to start application '{app.app_name}'"
+            ) from e
 
     def get_environment(self, app):
         # Create a shell environment where PYTHONPATH points to the source
         # directories described by the app config.
-        return {
-            'PYTHONPATH': os.pathsep.join(app.PYTHONPATH)
-        }
+        return {"PYTHONPATH": os.pathsep.join(app.PYTHONPATH)}
 
     def __call__(
         self,
         appname: Optional[str] = None,
         update_dependencies: Optional[bool] = False,
         run_app: Optional[bool] = True,
-        **options
+        **options,
     ):
         # Confirm all required tools are available
         self.verify_tools()
@@ -135,18 +133,20 @@ class DevCommand(BaseCommand):
         # If one exists, assume that the dependencies have already been
         # installed. If a dependency update has been manually requested,
         # do it regardless.
-        dist_info_path = self.app_module_path(app).parent / f'{app.module_name}.dist-info'
+        dist_info_path = (
+            self.app_module_path(app).parent / f"{app.module_name}.dist-info"
+        )
         if not run_app:
             # If we are not running the app, it means we should update dependencies.
             update_dependencies = True
         if update_dependencies or not dist_info_path.exists():
             self.logger.info()
-            self.logger.info(f'[{app.app_name}] Installing dependencies...')
+            self.logger.info(f"[{app.app_name}] Installing dependencies...")
             self.install_dev_dependencies(app, **options)
             write_dist_info(app, dist_info_path)
 
         if run_app:
             self.logger.info()
-            self.logger.info(f'[{app.app_name}] Starting in dev mode...')
+            self.logger.info(f"[{app.app_name}] Starting in dev mode...")
             env = self.get_environment(app)
             return self.run_dev_app(app, env, **options)

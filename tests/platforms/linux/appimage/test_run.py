@@ -15,7 +15,9 @@ def test_verify_linux(tmp_path):
 
     # Mock the existence of Docker.
     command.subprocess = MagicMock()
-    command.subprocess.check_output.return_value = "Docker version 19.03.8, build afacb8b\n"
+    command.subprocess.check_output.return_value = (
+        "Docker version 19.03.8, build afacb8b\n"
+    )
 
     command.verify_tools()
 
@@ -28,7 +30,9 @@ def test_verify_non_linux(tmp_path):
 
     # Mock the existence of Docker.
     command.subprocess = MagicMock()
-    command.subprocess.check_output.return_value = "Docker version 19.03.8, build afacb8b\n"
+    command.subprocess.check_output.return_value = (
+        "Docker version 19.03.8, build afacb8b\n"
+    )
 
     with pytest.raises(BriefcaseCommandError):
         command.verify_tools()
@@ -39,15 +43,14 @@ def test_run_app(first_app_config, tmp_path):
     command = LinuxAppImageRunCommand(base_path=tmp_path)
 
     # Set the host architecture for test purposes.
-    command.host_arch = 'wonky'
+    command.host_arch = "wonky"
 
     command.subprocess = MagicMock()
 
     command.run_app(first_app_config)
 
     command.subprocess.run.assert_called_with(
-        [os.fsdecode(tmp_path / 'linux' / 'First_App-0.0.1-wonky.AppImage')],
-        check=True
+        [os.fsdecode(tmp_path / "linux" / "First_App-0.0.1-wonky.AppImage")], check=True
     )
 
 
@@ -56,16 +59,15 @@ def test_run_app_failed(first_app_config, tmp_path):
     command = LinuxAppImageRunCommand(base_path=tmp_path)
 
     # Set the host architecture for test purposes.
-    command.host_arch = 'wonky'
+    command.host_arch = "wonky"
 
     command.subprocess = MagicMock()
-    command.subprocess.run.side_effect = BriefcaseCommandError('problem')
+    command.subprocess.run.side_effect = BriefcaseCommandError("problem")
 
     with pytest.raises(BriefcaseCommandError):
         command.run_app(first_app_config)
 
     # The run command was still invoked, though
     command.subprocess.run.assert_called_with(
-        [os.fsdecode(tmp_path / 'linux' / 'First_App-0.0.1-wonky.AppImage')],
-        check=True
+        [os.fsdecode(tmp_path / "linux" / "First_App-0.0.1-wonky.AppImage")], check=True
     )

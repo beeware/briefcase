@@ -1,2 +1,1 @@
-
-DEFAULT_OUTPUT_FORMAT = 'project'
+DEFAULT_OUTPUT_FORMAT = "project"

@@ -4,10 +4,11 @@ from briefcase.console import InputDisabled
 
 
 @pytest.mark.parametrize(
-    "value, expected", [
+    "value, expected",
+    [
         ("Value", "Value"),
         ("", "Default"),
-    ]
+    ],
 )
 def test_text_input(console, value, expected):
     prompt = "> "

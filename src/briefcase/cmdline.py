@@ -10,7 +10,7 @@ from .exceptions import (
     InvalidFormatError,
     NoCommandError,
     ShowOutputFormats,
-    UnsupportedCommandError
+    UnsupportedCommandError,
 )
 
 
@@ -20,20 +20,17 @@ def parse_cmdline(args):
         description="Package Python code for distribution.",
         usage="briefcase [-h] <command> [<platform>] [<format>] ...",
         epilog="Each command, platform and format has additional options. "
-               "Use the -h option on a specific command for more details.",
-        add_help=False
+        "Use the -h option on a specific command for more details.",
+        add_help=False,
     )
     parser.add_argument(
-        '-f', '--formats',
-        action='store_true',
-        dest='show_output_formats',
-        help="show the available output formats and exit (specify a platform for more details)."
+        "-f",
+        "--formats",
+        action="store_true",
+        dest="show_output_formats",
+        help="show the available output formats and exit (specify a platform for more details).",
     )
-    parser.add_argument(
-        '-V', '--version',
-        action='version',
-        version=__version__
-    )
+    parser.add_argument("-V", "--version", action="version", version=__version__)
 
     # <command> isn't actually optional; but if it's marked as required,
     # there's no way to get help for subcommands. So; treat <command>
@@ -41,14 +38,21 @@ def parse_cmdline(args):
     # as the case where top-level help is displayed, and provide an explicit
     # usage string so that the instructions displayed are correct
     parser.add_argument(
-        'command',
+        "command",
         choices=[
-            'new', 'dev', 'upgrade',
-            'create', 'update', 'build', 'run', 'package', 'publish'
+            "new",
+            "dev",
+            "upgrade",
+            "create",
+            "update",
+            "build",
+            "run",
+            "package",
+            "publish",
         ],
-        metavar='command',
-        nargs='?',
-        help='the command to execute (one of: %(choices)s)',
+        metavar="command",
+        nargs="?",
+        help="the command to execute (one of: %(choices)s)",
     )
 
     # <platform> *is* optional, with the default value based on the platform
@@ -59,10 +63,7 @@ def parse_cmdline(args):
     # actually used to register the platform. This function maps the lower-case
     # version of the registered name to the actual registered name.
     def normalize(name):
-        return {
-            n.lower(): n
-            for n in platforms.keys()
-        }.get(name.lower(), name)
+        return {n.lower(): n for n in platforms.keys()}.get(name.lower(), name)
 
     # Use parse_known_args to ensure any extra arguments can be ignored,
     # and parsed as part of subcommand handling. This will capture the
@@ -73,47 +74,41 @@ def parse_cmdline(args):
     # If no command has been provided, display top-level help.
     if options.command is None:
         raise NoCommandError(parser.format_help())
-    elif options.command == 'new':
+    elif options.command == "new":
         command = NewCommand(base_path=Path.cwd())
-        options = command.parse_options(
-            extra=extra
-        )
+        options = command.parse_options(extra=extra)
         return command, options
-    elif options.command == 'dev':
+    elif options.command == "dev":
         command = DevCommand(base_path=Path.cwd())
-        options = command.parse_options(
-            extra=extra
-        )
+        options = command.parse_options(extra=extra)
         return command, options
-    elif options.command == 'upgrade':
+    elif options.command == "upgrade":
         command = UpgradeCommand(base_path=Path.cwd())
-        options = command.parse_options(
-            extra=extra
-        )
+        options = command.parse_options(extra=extra)
         return command, options
 
     parser.add_argument(
-        'platform',
+        "platform",
         choices=list(platforms.keys()),
         default={
-            'darwin': 'macOS',
-            'linux': 'linux',
-            'win32': 'windows',
+            "darwin": "macOS",
+            "linux": "linux",
+            "win32": "windows",
         }[sys.platform],
-        metavar='platform',
-        nargs='?',
+        metavar="platform",
+        nargs="?",
         type=normalize,
-        help='The platform to target (one of %(choices)s; default: %(default)s',
+        help="The platform to target (one of %(choices)s; default: %(default)s",
     )
 
     # <format> is also optional, with the default being platform dependent.
     # There's no way to encode option-dependent choices, so allow *any*
     # input, and we'll manually validate.
     parser.add_argument(
-        'output_format',
-        metavar='format',
-        nargs='?',
-        help='The output format to use (the available output formats are platform dependent)'
+        "output_format",
+        metavar="format",
+        nargs="?",
+        help="The output format to use (the available output formats are platform dependent)",
     )
 
     # Re-parse the aruments, now that we know it is a command that makes use
@@ -140,9 +135,9 @@ def parse_cmdline(args):
         output_format = options.output_format
 
     # Normalise casing of output_format to be more forgiving.
-    output_format = {
-        n.lower(): n for n in output_formats
-    }.get(output_format.lower(), output_format)
+    output_format = {n.lower(): n for n in output_formats}.get(
+        output_format.lower(), output_format
+    )
 
     # We now know the command, platform, and format.
     # Get the command class that corresponds to that definition.
@@ -158,12 +153,10 @@ def parse_cmdline(args):
         raise UnsupportedCommandError(
             platform=options.platform,
             output_format=output_format,
-            command=options.command
+            command=options.command,
         )
 
     # Construct a command, and parse the remaining arguments.
     command = Command(base_path=Path.cwd())
-    options = command.parse_options(
-        extra=extra
-    )
+    options = command.parse_options(extra=extra)
     return command, options

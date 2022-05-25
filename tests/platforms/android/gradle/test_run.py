@@ -29,11 +29,11 @@ def test_run_existing_device(run_command, first_app_config):
     "An app can be run on an existing device"
     # Set up device selection to return a running physical device.
     run_command.android_sdk.select_target_device = MagicMock(
-        return_value=("exampleDevice", 'ExampleDevice', None)
+        return_value=("exampleDevice", "ExampleDevice", None)
     )
     # Set up app config to have a `-` in the `bundle`, to ensure it gets
     # normalized into a `_` via `package_name`.
-    first_app_config.bundle = 'com.ex-ample'
+    first_app_config.bundle = "com.ex-ample"
 
     # Invoke run_app
     run_command.run_app(first_app_config, device_or_avd="exampleDevice")
@@ -70,7 +70,7 @@ def test_run_created_device(run_command, first_app_config):
     run_command.android_sdk.select_target_device = MagicMock(
         return_value=(None, None, None)
     )
-    run_command.input = MagicMock(return_value='newDevice')
+    run_command.input = MagicMock(return_value="newDevice")
 
     with pytest.raises(BriefcaseCommandError):
         run_command.run_app(first_app_config)

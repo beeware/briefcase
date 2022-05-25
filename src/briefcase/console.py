@@ -12,6 +12,7 @@ class Log:
     """
     Manage logging output driven by verbosity flags.
     """
+
     DEBUG = 2
     DEEP_DEBUG = 3
 
@@ -104,21 +105,21 @@ class Console:
             default_text = None
         elif default:
             yes_no = "[Y/n]"
-            default_text = 'y'
+            default_text = "y"
         else:
             yes_no = "[y/N]"
-            default_text = 'n'
+            default_text = "n"
 
         prompt = f"{question} {yes_no}? "
 
         result = self.selection_input(
             prompt=prompt,
-            choices=['y', 'n'],
+            choices=["y", "n"],
             default=default_text,
             error_message="Please enter Y or N",
             transform=lambda s: s.lower()[:1],
         )
-        if result == 'y':
+        if result == "y":
             return True
 
         return False
@@ -129,7 +130,7 @@ class Console:
         choices,
         default=None,
         error_message="Invalid Selection",
-        transform=None
+        transform=None,
     ):
         """
         Prompt the user to select an option from a list of choices.
@@ -255,7 +256,7 @@ class WaitBar:
         print(self.alive_char, end="", flush=True)
 
 
-def select_option(options, input, prompt='> ', error="Invalid selection"):
+def select_option(options, input, prompt="> ", error="Invalid selection"):
     """
     Prompt the user for a choice from a list of options.
 
@@ -280,18 +281,13 @@ def select_option(options, input, prompt='> ', error="Invalid selection"):
     :returns: The key corresponding to the user's chosen option.
     """
     if isinstance(options, dict):
-        ordered = list(
-            sorted(
-                options.items(),
-                key=operator.itemgetter(1)
-            )
-        )
+        ordered = list(sorted(options.items(), key=operator.itemgetter(1)))
     else:
         ordered = options
 
     if input.enabled:
         for i, (key, value) in enumerate(ordered, start=1):
-            input.prompt(f'  {i}) {value}')
+            input.prompt(f"  {i}) {value}")
 
         input.prompt()
 

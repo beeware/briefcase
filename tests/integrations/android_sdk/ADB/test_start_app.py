@@ -37,13 +37,15 @@ def test_missing_activity(mock_sdk):
     # Use real `adb` output from launching an activity that does not exist.
     # Mock out the run command on an adb instance
     adb = ADB(mock_sdk, "exampleDevice")
-    adb.run = MagicMock(return_value="""\
+    adb.run = MagicMock(
+        return_value="""\
 Starting: Intent { act=android.intent.action.MAIN cat=[android.intent.category.\
 LAUNCHER] cmp=com.example.sample.package/.MainActivity }
 Error type 3
 Error: Activity class {com.example.sample.package/com.example.sample.package.\
 MainActivity} does not exist.
-""")
+"""
+    )
 
     with pytest.raises(BriefcaseCommandError) as exc_info:
         adb.start_app("com.example.sample.package", "com.example.sample.activity")
@@ -56,7 +58,7 @@ def test_invalid_device(mock_sdk):
     # Use real `adb` output from launching an activity that does not exist.
     # Mock out the run command on an adb instance
     adb = ADB(mock_sdk, "exampleDevice")
-    adb.run = MagicMock(side_effect=InvalidDeviceError('device', 'exampleDevice'))
+    adb.run = MagicMock(side_effect=InvalidDeviceError("device", "exampleDevice"))
 
     with pytest.raises(InvalidDeviceError):
         adb.start_app("com.example.sample.package", "com.example.sample.activity")

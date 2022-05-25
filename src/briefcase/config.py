@@ -13,158 +13,152 @@ from briefcase.platforms import get_output_formats, get_platforms
 from .exceptions import BriefcaseConfigError
 
 # PEP508 provides a basic restriction on naming
-PEP508_NAME_RE = re.compile(
-    r'^([A-Z0-9]|[A-Z0-9][A-Z0-9._-]*[A-Z0-9])$',
-    re.IGNORECASE
-)
+PEP508_NAME_RE = re.compile(r"^([A-Z0-9]|[A-Z0-9][A-Z0-9._-]*[A-Z0-9])$", re.IGNORECASE)
 
 # Javascript reserved keywords:
 # https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#reserved_keywords_as_of_ecmascript_2015
 JAVASCRIPT_RESERVED_WORDS = {
-    'break',
-    'case',
-    'catch',
-    'class',
-    'const',
-    'continue',
-    'debugger',
-    'default',
-    'delete',
-    'do',
-    'else',
-    'export',
-    'extends',
-    'finally',
-    'for',
-    'function',
-    'if',
-    'import',
-    'in',
-    'instanceof',
-    'new',
-    'return',
-    'super',
-    'switch',
-    'this',
-    'throw',
-    'try',
-    'typeof',
-    'var',
-    'void',
-    'while',
-    'with',
-    'yield',
+    "break",
+    "case",
+    "catch",
+    "class",
+    "const",
+    "continue",
+    "debugger",
+    "default",
+    "delete",
+    "do",
+    "else",
+    "export",
+    "extends",
+    "finally",
+    "for",
+    "function",
+    "if",
+    "import",
+    "in",
+    "instanceof",
+    "new",
+    "return",
+    "super",
+    "switch",
+    "this",
+    "throw",
+    "try",
+    "typeof",
+    "var",
+    "void",
+    "while",
+    "with",
+    "yield",
 }
 
 # Java reserved keywords
 # https://en.wikipedia.org/wiki/List_of_Java_keywords
 JAVA_RESERVED_WORDS = {
     # Keywords
-    'abstract',
-    'assert',
-    'boolean',
-    'break',
-    'byte',
-    'case',
-    'catch',
-    'char',
-    'class',
-    'const',
-    'continue',
-    'default',
-    'do',
-    'double',
-    'else',
-    'enum',
-    'extends',
-    'final',
-    'finally',
-    'float',
-    'for',
-    'goto',
-    'if',
-    'implements',
-    'import',
-    'instanceof',
-    'int',
-    'interface',
-    'long',
-    'native',
-    'new',
-    'package',
-    'private',
-    'protected',
-    'public',
-    'return',
-    'short',
-    'static',
-    'super',
-    'switch',
-    'synchronized',
-    'this',
-    'throw',
-    'throws',
-    'transient',
-    'try',
-    'void',
-    'volatile',
-    'while',
-
+    "abstract",
+    "assert",
+    "boolean",
+    "break",
+    "byte",
+    "case",
+    "catch",
+    "char",
+    "class",
+    "const",
+    "continue",
+    "default",
+    "do",
+    "double",
+    "else",
+    "enum",
+    "extends",
+    "final",
+    "finally",
+    "float",
+    "for",
+    "goto",
+    "if",
+    "implements",
+    "import",
+    "instanceof",
+    "int",
+    "interface",
+    "long",
+    "native",
+    "new",
+    "package",
+    "private",
+    "protected",
+    "public",
+    "return",
+    "short",
+    "static",
+    "super",
+    "switch",
+    "synchronized",
+    "this",
+    "throw",
+    "throws",
+    "transient",
+    "try",
+    "void",
+    "volatile",
+    "while",
     # Reserved Identifiers
-    'exports',
-    'module',
-    'non-sealed',
-    'open',
-    'opens',
-    'permits',
-    'provides',
-    'record',
-    'requires',
-    'sealed',
-    'to',
-    'transitive',
-    'uses',
-    'var',
-    'with',
-    'yield',
-
+    "exports",
+    "module",
+    "non-sealed",
+    "open",
+    "opens",
+    "permits",
+    "provides",
+    "record",
+    "requires",
+    "sealed",
+    "to",
+    "transitive",
+    "uses",
+    "var",
+    "with",
+    "yield",
     # Reserved Literals
-    'true',
-    'false',
-    'null',
-
+    "true",
+    "false",
+    "null",
     # Unused, but reserved.
-    'strictfp',
+    "strictfp",
 }
 
 
 # Names that are illegal as Windows filenames
 # https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file
 WINDOWS_RESERVED_WORDS = {
-    'con',
-    'prn',
-    'aux',
-    'nul',
-    'com1',
-    'com2',
-    'com3',
-    'com4',
-    'com5',
-    'com6',
-    'com7',
-    'com8',
-    'com9',
-    'com0',
-    'lpt1',
-    'lpt2',
-    'lpt3',
-    'lpt4',
-    'lpt5',
-    'lpt6',
-    'lpt7',
-    'lpt8',
-    'lpt9',
-    'lpt0',
+    "con",
+    "prn",
+    "aux",
+    "nul",
+    "com1",
+    "com2",
+    "com3",
+    "com4",
+    "com5",
+    "com6",
+    "com7",
+    "com8",
+    "com9",
+    "com0",
+    "lpt1",
+    "lpt2",
+    "lpt3",
+    "lpt4",
+    "lpt5",
+    "lpt6",
+    "lpt7",
+    "lpt8",
+    "lpt9",
+    "lpt0",
 }
 
 NON_PYTHON_RESERVED_WORDS = set.union(
@@ -181,14 +175,17 @@ def is_valid_pep508_name(app_name):
 
 def is_reserved_keyword(app_name):
     "Determine if the name is a reserved keyword"
-    return keyword.iskeyword(app_name.lower()) or app_name.lower() in NON_PYTHON_RESERVED_WORDS
+    return (
+        keyword.iskeyword(app_name.lower())
+        or app_name.lower() in NON_PYTHON_RESERVED_WORDS
+    )
 
 
 def is_valid_app_name(app_name):
     return not is_reserved_keyword(app_name) and is_valid_pep508_name(app_name)
 
 
-VALID_BUNDLE_RE = re.compile(r'[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$')
+VALID_BUNDLE_RE = re.compile(r"[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$")
 
 
 def is_valid_bundle_identifier(bundle):
@@ -196,13 +193,13 @@ def is_valid_bundle_identifier(bundle):
     if not VALID_BUNDLE_RE.match(bundle):
         return False
 
-    for part in bundle.split('.'):
+    for part in bundle.split("."):
         # *Some* 2-letter country codes are valid identifiers,
         # even though they're reserved words; see:
         #    https://www.oracle.com/java/technologies/javase/codeconventions-namingconventions.html
         # `.do` *should* be on this list, but as of Apr 2022, `.do` breaks
         # the Android build tooling.
-        if is_reserved_keyword(part) and part not in {'in', 'is'}:
+        if is_reserved_keyword(part) and part not in {"in", "is"}:
             return False
 
     return True
@@ -210,11 +207,11 @@ def is_valid_bundle_identifier(bundle):
 
 # This is the canonical definition from PEP440, modified to include named groups
 PEP440_CANONICAL_VERSION_PATTERN_RE = re.compile(
-    r'^((?P<epoch>[1-9][0-9]*)!)?'
-    r'(?P<release>(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*))*)'
-    r'((?P<pre_tag>a|b|rc)(?P<pre_value>0|[1-9][0-9]*))?'
-    r'(\.post(?P<post>0|[1-9][0-9]*))?'
-    r'(\.dev(?P<dev>0|[1-9][0-9]*))?$'
+    r"^((?P<epoch>[1-9][0-9]*)!)?"
+    r"(?P<release>(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*))*)"
+    r"((?P<pre_tag>a|b|rc)(?P<pre_value>0|[1-9][0-9]*))?"
+    r"(\.post(?P<post>0|[1-9][0-9]*))?"
+    r"(\.dev(?P<dev>0|[1-9][0-9]*))?$"
 )
 
 
@@ -238,18 +235,18 @@ def parsed_version(version):
     groupdict = PEP440_CANONICAL_VERSION_PATTERN_RE.match(version).groupdict()
 
     # Convert dot separated string of integers to tuple of integers
-    groupdict['release'] = tuple(int(p) for p in groupdict.pop('release').split('.'))
+    groupdict["release"] = tuple(int(p) for p in groupdict.pop("release").split("."))
 
     # Convert strings to values
-    for key in ('epoch', 'pre_value', 'post', 'dev'):
+    for key in ("epoch", "pre_value", "post", "dev"):
         try:
             groupdict[key] = int(groupdict[key])
         except TypeError:
             pass
 
-    tag = groupdict.pop('pre_tag')
-    value = groupdict.pop('pre_value')
-    groupdict['pre'] = (tag, value) if tag is not None else None
+    tag = groupdict.pop("pre_tag")
+    value = groupdict.pop("pre_value")
+    groupdict["pre"] = (tag, value) if tag is not None else None
     return SimpleNamespace(**groupdict)
 
 
@@ -268,7 +265,7 @@ class GlobalConfig(BaseConfig):
         url=None,
         author=None,
         author_email=None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(**kwargs)
         self.project_name = project_name
@@ -309,7 +306,7 @@ class AppConfig(BaseConfig):
         template=None,
         template_branch=None,
         supported=True,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(**kwargs)
 
@@ -356,7 +353,7 @@ class AppConfig(BaseConfig):
             )
 
         # Sources list doesn't include any duplicates
-        source_modules = {source.rsplit('/', 1)[-1] for source in self.sources}
+        source_modules = {source.rsplit("/", 1)[-1] for source in self.sources}
         if len(self.sources) != len(source_modules):
             raise BriefcaseConfigError(
                 f"The `sources` list for {self.app_name!r} contains duplicated "
@@ -381,7 +378,7 @@ class AppConfig(BaseConfig):
         This is derived from the name, but:
         * all `-` have been replaced with `_`.
         """
-        return self.app_name.replace('-', '_')
+        return self.app_name.replace("-", "_")
 
     @property
     def package_name(self):
@@ -390,14 +387,14 @@ class AppConfig(BaseConfig):
         something that can be used a namespace identifier on Python or Java,
         similar to `module_name`.
         """
-        return self.bundle.replace('-', '_')
+        return self.bundle.replace("-", "_")
 
     @property
     def PYTHONPATH(self):
         "The PYTHONPATH modifications needed to run this app."
         paths = []
         for source in self.sources:
-            path = source.rsplit('/', 1)[0]
+            path = source.rsplit("/", 1)[0]
             if path not in paths:
                 paths.append(path)
         return paths
@@ -411,7 +408,7 @@ def merge_config(config, data):
         is modified in-situ.
     :param data: The new configuration data to merge into the configuration.
     """
-    for option in ['requires', 'sources']:
+    for option in ["requires", "sources"]:
         value = data.pop(option, [])
 
         if value:
@@ -452,20 +449,20 @@ def parse_config(config_file, platform, output_format):
     try:
         pyproject = tomllib.load(config_file)
 
-        global_config = pyproject['tool']['briefcase']
+        global_config = pyproject["tool"]["briefcase"]
     except tomllib.TOMLDecodeError as e:
-        raise BriefcaseConfigError(f'Invalid pyproject.toml: {e}') from e
+        raise BriefcaseConfigError(f"Invalid pyproject.toml: {e}") from e
     except KeyError as e:
-        raise BriefcaseConfigError('No tool.briefcase section in pyproject.toml') from e
+        raise BriefcaseConfigError("No tool.briefcase section in pyproject.toml") from e
 
     # For consistent results, sort the platforms and formats
     all_platforms = sorted(get_platforms().keys())
     all_formats = sorted(get_output_formats(platform).keys())
 
     try:
-        all_apps = global_config.pop('app')
+        all_apps = global_config.pop("app")
     except KeyError as e:
-        raise BriefcaseConfigError('No Briefcase apps defined in pyproject.toml') from e
+        raise BriefcaseConfigError("No Briefcase apps defined in pyproject.toml") from e
 
     # Build the flat configuration for each app,
     # based on the requested platform and output format
@@ -524,7 +521,7 @@ def parse_config(config_file, platform, output_format):
         config = copy.deepcopy(global_config)
 
         # The app name is both the key, and a property of the configuration
-        config['app_name'] = app_name
+        config["app_name"] = app_name
 
         # Merge the app-specific requirements
         merge_config(config, app_data)

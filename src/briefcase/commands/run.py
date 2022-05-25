@@ -8,20 +8,15 @@ from .base import BaseCommand, full_options
 
 
 class RunCommand(BaseCommand):
-    command = 'run'
+    command = "run"
 
     def add_options(self, parser):
+        parser.add_argument("-a", "--app", dest="appname", help="The app to run")
         parser.add_argument(
-            '-a',
-            '--app',
-            dest='appname',
-            help='The app to run'
-        )
-        parser.add_argument(
-            '-u',
-            '--update',
+            "-u",
+            "--update",
             action="store_true",
-            help='Update the app before execution'
+            help="Update the app before execution",
         )
 
     @abstractmethod
@@ -34,10 +29,7 @@ class RunCommand(BaseCommand):
         ...
 
     def __call__(
-        self,
-        appname: Optional[str] = None,
-        update: Optional[bool] = False,
-        **options
+        self, appname: Optional[str] = None, update: Optional[bool] = False, **options
     ):
         # Confirm all required tools are available
         self.verify_tools()

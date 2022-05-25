@@ -11,10 +11,10 @@ from .base import BaseCommand
 
 
 class UpgradeCommand(BaseCommand):
-    cmd_line = 'briefcase upgrade'
-    command = 'upgrade'
+    cmd_line = "briefcase upgrade"
+    command = "upgrade"
     output_format = None
-    description = 'Upgrade briefcase-managed tools'
+    description = "Upgrade briefcase-managed tools"
 
     def __init__(self, *args, **options):
         super().__init__(*args, **options)
@@ -24,9 +24,9 @@ class UpgradeCommand(BaseCommand):
     def platform(self):
         """The upgrade command always reports as the local platform."""
         return {
-            'darwin': 'macOS',
-            'linux': 'linux',
-            'win32': 'windows',
+            "darwin": "macOS",
+            "linux": "linux",
+            "win32": "windows",
         }[sys.platform]
 
     def bundle_path(self, app):
@@ -43,25 +43,20 @@ class UpgradeCommand(BaseCommand):
 
     def add_options(self, parser):
         parser.add_argument(
-            '-l',
-            '--list',
-            dest='list_tools',
-            action='store_true',
-            help='List the Briefcase-managed tools that are currently installed.'
+            "-l",
+            "--list",
+            dest="list_tools",
+            action="store_true",
+            help="List the Briefcase-managed tools that are currently installed.",
         )
         parser.add_argument(
-            'tool_list',
-            metavar='tool',
-            nargs='*',
-            help='The Briefcase-managed tool to upgrade. If no tool is named, all tools will be upgraded.',
+            "tool_list",
+            metavar="tool",
+            nargs="*",
+            help="The Briefcase-managed tool to upgrade. If no tool is named, all tools will be upgraded.",
         )
 
-    def __call__(
-        self,
-        tool_list: List[str],
-        list_tools=False,
-        **options
-    ):
+    def __call__(self, tool_list: List[str], list_tools=False, **options):
         # Verify all the managed SDKs to see which are present.
         managed_tools = {}
         non_managed_tools = set()
@@ -86,7 +81,9 @@ class UpgradeCommand(BaseCommand):
             if name in managed_tools:
                 found_tools.append(name)
             elif name not in non_managed_tools:
-                raise BriefcaseCommandError(f"Briefcase doesn't know how to manage the tool '{name}'")
+                raise BriefcaseCommandError(
+                    f"Briefcase doesn't know how to manage the tool '{name}'"
+                )
 
         if found_tools:
             if list_tools:
@@ -94,7 +91,7 @@ class UpgradeCommand(BaseCommand):
                 for name in found_tools:
                     self.logger.info(f" - {name}")
             else:
-                self.logger.info('Briefcase will upgrade the following tools:')
+                self.logger.info("Briefcase will upgrade the following tools:")
                 for name in found_tools:
                     self.logger.info(f" - {name}")
                 self.logger.info()

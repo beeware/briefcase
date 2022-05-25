@@ -14,10 +14,10 @@ def docker_install_details(host_os):
     :param host_os: The host OS for which installation details are required.
     :returns: a context dictionary containing Docker installation details.
     """
-    if host_os == 'Windows':
+    if host_os == "Windows":
         install_url = "https://docs.docker.com/docker-for-windows/install/"
         extra_content = ""
-    elif host_os == 'Darwin':
+    elif host_os == "Darwin":
         install_url = "https://docs.docker.com/docker-for-mac/install/"
         extra_content = ""
     else:
@@ -26,8 +26,8 @@ def docker_install_details(host_os):
 `--no-docker` command-line argument.
 """
     return {
-        'install_url': install_url,
-        'extra_content': extra_content,
+        "install_url": install_url,
+        "extra_content": extra_content,
     }
 
 
@@ -104,16 +104,16 @@ need to restart your terminal session.
     try:
         # Try to get the version of docker that is installed.
         output = command.subprocess.check_output(
-            ['docker', '--version'],
+            ["docker", "--version"],
             stderr=subprocess.STDOUT,
-        ).strip('\n')
+        ).strip("\n")
 
         # Do a simple check that the docker that was invoked
         # actually looks like the real deal, and is a version that
         # meets our requirements.
-        if output.startswith('Docker version '):
+        if output.startswith("Docker version "):
             docker_version = output[15:]
-            version = docker_version.split('.')
+            version = docker_version.split(".")
             if int(version[0]) < 19:
                 # Docker version isn't compatible.
                 raise BriefcaseCommandError(
@@ -130,9 +130,7 @@ need to restart your terminal session.
     except FileNotFoundError as e:
         # Docker executable doesn't exist.
         raise BriefcaseCommandError(
-            DOCKER_NOT_INSTALLED_ERROR.format(
-                **docker_install_details(command.host_os)
-            )
+            DOCKER_NOT_INSTALLED_ERROR.format(**docker_install_details(command.host_os))
         ) from e
 
     # Check that docker commands can actually run.
@@ -180,18 +178,18 @@ installation, and try again.
         # and the user has sufficient permissions.
         # We don't care about the output, just that it succeeds.
         command.subprocess.check_output(
-            ['docker', 'info'],
+            ["docker", "info"],
             stderr=subprocess.STDOUT,
         )
     except subprocess.CalledProcessError as e:
         failure_output = e.output
-        if 'permission denied while trying to connect' in failure_output:
+        if "permission denied while trying to connect" in failure_output:
             raise BriefcaseCommandError(LACKS_PERMISSION_ERROR) from e
         elif (
-                # error message on Ubuntu
-                'Is the docker daemon running?' in failure_output
-                # error message on macOS
-                or 'connect: connection refused' in failure_output
+            # error message on Ubuntu
+            "Is the docker daemon running?" in failure_output
+            # error message on macOS
+            or "connect: connection refused" in failure_output
         ):
             raise BriefcaseCommandError(DAEMON_NOT_RUNNING_ERROR) from e
         else:
@@ -207,23 +205,32 @@ class Docker:
     def prepare(self):
         try:
             self.command.logger.info()
-            self.command.logger.info(f"[{self.app.app_name}] Building Docker container image...")
+            self.command.logger.info(
+                f"[{self.app.app_name}] Building Docker container image..."
+            )
             self.command.logger.info()
             try:
-                system_requires = ' '.join(self.app.system_requires)
+                system_requires = " ".join(self.app.system_requires)
             except AttributeError:
-                system_requires = ''
+                system_requires = ""
 
             self._subprocess.run(
                 [
-                    "docker", "build",
-                    "--tag", self.command.docker_image_tag(self.app),
-                    "--file", self.command.bundle_path(self.app) / 'Dockerfile',
-                    "--build-arg", f"PY_VERSION={self.command.python_version_tag}",
-                    "--build-arg", f"SYSTEM_REQUIRES={system_requires}",
-                    "--build-arg", f"HOST_UID={self.command.os.getuid()}",
-                    "--build-arg", f"HOST_GID={self.command.os.getgid()}",
-                    Path(self.command.base_path, *self.app.sources[0].split('/')[:-1])
+                    "docker",
+                    "build",
+                    "--tag",
+                    self.command.docker_image_tag(self.app),
+                    "--file",
+                    self.command.bundle_path(self.app) / "Dockerfile",
+                    "--build-arg",
+                    f"PY_VERSION={self.command.python_version_tag}",
+                    "--build-arg",
+                    f"SYSTEM_REQUIRES={system_requires}",
+                    "--build-arg",
+                    f"HOST_UID={self.command.os.getuid()}",
+                    "--build-arg",
+                    f"HOST_GID={self.command.os.getgid()}",
+                    Path(self.command.base_path, *self.app.sources[0].split("/")[:-1]),
                 ],
                 check=True,
             )
@@ -240,17 +247,20 @@ class Docker:
         # The :z suffix allows SELinux to modify the host mount; it is ignored
         # on non-SELinux platforms.
         docker_args = [
-            "docker", "run",
+            "docker",
+            "run",
             "--tty",
-            "--volume", f"{self.command.platform_path}:/app:z",
-            "--volume", f"{self.command.dot_briefcase_path}:/home/brutus/.briefcase:z",
+            "--volume",
+            f"{self.command.platform_path}:/app:z",
+            "--volume",
+            f"{self.command.dot_briefcase_path}:/home/brutus/.briefcase:z",
         ]
 
         # If any environment variables have been defined, pass them in
         # as --env arguments to Docker.
         if env:
             for key, value in env.items():
-                docker_args.extend(['--env', f"{key}={value}"])
+                docker_args.extend(["--env", f"{key}={value}"])
 
         # ... then the image name.
         docker_args.append(self.command.docker_image_tag(self.app))
@@ -259,15 +269,16 @@ class Docker:
         for arg in args:
             arg = str(arg)
             if arg == sys.executable:
-                docker_args.append(f'python{self.command.python_version_tag}')
+                docker_args.append(f"python{self.command.python_version_tag}")
             elif os.fsdecode(self.command.platform_path) in arg:
                 docker_args.append(
-                    arg.replace(os.fsdecode(self.command.platform_path), '/app')
+                    arg.replace(os.fsdecode(self.command.platform_path), "/app")
                 )
             elif os.fsdecode(self.command.dot_briefcase_path) in arg:
                 docker_args.append(
                     arg.replace(
-                        os.fsdecode(self.command.dot_briefcase_path), '/home/brutus/.briefcase'
+                        os.fsdecode(self.command.dot_briefcase_path),
+                        "/home/brutus/.briefcase",
                     )
                 )
             else:
