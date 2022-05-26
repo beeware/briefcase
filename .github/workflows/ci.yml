@@ -4,10 +4,28 @@ on:
   push:
     branches:
       - main
+env:
+  python_version: '3.9'
 
 jobs:
+  pre-commit:
+    name: Lint using pre-commit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v3.0.2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Set up Python
+        uses: actions/setup-python@v3.1.2
+        with:
+          python-version: ${{ env.python_version }}
+      - name: Lint with Pre-commit
+        uses: pre-commit/action@v2.0.3
+
   beefore:
     name: Pre-test checks
+    needs: pre-commit
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 4
@@ -25,12 +43,10 @@ jobs:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
-    - name: Set up Python 3.9
-      uses: actions/setup-python@v2
+    - name: Set up Python
+      uses: actions/setup-python@v3.1.2
       with:
-        python-version: "3.9"
-    - name: Lint with Pre-commit
-      uses: pre-commit/action@v2.0.3
+        python-version: ${{ env.python_version }}
     - name: Install dependencies
       run: |
         pip install --upgrade pip
@@ -47,7 +63,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python 3.7
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v3.1.2
       with:
         python-version: "3.7"
     - name: Install dependencies
@@ -80,7 +96,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v3.1.2
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
@@ -102,10 +118,10 @@ jobs:
     runs-on: ${{ matrix.platform }}
     steps:
     - uses: actions/checkout@v3
-    - name: Set up Python 3.9
-      uses: actions/setup-python@v2
+    - name: Set up Python
+      uses: actions/setup-python@v3.1.2
       with:
-        python-version: "3.9"
+        python-version: ${{ env.python_version }}
     - name: Install dependencies
       run: |
         pip install --upgrade pip
@@ -145,10 +161,10 @@ jobs:
           ${{ matrix.pip-cache-dir }}
           ${{ matrix.docker-cache-dir }}
     - uses: actions/checkout@v3
-    - name: Set up Python 3.9
-      uses: actions/setup-python@v2
+    - name: Set up Python
+      uses: actions/setup-python@v3.1.2
       with:
-        python-version: "3.9"
+        python-version: ${{ env.python_version }}
     - name: Install dependencies
       run: |
         pip install --upgrade pip
