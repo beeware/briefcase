@@ -102,7 +102,7 @@ def test_explicit_device_name_and_version(dummy_command):
 
     # Specify an iPhone 8 on 10.3
     # It matches case insensitive, and finds the explicit iOS version.
-    udid, iOS_version, device = dummy_command.select_target_device('iphone 8::10.3')
+    udid, iOS_version, device = dummy_command.select_target_device('iphone 8::ios 10.3')
 
     assert udid == '68A6E340-8376-47C5-9468-C9A005C88209'
     assert iOS_version == 'iOS 10.3'
