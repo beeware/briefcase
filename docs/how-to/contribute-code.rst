@@ -69,6 +69,34 @@ requirements, run the following commands within your virtual environment:
 
       C:\...>pip install -e .
 
+Briefcase uses `Pre-Commit <https://pre-commit.com>`__ which provides git hook scripts to
+identify simple issues and standardize formatting. These linters are run automatically
+prior to committing a change with git. Prior to contributing, install and enable
+pre-commit:
+
+.. tabs::
+
+  .. group-tab:: macOS
+
+    .. code-block:: bash
+
+      $ (venv) python3 -m pip install -r requirements.dev.txt
+      $ (venv) pre-commit install
+
+  .. group-tab:: Linux
+
+    .. code-block:: bash
+
+      $ (venv) python3 -m pip install -r requirements.dev.txt
+      $ (venv) pre-commit install
+
+  .. group-tab:: Windows
+
+    .. code-block:: doscon
+
+      C:\...>py -m pip install -r requirements.dev.txt
+      C:\...>pre-commit install
+
 Now you are ready to start hacking! Have fun!
 
 Briefcase uses `PyTest <https://pytest.org>`__ for its own test suite. It uses
@@ -81,21 +109,21 @@ To set up a testing environment and run the full test suite:
 
     .. code-block:: bash
 
-      $ (venv) pip install tox
+      $ (venv) pip install -r requirements.test.txt
       $ (venv) tox
 
   .. group-tab:: Linux
 
     .. code-block:: bash
 
-      $ (venv) pip install tox
+      $ (venv) pip install -r requirements.test.txt
       $ (venv) tox
 
   .. group-tab:: Windows
 
     .. code-block:: doscon
 
-      C:\...>pip install tox
+      C:\...>pip install -r requirements.test.txt
       C:\...>tox
 
 By default this will run the test suite multiple times, once on each Python
@@ -146,8 +174,8 @@ Or, to run using a specific version of Python, e.g. when you want to use Python 
       C:\...>tox -e py37
 
 substituting the version number that you want to target. You can also specify
-one of the pre-commit checks `flake8`, `docs` or `package` to check code
-formatting, documentation syntax and packaging metadata, respectively.
+one of the additional checks `docs` or `package` to check documentation syntax and
+packaging metadata, respectively.
 
 Add change information for release notes
 ----------------------------------------
