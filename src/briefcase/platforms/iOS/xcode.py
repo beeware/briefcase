@@ -138,9 +138,12 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
                 device = udid_or_device
 
                 # Search iOS versions, looking for most recent version first.
+                # The iOS version string will be something like "iOS 15.4";
+                # Drop the prefix (if it exists), convert into the tuple (15, 4),
+                # and sort numerically.
                 for iOS_version, devices in sorted(
                     simulators.items(),
-                    key=lambda item: tuple(int(v) for v in item[0].split()[1].split('.')),
+                    key=lambda item: tuple(int(v) for v in item[0].split()[-1].split('.')),
                     reverse=True
                 ):
                     try:

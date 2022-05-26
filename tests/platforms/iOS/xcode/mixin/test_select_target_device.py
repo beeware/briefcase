@@ -83,6 +83,38 @@ def test_explicit_device_name_should_find_highest_version(dummy_command):
     assert dummy_command.input.prompts == []
 
 
+def test_explicit_device_name_should_find_highest_version_no_os(dummy_command):
+    "If an explicit device name is provided (case insensitive) it is used."
+    # get_simulators will return multiple options on 2 iOS versions.
+    # In older versions of Xcode, the OS name wasn't included in the version
+    # string. Ensure that this still works, even though it doesn't happen in
+    # practice (as of May 2022)
+    dummy_command.get_simulators.return_value = {
+        '10.3': {
+            '0BB80120-FA02-4597-A1BA-DB8CDE4F086D': 'iPhone 5s',
+            'D7BBAD14-38FD-48F5-ACFD-B1193F829216': 'iPhone 6',
+            '6998CA09-44B5-4963-8F80-265412D99683': 'iPhone 7',
+            '68A6E340-8376-47C5-9468-C9A005C88209': 'iPhone 8',
+        },
+        '13.2': {
+            'C9A005C8-9468-47C5-8376-68A6E3408209': 'iPhone 8',
+            '2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D': 'iPhone 11',
+            'EEEBA06C-81F9-407C-885A-2261306DB2BE': 'iPhone 11 Pro Max',
+        }
+    }
+
+    # Try to load an iPhone 8.
+    # It matches case insensitive, and finds the highest iOS version.
+    udid, iOS_version, device = dummy_command.select_target_device('iphone 8')
+
+    assert udid == 'C9A005C8-9468-47C5-8376-68A6E3408209'
+    assert iOS_version == '13.2'
+    assert device == 'iPhone 8'
+
+    # User input was not solicited
+    assert dummy_command.input.prompts == []
+
+
 def test_explicit_device_name_and_version(dummy_command):
     "If there are multiple options on multiple devices, two user inputs are needed."
     # get_simulators will return multiple options on 2 iOS versions.
@@ -100,7 +132,7 @@ def test_explicit_device_name_and_version(dummy_command):
         }
     }
 
-    # Specify an iPhone 8 on 10.3
+    # Specify an iPhone 8 on iOS 10.3
     # It matches case insensitive, and finds the explicit iOS version.
     udid, iOS_version, device = dummy_command.select_target_device('iphone 8::ios 10.3')
 
