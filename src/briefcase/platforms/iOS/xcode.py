@@ -107,7 +107,16 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
                 # A device name::version.
                 device, iOS_version = udid_or_device.split('::')
                 try:
-                    devices = simulators[iOS_version]
+                    # Convert the simulator dict into a dict where
+                    # the iOS versions are lower cased, then do a lookup
+                    # on the lower case name provided by the user.
+                    # However, also return the *unmodified* iOS version string
+                    # so we can convert the user-provided iOS version into the
+                    # "clean", official capitalization.
+                    iOS_version, devices = {
+                        clean_iOS_version.lower(): (clean_iOS_version, details)
+                        for clean_iOS_version, details in simulators.items()
+                    }[iOS_version.lower()]
                     try:
                         # Do a reverse lookup for UDID, based on a
                         # case-insensitive name lookup.
@@ -129,9 +138,12 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
                 device = udid_or_device
 
                 # Search iOS versions, looking for most recent version first.
+                # The iOS version string will be something like "iOS 15.4";
+                # Drop the prefix (if it exists), convert into the tuple (15, 4),
+                # and sort numerically.
                 for iOS_version, devices in sorted(
                     simulators.items(),
-                    key=lambda item: tuple(int(v) for v in item[0].split('.')),
+                    key=lambda item: tuple(int(v) for v in item[0].split()[-1].split('.')),
                     reverse=True
                 ):
                     try:
