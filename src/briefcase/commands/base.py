@@ -542,18 +542,10 @@ class BaseCommand(ABC):
                     # We are offline, or otherwise unable to contact
                     # the origin git repo. It's OK to continue; but warn
                     # the user that the template may be stale.
-                    self.logger.warning(
-                        "***************************************************************************"
-                    )
-                    self.logger.warning(
-                        "WARNING: Unable to update template (is your computer offline?)"
-                    )
-                    self.logger.warning(
-                        "WARNING: Briefcase will use existing template without updating."
-                    )
-                    self.logger.warning(
-                        "***************************************************************************"
-                    )
+                    self.logger.warning("***************************************************************************")
+                    self.logger.warning("WARNING: Unable to update template (is your computer offline?)")
+                    self.logger.warning("WARNING: Briefcase will use existing template without updating.")
+                    self.logger.warning("***************************************************************************")
                 try:
                     # Check out the branch for the required version tag.
                     head = remote.refs[branch]
