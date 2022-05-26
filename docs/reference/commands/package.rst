@@ -62,6 +62,3 @@ Sign app with adhoc identity.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The code signing identity to use when signing the app.
-
-
-
