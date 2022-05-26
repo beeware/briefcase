@@ -7,6 +7,7 @@ import threading
 
 import psutil
 
+from briefcase.console import Log
 from briefcase.exceptions import CommandOutputParseError
 
 
@@ -40,14 +41,12 @@ def is_process_dead(pid: int):
     to identify when the process goes from existing to not existing.
 
     :param pid: integer value to be checked if assigned as a PID.
-    :return: True if PID doesn't exist; defaults to False if PID=None.
+    :return: True if PID does not exist; False otherwise.
     """
-    if pid is None:
-        return False
     return not psutil.pid_exists(pid)
 
 
-def get_process_id_by_command(command_list: list = None, command: str = ""):
+def get_process_id_by_command(command_list: list = None, command: str = "", logger: Log = None):
     """
     Find a Process ID (PID) a by its command.
     If multiple processes are found, then the most recently created
@@ -58,21 +57,30 @@ def get_process_id_by_command(command_list: list = None, command: str = ""):
         This is primarily intended for use on macOS where the `open` command
         takes a filepath to a directory for an application; therefore, the actual
         running process will be running a command within that directory.
+    :param logger: optional Log to show messages about process matching to users
     :return: PID if found else None
     """
-    matching_processes = []
+    matching_procs = []
+    # retrieve command line, creation time, and ID for all running processes.
+    # note: psutil returns None for a process attribute if it is unavailable;
+    #   this is most likely to happen for restricted or zombie processes.
     for proc in psutil.process_iter(["cmdline", "create_time", "pid"]):
         proc_cmdline = proc.info['cmdline']
         if command_list and proc_cmdline == command_list:
-            matching_processes.append(proc.info)
+            matching_procs.append(proc.info)
         if command and proc_cmdline and proc_cmdline[0].startswith(command):
-            matching_processes.append(proc.info)
+            matching_procs.append(proc.info)
 
-    if len(matching_processes) == 1:
-        return matching_processes[0]["pid"]
-    elif len(matching_processes) > 1:
+    if len(matching_procs) == 1:
+        return matching_procs[0]["pid"]
+    elif len(matching_procs) > 1:
         # return the ID of the most recently created matching process
-        return sorted(matching_processes, key=operator.itemgetter("create_time"))[-1]["pid"]
+        pid = sorted(matching_procs, key=operator.itemgetter("create_time"))[-1]["pid"]
+        if logger:
+            logger.info(
+                f"Multiple running instances of app found. "
+                f"Using most recently created app process {pid}.")
+        return pid
 
     return None
 

@@ -67,29 +67,33 @@ class macOSRunMixin:
         # Wait for the log stream start up
         time.sleep(0.25)
 
-        self.logger.info()
-        self.logger.info(f"[{app.app_name}] Starting app...")
         try:
-            self.subprocess.run(
-                [
-                    "open",
-                    "-n",  # Force a new app to be launched
-                    os.fsdecode(self.binary_path(app)),
-                ],
-                check=True,
-            )
-        except subprocess.CalledProcessError as e:
-            self.subprocess.cleanup("log stream", log_popen)
-            raise BriefcaseCommandError(f"Unable to start app {app.app_name}.") from e
+            self.logger.info()
+            self.logger.info(f'[{app.app_name}] Starting app...')
+            try:
+                self.subprocess.run(
+                    [
+                        "open",
+                        "-n",  # Force a new app to be launched
+                        os.fsdecode(self.binary_path(app)),
+                    ],
+                    check=True,
+                )
+            except subprocess.CalledProcessError:
+                raise BriefcaseCommandError(f"Unable to start app {app.app_name}.")
 
-        # Start streaming logs for the app.
-        self.logger.info()
-        self.logger.info(
-            f"[{app.app_name}] Following system log output (type CTRL-C to stop log)..."
-        )
-        self.logger.info("=" * 75)
-        app_pid = get_process_id_by_command(command=str(self.binary_path(app)))
-        self.subprocess.stream_output("log stream", log_popen, stop_func=lambda: is_process_dead(app_pid))
+            # Start streaming logs for the app.
+            app_pid = get_process_id_by_command(command=str(self.binary_path(app)), logger=self.logger)
+            if app_pid is None:
+                self.logger.error()
+                self.logger.error(f"Unable to find process for app {app.app_name} to start log streaming.")
+            else:
+                self.logger.info()
+                self.logger.info(f"[{app.app_name}] Following system log output (type CTRL-C to stop log)...")
+                self.logger.info("=" * 75)
+                self.subprocess.stream_output("log stream", log_popen, stop_func=lambda: is_process_dead(app_pid))
+        finally:
+            self.subprocess.cleanup("log stream", log_popen)
 
 
 def is_mach_o_binary(path):
