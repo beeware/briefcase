@@ -109,7 +109,7 @@ your changes and recommit them:
 
     .. code-block:: bash
 
-      $ (venv) git commit -m "Minor change"                                                                                                                                                    12:22:57
+      $ (venv) git commit -m "Minor change"
       black....................................................................Failed
       - hook id: black
       - files were modified by this hook
@@ -118,13 +118,13 @@ your changes and recommit them:
 
       All done! ✨ 🍰 ✨
       1 file reformatted.
-      $ (venv) git commit -am "Minor change"                                                                                                                                                    12:22:57
+      $ (venv) git commit -am "Minor change"
 
   .. group-tab:: Linux
 
     .. code-block:: bash
 
-      $ (venv) git commit -m "Minor change"                                                                                                                                                    12:22:57
+      $ (venv) git commit -m "Minor change"
       black....................................................................Failed
       - hook id: black
       - files were modified by this hook
@@ -133,7 +133,7 @@ your changes and recommit them:
 
       All done! ✨ 🍰 ✨
       1 file reformatted.
-      $ (venv) git commit -am "Minor change"                                                                                                                                                    12:22:57
+      $ (venv) git commit -am "Minor change"
 
   .. group-tab:: Windows
 
@@ -142,7 +142,7 @@ your changes and recommit them:
       C:\...>py -m pip install -r requirements.dev.txt
       C:\...>pre-commit install
       pre-commit installed at .git/hooks/pre-commit
-      C:\...>git commit -m "Minor change"                                                                                                                                                    12:22:57
+      C:\...>git commit -m "Minor change"
       black....................................................................Failed
       - hook id: black
       - files were modified by this hook
@@ -151,7 +151,7 @@ your changes and recommit them:
 
       All done! ✨ 🍰 ✨
       1 file reformatted.
-      C:\...>git commit -am "Minor change"                                                                                                                                                    12:22:57
+      C:\...>git commit -am "Minor change"
 
 Now you are ready to start hacking! Have fun!
 
