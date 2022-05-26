@@ -82,6 +82,7 @@ pre-commit:
 
       $ (venv) python3 -m pip install -r requirements.dev.txt
       $ (venv) pre-commit install
+      pre-commit installed at .git/hooks/pre-commit
 
   .. group-tab:: Linux
 
@@ -89,6 +90,7 @@ pre-commit:
 
       $ (venv) python3 -m pip install -r requirements.dev.txt
       $ (venv) pre-commit install
+      pre-commit installed at .git/hooks/pre-commit
 
   .. group-tab:: Windows
 
@@ -96,6 +98,60 @@ pre-commit:
 
       C:\...>py -m pip install -r requirements.dev.txt
       C:\...>pre-commit install
+      pre-commit installed at .git/hooks/pre-commit
+
+When you go to commit a change, pre-commit will run automatically. This will cause
+your commit to fail and pre-commit will make changes. You'll need to then restage
+your changes and recommit them:
+.. tabs::
+
+  .. group-tab:: macOS
+
+    .. code-block:: bash
+
+      $ (venv) git commit -m "Minor change"                                                                                                                                                    12:22:57
+      black....................................................................Failed
+      - hook id: black
+      - files were modified by this hook
+
+      reformatted file.py
+
+      All done! ✨ 🍰 ✨
+      1 file reformatted.
+      $ (venv) git commit -am "Minor change"                                                                                                                                                    12:22:57
+
+  .. group-tab:: Linux
+
+    .. code-block:: bash
+
+      $ (venv) git commit -m "Minor change"                                                                                                                                                    12:22:57
+      black....................................................................Failed
+      - hook id: black
+      - files were modified by this hook
+
+      reformatted file.py
+
+      All done! ✨ 🍰 ✨
+      1 file reformatted.
+      $ (venv) git commit -am "Minor change"                                                                                                                                                    12:22:57
+
+  .. group-tab:: Windows
+
+    .. code-block:: doscon
+
+      C:\...>py -m pip install -r requirements.dev.txt
+      C:\...>pre-commit install
+      pre-commit installed at .git/hooks/pre-commit
+      C:\...>git commit -m "Minor change"                                                                                                                                                    12:22:57
+      black....................................................................Failed
+      - hook id: black
+      - files were modified by this hook
+
+      reformatted file.py
+
+      All done! ✨ 🍰 ✨
+      1 file reformatted.
+      C:\...>git commit -am "Minor change"                                                                                                                                                    12:22:57
 
 Now you are ready to start hacking! Have fun!
 
