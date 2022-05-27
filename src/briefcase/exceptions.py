@@ -1,4 +1,3 @@
-
 class BriefcaseError(Exception):
     def __init__(self, error_code):
         self.error_code = error_code
@@ -21,7 +20,7 @@ class ShowOutputFormats(BriefcaseError):
         self.choices = choices
 
     def __str__(self):
-        choices = ', '.join(sorted(self.choices))
+        choices = ", ".join(sorted(self.choices))
         return (
             f"Available formats for {self.platform}: {choices}\n"
             f"Default format: {self.default}"
@@ -35,7 +34,7 @@ class InvalidFormatError(BriefcaseError):
         self.choices = choices
 
     def __str__(self):
-        choices = ', '.join(sorted(self.choices))
+        choices = ", ".join(sorted(self.choices))
         return f"Invalid format '{self.requested}'; (choose from: {choices})"
 
 

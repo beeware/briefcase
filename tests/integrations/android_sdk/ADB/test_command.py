@@ -40,15 +40,19 @@ def test_simple_command(mock_sdk, tmp_path):
     ],
 )
 def test_error_handling(mock_sdk, tmp_path, name, exception):
-    "ADB.command() can parse errors returned by adb."
+    """ADB.command() can parse errors returned by adb."""
     # Set up a mock command with a subprocess module that has with sample data loaded.
     adb_samples = Path(__file__).parent / "adb_errors"
     with (adb_samples / (name + ".out")).open("r") as adb_output_file:
-        with (adb_samples / (name + ".returncode")).open(encoding='utf-8') as returncode_file:
-            mock_sdk.command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
-                returncode=int(returncode_file.read().strip()),
-                cmd=["ignored"],
-                output=adb_output_file.read(),
+        with (adb_samples / (name + ".returncode")).open(
+            encoding="utf-8"
+        ) as returncode_file:
+            mock_sdk.command.subprocess.check_output.side_effect = (
+                subprocess.CalledProcessError(
+                    returncode=int(returncode_file.read().strip()),
+                    cmd=["ignored"],
+                    output=adb_output_file.read(),
+                )
             )
 
     # Create an ADB instance and invoke run()

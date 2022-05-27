@@ -26,7 +26,7 @@ from briefcase.exceptions import (
     BadNetworkResourceError,
     BriefcaseCommandError,
     BriefcaseConfigError,
-    MissingNetworkResourceError
+    MissingNetworkResourceError,
 )
 from briefcase.integrations.subprocess import Subprocess
 
@@ -34,23 +34,27 @@ from briefcase.integrations.subprocess import Subprocess
 class TemplateUnsupportedVersion(BriefcaseCommandError):
     def __init__(self, python_version_tag):
         self.python_version_tag = python_version_tag
-        super().__init__(f"""\
+        super().__init__(
+            f"""\
 Could not find template for Python {self.python_version_tag}.
 
 This is likely because Python {self.python_version_tag}
 is not yet supported. You will need to:
   * Use an older version of Python; or
   * Define your own custom template.
-""")
+"""
+        )
 
 
 class UnsupportedPlatform(BriefcaseCommandError):
     def __init__(self, platform):
         self.platform = platform
-        super().__init__(f"""\
+        super().__init__(
+            f"""\
 App cannot be deployed on {platform}. This is probably because one or more
 dependencies (e.g., the GUI library) doesn't support {platform}.
-""")
+"""
+        )
 
 
 def create_config(klass, config, msg):
@@ -62,17 +66,16 @@ def create_config(klass, config, msg):
         required_args = {
             name
             for name, param in inspect.signature(klass.__init__).parameters.items()
-            if param.default == inspect._empty
-            and name not in {'self', 'kwargs'}
+            if param.default == inspect._empty and name not in {"self", "kwargs"}
         }
         missing_args = required_args - config.keys()
-        missing = ', '.join(f"'{arg}'" for arg in sorted(missing_args))
+        missing = ", ".join(f"'{arg}'" for arg in sorted(missing_args))
         raise BriefcaseConfigError(f"{msg} is incomplete (missing {missing})") from e
 
 
 def cookiecutter_cache_path(template):
-    """
-    Determine the cookiecutter template cache directory given a template URL.
+    """Determine the cookiecutter template cache directory given a template
+    URL.
 
     This will return a valid path, regardless of whether `template`
 
@@ -80,15 +83,14 @@ def cookiecutter_cache_path(template):
         a URL.
     :returns: The path that cookiecutter would use for the given template name.
     """
-    template = template.rstrip('/')
-    tail = template.split('/')[-1]
-    cache_name = tail.rsplit('.git')[0]
-    return Path.home() / '.cookiecutters' / cache_name
+    template = template.rstrip("/")
+    tail = template.split("/")[-1]
+    cache_name = tail.rsplit(".git")[0]
+    return Path.home() / ".cookiecutters" / cache_name
 
 
 def full_options(state, options):
-    """
-    Merge command state with keyword arguments.
+    """Merge command state with keyword arguments.
 
     Command state takes precedence over any keyword argument.
 
@@ -115,7 +117,7 @@ class BaseCommand(ABC):
         self.base_path = base_path
         self.home_path = home_path
         self.dot_briefcase_path = home_path / ".briefcase"
-        self.tools_path = self.dot_briefcase_path / 'tools'
+        self.tools_path = self.dot_briefcase_path / "tools"
 
         self.global_config = None
         self.apps = {} if apps is None else apps
@@ -143,7 +145,8 @@ class BaseCommand(ABC):
 
     @property
     def create_command(self):
-        "Factory property; return an instance of a create command for the same format"
+        """Factory property; return an instance of a create command for the
+        same format."""
         format_module = importlib.import_module(self.__module__)
         command = format_module.create(
             base_path=self.base_path,
@@ -155,7 +158,8 @@ class BaseCommand(ABC):
 
     @property
     def update_command(self):
-        "Factory property; return an instance of an update command for the same format"
+        """Factory property; return an instance of an update command for the
+        same format."""
         format_module = importlib.import_module(self.__module__)
         command = format_module.update(
             base_path=self.base_path,
@@ -167,7 +171,8 @@ class BaseCommand(ABC):
 
     @property
     def build_command(self):
-        "Factory property; return an instance of a build command for the same format"
+        """Factory property; return an instance of a build command for the same
+        format."""
         format_module = importlib.import_module(self.__module__)
         command = format_module.build(
             base_path=self.base_path,
@@ -179,7 +184,8 @@ class BaseCommand(ABC):
 
     @property
     def run_command(self):
-        "Factory property; return an instance of a run command for the same format"
+        """Factory property; return an instance of a run command for the same
+        format."""
         format_module = importlib.import_module(self.__module__)
         command = format_module.run(
             base_path=self.base_path,
@@ -191,7 +197,8 @@ class BaseCommand(ABC):
 
     @property
     def package_command(self):
-        "Factory property; return an instance of a package command for the same format"
+        """Factory property; return an instance of a package command for the
+        same format."""
         format_module = importlib.import_module(self.__module__)
         command = format_module.package(
             base_path=self.base_path,
@@ -203,7 +210,8 @@ class BaseCommand(ABC):
 
     @property
     def publish_command(self):
-        "Factory property; return an instance of a publish command for the same format"
+        """Factory property; return an instance of a publish command for the
+        same format."""
         format_module = importlib.import_module(self.__module__)
         command = format_module.publish(
             base_path=self.base_path,
@@ -215,14 +223,11 @@ class BaseCommand(ABC):
 
     @property
     def platform_path(self):
-        """
-        The path for all applications for this command's platform
-        """
+        """The path for all applications for this command's platform."""
         return self.base_path / self.platform
 
     def bundle_path(self, app):
-        """
-        The path to the bundle for the app in the output format.
+        """The path to the bundle for the app in the output format.
 
         The bundle is the template-generated source form of the app.
         The path will usually be a directory, the existence of which is
@@ -234,8 +239,8 @@ class BaseCommand(ABC):
 
     @abstractmethod
     def binary_path(self, app):
-        """
-        The path to the executable artefact for the app in the output format.
+        """The path to the executable artefact for the app in the output
+        format.
 
         This may be a binary file produced by compilation; however, if
         the output format doesn't require compilation, it may be the same
@@ -249,8 +254,7 @@ class BaseCommand(ABC):
 
     @abstractmethod
     def distribution_path(self, app, packaging_format):
-        """
-        The path to the distributable artefact for the app in the given
+        """The path to the distributable artefact for the app in the given
         packaging format.
 
         This is the single file that should be uploaded for distribution.
@@ -264,19 +268,18 @@ class BaseCommand(ABC):
         ...
 
     def _load_path_index(self, app: BaseConfig):
-        """
-        Load the path index from the index file provided by the app template
+        """Load the path index from the index file provided by the app
+        template.
 
         :param app: The config object for the app
         :return: The contents of the application path index.
         """
-        with (self.bundle_path(app) / 'briefcase.toml').open('rb') as f:
-            self._path_index[app] = tomllib.load(f)['paths']
+        with (self.bundle_path(app) / "briefcase.toml").open("rb") as f:
+            self._path_index[app] = tomllib.load(f)["paths"]
         return self._path_index[app]
 
     def support_path(self, app: BaseConfig):
-        """
-        Obtain the path into which the support package should be unpacked
+        """Obtain the path into which the support package should be unpacked.
 
         :param app: The config object for the app
         :return: The full path where the support package should be unpacked.
@@ -286,11 +289,10 @@ class BaseCommand(ABC):
             path_index = self._path_index[app]
         except KeyError:
             path_index = self._load_path_index(app)
-        return self.bundle_path(app) / path_index['support_path']
+        return self.bundle_path(app) / path_index["support_path"]
 
     def app_packages_path(self, app: BaseConfig):
-        """
-        Obtain the path into which dependencies should be installed
+        """Obtain the path into which dependencies should be installed.
 
         :param app: The config object for the app
         :return: The full path where application dependencies should be installed.
@@ -300,11 +302,10 @@ class BaseCommand(ABC):
             path_index = self._path_index[app]
         except KeyError:
             path_index = self._load_path_index(app)
-        return self.bundle_path(app) / path_index['app_packages_path']
+        return self.bundle_path(app) / path_index["app_packages_path"]
 
     def app_path(self, app: BaseConfig):
-        """
-        Obtain the path into which the application should be installed.
+        """Obtain the path into which the application should be installed.
 
         :param app: The config object for the app
         :return: The full path where application code should be installed.
@@ -314,19 +315,18 @@ class BaseCommand(ABC):
             path_index = self._path_index[app]
         except KeyError:
             path_index = self._load_path_index(app)
-        return self.bundle_path(app) / path_index['app_path']
+        return self.bundle_path(app) / path_index["app_path"]
 
     def app_module_path(self, app):
-        """
-        Find the path for the application module for an app.
+        """Find the path for the application module for an app.
 
         :param app: The config object for the app
         :returns: The Path to the dist-info folder.
         """
         app_home = [
-            path.split('/')
+            path.split("/")
             for path in app.sources
-            if path.rsplit('/', 1)[-1] == app.module_name
+            if path.rsplit("/", 1)[-1] == app.module_name
         ]
         try:
             if len(app_home) == 1:
@@ -344,19 +344,18 @@ class BaseCommand(ABC):
 
     @property
     def python_version_tag(self):
-        """
-        The major.minor of the Python version in use, as a string.
+        """The major.minor of the Python version in use, as a string.
 
-        This is used as a repository label/tag to identify the appropriate
-        templates, etc to use.
+        This is used as a repository label/tag to identify the
+        appropriate templates, etc to use.
         """
         return f"{self.sys.version_info.major}.{self.sys.version_info.minor}"
 
     def verify_tools(self):
-        """
-        Verify that the tools needed to run this command exist
+        """Verify that the tools needed to run this command exist.
 
-        Raises MissingToolException if a required system tool is missing.
+        Raises MissingToolException if a required system tool is
+        missing.
         """
         pass
 
@@ -365,7 +364,7 @@ class BaseCommand(ABC):
             prog=self.cmd_line.format(
                 command=self.command,
                 platform=self.platform,
-                output_format=self.output_format
+                output_format=self.output_format,
             ),
             description=self.description,
         )
@@ -379,14 +378,13 @@ class BaseCommand(ABC):
         options = vars(parser.parse_args(extra))
 
         # Extract the base default options onto the command
-        self.input.enabled = options.pop('input_enabled')
-        self.logger = Log(verbosity=options.pop('verbosity'))
+        self.input.enabled = options.pop("input_enabled")
+        self.logger = Log(verbosity=options.pop("verbosity"))
 
         return options
 
     def clone_options(self, command):
-        """
-        Clone options from one command to this one.
+        """Clone options from one command to this one.
 
         :param command: The command whose options are to be cloned
         """
@@ -394,35 +392,33 @@ class BaseCommand(ABC):
         self.logger = command.logger
 
     def add_default_options(self, parser):
-        """
-        Add the default options that exist on *all* commands
+        """Add the default options that exist on *all* commands.
 
         :param parser: a stub argparse parser for the command.
         """
         parser.add_argument(
-            '-v', '--verbosity',
-            action='count',
+            "-v",
+            "--verbosity",
+            action="count",
             default=1,
-            help="set the verbosity of output (use -vv for additional debug output)"
+            help="set the verbosity of output (use -vv for additional debug output)",
         )
+        parser.add_argument("-V", "--version", action="version", version=__version__)
         parser.add_argument(
-            '-V', '--version',
-            action='version',
-            version=__version__
-        )
-        parser.add_argument(
-            '--no-input',
-            action='store_false',
+            "--no-input",
+            action="store_false",
             default=True,
             dest="input_enabled",
-            help="Don't ask for user input. If any action would be destructive, "
-                 "an error will be raised; otherwise, default answers will be "
-                 "assumed."
+            help=(
+                "Don't ask for user input. If any action would be destructive, "
+                "an error will be raised; otherwise, default answers will be "
+                "assumed."
+            ),
         )
 
     def add_options(self, parser):
-        """
-        Add any options that this command needs to parse from the command line.
+        """Add any options that this command needs to parse from the command
+        line.
 
         :param parser: a stub argparse parser for the command.
         """
@@ -430,20 +426,20 @@ class BaseCommand(ABC):
 
     def parse_config(self, filename):
         try:
-            with open(filename, 'rb') as config_file:
+            with open(filename, "rb") as config_file:
                 # Parse the content of the pyproject.toml file, extracting
                 # any platform and output format configuration for each app,
                 # creating a single set of configuration options.
                 global_config, app_configs = parse_config(
                     config_file,
                     platform=self.platform,
-                    output_format=self.output_format
+                    output_format=self.output_format,
                 )
 
                 self.global_config = create_config(
                     klass=self.GLOBAL_CONFIG_CLASS,
                     config=global_config,
-                    msg="Global configuration"
+                    msg="Global configuration",
                 )
 
                 for app_name, app_config in app_configs.items():
@@ -452,15 +448,14 @@ class BaseCommand(ABC):
                     self.apps[app_name] = create_config(
                         klass=self.APP_CONFIG_CLASS,
                         config=app_config,
-                        msg=f"Configuration for '{app_name}'"
+                        msg=f"Configuration for '{app_name}'",
                     )
 
         except FileNotFoundError as e:
-            raise BriefcaseConfigError('configuration file not found') from e
+            raise BriefcaseConfigError("configuration file not found") from e
 
     def download_url(self, url, download_path):
-        """
-        Download a given URL, caching it. If it has already been downloaded,
+        """Download a given URL, caching it. If it has already been downloaded,
         return the value that has been cached.
 
         This is a utility method used to obtain assets used by the
@@ -480,29 +475,28 @@ class BaseCommand(ABC):
                 url=url,
             )
         elif response.status_code != 200:
-            raise BadNetworkResourceError(
-                url=url,
-                status_code=response.status_code
-            )
+            raise BadNetworkResourceError(url=url, status_code=response.status_code)
 
         # The initial URL might (read: will) go through URL redirects, so
         # we need the *final* response. We look at either the `Content-Disposition`
         # header, or the final URL, to extract the cache filename.
         cache_full_name = urlparse(response.url).path
-        header_value = response.headers.get('Content-Disposition')
+        header_value = response.headers.get("Content-Disposition")
         if header_value:
             # See also https://tools.ietf.org/html/rfc6266
             value, parameters = parse_header(header_value)
-            if (value.split(':', 1)[-1].strip().lower() == 'attachment' and parameters.get('filename')):
-                cache_full_name = parameters['filename']
-        cache_name = cache_full_name.split('/')[-1]
+            if value.split(":", 1)[
+                -1
+            ].strip().lower() == "attachment" and parameters.get("filename"):
+                cache_full_name = parameters["filename"]
+        cache_name = cache_full_name.split("/")[-1]
         filename = download_path / cache_name
         if not filename.exists():
             # We have meaningful content, and it hasn't been cached previously,
             # so save it in the requested location
-            self.logger.info(f'Downloading {cache_name}...')
-            with filename.open('wb') as f:
-                total = response.headers.get('content-length')
+            self.logger.info(f"Downloading {cache_name}...")
+            with filename.open("wb") as f:
+                total = response.headers.get("content-length")
                 if total is None:
                     f.write(response.content)
                 else:
@@ -513,12 +507,11 @@ class BaseCommand(ABC):
                             downloaded += len(data)
                             progress_bar.update(completed=downloaded)
         else:
-            self.logger.info(f'{cache_name} already downloaded')
+            self.logger.info(f"{cache_name} already downloaded")
         return filename
 
-    def update_cookiecutter_cache(self, template: str, branch='master'):
-        """
-        Ensure that we have a current checkout of a template path.
+    def update_cookiecutter_cache(self, template: str, branch="master"):
+        """Ensure that we have a current checkout of a template path.
 
         If the path is a local path, use the path as is.
 
@@ -545,23 +538,33 @@ class BaseCommand(ABC):
                 repo = self.git.Repo(cached_template)
                 try:
                     # Attempt to update the repository
-                    remote = repo.remote(name='origin')
+                    remote = repo.remote(name="origin")
                     remote.fetch()
                 except self.git.exc.GitCommandError:
                     # We are offline, or otherwise unable to contact
                     # the origin git repo. It's OK to continue; but warn
                     # the user that the template may be stale.
-                    self.logger.warning("***************************************************************************")
-                    self.logger.warning("WARNING: Unable to update template (is your computer offline?)")
-                    self.logger.warning("WARNING: Briefcase will use existing template without updating.")
-                    self.logger.warning("***************************************************************************")
+                    self.logger.warning(
+                        """
+*************************************************************************
+** WARNING: Unable to update template                                  **
+*************************************************************************
+
+   Briefcase is unable the update the application template. This
+   may be because your computer is currently offline. Briefcase will
+   use existing template without updating.
+
+*************************************************************************
+"""
+                    )
                 try:
                     # Check out the branch for the required version tag.
                     head = remote.refs[branch]
 
                     self.logger.info(
                         f"Using existing template (sha {head.commit.hexsha}, "
-                        f"updated {head.commit.committed_datetime.strftime('%c')})")
+                        f"updated {head.commit.committed_datetime.strftime('%c')})"
+                    )
                     head.checkout()
                 except IndexError as e:
                     # No branch exists for the requested version.

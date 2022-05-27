@@ -8,32 +8,33 @@ from briefcase.commands import (
     PackageCommand,
     PublishCommand,
     RunCommand,
-    UpdateCommand
+    UpdateCommand,
 )
 from briefcase.config import BaseConfig
 from briefcase.console import InputDisabled, select_option
 from briefcase.exceptions import BriefcaseCommandError, InvalidDeviceError
-from briefcase.integrations.xcode import (
-    DeviceState,
-    get_device_state,
-    get_simulators
-)
+from briefcase.integrations.xcode import DeviceState, get_device_state, get_simulators
 from briefcase.platforms.iOS import iOSMixin
 
 
 class iOSXcodePassiveMixin(iOSMixin):
-    output_format = 'Xcode'
+    output_format = "Xcode"
 
     @property
     def packaging_formats(self):
-        return ['ipa']
+        return ["ipa"]
 
     @property
     def default_packaging_format(self):
-        return 'ipa'
+        return "ipa"
 
     def binary_path(self, app):
-        return self.bundle_path(app) / 'build' / 'Debug-iphonesimulator' / f'{app.formal_name}.app'
+        return (
+            self.bundle_path(app)
+            / "build"
+            / "Debug-iphonesimulator"
+            / f"{app.formal_name}.app"
+        )
 
     def distribution_path(self, app, packaging_format):
         return self.binary_path(app)
@@ -50,18 +51,17 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
     def add_options(self, parser):
         super().add_options(parser)
         parser.add_argument(
-            '-d',
-            '--device',
-            dest='udid',
-            help='The device to target; either a UDID, '
-                 'a device name ("iPhone 11"), '
-                 'or a device name and OS version ("iPhone 11::iOS 13.3")',
+            "-d",
+            "--device",
+            dest="udid",
+            help="The device to target; either a UDID, "
+            'a device name ("iPhone 11"), '
+            'or a device name and OS version ("iPhone 11::iOS 13.3")',
             required=False,
         )
 
     def select_target_device(self, udid_or_device=None):
-        """
-        Select the target device to use for iOS builds.
+        """Select the target device to use for iOS builds.
 
         Interrogates the system to get the list of available simulators
 
@@ -81,7 +81,7 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
         :returns: A tuple containing the udid, iOS version, and device name
             for the selected device.
         """
-        simulators = self.get_simulators(self, 'iOS')
+        simulators = self.get_simulators(self, "iOS")
 
         try:
             # Try to convert to a UDID. If this succeeds, then the argument
@@ -98,14 +98,14 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
 
             # We've iterated through all available iOS versions and
             # found no match; return an error.
-            raise InvalidDeviceError('device UDID', udid)
+            raise InvalidDeviceError("device UDID", udid)
 
         except (ValueError, TypeError) as e:
             # Provided value wasn't a UDID.
             # It must be a device or device+version
-            if udid_or_device and '::' in udid_or_device:
+            if udid_or_device and "::" in udid_or_device:
                 # A device name::version.
-                device, iOS_version = udid_or_device.split('::')
+                device, iOS_version = udid_or_device.split("::")
                 try:
                     # Convert the simulator dict into a dict where
                     # the iOS versions are lower cased, then do a lookup
@@ -120,19 +120,18 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
                     try:
                         # Do a reverse lookup for UDID, based on a
                         # case-insensitive name lookup.
-                        udid = {
-                            name.lower(): udid
-                            for udid, name in devices.items()
-                        }[device.lower()]
+                        udid = {name.lower(): udid for udid, name in devices.items()}[
+                            device.lower()
+                        ]
 
                         # Found a match;
                         # normalize back to the official name and return.
                         device = devices[udid]
                         return udid, iOS_version, device
                     except KeyError as e:
-                        raise InvalidDeviceError('device name', device) from e
+                        raise InvalidDeviceError("device name", device) from e
                 except KeyError as err:
-                    raise InvalidDeviceError('iOS Version', iOS_version) from err
+                    raise InvalidDeviceError("iOS Version", iOS_version) from err
             elif udid_or_device:
                 # Just a device name
                 device = udid_or_device
@@ -143,14 +142,15 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
                 # and sort numerically.
                 for iOS_version, devices in sorted(
                     simulators.items(),
-                    key=lambda item: tuple(int(v) for v in item[0].split()[-1].split('.')),
-                    reverse=True
+                    key=lambda item: tuple(
+                        int(v) for v in item[0].split()[-1].split(".")
+                    ),
+                    reverse=True,
                 ):
                     try:
-                        udid = {
-                            name.lower(): udid
-                            for udid, name in devices.items()
-                        }[device.lower()]
+                        udid = {name.lower(): udid for udid, name in devices.items()}[
+                            device.lower()
+                        ]
 
                         # Found a match;
                         # normalize back to the official name and return.
@@ -159,7 +159,7 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
                     except KeyError:
                         # UDID doesn't exist in this iOS version; try another.
                         pass
-                raise InvalidDeviceError('device name', device) from e
+                raise InvalidDeviceError("device name", device) from e
 
         if len(simulators) == 0:
             raise BriefcaseCommandError("No iOS simulators available.")
@@ -169,10 +169,9 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
             self.input.prompt()
             self.input.prompt("Select iOS version:")
             self.input.prompt()
-            iOS_version = select_option({
-                version: version
-                for version in simulators.keys()
-            }, input=self.input)
+            iOS_version = select_option(
+                {version: version for version in simulators.keys()}, input=self.input
+            )
 
         devices = simulators[iOS_version]
 
@@ -214,8 +213,7 @@ class iOSXcodeBuildCommand(iOSXcodeMixin, BuildCommand):
     description = "Build an iOS Xcode project."
 
     def build_app(self, app: BaseConfig, udid=None, **kwargs):
-        """
-        Build the Xcode project for the application.
+        """Build the Xcode project for the application.
 
         :param app: The application to build
         :param udid: The device UDID to target. If ``None``, the user will
@@ -229,43 +227,38 @@ class iOSXcodeBuildCommand(iOSXcodeMixin, BuildCommand):
             ) from e
 
         self.logger.info()
-        self.logger.info(f"Targeting an {device} running {iOS_version} (device UDID {udid})")
+        self.logger.info(
+            f"Targeting an {device} running {iOS_version} (device UDID {udid})"
+        )
 
         self.logger.info()
-        self.logger.info(f'[{app.app_name}] Building XCode project...')
-
-        # build_settings = [
-        #     ('AD_HOC_CODE_SIGNING_ALLOWED', 'YES'),
-        #     ('CODE_SIGN_IDENTITY', '-'),
-        #     ('VALID_ARCHS', '"i386 x86_64"'),
-        #     ('ARCHS', 'x86_64'),
-        #     ('ONLY_ACTIVE_ARCHS', 'NO')
-        # ]
-        # build_settings_str = [f'{setting}={value}' for setting, value in build_settings]
+        self.logger.info(f"[{app.app_name}] Building XCode project...")
 
         try:
             self.subprocess.run(
                 [
-                    'xcodebuild',  # ' '.join(build_settings_str),
-                    '-project', self.bundle_path(app) / f'{app.formal_name}.xcodeproj',
-                    '-destination',
+                    "xcodebuild",
+                    "-project",
+                    self.bundle_path(app) / f"{app.formal_name}.xcodeproj",
+                    "-destination",
                     f'platform="iOS Simulator,name={device},OS={iOS_version}"',
-                    '-quiet',
-                    '-configuration', 'Debug',
-                    '-arch', self.host_arch,
-                    '-sdk', 'iphonesimulator',
-                    'build'
+                    "-quiet",
+                    "-configuration",
+                    "Debug",
+                    "-arch",
+                    self.host_arch,
+                    "-sdk",
+                    "iphonesimulator",
+                    "build",
                 ],
                 check=True,
             )
-            self.logger.info('Build succeeded.')
+            self.logger.info("Build succeeded.")
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(f"Unable to build app {app.app_name}.") from e
 
         # Preserve the device selection as state.
-        return {
-            'udid': udid
-        }
+        return {"udid": udid}
 
 
 class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
@@ -280,8 +273,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         self.sleep = time.sleep
 
     def run_app(self, app: BaseConfig, udid=None, **kwargs):
-        """
-        Start the application.
+        """Start the application.
 
         :param app: The config object for the app
         :param udid: The device UDID to target. If ``None``, the user will
@@ -315,19 +307,18 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         if device_state == DeviceState.SHUTDOWN:
             try:
                 self.logger.info(f"Booting {device} simulator running {iOS_version}...")
-                self.subprocess.run(
-                    ['xcrun', 'simctl', 'boot', udid],
-                    check=True
-                )
+                self.subprocess.run(["xcrun", "simctl", "boot", udid], check=True)
             except subprocess.CalledProcessError as e:
-                raise BriefcaseCommandError(f"Unable to boot {device} simulator running {iOS_version}") from e
+                raise BriefcaseCommandError(
+                    f"Unable to boot {device} simulator running {iOS_version}"
+                ) from e
 
         # We now know the simulator is *running*, so we can open it.
         try:
             self.logger.info(f"Opening {device} simulator running {iOS_version}...")
             self.subprocess.run(
-                ['open', '-a', 'Simulator', '--args', '-CurrentDeviceUDID', udid],
-                check=True
+                ["open", "-a", "Simulator", "--args", "-CurrentDeviceUDID", udid],
+                check=True,
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(
@@ -336,35 +327,43 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
 
         # Try to uninstall the app first. If the app hasn't been installed
         # before, this will still succeed.
-        app_identifier = '.'.join([app.bundle, app.app_name])
+        app_identifier = ".".join([app.bundle, app.app_name])
         self.logger.info()
-        self.logger.info(f'[{app.app_name}] Uninstalling old app version...')
+        self.logger.info(f"[{app.app_name}] Uninstalling old app version...")
         try:
             self.subprocess.run(
-                ['xcrun', 'simctl', 'uninstall', udid, app_identifier],
-                check=True
+                ["xcrun", "simctl", "uninstall", udid, app_identifier], check=True
             )
         except subprocess.CalledProcessError as e:
-            raise BriefcaseCommandError(f"Unable to uninstall old version of app {app.app_name}.") from e
+            raise BriefcaseCommandError(
+                f"Unable to uninstall old version of app {app.app_name}."
+            ) from e
 
         # Install the app.
         self.logger.info()
-        self.logger.info(f'[{app.app_name}] Installing new app version...')
+        self.logger.info(f"[{app.app_name}] Installing new app version...")
         try:
             self.subprocess.run(
-                ['xcrun', 'simctl', 'install', udid, self.binary_path(app)],
-                check=True
+                ["xcrun", "simctl", "install", udid, self.binary_path(app)], check=True
             )
         except subprocess.CalledProcessError as e:
-            raise BriefcaseCommandError(f"Unable to install new version of app {app.app_name}.") from e
+            raise BriefcaseCommandError(
+                f"Unable to install new version of app {app.app_name}."
+            ) from e
 
         # Start log stream for the app.
         simulator_log_popen = self.subprocess.Popen(
             [
-                "xcrun", "simctl", "spawn", udid,
-                "log", "stream",
-                "--style", "compact",
-                "--predicate", f'senderImagePath ENDSWITH "/{app.formal_name}"'
+                "xcrun",
+                "simctl",
+                "spawn",
+                udid,
+                "log",
+                "stream",
+                "--style",
+                "compact",
+                "--predicate",
+                f'senderImagePath ENDSWITH "/{app.formal_name}"',
             ],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
@@ -375,11 +374,10 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         self.sleep(0.25)
 
         self.logger.info()
-        self.logger.info(f'[{app.app_name}] Starting app...')
+        self.logger.info(f"[{app.app_name}] Starting app...")
         try:
             self.subprocess.run(
-                ['xcrun', 'simctl', 'launch', udid, app_identifier],
-                check=True
+                ["xcrun", "simctl", "launch", udid, app_identifier], check=True
             )
         except subprocess.CalledProcessError as e:
             self.subprocess.cleanup("log stream", simulator_log_popen)
@@ -387,14 +385,14 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
 
         # Start streaming logs for the app.
         self.logger.info()
-        self.logger.info(f"[{app.app_name}] Following simulator log output (type CTRL-C to stop log)...")
+        self.logger.info(
+            f"[{app.app_name}] Following simulator log output (type CTRL-C to stop log)..."
+        )
         self.logger.info("=" * 75)
         self.subprocess.stream_output("log stream", simulator_log_popen)
 
         # Preserve the device selection as state.
-        return {
-            'udid': udid
-        }
+        return {"udid": udid}
 
 
 class iOSXcodePackageCommand(iOSXcodeMixin, PackageCommand):
@@ -403,8 +401,8 @@ class iOSXcodePackageCommand(iOSXcodeMixin, PackageCommand):
 
 class iOSXcodePublishCommand(iOSXcodeMixin, PublishCommand):
     description = "Publish an iOS app."
-    publication_channels = ['ios_appstore']
-    default_publication_channel = 'ios_appstore'
+    publication_channels = ["ios_appstore"]
+    default_publication_channel = "ios_appstore"
 
 
 # Declare the briefcase command bindings

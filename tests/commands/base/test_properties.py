@@ -4,7 +4,7 @@ from .conftest import DummyCommand
 def test_bundle_path(base_command, my_app, tmp_path):
     bundle_path = base_command.bundle_path(my_app)
 
-    assert bundle_path == tmp_path / 'tester' / 'dumdum' / 'My App'
+    assert bundle_path == tmp_path / "tester" / "dumdum" / "My App"
 
 
 def test_create_command(base_command):
@@ -38,7 +38,8 @@ def test_publish_command(base_command):
 
 
 def test_input_state_transferred(tmp_path):
-    "If input is disabled, that status is transferred to created subcommands"
+    """If input is disabled, that status is transferred to created
+    subcommands."""
     command = DummyCommand(base_path=tmp_path, input_enabled=False)
 
     # Check the enabled state of subcommands

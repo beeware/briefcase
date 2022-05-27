@@ -7,15 +7,16 @@ from briefcase.exceptions import BriefcaseConfigError
 
 
 def test_invalid_toml():
-    "If the config file isn't TOML, raise an error"
+    """If the config file isn't TOML, raise an error."""
     config_file = BytesIO(b"this is not toml!")
 
     with pytest.raises(BriefcaseConfigError, match="Invalid pyproject.toml"):
-        parse_config(config_file, platform='macOS', output_format='xcode')
+        parse_config(config_file, platform="macOS", output_format="xcode")
 
 
 def test_no_briefcase_section():
-    "If the config file doesn't contain a briefcase tool section, raise an error"
+    """If the config file doesn't contain a briefcase tool section, raise an
+    error."""
     config_file = BytesIO(
         b"""
         [tool.section]
@@ -25,11 +26,12 @@ def test_no_briefcase_section():
     )
 
     with pytest.raises(BriefcaseConfigError, match="No tool.briefcase section"):
-        parse_config(config_file, platform='macOS', output_format='xcode')
+        parse_config(config_file, platform="macOS", output_format="xcode")
 
 
 def test_no_apps():
-    "If the config file doesn't contain at least one briefcase app, raise an error"
+    """If the config file doesn't contain at least one briefcase app, raise an
+    error."""
     config_file = BytesIO(
         b"""
         [tool.briefcase]
@@ -39,11 +41,12 @@ def test_no_apps():
     )
 
     with pytest.raises(BriefcaseConfigError, match="No Briefcase apps defined"):
-        parse_config(config_file, platform='macOS', output_format='xcode')
+        parse_config(config_file, platform="macOS", output_format="xcode")
 
 
 def test_single_minimal_app():
-    "A single app can be defined, but can exist without any app attributes"
+    """A single app can be defined, but can exist without any app
+    attributes."""
     config_file = BytesIO(
         b"""
         [tool.briefcase]
@@ -53,25 +56,21 @@ def test_single_minimal_app():
         """
     )
 
-    global_options, apps = parse_config(config_file, platform='macOS', output_format='xcode')
+    global_options, apps = parse_config(
+        config_file, platform="macOS", output_format="xcode"
+    )
 
     # There's a single global option
-    assert global_options == {
-        'value': 42
-    }
+    assert global_options == {"value": 42}
 
     # The app gets the name from it's header line.
     # It inherits the value from the base definition.
-    assert apps == {
-        'my_app': {
-            "app_name": "my_app",
-            "value": 42
-        }
-    }
+    assert apps == {"my_app": {"app_name": "my_app", "value": 42}}
 
 
 def test_multiple_minimal_apps():
-    "The configuration can contain multiple apps without an explicit tool header"
+    """The configuration can contain multiple apps without an explicit tool
+    header."""
     config_file = BytesIO(
         b"""
         [tool.briefcase.app.first]
@@ -83,7 +82,9 @@ def test_multiple_minimal_apps():
         """
     )
 
-    global_options, apps = parse_config(config_file, platform='macOS', output_format='xcode')
+    global_options, apps = parse_config(
+        config_file, platform="macOS", output_format="xcode"
+    )
 
     # There are no global options
     assert global_options == {}
@@ -91,11 +92,11 @@ def test_multiple_minimal_apps():
     # The apps gets their name from the header lines.
     # The second tool overrides it's app name
     assert apps == {
-        'first': {
+        "first": {
             "app_name": "first",
             "number": 37,
         },
-        'second': {
+        "second": {
             "app_name": "my_app",
             "number": 42,
         },
@@ -103,7 +104,7 @@ def test_multiple_minimal_apps():
 
 
 def test_platform_override():
-    "An app can define platform settings that override base settings"
+    """An app can define platform settings that override base settings."""
     config_file = BytesIO(
         b"""
         [tool.briefcase]
@@ -128,12 +129,14 @@ def test_platform_override():
         """
     )
 
-    global_options, apps = parse_config(config_file, platform='macOS', output_format='xcode')
+    global_options, apps = parse_config(
+        config_file, platform="macOS", output_format="xcode"
+    )
 
     # The global options are exactly as specified
     assert global_options == {
-        'value': 0,
-        'basevalue': 'the base',
+        "value": 0,
+        "basevalue": "the base",
     }
 
     # Since a macOS app has been requested, the macOS platform values
@@ -143,24 +146,24 @@ def test_platform_override():
     # Platforms should be processed in sorted order, which means that linux
     # will be processed before macos.
     assert apps == {
-        'my_app': {
+        "my_app": {
             "app_name": "my_app",
             "value": 2,
             "basevalue": "the base",
             "appvalue": "the app",
             "platformvalue": "macos platform",
         },
-        'other_app': {
+        "other_app": {
             "app_name": "other_app",
             "value": 4,
             "basevalue": "the base",
             "platformvalue": "other macos platform",
-        }
+        },
     }
 
 
 def test_platform_override_ordering():
-    "The order of platform processing doesn't affect output"
+    """The order of platform processing doesn't affect output."""
     config_file = BytesIO(
         b"""
         [tool.briefcase]
@@ -185,13 +188,12 @@ def test_platform_override_ordering():
         """
     )
 
-    global_options, apps = parse_config(config_file, platform='macOS', output_format='xcode')
+    global_options, apps = parse_config(
+        config_file, platform="macOS", output_format="xcode"
+    )
 
     # The global options are exactly as specified
-    assert global_options == {
-        'value': 0,
-        'basevalue': "the base"
-    }
+    assert global_options == {"value": 0, "basevalue": "the base"}
 
     # Since a macOS app has been requested, the macOS platform values
     # take priority. Linux configuration values are dropped.
@@ -200,24 +202,25 @@ def test_platform_override_ordering():
     # Platforms should be processed in order, which means that windows
     # will be processed after macos.
     assert apps == {
-        'my_app': {
+        "my_app": {
             "app_name": "my_app",
             "value": 2,
             "basevalue": "the base",
             "appvalue": "the app",
             "platformvalue": "macos platform",
         },
-        'other_app': {
+        "other_app": {
             "app_name": "other_app",
             "value": 4,
             "basevalue": "the base",
             "platformvalue": "other macos platform",
-        }
+        },
     }
 
 
 def test_format_override():
-    "An app can define format settings that override base and platform settings"
+    """An app can define format settings that override base and platform
+    settings."""
     config_file = BytesIO(
         b"""
         [tool.briefcase]
@@ -262,13 +265,12 @@ def test_format_override():
         """
     )
 
-    global_options, apps = parse_config(config_file, platform='macOS', output_format='app')
+    global_options, apps = parse_config(
+        config_file, platform="macOS", output_format="app"
+    )
 
     # The global options are exactly as specified
-    assert global_options == {
-        'value': 0,
-        'basevalue': "the base"
-    }
+    assert global_options == {"value": 0, "basevalue": "the base"}
 
     # Since a macOS app has been requested, the macOS app format values
     # take priority. Linux configuration values are dropped.
@@ -277,7 +279,7 @@ def test_format_override():
     # Formats should be processed in order, which means that app
     # will be processed before dmg and homebrew.
     assert apps == {
-        'my_app': {
+        "my_app": {
             "app_name": "my_app",
             "value": 21,
             "basevalue": "the base",
@@ -285,17 +287,17 @@ def test_format_override():
             "platformvalue": "macos platform",
             "formatvalue": "app format",
         },
-        'other_app': {
+        "other_app": {
             "app_name": "other_app",
             "value": 41,
             "basevalue": "the base",
             "formatvalue": "other macos app format",
-        }
+        },
     }
 
 
 def test_format_override_ordering():
-    "The order of format processing doesn't affect output"
+    """The order of format processing doesn't affect output."""
     config_file = BytesIO(
         b"""
         [tool.briefcase]
@@ -340,13 +342,12 @@ def test_format_override_ordering():
         """
     )
 
-    global_options, apps = parse_config(config_file, platform='macOS', output_format='app')
+    global_options, apps = parse_config(
+        config_file, platform="macOS", output_format="app"
+    )
 
     # The global options are exactly as specified
-    assert global_options == {
-        'value': 0,
-        'basevalue': "the base"
-    }
+    assert global_options == {"value": 0, "basevalue": "the base"}
 
     # Since a macOS dmg has been requested, the macOS dmg format values
     # take priority. Linux configuration values are dropped.
@@ -355,7 +356,7 @@ def test_format_override_ordering():
     # Formats should be processed in order, which means that dmg
     # will be processed after app, but before homebrew.
     assert apps == {
-        'my_app': {
+        "my_app": {
             "app_name": "my_app",
             "value": 22,
             "basevalue": "the base",
@@ -363,16 +364,16 @@ def test_format_override_ordering():
             "platformvalue": "macos platform",
             "formatvalue": "app format",
         },
-        'other_app': {
+        "other_app": {
             "app_name": "other_app",
             "value": 0,
             "basevalue": "the base",
-        }
+        },
     }
 
 
 def test_requires():
-    "Requirements can be specified"
+    """Requirements can be specified."""
     config_file = BytesIO(
         b"""
         [tool.briefcase]
@@ -402,18 +403,20 @@ def test_requires():
     )
 
     # Request a macOS app
-    global_options, apps = parse_config(config_file, platform='macOS', output_format='app')
+    global_options, apps = parse_config(
+        config_file, platform="macOS", output_format="app"
+    )
 
     # The global options are exactly as specified
     assert global_options == {
-        'value': 0,
-        'requires': ["base value"],
+        "value": 0,
+        "requires": ["base value"],
     }
 
     # The macOS my_app app specifies a full inherited chain.
     # The other_app app doesn't specify any options.
     assert apps == {
-        'my_app': {
+        "my_app": {
             "app_name": "my_app",
             "requires": [
                 "base value",
@@ -423,29 +426,28 @@ def test_requires():
             ],
             "value": 0,
         },
-        'other_app': {
+        "other_app": {
             "app_name": "other_app",
             "requires": [
                 "base value",
             ],
             "value": 0,
-        }
+        },
     }
 
     # Request a macOS xcode project
     config_file.seek(0)
-    global_options, apps = parse_config(config_file, platform='macOS', output_format='xcode')
+    global_options, apps = parse_config(
+        config_file, platform="macOS", output_format="xcode"
+    )
 
     # The global options are exactly as specified
-    assert global_options == {
-        'value': 0,
-        'requires': ["base value"]
-    }
+    assert global_options == {"value": 0, "requires": ["base value"]}
 
     # The macOS my_app dmg specifies a full inherited chain.
     # The other_app dmg doesn't specify any options.
     assert apps == {
-        'my_app': {
+        "my_app": {
             "app_name": "my_app",
             "requires": [
                 "base value",
@@ -455,27 +457,26 @@ def test_requires():
             ],
             "value": 0,
         },
-        'other_app': {
+        "other_app": {
             "app_name": "other_app",
             "requires": [
                 "base value",
             ],
             "value": 0,
-        }
+        },
     }
 
     config_file.seek(0)
-    global_options, apps = parse_config(config_file, platform='linux', output_format='appimage')
+    global_options, apps = parse_config(
+        config_file, platform="linux", output_format="appimage"
+    )
 
     # The global options are exactly as specified
-    assert global_options == {
-        'value': 0,
-        'requires': ["base value"]
-    }
+    assert global_options == {"value": 0, "requires": ["base value"]}
 
     # The linux my_app appimage overrides the *base* value, but extends for linux.
     assert apps == {
-        'my_app': {
+        "my_app": {
             "app_name": "my_app",
             "requires": [
                 "base value",
@@ -485,18 +486,18 @@ def test_requires():
             ],
             "value": 0,
         },
-        'other_app': {
+        "other_app": {
             "app_name": "other_app",
             "requires": [
                 "base value",
             ],
             "value": 0,
-        }
+        },
     }
 
 
 def test_document_types():
-    "Document types can be specified"
+    """Document types can be specified."""
     config_file = BytesIO(
         b"""
         [tool.briefcase]
@@ -520,27 +521,29 @@ def test_document_types():
     )
 
     # Request a macOS app
-    global_options, apps = parse_config(config_file, platform='macOS', output_format='xcode')
+    global_options, apps = parse_config(
+        config_file, platform="macOS", output_format="xcode"
+    )
 
     # The macOS my_app app specifies a full inherited chain.
     # The other_app app doesn't specify any options.
     assert apps == {
-        'my_app': {
+        "my_app": {
             "app_name": "my_app",
             "document_type": {
-                'document': {
-                    'extension': 'doc',
-                    'description': 'A document',
+                "document": {
+                    "extension": "doc",
+                    "description": "A document",
                 },
-                'image': {
-                    'extension': 'img',
-                    'description': 'An image',
-                }
+                "image": {
+                    "extension": "img",
+                    "description": "An image",
+                },
             },
             "value": 0,
         },
-        'other_app': {
+        "other_app": {
             "app_name": "other_app",
             "value": 0,
-        }
+        },
     }

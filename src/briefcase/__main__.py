@@ -7,7 +7,7 @@ from .exceptions import BriefcaseError
 def main():
     try:
         command, options = parse_cmdline(sys.argv[1:])
-        command.parse_config('pyproject.toml')
+        command.parse_config("pyproject.toml")
         command(**options)
         result = 0
     except BriefcaseError as e:
@@ -23,5 +23,5 @@ def main():
     sys.exit(result)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

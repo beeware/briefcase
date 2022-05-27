@@ -4,7 +4,7 @@ from briefcase.exceptions import BriefcaseCommandError
 
 
 def test_publish(publish_command, first_app, second_app):
-    "If there are multiple apps, publish all of them"
+    """If there are multiple apps, publish all of them."""
     # Add two apps
     publish_command.apps = {
         "first": first_app,
@@ -20,7 +20,7 @@ def test_publish(publish_command, first_app, second_app):
     # The right sequence of things will be done
     assert publish_command.actions == [
         # Tools are verified
-        ("verify", ),
+        ("verify",),
         # Publish the first app to s3
         ("publish", "first", "s3", {}),
         # Publish the second app to s3
@@ -29,7 +29,7 @@ def test_publish(publish_command, first_app, second_app):
 
 
 def test_publish_alternative_channel(publish_command, first_app, second_app):
-    "Apps can be published to an alternate channel"
+    """Apps can be published to an alternate channel."""
     # Add two apps
     publish_command.apps = {
         "first": first_app,
@@ -45,7 +45,7 @@ def test_publish_alternative_channel(publish_command, first_app, second_app):
     # The right sequence of things will be done
     assert publish_command.actions == [
         # Tools are verified
-        ("verify", ),
+        ("verify",),
         # Publish the first app to the alternative channel
         ("publish", "first", "alternative", {}),
         # Publish the second app to the alternative channel
@@ -54,7 +54,7 @@ def test_publish_alternative_channel(publish_command, first_app, second_app):
 
 
 def test_non_existent(publish_command, first_app_config, second_app):
-    "Requesting a publish of a non-existent app raises an error"
+    """Requesting a publish of a non-existent app raises an error."""
     # Add two apps; use the "config only" version of the first app.
     publish_command.apps = {
         "first": first_app_config,
@@ -70,12 +70,13 @@ def test_non_existent(publish_command, first_app_config, second_app):
 
     # Only verification will be performed
     assert publish_command.actions == [
-        ("verify", ),
+        ("verify",),
     ]
 
 
 def test_unbuilt(publish_command, first_app_unbuilt, second_app):
-    "Requesting a publish of an app that has been created, but not built, raises an error"
+    """Requesting a publish of an app that has been created, but not built,
+    raises an error."""
     # Add two apps; use the "config only" version of the first app.
     publish_command.apps = {
         "first": first_app_unbuilt,
@@ -91,5 +92,5 @@ def test_unbuilt(publish_command, first_app_unbuilt, second_app):
 
     # Only verification will be performed
     assert publish_command.actions == [
-        ("verify", ),
+        ("verify",),
     ]

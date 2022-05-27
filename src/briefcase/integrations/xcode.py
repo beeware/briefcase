@@ -3,8 +3,8 @@ import re
 import subprocess
 from pathlib import Path
 
-from briefcase.integrations.subprocess import json_parser
 from briefcase.exceptions import BriefcaseCommandError, CommandOutputParseError
+from briefcase.integrations.subprocess import json_parser
 
 
 class DeviceState(enum.Enum):
@@ -15,7 +15,8 @@ class DeviceState(enum.Enum):
 
 
 def verify_command_line_tools_install(command):
-    """Verify that command line developer tools are installed and ready for use.
+    """Verify that command line developer tools are installed and ready for
+    use.
 
     A completely clean machine will have neither Xcode *or* the Command Line
     Tools. However, it's possible to install Xcode and *not* install the command
@@ -55,8 +56,7 @@ def verify_xcode_install(command, min_version=None):
 
 
 def ensure_command_line_tools_are_installed(command):
-    """
-    Determine if the Xcode command line tools are installed.
+    """Determine if the Xcode command line tools are installed.
 
     If they are not installed, an exception is raised; in addition, a OS dialog
     will be displayed prompting the user to install Xcode.
@@ -76,10 +76,10 @@ def ensure_command_line_tools_are_installed(command):
     # Any other status code is a problem.
     try:
         command.subprocess.check_output(
-            ['xcode-select', '--install'],
-            stderr=subprocess.STDOUT
+            ["xcode-select", "--install"], stderr=subprocess.STDOUT
         )
-        raise BriefcaseCommandError("""\
+        raise BriefcaseCommandError(
+            """\
 Xcode command line developer tools are not installed.
 
 You should be shown a dialog prompting you to install Xcode and the
@@ -87,10 +87,12 @@ command line tools. Select "Install" to install the command line developer
 tools.
 
 Re-run Briefcase once that installation is complete.
-""")
+"""
+        )
     except subprocess.CalledProcessError as e:
         if e.returncode != 1:
-            command.logger.warning("""
+            command.logger.warning(
+                """
 *************************************************************************
 ** WARNING: Unable to determine if Xcode is installed                  **
 *************************************************************************
@@ -109,7 +111,8 @@ Re-run Briefcase once that installation is complete.
    from the command prompt.
 
 *************************************************************************
-""")
+"""
+            )
 
 
 def ensure_xcode_is_installed(
@@ -117,9 +120,8 @@ def ensure_xcode_is_installed(
     xcode_location=None,
     min_version=None,
 ):
-    """
-    Determine if Xcode is installed; and if so, that it meets minimum version
-    requirements.
+    """Determine if Xcode is installed; and if so, that it meets minimum
+    version requirements.
 
     Raises an exception if XCode isn't installed, or if the version of Xcode
     that is installed doesn't meet the minimum requirement.
@@ -138,12 +140,13 @@ def ensure_xcode_is_installed(
 
         try:
             output = command.subprocess.check_output(
-                ['xcode-select', '-p'],
+                ["xcode-select", "-p"],
                 stderr=subprocess.STDOUT,
             )
             xcode_location = output.strip()
         except subprocess.CalledProcessError as e:
-            raise BriefcaseCommandError("""\
+            raise BriefcaseCommandError(
+                """\
 Could not find Xcode installation.
 
 To select an existing Xcode installation, run:
@@ -151,26 +154,31 @@ To select an existing Xcode installation, run:
     $ sudo xcode-select --switch path/to/Xcode.app
 
 or install Xcode from the macOS App Store. Re-run Briefcase afterwards.
-""") from e
+"""
+            ) from e
 
     if not Path(xcode_location).exists():
-        raise BriefcaseCommandError("""\
+        raise BriefcaseCommandError(
+            """\
 Xcode is not installed.
 
 You can install Xcode from the macOS App Store.
 
 Re-run Briefcase once that installation is complete.
-""")
+"""
+        )
 
     try:
         output = command.subprocess.check_output(
-            ['xcodebuild', '-version'],
+            ["xcodebuild", "-version"],
             stderr=subprocess.STDOUT,
         )
 
         if min_version is not None:
             # Look for a line in the output that reads "Xcode X.Y.Z"
-            version_lines = [line for line in output.split('\n') if line.startswith('Xcode ')]
+            version_lines = [
+                line for line in output.split("\n") if line.startswith("Xcode ")
+            ]
             if version_lines:
                 try:
                     # Split the content after the first space
@@ -178,13 +186,12 @@ Re-run Briefcase once that installation is complete.
                     # Append 0's to fill any gaps caused by
                     # version numbers that don't have a minor version.
                     version = tuple(
-                        int(v)
-                        for v in version_lines[0].split(' ')[1].split('.')
+                        int(v) for v in version_lines[0].split(" ")[1].split(".")
                     ) + (0, 0)
 
                     if version < min_version:
-                        min_version = '.'.join(str(v) for v in min_version)
-                        version = '.'.join(str(v) for v in version)
+                        min_version = ".".join(str(v) for v in min_version)
+                        version = ".".join(str(v) for v in version)
                         raise BriefcaseCommandError(
                             f"Xcode {min_version} is required; {version} is installed. Please update Xcode."
                         )
@@ -194,7 +201,8 @@ Re-run Briefcase once that installation is complete.
                 except IndexError:
                     pass
 
-            command.logger.warning("""
+            command.logger.warning(
+                """
 *************************************************************************
 ** WARNING: Unable to determine the version of Xcode that is installed **
 *************************************************************************
@@ -213,11 +221,13 @@ Re-run Briefcase once that installation is complete.
    from the command prompt.
 
 *************************************************************************
-""")
+"""
+            )
 
     except subprocess.CalledProcessError as e:
         if " is a command line tools instance" in e.output:
-            raise BriefcaseCommandError("""\
+            raise BriefcaseCommandError(
+                """\
 Xcode may be installed, but the active developer directory is a
 command line tools instance. To make the default Xcode install the
 active developer directory, run:
@@ -229,10 +239,12 @@ Or, to use a version of Xcode installed in a non-default location:
     $ sudo xcode-select --switch /path/to/Xcode.app
 
 and then re-run Briefcase.
-""") from e
+"""
+            ) from e
 
         else:
-            raise BriefcaseCommandError("""\
+            raise BriefcaseCommandError(
+                """\
 The Xcode install appears to exist, but Briefcase was unable to
 determine the current Xcode version. Running:
 
@@ -242,12 +254,12 @@ should return the current Xcode version, but it raised an error.
 
 You may need to re-install Xcode. Re-run Briefcase once that
 installation is complete.
-""") from e
+"""
+            ) from e
 
 
 def confirm_xcode_license_accepted(command):
-    """
-    Confirm if the Xcode license has been accepted.
+    """Confirm if the Xcode license has been accepted.
 
     :param command: The command that needs to perform the verification check.
     """
@@ -256,12 +268,12 @@ def confirm_xcode_license_accepted(command):
     # accepted. In this case, we can prompt the user to accept the license.
     try:
         command.subprocess.check_output(
-            ['/usr/bin/clang', '--version'],
-            stderr=subprocess.STDOUT
+            ["/usr/bin/clang", "--version"], stderr=subprocess.STDOUT
         )
     except subprocess.CalledProcessError as e:
         if e.returncode == 69:
-            command.logger.info("""
+            command.logger.info(
+                """
 Use of Xcode and the iOS developer tools are covered by a license that must be
 accepted before you can use those tools.
 
@@ -274,31 +286,37 @@ at the command line and accepting the license there.
 
 Briefcase will try the command line version of this command now. You will need
 to enter your password (Briefcase will not store this password anywhere).
-""")
+"""
+            )
             try:
                 command.subprocess.run(
-                    ['sudo', 'xcodebuild', '-license'],
+                    ["sudo", "xcodebuild", "-license"],
                     check=True,
                 )
             except subprocess.CalledProcessError as e:
                 # status code 1 - sudo fail
                 # status code 69 - license not accepted.
                 if e.returncode == 1:
-                    raise BriefcaseCommandError("""\
+                    raise BriefcaseCommandError(
+                        """\
 Briefcase was unable to run the Xcode licensing tool. This may be because you
 did not enter your password correctly, or because your account does not have
 administrator privileges on this computer.
 
 You need to accept the Xcode license before Briefcase can package your app.
-""")
+"""
+                    )
                 elif e.returncode == 69:
-                    raise BriefcaseCommandError("""\
+                    raise BriefcaseCommandError(
+                        """\
 Xcode license has not been accepted. Briefcase cannot continue.
 
 You need to accept the Xcode license before Briefcase can package your app.
-""")
+"""
+                    )
                 else:
-                    command.logger.warning("""
+                    command.logger.warning(
+                        """
 *************************************************************************
 ** WARNING: Unable to determine if the Xcode license has been accepted **
 *************************************************************************
@@ -317,9 +335,11 @@ You need to accept the Xcode license before Briefcase can package your app.
    from the command prompt.
 
 *************************************************************************
-""")
+"""
+                    )
         else:
-            command.logger.warning("""
+            command.logger.warning(
+                """
 *************************************************************************
 ** WARNING: Unable to determine if the Xcode license has been accepted **
 *************************************************************************
@@ -338,16 +358,16 @@ You need to accept the Xcode license before Briefcase can package your app.
    from the command prompt.
 
 *************************************************************************
-""")
+"""
+            )
 
 
 def get_simulators(
     command,
     os_name,
-    simulator_location='/Library/Developer/PrivateFrameworks/CoreSimulator.framework/',
+    simulator_location="/Library/Developer/PrivateFrameworks/CoreSimulator.framework/",
 ):
-    """
-    Obtain the simulators available on this machine.
+    """Obtain the simulators available on this machine.
 
     The return value is a 2 level dictionary. The outer dictionary is
     keyed by OS version; the inner dictionary for each OS version
@@ -364,26 +384,27 @@ def get_simulators(
     # If the simulator frameworks don't exist, they will be downloaded
     # and installed. This should only occur on first execution.
     if not Path(simulator_location).exists():
-        command.input(f"""
+        command.input(
+            f"""
 It looks like the {os_name} Simulator is not installed. The {os_name} Simulator
 must be installed with administrator privileges.
 
 xcodebuild will prompt you for your admin password so that it can download
 and install the simulator.
 
-Press Return to continue: """)
+Press Return to continue: """
+        )
 
     try:
         simctl_data = command.subprocess.parse_output(
             json_parser,
-            ['xcrun', 'simctl', 'list', '-j'],
+            ["xcrun", "simctl", "list", "-j"],
         )
 
         os_versions = {
-            runtime['name']: runtime['identifier']
-            for runtime in simctl_data['runtimes']
-            if runtime['name'].startswith(f'{os_name} ')
-            and runtime['isAvailable']
+            runtime["name"]: runtime["identifier"]
+            for runtime in simctl_data["runtimes"]
+            if runtime["name"].startswith(f"{os_name} ") and runtime["isAvailable"]
         }
 
         # For some reason, simctl varies the style of key that is used to
@@ -395,21 +416,18 @@ Press Return to continue: """)
         # neither exist, return an empty list.
         simulators = {
             version: {
-                device['udid']: device['name']
-                for device in simctl_data['devices'].get(
-                    identifier,
-                    simctl_data['devices'].get(version, [])
+                device["udid"]: device["name"]
+                for device in simctl_data["devices"].get(
+                    identifier, simctl_data["devices"].get(version, [])
                 )
-                if device['isAvailable']
+                if device["isAvailable"]
             }
             for version, identifier in os_versions.items()
         }
 
         # Purge any versions with no devices
         versions_with_no_devices = [
-            version
-            for version, devices in simulators.items()
-            if len(devices) == 0
+            version for version, devices in simulators.items() if len(devices) == 0
         ]
         for version in versions_with_no_devices:
             simulators.pop(version)
@@ -423,8 +441,7 @@ Press Return to continue: """)
 
 
 def get_device_state(command, udid):
-    """
-    Determine the state of an iOS simulator device.
+    """Determine the state of an iOS simulator device.
 
     :param command: The command that needs to know the simulator device state.
     :param udid: The UDID of the device to inspect
@@ -433,17 +450,17 @@ def get_device_state(command, udid):
     try:
         simctl_data = command.subprocess.parse_output(
             json_parser,
-            ['xcrun', 'simctl', 'list', 'devices', '-j', udid],
+            ["xcrun", "simctl", "list", "devices", "-j", udid],
         )
 
-        for runtime, devices in simctl_data['devices'].items():
+        for runtime, devices in simctl_data["devices"].items():
             for device in devices:
-                if device['udid'] == udid:
+                if device["udid"] == udid:
                     return {
-                        'Booted': DeviceState.BOOTED,
-                        'Shutting Down': DeviceState.SHUTTING_DOWN,
-                        'Shutdown': DeviceState.SHUTDOWN,
-                    }.get(device['state'], DeviceState.UNKNOWN)
+                        "Booted": DeviceState.BOOTED,
+                        "Shutting Down": DeviceState.SHUTTING_DOWN,
+                        "Shutdown": DeviceState.SHUTDOWN,
+                    }.get(device["state"], DeviceState.UNKNOWN)
 
         # If we fall out the bottom of the loop, the UDID didn't match
         # so we raise an error.
@@ -455,24 +472,23 @@ def get_device_state(command, udid):
 
 
 # A regex pattern that matches the content returned by `security find-identity`
-IDENTITY_RE = re.compile(r'\s*\d+\) ([0-9A-F]{40}) \"(.*)\"')
+IDENTITY_RE = re.compile(r"\s*\d+\) ([0-9A-F]{40}) \"(.*)\"")
 
 
 def get_identities(command, policy):
-    """
-    Obtain a set of valid identities for the given policy
+    """Obtain a set of valid identities for the given policy.
 
     :param command: The command that needs the identities.
     :param policy: The identity policy to evaluate (e.g., ``codesigning``)
     """
     try:
         output = command.subprocess.check_output(
-            ['security', 'find-identity', '-v', '-p', policy],
+            ["security", "find-identity", "-v", "-p", policy],
         )
 
         return dict(
             IDENTITY_RE.match(line).groups()
-            for line in output.split('\n')
+            for line in output.split("\n")
             if IDENTITY_RE.match(line)
         )
 

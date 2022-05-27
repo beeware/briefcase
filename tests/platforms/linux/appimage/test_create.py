@@ -10,23 +10,22 @@ def test_support_package_url(first_app_config, tmp_path):
     command = LinuxAppImageCreateCommand(base_path=tmp_path)
 
     # Set some properties of the host system for test purposes.
-    command.host_arch = 'wonky'
-    command.platform = 'tester'
+    command.host_arch = "wonky"
+    command.platform = "tester"
 
     assert command.support_package_url_query == [
-        ('platform', 'tester'),
-        ('version', f'3.{sys.version_info.minor}'),
-        ('arch', 'wonky'),
+        ("platform", "tester"),
+        ("version", f"3.{sys.version_info.minor}"),
+        ("arch", "wonky"),
     ]
 
 
 @pytest.mark.skipif(
-    sys.platform == "win32",
-    reason="Windows paths aren't converted in Docker context"
+    sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
 )
 def test_install_app_dependencies(first_app_config, tmp_path):
-    "If Docker is in use, a docker context is used to invoke pip"
-    first_app_config.requires = ['foo==1.2.3', 'bar>=4.5']
+    """If Docker is in use, a docker context is used to invoke pip."""
+    first_app_config.requires = ["foo==1.2.3", "bar>=4.5"]
 
     command = LinuxAppImageCreateCommand(base_path=tmp_path)
     command.use_docker = True
@@ -36,9 +35,7 @@ def test_install_app_dependencies(first_app_config, tmp_path):
     command.Docker.return_value = docker
 
     command._path_index = {
-        first_app_config: {
-            'app_packages_path': 'path/to/app_packages'
-        }
+        first_app_config: {"app_packages_path": "path/to/app_packages"}
     }
 
     command.install_app_dependencies(first_app_config)
@@ -52,23 +49,26 @@ def test_install_app_dependencies(first_app_config, tmp_path):
     # pip was invoked inside docker.
     docker.run.assert_called_with(
         [
-            sys.executable, '-m', 'pip',
-            'install', '--upgrade', '--no-user',
-            f'--target={tmp_path}/linux/appimage/First App/path/to/app_packages',
-            'foo==1.2.3',
-            'bar>=4.5',
+            sys.executable,
+            "-m",
+            "pip",
+            "install",
+            "--upgrade",
+            "--no-user",
+            f"--target={tmp_path}/linux/appimage/First App/path/to/app_packages",
+            "foo==1.2.3",
+            "bar>=4.5",
         ],
-        check=True
+        check=True,
     )
 
 
 @pytest.mark.skipif(
-    sys.platform == "win32",
-    reason="Windows paths aren't converted in Docker context"
+    sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
 )
 def test_install_app_dependencies_no_docker(first_app_config, tmp_path):
-    "If docker is *not* in use, calls are made on raw subprocess"
-    first_app_config.requires = ['foo==1.2.3', 'bar>=4.5']
+    """If docker is *not* in use, calls are made on raw subprocess."""
+    first_app_config.requires = ["foo==1.2.3", "bar>=4.5"]
 
     command = LinuxAppImageCreateCommand(base_path=tmp_path)
     command.use_docker = False
@@ -78,9 +78,7 @@ def test_install_app_dependencies_no_docker(first_app_config, tmp_path):
     command.Docker.return_value = docker
 
     command._path_index = {
-        first_app_config: {
-            'app_packages_path': 'path/to/app_packages'
-        }
+        first_app_config: {"app_packages_path": "path/to/app_packages"}
     }
 
     command.install_app_dependencies(first_app_config)
@@ -95,11 +93,15 @@ def test_install_app_dependencies_no_docker(first_app_config, tmp_path):
     # pip was invoked natively
     command.subprocess.run.assert_called_with(
         [
-            sys.executable, '-m', 'pip',
-            'install', '--upgrade', '--no-user',
-            f'--target={tmp_path}/linux/appimage/First App/path/to/app_packages',
-            'foo==1.2.3',
-            'bar>=4.5',
+            sys.executable,
+            "-m",
+            "pip",
+            "install",
+            "--upgrade",
+            "--no-user",
+            f"--target={tmp_path}/linux/appimage/First App/path/to/app_packages",
+            "foo==1.2.3",
+            "bar>=4.5",
         ],
-        check=True
+        check=True,
     )

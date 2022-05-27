@@ -14,18 +14,18 @@ from briefcase.platforms.linux.appimage import LinuxAppImageBuildCommand
 
 @pytest.fixture
 def first_app(first_app_config, tmp_path):
-    "A fixture for the first app, rolled out on disk"
+    """A fixture for the first app, rolled out on disk."""
     # Make it look like the template has been generated
-    app_dir = tmp_path / 'linux' / 'appimage' / 'First App' / 'First App.AppDir'
-    (app_dir / 'usr' / 'app' / 'support').mkdir(parents=True, exist_ok=True)
-    (app_dir / 'usr' / 'app_packages' / 'firstlib').mkdir(parents=True, exist_ok=True)
-    (app_dir / 'usr' / 'app_packages' / 'secondlib').mkdir(parents=True, exist_ok=True)
+    app_dir = tmp_path / "linux" / "appimage" / "First App" / "First App.AppDir"
+    (app_dir / "usr" / "app" / "support").mkdir(parents=True, exist_ok=True)
+    (app_dir / "usr" / "app_packages" / "firstlib").mkdir(parents=True, exist_ok=True)
+    (app_dir / "usr" / "app_packages" / "secondlib").mkdir(parents=True, exist_ok=True)
 
     # Create some .so files
-    (app_dir / 'usr' / 'app' / 'support' / 'support.so').touch()
-    (app_dir / 'usr' / 'app_packages' / 'firstlib' / 'first.so').touch()
-    (app_dir / 'usr' / 'app_packages' / 'secondlib' / 'second_a.so').touch()
-    (app_dir / 'usr' / 'app_packages' / 'secondlib' / 'second_b.so').touch()
+    (app_dir / "usr" / "app" / "support" / "support.so").touch()
+    (app_dir / "usr" / "app_packages" / "firstlib" / "first.so").touch()
+    (app_dir / "usr" / "app_packages" / "secondlib" / "second_a.so").touch()
+    (app_dir / "usr" / "app_packages" / "secondlib" / "second_b.so").touch()
 
     return first_app_config
 
@@ -35,21 +35,19 @@ def build_command(tmp_path, first_app_config):
     command = LinuxAppImageBuildCommand(
         base_path=tmp_path,
         home_path=tmp_path / "home",
-        apps={'first': first_app_config}
+        apps={"first": first_app_config},
     )
-    command.host_os = 'Linux'
-    command.host_arch = 'wonky'
+    command.host_os = "Linux"
+    command.host_arch = "wonky"
     command.use_docker = False
     command._path_index = {
         first_app_config: {
-            'app_path': "First App.AppDir/usr/app",
-            'app_packages_path': "First App.AppDir/usr/app_packages",
+            "app_path": "First App.AppDir/usr/app",
+            "app_packages_path": "First App.AppDir/usr/app_packages",
         }
     }
     command.os = mock.MagicMock()
-    command.os.environ.copy.return_value = {
-        'PATH': '/usr/local/bin:/usr/bin'
-    }
+    command.os.environ.copy.return_value = {"PATH": "/usr/local/bin:/usr/bin"}
 
     # Store the underlying subprocess instance
     command._subprocess = mock.MagicMock()
@@ -63,9 +61,9 @@ def build_command(tmp_path, first_app_config):
 
 
 def test_verify_tools_wrong_platform(build_command):
-    "If we're not on Linux, the build fails"
+    """If we're not on Linux, the build fails."""
 
-    build_command.host_os = 'TestOS'
+    build_command.host_os = "TestOS"
     build_command.build_app = mock.MagicMock()
     build_command.download_url = mock.MagicMock()
 
@@ -84,7 +82,7 @@ def test_verify_tools_wrong_platform(build_command):
 
 
 def test_verify_tools_download_failure(build_command):
-    "If the build tools can't be retrieved, the build fails"
+    """If the build tools can't be retrieved, the build fails."""
     build_command.build_app = mock.MagicMock()
     build_command.download_url = mock.MagicMock(
         side_effect=requests_exceptions.ConnectionError
@@ -96,8 +94,8 @@ def test_verify_tools_download_failure(build_command):
 
     # The download was attempted
     build_command.download_url.assert_called_with(
-        url='https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-wonky.AppImage',
-        download_path=build_command.dot_briefcase_path / 'tools'
+        url="https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-wonky.AppImage",
+        download_path=build_command.dot_briefcase_path / "tools",
     )
 
     # But it failed, so the file won't be made executable...
@@ -108,45 +106,48 @@ def test_verify_tools_download_failure(build_command):
 
 
 def test_build_appimage(build_command, first_app, tmp_path):
-    "A Linux app can be packaged as an AppImage"
+    """A Linux app can be packaged as an AppImage."""
 
     build_command.build_app(first_app)
 
     # linuxdeploy was invoked
-    app_dir = tmp_path / 'linux' / 'appimage' / 'First App' / 'First App.AppDir'
+    app_dir = tmp_path / "linux" / "appimage" / "First App" / "First App.AppDir"
     build_command._subprocess.run.assert_called_with(
         [
             os.fsdecode(build_command.linuxdeploy.appimage_path),
             "--appimage-extract-and-run",
             f"--appdir={app_dir}",
-            "-d", os.fsdecode(app_dir / "com.example.first-app.desktop"),
-            "-o", "appimage",
-            "--deploy-deps-only", os.fsdecode(app_dir / 'usr' / 'app' / 'support'),
-            "--deploy-deps-only", os.fsdecode(app_dir / 'usr' / 'app_packages' / 'firstlib'),
-            "--deploy-deps-only", os.fsdecode(app_dir / 'usr' / 'app_packages' / 'secondlib'),
+            "-d",
+            os.fsdecode(app_dir / "com.example.first-app.desktop"),
+            "-o",
+            "appimage",
+            "--deploy-deps-only",
+            os.fsdecode(app_dir / "usr" / "app" / "support"),
+            "--deploy-deps-only",
+            os.fsdecode(app_dir / "usr" / "app_packages" / "firstlib"),
+            "--deploy-deps-only",
+            os.fsdecode(app_dir / "usr" / "app_packages" / "secondlib"),
         ],
         env={
-            'PATH': '/usr/local/bin:/usr/bin',
-            'VERSION': '0.0.1',
+            "PATH": "/usr/local/bin:/usr/bin",
+            "VERSION": "0.0.1",
         },
         check=True,
-        cwd=os.fsdecode(tmp_path / 'linux'),
+        cwd=os.fsdecode(tmp_path / "linux"),
         text=True,
     )
     # Binary is marked executable
     build_command.os.chmod.assert_called_with(
-        tmp_path / 'linux' / 'First_App-0.0.1-wonky.AppImage',
-        0o755
+        tmp_path / "linux" / "First_App-0.0.1-wonky.AppImage", 0o755
     )
 
 
 def test_build_failure(build_command, first_app, tmp_path):
-    "If linuxdeploy fails, the build is stopped."
+    """If linuxdeploy fails, the build is stopped."""
 
     # Mock a failure in the build
     build_command._subprocess.run.side_effect = subprocess.CalledProcessError(
-        cmd=['linuxdeploy-x86_64.AppImage', '...'],
-        returncode=1
+        cmd=["linuxdeploy-x86_64.AppImage", "..."], returncode=1
     )
 
     # Invoking the build will raise an error.
@@ -154,24 +155,29 @@ def test_build_failure(build_command, first_app, tmp_path):
         build_command.build_app(first_app)
 
     # linuxdeploy was invoked
-    app_dir = tmp_path / 'linux' / 'appimage' / 'First App' / 'First App.AppDir'
+    app_dir = tmp_path / "linux" / "appimage" / "First App" / "First App.AppDir"
     build_command._subprocess.run.assert_called_with(
         [
             os.fsdecode(build_command.linuxdeploy.appimage_path),
             "--appimage-extract-and-run",
             f"--appdir={app_dir}",
-            "-d", os.fsdecode(app_dir / "com.example.first-app.desktop"),
-            "-o", "appimage",
-            "--deploy-deps-only", os.fsdecode(app_dir / 'usr' / 'app' / 'support'),
-            "--deploy-deps-only", os.fsdecode(app_dir / 'usr' / 'app_packages' / 'firstlib'),
-            "--deploy-deps-only", os.fsdecode(app_dir / 'usr' / 'app_packages' / 'secondlib'),
+            "-d",
+            os.fsdecode(app_dir / "com.example.first-app.desktop"),
+            "-o",
+            "appimage",
+            "--deploy-deps-only",
+            os.fsdecode(app_dir / "usr" / "app" / "support"),
+            "--deploy-deps-only",
+            os.fsdecode(app_dir / "usr" / "app_packages" / "firstlib"),
+            "--deploy-deps-only",
+            os.fsdecode(app_dir / "usr" / "app_packages" / "secondlib"),
         ],
         env={
-            'PATH': '/usr/local/bin:/usr/bin',
-            'VERSION': '0.0.1',
+            "PATH": "/usr/local/bin:/usr/bin",
+            "VERSION": "0.0.1",
         },
         check=True,
-        cwd=os.fsdecode(tmp_path / 'linux'),
+        cwd=os.fsdecode(tmp_path / "linux"),
         text=True,
     )
 
@@ -180,13 +186,12 @@ def test_build_failure(build_command, first_app, tmp_path):
 
 
 @pytest.mark.skipif(
-    sys.platform == "win32",
-    reason="Windows paths aren't converted in Docker context"
+    sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
 )
 def test_build_appimage_with_docker(build_command, first_app, tmp_path):
-    "A Linux app can be packaged as an AppImage"
+    """A Linux app can be packaged as an AppImage."""
     # Enable docker, and move to a non-Linux OS.
-    build_command.host_os = 'TestOS'
+    build_command.host_os = "TestOS"
     build_command.use_docker = True
 
     build_command.build_app(first_app)
@@ -198,26 +203,34 @@ def test_build_appimage_with_docker(build_command, first_app, tmp_path):
     build_command._subprocess.run.assert_called_with(
         [
             "docker",
-            "run", "--tty",
-            '--volume', f'{build_command.platform_path}:/app:z',
-            '--volume', f'{build_command.dot_briefcase_path}:/home/brutus/.briefcase:z',
-            '--env', 'VERSION=0.0.1',
-            f'briefcase/com.example.first-app:py3.{sys.version_info.minor}',
+            "run",
+            "--tty",
+            "--volume",
+            f"{build_command.platform_path}:/app:z",
+            "--volume",
+            f"{build_command.dot_briefcase_path}:/home/brutus/.briefcase:z",
+            "--env",
+            "VERSION=0.0.1",
+            f"briefcase/com.example.first-app:py3.{sys.version_info.minor}",
             "/home/brutus/.briefcase/tools/linuxdeploy-wonky.AppImage",
             "--appimage-extract-and-run",
             "--appdir=/app/appimage/First App/First App.AppDir",
-            "-d", "/app/appimage/First App/First App.AppDir/com.example.first-app.desktop",
-            "-o", "appimage",
-            "--deploy-deps-only", "/app/appimage/First App/First App.AppDir/usr/app/support",
-            "--deploy-deps-only", "/app/appimage/First App/First App.AppDir/usr/app_packages/firstlib",
-            "--deploy-deps-only", "/app/appimage/First App/First App.AppDir/usr/app_packages/secondlib",
+            "-d",
+            "/app/appimage/First App/First App.AppDir/com.example.first-app.desktop",
+            "-o",
+            "appimage",
+            "--deploy-deps-only",
+            "/app/appimage/First App/First App.AppDir/usr/app/support",
+            "--deploy-deps-only",
+            "/app/appimage/First App/First App.AppDir/usr/app_packages/firstlib",
+            "--deploy-deps-only",
+            "/app/appimage/First App/First App.AppDir/usr/app_packages/secondlib",
         ],
         check=True,
-        cwd=os.fsdecode(tmp_path / 'linux'),
+        cwd=os.fsdecode(tmp_path / "linux"),
         text=True,
     )
     # Binary is marked executable
     build_command.os.chmod.assert_called_with(
-        tmp_path / 'linux' / 'First_App-0.0.1-wonky.AppImage',
-        0o755
+        tmp_path / "linux" / "First_App-0.0.1-wonky.AppImage", 0o755
     )

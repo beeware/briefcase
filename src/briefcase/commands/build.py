@@ -6,29 +6,24 @@ from .base import BaseCommand, full_options
 
 
 class BuildCommand(BaseCommand):
-    command = 'build'
+    command = "build"
 
     def add_options(self, parser):
         parser.add_argument(
-            '-u',
-            '--update',
-            action="store_true",
-            help='Update the app before building'
+            "-u", "--update", action="store_true", help="Update the app before building"
         )
 
     def build_app(self, app: BaseConfig, **options):
-        """
-        Build an application.
+        """Build an application.
 
         :param app: The application to build
         """
         # Default implementation; nothing to build.
 
     def _build_app(self, app: BaseConfig, update: bool, **options):
-        """
-        Internal method to invoke a build on a single app.
-        Ensures the app exists, and has been updated (if requested) before
-        attempting to issue the actual build command.
+        """Internal method to invoke a build on a single app. Ensures the app
+        exists, and has been updated (if requested) before attempting to issue
+        the actual build command.
 
         :param app: The application to build?
         :param update: Should the application be updated first?
@@ -44,14 +39,13 @@ class BuildCommand(BaseCommand):
         state = self.build_app(app, **full_options(state, options))
 
         self.logger.info()
-        self.logger.info(f"[{app.app_name}] Built {self.binary_path(app).relative_to(self.base_path)}")
+        self.logger.info(
+            f"[{app.app_name}] Built {self.binary_path(app).relative_to(self.base_path)}"
+        )
         return state
 
     def __call__(
-        self,
-        app: Optional[BaseConfig] = None,
-        update: bool = False,
-        **options
+        self, app: Optional[BaseConfig] = None, update: bool = False, **options
     ):
         # Confirm all required tools are available
         self.verify_tools()
@@ -61,6 +55,8 @@ class BuildCommand(BaseCommand):
         else:
             state = None
             for app_name, app in sorted(self.apps.items()):
-                state = self._build_app(app, update=update, **full_options(state, options))
+                state = self._build_app(
+                    app, update=update, **full_options(state, options)
+                )
 
         return state

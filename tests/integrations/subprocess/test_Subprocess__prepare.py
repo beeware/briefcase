@@ -1,6 +1,5 @@
-
 def test_build_image(mock_sub):
-    "Building an image is a no-op"
+    """Building an image is a no-op."""
 
     mock_sub.prepare()
 

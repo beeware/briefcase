@@ -1,4 +1,3 @@
-include beekeeper.yml
 include CONTRIBUTING.md
 include README.rst
 include AUTHORS
@@ -9,6 +8,8 @@ include tests/integrations/xcode/simctl/README
 include pyproject.toml
 include tox.ini
 include .coveragerc
+include .git-blame-ignore-revs
+include .pre-commit-config.yaml
 recursive-include changes *.rst
 recursive-include src *.py
 recursive-include docs *.bat

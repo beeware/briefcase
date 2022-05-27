@@ -7,7 +7,7 @@ from briefcase.commands import (
     PackageCommand,
     PublishCommand,
     RunCommand,
-    UpdateCommand
+    UpdateCommand,
 )
 from briefcase.config import BaseConfig, parsed_version
 from briefcase.exceptions import BriefcaseCommandError
@@ -25,7 +25,7 @@ def safe_formal_name(name):
     :param name: The candidate name
     :returns: The safe version of the name.
     """
-    return re.sub(r'\s+', ' ', re.sub(r'[!/\\:<>"\?\*\|]', "", name)).strip()
+    return re.sub(r"\s+", " ", re.sub(r'[!/\\:<>"\?\*\|]', "", name)).strip()
 
 
 class GradleMixin:
@@ -34,18 +34,17 @@ class GradleMixin:
 
     @property
     def packaging_formats(self):
-        return ['aab']
+        return ["aab"]
 
     @property
     def default_packaging_format(self):
-        return 'aab'
+        return "aab"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
     def bundle_path(self, app):
-        """
-        The path to the bundle for the app in the output format.
+        """The path to the bundle for the app in the output format.
 
         The bundle is the template-generated source form of the app.
         The path will usually be a directory, the existence of which is
@@ -55,7 +54,9 @@ class GradleMixin:
 
         :param app: The app config
         """
-        return self.platform_path / self.output_format / safe_formal_name(app.formal_name)
+        return (
+            self.platform_path / self.output_format / safe_formal_name(app.formal_name)
+        )
 
     def binary_path(self, app):
         return (
@@ -84,10 +85,8 @@ class GradleMixin:
         return self.bundle_path(app) / gradlew
 
     def verify_tools(self):
-        """
-        Verify that we the Android APK tools in `briefcase` will operate on
-        this system, downloading tools as needed.
-        """
+        """Verify that we the Android APK tools in `briefcase` will operate on
+        this system, downloading tools as needed."""
         super().verify_tools()
         self.android_sdk = AndroidSDK.verify(self)
 
@@ -96,8 +95,7 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
     description = "Create and populate an Android APK."
 
     def output_format_template_context(self, app: BaseConfig):
-        """
-        Additional template context required by the output format.
+        """Additional template context required by the output format.
 
         :param app: The config object for the app
         """
@@ -111,11 +109,11 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
 
             v = (list(parsed.release) + [0, 0])[:3]  # version triple
             build = int(getattr(app, "build", "0"))
-            version_code = f'{v[0]:d}{v[1]:02d}{v[2]:02d}{build:02d}'.lstrip('0')
+            version_code = f"{v[0]:d}{v[1]:02d}{v[2]:02d}{build:02d}".lstrip("0")
 
         return {
-            'version_code': version_code,
-            'safe_formal_name': safe_formal_name(app.formal_name),
+            "version_code": version_code,
+            "safe_formal_name": safe_formal_name(app.formal_name),
         }
 
 
@@ -127,8 +125,7 @@ class GradleBuildCommand(GradleMixin, BuildCommand):
     description = "Build an Android debug APK."
 
     def build_app(self, app: BaseConfig, **kwargs):
-        """
-        Build an application.
+        """Build an application.
 
         :param app: The application to build
         """
@@ -143,7 +140,7 @@ class GradleBuildCommand(GradleMixin, BuildCommand):
                 # Set working directory so gradle can use the app bundle path as its
                 # project root, i.e., to avoid 'Task assembleDebug not found'.
                 cwd=self.bundle_path(app),
-                check=True
+                check=True,
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError("Error while building project.") from e
@@ -163,13 +160,12 @@ class GradleRunCommand(GradleMixin, RunCommand):
             "--device",
             dest="device_or_avd",
             help="The device to target; either a device ID for a physical device, "
-                 " or an AVD name ('@emulatorName') ",
+            " or an AVD name ('@emulatorName') ",
             required=False,
         )
 
     def run_app(self, app: BaseConfig, device_or_avd=None, **kwargs):
-        """
-        Start the application.
+        """Start the application.
 
         :param app: The config object for the app
         :param device: The device to target. If ``None``, the user will
@@ -190,7 +186,9 @@ class GradleRunCommand(GradleMixin, RunCommand):
             device, name = self.android_sdk.start_emulator(avd)
 
         self.logger.info()
-        self.logger.info(f"[{app.app_name}] Starting app on {name} (device ID {device})")
+        self.logger.info(
+            f"[{app.app_name}] Starting app on {name} (device ID {device})"
+        )
 
         # Create an ADB wrapper for the selected device
         adb = self.android_sdk.adb(device=device)
@@ -219,7 +217,9 @@ class GradleRunCommand(GradleMixin, RunCommand):
         adb.start_app(package, "org.beeware.android.MainActivity")
 
         self.logger.info()
-        self.logger.info(f"[{app.app_name}] Following device log output (type CTRL-C to stop log)...")
+        self.logger.info(
+            f"[{app.app_name}] Following device log output (type CTRL-C to stop log)..."
+        )
         self.logger.info("=" * 75)
         adb.logcat()
 
@@ -228,14 +228,15 @@ class GradlePackageCommand(GradleMixin, PackageCommand):
     description = "Create an Android App Bundle and APK in release mode."
 
     def package_app(self, app: BaseConfig, **kwargs):
-        """
-        Package the app for distribution.
+        """Package the app for distribution.
 
         This involves building the release app bundle.
 
         :param app: The application to build
         """
-        self.logger.info(f"[{app.app_name}] Building Android App Bundle and APK in release mode...")
+        self.logger.info(
+            f"[{app.app_name}] Building Android App Bundle and APK in release mode..."
+        )
         try:
             self.subprocess.run(
                 # Windows needs the full path to `gradlew`; macOS & Linux can find it
@@ -246,7 +247,7 @@ class GradlePackageCommand(GradleMixin, PackageCommand):
                 # Set working directory so gradle can use the app bundle path as its
                 # project root, i.e., to avoid 'Task bundleRelease not found'.
                 cwd=self.bundle_path(app),
-                check=True
+                check=True,
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError("Error while building project.") from e

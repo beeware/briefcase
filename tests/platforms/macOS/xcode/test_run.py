@@ -9,7 +9,7 @@ from briefcase.platforms.macOS.xcode import macOSXcodeRunCommand
 
 
 def test_run_app(first_app_config, tmp_path):
-    "A macOS Xcode app can be started"
+    """A macOS Xcode app can be started."""
     command = macOSXcodeRunCommand(base_path=tmp_path)
     command.subprocess = mock.MagicMock()
 
@@ -20,9 +20,11 @@ def test_run_app(first_app_config, tmp_path):
     sender = bin_path / "Contents" / "MacOS" / "First App"
     command.subprocess.Popen.assert_called_with(
         [
-            'log', 'stream',
-            '--style', 'compact',
-            '--predicate',
+            "log",
+            "stream",
+            "--style",
+            "compact",
+            "--predicate",
             f'senderImagePath=="{sender}"'
             f' OR (processImagePath=="{sender}"'
             ' AND senderImagePath=="/usr/lib/libffi.dylib")',
@@ -32,6 +34,5 @@ def test_run_app(first_app_config, tmp_path):
         bufsize=1,
     )
     command.subprocess.run.assert_called_with(
-        ['open', '-n', os.fsdecode(bin_path)],
-        check=True
+        ["open", "-n", os.fsdecode(bin_path)], check=True
     )

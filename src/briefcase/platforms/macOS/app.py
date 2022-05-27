@@ -8,49 +8,47 @@ from briefcase.commands import (
     PackageCommand,
     PublishCommand,
     RunCommand,
-    UpdateCommand
+    UpdateCommand,
 )
 from briefcase.config import BaseConfig
 from briefcase.platforms.macOS import (
     macOSMixin,
     macOSPackageMixin,
     macOSRunMixin,
-    macOSSigningMixin
+    macOSSigningMixin,
 )
 
 
 class macOSAppMixin(macOSMixin):
-    output_format = 'app'
+    output_format = "app"
 
     def binary_path(self, app):
-        return self.bundle_path(app) / f'{app.formal_name}.app'
+        return self.bundle_path(app) / f"{app.formal_name}.app"
 
     def distribution_path(self, app, packaging_format):
-        if packaging_format == 'dmg':
-            return self.platform_path / f'{app.formal_name}-{app.version}.dmg'
+        if packaging_format == "dmg":
+            return self.platform_path / f"{app.formal_name}-{app.version}.dmg"
         else:
             return self.binary_path(app)
 
     def entitlements_path(self, app):
-        return (
-                self.bundle_path(app)
-                / 'Entitlements.plist'
-        )
+        return self.bundle_path(app) / "Entitlements.plist"
 
 
 class macOSAppCreateCommand(macOSAppMixin, CreateCommand):
     description = "Create and populate a macOS app."
 
     def install_app_support_package(self, app: BaseConfig):
-        """
-        Install the application support package.
+        """Install the application support package.
 
         :param app: The config object for the app
         """
         super().install_app_support_package(app)
 
         # keep only Python lib from support package
-        lib_path = self.support_path(app).parent / 'Support' / 'Python' / 'Resources' / 'lib'
+        lib_path = (
+            self.support_path(app).parent / "Support" / "Python" / "Resources" / "lib"
+        )
 
         with tempfile.TemporaryDirectory() as tmpdir:
             # TODO: Py3.8 compatibility; os.fsdecode not required in Py3.9
@@ -59,7 +57,7 @@ class macOSAppCreateCommand(macOSAppMixin, CreateCommand):
 
             self.os.makedirs(Path(lib_path).parent)
             # TODO: Py3.8 compatibility; os.fsdecode not required in Py3.9
-            self.shutil.move(os.fsdecode(Path(tmpdir) / 'lib'), os.fsdecode(lib_path))
+            self.shutil.move(os.fsdecode(Path(tmpdir) / "lib"), os.fsdecode(lib_path))
 
 
 class macOSAppUpdateCommand(macOSAppMixin, UpdateCommand):
@@ -70,8 +68,7 @@ class macOSAppBuildCommand(macOSAppMixin, macOSSigningMixin, BuildCommand):
     description = "Build a macOS app."
 
     def build_app(self, app: BaseConfig, **kwargs):
-        """
-        Build the macOS app.
+        """Build the macOS app.
 
         :param app: The application to build
         """
@@ -80,7 +77,7 @@ class macOSAppBuildCommand(macOSAppMixin, macOSSigningMixin, BuildCommand):
         # adhoc signing identity. Apply an adhoc signing identity to the
         # app bundle.
         self.logger.info()
-        self.logger.info(f'[{app.app_name}] Adhoc signing app...')
+        self.logger.info(f"[{app.app_name}] Adhoc signing app...")
         self.sign_app(app=app, identity="-")
 
 

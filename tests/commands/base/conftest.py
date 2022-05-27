@@ -5,13 +5,12 @@ from briefcase.config import AppConfig, BaseConfig
 
 
 class DummyCommand(BaseCommand):
-    """
-    A dummy command to test the BaseCommand interface.
-    """
-    command = 'dummy',
-    platform = 'tester'
-    output_format = 'dumdum'
-    description = 'Dummy base command'
+    """A dummy command to test the BaseCommand interface."""
+
+    command = ("dummy",)
+    platform = "tester"
+    output_format = "dumdum"
+    description = "Dummy base command"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -19,10 +18,10 @@ class DummyCommand(BaseCommand):
     def add_options(self, parser):
         # Provide some extra arguments:
         # * some optional arguments
-        parser.add_argument('-x', '--extra')
-        parser.add_argument('-m', '--mystery')
+        parser.add_argument("-x", "--extra")
+        parser.add_argument("-m", "--mystery")
         # * a required argument
-        parser.add_argument('-r', '--required', required=True)
+        parser.add_argument("-r", "--required", required=True)
 
     def binary_path(self, app):
         raise NotImplementedError()
@@ -34,7 +33,7 @@ class DummyCommand(BaseCommand):
 @pytest.fixture
 def base_command(tmp_path):
     command = DummyCommand(base_path=tmp_path)
-    command.parse_options(['-r', 'default'])
+    command.parse_options(["-r", "default"])
     return command
 
 
@@ -80,33 +79,33 @@ class CustomGlobalConfig(BaseConfig):
         self.foo = foo
 
     def __repr__(self):
-        return f'<Custom GlobalConfig {self.foo}>'
+        return f"<Custom GlobalConfig {self.foo}>"
 
 
 class CustomAppConfig(AppConfig):
     def __init__(self, foo, bar, **kwargs):
         super().__init__(
-            app_name='custom',
-            bundle='com.example',
-            description='Custom app',
+            app_name="custom",
+            bundle="com.example",
+            description="Custom app",
             version="37.42",
-            sources=['src/custom'],
+            sources=["src/custom"],
         )
         self.foo = foo
         self.bar = bar
 
     def __repr__(self):
-        return f'<Custom AppConfig {self.foo}, {self.bar}>'
+        return f"<Custom AppConfig {self.foo}, {self.bar}>"
 
 
 class OtherDummyCommand(BaseCommand):
     GLOBAL_CONFIG_CLASS = CustomGlobalConfig
     APP_CONFIG_CLASS = CustomAppConfig
 
-    command = 'other',
-    platform = 'tester'
-    output_format = 'dumdum'
-    description = 'Another dummy command'
+    command = ("other",)
+    platform = "tester"
+    output_format = "dumdum"
+    description = "Another dummy command"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -126,10 +125,10 @@ def other_command(tmp_path):
 @pytest.fixture
 def my_app():
     return AppConfig(
-        app_name='my-app',
-        formal_name='My App',
-        bundle='com.example',
-        version='1.2.3',
-        description='This is a simple app',
-        sources=['src/my_app'],
+        app_name="my-app",
+        formal_name="My App",
+        bundle="com.example",
+        version="1.2.3",
+        description="This is a simple app",
+        sources=["src/my_app"],
     )

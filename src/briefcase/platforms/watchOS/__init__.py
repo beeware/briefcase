@@ -1,2 +1,1 @@
-
-DEFAULT_OUTPUT_FORMAT = 'xcode'
+DEFAULT_OUTPUT_FORMAT = "xcode"
