@@ -9,7 +9,7 @@ env:
 
 jobs:
   pre-commit:
-    name: Lint using pre-commit
+    name: Pre-commit code style checks
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
