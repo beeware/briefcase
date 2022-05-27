@@ -69,7 +69,7 @@ class macOSRunMixin:
 
         try:
             self.logger.info()
-            self.logger.info(f'[{app.app_name}] Starting app...')
+            self.logger.info(f"[{app.app_name}] Starting app...")
             try:
                 self.subprocess.run(
                     [
@@ -83,15 +83,23 @@ class macOSRunMixin:
                 raise BriefcaseCommandError(f"Unable to start app {app.app_name}.")
 
             # Start streaming logs for the app.
-            app_pid = get_process_id_by_command(command=str(self.binary_path(app)), logger=self.logger)
+            app_pid = get_process_id_by_command(
+                command=str(self.binary_path(app)), logger=self.logger
+            )
             if app_pid is None:
                 self.logger.error()
-                self.logger.error(f"Unable to find process for app {app.app_name} to start log streaming.")
+                self.logger.error(
+                    f"Unable to find process for app {app.app_name} to start log streaming."
+                )
             else:
                 self.logger.info()
-                self.logger.info(f"[{app.app_name}] Following system log output (type CTRL-C to stop log)...")
+                self.logger.info(
+                    f"[{app.app_name}] Following system log output (type CTRL-C to stop log)..."
+                )
                 self.logger.info("=" * 75)
-                self.subprocess.stream_output("log stream", log_popen, stop_func=lambda: is_process_dead(app_pid))
+                self.subprocess.stream_output(
+                    "log stream", log_popen, stop_func=lambda: is_process_dead(app_pid)
+                )
         finally:
             self.subprocess.cleanup("log stream", log_popen)
 

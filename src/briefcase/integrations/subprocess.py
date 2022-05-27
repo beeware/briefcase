@@ -2,8 +2,8 @@ import json
 import operator
 import shlex
 import subprocess
-import time
 import threading
+import time
 
 import psutil
 
@@ -32,8 +32,7 @@ def json_parser(json_output):
 
 
 def is_process_dead(pid: int):
-    """
-    Returns True if a PID is not assigned to a process.
+    """Returns True if a PID is not assigned to a process.
 
     Checking if a PID exists is only a semi-safe proxy to determine
     if a process is dead since PIDs can be re-used. Therefore, this
@@ -46,11 +45,11 @@ def is_process_dead(pid: int):
     return not psutil.pid_exists(pid)
 
 
-def get_process_id_by_command(command_list: list = None, command: str = "", logger: Log = None):
-    """
-    Find a Process ID (PID) a by its command.
-    If multiple processes are found, then the most recently created
-    process ID is returned.
+def get_process_id_by_command(
+    command_list: list = None, command: str = "", logger: Log = None
+):
+    """Find a Process ID (PID) a by its command. If multiple processes are
+    found, then the most recently created process ID is returned.
 
     :param command_list: list of a command's fully qualified path and its arguments.
     :param command: a partial or complete fully-qualified filepath to a command.
@@ -65,7 +64,7 @@ def get_process_id_by_command(command_list: list = None, command: str = "", logg
     # note: psutil returns None for a process attribute if it is unavailable;
     #   this is most likely to happen for restricted or zombie processes.
     for proc in psutil.process_iter(["cmdline", "create_time", "pid"]):
-        proc_cmdline = proc.info['cmdline']
+        proc_cmdline = proc.info["cmdline"]
         if command_list and proc_cmdline == command_list:
             matching_procs.append(proc.info)
         if command and proc_cmdline and proc_cmdline[0].startswith(command):
@@ -78,8 +77,8 @@ def get_process_id_by_command(command_list: list = None, command: str = "", logg
         pid = sorted(matching_procs, key=operator.itemgetter("create_time"))[-1]["pid"]
         if logger:
             logger.info(
-                f"Multiple running instances of app found. "
-                f"Using most recently created app process {pid}.")
+                f"Multiple running instances of app found. Using most recently created app process {pid}."
+            )
         return pid
 
     return None
@@ -285,9 +284,8 @@ class Subprocess:
         )
 
     def stream_output(self, label, popen_process, stop_func=None):
-        """
-        Stream the output of a Popen process until the process exits.
-        If the user sends CTRL+C, the process will be terminated.
+        """Stream the output of a Popen process until the process exits. If the
+        user sends CTRL+C, the process will be terminated.
 
         This is useful for starting a process via Popen such as tailing a
         log file, then initiating a non-blocking process that populates that
@@ -307,18 +305,17 @@ class Subprocess:
         try:
             output_streamer.start()
             if stop_func:
-                while output_streamer.is_alive():
-                    if stop_func():
-                        self.cleanup(label, popen_process)
+                while output_streamer.is_alive() or not stop_func():
                     time.sleep(0.5)
             else:
                 output_streamer.join()
         except KeyboardInterrupt:
+            pass  # allow CTRL+C to gracefully stop streaming
+        finally:
             self.cleanup(label, popen_process)
 
     def _stream_output_thread(self, popen_process):
-        """
-        Stream output for a Popen process in a Thread.
+        """Stream output for a Popen process in a Thread.
 
         :param popen_process: popen process to stream stdout
         """
@@ -345,12 +342,13 @@ class Subprocess:
             to provide context in logging messages.
         :param popen_process: The Popen instance to clean up.
         """
-        popen_process.terminate()
-        try:
-            popen_process.wait(timeout=3)
-        except subprocess.TimeoutExpired:
-            self.command.logger.warning(f"Forcibly killing {label}...")
-            popen_process.kill()
+        with popen_process:
+            popen_process.terminate()
+            try:
+                popen_process.wait(timeout=3)
+            except subprocess.TimeoutExpired:
+                self.command.logger.warning(f"Forcibly killing {label}...")
+                popen_process.kill()
 
     def _log_command(self, args):
         """Log the entire console command being executed."""
