@@ -82,7 +82,7 @@ class macOSRunMixin:
             except subprocess.CalledProcessError:
                 raise BriefcaseCommandError(f"Unable to start app {app.app_name}.")
 
-            # Start streaming logs for the app.
+            # Find the App process ID so log streaming can exit when the app exits
             app_pid = get_process_id_by_command(
                 command=str(self.binary_path(app)), logger=self.logger
             )
@@ -92,6 +92,7 @@ class macOSRunMixin:
                     f"Unable to find process for app {app.app_name} to start log streaming."
                 )
             else:
+                # Start streaming logs for the app.
                 self.logger.info()
                 self.logger.info(
                     f"[{app.app_name}] Following system log output (type CTRL-C to stop log)..."

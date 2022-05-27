@@ -305,7 +305,7 @@ class Subprocess:
         try:
             output_streamer.start()
             if stop_func:
-                while output_streamer.is_alive() or not stop_func():
+                while output_streamer.is_alive() and not stop_func():
                     time.sleep(0.5)
             else:
                 output_streamer.join()
@@ -313,6 +313,7 @@ class Subprocess:
             pass  # allow CTRL+C to gracefully stop streaming
         finally:
             self.cleanup(label, popen_process)
+            output_streamer.join()
 
     def _stream_output_thread(self, popen_process):
         """Stream output for a Popen process in a Thread.
@@ -342,13 +343,12 @@ class Subprocess:
             to provide context in logging messages.
         :param popen_process: The Popen instance to clean up.
         """
-        with popen_process:
-            popen_process.terminate()
-            try:
-                popen_process.wait(timeout=3)
-            except subprocess.TimeoutExpired:
-                self.command.logger.warning(f"Forcibly killing {label}...")
-                popen_process.kill()
+        popen_process.terminate()
+        try:
+            popen_process.wait(timeout=3)
+        except subprocess.TimeoutExpired:
+            self.command.logger.warning(f"Forcibly killing {label}...")
+            popen_process.kill()
 
     def _log_command(self, args):
         """Log the entire console command being executed."""
