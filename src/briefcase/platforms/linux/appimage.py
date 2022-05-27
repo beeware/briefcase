@@ -96,7 +96,7 @@ class LinuxAppImageMixin(LinuxMixin):
         :param app: The application that will determine the container image.
         """
         if self.use_docker:
-            """Enter the Docker context."""
+            # Enter the Docker context.
             self.logger.info()
             self.logger.info(f"[{app.app_name}] Entering Docker context...")
             orig_subprocess = self.subprocess

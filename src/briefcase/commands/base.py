@@ -409,9 +409,11 @@ class BaseCommand(ABC):
             action="store_false",
             default=True,
             dest="input_enabled",
-            help="Don't ask for user input. If any action would be destructive, "
-            "an error will be raised; otherwise, default answers will be "
-            "assumed.",
+            help=(
+                "Don't ask for user input. If any action would be destructive, "
+                "an error will be raised; otherwise, default answers will be "
+                "assumed."
+            ),
         )
 
     def add_options(self, parser):
@@ -543,16 +545,17 @@ class BaseCommand(ABC):
                     # the origin git repo. It's OK to continue; but warn
                     # the user that the template may be stale.
                     self.logger.warning(
-                        "***************************************************************************"
-                    )
-                    self.logger.warning(
-                        "WARNING: Unable to update template (is your computer offline?)"
-                    )
-                    self.logger.warning(
-                        "WARNING: Briefcase will use existing template without updating."
-                    )
-                    self.logger.warning(
-                        "***************************************************************************"
+                        """
+*************************************************************************
+** WARNING: Unable to update template                                  **
+*************************************************************************
+
+   Briefcase is unable the update the application template. This
+   may be because your computer is currently offline. Briefcase will
+   use existing template without updating.
+
+*************************************************************************
+"""
                     )
                 try:
                     # Check out the branch for the required version tag.

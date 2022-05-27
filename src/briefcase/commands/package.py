@@ -86,8 +86,10 @@ class PackageCommand(BaseCommand):
             "-i",
             "--identity",
             dest="identity",
-            help="The code signing identity to use; either the 40-digit hex "
-            "checksum, or the full name of the identity.",
+            help=(
+                "The code signing identity to use; either the 40-digit hex "
+                "checksum, or the full name of the identity."
+            ),
             required=False,
         )
 

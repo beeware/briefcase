@@ -19,8 +19,10 @@ def parse_cmdline(args):
         prog="briefcase",
         description="Package Python code for distribution.",
         usage="briefcase [-h] <command> [<platform>] [<format>] ...",
-        epilog="Each command, platform and format has additional options. "
-        "Use the -h option on a specific command for more details.",
+        epilog=(
+            "Each command, platform and format has additional options. "
+            "Use the -h option on a specific command for more details."
+        ),
         add_help=False,
     )
     parser.add_argument(

@@ -237,7 +237,7 @@ class iOSXcodeBuildCommand(iOSXcodeMixin, BuildCommand):
         try:
             self.subprocess.run(
                 [
-                    "xcodebuild",  # ' '.join(build_settings_str),
+                    "xcodebuild",
                     "-project",
                     self.bundle_path(app) / f"{app.formal_name}.xcodeproj",
                     "-destination",
