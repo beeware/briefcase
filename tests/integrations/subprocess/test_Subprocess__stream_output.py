@@ -5,6 +5,13 @@ import pytest
 from briefcase.console import Log
 
 
+@pytest.fixture()
+def mock_sub(mock_sub):
+    # also mock cleanup for stream output testing
+    mock_sub.cleanup = mock.MagicMock()
+    return mock_sub
+
+
 @pytest.fixture
 def popen_process():
     process = mock.MagicMock()
@@ -30,7 +37,9 @@ def popen_process():
 def test_output(mock_sub, popen_process, capsys):
     """Readline output is printed."""
     mock_sub.stream_output("testing", popen_process)
+
     assert capsys.readouterr().out == ("output line 1\n" "\n" "output line 3\n")
+    mock_sub.cleanup.assert_called_once_with("testing", popen_process)
 
 
 def test_output_debug(mock_sub, popen_process, capsys):
@@ -38,7 +47,9 @@ def test_output_debug(mock_sub, popen_process, capsys):
     mock_sub.command.logger = Log(verbosity=2)
 
     mock_sub.stream_output("testing", popen_process)
+
     assert capsys.readouterr().out == ("output line 1\n" "\n" "output line 3\n")
+    mock_sub.cleanup.assert_called_once_with("testing", popen_process)
 
 
 def test_output_deep_debug(mock_sub, popen_process, capsys):
@@ -46,26 +57,24 @@ def test_output_deep_debug(mock_sub, popen_process, capsys):
     mock_sub.command.logger = Log(verbosity=3)
 
     mock_sub.stream_output("testing", popen_process)
+
     assert capsys.readouterr().out == (
         "output line 1\n" "\n" "output line 3\n" ">>> Return code: -3\n"
     )
+    mock_sub.cleanup.assert_called_once_with("testing", popen_process)
 
 
 def test_keyboard_interrupt(mock_sub, popen_process, capsys):
-    """Process is terminated if user sends CTRL+C."""
-    popen_process.stdout.readline.side_effect = [
-        "output line 1\n",
-        "\n",
-        KeyboardInterrupt(),
-    ]
-    mock_sub.cleanup = mock.MagicMock()
+    """KeyboardInterrupt is suppressed if user sends CTRL+C and all output is
+    printed."""
 
-    mock_sub.stream_output("testing", popen_process)
+    def send_ctrl_c():
+        raise KeyboardInterrupt()
 
-    # Response to the CTRL-C is a process cleanup.
+    mock_sub.stream_output("testing", popen_process, stop_func=send_ctrl_c)
+
+    assert capsys.readouterr().out == ("output line 1\n" "\n" "output line 3\n")
     mock_sub.cleanup.assert_called_once_with("testing", popen_process)
-
-    assert capsys.readouterr().out == ("output line 1\n" "\n")
 
 
 def test_process_exit_with_queued_output(mock_sub, popen_process, capsys):
@@ -74,3 +83,14 @@ def test_process_exit_with_queued_output(mock_sub, popen_process, capsys):
 
     mock_sub.stream_output("testing", popen_process)
     assert capsys.readouterr().out == ("output line 1\n" "\n" "output line 3\n")
+    mock_sub.cleanup.assert_called_once_with("testing", popen_process)
+
+
+@pytest.mark.parametrize("stop_func_ret_val", (True, False))
+def test_stop_func(mock_sub, popen_process, stop_func_ret_val, capsys):
+    """All output is printed whether stop_func aborts streaming or not."""
+    mock_sub.stream_output(
+        "testing", popen_process, stop_func=lambda: stop_func_ret_val
+    )
+    assert capsys.readouterr().out == ("output line 1\n" "\n" "output line 3\n")
+    mock_sub.cleanup.assert_called_once_with("testing", popen_process)
