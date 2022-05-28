@@ -306,7 +306,7 @@ class Subprocess:
             output_streamer.start()
             if stop_func:
                 while output_streamer.is_alive() and not stop_func():
-                    time.sleep(0.5)
+                    time.sleep(0.1)
             else:
                 output_streamer.join()
         except KeyboardInterrupt:
