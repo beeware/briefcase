@@ -1,4 +1,3 @@
-from time import sleep
 from unittest import mock
 
 import pytest
@@ -21,7 +20,7 @@ def popen_process():
     # continuously returning "" once it reaches EOF
     process.stdout.readline.side_effect = [
         "output line 1\n",
-        sleep(0.25) or "\n",  # sneaky method to slow the output streamer down
+        "\n",
         "output line 3\n",
         "",
         "",
