@@ -26,14 +26,14 @@ def run_command(tmp_path, first_app_config):
 
 
 def test_run_existing_device(run_command, first_app_config):
-    "An app can be run on an existing device"
+    """An app can be run on an existing device."""
     # Set up device selection to return a running physical device.
     run_command.android_sdk.select_target_device = MagicMock(
-        return_value=("exampleDevice", 'ExampleDevice', None)
+        return_value=("exampleDevice", "ExampleDevice", None)
     )
     # Set up app config to have a `-` in the `bundle`, to ensure it gets
     # normalized into a `_` via `package_name`.
-    first_app_config.bundle = 'com.ex-ample'
+    first_app_config.bundle = "com.ex-ample"
 
     # Invoke run_app
     run_command.run_app(first_app_config, device_or_avd="exampleDevice")
@@ -51,17 +51,13 @@ def test_run_existing_device(run_command, first_app_config):
         run_command.binary_path(first_app_config)
     )
     run_command.mock_adb.force_stop_app.assert_called_once_with(
-        "{first_app_config.package_name}.{first_app_config.module_name}".format(
-            first_app_config=first_app_config
-        ),
+        f"{first_app_config.package_name}.{first_app_config.module_name}",
     )
 
     run_command.mock_adb.clear_log.assert_called_once()
 
     run_command.mock_adb.start_app.assert_called_once_with(
-        "{first_app_config.package_name}.{first_app_config.module_name}".format(
-            first_app_config=first_app_config
-        ),
+        f"{first_app_config.package_name}.{first_app_config.module_name}",
         "org.beeware.android.MainActivity",
     )
 
@@ -69,12 +65,13 @@ def test_run_existing_device(run_command, first_app_config):
 
 
 def test_run_created_device(run_command, first_app_config):
-    "If the user chooses to run on a newly created device, an error is raised (for now)"
+    """If the user chooses to run on a newly created device, an error is raised
+    (for now)"""
     # Set up device selection to return a completely new device
     run_command.android_sdk.select_target_device = MagicMock(
         return_value=(None, None, None)
     )
-    run_command.input = MagicMock(return_value='newDevice')
+    run_command.input = MagicMock(return_value="newDevice")
 
     with pytest.raises(BriefcaseCommandError):
         run_command.run_app(first_app_config)
@@ -84,7 +81,8 @@ def test_run_created_device(run_command, first_app_config):
 
 
 def test_run_idle_device(run_command, first_app_config):
-    "If the user chooses to run on an idle device, an error is raised (for now)"
+    """If the user chooses to run on an idle device, an error is raised (for
+    now)"""
     # Set up device selection to return a new device that has an AVD,
     # but not a device ID.
     run_command.android_sdk.select_target_device = MagicMock(

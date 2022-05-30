@@ -1,33 +1,223 @@
 import copy
+import keyword
 import re
 from types import SimpleNamespace
 
-import toml
+try:
+    import tomllib
+except ModuleNotFoundError:
+    import tomli as tomllib
 
 from briefcase.platforms import get_output_formats, get_platforms
 
 from .exceptions import BriefcaseConfigError
 
-# The restriction on application naming comes from PEP508
-PEP508_NAME_RE = re.compile(
-    r'^([A-Z0-9]|[A-Z0-9][A-Z0-9._-]*[A-Z0-9])$',
-    re.IGNORECASE
+# PEP508 provides a basic restriction on naming
+PEP508_NAME_RE = re.compile(r"^([A-Z0-9]|[A-Z0-9][A-Z0-9._-]*[A-Z0-9])$", re.IGNORECASE)
+
+# Javascript reserved keywords:
+# https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#reserved_keywords_as_of_ecmascript_2015
+JAVASCRIPT_RESERVED_WORDS = {
+    "break",
+    "case",
+    "catch",
+    "class",
+    "const",
+    "continue",
+    "debugger",
+    "default",
+    "delete",
+    "do",
+    "else",
+    "export",
+    "extends",
+    "finally",
+    "for",
+    "function",
+    "if",
+    "import",
+    "in",
+    "instanceof",
+    "new",
+    "return",
+    "super",
+    "switch",
+    "this",
+    "throw",
+    "try",
+    "typeof",
+    "var",
+    "void",
+    "while",
+    "with",
+    "yield",
+}
+
+# Java reserved keywords
+# https://en.wikipedia.org/wiki/List_of_Java_keywords
+JAVA_RESERVED_WORDS = {
+    # Keywords
+    "abstract",
+    "assert",
+    "boolean",
+    "break",
+    "byte",
+    "case",
+    "catch",
+    "char",
+    "class",
+    "const",
+    "continue",
+    "default",
+    "do",
+    "double",
+    "else",
+    "enum",
+    "extends",
+    "final",
+    "finally",
+    "float",
+    "for",
+    "goto",
+    "if",
+    "implements",
+    "import",
+    "instanceof",
+    "int",
+    "interface",
+    "long",
+    "native",
+    "new",
+    "package",
+    "private",
+    "protected",
+    "public",
+    "return",
+    "short",
+    "static",
+    "super",
+    "switch",
+    "synchronized",
+    "this",
+    "throw",
+    "throws",
+    "transient",
+    "try",
+    "void",
+    "volatile",
+    "while",
+    # Reserved Identifiers
+    "exports",
+    "module",
+    "non-sealed",
+    "open",
+    "opens",
+    "permits",
+    "provides",
+    "record",
+    "requires",
+    "sealed",
+    "to",
+    "transitive",
+    "uses",
+    "var",
+    "with",
+    "yield",
+    # Reserved Literals
+    "true",
+    "false",
+    "null",
+    # Unused, but reserved.
+    "strictfp",
+}
+
+
+# Names that are illegal as Windows filenames
+# https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file
+WINDOWS_RESERVED_WORDS = {
+    "con",
+    "prn",
+    "aux",
+    "nul",
+    "com1",
+    "com2",
+    "com3",
+    "com4",
+    "com5",
+    "com6",
+    "com7",
+    "com8",
+    "com9",
+    "com0",
+    "lpt1",
+    "lpt2",
+    "lpt3",
+    "lpt4",
+    "lpt5",
+    "lpt6",
+    "lpt7",
+    "lpt8",
+    "lpt9",
+    "lpt0",
+}
+
+NON_PYTHON_RESERVED_WORDS = set.union(
+    JAVASCRIPT_RESERVED_WORDS,
+    JAVA_RESERVED_WORDS,
+    WINDOWS_RESERVED_WORDS,
 )
 
-# This is the canonical definition from PEP440, modified to include
-# named groups
+
+def is_valid_pep508_name(app_name):
+    """Determine if the name is valid by PEP508 rules."""
+    return PEP508_NAME_RE.match(app_name)
+
+
+def is_reserved_keyword(app_name):
+    """Determine if the name is a reserved keyword."""
+    return (
+        keyword.iskeyword(app_name.lower())
+        or app_name.lower() in NON_PYTHON_RESERVED_WORDS
+    )
+
+
+def is_valid_app_name(app_name):
+    return not is_reserved_keyword(app_name) and is_valid_pep508_name(app_name)
+
+
+VALID_BUNDLE_RE = re.compile(r"[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$")
+
+
+def is_valid_bundle_identifier(bundle):
+    # Ensure the bundle identifier follows the basi
+    if not VALID_BUNDLE_RE.match(bundle):
+        return False
+
+    for part in bundle.split("."):
+        # *Some* 2-letter country codes are valid identifiers,
+        # even though they're reserved words; see:
+        #    https://www.oracle.com/java/technologies/javase/codeconventions-namingconventions.html
+        # `.do` *should* be on this list, but as of Apr 2022, `.do` breaks
+        # the Android build tooling.
+        if is_reserved_keyword(part) and part not in {"in", "is"}:
+            return False
+
+    return True
+
+
+# This is the canonical definition from PEP440, modified to include named groups
 PEP440_CANONICAL_VERSION_PATTERN_RE = re.compile(
-    r'^((?P<epoch>[1-9][0-9]*)!)?'
-    r'(?P<release>(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*))*)'
-    r'((?P<pre_tag>a|b|rc)(?P<pre_value>0|[1-9][0-9]*))?'
-    r'(\.post(?P<post>0|[1-9][0-9]*))?'
-    r'(\.dev(?P<dev>0|[1-9][0-9]*))?$'
+    r"^((?P<epoch>[1-9][0-9]*)!)?"
+    r"(?P<release>(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*))*)"
+    r"((?P<pre_tag>a|b|rc)(?P<pre_value>0|[1-9][0-9]*))?"
+    r"(\.post(?P<post>0|[1-9][0-9]*))?"
+    r"(\.dev(?P<dev>0|[1-9][0-9]*))?$"
 )
 
 
 def is_pep440_canonical_version(version):
-    """
-    Determine if the string describes a valid PEP440 canonical version specifier.
+    """Determine if the string describes a valid PEP440 canonical version
+    specifier.
 
     This implementation comes directly from PEP440 itself.
 
@@ -37,30 +227,25 @@ def is_pep440_canonical_version(version):
 
 
 def parsed_version(version):
-    """
-    Return a parsed version string
+    """Return a parsed version string.
 
     :param version: The parsed version string
     """
     groupdict = PEP440_CANONICAL_VERSION_PATTERN_RE.match(version).groupdict()
 
     # Convert dot separated string of integers to tuple of integers
-    groupdict['release'] = tuple(int(p) for p in groupdict.pop('release').split('.'))
+    groupdict["release"] = tuple(int(p) for p in groupdict.pop("release").split("."))
 
     # Convert strings to values
-    for key in ('epoch', 'pre_value', 'post', 'dev'):
+    for key in ("epoch", "pre_value", "post", "dev"):
         try:
             groupdict[key] = int(groupdict[key])
         except TypeError:
             pass
 
-    tag = groupdict.pop('pre_tag')
-    value = groupdict.pop('pre_value')
-    if tag is not None:
-        groupdict['pre'] = (tag, value)
-    else:
-        groupdict['pre'] = None
-
+    tag = groupdict.pop("pre_tag")
+    value = groupdict.pop("pre_value")
+    groupdict["pre"] = (tag, value) if tag is not None else None
     return SimpleNamespace(**groupdict)
 
 
@@ -79,7 +264,7 @@ class GlobalConfig(BaseConfig):
         url=None,
         author=None,
         author_email=None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(**kwargs)
         self.project_name = project_name
@@ -92,15 +277,13 @@ class GlobalConfig(BaseConfig):
         # Version number is PEP440 compliant:
         if not is_pep440_canonical_version(self.version):
             raise BriefcaseConfigError(
-                "Version number ({self.version}) is not valid.\n\n"
+                f"Version number ({self.version}) is not valid.\n\n"
                 "Version numbers must be PEP440 compliant; "
-                "see https://www.python.org/dev/peps/pep-0440/ for details.".format(
-                    self=self
-                )
+                "see https://www.python.org/dev/peps/pep-0440/ for details."
             )
 
     def __repr__(self):
-        return "<{self.project_name} v{self.version} GlobalConfig>".format(self=self)
+        return f"<{self.project_name} v{self.version} GlobalConfig>"
 
 
 class AppConfig(BaseConfig):
@@ -122,7 +305,7 @@ class AppConfig(BaseConfig):
         template=None,
         template_branch=None,
         supported=True,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(**kwargs)
 
@@ -143,84 +326,84 @@ class AppConfig(BaseConfig):
         self.template_branch = template_branch
         self.supported = supported
 
-        # Validate that the app name is valid.
-        if not PEP508_NAME_RE.match(self.app_name):
+        if not is_valid_app_name(self.app_name):
             raise BriefcaseConfigError(
-                "{self.app_name!r} is not a valid app name.\n\n"
-                "App names must be PEP508 compliant (i.e., they can only "
-                "include letters, numbers, '-' and '_'; must start with a "
-                "letter; and cannot end with '-' or '_'.".format(self=self)
+                f"{self.app_name!r} is not a valid app name.\n\n"
+                "App names must not be reserved keywords such as 'and', 'for' and 'while'.\n"
+                "They must also be PEP508 compliant (i.e., they can only include letters,\n"
+                "numbers, '-' and '_'; must start with a letter; and cannot end with '-' or '_')."
+            )
+
+        if not is_valid_bundle_identifier(self.bundle):
+            raise BriefcaseConfigError(
+                f"{self.bundle!r} is not a valid bundle identifier.\n\n"
+                "The bundle should be a reversed domain name. It must contain at least 2\n"
+                "dot-separated sections; each section may only include letters, numbers,\n"
+                "and hyphens; and each section may not contain any reserved words (like\n"
+                "'switch', or 'while')."
             )
 
         # Version number is PEP440 compliant:
         if not is_pep440_canonical_version(self.version):
             raise BriefcaseConfigError(
-                "Version number for {self.app_name} ({self.version}) is not valid.\n\n"
+                f"Version number for {self.app_name!r} ({self.version}) is not valid.\n\n"
                 "Version numbers must be PEP440 compliant; "
-                "see https://www.python.org/dev/peps/pep-0440/ for details.".format(
-                    self=self
-                )
+                "see https://www.python.org/dev/peps/pep-0440/ for details."
             )
 
         # Sources list doesn't include any duplicates
-        source_modules = {source.rsplit('/', 1)[-1] for source in self.sources}
+        source_modules = {source.rsplit("/", 1)[-1] for source in self.sources}
         if len(self.sources) != len(source_modules):
             raise BriefcaseConfigError(
-                "The `sources` list for {self.app_name} contains duplicated "
-                "package names.".format(self=self)
+                f"The `sources` list for {self.app_name!r} contains duplicated "
+                "package names."
             )
 
         # There is, at least, a source for the app module
         if self.module_name not in source_modules:
             raise BriefcaseConfigError(
-                "The `sources` list for {self.app_name} does not include a "
-                "package named '{self.module_name}'.".format(self=self)
+                f"The `sources` list for {self.app_name!r} does not include a "
+                f"package named {self.module_name!r}."
             )
 
     def __repr__(self):
-        return "<{self.bundle}.{self.app_name} v{self.version} AppConfig>".format(
-            self=self,
-        )
+        return f"<{self.bundle}.{self.app_name} v{self.version} AppConfig>"
 
     @property
     def module_name(self):
-        """
-        The module name for the app.
+        """The module name for the app.
 
         This is derived from the name, but:
         * all `-` have been replaced with `_`.
         """
-        return self.app_name.replace('-', '_')
+        return self.app_name.replace("-", "_")
 
     @property
     def package_name(self):
-        """
-        The bundle name of the app, with `-` replaced with `_` to create
+        """The bundle name of the app, with `-` replaced with `_` to create
         something that can be used a namespace identifier on Python or Java,
-        similar to `module_name`.
-        """
-        return self.bundle.replace('-', '_')
+        similar to `module_name`."""
+        return self.bundle.replace("-", "_")
 
     @property
     def PYTHONPATH(self):
-        "The PYTHONPATH modifications needed to run this app."
+        """The PYTHONPATH modifications needed to run this app."""
         paths = []
         for source in self.sources:
-            path = source.rsplit('/', 1)[0]
+            path = source.rsplit("/", 1)[0]
             if path not in paths:
                 paths.append(path)
         return paths
 
 
 def merge_config(config, data):
-    """
-    Merge a new set of configuration requirements into a base configuration.
+    """Merge a new set of configuration requirements into a base configuration.
 
     :param config: the base configuration to update. This configuration
         is modified in-situ.
     :param data: The new configuration data to merge into the configuration.
     """
-    for option in ['requires', 'sources']:
+    for option in ["requires", "sources"]:
         value = data.pop(option, [])
 
         if value:
@@ -230,8 +413,7 @@ def merge_config(config, data):
 
 
 def parse_config(config_file, platform, output_format):
-    """
-    Parse the briefcase section of the pyproject.toml configuration file.
+    """Parse the briefcase section of the pyproject.toml configuration file.
 
     This method only does basic structural parsing of the TOML, looking for,
     at a minimum, a ``[tool.briefcase.app.<appname>]`` section declaring the
@@ -259,22 +441,22 @@ def parse_config(config_file, platform, output_format):
         format definitions.
     """
     try:
-        pyproject = toml.load(config_file)
+        pyproject = tomllib.load(config_file)
 
-        global_config = pyproject['tool']['briefcase']
-    except toml.TomlDecodeError as e:
-        raise BriefcaseConfigError('Invalid pyproject.toml: {e}'.format(e=e))
-    except KeyError:
-        raise BriefcaseConfigError('No tool.briefcase section in pyproject.toml')
+        global_config = pyproject["tool"]["briefcase"]
+    except tomllib.TOMLDecodeError as e:
+        raise BriefcaseConfigError(f"Invalid pyproject.toml: {e}") from e
+    except KeyError as e:
+        raise BriefcaseConfigError("No tool.briefcase section in pyproject.toml") from e
 
     # For consistent results, sort the platforms and formats
     all_platforms = sorted(get_platforms().keys())
     all_formats = sorted(get_output_formats(platform).keys())
 
     try:
-        all_apps = global_config.pop('app')
-    except KeyError:
-        raise BriefcaseConfigError('No Briefcase apps defined in pyproject.toml')
+        all_apps = global_config.pop("app")
+    except KeyError as e:
+        raise BriefcaseConfigError("No Briefcase apps defined in pyproject.toml") from e
 
     # Build the flat configuration for each app,
     # based on the requested platform and output format
@@ -333,7 +515,7 @@ def parse_config(config_file, platform, output_format):
         config = copy.deepcopy(global_config)
 
         # The app name is both the key, and a property of the configuration
-        config['app_name'] = app_name
+        config["app_name"] = app_name
 
         # Merge the app-specific requirements
         merge_config(config, app_data)

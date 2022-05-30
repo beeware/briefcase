@@ -1,5 +1,6 @@
-from briefcase.console import Console, InputDisabled
 from unittest.mock import MagicMock
+
+from briefcase.console import Console, InputDisabled
 
 
 class DummyConsole(Console):

@@ -4,7 +4,7 @@ from briefcase.exceptions import BriefcaseCommandError
 
 
 def test_no_args_one_app(run_command, first_app):
-    "If there is one app, run starts that app by default"
+    """If there is one app, run starts that app by default."""
     # Add a single app
     run_command.apps = {
         "first": first_app,
@@ -19,14 +19,14 @@ def test_no_args_one_app(run_command, first_app):
     # The right sequence of things will be done
     assert run_command.actions == [
         # Tools are verified
-        ("verify", ),
+        ("verify",),
         # Run the first app
         ("run", "first", {}),
     ]
 
 
 def test_no_args_two_apps(run_command, first_app, second_app):
-    "If there are one app, run starts that app by default"
+    """If there are one app, run starts that app by default."""
     # Add two apps
     run_command.apps = {
         "first": first_app,
@@ -42,12 +42,12 @@ def test_no_args_two_apps(run_command, first_app, second_app):
 
     # Only verification actions will be performed
     assert run_command.actions == [
-        ("verify", ),
+        ("verify",),
     ]
 
 
 def test_with_arg_one_app(run_command, first_app):
-    "If there is one app, and a -a argument, run starts that app"
+    """If there is one app, and a -a argument, run starts that app."""
     # Add a single app
     run_command.apps = {
         "first": first_app,
@@ -62,14 +62,14 @@ def test_with_arg_one_app(run_command, first_app):
     # The right sequence of things will be done
     assert run_command.actions == [
         # Tools are verified
-        ("verify", ),
+        ("verify",),
         # Run the first app
         ("run", "first", {}),
     ]
 
 
 def test_with_arg_two_apps(run_command, first_app, second_app):
-    "If there are multiple apps, the --app argument starts app nominated"
+    """If there are multiple apps, the --app argument starts app nominated."""
     # Add two apps
     run_command.apps = {
         "first": first_app,
@@ -85,14 +85,15 @@ def test_with_arg_two_apps(run_command, first_app, second_app):
     # The right sequence of things will be done
     assert run_command.actions == [
         # Tools are verified
-        ("verify", ),
+        ("verify",),
         # Run the second app
         ("run", "second", {}),
     ]
 
 
 def test_bad_app_reference(run_command, first_app, second_app):
-    "If the command line argument refers to an app that doesn't exist, raise an error"
+    """If the command line argument refers to an app that doesn't exist, raise
+    an error."""
     # Add two apps
     run_command.apps = {
         "first": first_app,
@@ -108,12 +109,12 @@ def test_bad_app_reference(run_command, first_app, second_app):
 
     # Only verification actions will be performed
     assert run_command.actions == [
-        ("verify", ),
+        ("verify",),
     ]
 
 
 def test_create_app_before_start(run_command, first_app_config):
-    "If the app to be started doesn't exist, create it first"
+    """If the app to be started doesn't exist, create it first."""
     # Add a single app, using the 'config only' fixture
     run_command.apps = {
         "first": first_app_config,
@@ -128,7 +129,7 @@ def test_create_app_before_start(run_command, first_app_config):
     # The right sequence of things will be done
     assert run_command.actions == [
         # Tools are verified
-        ("verify", ),
+        ("verify",),
         # App doesn't exist, so it will be created and built
         ("create", "first", {}),
         ("build", "first", {"create_state": "first"}),
@@ -138,7 +139,7 @@ def test_create_app_before_start(run_command, first_app_config):
 
 
 def test_update_app(run_command, first_app):
-    "The run command can request that the app is updated first"
+    """The run command can request that the app is updated first."""
     # Add a single app
     run_command.apps = {
         "first": first_app,
@@ -153,7 +154,7 @@ def test_update_app(run_command, first_app):
     # The right sequence of things will be done
     assert run_command.actions == [
         # Tools are verified
-        ("verify", ),
+        ("verify",),
         # An update was requested
         ("update", "first", {}),
         ("build", "first", {"update_state": "first"}),
@@ -163,7 +164,7 @@ def test_update_app(run_command, first_app):
 
 
 def test_update_uncompiled_app(run_command, first_app_uncompiled):
-    "The run command can request that an uncompiled app is updated first"
+    """The run command can request that an uncompiled app is updated first."""
     # Add a single app
     run_command.apps = {
         "first": first_app_uncompiled,
@@ -178,7 +179,7 @@ def test_update_uncompiled_app(run_command, first_app_uncompiled):
     # The right sequence of things will be done
     assert run_command.actions == [
         # Tools are verified
-        ("verify", ),
+        ("verify",),
         # An update was requested
         ("update", "first", {}),
         ("build", "first", {"update_state": "first"}),
@@ -188,7 +189,7 @@ def test_update_uncompiled_app(run_command, first_app_uncompiled):
 
 
 def test_update_non_existent(run_command, first_app_config):
-    "Requesting an update of a non-existent app causes a create"
+    """Requesting an update of a non-existent app causes a create."""
     # Add a single app, using the 'config only' fixture
     run_command.apps = {
         "first": first_app_config,
@@ -203,7 +204,7 @@ def test_update_non_existent(run_command, first_app_config):
     # The right sequence of things will be done
     assert run_command.actions == [
         # Tools are verified
-        ("verify", ),
+        ("verify",),
         # App doesn't exist, so it will be created and built
         ("create", "first", {}),
         ("build", "first", {"create_state": "first"}),

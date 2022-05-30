@@ -8,7 +8,7 @@ from briefcase.commands import (
     PackageCommand,
     PublishCommand,
     RunCommand,
-    UpdateCommand
+    UpdateCommand,
 )
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError
@@ -18,17 +18,16 @@ from briefcase.platforms.linux import LinuxMixin
 
 
 class LinuxAppImageMixin(LinuxMixin):
-    output_format = 'appimage'
+    output_format = "appimage"
 
     def appdir_path(self, app):
-        return self.bundle_path(app) / "{app.formal_name}.AppDir".format(app=app)
+        return self.bundle_path(app) / f"{app.formal_name}.AppDir"
 
     def binary_path(self, app):
-        binary_name = app.formal_name.replace(' ', '_')
-        return self.platform_path / '{binary_name}-{app.version}-{self.host_arch}.AppImage'.format(
-            app=app,
-            self=self,
-            binary_name=binary_name,
+        binary_name = app.formal_name.replace(" ", "_")
+        return (
+            self.platform_path
+            / f"{binary_name}-{app.version}-{self.host_arch}.AppImage"
         )
 
     def distribution_path(self, app, packaging_format):
@@ -37,59 +36,54 @@ class LinuxAppImageMixin(LinuxMixin):
     def add_options(self, parser):
         super().add_options(parser)
         parser.add_argument(
-            '--no-docker',
-            dest='use_docker',
-            action='store_false',
+            "--no-docker",
+            dest="use_docker",
+            action="store_false",
             help="Don't use Docker for building the AppImage",
             required=False,
         )
 
     def parse_options(self, extra):
-        """Extract the use_docker option"""
+        """Extract the use_docker option."""
         options = super().parse_options(extra)
 
-        self.use_docker = options.pop('use_docker')
+        self.use_docker = options.pop("use_docker")
 
         return options
 
     def clone_options(self, command):
-        """Clone the use_docker option"""
+        """Clone the use_docker option."""
         super().clone_options(command)
         self.use_docker = command.use_docker
 
     def docker_image_tag(self, app):
-        "The Docker image tag for an app"
-        return 'briefcase/{app.bundle}.{app_name}:py{self.python_version_tag}'.format(
-            app=app,
-            self=self,
-            app_name=app.app_name.lower()
+        """The Docker image tag for an app."""
+        return (
+            f"briefcase/{app.bundle}.{app.app_name.lower()}:py{self.python_version_tag}"
         )
 
     def verify_tools(self):
-        """
-        Verify that Docker is available; and if it isn't that we're on Linux.
-        """
+        """Verify that Docker is available; and if it isn't that we're on
+        Linux."""
         super().verify_tools()
         if self.use_docker:
-            if self.host_os == 'Windows':
-                raise BriefcaseCommandError("""
-Linux AppImages cannot be generated on Windows.
-""")
+            if self.host_os == "Windows":
+                raise BriefcaseCommandError(
+                    "Linux AppImages cannot be generated on Windows."
+                )
             else:
                 self.Docker = verify_docker(self)
+        elif self.host_os == "Linux":
+            # Use subprocess natively. No Docker wrapper is needed
+            self.Docker = None
         else:
-            if self.host_os == 'Linux':
-                # Use subprocess natively. No Docker wrapper is needed
-                self.Docker = None
-            else:
-                raise BriefcaseCommandError("""
-Linux AppImages can only be generated on Linux.
-""")
+            raise BriefcaseCommandError(
+                "Linux AppImages can only be generated on Linux."
+            )
 
     @contextmanager
     def dockerize(self, app):
-        """
-        Enter a Docker container based on the properties of the app.
+        """Enter a Docker container based on the properties of the app.
 
         Provides a context manager for the Docker context. The context
         object is an object that exposes subprocess-analog calls.
@@ -102,16 +96,16 @@ Linux AppImages can only be generated on Linux.
         :param app: The application that will determine the container image.
         """
         if self.use_docker:
-            """
-            Enter the Docker context.
-            """
-            print("[{app.app_name}] Entering Docker context...".format(app=app))
+            # Enter the Docker context.
+            self.logger.info()
+            self.logger.info(f"[{app.app_name}] Entering Docker context...")
             orig_subprocess = self.subprocess
             self.subprocess = self.Docker(self, app)
 
             yield self.subprocess
 
-            print("[{app.app_name}] Leaving Docker context.".format(app=app))
+            self.logger.info()
+            self.logger.info(f"[{app.app_name}] Leaving Docker context.")
             self.subprocess = orig_subprocess
         else:
             yield self.subprocess
@@ -122,18 +116,15 @@ class LinuxAppImageCreateCommand(LinuxAppImageMixin, CreateCommand):
 
     @property
     def support_package_url_query(self):
-        """
-        The query arguments to use in a support package query request.
-        """
+        """The query arguments to use in a support package query request."""
         return [
-            ('platform', self.platform),
-            ('version', self.python_version_tag),
-            ('arch', self.host_arch),
+            ("platform", self.platform),
+            ("version", self.python_version_tag),
+            ("arch", self.host_arch),
         ]
 
     def install_app_dependencies(self, app: BaseConfig):
-        """
-        Install application dependencies.
+        """Install application dependencies.
 
         This will be containerized in Docker to ensure that the right
         binary versions are installed.
@@ -157,29 +148,25 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
         self.linuxdeploy = LinuxDeploy.verify(self)
 
     def build_app(self, app: BaseConfig, **kwargs):
-        """
-        Build an application.
+        """Build an application.
 
         :param app: The application to build
         """
-        print()
-        print("[{app.app_name}] Building AppImage...".format(app=app))
+        self.logger.info()
+        self.logger.info(f"[{app.app_name}] Building AppImage...")
 
         try:
-            print()
             # Build the AppImage.
             # For some reason, the version has to be passed in as an
             # environment variable, *not* in the configuration...
-            env = {
-                'VERSION': app.version
-            }
+            env = {"VERSION": app.version}
 
             # Find all the .so files in app and app_packages,
             # so they can be passed in to linuxdeploy to have their
             # dependencies added to the AppImage. Looks for any .so file
             # in the application, and make sure it is marked for deployment.
             so_folders = set()
-            for so_file in self.appdir_path(app).glob('**/*.so'):
+            for so_file in self.appdir_path(app).glob("**/*.so"):
                 so_folders.add(so_file.parent)
 
             deploy_deps_args = []
@@ -193,65 +180,54 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
                     [
                         self.linuxdeploy.appimage_path,
                         "--appimage-extract-and-run",
-                        "--appdir={appdir_path}".format(appdir_path=self.appdir_path(app)),
-                        "-d", os.fsdecode(
-                            self.appdir_path(app) / "{app.bundle}.{app.app_name}.desktop".format(
-                                app=app,
-                            )
+                        f"--appdir={self.appdir_path(app)}",
+                        "-d",
+                        os.fsdecode(
+                            self.appdir_path(app)
+                            / f"{app.bundle}.{app.app_name}.desktop"
                         ),
-                        "-o", "appimage",
-                    ] + deploy_deps_args,
+                        "-o",
+                        "appimage",
+                    ]
+                    + deploy_deps_args,
                     env=env,
                     check=True,
-                    cwd=self.platform_path
+                    cwd=self.platform_path,
                 )
 
             # Make the binary executable.
             self.os.chmod(self.binary_path(app), 0o755)
-        except subprocess.CalledProcessError:
-            print()
+        except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(
-                "Error while building app {app.app_name}.".format(app=app)
-            )
+                f"Error while building app {app.app_name}."
+            ) from e
 
 
 class LinuxAppImageRunCommand(LinuxAppImageMixin, RunCommand):
     description = "Run a Linux AppImage."
 
     def verify_tools(self):
-        """
-        Verify that we're on Linux.
-        """
+        """Verify that we're on Linux."""
         super().verify_tools()
-        if self.host_os != 'Linux':
-            raise BriefcaseCommandError(
-                "AppImages can only be executed on Linux."
-            )
+        if self.host_os != "Linux":
+            raise BriefcaseCommandError("AppImages can only be executed on Linux.")
 
     def run_app(self, app: BaseConfig, **kwargs):
-        """
-        Start the application.
+        """Start the application.
 
         :param app: The config object for the app
-        :param base_path: The path to the project directory.
         """
-        print()
-        print('[{app.app_name}] Starting app...'.format(
-            app=app
-        ))
+        self.logger.info()
+        self.logger.info(f"[{app.app_name}] Starting app...")
         try:
-            print()
             self.subprocess.run(
                 [
                     os.fsdecode(self.binary_path(app)),
                 ],
                 check=True,
             )
-        except subprocess.CalledProcessError:
-            print()
-            raise BriefcaseCommandError(
-                "Unable to start app {app.app_name}.".format(app=app)
-            )
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(f"Unable to start app {app.app_name}.") from e
 
 
 class LinuxAppImagePackageCommand(LinuxAppImageMixin, PackageCommand):

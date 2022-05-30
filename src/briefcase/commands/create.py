@@ -13,13 +13,17 @@ from requests import exceptions as requests_exceptions
 
 import briefcase
 from briefcase.config import BaseConfig
-from briefcase.exceptions import BriefcaseCommandError, NetworkFailure
+from briefcase.exceptions import (
+    BriefcaseCommandError,
+    MissingNetworkResourceError,
+    NetworkFailure,
+)
 
 from .base import (
     BaseCommand,
     TemplateUnsupportedVersion,
     UnsupportedPlatform,
-    full_options
+    full_options,
 )
 
 
@@ -27,54 +31,52 @@ class InvalidTemplateRepository(BriefcaseCommandError):
     def __init__(self, template):
         self.template = template
         super().__init__(
-            'Unable to clone application template; is the template path {template!r} correct?'.format(
-                template=template
-            )
+            f"Unable to clone application template; is the template path {template!r} correct?"
         )
 
 
 class InvalidSupportPackage(BriefcaseCommandError):
     def __init__(self, filename):
         self.filename = filename
-        super().__init__(
-            'Unable to unpack support package {filename!r}'.format(
-                filename=filename
-            )
-        )
+        super().__init__(f"Unable to unpack support package {filename!r}")
 
 
-class NoSupportPackage(BriefcaseCommandError):
-    def __init__(self, platform, python_version):
-        self.platform = platform
-        self.python_version = python_version
+class MissingSupportPackage(BriefcaseCommandError):
+    def __init__(self, python_version_tag, host_arch):
+        self.python_version_tag = python_version_tag
+        self.host_arch = host_arch
         super().__init__(
-            'Unable to locate a support package for Python {python_version} on {platform}'.format(
-                python_version=python_version,
-                platform=platform,
-            )
+            f"""\
+Unable to download a support package for Python {self.python_version_tag} on {self.host_arch}.
+
+This is likely because either Python {self.python_version_tag} and/or {self.host_arch}
+is not yet supported. You will need to:
+    * Use an older version of Python; or
+    * Compile your own custom support package.
+"""
         )
 
 
 class DependencyInstallError(BriefcaseCommandError):
     def __init__(self):
         super().__init__(
-            'Unable to install dependencies. This may be because one of your '
-            'dependencies is invalid, or because pip was unable to connect '
-            'to the PyPI server.'
+            """\
+Unable to install dependencies. This may be because one of your
+dependencies is invalid, or because pip was unable to connect
+to the PyPI server.
+"""
         )
 
 
 class MissingAppSources(BriefcaseCommandError):
     def __init__(self, src):
         self.src = src
-        super().__init__(
-            'Application source {src!r} does not exist.'.format(src=src)
-        )
+        super().__init__(f"Application source {src!r} does not exist.")
 
 
 def cookiecutter_cache_path(template):
-    """
-    Determine the cookiecutter template cache directory given a template URL.
+    """Determine the cookiecutter template cache directory given a template
+    URL.
 
     This will return a valid path, regardless of whether `template`
 
@@ -82,41 +84,40 @@ def cookiecutter_cache_path(template):
         a URL.
     :returns: The path that cookiecutter would use for the given template name.
     """
-    template = template.rstrip('/')
-    tail = template.split('/')[-1]
-    cache_name = tail.rsplit('.git')[0]
-    return Path.home() / '.cookiecutters' / cache_name
+    template = template.rstrip("/")
+    tail = template.split("/")[-1]
+    cache_name = tail.rsplit(".git")[0]
+    return Path.home() / ".cookiecutters" / cache_name
 
 
 def write_dist_info(app: BaseConfig, dist_info_path: Path):
-    """
-    Install the dist-info folder for the application.
+    """Install the dist-info folder for the application.
 
     :param app: The config object for the app
     :param path: The path into which the dist-info folder should be written.
     """
     # Create dist-info folder, and write a minimal metadata collection.
     dist_info_path.mkdir(exist_ok=True)
-    with (dist_info_path / 'INSTALLER').open('w') as f:
-        f.write('briefcase\n')
-    with (dist_info_path / 'METADATA').open('w') as f:
-        f.write('Metadata-Version: 2.1\n')
-        f.write('Briefcase-Version: {}\n'.format(briefcase.__version__))
-        f.write('Name: {app.app_name}\n'.format(app=app))
-        f.write('Formal-Name: {app.formal_name}\n'.format(app=app))
-        f.write('App-ID: {app.bundle}.{app.app_name}\n'.format(app=app))
-        f.write('Version: {app.version}\n'.format(app=app))
+    with (dist_info_path / "INSTALLER").open("w") as f:
+        f.write("briefcase\n")
+    with (dist_info_path / "METADATA").open("w") as f:
+        f.write("Metadata-Version: 2.1\n")
+        f.write(f"Briefcase-Version: {briefcase.__version__}\n")
+        f.write(f"Name: {app.app_name}\n")
+        f.write(f"Formal-Name: {app.formal_name}\n")
+        f.write(f"App-ID: {app.bundle}.{app.app_name}\n")
+        f.write(f"Version: {app.version}\n")
         if app.url:
-            f.write('Home-page: {app.url}\n'.format(app=app))
+            f.write(f"Home-page: {app.url}\n")
         if app.author:
-            f.write('Author: {app.author}\n'.format(app=app))
+            f.write(f"Author: {app.author}\n")
         if app.author_email:
-            f.write('Author-email: {app.author_email}\n'.format(app=app))
-        f.write('Summary: {app.description}\n'.format(app=app))
+            f.write(f"Author-email: {app.author_email}\n")
+        f.write(f"Summary: {app.description}\n")
 
 
 class CreateCommand(BaseCommand):
-    command = 'create'
+    command = "create"
 
     def __init__(self, *args, **options):
         super().__init__(*args, **options)
@@ -124,31 +125,24 @@ class CreateCommand(BaseCommand):
 
     @property
     def app_template_url(self):
-        "The URL for a cookiecutter repository to use when creating apps"
-        return 'https://github.com/beeware/briefcase-{self.platform}-{self.output_format}-template.git'.format(
-            self=self
-        )
+        """The URL for a cookiecutter repository to use when creating apps."""
+        return f"https://github.com/beeware/briefcase-{self.platform}-{self.output_format}-template.git"
 
     @property
     def support_package_url_query(self):
-        """
-        The query arguments to use in a support package query request.
-        """
+        """The query arguments to use in a support package query request."""
         return [
-            ('platform', self.platform),
-            ('version', self.python_version_tag),
+            ("platform", self.platform),
+            ("version", self.python_version_tag),
         ]
 
     @property
     def support_package_url(self):
-        "The URL of the support package to use for apps of this type."
-        return "https://briefcase-support.org/python?{query}".format(
-            query=urlencode(self.support_package_url_query)
-        )
+        """The URL of the support package to use for apps of this type."""
+        return f"https://briefcase-support.org/python?{urlencode(self.support_package_url_query)}"
 
     def icon_targets(self, app: BaseConfig):
-        """
-        Obtain the dictionary of icon targets that the template requires.
+        """Obtain the dictionary of icon targets that the template requires.
 
         :param app: The config object for the app
         :return: A dictionary of icons that the template supports. The keys
@@ -165,20 +159,18 @@ class CreateCommand(BaseCommand):
         #   return a dictionary with a single ``None`` key.
         # Otherwise, return the full size-keyed dictionary.
         try:
-            icon_targets = path_index['icon']
+            icon_targets = path_index["icon"]
             # Convert string-specified icons into an "unknown size" icon form
             if isinstance(icon_targets, str):
-                icon_targets = {
-                    None: icon_targets
-                }
+                icon_targets = {None: icon_targets}
         except KeyError:
             icon_targets = {}
 
         return icon_targets
 
     def splash_image_targets(self, app: BaseConfig):
-        """
-        Obtain the dictionary of splash image targets that the template requires.
+        """Obtain the dictionary of splash image targets that the template
+        requires.
 
         :param app: The config object for the app
         :return: A dictionary of splash images that the template supports. The keys
@@ -195,20 +187,18 @@ class CreateCommand(BaseCommand):
         #   return a dictionary with a single ``None`` key.
         # Otherwise, return the full size-keyed dictionary.
         try:
-            splash_targets = path_index['splash']
+            splash_targets = path_index["splash"]
             # Convert string-specified splash images into an "unknown size" icon form
             if isinstance(splash_targets, str):
-                splash_targets = {
-                    None: splash_targets
-                }
+                splash_targets = {None: splash_targets}
         except KeyError:
             splash_targets = {}
 
         return splash_targets
 
     def document_type_icon_targets(self, app: BaseConfig):
-        """
-        Obtain the dictionary of document type icon targets that the template requires.
+        """Obtain the dictionary of document type icon targets that the
+        template requires.
 
         :param app: The config object for the app
         :return: A dictionary of document types, with the values being dictionaries
@@ -227,31 +217,23 @@ class CreateCommand(BaseCommand):
         #   without a size specification, return a dictionary with a single
         #   ``None`` key. Otherwise, return the full size-keyed dictionary.
         try:
-            document_type_icon_targets = {}
-            for extension, targets in path_index['document_type_icon'].items():
-                # Convert string-specified icons into an "unknown size" icon form
-                if isinstance(targets, str):
-                    document_type_icon_targets[extension] = {
-                        None: targets
-                    }
-                else:
-                    document_type_icon_targets[extension] = targets
+            return {
+                extension: {None: targets} if isinstance(targets, str) else targets
+                for extension, targets in path_index["document_type_icon"].items()
+            }
 
-            return document_type_icon_targets
         except KeyError:
             return {}
 
     def output_format_template_context(self, app: BaseConfig):
-        """
-        Additional template context required by the output format.
+        """Additional template context required by the output format.
 
         :param app: The config object for the app
         """
         return {}
 
     def generate_app_template(self, app: BaseConfig):
-        """
-        Create an application bundle.
+        """Create an application bundle.
 
         :param app: The config object for the app
         """
@@ -262,30 +244,29 @@ class CreateCommand(BaseCommand):
         if app.template_branch is None:
             app.template_branch = self.python_version_tag
 
-        print("Using app template: {app_template}, branch {template_branch}".format(
-            app_template=app.template,
-            template_branch=app.template_branch,
-        ))
+        self.logger.info(
+            f"Using app template: {app.template}, branch {app.template_branch}"
+        )
 
         # Make sure we have an updated cookiecutter template,
         # checked out to the right branch
         cached_template = self.update_cookiecutter_cache(
-            template=app.template,
-            branch=app.template_branch
+            template=app.template, branch=app.template_branch
         )
 
         # Construct a template context from the app configuration.
         extra_context = app.__dict__.copy()
         # Augment with some extra fields.
-        extra_context.update({
-            # Transformations of explicit properties into useful forms
-            'module_name': app.module_name,
-            'package_name': app.package_name,
-
-            # Properties that are a function of the execution
-            'year': date.today().strftime('%Y'),
-            'month': date.today().strftime('%B'),
-        })
+        extra_context.update(
+            {
+                # Transformations of explicit properties into useful forms
+                "module_name": app.module_name,
+                "package_name": app.package_name,
+                # Properties that are a function of the execution
+                "year": date.today().strftime("%Y"),
+                "month": date.today().strftime("%B"),
+            }
+        )
 
         # Add in any extra template context required by the output format.
         extra_context.update(self.output_format_template_context(app))
@@ -300,23 +281,22 @@ class CreateCommand(BaseCommand):
                 no_input=True,
                 output_dir=os.fsdecode(output_path),
                 checkout=app.template_branch,
-                extra_context=extra_context
+                extra_context=extra_context,
             )
-        except subprocess.CalledProcessError:
+        except subprocess.CalledProcessError as e:
             # Computer is offline
             # status code == 128 - certificate validation error.
-            raise NetworkFailure("clone template repository")
-        except cookiecutter_exceptions.RepositoryNotFound:
+            raise NetworkFailure("clone template repository") from e
+        except cookiecutter_exceptions.RepositoryNotFound as e:
             # Either the template path is invalid,
             # or it isn't a cookiecutter template (i.e., no cookiecutter.json)
-            raise InvalidTemplateRepository(app.template)
-        except cookiecutter_exceptions.RepositoryCloneFailed:
+            raise InvalidTemplateRepository(app.template) from e
+        except cookiecutter_exceptions.RepositoryCloneFailed as e:
             # Branch does not exist for python version
-            raise TemplateUnsupportedVersion(app.template_branch)
+            raise TemplateUnsupportedVersion(app.template_branch) from e
 
     def install_app_support_package(self, app: BaseConfig):
-        """
-        Install the application support packge.
+        """Install the application support package.
 
         :param app: The config object for the app
         """
@@ -325,111 +305,100 @@ class CreateCommand(BaseCommand):
             # the support package URL.
             try:
                 support_package_url = app.support_package
-                print("Using custom support package {support_package_url}".format(
-                    support_package_url=support_package_url
-                ))
+                custom_support_package = True
+                self.logger.info(f"Using custom support package {support_package_url}")
             except AttributeError:
                 support_package_url = self.support_package_url
-                print("Using support package {support_package_url}".format(
-                    support_package_url=support_package_url
-                ))
+                custom_support_package = False
+                self.logger.info(f"Using support package {support_package_url}")
 
-            if support_package_url.startswith('https://') or support_package_url.startswith('http://'):
+            if support_package_url.startswith(
+                "https://"
+            ) or support_package_url.startswith("http://"):
                 try:
-                    print("... pinned to revision {app.support_revision}".format(
-                        app=app
-                    ))
+                    self.logger.info(f"... pinned to revision {app.support_revision}")
                     # If a revision has been specified, add the revision
-                    # as an query argument in the support package URL.
+                    # as a query argument in the support package URL.
                     # This is a lot more painful than "add arg to query" should
                     # be because (a) url splits aren't appendable, and
                     # (b) Python 3.5 doesn't guarantee dictionary order.
                     url_parts = list(urlsplit(support_package_url))
-                    query = []
-                    for key, value in parse_qsl(url_parts[3]):
-                        query.append((key, value))
-                    query.append(('revision', app.support_revision))
+                    query = list(parse_qsl(url_parts[3]))
+                    query.append(("revision", app.support_revision))
                     url_parts[3] = urlencode(query)
                     support_package_url = urlunsplit(url_parts)
 
                 except AttributeError:
                     # No support revision specified.
-                    print("... using most recent revision")
+                    self.logger.info("... using most recent revision")
 
                 # Download the support file, caching the result
                 # in the user's briefcase support cache directory.
                 support_filename = self.download_url(
                     url=support_package_url,
-                    download_path=self.dot_briefcase_path / 'support'
+                    download_path=self.dot_briefcase_path / "support",
                 )
             else:
                 support_filename = Path(support_package_url)
-        except requests_exceptions.ConnectionError:
-            raise NetworkFailure('downloading support package')
+        except MissingNetworkResourceError as e:
+            # If there is a custom support package, report the missing resource as-is.
+            if custom_support_package:
+                raise
+            else:
+                raise MissingSupportPackage(
+                    python_version_tag=self.python_version_tag,
+                    host_arch=self.host_arch,
+                ) from e
 
+        except requests_exceptions.ConnectionError as e:
+            raise NetworkFailure("downloading support package") from e
         try:
-            print("Unpacking support package...")
+            self.logger.info("Unpacking support package...")
             support_path = self.support_path(app)
             support_path.mkdir(parents=True, exist_ok=True)
             # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
             self.shutil.unpack_archive(
-                os.fsdecode(support_filename),
-                extract_dir=os.fsdecode(support_path)
+                os.fsdecode(support_filename), extract_dir=os.fsdecode(support_path)
             )
-        except (shutil.ReadError, EOFError):
-            print()
-            raise InvalidSupportPackage(support_package_url)
+        except (shutil.ReadError, EOFError) as e:
+            raise InvalidSupportPackage(support_package_url) from e
 
     def include_path(self, app: BaseConfig):
-        """
-        Return the path to Python.h.
-        """
+        """Return the path to Python.h."""
         if self.platform == "android":
             include = os.path.join(self.bundle_path(app), "app", "include")
             for suffix in ["", "m"]:
                 includepy = os.path.join(
                     include,
-                    "python{}{}".format(self.python_version_tag, suffix),
+                    f"python{self.python_version_tag}{suffix}",
                 )
                 if os.path.exists(includepy):
                     return includepy
-            return None
-        else:
-            return None
+        return None
 
     def libpython(self, app: BaseConfig):
-        """
-        Return a tuple of the Python shared library name and its path.
-        """
+        """Return a tuple of the Python shared library name and its path."""
         if self.platform == "android":
             abi = getattr(app, "ABI", "arm64-v8a")
-            # sysconfig.get_config_var("LIBDIR")
             libdir = os.path.join(self.bundle_path(app), "app", "libs", abi)
             if not os.path.exists(libdir):
                 return (None, None)
-            # sysconfig.get_config_var("LDLIBRARY")
             for suffix in ["", "m"]:
-                ldlibrary = 'libpython{}{}.so'.format(
-                    self.python_version_tag,
-                    suffix,
-                )
+                ldlibrary = f"libpython{self.python_version_tag}{suffix}.so"
                 if os.path.exists(os.path.join(libdir, ldlibrary)):
                     return (ldlibrary, libdir)
-            return (None, None)
-        else:
-            return (None, None)
+        return (None, None)
 
     def build_env(self, app: BaseConfig):
-        """
-        Return an environment in which to build the dependencies for the app.
-        This should include the path to Python.h in CPPFLAGS, and libpython
-        and its path in LDFLAGS.
+        """Return an environment in which to build the dependencies for the
+        app. This should include the path to Python.h in CPPFLAGS, and
+        libpython and its path in LDFLAGS.
 
         :param app: The config object for the app
         """
         if self.platform == "android":
             env = dict(self.android_sdk.env)
-            env.update({"ABI": getattr(app, "ABI", "arm64-v8a")})
+            env["ABI"] = getattr(app, "ABI", "arm64-v8a")
         else:
             env = dict(os.environ)
         includepy = self.include_path(app)
@@ -438,24 +407,29 @@ class CreateCommand(BaseCommand):
             cppflags = [
                 "-I{}".format(includepy.replace(" ", "\\ ")),
             ] + cppflags
-            env.update({"CPPFLAGS": " ".join(cppflags)})
+            env["CPPFLAGS"] = " ".join(cppflags)
         ldlibrary, libdir = self.libpython(app)
         if ldlibrary is not None:
             ldflags = env.get("LDFLAGS", "").split(" ")
             ldflags = [
                 "-L{}".format(libdir.replace(" ", "\\ ")),
-                "-l{}".format(re.match(r"lib(.*)[.].*", ldlibrary).group(1)),
+                f'-l{re.match(r"lib(.*)[.].*", ldlibrary).group(1)}',
             ] + ldflags
-            env.update({"LDFLAGS": " ".join(ldflags)})
+            env["LDFLAGS"] = " ".join(ldflags)
         return env
 
     def install_app_dependencies(self, app: BaseConfig):
-        """
-        Install the dependencies for the app.
+        """Install the dependencies for the app.
 
         :param app: The config object for the app
         """
         target = self.app_packages_path(app)
+
+        # Clear existing dependency directory
+        if target.is_dir():
+            self.shutil.rmtree(target)
+            self.os.mkdir(target)
+
         if self.platform == "android":
             abi = getattr(app, "ABI", None)
             if abi is None:
@@ -466,13 +440,14 @@ class CreateCommand(BaseCommand):
                 return
             else:
                 target = os.path.join(target, abi)
+        # Install  dependencies
         if app.requires:
             try:
                 pip = [sys.executable, "-m", "pip"]
                 options = [
                     "--upgrade",
                     "--no-user",
-                    "--target={}".format(target),
+                    f"--target={self.app_packages_path(app)}",
                 ]
                 if self.platform == "android":
                     pip = [sys.executable, "-m", "androidenv"] + pip
@@ -482,29 +457,29 @@ class CreateCommand(BaseCommand):
                     check=True,
                     env=self.build_env(app),
                 )
-            except subprocess.CalledProcessError:
-                raise DependencyInstallError()
+            except subprocess.CalledProcessError as e:
+                raise DependencyInstallError() from e
         else:
-            print("No application dependencies.")
+            self.logger.info("No application dependencies.")
 
     def install_app_code(self, app: BaseConfig):
-        """
-        Install the application code into the bundle.
+        """Install the application code into the bundle.
 
         :param app: The config object for the app
         """
+
+        # Remove existing app folder
+        app_path = self.app_path(app)
+        if app_path.is_dir():
+            self.shutil.rmtree(app_path)
+            self.os.mkdir(app_path)
+
+        # Install app code.
         if app.sources:
             for src in app.sources:
-                print("Installing {src}...".format(src=src))
+                self.logger.info(f"Installing {src}...")
                 original = self.base_path / src
-                target = self.app_path(app) / original.name
-
-                # Remove existing versions of the code
-                if target.exists():
-                    if target.is_dir():
-                        self.shutil.rmtree(target)
-                    else:
-                        target.unlink()
+                target = app_path / original.name
 
                 # Install the new copy of the app code.
                 if not original.exists():
@@ -514,20 +489,18 @@ class CreateCommand(BaseCommand):
                 else:
                     self.shutil.copy(original, target)
         else:
-            print("No sources defined for {app.app_name}.".format(app=app))
+            self.logger.info(f"No sources defined for {app.app_name}.")
 
         # Write the dist-info folder for the application.
         write_dist_info(
             app=app,
-            dist_info_path=self.app_path(app) / '{app.module_name}-{app.version}.dist-info'.format(
-                app=app,
-            )
+            dist_info_path=self.app_path(app)
+            / f"{app.module_name}-{app.version}.dist-info",
         )
 
     def install_image(self, role, variant, size, source, target):
-        """
-        Install an icon/image of the requested size at a target location, using
-        the source images defined by the app config.
+        """Install an icon/image of the requested size at a target location,
+        using the source images defined by the app config.
 
         :param role: A string describing the role the of the image.
         :param variant: The image variant. A variant of ``None`` means the image
@@ -543,28 +516,15 @@ class CreateCommand(BaseCommand):
         if source is not None:
             if size is None:
                 if variant is None:
-                    source_filename = '{source}{target.suffix}'.format(
-                        source=source,
-                        target=target,
-                    )
+                    source_filename = f"{source}{target.suffix}"
                     full_role = role
                 else:
                     try:
-                        source_filename = '{source}{target.suffix}'.format(
-                            source=source[variant],
-                            target=target,
-                        )
-                        full_role = '{variant} {role}'.format(
-                            variant=variant,
-                            role=role,
-                        )
+                        source_filename = f"{source[variant]}{target.suffix}"
+                        full_role = f"{variant} {role}"
                     except (TypeError, KeyError):
-                        print(
-                            "Unable to find {variant} variant for {role}; "
-                            "using default".format(
-                                variant=variant,
-                                role=role,
-                            )
+                        self.logger.info(
+                            f"Unable to find {variant} variant for {role}; using default"
                         )
                         return
             else:
@@ -575,73 +535,38 @@ class CreateCommand(BaseCommand):
                     # lookup; if it fails, we have a sized image with no
                     # variant.
                     try:
-                        source_filename = '{source}{target.suffix}'.format(
-                            source=source[size],
-                            target=target,
-                        )
-                        full_role = '{size} {role}'.format(
-                            size=size,
-                            role=role,
-                        )
+                        source_filename = f"{source[size]}{target.suffix}"
+                        full_role = f"{size} {role}"
                     except TypeError:
                         # The lookup on the source failed; that means we
-                        # have an sized image without variants.
-                        source_filename = '{source}-{size}{target.suffix}'.format(
-                            source=source,
-                            size=size,
-                            target=target,
-                        )
-                        full_role = '{size}px {role}'.format(
-                            size=size,
-                            role=role,
-                        )
-
+                        # have a sized image without variants.
+                        source_filename = f"{source}-{size}{target.suffix}"
+                        full_role = f"{size}px {role}"
                 else:
                     try:
-                        source_filename = '{source}-{size}{target.suffix}'.format(
-                            source=source[variant],
-                            size=size,
-                            target=target,
-                        )
-                        full_role = '{size}px {variant} {role}'.format(
-                            size=size,
-                            variant=variant,
-                            role=role,
-                        )
+                        source_filename = f"{source[variant]}-{size}{target.suffix}"
+                        full_role = f"{size}px {variant} {role}"
                     except (TypeError, KeyError):
-                        print(
-                            "Unable to find {size}px {variant} variant for {role}; "
-                            "using default".format(
-                                size=size,
-                                variant=variant,
-                                role=role,
-                            )
+                        self.logger.info(
+                            f"Unable to find {size}px {variant} variant for {role}; using default"
                         )
                         return
 
             full_source = self.base_path / source_filename
             if full_source.exists():
-                print("Installing {source_filename} as {full_role}...".format(
-                    source_filename=source_filename,
-                    full_role=full_role,
-                ))
-
+                self.logger.info(f"Installing {source_filename} as {full_role}...")
                 # Make sure the target directory exists
                 target.parent.mkdir(parents=True, exist_ok=True)
                 # Copy the source image to the target location
                 self.shutil.copy(full_source, target)
             else:
-                print(
-                    "Unable to find {source_filename} for {full_role}; using default".format(
-                        full_role=full_role,
-                        source_filename=source_filename,
-                    )
+                self.logger.info(
+                    f"Unable to find {source_filename} for {full_role}; using default"
                 )
 
     def install_app_resources(self, app: BaseConfig):
-        """
-        Install the application resources (such as icons and splash screens) into
-        the bundle.
+        """Install the application resources (such as icons and splash screens)
+        into the bundle.
 
         :param app: The config object for the app
         """
@@ -651,20 +576,20 @@ class CreateCommand(BaseCommand):
                 # if there's no `items`, then it's an icon without variants.
                 for size, target in targets.items():
                     self.install_image(
-                        'application icon',
+                        "application icon",
                         source=app.icon,
                         variant=variant_or_size,
                         size=size,
-                        target=self.bundle_path(app) / target
+                        target=self.bundle_path(app) / target,
                     )
             except AttributeError:
                 # Either a single variant, or a single size.
                 self.install_image(
-                    'application icon',
+                    "application icon",
                     source=app.icon,
                     variant=None,
                     size=variant_or_size,
-                    target=self.bundle_path(app) / targets
+                    target=self.bundle_path(app) / targets,
                 )
 
         for variant_or_size, targets in self.splash_image_targets(app).items():
@@ -673,35 +598,34 @@ class CreateCommand(BaseCommand):
                 # if there's no `items`, then it's a splash without variants
                 for size, target in targets.items():
                     self.install_image(
-                        'splash image',
+                        "splash image",
                         source=app.splash,
                         variant=variant_or_size,
                         size=size,
-                        target=self.bundle_path(app) / target
+                        target=self.bundle_path(app) / target,
                     )
             except AttributeError:
                 # Either a single variant, or a single size.
                 self.install_image(
-                    'splash image',
+                    "splash image",
                     source=app.splash,
                     variant=None,
                     size=variant_or_size,
-                    target=self.bundle_path(app) / targets
+                    target=self.bundle_path(app) / targets,
                 )
 
         for extension, doctype in self.document_type_icon_targets(app).items():
             for size, target in doctype.items():
                 self.install_image(
-                    'icon for .{extension} documents'.format(extension=extension),
+                    f"icon for .{extension} documents",
                     size=size,
-                    source=app.document_types[extension]['icon'],
+                    source=app.document_types[extension]["icon"],
                     variant=None,
                     target=self.bundle_path(app) / target,
                 )
 
     def create_app(self, app: BaseConfig, **options):
-        """
-        Create an application bundle.
+        """Create an application bundle.
 
         :param app: The config object for the app
         """
@@ -710,63 +634,49 @@ class CreateCommand(BaseCommand):
 
         bundle_path = self.bundle_path(app)
         if bundle_path.exists():
-            print()
+            self.logger.info()
             confirm = self.input.boolean_input(
-                'Application {app.app_name} already exists; overwrite'.format(app=app),
-                default=False
+                f"Application {app.app_name} already exists; overwrite", default=False
             )
             if not confirm:
-                print("Aborting creation of app {app.app_name}".format(
-                    app=app
-                ))
+                self.logger.error(
+                    f"Aborting creation of app {app.app_name}; existing application will not be overwritten."
+                )
                 return
-            print()
-            print("[{app.app_name}] Removing old application bundle...".format(
-                app=app
-            ))
+            self.logger.info()
+            self.logger.info(f"[{app.app_name}] Removing old application bundle...")
             self.shutil.rmtree(bundle_path)
 
-        print()
-        print('[{app.app_name}] Generating application template...'.format(
-            app=app
-        ))
+        self.logger.info()
+        self.logger.info(f"[{app.app_name}] Generating application template...")
         self.generate_app_template(app=app)
 
-        print()
-        print('[{app.app_name}] Installing support package...'.format(
-            app=app
-        ))
+        self.logger.info()
+        self.logger.info(f"[{app.app_name}] Installing support package...")
         self.install_app_support_package(app=app)
 
-        print()
-        print('[{app.app_name}] Installing dependencies...'.format(
-            app=app
-        ))
+        self.logger.info()
+        self.logger.info(f"[{app.app_name}] Installing dependencies...")
         self.install_app_dependencies(app=app)
 
-        print()
-        print('[{app.app_name}] Installing application code...'.format(
-            app=app
-        ))
+        self.logger.info()
+        self.logger.info(f"[{app.app_name}] Installing application code...")
         self.install_app_code(app=app)
 
-        print()
-        print('[{app.app_name}] Installing application resources...'.format(
-            app=app
-        ))
+        self.logger.info()
+        self.logger.info(f"[{app.app_name}] Installing application resources...")
         self.install_app_resources(app=app)
-        print()
 
-        print("[{app.app_name}] Created {filename}".format(
-            app=app,
-            filename=self.bundle_path(app).relative_to(self.base_path),
-        ))
+        self.logger.info()
+        self.logger.info(
+            f"[{app.app_name}] Created {self.bundle_path(app).relative_to(self.base_path)}"
+        )
 
     def verify_tools(self):
-        """
-        Verify that the tools needed to run this command exist
+        """Verify that the tools needed to run this command exist.
 
-        Raises MissingToolException if a required system tool is missing.
+        Raises MissingToolException if a required system tool is
+        missing.
         """
         self.git = self.integrations.git.verify_git_is_installed(self)
 

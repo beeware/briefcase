@@ -7,7 +7,7 @@ from briefcase.exceptions import BriefcaseCommandError
 
 
 def test_upgrade(mock_sdk):
-    "sdkmanager can be use to upgrade the Android SDK"
+    """sdkmanager can be use to upgrade the Android SDK."""
     mock_sdk.upgrade()
 
     mock_sdk.command.subprocess.run.assert_called_once_with(
@@ -18,7 +18,7 @@ def test_upgrade(mock_sdk):
 
 
 def test_upgrade_failure(mock_sdk):
-    "If sdkmanager fails, an error is raised"
+    """If sdkmanager fails, an error is raised."""
     mock_sdk.command.subprocess.run.side_effect = subprocess.CalledProcessError(1, "")
     with pytest.raises(BriefcaseCommandError):
         mock_sdk.upgrade()

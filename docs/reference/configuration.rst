@@ -62,8 +62,13 @@ or are are common to all applications in this repository.
 
 Configuration options for a specific application.
 
-``<app name>`` must adhere to a valid Python distribution name as
-specified in `PEP508 <https://www.python.org/dev/peps/pep-0508/#names>`__.
+``<app name>`` must adhere to a valid Python distribution name as specified in
+`PEP508 <https://www.python.org/dev/peps/pep-0508/#names>`__. The app name must
+also *not* be a reserved word in Python, Java or JavaScript (i.e., app names
+like ``switch`` or ``pass`` would not be valid); and it may not include any of
+the `filenames prohibited by Windows
+<https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file#naming-conventions>`__
+(i.e., ``CON``, ``PRN``, or ``LPT1``).
 
 ``[tool.briefcase.app.<app name>.<platform>]``
 ----------------------------------------------

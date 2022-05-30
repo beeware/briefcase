@@ -3,26 +3,50 @@ on:
   pull_request:
   push:
     branches:
-      - master
+      - main
+env:
+  python_version: '3.9'
 
 jobs:
+  pre-commit:
+    name: Pre-commit code style checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v3.0.2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Set up Python
+        uses: actions/setup-python@v3.1.2
+        with:
+          python-version: ${{ env.python_version }}
+      - name: Lint with Pre-commit
+        uses: pre-commit/action@v2.0.3
+
   beefore:
     name: Pre-test checks
+    needs: pre-commit
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 4
       matrix:
         task:
-        - 'flake8'
         - 'towncrier-check'
         - 'docs'
         - 'package'
     steps:
-    - uses: actions/checkout@v1
-    - name: Set up Python 3.9
-      uses: actions/setup-python@v1
+    # Check out main; needed for towncrier comparisons.
+    - uses: actions/checkout@v3
       with:
-        python-version: 3.9
+        fetch-depth: 0
+        ref: main
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Set up Python
+      uses: actions/setup-python@v3.1.2
+      with:
+        python-version: ${{ env.python_version }}
     - name: Install dependencies
       run: |
         pip install --upgrade pip
@@ -33,15 +57,15 @@ jobs:
         tox -e ${{ matrix.task }}
 
   smoke:
-    name: Smoke test (3.6)
+    name: Smoke test (3.7)
     needs: beefore
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
-    - name: Set up Python 3.6
-      uses: actions/setup-python@v1
+    - uses: actions/checkout@v3
+    - name: Set up Python 3.7
+      uses: actions/setup-python@v3.1.2
       with:
-        python-version: 3.6
+        python-version: "3.7"
     - name: Install dependencies
       run: |
         pip install --upgrade pip
@@ -68,11 +92,11 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: ['3.7', '3.8', '3.9', '3.10']
+        python-version: ['3.8', '3.9', '3.10', '3.11.0-alpha - 3.11.0']
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v1
+      uses: actions/setup-python@v3.1.2
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
@@ -84,16 +108,20 @@ jobs:
       run: |
         tox -e py
 
-  windows:
-    name: Windows tests
-    needs: python-versions
-    runs-on: windows-latest
+  platform-compat:
+    name: Platform compatibility test
+    needs: smoke
+    strategy:
+      max-parallel: 4
+      matrix:
+        platform: ['macos-latest', 'windows-latest']
+    runs-on: ${{ matrix.platform }}
     steps:
-    - uses: actions/checkout@v1
-    - name: Set up Python 3.9
-      uses: actions/setup-python@v1
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v3.1.2
       with:
-        python-version: 3.9
+        python-version: ${{ env.python_version }}
     - name: Install dependencies
       run: |
         pip install --upgrade pip
@@ -103,16 +131,40 @@ jobs:
       run: |
         tox -e py
 
-  macOS:
-    name: macOS tests
-    needs: python-versions
-    runs-on: macOS-latest
+  verify-desktop:
+    name: Desktop app verification
+    needs: smoke
+    strategy:
+      max-parallel: 4
+      matrix:
+        platform: ['macos-latest', 'windows-latest', 'ubuntu-latest']
+        framework: ['toga', 'pyside2', 'pyside6', 'ppb']
+        include:
+        - platform: macos-latest
+          pip-cache-dir: ~/Library/Caches/pip
+          docker-cache-dir: ~/Library/Containers/com.docker.docker/Data/vms/0/
+        - platform: windows-latest
+          pip-cache-dir: ~\AppData\Local\pip\Cache
+          docker-cache-dir: C:\ProgramData\DockerDesktop
+        - platform: ubuntu-latest
+          pip-cache-dir: ~/.cache/pip
+          docker-cache-dir: /var/lib/docker
+    runs-on: ${{ matrix.platform }}
     steps:
-    - uses: actions/checkout@v1
-    - name: Set up Python 3.9
-      uses: actions/setup-python@v1
+    - name: Cache Briefcase tools
+      uses: actions/cache@v3
       with:
-        python-version: 3.9
+        key: briefcase-${{ matrix.platform }}
+        path: |
+          ~/.briefcase
+          ~/.cookiecutters
+          ${{ matrix.pip-cache-dir }}
+          ${{ matrix.docker-cache-dir }}
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v3.1.2
+      with:
+        python-version: ${{ env.python_version }}
     - name: Install dependencies
       run: |
         pip install --upgrade pip
@@ -120,4 +172,4 @@ jobs:
         pip install tox
     - name: Test
       run: |
-        tox -e py
+        tox -e verify-${{ matrix.framework }}

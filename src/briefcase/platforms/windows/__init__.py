@@ -1,6 +1,5 @@
-
-DEFAULT_OUTPUT_FORMAT = 'msi'
+DEFAULT_OUTPUT_FORMAT = "msi"
 
 
 class WindowsMixin:
-    platform = 'windows'
+    platform = "windows"

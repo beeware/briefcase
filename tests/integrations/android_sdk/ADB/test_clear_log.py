@@ -8,7 +8,7 @@ from briefcase.integrations.android_sdk import ADB
 
 
 def test_clear_log(mock_sdk, capsys):
-    "Invoking `clear_log()` calls `run()` with the appropriate parameters."
+    """Invoking `clear_log()` calls `run()` with the appropriate parameters."""
     # Mock out the run command on an adb instance
     adb = ADB(mock_sdk, "exampleDevice")
     adb.run = MagicMock(return_value="example normal adb output")
@@ -25,23 +25,23 @@ def test_clear_log(mock_sdk, capsys):
 
 
 def test_adb_failure(mock_sdk):
-    "If adb logcat fails, the error is caught."
+    """If adb logcat fails, the error is caught."""
     # Mock out the run command on an adb instance
     adb = ADB(mock_sdk, "exampleDevice")
-    adb.run = MagicMock(side_effect=subprocess.CalledProcessError(
-        returncode=1, cmd='adb logcat'
-    ))
+    adb.run = MagicMock(
+        side_effect=subprocess.CalledProcessError(returncode=1, cmd="adb logcat")
+    )
 
     with pytest.raises(BriefcaseCommandError):
         adb.clear_log()
 
 
 def test_invalid_device(mock_sdk):
-    "If the device doesn't exist, the error is caught."
+    """If the device doesn't exist, the error is caught."""
     # Use real `adb` output from launching an activity that does not exist.
     # Mock out the run command on an adb instance
     adb = ADB(mock_sdk, "exampleDevice")
-    adb.run = MagicMock(side_effect=InvalidDeviceError('device', 'exampleDevice'))
+    adb.run = MagicMock(side_effect=InvalidDeviceError("device", "exampleDevice"))
 
     with pytest.raises(InvalidDeviceError):
         adb.clear_log()
