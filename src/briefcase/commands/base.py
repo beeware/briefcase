@@ -452,7 +452,10 @@ class BaseCommand(ABC):
                     )
 
         except FileNotFoundError as e:
-            raise BriefcaseConfigError("configuration file not found") from e
+            raise BriefcaseConfigError(
+                f"configuration {filename!r} file not found, "
+                "it may be in a different directory or not exist."
+            ) from e
 
     def download_url(self, url, download_path):
         """Download a given URL, caching it. If it has already been downloaded,
