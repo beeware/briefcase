@@ -22,14 +22,17 @@ def package_command(tmp_path):
 def test_package_app(package_command, first_app_with_binaries, tmp_path, capsys):
     """A macOS App can be packaged."""
     # Select a codesigning identity
-    package_command.select_identity.return_value = "Sekrit identity (DEADBEEF)"
+    package_command.select_identity.return_value = (
+        "CAFEBEEF",
+        "Sekrit identity (DEADBEEF)",
+    )
 
     # Package the app
     package_command.package_app(first_app_with_binaries)
 
     # A request has been made to sign the app
     package_command.sign_app.assert_called_once_with(
-        app=first_app_with_binaries, identity="Sekrit identity (DEADBEEF)"
+        app=first_app_with_binaries, identity="CAFEBEEF"
     )
 
     # The DMG has been built as expected
@@ -56,7 +59,7 @@ def test_package_app(package_command, first_app_with_binaries, tmp_path, capsys)
     # by calling sign_app()
     package_command.sign_file.assert_called_once_with(
         os.fsdecode(tmp_path / "macOS" / "First App-0.0.1.dmg"),
-        identity="Sekrit identity (DEADBEEF)",
+        identity="CAFEBEEF",
     )
 
     # The app doesn't specify an app icon or installer icon, so there's no
@@ -68,7 +71,10 @@ def test_package_app_sign_failure(package_command, first_app_with_binaries, tmp_
     """If the signing process can't be completed, an error is raised."""
 
     # Select a codesigning identity
-    package_command.select_identity.return_value = "Sekrit identity (DEADBEEF)"
+    package_command.select_identity.return_value = (
+        "CAFEBEEF",
+        "Sekrit identity (DEADBEEF)",
+    )
 
     # Raise an error when attempting to sign the app
     package_command.sign_app.side_effect = BriefcaseCommandError("Unable to code sign")
@@ -79,7 +85,7 @@ def test_package_app_sign_failure(package_command, first_app_with_binaries, tmp_
 
     # A request has been made to sign the app
     package_command.sign_app.assert_called_once_with(
-        app=first_app_with_binaries, identity="Sekrit identity (DEADBEEF)"
+        app=first_app_with_binaries, identity="CAFEBEEF"
     )
 
     # dmgbuild has not been called
@@ -106,7 +112,7 @@ def test_package_app_no_sign(package_command, first_app_with_binaries, tmp_path)
 def test_package_app_adhoc_sign(package_command, first_app_with_binaries, tmp_path):
     """A macOS App can be packaged and signed with adhoc identity."""
 
-    # Package the app with an adhoc identity
+    # Package the app with an adhoc identity.
     package_command.package_app(first_app_with_binaries, adhoc_sign=True)
 
     # A request has been made to sign the app
@@ -144,14 +150,17 @@ def test_package_app_adhoc_sign(package_command, first_app_with_binaries, tmp_pa
 def test_package_app_no_dmg(package_command, first_app_with_binaries, tmp_path):
     """A macOS App can be packaged without building dmg."""
     # Select a code signing identity
-    package_command.select_identity.return_value = "Sekrit identity (DEADBEEF)"
+    package_command.select_identity.return_value = (
+        "CAFEBEEF",
+        "Sekrit identity (DEADBEEF)",
+    )
 
     # Package the app in app (not DMG) format
     package_command.package_app(first_app_with_binaries, packaging_format="app")
 
     # A request has been made to sign the app
     package_command.sign_app.assert_called_once_with(
-        app=first_app_with_binaries, identity="Sekrit identity (DEADBEEF)"
+        app=first_app_with_binaries, identity="CAFEBEEF"
     )
 
     # No dmg was built.

@@ -14,6 +14,8 @@ from tests.utils import DummyConsole
 class DummySigningCommand(macOSAppMixin, macOSSigningMixin, BaseCommand):
     """A dummy command to expose code signing capapbilities."""
 
+    command = "sign"
+
     def __init__(self, base_path, **kwargs):
         super().__init__(base_path=base_path, **kwargs)
         self.input = DummyConsole()
@@ -108,7 +110,10 @@ def test_explicit_identity_checksum(dummy_command):
     # The identity will be the onethe user specified as an option.
     result = dummy_command.select_identity("11E77FB58F13F6108B38110D5D92233C58ED38C5")
 
-    assert result == "iPhone Developer: Jane Smith (BXAH5H869S)"
+    assert result == (
+        "11E77FB58F13F6108B38110D5D92233C58ED38C5",
+        "iPhone Developer: Jane Smith (BXAH5H869S)",
+    )
 
     # User input was not solicited
     assert dummy_command.input.prompts == []
@@ -125,7 +130,10 @@ def test_explicit_identity_name(dummy_command):
     # The identity will be the onethe user specified as an option.
     result = dummy_command.select_identity("iPhone Developer: Jane Smith (BXAH5H869S)")
 
-    assert result == "iPhone Developer: Jane Smith (BXAH5H869S)"
+    assert result == (
+        "11E77FB58F13F6108B38110D5D92233C58ED38C5",
+        "iPhone Developer: Jane Smith (BXAH5H869S)",
+    )
 
     # User input was not solicited
     assert dummy_command.input.prompts == []
@@ -157,7 +165,10 @@ def test_implied_identity(dummy_command):
     result = dummy_command.select_identity()
 
     # The identity will be the only option available.
-    assert result == "iPhone Developer: Jane Smith (BXAH5H869S)"
+    assert result == (
+        "11E77FB58F13F6108B38110D5D92233C58ED38C5",
+        "iPhone Developer: Jane Smith (BXAH5H869S)",
+    )
 
     # User input was not solicited
     assert dummy_command.input.prompts == []
@@ -177,7 +188,10 @@ def test_selected_identity(dummy_command):
     result = dummy_command.select_identity()
 
     # The identity will be the only option available.
-    assert result == "iPhone Developer: Jane Smith (BXAH5H869S)"
+    assert result == (
+        "11E77FB58F13F6108B38110D5D92233C58ED38C5",
+        "iPhone Developer: Jane Smith (BXAH5H869S)",
+    )
 
     # User input was solicited once
     assert dummy_command.input.prompts == ["> "]

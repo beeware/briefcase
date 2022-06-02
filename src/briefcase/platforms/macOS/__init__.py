@@ -153,30 +153,43 @@ class macOSSigningMixin:
         if identity:
             try:
                 # Try to look up the identity as a hex checksum
-                return identities[identity]
+                identity_name = identities[identity]
+                return identity, identity_name
             except KeyError as e:
                 # Try to look up the identity as readable name
-                if identity in identities.values():
-                    return identity
-
-                # Not found
-                raise BriefcaseCommandError(
-                    f"Invalid code signing identity {identity!r}"
-                ) from e
+                try:
+                    reverse_lookup = {name: ident for ident, name in identities.items()}
+                    identity_id = reverse_lookup[identity]
+                    return identity_id, identity
+                except KeyError:
+                    # Not found as an ID or name
+                    raise BriefcaseCommandError(
+                        f"Invalid code signing identity {identity!r}"
+                    ) from e
 
         if len(identities) == 0:
             raise BriefcaseCommandError("No code signing identities are available.")
         elif len(identities) == 1:
-            identity = list(identities.items())[0][1]
+            identity, identity_name = list(identities.items())[0]
         else:
             self.input.prompt()
             self.input.prompt("Select code signing identity to use:")
             self.input.prompt()
-            selection = select_option(identities, input=self.input)
-            identity = identities[selection]
-            self.logger.info(f"selected {identity}")
+            identity = select_option(identities, input=self.input)
+            identity_name = identities[identity]
+            self.logger.info(
+                f"""
+In the future, you could specify this signing identity by running:
 
-        return identity
+    briefcase {self.command} macOS -i {identity}
+
+or
+    briefcase {self.command} macOS -i "{identity_name}"
+
+"""
+            )
+
+        return identity, identity_name
 
     def sign_file(self, path, identity, entitlements=None):
         """Code sign a file.
@@ -332,11 +345,11 @@ class macOSPackageMixin(macOSSigningMixin):
                     "Signing app with adhoc identity...", prefix=app.app_name
                 )
             else:
-                identity = self.select_identity(identity=identity)
+                identity, identity_name = self.select_identity(identity=identity)
 
                 self.logger.info()
                 self.logger.info(
-                    f"Signing app with identity {identity}...", prefix=app.app_name
+                    f"Signing app with identity {identity_name}...", prefix=app.app_name
                 )
 
             self.sign_app(app=app, identity=identity)
