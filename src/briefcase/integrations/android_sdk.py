@@ -1012,7 +1012,7 @@ class ADB:
         Returns `None` on success; raises an exception on failure.
         """
         try:
-            self.run("install", apk_path)
+            self.run("install", "-r", apk_path)
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(
                 f"Unable to install APK {apk_path} on {self.device}"

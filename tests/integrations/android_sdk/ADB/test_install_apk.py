@@ -18,7 +18,7 @@ def test_install_apk(mock_sdk, capsys):
     adb.install_apk("example.apk")
 
     # Validate call parameters.
-    adb.run.assert_called_once_with("install", "example.apk")
+    adb.run.assert_called_once_with("install", "-r", "example.apk")
 
     # Validate that the normal output of the command was not printed (since there
     # was no error).
@@ -38,7 +38,7 @@ def test_install_failure(mock_sdk, capsys):
         adb.install_apk("example.apk")
 
     # Validate call parameters.
-    adb.run.assert_called_once_with("install", "example.apk")
+    adb.run.assert_called_once_with("install", "-r", "example.apk")
 
 
 def test_invalid_device(mock_sdk, capsys):
@@ -52,4 +52,4 @@ def test_invalid_device(mock_sdk, capsys):
         adb.install_apk("example.apk")
 
     # Validate call parameters.
-    adb.run.assert_called_once_with("install", "example.apk")
+    adb.run.assert_called_once_with("install", "-r", "example.apk")
