@@ -54,6 +54,8 @@
 import os
 import subprocess
 from contextlib import contextmanager
+import json
+from pathlib import Path
 
 from briefcase.commands import (
     BuildCommand,
@@ -74,22 +76,82 @@ class LinuxFlatpakMixin(LinuxMixin):
     output_format = "flatpak"
 
     def binary_path(self, app):
-        return self.bundle_path(app) / f"{app.formal_name}.AppDir"
+        # XXX not really relevant to flatpaks
+        return self.platform_path
 
     def distribution_path(self, app, packaging_format):
-        return self.binary_path(app)
+        # XXX not really relevant to flatpaks
+        return self.platform_path
+
+    def build_path(self, app):
+        return self.platform_path / self.output_format / app.bundle
+
+    def manifest_file(self, app):
+        return self.build_path(app) / "manifest.json"
+
+    def requirements_manifest_file(self, app):
+        return Path("python3-requirements.json")
+
+    def verify_tools(self):
+        # XXX check that flatpak and flatpak-builder exist?
+        pass
 
 
 class LinuxFlatpakCreateCommand(LinuxFlatpakMixin, CreateCommand):
     description = "Create and populate a Linux Flatpak."
 
     def create_app(self, app: BaseConfig, **options):
-        raise NotImplementedError("stub")
+        self.build_path(app).mkdir(parents=True, exist_ok=True)
 
 
 class LinuxFlatpakUpdateCommand(LinuxFlatpakMixin, UpdateCommand):
     description = "Update an existing Linux Flatpak."
 
+    def update_app(self, app: BaseConfig, update_dependencies=False, update_resources=False, **options):
+
+        # XXX this cheats and just calls the tool to create "python3-requirements.json"
+
+        try:
+            self.subprocess.run(
+                [
+                    "flatpak-pip-generator",
+                    "--requirements-file",
+                    "requirements.txt",
+                ],
+                check=True,
+            )
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(f"Unable to update app {app.app_name}.") from e
+
+        command = Path(app.sources[0]) / "app.py"
+
+        manifest = {
+            "app-id": app.bundle,
+            "runtime": "org.freedesktop.Platform",
+            "runtime-version": "21.08",
+            "sdk": "org.freedesktop.Sdk",
+            "command": command.name,
+            "modules": [
+                {
+                    "name": app.bundle,
+                    "buildsystem": "simple",
+                    "build-commands": [
+                        "install -D %s /app/bin/%s" % (command.name, command.name)
+                    ],
+                    "sources": [
+                        { "type": "file", "path": str(command.resolve()) }
+                    ],
+                },
+                str(self.requirements_manifest_file(app).resolve()),
+            ],
+            "finish-args": [
+                "--socket=fallback-x11",
+                "--socket=wayland",
+            ]
+        }
+
+        with self.manifest_file(app).open("w") as fp:
+            json.dump(manifest, fp, indent=2)
 
 class LinuxFlatpakBuildCommand(LinuxFlatpakMixin, BuildCommand):
     description = "Build a Linux Flatpak."
@@ -104,8 +166,21 @@ class LinuxFlatpakBuildCommand(LinuxFlatpakMixin, BuildCommand):
         """
         self.logger.info()
         self.logger.info(f"[{app.app_name}] Building Flatpak...")
+        try:
+            self.subprocess.run(
+                [
+                    "flatpak-builder",
+                    "--install",
+                    "--user",
+                    "--force-clean",
+                    self.build_path(app) / "build",
+                    self.manifest_file(app)
+                ],
+                check=True,
+            )
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(f"Unable to build app {app.app_name}.") from e
 
-        raise NotImplementedError("stub")
 
 class LinuxFlatpakRunCommand(LinuxFlatpakMixin, RunCommand):
     description = "Run a Linux Flatpak."
@@ -121,8 +196,15 @@ class LinuxFlatpakRunCommand(LinuxFlatpakMixin, RunCommand):
 
         :param app: The config object for the app
         """
-
-        raise NotImplementedError("stub")
+        self.logger.info()
+        self.logger.info(f"[{app.app_name}] Starting app...")
+        try:
+            self.subprocess.run(
+                [ "flatpak", "run", app.bundle ],
+                check=True,
+            )
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(f"Unable to start app {app.app_name}.") from e
 
 
 class LinuxFlatpakPackageCommand(LinuxFlatpakMixin, PackageCommand):
