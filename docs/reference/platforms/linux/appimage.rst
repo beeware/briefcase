@@ -41,6 +41,19 @@ AppImage:
    using Ubuntu 19.10, for example, you can expect that only people on the most
    recent versions of another distribution will be able to run your AppImage.
 
+Build Process
+=============
+
+Briefcase uses `linuxdeploy <https://github.com/linuxdeploy/linuxdeploy`__ to
+build the AppImage in the correct format. AppImage tools expect directories in
+a specific format called the AppDir that will then be converted into the final
+AppImage. In practice, creating AppDirs for arbitrary applications tends to be
+a challenging task to get all of the dependencies properly bundled.
+
+Linuxdeploy simplifies this process as an AppDir maintenance tool while
+automating most of the process to create and bundle AppDirs for applications.
+It also includes a plugin system that makes bundling of frameworks easier.
+
 Icon format
 ===========
 
