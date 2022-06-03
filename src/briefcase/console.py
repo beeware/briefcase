@@ -168,7 +168,7 @@ class Console:
         """
         wait_bar = Progress(
             TextColumn("     "),
-            BarColumn(bar_width=40, style="black", pulse_style="white"),
+            BarColumn(bar_width=20, style="black", pulse_style="white"),
             TextColumn(message),
             transient=True,
             console=self.rich_console,
