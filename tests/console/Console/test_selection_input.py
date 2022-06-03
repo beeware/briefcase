@@ -18,7 +18,7 @@ def test_selection_input(console, value, expected, default, transform):
     prompt = "> "
     options = ["A", "B", "C", "D", "E", "F"]
 
-    console._input.side_effect = [value]
+    console.rich_console.input.side_effect = [value]
 
     actual = console.selection_input(
         prompt=prompt,
@@ -28,7 +28,7 @@ def test_selection_input(console, value, expected, default, transform):
     )
 
     assert actual == expected
-    console._input.assert_called_once_with(prompt)
+    console.rich_console.input.assert_called_once_with(prompt, markup=False)
 
 
 def test_bad_input(console):
@@ -36,15 +36,15 @@ def test_bad_input(console):
     prompt = "> "
     options = ["A", "B", "C", "D", "E", "F"]
 
-    console._input.side_effect = ["G", "Q", "C"]
+    console.rich_console.input.side_effect = ["G", "Q", "C"]
 
     actual = console.selection_input(prompt=prompt, choices=options)
 
     assert actual == "C"
-    assert console._input.call_count == 3
-    assert console._input.call_args_list[0] == call(prompt)
-    assert console._input.call_args_list[1] == call(prompt)
-    assert console._input.call_args_list[2] == call(prompt)
+    assert console.rich_console.input.call_count == 3
+    assert console.rich_console.input.call_args_list[0] == call(prompt, markup=False)
+    assert console.rich_console.input.call_args_list[1] == call(prompt, markup=False)
+    assert console.rich_console.input.call_args_list[2] == call(prompt, markup=False)
 
 
 def test_disabled(disabled_console):
@@ -56,7 +56,7 @@ def test_disabled(disabled_console):
     )
 
     assert actual == "C"
-    disabled_console._input.assert_not_called()
+    disabled_console.rich_console.input.assert_not_called()
 
 
 def test_disabled_no_default(disabled_console):
@@ -70,4 +70,4 @@ def test_disabled_no_default(disabled_console):
             default=None,
         )
 
-    disabled_console._input.assert_not_called()
+    disabled_console.rich_console.input.assert_not_called()

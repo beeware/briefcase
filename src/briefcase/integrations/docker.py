@@ -203,7 +203,7 @@ class Docker:
         try:
             self.command.logger.info()
             self.command.logger.info(
-                f"[{self.app.app_name}] Building Docker container image..."
+                "Building Docker container image...", prefix=self.app.app_name
             )
             self.command.logger.info()
             try:

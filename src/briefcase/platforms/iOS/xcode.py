@@ -232,7 +232,7 @@ class iOSXcodeBuildCommand(iOSXcodeMixin, BuildCommand):
         )
 
         self.logger.info()
-        self.logger.info(f"[{app.app_name}] Building XCode project...")
+        self.logger.info("Building XCode project...", prefix=app.app_name)
 
         try:
             self.subprocess.run(
@@ -288,39 +288,51 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
 
         self.logger.info()
         self.logger.info(
-            f"[{app.app_name}] Starting app on an {device} running {iOS_version} (device UDID {udid})"
+            f"Starting app on an {device} running {iOS_version} (device UDID {udid})",
+            prefix=app.app_name,
         )
+        self.logger.info()
 
         # The simulator needs to be booted before being started.
         # If it's shut down, we can boot it again; but if it's currently
         # shutting down, we need to wait for it to shut down before restarting.
         device_state = self.get_device_state(self, udid)
         if device_state not in {DeviceState.SHUTDOWN, DeviceState.BOOTED}:
-            with self.input.wait_bar("Waiting for simulator...") as wait_bar:
+            with self.input.wait_bar("Waiting for simulator shutdown..."):
                 while device_state not in {DeviceState.SHUTDOWN, DeviceState.BOOTED}:
                     self.sleep(2)
-                    wait_bar.update()
                     device_state = self.get_device_state(self, udid)
 
         # We now know the simulator is either shut down or booted;
         # if it's shut down, start it again.
         if device_state == DeviceState.SHUTDOWN:
             try:
-                self.logger.info(f"Booting {device} simulator running {iOS_version}...")
-                self.subprocess.run(["xcrun", "simctl", "boot", udid], check=True)
+                with self.input.wait_bar("Booting simulator..."):
+                    self.subprocess.run(
+                        ["xcrun", "simctl", "boot", udid],
+                        check=True,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.STDOUT,
+                    )
             except subprocess.CalledProcessError as e:
+                self.logger.error()
+                self.logger.error(e.stdout)
                 raise BriefcaseCommandError(
                     f"Unable to boot {device} simulator running {iOS_version}"
                 ) from e
 
         # We now know the simulator is *running*, so we can open it.
         try:
-            self.logger.info(f"Opening {device} simulator running {iOS_version}...")
-            self.subprocess.run(
-                ["open", "-a", "Simulator", "--args", "-CurrentDeviceUDID", udid],
-                check=True,
-            )
+            with self.input.wait_bar("Opening simulator..."):
+                self.subprocess.run(
+                    ["open", "-a", "Simulator", "--args", "-CurrentDeviceUDID", udid],
+                    check=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                )
         except subprocess.CalledProcessError as e:
+            self.logger.error()
+            self.logger.error(e.stdout)
             raise BriefcaseCommandError(
                 f"Unable to open {device} simulator running {iOS_version}"
             ) from e
@@ -328,25 +340,33 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         # Try to uninstall the app first. If the app hasn't been installed
         # before, this will still succeed.
         app_identifier = ".".join([app.bundle, app.app_name])
-        self.logger.info()
-        self.logger.info(f"[{app.app_name}] Uninstalling old app version...")
         try:
-            self.subprocess.run(
-                ["xcrun", "simctl", "uninstall", udid, app_identifier], check=True
-            )
+            with self.input.wait_bar("Uninstalling old app version..."):
+                self.subprocess.run(
+                    ["xcrun", "simctl", "uninstall", udid, app_identifier],
+                    check=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                )
         except subprocess.CalledProcessError as e:
+            self.logger.error()
+            self.logger.error(e.stdout)
             raise BriefcaseCommandError(
                 f"Unable to uninstall old version of app {app.app_name}."
             ) from e
 
         # Install the app.
-        self.logger.info()
-        self.logger.info(f"[{app.app_name}] Installing new app version...")
         try:
-            self.subprocess.run(
-                ["xcrun", "simctl", "install", udid, self.binary_path(app)], check=True
-            )
+            with self.input.wait_bar("Installing new app version..."):
+                self.subprocess.run(
+                    ["xcrun", "simctl", "install", udid, self.binary_path(app)],
+                    check=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                )
         except subprocess.CalledProcessError as e:
+            self.logger.error()
+            self.logger.error(e.stdout)
             raise BriefcaseCommandError(
                 f"Unable to install new version of app {app.app_name}."
             ) from e
@@ -373,20 +393,25 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         # Wait for the log stream start up
         self.sleep(0.25)
 
-        self.logger.info()
-        self.logger.info(f"[{app.app_name}] Starting app...")
         try:
-            self.subprocess.run(
-                ["xcrun", "simctl", "launch", udid, app_identifier], check=True
-            )
+            with self.input.wait_bar("Starting app..."):
+                self.subprocess.run(
+                    ["xcrun", "simctl", "launch", udid, app_identifier],
+                    check=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                )
         except subprocess.CalledProcessError as e:
             self.subprocess.cleanup("log stream", simulator_log_popen)
+            self.logger.error()
+            self.logger.error(e.stdout)
             raise BriefcaseCommandError(f"Unable to launch app {app.app_name}.") from e
 
         # Start streaming logs for the app.
         self.logger.info()
         self.logger.info(
-            f"[{app.app_name}] Following simulator log output (type CTRL-C to stop log)..."
+            "Following simulator log output (type CTRL-C to stop log)...",
+            prefix=app.app_name,
         )
         self.logger.info("=" * 75)
         self.subprocess.stream_output("log stream", simulator_log_popen)

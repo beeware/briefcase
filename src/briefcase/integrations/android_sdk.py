@@ -857,13 +857,10 @@ briefcase run android -d @{avd}
         # Step 1: Wait for the device to appear so we can get an
         # ADB instance for the new device.
         self.command.logger.info()
-        with self.command.input.wait_bar(
-            "Waiting for emulator to start..."
-        ) as startup_wait_bar:
+        with self.command.input.wait_bar("Waiting for emulator to start..."):
             adb = None
             known_devices = set()
             while adb is None:
-                startup_wait_bar.update()
                 if emulator_popen.poll() is not None:
                     raise BriefcaseCommandError(
                         f"""\
@@ -900,7 +897,7 @@ find this page helpful in diagnosing emulator problems.
                 self.sleep(2)
 
         # Phase 2: Wait for the boot process to complete
-        with self.command.input.wait_bar("Booting...") as boot_wait_bar:
+        with self.command.input.wait_bar("Booting..."):
             while not adb.has_booted():
                 if emulator_popen.poll() is not None:
                     raise BriefcaseCommandError(
@@ -920,7 +917,6 @@ find this page helpful in diagnosing emulator problems.
 
                 # Try again in 2 seconds...
                 self.sleep(2)
-                boot_wait_bar.update()
 
         # Return the device ID and full name.
         return device, full_name

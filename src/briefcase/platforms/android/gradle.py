@@ -129,7 +129,7 @@ class GradleBuildCommand(GradleMixin, BuildCommand):
 
         :param app: The application to build
         """
-        self.logger.info(f"[{app.app_name}] Building Android APK...")
+        self.logger.info("Building Android APK...", prefix=app.app_name)
         try:
             self.subprocess.run(
                 # Windows needs the full path to `gradlew`; macOS & Linux can find it
@@ -187,7 +187,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
 
         self.logger.info()
         self.logger.info(
-            f"[{app.app_name}] Starting app on {name} (device ID {device})"
+            f"Starting app on {name} (device ID {device})", prefix=app.app_name
         )
 
         # Create an ADB wrapper for the selected device
@@ -199,26 +199,27 @@ class GradleRunCommand(GradleMixin, RunCommand):
 
         # We force-stop the app to ensure the activity launches freshly.
         self.logger.info()
-        self.logger.info(f"[{app.app_name}] Stopping old versions of the app...")
+        self.logger.info("Stopping old versions of the app...", prefix=app.app_name)
         adb.force_stop_app(package)
 
         # Install the latest APK file onto the device.
         self.logger.info()
-        self.logger.info(f"[{app.app_name}] Installing app...")
+        self.logger.info("Installing app...", prefix=app.app_name)
         adb.install_apk(self.binary_path(app))
 
         self.logger.info()
-        self.logger.info(f"[{app.app_name}] Clearing device log...")
+        self.logger.info("Clearing device log...", prefix=app.app_name)
         adb.clear_log()
 
         # To start the app, we launch `org.beeware.android.MainActivity`.
         self.logger.info()
-        self.logger.info(f"[{app.app_name}] Launching app...")
+        self.logger.info("Launching app...", prefix=app.app_name)
         adb.start_app(package, "org.beeware.android.MainActivity")
 
         self.logger.info()
         self.logger.info(
-            f"[{app.app_name}] Following device log output (type CTRL-C to stop log)..."
+            "Following device log output (type CTRL-C to stop log)...",
+            prefix=app.app_name,
         )
         self.logger.info("=" * 75)
         adb.logcat()
@@ -235,7 +236,8 @@ class GradlePackageCommand(GradleMixin, PackageCommand):
         :param app: The application to build
         """
         self.logger.info(
-            f"[{app.app_name}] Building Android App Bundle and APK in release mode..."
+            "Building Android App Bundle and APK in release mode...",
+            prefix=app.app_name,
         )
         try:
             self.subprocess.run(
