@@ -110,6 +110,9 @@ class LinuxFlatpakUpdateCommand(LinuxFlatpakMixin, UpdateCommand):
     def update_app(self, app: BaseConfig, update_dependencies=False, update_resources=False, **options):
 
         # XXX this cheats and just calls the tool to create "python3-requirements.json"
+        # from a requirements.txt, rather than from pyproject.toml like it should.
+        #
+        # XXX fix the "helloworld" path below too.  Should be generated from app.sources
 
         try:
             self.subprocess.run(
@@ -126,6 +129,7 @@ class LinuxFlatpakUpdateCommand(LinuxFlatpakMixin, UpdateCommand):
         source_paths = [ str(Path(s).resolve()) for s in app.sources ]
 
         manifest = {
+            # XXX some of these defaults should be options
             "app-id": app.bundle,
             "runtime": "org.freedesktop.Platform",
             "runtime-version": "21.08",
@@ -137,10 +141,10 @@ class LinuxFlatpakUpdateCommand(LinuxFlatpakMixin, UpdateCommand):
                     "buildsystem": "simple",
                     "build-commands": [
                         "install -D run.sh /app/bin/run.sh",
-                        "cp -r helloworld /app/"
+                        "cp -r * /app/"
                     ],
                     "sources": [
-                        { "type": "script", "dest-filename": "run.sh", "commands": [ "cd /app", "echo ROCK AND ROLL", "python3 -m helloworld" ] },
+                        { "type": "script", "dest-filename": "run.sh", "commands": [ "cd /app", "python3 -m helloworld" ] },
                         { "type": "dir", "path": str(Path("src").resolve()) }
                     ] 
                 },
@@ -152,6 +156,7 @@ class LinuxFlatpakUpdateCommand(LinuxFlatpakMixin, UpdateCommand):
             ]
         }
 
+        # XXX error handling ...
         with self.manifest_file(app).open("w") as fp:
             json.dump(manifest, fp, indent=2)
 
