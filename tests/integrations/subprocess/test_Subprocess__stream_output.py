@@ -1,3 +1,4 @@
+from time import sleep
 from unittest import mock
 
 import pytest
@@ -68,8 +69,18 @@ def test_keyboard_interrupt(mock_sub, popen_process, capsys):
     """KeyboardInterrupt is suppressed if user sends CTRL+C and all output is
     printed."""
 
-    def send_ctrl_c():
-        raise KeyboardInterrupt()
+    def slow_poll(*a):
+        sleep(0.5)
+        return -3
+
+    # this helps ensure that the output streaming thread doesn't
+    # finish before is_alive() is called and therefore ensures
+    # that stop_func is always executed during this test.
+    popen_process.poll = mock.MagicMock()
+    popen_process.poll.side_effect = slow_poll
+
+    send_ctrl_c = mock.MagicMock()
+    send_ctrl_c.side_effect = [False, KeyboardInterrupt]
 
     mock_sub.stream_output("testing", popen_process, stop_func=send_ctrl_c)
 

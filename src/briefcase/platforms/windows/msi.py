@@ -120,7 +120,7 @@ class WindowsMSIRunCommand(WindowsMSIMixin, RunCommand):
         :param app: The config object for the app
         """
         self.logger.info()
-        self.logger.info(f"[{app.app_name}] Starting app...")
+        self.logger.info("Starting app...", prefix=app.app_name)
         try:
             self.subprocess.run(
                 [
@@ -145,7 +145,7 @@ class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
         :param app: The application to build
         """
         self.logger.info()
-        self.logger.info(f"[{app.app_name}] Building MSI...")
+        self.logger.info("Building MSI...", prefix=app.app_name)
 
         try:
             self.logger.info()

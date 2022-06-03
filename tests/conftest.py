@@ -4,6 +4,14 @@ from unittest import mock
 import pytest
 from git import exc as git_exceptions
 
+from briefcase.console import rich_console
+
+# Stop Rich from inserting line breaks in to long lines of text.
+# Rich does this to prevent individual words being split between
+# two lines in the terminal...however, these additional line breaks
+# cause some tests to fail unexpectedly.
+rich_console.soft_wrap = True
+
 
 @pytest.fixture
 def mock_git():

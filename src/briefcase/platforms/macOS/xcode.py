@@ -74,7 +74,7 @@ class macOSXcodeBuildCommand(macOSXcodeMixin, BuildCommand):
         """
 
         self.logger.info()
-        self.logger.info(f"[{app.app_name}] Building XCode project...")
+        self.logger.info("Building XCode project...", prefix=app.app_name)
 
         try:
             self.subprocess.run(

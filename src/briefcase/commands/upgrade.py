@@ -98,7 +98,7 @@ class UpgradeCommand(BaseCommand):
 
                 for name in found_tools:
                     tool = managed_tools[name]
-                    self.logger.info(f"[{tool.name}] Upgrading {tool.full_name}...")
+                    self.logger.info(f"Upgrading {tool.full_name}...", prefix=tool.name)
                     self.logger.info()
                     tool.upgrade()
 
