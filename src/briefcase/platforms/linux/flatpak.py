@@ -123,24 +123,26 @@ class LinuxFlatpakUpdateCommand(LinuxFlatpakMixin, UpdateCommand):
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(f"Unable to update app {app.app_name}.") from e
 
-        command = Path(app.sources[0]) / "app.py"
+        source_paths = [ str(Path(s).resolve()) for s in app.sources ]
 
         manifest = {
             "app-id": app.bundle,
             "runtime": "org.freedesktop.Platform",
             "runtime-version": "21.08",
             "sdk": "org.freedesktop.Sdk",
-            "command": command.name,
+            "command": "/app/bin/run.sh",
             "modules": [
                 {
                     "name": app.bundle,
                     "buildsystem": "simple",
                     "build-commands": [
-                        "install -D %s /app/bin/%s" % (command.name, command.name)
+                        "install -D run.sh /app/bin/run.sh",
+                        "cp -r helloworld /app/"
                     ],
                     "sources": [
-                        { "type": "file", "path": str(command.resolve()) }
-                    ],
+                        { "type": "script", "dest-filename": "run.sh", "commands": [ "cd /app", "echo ROCK AND ROLL", "python3 -m helloworld" ] },
+                        { "type": "dir", "path": str(Path("src").resolve()) }
+                    ] 
                 },
                 str(self.requirements_manifest_file(app).resolve()),
             ],
@@ -170,6 +172,7 @@ class LinuxFlatpakBuildCommand(LinuxFlatpakMixin, BuildCommand):
             self.subprocess.run(
                 [
                     "flatpak-builder",
+                    "-vv",
                     "--install",
                     "--user",
                     "--force-clean",
