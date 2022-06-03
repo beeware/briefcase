@@ -112,11 +112,11 @@ class Log:
 
     def warning(self, message="", *, prefix="", markup=False):
         """Log message at warning level; always included in output."""
-        self._log(prefix=prefix, message=message, markup=markup)
+        self._log(prefix=prefix, message=message, markup=markup, style="bold yellow")
 
     def error(self, message="", *, prefix="", markup=False):
         """Log message at error level; always included in output."""
-        self._log(prefix=prefix, message=message, markup=markup)
+        self._log(prefix=prefix, message=message, markup=markup, style="bold red")
 
 
 class Console:
