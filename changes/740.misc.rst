@@ -1,1 +1,0 @@
-Use Rich to print to the terminal and render progress and status bars.
