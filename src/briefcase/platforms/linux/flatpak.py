@@ -51,3 +51,92 @@
 #   suspect we're better off doing this stuff here instead.
 
 
+import os
+import subprocess
+from contextlib import contextmanager
+
+from briefcase.commands import (
+    BuildCommand,
+    CreateCommand,
+    PackageCommand,
+    PublishCommand,
+    RunCommand,
+    UpdateCommand,
+)
+from briefcase.config import BaseConfig
+from briefcase.exceptions import BriefcaseCommandError
+from briefcase.integrations.docker import verify_docker
+from briefcase.integrations.linuxdeploy import LinuxDeploy
+from briefcase.platforms.linux import LinuxMixin
+
+
+class LinuxFlatpakMixin(LinuxMixin):
+    output_format = "flatpak"
+
+    def binary_path(self, app):
+        return self.bundle_path(app) / f"{app.formal_name}.AppDir"
+
+    def distribution_path(self, app, packaging_format):
+        return self.binary_path(app)
+
+
+class LinuxFlatpakCreateCommand(LinuxFlatpakMixin, CreateCommand):
+    description = "Create and populate a Linux Flatpak."
+
+    def create_app(self, app: BaseConfig, **options):
+        raise NotImplementedError("stub")
+
+
+class LinuxFlatpakUpdateCommand(LinuxFlatpakMixin, UpdateCommand):
+    description = "Update an existing Linux Flatpak."
+
+
+class LinuxFlatpakBuildCommand(LinuxFlatpakMixin, BuildCommand):
+    description = "Build a Linux Flatpak."
+
+    def verify_tools(self):
+        pass
+
+    def build_app(self, app: BaseConfig, **kwargs):
+        """Build an application.
+
+        :param app: The application to build
+        """
+        self.logger.info()
+        self.logger.info(f"[{app.app_name}] Building Flatpak...")
+
+        raise NotImplementedError("stub")
+
+class LinuxFlatpakRunCommand(LinuxFlatpakMixin, RunCommand):
+    description = "Run a Linux Flatpak."
+
+    def verify_tools(self):
+        """Verify that we're on Linux."""
+        super().verify_tools()
+        if self.host_os != "Linux":
+            raise BriefcaseCommandError("Flatpaks can only be executed on Linux.")
+
+    def run_app(self, app: BaseConfig, **kwargs):
+        """Start the application.
+
+        :param app: The config object for the app
+        """
+
+        raise NotImplementedError("stub")
+
+
+class LinuxFlatpakPackageCommand(LinuxFlatpakMixin, PackageCommand):
+    description = "Publish a Linux Flatpak."
+
+
+class LinuxFlatpakPublishCommand(LinuxFlatpakMixin, PublishCommand):
+    description = "Publish a Linux Flatpak."
+
+
+# Declare the briefcase command bindings
+create = LinuxFlatpakCreateCommand  # noqa
+update = LinuxFlatpakUpdateCommand  # noqa
+build = LinuxFlatpakBuildCommand  # noqa
+run = LinuxFlatpakRunCommand  # noqa
+package = LinuxFlatpakPackageCommand  # noqa
+publish = LinuxFlatpakPublishCommand  # noqa
