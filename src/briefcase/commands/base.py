@@ -38,8 +38,7 @@ class TemplateUnsupportedVersion(BriefcaseCommandError):
             f"""\
 Could not find template for Python {self.python_version_tag}.
 
-This is likely because Python {self.python_version_tag}
-is not yet supported. You will need to:
+This is likely because Python {self.python_version_tag} is not yet supported. You will need to:
   * Use an older version of Python; or
   * Define your own custom template.
 """
