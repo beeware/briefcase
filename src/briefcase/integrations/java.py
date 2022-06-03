@@ -208,9 +208,11 @@ class JDK:
             # install the JDK.
             if install_message:
                 command.logger.warning(install_message)
-
+            command.logger.info(
+                "The Java JDK was not found; downloading and installing...",
+                prefix=cls.name,
+            )
             jdk.install()
-
             return jdk
         else:
             raise MissingToolError("Java")
@@ -239,30 +241,40 @@ class JDK:
         except requests_exceptions.ConnectionError as e:
             raise NetworkFailure("download Java 8 JDK") from e
 
-        try:
-            self.command.logger.info("Installing AdoptOpenJDK...")
-            # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
-            self.command.shutil.unpack_archive(
-                os.fsdecode(jdk_zip_path),
-                extract_dir=os.fsdecode(self.command.tools_path),
-            )
-        except (shutil.ReadError, EOFError) as e:
-            raise BriefcaseCommandError(
-                f"""\
+        with self.command.input.wait_bar("Installing AdoptOpenJDK..."):
+            try:
+                # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
+                self.command.shutil.unpack_archive(
+                    os.fsdecode(jdk_zip_path),
+                    extract_dir=os.fsdecode(self.command.tools_path),
+                )
+            except (shutil.ReadError, EOFError) as e:
+                raise BriefcaseCommandError(
+                    f"""\
 Unable to unpack AdoptOpenJDK ZIP file. The download may have been interrupted
 or corrupted.
 
 Delete {jdk_zip_path} and run briefcase again.
 """
-            ) from e
+                ) from e
 
-        jdk_zip_path.unlink()  # Zip file no longer needed once unpacked.
+            jdk_zip_path.unlink()  # Zip file no longer needed once unpacked.
 
-        # The tarball will unpack into ~.briefcase/tools/jdk8u242-b08
-        # (or whatever name matches the current release).
-        # We turn this into ~.briefcase/tools/java so we have a consistent name.
-        java_unpack_path = self.command.tools_path / f"jdk{self.release}-{self.build}"
-        java_unpack_path.rename(self.command.tools_path / "java")
+            # The tarball will unpack into ~.briefcase/tools/jdk8u242-b08
+            # (or whatever name matches the current release).
+            # We turn this into ~.briefcase/tools/java so we have a consistent name.
+            java_unpack_path = (
+                self.command.tools_path / f"jdk{self.release}-{self.build}"
+            )
+            java_unpack_path.rename(self.command.tools_path / "java")
+
+    def uninstall(self):
+        """Uninstall a JDK."""
+        with self.command.input.wait_bar("Removing old JDK install..."):
+            if self.command.host_os == "Darwin":
+                self.command.shutil.rmtree(self.java_home.parent.parent)
+            else:
+                self.command.shutil.rmtree(self.java_home)
 
     def upgrade(self):
         """Upgrade an existing JDK install."""
@@ -270,11 +282,6 @@ Delete {jdk_zip_path} and run briefcase again.
             raise NonManagedToolError("Java")
         if not self.exists():
             raise MissingToolError("Java")
-        self.command.logger.info("Removing old JDK install...")
-        if self.command.host_os == "Darwin":
-            self.command.shutil.rmtree(self.java_home.parent.parent)
-        else:
-            self.command.shutil.rmtree(self.java_home)
 
+        self.uninstall()
         self.install()
-        self.command.logger.info("...done.")

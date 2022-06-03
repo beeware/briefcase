@@ -144,7 +144,6 @@ def test_debug_call_with_env(mock_sub, capsys):
     mock_sub._subprocess.run.assert_called_with(
         ["hello", "world"], env=merged_env, text=True
     )
-
     expected_output = (
         "\n"
         ">>> Running Command:\n"
@@ -153,7 +152,6 @@ def test_debug_call_with_env(mock_sub, capsys):
         ">>>     NewVar=NewVarValue\n"
         ">>> Return code: 0\n"
     )
-
     assert capsys.readouterr().out == expected_output
 
 
@@ -165,7 +163,6 @@ def test_deep_debug_call(mock_sub, capsys):
     mock_sub.run(["hello", "world"])
 
     mock_sub._subprocess.run.assert_called_with(["hello", "world"], text=True)
-
     expected_output = (
         "\n"
         ">>> Running Command:\n"
@@ -179,7 +176,6 @@ def test_deep_debug_call(mock_sub, capsys):
         ">>>     PWD=/home/user/\n"
         ">>> Return code: 0\n"
     )
-
     assert capsys.readouterr().out == expected_output
 
 
@@ -197,7 +193,6 @@ def test_deep_debug_call_with_env(mock_sub, capsys):
     mock_sub._subprocess.run.assert_called_with(
         ["hello", "world"], env=merged_env, text=True
     )
-
     expected_output = (
         "\n"
         ">>> Running Command:\n"
@@ -212,7 +207,6 @@ def test_deep_debug_call_with_env(mock_sub, capsys):
         ">>>     NewVar=NewVarValue\n"
         ">>> Return code: 0\n"
     )
-
     assert capsys.readouterr().out == expected_output
 
 
@@ -243,7 +237,6 @@ def test_calledprocesserror_exception_logging(mock_sub, capsys):
         ">>>     PWD=/home/user/\n"
         ">>> Return code: -1\n"
     )
-
     assert capsys.readouterr().out == expected_output
 
 

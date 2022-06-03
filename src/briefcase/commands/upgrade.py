@@ -94,15 +94,11 @@ class UpgradeCommand(BaseCommand):
                 self.logger.info("Briefcase will upgrade the following tools:")
                 for name in found_tools:
                     self.logger.info(f" - {name}")
-                self.logger.info()
 
                 for name in found_tools:
                     tool = managed_tools[name]
                     self.logger.info(f"Upgrading {tool.full_name}...", prefix=tool.name)
-                    self.logger.info()
                     tool.upgrade()
-
-                self.logger.info()
 
         else:
             self.logger.info("Briefcase is not managing any tools.")

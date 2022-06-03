@@ -41,8 +41,6 @@ def test_run_app_simulator_booted(first_app_config, tmp_path):
                     "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
                 ],
                 check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
             ),
             # Uninstall the old app
             mock.call(
@@ -54,8 +52,6 @@ def test_run_app_simulator_booted(first_app_config, tmp_path):
                     "com.example.first-app",
                 ],
                 check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
             ),
             # Install the new app
             mock.call(
@@ -73,8 +69,6 @@ def test_run_app_simulator_booted(first_app_config, tmp_path):
                     / "First App.app",
                 ],
                 check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
             ),
             # Launch the new app
             mock.call(
@@ -86,8 +80,6 @@ def test_run_app_simulator_booted(first_app_config, tmp_path):
                     "com.example.first-app",
                 ],
                 check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
             ),
         ]
     )
@@ -141,8 +133,6 @@ def test_run_app_simulator_shut_down(first_app_config, tmp_path):
             mock.call(
                 ["xcrun", "simctl", "boot", "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D"],
                 check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
             ),
             # Open the simulator
             mock.call(
@@ -155,8 +145,6 @@ def test_run_app_simulator_shut_down(first_app_config, tmp_path):
                     "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
                 ],
                 check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
             ),
             # Uninstall the old app
             mock.call(
@@ -168,8 +156,6 @@ def test_run_app_simulator_shut_down(first_app_config, tmp_path):
                     "com.example.first-app",
                 ],
                 check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
             ),
             # Install the new app
             mock.call(
@@ -187,8 +173,6 @@ def test_run_app_simulator_shut_down(first_app_config, tmp_path):
                     / "First App.app",
                 ],
                 check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
             ),
             # Launch the new app
             mock.call(
@@ -200,8 +184,6 @@ def test_run_app_simulator_shut_down(first_app_config, tmp_path):
                     "com.example.first-app",
                 ],
                 check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
             ),
         ]
     )
@@ -268,8 +250,6 @@ def test_run_app_simulator_shutting_down(first_app_config, tmp_path):
             mock.call(
                 ["xcrun", "simctl", "boot", "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D"],
                 check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
             ),
             # Open the simulator
             mock.call(
@@ -282,8 +262,6 @@ def test_run_app_simulator_shutting_down(first_app_config, tmp_path):
                     "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
                 ],
                 check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
             ),
             # Uninstall the old app
             mock.call(
@@ -295,8 +273,6 @@ def test_run_app_simulator_shutting_down(first_app_config, tmp_path):
                     "com.example.first-app",
                 ],
                 check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
             ),
             # Install the new app
             mock.call(
@@ -314,8 +290,6 @@ def test_run_app_simulator_shutting_down(first_app_config, tmp_path):
                     / "First App.app",
                 ],
                 check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
             ),
             # Launch the new app
             mock.call(
@@ -327,8 +301,6 @@ def test_run_app_simulator_shutting_down(first_app_config, tmp_path):
                     "com.example.first-app",
                 ],
                 check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
             ),
         ]
     )
@@ -384,8 +356,6 @@ def test_run_app_simulator_boot_failure(first_app_config, tmp_path):
             mock.call(
                 ["xcrun", "simctl", "boot", "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D"],
                 check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
             ),
         ]
     )
@@ -427,8 +397,6 @@ def test_run_app_simulator_open_failure(first_app_config, tmp_path):
             mock.call(
                 ["xcrun", "simctl", "boot", "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D"],
                 check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
             ),
             # Open the simulator
             mock.call(
@@ -441,8 +409,6 @@ def test_run_app_simulator_open_failure(first_app_config, tmp_path):
                     "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
                 ],
                 check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
             ),
         ]
     )
@@ -485,8 +451,6 @@ def test_run_app_simulator_uninstall_failure(first_app_config, tmp_path):
             mock.call(
                 ["xcrun", "simctl", "boot", "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D"],
                 check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
             ),
             # Open the simulator
             mock.call(
@@ -499,8 +463,6 @@ def test_run_app_simulator_uninstall_failure(first_app_config, tmp_path):
                     "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
                 ],
                 check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
             ),
             # Uninstall the old app
             mock.call(
@@ -512,8 +474,6 @@ def test_run_app_simulator_uninstall_failure(first_app_config, tmp_path):
                     "com.example.first-app",
                 ],
                 check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
             ),
         ]
     )
@@ -557,8 +517,6 @@ def test_run_app_simulator_install_failure(first_app_config, tmp_path):
             mock.call(
                 ["xcrun", "simctl", "boot", "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D"],
                 check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
             ),
             # Open the simulator
             mock.call(
@@ -571,8 +529,6 @@ def test_run_app_simulator_install_failure(first_app_config, tmp_path):
                     "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
                 ],
                 check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
             ),
             # Uninstall the old app
             mock.call(
@@ -584,8 +540,6 @@ def test_run_app_simulator_install_failure(first_app_config, tmp_path):
                     "com.example.first-app",
                 ],
                 check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
             ),
             # Install the new app
             mock.call(
@@ -603,8 +557,6 @@ def test_run_app_simulator_install_failure(first_app_config, tmp_path):
                     / "First App.app",
                 ],
                 check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
             ),
         ]
     )
@@ -651,8 +603,6 @@ def test_run_app_simulator_launch_failure(first_app_config, tmp_path):
             mock.call(
                 ["xcrun", "simctl", "boot", "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D"],
                 check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
             ),
             # Open the simulator
             mock.call(
@@ -665,8 +615,6 @@ def test_run_app_simulator_launch_failure(first_app_config, tmp_path):
                     "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
                 ],
                 check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
             ),
             # Uninstall the old app
             mock.call(
@@ -678,8 +626,6 @@ def test_run_app_simulator_launch_failure(first_app_config, tmp_path):
                     "com.example.first-app",
                 ],
                 check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
             ),
             # Install the new app
             mock.call(
@@ -697,8 +643,6 @@ def test_run_app_simulator_launch_failure(first_app_config, tmp_path):
                     / "First App.app",
                 ],
                 check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
             ),
             # Launch the new app
             mock.call(
@@ -710,8 +654,6 @@ def test_run_app_simulator_launch_failure(first_app_config, tmp_path):
                     "com.example.first-app",
                 ],
                 check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
             ),
         ]
     )

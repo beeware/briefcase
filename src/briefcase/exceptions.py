@@ -3,7 +3,12 @@ class BriefcaseError(Exception):
         self.error_code = error_code
 
 
-class NoCommandError(BriefcaseError):
+class HelpText(Exception):
+    """Exceptions that contain help text and shouldn't be displayed to users as
+    an error."""
+
+
+class NoCommandError(BriefcaseError, HelpText):
     def __init__(self, msg):
         super().__init__(-10)
         self.msg = msg
@@ -12,7 +17,7 @@ class NoCommandError(BriefcaseError):
         return self.msg
 
 
-class ShowOutputFormats(BriefcaseError):
+class ShowOutputFormats(BriefcaseError, HelpText):
     def __init__(self, platform, default, choices):
         super().__init__(0)
         self.platform = platform

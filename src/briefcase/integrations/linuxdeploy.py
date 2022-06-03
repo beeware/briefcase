@@ -42,6 +42,10 @@ class LinuxDeploy:
 
         if not linuxdeploy.exists():
             if install:
+                command.logger.info(
+                    "The linuxdeploy SDK was not found; downloading and installing...",
+                    prefix=cls.name,
+                )
                 linuxdeploy.install()
             else:
                 raise MissingToolError("linuxdeploy")
@@ -61,21 +65,25 @@ class LinuxDeploy:
             linuxdeploy_appimage_path = self.command.download_url(
                 url=self.linuxdeploy_download_url, download_path=self.command.tools_path
             )
-            self.command.os.chmod(linuxdeploy_appimage_path, 0o755)
-            self.patch_elf_header()
         except requests_exceptions.ConnectionError as e:
             raise NetworkFailure("downloading linuxdeploy AppImage") from e
 
-    def upgrade(self):
-        """Upgrade an existing linuxdeploy install."""
-        if self.exists():
-            self.command.logger.info("Removing old LinuxDeploy install...")
+        with self.command.input.wait_bar("Updating permissions for LinuxDeploy..."):
+            self.command.os.chmod(linuxdeploy_appimage_path, 0o755)
+        self.patch_elf_header()
+
+    def uninstall(self):
+        """Uninstall linuxdeploy."""
+        with self.command.input.wait_bar("Removing old LinuxDeploy install..."):
             self.appimage_path.unlink()
 
-            self.install()
-            self.command.logger.info("...done.")
-        else:
+    def upgrade(self):
+        """Upgrade an existing linuxdeploy install."""
+        if not self.exists():
             raise MissingToolError("linuxdeploy")
+
+        self.uninstall()
+        self.install()
 
     def patch_elf_header(self):
         """Patch the ELF header of the AppImage to ensure it's always
@@ -102,11 +110,13 @@ class LinuxDeploy:
             # Check if the header at the offset is the original value
             # If so, patch it.
             if appimage.read(len(ELF_PATCH_ORIGINAL_BYTES)) == ELF_PATCH_ORIGINAL_BYTES:
-                appimage.seek(ELF_PATCH_OFFSET)
-                appimage.write(ELF_PATCH_PATCHED_BYTES)
-                appimage.flush()
-                appimage.seek(0)
-                self.command.logger.info("Patched ELF header of linuxdeploy AppImage.")
+                with self.command.input.wait_bar(
+                    "Patching ELF header of linuxdeploy AppImage..."
+                ):
+                    appimage.seek(ELF_PATCH_OFFSET)
+                    appimage.write(ELF_PATCH_PATCHED_BYTES)
+                    appimage.flush()
+                    appimage.seek(0)
             # Else if the header is the patched value, do nothing.
             elif (
                 appimage.read(len(ELF_PATCH_ORIGINAL_BYTES)) == ELF_PATCH_PATCHED_BYTES

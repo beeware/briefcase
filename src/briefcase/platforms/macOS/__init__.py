@@ -70,7 +70,6 @@ class macOSRunMixin:
         time.sleep(0.25)
 
         try:
-            self.logger.info()
             self.logger.info("Starting app...", prefix=app.app_name)
             try:
                 self.subprocess.run(
@@ -95,7 +94,6 @@ class macOSRunMixin:
                 )
             else:
                 # Start streaming logs for the app.
-                self.logger.info()
                 self.logger.info(
                     "Following system log output (type CTRL-C to stop log)...",
                     prefix=app.app_name,
@@ -217,22 +215,24 @@ or
             process_command.append(options)
 
         try:
-            self.logger.info(f"Signing {Path(path).relative_to(self.base_path)}")
-            self.subprocess.run(
-                process_command,
-                stderr=subprocess.PIPE,
-                check=True,
-            )
+            with self.input.wait_bar(
+                f"Signing {Path(path).relative_to(self.base_path)}..."
+            ):
+                self.subprocess.run(
+                    process_command,
+                    stderr=subprocess.PIPE,
+                    check=True,
+                )
         except subprocess.CalledProcessError as e:
             errors = e.stderr
             if "code object is not signed at all" in errors:
-                self.logger.info("... file requires a deep sign; retrying")
                 try:
-                    self.subprocess.run(
-                        process_command + ["--deep"],
-                        stderr=subprocess.PIPE,
-                        check=True,
-                    )
+                    with self.input.wait_bar("File requires a deep sign; retrying..."):
+                        self.subprocess.run(
+                            process_command + ["--deep"],
+                            stderr=subprocess.PIPE,
+                            check=True,
+                        )
                 except subprocess.CalledProcessError as e:
                     raise BriefcaseCommandError(
                         f"Unable to deep code sign {path}."
@@ -511,8 +511,6 @@ password:
                     )
 
                 identity = "-"
-
-                self.logger.info()
                 self.logger.info(
                     "Signing app with adhoc identity...", prefix=app.app_name
                 )
@@ -524,7 +522,6 @@ password:
 
                 identity, identity_name = self.select_identity(identity=identity)
 
-                self.logger.info()
                 self.logger.info(
                     f"Signing app with identity {identity_name}...", prefix=app.app_name
                 )
@@ -548,7 +545,6 @@ password:
                 self.notarize(self.binary_path(app), team_id=team_id)
 
         if packaging_format == "dmg":
-            self.logger.info()
             self.logger.info("Building DMG...", prefix=app.app_name)
 
             dmg_settings = {

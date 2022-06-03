@@ -2,7 +2,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from briefcase.console import Log
+from briefcase.console import Console, Log
 from briefcase.integrations.subprocess import Subprocess
 
 # hardcoded here since subprocess will only include these constants if Python is literally on Windows
@@ -14,6 +14,7 @@ CREATE_NEW_PROCESS_GROUP = 0x200
 def mock_sub():
     command = MagicMock()
     command.logger = Log(verbosity=1)
+    command.input = Console()
 
     command.os = MagicMock()
     command.os.environ = {
@@ -35,3 +36,23 @@ def mock_sub():
     sub._subprocess.CREATE_NEW_PROCESS_GROUP = CREATE_NEW_PROCESS_GROUP
 
     return sub
+
+
+@pytest.fixture
+def popen_process():
+    process = MagicMock()
+    # There are extra empty strings at the end to simulate readline
+    # continuously returning "" once it reaches EOF
+    process.stdout.readline.side_effect = [
+        "output line 1\n",
+        "\n",
+        "output line 3\n",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+    ]
+    process.poll.side_effect = [None, None, None, -3, -3, -3]
+    return process

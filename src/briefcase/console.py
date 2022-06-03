@@ -79,6 +79,8 @@ class Log:
                     )
                 prefix = f"[dim]\\[{prefix}][/dim] "
                 markup = True
+                # insert vertical space before for all messages with a prefix
+                self.rich_console.print()
             for line in message.splitlines():
                 self.rich_console.print(
                     f"{preface}{prefix}{line}", markup=markup, style=style
@@ -123,6 +125,7 @@ class Console:
     def __init__(self, enabled=True):
         self.rich_console = rich_console
         self._enabled = enabled
+        self.is_wait_bar_active = False
 
     @property
     def enabled(self):
@@ -167,7 +170,7 @@ class Console:
             the message must already be escaped; defaults False.
         """
         wait_bar = Progress(
-            TextColumn("     "),
+            TextColumn("    "),
             BarColumn(bar_width=20, style="black", pulse_style="white"),
             TextColumn(message),
             transient=True,
@@ -176,6 +179,7 @@ class Console:
         # setting start=False causes the progress bar to pulse
         wait_bar.add_task("", start=False)
         try:
+            self.is_wait_bar_active = True
             with wait_bar:
                 yield
         except BaseException:
@@ -189,6 +193,8 @@ class Console:
                     f'{message}{f" {done_message}" if done_message else ""}',
                     markup=markup,
                 )
+        finally:
+            self.is_wait_bar_active = False
 
     def boolean_input(self, question, default=False):
         """Get a boolean input from user, in the form of y/n.

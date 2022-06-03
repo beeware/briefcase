@@ -76,7 +76,6 @@ class macOSAppBuildCommand(macOSAppMixin, macOSSigningMixin, BuildCommand):
         # signed to be able to execute on M1 hardware - even if it's only an
         # adhoc signing identity. Apply an adhoc signing identity to the
         # app bundle.
-        self.logger.info()
         self.logger.info("Adhoc signing app...", prefix=app.app_name)
         self.sign_app(app=app, identity="-")
 

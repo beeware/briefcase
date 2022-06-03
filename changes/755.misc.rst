@@ -1,0 +1,1 @@
+Increase consistency displaying messages in the terminal regardless of command, platform, etc.

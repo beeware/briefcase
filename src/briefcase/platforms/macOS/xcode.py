@@ -73,7 +73,6 @@ class macOSXcodeBuildCommand(macOSXcodeMixin, BuildCommand):
         :param app: The application to build
         """
 
-        self.logger.info()
         self.logger.info("Building XCode project...", prefix=app.app_name)
 
         try:

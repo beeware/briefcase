@@ -259,7 +259,7 @@ def test_sign_file_deep_sign(dummy_command, tmp_path, capsys):
     )
 
     # The console includes a warning about the attempt to deep sign
-    assert "... file requires a deep sign; retrying\n" in capsys.readouterr().out
+    assert "File requires a deep sign; retrying... done\n" in capsys.readouterr().out
 
 
 def test_sign_file_deep_sign_failure(dummy_command, tmp_path, capsys):
@@ -287,7 +287,7 @@ def test_sign_file_deep_sign_failure(dummy_command, tmp_path, capsys):
     )
 
     # The console includes a warning about the attempt to deep sign
-    assert "... file requires a deep sign; retrying\n" in capsys.readouterr().out
+    assert "File requires a deep sign; retrying...\n" in capsys.readouterr().out
 
 
 def test_sign_file_unsupported_format(dummy_command, tmp_path, capsys):
