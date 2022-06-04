@@ -4,37 +4,16 @@
 #
 # also I used https://github.com/flatpak/flatpak-builder-tools/blob/master/pip/flatpak-pip-generator
 # to transform eg: 'requirements.txt' into the "python3-requirements.json"
-# 
+#
 # but really we want to transform the pyproject.toml directly and to have the
 # transformer be a library not a standalone python program.
-# 
+#
 # commands run:
 #
 # flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 # flatpak install flathub org.freedesktop.Platform//21.08 org.freedesktop.Sdk//21.08
 # pip freeze > requirements.txt
 # flatpak-pip-generator --requirements-file=requirements.txt
-#
-# org.zoic.hello.yaml:
-#
-#   app-id: org.zoic.hello
-#   runtime: org.freedesktop.Platform
-#   runtime-version: '21.08'
-#   sdk: org.freedesktop.Sdk
-#   command: hello.py
-#   modules:
-#     - name: hello
-#       buildsystem: simple
-#       build-commands:
-#         - install -D hello.py /app/bin/hello.py
-#       sources:
-#         - type: file
-#           path: hello.py
-#     - python3-requirements.json
-#   finish-args:
-#     - "--socket=fallback-x11"
-#     - "--socket=wayland"
-#
 # flatpak-builder --user --install --force-clean build-dir/ org.zoic.hello.yaml
 # flatpak run -v org.zoic.hello
 #
@@ -46,15 +25,13 @@
 #   use absolute paths if that's what you want to do.
 # * flatpak-builder is in C (!)
 # * flatpak-pip-generator is a python program which translates requirements.txt
-#   files into includable "python3-requirements.json" module *but* it isn't 
+#   files into includable "python3-requirements.json" module *but* it isn't
 #   distributed on pypi, isn't a library and doesn't load pyproject.toml so I
 #   suspect we're better off doing this stuff here instead.
 
 
-import os
-import subprocess
-from contextlib import contextmanager
 import json
+import subprocess
 from pathlib import Path
 
 from briefcase.commands import (
@@ -67,8 +44,6 @@ from briefcase.commands import (
 )
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.integrations.docker import verify_docker
-from briefcase.integrations.linuxdeploy import LinuxDeploy
 from briefcase.platforms.linux import LinuxMixin
 
 
@@ -107,7 +82,13 @@ class LinuxFlatpakCreateCommand(LinuxFlatpakMixin, CreateCommand):
 class LinuxFlatpakUpdateCommand(LinuxFlatpakMixin, UpdateCommand):
     description = "Update an existing Linux Flatpak."
 
-    def update_app(self, app: BaseConfig, update_dependencies=False, update_resources=False, **options):
+    def update_app(
+        self,
+        app: BaseConfig,
+        update_dependencies=False,
+        update_resources=False,
+        **options,
+    ):
 
         # XXX this cheats and just calls the tool to create "python3-requirements.json"
         # from a requirements.txt, rather than from pyproject.toml like it should.
@@ -126,8 +107,6 @@ class LinuxFlatpakUpdateCommand(LinuxFlatpakMixin, UpdateCommand):
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(f"Unable to update app {app.app_name}.") from e
 
-        source_paths = [ str(Path(s).resolve()) for s in app.sources ]
-
         manifest = {
             # XXX some of these defaults should be options
             "app-id": app.bundle,
@@ -141,24 +120,29 @@ class LinuxFlatpakUpdateCommand(LinuxFlatpakMixin, UpdateCommand):
                     "buildsystem": "simple",
                     "build-commands": [
                         "install -D run.sh /app/bin/run.sh",
-                        "cp -r * /app/"
+                        "cp -r * /app/",
                     ],
                     "sources": [
-                        { "type": "script", "dest-filename": "run.sh", "commands": [ "cd /app", "python3 -m helloworld" ] },
-                        { "type": "dir", "path": str(Path("src").resolve()) }
-                    ] 
+                        {
+                            "type": "script",
+                            "dest-filename": "run.sh",
+                            "commands": ["cd /app", "python3 -m helloworld"],
+                        },
+                        {"type": "dir", "path": str(Path("src").resolve())},
+                    ],
                 },
                 str(self.requirements_manifest_file(app).resolve()),
             ],
             "finish-args": [
                 "--socket=fallback-x11",
                 "--socket=wayland",
-            ]
+            ],
         }
 
         # XXX error handling ...
         with self.manifest_file(app).open("w") as fp:
             json.dump(manifest, fp, indent=2)
+
 
 class LinuxFlatpakBuildCommand(LinuxFlatpakMixin, BuildCommand):
     description = "Build a Linux Flatpak."
@@ -177,12 +161,11 @@ class LinuxFlatpakBuildCommand(LinuxFlatpakMixin, BuildCommand):
             self.subprocess.run(
                 [
                     "flatpak-builder",
-                    "-vv",
                     "--install",
                     "--user",
                     "--force-clean",
                     self.build_path(app) / "build",
-                    self.manifest_file(app)
+                    self.manifest_file(app),
                 ],
                 check=True,
             )
@@ -208,7 +191,7 @@ class LinuxFlatpakRunCommand(LinuxFlatpakMixin, RunCommand):
         self.logger.info(f"[{app.app_name}] Starting app...")
         try:
             self.subprocess.run(
-                [ "flatpak", "run", app.bundle ],
+                ["flatpak", "run", app.bundle],
                 check=True,
             )
         except subprocess.CalledProcessError as e:
