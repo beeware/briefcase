@@ -142,7 +142,8 @@ class LinuxDeployGtkPlugin:
 
     @property
     def linuxdeploy_gtk_download_url(self):
-        return "https://raw.githubusercontent.com/linuxdeploy/linuxdeploy-plugin-gtk/master/linuxdeploy-plugin-gtk.sh"
+        # Update url once https://github.com/linuxdeploy/linuxdeploy-plugin-gtk/pull/33 is merged
+        return "https://github.com/danyeaw/linuxdeploy-plugin-gtk/blob/typelib-support/linuxdeploy-plugin-gtk.sh"
 
     @property
     def plugin_path(self):
