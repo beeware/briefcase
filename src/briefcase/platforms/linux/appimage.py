@@ -158,10 +158,15 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
                 # Build the AppImage.
                 # For some reason, the version has to be passed in as an
                 # environment variable, *not* in the configuration...
-                env = {
-                    "VERSION": app.version,
-                    "DEPLOY_GTK_VERSION": "3",
-                }
+                env = {"VERSION": app.version}
+                plugins = []
+                for dependency in app.requires:
+                    if "toga-gtk" in dependency:
+                        self.logger.info("Using linuxdeploy GTK plugin")
+                        env["DEPLOY_GTK_VERSION"] = "3"
+                        plugins.append("gtk")
+                if not plugins:
+                    self.logger.info("No linuxdeploy plugins needed")
 
                 # Find all the .so files in app and app_packages,
                 # so they can be passed in to linuxdeploy to have their
@@ -171,9 +176,11 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
                 for so_file in self.appdir_path(app).glob("**/*.so"):
                     so_folders.add(so_file.parent)
 
-                deploy_deps_args = []
+                additional_args = []
                 for folder in sorted(so_folders):
-                    deploy_deps_args.extend(["--deploy-deps-only", str(folder)])
+                    additional_args.extend(["--deploy-deps-only", str(folder)])
+                for plugin in plugins:
+                    additional_args.extend(["--plugin", plugin])
 
                 # Build the app image. We use `--appimage-extract-and-run`
                 # because AppImages won't run natively inside Docker.
@@ -182,7 +189,6 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
                         [
                             self.linuxdeploy.appimage_path,
                             "--appimage-extract-and-run",
-                            "--plugin=gtk",
                             f"--appdir={self.appdir_path(app)}",
                             "-d",
                             os.fsdecode(
@@ -192,7 +198,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
                             "-o",
                             "appimage",
                         ]
-                        + deploy_deps_args,
+                        + additional_args,
                         env=env,
                         check=True,
                         cwd=self.platform_path,
