@@ -13,7 +13,7 @@ from briefcase.commands import (
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.docker import verify_docker
-from briefcase.integrations.linuxdeploy import LinuxDeploy
+from briefcase.integrations.linuxdeploy import LinuxDeploy, LinuxDeployGtkPlugin
 from briefcase.platforms.linux import LinuxMixin
 
 
@@ -144,6 +144,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
     def verify_tools(self):
         super().verify_tools()
         self.linuxdeploy = LinuxDeploy.verify(self)
+        self.linuxdeploy_gtk_plugin = LinuxDeployGtkPlugin.verify(self)
 
     def build_app(self, app: BaseConfig, **kwargs):
         """Build an application.
@@ -157,7 +158,10 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
                 # Build the AppImage.
                 # For some reason, the version has to be passed in as an
                 # environment variable, *not* in the configuration...
-                env = {"VERSION": app.version}
+                env = {
+                    "VERSION": app.version,
+                    "DEPLOY_GTK_VERSION": "3",
+                }
 
                 # Find all the .so files in app and app_packages,
                 # so they can be passed in to linuxdeploy to have their
@@ -178,6 +182,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
                         [
                             self.linuxdeploy.appimage_path,
                             "--appimage-extract-and-run",
+                            "--plugin=gtk",
                             f"--appdir={self.appdir_path(app)}",
                             "-d",
                             os.fsdecode(

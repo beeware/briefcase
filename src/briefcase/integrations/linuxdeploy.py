@@ -127,3 +127,67 @@ class LinuxDeploy:
                 # The original or patched value. If this is the case, the file is likely
                 # wrong and we should raise an exception.
                 raise CorruptToolError("linuxdeploy")
+
+
+class LinuxDeployGtkPlugin:
+    name = "linuxdeploy_gtk_plugin"
+    full_name = "linuxdeploy_gtk_plugin"
+
+    def __init__(self, command):
+        self.command = command
+
+    @property
+    def plugin_name(self):
+        return "linuxdeploy-plugin-gtk.sh"
+
+    @property
+    def linuxdeploy_gtk_download_url(self):
+        return "https://raw.githubusercontent.com/linuxdeploy/linuxdeploy-plugin-gtk/master/linuxdeploy-plugin-gtk.sh"
+
+    @property
+    def plugin_path(self):
+        return self.command.tools_path / self.plugin_name
+
+    @classmethod
+    def verify(cls, command, install=True):
+        """Verify that LinuxDeploy Gtk Plugin is available.
+
+        :param command: The command that needs to use linuxdeploy
+        :param install: Should the tool be installed if it is not found?
+        :returns: A valid LinuxDeploy Gtk Plugin wrapper. If linuxdeploy gtk plugin is not
+            available, and was not installed, raises MissingToolError.
+        """
+        linuxdeploy_gtk_plugin = LinuxDeployGtkPlugin(command)
+
+        if not linuxdeploy_gtk_plugin.exists():
+            if install:
+                linuxdeploy_gtk_plugin.install()
+            else:
+                raise MissingToolError("linuxdeploy_gtk_plugin")
+
+        return LinuxDeployGtkPlugin(command)
+
+    def install(self):
+        """Download and install linuxdeploy gtk plugin."""
+        try:
+            linuxdeploy_gtk_plugin_path = self.command.download_url(
+                url=self.linuxdeploy_gtk_download_url,
+                download_path=self.command.tools_path,
+            )
+            self.command.os.chmod(linuxdeploy_gtk_plugin_path, 0o755)
+        except requests_exceptions.ConnectionError as e:
+            raise NetworkFailure("downloading linuxdeploy gtk plugin") from e
+
+    def upgrade(self):
+        """Upgrade an existing linuxdeploy gtk plugin install."""
+        if self.exists():
+            self.command.logger.info("Removing old LinuxDeploy gtk plugin...")
+            self.plugin_path.unlink()
+
+            self.install()
+            self.command.logger.info("...done.")
+        else:
+            raise MissingToolError("linuxdeploy_gtk_plugin")
+
+    def exists(self):
+        return self.plugin_path.exists()
