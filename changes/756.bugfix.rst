@@ -1,0 +1,2 @@
+Fixed a Namespace not Found error in Linux with GTK apps caused by linuxdeploy not
+installing typelibs used for gobject-introspection.
