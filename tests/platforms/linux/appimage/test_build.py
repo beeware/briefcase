@@ -8,7 +8,7 @@ from requests import exceptions as requests_exceptions
 
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.docker import Docker
-from briefcase.integrations.linuxdeploy import LinuxDeploy
+from briefcase.integrations.linuxdeploy import LinuxDeploy, LinuxDeployGtkPlugin
 from briefcase.platforms.linux.appimage import LinuxAppImageBuildCommand
 
 
@@ -65,6 +65,7 @@ def build_command(tmp_path, first_app_config):
     command.Docker = Docker
 
     command.linuxdeploy = LinuxDeploy(command)
+    command.linuxdeploy_gtk_plugin = LinuxDeployGtkPlugin(command)
     return command
 
 
@@ -144,6 +145,47 @@ def test_build_appimage(build_command, first_app, tmp_path):
         text=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
+    )
+    # Binary is marked executable
+    build_command.os.chmod.assert_called_with(
+        tmp_path / "linux" / "First_App-0.0.1-wonky.AppImage", 0o755
+    )
+
+
+def test_build_appimage_with_gtk(build_command, first_app, first_app_config, tmp_path):
+    """Check that linuxdeploy is correctly called with the gtk plugin."""
+
+    first_app.requires = ["toga-gtk"]
+    build_command.build_app(first_app)
+
+    # linuxdeploy was invoked
+    app_dir = tmp_path / "linux" / "appimage" / "First App" / "First App.AppDir"
+    build_command._subprocess.run.assert_called_with(
+        [
+            os.fsdecode(build_command.linuxdeploy.appimage_path),
+            "--appimage-extract-and-run",
+            f"--appdir={app_dir}",
+            "-d",
+            os.fsdecode(app_dir / "com.example.first-app.desktop"),
+            "-o",
+            "appimage",
+            "--deploy-deps-only",
+            os.fsdecode(app_dir / "usr" / "app" / "support"),
+            "--deploy-deps-only",
+            os.fsdecode(app_dir / "usr" / "app_packages" / "firstlib"),
+            "--deploy-deps-only",
+            os.fsdecode(app_dir / "usr" / "app_packages" / "secondlib"),
+            "--plugin",
+            "gtk",
+        ],
+        check=True,
+        env={
+            "PATH": "/usr/local/bin:/usr/bin",
+            "VERSION": "0.0.1",
+            "DEPLOY_GTK_VERSION": "3",
+        },
+        cwd=os.fsdecode(tmp_path / "linux"),
+        text=True,
     )
     # Binary is marked executable
     build_command.os.chmod.assert_called_with(
