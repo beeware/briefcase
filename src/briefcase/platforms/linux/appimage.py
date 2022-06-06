@@ -155,61 +155,67 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
 
         with self.input.wait_bar("Building..."):
             try:
-                # Build the AppImage.
-                # For some reason, the version has to be passed in as an
-                # environment variable, *not* in the configuration...
-                env = {"VERSION": app.version}
-                plugins = []
-                for dependency in app.requires:
-                    if "toga-gtk" or "PyGObject" in dependency:
-                        self.logger.info("Using linuxdeploy GTK plugin")
-                        env["DEPLOY_GTK_VERSION"] = "3"
-                        plugins.append("gtk")
-                if not plugins:
-                    self.logger.info("No linuxdeploy plugins needed")
-
-                # Find all the .so files in app and app_packages,
-                # so they can be passed in to linuxdeploy to have their
-                # dependencies added to the AppImage. Looks for any .so file
-                # in the application, and make sure it is marked for deployment.
-                so_folders = set()
-                for so_file in self.appdir_path(app).glob("**/*.so"):
-                    so_folders.add(so_file.parent)
-
-                additional_args = []
-                for folder in sorted(so_folders):
-                    additional_args.extend(["--deploy-deps-only", str(folder)])
-                for plugin in plugins:
-                    additional_args.extend(["--plugin", plugin])
-
-                # Build the app image. We use `--appimage-extract-and-run`
-                # because AppImages won't run natively inside Docker.
-                with self.dockerize(app) as docker:
-                    docker.run(
-                        [
-                            self.linuxdeploy.appimage_path,
-                            "--appimage-extract-and-run",
-                            f"--appdir={self.appdir_path(app)}",
-                            "-d",
-                            os.fsdecode(
-                                self.appdir_path(app)
-                                / f"{app.bundle}.{app.app_name}.desktop"
-                            ),
-                            "-o",
-                            "appimage",
-                        ]
-                        + additional_args,
-                        env=env,
-                        check=True,
-                        cwd=self.platform_path,
-                    )
-
-                # Make the binary executable.
-                self.os.chmod(self.binary_path(app), 0o755)
+                self._build_appimage(app)
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
                     f"Error while building app {app.app_name}."
                 ) from e
+
+    def _build_appimage(self, app):
+        """Build the AppImage.
+
+        :param app: The application to build
+        """
+
+        # For some reason, the version has to be passed in as an
+        # environment variable, *not* in the configuration...
+        env = {"VERSION": app.version}
+        plugins = []
+        for dependency in app.requires:
+            if "toga-gtk" in dependency or "PyGObject" in dependency:
+                self.logger.info("Using linuxdeploy GTK plugin")
+                env["DEPLOY_GTK_VERSION"] = "3"
+                plugins.append("gtk")
+        if not plugins:
+            self.logger.info("No linuxdeploy plugins needed")
+
+        # Find all the .so files in app and app_packages,
+        # so they can be passed in to linuxdeploy to have their
+        # dependencies added to the AppImage. Looks for any .so file
+        # in the application, and make sure it is marked for deployment.
+        so_folders = {
+            so_file.parent for so_file in self.appdir_path(app).glob("**/*.so")
+        }
+
+        additional_args = []
+        for folder in sorted(so_folders):
+            additional_args.extend(["--deploy-deps-only", str(folder)])
+        for plugin in plugins:
+            additional_args.extend(["--plugin", plugin])
+
+        # Build the app image. We use `--appimage-extract-and-run`
+        # because AppImages won't run natively inside Docker.
+        with self.dockerize(app) as docker:
+            docker.run(
+                [
+                    self.linuxdeploy.appimage_path,
+                    "--appimage-extract-and-run",
+                    f"--appdir={self.appdir_path(app)}",
+                    "-d",
+                    os.fsdecode(
+                        self.appdir_path(app) / f"{app.bundle}.{app.app_name}.desktop"
+                    ),
+                    "-o",
+                    "appimage",
+                ]
+                + additional_args,
+                env=env,
+                check=True,
+                cwd=self.platform_path,
+            )
+
+        # Make the binary executable.
+        self.os.chmod(self.binary_path(app), 0o755)
 
 
 class LinuxAppImageRunCommand(LinuxAppImageMixin, RunCommand):
