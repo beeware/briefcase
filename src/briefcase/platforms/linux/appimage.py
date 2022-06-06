@@ -171,11 +171,12 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
         # environment variable, *not* in the configuration...
         env = {"VERSION": app.version}
         plugins = []
-        for dependency in app.requires:
-            if "toga-gtk" in dependency or "PyGObject" in dependency:
-                self.logger.info("Using linuxdeploy GTK plugin")
-                env["DEPLOY_GTK_VERSION"] = "3"
-                plugins.append("gtk")
+        if app.requires:
+            for dependency in app.requires:
+                if "toga-gtk" in dependency or "PyGObject" in dependency:
+                    self.logger.info("Using linuxdeploy GTK plugin")
+                    env["DEPLOY_GTK_VERSION"] = "3"
+                    plugins.append("gtk")
         if not plugins:
             self.logger.info("No linuxdeploy plugins needed")
 
