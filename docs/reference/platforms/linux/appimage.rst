@@ -129,6 +129,43 @@ a new environment that is completely isolated from your development
 environment, so if your app has any operating system dependencies, they
 *must* be listed in your ``system_requires`` definition.
 
+Implementation Details
+======================
+
+Briefcase uses `linuxdeploy <https://github.com/linuxdeploy/linuxdeploy>`__ to
+build the AppImage in the correct format. AppImage tools expect directories in
+a specific format called the AppDir that will then be converted into the final
+AppImage. In practice, creating AppDirs for arbitrary applications tends to be
+a challenging task to get all of the dependencies properly bundled.
+
+Linuxdeploy simplifies this process as an AppDir maintenance tool while
+automating most of the process to create and bundle AppDirs for applications.
+It also includes a plugin system that makes bundling of frameworks easier.
+
+Building GTK Apps
+~~~~~~~~~~~~~~~~~
+
+In order to support GTK based apps like Toga in Linux, Briefcase also uses the
+`linuxdeploy-gtk-plugin
+<https://github.com/linuxdeploy/linuxdeploy-gtk-plugin>`__.
+This plugin goes through a series of steps to make sure that all the libraries
+are pulled in for the app to work properly once in the AppImage. The plugin
+goes through the following steps including:
+
+1.  Detects the GTK version to use, we manually set the version to 3
+2.  Installs itself as a hook in $APPDIR/apprun-hooks
+3.  Uses gsettings to set a light or dark adwaita theme
+4.  Installs the GLib schemas and then runs `glib-compile-schemas` on them
+5.  Installs the GIRepository typelibs for PyGObject to make use of
+6.  Copies the GTK libs and sets GTK path related environmental variables to
+    locations in the APPDIR
+7.  Updates the input method module registration (immodules) cache
+8.  Installs the GDK Pixbuf libraries and cache, and then updates the cache
+    using gdk-pixbuf-query-loaders
+9.  Installs additional libraries including Gdk, GObject, Gio, librsvg, Pango,
+    PangoCairo, and PangoFT2
+10. Manually sets the RPATH for the GTK modules
+
 Runtime issues with AppImages
 =============================
 
