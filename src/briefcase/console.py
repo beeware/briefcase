@@ -73,14 +73,14 @@ class Log:
             self.rich_console.print()
         else:
             if prefix:
+                # insert vertical space before for all messages with a prefix
+                self.rich_console.print()
                 if not markup:
                     preface, prefix, message = (
                         escape(text) for text in (preface, prefix, message)
                     )
                 prefix = f"[dim]\\[{prefix}][/dim] "
                 markup = True
-                # insert vertical space before for all messages with a prefix
-                self.rich_console.print()
             for line in message.splitlines():
                 self.rich_console.print(
                     f"{preface}{prefix}{line}", markup=markup, style=style
@@ -125,7 +125,11 @@ class Console:
     def __init__(self, enabled=True):
         self.rich_console = rich_console
         self._enabled = enabled
-        self.is_wait_bar_active = False
+
+        # Signal that Rich is dynamically controlling the terminal output.
+        # Therefore, all output must be printed to the screen by Rich to
+        # prevent corruption of dynamic elements like Wait Bars.
+        self.is_output_controlled = False
 
     @property
     def enabled(self):
@@ -179,7 +183,7 @@ class Console:
         # setting start=False causes the progress bar to pulse
         wait_bar.add_task("", start=False)
         try:
-            self.is_wait_bar_active = True
+            self.is_output_controlled = True
             with wait_bar:
                 yield
         except BaseException:
@@ -194,7 +198,7 @@ class Console:
                     markup=markup,
                 )
         finally:
-            self.is_wait_bar_active = False
+            self.is_output_controlled = False
 
     def boolean_input(self, question, default=False):
         """Get a boolean input from user, in the form of y/n.

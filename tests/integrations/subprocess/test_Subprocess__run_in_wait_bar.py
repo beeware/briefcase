@@ -58,6 +58,7 @@ def test_debug_call(mock_sub, capsys):
         "output line 1\n"
         "\n"
         "output line 3\n"
+        ">>> Return code: -3\n"
         "\n"
     )
     assert capsys.readouterr().out == expected_output
@@ -91,6 +92,7 @@ def test_debug_call_with_env(mock_sub, capsys):
         "output line 1\n"
         "\n"
         "output line 3\n"
+        ">>> Return code: -3\n"
         "\n"
     )
     assert capsys.readouterr().out == expected_output

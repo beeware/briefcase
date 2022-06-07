@@ -186,14 +186,15 @@ class Subprocess:
          - The `text` argument is defaulted to True so all output is returned
            as strings instead of bytes.
         """
-        # If a Wait Bar is active and output is not redirected, then simulate run().
+        # If dynamic screen content (e.g. a Wait Bar) is active and
+        # output is not redirected, then simulate run().
         is_output_redirected = kwargs.get("capture_output") or (
             kwargs.get("stdout") and kwargs.get("stderr")
         )
-        if self.command.input.is_wait_bar_active and not is_output_redirected:
-            return self._run_in_wait_bar(args, **kwargs)
+        if self.command.input.is_output_controlled and not is_output_redirected:
+            return self._run_in_controlled_terminal(args, **kwargs)
 
-        # Otherwise, run run() normally.
+        # Otherwise, invoke run() normally.
         self._log_command(args)
         self._log_environment(kwargs.get("env"))
 
@@ -208,11 +209,12 @@ class Subprocess:
 
         return command_result
 
-    def _run_in_wait_bar(self, args, check=False, **kwargs):
-        """Simulate subprocess.run() when a Wait Bar is active.
+    def _run_in_controlled_terminal(self, args, check=False, **kwargs):
+        """Simulate subprocess.run() when dynamic screen content is active.
 
-        During an active Wait Bar, output can only be printed to the screen
-        via Log or Console to avoid interfering with the Wait Bar updates.
+        When dynamic screen content like a Wait Bar is active, output can
+        only be printed to the screen via Log or Console to avoid interfering
+        with and likely corrupting the updates to the dynamic screen elements.
 
         stdout will always be piped so it can be printed to the screen;
         however, stderr can be piped by the caller so it is available
@@ -222,15 +224,14 @@ class Subprocess:
         """
         if kwargs.get("stdout") and not kwargs.get("stderr"):
             raise AssertionError(
-                "Subprocess.run was invoked in a Wait Bar with stdout redirected "
-                "while stderr was not redirected. This would result in stdout being "
-                "printed to the terminal. Redirect stderr as well or use check_output."
+                "Subprocess.run() was invoked while dynamic Rich content is active with stdout "
+                "redirected while stderr was not redirected. This would result in stdout "
+                "being printed to the terminal. Redirect stderr as well or use check_output."
             )
-        for arg in ("timeout", "input"):
-            if kwargs.get(arg):
-                raise AssertionError(
-                    f"The subprocess.run '{arg}' argument is not supported in a Wait Bar."
-                )
+        for arg in [arg for arg in ["timeout", "input"] if arg in kwargs]:
+            raise AssertionError(
+                f"The Subprocess.run() '{arg}' argument is not supported while dynamic Rich content is active."
+            )
 
         # stdout must be piped so the output streamer can print it.
         kwargs["stdout"] = subprocess.PIPE
@@ -239,7 +240,7 @@ class Subprocess:
 
         stderr = None
         with self.Popen(args, **kwargs) as process:
-            self.stream_output("Wait bar streamer", process)
+            self.stream_output("Wait Bar streamer", process)
             if process.stderr and kwargs["stderr"] != subprocess.STDOUT:
                 stderr = process.stderr.read()
             return_code = process.poll()

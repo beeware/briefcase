@@ -191,11 +191,11 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
             f"""
 In the future, you could specify this device by running:
 
-    briefcase {self.command} iOS -d "{device}::{iOS_version}"
+    $ briefcase {self.command} iOS -d "{device}::{iOS_version}"
 
 or:
 
-    briefcase {self.command} iOS -d {udid}
+    $ briefcase {self.command} iOS -d {udid}
 """
         )
         return udid, iOS_version, device
@@ -226,35 +226,36 @@ class iOSXcodeBuildCommand(iOSXcodeMixin, BuildCommand):
                 "Input has been disabled; can't select a device to target."
             ) from e
 
-        self.logger.info()
         self.logger.info(
-            f"Targeting an {device} running {iOS_version} (device UDID {udid})"
+            f"Targeting an {device} running {iOS_version} (device UDID {udid})",
+            prefix=app.app_name,
         )
 
         self.logger.info("Building XCode project...", prefix=app.app_name)
-
-        try:
-            self.subprocess.run(
-                [
-                    "xcodebuild",
-                    "-project",
-                    self.bundle_path(app) / f"{app.formal_name}.xcodeproj",
-                    "-destination",
-                    f'platform="iOS Simulator,name={device},OS={iOS_version}"',
-                    "-quiet",
-                    "-configuration",
-                    "Debug",
-                    "-arch",
-                    self.host_arch,
-                    "-sdk",
-                    "iphonesimulator",
-                    "build",
-                ],
-                check=True,
-            )
-            self.logger.info("Build succeeded.")
-        except subprocess.CalledProcessError as e:
-            raise BriefcaseCommandError(f"Unable to build app {app.app_name}.") from e
+        with self.input.wait_bar("Building..."):
+            try:
+                self.subprocess.run(
+                    [
+                        "xcodebuild",
+                        "-project",
+                        self.bundle_path(app) / f"{app.formal_name}.xcodeproj",
+                        "-destination",
+                        f'platform="iOS Simulator,name={device},OS={iOS_version}"',
+                        "-quiet",
+                        "-configuration",
+                        "Debug",
+                        "-arch",
+                        self.host_arch,
+                        "-sdk",
+                        "iphonesimulator",
+                        "build",
+                    ],
+                    check=True,
+                )
+            except subprocess.CalledProcessError as e:
+                raise BriefcaseCommandError(
+                    f"Unable to build app {app.app_name}."
+                ) from e
 
         # Preserve the device selection as state.
         return {"udid": udid}

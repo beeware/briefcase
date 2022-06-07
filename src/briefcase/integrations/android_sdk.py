@@ -205,7 +205,7 @@ class AndroidSDK:
             return sdk
         elif (sdk_root_path / "tools").exists():
             # The legacy SDK Tools exist. Delete them.
-            command.logger.info(
+            command.logger.warning(
                 f"""
 *************************************************************************
 ** WARNING: Upgrading Android SDK tools                                **
@@ -222,7 +222,6 @@ class AndroidSDK:
     in {sdk.avd_path} matching the emulator name.
 
 *************************************************************************
-
 """
             )
             command.shutil.rmtree(sdk_root_path)
@@ -377,9 +376,9 @@ its output for errors.
 
         self.command.logger.info(
             """
-    The Android tools provided by Google have license terms that you must accept
-    before you may use those tools.
-    """
+The Android tools provided by Google have license terms that you must accept
+before you may use those tools.
+"""
         )
         try:
             # Using subprocess.run() with no I/O redirection so the user sees
@@ -650,7 +649,7 @@ Use the -d/--device option to explicitly specify the device to use.
                 f"""
 In future, you can specify this device by running:
 
-    briefcase run android -d @{avd}
+    $ briefcase run android -d @{avd}
 """
             )
         elif device:
@@ -658,7 +657,7 @@ In future, you can specify this device by running:
                 f"""
 In future, you can specify this device by running:
 
-    briefcase run android -d {device}
+    $ briefcase run android -d {device}
 """
             )
 
@@ -701,7 +700,7 @@ a default name '{default_avd}'.
                 self.command.logger.info(
                     f"""
 '{avd}' is not a valid emulator name. An emulator name may only contain
-letters, numbers, hyphens and underscores
+letters, numbers, hyphens and underscores.
 
 """
                 )
@@ -720,9 +719,8 @@ An emulator named '{avd}' already exists.
         device_type = "pixel"
         skin = "pixel_3a"
 
-        try:
-            self.command.logger.info()
-            with self.command.input.wait_bar(f"Creating Android emulator {avd}..."):
+        with self.command.input.wait_bar(f"Creating Android emulator {avd}..."):
+            try:
                 self.command.subprocess.check_output(
                     [
                         os.fsdecode(self.avdmanager_path),
@@ -741,14 +739,12 @@ An emulator named '{avd}' already exists.
                     env=self.env,
                     stderr=subprocess.STDOUT,
                 )
-        except subprocess.CalledProcessError as e:
-            raise BriefcaseCommandError("Unable to create Android emulator") from e
+            except subprocess.CalledProcessError as e:
+                raise BriefcaseCommandError("Unable to create Android emulator") from e
 
         # Check for a device skin. If it doesn't exist, download it.
         skin_path = self.root_path / "skins" / skin
-        if skin_path.exists():
-            self.command.logger.info(f"Device skin '{skin}' already exists")
-        else:
+        if not skin_path.exists():
             self.command.logger.info("Obtaining device skin...")
             skin_url = (
                 "https://android.googlesource.com/platform/tools/adt/idea/"
@@ -799,7 +795,7 @@ Android emulator '{avd}' created.
 
 In future, you can specify this device by running:
 
-    briefcase run android -d @{avd}
+    $ briefcase run android -d @{avd}
 """
         )
 
@@ -871,7 +867,7 @@ Android emulator was unable to start!
 
 Try starting the emulator manually by running:
 
-    {' '.join(str(arg) for arg in emulator_popen.args)}
+    $ {' '.join(str(arg) for arg in emulator_popen.args)}
 
 Resolve any problems you discover, then try running your app again. You may
 find this page helpful in diagnosing emulator problems.
@@ -900,26 +896,27 @@ find this page helpful in diagnosing emulator problems.
                 self.sleep(2)
 
         # Phase 2: Wait for the boot process to complete
-        while not adb.has_booted():
+        if not adb.has_booted():
             with self.command.input.wait_bar("Booting emulator..."):
-                if emulator_popen.poll() is not None:
-                    raise BriefcaseCommandError(
-                        f"""\
+                while not adb.has_booted():
+                    if emulator_popen.poll() is not None:
+                        raise BriefcaseCommandError(
+                            f"""\
 Android emulator was unable to boot!
 
 Try starting the emulator manually by running:
 
-    {' '.join(str(arg) for arg in emulator_popen.args)}
+    $ {' '.join(str(arg) for arg in emulator_popen.args)}
 
 Resolve any problems you discover, then try running your app again. You may
 find this page helpful in diagnosing emulator problems.
 
     https://developer.android.com/studio/run/emulator-acceleration#accel-vm
 """
-                    )
+                        )
 
-                # Try again in 2 seconds...
-                self.sleep(2)
+                    # Try again in 2 seconds...
+                    self.sleep(2)
 
         # Return the device ID and full name.
         return device, full_name

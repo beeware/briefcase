@@ -311,9 +311,7 @@ class CreateCommand(BaseCommand):
                 custom_support_package = False
                 self.logger.info(f"Using support package {support_package_url}")
 
-            if support_package_url.startswith(
-                "https://"
-            ) or support_package_url.startswith("http://"):
+            if support_package_url.startswith(("https://", "http://")):
                 try:
                     self.logger.info(f"... pinned to revision {app.support_revision}")
                     # If a revision has been specified, add the revision

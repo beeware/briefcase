@@ -74,23 +74,25 @@ class macOSXcodeBuildCommand(macOSXcodeMixin, BuildCommand):
         """
 
         self.logger.info("Building XCode project...", prefix=app.app_name)
-
-        try:
-            self.subprocess.run(
-                [
-                    "xcodebuild",
-                    "-project",
-                    self.bundle_path(app) / f"{app.formal_name}.xcodeproj",
-                    "-quiet",
-                    "-configuration",
-                    "Release",
-                    "build",
-                ],
-                check=True,
-            )
-            self.logger.info("Build succeeded.")
-        except subprocess.CalledProcessError as e:
-            raise BriefcaseCommandError(f"Unable to build app {app.app_name}.") from e
+        with self.input.wait_bar("Building..."):
+            try:
+                self.subprocess.run(
+                    [
+                        "xcodebuild",
+                        "-project",
+                        self.bundle_path(app) / f"{app.formal_name}.xcodeproj",
+                        "-quiet",
+                        "-configuration",
+                        "Release",
+                        "build",
+                    ],
+                    check=True,
+                )
+                self.logger.info("Build succeeded.")
+            except subprocess.CalledProcessError as e:
+                raise BriefcaseCommandError(
+                    f"Unable to build app {app.app_name}."
+                ) from e
 
 
 class macOSXcodeRunCommand(macOSRunMixin, macOSXcodeMixin, RunCommand):

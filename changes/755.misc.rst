@@ -1,1 +1,1 @@
-Increase consistency displaying messages in the terminal regardless of command, platform, etc.
+Deploy Rich implementation of progress/wait bars and increase consistency for logging.

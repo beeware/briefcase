@@ -181,11 +181,11 @@ class macOSSigningMixin:
                 f"""
 In the future, you could specify this signing identity by running:
 
-    briefcase {self.command} macOS -i {identity}
+    $ briefcase {self.command} macOS -i {identity}
 
 or
-    briefcase {self.command} macOS -i "{identity_name}"
 
+    $ briefcase {self.command} macOS -i "{identity_name}"
 """
             )
 
@@ -214,25 +214,23 @@ or
             process_command.append("--options")
             process_command.append(options)
 
+        self.logger.info(f"Signing {Path(path).relative_to(self.base_path)}")
         try:
-            with self.input.wait_bar(
-                f"Signing {Path(path).relative_to(self.base_path)}..."
-            ):
-                self.subprocess.run(
-                    process_command,
-                    stderr=subprocess.PIPE,
-                    check=True,
-                )
+            self.subprocess.run(
+                process_command,
+                stderr=subprocess.PIPE,
+                check=True,
+            )
         except subprocess.CalledProcessError as e:
             errors = e.stderr
             if "code object is not signed at all" in errors:
+                self.logger.info("... file requires a deep sign; retrying")
                 try:
-                    with self.input.wait_bar("File requires a deep sign; retrying..."):
-                        self.subprocess.run(
-                            process_command + ["--deep"],
-                            stderr=subprocess.PIPE,
-                            check=True,
-                        )
+                    self.subprocess.run(
+                        process_command + ["--deep"],
+                        stderr=subprocess.PIPE,
+                        check=True,
+                    )
                 except subprocess.CalledProcessError as e:
                     raise BriefcaseCommandError(
                         f"Unable to deep code sign {path}."
@@ -281,12 +279,16 @@ or
 
         # Signs code objects in reversed lexicographic order to ensure nesting order is respected
         # (objects must be signed from the inside out)
-        for path in sorted(sign_targets, reverse=True):
-            self.sign_file(
-                path,
-                entitlements=self.entitlements_path(app),
-                identity=identity,
-            )
+        progress_bar = self.input.progress_bar()
+        task_id = progress_bar.add_task("Signing App", total=len(sign_targets))
+        with progress_bar:
+            for path in sorted(sign_targets, reverse=True):
+                self.sign_file(
+                    path,
+                    entitlements=self.entitlements_path(app),
+                    identity=identity,
+                )
+                progress_bar.update(task_id, advance=1)
 
 
 class macOSPackageMixin(macOSSigningMixin):
@@ -388,7 +390,7 @@ class macOSPackageMixin(macOSSigningMixin):
 The keychain does not contain credentials for the profile {profile}.
 You can store these credentials by invoking:
 
-    xcrun notarytool store-credentials --team-id {team_id} profile
+    $ xcrun notarytool store-credentials --team-id {team_id} profile
 """
                         )
 

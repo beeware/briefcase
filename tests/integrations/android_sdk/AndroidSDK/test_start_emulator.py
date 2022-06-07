@@ -137,7 +137,7 @@ def test_start_emulator(mock_sdk):
     )
 
     # Took a total of 5 naps.
-    assert mock_sdk.sleep.call_count == 5
+    assert mock_sdk.sleep.call_count == 4
 
 
 def test_emulator_fail_to_start(mock_sdk):
@@ -273,21 +273,30 @@ def test_emulator_fail_to_boot(mock_sdk):
         ]
     )
 
-    # This will result in 5 calls on adb.run (3 calls to avd_name, then
-    # 2 calls to getprop)
+    # This will result in 6 calls on adb.run
+    # 3 calls to avd_name and then 3 calls to getprop
     mock_sdk.mock_run.side_effect = [
         # emu avd_name
         subprocess.CalledProcessError(returncode=1, cmd="emu avd name"),
         "runningEmulator\nOK",
         "idleEmulator\nOK",
         # shell getprop sys.boot_completed
-        "\n",
-        "1\n",
+        "\n",  # gets in to emulator has_booted() if block
+        "\n",  # enters has_booted() while loop
+        "\n",  # one loop waiting for simulator to finish booting
+        "1\n",  # successful boot...except poll() will return non-None first raising failure
     ]
 
-    # poll() on the process continues to return None, indicating no problem.
+    # poll() on the process returns failure during simulator boot
     emu_popen = MagicMock()
-    emu_popen.poll.side_effect = [None, None, None, None, 1]
+    emu_popen.poll.side_effect = [
+        None,  # in start loop without emulator in device list
+        None,  # in start loop without emulator in device list
+        None,  # in start loop with emulator in offline mode
+        None,  # in start loop with emulator in online mode
+        None,  # in boot loop waiting for emulator to finish booting
+        1,  # invoke failure mode for simulator boot
+    ]
     emu_popen.args = [mock_sdk.emulator_path, "@idleEmulator"]
     mock_sdk.command.subprocess.Popen.return_value = emu_popen
 
@@ -309,17 +318,20 @@ def test_emulator_fail_to_boot(mock_sdk):
         start_new_session=True,
     )
 
-    # There were 4 calls to run before failure
+    # There were 6 calls to run before failure
     mock_sdk.mock_run.assert_has_calls(
         [
-            # Three calls to get avd name
+            # 3 calls to get avd name
             call("emu", "avd", "name"),
             call("emu", "avd", "name"),
             call("emu", "avd", "name"),
-            # 1 calls to get boot property
+            # 3 calls to get boot property (since boot fails
+            # before last/fourth one would return success)
+            call("shell", "getprop", "sys.boot_completed"),
+            call("shell", "getprop", "sys.boot_completed"),
             call("shell", "getprop", "sys.boot_completed"),
         ]
     )
 
-    # Took a total of 4 naps.
-    assert mock_sdk.sleep.call_count == 4
+    # Took a total of 5 naps.
+    assert mock_sdk.sleep.call_count == 5

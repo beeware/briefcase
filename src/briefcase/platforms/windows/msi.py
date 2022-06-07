@@ -146,8 +146,8 @@ class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
         self.logger.info("Building MSI...", prefix=app.app_name)
 
         try:
-            self.logger.info()
-            with self.input.wait_bar("Compiling application manifest..."):
+            self.logger.info("Compiling application manifest...")
+            with self.input.wait_bar("Compiling..."):
                 self.subprocess.run(
                     [
                         self.wix.heat_exe,
@@ -177,8 +177,8 @@ class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
             ) from e
 
         try:
-            self.logger.info()
-            with self.input.wait_bar("Compiling application installer..."):
+            self.logger.info("Compiling application installer...")
+            with self.input.wait_bar("Compiling..."):
                 self.subprocess.run(
                     [
                         self.wix.candle_exe,
@@ -198,8 +198,8 @@ class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
             raise BriefcaseCommandError(f"Unable to compile app {app.app_name}.") from e
 
         try:
-            self.logger.info()
-            with self.input.wait_bar("Linking application installer..."):
+            self.logger.info("Linking application installer...")
+            with self.input.wait_bar("Linking..."):
                 self.subprocess.run(
                     [
                         self.wix.light_exe,
