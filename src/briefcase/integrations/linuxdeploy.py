@@ -130,9 +130,6 @@ class LinuxDeploy:
 
 
 class LinuxDeployGtkPlugin:
-    name = "linuxdeploy_gtk_plugin"
-    full_name = "linuxdeploy_gtk_plugin"
-
     def __init__(self, command):
         self.command = command
 
