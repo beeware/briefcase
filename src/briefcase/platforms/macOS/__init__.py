@@ -300,10 +300,15 @@ class macOSPackageMixin(macOSSigningMixin):
 
     def add_options(self, parser):
         super().add_options(parser)
+        # We use store_const:False rather than store_false so that the
+        # "unspecified" value is None, rather than True, allowing for
+        # a "default behavior" interpretation with `--no-sign` or
+        # `--adhoc-sign` is specified
         parser.add_argument(
             "--no-notarize",
             dest="notarize_app",
-            action="store_false",
+            action="store_const",
+            const=False,
             help="Disable notarization for the app",
         )
 
@@ -487,14 +492,16 @@ password:
         """Package an app bundle.
 
         :param app: The application to package
-        :param sign_app: Should the application be signed?
-        :param notarize_app: Should the app be notarized?
+        :param sign_app: Should the application be signed? Default: ``True``
+        :param notarize_app: Should the app be notarized? Default: ``True`` if the
+            app has been signed with a real identity; ``False`` if the app is
+            unsigned, or an ad-hoc signing identity has been used.
         :param identity: The code signing identity to use. This can be either
             the 40-digit hex checksum, or the string name of the identity.
             If unspecified, the user will be prompted for a code signing
-            identity. Ignored if ``sign_app`` is False.
-        :param adhoc_sign: If true, code will be signed with adhoc identity of "-"
-        :param packaging_format: The packaging format to use. Default is `dmg`.
+            identity. Ignored if ``sign_app`` is ``False``.
+        :param adhoc_sign: If ``True``, code will be signed with adhoc identity of "-"
+        :param packaging_format: The packaging format to use. Default is ``dmg``.
         """
         if sign_app:
             if adhoc_sign:
