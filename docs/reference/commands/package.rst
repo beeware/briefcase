@@ -44,9 +44,10 @@ running::
     $ briefcase update
     $ briefcase package
 
+``-p <format>``, ``--packaging-format <format>``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-publish
--------
+The format to use for packaging. The available packaging formats are platform dependent.
 
 ``--no-sign``
 ~~~~~~~~~~~~~
