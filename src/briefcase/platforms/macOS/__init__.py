@@ -478,7 +478,7 @@ password:
         self,
         app: BaseConfig,
         sign_app=True,
-        notarize_app=True,
+        notarize_app=None,
         identity=None,
         adhoc_sign=False,
         packaging_format="dmg",
@@ -510,6 +510,11 @@ password:
                     "Signing app with adhoc identity...", prefix=app.app_name
                 )
             else:
+                # If we're signing, and notarization isn't explicitly disabled,
+                # notarize by default.
+                if notarize_app is None:
+                    notarize_app = True
+
                 identity, identity_name = self.select_identity(identity=identity)
 
                 self.logger.info()

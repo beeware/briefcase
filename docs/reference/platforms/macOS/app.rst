@@ -35,4 +35,5 @@ macOS apps.
 ~~~~~~~~~~~~~~~~~
 
 Do not submit the application for notarization. By default, apps will be
-submitted for notarization.
+submitted for notarization unless they have been signed with an ad-hoc
+signing identity.

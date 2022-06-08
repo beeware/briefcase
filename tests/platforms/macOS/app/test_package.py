@@ -28,7 +28,7 @@ def test_package_app(package_command, first_app_with_binaries, tmp_path, capsys)
         "Sekrit identity (DEADBEEF)",
     )
 
-    # Package the app
+    # Package the app. Sign and notarize by default
     package_command.package_app(first_app_with_binaries)
 
     # A request has been made to sign the app
@@ -84,7 +84,7 @@ def test_package_app_no_notarization(
         "Sekrit identity (DEADBEEF)",
     )
 
-    # Package the app without notarization
+    # Package the app; sign by default, but disable notarization
     package_command.package_app(first_app_with_binaries, notarize_app=False)
 
     # A request has been made to sign the app
@@ -158,7 +158,7 @@ def test_package_app_sign_failure(package_command, first_app_with_binaries, tmp_
 
 
 def test_package_app_no_sign(package_command, first_app_with_binaries):
-    """A macOS App can be packaged without signing."""
+    """A macOS App can be packaged without signing or notarization."""
 
     # Package the app without code signing or notarization
     package_command.package_app(
@@ -187,6 +187,25 @@ def test_package_app_notarize_without_sign(package_command, first_app_with_binar
             sign_app=False,
             notarize_app=True,
         )
+
+    # No code signing or notarization has been performed.
+    assert package_command.select_identity.call_count == 0
+    assert package_command.sign_app.call_count == 0
+    assert package_command.sign_file.call_count == 0
+    assert package_command.notarize.call_count == 0
+
+
+def test_package_app_notarize_without_sign_default_notariztion(
+    package_command, first_app_with_binaries
+):
+    """A macOS App will default to no notarization if it wasn't signed."""
+
+    # Package the app without code signing; notarization will be disabled
+    # even though it isn't specified
+    package_command.package_app(
+        first_app_with_binaries,
+        sign_app=False,
+    )
 
     # No code signing or notarization has been performed.
     assert package_command.select_identity.call_count == 0
@@ -242,27 +261,52 @@ def test_package_app_adhoc_sign(package_command, first_app_with_binaries, tmp_pa
     package_command.notarize.assert_not_called()
 
 
-def test_package_app_adhoc_sign_with_notarization(
-    package_command, first_app_with_binaries
+def test_package_app_adhoc_sign_default_notarization(
+    package_command, first_app_with_binaries, tmp_path
 ):
-    """Attempting to notarize with an adhoc identity raises an error."""
+    """An adhoc signed app is not notarized by default."""
 
-    # Package the app with an adhoc identity, but attempt notarization
-    with pytest.raises(
-        BriefcaseCommandError,
-        match=r"Can't notarize an app with an adhoc signing identity",
-    ):
-        package_command.package_app(
-            first_app_with_binaries,
-            adhoc_sign=True,
-            notarize_app=True,
-        )
+    # Package the app with an adhoc identity; notarization will
+    # be disabled as a default
+    package_command.package_app(
+        first_app_with_binaries,
+        adhoc_sign=True,
+    )
 
-    # No code signing or notarization has been performed.
-    assert package_command.select_identity.call_count == 0
-    assert package_command.sign_app.call_count == 0
-    assert package_command.sign_file.call_count == 0
-    assert package_command.notarize.call_count == 0
+    # A request has been made to sign the app
+    package_command.sign_app.assert_called_once_with(
+        app=first_app_with_binaries, identity="-"
+    )
+
+    # The DMG has been built as expected
+    package_command.dmgbuild.build_dmg.assert_called_once_with(
+        filename=os.fsdecode(tmp_path / "macOS" / "First App-0.0.1.dmg"),
+        volume_name="First App 0.0.1",
+        settings={
+            "files": [
+                os.fsdecode(tmp_path / "macOS" / "app" / "First App" / "First App.app")
+            ],
+            "symlinks": {"Applications": "/Applications"},
+            "icon_locations": {
+                "First App.app": (75, 75),
+                "Applications": (225, 75),
+            },
+            "window_rect": ((600, 600), (350, 150)),
+            "icon_size": 64,
+            "text_size": 12,
+        },
+    )
+
+    # A request was made to sign the DMG as well.
+    # This ignores the calls that would have been made transitively
+    # by calling sign_app()
+    package_command.sign_file.assert_called_once_with(
+        tmp_path / "macOS" / "First App-0.0.1.dmg",
+        identity="-",
+    )
+
+    # No request was made to notarize
+    package_command.notarize.assert_not_called()
 
 
 def test_package_bare_app(package_command, first_app_with_binaries, tmp_path):
