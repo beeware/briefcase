@@ -382,15 +382,15 @@ class Subprocess:
     def _log_output(self, output, stderr=None):
         """Log the output of the executed command."""
         if output:
-            self.command.logger.deep_debug("Command Output:")
+            self.command.logger.debug("Command Output:")
             for line in ensure_str(output).splitlines():
-                self.command.logger.deep_debug(f"    {line}")
+                self.command.logger.debug(f"    {line}")
 
         if stderr:
-            self.command.logger.deep_debug("Command Error Output (stderr):")
+            self.command.logger.debug("Command Error Output (stderr):")
             for line in ensure_str(stderr).splitlines():
-                self.command.logger.deep_debug(f"    {line}")
+                self.command.logger.debug(f"    {line}")
 
     def _log_return_code(self, return_code):
         """Log the output value of the executed command."""
-        self.command.logger.deep_debug(f"Return code: {return_code}")
+        self.command.logger.debug(f"Return code: {return_code}")
