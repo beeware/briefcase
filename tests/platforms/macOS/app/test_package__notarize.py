@@ -1,5 +1,6 @@
 import os
 import subprocess
+from pathlib import Path
 from unittest import mock
 from unittest.mock import MagicMock
 
@@ -316,7 +317,7 @@ def test_notarize_unknown_credentials_after_storage(package_command, first_app_d
     # The notarization call will fail with an error
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Unable to submit macOS/First App.dmg for notarization.",
+        match=rf"Unable to submit {Path('macOS') / 'First App.dmg'} for notarization.",
     ):
         package_command.notarize(first_app_dmg, team_id="DEADBEEF")
 
@@ -383,7 +384,7 @@ def test_notarization_failure_with_credentials(package_command, first_app_dmg):
     # The notarization call will fail with an error
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Unable to submit macOS/First App.dmg for notarization.",
+        match=rf"Unable to submit {Path('macOS') / 'First App.dmg'} for notarization.",
     ):
         package_command.notarize(first_app_dmg, team_id="DEADBEEF")
 
@@ -423,7 +424,7 @@ def test_stapling_failure(package_command, first_app_dmg):
 
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Unable to staple notarization onto macOS/First App.dmg",
+        match=rf"Unable to staple notarization onto {Path('macOS') / 'First App.dmg'}",
     ):
         package_command.notarize(first_app_dmg, team_id="DEADBEEF")
 
