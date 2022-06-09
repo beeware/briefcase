@@ -1,7 +1,9 @@
 import os
+import re
 import subprocess
 import time
 from pathlib import Path
+from zipfile import ZipFile
 
 from briefcase.config import BaseConfig
 from briefcase.console import select_option
@@ -153,30 +155,43 @@ class macOSSigningMixin:
         if identity:
             try:
                 # Try to look up the identity as a hex checksum
-                return identities[identity]
+                identity_name = identities[identity]
+                return identity, identity_name
             except KeyError as e:
                 # Try to look up the identity as readable name
-                if identity in identities.values():
-                    return identity
-
-                # Not found
-                raise BriefcaseCommandError(
-                    f"Invalid code signing identity {identity!r}"
-                ) from e
+                try:
+                    reverse_lookup = {name: ident for ident, name in identities.items()}
+                    identity_id = reverse_lookup[identity]
+                    return identity_id, identity
+                except KeyError:
+                    # Not found as an ID or name
+                    raise BriefcaseCommandError(
+                        f"Invalid code signing identity {identity!r}"
+                    ) from e
 
         if len(identities) == 0:
             raise BriefcaseCommandError("No code signing identities are available.")
         elif len(identities) == 1:
-            identity = list(identities.items())[0][1]
+            identity, identity_name = list(identities.items())[0]
         else:
             self.input.prompt()
             self.input.prompt("Select code signing identity to use:")
             self.input.prompt()
-            selection = select_option(identities, input=self.input)
-            identity = identities[selection]
-            self.logger.info(f"selected {identity}")
+            identity = select_option(identities, input=self.input)
+            identity_name = identities[identity]
+            self.logger.info(
+                f"""
+In the future, you could specify this signing identity by running:
 
-        return identity
+    briefcase {self.command} macOS -i {identity}
+
+or
+    briefcase {self.command} macOS -i "{identity_name}"
+
+"""
+            )
+
+        return identity, identity_name
 
     def sign_file(self, path, identity, entitlements=None):
         """Code sign a file.
@@ -283,6 +298,20 @@ class macOSPackageMixin(macOSSigningMixin):
     def default_packaging_format(self):
         return "dmg"
 
+    def add_options(self, parser):
+        super().add_options(parser)
+        # We use store_const:False rather than store_false so that the
+        # "unspecified" value is None, rather than True, allowing for
+        # a "default behavior" interpretation with `--no-sign` or
+        # `--adhoc-sign` is specified
+        parser.add_argument(
+            "--no-notarize",
+            dest="notarize_app",
+            action="store_const",
+            const=False,
+            help="Disable notarization for the app",
+        )
+
     def verify_tools(self):
         if self.host_os != "Darwin":
             raise BriefcaseCommandError(
@@ -303,10 +332,158 @@ class macOSPackageMixin(macOSSigningMixin):
         # These are abstracted to enable testing without patching.
         self.dmgbuild = dmgbuild
 
+    def team_id_from_identity(self, identity_name):
+        """Extract the team ID from the full identity name.
+
+        The identity name will be in the form:
+            Some long identifying name (Team ID)
+
+        :param identity_name: The full identity name
+        :returns: The team ID string.
+        """
+        try:
+            return re.match(r".*\(([\dA-Z]*)\)", identity_name)[1]
+        except TypeError:
+            raise BriefcaseCommandError(
+                "Couldn't extract Team ID from signing identity {identity!r}"
+            )
+
+    def notarize(self, filename, team_id):
+        """Notarize a file.
+
+        Submits the file to Apple for notarization; if successful, staples the
+        notarization result onto the file.
+
+        If the file is a .app, it will be archived as a .zip for submission purposes.
+
+        :param filename: The file to notarize.
+        :param team_id: The team ID to
+        """
+        try:
+            if filename.suffix == ".app":
+                # Archive the app into a zip.
+                with self.input.wait_bar(f"Archiving {filename.name}..."):
+                    archive_filename = filename.parent / "archive.zip"
+                    with ZipFile(archive_filename, "a") as archive:
+                        for path in filename.glob("**/*"):
+                            archive.write(
+                                path, arcname=path.relative_to(filename.parent)
+                            )
+            elif filename.suffix == ".dmg":
+                archive_filename = filename
+            else:
+                archive_filename = filename
+                raise RuntimeError(
+                    f"Don't know how to notarize a file of type {filename.suffix}"
+                )
+
+            profile = f"briefcase-macOS-{team_id}"
+            submitted = False
+            store_credentials = False
+            while not submitted:
+                if store_credentials:
+                    if not self.input.enabled:
+                        raise BriefcaseCommandError(
+                            f"""
+The keychain does not contain credentials for the profile {profile}.
+You can store these credentials by invoking:
+
+    xcrun notarytool store-credentials --team-id {team_id} profile
+"""
+                        )
+
+                    self.logger.warning(
+                        """
+The notarization process uses credentials stored on your system Keychain.
+You need to do this once for each signing certificate you use.
+
+The credentials are authenticated and stored using your Apple ID, using
+an app-specific Apple ID password. To generate an app-specific Apple ID
+password:
+
+  1. Sign into https://appleid.apple.com;
+  2. In the 'Sign-in and Security' section, click 'App-Specific Passwords';
+  3. Click on the '+' icon. You will need to provide an identifying name
+     for the password. You can pick any name that makes sense to you - the
+     name is only there so you can identify passwords. 'Briefcase' would be
+     one possible name.
+  4. Record the password somewhere safe.
+"""
+                    )
+                    try:
+                        self.subprocess.run(
+                            [
+                                "xcrun",
+                                "notarytool",
+                                "store-credentials",
+                                "--team-id",
+                                team_id,
+                                profile,
+                            ],
+                            check=True,
+                        )
+                    except subprocess.CalledProcessError as e:
+                        raise BriefcaseCommandError(
+                            f"Unable to store credentials for team ID {team_id}."
+                        ) from e
+
+                # Attempt the notarization
+                try:
+                    self.logger.info()
+                    self.subprocess.run(
+                        [
+                            "xcrun",
+                            "notarytool",
+                            "submit",
+                            os.fsdecode(archive_filename),
+                            "--keychain-profile",
+                            profile,
+                            "--wait",
+                        ],
+                        check=True,
+                    )
+                    submitted = True
+                except subprocess.CalledProcessError as e:
+                    # Error when submitting for notarization.
+                    # A return code of 69 (nice) indicates an issue with the
+                    # keychain profile. If store_credentials is already True,
+                    # then we've already tried to store them, so call the attempt
+                    # a fail
+                    if e.returncode == 69 and not store_credentials:
+                        store_credentials = True
+                    else:
+                        raise BriefcaseCommandError(
+                            f"Unable to submit {filename.relative_to(self.base_path)} for notarization."
+                        ) from e
+        finally:
+            # Clean up house; we don't need the archive any more.
+            if archive_filename != filename:
+                self.os.unlink(archive_filename)
+
+        try:
+            self.logger.info()
+            self.logger.info(
+                f"Stapling notarization onto {filename.relative_to(self.base_path)}..."
+            )
+            self.subprocess.run(
+                [
+                    "xcrun",
+                    "stapler",
+                    "staple",
+                    os.fsdecode(filename),
+                ],
+                check=True,
+            )
+        except subprocess.CalledProcessError:
+            raise BriefcaseCommandError(
+                f"Unable to staple notarization onto {filename.relative_to(self.base_path)}."
+            )
+
     def package_app(
         self,
         app: BaseConfig,
         sign_app=True,
+        notarize_app=None,
         identity=None,
         adhoc_sign=False,
         packaging_format="dmg",
@@ -315,16 +492,24 @@ class macOSPackageMixin(macOSSigningMixin):
         """Package an app bundle.
 
         :param app: The application to package
-        :param sign_app: Should the application be signed?
+        :param sign_app: Should the application be signed? Default: ``True``
+        :param notarize_app: Should the app be notarized? Default: ``True`` if the
+            app has been signed with a real identity; ``False`` if the app is
+            unsigned, or an ad-hoc signing identity has been used.
         :param identity: The code signing identity to use. This can be either
             the 40-digit hex checksum, or the string name of the identity.
             If unspecified, the user will be prompted for a code signing
-            identity. Ignored if ``sign_app`` is False.
-        :param adhoc_sign: If true, code will be signed with adhoc identity of "-"
-        :param packaging_format: The packaging format to use. Default is `dmg`.
+            identity. Ignored if ``sign_app`` is ``False``.
+        :param adhoc_sign: If ``True``, code will be signed with adhoc identity of "-"
+        :param packaging_format: The packaging format to use. Default is ``dmg``.
         """
         if sign_app:
             if adhoc_sign:
+                if notarize_app:
+                    raise BriefcaseCommandError(
+                        "Can't notarize an app with an adhoc signing identity"
+                    )
+
                 identity = "-"
 
                 self.logger.info()
@@ -332,14 +517,35 @@ class macOSPackageMixin(macOSSigningMixin):
                     "Signing app with adhoc identity...", prefix=app.app_name
                 )
             else:
-                identity = self.select_identity(identity=identity)
+                # If we're signing, and notarization isn't explicitly disabled,
+                # notarize by default.
+                if notarize_app is None:
+                    notarize_app = True
+
+                identity, identity_name = self.select_identity(identity=identity)
 
                 self.logger.info()
                 self.logger.info(
-                    f"Signing app with identity {identity}...", prefix=app.app_name
+                    f"Signing app with identity {identity_name}...", prefix=app.app_name
                 )
 
+                if notarize_app:
+                    team_id = self.team_id_from_identity(identity_name)
+
             self.sign_app(app=app, identity=identity)
+        else:
+            if notarize_app:
+                raise BriefcaseCommandError(
+                    "Can't notarize an app that hasn't been signed"
+                )
+
+        if packaging_format == "app":
+            if notarize_app:
+                self.logger.info(
+                    f"Notarizing app using team ID {team_id}...",
+                    prefix=app.app_name,
+                )
+                self.notarize(self.binary_path(app), team_id=team_id)
 
         if packaging_format == "dmg":
             self.logger.info()
@@ -392,11 +598,9 @@ class macOSPackageMixin(macOSSigningMixin):
                 # No installer background image provided
                 pass
 
-            dmg_path = os.fsdecode(
-                self.distribution_path(app, packaging_format=packaging_format)
-            )
+            dmg_path = self.distribution_path(app, packaging_format=packaging_format)
             self.dmgbuild.build_dmg(
-                filename=dmg_path,
+                filename=os.fsdecode(dmg_path),
                 volume_name=f"{app.formal_name} {app.version}",
                 settings=dmg_settings,
             )
@@ -406,3 +610,10 @@ class macOSPackageMixin(macOSSigningMixin):
                     dmg_path,
                     identity=identity,
                 )
+
+                if notarize_app:
+                    self.logger.info(
+                        f"Notarizing DMG with team ID {team_id}...",
+                        prefix=app.app_name,
+                    )
+                    self.notarize(dmg_path, team_id=team_id)

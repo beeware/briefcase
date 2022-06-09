@@ -10,7 +10,7 @@ which is required to distribute your application across MacOS and iOS devices.
 
 We will specifically focus on generating a `Developer ID Application identity
 <https://developer.apple.com/developer-id/>`__, which is used to distribute a
-*Mac application outside of the Mac App store*. However, the procedure for
+*macOS application outside of the Mac App store*. However, the procedure for
 creating all other types of identities is exactly the same. Once you familiarize
 yourself with the general process, you'll be able to create identities required
 to upload applications to the Mac or iOS App stores without much trouble.
@@ -57,7 +57,7 @@ Generating a certificate request on Keychain Access
 ---------------------------------------------------
 
 Now that you're set up with an Apple Developer ID, it's time to create a
-certificate *request*, which you'll then use to generate a valid Developer ID
+*certificate request*, which you'll then use to generate a valid Developer ID
 certificate.
 
 First, open the Keychain Access application on your Mac. At the top left of your
@@ -92,7 +92,6 @@ creates not only the file you have just saved, but also a private key in your
 Keychain, which will establish the validity of your actual Developer ID
 Application certificate later on.
 
-
 Creating a Developer ID Application Certificate
 -----------------------------------------------
 
@@ -103,7 +102,8 @@ Identifiers and Profiles":
 .. image:: images/Certificates_Identifiers_Profiles.png
    :width: 500
 
-When you land in the Certificates section, click the "+" symbol to create a new certificate:
+When you land in the Certificates section, click the "+" symbol to create a new
+certificate:
 
 .. image:: images/Create_certificate.png
    :width: 500
@@ -117,18 +117,21 @@ Later on, if you want to generate another code signing certificate for other
 purposes, such as uploading your application the App store, you'll simply have
 to choose a different type of a certificate on this page.
 
-**Note**: If you've been registered as an organization, there's a chance that
-the option to choose the Developer ID Application certificate is unavailable.
-This may happen if you're not assigned the role of the `Account Holder
-<https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution>`__.
-You can access and change these roles using `App Store Connect
-<https://appstoreconnect.apple.com/access/users>`__.
-
 .. image:: images/Choose_developerID_application.png
    :width: 500
 
-Click "Continue". In the next window, click "Choose file" and upload the
-Certificate Signing Request you have just generated on your Keychain:
+.. note::
+
+   If you've been registered as an organization, there's a chance that
+   the option to choose the Developer ID Application certificate is unavailable.
+   This may happen if you're not assigned the role of the `Account Holder
+   <https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution>`__.
+   You can access and change these roles using `App Store Connect
+   <https://appstoreconnect.apple.com/access/users>`__.
+
+Select "Developer ID Application" and click "Continue". In the next window,
+click "Choose file" and upload the Certificate Signing Request you have just
+generated on your Keychain:
 
 .. image:: images/Upload_certificate_request.png
    :width: 500
@@ -143,101 +146,41 @@ machine:
 The certificate should be of the format ``example.cer``. Once you download it,
 double-click to install it in your Keychain Access.
 
-Then open your Keychain, make sure you're in the ``login`` directy on the
-left-hand side, and open the window ``My Certificates``. You should see a
-certificate whose title starts with "Developer ID Application...".
+If you now open your Keychain, selected the ``login`` keychain on
+the left-hand side, and selec the ``My Certificates`` tab, you should see a
+certificate with the title "Developer ID Application: <your name>".
 
 Click on the certificate and make sure you see a note that reads ``This
-certificate is valid``. **Note**: In the example below, the certificate details
-have been erased:
+certificate is valid``.
 
 .. image:: images/Valid_certificate.png
    :width: 500
 
+.. note::
+
+   In this screenshot, the certificate details have been redacted. Your
+   certificate should show expiration details, trust chains, and other
+   details about you, the certificate issuer (Apple), and the certificate.
+
 Congratulations! You've just successfully installed the Developer ID Application
 certificate.
 
+.. admonition:: Keep this certificate safe!
 
-Accessing the details of the Certificate on your Terminal
----------------------------------------------------------
-
-Finally, open your Terminal. You'll have to run a command that will fetch
-detailed information about all valid certificates for code signing on your local
-machine, including the Developer ID Application Certificate you have just
-created:
-
-.. tabs::
-
-  .. group-tab:: macOS
-
-    .. code-block:: bash
-
-      $ security find-identity -p basic -v
-
-
-The important part of the output is the following::
-
-    <Certificate ID> "Developer ID Application: <Name> (<Team ID>)"
-
-e.g::
-
-    A1B2C3D4E5F6G7H8I9J10K11L12M13N14O15P16R "Developer ID Application: Jane Doe (ABCD123456)"
-
-You'll need to keep note of two things:
-
- * **Certificate ID**: This should be a 40-unit string, which in the example is:
-   ``A1B2C3D4E5F6G7H8I9J10K11L12M13N14O15P16R``
-
- * **Team ID**: Will usually be a 10-unit string. Here, it's: ``ABCD123456``.
-
-
-Anticipating potential issues with the identity in the future
--------------------------------------------------------------
-
-It's also useful to keep in mind two potential issues related to MacOS code signing identities.
-
- * First, the *specific type* of the certificate you have just created is quite
+   The *specific type* of the certificate you have just created is quite
    precious, and you should make sure to keep it safe. A single Developer ID
-   Application Certificate can be used to `sign, notarize and distribute multiple
-   applications <https://developer.apple.com/forums/thread/657993>`__ outside of
-   the Mac App store, which is why a `very limited number of them
-   <https://help.apple.com/xcode/mac/current/#/dev3a05256b8>`__ can be created on
-   a particular Developer Account. You should consider making a back up copy,
+   Application Certificate can be used to `sign, notarize and distribute
+   multiple applications <https://developer.apple.com/forums/thread/657993>`__
+   outside of the Mac App store, which is why a `very limited number of them
+   <https://help.apple.com/xcode/mac/current/#/dev3a05256b8>`__ can be created
+   on a particular Developer Account. You should consider making a backup copy,
    which will require you to export the certificate together with the associated
    private key from the Keychain. The procedure for doing so is `documented by
    Apple
    <https://support.apple.com/guide/keychain-access/import-and-export-keychain-items-kyca35961/mac>`__.
 
-
- * If you intend to create other types of code signing identities in the future,
-   it's also helpful to discuss `Apple's Worldwide Developer Relations (WWDR)
-   Intermediate Certificate <https://developer.apple.com/support/expiration/>`__.
-   While we didn't need to use it to create the Developer ID Application identity,
-   you'll need to have a WWDR certificate in your Keychain to create valid code
-   signing identities for other purposes, such as testing your applications with
-   the "Mac Development" certificate or uploading them to the App store with the
-   "Mac App Distribution" certificate.
-
-  The WWDR certificate should be automatically installed in your Keychain with
-  Xcode 11.4.1 or later. You should verify this by opening your Keychain, making
-  sure you're in the ``login`` directory on the left-hand side, and navigating
-  to the window ``My Certificates``. You should see a certificate called ``Apple
-  Worldwide Developer Relations Certification Authority`` whose **expiration
-  date is set to 2030**:
-
-  .. image:: images/WWDR_certificate.png
-     :width: 500
-
-  If you can't find this certificate in the Keychain, you can download it by
-  following the instructions on the `Apple Developer website
-  <https://developer.apple.com/support/expiration/>`__. Alhough Apple's
-  documentation may change in the future, the instructions are currently
-  displayed under the ``Taking Action`` section. There, you will find a link to
-  download the certificate directly or through `Apple's Certificate Authority
-  page <https://www.apple.com/certificateauthority/>`__. Once you download it,
-  make sure to install it in your Keychain.
-
-
 Next steps
 ----------
-Now it's time to start using the Developer ID Application Certificate to sign, notarize, and distribute your application!
+
+Now it's time to start using the Developer ID Application Certificate to sign,
+notarize, and distribute your application!

@@ -119,9 +119,16 @@ def test_debug_call(mock_sub, capsys):
     mock_sub.run(["hello", "world"])
 
     mock_sub._subprocess.run.assert_called_with(["hello", "world"], text=True)
-    assert capsys.readouterr().out == (
-        "\n" ">>> Running Command:\n" ">>>     hello world\n"
+    # fmt: off
+    expected_output = (
+        "\n"
+        ">>> Running Command:\n"
+        ">>>     hello world\n"
+        ">>> Return code: 0\n"
     )
+    # fmt: on
+
+    assert capsys.readouterr().out == expected_output
 
 
 def test_debug_call_with_env(mock_sub, capsys):
@@ -144,6 +151,7 @@ def test_debug_call_with_env(mock_sub, capsys):
         ">>>     hello world\n"
         ">>> Environment:\n"
         ">>>     NewVar=NewVarValue\n"
+        ">>> Return code: 0\n"
     )
 
     assert capsys.readouterr().out == expected_output

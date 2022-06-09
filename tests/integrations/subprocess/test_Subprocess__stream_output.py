@@ -49,7 +49,16 @@ def test_output_debug(mock_sub, popen_process, capsys):
 
     mock_sub.stream_output("testing", popen_process)
 
-    assert capsys.readouterr().out == ("output line 1\n" "\n" "output line 3\n")
+    # fmt: off
+    expected_output = (
+        "output line 1\n"
+        "\n"
+        "output line 3\n"
+        ">>> Return code: -3\n"
+    )
+    # fmt: on
+    assert capsys.readouterr().out == expected_output
+
     mock_sub.cleanup.assert_called_once_with("testing", popen_process)
 
 
@@ -59,9 +68,16 @@ def test_output_deep_debug(mock_sub, popen_process, capsys):
 
     mock_sub.stream_output("testing", popen_process)
 
-    assert capsys.readouterr().out == (
-        "output line 1\n" "\n" "output line 3\n" ">>> Return code: -3\n"
+    # fmt: off
+    expected_output = (
+        "output line 1\n"
+        "\n"
+        "output line 3\n"
+        ">>> Return code: -3\n"
     )
+    # fmt: on
+    assert capsys.readouterr().out == expected_output
+
     mock_sub.cleanup.assert_called_once_with("testing", popen_process)
 
 

@@ -138,4 +138,5 @@ def test_simple_verbose_call(mock_docker, tmp_path, capsys):
         f"--volume {tmp_path / '.briefcase'}:/home/brutus/.briefcase:z "
         "briefcase/com.example.myapp:py3.X "
         "hello world\n"
+        ">>> Return code: 3\n"
     )

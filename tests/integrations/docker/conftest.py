@@ -23,6 +23,10 @@ def mock_docker(tmp_path):
     command.subprocess = Subprocess(command)
     command.subprocess._subprocess = MagicMock()
 
+    proc = MagicMock()
+    proc.returncode = 3
+    command.subprocess._subprocess.run.return_value = proc
+
     app = MagicMock()
     app.app_name = "myapp"
     app.sources = ["path/to/src/myapp", "other/stuff"]
