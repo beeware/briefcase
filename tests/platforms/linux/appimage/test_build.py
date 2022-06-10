@@ -152,10 +152,15 @@ def test_build_appimage(build_command, first_app, tmp_path):
     )
 
 
-def test_build_appimage_with_gtk(build_command, first_app, first_app_config, tmp_path):
+@pytest.mark.parametrize(
+    "requires", [["toga-gtk"], ["toga-gtk>=0.3.0.dev32"], ["PyGObject"], ["pygobject"]]
+)
+def test_build_appimage_with_gtk(
+    build_command, first_app, first_app_config, tmp_path, requires
+):
     """Check that linuxdeploy is correctly called with the gtk plugin."""
 
-    first_app.requires = ["toga-gtk"]
+    first_app.requires = requires
     build_command.build_app(first_app)
 
     # linuxdeploy was invoked

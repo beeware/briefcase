@@ -173,8 +173,12 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
 
         plugins = []
         if app.requires:
-            for dependency in app.requires:
-                if ("toga-gtk" or "pygobject") in dependency.lower():
+            lowercase_gtk_dependencies = ["toga-gtk", "pygobject"]
+            for requirement in app.requires:
+                if any(
+                    gtk_dependency in requirement.lower()
+                    for gtk_dependency in lowercase_gtk_dependencies
+                ):
                     self.logger.info("Using linuxdeploy GTK plugin")
                     env["DEPLOY_GTK_VERSION"] = "3"
                     plugins.append("gtk")
