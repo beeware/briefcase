@@ -362,6 +362,22 @@ class CreateCommand(BaseCommand):
         except (shutil.ReadError, EOFError) as e:
             raise InvalidSupportPackage(support_package_url) from e
 
+    def pip_install_options(self, target):
+        """Options that should be used when invoking ``pip install``.
+
+        These options do *not* include the list of requirements that are
+        specified by the app.
+
+        :param target: The target location for the install
+        :returns: A list of strings; flags/options to be passed to
+            `pip install`
+        """
+        return [
+            "--upgrade",
+            "--no-user",
+            f"--target={target}",
+        ]
+
     def install_app_dependencies(self, app: BaseConfig):
         """Install the dependencies for the app.
 
@@ -384,10 +400,8 @@ class CreateCommand(BaseCommand):
                         "-m",
                         "pip",
                         "install",
-                        "--upgrade",
-                        "--no-user",
-                        f"--target={target}",
                     ]
+                    + self.pip_install_options(target)
                     + app.requires,
                     check=True,
                 )

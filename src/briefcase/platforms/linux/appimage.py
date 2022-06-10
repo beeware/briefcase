@@ -123,6 +123,13 @@ class LinuxAppImageCreateCommand(LinuxAppImageMixin, CreateCommand):
             ("arch", self.host_arch),
         ]
 
+    def pip_install_options(self, target):
+        # On Linux, disable the use of binary wheels. The libraries in a
+        # binary wheel have been modified in a way that makes them incompatible
+        # with Linuxdeploy, so we need to ensure that all dependencies are
+        # installed from source.
+        return super().pip_install_options(target) + ['--no-binary', ':all:']
+
     def install_app_dependencies(self, app: BaseConfig):
         """Install application dependencies.
 
@@ -136,7 +143,7 @@ class LinuxAppImageCreateCommand(LinuxAppImageMixin, CreateCommand):
             super().install_app_dependencies(app=app)
 
 
-class LinuxAppImageUpdateCommand(LinuxAppImageMixin, UpdateCommand):
+class LinuxAppImageUpdateCommand(LinuxAppImageCreateCommand, UpdateCommand):
     description = "Update an existing Linux AppImage."
 
 

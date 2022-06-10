@@ -3,21 +3,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from briefcase.platforms.linux.appimage import LinuxAppImageCreateCommand
-
-
-def test_support_package_url(first_app_config, tmp_path):
-    command = LinuxAppImageCreateCommand(base_path=tmp_path)
-
-    # Set some properties of the host system for test purposes.
-    command.host_arch = "wonky"
-    command.platform = "tester"
-
-    assert command.support_package_url_query == [
-        ("platform", "tester"),
-        ("version", f"3.{sys.version_info.minor}"),
-        ("arch", "wonky"),
-    ]
+from briefcase.platforms.linux.appimage import LinuxAppImageUpdateCommand
 
 
 @pytest.mark.skipif(
@@ -27,7 +13,7 @@ def test_install_app_dependencies(first_app_config, tmp_path):
     """If Docker is in use, a docker context is used to invoke pip."""
     first_app_config.requires = ["foo==1.2.3", "bar>=4.5"]
 
-    command = LinuxAppImageCreateCommand(base_path=tmp_path)
+    command = LinuxAppImageUpdateCommand(base_path=tmp_path)
     command.use_docker = True
     command.subprocess = MagicMock()
     docker = MagicMock()
@@ -72,7 +58,7 @@ def test_install_app_dependencies_no_docker(first_app_config, tmp_path):
     """If docker is *not* in use, calls are made on raw subprocess."""
     first_app_config.requires = ["foo==1.2.3", "bar>=4.5"]
 
-    command = LinuxAppImageCreateCommand(base_path=tmp_path)
+    command = LinuxAppImageUpdateCommand(base_path=tmp_path)
     command.use_docker = False
     command.subprocess = MagicMock()
     docker = MagicMock()
