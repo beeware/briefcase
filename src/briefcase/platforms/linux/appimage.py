@@ -128,7 +128,7 @@ class LinuxAppImageCreateCommand(LinuxAppImageMixin, CreateCommand):
         # binary wheel have been modified in a way that makes them incompatible
         # with Linuxdeploy, so we need to ensure that all dependencies are
         # installed from source.
-        return super().pip_install_options(target) + ['--no-binary', ':all:']
+        return super().pip_install_options(target) + ["--no-binary", ":all:"]
 
     def install_app_dependencies(self, app: BaseConfig):
         """Install application dependencies.
