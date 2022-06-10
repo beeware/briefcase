@@ -1,0 +1,4 @@
+Python dependencies are now *always* installed from source on Linux.
+
+This may require updates to your ``system_requires`` list to ensure the development
+packages needed to compile binary modules are available.
