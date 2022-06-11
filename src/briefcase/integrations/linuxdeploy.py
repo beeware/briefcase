@@ -139,7 +139,6 @@ class LinuxDeployGtkPlugin:
 
     @property
     def linuxdeploy_gtk_download_url(self):
-        # Update url once https://github.com/linuxdeploy/linuxdeploy-plugin-gtk/pull/33 is merged
         return (
             "https://raw.githubusercontent.com/linuxdeploy/linuxdeploy-plugin-gtk/"
             "master/linuxdeploy-plugin-gtk.sh"
