@@ -66,8 +66,8 @@ def test_verify_does_not_exist(mock_command, tmp_path):
 
     # A download is invoked
     mock_command.download_url.assert_called_with(
-        url="https://raw.githubusercontent.com/danyeaw/linuxdeploy-plugin-gtk/"
-        "typelib-support/linuxdeploy-plugin-gtk.sh",
+        url="https://raw.githubusercontent.com/linuxdeploy/linuxdeploy-plugin-gtk/"
+        "master/linuxdeploy-plugin-gtk.sh",
         download_path=tmp_path / "tools",
     )
     # The downloaded file will be made executable
@@ -87,7 +87,7 @@ def test_verify_linuxdeploy_gtk_download_failure(mock_command, tmp_path):
 
     # A download was invoked
     mock_command.download_url.assert_called_with(
-        url="https://raw.githubusercontent.com/danyeaw/linuxdeploy-plugin-gtk/"
-        "typelib-support/linuxdeploy-plugin-gtk.sh",
+        url="https://raw.githubusercontent.com/linuxdeploy/linuxdeploy-plugin-gtk/"
+        "master/linuxdeploy-plugin-gtk.sh",
         download_path=tmp_path / "tools",
     )
