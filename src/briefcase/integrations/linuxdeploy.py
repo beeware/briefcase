@@ -1,3 +1,5 @@
+from abc import abstractmethod
+
 from requests import exceptions as requests_exceptions
 
 from briefcase.exceptions import CorruptToolError, MissingToolError, NetworkFailure
@@ -7,27 +9,23 @@ ELF_PATCH_ORIGINAL_BYTES = bytes.fromhex("414902")
 ELF_PATCH_PATCHED_BYTES = bytes.fromhex("000000")
 
 
-class LinuxDeploy:
-    name = "linuxdeploy"
-    full_name = "linuxdeploy"
-
+class LinuxDeployBase:
     def __init__(self, command):
         self.command = command
 
     @property
-    def appimage_name(self):
-        return f"linuxdeploy-{self.command.host_arch}.AppImage"
+    @abstractmethod
+    def filename(self):
+        ...
 
     @property
+    @abstractmethod
     def linuxdeploy_download_url(self):
-        return (
-            "https://github.com/linuxdeploy/linuxdeploy/"
-            f"releases/download/continuous/{self.appimage_name}"
-        )
+        ...
 
     @property
-    def appimage_path(self):
-        return self.command.tools_path / self.appimage_name
+    def file_path(self):
+        return self.command.tools_path / self.filename
 
     @classmethod
     def verify(cls, command, install=True):
@@ -38,7 +36,7 @@ class LinuxDeploy:
         :returns: A valid linuxdeploy tool wrapper. If linuxdeploy is not
             available, and was not installed, raises MissingToolError.
         """
-        linuxdeploy = LinuxDeploy(command)
+        linuxdeploy = cls(command)
 
         if not linuxdeploy.exists():
             if install:
@@ -50,10 +48,10 @@ class LinuxDeploy:
             else:
                 raise MissingToolError("linuxdeploy")
 
-        return LinuxDeploy(command)
+        return cls(command)
 
     def exists(self):
-        return self.appimage_path.exists()
+        return self.file_path.exists()
 
     @property
     def managed_install(self):
@@ -62,15 +60,16 @@ class LinuxDeploy:
     def install(self):
         """Download and install linuxdeploy."""
         try:
-            linuxdeploy_appimage_path = self.command.download_url(
+            linuxdeploy_path = self.command.download_url(
                 url=self.linuxdeploy_download_url, download_path=self.command.tools_path
             )
         except requests_exceptions.ConnectionError as e:
             raise NetworkFailure("downloading linuxdeploy AppImage") from e
 
         with self.command.input.wait_bar("Installing linuxdeploy..."):
-            self.command.os.chmod(linuxdeploy_appimage_path, 0o755)
-            self.patch_elf_header()
+            self.command.os.chmod(linuxdeploy_path, 0o755)
+            if self.filename.endswith("AppImage"):
+                self.patch_elf_header()
 
     def uninstall(self):
         """Uninstall linuxdeploy."""
@@ -105,7 +104,7 @@ class LinuxDeploy:
 
         if not self.exists():
             raise MissingToolError("linuxdeploy")
-        with open(self.appimage_path, "r+b") as appimage:
+        with open(self.file_path, "r+b") as appimage:
             appimage.seek(ELF_PATCH_OFFSET)
             # Check if the header at the offset is the original value
             # If so, patch it.
@@ -129,65 +128,35 @@ class LinuxDeploy:
                 raise CorruptToolError("linuxdeploy")
 
 
-class LinuxDeployGtkPlugin:
+class LinuxDeploy(LinuxDeployBase):
     def __init__(self, command):
+        super().__init__(self)
         self.command = command
 
     @property
-    def plugin_name(self):
+    def filename(self):
+        return f"linuxdeploy-{self.command.host_arch}.AppImage"
+
+    @property
+    def linuxdeploy_download_url(self):
+        return (
+            "https://github.com/linuxdeploy/linuxdeploy/"
+            f"releases/download/continuous/{self.filename}"
+        )
+
+
+class LinuxDeployGtkPlugin(LinuxDeployBase):
+    def __init__(self, command):
+        super().__init__(command)
+        self.command = command
+
+    @property
+    def filename(self):
         return "linuxdeploy-plugin-gtk.sh"
 
     @property
-    def linuxdeploy_gtk_download_url(self):
+    def linuxdeploy_download_url(self):
         return (
             "https://raw.githubusercontent.com/linuxdeploy/linuxdeploy-plugin-gtk/"
-            "master/linuxdeploy-plugin-gtk.sh"
+            f"master/{self.filename}"
         )
-
-    @property
-    def plugin_path(self):
-        return self.command.tools_path / self.plugin_name
-
-    @classmethod
-    def verify(cls, command, install=True):
-        """Verify that LinuxDeploy Gtk Plugin is available.
-
-        :param command: The command that needs to use linuxdeploy
-        :param install: Should the tool be installed if it is not found?
-        :returns: A valid LinuxDeploy Gtk Plugin wrapper. If linuxdeploy gtk plugin is not
-            available, and was not installed, raises MissingToolError.
-        """
-        linuxdeploy_gtk_plugin = LinuxDeployGtkPlugin(command)
-
-        if not linuxdeploy_gtk_plugin.exists():
-            if install:
-                linuxdeploy_gtk_plugin.install()
-            else:
-                raise MissingToolError("linuxdeploy_gtk_plugin")
-
-        return LinuxDeployGtkPlugin(command)
-
-    def install(self):
-        """Download and install linuxdeploy gtk plugin."""
-        try:
-            linuxdeploy_gtk_plugin_path = self.command.download_url(
-                url=self.linuxdeploy_gtk_download_url,
-                download_path=self.command.tools_path,
-            )
-            self.command.os.chmod(linuxdeploy_gtk_plugin_path, 0o755)
-        except requests_exceptions.ConnectionError as e:
-            raise NetworkFailure("downloading linuxdeploy gtk plugin") from e
-
-    def upgrade(self):
-        """Upgrade an existing linuxdeploy gtk plugin install."""
-        if self.exists():
-            self.command.logger.info("Removing old LinuxDeploy gtk plugin...")
-            self.plugin_path.unlink()
-
-            self.install()
-            self.command.logger.info("...done.")
-        else:
-            raise MissingToolError("linuxdeploy_gtk_plugin")
-
-    def exists(self):
-        return self.plugin_path.exists()

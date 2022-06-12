@@ -123,7 +123,7 @@ def test_build_appimage(build_command, first_app, tmp_path):
     app_dir = tmp_path / "linux" / "appimage" / "First App" / "First App.AppDir"
     build_command._subprocess.Popen.assert_called_with(
         [
-            os.fsdecode(build_command.linuxdeploy.appimage_path),
+            os.fsdecode(build_command.linuxdeploy.file_path),
             "--appimage-extract-and-run",
             f"--appdir={app_dir}",
             "-d",
@@ -167,7 +167,7 @@ def test_build_appimage_with_gtk(
     app_dir = tmp_path / "linux" / "appimage" / "First App" / "First App.AppDir"
     build_command._subprocess.run.assert_called_with(
         [
-            os.fsdecode(build_command.linuxdeploy.appimage_path),
+            os.fsdecode(build_command.linuxdeploy.file_path),
             "--appimage-extract-and-run",
             f"--appdir={app_dir}",
             "-d",
@@ -214,7 +214,7 @@ def test_build_failure(build_command, first_app, tmp_path):
     app_dir = tmp_path / "linux" / "appimage" / "First App" / "First App.AppDir"
     build_command._subprocess.Popen.assert_called_with(
         [
-            os.fsdecode(build_command.linuxdeploy.appimage_path),
+            os.fsdecode(build_command.linuxdeploy.file_path),
             "--appimage-extract-and-run",
             f"--appdir={app_dir}",
             "-d",

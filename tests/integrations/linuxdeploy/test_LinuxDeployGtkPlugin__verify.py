@@ -31,7 +31,7 @@ def test_verify_exists(mock_command, tmp_path):
     assert mock_command.os.chmod.call_count == 0
 
     # The build command retains the path to the downloaded file.
-    assert linuxdeploy_gtk_plugin.plugin_path == plugin_path
+    assert linuxdeploy_gtk_plugin.file_path == plugin_path
 
 
 def test_verify_does_not_exist_dont_install(mock_command, tmp_path):
@@ -74,7 +74,7 @@ def test_verify_does_not_exist(mock_command, tmp_path):
     mock_command.os.chmod.assert_called_with("new-downloaded-file", 0o755)
 
     # The build command retains the path to the downloaded file.
-    assert linuxdeploy.plugin_path == plugin_path
+    assert linuxdeploy.file_path == plugin_path
 
 
 def test_verify_linuxdeploy_gtk_download_failure(mock_command, tmp_path):

@@ -204,7 +204,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
         with self.dockerize(app) as docker:
             docker.run(
                 [
-                    self.linuxdeploy.appimage_path,
+                    self.linuxdeploy.file_path,
                     "--appimage-extract-and-run",
                     f"--appdir={self.appdir_path(app)}",
                     "-d",
