@@ -130,20 +130,21 @@ class GradleBuildCommand(GradleMixin, BuildCommand):
         :param app: The application to build
         """
         self.logger.info("Building Android APK...", prefix=app.app_name)
-        try:
-            self.subprocess.run(
-                # Windows needs the full path to `gradlew`; macOS & Linux can find it
-                # via `./gradlew`. For simplicity of implementation, we always provide
-                # the full path.
-                [self.gradlew_path(app), "assembleDebug"],
-                env=self.android_sdk.env,
-                # Set working directory so gradle can use the app bundle path as its
-                # project root, i.e., to avoid 'Task assembleDebug not found'.
-                cwd=self.bundle_path(app),
-                check=True,
-            )
-        except subprocess.CalledProcessError as e:
-            raise BriefcaseCommandError("Error while building project.") from e
+        with self.input.wait_bar("Building..."):
+            try:
+                self.subprocess.run(
+                    # Windows needs the full path to `gradlew`; macOS & Linux can find it
+                    # via `./gradlew`. For simplicity of implementation, we always provide
+                    # the full path.
+                    [self.gradlew_path(app), "assembleDebug", "--console", "plain"],
+                    env=self.android_sdk.env,
+                    # Set working directory so gradle can use the app bundle path as its
+                    # project root, i.e., to avoid 'Task assembleDebug not found'.
+                    cwd=self.bundle_path(app),
+                    check=True,
+                )
+            except subprocess.CalledProcessError as e:
+                raise BriefcaseCommandError("Error while building project.") from e
 
 
 class GradleRunCommand(GradleMixin, RunCommand):
@@ -241,20 +242,21 @@ class GradlePackageCommand(GradleMixin, PackageCommand):
             "Building Android App Bundle and APK in release mode...",
             prefix=app.app_name,
         )
-        try:
-            self.subprocess.run(
-                # Windows needs the full path to `gradlew`; macOS & Linux can find it
-                # via `./gradlew`. For simplicity of implementation, we always provide
-                # the full path.
-                [self.gradlew_path(app), "bundleRelease"],
-                env=self.android_sdk.env,
-                # Set working directory so gradle can use the app bundle path as its
-                # project root, i.e., to avoid 'Task bundleRelease not found'.
-                cwd=self.bundle_path(app),
-                check=True,
-            )
-        except subprocess.CalledProcessError as e:
-            raise BriefcaseCommandError("Error while building project.") from e
+        with self.input.wait_bar("Bundling..."):
+            try:
+                self.subprocess.run(
+                    # Windows needs the full path to `gradlew`; macOS & Linux can find it
+                    # via `./gradlew`. For simplicity of implementation, we always provide
+                    # the full path.
+                    [self.gradlew_path(app), "bundleRelease", "--console", "plain"],
+                    env=self.android_sdk.env,
+                    # Set working directory so gradle can use the app bundle path as its
+                    # project root, i.e., to avoid 'Task bundleRelease not found'.
+                    cwd=self.bundle_path(app),
+                    check=True,
+                )
+            except subprocess.CalledProcessError as e:
+                raise BriefcaseCommandError("Error while building project.") from e
 
 
 class GradlePublishCommand(GradleMixin, PublishCommand):

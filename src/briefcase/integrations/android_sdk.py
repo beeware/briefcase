@@ -157,11 +157,7 @@ class AndroidSDK:
             if sdk.exists():
                 # Ensure licenses have been accepted
                 sdk.verify_license()
-
-                # If the user has requested debug output, output the current
-                # list of packages managed by the SDK manager
-                if command.logger.verbosity >= command.logger.DEBUG:
-                    sdk.list_packages()
+                sdk.list_packages()
 
                 return sdk
             else:
@@ -199,11 +195,7 @@ class AndroidSDK:
             # The sdkmanager binary exists in the `latest` location, and is executable.
             # Ensure licenses have been accepted
             sdk.verify_license()
-
-            # If the user has requested debug output, output the current
-            # list of packages managed by the SDK manager
-            if command.logger.verbosity >= command.logger.DEBUG:
-                sdk.list_packages()
+            sdk.list_packages()
 
             return sdk
         elif (sdk_root_path / "tools").exists():
@@ -345,14 +337,12 @@ its output for errors.
             ) from e
 
     def list_packages(self):
-        """List the packages currently manged by the Android SDK."""
+        """In debug output, list the packages currently managed by the SDK."""
         try:
-            # Using subprocess.run() with no I/O redirection so the user sees
-            # the full output and can send input.
-            self.command.subprocess.run(
+            # check_output always writes its output to debug
+            self.command.subprocess.check_output(
                 [os.fsdecode(self.sdkmanager_path), "--list_installed"],
                 env=self.env,
-                check=True,
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(
@@ -480,7 +470,7 @@ connection.
     Briefcase was unable to determine the system image of the Android
     emulator AVD {avd!r} from it's configuration file.
 
-    Briefcase will proceeed assuming the emulator is correctly
+    Briefcase will proceed assuming the emulator is correctly
     configured. If you experience any problems running the emulator,
     this may be the cause of the problem.
 
@@ -502,7 +492,7 @@ connection.
     Briefcase does not recognize the skin {skin!r} used by the
     Android emulator AVD {avd!r}.
 
-    Briefcase will proceeed assuming the emulator is correctly
+    Briefcase will proceed assuming the emulator is correctly
     configured. If you experience any problems running the emulator,
     this may be the cause of the problem.
 
@@ -541,7 +531,7 @@ connection.
     The system image {system_image!r}
     does not match the architecture of this computer ({self.emulator_abi}).
 
-    Briefcase will proceeed assuming the emulator is correctly
+    Briefcase will proceed assuming the emulator is correctly
     configured. If you experience any problems running the emulator,
     this may be the cause of the problem.
 
@@ -1259,8 +1249,7 @@ Activity class not found while starting app.
     def logcat(self):
         """Start tailing the adb log for the device."""
         try:
-            # Using subprocess.run() with no I/O redirection so the user sees
-            # the full output and can send input.
+            # stream output so it's captured in logging
             self.command.subprocess.run(
                 [
                     os.fsdecode(self.android_sdk.adb_path),
@@ -1274,6 +1263,12 @@ Activity class not found while starting app.
                 ],
                 env=self.android_sdk.env,
                 check=True,
+                stream_output=True,
             )
         except subprocess.CalledProcessError as e:
-            raise BriefcaseCommandError("Error starting ADB logcat.") from e
+            # If the user sends CTRL+C:
+            #  - on Windows, adb returns 0xC000013A (STATUS_CONTROL_C_EXIT)
+            #  - on Linux/macOS, adb returns -2.
+            # Exit normally since the user was instructed to use CTRL+C.
+            if e.returncode not in {-2, 0xC000013A}:
+                raise BriefcaseCommandError("Error starting ADB logcat.") from e

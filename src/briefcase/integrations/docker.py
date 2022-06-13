@@ -209,27 +209,32 @@ class Docker:
             except AttributeError:
                 system_requires = ""
 
-            self._subprocess.run(
-                [
-                    "docker",
-                    "build",
-                    "--tag",
-                    self.command.docker_image_tag(self.app),
-                    "--file",
-                    self.command.bundle_path(self.app) / "Dockerfile",
-                    "--build-arg",
-                    f"PY_VERSION={self.command.python_version_tag}",
-                    "--build-arg",
-                    f"SYSTEM_REQUIRES={system_requires}",
-                    "--build-arg",
-                    f"HOST_UID={self.command.os.getuid()}",
-                    "--build-arg",
-                    f"HOST_GID={self.command.os.getgid()}",
-                    Path(self.command.base_path, *self.app.sources[0].split("/")[:-1]),
-                ],
-                check=True,
-            )
-
+            with self.command.input.wait_bar("Building container..."):
+                self._subprocess.run(
+                    [
+                        "docker",
+                        "build",
+                        "--progress",
+                        "plain",
+                        "--tag",
+                        self.command.docker_image_tag(self.app),
+                        "--file",
+                        self.command.bundle_path(self.app) / "Dockerfile",
+                        "--build-arg",
+                        f"PY_VERSION={self.command.python_version_tag}",
+                        "--build-arg",
+                        f"SYSTEM_REQUIRES={system_requires}",
+                        "--build-arg",
+                        f"HOST_UID={self.command.os.getuid()}",
+                        "--build-arg",
+                        f"HOST_GID={self.command.os.getgid()}",
+                        Path(
+                            self.command.base_path,
+                            *self.app.sources[0].split("/")[:-1],
+                        ),
+                    ],
+                    check=True,
+                )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(
                 f"Error building Docker container for {self.app.app_name}."

@@ -12,10 +12,12 @@ def test_prepare(mock_docker, tmp_path):
 
     mock_docker.prepare()
 
-    mock_docker._subprocess._subprocess.run.assert_called_with(
+    mock_docker._subprocess._subprocess.Popen.assert_called_with(
         [
             "docker",
             "build",
+            "--progress",
+            "plain",
             "--tag",
             "briefcase/com.example.myapp:py3.X",
             "--file",
@@ -30,7 +32,8 @@ def test_prepare(mock_docker, tmp_path):
             "HOST_GID=42",
             os.fsdecode(tmp_path / "base" / "path" / "to" / "src"),
         ],
-        check=True,
+        stdout=-1,
+        stderr=-2,
         text=True,
         encoding=ANY,
     )
@@ -39,17 +42,19 @@ def test_prepare(mock_docker, tmp_path):
 def test_prepare_failure(mock_docker, tmp_path):
     """If the Docker environment can't be prepared, an error is raised."""
     # Mock a failure in docker build.
-    mock_docker._subprocess._subprocess.run.side_effect = subprocess.CalledProcessError(
-        returncode=1, cmd="docker build"
+    mock_docker._subprocess._subprocess.Popen.side_effect = (
+        subprocess.CalledProcessError(returncode=1, cmd="docker build")
     )
 
     with pytest.raises(BriefcaseCommandError):
         mock_docker.prepare()
 
-    mock_docker._subprocess._subprocess.run.assert_called_with(
+    mock_docker._subprocess._subprocess.Popen.assert_called_with(
         [
             "docker",
             "build",
+            "--progress",
+            "plain",
             "--tag",
             "briefcase/com.example.myapp:py3.X",
             "--file",
@@ -64,7 +69,8 @@ def test_prepare_failure(mock_docker, tmp_path):
             "HOST_GID=42",
             os.fsdecode(tmp_path / "base" / "path" / "to" / "src"),
         ],
-        check=True,
+        stdout=-1,
+        stderr=-2,
         text=True,
         encoding=ANY,
     )
