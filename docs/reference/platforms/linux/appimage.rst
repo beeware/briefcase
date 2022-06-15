@@ -15,10 +15,10 @@ library versions present on each distribution. An AppImage can be executed on
 version of the distribution where the AppImage was created.
 
 To simplify the packaging process, Briefcase provides a pre-compiled Python
-support library. This support library was compiled on Ubuntu 16.04, which means
+support library. This support library was compiled on Ubuntu 18.04, which means
 the AppImages build by Briefcase can be used on *any* Linux distribution of
 about the same age or newer - but those AppImages *must* be compiled on Ubuntu
-16.04.
+18.04.
 
 This means you have four options for using Briefcase to compile a Linux
 AppImage:
@@ -27,11 +27,11 @@ AppImage:
    the default behavior of Briefcase. This also means that it is possible to
    build Linux binaries on any platform that can run Docker.
 
-2. Install Ubuntu 16.04 on your own machine.
+2. Install Ubuntu 18.04 on your own machine.
 
-3. Find a cloud or CI provider that can provide you an Ubuntu 16.04
+3. Find a cloud or CI provider that can provide you an Ubuntu 18.04
    machine for build purposes. Github Actions, for example, provides Ubuntu
-   16.04 as a build option. Again, you'll need to use the ``--no-docker``
+   18.04 as a build option. Again, you'll need to use the ``--no-docker``
    command line option.
 
 4. Build your own version of the BeeWare `Python support libraries
@@ -75,9 +75,9 @@ file.
 A list of operating system packages that must be installed for the AppImage
 build to succeed. If a Docker build is requested, this list will be passed to
 the Docker context when building the container for the app build. By default,
-entries should be Ubuntu 16.04 ``apt`` package requirements. For example,
+entries should be Ubuntu 18.04 ``apt`` package requirements. For example,
 
-   system_requires = ['libgirepository1.0-dev', 'libcairo2-dev']
+    system_requires = ['libgirepository1.0-dev', 'libcairo2-dev']
 
 would make the GTK GI and Cairo operating system libraries available to your
 app.
@@ -91,3 +91,122 @@ but the app works under ``briefcase dev``, the problem may be an incomplete
 a new environment that is completely isolated from your development
 environment, so if your app has any operating system dependencies, they
 *must* be listed in your ``system_requires`` definition.
+
+Runtime issues with AppImages
+=============================
+
+Packaging on Linux is a difficult problem - especially when it comes to binary
+libraries. The following are some common problems you may see, and ways that
+they can be mitigated.
+
+ELF load command address/offset not properly aligned
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The process of building an AppImage involves using a tool named ``linuxdeploy``.
+``linuxdeploy`` processes all the libraries used by an app so that they can be
+relocated into the final packaged binary. Building a ``manylinux`` binary wheel
+involves a tool called ``auditwheel`` that performs a very similar process.
+Unfortunately, processing a binary with ``linuxdeploy`` after it has been
+processed by ``auditwheel`` can result in a binary library that cannot be loaded
+at runtime.
+
+This is particularly common when a module installed as a binary wheel has a
+dependency on external libraries. For example, Pillow is a Python library that
+contains a binary submodule; that submodule uses ``libpng``, ``libtiff``, and
+other system libraries for image manipulation. If you install Pillow from a
+``manylinux`` wheel, you may see an error similar to the following at runtime::
+
+    Traceback (most recent call last):
+    File "/tmp/.mount_TestbewwDi98/usr/app/testbed/app.py", line 54, in main
+      test()
+    File "/tmp/.mount_TestbewwDi98/usr/app/testbed/linux.py", line 94, in test_pillow
+       from PIL import Image
+    File "/tmp/.mount_TestbewwDi98/usr/app_packages/PIL/Image.py", line 132, in <module>
+       from . import _imaging as core
+    ImportError: libtiff-d0580107.so.5.7.0: ELF load command address/offset not properly aligned
+
+This indicates that one of the libraries that has been included in the AppImage
+has become corrupted as a result of double processing.
+
+The solution is to ask Briefcase to install the affected library from source.
+This can be done by adding a ``"--no-binary"`` entry to the ``requires``
+declaration for your app. For example, if your app includes Pillow as a
+requirement::
+
+    requires = ["pillow==9.1.0"]
+
+You can force Briefcase to install Pillow from source by adding::
+
+    requires = [
+        "pillow==9.1.0",
+        "--no-binary", "pillow",
+    ]
+
+Since the library will be installed from source, you also need to add any system
+requirements that are needed to compile the binary library. For example, Pillow
+requires the development libraries for the various image formats that it uses::
+
+    system_requires = [
+        ... other system requirements ...
+        "libjpeg-dev",
+        "libpng-dev",
+        "libtiff-dev",
+    ]
+
+If you are missing a system requirement, the call to ``briefcase build`` will
+fail with an error::
+
+     error: subprocess-exited-with-error
+
+     × pip subprocess to install build dependencies did not run successfully.
+     │ exit code: 1
+     ╰─> See above for output.
+
+     note: This error originates from a subprocess, and is likely not a problem with pip.
+     >>> Return code: 1
+
+     Unable to install dependencies. This may be because one of your
+     dependencies is invalid, or because pip was unable to connect
+     to the PyPI server.
+
+You must add a separate ``--no-binary`` option for every binary library you want
+to install from source. For example, if your app also includes the
+``cryptography`` library, and you want to install that library from source, you
+would add::
+
+    requires = [
+        "pillow==9.1.0",
+        "cryptography==37.0.2",
+        "--no-binary", "pillow",
+        "--no-binary", "cryptography",
+    ]
+
+If you want to force *all* packages to be installed from source, you can add a
+single ``:all`` declaration::
+
+    requires = [
+        "pillow==9.1.0",
+        "cryptography==37.0.2",
+        "--no-binary", ":all:",
+    ]
+
+The ``--no-binary`` declaration doesn't need to be added to the same
+``requires`` declaration that defines the requirement. For example, if you have
+a library that is used on all platforms, the declaration will probably be in the
+top-level ``requires``, not the platform-specific ``requires``. If you add
+``--no-binary`` in the top-level requires, the use of a binary wheel would be
+prevented on *all* platforms. To avoid this, you can add the requirement in the
+top-level requires, but add the ``--no-binary`` declaration to the
+linux-specific requirements::
+
+    [tool.briefcase.app.helloworld]
+    formal_name = "Hello World"
+    ...
+    requires = [
+        "pillow",
+    ]
+
+    [tool.briefcase.app.helloworld.linux]
+    requires = [
+        "--no-binary", "pillow"
+    ]
