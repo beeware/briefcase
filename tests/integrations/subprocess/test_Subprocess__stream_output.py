@@ -13,28 +13,6 @@ def mock_sub(mock_sub):
     return mock_sub
 
 
-@pytest.fixture
-def popen_process():
-    process = mock.MagicMock()
-
-    # There are extra empty strings at the end to simulate readline
-    # continuously returning "" once it reaches EOF
-    process.stdout.readline.side_effect = [
-        "output line 1\n",
-        "\n",
-        "output line 3\n",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-    ]
-    process.poll.side_effect = [None, None, None, -3]
-
-    return process
-
-
 def test_output(mock_sub, popen_process, capsys):
     """Readline output is printed."""
     mock_sub.stream_output("testing", popen_process)

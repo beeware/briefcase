@@ -2,7 +2,7 @@ import sys
 
 from .cmdline import parse_cmdline
 from .console import Log
-from .exceptions import BriefcaseError
+from .exceptions import BriefcaseError, HelpText
 
 
 def main():
@@ -12,6 +12,10 @@ def main():
         command.parse_config("pyproject.toml")
         command(**options)
         result = 0
+    except HelpText as e:
+        log.info()
+        log.info(str(e))
+        result = e.error_code
     except BriefcaseError as e:
         log.error()
         log.error(str(e))

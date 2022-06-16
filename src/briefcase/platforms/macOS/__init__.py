@@ -70,7 +70,6 @@ class macOSRunMixin:
         time.sleep(0.25)
 
         try:
-            self.logger.info()
             self.logger.info("Starting app...", prefix=app.app_name)
             try:
                 self.subprocess.run(
@@ -95,7 +94,6 @@ class macOSRunMixin:
                 )
             else:
                 # Start streaming logs for the app.
-                self.logger.info()
                 self.logger.info(
                     "Following system log output (type CTRL-C to stop log)...",
                     prefix=app.app_name,
@@ -183,11 +181,11 @@ class macOSSigningMixin:
                 f"""
 In the future, you could specify this signing identity by running:
 
-    briefcase {self.command} macOS -i {identity}
+    $ briefcase {self.command} macOS -i {identity}
 
 or
-    briefcase {self.command} macOS -i "{identity_name}"
 
+    $ briefcase {self.command} macOS -i "{identity_name}"
 """
             )
 
@@ -216,8 +214,8 @@ or
             process_command.append("--options")
             process_command.append(options)
 
+        self.logger.info(f"Signing {Path(path).relative_to(self.base_path)}")
         try:
-            self.logger.info(f"Signing {Path(path).relative_to(self.base_path)}")
             self.subprocess.run(
                 process_command,
                 stderr=subprocess.PIPE,
@@ -281,12 +279,16 @@ or
 
         # Signs code objects in reversed lexicographic order to ensure nesting order is respected
         # (objects must be signed from the inside out)
-        for path in sorted(sign_targets, reverse=True):
-            self.sign_file(
-                path,
-                entitlements=self.entitlements_path(app),
-                identity=identity,
-            )
+        progress_bar = self.input.progress_bar()
+        task_id = progress_bar.add_task("Signing App", total=len(sign_targets))
+        with progress_bar:
+            for path in sorted(sign_targets, reverse=True):
+                self.sign_file(
+                    path,
+                    entitlements=self.entitlements_path(app),
+                    identity=identity,
+                )
+                progress_bar.update(task_id, advance=1)
 
 
 class macOSPackageMixin(macOSSigningMixin):
@@ -388,7 +390,7 @@ class macOSPackageMixin(macOSSigningMixin):
 The keychain does not contain credentials for the profile {profile}.
 You can store these credentials by invoking:
 
-    xcrun notarytool store-credentials --team-id {team_id} profile
+    $ xcrun notarytool store-credentials --team-id {team_id} profile
 """
                         )
 
@@ -511,8 +513,6 @@ password:
                     )
 
                 identity = "-"
-
-                self.logger.info()
                 self.logger.info(
                     "Signing app with adhoc identity...", prefix=app.app_name
                 )
@@ -524,7 +524,6 @@ password:
 
                 identity, identity_name = self.select_identity(identity=identity)
 
-                self.logger.info()
                 self.logger.info(
                     f"Signing app with identity {identity_name}...", prefix=app.app_name
                 )
@@ -548,7 +547,6 @@ password:
                 self.notarize(self.binary_path(app), team_id=team_id)
 
         if packaging_format == "dmg":
-            self.logger.info()
             self.logger.info("Building DMG...", prefix=app.app_name)
 
             dmg_settings = {

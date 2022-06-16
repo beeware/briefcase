@@ -178,15 +178,23 @@ class Subprocess:
 
         The behavior of this method is identical to subprocess.run(),
         except for:
+         - If a Wait Bar is active and IO is not redirected, subprocess.run()
+           will be simulated so the output can be proxied via stream_output.
          - If the `env` argument is provided, the current system environment
            will be copied, and the contents of env overwritten into that
            environment.
-         - The `text` argument is defaulted to True so all output
-           is returned as strings instead of bytes.
+         - The `text` argument is defaulted to True so all output is returned
+           as strings instead of bytes.
         """
-        # Invoke subprocess.run().
-        # Pass through all arguments as-is.
-        # All exceptions are propagated back to the caller.
+        # If dynamic screen content (e.g. a Wait Bar) is active and
+        # output is not redirected, then simulate run().
+        is_output_redirected = kwargs.get("capture_output") or (
+            kwargs.get("stdout") and kwargs.get("stderr")
+        )
+        if self.command.input.is_output_controlled and not is_output_redirected:
+            return self._run_in_controlled_terminal(args, **kwargs)
+
+        # Otherwise, invoke run() normally.
         self._log_command(args)
         self._log_environment(kwargs.get("env"))
 
@@ -197,9 +205,50 @@ class Subprocess:
         except subprocess.CalledProcessError as e:
             self._log_return_code(e.returncode)
             raise
-
         self._log_return_code(command_result.returncode)
+
         return command_result
+
+    def _run_in_controlled_terminal(self, args, check=False, **kwargs):
+        """Simulate subprocess.run() when dynamic screen content is active.
+
+        When dynamic screen content like a Wait Bar is active, output can
+        only be printed to the screen via Log or Console to avoid interfering
+        with and likely corrupting the updates to the dynamic screen elements.
+
+        stdout will always be piped so it can be printed to the screen;
+        however, stderr can be piped by the caller so it is available
+        to the caller in the return value...as with subprocess.run().
+
+        Note: the 'timeout' and 'input' arguments are not supported.
+        """
+        if kwargs.get("stdout") and not kwargs.get("stderr"):
+            raise AssertionError(
+                "Subprocess.run() was invoked while dynamic Rich content is active with stdout "
+                "redirected while stderr was not redirected. This would result in stdout "
+                "being printed to the terminal. Redirect stderr as well or use check_output."
+            )
+        for arg in [arg for arg in ["timeout", "input"] if arg in kwargs]:
+            raise AssertionError(
+                f"The Subprocess.run() '{arg}' argument is not supported while dynamic Rich content is active."
+            )
+
+        # stdout must be piped so the output streamer can print it.
+        kwargs["stdout"] = subprocess.PIPE
+        # if stderr isn't explicitly redirected, then send it to stdout.
+        kwargs.setdefault("stderr", subprocess.STDOUT)
+
+        stderr = None
+        with self.Popen(args, **kwargs) as process:
+            self.stream_output("Wait Bar streamer", process)
+            if process.stderr and kwargs["stderr"] != subprocess.STDOUT:
+                stderr = process.stderr.read()
+            return_code = process.poll()
+
+        if check and return_code:
+            raise subprocess.CalledProcessError(return_code, args, stderr=stderr)
+
+        return subprocess.CompletedProcess(args, return_code, stderr=stderr)
 
     def check_output(self, args, **kwargs):
         """A wrapper for subprocess.check_output()

@@ -53,6 +53,14 @@ def build_command(tmp_path, first_app_config):
     command._subprocess = mock.MagicMock()
     command.subprocess._subprocess = command._subprocess
 
+    # Short circuit the process streamer
+    wait_bar_streamer = mock.MagicMock()
+    wait_bar_streamer.stdout.readline.return_value = ""
+    wait_bar_streamer.poll.return_value = 0
+    command.subprocess._subprocess.Popen.return_value.__enter__.return_value = (
+        wait_bar_streamer
+    )
+
     # Set up a Docker wrapper
     command.Docker = Docker
 
@@ -112,7 +120,7 @@ def test_build_appimage(build_command, first_app, tmp_path):
 
     # linuxdeploy was invoked
     app_dir = tmp_path / "linux" / "appimage" / "First App" / "First App.AppDir"
-    build_command._subprocess.run.assert_called_with(
+    build_command._subprocess.Popen.assert_called_with(
         [
             os.fsdecode(build_command.linuxdeploy.appimage_path),
             "--appimage-extract-and-run",
@@ -132,9 +140,10 @@ def test_build_appimage(build_command, first_app, tmp_path):
             "PATH": "/usr/local/bin:/usr/bin",
             "VERSION": "0.0.1",
         },
-        check=True,
         cwd=os.fsdecode(tmp_path / "linux"),
         text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
     )
     # Binary is marked executable
     build_command.os.chmod.assert_called_with(
@@ -146,7 +155,7 @@ def test_build_failure(build_command, first_app, tmp_path):
     """If linuxdeploy fails, the build is stopped."""
 
     # Mock a failure in the build
-    build_command._subprocess.run.side_effect = subprocess.CalledProcessError(
+    build_command._subprocess.Popen.side_effect = subprocess.CalledProcessError(
         cmd=["linuxdeploy-x86_64.AppImage", "..."], returncode=1
     )
 
@@ -156,7 +165,7 @@ def test_build_failure(build_command, first_app, tmp_path):
 
     # linuxdeploy was invoked
     app_dir = tmp_path / "linux" / "appimage" / "First App" / "First App.AppDir"
-    build_command._subprocess.run.assert_called_with(
+    build_command._subprocess.Popen.assert_called_with(
         [
             os.fsdecode(build_command.linuxdeploy.appimage_path),
             "--appimage-extract-and-run",
@@ -176,9 +185,10 @@ def test_build_failure(build_command, first_app, tmp_path):
             "PATH": "/usr/local/bin:/usr/bin",
             "VERSION": "0.0.1",
         },
-        check=True,
         cwd=os.fsdecode(tmp_path / "linux"),
         text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
     )
 
     # chmod isn't invoked if the binary wasn't created.
@@ -200,7 +210,7 @@ def test_build_appimage_with_docker(build_command, first_app, tmp_path):
     assert type(build_command.subprocess) != Docker
 
     # linuxdeploy was invoked inside Docker
-    build_command._subprocess.run.assert_called_with(
+    build_command._subprocess.Popen.assert_called_with(
         [
             "docker",
             "run",
@@ -226,9 +236,10 @@ def test_build_appimage_with_docker(build_command, first_app, tmp_path):
             "--deploy-deps-only",
             "/app/appimage/First App/First App.AppDir/usr/app_packages/secondlib",
         ],
-        check=True,
         cwd=os.fsdecode(tmp_path / "linux"),
         text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
     )
     # Binary is marked executable
     build_command.os.chmod.assert_called_with(

@@ -31,17 +31,21 @@ class LinuxDeploy:
 
     @classmethod
     def verify(cls, command, install=True):
-        """Verify that LinuxDeploy is available.
+        """Verify that linuxdeploy is available.
 
         :param command: The command that needs to use linuxdeploy
         :param install: Should the tool be installed if it is not found?
-        :returns: A valid LinuxDeploy SDK wrapper. If linuxdeploy is not
+        :returns: A valid linuxdeploy tool wrapper. If linuxdeploy is not
             available, and was not installed, raises MissingToolError.
         """
         linuxdeploy = LinuxDeploy(command)
 
         if not linuxdeploy.exists():
             if install:
+                command.logger.info(
+                    "The linuxdeploy tool was not found; downloading and installing...",
+                    prefix=cls.name,
+                )
                 linuxdeploy.install()
             else:
                 raise MissingToolError("linuxdeploy")
@@ -61,21 +65,25 @@ class LinuxDeploy:
             linuxdeploy_appimage_path = self.command.download_url(
                 url=self.linuxdeploy_download_url, download_path=self.command.tools_path
             )
-            self.command.os.chmod(linuxdeploy_appimage_path, 0o755)
-            self.patch_elf_header()
         except requests_exceptions.ConnectionError as e:
             raise NetworkFailure("downloading linuxdeploy AppImage") from e
 
-    def upgrade(self):
-        """Upgrade an existing linuxdeploy install."""
-        if self.exists():
-            self.command.logger.info("Removing old LinuxDeploy install...")
+        with self.command.input.wait_bar("Installing linuxdeploy..."):
+            self.command.os.chmod(linuxdeploy_appimage_path, 0o755)
+            self.patch_elf_header()
+
+    def uninstall(self):
+        """Uninstall linuxdeploy."""
+        with self.command.input.wait_bar("Removing old linuxdeploy install..."):
             self.appimage_path.unlink()
 
-            self.install()
-            self.command.logger.info("...done.")
-        else:
+    def upgrade(self):
+        """Upgrade an existing linuxdeploy install."""
+        if not self.exists():
             raise MissingToolError("linuxdeploy")
+
+        self.uninstall()
+        self.install()
 
     def patch_elf_header(self):
         """Patch the ELF header of the AppImage to ensure it's always

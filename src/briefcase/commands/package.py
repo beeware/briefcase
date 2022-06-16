@@ -55,7 +55,6 @@ class PackageCommand(BaseCommand):
         filename = self.distribution_path(
             app, packaging_format=packaging_format
         ).relative_to(self.base_path)
-        self.logger.info()
         self.logger.info(f"Packaged {filename}", prefix=app.app_name)
         return state
 

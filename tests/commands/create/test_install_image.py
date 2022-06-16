@@ -51,9 +51,8 @@ def test_no_requested_size(create_command, tmp_path, capsys):
     )
 
     # The right message was written to output
-    assert (
-        capsys.readouterr().out == "Installing input/original.png as sample image...\n"
-    )
+    expected = "\nInstalling input/original.png as sample image... done\n"
+    assert capsys.readouterr().out == expected
 
     # The file was copied into position
     create_command.shutil.copy.assert_called_with(
@@ -79,9 +78,8 @@ def test_no_requested_size_invalid_path(create_command, tmp_path, capsys):
     )
 
     # The right message was written to output
-    assert capsys.readouterr().out == (
-        "Unable to find input/original.png for sample image; using default\n"
-    )
+    expected = "Unable to find input/original.png for sample image; using default\n"
+    assert capsys.readouterr().out == expected
 
     # The file was not copied
     assert create_command.shutil.copy.call_count == 0
@@ -109,10 +107,8 @@ def test_requested_size(create_command, tmp_path, capsys):
     )
 
     # The right message was written to output
-    assert (
-        capsys.readouterr().out
-        == "Installing input/original-3742.png as 3742px sample image...\n"
-    )
+    expected = "\nInstalling input/original-3742.png as 3742px sample image... done\n"
+    assert capsys.readouterr().out == expected
 
     # The file was copied into position
     create_command.shutil.copy.assert_called_with(
@@ -138,9 +134,8 @@ def test_requested_size_invalid_path(create_command, tmp_path, capsys):
     )
 
     # The right message was written to output
-    assert capsys.readouterr().out == (
-        "Unable to find input/original-3742.png for 3742px sample image; using default\n"
-    )
+    expected = "Unable to find input/original-3742.png for 3742px sample image; using default\n"
+    assert capsys.readouterr().out == expected
 
     # The file was not copied
     assert create_command.shutil.copy.call_count == 0
@@ -170,10 +165,8 @@ def test_variant_with_no_requested_size(create_command, tmp_path, capsys):
     )
 
     # The right message was written to output
-    assert (
-        capsys.readouterr().out
-        == "Installing input/original.png as round sample image...\n"
-    )
+    expected = "\nInstalling input/original.png as round sample image... done\n"
+    assert capsys.readouterr().out == expected
 
     # The file was copied into position
     create_command.shutil.copy.assert_called_with(
@@ -206,10 +199,8 @@ def test_variant_without_variant_source_and_no_requested_size(
     )
 
     # The right message was written to output
-    assert (
-        capsys.readouterr().out
-        == "Unable to find round variant for sample image; using default\n"
-    )
+    expected = "Unable to find round variant for sample image; using default\n"
+    assert capsys.readouterr().out == expected
 
     # No file was installed.
     create_command.shutil.copy.assert_not_called()
@@ -238,10 +229,8 @@ def test_unknown_variant_with_no_requested_size(create_command, tmp_path, capsys
     )
 
     # The right message was written to output
-    assert (
-        capsys.readouterr().out
-        == "Unable to find unknown variant for sample image; using default\n"
-    )
+    expected = "Unable to find unknown variant for sample image; using default\n"
+    assert capsys.readouterr().out == expected
 
     # No file was installed.
     create_command.shutil.copy.assert_not_called()
@@ -271,10 +260,10 @@ def test_variant_with_size(create_command, tmp_path, capsys):
     )
 
     # The right message was written to output
-    assert (
-        capsys.readouterr().out
-        == "Installing input/original-3742.png as 3742px round sample image...\n"
+    expected = (
+        "\nInstalling input/original-3742.png as 3742px round sample image... done\n"
     )
+    assert capsys.readouterr().out == expected
 
     # The file was copied into position
     create_command.shutil.copy.assert_called_with(
@@ -305,10 +294,8 @@ def test_variant_with_size_without_variants(create_command, tmp_path, capsys):
     )
 
     # The right message was written to output
-    assert (
-        capsys.readouterr().out
-        == "Unable to find 3742px round variant for sample image; using default\n"
-    )
+    expected = "Unable to find 3742px round variant for sample image; using default\n"
+    assert capsys.readouterr().out == expected
 
     # No file was installed.
     create_command.shutil.copy.assert_not_called()
@@ -339,10 +326,8 @@ def test_unsized_variant(create_command, tmp_path, capsys):
     )
 
     # The right message was written to output
-    assert (
-        capsys.readouterr().out
-        == "Installing input/original.png as round sample image...\n"
-    )
+    expected = "\nInstalling input/original.png as round sample image... done\n"
+    assert capsys.readouterr().out == expected
 
     # The file was copied into position
     create_command.shutil.copy.assert_called_with(

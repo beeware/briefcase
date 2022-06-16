@@ -85,7 +85,7 @@ class GradleMixin:
         return self.bundle_path(app) / gradlew
 
     def verify_tools(self):
-        """Verify that we the Android APK tools in `briefcase` will operate on
+        """Verify that the Android APK tools in `briefcase` will operate on
         this system, downloading tools as needed."""
         super().verify_tools()
         self.android_sdk = AndroidSDK.verify(self)
@@ -183,9 +183,9 @@ class GradleRunCommand(GradleMixin, RunCommand):
             if avd is None:
                 avd = self.android_sdk.create_emulator()
 
+            self.logger.info(f"Starting emulator {avd}...", prefix=app.app_name)
             device, name = self.android_sdk.start_emulator(avd)
 
-        self.logger.info()
         self.logger.info(
             f"Starting app on {name} (device ID {device})", prefix=app.app_name
         )
@@ -198,25 +198,22 @@ class GradleRunCommand(GradleMixin, RunCommand):
         package = f"{app.package_name}.{app.module_name}"
 
         # We force-stop the app to ensure the activity launches freshly.
-        self.logger.info()
-        self.logger.info("Stopping old versions of the app...", prefix=app.app_name)
-        adb.force_stop_app(package)
+        self.logger.info("Installing app...", prefix=app.app_name)
+        with self.input.wait_bar("Stopping old versions of the app..."):
+            adb.force_stop_app(package)
 
         # Install the latest APK file onto the device.
-        self.logger.info()
-        self.logger.info("Installing app...", prefix=app.app_name)
-        adb.install_apk(self.binary_path(app))
+        with self.input.wait_bar("Installing new app version..."):
+            adb.install_apk(self.binary_path(app))
 
-        self.logger.info()
-        self.logger.info("Clearing device log...", prefix=app.app_name)
-        adb.clear_log()
+        self.logger.info("Starting app...", prefix=app.app_name)
+        with self.input.wait_bar("Clearing device log..."):
+            adb.clear_log()
 
         # To start the app, we launch `org.beeware.android.MainActivity`.
-        self.logger.info()
-        self.logger.info("Launching app...", prefix=app.app_name)
-        adb.start_app(package, "org.beeware.android.MainActivity")
+        with self.input.wait_bar("Launching app..."):
+            adb.start_app(package, "org.beeware.android.MainActivity")
 
-        self.logger.info()
         self.logger.info(
             "Following device log output (type CTRL-C to stop log)...",
             prefix=app.app_name,

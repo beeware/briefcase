@@ -201,11 +201,9 @@ class Docker:
 
     def prepare(self):
         try:
-            self.command.logger.info()
             self.command.logger.info(
                 "Building Docker container image...", prefix=self.app.app_name
             )
-            self.command.logger.info()
             try:
                 system_requires = " ".join(self.app.system_requires)
             except AttributeError:

@@ -96,6 +96,10 @@ WiX Toolset. Current value: {wix_home!r}
 
             if not wix.exists():
                 if install:
+                    command.logger.info(
+                        "The WiX toolset was not found; downloading and installing...",
+                        prefix=cls.name,
+                    )
                     wix.install()
                 else:
                     raise MissingToolError("WiX")
@@ -131,11 +135,11 @@ WiX Toolset. Current value: {wix_home!r}
             raise NetworkFailure("download WiX") from e
 
         try:
-            self.command.logger.info("Installing WiX...")
-            # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
-            self.command.shutil.unpack_archive(
-                os.fsdecode(wix_zip_path), extract_dir=os.fsdecode(self.wix_home)
-            )
+            with self.command.input.wait_bar("Installing WiX..."):
+                # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
+                self.command.shutil.unpack_archive(
+                    os.fsdecode(wix_zip_path), extract_dir=os.fsdecode(self.wix_home)
+                )
         except (shutil.ReadError, EOFError) as e:
             raise BriefcaseCommandError(
                 f"""\
@@ -149,15 +153,17 @@ Delete {wix_zip_path} and run briefcase again.
         # Zip file no longer needed once unpacked.
         wix_zip_path.unlink()
 
+    def uninstall(self):
+        """Uninstall WiX."""
+        with self.command.input.wait_bar("Removing old WiX install..."):
+            self.command.shutil.rmtree(self.wix_home)
+
     def upgrade(self):
         """Upgrade an existing WiX install."""
         if not self.managed_install:
             raise NonManagedToolError("WiX")
-        elif not self.exists():
+        if not self.exists():
             raise MissingToolError("WiX")
-        else:
-            self.command.logger.info("Removing old WiX install...")
-            self.command.shutil.rmtree(self.wix_home)
 
-            self.install()
-            self.command.logger.info("...done.")
+        self.uninstall()
+        self.install()
