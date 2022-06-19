@@ -1,0 +1,1 @@
+If Briefcase is terminated by a failed subprocess, then its command line, return code, stdout and stderr are now logged to the console even in non-verbose mode.
