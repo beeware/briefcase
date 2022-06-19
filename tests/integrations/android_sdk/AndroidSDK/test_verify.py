@@ -13,7 +13,7 @@ from briefcase.integrations.android_sdk import AndroidSDK
 
 
 @pytest.fixture
-def mock_command(tmp_path):
+def mock_command(tmp_path, monkeypatch):
     command = MagicMock()
 
     command.logger = Log(verbosity=1)
@@ -24,6 +24,7 @@ def mock_command(tmp_path):
 
     # Make the `os` module and `host_os` live.
     command.os = os
+    monkeypatch.setattr("os.environ", {})
 
     # Identify the host platform
     command.host_os = platform.system()

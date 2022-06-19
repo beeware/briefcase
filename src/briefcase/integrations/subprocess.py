@@ -400,12 +400,7 @@ class Subprocess:
             popen_process.kill()
 
     def _log_command(self, args):
-        """Log the entire console command being executed."""
-        self.command.logger.debug()
-        self.command.logger.debug("Running Command:")
-        self.command.logger.debug(
-            f"    {' '.join(shlex.quote(str(arg)) for arg in args)}"
-        )
+        log_command(self.command.logger, "debug", args)
 
     def _log_environment(self, overrides):
         """Log the state of environment variables prior to command execution.
@@ -429,17 +424,40 @@ class Subprocess:
                     self.command.logger.debug(f"    {env_var}={value}")
 
     def _log_output(self, output, stderr=None):
-        """Log the output of the executed command."""
-        if output:
-            self.command.logger.debug("Command Output:")
-            for line in ensure_str(output).splitlines():
-                self.command.logger.debug(f"    {line}")
-
-        if stderr:
-            self.command.logger.debug("Command Error Output (stderr):")
-            for line in ensure_str(stderr).splitlines():
-                self.command.logger.debug(f"    {line}")
+        log_output(self.command.logger, "debug", output, stderr)
 
     def _log_return_code(self, return_code):
-        """Log the output value of the executed command."""
-        self.command.logger.debug(f"Return code: {return_code}")
+        log_return_code(self.command.logger, "debug", return_code)
+
+
+def log_command(logger, level, args):
+    """Log the entire console command being executed."""
+    log_method = getattr(logger, level)
+    log_method()
+    log_method("Running Command:")
+    cmd_line = (
+        args
+        if isinstance(args, str)
+        else " ".join(shlex.quote(str(arg)) for arg in args)
+    )
+    log_method(f"    {cmd_line}")
+
+
+def log_output(logger, level, output, stderr=None):
+    """Log the output of the executed command."""
+    log_method = getattr(logger, level)
+    if output:
+        log_method("Command Output:")
+        for line in ensure_str(output).splitlines():
+            log_method(f"    {line}")
+
+    if stderr:
+        log_method("Command Error Output (stderr):")
+        for line in ensure_str(stderr).splitlines():
+            log_method(f"    {line}")
+
+
+def log_return_code(logger, level, return_code):
+    """Log the output value of the executed command."""
+    log_method = getattr(logger, level)
+    log_method(f"Return code: {return_code}")
