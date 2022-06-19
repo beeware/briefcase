@@ -129,6 +129,35 @@ a new environment that is completely isolated from your development
 environment, so if your app has any operating system dependencies, they
 *must* be listed in your ``system_requires`` definition.
 
+``linuxdeploy_plugins``
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Loads
+`linuxdeploy plugins
+<https://docs.appimage.org/packaging-guide/from-source/linuxdeploy-user-guide.html#plugin-system>`__
+in order to have linuxdeploy load extra resources in to the AppImage bundle.
+This is needed for applications that depend on libraries that cannot be
+automatically discovered by linuxdeploy like GTK. For example,
+
+    linuxdeploy_plugins = ['gtk']
+
+Briefcase can take plugins in three different formats:
+
+1. A plugin provided by Briefcase. Currently ``gtk`` is supported.
+2. A URL to a plugin, for example
+   'https://github.com/linuxdeploy/linuxdeploy-gtk-plugin/master/linuxdeploy-gtk-plugin.sh'
+3. A path to a plugin relative to the ``pyproject.toml`` file, like
+   'packaging/linuxdeploy-gtk-plugin.sh'
+
+If you see errors during ``briefcase build`` of the form::
+
+    ValueError: Namespace Something not available
+    or
+    ImportError: /usr/lib/libSomething.so.0: undefined symbol: some_symbol
+
+you may need to use a linuxdeploy plugin.
+
+
 Implementation Details
 ======================
 
