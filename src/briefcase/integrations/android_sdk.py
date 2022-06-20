@@ -416,11 +416,7 @@ connection.
         Raises an error if the emulator can't be installed.
         """
         if (self.root_path / "emulator").exists():
-            # If the user has requested debug output, output the current
-            # list of packages managed by the SDK manager
-            if self.command.logger.verbosity >= self.command.logger.DEBUG:
-                self.list_packages()
-
+            self.command.logger.debug("Android emulator is already installed.")
             return
 
         self.command.logger.info("Downloading the Android emulator...")
@@ -442,36 +438,70 @@ connection.
     def verify_avd(self, avd):
         """Verify that the AVD has the necessary system components to launch.
 
+        This includes:
+            * AVD system image
+            * Emulator skin
+
         :param avd: The AVD name to verify.
         """
         # Read the AVD configuration to retrieve the system image.
         # This is stored in the AVD configuration file with the key:
         #   image.sysdir.1=system-images/android-31/default/arm64-v8a/
         try:
-            system_image_path = Path(self.avd_config(avd)["image.sysdir.1"])
+            avd_config = self.avd_config(avd)
         except FileNotFoundError:
             raise BriefcaseCommandError(f"Unable to read configuration of AVD @{avd}")
+
+        try:
+            system_image_path = Path(avd_config["image.sysdir.1"])
+
+            # Convert the path into a system image name, and verify it.
+            self.verify_system_image(";".join(system_image_path.parts))
         except KeyError:
             self.command.logger.warning(
                 f"""
 *************************************************************************
-** WARNING: Unable to read AVD configuration                           **
+** WARNING: Unable to determine AVD system image                       **
 *************************************************************************
 
-    Briefcase was unable to read the configuration of the Android
-    emulator AVD {avd!r}.
+    Briefcase was unable to determine the system image of the Android
+    emulator AVD {avd!r} from it's configuration file.
 
     Briefcase will proceeed assuming the emulator is correctly
     configured. If you experience any problems running the emulator,
-    this is the likely cause of the problem.
+    this may be the cause of the problem.
 
 *************************************************************************
 """
             )
-            return
 
-        # Convert the path into a system image name, and verify it.
-        self.verify_system_image(";".join(system_image_path.parts))
+        try:
+            skin = avd_config["skin.name"]
+            skin_path = Path(avd_config["skin.path"])
+
+            if skin_path != Path("skins") / skin:
+                self.command.logger.warning(
+                    f"""
+*************************************************************************
+** WARNING: Unrecognized device skin                                   **
+*************************************************************************
+
+    Briefcase does not recognize the skin {skin!r} used by the
+    Android emulator AVD {avd!r}.
+
+    Briefcase will proceeed assuming the emulator is correctly
+    configured. If you experience any problems running the emulator,
+    this may be the cause of the problem.
+
+*************************************************************************
+"""
+                )
+            else:
+                # Convert the path into a system image name, and verify it.
+                self.verify_emulator_skin(skin)
+
+        except KeyError:
+            self.command.logger.debug(f"Device {avd!r} doesn't define a skin.")
 
     def verify_system_image(self, system_image):
         """Verify that the required system image is installed.
@@ -500,7 +530,7 @@ connection.
 
     Briefcase will proceeed assuming the emulator is correctly
     configured. If you experience any problems running the emulator,
-    this is the likely cause of the problem.
+    this may be the cause of the problem.
 
 *************************************************************************
 """
@@ -534,6 +564,49 @@ connection.
             raise BriefcaseCommandError(
                 f"Error while installing the {system_image!r} Android system image."
             ) from e
+
+    def verify_emulator_skin(self, skin):
+        """Verify that an emulator skin is available.
+
+        A human-readable list of available skins can be found here:
+
+            https://android.googlesource.com/platform/tools/adt/idea/+/refs/heads/mirror-goog-studio-main/artwork/resources/device-art-resources/
+
+        :param skin: The name of the skin to obtain
+        """
+        # Check for a device skin. If it doesn't exist, download it.
+        skin_path = self.root_path / "skins" / skin
+        if skin_path.exists():
+            self.command.logger.debug(f"Device skin {skin!r} already exists.")
+            return
+
+        self.command.logger.info(f"Obtaining {skin} device skin...", prefix=self.name)
+
+        skin_url = (
+            "https://android.googlesource.com/platform/tools/adt/idea/"
+            "+archive/refs/heads/mirror-goog-studio-main/"
+            f"artwork/resources/device-art-resources/{skin}.tar.gz"
+        )
+
+        try:
+            skin_tgz_path = self.command.download_url(
+                url=skin_url,
+                download_path=self.root_path,
+            )
+        except requests_exceptions.ConnectionError as e:
+            raise NetworkFailure(f"download {skin} device skin") from e
+
+        # Unpack skin archive
+        with self.command.input.wait_bar("Installing device skin..."):
+            try:
+                self.command.shutil.unpack_archive(skin_tgz_path, extract_dir=skin_path)
+            except (shutil.ReadError, EOFError) as err:
+                raise BriefcaseCommandError(
+                    f"Unable to unpack {skin} device skin."
+                ) from err
+
+            # Delete the downloaded file.
+            skin_tgz_path.unlink()
 
     def emulators(self):
         """Find the list of emulators that are available."""
@@ -813,9 +886,12 @@ An emulator named '{avd}' already exists.
             else:
                 avd_is_invalid = False
 
-        # TODO: Provide a list of options for device types with matching skins.
+        # TODO: Provide a list of options for device types with matching skins
         device_type = "pixel"
         skin = "pixel_3a"
+
+        # Ensure the required skin is available.
+        self.verify_emulator_skin(skin)
 
         # TODO: Provide a list of options for system images.
         system_image = f"system-images;android-31;default;{self.emulator_abi}"
@@ -845,38 +921,6 @@ An emulator named '{avd}' already exists.
                 )
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError("Unable to create Android emulator") from e
-
-        # Check for a device skin. If it doesn't exist, download it.
-        skin_path = self.root_path / "skins" / skin
-        if not skin_path.exists():
-            self.command.logger.info("Obtaining device skin...")
-            skin_url = (
-                "https://android.googlesource.com/platform/tools/adt/idea/"
-                "+archive/refs/heads/mirror-goog-studio-master-dev/"
-                f"artwork/resources/device-art-resources/{skin}.tar.gz"
-            )
-
-            try:
-                skin_tgz_path = self.command.download_url(
-                    url=skin_url,
-                    download_path=self.root_path,
-                )
-            except requests_exceptions.ConnectionError as e:
-                raise NetworkFailure(f"download {skin} device skin") from e
-
-            # Unpack skin archive
-            with self.command.input.wait_bar("Installing device skin..."):
-                try:
-                    self.command.shutil.unpack_archive(
-                        skin_tgz_path, extract_dir=skin_path
-                    )
-                except (shutil.ReadError, EOFError) as err:
-                    raise BriefcaseCommandError(
-                        f"Unable to unpack {skin} device skin"
-                    ) from err
-
-                # Delete the downloaded file.
-                skin_tgz_path.unlink()
 
         with self.command.input.wait_bar("Adding extra device configuration..."):
             self.update_emulator_config(
