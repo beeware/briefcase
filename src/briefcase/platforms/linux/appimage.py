@@ -1,5 +1,7 @@
 import os
+import pathlib
 import subprocess
+import urllib
 from contextlib import contextmanager
 
 from briefcase.commands import (
@@ -138,6 +140,19 @@ class LinuxAppImageUpdateCommand(LinuxAppImageMixin, UpdateCommand):
     description = "Update an existing Linux AppImage."
 
 
+def _url_validator(url):
+    try:
+        result = urllib.parse.urlparse(url)
+        return all([result.scheme, result.netloc])
+    except ValueError:
+        return False
+
+
+def _get_plugin_name_from_path(path):
+    filename_stem = pathlib.Path(path).stem
+    return filename_stem.split("-")[-1]
+
+
 class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
     description = "Build a Linux AppImage."
 
@@ -172,18 +187,26 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
         env = {"VERSION": app.version}
 
         plugins = []
-        if app.requires:
-            lowercase_gtk_dependencies = ["toga-gtk", "pygobject"]
-            for requirement in app.requires:
-                if any(
-                    gtk_dependency in requirement.lower()
-                    for gtk_dependency in lowercase_gtk_dependencies
-                ):
-                    self.logger.info("Using linuxdeploy GTK plugin")
+        if app.linuxdeploy_plugins:
+            for plugin in app.linuxdeploy_plugins:
+                plugin_path = pathlib.Path(plugin)
+                plugin_name = None
+                if plugin == "gtk":
+                    plugin_name = plugin
                     env["DEPLOY_GTK_VERSION"] = "3"
-                    plugins.append("gtk")
-        if not plugins:
-            self.logger.info("No linuxdeploy plugins needed")
+                elif _url_validator(plugin):
+                    url_path = urllib.parse.urlparse(plugin).path
+                    plugin_name = _get_plugin_name_from_path(url_path)
+                elif plugin_path.is_file():
+                    plugin_name = _get_plugin_name_from_path(plugin_path)
+                if plugin_name:
+                    plugins.append(plugin_name)
+                    self.logger.info(f"Using linuxdeploy {plugin_name} plugin")
+                else:
+                    self.logger.info(f"Unable to find or parse plugin {plugin}")
+
+        else:
+            self.logger.info("No linuxdeploy plugins configured")
 
         # Find all the .so files in app and app_packages,
         # so they can be passed in to linuxdeploy to have their
