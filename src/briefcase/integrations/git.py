@@ -11,9 +11,9 @@ def verify_git_is_installed(command):
     with the UX workflow.
 
     So - we defer importing git until we actually know we need it. This
-    enables Briefcase to start us to do other Xcode checks as part of
-    macOS workflows, and ensures that "briefcase --help" works on other
-    platforms without raising an error.
+    enables Briefcase to start to do other Xcode checks as part of the macOS
+    workflows, and ensures that "briefcase --help" works on other platforms
+    without raising an error.
 
     :param command: The command that needs to perform the verification check.
     :returns: The git module, if `git` is installed and available.
