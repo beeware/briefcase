@@ -70,6 +70,7 @@ def test_run_created_emulator(run_command, first_app_config):
         return_value=(None, None, None)
     )
     run_command.android_sdk.create_emulator = MagicMock(return_value="newDevice")
+    run_command.android_sdk.verify_avd = MagicMock()
     run_command.android_sdk.start_emulator = MagicMock(
         return_value=("emulator-3742", "New Device")
     )
@@ -79,6 +80,10 @@ def test_run_created_emulator(run_command, first_app_config):
 
     # A new emulator was created
     run_command.android_sdk.create_emulator.assert_called_once_with()
+
+    # No attempt was made to verify the AVD (it is pre-verified through
+    # the creation process)
+    run_command.android_sdk.verify_avd.assert_not_called()
 
     # The emulator was started
     run_command.android_sdk.start_emulator.assert_called_once_with("newDevice")
@@ -113,6 +118,7 @@ def test_run_idle_device(run_command, first_app_config):
     )
 
     run_command.android_sdk.create_emulator = MagicMock()
+    run_command.android_sdk.verify_avd = MagicMock()
     run_command.android_sdk.start_emulator = MagicMock(
         return_value=("emulator-3742", "Idle Device")
     )
@@ -122,6 +128,9 @@ def test_run_idle_device(run_command, first_app_config):
 
     # No attempt was made to create a new emulator
     run_command.android_sdk.create_emulator.assert_not_called()
+
+    # The AVD has been verified
+    run_command.android_sdk.verify_avd.assert_called_with("idleDevice")
 
     # The emulator was started
     run_command.android_sdk.start_emulator.assert_called_once_with("idleDevice")

@@ -59,6 +59,9 @@ def test_create_emulator(mock_sdk, tmp_path, host_os, host_arch, emulator_abi):
         "new-emulator",
     ]
 
+    # Mock system image verification
+    mock_sdk.verify_system_image = MagicMock()
+
     # Consider to remove if block when we drop py3.7 support, only keep statements from else.
     # MagicMock below py3.8 doesn't has __fspath__ attribute.
     if sys.version_info < (3, 8):
@@ -79,6 +82,11 @@ def test_create_emulator(mock_sdk, tmp_path, host_os, host_arch, emulator_abi):
 
     # The expected device AVD was created.
     assert avd == "new-emulator"
+
+    # The system image was verified
+    mock_sdk.verify_system_image.assert_called_once_with(
+        f"system-images;android-31;default;{emulator_abi}"
+    )
 
     # avdmanager was invoked
     mock_sdk.command.subprocess.check_output.assert_called_once_with(
@@ -135,6 +143,9 @@ def test_create_preexisting_skins(mock_sdk, tmp_path):
     # Mock the user getting a valid name first time
     mock_sdk.command.input.return_value = "new-emulator"
 
+    # Mock system image verification
+    mock_sdk.verify_system_image = MagicMock()
+
     # Mock a pre-existing skin folder
     (mock_sdk.root_path / "skins" / "pixel_3a").mkdir(parents=True)
 
@@ -184,6 +195,9 @@ def test_create_failure(mock_sdk):
     """If avdmanager fails, an error is raised."""
     # Mock the user getting a valid name first time
     mock_sdk.command.input.return_value = "new-emulator"
+
+    # Mock system image verification
+    mock_sdk.verify_system_image = MagicMock()
 
     # Mock an avdmanager failure.
     mock_sdk.command.subprocess.check_output.side_effect = (

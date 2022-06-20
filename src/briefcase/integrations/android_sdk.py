@@ -108,6 +108,9 @@ class AndroidSDK:
     def avd_path(self):
         return self.dot_android_path / "avd"
 
+    def avd_config_filename(self, avd):
+        return self.avd_path / f"{avd}.avd" / "config.ini"
+
     @property
     def env(self):
         return {
@@ -420,21 +423,116 @@ connection.
 
             return
 
-        self.command.logger.info("Downloading the Android emulator and system image...")
+        self.command.logger.info("Downloading the Android emulator...")
         try:
             self.command.subprocess.run(
                 [
                     os.fsdecode(self.sdkmanager_path),
                     "platform-tools",
                     "emulator",
-                    f"system-images;android-31;default;{self.emulator_abi}",
                 ],
                 env=self.env,
                 check=True,
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(
-                "Error while installing Android emulator and system image."
+                "Error while installing Android emulator."
+            ) from e
+
+    def verify_avd(self, avd):
+        """Verify that the AVD has the necessary system components to launch.
+
+        :param avd: The AVD name to verify.
+        """
+        # Read the AVD configuration to retrieve the system image.
+        # This is stored in the AVD configuration file with the key:
+        #   image.sysdir.1=system-images/android-31/default/arm64-v8a/
+        try:
+            system_image_path = Path(self.avd_config(avd)["image.sysdir.1"])
+        except FileNotFoundError:
+            raise BriefcaseCommandError(f"Unable to read configuration of AVD @{avd}")
+        except KeyError:
+            self.command.logger.warning(
+                f"""
+*************************************************************************
+** WARNING: Unable to read AVD configuration                           **
+*************************************************************************
+
+    Briefcase was unable to read the configuration of the Android
+    emulator AVD {avd!r}.
+
+    Briefcase will proceeed assuming the emulator is correctly
+    configured. If you experience any problems running the emulator,
+    this is the likely cause of the problem.
+
+*************************************************************************
+"""
+            )
+            return
+
+        # Convert the path into a system image name, and verify it.
+        self.verify_system_image(";".join(system_image_path.parts))
+
+    def verify_system_image(self, system_image):
+        """Verify that the required system image is installed.
+
+        :param system_image: The SDKManager identifier for the system
+            image (e.g., ``"system-images;android-31;default;x86_64"``)
+        """
+        # Look for the directory named as a system image.
+        # If it exists, we already have the system image.
+        system_image_parts = system_image.split(";")
+
+        if len(system_image_parts) < 4 or system_image_parts[0] != "system-images":
+            raise BriefcaseCommandError(
+                f"{system_image!r} is not a valid system image name."
+            )
+
+        if system_image_parts[-1] != self.emulator_abi:
+            self.command.logger.warning(
+                f"""
+*************************************************************************
+** WARNING: Unexpected emulator ABI                                    **
+*************************************************************************
+
+    The system image {system_image!r}
+    does not match the architecture of this computer ({self.emulator_abi}).
+
+    Briefcase will proceeed assuming the emulator is correctly
+    configured. If you experience any problems running the emulator,
+    this is the likely cause of the problem.
+
+*************************************************************************
+"""
+            )
+
+        # Convert the system image into a path where that system image
+        # would be expected, and see if the location exists.
+        system_image_path = self.root_path
+        for part in system_image_parts:
+            system_image_path = system_image_path / part
+
+        if system_image_path.exists():
+            # Found the system image.
+            return
+
+        # System image not found; download it.
+        self.command.logger.info(
+            f"Downloading the {system_image!r} Android system image...",
+            prefix=self.name,
+        )
+        try:
+            self.command.subprocess.run(
+                [
+                    os.fsdecode(self.sdkmanager_path),
+                    system_image,
+                ],
+                env=self.env,
+                check=True,
+            )
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(
+                f"Error while installing the {system_image!r} Android system image."
             ) from e
 
     def emulators(self):
@@ -715,9 +813,15 @@ An emulator named '{avd}' already exists.
             else:
                 avd_is_invalid = False
 
-        # TODO: Provide a list of options for device types with matching skins
+        # TODO: Provide a list of options for device types with matching skins.
         device_type = "pixel"
         skin = "pixel_3a"
+
+        # TODO: Provide a list of options for system images.
+        system_image = f"system-images;android-31;default;{self.emulator_abi}"
+
+        # Ensure the required system image is available.
+        self.verify_system_image(system_image)
 
         with self.command.input.wait_bar(f"Creating Android emulator {avd}..."):
             try:
@@ -732,7 +836,7 @@ An emulator named '{avd}' already exists.
                         "--abi",
                         self.emulator_abi,
                         "--package",
-                        f"system-images;android-31;default;{self.emulator_abi}",
+                        system_image,
                         "--device",
                         device_type,
                     ],
@@ -801,17 +905,14 @@ In future, you can specify this device by running:
 
         return avd
 
-    def update_emulator_config(self, avd, updates):
-        """Update the AVD configuration with specific values.
+    def avd_config(self, avd):
+        """Obtain the AVD configuration as key-value pairs.
 
-        :params avd: The AVD whose config will be updated
-        :params updates: A dictionary containing the new key-value to
-            add to the device configuration.
+        :params avd: The AVD whose config will be retrieved
         """
         # Parse the existing config into key-value pairs
-        avd_config_filename = self.avd_path / f"{avd}.avd" / "config.ini"
         avd_config = {}
-        with avd_config_filename.open("r") as f:
+        with self.avd_config_filename(avd).open("r") as f:
             for line in f:
                 try:
                     key, value = line.rstrip().split("=", 1)
@@ -819,11 +920,22 @@ In future, you can specify this device by running:
                 except ValueError:
                     pass
 
+        return avd_config
+
+    def update_emulator_config(self, avd, updates):
+        """Update the AVD configuration with specific values.
+
+        :params avd: The AVD whose config will be updated
+        :params updates: A dictionary containing the new key-value to
+            add to the device configuration.
+        """
+        avd_config = self.avd_config(avd)
+
         # Augment the config with the new key-values pairs
         avd_config.update(updates)
 
         # Write the update configuration.
-        with avd_config_filename.open("w") as f:
+        with self.avd_config_filename(avd).open("w") as f:
             for key, value in avd_config.items():
                 f.write(f"{key}={value}\n")
 
