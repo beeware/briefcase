@@ -960,7 +960,7 @@ In future, you can specify this device by running:
             for line in f:
                 try:
                     key, value = line.rstrip().split("=", 1)
-                    avd_config[key] = value
+                    avd_config[key.strip()] = value.strip()
                 except ValueError:
                     pass
 

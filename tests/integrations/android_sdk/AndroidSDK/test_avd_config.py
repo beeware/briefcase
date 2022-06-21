@@ -1,9 +1,5 @@
-import pytest
-
-
-@pytest.fixture
-def test_device(tmp_path):
-    """Create an AVD configuration file."""
+def test_avd_config(mock_sdk, tmp_path):
+    """An AVD configuration can be read."""
     config_file = tmp_path / ".android" / "avd" / "testDevice.avd" / "config.ini"
     config_file.parent.mkdir(parents=True)
 
@@ -25,11 +21,42 @@ disk.cachePartition.size=37MB
 """
         )
 
-    return config_file
+    assert mock_sdk.avd_config("testDevice") == {
+        "avd.ini.encoding": "UTF-8",
+        "hw.device.manufacturer": "Google",
+        "hw.device.name": "pixel",
+        "weird.key": "good=bad",
+        "PlayStore.enabled": "no",
+        "avd.name": "testDevice",
+        "disk.cachePartition": "yes",
+        "disk.cachePartition.size": "37MB",
+    }
 
 
-def test_avd_config(mock_sdk, test_device):
-    """An AVD configuration can be read."""
+def test_avd_config_with_space(mock_sdk, tmp_path):
+    """An AVD configuration that contains spaces can be read."""
+    config_file = tmp_path / ".android" / "avd" / "testDevice.avd" / "config.ini"
+    config_file.parent.mkdir(parents=True)
+
+    # Write a default config. It contains:
+    # * blank lines
+    # * a key whose value explicitly contains an equals sign.
+    # * spaces either side of the key/value separator
+    with config_file.open("w") as f:
+        f.write(
+            """
+avd.ini.encoding = UTF-8
+hw.device.manufacturer = Google
+hw.device.name = pixel
+weird.key = good=bad
+
+PlayStore.enabled = no
+avd.name = testDevice
+disk.cachePartition = yes
+disk.cachePartition.size = 37MB
+"""
+        )
+
     assert mock_sdk.avd_config("testDevice") == {
         "avd.ini.encoding": "UTF-8",
         "hw.device.manufacturer": "Google",
