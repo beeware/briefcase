@@ -182,6 +182,11 @@ class GradleRunCommand(GradleMixin, RunCommand):
         if device is None:
             if avd is None:
                 avd = self.android_sdk.create_emulator()
+            else:
+                # Ensure the system image for the requested emulator is available.
+                # This step is only needed if the AVD already existed; you have to
+                # have an image available to create an AVD.
+                self.android_sdk.verify_avd(avd)
 
             self.logger.info(f"Starting emulator {avd}...", prefix=app.app_name)
             device, name = self.android_sdk.start_emulator(avd)
