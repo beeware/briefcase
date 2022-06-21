@@ -411,10 +411,23 @@ connection.
             )
 
     def verify_emulator(self):
-        """Verify that Android emulator has been installed.
+        """Verify that Android emulator has been installed, and is in a
+        runnable state.
 
         Raises an error if the emulator can't be installed.
         """
+        # Ensure the `platforms` folder exists.
+        # See the discussion on #766 for details; as of June 2022, if this folder
+        # doesn't exist, the emulator won't start, raising the error:
+        #
+        #    PANIC: Cannot find AVD system path. Please define ANDROID_SDK_ROOT
+        #
+        # Creating an empty platforms folder is enough to overcome this. This folder
+        # will be created automatically when you build a project; but if you have a
+        # clean Android SDK install that hasn't been used to build a project, it
+        # might be missing.
+        (self.root_path / "platforms").mkdir(exist_ok=True)
+
         if (self.root_path / "emulator").exists():
             self.command.logger.debug("Android emulator is already installed.")
             return

@@ -27,6 +27,9 @@ def mock_sdk(tmp_path):
     jdk = MagicMock()
     jdk.java_home = Path("/path/to/jdk")
 
-    sdk = AndroidSDK(command, jdk=jdk, root_path=tmp_path / "sdk")
+    sdk_root = tmp_path / "sdk"
+    sdk_root.mkdir(parents=True)
+
+    sdk = AndroidSDK(command, jdk=jdk, root_path=sdk_root)
 
     return sdk
