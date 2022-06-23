@@ -70,6 +70,8 @@ def test_package_msi(package_command, first_app_config, tmp_path):
                     "WixUtilExtension",
                     "-ext",
                     "WixUIExtension",
+                    "-loc",
+                    "unicode.wxl",
                     "-o",
                     tmp_path / "windows" / "First App-0.0.1.msi",
                     "first-app.wixobj",
