@@ -208,6 +208,8 @@ class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
                         "WixUtilExtension",
                         "-ext",
                         "WixUIExtension",
+                        "-loc",
+                        "unicode.wxl",
                         "-o",
                         self.distribution_path(app, packaging_format="msi"),
                         f"{app.app_name}.wixobj",
