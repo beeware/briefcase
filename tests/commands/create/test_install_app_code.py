@@ -13,10 +13,10 @@ def assert_dist_info(app_path):
     assert (dist_info_path / "INSTALLER").exists()
     assert (dist_info_path / "METADATA").exists()
 
-    with (dist_info_path / "INSTALLER").open() as f:
+    with (dist_info_path / "INSTALLER").open(encoding="utf-8") as f:
         assert f.read() == "briefcase\n"
 
-    with (dist_info_path / "METADATA").open() as f:
+    with (dist_info_path / "METADATA").open(encoding="utf-8") as f:
         assert (
             f.read()
             == f"""Metadata-Version: 2.1
@@ -249,3 +249,53 @@ def test_replace_sources(create_command, myapp, tmp_path, app_path):
     # Metadata has been updated.
     assert not (app_path / "my_app-1.2.2.dist-info").exists()
     assert_dist_info(app_path)
+
+
+def test_non_latin_metadata(create_command, myapp, app_path):
+    """If the app metadata contains non-Latin-1 characters, the METADATA file
+    is written correctly (Briefcase#767)"""
+    myapp.formal_name = "My büggy app"
+    myapp.author = "José Weiß-Müller"
+    myapp.author_email = "钱华林@中科院.中国"
+    myapp.url = "https://xn--7qvx15a.cn"
+    myapp.description = "A Møøse once bit my sister..."
+
+    # Mock shutil so we can track usage.
+    create_command.shutil = mock.MagicMock()
+    create_command.os = mock.MagicMock()
+
+    myapp.sources = []
+
+    create_command.install_app_code(myapp)
+
+    # No request was made to install dependencies
+    create_command.shutil.rmtree.assert_called_once_with(app_path)
+    create_command.os.mkdir.assert_called_once_with(app_path)
+    create_command.shutil.copytree.assert_not_called()
+    create_command.shutil.copy.assert_not_called()
+
+    # The dist-info file was created, and is readable.
+    dist_info_path = app_path / "my_app-1.2.3.dist-info"
+
+    # Confirm the metadata files exist.
+    assert (dist_info_path / "INSTALLER").exists()
+    assert (dist_info_path / "METADATA").exists()
+
+    with (dist_info_path / "INSTALLER").open(encoding="utf-8") as f:
+        assert f.read() == "briefcase\n"
+
+    with (dist_info_path / "METADATA").open(encoding="utf-8") as f:
+        assert (
+            f.read()
+            == f"""Metadata-Version: 2.1
+Briefcase-Version: {briefcase.__version__}
+Name: my-app
+Formal-Name: My büggy app
+App-ID: com.example.my-app
+Version: 1.2.3
+Home-page: https://xn--7qvx15a.cn
+Author: José Weiß-Müller
+Author-email: 钱华林@中科院.中国
+Summary: A Møøse once bit my sister...
+"""
+        )
