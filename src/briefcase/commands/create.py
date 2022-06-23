@@ -97,9 +97,9 @@ def write_dist_info(app: BaseConfig, dist_info_path: Path):
     """
     # Create dist-info folder, and write a minimal metadata collection.
     dist_info_path.mkdir(exist_ok=True)
-    with (dist_info_path / "INSTALLER").open("w") as f:
+    with (dist_info_path / "INSTALLER").open("w", encoding="utf-8") as f:
         f.write("briefcase\n")
-    with (dist_info_path / "METADATA").open("w") as f:
+    with (dist_info_path / "METADATA").open("w", encoding="utf-8") as f:
         f.write("Metadata-Version: 2.1\n")
         f.write(f"Briefcase-Version: {briefcase.__version__}\n")
         f.write(f"Name: {app.app_name}\n")
