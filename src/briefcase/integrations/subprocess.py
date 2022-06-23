@@ -1,7 +1,9 @@
 import json
 import operator
+import os
 import shlex
 import subprocess
+import sys
 import threading
 import time
 
@@ -9,6 +11,10 @@ import psutil
 
 from briefcase.console import Log
 from briefcase.exceptions import CommandOutputParseError
+
+# At startup, capture the encoding of stdout. We do this at startup
+# because rich will wrap stdout;
+STDOUT_ENCODING = os.device_encoding(sys.stdout.fileno())
 
 
 class ParseError(Exception):
@@ -237,6 +243,11 @@ class Subprocess:
         kwargs["stdout"] = subprocess.PIPE
         # if stderr isn't explicitly redirected, then send it to stdout.
         kwargs.setdefault("stderr", subprocess.STDOUT)
+
+        # Ensure that the pipe is using the same encoding as the operating
+        # system. This is for the benefit of Windows, which uses cp437
+        # for console output when the system encoding is cp1252.
+        kwargs.setdefault("encoding", STDOUT_ENCODING)
 
         stderr = None
         with self.Popen(args, **kwargs) as process:
