@@ -1,5 +1,6 @@
 import os
 import sys
+from unittest.mock import ANY
 
 import pytest
 
@@ -25,6 +26,7 @@ def test_simple_call(mock_docker, tmp_path, capsys):
             "world",
         ],
         text=True,
+        encoding=ANY,
     )
     assert capsys.readouterr().out == ""
 
@@ -48,6 +50,7 @@ def test_simple_call_with_arg(mock_docker, tmp_path, capsys):
             "world",
         ],
         universal_newlines=True,
+        encoding=ANY,
     )
     assert capsys.readouterr().out == ""
 
@@ -72,6 +75,7 @@ def test_simple_call_with_path_arg(mock_docker, tmp_path, capsys):
         ],
         cwd=os.fsdecode(tmp_path / "cwd"),
         text=True,
+        encoding=ANY,
     )
     assert capsys.readouterr().out == ""
 
@@ -101,6 +105,7 @@ def test_simple_call_with_sys_executable_arg(
             "python3.X",
         ],
         text=True,
+        encoding=ANY,
     )
 
     assert capsys.readouterr().out == ""
@@ -129,6 +134,7 @@ def test_simple_verbose_call(mock_docker, tmp_path, capsys):
             "world",
         ],
         text=True,
+        encoding=ANY,
     )
     assert capsys.readouterr().out == (
         "\n"
