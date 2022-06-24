@@ -142,6 +142,7 @@ def test_build_appimage(build_command, first_app, tmp_path):
         },
         cwd=os.fsdecode(tmp_path / "linux"),
         text=True,
+        encoding=mock.ANY,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
     )
@@ -187,6 +188,7 @@ def test_build_failure(build_command, first_app, tmp_path):
         },
         cwd=os.fsdecode(tmp_path / "linux"),
         text=True,
+        encoding=mock.ANY,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
     )
@@ -238,6 +240,7 @@ def test_build_appimage_with_docker(build_command, first_app, tmp_path):
         ],
         cwd=os.fsdecode(tmp_path / "linux"),
         text=True,
+        encoding=mock.ANY,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
     )

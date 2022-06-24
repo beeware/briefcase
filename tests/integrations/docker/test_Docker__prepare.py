@@ -1,5 +1,6 @@
 import os
 import subprocess
+from unittest.mock import ANY
 
 import pytest
 
@@ -31,6 +32,7 @@ def test_prepare(mock_docker, tmp_path):
         ],
         check=True,
         text=True,
+        encoding=ANY,
     )
 
 
@@ -64,4 +66,5 @@ def test_prepare_failure(mock_docker, tmp_path):
         ],
         check=True,
         text=True,
+        encoding=ANY,
     )

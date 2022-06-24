@@ -12,10 +12,6 @@ import psutil
 from briefcase.console import Log
 from briefcase.exceptions import CommandOutputParseError
 
-# At startup, capture the encoding of stdout. We do this at startup
-# because rich will wrap stdout;
-STDOUT_ENCODING = os.device_encoding(sys.stdout.fileno())
-
 
 class ParseError(Exception):
     """Raised by parser functions to signal parsing was unsuccessful."""
@@ -147,6 +143,19 @@ class Subprocess:
         if "text" not in kwargs and "universal_newlines" not in kwargs:
             kwargs["text"] = True
 
+        # If we're in text/universal_newlines mode, ensure that there is
+        # an encoding specified. If encoding isn't specified, default to
+        # the system's stdout encoding.
+        # This is for the benefit of Windows, which uses cp437 for console
+        # output when the system encoding is cp1252.
+        # `__stdout__` is used because rich captures and redirects `sys.stdout`.
+        # The fallback to "UTF-8" is needed to catch the case where stdout
+        # is redirected to a non-tty (e.g. during pytest conditions)
+        if kwargs.get("text") or kwargs.get("universal_newlines", False):
+            kwargs.setdefault(
+                "encoding", os.device_encoding(sys.__stdout__.fileno()) or "UTF-8"
+            )
+
         # For Windows, convert start_new_session=True to creation flags
         if self.command.host_os == "Windows":
             try:
@@ -243,11 +252,6 @@ class Subprocess:
         kwargs["stdout"] = subprocess.PIPE
         # if stderr isn't explicitly redirected, then send it to stdout.
         kwargs.setdefault("stderr", subprocess.STDOUT)
-
-        # Ensure that the pipe is using the same encoding as the operating
-        # system. This is for the benefit of Windows, which uses cp437
-        # for console output when the system encoding is cp1252.
-        kwargs.setdefault("encoding", STDOUT_ENCODING)
 
         stderr = None
         with self.Popen(args, **kwargs) as process:
