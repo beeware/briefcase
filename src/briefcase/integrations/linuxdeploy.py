@@ -27,7 +27,7 @@ class LinuxDeployBase:
 
     @property
     def file_path(self):
-        return self.command.tools_path / self.filename
+        ...
 
     @classmethod
     def verify(cls, command, install=True, plugin: Optional[str] = None):
@@ -39,42 +39,48 @@ class LinuxDeployBase:
         :returns: A valid linuxdeploy tool wrapper. If linuxdeploy is not
             available, and was not installed, raises MissingToolError.
         """
-        linuxdeploy = cls(command)
-
+        linuxdeploy = cls(command, plugin) if plugin else cls(command)
         if not linuxdeploy.exists():
             if install:
                 command.logger.info(
                     "The linuxdeploy tool or plugin was not found;"
-                    "downloading and installing...",
+                    " downloading and installing...",
                     prefix=cls.__name__,
                 )
-                if plugin:
-                    linuxdeploy.install(plugin)
-                else:
-                    linuxdeploy.install()
+                linuxdeploy.install()
             else:
-                raise MissingToolError("linuxdeploy")
+                raise MissingToolError("linuxdeploy tool or plugin")
 
-        return cls(command)
+        return linuxdeploy
 
     def exists(self):
-        return self.file_path.exists()
+        return self.file_path.exists() or self.file_path.is_symlink()
 
     @property
     def managed_install(self):
         return True
 
     def install(self):
-        """Download and install linuxdeploy."""
+        """Download and install linuxdeploy or plugin."""
         try:
-            linuxdeploy_path = self.command.download_url(
+            self.command.download_url(
                 url=self.download_url, download_path=self.command.tools_path
             )
+        # Local file
+        except requests_exceptions.MissingSchema:
+            local_plugin = pathlib.Path(self.download_url)
+            plugins_path = self.command.tools_path / "plugins"
+            plugins_path.mkdir(parents=True, exist_ok=True)
+            if local_plugin.resolve() != self.file_path.resolve():
+                self.file_path.unlink(missing_ok=True)
+                self.file_path.symlink_to(local_plugin.resolve())
         except requests_exceptions.ConnectionError as e:
             raise NetworkFailure("downloading linuxdeploy AppImage") from e
 
-        with self.command.input.wait_bar("Installing linuxdeploy..."):
-            self.command.os.chmod(linuxdeploy_path, 0o755)
+        with self.command.input.wait_bar(
+            f"Installing linuxdeploy or plugin with {self.download_url}..."
+        ):
+            self.command.os.chmod(self.file_path, 0o755)
             if self.filename.endswith("AppImage"):
                 self.patch_elf_header()
 
@@ -82,6 +88,8 @@ class LinuxDeployBase:
         """Uninstall linuxdeploy."""
         with self.command.input.wait_bar("Removing old linuxdeploy install..."):
             self.appimage_path.unlink()
+            plugins_path = self.command.tools_path / "plugins"
+            plugins_path.unlink()
 
     def upgrade(self):
         """Upgrade an existing linuxdeploy install."""
@@ -141,6 +149,10 @@ class LinuxDeploy(LinuxDeployBase):
         self.command = command
 
     @property
+    def file_path(self):
+        return self.command.tools_path / self.filename
+
+    @property
     def filename(self):
         return f"linuxdeploy-{self.command.host_arch}.AppImage"
 
@@ -154,9 +166,13 @@ class LinuxDeploy(LinuxDeployBase):
 
 class LinuxDeployOtherPlugin(LinuxDeployBase):
     def __init__(self, command, plugin):
-        super().__init__(command, plugin)
+        super().__init__(command)
         self.command = command
         self.plugin = plugin
+
+    @property
+    def file_path(self):
+        return self.command.tools_path / "plugins" / self.filename
 
     @property
     def filename(self):
@@ -171,6 +187,10 @@ class LinuxDeployGtkPlugin(LinuxDeployBase):
     def __init__(self, command):
         super().__init__(command)
         self.command = command
+
+    @property
+    def file_path(self):
+        return self.command.tools_path / "plugins" / self.filename
 
     @property
     def filename(self):

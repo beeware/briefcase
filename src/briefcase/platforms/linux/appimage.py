@@ -145,6 +145,10 @@ class LinuxAppImageUpdateCommand(LinuxAppImageMixin, UpdateCommand):
 
 
 def _valid_url(url: str) -> bool:
+    """Check that a URL is valid.
+
+    :param url: The URL to check.
+    """
     try:
         result = urllib.parse.urlparse(url)
         return all([result.scheme, result.netloc])
@@ -156,21 +160,27 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
     description = "Build a Linux AppImage."
 
     def verify_tools(self, app: BaseConfig):
+        """Verify that the AppImage linuxdeploy tool and plugins exist.
+
+        :param app: The application to build
+        """
         super().verify_tools(app)
         self.linuxdeploy = LinuxDeploy.verify(self)
         if app.linuxdeploy_plugins:
             for plugin in app.linuxdeploy_plugins:
-                plugin_path = pathlib.Path(plugin)
                 if " " in plugin:
                     _, plugin = plugin.split(" ")
+                plugin_path = pathlib.Path(plugin)
                 if plugin == "gtk":
                     LinuxDeployGtkPlugin.verify(self)
                 elif _valid_url(plugin) or plugin_path.is_file():
-                    LinuxDeployOtherPlugin.verify(self, plugin)
+                    LinuxDeployOtherPlugin.verify(self, plugin=plugin)
                 else:
                     self.logger.info(f"unable to verify plugin {plugin}")
                     continue
-                self.logger.info(f"linuxdeploy {plugin} plugin already installed")
+                self.logger.info(
+                    f"linuxdeploy {plugin} plugin verified to be installed"
+                )
 
     def build_app(self, app: BaseConfig, **kwargs):
         """Build an application.
