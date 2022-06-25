@@ -66,14 +66,6 @@ class LinuxDeployBase:
             self.command.download_url(
                 url=self.download_url, download_path=self.command.tools_path
             )
-        # Local file
-        except requests_exceptions.MissingSchema:
-            local_plugin = pathlib.Path(self.download_url)
-            plugins_path = self.command.tools_path / "plugins"
-            plugins_path.mkdir(parents=True, exist_ok=True)
-            if local_plugin.resolve() != self.file_path.resolve():
-                self.file_path.unlink(missing_ok=True)
-                self.file_path.symlink_to(local_plugin.resolve())
         except requests_exceptions.ConnectionError as e:
             raise NetworkFailure("downloading linuxdeploy AppImage") from e
 
@@ -172,15 +164,30 @@ class LinuxDeployOtherPlugin(LinuxDeployBase):
 
     @property
     def file_path(self):
-        return self.command.tools_path / "plugins" / self.filename
+        return self.command.tools_path / "linuxdeploy_plugins" / self.filename
 
     @property
     def filename(self):
-        return pathlib.Path(self.plugin).stem
+        return pathlib.Path(self.plugin).name
 
     @property
     def download_url(self):
         return self.plugin
+
+    def install(self):
+        """Symlink to the local linuxdeploy plugin."""
+        local_plugin = pathlib.Path(self.download_url)
+        plugins_path = self.command.tools_path / "plugins"
+        plugins_path.mkdir(parents=True, exist_ok=True)
+        if local_plugin.resolve() != self.file_path.resolve():
+            self.file_path.unlink(missing_ok=True)
+            self.file_path.symlink_to(local_plugin.resolve())
+        with self.command.input.wait_bar(
+            f"Installing linuxdeploy plugin with {self.download_url}..."
+        ):
+            self.command.os.chmod(self.file_path, 0o755)
+            if self.filename.endswith("AppImage"):
+                self.patch_elf_header()
 
 
 class LinuxDeployGtkPlugin(LinuxDeployBase):

@@ -177,10 +177,6 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
                     LinuxDeployOtherPlugin.verify(self, plugin=plugin)
                 else:
                     self.logger.info(f"unable to verify plugin {plugin}")
-                    continue
-                self.logger.info(
-                    f"linuxdeploy {plugin} plugin verified to be installed"
-                )
 
     def build_app(self, app: BaseConfig, **kwargs):
         """Build an application.
