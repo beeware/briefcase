@@ -80,7 +80,7 @@ class LinuxDeployBase:
         """Uninstall linuxdeploy."""
         with self.command.input.wait_bar("Removing old linuxdeploy install..."):
             self.appimage_path.unlink()
-            plugins_path = self.command.tools_path / "plugins"
+            plugins_path = self.command.tools_path / "linuxdeploy_plugins"
             plugins_path.unlink()
 
     def upgrade(self):
@@ -177,8 +177,7 @@ class LinuxDeployOtherPlugin(LinuxDeployBase):
     def install(self):
         """Symlink to the local linuxdeploy plugin."""
         local_plugin = pathlib.Path(self.download_url)
-        plugins_path = self.command.tools_path / "plugins"
-        plugins_path.mkdir(parents=True, exist_ok=True)
+        self.file_path.parent.mkdir(parents=True, exist_ok=True)
         if local_plugin.resolve() != self.file_path.resolve():
             self.file_path.unlink(missing_ok=True)
             self.file_path.symlink_to(local_plugin.resolve())
@@ -197,7 +196,7 @@ class LinuxDeployGtkPlugin(LinuxDeployBase):
 
     @property
     def file_path(self):
-        return self.command.tools_path / "plugins" / self.filename
+        return self.command.tools_path / "linuxdeploy_plugins" / self.filename
 
     @property
     def filename(self):
