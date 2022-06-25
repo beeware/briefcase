@@ -65,14 +65,12 @@ class LinuxDeployBase:
         """Download and install linuxdeploy or plugin."""
         try:
             self.command.download_url(
-                url=self.download_url, download_path=self.command.tools_path
+                url=self.download_url, download_path=self.file_path.parent
             )
         except requests_exceptions.ConnectionError as e:
-            raise NetworkFailure("downloading linuxdeploy AppImage") from e
+            raise NetworkFailure("downloading linuxdeploy tool or plugin") from e
 
-        with self.command.input.wait_bar(
-            f"Installing linuxdeploy or plugin with {self.download_url}..."
-        ):
+        with self.command.input.wait_bar(f"Installing {self.filename}..."):
             self.command.os.chmod(self.file_path, 0o755)
             if self.filename.endswith("AppImage"):
                 self.patch_elf_header()
