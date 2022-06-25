@@ -144,7 +144,7 @@ class LinuxAppImageUpdateCommand(LinuxAppImageMixin, UpdateCommand):
     description = "Update an existing Linux AppImage."
 
 
-def _valid_url(url):
+def _valid_url(url: str) -> bool:
     try:
         result = urllib.parse.urlparse(url)
         return all([result.scheme, result.netloc])
@@ -161,6 +161,8 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
         if app.linuxdeploy_plugins:
             for plugin in app.linuxdeploy_plugins:
                 plugin_path = pathlib.Path(plugin)
+                if " " in plugin:
+                    _, plugin = plugin.split(" ")
                 if plugin == "gtk":
                     LinuxDeployGtkPlugin.verify(self)
                 elif _valid_url(plugin) or plugin_path.is_file():
@@ -198,13 +200,19 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
         plugins = []
         if app.linuxdeploy_plugins:
             for plugin in app.linuxdeploy_plugins:
+                env_var = None
+                if " " in plugin:
+                    env_var, plugin = plugin.split(" ")
+                    var, value = env_var.split("=")
+                    env[var] = value
                 if plugin == "gtk":
                     plugins.append(plugin)
+                    if not env_var:
+                        env["DEPLOY_GTK_VERSION"] = "3"
                 else:
                     filename_stem = pathlib.Path(plugin).stem
                     plugin_name = filename_stem.split("-")[-1]
                     plugins.append(plugin_name)
-                env["DEPLOY_GTK_VERSION"] = "3"
 
         else:
             self.logger.info("No linuxdeploy plugins configured")

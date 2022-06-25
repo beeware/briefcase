@@ -149,6 +149,17 @@ Briefcase can take plugins in three different formats:
 3. A path to a plugin relative to the ``pyproject.toml`` file, like
    'packaging/linuxdeploy-gtk-plugin.sh'
 
+Some plugins need an environmental variable passed to configure it. For
+example, the ``gtk`` plugin needs the ``DEPLOY_GTK_VERSION`` environmental
+variable set to 3 or 4. If you use the ``gtk`` plugin provided by Briefcase,
+it is set to 3 by default, but you can override it or set it for other plugins
+by setting the ``DEPLOY_GTK_VERSION`` environmental variable. For example,
+when using a relative path, you can set it like this:
+
+    linuxdeploy_plugins = ['DEPLOY_GTK_VERSION=3 packaging/linuxdeploy-gtk-plugin.sh']
+
+``linuxdeploy_gtk_version``
+
 If you see errors during ``briefcase build`` of the form::
 
     ValueError: Namespace Something not available
