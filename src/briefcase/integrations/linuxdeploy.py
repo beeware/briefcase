@@ -1,4 +1,5 @@
 import pathlib
+import shutil
 from abc import abstractmethod
 from typing import Optional
 
@@ -79,9 +80,8 @@ class LinuxDeployBase:
     def uninstall(self):
         """Uninstall linuxdeploy."""
         with self.command.input.wait_bar("Removing old linuxdeploy install..."):
-            self.appimage_path.unlink()
-            plugins_path = self.command.tools_path / "linuxdeploy_plugins"
-            plugins_path.unlink()
+            self.file_path.unlink()
+            shutil.rmtree(self.command.tools_path / "linuxdeploy_plugins")
 
     def upgrade(self):
         """Upgrade an existing linuxdeploy install."""
@@ -136,6 +136,9 @@ class LinuxDeployBase:
 
 
 class LinuxDeploy(LinuxDeployBase):
+    name = "linuxdeploy"
+    full_name = "linuxdeploy"
+
     def __init__(self, command):
         super().__init__(self)
         self.command = command
@@ -157,6 +160,9 @@ class LinuxDeploy(LinuxDeployBase):
 
 
 class LinuxDeployOtherPlugin(LinuxDeployBase):
+    name = "linuxdeploy_other_plugin"
+    full_name = "linuxdeploy other plugin"
+
     def __init__(self, command, plugin):
         super().__init__(command)
         self.command = command
@@ -190,6 +196,9 @@ class LinuxDeployOtherPlugin(LinuxDeployBase):
 
 
 class LinuxDeployGtkPlugin(LinuxDeployBase):
+    name = "linuxdeploy_gtk_plugin"
+    full_name = "linuxdeploy GTK plugin"
+
     def __init__(self, command):
         super().__init__(command)
         self.command = command
