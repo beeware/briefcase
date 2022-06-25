@@ -15,7 +15,11 @@ from briefcase.commands import (
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.docker import verify_docker
-from briefcase.integrations.linuxdeploy import LinuxDeploy, LinuxDeployGtkPlugin
+from briefcase.integrations.linuxdeploy import (
+    LinuxDeploy,
+    LinuxDeployGtkPlugin,
+    LinuxDeployOtherPlugin,
+)
 from briefcase.platforms.linux import LinuxMixin
 
 
@@ -64,10 +68,10 @@ class LinuxAppImageMixin(LinuxMixin):
             f"briefcase/{app.bundle}.{app.app_name.lower()}:py{self.python_version_tag}"
         )
 
-    def verify_tools(self):
+    def verify_tools(self, app: BaseConfig):
         """Verify that Docker is available; and if it isn't that we're on
         Linux."""
-        super().verify_tools()
+        super().verify_tools(app)
         if self.use_docker:
             if self.host_os == "Windows":
                 raise BriefcaseCommandError(
@@ -140,7 +144,7 @@ class LinuxAppImageUpdateCommand(LinuxAppImageMixin, UpdateCommand):
     description = "Update an existing Linux AppImage."
 
 
-def _url_validator(url):
+def _valid_url(url):
     try:
         result = urllib.parse.urlparse(url)
         return all([result.scheme, result.netloc])
@@ -148,18 +152,23 @@ def _url_validator(url):
         return False
 
 
-def _get_plugin_name_from_path(path):
-    filename_stem = pathlib.Path(path).stem
-    return filename_stem.split("-")[-1]
-
-
 class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
     description = "Build a Linux AppImage."
 
-    def verify_tools(self):
-        super().verify_tools()
+    def verify_tools(self, app: BaseConfig):
+        super().verify_tools(app)
         self.linuxdeploy = LinuxDeploy.verify(self)
-        self.linuxdeploy_gtk_plugin = LinuxDeployGtkPlugin.verify(self)
+        if app.linuxdeploy_plugins:
+            for plugin in app.linuxdeploy_plugins:
+                plugin_path = pathlib.Path(plugin)
+                if plugin == "gtk":
+                    LinuxDeployGtkPlugin.verify(self)
+                elif _valid_url(plugin) or plugin_path.is_file():
+                    LinuxDeployOtherPlugin.verify(self, plugin)
+                else:
+                    self.logger.info(f"unable to verify plugin {plugin}")
+                    continue
+                self.logger.info(f"linuxdeploy {plugin} plugin already installed")
 
     def build_app(self, app: BaseConfig, **kwargs):
         """Build an application.
@@ -176,7 +185,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
                     f"Error while building app {app.app_name}."
                 ) from e
 
-    def _build_appimage(self, app):
+    def _build_appimage(self, app: BaseConfig):
         """Build the AppImage.
 
         :param app: The application to build
@@ -189,21 +198,13 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
         plugins = []
         if app.linuxdeploy_plugins:
             for plugin in app.linuxdeploy_plugins:
-                plugin_path = pathlib.Path(plugin)
-                plugin_name = None
                 if plugin == "gtk":
-                    plugin_name = plugin
-                    env["DEPLOY_GTK_VERSION"] = "3"
-                elif _url_validator(plugin):
-                    url_path = urllib.parse.urlparse(plugin).path
-                    plugin_name = _get_plugin_name_from_path(url_path)
-                elif plugin_path.is_file():
-                    plugin_name = _get_plugin_name_from_path(plugin_path)
-                if plugin_name:
-                    plugins.append(plugin_name)
-                    self.logger.info(f"Using linuxdeploy {plugin_name} plugin")
+                    plugins.append(plugin)
                 else:
-                    self.logger.info(f"Unable to find or parse plugin {plugin}")
+                    filename_stem = pathlib.Path(plugin).stem
+                    plugin_name = filename_stem.split("-")[-1]
+                    plugins.append(plugin_name)
+                env["DEPLOY_GTK_VERSION"] = "3"
 
         else:
             self.logger.info("No linuxdeploy plugins configured")
@@ -250,9 +251,9 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
 class LinuxAppImageRunCommand(LinuxAppImageMixin, RunCommand):
     description = "Run a Linux AppImage."
 
-    def verify_tools(self):
+    def verify_tools(self, app: BaseConfig):
         """Verify that we're on Linux."""
-        super().verify_tools()
+        super().verify_tools(app)
         if self.host_os != "Linux":
             raise BriefcaseCommandError("AppImages can only be executed on Linux.")
 

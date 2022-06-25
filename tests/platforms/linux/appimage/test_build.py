@@ -8,7 +8,7 @@ from requests import exceptions as requests_exceptions
 
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.docker import Docker
-from briefcase.integrations.linuxdeploy import LinuxDeploy, LinuxDeployGtkPlugin
+from briefcase.integrations.linuxdeploy import LinuxDeploy
 from briefcase.platforms.linux.appimage import LinuxAppImageBuildCommand
 
 
@@ -65,7 +65,6 @@ def build_command(tmp_path, first_app_config):
     command.Docker = Docker
 
     command.linuxdeploy = LinuxDeploy(command)
-    command.linuxdeploy_gtk_plugin = LinuxDeployGtkPlugin(command)
     return command
 
 

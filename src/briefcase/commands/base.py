@@ -8,6 +8,7 @@ import sys
 from abc import ABC, abstractmethod
 from cgi import parse_header
 from pathlib import Path
+from typing import Optional
 from urllib.parse import urlparse
 
 import requests
@@ -350,7 +351,7 @@ class BaseCommand(ABC):
         """
         return f"{self.sys.version_info.major}.{self.sys.version_info.minor}"
 
-    def verify_tools(self):
+    def verify_tools(self, app: Optional[BaseConfig] = None):
         """Verify that the tools needed to run this command exist.
 
         Raises MissingToolException if a required system tool is

@@ -1,4 +1,6 @@
+import pathlib
 from abc import abstractmethod
+from typing import Optional
 
 from requests import exceptions as requests_exceptions
 
@@ -20,7 +22,7 @@ class LinuxDeployBase:
 
     @property
     @abstractmethod
-    def linuxdeploy_download_url(self):
+    def download_url(self):
         ...
 
     @property
@@ -28,11 +30,12 @@ class LinuxDeployBase:
         return self.command.tools_path / self.filename
 
     @classmethod
-    def verify(cls, command, install=True):
-        """Verify that linuxdeploy is available.
+    def verify(cls, command, install=True, plugin: Optional[str] = None):
+        """Verify that linuxdeploy or plugin is available.
 
         :param command: The command that needs to use linuxdeploy
         :param install: Should the tool be installed if it is not found?
+        :param plugin: The linuxdeploy plugin to verify.
         :returns: A valid linuxdeploy tool wrapper. If linuxdeploy is not
             available, and was not installed, raises MissingToolError.
         """
@@ -41,10 +44,14 @@ class LinuxDeployBase:
         if not linuxdeploy.exists():
             if install:
                 command.logger.info(
-                    "The linuxdeploy tool was not found; downloading and installing...",
-                    prefix=cls.name,
+                    "The linuxdeploy tool or plugin was not found;"
+                    "downloading and installing...",
+                    prefix=cls.__name__,
                 )
-                linuxdeploy.install()
+                if plugin:
+                    linuxdeploy.install(plugin)
+                else:
+                    linuxdeploy.install()
             else:
                 raise MissingToolError("linuxdeploy")
 
@@ -61,7 +68,7 @@ class LinuxDeployBase:
         """Download and install linuxdeploy."""
         try:
             linuxdeploy_path = self.command.download_url(
-                url=self.linuxdeploy_download_url, download_path=self.command.tools_path
+                url=self.download_url, download_path=self.command.tools_path
             )
         except requests_exceptions.ConnectionError as e:
             raise NetworkFailure("downloading linuxdeploy AppImage") from e
@@ -138,11 +145,26 @@ class LinuxDeploy(LinuxDeployBase):
         return f"linuxdeploy-{self.command.host_arch}.AppImage"
 
     @property
-    def linuxdeploy_download_url(self):
+    def download_url(self):
         return (
             "https://github.com/linuxdeploy/linuxdeploy/"
             f"releases/download/continuous/{self.filename}"
         )
+
+
+class LinuxDeployOtherPlugin(LinuxDeployBase):
+    def __init__(self, command, plugin):
+        super().__init__(command, plugin)
+        self.command = command
+        self.plugin = plugin
+
+    @property
+    def filename(self):
+        return pathlib.Path(self.plugin).stem
+
+    @property
+    def download_url(self):
+        return self.plugin
 
 
 class LinuxDeployGtkPlugin(LinuxDeployBase):
@@ -155,7 +177,7 @@ class LinuxDeployGtkPlugin(LinuxDeployBase):
         return "linuxdeploy-plugin-gtk.sh"
 
     @property
-    def linuxdeploy_download_url(self):
+    def download_url(self):
         return (
             "https://raw.githubusercontent.com/linuxdeploy/linuxdeploy-plugin-gtk/"
             f"master/{self.filename}"
