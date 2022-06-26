@@ -1,5 +1,4 @@
 import pathlib
-import shutil
 from abc import abstractmethod
 from typing import Optional
 
@@ -74,14 +73,6 @@ class LinuxDeployBase:
             self.command.os.chmod(self.file_path, 0o755)
             if self.filename.endswith("AppImage"):
                 self.patch_elf_header()
-
-    def uninstall(self):
-        """Uninstall linuxdeploy."""
-        with self.command.input.wait_bar("Removing old linuxdeploy install..."):
-            self.file_path.unlink()
-            plugins_path = self.command.tools_path / "linuxdeploy-plugins"
-            if plugins_path.is_dir():
-                shutil.rmtree(plugins_path)
 
     def upgrade(self):
         """Upgrade an existing linuxdeploy install."""
@@ -158,6 +149,11 @@ class LinuxDeploy(LinuxDeployBase):
             f"releases/download/continuous/{self.filename}"
         )
 
+    def uninstall(self):
+        """Uninstall linuxdeploy."""
+        with self.command.input.wait_bar("Removing old linuxdeploy install..."):
+            self.file_path.unlink()
+
 
 class LinuxDeployPluginBase(LinuxDeployBase):
     """Base class for linuxdeploy plugins."""
@@ -171,10 +167,18 @@ class LinuxDeployPluginBase(LinuxDeployBase):
     def file_path(self):
         return self.command.tools_path / "linuxdeploy_plugins" / self.filename
 
+    def uninstall(self):
+        """Uninstall linuxdeploy plugin."""
+        with self.command.input.wait_bar("Removing old linuxdeploy plugin..."):
+            self.file_path.unlink()
+            plugins_path = self.command.tools_path / "linuxdeploy-plugins"
+            if plugins_path.is_dir() and plugins_path.is_empty():
+                plugins_path.rmdir()
+
 
 class LinuxDeployPluginFromFile(LinuxDeployPluginBase):
-    name = "linuxdeploy_local_plugin"
-    full_name = "linuxdeploy local plugin"
+    name = "linuxdeploy_plugin_from_file"
+    full_name = "linuxdeploy plugin from file"
 
     @property
     def filename(self):
@@ -200,8 +204,8 @@ class LinuxDeployPluginFromFile(LinuxDeployPluginBase):
 
 
 class LinuxDeployPluginFromUrl(LinuxDeployPluginBase):
-    name = "linuxdeploy_url_plugin"
-    full_name = "linuxdeploy URL plugin"
+    name = "linuxdeploy_plugin_from_url"
+    full_name = "linuxdeploy plugin from URL"
 
     @property
     def filename(self):

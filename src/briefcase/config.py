@@ -404,9 +404,9 @@ class AppConfig(BaseConfig):
                 else:
                     plugin_env = None
                     plugin_path = plugin
-                if plugin == "gtk":
+                if plugin_path == "gtk":
                     plugin_type = LinuxDeployPluginType.GTK
-                elif is_valid_url(plugin):
+                elif is_valid_url(plugin_path):
                     plugin_type = LinuxDeployPluginType.URL
                 elif pathlib.Path(plugin_path).is_file():
                     plugin_type = LinuxDeployPluginType.FILE
