@@ -3,6 +3,7 @@ import pathlib
 import subprocess
 import urllib
 from contextlib import contextmanager
+from typing import Optional
 
 from briefcase.commands import (
     BuildCommand,
@@ -69,10 +70,10 @@ class LinuxAppImageMixin(LinuxMixin):
             f"briefcase/{app.bundle}.{app.app_name.lower()}:py{self.python_version_tag}"
         )
 
-    def verify_tools(self, app: BaseConfig):
+    def verify_tools(self, app: Optional[BaseConfig] = None):
         """Verify that Docker is available; and if it isn't that we're on
         Linux."""
-        super().verify_tools(app)
+        super().verify_tools()
         if self.use_docker:
             if self.host_os == "Windows":
                 raise BriefcaseCommandError(
@@ -268,9 +269,9 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
 class LinuxAppImageRunCommand(LinuxAppImageMixin, RunCommand):
     description = "Run a Linux AppImage."
 
-    def verify_tools(self, app: BaseConfig):
+    def verify_tools(self):
         """Verify that we're on Linux."""
-        super().verify_tools(app)
+        super().verify_tools()
         if self.host_os != "Linux":
             raise BriefcaseCommandError("AppImages can only be executed on Linux.")
 

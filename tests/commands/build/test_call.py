@@ -37,10 +37,12 @@ def test_multiple_apps(build_command, first_app, second_app):
 
     # The right sequence of things will be done
     assert build_command.actions == [
-        # Tools are verified
+        # Tools are verified for first app
         ("verify",),
         # Build the first app; no state
         ("build", "first", {}),
+        # Tools are verified for second app
+        ("verify",),
         # Build the second apps; state from previous build.
         ("build", "second", {"build_state": "first"}),
     ]
@@ -62,11 +64,13 @@ def test_non_existent(build_command, first_app_config, second_app):
 
     # The right sequence of things will be done
     assert build_command.actions == [
-        # Tools are verified
+        # Tools are verified for first app
         ("verify",),
         # First App doesn't exist, so it will be created, then built
         ("create", "first", {}),
         ("build", "first", {"create_state": "first"}),
+        # Tools are verified for second app
+        ("verify",),
         # Second app *does* exist, so it only be built
         ("build", "second", {"create_state": "first", "build_state": "first"}),
     ]
@@ -89,10 +93,12 @@ def test_unbuilt(build_command, first_app_unbuilt, second_app):
 
     # The right sequence of things will be done
     assert build_command.actions == [
-        # Tools are verified
+        # Tools are verified for first app
         ("verify",),
         # First App exists, but hasn't been built; it will be built.
         ("build", "first", {}),
+        # Tools are verified for second app
+        ("verify",),
         # Second app has been built before; it will be built again.
         ("build", "second", {"build_state": "first"}),
     ]
@@ -114,11 +120,13 @@ def test_update_app(build_command, first_app, second_app):
 
     # The right sequence of things will be done
     assert build_command.actions == [
-        # Tools are verified
+        # Tools are verified for first app
         ("verify",),
         # Update then build the first app
         ("update", "first", {}),
         ("build", "first", {"update_state": "first"}),
+        # Tools are verified for second app
+        ("verify",),
         # Update then build the second app
         ("update", "second", {"update_state": "first", "build_state": "first"}),
         ("build", "second", {"update_state": "second", "build_state": "first"}),
@@ -141,11 +149,13 @@ def test_update_non_existent(build_command, first_app_config, second_app):
 
     # The right sequence of things will be done
     assert build_command.actions == [
-        # Tools are verified
+        # Tools are verified for first app
         ("verify",),
         # First App doesn't exist, so it will be created, then built
         ("create", "first", {}),
         ("build", "first", {"create_state": "first"}),
+        # Tools are verified for second app
+        ("verify",),
         # Second app *does* exist, so it will be updated, then built
         ("update", "second", {"create_state": "first", "build_state": "first"}),
         (
@@ -172,11 +182,13 @@ def test_update_unbuilt(build_command, first_app_unbuilt, second_app):
 
     # The right sequence of things will be done
     assert build_command.actions == [
-        # Verify
+        # Tools are verified for first app
         ("verify",),
         # First App exists, but hasn't been built; it will updated then built.
         ("update", "first", {}),
         ("build", "first", {"update_state": "first"}),
+        # Tools are verified for second app
+        ("verify",),
         # Second app has been built before; it will be built again.
         ("update", "second", {"update_state": "first", "build_state": "first"}),
         ("build", "second", {"update_state": "second", "build_state": "first"}),
