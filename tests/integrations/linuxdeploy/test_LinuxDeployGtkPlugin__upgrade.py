@@ -12,19 +12,24 @@ def mock_command(tmp_path):
     command = MagicMock()
     command.tools_path = tmp_path / "tools"
     command.tools_path.mkdir()
+    plugins_path = command.tools_path / "linuxdeploy_plugins"
+    plugins_path.mkdir()
 
     return command
 
 
 def test_upgrade_exists(mock_command, tmp_path):
     """If linuxdeploy gtk already exists, upgrading deletes first."""
-    plugin_path = tmp_path / "tools" / "linuxdeploy-plugin-gtk.sh"
+    plugin_path = (
+        tmp_path / "tools" / "linuxdeploy_plugins" / "linuxdeploy-plugin-gtk.sh"
+    )
 
     # Mock already installed
     plugin_path.touch()
 
     # Mock a successful download
     def side_effect_create_mock_plugin(*args, **kwargs):
+        plugin_path.parent.mkdir(exist_ok=True)
         plugin_path.touch()
         return "new-downloaded-file"
 
@@ -41,7 +46,7 @@ def test_upgrade_exists(mock_command, tmp_path):
     mock_command.download_url.assert_called_with(
         url="https://raw.githubusercontent.com/linuxdeploy/linuxdeploy-plugin-gtk/"
         "master/linuxdeploy-plugin-gtk.sh",
-        download_path=tmp_path / "tools",
+        download_path=tmp_path / "tools" / "linuxdeploy_plugins",
     )
     # The downloaded file will be made executable
     mock_command.os.chmod.assert_called_with("new-downloaded-file", 0o755)
@@ -63,7 +68,9 @@ def test_upgrade_linuxdeploy_gtk_download_failure(mock_command, tmp_path):
     """If linuxdeploy gtk doesn't exist, but a download failure occurs, an
     error is raised."""
     # Mock the existence of an install
-    plugin_path = tmp_path / "tools" / "linuxdeploy-plugin-gtk.sh"
+    plugin_path = (
+        tmp_path / "tools" / "linuxdeploy_plugins" / "linuxdeploy-plugin-gtk.sh"
+    )
     plugin_path.touch()
 
     mock_command.download_url.side_effect = requests_exceptions.ConnectionError
@@ -81,5 +88,5 @@ def test_upgrade_linuxdeploy_gtk_download_failure(mock_command, tmp_path):
     mock_command.download_url.assert_called_with(
         url="https://raw.githubusercontent.com/linuxdeploy/linuxdeploy-plugin-gtk/"
         "master/linuxdeploy-plugin-gtk.sh",
-        download_path=tmp_path / "tools",
+        download_path=tmp_path / "tools" / "linuxdeploy_plugins",
     )
