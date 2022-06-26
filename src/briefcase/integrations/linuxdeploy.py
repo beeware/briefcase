@@ -79,7 +79,9 @@ class LinuxDeployBase:
         """Uninstall linuxdeploy."""
         with self.command.input.wait_bar("Removing old linuxdeploy install..."):
             self.file_path.unlink()
-            shutil.rmtree(self.command.tools_path / "linuxdeploy_plugins")
+            plugins_path = self.command.tools_path / "linuxdeploy-plugins"
+            if plugins_path.is_dir():
+                shutil.rmtree(plugins_path)
 
     def upgrade(self):
         """Upgrade an existing linuxdeploy install."""
