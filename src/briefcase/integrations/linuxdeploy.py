@@ -157,9 +157,9 @@ class LinuxDeploy(LinuxDeployBase):
         )
 
 
-class LinuxDeployOtherPlugin(LinuxDeployBase):
-    name = "linuxdeploy_other_plugin"
-    full_name = "linuxdeploy other plugin"
+class LinuxDeployLocalPlugin(LinuxDeployBase):
+    name = "linuxdeploy_local_plugin"
+    full_name = "linuxdeploy local plugin"
 
     def __init__(self, command, plugin):
         super().__init__(command)
@@ -191,6 +191,28 @@ class LinuxDeployOtherPlugin(LinuxDeployBase):
             self.command.os.chmod(self.file_path, 0o755)
             if self.filename.endswith("AppImage"):
                 self.patch_elf_header()
+
+
+class LinuxDeployUrlPlugin(LinuxDeployBase):
+    name = "linuxdeploy_url_plugin"
+    full_name = "linuxdeploy URL plugin"
+
+    def __init__(self, command, plugin):
+        super().__init__(command)
+        self.command = command
+        self.plugin = plugin
+
+    @property
+    def file_path(self):
+        return self.command.tools_path / "linuxdeploy_plugins" / self.filename
+
+    @property
+    def filename(self):
+        return pathlib.Path(self.plugin).name
+
+    @property
+    def download_url(self):
+        return self.plugin
 
 
 class LinuxDeployGtkPlugin(LinuxDeployBase):

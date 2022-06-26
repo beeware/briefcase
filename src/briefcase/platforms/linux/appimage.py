@@ -18,7 +18,8 @@ from briefcase.integrations.docker import verify_docker
 from briefcase.integrations.linuxdeploy import (
     LinuxDeploy,
     LinuxDeployGtkPlugin,
-    LinuxDeployOtherPlugin,
+    LinuxDeployLocalPlugin,
+    LinuxDeployUrlPlugin,
 )
 from briefcase.platforms.linux import LinuxMixin
 
@@ -174,7 +175,9 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
                 if plugin == "gtk":
                     LinuxDeployGtkPlugin.verify(self)
                 elif _valid_url(plugin) or plugin_path.is_file():
-                    LinuxDeployOtherPlugin.verify(self, plugin=plugin)
+                    LinuxDeployUrlPlugin.verify(self, plugin=plugin)
+                elif plugin_path.is_file():
+                    LinuxDeployLocalPlugin.verify(self, plugin=plugin)
                 else:
                     self.logger.info(f"unable to verify plugin {plugin}")
 
