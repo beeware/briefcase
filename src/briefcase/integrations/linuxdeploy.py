@@ -172,7 +172,7 @@ class LinuxDeployPluginBase(LinuxDeployBase):
         with self.command.input.wait_bar("Removing old linuxdeploy plugin..."):
             self.file_path.unlink()
             plugins_path = self.command.tools_path / "linuxdeploy-plugins"
-            if plugins_path.is_dir() and plugins_path.is_empty():
+            if plugins_path.is_dir() and not any(plugins_path.iterdir()):
                 plugins_path.rmdir()
 
 
