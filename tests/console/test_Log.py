@@ -68,7 +68,7 @@ def test_save_log_to_file_no_exception(tmp_path, now):
     assert log_filepath.exists()
     log_contents = open(log_filepath, encoding="utf-8").read()
 
-    assert log_contents.startswith("Date:            2022-06-25")
+    assert log_contents.startswith("Date/Time:       2022-06-25 16:12:29")
     assert f"{Log.DEBUG_PREFACE}this is debug output" in log_contents
     assert "this is info output" in log_contents
     assert "this is warning output" in log_contents
@@ -76,8 +76,11 @@ def test_save_log_to_file_no_exception(tmp_path, now):
     assert "this is print output" in log_contents
     assert "this is log output" in log_contents
     assert "this is console output" not in log_contents
-    assert "GITHUB_KEY=********************" in log_contents
+    # Environment variables are in the output
     assert "ANDROID_SDK_ROOT=/androidsdk" in log_contents
+    assert "GITHUB_KEY=********************" in log_contents
+    # Environment variables are sorted
+    assert log_contents.index("ANDROID_SDK_ROOT") < log_contents.index("GITHUB_KEY")
     assert "Traceback (most recent call last)" not in log_contents
 
 
@@ -101,7 +104,7 @@ def test_save_log_to_file_with_exception(tmp_path, now):
     log_filepath.exists()
     log_contents = open(log_filepath, encoding="utf-8").read()
 
-    assert log_contents.startswith("Date:            2022-06-25")
+    assert log_contents.startswith("Date/Time:       2022-06-25 16:12:29")
     assert "Traceback (most recent call last)" in log_contents
     assert log_contents.splitlines()[-1].startswith("ZeroDivisionError")
 

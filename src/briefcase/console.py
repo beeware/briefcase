@@ -233,10 +233,10 @@ class Log:
         uname = platform.uname()
         sanitized_env_vars = "\n".join(
             f"    {env_var}={value if not SENSITIVE_SETTING_RE.search(env_var) else '********************'}"
-            for env_var, value in command.os.environ.items()
+            for env_var, value in sorted(command.os.environ.items())
         )
         return (
-            f"Date:            {datetime.now().strftime('%Y-%m-%d')}\n"
+            f"Date/Time:       {datetime.now().strftime('%Y-%m-%d %H:%M:%S %Z')}\n"
             f"Command line:    {' '.join(sys.argv)}\n"
             f"\n"
             f"OS Release:      {uname.system} {uname.release}\n"
