@@ -55,7 +55,7 @@ class LinuxDeployBase:
         return linuxdeploy
 
     def exists(self):
-        return self.file_path.exists() or self.file_path.is_symlink()
+        return self.file_path.exists()
 
     @property
     def managed_install(self):
@@ -179,12 +179,12 @@ class LinuxDeployOtherPlugin(LinuxDeployBase):
         return self.plugin
 
     def install(self):
-        """Symlink to the local linuxdeploy plugin."""
+        """Create hardlink to the local linuxdeploy plugin."""
         local_plugin = pathlib.Path(self.download_url)
         self.file_path.parent.mkdir(parents=True, exist_ok=True)
         if local_plugin.resolve() != self.file_path.resolve():
             self.file_path.unlink(missing_ok=True)
-            self.file_path.symlink_to(local_plugin.resolve())
+            self.file_path.hardlink_to(local_plugin.resolve())
         with self.command.input.wait_bar(
             f"Installing linuxdeploy plugin with {self.download_url}..."
         ):
