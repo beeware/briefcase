@@ -31,16 +31,16 @@ class LinuxDeployBase:
         ...
 
     @classmethod
-    def verify(cls, command, install=True, plugin: Optional[str] = None):
+    def verify(cls, command, install=True, plugin_path: Optional[str] = None):
         """Verify that linuxdeploy or plugin is available.
 
         :param command: The command that needs to use linuxdeploy
         :param install: Should the tool be installed if it is not found?
-        :param plugin: The linuxdeploy plugin to verify.
+        :param plugin_path: The path of the linuxdeploy plugin to verify.
         :returns: A valid linuxdeploy tool wrapper. If linuxdeploy is not
             available, and was not installed, raises MissingToolError.
         """
-        linuxdeploy = cls(command, plugin) if plugin else cls(command)
+        linuxdeploy = cls(command, plugin_path) if plugin_path else cls(command)
         if not linuxdeploy.exists():
             if install:
                 command.logger.info(
@@ -159,9 +159,8 @@ class LinuxDeploy(LinuxDeployBase):
         )
 
 
-class LinuxDeployLocalPlugin(LinuxDeployBase):
-    name = "linuxdeploy_local_plugin"
-    full_name = "linuxdeploy local plugin"
+class LinuxDeployPluginBase(LinuxDeployBase):
+    """Base class for linuxdeploy plugins."""
 
     def __init__(self, command, plugin):
         super().__init__(command)
@@ -171,6 +170,11 @@ class LinuxDeployLocalPlugin(LinuxDeployBase):
     @property
     def file_path(self):
         return self.command.tools_path / "linuxdeploy_plugins" / self.filename
+
+
+class LinuxDeployPluginFromFile(LinuxDeployPluginBase):
+    name = "linuxdeploy_local_plugin"
+    full_name = "linuxdeploy local plugin"
 
     @property
     def filename(self):
@@ -195,18 +199,9 @@ class LinuxDeployLocalPlugin(LinuxDeployBase):
                 self.patch_elf_header()
 
 
-class LinuxDeployUrlPlugin(LinuxDeployBase):
+class LinuxDeployPluginFromUrl(LinuxDeployPluginBase):
     name = "linuxdeploy_url_plugin"
     full_name = "linuxdeploy URL plugin"
-
-    def __init__(self, command, plugin):
-        super().__init__(command)
-        self.command = command
-        self.plugin = plugin
-
-    @property
-    def file_path(self):
-        return self.command.tools_path / "linuxdeploy_plugins" / self.filename
 
     @property
     def filename(self):
@@ -217,17 +212,9 @@ class LinuxDeployUrlPlugin(LinuxDeployBase):
         return self.plugin
 
 
-class LinuxDeployGtkPlugin(LinuxDeployBase):
+class LinuxDeployGtkPlugin(LinuxDeployPluginBase):
     name = "linuxdeploy_gtk_plugin"
     full_name = "linuxdeploy GTK plugin"
-
-    def __init__(self, command):
-        super().__init__(command)
-        self.command = command
-
-    @property
-    def file_path(self):
-        return self.command.tools_path / "linuxdeploy_plugins" / self.filename
 
     @property
     def filename(self):

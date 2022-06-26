@@ -1,12 +1,17 @@
 import copy
 import keyword
+import pathlib
 import re
+import urllib
+from collections import namedtuple
 from types import SimpleNamespace
 
 try:
     import tomllib
 except ModuleNotFoundError:
     import tomli as tomllib
+
+from enum import Enum, auto
 
 from briefcase.platforms import get_output_formats, get_platforms
 
@@ -185,6 +190,27 @@ def is_valid_app_name(app_name):
     return not is_reserved_keyword(app_name) and is_valid_pep508_name(app_name)
 
 
+LinuxDeployPlugin = namedtuple("LinuxDeployPlugin", ["type", "path", "env_var"])
+
+
+class LinuxDeployPluginType(Enum):
+    GTK = auto()
+    FILE = auto()
+    URL = auto()
+
+
+def is_valid_url(url: str) -> bool:
+    """Check that a URL is valid.
+
+    :param url: The URL to check.
+    """
+    try:
+        result = urllib.parse.urlparse(url)
+        return all([result.scheme, result.netloc])
+    except ValueError:
+        return False
+
+
 VALID_BUNDLE_RE = re.compile(r"[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$")
 
 
@@ -305,6 +331,8 @@ class AppConfig(BaseConfig):
         template=None,
         template_branch=None,
         supported=True,
+        linuxdeploy_plugins=None,
+        linuxdeploy_plugins_info=None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -325,6 +353,8 @@ class AppConfig(BaseConfig):
         self.template = template
         self.template_branch = template_branch
         self.supported = supported
+        self.linuxdeploy_plugins = linuxdeploy_plugins
+        self.linuxdeploy_plugins_info = linuxdeploy_plugins_info
 
         if not is_valid_app_name(self.app_name):
             raise BriefcaseConfigError(
@@ -365,6 +395,31 @@ class AppConfig(BaseConfig):
                 f"The `sources` list for {self.app_name!r} does not include a "
                 f"package named {self.module_name!r}."
             )
+
+        if self.linuxdeploy_plugins:
+            self.linuxdeploy_plugins_info: list[LinuxDeployPlugin] = []
+            for plugin in self.linuxdeploy_plugins:
+                if " " in plugin:
+                    plugin_env, plugin_path = plugin.split(" ")
+                else:
+                    plugin_env = None
+                    plugin_path = plugin
+                if plugin == "gtk":
+                    plugin_type = LinuxDeployPluginType.GTK
+                elif is_valid_url(plugin):
+                    plugin_type = LinuxDeployPluginType.URL
+                elif pathlib.Path(plugin_path).is_file():
+                    plugin_type = LinuxDeployPluginType.FILE
+                else:
+                    raise BriefcaseConfigError(
+                        f"The `linuxdeploy_plugins` for {self.app_name!r} contains "
+                        "an invalid plugin."
+                    )
+                self.linuxdeploy_plugins_info.append(
+                    LinuxDeployPlugin(
+                        type=plugin_type, path=plugin_path, env_var=plugin_env
+                    )
+                )
 
     def __repr__(self):
         return f"<{self.bundle}.{self.app_name} v{self.version} AppConfig>"

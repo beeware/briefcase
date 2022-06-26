@@ -1,7 +1,6 @@
 import os
 import pathlib
 import subprocess
-import urllib
 from contextlib import contextmanager
 from typing import Optional
 
@@ -13,14 +12,14 @@ from briefcase.commands import (
     RunCommand,
     UpdateCommand,
 )
-from briefcase.config import BaseConfig
+from briefcase.config import AppConfig, LinuxDeployPluginType
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.docker import verify_docker
 from briefcase.integrations.linuxdeploy import (
     LinuxDeploy,
     LinuxDeployGtkPlugin,
-    LinuxDeployLocalPlugin,
-    LinuxDeployUrlPlugin,
+    LinuxDeployPluginFromFile,
+    LinuxDeployPluginFromUrl,
 )
 from briefcase.platforms.linux import LinuxMixin
 
@@ -70,7 +69,7 @@ class LinuxAppImageMixin(LinuxMixin):
             f"briefcase/{app.bundle}.{app.app_name.lower()}:py{self.python_version_tag}"
         )
 
-    def verify_tools(self, app: Optional[BaseConfig] = None):
+    def verify_tools(self, app: Optional[AppConfig] = None):
         """Verify that Docker is available; and if it isn't that we're on
         Linux."""
         super().verify_tools()
@@ -129,7 +128,7 @@ class LinuxAppImageCreateCommand(LinuxAppImageMixin, CreateCommand):
             ("arch", self.host_arch),
         ]
 
-    def install_app_dependencies(self, app: BaseConfig):
+    def install_app_dependencies(self, app: AppConfig):
         """Install application dependencies.
 
         This will be containerized in Docker to ensure that the right
@@ -146,43 +145,28 @@ class LinuxAppImageUpdateCommand(LinuxAppImageMixin, UpdateCommand):
     description = "Update an existing Linux AppImage."
 
 
-def _valid_url(url: str) -> bool:
-    """Check that a URL is valid.
-
-    :param url: The URL to check.
-    """
-    try:
-        result = urllib.parse.urlparse(url)
-        return all([result.scheme, result.netloc])
-    except ValueError:
-        return False
-
-
 class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
     description = "Build a Linux AppImage."
 
-    def verify_tools(self, app: BaseConfig):
+    def verify_tools(self, app: AppConfig):
         """Verify that the AppImage linuxdeploy tool and plugins exist.
 
         :param app: The application to build
         """
         super().verify_tools(app)
         self.linuxdeploy = LinuxDeploy.verify(self)
-        if app.linuxdeploy_plugins:
-            for plugin in app.linuxdeploy_plugins:
-                if " " in plugin:
-                    _, plugin = plugin.split(" ")
-                plugin_path = pathlib.Path(plugin)
-                if plugin == "gtk":
-                    LinuxDeployGtkPlugin.verify(self)
-                elif _valid_url(plugin) or plugin_path.is_file():
-                    LinuxDeployUrlPlugin.verify(self, plugin=plugin)
-                elif plugin_path.is_file():
-                    LinuxDeployLocalPlugin.verify(self, plugin=plugin)
+        if app.linuxdeploy_plugins_info:
+            for plugin in app.linuxdeploy_plugins_info:
+                if plugin.type == LinuxDeployPluginType.GTK:
+                    LinuxDeployGtkPlugin.verify(self, plugin_path=plugin.path)
+                elif plugin.type == LinuxDeployPluginType.FILE:
+                    LinuxDeployPluginFromFile.verify(self, plugin_path=plugin.path)
+                elif plugin.type == LinuxDeployPluginType.URL:
+                    LinuxDeployPluginFromUrl.verify(self, plugin_path=plugin.path)
                 else:
-                    self.logger.info(f"unable to verify plugin {plugin}")
+                    self.logger.info(f"unable to verify plugin {plugin.path}")
 
-    def build_app(self, app: BaseConfig, **kwargs):
+    def build_app(self, app: AppConfig, **kwargs):
         """Build an application.
 
         :param app: The application to build
@@ -197,7 +181,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
                     f"Error while building app {app.app_name}."
                 ) from e
 
-    def _build_appimage(self, app: BaseConfig):
+    def _build_appimage(self, app: AppConfig):
         """Build the AppImage.
 
         :param app: The application to build
@@ -275,7 +259,7 @@ class LinuxAppImageRunCommand(LinuxAppImageMixin, RunCommand):
         if self.host_os != "Linux":
             raise BriefcaseCommandError("AppImages can only be executed on Linux.")
 
-    def run_app(self, app: BaseConfig, **kwargs):
+    def run_app(self, app: AppConfig, **kwargs):
         """Start the application.
 
         :param app: The config object for the app

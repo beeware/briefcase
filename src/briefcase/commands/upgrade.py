@@ -1,10 +1,16 @@
 import sys
 from typing import List
 
+from briefcase.config import LinuxDeployPluginType
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.android_sdk import AndroidSDK
 from briefcase.integrations.java import JDK
-from briefcase.integrations.linuxdeploy import LinuxDeploy
+from briefcase.integrations.linuxdeploy import (
+    LinuxDeploy,
+    LinuxDeployGtkPlugin,
+    LinuxDeployPluginFromFile,
+    LinuxDeployPluginFromUrl,
+)
 from briefcase.integrations.wix import WiX
 
 from .base import BaseCommand
@@ -57,9 +63,30 @@ class UpgradeCommand(BaseCommand):
         )
 
     def __call__(self, tool_list: List[str], list_tools=False, **options):
-        # Verify all the managed SDKs to see which are present.
+        # Verify all the managed SDKs and plugins to see which are present.
         managed_tools = {}
         non_managed_tools = set()
+
+        # Add linuxdeploy plugins to tools based on app config
+        for app_name, app in sorted(self.apps.items()):
+            if app.linuxdeploy_plugins_info:
+                for plugin in app.linuxdeploy_plugins_info:
+                    if plugin.type == LinuxDeployPluginType.GTK:
+                        klass = LinuxDeployGtkPlugin
+                    elif plugin.type == LinuxDeployPluginType.FILE:
+                        klass = LinuxDeployPluginFromFile
+                    elif plugin.type == LinuxDeployPluginType.URL:
+                        klass = LinuxDeployPluginFromUrl
+                    try:
+                        tool = klass.verify(self, plugin_path=plugin.path)
+                        if tool.managed_install:
+                            managed_tools[klass.name] = tool
+                        else:
+                            non_managed_tools.add(klass.name)
+                    except BriefcaseCommandError:
+                        # Plugin doesn't exist, or can't be managed
+                        non_managed_tools.add(klass.name)
+
         for klass in self.sdks:
             try:
                 tool = klass.verify(self, install=False)
