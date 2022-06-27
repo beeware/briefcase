@@ -18,13 +18,18 @@ def mock_command(tmp_path):
 
 def test_verify_exists(mock_command, tmp_path):
     """If linuxdeploy gtk plugin already exists, verify doesn't download."""
-    plugin_path = tmp_path / "tools" / "linuxdeploy-plugin-gtk.sh"
+    plugin_path = (
+        tmp_path / "tools" / "linuxdeploy_plugins" / "linuxdeploy-plugin-gtk.sh"
+    )
 
     # Mock the existence of an install
+    plugin_path.parent.mkdir(exist_ok=True, parents=True)
     plugin_path.touch()
 
     # Create a linuxdeploy wrapper by verification
-    linuxdeploy_gtk_plugin = LinuxDeployGtkPlugin.verify(mock_command)
+    linuxdeploy_gtk_plugin = LinuxDeployGtkPlugin.verify(
+        mock_command, plugin_path="gtk"
+    )
 
     # No download occured
     assert mock_command.download_url.call_count == 0
@@ -43,7 +48,7 @@ def test_verify_does_not_exist_dont_install(mock_command, tmp_path):
     # True to create a linuxdeploy wrapper by verification.
     # This will fail because it doesn't exist, but installation was disabled.
     with pytest.raises(MissingToolError):
-        LinuxDeployGtkPlugin.verify(mock_command, install=False)
+        LinuxDeployGtkPlugin.verify(mock_command, install=False, plugin_path="gtk")
 
     # No download occured
     assert mock_command.download_url.call_count == 0
@@ -52,23 +57,26 @@ def test_verify_does_not_exist_dont_install(mock_command, tmp_path):
 
 def test_verify_does_not_exist(mock_command, tmp_path):
     """If linuxdeploy gtk plugin doesn't exist, it is downloaded."""
-    plugin_path = tmp_path / "tools" / "linuxdeploy-plugin-gtk.sh"
+    plugin_path = (
+        tmp_path / "tools" / "linuxdeploy_plugins" / "linuxdeploy-plugin-gtk.sh"
+    )
 
     # Mock a successful download
     def side_effect_create_mock_plugin(*args, **kwargs):
+        plugin_path.parent.mkdir(exist_ok=True, parents=True)
         plugin_path.touch()
         return "new-downloaded-file"
 
     mock_command.download_url.side_effect = side_effect_create_mock_plugin
 
     # Create a linuxdeploy gtk plugin wrapper
-    linuxdeploy = LinuxDeployGtkPlugin.verify(mock_command)
+    linuxdeploy = LinuxDeployGtkPlugin.verify(mock_command, plugin_path="gtk")
 
     # A download is invoked
     mock_command.download_url.assert_called_with(
         url="https://raw.githubusercontent.com/linuxdeploy/linuxdeploy-plugin-gtk/"
         "master/linuxdeploy-plugin-gtk.sh",
-        download_path=tmp_path / "tools",
+        download_path=tmp_path / "tools" / "linuxdeploy_plugins",
     )
     # The downloaded file will be made executable
     mock_command.os.chmod.assert_called_with("new-downloaded-file", 0o755)
@@ -83,11 +91,11 @@ def test_verify_linuxdeploy_gtk_download_failure(mock_command, tmp_path):
     mock_command.download_url.side_effect = requests_exceptions.ConnectionError
 
     with pytest.raises(NetworkFailure):
-        LinuxDeployGtkPlugin.verify(mock_command)
+        LinuxDeployGtkPlugin.verify(mock_command, plugin_path="gtk")
 
     # A download was invoked
     mock_command.download_url.assert_called_with(
         url="https://raw.githubusercontent.com/linuxdeploy/linuxdeploy-plugin-gtk/"
         "master/linuxdeploy-plugin-gtk.sh",
-        download_path=tmp_path / "tools",
+        download_path=tmp_path / "tools" / "linuxdeploy_plugins",
     )
