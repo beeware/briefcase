@@ -49,6 +49,29 @@ class LinuxDeployBase:
             if self.filename.endswith("AppImage"):
                 self.patch_elf_header()
 
+    @classmethod
+    def verify(cls, command, install=True, plugin_path: [str] = None):
+        """Verify that linuxdeploy tool or plugin is available.
+
+        :param command: The command that needs to use linuxdeploy
+        :param install: Should the tool be installed if it is not found?
+        :param plugin_path: The path of the linuxdeploy plugin to verify.
+        :returns: A valid linuxdeploy tool wrapper. If linuxdeploy is not
+            available, and was not installed, raises MissingToolError.
+        """
+        linuxdeploy = cls(command)
+        if not linuxdeploy.exists():
+            if install:
+                command.logger.info(
+                    "The linuxdeploy tool or plugin was not found; "
+                    "downloading and installing...",
+                    prefix=cls.__name__,
+                )
+                linuxdeploy.install()
+            else:
+                raise MissingToolError("linuxdeploy tool or plugin")
+        return linuxdeploy
+
     @abstractmethod
     def uninstall(self):
         ...
@@ -109,10 +132,6 @@ class LinuxDeploy(LinuxDeployBase):
     name = "linuxdeploy"
     full_name = "linuxdeploy"
 
-    def __init__(self, command):
-        super().__init__(self)
-        self.command = command
-
     @property
     def file_path(self):
         return self.command.tools_path / self.filename
@@ -128,27 +147,6 @@ class LinuxDeploy(LinuxDeployBase):
             f"releases/download/continuous/{self.filename}"
         )
 
-    @classmethod
-    def verify(cls, command, install=True):
-        """Verify that linuxdeploy is available.
-
-        :param command: The command that needs to use linuxdeploy
-        :param install: Should the tool be installed if it is not found?
-        :returns: A valid linuxdeploy tool wrapper. If linuxdeploy is not
-            available, and was not installed, raises MissingToolError.
-        """
-        linuxdeploy = cls(command)
-        if not linuxdeploy.exists():
-            if install:
-                command.logger.info(
-                    "The linuxdeploy tool was not found; downloading and installing...",
-                    prefix=cls.__name__,
-                )
-                linuxdeploy.install()
-            else:
-                raise MissingToolError("linuxdeploy tool")
-        return linuxdeploy
-
     def uninstall(self):
         """Uninstall linuxdeploy."""
         with self.command.input.wait_bar("Removing the old linuxdeploy install..."):
@@ -158,36 +156,9 @@ class LinuxDeploy(LinuxDeployBase):
 class LinuxDeployPluginBase(LinuxDeployBase):
     """Base class for linuxdeploy plugins."""
 
-    def __init__(self, command, plugin):
-        super().__init__(command)
-        self.command = command
-        self.plugin = plugin
-
     @property
     def file_path(self):
         return self.command.tools_path / "linuxdeploy_plugins" / self.filename
-
-    @classmethod
-    def verify(cls, command, install=True, plugin_path: [str] = None):
-        """Verify that the linuxdeploy plugin is available.
-
-        :param command: The command that needs to use linuxdeploy
-        :param install: Should the tool be installed if it is not found?
-        :param plugin_path: The path of the linuxdeploy plugin to verify.
-        :returns: A valid linuxdeploy tool wrapper. If linuxdeploy is not
-            available, and was not installed, raises MissingToolError.
-        """
-        linuxdeploy = cls(command, plugin_path)
-        if not linuxdeploy.exists():
-            if install:
-                command.logger.info(
-                    "The linuxdeploy plugin was not found; downloading and installing...",
-                    prefix=cls.__name__,
-                )
-                linuxdeploy.install()
-            else:
-                raise MissingToolError("linuxdeploy plugin")
-        return linuxdeploy
 
     def uninstall(self):
         """Uninstall linuxdeploy plugin."""

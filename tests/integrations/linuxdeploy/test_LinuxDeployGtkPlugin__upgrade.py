@@ -35,7 +35,7 @@ def test_upgrade_exists(mock_command, tmp_path):
     mock_command.download_url.side_effect = side_effect_create_mock_plugin
 
     # Create a linuxdeploy gtk wrapper, then upgrade it
-    linuxdeploy_gtk_plugin = LinuxDeployGtkPlugin(mock_command, "gtk")
+    linuxdeploy_gtk_plugin = LinuxDeployGtkPlugin(mock_command)
     linuxdeploy_gtk_plugin.upgrade()
 
     # The mock file should exist as the upgraded version
@@ -55,7 +55,7 @@ def test_upgrade_does_not_exist(mock_command, tmp_path):
     """If linuxdeploy gtk plugin doesn't already exist, upgrading is an
     error."""
     # Create a linuxdeploy gtk plugin wrapper, then upgrade it
-    linuxdeploy_gtk_plugin = LinuxDeployGtkPlugin(mock_command, "gtk")
+    linuxdeploy_gtk_plugin = LinuxDeployGtkPlugin(mock_command)
     with pytest.raises(MissingToolError):
         linuxdeploy_gtk_plugin.upgrade()
 
@@ -77,7 +77,7 @@ def test_upgrade_linuxdeploy_gtk_download_failure(mock_command, tmp_path):
 
     # Create a linuxdeploy gtk wrapper, then upgrade it.
     # The upgrade will fail
-    linuxdeploy_gtk_path = LinuxDeployGtkPlugin(mock_command, "gtk")
+    linuxdeploy_gtk_path = LinuxDeployGtkPlugin(mock_command)
     with pytest.raises(NetworkFailure):
         linuxdeploy_gtk_path.upgrade()
 
