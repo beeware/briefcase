@@ -1,5 +1,11 @@
 import contextlib
 import operator
+import os
+import platform
+import re
+import sys
+from datetime import datetime
+from pathlib import Path
 
 from rich.console import Console as RichConsole
 from rich.highlighter import RegexHighlighter
@@ -11,6 +17,12 @@ from rich.progress import (
     TextColumn,
     TimeRemainingColumn,
 )
+from rich.traceback import Traceback
+
+from briefcase import __version__
+
+# Regex to identify settings likely to contain sensitive information
+SENSITIVE_SETTING_RE = re.compile(r"API|TOKEN|KEY|SECRET|PASS|SIGNATURE", flags=re.I)
 
 
 class InputDisabled(Exception):
@@ -21,7 +33,7 @@ class InputDisabled(Exception):
 
 
 class RichConsoleHighlighter(RegexHighlighter):
-    """Custom Rich highlighter for printing to the terminal.
+    """Custom Rich highlighter for printing to the console.
 
     This highlighter limits text highlighting to only URLs.
 
@@ -39,23 +51,89 @@ class RichConsoleHighlighter(RegexHighlighter):
     highlights = [r"(?P<url>(file|https|http|ws|wss)://[-0-9a-zA-Z$_+!`(),.?/;:&=%#]*)"]
 
 
-rich_console = RichConsole(highlighter=RichConsoleHighlighter(), emoji=False)
+class Printer:
+    """Interface for printing and managing output to the console and/or log."""
+
+    # Console to manage console output.
+    console = RichConsole(highlighter=RichConsoleHighlighter(), emoji=False)
+
+    # Console to record all logging to a buffer while not printing anything to the console.
+    # We need to be wide enough to render `sdkmanager --list_installed` output without
+    # line wrapping.
+    LOG_FILE_WIDTH = 180
+    log = RichConsole(
+        # Rich only records what's being logged if it is actually written somewhere;
+        # writing to /dev/null allows Rich to do so without needing to print the logs
+        # in the console or save them to file before it is known a file is wanted.
+        file=open(os.devnull, "w", encoding="utf-8", errors="ignore"),
+        record=True,
+        width=LOG_FILE_WIDTH,
+        no_color=True,
+        markup=False,
+        emoji=False,
+        highlight=False,
+        soft_wrap=True,
+    )
+
+    @classmethod
+    def __call__(cls, *messages, stack_offset=5, show=True, **kwargs):
+        """Entry point for all printing to the console and the log.
+
+        The log records all content that is printed whether it is shown in
+        the console or not (e.g. debug output). When execution completes,
+        the log is conditionally exported and saved to a file.
+
+        :param messages: content to print and/or log
+        :param show: True (default) to print and log messages; False to only log.
+        :param stack_offset: number of levels up the stack where logging was invoked.
+            This tells Rich the number of levels to recurse up the stack to find
+            the filename to put in the right column of the Rich log.
+            Defaults to 5 since most uses are 5 levels deep from the actual logging.
+        """
+        if show:
+            cls.to_console(*messages, **kwargs)
+        cls.to_log(*messages, stack_offset=stack_offset, **kwargs)
+
+    @classmethod
+    def to_console(cls, *renderables, **kwargs):
+        """Specialized print to the console only omitting the log."""
+        cls.console.print(*renderables, **kwargs)
+
+    @classmethod
+    def to_log(cls, *renderables, stack_offset=5, **kwargs):
+        """Specialized print to the log only omitting the console."""
+        cls.log.log(*renderables, _stack_offset=stack_offset, **kwargs)
+
+    @classmethod
+    def export_log(cls):
+        """Export the text of the entire log."""
+        return cls.log.export_text()
 
 
 class Log:
     """Manage logging output driven by verbosity flags."""
 
+    # level of verbosity when debug output is shown in the console
     DEBUG = 2
-    DEEP_DEBUG = 3
+    # printed at the beginning of all debug output
+    DEBUG_PREFACE = ">>> "
 
-    def __init__(self, verbosity=1):
-        self.rich_console = rich_console
+    def __init__(self, printer=Printer(), verbosity=1):
+        self.print = printer
         # verbosity will be 1 more than the number of v flags from invocation
         self.verbosity = verbosity
-        # value to be printed at the beginning of all debug output
-        self.debug_preface = ">>> "
+        # preserved Rich stacktrace of exception for logging to file
+        self.stacktrace = None
 
-    def _log(self, preface="", prefix="", message="", markup=False, style=None):
+    def _log(
+        self,
+        preface="",
+        prefix="",
+        message="",
+        show=True,
+        markup=False,
+        style=None,
+    ):
         """Funnel to log all messages.
 
         :param preface: value to be printed on the far left of the message and
@@ -63,6 +141,8 @@ class Log:
         :param prefix: text prepended to the message wrapped in brackets and will
             be presented as dimmer compared to the styling of the message text.
         :param message: text to log; can contain Rich tags if markup=True.
+        :param show: True to print message to console; False to not print it.
+            This is to allow logs to be saved to a file without printing them.
         :param markup: whether to interpret Rich markup in the prefix, preface,
             and message; if True, all text must already be escaped; defaults False.
         :param style: Rich style to apply to everything printed for message.
@@ -70,11 +150,11 @@ class Log:
         if not message:
             # When a message is not provided, do not output anything;
             # This type of call is just clearing some vertical space.
-            self.rich_console.print()
+            self.print(show=show)
         else:
             if prefix:
                 # insert vertical space before for all messages with a prefix
-                self.rich_console.print()
+                self.print(show=show)
                 if not markup:
                     preface, prefix, message = (
                         escape(text) for text in (preface, prefix, message)
@@ -82,31 +162,23 @@ class Log:
                 prefix = f"[dim]\\[{prefix}][/dim] "
                 markup = True
             for line in message.splitlines():
-                self.rich_console.print(
-                    f"{preface}{prefix}{line}", markup=markup, style=style
+                self.print(
+                    f"{preface}{prefix}{line}",
+                    show=show,
+                    markup=markup,
+                    style=style,
                 )
-
-    def deep_debug(self, message="", *, prefix="", markup=False):
-        """Log messages at deep debug level; included if verbosity>=3."""
-        if self.verbosity >= self.DEEP_DEBUG:
-            self._log(
-                preface=self.debug_preface,
-                prefix=prefix,
-                message=message,
-                markup=markup,
-                style="dim",
-            )
 
     def debug(self, message="", *, prefix="", markup=False):
         """Log messages at debug level; included if verbosity>=2."""
-        if self.verbosity >= self.DEBUG:
-            self._log(
-                preface=self.debug_preface,
-                prefix=prefix,
-                message=message,
-                markup=markup,
-                style="dim",
-            )
+        self._log(
+            preface=self.DEBUG_PREFACE,
+            prefix=prefix,
+            message=message,
+            show=self.verbosity >= self.DEBUG,
+            markup=markup,
+            style="dim",
+        )
 
     def info(self, message="", *, prefix="", markup=False):
         """Log message at info level; always included in output."""
@@ -120,24 +192,91 @@ class Log:
         """Log message at error level; always included in output."""
         self._log(prefix=prefix, message=message, markup=markup, style="bold red")
 
+    def capture_stacktrace(self):
+        """Preserve Rich stacktrace from exception while in except block."""
+        self.stacktrace = Traceback.extract(*sys.exc_info(), show_locals=True)
+
+    def save_log_to_file(self, command):
+        """Save the current application log to file."""
+        # only save the log if a command ran and it errored or --log was specified
+        if command is None or (not self.stacktrace and not command.save_log):
+            return
+
+        with command.input.wait_bar("Saving log...", transient=True):
+            self.print.to_console()
+            log_filename = f"briefcase.{datetime.now().strftime('%Y_%m_%d-%H_%M_%S')}.{command.command}.log"
+            log_filepath = command.base_path / log_filename
+            try:
+                with open(
+                    log_filepath, "w", encoding="utf-8", errors="backslashreplace"
+                ) as log_file:
+                    log_file.write(self._build_log(command))
+            except OSError as e:
+                self.error(f"Failed to save log to {log_filepath}: {e}")
+            else:
+                self.warning(f"Log saved to {log_filepath}")
+            self.print.to_console()
+
+    def _build_log(self, command):
+        """Accumulate all information to include in the log file."""
+        # add the exception stacktrace to end of log if one was captured
+        if self.stacktrace:
+            # using print.log.print() instead of print.to_log() to avoid
+            # timestamp and code location inclusion for the stacktrace box.
+            self.print.log.print(
+                Traceback(
+                    trace=self.stacktrace,
+                    width=self.print.LOG_FILE_WIDTH,
+                    show_locals=True,
+                ),
+                new_line_start=True,
+            )
+        # build log header and export buffered log from Rich
+        uname = platform.uname()
+        sanitized_env_vars = "\n".join(
+            f"    {env_var}={value if not SENSITIVE_SETTING_RE.search(env_var) else '********************'}"
+            for env_var, value in sorted(command.os.environ.items())
+        )
+        return (
+            f"Date/Time:       {datetime.now().strftime('%Y-%m-%d %H:%M:%S %Z')}\n"
+            f"Command line:    {' '.join(sys.argv)}\n"
+            f"\n"
+            f"OS Release:      {uname.system} {uname.release}\n"
+            f"OS Version:      {uname.version}\n"
+            f"Architecture:    {uname.machine}\n"
+            f"Platform:        {platform.platform(aliased=True)}\n"
+            f"\n"
+            f"Python exe:      {sys.executable}\n"
+            # replace line breaks with spaces (use chr(10) since '\n' isn't allowed in f-strings...)
+            f"Python version:  {sys.version.replace(chr(10), ' ')}\n"
+            # sys.real_prefix was used in older versions of virtualenv.
+            # sys.base_prefix is always the python exe's original site-specific directory (e.g. /usr/local).
+            # sys.prefix is updated (from base_prefix's value) to the virtual env's site-specific directory.
+            f"Virtual env:     {hasattr(sys, 'real_prefix') or sys.base_prefix != sys.prefix}\n"
+            # for conda, prefix and base_prefix are likely the same but contain a conda-meta dir.
+            f"Conda env:       {(Path(sys.prefix) / 'conda-meta').exists()}\n"
+            f"\n"
+            f"Briefcase:       {__version__}\n"
+            f"Target platform: {command.platform}\n"
+            f"Target format:   {command.output_format}\n"
+            f"\n"
+            f"Environment Variables:\n"
+            f"{sanitized_env_vars}\n"
+            f"\n"
+            f"Briefcase Log:\n"
+            f"{self.print.export_log()}"
+        )
+
 
 class Console:
-    def __init__(self, enabled=True):
-        self.rich_console = rich_console
-        self._enabled = enabled
-
-        # Signal that Rich is dynamically controlling the terminal output.
+    def __init__(self, printer=Printer(), enabled=True):
+        self.print = printer
+        self.input = printer.console.input
+        self.enabled = enabled
+        # Signal that Rich is dynamically controlling the console output.
         # Therefore, all output must be printed to the screen by Rich to
         # prevent corruption of dynamic elements like Wait Bars.
         self.is_output_controlled = False
-
-    @property
-    def enabled(self):
-        return self._enabled
-
-    @enabled.setter
-    def enabled(self, enabled):
-        self._enabled = enabled
 
     def prompt(self, *values, markup=False, **kwargs):
         """Print to the screen for soliciting user interaction.
@@ -146,7 +285,7 @@ class Console:
         :param markup: True if prompt contains Rich markup
         """
         if self.enabled:
-            self.rich_console.print(*values, markup=markup, **kwargs)
+            self.print(*values, markup=markup, stack_offset=4, **kwargs)
 
     def progress_bar(self):
         """Returns a progress bar as a context manager."""
@@ -157,12 +296,17 @@ class Console:
             TextColumn("{task.percentage:>3.1f}%", style="default"),
             TextColumn("•", style="default"),
             TimeRemainingColumn(compact=True, elapsed_when_finished=True),
-            console=self.rich_console,
+            console=self.print.console,
         )
 
     @contextlib.contextmanager
     def wait_bar(
-        self, message="", done_message="done", *, transient=False, markup=False
+        self,
+        message="",
+        done_message="done",
+        *,
+        transient=False,
+        markup=False,
     ):
         """Returns a wait bar as a context manager.
 
@@ -178,7 +322,7 @@ class Console:
             BarColumn(bar_width=20, style="black", pulse_style="white"),
             TextColumn(message),
             transient=True,
-            console=self.rich_console,
+            console=self.print.console,
         )
         # setting start=False causes the progress bar to pulse
         wait_bar.add_task("", start=False)
@@ -189,11 +333,11 @@ class Console:
         except BaseException:
             # ensure the message is left on the screen even if user sends CTRL+C
             if message and not transient:
-                self.rich_console.print(message, markup=markup)
+                self.print(message, markup=markup)
             raise
         else:
             if message and not transient:
-                self.rich_console.print(
+                self.print(
                     f'{message}{f" {done_message}" if done_message else ""}',
                     markup=markup,
                 )
@@ -290,11 +434,13 @@ class Console:
         return user_input
 
     def __call__(self, prompt, *, markup=False):
-        """Make Console present the same interface as input()"""
+        """Present input() interface."""
         if not self.enabled:
             raise InputDisabled()
         try:
-            return self.rich_console.input(prompt, markup=markup)
+            input_value = self.input(prompt, markup=markup)
+            self.print.to_log(f"{Log.DEBUG_PREFACE}User input: {input_value}")
+            return input_value
         except EOFError:
             raise KeyboardInterrupt
 
@@ -304,7 +450,7 @@ def select_option(options, input, prompt="> ", error="Invalid selection"):
 
     The options are provided as a dictionary; the values are the
     human-readable options, and the keys are the values that will
-    be returned as the selection. The human readable options
+    be returned as the selection. The human-readable options
     will be sorted before display to the user.
 
     This method does *not* print a question or any leading text;

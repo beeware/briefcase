@@ -165,69 +165,7 @@ def test_debug_call_with_env(mock_sub, capsys):
         "\n"
         ">>> Running Command:\n"
         ">>>     hello world\n"
-        ">>> Environment:\n"
-        ">>>     NewVar=NewVarValue\n"
-        ">>> Return code: 0\n"
-    )
-    assert capsys.readouterr().out == expected_output
-
-
-def test_deep_debug_call(mock_sub, capsys):
-    """If verbosity is at the max, the full environment and return is
-    output."""
-    mock_sub.command.logger = Log(verbosity=3)
-
-    mock_sub.run(["hello", "world"])
-
-    mock_sub._subprocess.run.assert_called_with(
-        ["hello", "world"],
-        text=True,
-        encoding=ANY,
-    )
-    expected_output = (
-        "\n"
-        ">>> Running Command:\n"
-        ">>>     hello world\n"
-        ">>> Full Environment:\n"
-        ">>>     VAR1=Value 1\n"
-        ">>>     PS1=\n"
-        ">>> Line 2\n"
-        ">>> \n"
-        ">>> Line 4\n"
-        ">>>     PWD=/home/user/\n"
-        ">>> Return code: 0\n"
-    )
-    assert capsys.readouterr().out == expected_output
-
-
-def test_deep_debug_call_with_env(mock_sub, capsys):
-    """If verbosity is at the max, the full environment and return is output,
-    and the environment is merged."""
-    mock_sub.command.logger = Log(verbosity=3)
-
-    env = {"NewVar": "NewVarValue"}
-    mock_sub.run(["hello", "world"], env=env)
-
-    merged_env = mock_sub.command.os.environ.copy()
-    merged_env.update(env)
-
-    mock_sub._subprocess.run.assert_called_with(
-        ["hello", "world"],
-        env=merged_env,
-        text=True,
-        encoding=ANY,
-    )
-    expected_output = (
-        "\n"
-        ">>> Running Command:\n"
-        ">>>     hello world\n"
-        ">>> Full Environment:\n"
-        ">>>     VAR1=Value 1\n"
-        ">>>     PS1=\n"
-        ">>> Line 2\n"
-        ">>> \n"
-        ">>> Line 4\n"
-        ">>>     PWD=/home/user/\n"
+        ">>> Environment Overrides:\n"
         ">>>     NewVar=NewVarValue\n"
         ">>> Return code: 0\n"
     )
@@ -248,19 +186,15 @@ def test_calledprocesserror_exception_logging(mock_sub, capsys):
     with pytest.raises(CalledProcessError):
         mock_sub.run(["hello", "world"])
 
+    # fmt: off
     expected_output = (
         "\n"
         ">>> Running Command:\n"
         ">>>     hello world\n"
-        ">>> Full Environment:\n"
-        ">>>     VAR1=Value 1\n"
-        ">>>     PS1=\n"
-        ">>> Line 2\n"
-        ">>> \n"
-        ">>> Line 4\n"
-        ">>>     PWD=/home/user/\n"
         ">>> Return code: -1\n"
     )
+    # fmt: on
+
     assert capsys.readouterr().out == expected_output
 
 

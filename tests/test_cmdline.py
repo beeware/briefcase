@@ -200,7 +200,7 @@ def test_bare_command_help(monkeypatch, capsys):
     # Help message is for default platform and format
     output = capsys.readouterr().out
     assert output.startswith(
-        "usage: briefcase create macOS app [-h] [-v] [-V] [--no-input]\n"
+        "usage: briefcase create macOS app [-h] [-v] [-V] [--no-input] [--log]\n"
         "\n"
         "Create and populate a macOS app.\n"
     )
@@ -292,7 +292,7 @@ def test_command_explicit_platform_help(monkeypatch, capsys):
     # Help message is for default platform and format
     output = capsys.readouterr().out
     assert output.startswith(
-        "usage: briefcase create macOS app [-h] [-v] [-V] [--no-input]\n"
+        "usage: briefcase create macOS app [-h] [-v] [-V] [--no-input] [--log]\n"
         "\n"
         "Create and populate a macOS app.\n"
     )
@@ -361,7 +361,7 @@ def test_command_explicit_format_help(monkeypatch, capsys):
     # Help message is for default platform, but app format
     output = capsys.readouterr().out
     assert output.startswith(
-        "usage: briefcase create macOS app [-h] [-v] [-V] [--no-input]\n"
+        "usage: briefcase create macOS app [-h] [-v] [-V] [--no-input] [--log]\n"
         "\n"
         "Create and populate a macOS app.\n"
     )
@@ -425,6 +425,7 @@ def test_unknown_command_options(monkeypatch, capsys):
     output = capsys.readouterr().err
 
     assert output.startswith(
-        "usage: briefcase publish macOS Xcode [-h] [-v] [-V] [--no-input] [-c {s3}]\n"
+        "usage: briefcase publish macOS Xcode [-h] [-v] [-V] [--no-input] [--log]\n"
+        "                                     [-c {s3}]\n"
         "briefcase publish macOS Xcode: error: unrecognized arguments: -x"
     )

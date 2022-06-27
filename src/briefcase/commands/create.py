@@ -373,24 +373,27 @@ class CreateCommand(BaseCommand):
             self.shutil.rmtree(target)
             self.os.mkdir(target)
 
-        # Install  dependencies
+        # Install dependencies
         if app.requires:
-            try:
-                self.subprocess.run(
-                    [
-                        sys.executable,
-                        "-m",
-                        "pip",
-                        "install",
-                        "--upgrade",
-                        "--no-user",
-                        f"--target={target}",
-                    ]
-                    + app.requires,
-                    check=True,
-                )
-            except subprocess.CalledProcessError as e:
-                raise DependencyInstallError() from e
+            with self.input.wait_bar("Installing app dependencies..."):
+                try:
+                    self.subprocess.run(
+                        [
+                            sys.executable,
+                            "-m",
+                            "pip",
+                            "install",
+                            "--upgrade",
+                            "--no-user",
+                            "--progress-bar",
+                            "off",
+                            f"--target={target}",
+                        ]
+                        + app.requires,
+                        check=True,
+                    )
+                except subprocess.CalledProcessError as e:
+                    raise DependencyInstallError() from e
         else:
             self.logger.info("No application dependencies.")
 

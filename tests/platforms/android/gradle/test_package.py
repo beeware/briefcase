@@ -46,6 +46,8 @@ def test_execute_gradle(package_command, first_app_config, host_os, gradlew_name
         [
             package_command.bundle_path(first_app_config) / gradlew_name,
             "bundleRelease",
+            "--console",
+            "plain",
         ],
         cwd=package_command.bundle_path(first_app_config),
         env=package_command.android_sdk.env,

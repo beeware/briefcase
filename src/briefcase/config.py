@@ -428,12 +428,12 @@ def parse_config(config_file, platform, output_format):
 
     A configuration can define multiple apps; the final output is the merged
     content of the global, app, platform and output format settings
-    for each app, with output format definitions taking precendence over
+    for each app, with output format definitions taking precedence over
     platform, over app-level, over global. The final result is a single
     (mostly) flat dictionary for each app.
 
     :param config_file: A file-like object containing TOML to be parsed.
-    :param platform: The platform being targetted
+    :param platform: The platform being targeted
     :param output_format: The output format
     :returns: A dictionary of configuration data. The top level dictionary is
         keyed by the names of the apps that are declared; each value is
