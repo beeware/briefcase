@@ -1,1 +1,0 @@
-The existence of an appropriate Android system image is now verified independently to the existence of the emulator.

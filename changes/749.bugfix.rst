@@ -1,1 +1,0 @@
-Windows MSI projects are now able to support files with non-ASCII filenames.

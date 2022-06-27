@@ -1,1 +1,0 @@
-macOS apps are now notarized as part of the packaging process.

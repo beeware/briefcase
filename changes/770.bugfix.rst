@@ -1,1 +1,0 @@
-Output from subprocesses is correctly encoded, avoiding errors (especially on Windows) when tool output includes non-ASCII content.

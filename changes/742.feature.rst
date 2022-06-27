@@ -1,1 +1,0 @@
-The macOS log streamer now automatically exits using the run command when the app exits.

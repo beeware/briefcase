@@ -1,1 +1,0 @@
-A verbose log is written to file when a critical error occurs or --log is specified.

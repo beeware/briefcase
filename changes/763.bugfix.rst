@@ -1,1 +1,0 @@
-The error message presented when the Xcode Commandline Tools are installed, but Xcode is not, has been clarified.
