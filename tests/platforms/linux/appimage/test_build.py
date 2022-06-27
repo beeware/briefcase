@@ -216,11 +216,11 @@ def test_build_appimage_with_docker(build_command, first_app, tmp_path):
         [
             "docker",
             "run",
-            "--tty",
             "--volume",
             f"{build_command.platform_path}:/app:z",
             "--volume",
             f"{build_command.dot_briefcase_path}:/home/brutus/.briefcase:z",
+            "--rm",
             "--env",
             "VERSION=0.0.1",
             f"briefcase/com.example.first-app:py3.{sys.version_info.minor}",
