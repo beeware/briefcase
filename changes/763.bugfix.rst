@@ -1,1 +1,1 @@
-Clarified the error message when Xcode is not installed, but the Xcode Commandline Tools are installed.
+The error message presented when the Xcode Commandline Tools are installed, but Xcode is not, has been clarified.
