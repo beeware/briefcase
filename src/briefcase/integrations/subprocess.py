@@ -247,11 +247,14 @@ class Subprocess:
         Note: the 'timeout' and 'input' arguments are not supported.
         """
         if kwargs.get("stdout") and not kwargs.get("stderr"):
+            # This is an unsupported configuration, as it's not clear where stderr
+            # output would be displayed. Either:
+            # * Redirect stderr in addition to stdout; or
+            # * Use check_output() instead of run() to capture console output
+            #   without streaming.
             raise AssertionError(
                 "Subprocess.run() was invoked while dynamic Rich content is active (or via "
-                "`stream_output`) with stdout redirected while stderr was not redirected. "
-                "This would result in stdout being printed to the console. Redirect stderr "
-                "as well or use check_output."
+                "`stream_output`) with stdout redirected while stderr was not redirected."
             )
         for arg in [arg for arg in ["timeout", "input"] if arg in kwargs]:
             raise AssertionError(
