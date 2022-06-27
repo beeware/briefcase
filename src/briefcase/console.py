@@ -58,7 +58,9 @@ class Printer:
     console = RichConsole(highlighter=RichConsoleHighlighter(), emoji=False)
 
     # Console to record all logging to a buffer while not printing anything to the console.
-    LOG_FILE_WIDTH = 120
+    # We need to be wide enough to render `sdkmanager --list_installed` output without
+    # line wrapping.
+    LOG_FILE_WIDTH = 180
     log = RichConsole(
         # Rich only records what's being logged if it is actually written somewhere;
         # writing to /dev/null allows Rich to do so without needing to print the logs

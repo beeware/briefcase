@@ -25,7 +25,7 @@ def test_call(capsys, printer, message, show, expected_console_output):
     assert capsys.readouterr().out == expected_console_output
     log = printer.export_log()
     assert len(log.splitlines()) == 1
-    assert message + " " * 79 + "console.py" in log
+    assert " " + message + " " * 139 + "console.py" in log
 
 
 def test_to_console(capsys, printer):
@@ -41,4 +41,14 @@ def test_to_log(capsys, printer):
     assert capsys.readouterr().out == ""
     log = printer.export_log()
     assert len(log.splitlines()) == 1
-    assert "a line of output" + " " * 79 + "console.py" in log
+    assert " a line of output" + " " * 139 + "console.py" in log
+
+
+def test_very_long_line(capsys, printer):
+    """Very long lines are split."""
+    printer.to_log("A very long line of output!! " * 6, stack_offset=1)
+    assert capsys.readouterr().out == ""
+    log = printer.export_log()
+    assert len(log.splitlines()) == 2
+    assert (" " + "A very long line of output!! " * 5 + "A very    console.py:") in log
+    assert (" long line of output!!" + " " * 148) in log
