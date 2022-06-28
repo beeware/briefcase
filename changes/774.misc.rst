@@ -1,1 +1,0 @@
-Corrects wording in messages about docker actions and temporary containers are now automatically deleted.
