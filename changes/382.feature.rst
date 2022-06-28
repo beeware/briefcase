@@ -1,0 +1,1 @@
+Windows MSI installers can now be configured to ask the user whether they want a per-user or per-machine install.
