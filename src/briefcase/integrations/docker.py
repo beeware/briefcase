@@ -202,14 +202,15 @@ class Docker:
     def prepare(self):
         try:
             self.command.logger.info(
-                "Building Docker container image...", prefix=self.app.app_name
+                "Building Docker container image...",
+                prefix=self.app.app_name,
             )
             try:
                 system_requires = " ".join(self.app.system_requires)
             except AttributeError:
                 system_requires = ""
 
-            with self.command.input.wait_bar("Building container..."):
+            with self.command.input.wait_bar("Building Docker image..."):
                 self._subprocess.run(
                     [
                         "docker",
@@ -237,23 +238,24 @@ class Docker:
                 )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(
-                f"Error building Docker container for {self.app.app_name}."
+                f"Error building Docker image for {self.app.app_name}."
             ) from e
 
     def run(self, args, env=None, **kwargs):
-        """Run a process inside the Docker container."""
-        # Set up the `docker run` invocation in interactive mode,
-        # with volume mounts for the platform and .briefcase directories.
-        # The :z suffix allows SELinux to modify the host mount; it is ignored
-        # on non-SELinux platforms.
+        """Run a process inside a Docker container."""
+        # Set up the `docker run` with volume mounts for the platform &
+        # .briefcase directories and to delete the temporary container
+        # after running the command.
+        # The :z suffix allows SELinux to modify the host mount; it is
+        # ignored on non-SELinux platforms.
         docker_args = [
             "docker",
             "run",
-            "--tty",
             "--volume",
             f"{self.command.platform_path}:/app:z",
             "--volume",
             f"{self.command.dot_briefcase_path}:/home/brutus/.briefcase:z",
+            "--rm",
         ]
 
         # If any environment variables have been defined, pass them in
@@ -262,10 +264,10 @@ class Docker:
             for key, value in env.items():
                 docker_args.extend(["--env", f"{key}={value}"])
 
-        # ... then the image name.
+        # ... then the image name to create the temporary container with
         docker_args.append(self.command.docker_image_tag(self.app))
 
-        # ... then add all the arguments
+        # ... then add the command (and its arguments) to run in the container
         for arg in args:
             arg = str(arg)
             if arg == sys.executable:

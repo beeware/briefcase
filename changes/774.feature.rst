@@ -1,0 +1,1 @@
+Temporary docker containers are now cleaned up after use. The wording of Docker progress messages has also been improved.

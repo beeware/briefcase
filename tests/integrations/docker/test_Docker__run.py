@@ -16,11 +16,11 @@ def test_simple_call(mock_docker, tmp_path, capsys):
         [
             "docker",
             "run",
-            "--tty",
             "--volume",
             f"{tmp_path / 'platform'}:/app:z",
             "--volume",
             f"{tmp_path / '.briefcase'}:/home/brutus/.briefcase:z",
+            "--rm",
             "briefcase/com.example.myapp:py3.X",
             "hello",
             "world",
@@ -40,11 +40,11 @@ def test_simple_call_with_arg(mock_docker, tmp_path, capsys):
         [
             "docker",
             "run",
-            "--tty",
             "--volume",
             f"{tmp_path / 'platform'}:/app:z",
             "--volume",
             f"{tmp_path / '.briefcase'}:/home/brutus/.briefcase:z",
+            "--rm",
             "briefcase/com.example.myapp:py3.X",
             "hello",
             "world",
@@ -64,11 +64,11 @@ def test_simple_call_with_path_arg(mock_docker, tmp_path, capsys):
         [
             "docker",
             "run",
-            "--tty",
             "--volume",
             f"{tmp_path / 'platform'}:/app:z",
             "--volume",
             f"{tmp_path / '.briefcase'}:/home/brutus/.briefcase:z",
+            "--rm",
             "briefcase/com.example.myapp:py3.X",
             "hello",
             os.fsdecode(tmp_path / "location"),
@@ -95,11 +95,11 @@ def test_simple_call_with_sys_executable_arg(
         [
             "docker",
             "run",
-            "--tty",
             "--volume",
             f"{tmp_path / 'platform'}:/app:z",
             "--volume",
             f"{tmp_path / '.briefcase'}:/home/brutus/.briefcase:z",
+            "--rm",
             "briefcase/com.example.myapp:py3.X",
             "hello",
             "python3.X",
@@ -124,11 +124,11 @@ def test_simple_verbose_call(mock_docker, tmp_path, capsys):
         [
             "docker",
             "run",
-            "--tty",
             "--volume",
             f"{tmp_path / 'platform'}:/app:z",
             "--volume",
             f"{tmp_path / '.briefcase'}:/home/brutus/.briefcase:z",
+            "--rm",
             "briefcase/com.example.myapp:py3.X",
             "hello",
             "world",
@@ -139,9 +139,10 @@ def test_simple_verbose_call(mock_docker, tmp_path, capsys):
     assert capsys.readouterr().out == (
         "\n"
         ">>> Running Command:\n"
-        ">>>     docker run --tty "
+        ">>>     docker run "
         f"--volume {tmp_path / 'platform'}:/app:z "
         f"--volume {tmp_path / '.briefcase'}:/home/brutus/.briefcase:z "
+        "--rm "
         "briefcase/com.example.myapp:py3.X "
         "hello world\n"
         ">>> Return code: 3\n"
