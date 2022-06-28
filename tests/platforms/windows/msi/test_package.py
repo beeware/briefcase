@@ -54,6 +54,8 @@ def test_package_msi(package_command, first_app_config, tmp_path):
                     "WixUtilExtension",
                     "-ext",
                     "WixUIExtension",
+                    "-arch",
+                    "x64",
                     "-dSourceDir=src",
                     "first-app.wxs",
                     "first-app-manifest.wxs",

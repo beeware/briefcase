@@ -77,8 +77,8 @@ class WindowsMSICreateCommand(WindowsMSIMixin, CreateCommand):
         try:
             install_scope = "perMachine" if app.system_installer else "perUser"
         except AttributeError:
-            # system_installer not defined in config; default to perUser install.
-            install_scope = "perUser"
+            # system_installer not defined in config; default to asking the user
+            install_scope = None
 
         return {
             "version_triple": version_triple,
@@ -187,6 +187,8 @@ class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
                         "WixUtilExtension",
                         "-ext",
                         "WixUIExtension",
+                        "-arch",
+                        "x64",
                         "-dSourceDir=src",
                         f"{app.app_name}.wxs",
                         f"{app.app_name}-manifest.wxs",

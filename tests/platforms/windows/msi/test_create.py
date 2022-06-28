@@ -83,7 +83,7 @@ def test_default_install_scope(first_app_config, tmp_path):
 
     context = command.output_format_template_context(first_app_config)
 
-    assert context["install_scope"] == "perUser"
+    assert context["install_scope"] is None
 
 
 def test_per_machine_install_scope(first_app_config, tmp_path):
