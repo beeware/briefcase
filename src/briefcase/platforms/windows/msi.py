@@ -84,6 +84,10 @@ class WindowsMSICreateCommand(WindowsMSIMixin, CreateCommand):
             "version_triple": version_triple,
             "guid": str(guid),
             "install_scope": install_scope,
+            # Template forward compatibility flags
+            # 2022-06-29: #775 added the need to pass for -arch 64 to candle.exe;
+            # Briefcase v0.3.8 didn't use that flag.
+            "_use_arch64": True,
         }
 
     def install_app_support_package(self, app: BaseConfig):
