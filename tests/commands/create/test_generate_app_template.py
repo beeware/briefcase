@@ -29,6 +29,8 @@ def full_context(extra):
         "icon": None,
         "splash": None,
         "supported": True,
+        "linuxdeploy_plugins": None,
+        "linuxdeploy_plugins_info": None,
         "document_types": {},
         # Fields generated from other properties
         "module_name": "my_app",
