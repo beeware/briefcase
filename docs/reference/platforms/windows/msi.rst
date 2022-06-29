@@ -43,7 +43,8 @@ installer; however, they are installed once and shared between all users on a
 computer.
 
 If ``true`` the installer will attempt to install the app as a per-machine app,
-available to all users. Defaults to a per-user install.
+available to all users. If ``false``, the installer will install as a per-user
+app. If undefined the installer will ask the user for their preference.
 
 ``version_triple``
 ------------------

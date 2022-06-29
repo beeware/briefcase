@@ -77,13 +77,17 @@ class WindowsMSICreateCommand(WindowsMSIMixin, CreateCommand):
         try:
             install_scope = "perMachine" if app.system_installer else "perUser"
         except AttributeError:
-            # system_installer not defined in config; default to perUser install.
-            install_scope = "perUser"
+            # system_installer not defined in config; default to asking the user
+            install_scope = None
 
         return {
             "version_triple": version_triple,
             "guid": str(guid),
             "install_scope": install_scope,
+            # Template forward compatibility flags
+            # 2022-06-29: #775 added the need to pass for -arch 64 to candle.exe;
+            # Briefcase v0.3.8 didn't use that flag.
+            "_use_arch64": True,
         }
 
     def install_app_support_package(self, app: BaseConfig):
@@ -187,6 +191,8 @@ class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
                         "WixUtilExtension",
                         "-ext",
                         "WixUIExtension",
+                        "-arch",
+                        "x64",
                         "-dSourceDir=src",
                         f"{app.app_name}.wxs",
                         f"{app.app_name}-manifest.wxs",

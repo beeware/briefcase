@@ -83,7 +83,12 @@ def test_default_install_scope(first_app_config, tmp_path):
 
     context = command.output_format_template_context(first_app_config)
 
-    assert context["install_scope"] == "perUser"
+    assert context == {
+        "guid": "d666a4f1-c7b7-52cc-888a-3a35a7cc97e5",
+        "version_triple": "0.0.1",
+        "install_scope": None,
+        "_use_arch64": True,
+    }
 
 
 def test_per_machine_install_scope(first_app_config, tmp_path):
@@ -93,7 +98,12 @@ def test_per_machine_install_scope(first_app_config, tmp_path):
 
     context = command.output_format_template_context(first_app_config)
 
-    assert context["install_scope"] == "perMachine"
+    assert context == {
+        "guid": "d666a4f1-c7b7-52cc-888a-3a35a7cc97e5",
+        "version_triple": "0.0.1",
+        "install_scope": "perMachine",
+        "_use_arch64": True,
+    }
 
 
 def test_per_user_install_scope(first_app_config, tmp_path):
@@ -103,4 +113,9 @@ def test_per_user_install_scope(first_app_config, tmp_path):
 
     context = command.output_format_template_context(first_app_config)
 
-    assert context["install_scope"] == "perUser"
+    assert context == {
+        "guid": "d666a4f1-c7b7-52cc-888a-3a35a7cc97e5",
+        "version_triple": "0.0.1",
+        "install_scope": "perUser",
+        "_use_arch64": True,
+    }
