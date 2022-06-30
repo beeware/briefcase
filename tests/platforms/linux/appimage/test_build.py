@@ -103,7 +103,7 @@ def test_verify_tools_download_failure(build_command):
     # The download was attempted
     build_command.download_url.assert_called_with(
         url="https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-wonky.AppImage",
-        download_path=build_command.dot_briefcase_path / "tools",
+        download_path=build_command.tools_path,
     )
 
     # But it failed, so the file won't be made executable...
@@ -219,12 +219,12 @@ def test_build_appimage_with_docker(build_command, first_app, tmp_path):
             "--volume",
             f"{build_command.platform_path}:/app:z",
             "--volume",
-            f"{build_command.dot_briefcase_path}:/home/brutus/.briefcase:z",
+            f"{build_command.data_path}:/home/brutus/.local/share/briefcase:z",
             "--rm",
             "--env",
             "VERSION=0.0.1",
             f"briefcase/com.example.first-app:py3.{sys.version_info.minor}",
-            "/home/brutus/.briefcase/tools/linuxdeploy-wonky.AppImage",
+            "/home/brutus/.local/share/briefcase/tools/linuxdeploy-wonky.AppImage",
             "--appimage-extract-and-run",
             "--appdir=/app/appimage/First App/First App.AppDir",
             "-d",

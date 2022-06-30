@@ -333,7 +333,7 @@ class CreateCommand(BaseCommand):
                 # in the user's briefcase support cache directory.
                 support_filename = self.download_url(
                     url=support_package_url,
-                    download_path=self.dot_briefcase_path / "support",
+                    download_path=self.data_path / "support",
                 )
             else:
                 support_filename = Path(support_package_url)

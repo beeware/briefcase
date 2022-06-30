@@ -116,8 +116,8 @@ WiX Toolset. Current value: {wix_home!r}
     @property
     def managed_install(self):
         try:
-            # Determine if wix_home is relative to the .briefcase folder.
-            # If wix_home isn't inside .briefcase, this will raise a ValueError,
+            # Determine if wix_home is relative to the briefcase data directory.
+            # If wix_home isn't inside this directory, this will raise a ValueError,
             # indicating it is a non-managed install.
             self.wix_home.relative_to(self.command.tools_path)
             return True

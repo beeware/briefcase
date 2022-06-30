@@ -11,6 +11,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 import requests
+from appdirs import AppDirs
 from cookiecutter.main import cookiecutter
 from cookiecutter.repository import is_repo_url
 
@@ -113,10 +114,11 @@ class BaseCommand(ABC):
     APP_CONFIG_CLASS = AppConfig
 
     def __init__(self, base_path, home_path=Path.home(), apps=None, input_enabled=True):
+        app_dirs = AppDirs(appname="briefcase", appauthor="BeeWare")
         self.base_path = base_path
         self.home_path = home_path
-        self.dot_briefcase_path = home_path / ".briefcase"
-        self.tools_path = self.dot_briefcase_path / "tools"
+        self.data_path = Path(app_dirs.user_data_dir)
+        self.tools_path = self.data_path / "tools"
 
         self.global_config = None
         self.apps = {} if apps is None else apps
@@ -142,6 +144,62 @@ class BaseCommand(ABC):
         # Initialize default logger (replaced when options are parsed).
         self.logger = Log()
         self.save_log = False
+
+    def check_obsolete_data_dir(self):
+        """Inform user if obsolete data directory exists.
+
+        TODO: Remove this check after 1 JAN 2023 since most users will have transitioned by then
+
+        Previous versions used the ~/.briefcase directory to store
+        downloads, tools, etc. This check lets users know the old
+        directory still exists and their options to migrate or clean up.
+        """
+        dot_briefcase_path = self.home_path / ".briefcase"
+
+        if not dot_briefcase_path.exists():
+            return
+
+        if self.data_path.exists():
+            self.logger.warning(
+                f"NOTICE: Briefcase is no longer using the data directory '{dot_briefcase_path}'. "
+                f"This directory can be safely deleted."
+            )
+        else:
+            self.logger.warning(
+                f"""\
+*************************************************************************
+** NOTICE: Briefcase's data directory is changing                      **
+*************************************************************************
+
+    Briefcase's data directory is transitioning from:
+
+        {dot_briefcase_path}
+
+    to:
+
+        {self.data_path}
+
+    If you continue, Briefcase will automatically re-build the new data
+    directory through normal use.
+
+    To avoid redoing potentially large downloads and long installations
+    to re-build the data directory, you can move the contents of the old
+    data directory to the new location.
+
+    The old data directory should be deleted since it is no longer used.
+
+*************************************************************************
+"""
+            )
+            self.input.prompt()
+            if not self.input.boolean_input(
+                "Continue?",
+                # default to continuing for non-interactive runs
+                default=not self.input.enabled,
+            ):
+                raise BriefcaseCommandError(
+                    f"Move the contents of '{dot_briefcase_path}' to '{self.data_path}'"
+                )
 
     @property
     def create_command(self):
