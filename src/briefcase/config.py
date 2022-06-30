@@ -413,7 +413,7 @@ class AppConfig(BaseConfig):
                 else:
                     raise BriefcaseConfigError(
                         f"The `linuxdeploy_plugins` for {self.app_name!r} contains "
-                        "an invalid plugin."
+                        f"an invalid plugin {plugin}."
                     )
                 self.linuxdeploy_plugins_info.append(
                     LinuxDeployPlugin(
