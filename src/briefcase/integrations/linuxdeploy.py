@@ -11,8 +11,9 @@ ELF_PATCH_PATCHED_BYTES = bytes.fromhex("000000")
 
 
 class LinuxDeployBase:
-    def __init__(self, command):
+    def __init__(self, command, plugin_path=None):
         self.command = command
+        self.plugin_path = plugin_path
 
     @property
     @abstractmethod
@@ -59,7 +60,7 @@ class LinuxDeployBase:
         :returns: A valid linuxdeploy tool wrapper. If linuxdeploy is not
             available, and was not installed, raises MissingToolError.
         """
-        linuxdeploy = cls(command)
+        linuxdeploy = cls(command, plugin_path)
         if not linuxdeploy.exists():
             if install:
                 command.logger.info(
@@ -175,11 +176,11 @@ class LinuxDeployPluginFromFile(LinuxDeployPluginBase):
 
     @property
     def filename(self):
-        return pathlib.Path(self.plugin).name
+        return pathlib.Path(self.plugin_path).name
 
     @property
     def linuxdeploy_download_url(self):
-        return self.plugin
+        return self.plugin_path
 
     def install(self):
         """Create hardlink to the local linuxdeploy plugin."""
@@ -202,11 +203,11 @@ class LinuxDeployPluginFromUrl(LinuxDeployPluginBase):
 
     @property
     def filename(self):
-        return pathlib.Path(self.plugin).name
+        return self.plugin_path.name
 
     @property
     def linuxdeploy_download_url(self):
-        return self.plugin
+        return self.plugin_path
 
 
 class LinuxDeployGtkPlugin(LinuxDeployPluginBase):
