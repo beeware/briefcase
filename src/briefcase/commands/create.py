@@ -385,8 +385,6 @@ class CreateCommand(BaseCommand):
                             "install",
                             "--upgrade",
                             "--no-user",
-                            "--progress-bar",
-                            "off",
                             f"--target={target}",
                         ]
                         + app.requires,
