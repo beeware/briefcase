@@ -151,21 +151,25 @@ def test_build_appimage(build_command, first_app, tmp_path):
     )
 
 
-@pytest.mark.xfail(reason="TODO: Fix this test")
 @pytest.mark.parametrize(
-    "linuxdeploy_plugin", ["gtk", "DEPLOY_GTK_VERSION=3 linuxdeploy-plugin-gtk.sh"]
+    "linuxdeploy_plugin",
+    [
+        "gtk",
+        "DEPLOY_GTK_VERSION=3 https://example.com/linuxdeploy-plugin-gtk.sh",
+        "DEPLOY_GTK_VERSION=3 _packaging/linux-plugin-gtk.appimage",
+    ],
 )
 def test_build_appimage_with_gtk(
     build_command, first_app, first_app_config, tmp_path, linuxdeploy_plugin
 ):
     """Check that linuxdeploy is correctly called with the gtk plugin."""
 
-    first_app_config.linuxdeploy_plugins = linuxdeploy_plugin
+    first_app_config.linuxdeploy_plugins = [linuxdeploy_plugin]
     build_command.build_app(first_app)
 
     # linuxdeploy was invoked
     app_dir = tmp_path / "linux" / "appimage" / "First App" / "First App.AppDir"
-    build_command._subprocess.run.assert_called_with(
+    build_command._subprocess.Popen.assert_called_with(
         [
             os.fsdecode(build_command.linuxdeploy.file_path),
             "--appimage-extract-and-run",
@@ -183,10 +187,12 @@ def test_build_appimage_with_gtk(
             "--plugin",
             "gtk",
         ],
-        check=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
         env={
             "PATH": "/usr/local/bin:/usr/bin",
             "VERSION": "0.0.1",
+            "DEPLOY_GTK_VERSION": "3",
         },
         cwd=os.fsdecode(tmp_path / "linux"),
         text=True,
