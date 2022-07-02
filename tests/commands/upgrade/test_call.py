@@ -1,5 +1,9 @@
+import os
+from pathlib import Path
+
 import pytest
 
+from briefcase.config import LinuxDeployPlugin, LinuxDeployPluginType
 from briefcase.exceptions import BriefcaseCommandError
 
 
@@ -159,3 +163,78 @@ def test_unknown_tool(
     ManagedSDK2.verify.assert_called_with(upgrade_command, install=False)
     NonManagedSDK.verify.assert_called_with(upgrade_command, install=False)
     NonInstalledSDK.verify.assert_called_with(upgrade_command, install=False)
+
+
+@pytest.mark.parametrize(
+    "linuxdeploy_plugin,type,path,env_var,",
+    [
+        (["gtk"], LinuxDeployPluginType.GTK, "gtk", None),
+        (
+            ["https://briefcase.org/linuxdeploy-gtk-plugin.sh"],
+            LinuxDeployPluginType.URL,
+            "https://briefcase.org/linuxdeploy-gtk-plugin.sh",
+            None,
+        ),
+        (
+            ["DEPLOY_GTK_VERSION=3 https://briefcase.org/linuxdeploy-gtk-plugin.sh"],
+            LinuxDeployPluginType.URL,
+            "https://briefcase.org/linuxdeploy-gtk-plugin.sh",
+            "DEPLOY_GTK_VERSION=3",
+        ),
+    ],
+)
+def test_upgrade_linuxdeploy_plugin_gtk(
+    linuxdeploy_plugin,
+    type,
+    path,
+    env_var,
+    upgrade_command,
+    ManagedSDK1,
+    first_app_config,
+    tmpdir,
+):
+    """Test upgrade of gtk plugin."""
+    file_plugin = Path(tmpdir) / "linuxdeploy-gtk-plugin.sh"
+    file_plugin.touch()
+
+    first_app_config.linuxdeploy_plugins = linuxdeploy_plugin
+    first_app_config.linuxdeploy_plugins_info = [
+        LinuxDeployPlugin(type=type, path=path, env_var=env_var)
+    ]
+    upgrade_command.apps = {
+        "first": first_app_config,
+    }
+
+    # Run the upgrade command
+    upgrade_command(tool_list=["managed-1"])
+
+    # Verify tool
+    ManagedSDK1.verify.assert_called_with(upgrade_command, install=False)
+
+
+def test_upgrade_linuxdeploy_plugin_gtk_file(
+    upgrade_command, ManagedSDK1, first_app_config, tmpdir, monkeypatch
+):
+    """Test upgrade of local file-based gtk plugin."""
+    file_plugin = Path(tmpdir) / "linuxdeploy-gtk-plugin.sh"
+    file_plugin.touch()
+
+    first_app_config.linuxdeploy_plugins = str(file_plugin)
+    first_app_config.linuxdeploy_plugins_info = [
+        LinuxDeployPlugin(
+            type=LinuxDeployPluginType.FILE, path=str(file_plugin), env_var=None
+        )
+    ]
+    upgrade_command.apps = {
+        "first": first_app_config,
+    }
+
+    # Do not create hard link during tests
+    monkeypatch.setattr(os, "link", lambda src, dst: None)
+    monkeypatch.setattr(os, "chmod", lambda path, mode: None)
+
+    # Run the upgrade command
+    upgrade_command(tool_list=["managed-1"])
+
+    # Verify tool
+    ManagedSDK1.verify.assert_called_with(upgrade_command, install=False)

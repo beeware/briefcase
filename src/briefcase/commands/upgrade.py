@@ -79,10 +79,7 @@ class UpgradeCommand(BaseCommand):
                         klass = LinuxDeployPluginFromUrl
                     try:
                         tool = klass.verify(self, plugin_path=plugin.path)
-                        if tool.managed_install:
-                            managed_tools[klass.name] = tool
-                        else:
-                            non_managed_tools.add(klass.name)
+                        managed_tools[klass.name] = tool
                     except BriefcaseCommandError:
                         # Plugin doesn't exist, or can't be managed
                         non_managed_tools.add(klass.name)
