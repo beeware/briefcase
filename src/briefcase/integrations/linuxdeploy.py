@@ -206,7 +206,7 @@ class LinuxDeployPluginFromUrl(LinuxDeployPluginBase):
 
     @property
     def filename(self):
-        return self.plugin_path.name
+        return pathlib.Path(self.plugin_path).name
 
     @property
     def linuxdeploy_download_url(self):
