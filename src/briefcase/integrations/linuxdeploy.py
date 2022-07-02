@@ -1,3 +1,4 @@
+import os
 import pathlib
 from abc import abstractmethod
 
@@ -188,7 +189,9 @@ class LinuxDeployPluginFromFile(LinuxDeployPluginBase):
         self.file_path.parent.mkdir(parents=True, exist_ok=True)
         if local_plugin.resolve() != self.file_path.resolve():
             self.file_path.unlink(missing_ok=True)
-            self.file_path.hardlink_to(local_plugin.resolve())
+            # Python 3.10+ upgrade to from os.link to
+            # self.file_path.hardlink_to(local_plugin.resolve()) type: ignore
+            os.link(local_plugin.resolve(), self.file_path)
         with self.command.input.wait_bar(
             f"Installing linuxdeploy plugin with {self.linuxdeploy_download_url}..."
         ):
