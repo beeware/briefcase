@@ -6,6 +6,8 @@ from unittest import mock
 import pytest
 from requests import exceptions as requests_exceptions
 
+import briefcase.exceptions
+from briefcase.config import LinuxDeployPlugin, LinuxDeployPluginType
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.docker import Docker
 from briefcase.integrations.linuxdeploy import LinuxDeploy
@@ -152,20 +154,34 @@ def test_build_appimage(build_command, first_app, tmp_path):
 
 
 @pytest.mark.parametrize(
-    "linuxdeploy_plugin",
+    "linuxdeploy_plugin,type,path,env_var,",
     [
-        "gtk",
-        "DEPLOY_GTK_VERSION=3 https://example.com/linuxdeploy-plugin-gtk.sh",
-        "DEPLOY_GTK_VERSION=3 _packaging/linux-plugin-gtk.appimage",
+        (["gtk"], LinuxDeployPluginType.GTK, "gtk", None),
+        (
+            ["DEPLOY_GTK_VERSION=3 https://briefcase.org/linuxdeploy-plugin-gtk.sh"],
+            LinuxDeployPluginType.URL,
+            "https://briefcase.org/linuxdeploy-plugin-gtk.sh",
+            "DEPLOY_GTK_VERSION=3",
+        ),
     ],
 )
 def test_build_appimage_with_gtk(
-    build_command, first_app, first_app_config, tmp_path, linuxdeploy_plugin
+    build_command,
+    first_app,
+    first_app_config,
+    tmp_path,
+    linuxdeploy_plugin,
+    type,
+    path,
+    env_var,
 ):
     """Check that linuxdeploy is correctly called with the gtk plugin."""
 
-    first_app_config.linuxdeploy_plugins = [linuxdeploy_plugin]
-    build_command.build_app(first_app)
+    first_app_config.linuxdeploy_plugins = linuxdeploy_plugin
+    first_app_config.linuxdeploy_plugins_info = [
+        LinuxDeployPlugin(type=type, path=path, env_var=env_var)
+    ]
+    build_command.build_app(first_app_config)
 
     # linuxdeploy was invoked
     app_dir = tmp_path / "linux" / "appimage" / "First App" / "First App.AppDir"
@@ -297,3 +313,30 @@ def test_build_appimage_with_docker(build_command, first_app, tmp_path):
     build_command.os.chmod.assert_called_with(
         tmp_path / "linux" / "First_App-0.0.1-wonky.AppImage", 0o755
     )
+
+
+@pytest.mark.parametrize(
+    "linuxdeploy_plugin,type,path,env_var,",
+    [
+        (["gtk"], LinuxDeployPluginType.GTK, "gtk", None),
+        (
+            ["DEPLOY_GTK_VERSION=3 https://briefcase.org/linuxdeploy-plugin-gtk.sh"],
+            LinuxDeployPluginType.URL,
+            "https://briefcase.org/linuxdeploy-plugin-gtk.sh",
+            "DEPLOY_GTK_VERSION=3",
+        ),
+    ],
+)
+def test_build_verify_tools(
+    build_command, first_app_config, linuxdeploy_plugin, type, path, env_var
+):
+
+    first_app_config.linuxdeploy_plugins = linuxdeploy_plugin
+    first_app_config.linuxdeploy_plugins_info = [
+        LinuxDeployPlugin(type=type, path=path, env_var=env_var)
+    ]
+    build_command.download_url = mock.MagicMock()
+    with pytest.raises(briefcase.exceptions.MissingToolError):
+        build_command.verify_tools(first_app_config)
+
+        assert build_command.actions == [("verify",)]

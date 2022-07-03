@@ -1,3 +1,8 @@
+import pytest
+
+from briefcase.config import LinuxDeployPluginType, LinuxDeployPlugin
+
+
 def test_specific_app(build_command, first_app, second_app):
     """If a specific app is requested, build it."""
     # Add two apps
@@ -192,4 +197,50 @@ def test_update_unbuilt(build_command, first_app_unbuilt, second_app):
         # Second app has been built before; it will be built again.
         ("update", "second", {"update_state": "first", "build_state": "first"}),
         ("build", "second", {"update_state": "second", "build_state": "first"}),
+    ]
+
+
+@pytest.mark.parametrize(
+    "linuxdeploy_plugin,type,path,env_var,",
+    [
+        (["gtk"], LinuxDeployPluginType.GTK, "gtk", None),
+        (
+            ["https://briefcase.org/linuxdeploy-plugin-gtk.sh"],
+            LinuxDeployPluginType.URL,
+            "https://briefcase.org/linuxdeploy-plugin-gtk.sh",
+            None,
+        ),
+        (
+            ["DEPLOY_GTK_VERSION=3 https://briefcase.org/linuxdeploy-plugin-gtk.sh"],
+            LinuxDeployPluginType.URL,
+            "https://briefcase.org/linuxdeploy-plugin-gtk.sh",
+            "DEPLOY_GTK_VERSION=3",
+        ),
+    ],
+)
+def test_app_with_linuxdeploy_plugin(
+    build_command, first_app_config, linuxdeploy_plugin, type, path, env_var
+):
+    """Build an app with the GTK plugin for linuxdeploy."""
+    first_app_config.linuxdeploy_plugins = linuxdeploy_plugin
+    first_app_config.linuxdeploy_plugins_info = [
+        LinuxDeployPlugin(type=type, path=path, env_var=env_var)
+    ]
+    build_command.apps = {
+        "first": first_app_config,
+    }
+
+    # Configure no command line options
+    options = build_command.parse_options([])
+
+    # Run the build command
+    build_command(first_app_config, **options)
+
+    # The right sequence of things will be done
+    assert build_command.actions == [
+        # Tools are verified
+        ("verify",),
+        ("create", "first", {}),
+        # First App exists, but hasn't been built; it will updated then built.
+        ("build", "first", {"create_state": "first"}),
     ]

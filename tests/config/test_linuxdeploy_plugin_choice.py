@@ -10,11 +10,11 @@ from briefcase.config import AppConfig, LinuxDeployPluginType
     [
         (["gtk"], LinuxDeployPluginType.GTK),
         (
-            ["https://briefcase.org/linuxdeploy-gtk-plugin.sh"],
+            ["https://briefcase.org/linuxdeploy-plugin-gtk.sh"],
             LinuxDeployPluginType.URL,
         ),
         (
-            ["DEPLOY_GTK_VERSION=3 https://briefcase.org/linuxdeploy-gtk-plugin.sh"],
+            ["DEPLOY_GTK_VERSION=3 https://briefcase.org/linuxdeploy-plugin-gtk.sh"],
             LinuxDeployPluginType.URL,
         ),
     ],
@@ -36,7 +36,7 @@ def test_linuxdeploy_plugin_type_gtk_and_url(
 
 def test_linuxdeploy_plugin_type_file(tmpdir):
     """A simple config can be defined."""
-    file_plugin = Path(tmpdir) / "linuxdeploy-gtk-plugin.sh"
+    file_plugin = Path(tmpdir) / "linuxdeploy-plugin-gtk.sh"
     file_plugin.touch()
     config = AppConfig(
         app_name="myapp",

@@ -170,15 +170,15 @@ def test_unknown_tool(
     [
         (["gtk"], LinuxDeployPluginType.GTK, "gtk", None),
         (
-            ["https://briefcase.org/linuxdeploy-gtk-plugin.sh"],
+            ["https://briefcase.org/linuxdeploy-plugin-gtk.sh"],
             LinuxDeployPluginType.URL,
-            "https://briefcase.org/linuxdeploy-gtk-plugin.sh",
+            "https://briefcase.org/linuxdeploy-plugin-gtk.sh",
             None,
         ),
         (
-            ["DEPLOY_GTK_VERSION=3 https://briefcase.org/linuxdeploy-gtk-plugin.sh"],
+            ["DEPLOY_GTK_VERSION=3 https://briefcase.org/linuxdeploy-plugin-gtk.sh"],
             LinuxDeployPluginType.URL,
-            "https://briefcase.org/linuxdeploy-gtk-plugin.sh",
+            "https://briefcase.org/linuxdeploy-plugin-gtk.sh",
             "DEPLOY_GTK_VERSION=3",
         ),
     ],
@@ -191,12 +191,8 @@ def test_upgrade_linuxdeploy_plugin_gtk(
     upgrade_command,
     ManagedSDK1,
     first_app_config,
-    tmpdir,
 ):
     """Test upgrade of gtk plugin."""
-    file_plugin = Path(tmpdir) / "linuxdeploy-gtk-plugin.sh"
-    file_plugin.touch()
-
     first_app_config.linuxdeploy_plugins = linuxdeploy_plugin
     first_app_config.linuxdeploy_plugins_info = [
         LinuxDeployPlugin(type=type, path=path, env_var=env_var)
@@ -216,7 +212,7 @@ def test_upgrade_linuxdeploy_plugin_gtk_file(
     upgrade_command, ManagedSDK1, first_app_config, tmpdir, monkeypatch
 ):
     """Test upgrade of local file-based gtk plugin."""
-    file_plugin = Path(tmpdir) / "linuxdeploy-gtk-plugin.sh"
+    file_plugin = Path(tmpdir) / "linuxdeploy-plugin-gtk.sh"
     file_plugin.touch()
 
     first_app_config.linuxdeploy_plugins = str(file_plugin)
