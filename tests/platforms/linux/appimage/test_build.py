@@ -213,6 +213,7 @@ def test_build_appimage_with_gtk(
         },
         cwd=os.fsdecode(tmp_path / "linux"),
         text=True,
+        encoding=mock.ANY,
     )
     # Binary is marked executable
     build_command.os.chmod.assert_called_with(
