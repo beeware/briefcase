@@ -1,4 +1,5 @@
 import subprocess
+from unittest.mock import ANY
 
 import pytest
 
@@ -19,7 +20,11 @@ def test_call(mock_sub, capsys):
         mock_sub.run(["hello", "world"])
 
     mock_sub._subprocess.Popen.assert_called_with(
-        ["hello", "world"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
+        ["hello", "world"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        encoding=ANY,
     )
     expected_output = "output line 1\n" "\n" "output line 3\n" "\n"
     assert capsys.readouterr().out == expected_output
@@ -36,6 +41,7 @@ def test_call_with_arg(mock_sub, capsys):
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         universal_newlines=True,
+        encoding=ANY,
     )
     expected_output = "output line 1\n" "\n" "output line 3\n" "\n"
     assert capsys.readouterr().out == expected_output
@@ -49,7 +55,11 @@ def test_debug_call(mock_sub, capsys):
         mock_sub.run(["hello", "world"])
 
     mock_sub._subprocess.Popen.assert_called_with(
-        ["hello", "world"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
+        ["hello", "world"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        encoding=ANY,
     )
     expected_output = (
         "\n"
@@ -82,83 +92,13 @@ def test_debug_call_with_env(mock_sub, capsys):
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
+        encoding=ANY,
     )
     expected_output = (
         "\n"
         ">>> Running Command:\n"
         ">>>     hello world\n"
-        ">>> Environment:\n"
-        ">>>     NewVar=NewVarValue\n"
-        "output line 1\n"
-        "\n"
-        "output line 3\n"
-        ">>> Return code: -3\n"
-        "\n"
-    )
-    assert capsys.readouterr().out == expected_output
-
-
-def test_deep_debug_call(mock_sub, capsys):
-    """If verbosity is at the max, the full environment and return is
-    output."""
-    mock_sub.command.logger = Log(verbosity=3)
-
-    with mock_sub.command.input.wait_bar():
-        mock_sub.run(["hello", "world"])
-
-    mock_sub._subprocess.Popen.assert_called_with(
-        ["hello", "world"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
-    )
-    expected_output = (
-        "\n"
-        ">>> Running Command:\n"
-        ">>>     hello world\n"
-        ">>> Full Environment:\n"
-        ">>>     VAR1=Value 1\n"
-        ">>>     PS1=\n"
-        ">>> Line 2\n"
-        ">>> \n"
-        ">>> Line 4\n"
-        ">>>     PWD=/home/user/\n"
-        "output line 1\n"
-        "\n"
-        "output line 3\n"
-        ">>> Return code: -3\n"
-        "\n"
-    )
-    assert capsys.readouterr().out == expected_output
-
-
-def test_deep_debug_call_with_env(mock_sub, capsys):
-    """If verbosity is at the max, the full environment and return is output,
-    and the environment is merged."""
-    mock_sub.command.logger = Log(verbosity=3)
-
-    env = {"NewVar": "NewVarValue"}
-    with mock_sub.command.input.wait_bar():
-        mock_sub.run(["hello", "world"], env=env)
-
-    merged_env = mock_sub.command.os.environ.copy()
-    merged_env.update(env)
-
-    mock_sub._subprocess.Popen.assert_called_with(
-        ["hello", "world"],
-        env=merged_env,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-    )
-    expected_output = (
-        "\n"
-        ">>> Running Command:\n"
-        ">>>     hello world\n"
-        ">>> Full Environment:\n"
-        ">>>     VAR1=Value 1\n"
-        ">>>     PS1=\n"
-        ">>> Line 2\n"
-        ">>> \n"
-        ">>> Line 4\n"
-        ">>>     PWD=/home/user/\n"
+        ">>> Environment Overrides:\n"
         ">>>     NewVar=NewVarValue\n"
         "output line 1\n"
         "\n"
@@ -172,11 +112,11 @@ def test_deep_debug_call_with_env(mock_sub, capsys):
 @pytest.mark.parametrize(
     "in_kwargs, kwargs",
     [
-        ({}, {"text": True}),
-        ({"text": True}, {"text": True}),
+        ({}, {"text": True, "encoding": ANY}),
+        ({"text": True}, {"text": True, "encoding": ANY}),
         ({"text": False}, {"text": False}),
         ({"universal_newlines": False}, {"universal_newlines": False}),
-        ({"universal_newlines": True}, {"universal_newlines": True}),
+        ({"universal_newlines": True}, {"universal_newlines": True, "encoding": ANY}),
     ],
 )
 def test_text_eq_true_default_overriding(mock_sub, in_kwargs, kwargs):
@@ -185,7 +125,10 @@ def test_text_eq_true_default_overriding(mock_sub, in_kwargs, kwargs):
     with mock_sub.command.input.wait_bar():
         mock_sub.run(["hello", "world"], **in_kwargs)
     mock_sub._subprocess.Popen.assert_called_with(
-        ["hello", "world"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, **kwargs
+        ["hello", "world"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        **kwargs,
     )
 
 
@@ -202,6 +145,7 @@ def test_stderr_is_redirected(mock_sub, popen_process, capsys):
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
+        encoding=ANY,
     )
 
     expected_output = "output line 1\n" "\n" "output line 3\n" "\n"
@@ -221,6 +165,7 @@ def test_stderr_dev_null(mock_sub, popen_process, capsys):
         stdout=subprocess.PIPE,
         stderr=subprocess.DEVNULL,
         text=True,
+        encoding=ANY,
     )
 
     expected_output = "output line 1\n" "\n" "output line 3\n" "\n"

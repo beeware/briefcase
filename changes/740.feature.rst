@@ -1,1 +1,0 @@
-Console output now uses Rich to provide visual highlights and progress bars.

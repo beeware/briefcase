@@ -2,7 +2,7 @@ import pytest
 
 
 @pytest.fixture
-def test_device(tmp_path):
+def test_device(mock_sdk, tmp_path):
     """Create an AVD configuration file."""
     config_file = tmp_path / ".android" / "avd" / "testDevice.avd" / "config.ini"
     config_file.parent.mkdir(parents=True)
@@ -43,7 +43,6 @@ def test_update_existing(mock_sdk, test_device):
         content = f.read()
 
     # Keys have been updated, order is preserved.
-    # Blank lines have been dropped.
     assert (
         content
         == """avd.ini.encoding=UTF-8

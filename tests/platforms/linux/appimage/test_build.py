@@ -144,6 +144,7 @@ def test_build_appimage(build_command, first_app, tmp_path):
         },
         cwd=os.fsdecode(tmp_path / "linux"),
         text=True,
+        encoding=mock.ANY,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
     )
@@ -255,6 +256,7 @@ def test_build_failure(build_command, first_app, tmp_path):
         },
         cwd=os.fsdecode(tmp_path / "linux"),
         text=True,
+        encoding=mock.ANY,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
     )
@@ -282,11 +284,11 @@ def test_build_appimage_with_docker(build_command, first_app, tmp_path):
         [
             "docker",
             "run",
-            "--tty",
             "--volume",
             f"{build_command.platform_path}:/app:z",
             "--volume",
             f"{build_command.dot_briefcase_path}:/home/brutus/.briefcase:z",
+            "--rm",
             "--env",
             "VERSION=0.0.1",
             f"briefcase/com.example.first-app:py3.{sys.version_info.minor}",
@@ -306,6 +308,7 @@ def test_build_appimage_with_docker(build_command, first_app, tmp_path):
         ],
         cwd=os.fsdecode(tmp_path / "linux"),
         text=True,
+        encoding=mock.ANY,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
     )

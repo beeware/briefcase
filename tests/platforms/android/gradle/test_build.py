@@ -38,6 +38,8 @@ def test_execute_gradle(build_command, first_app_config, host_os, gradlew_name):
         [
             build_command.bundle_path(first_app_config) / gradlew_name,
             "assembleDebug",
+            "--console",
+            "plain",
         ],
         cwd=build_command.bundle_path(first_app_config),
         env=build_command.android_sdk.env,

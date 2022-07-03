@@ -130,8 +130,8 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
                         return udid, iOS_version, device
                     except KeyError as e:
                         raise InvalidDeviceError("device name", device) from e
-                except KeyError as err:
-                    raise InvalidDeviceError("iOS Version", iOS_version) from err
+                except KeyError as e:
+                    raise InvalidDeviceError("iOS Version", iOS_version) from e
             elif udid_or_device:
                 # Just a device name
                 device = udid_or_device

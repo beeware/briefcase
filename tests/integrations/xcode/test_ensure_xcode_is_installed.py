@@ -10,15 +10,19 @@ from briefcase.integrations.xcode import ensure_xcode_is_installed
 
 
 @pytest.fixture
-def xcode(tmp_path):
+def default_xcode_install_path(tmp_path):
+    return tmp_path / "Applications" / "Xcode.app"
+
+
+@pytest.fixture
+def xcode(default_xcode_install_path):
     """Create a dummy location for Xcode."""
-    xcode_location = tmp_path / "Xcode.app"
-    xcode_location.mkdir(parents=True, exist_ok=True)
-    return os.fsdecode(xcode_location)
+    default_xcode_install_path.mkdir(parents=True, exist_ok=True)
+    return os.fsdecode(default_xcode_install_path)
 
 
 def test_not_installed(tmp_path):
-    """If Xcode is not installed, raise an error."""
+    """If No Xcode is installed, raise an error."""
     command = mock.MagicMock()
     command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
         cmd=["xcode-select", "-p"], returncode=2
@@ -28,65 +32,192 @@ def test_not_installed(tmp_path):
     with pytest.raises(BriefcaseCommandError):
         ensure_xcode_is_installed(command)
 
-
-def test_not_installed_hardcoded_path(tmp_path):
-    """If Xcode is not installed at the given location, raise an error."""
-    command = mock.MagicMock()
-    command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
-        cmd=["xcodebuild", "-version"], returncode=1
+    # subprocess was invoked as expected
+    command.subprocess.check_output.assert_has_calls(
+        [
+            mock.call(
+                ["xcode-select", "-p"],
+                stderr=subprocess.STDOUT,
+            ),
+        ],
+        any_order=False,
     )
 
-    # Test a location where Xcode *won't* be installed
-    with pytest.raises(BriefcaseCommandError):
-        ensure_xcode_is_installed(
-            command,
-            xcode_location=tmp_path / "Xcode.app",
-        )
 
-    # xcode-select was not invoked
-    command.subprocess.check_output.assert_not_called()
+def test_custom_install_location(default_xcode_install_path, tmp_path):
+    """If Xcode is in a non-default location, that's fine."""
+    # Create a custom Xcode location
+    custom_xcode_location = tmp_path / "custom" / "Xcode.app"
+    custom_xcode_location.mkdir(parents=True, exist_ok=True)
+
+    command = mock.MagicMock()
+    command.subprocess.check_output.side_effect = [
+        os.fsdecode(custom_xcode_location) + "\n",  # xcode-select -p
+        "Xcode 13.3.1\nBuild version 11B500\n",  # xcodebuild -version
+    ]
+
+    ensure_xcode_is_installed(command, xcode_location=default_xcode_install_path)
+
+    # subprocess was invoked as expected
+    command.subprocess.check_output.assert_has_calls(
+        [
+            mock.call(
+                ["xcode-select", "-p"],
+                stderr=subprocess.STDOUT,
+            ),
+            mock.call(
+                ["xcodebuild", "-version"],
+                stderr=subprocess.STDOUT,
+            ),
+        ],
+        any_order=False,
+    )
 
 
-def test_exists_but_command_line_tools_selected(xcode):
-    """If the Xcode folder exists, but cmd-line tools are selected, raise an
+def test_command_line_tools_only(default_xcode_install_path):
+    """If the cmdline tools are installed, but Xcode isn't, raise an error."""
+    command = mock.MagicMock()
+    command.subprocess.check_output.side_effect = [
+        "/Library/Developer/CommandLineTools\n",  # xcode-select -p
+        subprocess.CalledProcessError(
+            cmd=["xcodebuild", "-version"],
+            returncode=1,
+            output="xcode-select: error: tool 'xcodebuild' requires Xcode, but "
+            "active developer directory '/Library/Developer/CommandLineTools' "
+            "is a command line tools instance\n",
+        ),
+    ]
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"You have the Xcode command line tools installed",
+    ):
+        ensure_xcode_is_installed(command, xcode_location=default_xcode_install_path)
+
+    # subprocess was invoked as expected
+    command.subprocess.check_output.assert_has_calls(
+        [
+            mock.call(
+                ["xcode-select", "-p"],
+                stderr=subprocess.STDOUT,
+            ),
+            mock.call(
+                ["xcodebuild", "-version"],
+                stderr=subprocess.STDOUT,
+            ),
+        ],
+        any_order=False,
+    )
+
+
+def test_installed_but_command_line_tools_selected(default_xcode_install_path, xcode):
+    """If Xcode is installed, but the cmdline tools are selected raise an
     error."""
     command = mock.MagicMock()
-    command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
-        cmd=["xcodebuild", "-version"], returncode=1
+    command.subprocess.check_output.side_effect = [
+        xcode + "\n",  # xcode-select -p
+        subprocess.CalledProcessError(
+            cmd=["xcodebuild", "-version"],
+            returncode=1,
+            output="xcode-select: error: tool 'xcodebuild' requires Xcode, but "
+            "active developer directory '/Library/Developer/CommandLineTools' "
+            "is a command line tools instance\n",
+        ),
+    ]
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Xcode appears to be installed, but the active developer directory ",
+    ):
+        ensure_xcode_is_installed(command, xcode_location=default_xcode_install_path)
+
+    # subprocess was invoked as expected
+    command.subprocess.check_output.assert_has_calls(
+        [
+            mock.call(
+                ["xcode-select", "-p"],
+                stderr=subprocess.STDOUT,
+            ),
+            mock.call(
+                ["xcodebuild", "-version"],
+                stderr=subprocess.STDOUT,
+            ),
+        ],
+        any_order=False,
     )
-    command.subprocess.check_output.side_effect.output = (
-        "xcode-select: error: tool 'xcodebuild' requires Xcode, but "
-        "active developer directory '/Library/Developer/CommandLineTools' "
-        "is a command line tools instance\n"
+
+
+def test_custom_install_with_command_line_tools(default_xcode_install_path, tmp_path):
+    """If the cmdline tools are installed, and Xcode is in a non-default
+    location, raise an error."""
+    # Create a custom Xcode location
+    custom_xcode_location = tmp_path / "custom" / "Xcode.app"
+    custom_xcode_location.mkdir(parents=True, exist_ok=True)
+
+    command = mock.MagicMock()
+    command.subprocess.check_output.side_effect = [
+        "/Library/Developer/CommandLineTools\n",  # xcode-select -p
+        subprocess.CalledProcessError(
+            cmd=["xcodebuild", "-version"],
+            returncode=1,
+            output="xcode-select: error: tool 'xcodebuild' requires Xcode, but "
+            "active developer directory '/Library/Developer/CommandLineTools' "
+            "is a command line tools instance\n",
+        ),
+    ]
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"You have the Xcode command line tools installed",
+    ):
+        ensure_xcode_is_installed(command, xcode_location=default_xcode_install_path)
+
+    # subprocess was invoked as expected
+    command.subprocess.check_output.assert_has_calls(
+        [
+            mock.call(
+                ["xcode-select", "-p"],
+                stderr=subprocess.STDOUT,
+            ),
+            mock.call(
+                ["xcodebuild", "-version"],
+                stderr=subprocess.STDOUT,
+            ),
+        ],
+        any_order=False,
     )
 
-    with pytest.raises(BriefcaseCommandError, match=r"xcode-select --switch"):
-        ensure_xcode_is_installed(command, xcode_location=xcode)
 
-    # xcode-select was invoked
-    command.subprocess.check_output.assert_called_once_with(
-        ["xcodebuild", "-version"],
-        stderr=subprocess.STDOUT,
-    )
-
-
-def test_exists_but_corrupted(xcode):
+def test_installed_but_corrupted(xcode):
     """If the Xcode folder exists, but xcodebuild breaks, raise an error."""
     command = mock.MagicMock()
-    command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
-        cmd=["xcodebuild", "-version"], returncode=1
-    )
-    command.subprocess.check_output.side_effect.output = "Badness occurred."
+    command.subprocess.check_output.side_effect = [
+        xcode + "\n",  # xcode-select -p
+        subprocess.CalledProcessError(
+            cmd=["xcodebuild", "-version"],
+            returncode=1,
+            output="Badness occurred",
+        ),
+    ]
 
     with pytest.raises(
         BriefcaseCommandError, match=r"should return the current Xcode version"
     ):
         ensure_xcode_is_installed(command, xcode_location=xcode)
 
-    # xcode-select was invoked
-    command.subprocess.check_output.assert_called_once_with(
-        ["xcodebuild", "-version"],
-        stderr=subprocess.STDOUT,
+    # subprocess was invoked as expected
+    command.subprocess.check_output.assert_has_calls(
+        [
+            mock.call(
+                ["xcode-select", "-p"],
+                stderr=subprocess.STDOUT,
+            ),
+            mock.call(
+                ["xcodebuild", "-version"],
+                stderr=subprocess.STDOUT,
+            ),
+        ],
+        any_order=False,
     )
 
 
@@ -94,17 +225,27 @@ def test_installed_no_minimum_version(xcode):
     """If Xcode is installed, but there's no minimum version, check is
     satisfied."""
     command = mock.MagicMock()
-    command.subprocess.check_output.return_value = (
-        "Xcode 11.2.1\nBuild version 11B500\n"
-    )
+    command.subprocess.check_output.side_effect = [
+        xcode + "\n",  # xcode-select -p
+        "Xcode 11.2.1\nBuild version 11B500\n",  # xcodebuild -version
+    ]
 
     # Check passes without an error.
     ensure_xcode_is_installed(command, xcode_location=xcode)
 
-    # xcode-select was invoked
-    command.subprocess.check_output.assert_called_once_with(
-        ["xcodebuild", "-version"],
-        stderr=subprocess.STDOUT,
+    # subprocess was invoked as expected
+    command.subprocess.check_output.assert_has_calls(
+        [
+            mock.call(
+                ["xcode-select", "-p"],
+                stderr=subprocess.STDOUT,
+            ),
+            mock.call(
+                ["xcodebuild", "-version"],
+                stderr=subprocess.STDOUT,
+            ),
+        ],
+        any_order=False,
     )
 
 
@@ -113,24 +254,35 @@ def test_installed_extra_output(capsys, xcode):
     # This specific output was seen in the wild with Xcode 13.2.1; see #668
     command = mock.MagicMock()
     command.logger = Log()
-    command.subprocess.check_output.return_value = "\n".join(
-        [
-            "objc[86306]: Class AMSupportURLConnectionDelegate is implemented in both /usr/lib/libauthinstall.dylib (0x20d17ab90) and /Library/Apple/System/Library/PrivateFrameworks/MobileDevice.framework/Versions/A/MobileDevice (0x1084b82c8). One of the two will be used. Which one is undefined."  # noqa: E501
-            "objc[86306]: Class AMSupportURLSession is implemented in both /usr/lib/libauthinstall.dylib (0x20d17abe0) and /Library/Apple/System/Library/PrivateFrameworks/MobileDevice.framework/Versions/A/MobileDevice (0x1084b8318). One of the two will be used. Which one is undefined.",  # noqa: E501
-            "Xcode 13.2.1",
-            "Build version 13C100",
-        ]
-    )
+    command.subprocess.check_output.side_effect = [
+        xcode + "\n",  # xcode-select -p
+        "\n".join(
+            [
+                "objc[86306]: Class AMSupportURLConnectionDelegate is implemented in both /usr/lib/libauthinstall.dylib (0x20d17ab90) and /Library/Apple/System/Library/PrivateFrameworks/MobileDevice.framework/Versions/A/MobileDevice (0x1084b82c8). One of the two will be used. Which one is undefined."  # noqa: E501
+                "objc[86306]: Class AMSupportURLSession is implemented in both /usr/lib/libauthinstall.dylib (0x20d17abe0) and /Library/Apple/System/Library/PrivateFrameworks/MobileDevice.framework/Versions/A/MobileDevice (0x1084b8318). One of the two will be used. Which one is undefined.",  # noqa: E501
+                "Xcode 13.2.1",
+                "Build version 13C100",
+            ]
+        ),
+    ]
 
     # Check passes without an error.
     ensure_xcode_is_installed(command, xcode_location=xcode, min_version=(11, 1))
 
-    # xcode-select was invoked
-    command.subprocess.check_output.assert_called_once_with(
-        ["xcodebuild", "-version"],
-        stderr=subprocess.STDOUT,
+    # subprocess was invoked as expected
+    command.subprocess.check_output.assert_has_calls(
+        [
+            mock.call(
+                ["xcode-select", "-p"],
+                stderr=subprocess.STDOUT,
+            ),
+            mock.call(
+                ["xcodebuild", "-version"],
+                stderr=subprocess.STDOUT,
+            ),
+        ],
+        any_order=False,
     )
-
     # No warning generated.
     out = capsys.readouterr().out
     assert "WARNING" not in out
@@ -172,7 +324,6 @@ def test_installed_with_minimum_version_success(min_version, version, capsys, xc
     """Check XCode can meet a minimum version requirement."""
 
     def check_output_mock(cmd_list, *args, **kwargs):
-
         if cmd_list == ["xcode-select", "-p"]:
             return xcode + "\n"
 
@@ -224,9 +375,10 @@ def test_installed_with_minimum_version_success(min_version, version, capsys, xc
 def test_installed_with_minimum_version_failure(min_version, version, xcode):
     """Check XCode fail to meet a minimum version requirement."""
     command = mock.MagicMock()
-    command.subprocess.check_output.return_value = (
-        f"Xcode {version}\nBuild version 11B500\n"
-    )
+    command.subprocess.check_output.side_effect = [
+        xcode + "\n",  # xcode-select -p
+        f"Xcode {version}\nBuild version 11B500\n",  # xcodebuild -version
+    ]
 
     # Check raises an error.
     with pytest.raises(BriefcaseCommandError):
@@ -236,10 +388,19 @@ def test_installed_with_minimum_version_failure(min_version, version, xcode):
             xcode_location=xcode,
         )
 
-    # xcode-select was invoked
-    command.subprocess.check_output.assert_called_once_with(
-        ["xcodebuild", "-version"],
-        stderr=subprocess.STDOUT,
+    # subprocess was invoked as expected
+    command.subprocess.check_output.assert_has_calls(
+        [
+            mock.call(
+                ["xcode-select", "-p"],
+                stderr=subprocess.STDOUT,
+            ),
+            mock.call(
+                ["xcodebuild", "-version"],
+                stderr=subprocess.STDOUT,
+            ),
+        ],
+        any_order=False,
     )
 
 
@@ -247,7 +408,10 @@ def test_unexpected_version_output(capsys, xcode):
     """If xcodebuild returns unexpected output, assume it's ok..."""
     command = mock.MagicMock()
     command.logger = Log()
-    command.subprocess.check_output.return_value = "Wibble Wibble Wibble\n"
+    command.subprocess.check_output.side_effect = [
+        xcode + "\n",  # xcode-select -p
+        "Wibble Wibble Wibble\n",  # xcodebuild -version
+    ]
 
     # Check passes without an error...
     ensure_xcode_is_installed(
@@ -256,10 +420,19 @@ def test_unexpected_version_output(capsys, xcode):
         xcode_location=xcode,
     )
 
-    # xcode-select was invoked
-    command.subprocess.check_output.assert_called_once_with(
-        ["xcodebuild", "-version"],
-        stderr=subprocess.STDOUT,
+    # subprocess was invoked as expected
+    command.subprocess.check_output.assert_has_calls(
+        [
+            mock.call(
+                ["xcode-select", "-p"],
+                stderr=subprocess.STDOUT,
+            ),
+            mock.call(
+                ["xcodebuild", "-version"],
+                stderr=subprocess.STDOUT,
+            ),
+        ],
+        any_order=False,
     )
 
     # ...but stdout contains a warning

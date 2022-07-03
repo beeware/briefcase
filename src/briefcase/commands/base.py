@@ -142,6 +142,7 @@ class BaseCommand(ABC):
 
         # Initialize default logger (replaced when options are parsed).
         self.logger = Log()
+        self.save_log = False
 
     @property
     def create_command(self):
@@ -379,7 +380,8 @@ class BaseCommand(ABC):
 
         # Extract the base default options onto the command
         self.input.enabled = options.pop("input_enabled")
-        self.logger = Log(verbosity=options.pop("verbosity"))
+        self.logger.verbosity = options.pop("verbosity")
+        self.save_log = options.pop("save_log")
 
         return options
 
@@ -401,7 +403,7 @@ class BaseCommand(ABC):
             "--verbosity",
             action="count",
             default=1,
-            help="set the verbosity of output (use -vv for additional debug output)",
+            help="set the verbosity of output",
         )
         parser.add_argument("-V", "--version", action="version", version=__version__)
         parser.add_argument(
@@ -414,6 +416,12 @@ class BaseCommand(ABC):
                 "an error will be raised; otherwise, default answers will be "
                 "assumed."
             ),
+        )
+        parser.add_argument(
+            "--log",
+            action="store_true",
+            dest="save_log",
+            help="Save a detailed log to file. By default, this log file is only created for critical errors.",
         )
 
     def add_options(self, parser):

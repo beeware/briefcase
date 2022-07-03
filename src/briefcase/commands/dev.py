@@ -59,20 +59,21 @@ class DevCommand(BaseCommand):
         :param app: The config object for the app
         """
         if app.requires:
-            try:
-                self.subprocess.run(
-                    [
-                        sys.executable,
-                        "-m",
-                        "pip",
-                        "install",
-                        "--upgrade",
-                    ]
-                    + app.requires,
-                    check=True,
-                )
-            except subprocess.CalledProcessError as e:
-                raise DependencyInstallError() from e
+            with self.input.wait_bar("Installing dev dependencies..."):
+                try:
+                    self.subprocess.run(
+                        [
+                            sys.executable,
+                            "-m",
+                            "pip",
+                            "install",
+                            "--upgrade",
+                        ]
+                        + app.requires,
+                        check=True,
+                    )
+                except subprocess.CalledProcessError as e:
+                    raise DependencyInstallError() from e
         else:
             self.logger.info("No application dependencies.")
 

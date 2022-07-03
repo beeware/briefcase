@@ -30,6 +30,7 @@ def test_logcat(mock_sdk):
         ],
         env=mock_sdk.env,
         check=True,
+        stream_output=True,
     )
 
 
@@ -43,3 +44,25 @@ def test_adb_failure(mock_sdk):
 
     with pytest.raises(BriefcaseCommandError):
         adb.logcat()
+
+
+@pytest.mark.parametrize(
+    "return_code",
+    (
+        0xC000013A,  # Windows: STATUS_CONTROL_C_EXIT in hex
+        3221225786,  # Windows: STATUS_CONTROL_C_EXIT in dec
+        -2,  # Linux/macOS
+    ),
+)
+def test_adb_ctrl_c(mock_sdk, return_code):
+    """When the user sends CTRL+C, exit normally."""
+    # Mock out the run command on an adb instance
+    adb = ADB(mock_sdk, "exampleDevice")
+    mock_sdk.command.subprocess.run = MagicMock(
+        side_effect=subprocess.CalledProcessError(
+            returncode=return_code, cmd="adb logcat"
+        )
+    )
+
+    # does not raise BriefcaseCommandError
+    adb.logcat()

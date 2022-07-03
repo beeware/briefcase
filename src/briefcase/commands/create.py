@@ -97,9 +97,9 @@ def write_dist_info(app: BaseConfig, dist_info_path: Path):
     """
     # Create dist-info folder, and write a minimal metadata collection.
     dist_info_path.mkdir(exist_ok=True)
-    with (dist_info_path / "INSTALLER").open("w") as f:
+    with (dist_info_path / "INSTALLER").open("w", encoding="utf-8") as f:
         f.write("briefcase\n")
-    with (dist_info_path / "METADATA").open("w") as f:
+    with (dist_info_path / "METADATA").open("w", encoding="utf-8") as f:
         f.write("Metadata-Version: 2.1\n")
         f.write(f"Briefcase-Version: {briefcase.__version__}\n")
         f.write(f"Name: {app.app_name}\n")
@@ -373,24 +373,27 @@ class CreateCommand(BaseCommand):
             self.shutil.rmtree(target)
             self.os.mkdir(target)
 
-        # Install  dependencies
+        # Install dependencies
         if app.requires:
-            try:
-                self.subprocess.run(
-                    [
-                        sys.executable,
-                        "-m",
-                        "pip",
-                        "install",
-                        "--upgrade",
-                        "--no-user",
-                        f"--target={target}",
-                    ]
-                    + app.requires,
-                    check=True,
-                )
-            except subprocess.CalledProcessError as e:
-                raise DependencyInstallError() from e
+            with self.input.wait_bar("Installing app dependencies..."):
+                try:
+                    self.subprocess.run(
+                        [
+                            sys.executable,
+                            "-m",
+                            "pip",
+                            "install",
+                            "--upgrade",
+                            "--no-user",
+                            "--progress-bar",
+                            "off",
+                            f"--target={target}",
+                        ]
+                        + app.requires,
+                        check=True,
+                    )
+                except subprocess.CalledProcessError as e:
+                    raise DependencyInstallError() from e
         else:
             self.logger.info("No application dependencies.")
 

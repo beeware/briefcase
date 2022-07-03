@@ -2,7 +2,6 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.android_sdk import AndroidSDK
 from briefcase.platforms.android.gradle import GradleRunCommand
 
@@ -38,7 +37,7 @@ def test_run_existing_device(run_command, first_app_config):
     # Invoke run_app
     run_command.run_app(first_app_config, device_or_avd="exampleDevice")
 
-    # selecte_target_device was invoked with a specific device
+    # select_target_device was invoked with a specific device
     run_command.android_sdk.select_target_device.assert_called_once_with(
         device_or_avd="exampleDevice"
     )
@@ -64,33 +63,94 @@ def test_run_existing_device(run_command, first_app_config):
     run_command.mock_adb.logcat.assert_called_once()
 
 
-def test_run_created_device(run_command, first_app_config):
-    """If the user chooses to run on a newly created device, an error is raised
-    (for now)"""
-    # Set up device selection to return a completely new device
+def test_run_created_emulator(run_command, first_app_config):
+    """The user can choose to run on a newly created emulator."""
+    # Set up device selection to return a completely new emulator
     run_command.android_sdk.select_target_device = MagicMock(
         return_value=(None, None, None)
     )
-    run_command.input = MagicMock(return_value="newDevice")
+    run_command.android_sdk.create_emulator = MagicMock(return_value="newDevice")
+    run_command.android_sdk.verify_avd = MagicMock()
+    run_command.android_sdk.start_emulator = MagicMock(
+        return_value=("emulator-3742", "New Device")
+    )
 
-    with pytest.raises(BriefcaseCommandError):
-        run_command.run_app(first_app_config)
+    # Invoke run_app
+    run_command.run_app(first_app_config)
 
-    # The ADB wrapper wasn't even created
-    run_command.mock_adb.assert_not_called()
+    # A new emulator was created
+    run_command.android_sdk.create_emulator.assert_called_once_with()
+
+    # No attempt was made to verify the AVD (it is pre-verified through
+    # the creation process)
+    run_command.android_sdk.verify_avd.assert_not_called()
+
+    # The emulator was started
+    run_command.android_sdk.start_emulator.assert_called_once_with("newDevice")
+
+    # The ADB wrapper is created
+    run_command.android_sdk.adb.assert_called_once_with(device="emulator-3742")
+
+    # The adb wrapper is invoked with the expected arguments
+    run_command.mock_adb.install_apk.assert_called_once_with(
+        run_command.binary_path(first_app_config)
+    )
+    run_command.mock_adb.force_stop_app.assert_called_once_with(
+        f"{first_app_config.package_name}.{first_app_config.module_name}",
+    )
+
+    run_command.mock_adb.clear_log.assert_called_once()
+
+    run_command.mock_adb.start_app.assert_called_once_with(
+        f"{first_app_config.package_name}.{first_app_config.module_name}",
+        "org.beeware.android.MainActivity",
+    )
+
+    run_command.mock_adb.logcat.assert_called_once()
 
 
 def test_run_idle_device(run_command, first_app_config):
-    """If the user chooses to run on an idle device, an error is raised (for
-    now)"""
+    """The user can choose to run on an idle device."""
     # Set up device selection to return a new device that has an AVD,
     # but not a device ID.
     run_command.android_sdk.select_target_device = MagicMock(
-        return_value=(None, "exampleDevice", "exampleDevice")
+        return_value=(None, "Idle Device", "idleDevice")
     )
 
-    with pytest.raises(BriefcaseCommandError):
-        run_command.run_app(first_app_config)
+    run_command.android_sdk.create_emulator = MagicMock()
+    run_command.android_sdk.verify_avd = MagicMock()
+    run_command.android_sdk.start_emulator = MagicMock(
+        return_value=("emulator-3742", "Idle Device")
+    )
 
-    # The ADB wrapper wasn't even created
-    run_command.mock_adb.assert_not_called()
+    # Invoke run_app
+    run_command.run_app(first_app_config)
+
+    # No attempt was made to create a new emulator
+    run_command.android_sdk.create_emulator.assert_not_called()
+
+    # The AVD has been verified
+    run_command.android_sdk.verify_avd.assert_called_with("idleDevice")
+
+    # The emulator was started
+    run_command.android_sdk.start_emulator.assert_called_once_with("idleDevice")
+
+    # The ADB wrapper is created
+    run_command.android_sdk.adb.assert_called_once_with(device="emulator-3742")
+
+    # The adb wrapper is invoked with the expected arguments
+    run_command.mock_adb.install_apk.assert_called_once_with(
+        run_command.binary_path(first_app_config)
+    )
+    run_command.mock_adb.force_stop_app.assert_called_once_with(
+        f"{first_app_config.package_name}.{first_app_config.module_name}",
+    )
+
+    run_command.mock_adb.clear_log.assert_called_once()
+
+    run_command.mock_adb.start_app.assert_called_once_with(
+        f"{first_app_config.package_name}.{first_app_config.module_name}",
+        "org.beeware.android.MainActivity",
+    )
+
+    run_command.mock_adb.logcat.assert_called_once()

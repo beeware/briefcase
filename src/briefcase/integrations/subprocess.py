@@ -1,7 +1,9 @@
 import json
 import operator
+import os
 import shlex
 import subprocess
+import sys
 import threading
 import time
 
@@ -106,7 +108,7 @@ class Subprocess:
         """
         env = self.command.os.environ.copy()
         if overrides:
-            env.update(**overrides)
+            env.update(overrides)
         return env
 
     def final_kwargs(self, **kwargs):
@@ -141,6 +143,19 @@ class Subprocess:
         if "text" not in kwargs and "universal_newlines" not in kwargs:
             kwargs["text"] = True
 
+        # If we're in text/universal_newlines mode, ensure that there is
+        # an encoding specified. If encoding isn't specified, default to
+        # the system's stdout encoding.
+        # This is for the benefit of Windows, which uses cp437 for console
+        # output when the system encoding is cp1252.
+        # `__stdout__` is used because rich captures and redirects `sys.stdout`.
+        # The fallback to "UTF-8" is needed to catch the case where stdout
+        # is redirected to a non-tty (e.g. during pytest conditions)
+        if kwargs.get("text") or kwargs.get("universal_newlines", False):
+            kwargs.setdefault(
+                "encoding", os.device_encoding(sys.__stdout__.fileno()) or "UTF-8"
+            )
+
         # For Windows, convert start_new_session=True to creation flags
         if self.command.host_os == "Windows":
             try:
@@ -173,8 +188,12 @@ class Subprocess:
 
         return kwargs
 
-    def run(self, args, **kwargs):
-        """A wrapper for subprocess.run()
+    def run(self, args, stream_output=False, **kwargs):
+        """A wrapper for subprocess.run().
+
+        :param args: args for subprocess.run()
+        :param stream_output: simulate run() while streaming the output to the console
+        :param kwargs: keywords args for subprocess.run()
 
         The behavior of this method is identical to subprocess.run(),
         except for:
@@ -186,13 +205,15 @@ class Subprocess:
          - The `text` argument is defaulted to True so all output is returned
            as strings instead of bytes.
         """
-        # If dynamic screen content (e.g. a Wait Bar) is active and
-        # output is not redirected, then simulate run().
+        # If `stream_output` or dynamic screen content (e.g. a Wait Bar) is
+        # active and output is not redirected, use run with output streaming.
         is_output_redirected = kwargs.get("capture_output") or (
             kwargs.get("stdout") and kwargs.get("stderr")
         )
-        if self.command.input.is_output_controlled and not is_output_redirected:
-            return self._run_in_controlled_terminal(args, **kwargs)
+        if stream_output or (
+            self.command.input.is_output_controlled and not is_output_redirected
+        ):
+            return self._run_and_stream_output(args, **kwargs)
 
         # Otherwise, invoke run() normally.
         self._log_command(args)
@@ -209,8 +230,11 @@ class Subprocess:
 
         return command_result
 
-    def _run_in_controlled_terminal(self, args, check=False, **kwargs):
-        """Simulate subprocess.run() when dynamic screen content is active.
+    def _run_and_stream_output(self, args, check=False, **kwargs):
+        """Simulate subprocess.run() while streaming output to the console.
+
+        This is useful when dynamic screen content is active or output should
+        be captured for logging.
 
         When dynamic screen content like a Wait Bar is active, output can
         only be printed to the screen via Log or Console to avoid interfering
@@ -223,14 +247,19 @@ class Subprocess:
         Note: the 'timeout' and 'input' arguments are not supported.
         """
         if kwargs.get("stdout") and not kwargs.get("stderr"):
+            # This is an unsupported configuration, as it's not clear where stderr
+            # output would be displayed. Either:
+            # * Redirect stderr in addition to stdout; or
+            # * Use check_output() instead of run() to capture console output
+            #   without streaming.
             raise AssertionError(
-                "Subprocess.run() was invoked while dynamic Rich content is active with stdout "
-                "redirected while stderr was not redirected. This would result in stdout "
-                "being printed to the terminal. Redirect stderr as well or use check_output."
+                "Subprocess.run() was invoked while dynamic Rich content is active (or via "
+                "`stream_output`) with stdout redirected while stderr was not redirected."
             )
         for arg in [arg for arg in ["timeout", "input"] if arg in kwargs]:
             raise AssertionError(
-                f"The Subprocess.run() '{arg}' argument is not supported while dynamic Rich content is active."
+                f"The Subprocess.run() '{arg}' argument is not supported "
+                f"with `stream_output` or while dynamic Rich content is active."
             )
 
         # stdout must be piped so the output streamer can print it.
@@ -240,7 +269,7 @@ class Subprocess:
 
         stderr = None
         with self.Popen(args, **kwargs) as process:
-            self.stream_output("Wait Bar streamer", process)
+            self.stream_output(args[0], process)
             if process.stderr and kwargs["stderr"] != subprocess.STDOUT:
                 stderr = process.stderr.read()
             return_code = process.poll()
@@ -408,25 +437,15 @@ class Subprocess:
         )
 
     def _log_environment(self, overrides):
-        """Log the state of environment variables prior to command execution.
-
-        In debug mode, only the updates to the current environment are logged.
-        In deep debug, the entire environment for the command is logged.
+        """Log the environment variables overrides prior to command execution.
 
         :param overrides: The explicit environment passed to the subprocess call;
             can be `None` if there are no explicit environment changes.
         """
-        if self.command.logger.verbosity >= self.command.logger.DEEP_DEBUG:
-            full_env = self.full_env(overrides)
-            self.command.logger.deep_debug("Full Environment:")
-            for env_var, value in full_env.items():
-                self.command.logger.deep_debug(f"    {env_var}={value}")
-
-        elif self.command.logger.verbosity >= self.command.logger.DEBUG:
-            if overrides:
-                self.command.logger.debug("Environment:")
-                for env_var, value in overrides.items():
-                    self.command.logger.debug(f"    {env_var}={value}")
+        if overrides:
+            self.command.logger.debug("Environment Overrides:")
+            for env_var, value in overrides.items():
+                self.command.logger.debug(f"    {env_var}={value}")
 
     def _log_output(self, output, stderr=None):
         """Log the output of the executed command."""

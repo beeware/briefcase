@@ -1,1 +1,0 @@
-Corrected a problem with the iOS simulator detecting the iOS version when only a device name is provided.

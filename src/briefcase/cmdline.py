@@ -113,7 +113,7 @@ def parse_cmdline(args):
         help="The output format to use (the available output formats are platform dependent)",
     )
 
-    # Re-parse the aruments, now that we know it is a command that makes use
+    # Re-parse the arguments, now that we know it is a command that makes use
     # of platform/output_format.
     options, extra = parser.parse_known_args(args)
 

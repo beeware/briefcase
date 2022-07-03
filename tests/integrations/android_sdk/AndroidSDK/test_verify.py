@@ -42,6 +42,13 @@ def mock_command(tmp_path):
     return command
 
 
+@pytest.fixture
+def jdk():
+    jdk = MagicMock()
+    jdk.java_home = "/path/to/java"
+    return jdk
+
+
 def mock_unpack(filename, extract_dir):
     # Create a file that would have been created by unpacking the archive
     # This includes the duplicated "cmdline-tools" folder name
@@ -61,7 +68,7 @@ def accept_license(android_sdk_root_path):
     return _side_effect
 
 
-def test_succeeds_immediately_in_happy_path(mock_command, tmp_path):
+def test_succeeds_immediately_in_happy_path(mock_command, tmp_path, jdk):
     """If verify is invoked on a path containing an Android SDK, it does
     nothing."""
     # If `sdkmanager` exists and has the right permissions, and
@@ -77,27 +84,37 @@ def test_succeeds_immediately_in_happy_path(mock_command, tmp_path):
     tools_bin = android_sdk_root_path / "cmdline-tools" / "latest" / "bin"
     tools_bin.mkdir(parents=True, mode=0o755)
     if platform.system() == "Windows":
-        (tools_bin / "sdkmanager.bat").touch()
+        sdk_manager = tools_bin / "sdkmanager.bat"
+        sdk_manager.touch()
     else:
-        (tools_bin / "sdkmanager").touch(mode=0o755)
+        sdk_manager = tools_bin / "sdkmanager"
+        sdk_manager.touch(mode=0o755)
 
     # Pre-accept the license
     accept_license(android_sdk_root_path)()
 
     # Expect verify() to succeed
-    sdk = AndroidSDK.verify(mock_command, jdk=MagicMock())
+    sdk = AndroidSDK.verify(mock_command, jdk=jdk)
 
     # No calls to download, run or unpack anything.
     mock_command.download_url.assert_not_called()
     mock_command.subprocess.run.assert_not_called()
-    mock_command.subprocess.check_output.assert_not_called()
     mock_command.shutil.unpack_archive.assert_not_called()
+
+    # One call to check_output to dump the installed packages
+    mock_command.subprocess.check_output.assert_called_once_with(
+        [os.fsdecode(sdk_manager), "--list_installed"],
+        env={
+            "ANDROID_SDK_ROOT": os.fsdecode(android_sdk_root_path),
+            "JAVA_HOME": jdk.java_home,
+        },
+    )
 
     # The returned SDK has the expected root path.
     assert sdk.root_path == android_sdk_root_path
 
 
-def test_succeeds_immediately_in_happy_path_with_debug(mock_command, tmp_path):
+def test_succeeds_immediately_in_happy_path_with_debug(mock_command, tmp_path, jdk):
     """If debug is enabled, a verify call will display the installed
     packages."""
     # Increase the log level.
@@ -126,30 +143,26 @@ def test_succeeds_immediately_in_happy_path_with_debug(mock_command, tmp_path):
     accept_license(android_sdk_root_path)()
 
     # Expect verify() to succeed
-    jdk = MagicMock()
-    jdk.java_home = "/path/to/java"
     sdk = AndroidSDK.verify(mock_command, jdk=jdk)
 
     # No calls to download or unpack anything.
     mock_command.download_url.assert_not_called()
-    mock_command.subprocess.check_output.assert_not_called()
     mock_command.shutil.unpack_archive.assert_not_called()
 
-    # One call to run to dump the installed packages
-    mock_command.subprocess.run.assert_called_once_with(
+    # One call to check_output to dump the installed packages
+    mock_command.subprocess.check_output.assert_called_once_with(
         [os.fsdecode(sdk_manager), "--list_installed"],
         env={
             "ANDROID_SDK_ROOT": os.fsdecode(android_sdk_root_path),
-            "JAVA_HOME": "/path/to/java",
+            "JAVA_HOME": jdk.java_home,
         },
-        check=True,
     )
 
     # The returned SDK has the expected root path.
     assert sdk.root_path == android_sdk_root_path
 
 
-def test_user_provided_sdk(mock_command, tmp_path):
+def test_user_provided_sdk(mock_command, tmp_path, jdk):
     """If the user specifies a valid ANDROID_SDK_ROOT, it is used."""
     # Increase the log level.
     mock_command.logger.verbosity = 2
@@ -174,29 +187,26 @@ def test_user_provided_sdk(mock_command, tmp_path):
     }
 
     # Expect verify() to succeed
-    jdk = MagicMock()
-    jdk.java_home = "/path/to/java"
     sdk = AndroidSDK.verify(mock_command, jdk=jdk)
 
     # No calls to download or unpack anything.
     mock_command.download_url.assert_not_called()
-    mock_command.subprocess.check_output.assert_not_called()
     mock_command.shutil.unpack_archive.assert_not_called()
 
-    # One call to run to dump the installed packages
-    mock_command.subprocess.run.assert_called_once_with(
+    # One call to check_output to dump the installed packages
+    mock_command.subprocess.check_output.assert_called_once_with(
         [os.fsdecode(sdk.sdkmanager_path), "--list_installed"],
         env={
             "ANDROID_SDK_ROOT": os.fsdecode(existing_android_sdk_root_path),
-            "JAVA_HOME": "/path/to/java",
+            "JAVA_HOME": jdk.java_home,
         },
-        check=True,
     )
+
     # The returned SDK has the expected root path.
     assert sdk.root_path == existing_android_sdk_root_path
 
 
-def test_user_provided_sdk_with_debug(mock_command, tmp_path):
+def test_user_provided_sdk_with_debug(mock_command, tmp_path, jdk):
     """If the has debug with a user-specified ANDROID_SDK_ROOT, the packages
     are listed."""
     # Create `sdkmanager` and the license file.
@@ -219,19 +229,27 @@ def test_user_provided_sdk_with_debug(mock_command, tmp_path):
     }
 
     # Expect verify() to succeed
-    sdk = AndroidSDK.verify(mock_command, jdk=MagicMock())
+    sdk = AndroidSDK.verify(mock_command, jdk=jdk)
 
     # No calls to download, run or unpack anything.
     mock_command.download_url.assert_not_called()
     mock_command.subprocess.run.assert_not_called()
-    mock_command.subprocess.check_output.assert_not_called()
     mock_command.shutil.unpack_archive.assert_not_called()
+
+    # One call to check_output to dump the installed packages
+    mock_command.subprocess.check_output.assert_called_once_with(
+        [os.fsdecode(sdk.sdkmanager_path), "--list_installed"],
+        env={
+            "ANDROID_SDK_ROOT": os.fsdecode(existing_android_sdk_root_path),
+            "JAVA_HOME": jdk.java_home,
+        },
+    )
 
     # The returned SDK has the expected root path.
     assert sdk.root_path == existing_android_sdk_root_path
 
 
-def test_invalid_user_provided_sdk(mock_command, tmp_path):
+def test_invalid_user_provided_sdk(mock_command, tmp_path, jdk):
     """If the user specifies an invalid ANDROID_SDK_ROOT, it is ignored."""
 
     # Create `sdkmanager` and the license file
@@ -253,13 +271,21 @@ def test_invalid_user_provided_sdk(mock_command, tmp_path):
     mock_command.os.environ = {"ANDROID_SDK_ROOT": os.fsdecode(tmp_path / "other_sdk")}
 
     # Expect verify() to succeed
-    sdk = AndroidSDK.verify(mock_command, jdk=MagicMock())
+    sdk = AndroidSDK.verify(mock_command, jdk=jdk)
 
     # No calls to download, run or unpack anything.
     mock_command.download_url.assert_not_called()
     mock_command.subprocess.run.assert_not_called()
-    mock_command.subprocess.check_output.assert_not_called()
     mock_command.shutil.unpack_archive.assert_not_called()
+
+    # One call to check_output to dump the installed packages
+    mock_command.subprocess.check_output.assert_called_once_with(
+        [os.fsdecode(sdk.sdkmanager_path), "--list_installed"],
+        env={
+            "ANDROID_SDK_ROOT": os.fsdecode(android_sdk_root_path),
+            "JAVA_HOME": jdk.java_home,
+        },
+    )
 
     # The returned SDK has the expected root path.
     assert sdk.root_path == android_sdk_root_path

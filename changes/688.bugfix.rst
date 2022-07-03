@@ -1,0 +1,1 @@
+Windows MSI installers now install in ``Program Files``, rather than ``Program Files (x86)``.

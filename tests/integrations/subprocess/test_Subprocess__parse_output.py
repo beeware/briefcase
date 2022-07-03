@@ -1,3 +1,5 @@
+from unittest.mock import ANY
+
 import pytest
 
 from briefcase.integrations.subprocess import CommandOutputParseError, ParseError
@@ -29,7 +31,11 @@ def test_call(mock_sub, capsys):
 
     output = mock_sub.parse_output(splitlines_parser, ["hello", "world"])
 
-    mock_sub._subprocess.check_output.assert_called_with(["hello", "world"], text=True)
+    mock_sub._subprocess.check_output.assert_called_with(
+        ["hello", "world"],
+        text=True,
+        encoding=ANY,
+    )
     assert capsys.readouterr().out == ""
 
     assert output == ["some output line 1", "more output line 2"]
@@ -46,6 +52,7 @@ def test_call_with_arg(mock_sub, capsys):
         ["hello", "world"],
         extra_arg="asdf",
         text=True,
+        encoding=ANY,
     )
     assert capsys.readouterr().out == ""
 
@@ -57,7 +64,11 @@ def test_call_with_parser_success(mock_sub, capsys):
 
     output = mock_sub.parse_output(second_line_parser, ["hello", "world"])
 
-    mock_sub._subprocess.check_output.assert_called_with(["hello", "world"], text=True)
+    mock_sub._subprocess.check_output.assert_called_with(
+        ["hello", "world"],
+        text=True,
+        encoding=ANY,
+    )
     assert output == "more output line 2"
 
 
@@ -70,7 +81,11 @@ def test_call_with_parser_error(mock_sub, capsys):
     ):
         mock_sub.parse_output(third_line_parser, ["hello", "world"])
 
-    mock_sub._subprocess.check_output.assert_called_with(["hello", "world"], text=True)
+    mock_sub._subprocess.check_output.assert_called_with(
+        ["hello", "world"],
+        text=True,
+        encoding=ANY,
+    )
     expected_output = (
         "\n"
         "Command Output Parsing Error:\n"
@@ -87,11 +102,11 @@ def test_call_with_parser_error(mock_sub, capsys):
 @pytest.mark.parametrize(
     "in_kwargs, kwargs",
     [
-        ({}, {"text": True}),
-        ({"text": True}, {"text": True}),
+        ({}, {"text": True, "encoding": ANY}),
+        ({"text": True}, {"text": True, "encoding": ANY}),
         ({"text": False}, {"text": False}),
         ({"universal_newlines": False}, {"universal_newlines": False}),
-        ({"universal_newlines": True}, {"universal_newlines": True}),
+        ({"universal_newlines": True}, {"universal_newlines": True, "encoding": ANY}),
     ],
 )
 def test_text_eq_true_default_overriding(mock_sub, in_kwargs, kwargs):
