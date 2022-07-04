@@ -27,7 +27,7 @@ class WindowsMSIMixin(WindowsMixin):
     def distribution_path(self, app, packaging_format):
         return self.platform_path / f"{app.formal_name}-{app.version}.msi"
 
-    def verify_tools(self):
+    def verify_tools(self, *args):
         super().verify_tools()
         self.wix = WiX.verify(self)
 
