@@ -1,0 +1,1 @@
+Add rich as a test dependency to fix import errors.
