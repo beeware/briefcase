@@ -1,2 +1,1 @@
-Fixed a Namespace not Found error in Linux with GTK apps caused by linuxdeploy not
-installing typelibs used for gobject-introspection.
+Add support for using linuxdeploy plugins when building Linux AppImages; this resolves many issues with GTK app deployment.
