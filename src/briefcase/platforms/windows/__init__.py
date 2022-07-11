@@ -1,4 +1,4 @@
-DEFAULT_OUTPUT_FORMAT = "msi"
+DEFAULT_OUTPUT_FORMAT = "app"
 
 
 class WindowsMixin:

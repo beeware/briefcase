@@ -1,7 +1,6 @@
 import os
 import struct
 import subprocess
-import sys
 import uuid
 
 from briefcase.commands import (
@@ -18,11 +17,11 @@ from briefcase.integrations.wix import WiX
 from briefcase.platforms.windows import WindowsMixin
 
 
-class WindowsMSIMixin(WindowsMixin):
-    output_format = "msi"
+class WindowsAppMixin(WindowsMixin):
+    output_format = "app"
 
     def binary_path(self, app):
-        return self.bundle_path(app)
+        return self.bundle_path(app) / "src" / f"{app.formal_name}.exe"
 
     def distribution_path(self, app, packaging_format):
         return self.platform_path / f"{app.formal_name}-{app.version}.msi"
@@ -32,7 +31,7 @@ class WindowsMSIMixin(WindowsMixin):
         self.wix = WiX.verify(self)
 
 
-class WindowsMSICreateCommand(WindowsMSIMixin, CreateCommand):
+class WindowsAppCreateCommand(WindowsAppMixin, CreateCommand):
     description = "Create and populate a Windows app."
 
     @property
@@ -84,38 +83,18 @@ class WindowsMSICreateCommand(WindowsMSIMixin, CreateCommand):
             "version_triple": version_triple,
             "guid": str(guid),
             "install_scope": install_scope,
-            # Template forward compatibility flags
-            # 2022-06-29: #775 added the need to pass for -arch 64 to candle.exe;
-            # Briefcase v0.3.8 didn't use that flag.
-            "_use_arch64": True,
         }
 
-    def install_app_support_package(self, app: BaseConfig):
-        """Install, then modify the default support package."""
-        # Install the support package using the normal install logic.
-        super().install_app_support_package(app)
 
-        # We need to add a ._pth file to include app and app_packages as
-        # part of the standard PYTHONPATH. Write a _pth file directly into
-        # the support folder, overwriting the default one.
-        version_tag = f"{sys.version_info.major}{sys.version_info.minor}"
-        pth_file = self.support_path(app) / f"python{version_tag}._pth"
-        with pth_file.open("w") as f:
-            f.write(f"python{version_tag}.zip\n")
-            f.write(".\n")
-            f.write("..\\\\app\n")
-            f.write("..\\\\app_packages\n")
-
-
-class WindowsMSIUpdateCommand(WindowsMSIMixin, UpdateCommand):
+class WindowsAppUpdateCommand(WindowsAppMixin, UpdateCommand):
     description = "Update an existing Windows app."
 
 
-class WindowsMSIBuildCommand(WindowsMSIMixin, BuildCommand):
+class WindowsAppBuildCommand(WindowsAppMixin, BuildCommand):
     description = "Build a Windows app."
 
 
-class WindowsMSIRunCommand(WindowsMSIMixin, RunCommand):
+class WindowsAppRunCommand(WindowsAppMixin, RunCommand):
     description = "Run a Windows app."
 
     def run_app(self, app: BaseConfig, **kwargs):
@@ -126,21 +105,15 @@ class WindowsMSIRunCommand(WindowsMSIMixin, RunCommand):
         self.logger.info("Starting app...", prefix=app.app_name)
         try:
             self.subprocess.run(
-                [
-                    os.fsdecode(
-                        self.binary_path(app) / "src" / "python" / "pythonw.exe"
-                    ),
-                    "-m",
-                    app.module_name,
-                ],
+                [os.fsdecode(self.binary_path(app))],
                 check=True,
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(f"Unable to start app {app.app_name}.") from e
 
 
-class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
-    description = "Package an MSI for a Windows app."
+class WindowsAppPackageCommand(WindowsAppMixin, PackageCommand):
+    description = "Package an App for a Windows app."
 
     def package_app(self, app: BaseConfig, **kwargs):
         """Build an application.
@@ -228,14 +201,14 @@ class WindowsMSIPackageCommand(WindowsMSIMixin, PackageCommand):
             raise BriefcaseCommandError(f"Unable to link app {app.app_name}.") from e
 
 
-class WindowsMSIPublishCommand(WindowsMSIMixin, PublishCommand):
-    description = "Publish a Windows MSI."
+class WindowsAppPublishCommand(WindowsAppMixin, PublishCommand):
+    description = "Publish a Windows App."
 
 
 # Declare the briefcase command bindings
-create = WindowsMSICreateCommand  # noqa
-update = WindowsMSIUpdateCommand  # noqa
-build = WindowsMSIBuildCommand  # noqa
-run = WindowsMSIRunCommand  # noqa
-package = WindowsMSIPackageCommand  # noqa
-publish = WindowsMSIPublishCommand  # noqa
+create = WindowsAppCreateCommand  # noqa
+update = WindowsAppUpdateCommand  # noqa
+build = WindowsAppBuildCommand  # noqa
+run = WindowsAppRunCommand  # noqa
+package = WindowsAppPackageCommand  # noqa
+publish = WindowsAppPublishCommand  # noqa

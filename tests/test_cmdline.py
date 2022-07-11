@@ -13,7 +13,7 @@ from briefcase.exceptions import (
 )
 from briefcase.platforms.linux.appimage import LinuxAppImageCreateCommand
 from briefcase.platforms.macOS.app import macOSAppCreateCommand, macOSAppPublishCommand
-from briefcase.platforms.windows.msi import WindowsMSICreateCommand
+from briefcase.platforms.windows.app import WindowsAppCreateCommand
 
 
 def test_empty():
@@ -179,7 +179,7 @@ def test_windows_default():
 
     cmd, options = parse_cmdline("create".split())
 
-    assert isinstance(cmd, WindowsMSICreateCommand)
+    assert isinstance(cmd, WindowsAppCreateCommand)
     assert cmd.platform == "windows"
     assert cmd.output_format == "msi"
     assert cmd.input.enabled
