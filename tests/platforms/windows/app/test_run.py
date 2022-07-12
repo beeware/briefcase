@@ -21,9 +21,6 @@ def test_run_app(first_app_config, tmp_path):
             ),
         ],
         check=True,
-        env={
-            "FIRST_APP_LOG_DIR": tmp_path,
-        },
     )
 
 
@@ -44,7 +41,4 @@ def test_run_app_failed(first_app_config, tmp_path):
             ),
         ],
         check=True,
-        env={
-            "FIRST_APP_LOG_DIR": tmp_path,
-        },
     )

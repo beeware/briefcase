@@ -1,7 +1,9 @@
+import subprocess
 from pathlib import Path
 
 from briefcase.commands import BuildCommand, PublishCommand, UpdateCommand
 from briefcase.config import BaseConfig
+from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.rcedit import RCEdit
 from briefcase.platforms.windows import (
     WindowsCreateCommand,
@@ -39,37 +41,42 @@ class WindowsAppBuildCommand(WindowsAppMixin, BuildCommand):
         self.logger.info("Building App...", prefix=app.app_name)
 
         with self.input.wait_bar("Setting stub app details..."):
-            self.subprocess.run(
-                [
-                    self.rcedit.rcedit_path,
-                    self.binary_path(app).relative_to(self.bundle_path(app)),
-                    "--set-version-string",
-                    "CompanyName",
-                    app.author,
-                    "--set-version-string",
-                    "FileDescription",
-                    app.description,
-                    "--set-version-string",
-                    "FileVersion",
-                    app.version,
-                    "--set-version-string",
-                    "InternalName",
-                    app.module_name,
-                    "--set-version-string",
-                    "OriginalFilename",
-                    self.binary_path(app).name,
-                    "--set-version-string",
-                    "ProductName",
-                    app.formal_name,
-                    "--set-version-string",
-                    "productVersion",
-                    app.version,
-                    "--set-icon",
-                    "icon.ico",
-                ],
-                check=True,
-                cwd=self.bundle_path(app),
-            )
+            try:
+                self.subprocess.run(
+                    [
+                        self.rcedit.rcedit_path,
+                        self.binary_path(app).relative_to(self.bundle_path(app)),
+                        "--set-version-string",
+                        "CompanyName",
+                        app.author,
+                        "--set-version-string",
+                        "FileDescription",
+                        app.description,
+                        "--set-version-string",
+                        "FileVersion",
+                        app.version,
+                        "--set-version-string",
+                        "InternalName",
+                        app.module_name,
+                        "--set-version-string",
+                        "OriginalFilename",
+                        self.binary_path(app).name,
+                        "--set-version-string",
+                        "ProductName",
+                        app.formal_name,
+                        "--set-version-string",
+                        "productVersion",
+                        app.version,
+                        "--set-icon",
+                        "icon.ico",
+                    ],
+                    check=True,
+                    cwd=self.bundle_path(app),
+                )
+            except subprocess.CalledProcessError as e:
+                raise BriefcaseCommandError(
+                    f"Unable to update details on stub app for {app.app_name}."
+                ) from e
 
 
 class WindowsAppRunCommand(WindowsAppMixin, WindowsRunCommand):

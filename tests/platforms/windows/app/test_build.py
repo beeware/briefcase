@@ -1,8 +1,10 @@
+import subprocess
 from pathlib import Path
 from unittest import mock
 
 import pytest
 
+from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.rcedit import RCEdit
 from briefcase.platforms.windows.app import WindowsAppBuildCommand
 
@@ -57,3 +59,18 @@ def test_build_app(package_command, first_app_config, tmp_path):
             ),
         ]
     )
+
+
+def test_build_app_failure(package_command, first_app_config, tmp_path):
+    """If the stub binary cannot be updated, an error is raised."""
+
+    package_command.subprocess.run.side_effect = subprocess.CalledProcessError(
+        returncode=1,
+        cmd="rcedit-x64.exe",
+    )
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Unable to update details on stub app for first-app.",
+    ):
+        package_command.build_app(first_app_config)

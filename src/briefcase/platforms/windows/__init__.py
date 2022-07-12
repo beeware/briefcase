@@ -82,14 +82,12 @@ class WindowsRunCommand(RunCommand):
         """
         self.logger.info("Starting app...", prefix=app.app_name)
         try:
+            # Start streaming logs for the app.
+            self.logger.info("=" * 75)
             self.subprocess.run(
                 [os.fsdecode(self.binary_path(app))],
                 check=True,
-                env={
-                    f"{app.module_name.upper()}_LOG_DIR": self.base_path,
-                },
             )
-            self.logger.info(f"Log written to {app.module_name.upper()}.log")
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(f"Unable to start app {app.app_name}.") from e
 
