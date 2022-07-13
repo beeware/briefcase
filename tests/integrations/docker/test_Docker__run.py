@@ -19,7 +19,7 @@ def test_simple_call(mock_docker, tmp_path, capsys):
             "--volume",
             f"{tmp_path / 'platform'}:/app:z",
             "--volume",
-            f"{tmp_path / '.briefcase'}:/home/brutus/.briefcase:z",
+            f"{tmp_path / 'briefcase'}:/home/brutus/.local/share/briefcase:z",
             "--rm",
             "briefcase/com.example.myapp:py3.X",
             "hello",
@@ -43,7 +43,7 @@ def test_simple_call_with_arg(mock_docker, tmp_path, capsys):
             "--volume",
             f"{tmp_path / 'platform'}:/app:z",
             "--volume",
-            f"{tmp_path / '.briefcase'}:/home/brutus/.briefcase:z",
+            f"{tmp_path / 'briefcase'}:/home/brutus/.local/share/briefcase:z",
             "--rm",
             "briefcase/com.example.myapp:py3.X",
             "hello",
@@ -67,7 +67,7 @@ def test_simple_call_with_path_arg(mock_docker, tmp_path, capsys):
             "--volume",
             f"{tmp_path / 'platform'}:/app:z",
             "--volume",
-            f"{tmp_path / '.briefcase'}:/home/brutus/.briefcase:z",
+            f"{tmp_path / 'briefcase'}:/home/brutus/.local/share/briefcase:z",
             "--rm",
             "briefcase/com.example.myapp:py3.X",
             "hello",
@@ -81,7 +81,10 @@ def test_simple_call_with_path_arg(mock_docker, tmp_path, capsys):
 
 
 def test_simple_call_with_sys_executable_arg(
-    mock_docker, tmp_path, capsys, monkeypatch
+    mock_docker,
+    tmp_path,
+    capsys,
+    monkeypatch,
 ):
     """Filepath arg that are same as sys.executable are replaced with
     unqualified python[ver]"""
@@ -98,7 +101,7 @@ def test_simple_call_with_sys_executable_arg(
             "--volume",
             f"{tmp_path / 'platform'}:/app:z",
             "--volume",
-            f"{tmp_path / '.briefcase'}:/home/brutus/.briefcase:z",
+            f"{tmp_path / 'briefcase'}:/home/brutus/.local/share/briefcase:z",
             "--rm",
             "briefcase/com.example.myapp:py3.X",
             "hello",
@@ -127,7 +130,7 @@ def test_simple_verbose_call(mock_docker, tmp_path, capsys):
             "--volume",
             f"{tmp_path / 'platform'}:/app:z",
             "--volume",
-            f"{tmp_path / '.briefcase'}:/home/brutus/.briefcase:z",
+            f"{tmp_path / 'briefcase'}:/home/brutus/.local/share/briefcase:z",
             "--rm",
             "briefcase/com.example.myapp:py3.X",
             "hello",
@@ -141,7 +144,7 @@ def test_simple_verbose_call(mock_docker, tmp_path, capsys):
         ">>> Running Command:\n"
         ">>>     docker run "
         f"--volume {tmp_path / 'platform'}:/app:z "
-        f"--volume {tmp_path / '.briefcase'}:/home/brutus/.briefcase:z "
+        f"--volume {tmp_path / 'briefcase'}:/home/brutus/.local/share/briefcase:z "
         "--rm "
         "briefcase/com.example.myapp:py3.X "
         "hello world\n"

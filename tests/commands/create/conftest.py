@@ -105,8 +105,9 @@ class TrackingCreateCommand(DummyCreateCommand):
 @pytest.fixture
 def create_command(tmp_path, mock_git):
     return DummyCreateCommand(
-        base_path=tmp_path,
-        home_path=tmp_path,
+        base_path=tmp_path / "project",
+        home_path=tmp_path / "home",
+        data_path=tmp_path / "data",
         git=mock_git,
     )
 
@@ -155,7 +156,7 @@ def bundle_path(myapp, tmp_path):
     # Return the bundle path for the app; however, as a side effect,
     # ensure that the app, app_packages and support target directories
     # exist, and the briefcase index file has been created.
-    bundle_path = tmp_path / "tester" / f"{myapp.app_name}.bundle"
+    bundle_path = tmp_path / "project" / "tester" / f"{myapp.app_name}.bundle"
     (bundle_path / "path" / "to" / "app").mkdir(parents=True, exist_ok=True)
     (bundle_path / "path" / "to" / "app_packages").mkdir(parents=True, exist_ok=True)
     (bundle_path / "path" / "to" / "support").mkdir(parents=True, exist_ok=True)
