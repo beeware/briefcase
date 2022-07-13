@@ -439,6 +439,7 @@ class Console:
             raise InputDisabled()
         try:
             input_value = self.input(prompt, markup=markup)
+            self.print.to_log(prompt)
             self.print.to_log(f"{Log.DEBUG_PREFACE}User input: {input_value}")
             return input_value
         except EOFError:
