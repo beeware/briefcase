@@ -1,1 +1,0 @@
-Data including downloads, SDKs, tools, etc. are stored in an OS-native user data directory instead of ~/.briefcase.
