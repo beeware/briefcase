@@ -201,6 +201,9 @@ class BaseCommand(ABC):
                     f"Move the contents of '{dot_briefcase_path}' to '{self.data_path}'"
                 )
 
+            # Create data directory to prevent full notice showing again.
+            self.data_path.mkdir(parents=True, exist_ok=True)
+
     @property
     def create_command(self):
         """Factory property; return an instance of a create command for the

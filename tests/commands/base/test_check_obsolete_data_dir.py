@@ -35,7 +35,7 @@ def test_first_notice_if_dot_briefcase_exists(capsys, tmp_path):
     cmd.check_obsolete_data_dir()
 
     assert dot_briefcase_dir.exists()
-    assert not cmd.data_path.exists()
+    assert cmd.data_path.exists()
     assert "Briefcase's data directory is changing" in capsys.readouterr().out
 
 
@@ -92,5 +92,5 @@ def test_automatic_continue_if_input_not_enabled(capsys, tmp_path):
     cmd.check_obsolete_data_dir()
 
     assert dot_briefcase_dir.exists()
-    assert not cmd.data_path.exists()
+    assert cmd.data_path.exists()
     assert "Briefcase's data directory is changing" in capsys.readouterr().out
