@@ -44,7 +44,7 @@ def test_first_notice_if_dot_briefcase_exists(capsys, tmp_path):
     cmd.input.boolean_input.assert_called_once()
     assert dot_briefcase_dir.exists()
     assert cmd.data_path.exists()
-    assert "Briefcase is changing it's data directory" in capsys.readouterr().out
+    assert "Briefcase is changing its data directory" in capsys.readouterr().out
 
 
 def test_subsequent_notice_if_dot_briefcase_exists(capsys, tmp_path):
@@ -91,7 +91,7 @@ def test_exception_if_user_does_not_continue(capsys, tmp_path):
     cmd.input.boolean_input.assert_called_once()
     assert dot_briefcase_dir.exists()
     assert not cmd.data_path.exists()
-    assert "Briefcase is changing it's data directory" in capsys.readouterr().out
+    assert "Briefcase is changing its data directory" in capsys.readouterr().out
 
 
 def test_automatic_continue_if_input_not_enabled(capsys, tmp_path):
@@ -113,4 +113,4 @@ def test_automatic_continue_if_input_not_enabled(capsys, tmp_path):
     cmd.input.boolean_input.assert_called_once()
     assert dot_briefcase_dir.exists()
     assert cmd.data_path.exists()
-    assert "Briefcase is changing it's data directory" in capsys.readouterr().out
+    assert "Briefcase is changing its data directory" in capsys.readouterr().out

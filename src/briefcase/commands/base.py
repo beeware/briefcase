@@ -180,10 +180,10 @@ This directory can be safely deleted.
             self.logger.warning(
                 f"""\
 *************************************************************************
-** NOTICE: Briefcase is changing it's data directory                   **
+** NOTICE: Briefcase is changing its data directory                   **
 *************************************************************************
 
-    Briefcase is moving it's data directory from:
+    Briefcase is moving its data directory from:
 
         {dot_briefcase_path}
 
@@ -197,7 +197,7 @@ This directory can be safely deleted.
     To avoid potentially large downloads and long installations, you
     can manually move the old data directory to the new location.
 
-    If you continue and allow Briefcase to re-download it's tools, the
+    If you continue and allow Briefcase to re-download its tools, the
     old data directory can be safely deleted.
 
 *************************************************************************
