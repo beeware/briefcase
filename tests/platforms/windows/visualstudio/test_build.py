@@ -1,4 +1,5 @@
 import subprocess
+from pathlib import Path
 from unittest import mock
 
 import pytest
@@ -13,7 +14,10 @@ def package_command(tmp_path):
     command = WindowsVisualStudioBuildCommand(base_path=tmp_path)
     command.tools_path = tmp_path / "tools"
     command.subprocess = mock.MagicMock()
-    command.visualstudio = VisualStudio(command=command)
+    command.visualstudio = VisualStudio(
+        command=command,
+        msbuild_path=tmp_path / "Visual Studio" / "MSBuild.exe",
+    )
     return command
 
 
@@ -27,7 +31,7 @@ def test_build_app(package_command, first_app_config, tmp_path):
             # Collect manifest
             mock.call(
                 [
-                    "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\MSBuild.exe",
+                    Path(tmp_path) / "Visual Studio" / "MSBuild.exe",
                     "First App.sln",
                     "-target:restore",
                     "-property:RestorePackagesConfig=true",
