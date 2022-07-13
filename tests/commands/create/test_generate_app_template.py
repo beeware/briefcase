@@ -1,4 +1,5 @@
 import os
+import platform
 import subprocess
 from datetime import date
 from pathlib import Path
@@ -30,6 +31,8 @@ def full_context(extra):
         "splash": None,
         "supported": True,
         "document_types": {},
+        # Properties of the generating environment
+        "python_version": platform.python_version(),
         # Fields generated from other properties
         "module_name": "my_app",
         "package_name": "com.example",
