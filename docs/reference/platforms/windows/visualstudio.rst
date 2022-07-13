@@ -1,16 +1,36 @@
-=============
-MSI Installer
-=============
+=====================
+Visual Studio project
+=====================
 
-An MSI installer is a common format used for the installation, maintenance,
-and removal of Windows software. It contains the files to be distributed, along
-with metadata supporting the files to be installed, including details such as
-registry entries. It includes a GUI installer, and automated generation of
-the uninstallation sequence.
+Briefcase supports creating a full Visual Studio project for a Windows App. This
+project can then be used to build the stub app binary with the ``briefcase
+build`` command, or directly from Visual Studio.
 
-Briefcase uses the `WiX Toolset <https://wixtoolset.org/>`__ to build
-installers. WiX, in turn, requires that .NET Framework 3.5 is enabled.
-To ensure .NET Framework 3.5 is enabled:
+Building the Visual Studio project requires that you install Visual Studio 2022
+or later. Visual Studio 2022 Community Edition `can be downloaded for free from
+Microsoft <https://visualstudio.microsoft.com/vs/community/>`__. You can also
+use the Professional or Enterprise versions if you have them.
+
+Briefcase will auto-detect the location of your Visual Studio installation,
+provided one of the following three things are true:
+
+1. You install Visual Studio in the standard location in your Program Files folder.
+2. ``MSBuild.exe`` is on your path.
+3. You define the environment variable ``MSBUILD`` that points at the location of
+   your ``MSBuild.exe`` executable
+
+When you install Visual Studio, there are many optional components. You should
+ensure that you have installed the following:
+
+    * .NET Desktop Development
+      - All default packages
+    * Desktop Development with C++
+      - All default packages
+      - C++/CLI support for v143 build tools
+
+Briefcase uses the `WiX Toolset <https://wixtoolset.org/>`__ to build an MSI
+installer for a Windows App. WiX, in turn, requires that .NET Framework 3.5 is
+enabled. To ensure .NET Framework 3.5 is enabled:
 
     1. Open the Windows Control Panel
     2. Traverse to Programs -> Programs and Features
@@ -20,12 +40,19 @@ To ensure .NET Framework 3.5 is enabled:
 Icon format
 ===========
 
-MSI installers use ``.ico`` format icons.
+Windows apps installers use multiformat ``.ico`` icons; these icons should
+contain images in the following sizes:
+
+* 16x16
+* 32x32
+* 48x48
+* 64x64
+* 256x256
 
 Splash Image format
 ===================
 
-MSI installers do not support splash screens or installer images.
+Windows Apps do not support splash screens or installer images.
 
 Application configuration
 =========================
@@ -67,14 +94,3 @@ pre, post and dev version indicators), padding with zeros if necessary:
 However, if you need to override this default value, you can define
 ``version_triple`` in your app settings. If provided, this value will be used
 in the MSI configuration file instead of the auto-generated value.
-
-Features
-========
-
-Briefcase produced MSI installers do not require elevated privileges for
-installation; they default to *per-user* installs. The installer can be
-installed for all users using the CLI, with:
-
-.. code-block::
-
-    > msiexec.exe /i <msi-filename> MSIINSTALLPERUSER=""
