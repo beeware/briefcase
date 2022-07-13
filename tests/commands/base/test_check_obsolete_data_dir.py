@@ -2,7 +2,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from briefcase.exceptions import BriefcaseCommandError
+from briefcase.exceptions import InfoHelpText
 
 from .conftest import DummyCommand
 
@@ -36,7 +36,7 @@ def test_first_notice_if_dot_briefcase_exists(capsys, tmp_path):
 
     assert dot_briefcase_dir.exists()
     assert cmd.data_path.exists()
-    assert "Briefcase's data directory is changing" in capsys.readouterr().out
+    assert "Briefcase is changing it's data directory" in capsys.readouterr().out
 
 
 def test_subsequent_notice_if_dot_briefcase_exists(capsys, tmp_path):
@@ -56,7 +56,7 @@ def test_subsequent_notice_if_dot_briefcase_exists(capsys, tmp_path):
     cmd.input.boolean_input.assert_not_called()
     assert dot_briefcase_dir.exists()
     assert cmd.data_path.exists()
-    assert "NOTICE: Briefcase is no longer using" in capsys.readouterr().out
+    assert "Briefcase is no longer using the data directory" in capsys.readouterr().out
 
 
 def test_exception_if_user_does_not_continue(capsys, tmp_path):
@@ -71,12 +71,12 @@ def test_exception_if_user_does_not_continue(capsys, tmp_path):
     cmd.input.boolean_input = MagicMock()
     cmd.input.boolean_input.return_value = False
 
-    with pytest.raises(BriefcaseCommandError, match="Move the contents"):
+    with pytest.raises(InfoHelpText, match="Move the Briefcase data directory from:"):
         cmd.check_obsolete_data_dir()
 
     assert dot_briefcase_dir.exists()
     assert not cmd.data_path.exists()
-    assert "Briefcase's data directory is changing" in capsys.readouterr().out
+    assert "Briefcase is changing it's data directory" in capsys.readouterr().out
 
 
 def test_automatic_continue_if_input_not_enabled(capsys, tmp_path):
@@ -93,4 +93,4 @@ def test_automatic_continue_if_input_not_enabled(capsys, tmp_path):
 
     assert dot_briefcase_dir.exists()
     assert cmd.data_path.exists()
-    assert "Briefcase's data directory is changing" in capsys.readouterr().out
+    assert "Briefcase is changing it's data directory" in capsys.readouterr().out

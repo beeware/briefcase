@@ -27,6 +27,7 @@ from briefcase.exceptions import (
     BadNetworkResourceError,
     BriefcaseCommandError,
     BriefcaseConfigError,
+    InfoHelpText,
     MissingNetworkResourceError,
 )
 from briefcase.integrations.subprocess import Subprocess
@@ -161,17 +162,22 @@ class BaseCommand(ABC):
 
         if self.data_path.exists():
             self.logger.warning(
-                f"NOTICE: Briefcase is no longer using the data directory '{dot_briefcase_path}'. "
-                f"This directory can be safely deleted."
+                f"""\
+Briefcase is no longer using the data directory:
+
+    {dot_briefcase_path}
+
+This directory can be safely deleted.
+"""
             )
         else:
             self.logger.warning(
                 f"""\
 *************************************************************************
-** NOTICE: Briefcase's data directory is changing                      **
+** NOTICE: Briefcase is changing it's data directory                   **
 *************************************************************************
 
-    Briefcase's data directory is transitioning from:
+    Briefcase is moving it's data directory from:
 
         {dot_briefcase_path}
 
@@ -179,26 +185,37 @@ class BaseCommand(ABC):
 
         {self.data_path}
 
-    If you continue, Briefcase will automatically re-build the new data
-    directory through normal use.
+    If you continue, Briefcase will re-download the tools and data it
+    uses to build and package applications.
 
-    To avoid redoing potentially large downloads and long installations
-    to re-build the data directory, you can move the contents of the old
-    data directory to the new location.
+    To avoid potentially large downloads and long installations, you
+    can manually move the old data directory to the new location.
 
-    The old data directory should be deleted since it is no longer used.
+    If you continue and allow Briefcase to re-download it's tools, the
+    old data directory can be safely deleted.
 
 *************************************************************************
 """
             )
             self.input.prompt()
             if not self.input.boolean_input(
-                "Continue?",
-                # default to continuing for non-interactive runs
+                "Do you want to re-download the Briefcase support tools",
+                # Default to continuing for non-interactive runs
                 default=not self.input.enabled,
             ):
-                raise BriefcaseCommandError(
-                    f"Move the contents of '{dot_briefcase_path}' to '{self.data_path}'"
+                raise InfoHelpText(
+                    f"""\
+Move the Briefcase data directory from:
+
+    {dot_briefcase_path}
+
+to:
+
+    {self.data_path}
+
+or delete the old data directory, and re-run Briefcase.
+
+"""
                 )
 
             # Create data directory to prevent full notice showing again.
