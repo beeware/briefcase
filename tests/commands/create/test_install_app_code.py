@@ -99,13 +99,15 @@ def test_source_dir(create_command, myapp, tmp_path, app_path):
     #     shallow.py
     #     submodule /
     #       deeper.py
-    first_src = tmp_path / "src" / "first" / "demo.py"
+    first_src = tmp_path / "project" / "src" / "first" / "demo.py"
     first_src.parent.mkdir(parents=True)
     with (first_src).open("w") as f:
         f.write("print('hello first')\n")
 
-    second_shallow_src = tmp_path / "src" / "second" / "shallow.py"
-    second_deep_src = tmp_path / "src" / "second" / "submodule" / "deeper.py"
+    second_shallow_src = tmp_path / "project" / "src" / "second" / "shallow.py"
+    second_deep_src = (
+        tmp_path / "project" / "src" / "second" / "submodule" / "deeper.py"
+    )
     second_deep_src.parent.mkdir(parents=True)
     with (second_shallow_src).open("w") as f:
         f.write("print('hello shallow second')\n")
@@ -138,12 +140,12 @@ def test_source_file(create_command, myapp, tmp_path, app_path):
     #   first /
     #     demo.py
     #   other.py
-    first_src = tmp_path / "src" / "first" / "demo.py"
+    first_src = tmp_path / "project" / "src" / "first" / "demo.py"
     first_src.parent.mkdir(parents=True)
     with (first_src).open("w") as f:
         f.write("print('hello first')\n")
 
-    second_src = tmp_path / "src" / "other.py"
+    second_src = tmp_path / "project" / "src" / "other.py"
     with (second_src).open("w") as f:
         f.write("print('hello second')\n")
 
@@ -170,13 +172,15 @@ def test_replace_sources(create_command, myapp, tmp_path, app_path):
     #     shallow.py
     #     submodule /
     #       deeper.py
-    first_src = tmp_path / "src" / "first" / "demo.py"
+    first_src = tmp_path / "project" / "src" / "first" / "demo.py"
     first_src.parent.mkdir(parents=True)
     with (first_src).open("w") as f:
         f.write("print('hello first')\n")
 
-    second_shallow_src = tmp_path / "src" / "second" / "shallow.py"
-    second_deep_src = tmp_path / "src" / "second" / "submodule" / "deeper.py"
+    second_shallow_src = tmp_path / "project" / "src" / "second" / "shallow.py"
+    second_deep_src = (
+        tmp_path / "project" / "src" / "second" / "submodule" / "deeper.py"
+    )
     second_deep_src.parent.mkdir(parents=True)
     with (second_shallow_src).open("w") as f:
         f.write("print('hello shallow second')\n")

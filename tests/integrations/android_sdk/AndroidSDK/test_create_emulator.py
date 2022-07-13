@@ -13,7 +13,8 @@ from tests.utils import FsPathMock
 @pytest.fixture
 def mock_sdk(tmp_path):
     command = MagicMock()
-    command.home_path = tmp_path
+    command.home_path = tmp_path / "home"
+    command.data_path = tmp_path / "data"
 
     # For default test purposes, assume we're on macOS x86_64
     command.host_os = "Darwin"
@@ -63,7 +64,9 @@ def test_create_emulator(mock_sdk, tmp_path, host_os, host_arch, emulator_abi):
     mock_sdk.verify_emulator_skin = MagicMock()
 
     # Mock the initial output of an AVD config file.
-    avd_config_path = tmp_path / ".android" / "avd" / "new-emulator.avd" / "config.ini"
+    avd_config_path = (
+        tmp_path / "home" / ".android" / "avd" / "new-emulator.avd" / "config.ini"
+    )
     avd_config_path.parent.mkdir(parents=True)
     with avd_config_path.open("w") as f:
         f.write("hw.device.name=pixel\n")
@@ -163,7 +166,9 @@ def test_default_name(mock_sdk, tmp_path):
     mock_sdk.command.input.return_value = ""
 
     # Mock the initial output of an AVD config file.
-    avd_config_path = tmp_path / ".android" / "avd" / "beePhone.avd" / "config.ini"
+    avd_config_path = (
+        tmp_path / "home" / ".android" / "avd" / "beePhone.avd" / "config.ini"
+    )
     avd_config_path.parent.mkdir(parents=True)
     with avd_config_path.open("w") as f:
         f.write("hw.device.name=pixel\n")
@@ -198,7 +203,9 @@ def test_default_name_with_collisions(mock_sdk, tmp_path):
     mock_sdk.command.input.return_value = ""
 
     # Mock the initial output of an AVD config file.
-    avd_config_path = tmp_path / ".android" / "avd" / "beePhone3.avd" / "config.ini"
+    avd_config_path = (
+        tmp_path / "home" / ".android" / "avd" / "beePhone3.avd" / "config.ini"
+    )
     avd_config_path.parent.mkdir(parents=True)
     with avd_config_path.open("w") as f:
         f.write("hw.device.name=pixel\n")

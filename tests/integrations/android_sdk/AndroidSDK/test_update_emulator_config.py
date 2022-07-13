@@ -4,7 +4,9 @@ import pytest
 @pytest.fixture
 def test_device(mock_sdk, tmp_path):
     """Create an AVD configuration file."""
-    config_file = tmp_path / ".android" / "avd" / "testDevice.avd" / "config.ini"
+    config_file = (
+        tmp_path / "home" / ".android" / "avd" / "testDevice.avd" / "config.ini"
+    )
     config_file.parent.mkdir(parents=True)
 
     # Write a default config. It contains:

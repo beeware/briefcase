@@ -13,7 +13,11 @@ def test_skip_if_dot_briefcase_nonexistent(capsys, tmp_path):
 
     home_path = tmp_path / "home"
     dot_briefcase_dir = home_path / ".briefcase"
-    cmd = DummyCommand(base_path=tmp_path / "base", home_path=home_path)
+    cmd = DummyCommand(
+        base_path=tmp_path / "base",
+        home_path=home_path,
+        data_path=tmp_path / "data_dir",
+    )
     cmd.check_obsolete_data_dir()
 
     assert not dot_briefcase_dir.exists()
@@ -27,8 +31,11 @@ def test_first_notice_if_dot_briefcase_exists(capsys, tmp_path):
     dot_briefcase_dir = home_path / ".briefcase"
     dot_briefcase_dir.mkdir(parents=True)
 
-    cmd = DummyCommand(base_path=tmp_path / "base", home_path=home_path)
-    cmd.data_path = tmp_path / "data_dir"
+    cmd = DummyCommand(
+        base_path=tmp_path / "base",
+        home_path=home_path,
+        data_path=tmp_path / "data_dir",
+    )
     cmd.input.boolean_input = MagicMock()
     cmd.input.boolean_input.return_value = True
 
@@ -47,8 +54,11 @@ def test_subsequent_notice_if_dot_briefcase_exists(capsys, tmp_path):
     dot_briefcase_dir = home_path / ".briefcase"
     dot_briefcase_dir.mkdir(parents=True)
 
-    cmd = DummyCommand(base_path=tmp_path / "base", home_path=home_path)
-    cmd.data_path = tmp_path / "data_dir"
+    cmd = DummyCommand(
+        base_path=tmp_path / "base",
+        home_path=home_path,
+        data_path=tmp_path / "data_dir",
+    )
     cmd.data_path.mkdir(parents=True)
     cmd.input.boolean_input = MagicMock()
 
@@ -67,8 +77,11 @@ def test_exception_if_user_does_not_continue(capsys, tmp_path):
     dot_briefcase_dir = home_path / ".briefcase"
     dot_briefcase_dir.mkdir(parents=True)
 
-    cmd = DummyCommand(base_path=tmp_path / "base", home_path=home_path)
-    cmd.data_path = tmp_path / "data_dir"
+    cmd = DummyCommand(
+        base_path=tmp_path / "base",
+        home_path=home_path,
+        data_path=tmp_path / "data_dir",
+    )
     cmd.input.boolean_input = MagicMock()
     cmd.input.boolean_input.return_value = False
 
@@ -87,8 +100,11 @@ def test_automatic_continue_if_input_not_enabled(capsys, tmp_path):
     dot_briefcase_dir = home_path / ".briefcase"
     dot_briefcase_dir.mkdir(parents=True)
 
-    cmd = DummyCommand(base_path=tmp_path / "base", home_path=home_path)
-    cmd.data_path = tmp_path / "data_dir"
+    cmd = DummyCommand(
+        base_path=tmp_path / "base",
+        home_path=home_path,
+        data_path=tmp_path / "data_dir",
+    )
     cmd.input.enabled = False
     cmd.input.boolean_input = MagicMock()
 

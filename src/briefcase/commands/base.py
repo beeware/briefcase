@@ -114,11 +114,17 @@ class BaseCommand(ABC):
     GLOBAL_CONFIG_CLASS = GlobalConfig
     APP_CONFIG_CLASS = AppConfig
 
-    def __init__(self, base_path, home_path=Path.home(), apps=None, input_enabled=True):
-        app_dirs = AppDirs(appname="briefcase", appauthor="BeeWare")
+    def __init__(
+        self,
+        base_path,
+        home_path=Path.home(),
+        data_path=Path(AppDirs(appname="briefcase", appauthor="BeeWare").user_data_dir),
+        apps=None,
+        input_enabled=True,
+    ):
         self.base_path = base_path
         self.home_path = home_path
-        self.data_path = Path(app_dirs.user_data_dir)
+        self.data_path = data_path
         self.tools_path = self.data_path / "tools"
 
         self.global_config = None
