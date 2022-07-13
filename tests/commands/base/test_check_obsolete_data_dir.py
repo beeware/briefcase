@@ -34,6 +34,7 @@ def test_first_notice_if_dot_briefcase_exists(capsys, tmp_path):
 
     cmd.check_obsolete_data_dir()
 
+    cmd.input.boolean_input.assert_called_once()
     assert dot_briefcase_dir.exists()
     assert cmd.data_path.exists()
     assert "Briefcase is changing it's data directory" in capsys.readouterr().out
@@ -74,6 +75,7 @@ def test_exception_if_user_does_not_continue(capsys, tmp_path):
     with pytest.raises(InfoHelpText, match="Move the Briefcase data directory from:"):
         cmd.check_obsolete_data_dir()
 
+    cmd.input.boolean_input.assert_called_once()
     assert dot_briefcase_dir.exists()
     assert not cmd.data_path.exists()
     assert "Briefcase is changing it's data directory" in capsys.readouterr().out
@@ -88,9 +90,11 @@ def test_automatic_continue_if_input_not_enabled(capsys, tmp_path):
     cmd = DummyCommand(base_path=tmp_path / "base", home_path=home_path)
     cmd.data_path = tmp_path / "data_dir"
     cmd.input.enabled = False
+    cmd.input.boolean_input = MagicMock()
 
     cmd.check_obsolete_data_dir()
 
+    cmd.input.boolean_input.assert_called_once()
     assert dot_briefcase_dir.exists()
     assert cmd.data_path.exists()
     assert "Briefcase is changing it's data directory" in capsys.readouterr().out
