@@ -11,9 +11,9 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 import requests
-from appdirs import AppDirs
 from cookiecutter.main import cookiecutter
 from cookiecutter.repository import is_repo_url
+from platformdirs import PlatformDirs
 
 try:
     import tomllib
@@ -118,7 +118,7 @@ class BaseCommand(ABC):
         self,
         base_path,
         home_path=Path.home(),
-        data_path=Path(AppDirs(appname="briefcase", appauthor="BeeWare").user_data_dir),
+        data_path=PlatformDirs(appname="briefcase", appauthor="BeeWare").user_data_path,
         apps=None,
         input_enabled=True,
     ):
