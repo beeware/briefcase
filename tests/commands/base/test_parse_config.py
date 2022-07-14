@@ -6,7 +6,7 @@ from briefcase.exceptions import BriefcaseConfigError
 def test_missing_config(base_command):
     """If the configuration file doesn't exit, raise an error."""
     filename = base_command.base_path / "does_not_exist.toml"
-    with pytest.raises(BriefcaseConfigError, match="configuration file not found"):
+    with pytest.raises(BriefcaseConfigError, match="Configuration file not found"):
         base_command.parse_config(filename)
 
 
