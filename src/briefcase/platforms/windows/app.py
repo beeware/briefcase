@@ -49,9 +49,12 @@ class WindowsAppBuildCommand(WindowsAppMixin, BuildCommand):
                         "--set-version-string",
                         "CompanyName",
                         app.author,
+                        # Although "FileDescription" sounds like it should be a... description,
+                        # this is the label that appears as a grouping in the Task Manager
+                        # when the application runs.
                         "--set-version-string",
                         "FileDescription",
-                        app.description,
+                        app.formal_name,
                         "--set-version-string",
                         "FileVersion",
                         app.version,
@@ -65,7 +68,7 @@ class WindowsAppBuildCommand(WindowsAppMixin, BuildCommand):
                         "ProductName",
                         app.formal_name,
                         "--set-version-string",
-                        "productVersion",
+                        "ProductVersion",
                         app.version,
                         "--set-icon",
                         "icon.ico",
