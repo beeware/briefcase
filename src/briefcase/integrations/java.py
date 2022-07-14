@@ -56,7 +56,7 @@ class JDK:
         points to a Java 8 JDK, use it.
 
         Otherwise, download a JDK from AdoptOpenJDK and unpack it into the
-        briefcase data directory.
+        ``~.briefcase`` path.
 
         :param command: The command that needs to perform the verification
             check.
@@ -223,7 +223,7 @@ class JDK:
     @property
     def managed_install(self):
         try:
-            # Determine if java_home is relative to the briefcase data directory.
+            # Determine if java_home is relative to the .briefcase directory.
             # If java_home isn't inside this directory, this will raise a ValueError,
             # indicating it is a non-managed install.
             self.java_home.relative_to(self.command.tools_path)
@@ -260,9 +260,9 @@ Delete {jdk_zip_path} and run briefcase again.
 
             jdk_zip_path.unlink()  # Zip file no longer needed once unpacked.
 
-            # The tarball will unpack into <briefcase data dir>/tools/jdk8u242-b08
+            # The tarball will unpack into ~/.briefcase/tools/jdk8u242-b08
             # (or whatever name matches the current release).
-            # We turn this into <briefcase data dir>/tools/java so we have a consistent name.
+            # We turn this into ~/.briefcase/tools/java so we have a consistent name.
             java_unpack_path = (
                 self.command.tools_path / f"jdk{self.release}-{self.build}"
             )

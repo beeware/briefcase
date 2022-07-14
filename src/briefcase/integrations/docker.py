@@ -243,11 +243,9 @@ class Docker:
 
     def run(self, args, env=None, **kwargs):
         """Run a process inside a Docker container."""
-        # briefcase data directory used inside container
-        docker_data_path = "/home/brutus/.local/share/briefcase"
         # Set up the `docker run` with volume mounts for the platform &
-        # briefcase data and tools directories and to delete the
-        # temporary container after running the command.
+        # .briefcase directories and to delete the temporary container
+        # after running the command.
         # The :z suffix allows SELinux to modify the host mount; it is
         # ignored on non-SELinux platforms.
         docker_args = [
@@ -256,7 +254,7 @@ class Docker:
             "--volume",
             f"{self.command.platform_path}:/app:z",
             "--volume",
-            f"{self.command.data_path}:{docker_data_path}:z",
+            f"{self.command.dot_briefcase_path}:/home/brutus/.briefcase:z",
             "--rm",
         ]
 
@@ -277,9 +275,12 @@ class Docker:
                 docker_args.append(
                     arg.replace(os.fsdecode(self.command.platform_path), "/app")
                 )
-            elif os.fsdecode(self.command.data_path) in arg:
+            elif os.fsdecode(self.command.dot_briefcase_path) in arg:
                 docker_args.append(
-                    arg.replace(os.fsdecode(self.command.data_path), docker_data_path)
+                    arg.replace(
+                        os.fsdecode(self.command.dot_briefcase_path),
+                        "/home/brutus/.briefcase",
+                    )
                 )
             else:
                 docker_args.append(arg)

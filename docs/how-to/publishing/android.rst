@@ -76,7 +76,7 @@ name.
 
     .. code-block::
 
-      $ ~/Library/Application\ Support/briefcase/tools/java/Contents/Home/bin/jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore ~/.android/upload-key-helloworld.jks "android/gradle/Hello World/app/build/outputs/bundle/release/app-release.aab" upload-key -storepass android
+      $ ~/.briefcase/tools/java/Contents/Home/bin/jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore ~/.android/upload-key-helloworld.jks "android/gradle/Hello World/app/build/outputs/bundle/release/app-release.aab" upload-key -storepass android
          adding: META-INF/MANIFEST.MF
          adding: META-INF/UPLOAD-K.SF
          adding: META-INF/UPLOAD-K.RSA
@@ -101,7 +101,7 @@ name.
 
     .. code-block::
 
-      $ ~/.local/share/briefcase/tools/java/bin/jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore ~/.android/upload-key-helloworld.jks "android/gradle/Hello World/app/build/outputs/bundle/release/app-release.aab" upload-key -storepass android
+      $ ~/.briefcase/tools/java/bin/jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore ~/.android/upload-key-helloworld.jks "android/gradle/Hello World/app/build/outputs/bundle/release/app-release.aab" upload-key -storepass android
          adding: META-INF/MANIFEST.MF
          adding: META-INF/UPLOAD-K.SF
          adding: META-INF/UPLOAD-K.RSA
@@ -126,7 +126,7 @@ name.
 
     .. code-block::
 
-      C:\...>& "$env:LOCALAPPDATA\BeeWare\briefcase\tools\java\bin\jarsigner.exe" -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore "$env:HOMEPATH\.android\upload-key-helloworld.jks" "android\gradle\Hello World\app\build\outputs\bundle\release\app-release.aab" upload-key -storepass android
+      C:\...>& "$env:HOMEPATH\.briefcase\tools\java\bin\jarsigner.exe" -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore "$env:HOMEPATH\.android\upload-key-helloworld.jks" "android\gradle\Hello World\app\build\outputs\bundle\release\app-release.aab" upload-key -storepass android
          adding: META-INF/MANIFEST.MF
          adding: META-INF/UPLOAD-K.SF
          adding: META-INF/UPLOAD-K.RSA
@@ -151,7 +151,7 @@ name.
 
     .. code-block:: doscon
 
-      C:\...>%LOCALAPPDATA%\BeeWare\briefcase\tools\java\bin\jarsigner.exe -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore %HOMEPATH%\.android\upload-key-helloworld.jks "android\gradle\Hello World\app\build\outputs\bundle\release\app-release.aab" upload-key -storepass android
+      C:\...>%HOMEPATH%\.briefcase\tools\java\bin\jarsigner.exe -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore %HOMEPATH%\.android\upload-key-helloworld.jks "android\gradle\Hello World\app\build\outputs\bundle\release\app-release.aab" upload-key -storepass android
          adding: META-INF/MANIFEST.MF
          adding: META-INF/UPLOAD-K.SF
          adding: META-INF/UPLOAD-K.RSA

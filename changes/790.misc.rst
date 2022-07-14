@@ -1,0 +1,1 @@
+Revert implementation of OS-native data directories due to issues with whitespace in Android SDK path.

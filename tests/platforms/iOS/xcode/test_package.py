@@ -6,7 +6,7 @@ from briefcase.platforms.iOS.xcode import iOSXcodePackageCommand
 @pytest.fixture
 def package_command(tmp_path, first_app_config):
     command = iOSXcodePackageCommand(base_path=tmp_path / "base_path")
-    command.data_path = tmp_path / "briefcase"
+    command.dot_briefcase_path = tmp_path / ".briefcase"
     return command
 
 

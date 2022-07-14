@@ -9,7 +9,7 @@ from briefcase.platforms.android.gradle import GradleRunCommand
 @pytest.fixture
 def run_command(tmp_path, first_app_config):
     command = GradleRunCommand(base_path=tmp_path / "base_path")
-    command.data_path = tmp_path / "briefcase"
+    command.dot_briefcase_path = tmp_path / ".briefcase"
     command.java_home_path = tmp_path / "java"
 
     command.mock_adb = MagicMock()

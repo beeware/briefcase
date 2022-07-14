@@ -14,7 +14,6 @@ from tests.utils import FsPathMock
 def mock_sdk(tmp_path):
     command = MagicMock()
     command.home_path = tmp_path / "home"
-    command.data_path = tmp_path / "data"
 
     # For default test purposes, assume we're on macOS x86_64
     command.host_os = "Darwin"

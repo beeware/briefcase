@@ -16,9 +16,9 @@ def build_command(tmp_path, first_app_config):
     # Mock-out the `sys` module so we can mock out the Python version in some tests.
     command.sys = mock.MagicMock()
 
-    # Use the `tmp_path` in `data_path` to ensure tests don't interfere
+    # Use the `tmp_path` in `dot_briefcase_path` to ensure tests don't interfere
     # with each other.
-    command.data_path = tmp_path / "briefcase"
+    command.dot_briefcase_path = tmp_path / ".briefcase"
 
     # Use a dummy JAVA HOME
     command.java_home_path = tmp_path / "java"

@@ -141,15 +141,12 @@ jobs:
         framework: ['toga', 'pyside2', 'pyside6', 'ppb']
         include:
         - platform: macos-latest
-          briefcase-data-dir: ~/Library/Application Support/briefcase
           pip-cache-dir: ~/Library/Caches/pip
           docker-cache-dir: ~/Library/Containers/com.docker.docker/Data/vms/0/
         - platform: windows-latest
-          briefcase-data-dir: ~\AppData\Local\BeeWare\briefcase
           pip-cache-dir: ~\AppData\Local\pip\Cache
           docker-cache-dir: C:\ProgramData\DockerDesktop
         - platform: ubuntu-latest
-          briefcase-data-dir: ~/.local/share/briefcase
           pip-cache-dir: ~/.cache/pip
           # cache action cannot cache docker images (actions/cache#31)
           # docker-cache-dir: /var/lib/docker
@@ -160,8 +157,8 @@ jobs:
       with:
         key: briefcase-${{ matrix.platform }}
         path: |
+          ~/.briefcase
           ~/.cookiecutters
-          ${{ matrix.briefcase-data-dir }}
           ${{ matrix.pip-cache-dir }}
           ${{ matrix.docker-cache-dir }}
     - uses: actions/checkout@v3

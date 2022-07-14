@@ -107,7 +107,6 @@ def create_command(tmp_path, mock_git):
     return DummyCreateCommand(
         base_path=tmp_path / "project",
         home_path=tmp_path / "home",
-        data_path=tmp_path / "data",
         git=mock_git,
     )
 

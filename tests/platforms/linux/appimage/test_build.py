@@ -37,7 +37,6 @@ def build_command(tmp_path, first_app_config):
     command = LinuxAppImageBuildCommand(
         base_path=tmp_path / "project",
         home_path=tmp_path / "home",
-        data_path=tmp_path / "data",
         apps={"first": first_app_config},
     )
     command.host_os = "Linux"
@@ -226,12 +225,12 @@ def test_build_appimage_with_docker(build_command, first_app, tmp_path):
             "--volume",
             f"{build_command.platform_path}:/app:z",
             "--volume",
-            f"{build_command.data_path}:/home/brutus/.local/share/briefcase:z",
+            f"{build_command.dot_briefcase_path}:/home/brutus/.briefcase:z",
             "--rm",
             "--env",
             "VERSION=0.0.1",
             f"briefcase/com.example.first-app:py3.{sys.version_info.minor}",
-            "/home/brutus/.local/share/briefcase/tools/linuxdeploy-wonky.AppImage",
+            "/home/brutus/.briefcase/tools/linuxdeploy-wonky.AppImage",
             "--appimage-extract-and-run",
             "--appdir=/app/appimage/First App/First App.AppDir",
             "-d",

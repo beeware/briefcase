@@ -12,7 +12,6 @@ from tests.utils import DummyConsole
 def mock_sdk(tmp_path):
     command = MagicMock()
     command.home_path = tmp_path / "home"
-    command.data_path = tmp_path / "data"
     command.subprocess = MagicMock()
     command.input = DummyConsole()
     command.logger = Log(verbosity=1)
