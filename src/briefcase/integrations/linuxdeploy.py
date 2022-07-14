@@ -227,3 +227,19 @@ class LinuxDeployGtkPlugin(LinuxDeployPluginBase):
             "https://raw.githubusercontent.com/linuxdeploy/linuxdeploy-plugin-gtk/"
             f"master/{self.filename}"
         )
+
+
+class LinuxDeployQtPlugin(LinuxDeployPluginBase):
+    name = "linuxdeploy_qt_plugin"
+    full_name = "linuxdeploy Qt plugin"
+
+    @property
+    def filename(self):
+        return "linuxdeploy-plugin-qt-x86_64.AppImage"
+
+    @property
+    def linuxdeploy_download_url(self):
+        return (
+            "https://github.com/linuxdeploy/linuxdeploy-plugin-qt/"
+            f"releases/download/continuous/{self.filename}"
+        )
