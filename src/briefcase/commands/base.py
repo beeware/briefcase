@@ -543,7 +543,9 @@ or delete the old data directory, and re-run Briefcase.
                     )
 
         except FileNotFoundError as e:
-            raise BriefcaseConfigError("configuration file not found") from e
+            raise BriefcaseConfigError(
+                f"""Configuration file not found. Did you run briefcase in the directory that contains {filename!r}?"""
+            ) from e
 
     def download_url(self, url, download_path):
         """Download a given URL, caching it. If it has already been downloaded,
