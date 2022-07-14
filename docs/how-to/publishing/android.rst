@@ -76,7 +76,7 @@ name.
 
     .. code-block::
 
-      $ ~/.briefcase/tools/java/Contents/Home/bin/jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore ~/.android/upload-key-helloworld.jks "android/Hello World/app/build/outputs/bundle/release/app-release.aab" upload-key -storepass android
+      $ ~/Library/Application\ Support/briefcase/tools/java/Contents/Home/bin/jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore ~/.android/upload-key-helloworld.jks "android/gradle/Hello World/app/build/outputs/bundle/release/app-release.aab" upload-key -storepass android
          adding: META-INF/MANIFEST.MF
          adding: META-INF/UPLOAD-K.SF
          adding: META-INF/UPLOAD-K.RSA
@@ -101,7 +101,7 @@ name.
 
     .. code-block::
 
-      $ ~/.briefcase/tools/java/bin/jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore ~/.android/upload-key-helloworld.jks "android/Hello World/app/build/outputs/bundle/release/app-release.aab" upload-key -storepass android
+      $ ~/.local/share/briefcase/tools/java/bin/jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore ~/.android/upload-key-helloworld.jks "android/gradle/Hello World/app/build/outputs/bundle/release/app-release.aab" upload-key -storepass android
          adding: META-INF/MANIFEST.MF
          adding: META-INF/UPLOAD-K.SF
          adding: META-INF/UPLOAD-K.RSA
@@ -122,11 +122,36 @@ name.
       Warning:
       The signer's certificate is self-signed.
 
-  .. group-tab:: Windows
+  .. group-tab:: Windows (PowerShell)
+
+    .. code-block::
+
+      C:\...>& "$env:LOCALAPPDATA\BeeWare\briefcase\tools\java\bin\jarsigner.exe" -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore "$env:HOMEPATH\.android\upload-key-helloworld.jks" "android\gradle\Hello World\app\build\outputs\bundle\release\app-release.aab" upload-key -storepass android
+         adding: META-INF/MANIFEST.MF
+         adding: META-INF/UPLOAD-K.SF
+         adding: META-INF/UPLOAD-K.RSA
+        signing: BundleConfig.pb
+        signing: BUNDLE-METADATA/com.android.tools.build.libraries/dependencies.pb
+        signing: base/assets/python/app/README
+      ...
+        signing: base/manifest/AndroidManifest.xml
+        signing: base/assets.pb
+        signing: base/native.pb
+        signing: base/resources.pb
+      >>> Signer
+        X.509, CN=Upload Key
+        [trusted certificate]
+
+      jar signed.
+
+      Warning:
+      The signer's certificate is self-signed.
+
+  .. group-tab:: Windows (cmd)
 
     .. code-block:: doscon
 
-      C:\...> %HOMEPATH%\.briefcase\tools\java\bin\jarsigner.exe -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore %HOMEPATH%\.android\upload-key-helloworld.jks "android\Hello World\app\build\outputs\bundle\release\app-release.aab" upload-key -storepass android
+      C:\...>%LOCALAPPDATA%\BeeWare\briefcase\tools\java\bin\jarsigner.exe -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore %HOMEPATH%\.android\upload-key-helloworld.jks "android\gradle\Hello World\app\build\outputs\bundle\release\app-release.aab" upload-key -storepass android
          adding: META-INF/MANIFEST.MF
          adding: META-INF/UPLOAD-K.SF
          adding: META-INF/UPLOAD-K.RSA
