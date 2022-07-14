@@ -3,12 +3,12 @@ from unittest import mock
 import pytest
 
 from briefcase.integrations.wix import WiX
-from briefcase.platforms.windows.msi import WindowsMSIPackageCommand
+from briefcase.platforms.windows.app import WindowsAppPackageCommand
 
 
 @pytest.fixture
 def package_command(tmp_path):
-    command = WindowsMSIPackageCommand(base_path=tmp_path)
+    command = WindowsAppPackageCommand(base_path=tmp_path)
     command.subprocess = mock.MagicMock()
     command.wix = WiX(command=command, wix_home=tmp_path / "wix")
     return command
@@ -43,7 +43,7 @@ def test_package_msi(package_command, first_app_config, tmp_path):
                     "first-app-manifest.wxs",
                 ],
                 check=True,
-                cwd=tmp_path / "windows" / "msi" / "First App",
+                cwd=tmp_path / "windows" / "app" / "First App",
             ),
             # Compile MSI
             mock.call(
@@ -61,7 +61,7 @@ def test_package_msi(package_command, first_app_config, tmp_path):
                     "first-app-manifest.wxs",
                 ],
                 check=True,
-                cwd=tmp_path / "windows" / "msi" / "First App",
+                cwd=tmp_path / "windows" / "app" / "First App",
             ),
             # Link MSI
             mock.call(
@@ -80,7 +80,7 @@ def test_package_msi(package_command, first_app_config, tmp_path):
                     "first-app-manifest.wixobj",
                 ],
                 check=True,
-                cwd=tmp_path / "windows" / "msi" / "First App",
+                cwd=tmp_path / "windows" / "app" / "First App",
             ),
         ]
     )

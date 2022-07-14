@@ -2,7 +2,7 @@ import sys
 
 import pytest
 
-from briefcase.platforms.windows.msi import WindowsMSICreateCommand
+from briefcase.platforms.windows.app import WindowsAppCreateCommand
 
 
 @pytest.mark.parametrize(
@@ -20,7 +20,7 @@ from briefcase.platforms.windows.msi import WindowsMSICreateCommand
     ],
 )
 def test_version_triple(first_app_config, tmp_path, version, version_triple):
-    command = WindowsMSICreateCommand(base_path=tmp_path)
+    command = WindowsAppCreateCommand(base_path=tmp_path)
 
     first_app_config.version = version
     context = command.output_format_template_context(first_app_config)
@@ -29,7 +29,7 @@ def test_version_triple(first_app_config, tmp_path, version, version_triple):
 
 
 def test_explicit_version_triple(first_app_config, tmp_path):
-    command = WindowsMSICreateCommand(base_path=tmp_path)
+    command = WindowsAppCreateCommand(base_path=tmp_path)
 
     first_app_config.version = "1.2.3a1"
     first_app_config.version_triple = "2.3.4"
@@ -42,7 +42,7 @@ def test_explicit_version_triple(first_app_config, tmp_path):
 
 def test_guid(first_app_config, tmp_path):
     """A preictable GUID will be generated from the bundle."""
-    command = WindowsMSICreateCommand(base_path=tmp_path)
+    command = WindowsAppCreateCommand(base_path=tmp_path)
 
     context = command.output_format_template_context(first_app_config)
 
@@ -51,7 +51,7 @@ def test_guid(first_app_config, tmp_path):
 
 def test_explicit_guid(first_app_config, tmp_path):
     """If a GUID is explicitly provided, it is used."""
-    command = WindowsMSICreateCommand(base_path=tmp_path)
+    command = WindowsAppCreateCommand(base_path=tmp_path)
 
     first_app_config.guid = "e822176f-b755-589f-849c-6c6600f7efb1"
     context = command.output_format_template_context(first_app_config)
@@ -61,7 +61,7 @@ def test_explicit_guid(first_app_config, tmp_path):
 
 
 def test_support_package_url(first_app_config, tmp_path):
-    command = WindowsMSICreateCommand(base_path=tmp_path)
+    command = WindowsAppCreateCommand(base_path=tmp_path)
 
     # Set some properties of the host system for test purposes.
     command.host_arch = "wonky"
@@ -79,7 +79,7 @@ def test_support_package_url(first_app_config, tmp_path):
 
 def test_default_install_scope(first_app_config, tmp_path):
     """By default, app should be installed per user."""
-    command = WindowsMSICreateCommand(base_path=tmp_path)
+    command = WindowsAppCreateCommand(base_path=tmp_path)
 
     context = command.output_format_template_context(first_app_config)
 
@@ -87,13 +87,12 @@ def test_default_install_scope(first_app_config, tmp_path):
         "guid": "d666a4f1-c7b7-52cc-888a-3a35a7cc97e5",
         "version_triple": "0.0.1",
         "install_scope": None,
-        "_use_arch64": True,
     }
 
 
 def test_per_machine_install_scope(first_app_config, tmp_path):
     """By default, app should be installed per user."""
-    command = WindowsMSICreateCommand(base_path=tmp_path)
+    command = WindowsAppCreateCommand(base_path=tmp_path)
     first_app_config.system_installer = True
 
     context = command.output_format_template_context(first_app_config)
@@ -102,13 +101,12 @@ def test_per_machine_install_scope(first_app_config, tmp_path):
         "guid": "d666a4f1-c7b7-52cc-888a-3a35a7cc97e5",
         "version_triple": "0.0.1",
         "install_scope": "perMachine",
-        "_use_arch64": True,
     }
 
 
 def test_per_user_install_scope(first_app_config, tmp_path):
-    """App can be set to have explocit per-user scope."""
-    command = WindowsMSICreateCommand(base_path=tmp_path)
+    """App can be set to have explicit per-user scope."""
+    command = WindowsAppCreateCommand(base_path=tmp_path)
     first_app_config.system_installer = False
 
     context = command.output_format_template_context(first_app_config)
@@ -117,5 +115,4 @@ def test_per_user_install_scope(first_app_config, tmp_path):
         "guid": "d666a4f1-c7b7-52cc-888a-3a35a7cc97e5",
         "version_triple": "0.0.1",
         "install_scope": "perUser",
-        "_use_arch64": True,
     }

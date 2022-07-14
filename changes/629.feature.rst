@@ -1,0 +1,3 @@
+Windows apps are now packaged with a stub application. This ensures that Windows
+apps present with the name and icon of the app, rather than the ``pythonw.exe``
+name and icon. It also allows for improvements in logging and error handling.

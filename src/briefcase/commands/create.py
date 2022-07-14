@@ -1,4 +1,5 @@
 import os
+import platform
 import shutil
 import subprocess
 import sys
@@ -258,6 +259,8 @@ class CreateCommand(BaseCommand):
         # Augment with some extra fields.
         extra_context.update(
             {
+                # Properties of the generating environment
+                "python_version": platform.python_version(),
                 # Transformations of explicit properties into useful forms
                 "module_name": app.module_name,
                 "package_name": app.package_name,
