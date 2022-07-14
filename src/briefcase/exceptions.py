@@ -8,6 +8,15 @@ class HelpText(BriefcaseError):
     an error."""
 
 
+class InfoHelpText(HelpText):
+    def __init__(self, msg):
+        super().__init__(0)
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
+
+
 class NoCommandError(HelpText):
     def __init__(self, msg):
         super().__init__(-10)
@@ -17,19 +26,15 @@ class NoCommandError(HelpText):
         return self.msg
 
 
-class ShowOutputFormats(HelpText):
+class ShowOutputFormats(InfoHelpText):
     def __init__(self, platform, default, choices):
-        super().__init__(0)
+        super().__init__(
+            f"Available formats for {platform}: {', '.join(sorted(choices))}\n"
+            f"Default format: {default}"
+        )
         self.platform = platform
         self.default = default
         self.choices = choices
-
-    def __str__(self):
-        choices = ", ".join(sorted(self.choices))
-        return (
-            f"Available formats for {self.platform}: {choices}\n"
-            f"Default format: {self.default}"
-        )
 
 
 class InvalidFormatError(BriefcaseError):

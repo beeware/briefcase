@@ -24,7 +24,7 @@ def test_install_app_support_package(create_command, myapp, tmp_path, support_pa
 
     # Confirm the right URL was used
     create_command.download_url.assert_called_with(
-        download_path=create_command.dot_briefcase_path / "support",
+        download_path=create_command.data_path / "support",
         url="https://briefcase-support.org/python?platform=tester&version=3.X&arch=gothic",
     )
 
@@ -54,7 +54,7 @@ def test_install_pinned_app_support_package(
 
     # Confirm the right URL was used
     create_command.download_url.assert_called_with(
-        download_path=create_command.dot_briefcase_path / "support",
+        download_path=create_command.data_path / "support",
         url="https://briefcase-support.org/python?platform=tester&version=3.X&arch=gothic&revision=42",
     )
 
@@ -110,9 +110,9 @@ def test_support_package_url_with_invalid_custom_support_packge_url(
     with pytest.raises(MissingNetworkResourceError):
         create_command.install_app_support_package(myapp)
 
-    # However, there will have a been a download attempt
+    # However, there will have been a download attempt
     create_command.download_url.assert_called_with(
-        download_path=create_command.dot_briefcase_path / "support",
+        download_path=create_command.data_path / "support",
         url=url,
     )
 
@@ -133,9 +133,9 @@ def test_support_package_url_with_unsupported_platform(create_command, myapp):
     with pytest.raises(MissingSupportPackage):
         create_command.install_app_support_package(myapp)
 
-    # However, there will have a been a download attempt
+    # However, there will have been a download attempt
     create_command.download_url.assert_called_with(
-        download_path=create_command.dot_briefcase_path / "support",
+        download_path=create_command.data_path / "support",
         url="https://briefcase-support.org/python?platform=tester&version=3.X&arch=unknown",
     )
 
@@ -160,7 +160,7 @@ def test_install_custom_app_support_package_url(
 
     # Confirm the right URL was used
     create_command.download_url.assert_called_with(
-        download_path=create_command.dot_briefcase_path / "support",
+        download_path=create_command.data_path / "support",
         url="https://example.com/custom/support.zip",
     )
 
@@ -193,7 +193,7 @@ def test_install_pinned_custom_app_support_package_url(
 
     # Confirm the right URL was used
     create_command.download_url.assert_called_with(
-        download_path=create_command.dot_briefcase_path / "support",
+        download_path=create_command.data_path / "support",
         url="https://example.com/custom/support.zip?revision=42",
     )
 
@@ -226,7 +226,7 @@ def test_install_pinned_custom_app_support_package_url_with_args(
 
     # Confirm the right URL was used
     create_command.download_url.assert_called_with(
-        download_path=create_command.dot_briefcase_path / "support",
+        download_path=create_command.data_path / "support",
         url="https://example.com/custom/support.zip?cool=Yes&revision=42",
     )
 

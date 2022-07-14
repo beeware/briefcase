@@ -11,6 +11,7 @@ from briefcase.integrations.linuxdeploy import (
     LinuxDeployPluginFromFile,
     LinuxDeployPluginFromUrl,
 )
+from briefcase.integrations.rcedit import RCEdit
 from briefcase.integrations.wix import WiX
 
 from .base import BaseCommand
@@ -24,7 +25,7 @@ class UpgradeCommand(BaseCommand):
 
     def __init__(self, *args, **options):
         super().__init__(*args, **options)
-        self.sdks = [AndroidSDK, LinuxDeploy, JDK, WiX]
+        self.sdks = [AndroidSDK, LinuxDeploy, JDK, WiX, RCEdit]
 
     @property
     def platform(self):

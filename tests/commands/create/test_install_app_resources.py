@@ -63,14 +63,26 @@ def test_icon_target(create_command, tmp_path):
                 source="images/icon",
                 variant=None,
                 size="10",
-                target=tmp_path / "tester/my-app.bundle/path/to/icon-10.png",
+                target=tmp_path
+                / "project"
+                / "tester"
+                / "my-app.bundle"
+                / "path"
+                / "to"
+                / "icon-10.png",
             ),
             mock.call(
                 "application icon",
                 source="images/icon",
                 variant=None,
                 size="20",
-                target=tmp_path / "tester/my-app.bundle/path/to/icon-20.png",
+                target=tmp_path
+                / "project"
+                / "tester"
+                / "my-app.bundle"
+                / "path"
+                / "to"
+                / "icon-20.png",
             ),
         ],
         any_order=True,
@@ -120,21 +132,39 @@ def test_icon_variant_target(create_command, tmp_path):
                 source={"round": "images/round", "square": "images/square"},
                 variant=None,
                 size="round",  # This is expected for unsized variants
-                target=tmp_path / "tester/my-app.bundle/path/to/round.png",
+                target=tmp_path
+                / "project"
+                / "tester"
+                / "my-app.bundle"
+                / "path"
+                / "to"
+                / "round.png",
             ),
             mock.call(
                 "application icon",
                 source={"round": "images/round", "square": "images/square"},
                 variant="square",
                 size="10",
-                target=tmp_path / "tester/my-app.bundle/path/to/square-10.png",
+                target=tmp_path
+                / "project"
+                / "tester"
+                / "my-app.bundle"
+                / "path"
+                / "to"
+                / "square-10.png",
             ),
             mock.call(
                 "application icon",
                 source={"round": "images/round", "square": "images/square"},
                 variant="square",
                 size="20",
-                target=tmp_path / "tester/my-app.bundle/path/to/square-20.png",
+                target=tmp_path
+                / "project"
+                / "tester"
+                / "my-app.bundle"
+                / "path"
+                / "to"
+                / "square-20.png",
             ),
         ],
         any_order=True,
@@ -177,14 +207,26 @@ def test_splash_target(create_command, tmp_path):
                 source="images/splash",
                 variant=None,
                 size="10x20",
-                target=tmp_path / "tester/my-app.bundle/path/to/splash-10x20.png",
+                target=tmp_path
+                / "project"
+                / "tester"
+                / "my-app.bundle"
+                / "path"
+                / "to"
+                / "splash-10x20.png",
             ),
             mock.call(
                 "splash image",
                 source="images/splash",
                 variant=None,
                 size="20x30",
-                target=tmp_path / "tester/my-app.bundle/path/to/splash-20x30.png",
+                target=tmp_path
+                / "project"
+                / "tester"
+                / "my-app.bundle"
+                / "path"
+                / "to"
+                / "splash-20x30.png",
             ),
         ],
         any_order=True,
@@ -234,21 +276,39 @@ def test_splash_variant_target(create_command, tmp_path):
                 source={"portrait": "images/portrait", "landscape": "images/landscape"},
                 variant=None,
                 size="portrait",  # This is expected for unsized variants
-                target=tmp_path / "tester/my-app.bundle/path/to/portrait.png",
+                target=tmp_path
+                / "project"
+                / "tester"
+                / "my-app.bundle"
+                / "path"
+                / "to"
+                / "portrait.png",
             ),
             mock.call(
                 "splash image",
                 source={"portrait": "images/portrait", "landscape": "images/landscape"},
                 variant="landscape",
                 size="10x20",
-                target=tmp_path / "tester/my-app.bundle/path/to/landscape-10x20.png",
+                target=tmp_path
+                / "project"
+                / "tester"
+                / "my-app.bundle"
+                / "path"
+                / "to"
+                / "landscape-10x20.png",
             ),
             mock.call(
                 "splash image",
                 source={"portrait": "images/portrait", "landscape": "images/landscape"},
                 variant="landscape",
                 size="20x30",
-                target=tmp_path / "tester/my-app.bundle/path/to/landscape-20x30.png",
+                target=tmp_path
+                / "project"
+                / "tester"
+                / "my-app.bundle"
+                / "path"
+                / "to"
+                / "landscape-20x30.png",
             ),
         ],
         any_order=True,
@@ -302,21 +362,39 @@ def test_doctype_icon_target(create_command, tmp_path):
                 source="images/mydoc-icon",
                 variant=None,
                 size=None,
-                target=tmp_path / "tester/my-app.bundle/path/to/mydoc-icon.png",
+                target=tmp_path
+                / "project"
+                / "tester"
+                / "my-app.bundle"
+                / "path"
+                / "to"
+                / "mydoc-icon.png",
             ),
             mock.call(
                 "icon for .other documents",
                 source="images/other-icon",
                 variant=None,
                 size="10",
-                target=tmp_path / "tester/my-app.bundle/path/to/other-icon-10.png",
+                target=tmp_path
+                / "project"
+                / "tester"
+                / "my-app.bundle"
+                / "path"
+                / "to"
+                / "other-icon-10.png",
             ),
             mock.call(
                 "icon for .other documents",
                 source="images/other-icon",
                 variant=None,
                 size="20",
-                target=tmp_path / "tester/my-app.bundle/path/to/other-icon-20.png",
+                target=tmp_path
+                / "project"
+                / "tester"
+                / "my-app.bundle"
+                / "path"
+                / "to"
+                / "other-icon-20.png",
             ),
         ],
         any_order=True,

@@ -4,12 +4,12 @@ from unittest import mock
 import pytest
 
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.platforms.windows.msi import WindowsMSIRunCommand
+from briefcase.platforms.windows.app import WindowsAppRunCommand
 
 
 def test_run_app(first_app_config, tmp_path):
-    """A windows MSI can be started."""
-    command = WindowsMSIRunCommand(base_path=tmp_path)
+    """A windows app can be started."""
+    command = WindowsAppRunCommand(base_path=tmp_path)
     command.subprocess = mock.MagicMock()
 
     command.run_app(first_app_config)
@@ -17,16 +17,8 @@ def test_run_app(first_app_config, tmp_path):
     command.subprocess.run.assert_called_with(
         [
             os.fsdecode(
-                tmp_path
-                / "windows"
-                / "msi"
-                / "First App"
-                / "src"
-                / "python"
-                / "pythonw.exe"
+                tmp_path / "windows" / "app" / "First App" / "src" / "First App.exe"
             ),
-            "-m",
-            "first_app",
         ],
         check=True,
     )
@@ -34,7 +26,7 @@ def test_run_app(first_app_config, tmp_path):
 
 def test_run_app_failed(first_app_config, tmp_path):
     """If there's a problem started the app, an exception is raised."""
-    command = WindowsMSIRunCommand(base_path=tmp_path)
+    command = WindowsAppRunCommand(base_path=tmp_path)
     command.subprocess = mock.MagicMock()
     command.subprocess.run.side_effect = BriefcaseCommandError("problem")
 
@@ -45,16 +37,8 @@ def test_run_app_failed(first_app_config, tmp_path):
     command.subprocess.run.assert_called_with(
         [
             os.fsdecode(
-                tmp_path
-                / "windows"
-                / "msi"
-                / "First App"
-                / "src"
-                / "python"
-                / "pythonw.exe"
+                tmp_path / "windows" / "app" / "First App" / "src" / "First App.exe"
             ),
-            "-m",
-            "first_app",
         ],
         check=True,
     )

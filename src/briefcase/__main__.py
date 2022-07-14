@@ -10,6 +10,7 @@ def main():
     command = None
     try:
         command, options = parse_cmdline(sys.argv[1:])
+        command.check_obsolete_data_dir()
         command.parse_config("pyproject.toml")
         command(**options)
         result = 0

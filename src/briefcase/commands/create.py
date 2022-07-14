@@ -1,4 +1,5 @@
 import os
+import platform
 import shutil
 import subprocess
 import sys
@@ -258,6 +259,8 @@ class CreateCommand(BaseCommand):
         # Augment with some extra fields.
         extra_context.update(
             {
+                # Properties of the generating environment
+                "python_version": platform.python_version(),
                 # Transformations of explicit properties into useful forms
                 "module_name": app.module_name,
                 "package_name": app.package_name,
@@ -333,7 +336,7 @@ class CreateCommand(BaseCommand):
                 # in the user's briefcase support cache directory.
                 support_filename = self.download_url(
                     url=support_package_url,
-                    download_path=self.dot_briefcase_path / "support",
+                    download_path=self.data_path / "support",
                 )
             else:
                 support_filename = Path(support_package_url)
@@ -385,8 +388,6 @@ class CreateCommand(BaseCommand):
                             "install",
                             "--upgrade",
                             "--no-user",
-                            "--progress-bar",
-                            "off",
                             f"--target={target}",
                         ]
                         + app.requires,

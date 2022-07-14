@@ -31,3 +31,7 @@ name specified should be the machine-readable package name for the app.
 ----------------------------------
 
 Update application dependencies.
+
+``--no-run``
+------------
+Do not run the application and only install application dependencies.

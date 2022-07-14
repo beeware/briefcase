@@ -13,7 +13,7 @@ from briefcase.exceptions import (
 )
 from briefcase.platforms.linux.appimage import LinuxAppImageCreateCommand
 from briefcase.platforms.macOS.app import macOSAppCreateCommand, macOSAppPublishCommand
-from briefcase.platforms.windows.msi import WindowsMSICreateCommand
+from briefcase.platforms.windows.app import WindowsAppCreateCommand
 
 
 def test_empty():
@@ -174,14 +174,14 @@ def test_macOS_default():
 
 @pytest.mark.skipif(sys.platform != "win32", reason="requires Windows")
 def test_windows_default():
-    """``briefcase create`` returns the Windows create msi command on
+    """``briefcase create`` returns the Windows create app command on
     Windows."""
 
     cmd, options = parse_cmdline("create".split())
 
-    assert isinstance(cmd, WindowsMSICreateCommand)
+    assert isinstance(cmd, WindowsAppCreateCommand)
     assert cmd.platform == "windows"
-    assert cmd.output_format == "msi"
+    assert cmd.output_format == "app"
     assert cmd.input.enabled
     assert cmd.logger.verbosity == 1
     assert options == {}

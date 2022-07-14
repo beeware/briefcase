@@ -1,0 +1,1 @@
+Use platformdirs instead of appdirs to determine OS-native user data directory.
