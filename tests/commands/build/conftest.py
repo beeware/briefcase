@@ -29,8 +29,8 @@ class DummyBuildCommand(BuildCommand):
     def distribution_path(self, app, packaging_format):
         return self.platform_path / f"{app.app_name}.dummy.{packaging_format}"
 
-    def verify_tools(self, app):
-        super().verify_tools(app)
+    def verify_tools(self):
+        super().verify_tools()
         self.actions.append(("verify",))
 
     def build_app(self, app, **kwargs):

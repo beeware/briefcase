@@ -2,7 +2,6 @@ import os
 import pathlib
 import subprocess
 from contextlib import contextmanager
-from typing import Optional
 
 from briefcase.commands import (
     BuildCommand,
@@ -12,15 +11,10 @@ from briefcase.commands import (
     RunCommand,
     UpdateCommand,
 )
-from briefcase.config import AppConfig, LinuxDeployPluginType
+from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.docker import verify_docker
-from briefcase.integrations.linuxdeploy import (
-    LinuxDeploy,
-    LinuxDeployGtkPlugin,
-    LinuxDeployPluginFromFile,
-    LinuxDeployPluginFromUrl,
-)
+from briefcase.integrations.linuxdeploy import LinuxDeploy
 from briefcase.platforms.linux import LinuxMixin
 
 
@@ -69,7 +63,7 @@ class LinuxAppImageMixin(LinuxMixin):
             f"briefcase/{app.bundle}.{app.app_name.lower()}:py{self.python_version_tag}"
         )
 
-    def verify_tools(self, app: Optional[AppConfig] = None):
+    def verify_tools(self):
         """Verify that Docker is available; and if it isn't that we're on
         Linux."""
         super().verify_tools()
@@ -148,23 +142,13 @@ class LinuxAppImageUpdateCommand(LinuxAppImageMixin, UpdateCommand):
 class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
     description = "Build a Linux AppImage."
 
-    def verify_tools(self, app: AppConfig):
+    def verify_tools(self):
         """Verify that the AppImage linuxdeploy tool and plugins exist.
 
         :param app: The application to build
         """
-        super().verify_tools(app)
+        super().verify_tools()
         self.linuxdeploy = LinuxDeploy.verify(self)
-        if app.linuxdeploy_plugins_info:
-            for plugin in app.linuxdeploy_plugins_info:
-                if plugin.type == LinuxDeployPluginType.GTK:
-                    LinuxDeployGtkPlugin.verify(self, plugin_path=plugin.path)
-                elif plugin.type == LinuxDeployPluginType.FILE:
-                    LinuxDeployPluginFromFile.verify(self, plugin_path=plugin.path)
-                elif plugin.type == LinuxDeployPluginType.URL:
-                    LinuxDeployPluginFromUrl.verify(self, plugin_path=plugin.path)
-                else:
-                    self.logger.info(f"unable to verify plugin {plugin.path}")
 
     def build_app(self, app: AppConfig, **kwargs):
         """Build an application.

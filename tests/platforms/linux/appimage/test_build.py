@@ -350,6 +350,6 @@ def test_build_verify_tools(
     ]
     build_command.download_url = mock.MagicMock()
     with pytest.raises(briefcase.exceptions.MissingToolError):
-        build_command.verify_tools(first_app_config)
+        build_command.verify_tools()
 
         assert build_command.actions == [("verify",)]

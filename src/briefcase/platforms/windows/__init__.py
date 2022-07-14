@@ -101,8 +101,8 @@ class WindowsPackageCommand(PackageCommand):
     def default_packaging_format(self):
         return "msi"
 
-    def verify_tools(self, *args):
-        super().verify_tools(*args)
+    def verify_tools(self):
+        super().verify_tools()
         self.wix = WiX.verify(self)
 
     def package_app(self, app: BaseConfig, **kwargs):

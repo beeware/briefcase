@@ -29,8 +29,8 @@ class WindowsVisualStudioUpdateCommand(WindowsVisualStudioMixin, UpdateCommand):
 class WindowsVisualStudioBuildCommand(WindowsVisualStudioMixin, BuildCommand):
     description = "Build a Visual Studio app project."
 
-    def verify_tools(self, *args):
-        super().verify_tools(*args)
+    def verify_tools(self):
+        super().verify_tools()
         self.visualstudio = VisualStudio.verify(self)
 
     def build_app(self, app: BaseConfig, **kwargs):
