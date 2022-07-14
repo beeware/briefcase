@@ -1,3 +1,27 @@
-from . import android_sdk, git, java, xcode
+from . import (
+    android_sdk,
+    cookiecutter,
+    docker,
+    git,
+    java,
+    linuxdeploy,
+    rcedit,
+    subprocess,
+    visualstudio,
+    wix,
+    xcode,
+)
 
-__all__ = ["android_sdk", "git", "java", "xcode"]
+__all__ = [
+    "android_sdk",
+    "cookiecutter",
+    "docker",
+    "git",
+    "java",
+    "linuxdeploy",
+    "rcedit",
+    "subprocess",
+    "visualstudio",
+    "wix",
+    "xcode",
+]

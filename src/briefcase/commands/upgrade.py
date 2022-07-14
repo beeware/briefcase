@@ -5,6 +5,7 @@ from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.android_sdk import AndroidSDK
 from briefcase.integrations.java import JDK
 from briefcase.integrations.linuxdeploy import LinuxDeploy
+from briefcase.integrations.rcedit import RCEdit
 from briefcase.integrations.wix import WiX
 
 from .base import BaseCommand
@@ -18,7 +19,7 @@ class UpgradeCommand(BaseCommand):
 
     def __init__(self, *args, **options):
         super().__init__(*args, **options)
-        self.sdks = [AndroidSDK, LinuxDeploy, JDK, WiX]
+        self.sdks = [AndroidSDK, LinuxDeploy, JDK, WiX, RCEdit]
 
     @property
     def platform(self):
