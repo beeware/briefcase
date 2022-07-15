@@ -19,10 +19,11 @@ files in a platform-native cache folder:
 If you want to use a different folder to store the Briefcase resources, you can
 define a ``BRIEFCASE_HOME`` environment variable.
 
-There are two restrictions on this path specification:
+There are three restrictions on this path specification:
 
-1. It *must not* contain any spaces.
-2. It *must not* be on a network drive.
+1. The path must already exist. If it doesn't exist, you should create it manually.
+2. It *must not* contain any spaces.
+3. It *must not* be on a network drive.
 
-These restrictions both exist because some of the tools that Briefcase uses (in
-particular, the Android SDK) do not work in these locations.
+The second two restrictions both exist because some of the tools that Briefcase
+uses (in particular, the Android SDK) do not work in these locations.

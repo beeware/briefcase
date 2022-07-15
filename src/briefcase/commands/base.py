@@ -140,7 +140,11 @@ class BaseCommand(ABC):
         # isn't defined, use a platform-specific default data path.
         if data_path is None:
             try:
-                data_path = os.environ["BRIEFCASE_HOME"]
+                data_path = Path(os.environ["BRIEFCASE_HOME"])
+                if not data_path.exists():
+                    raise BriefcaseCommandError(
+                        "The path specified by BRIEFCASE_HOME does not exist."
+                    )
             except KeyError:
                 if self.host_os == "Darwin":
                     # macOS uses a bundle name, rather than just the app name
