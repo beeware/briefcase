@@ -18,6 +18,18 @@ def test_space_in_path(tmp_path):
         DummyCommand(tmp_path / "base", data_path=tmp_path / "somewhere bad")
 
 
+def test_empty_custom_path(monkeypatch, tmp_path):
+    """If the environment-specified BRIEFCASE_HOME is defined, but empty, an
+    error is raised."""
+    monkeypatch.setenv("BRIEFCASE_HOME", "")
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"The path specified by BRIEFCASE_HOME does not exist.",
+    ):
+        DummyCommand(tmp_path / "base")
+
+
 def test_custom_path_does_not_exist(monkeypatch, tmp_path):
     """If the environment-specified BRIEFCASE_HOME doesn't exist, an error is
     raised."""

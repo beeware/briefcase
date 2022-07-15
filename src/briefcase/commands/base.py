@@ -140,8 +140,10 @@ class BaseCommand(ABC):
         # isn't defined, use a platform-specific default data path.
         if data_path is None:
             try:
-                data_path = Path(os.environ["BRIEFCASE_HOME"])
-                if not data_path.exists():
+                briefcase_home = os.environ["BRIEFCASE_HOME"]
+                data_path = Path(briefcase_home).resolve()
+                # Path("") converts to ".", so check for that edge case.
+                if briefcase_home == "" or not data_path.exists():
                     raise BriefcaseCommandError(
                         "The path specified by BRIEFCASE_HOME does not exist."
                     )
