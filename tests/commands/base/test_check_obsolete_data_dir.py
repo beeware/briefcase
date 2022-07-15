@@ -1,3 +1,4 @@
+import os
 from unittest.mock import MagicMock
 
 import pytest
@@ -18,9 +19,35 @@ def test_skip_if_dot_briefcase_nonexistent(capsys, tmp_path):
         home_path=home_path,
         data_path=tmp_path / "data_dir",
     )
+    cmd.input.boolean_input = MagicMock()
+
     cmd.check_obsolete_data_dir()
 
+    cmd.input.boolean_input.assert_not_called()
     assert not dot_briefcase_dir.exists()
+    assert capsys.readouterr().out == ""
+
+
+def test_skip_if_data_dir_from_environment(monkeypatch, capsys, tmp_path):
+    """If the data directory came from the user environment, don't run the
+    check, even if .briefcase exists."""
+    monkeypatch.setenv("BRIEFCASE_HOME", os.fsdecode(tmp_path / "custom"))
+
+    home_path = tmp_path / "home"
+    dot_briefcase_dir = home_path / ".briefcase"
+    dot_briefcase_dir.mkdir(parents=True)
+
+    cmd = DummyCommand(
+        base_path=tmp_path / "base",
+        home_path=home_path,
+        data_path=tmp_path / "data_dir",
+    )
+    cmd.input.boolean_input = MagicMock()
+
+    cmd.check_obsolete_data_dir()
+
+    cmd.input.boolean_input.assert_not_called()
+    assert dot_briefcase_dir.exists()
     assert capsys.readouterr().out == ""
 
 
