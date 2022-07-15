@@ -1,16 +1,10 @@
 import sys
 from typing import List
 
-from briefcase.config import LinuxDeployPluginType
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.android_sdk import AndroidSDK
 from briefcase.integrations.java import JDK
-from briefcase.integrations.linuxdeploy import (
-    LinuxDeploy,
-    LinuxDeployGtkPlugin,
-    LinuxDeployPluginFromFile,
-    LinuxDeployPluginFromUrl,
-)
+from briefcase.integrations.linuxdeploy import LinuxDeploy
 from briefcase.integrations.rcedit import RCEdit
 from briefcase.integrations.wix import WiX
 
@@ -25,7 +19,13 @@ class UpgradeCommand(BaseCommand):
 
     def __init__(self, *args, **options):
         super().__init__(*args, **options)
-        self.sdks = [AndroidSDK, LinuxDeploy, JDK, WiX, RCEdit]
+        self.sdks = [
+            AndroidSDK,
+            LinuxDeploy,
+            JDK,
+            WiX,
+            RCEdit,
+        ]
 
     @property
     def platform(self):
@@ -68,32 +68,27 @@ class UpgradeCommand(BaseCommand):
         managed_tools = {}
         non_managed_tools = set()
 
-        # Add linuxdeploy plugins to tools based on app config
-        for app_name, app in sorted(self.apps.items()):
-            if app.linuxdeploy_plugins_info:
-                for plugin in app.linuxdeploy_plugins_info:
-                    if plugin.type == LinuxDeployPluginType.GTK:
-                        klass = LinuxDeployGtkPlugin
-                    elif plugin.type == LinuxDeployPluginType.FILE:
-                        klass = LinuxDeployPluginFromFile
-                    elif plugin.type == LinuxDeployPluginType.URL:
-                        klass = LinuxDeployPluginFromUrl
-                    try:
-                        tool = klass.verify(self, plugin_path=plugin.path)
-                        managed_tools[klass.name] = tool
-                    except BriefcaseCommandError:
-                        # Plugin doesn't exist, or can't be managed
-                        non_managed_tools.add(klass.name)
-
         for klass in self.sdks:
             try:
                 tool = klass.verify(self, install=False)
                 if tool.managed_install:
                     managed_tools[klass.name] = tool
+                    try:
+                        for plugin_klass in tool.plugins.values():
+                            try:
+                                plugin = plugin_klass.verify(self, install=False)
+                                # All plugins are managed
+                                managed_tools[plugin.name] = plugin
+                            except BriefcaseCommandError:
+                                # Plugin doesn't exist
+                                non_managed_tools.add(klass.name)
+                    except AttributeError:
+                        # Tool doesn't have plugins
+                        pass
                 else:
                     non_managed_tools.add(klass.name)
             except BriefcaseCommandError:
-                # Tool doesn't exist, or can't be managed
+                # Tool doesn't exist
                 non_managed_tools.add(klass.name)
 
         # If a tool list wasn't provided, use the list of installed tools

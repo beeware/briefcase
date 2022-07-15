@@ -4,7 +4,7 @@ import pytest
 from requests import exceptions as requests_exceptions
 
 from briefcase.exceptions import MissingToolError, NetworkFailure
-from briefcase.integrations.linuxdeploy import LinuxDeploy
+from briefcase.integrations.linuxdeploy import LinuxDeployBase
 from tests.integrations.linuxdeploy.utils import create_mock_appimage
 
 
@@ -18,11 +18,33 @@ def mock_command(tmp_path):
     return command
 
 
-def test_upgrade_exists(mock_command, tmp_path):
+@pytest.fixture
+def linuxdeploy(mock_command, tmp_path):
+    class LinuxDeployDummy(LinuxDeployBase):
+        name = "dummy-plugin"
+        full_name = "Dummy plugin"
+
+        @property
+        def file_name(self):
+            return "linuxdeploy-dummy-wonky.AppImage"
+
+        @property
+        def download_url(self):
+            return "https://example.com/path/to/linuxdeploy-dummy-wonky.AppImage"
+
+        @property
+        def file_path(self):
+            return tmp_path / "plugin"
+
+    return LinuxDeployDummy(mock_command)
+
+
+def test_upgrade_exists(linuxdeploy, mock_command, tmp_path):
     """If linuxdeploy already exists, upgrading deletes first."""
-    appimage_path = tmp_path / "tools" / "linuxdeploy-wonky.AppImage"
+    appimage_path = tmp_path / "plugin" / "linuxdeploy-dummy-wonky.AppImage"
 
     # Mock the existence of an install
+    appimage_path.parent.mkdir(parents=True)
     appimage_path.touch()
 
     # Mock a successful download
@@ -33,7 +55,6 @@ def test_upgrade_exists(mock_command, tmp_path):
     mock_command.download_url.side_effect = side_effect_create_mock_appimage
 
     # Create a linuxdeploy wrapper, then upgrade it
-    linuxdeploy = LinuxDeploy(mock_command)
     linuxdeploy.upgrade()
 
     # The mock file should exist as the upgraded version
@@ -41,18 +62,16 @@ def test_upgrade_exists(mock_command, tmp_path):
 
     # A download is invoked
     mock_command.download_url.assert_called_with(
-        url="https://github.com/linuxdeploy/linuxdeploy/"
-        "releases/download/continuous/linuxdeploy-wonky.AppImage",
-        download_path=tmp_path / "tools",
+        url="https://example.com/path/to/linuxdeploy-dummy-wonky.AppImage",
+        download_path=tmp_path / "plugin",
     )
     # The downloaded file will be made executable
     mock_command.os.chmod.assert_called_with("new-downloaded-file", 0o755)
 
 
-def test_upgrade_does_not_exist(mock_command, tmp_path):
+def test_upgrade_does_not_exist(linuxdeploy, mock_command):
     """If linuxdeploy doesn't already exist, upgrading is an error."""
     # Create a linuxdeploy wrapper, then upgrade it
-    linuxdeploy = LinuxDeploy(mock_command)
     with pytest.raises(MissingToolError):
         linuxdeploy.upgrade()
 
@@ -60,18 +79,17 @@ def test_upgrade_does_not_exist(mock_command, tmp_path):
     assert mock_command.download_url.call_count == 0
 
 
-def test_upgrade_linuxdeploy_download_failure(mock_command, tmp_path):
+def test_upgrade_linuxdeploy_download_failure(linuxdeploy, mock_command, tmp_path):
     """If linuxdeploy doesn't exist, but a download failure occurs, an error is
     raised."""
     # Mock the existence of an install
-    appimage_path = tmp_path / "tools" / "linuxdeploy-wonky.AppImage"
+    appimage_path = tmp_path / "plugin" / "linuxdeploy-dummy-wonky.AppImage"
+    appimage_path.parent.mkdir(parents=True)
     appimage_path.touch()
 
     mock_command.download_url.side_effect = requests_exceptions.ConnectionError
 
-    # Create a linuxdeploy wrapper, then upgrade it.
-    # The upgrade will fail
-    linuxdeploy = LinuxDeploy(mock_command)
+    # Updated the linuxdeploy wrapper; the upgrade will fail
     with pytest.raises(NetworkFailure):
         linuxdeploy.upgrade()
 
@@ -80,7 +98,6 @@ def test_upgrade_linuxdeploy_download_failure(mock_command, tmp_path):
 
     # A download was invoked
     mock_command.download_url.assert_called_with(
-        url="https://github.com/linuxdeploy/linuxdeploy/"
-        "releases/download/continuous/linuxdeploy-wonky.AppImage",
-        download_path=tmp_path / "tools",
+        url="https://example.com/path/to/linuxdeploy-dummy-wonky.AppImage",
+        download_path=tmp_path / "plugin",
     )

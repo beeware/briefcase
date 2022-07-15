@@ -27,6 +27,7 @@ def create_mock_appimage(appimage_path: Path, mock_appimage_kind: str = "origina
         "corrupt": bytes.fromhex("%030x" % randrange(16**30)),
     }
 
+    appimage_path.parent.mkdir(parents=True, exist_ok=True)
     appimage_path.touch()
     with open(appimage_path, "w+b") as mock_appimage:
         if mock_appimage_kind in appimage_headers:

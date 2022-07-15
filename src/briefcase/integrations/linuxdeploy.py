@@ -1,6 +1,6 @@
-import os
-import pathlib
+import hashlib
 from abc import abstractmethod
+from urllib.parse import urlparse
 
 from requests import exceptions as requests_exceptions
 
@@ -12,76 +12,79 @@ ELF_PATCH_PATCHED_BYTES = bytes.fromhex("000000")
 
 
 class LinuxDeployBase:
-    def __init__(self, command, plugin_path=None):
+    def __init__(self, command):
         self.command = command
-        self.plugin_path = plugin_path
 
     @property
     @abstractmethod
-    def filename(self):
+    def file_name(self):
+        """The name of the executable file for the tool/plugin, excluding the
+        path."""
         ...
 
     @property
     @abstractmethod
-    def linuxdeploy_download_url(self):
+    def download_url(self):
+        """The URL where the tool/plugin can be downloaded."""
         ...
 
     @property
+    @abstractmethod
     def file_path(self):
+        """The folder on the local filesystem that contains the file_name."""
         ...
 
     def exists(self):
-        return self.file_path.exists()
-
-    @property
-    def managed_install(self):
-        return True
+        return (self.file_path / self.file_name).exists()
 
     def install(self):
         """Download and install linuxdeploy or plugin."""
         try:
             download_path = self.command.download_url(
-                url=self.linuxdeploy_download_url, download_path=self.file_path.parent
+                url=self.download_url,
+                download_path=self.file_path,
             )
         except requests_exceptions.ConnectionError as e:
-            raise NetworkFailure("downloading linuxdeploy tool or plugin") from e
+            raise NetworkFailure(f"downloading {self.full_name}") from e
 
-        with self.command.input.wait_bar(f"Installing {self.filename}..."):
+        with self.command.input.wait_bar(f"Installing {self.full_name}..."):
             self.command.os.chmod(download_path, 0o755)
-            if self.filename.endswith("AppImage"):
+            if self.file_name.endswith("AppImage"):
                 self.patch_elf_header()
 
     @classmethod
-    def verify(cls, command, install=True, plugin_path: [str] = None):
+    def verify(cls, command, install=True, **kwargs):
         """Verify that linuxdeploy tool or plugin is available.
 
         :param command: The command that needs to use linuxdeploy
-        :param install: Should the tool be installed if it is not found?
-        :param plugin_path: The path of the linuxdeploy plugin to verify.
-        :returns: A valid linuxdeploy tool wrapper. If linuxdeploy is not
+        :param install: Should the tool/plugin be installed if it is not found?
+        :param kwargs: Any additional keyword arguments that should be passed
+            to the tool at time of construction.
+        :returns: A valid tool wrapper. If the tool/plugin is not
             available, and was not installed, raises MissingToolError.
         """
-        linuxdeploy = cls(command, plugin_path)
-        if not linuxdeploy.exists():
+        tool = cls(command, **kwargs)
+        if not tool.exists():
             if install:
                 command.logger.info(
-                    "The linuxdeploy tool or plugin was not found; "
-                    "downloading and installing...",
-                    prefix=cls.__name__,
+                    cls.install_msg.format(full_name=cls.full_name),
+                    prefix="linuxdeploy",
                 )
-                linuxdeploy.install()
+                tool.install()
             else:
-                raise MissingToolError("linuxdeploy tool or plugin")
-        return linuxdeploy
+                raise MissingToolError(cls.name)
 
-    @abstractmethod
+        return tool
+
     def uninstall(self):
-        ...
+        """Uninstall tool."""
+        with self.command.input.wait_bar(f"Removing old {self.full_name} install..."):
+            (self.file_path / self.file_name).unlink()
 
     def upgrade(self):
         """Upgrade an existing linuxdeploy install."""
         if not self.exists():
-            raise MissingToolError("linuxdeploy")
+            raise MissingToolError(self.name)
 
         self.uninstall()
         self.install()
@@ -105,8 +108,9 @@ class LinuxDeployBase:
         """
 
         if not self.exists():
-            raise MissingToolError("linuxdeploy")
-        with open(self.file_path, "r+b") as appimage:
+            raise MissingToolError(self.name)
+
+        with (self.file_path / self.file_name).open("r+b") as appimage:
             appimage.seek(ELF_PATCH_OFFSET)
             # Check if the header at the offset is the original value
             # If so, patch it.
@@ -125,121 +129,151 @@ class LinuxDeployBase:
                 )
             else:
                 # We should only get here if the file at the AppImage patch doesn't have
-                # The original or patched value. If this is the case, the file is likely
+                # the original or patched value. If this is the case, the file is likely
                 # wrong and we should raise an exception.
-                raise CorruptToolError("linuxdeploy")
-
-
-class LinuxDeploy(LinuxDeployBase):
-    name = "linuxdeploy"
-    full_name = "linuxdeploy"
-
-    @property
-    def file_path(self):
-        return self.command.tools_path / self.filename
-
-    @property
-    def filename(self):
-        return f"linuxdeploy-{self.command.host_arch}.AppImage"
-
-    @property
-    def linuxdeploy_download_url(self):
-        return (
-            "https://github.com/linuxdeploy/linuxdeploy/"
-            f"releases/download/continuous/{self.filename}"
-        )
-
-    def uninstall(self):
-        """Uninstall linuxdeploy."""
-        with self.command.input.wait_bar("Removing the old linuxdeploy install..."):
-            self.file_path.unlink()
+                raise CorruptToolError(self.name)
 
 
 class LinuxDeployPluginBase(LinuxDeployBase):
     """Base class for linuxdeploy plugins."""
 
+    install_msg = "{full_name} was not found; downloading and installing..."
+
+    @property
+    def plugin_id(self):
+        return self.file_name.split(".")[0].split("-")[2]
+
     @property
     def file_path(self):
-        return self.command.tools_path / "linuxdeploy_plugins" / self.filename
-
-    def uninstall(self):
-        """Uninstall linuxdeploy plugin."""
-        with self.command.input.wait_bar("Removing the old linuxdeploy plugin..."):
-            self.file_path.unlink()
-            plugins_path = self.command.tools_path / "linuxdeploy-plugins"
-            if plugins_path.is_dir() and not any(plugins_path.iterdir()):
-                plugins_path.rmdir()
-
-
-class LinuxDeployPluginFromFile(LinuxDeployPluginBase):
-    name = "linuxdeploy_plugin_from_file"
-    full_name = "linuxdeploy plugin from file"
-
-    @property
-    def filename(self):
-        return pathlib.Path(self.plugin_path).name
-
-    @property
-    def linuxdeploy_download_url(self):
-        return self.plugin_path
-
-    def install(self):
-        """Create hardlink to the local linuxdeploy plugin."""
-        local_plugin = pathlib.Path(self.linuxdeploy_download_url)
-        self.file_path.parent.mkdir(parents=True, exist_ok=True)
-        if local_plugin.resolve() != self.file_path.resolve():
-            self.file_path.unlink(missing_ok=True)
-            # Python 3.10+ upgrade to from os.link to
-            # self.file_path.hardlink_to(local_plugin.resolve()) type: ignore
-            os.link(local_plugin.resolve(), self.file_path)
-        with self.command.input.wait_bar(
-            f"Installing linuxdeploy plugin with {self.linuxdeploy_download_url}..."
-        ):
-            self.command.os.chmod(self.file_path, 0o755)
-            if self.filename.endswith("AppImage"):
-                self.patch_elf_header()
-
-
-class LinuxDeployPluginFromUrl(LinuxDeployPluginBase):
-    name = "linuxdeploy_plugin_from_url"
-    full_name = "linuxdeploy plugin from URL"
-
-    @property
-    def filename(self):
-        return pathlib.Path(self.plugin_path).name
-
-    @property
-    def linuxdeploy_download_url(self):
-        return self.plugin_path
+        return self.command.tools_path / "linuxdeploy_plugins" / self.plugin_id
 
 
 class LinuxDeployGtkPlugin(LinuxDeployPluginBase):
-    name = "linuxdeploy_gtk_plugin"
+    plugin_id = "gtk"
     full_name = "linuxdeploy GTK plugin"
 
     @property
-    def filename(self):
+    def file_name(self):
         return "linuxdeploy-plugin-gtk.sh"
 
     @property
-    def linuxdeploy_download_url(self):
+    def download_url(self):
         return (
             "https://raw.githubusercontent.com/linuxdeploy/linuxdeploy-plugin-gtk/"
-            f"master/{self.filename}"
+            f"master/{self.file_name}"
         )
 
 
 class LinuxDeployQtPlugin(LinuxDeployPluginBase):
-    name = "linuxdeploy_qt_plugin"
+    plugin_id = "qt"
     full_name = "linuxdeploy Qt plugin"
 
     @property
-    def filename(self):
-        return "linuxdeploy-plugin-qt-x86_64.AppImage"
+    def file_name(self):
+        return f"linuxdeploy-plugin-qt-{self.command.host_arch}.AppImage"
 
     @property
-    def linuxdeploy_download_url(self):
+    def download_url(self):
         return (
             "https://github.com/linuxdeploy/linuxdeploy-plugin-qt/"
-            f"releases/download/continuous/{self.filename}"
+            f"releases/download/continuous/{self.file_name}"
         )
+
+
+class LinuxDeployLocalFilePlugin(LinuxDeployPluginBase):
+    full_name = "user-provided linuxdeploy plugin from local file"
+    install_msg = "Copying user-provided plugin into project"
+
+    def __init__(self, command, plugin_path, bundle_path):
+        super().__init__(command)
+        self._file_name = plugin_path.name
+        self.local_path = plugin_path.parent
+        self._file_path = bundle_path
+
+    @property
+    def file_name(self):
+        return self._file_name
+
+    @property
+    def file_path(self):
+        return self._file_path
+
+    @property
+    def download_url(self):
+        raise RuntimeError("Shouldn't be trying to download a local file plugin")
+
+    def install(self):
+        # Install the plugin by copying from the local path to the bundle
+        # folder. This is required to ensure that the file is available inside
+        # the Docker context.
+        self.command.shutil.copy(
+            self.local_path / self.file_name,
+            self.file_path / self.file_name,
+        )
+
+
+class LinuxDeployURLPlugin(LinuxDeployPluginBase):
+    full_name = "user-provided linuxdeploy plugin from URL"
+
+    def __init__(self, command, url):
+        super().__init__(command)
+        self._download_url = url
+
+        url_parts = urlparse(url)
+        self._file_name = url_parts.path.split("/")[-1]
+
+        # Build a hash of the download URL; this hash is used to
+        # idenfity plugins downloaded from different sources
+        self.hash = hashlib.sha256()
+        for part in url_parts:
+            self.hash.update(part.encode("utf-8"))
+
+    @property
+    def file_name(self):
+        return self._file_name
+
+    @property
+    def file_path(self):
+        return (
+            self.command.tools_path
+            / "linuxdeploy_plugins"
+            / self.plugin_id
+            / self.hash.hexdigest()
+        )
+
+    @property
+    def download_url(self):
+        return self._download_url
+
+
+class LinuxDeploy(LinuxDeployBase):
+    name = "linuxdeploy"
+    full_name = "linuxdeploy"
+    install_msg = "linuxdeploy was not found; downloading and installing..."
+
+    @property
+    def managed_install(self):
+        return True
+
+    @property
+    def file_path(self):
+        return self.command.tools_path
+
+    @property
+    def file_name(self):
+        return f"linuxdeploy-{self.command.host_arch}.AppImage"
+
+    @property
+    def download_url(self):
+        return (
+            "https://github.com/linuxdeploy/linuxdeploy/"
+            f"releases/download/continuous/{self.file_name}"
+        )
+
+    @property
+    def plugins(self):
+        """The known linuxdeploy plugins."""
+        return {
+            plugin.plugin_id: plugin
+            for plugin in [LinuxDeployGtkPlugin, LinuxDeployQtPlugin]
+        }
