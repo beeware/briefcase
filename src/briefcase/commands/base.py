@@ -126,7 +126,7 @@ class BaseCommand(ABC):
         self.host_arch = platform.machine()
         self.host_os = platform.system()
 
-        self.base_path = base_path
+        self.base_path = Path(base_path)
 
         # If a home path is provided during construction, use it. This usually
         # indicates we're under test conditions.
