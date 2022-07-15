@@ -117,23 +117,71 @@ class BaseCommand(ABC):
     def __init__(
         self,
         base_path,
-        home_path=Path.home(),
-        data_path=PlatformDirs(appname="briefcase", appauthor="BeeWare").user_data_path,
+        home_path=None,
+        data_path=None,
         apps=None,
         input_enabled=True,
     ):
-        self.base_path = base_path
-        self.home_path = home_path
-        self.data_path = data_path
+        # Some details about the host machine
+        self.host_arch = platform.machine()
+        self.host_os = platform.system()
+
+        self.base_path = Path(base_path)
+
+        # If a home path is provided during construction, use it. This usually
+        # indicates we're under test conditions.
+        if home_path is None:
+            home_path = Path.home()
+        self.home_path = Path(home_path)
+
+        # If a data path is provided during construction, use it. This usually
+        # indicates we're under test conditions. If there's no data path
+        # provided, look for a BRIEFCASE_HOME environment variable. If that
+        # isn't defined, use a platform-specific default data path.
+        if data_path is None:
+            try:
+                briefcase_home = os.environ["BRIEFCASE_HOME"]
+                data_path = Path(briefcase_home).resolve()
+                # Path("") converts to ".", so check for that edge case.
+                if briefcase_home == "" or not data_path.exists():
+                    raise BriefcaseCommandError(
+                        "The path specified by BRIEFCASE_HOME does not exist."
+                    )
+            except KeyError:
+                if self.host_os == "Darwin":
+                    # macOS uses a bundle name, rather than just the app name
+                    app_name = "org.beeware.briefcase"
+                else:
+                    app_name = "briefcase"
+
+                data_path = PlatformDirs(
+                    appname=app_name,
+                    appauthor="BeeWare",
+                ).user_cache_path
+
+        if " " in os.fsdecode(data_path):
+            raise BriefcaseCommandError(
+                f"""
+The location Briefcase will use to store tools and support files:
+
+    {data_path}
+
+contains spaces. This will cause problems with some tools, preventing
+you from building and packaging applications.
+
+You can set the environment variable BRIEFCASE_HOME to specify
+a custom location for Briefcase's tools.
+
+"""
+            )
+
+        self.data_path = Path(data_path)
+
         self.tools_path = self.data_path / "tools"
 
         self.global_config = None
         self.apps = {} if apps is None else apps
         self._path_index = {}
-
-        # Some details about the host machine
-        self.host_arch = platform.machine()
-        self.host_os = platform.system()
 
         # External service APIs.
         # These are abstracted to enable testing without patching.
@@ -163,7 +211,12 @@ class BaseCommand(ABC):
         """
         dot_briefcase_path = self.home_path / ".briefcase"
 
+        # If there's no .briefcase path, no need to check for migration.
         if not dot_briefcase_path.exists():
+            return
+
+        # If the data path is user-provided, don't check for migration.
+        if "BRIEFCASE_HOME" in os.environ:
             return
 
         if self.data_path.exists():

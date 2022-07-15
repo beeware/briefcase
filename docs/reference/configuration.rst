@@ -1,12 +1,12 @@
-=====================
-Configuration options
-=====================
+=============================
+Project configuration options
+=============================
 
 Briefcase is a `PEP518 <https://www.python.org/dev/peps/pep-0518/>`__-compliant
 build tool. It uses a ``pyproject.toml`` file, in the root directory of your
 project, to provide build instructions for the packaged file.
 
-If you have an application called "My App", with source code in the `src/myapp`
+If you have an application called "My App", with source code in the ``src/myapp``
 directory, the simplest possible ``pyproject.toml`` Briefcase configuration
 file would be::
 

@@ -141,15 +141,15 @@ jobs:
         framework: ['toga', 'pyside2', 'pyside6', 'ppb']
         include:
         - platform: macos-latest
-          briefcase-data-dir: ~/Library/Application Support/briefcase
+          briefcase-data-dir: ~/Library/Caches/org.beeware.briefcase
           pip-cache-dir: ~/Library/Caches/pip
           docker-cache-dir: ~/Library/Containers/com.docker.docker/Data/vms/0/
         - platform: windows-latest
-          briefcase-data-dir: ~\AppData\Local\BeeWare\briefcase
+          briefcase-data-dir: ~\AppData\Local\BeeWare\briefcase\Cache
           pip-cache-dir: ~\AppData\Local\pip\Cache
           docker-cache-dir: C:\ProgramData\DockerDesktop
         - platform: ubuntu-latest
-          briefcase-data-dir: ~/.local/share/briefcase
+          briefcase-data-dir: ~/.cache/briefcase
           pip-cache-dir: ~/.cache/pip
           # cache action cannot cache docker images (actions/cache#31)
           # docker-cache-dir: /var/lib/docker
