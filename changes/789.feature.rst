@@ -1,0 +1,1 @@
+Added support for the user to define a ``BRIEFCASE_HOME`` environment variable. This enables the user to specify the location of the Briefcase tool cache, allowing the user to avoid issues with spaces in paths or disk space limitations.
