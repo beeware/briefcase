@@ -22,8 +22,11 @@ def mock_command(tmp_path):
     command.sys = MagicMock()
     command.tools_path = tmp_path / "tools"
 
-    # Make the `os` module and `host_os` live.
-    command.os = os
+    # Mock the os environment, but copy over other key functions.
+    command.os = MagicMock()
+    command.os.environ = {}
+    command.os.fsdecode = os.fsdecode
+    command.os.access = os.access
 
     # Identify the host platform
     command.host_os = platform.system()
