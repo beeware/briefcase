@@ -4,7 +4,18 @@ from pathlib import Path
 
 import pytest
 
+from briefcase.exceptions import BriefcaseCommandError
+
 from .conftest import DummyCommand
+
+
+def test_space_in_path(tmp_path):
+    """The briefcase data path cannot contain spaces."""
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"contains spaces. This will cause problems with some tools",
+    ):
+        DummyCommand(tmp_path / "base", data_path=tmp_path / "somewhere bad")
 
 
 @pytest.mark.skipif(platform.system() != "Darwin", reason="macOS specific tests")

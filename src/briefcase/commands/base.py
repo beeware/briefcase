@@ -153,6 +153,22 @@ class BaseCommand(ABC):
                     appauthor="BeeWare",
                 ).user_cache_path
 
+        if " " in os.fsdecode(data_path):
+            raise BriefcaseCommandError(
+                f"""
+The location Briefcase will use to store tools and support files:
+
+    {data_path}
+
+contains spaces. This will cause problems with some tools, preventing
+you from building and packaging applications.
+
+You can set the environment variable BRIEFCASE_HOME to specify
+a custom location for Briefcase's tools.
+
+"""
+            )
+
         self.data_path = Path(data_path)
 
         self.tools_path = self.data_path / "tools"
