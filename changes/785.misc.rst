@@ -1,0 +1,1 @@
+The prompts to users are now included in the briefcase log file.
