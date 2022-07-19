@@ -199,6 +199,11 @@ class Docker:
         self._subprocess = command.subprocess
         self.app = app
 
+    @property
+    def docker_data_path(self):
+        """The briefcase data directory used inside container."""
+        return "/home/brutus/.cache/briefcase"
+
     def prepare(self):
         try:
             self.command.logger.info(
@@ -241,22 +246,49 @@ class Docker:
                 f"Error building Docker image for {self.app.app_name}."
             ) from e
 
-    def run(self, args, env=None, **kwargs):
-        """Run a process inside a Docker container."""
-        # briefcase data directory used inside container
-        docker_data_path = "/home/brutus/.local/share/briefcase"
-        # Set up the `docker run` with volume mounts for the platform &
-        # briefcase data and tools directories and to delete the
-        # temporary container after running the command.
-        # The :z suffix allows SELinux to modify the host mount; it is
-        # ignored on non-SELinux platforms.
+    def _dockerize_path(self, arg):
+        """Relocate any local path into the equivalent location on the docker
+        filesystem.
+
+        Converts:
+        * any reference to sys.executable into the python executable in the docker container
+        * any path in <platform path> into the equivalent stemming from /app
+        * any path in <data path> into the equivalent in ~/.cache/briefcase
+
+        :param arg: The string argument to convert to dockerized paths
+        :returns: A string where all convertible paths have been replaced.
+        """
+        if arg == sys.executable:
+            return f"python{self.command.python_version_tag}"
+        arg = arg.replace(os.fsdecode(self.command.platform_path), "/app")
+        arg = arg.replace(os.fsdecode(self.command.data_path), self.docker_data_path)
+
+        return arg
+
+    def _dockerize_args(self, args, env=None):
+        """Convert arguments and environment into a Docker-compatible form.
+        Convert an argument and environment specifiation into a form that can
+        be used as arguments to invoke Docker. This involves:
+
+         * Configuring the Docker invocation to reference the
+           appropriate container image, and clean up afterwards
+         * Setting volume mounts for the container instance
+         * Transforming any references to local paths into Docker path references.
+
+        :param args: The arguments for the command to be invoked
+        :param env: The environment specification for the command to be executed
+        :returns: A list of arguments that can be used to invoke the command
+            inside a docker container.
+        """
+        # The :z suffix on volument mounts allows SELinux to modify the host
+        # mount; it is ignored on non-SELinux platforms.
         docker_args = [
             "docker",
             "run",
             "--volume",
             f"{self.command.platform_path}:/app:z",
             "--volume",
-            f"{self.command.data_path}:{docker_data_path}:z",
+            f"{self.command.data_path}:{self.docker_data_path}:z",
             "--rm",
         ]
 
@@ -264,31 +296,32 @@ class Docker:
         # as --env arguments to Docker.
         if env:
             for key, value in env.items():
-                docker_args.extend(["--env", f"{key}={value}"])
+                docker_args.extend(["--env", f"{key}={self._dockerize_path(value)}"])
 
         # ... then the image name to create the temporary container with
         docker_args.append(self.command.docker_image_tag(self.app))
 
         # ... then add the command (and its arguments) to run in the container
-        for arg in map(str, args):
-            if arg == sys.executable:
-                docker_args.append(f"python{self.command.python_version_tag}")
-            elif os.fsdecode(self.command.platform_path) in arg:
-                docker_args.append(
-                    arg.replace(os.fsdecode(self.command.platform_path), "/app")
-                )
-            elif os.fsdecode(self.command.data_path) in arg:
-                docker_args.append(
-                    arg.replace(os.fsdecode(self.command.data_path), docker_data_path)
-                )
-            else:
-                docker_args.append(arg)
+        docker_args.extend([self._dockerize_path(str(arg)) for arg in args])
 
-        # Invoke the process.
+        return docker_args
+
+    def run(self, args, env=None, **kwargs):
+        """Run a process inside a Docker container."""
         # Any exceptions from running the process are *not* caught.
         # This ensures that "docker.run()" behaves as closely to
         # "subprocess.run()" as possible.
         self._subprocess.run(
-            docker_args,
+            self._dockerize_args(args, env=env),
+            **kwargs,
+        )
+
+    def check_output(self, args, env=None, **kwargs):
+        """Run a process inside a Docker container, capturing output."""
+        # Any exceptions from running the process are *not* caught.
+        # This ensures that "docker.check_output()" behaves as closely to
+        # "subprocess.check_output()" as possible.
+        return self._subprocess.check_output(
+            self._dockerize_args(args, env=env),
             **kwargs,
         )

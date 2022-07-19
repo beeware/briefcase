@@ -26,8 +26,12 @@ def mock_docker(tmp_path):
     command.subprocess._subprocess = MagicMock()
 
     proc = MagicMock()
+    # Mock return values for run
     proc.returncode = 3
     command.subprocess._subprocess.run.return_value = proc
+
+    # Mock return values for check_output
+    command.subprocess._subprocess.check_output.return_value = "goodbye\n"
 
     # Short circuit the process streamer
     wait_bar_streamer = MagicMock()
