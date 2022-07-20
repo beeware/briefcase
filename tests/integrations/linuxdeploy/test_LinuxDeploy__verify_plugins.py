@@ -1,4 +1,5 @@
 import os
+import sys
 
 import pytest
 
@@ -108,6 +109,10 @@ def test_custom_url_plugin(linuxdeploy, mock_command, tmp_path):
     )
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="Windows paths can't be passed to linuxdeploy",
+)
 def test_custom_local_file_plugin(linuxdeploy, mock_command, tmp_path):
     """A Custom local file plugin can be verified."""
 
@@ -184,6 +189,10 @@ def test_plugin_env(
     assert plugins["gtk"].env == expected_env
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="Windows paths can't be passed to linuxdeploy",
+)
 def test_complex_plugin_config(linuxdeploy, mock_command, tmp_path):
     """A comple plugin configuration can be verified."""
     # Define multiple plugins, of different types, each with different environments

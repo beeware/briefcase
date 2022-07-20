@@ -164,6 +164,10 @@ def test_build_appimage(build_command, first_app, tmp_path):
     )
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="Windows paths can't be passed to linuxdeploy",
+)
 def test_build_appimage_with_plugin(build_command, first_app, tmp_path):
     """A Linux app can be packaged as an AppImage with a plugin."""
     # Mock the existence of some plugins
