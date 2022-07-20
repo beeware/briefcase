@@ -30,8 +30,6 @@ def full_context(extra):
         "icon": None,
         "splash": None,
         "supported": True,
-        "linuxdeploy_plugins": None,
-        "linuxdeploy_plugins_info": None,
         "document_types": {},
         # Properties of the generating environment
         "python_version": platform.python_version(),
