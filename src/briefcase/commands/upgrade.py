@@ -38,15 +38,15 @@ class UpgradeCommand(BaseCommand):
 
     def bundle_path(self, app):
         """A placeholder; Upgrade command doesn't have a bundle path."""
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: no cover
 
     def binary_path(self, app):
         """A placeholder; Upgrade command doesn't have a binary path."""
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: no cover
 
     def distribution_path(self, app, packaging_format):
         """A placeholder; Upgrade command doesn't have a distribution path."""
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: no cover
 
     def add_options(self, parser):
         parser.add_argument(

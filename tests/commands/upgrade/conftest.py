@@ -39,6 +39,8 @@ def ManagedSDK1():
     sdk.full_name = "Managed 1"
     sdk.exists.return_value = True
     sdk.managed_install = True
+    # No plugins defined on SDK1
+    sdk.plugins.values.side_effect = AttributeError
     return sdk
 
 
