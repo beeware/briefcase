@@ -547,32 +547,3 @@ def test_document_types():
             "value": 0,
         },
     }
-
-
-def test_linuxdeploy_builtin_gtk_plugin():
-    """Linuxdeploy plugins can be specified."""
-    config_file = BytesIO(
-        b"""
-        [tool.briefcase]
-        value = 0
-
-        [tool.briefcase.app.my_app]
-
-        [tool.briefcase.app.my_app.linux]
-        linuxdeploy_plugins = "gtk"
-
-        """
-    )
-
-    # Request a linux app
-    global_options, apps = parse_config(
-        config_file, platform="linux", output_format="appimage"
-    )
-
-    assert apps == {
-        "my_app": {
-            "app_name": "my_app",
-            "linuxdeploy_plugins": "gtk",
-            "value": 0,
-        },
-    }

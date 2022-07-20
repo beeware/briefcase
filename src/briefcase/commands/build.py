@@ -28,7 +28,6 @@ class BuildCommand(BaseCommand):
         :param app: The application to build?
         :param update: Should the application be updated first?
         """
-        # Confirm all required tools are available
         target_file = self.bundle_path(app)
         if not target_file.exists():
             state = self.create_command(app, **options)
@@ -48,6 +47,7 @@ class BuildCommand(BaseCommand):
     def __call__(
         self, app: Optional[BaseConfig] = None, update: bool = False, **options
     ):
+        # Confirm all required tools are available
         self.verify_tools()
 
         if app:
