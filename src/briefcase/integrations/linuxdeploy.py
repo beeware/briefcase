@@ -1,10 +1,17 @@
 import hashlib
+import shlex
 from abc import abstractmethod
+from pathlib import Path
 from urllib.parse import urlparse
 
 from requests import exceptions as requests_exceptions
 
-from briefcase.exceptions import CorruptToolError, MissingToolError, NetworkFailure
+from briefcase.exceptions import (
+    BriefcaseCommandError,
+    CorruptToolError,
+    MissingToolError,
+    NetworkFailure,
+)
 
 ELF_PATCH_OFFSET = 0x08
 ELF_PATCH_ORIGINAL_BYTES = bytes.fromhex("414902")
@@ -45,7 +52,7 @@ class LinuxDeployBase:
                 download_path=self.file_path,
             )
         except requests_exceptions.ConnectionError as e:
-            raise NetworkFailure(f"downloading {self.full_name}") from e
+            raise NetworkFailure(f"download {self.full_name}") from e
 
         with self.command.input.wait_bar(f"Installing {self.full_name}..."):
             self.command.os.chmod(download_path, 0o755)
@@ -106,10 +113,6 @@ class LinuxDeployBase:
         - https://github.com/AppImage/AppImageKit/issues/1027#issuecomment-1028232809
         - https://github.com/AppImage/AppImageKit/issues/828
         """
-
-        if not self.exists():
-            raise MissingToolError(self.name)
-
         with (self.file_path / self.file_name).open("r+b") as appimage:
             appimage.seek(ELF_PATCH_OFFSET)
             # Check if the header at the offset is the original value
@@ -138,6 +141,13 @@ class LinuxDeployPluginBase(LinuxDeployBase):
     """Base class for linuxdeploy plugins."""
 
     install_msg = "{full_name} was not found; downloading and installing..."
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.env = {}
+
+        if not self.file_name.startswith("linuxdeploy-plugin-"):
+            raise BriefcaseCommandError(f"{self.file_name} is not a linuxdeploy plugin")
 
     @property
     def plugin_id(self):
@@ -185,10 +195,12 @@ class LinuxDeployLocalFilePlugin(LinuxDeployPluginBase):
     install_msg = "Copying user-provided plugin into project"
 
     def __init__(self, command, plugin_path, bundle_path):
-        super().__init__(command)
         self._file_name = plugin_path.name
         self.local_path = plugin_path.parent
         self._file_path = bundle_path
+
+        # Call the super last to ensure validation of the filename
+        super().__init__(command)
 
     @property
     def file_name(self):
@@ -206,17 +218,22 @@ class LinuxDeployLocalFilePlugin(LinuxDeployPluginBase):
         # Install the plugin by copying from the local path to the bundle
         # folder. This is required to ensure that the file is available inside
         # the Docker context.
-        self.command.shutil.copy(
-            self.local_path / self.file_name,
-            self.file_path / self.file_name,
-        )
+        try:
+            self.command.shutil.copy(
+                self.local_path / self.file_name,
+                self.file_path / self.file_name,
+            )
+        except FileNotFoundError:
+            raise BriefcaseCommandError(
+                f"Could not locate linuxdeploy plugin {self.local_path / self.file_name}. "
+                "Is the path correct?"
+            )
 
 
 class LinuxDeployURLPlugin(LinuxDeployPluginBase):
     full_name = "user-provided linuxdeploy plugin from URL"
 
     def __init__(self, command, url):
-        super().__init__(command)
         self._download_url = url
 
         url_parts = urlparse(url)
@@ -227,6 +244,9 @@ class LinuxDeployURLPlugin(LinuxDeployPluginBase):
         self.hash = hashlib.sha256()
         for part in url_parts:
             self.hash.update(part.encode("utf-8"))
+
+        # Call the super last to ensure validation of the filename
+        super().__init__(command)
 
     @property
     def file_name(self):
@@ -277,3 +297,63 @@ class LinuxDeploy(LinuxDeployBase):
             plugin.plugin_id: plugin
             for plugin in [LinuxDeployGtkPlugin, LinuxDeployQtPlugin]
         }
+
+    def verify_plugins(self, plugin_definitions, bundle_path):
+        """Verify that all the declared plugin dependencies are available.
+
+        Each plugin definition is a string, and can be:
+         * The name of a known plugin (gtk, qt)
+         * A URL
+         * A local file.
+
+        This definition can be preceeded by environment variables that must
+        exist in the environment. For example, a plugin definition of:
+
+            DEPLOY_GTK_VERSION=3 FOO='bar whiz' gtk
+
+        would specify the known GTK plugin, adding `DEPLOY_GTK_VERSION` and
+        `FOO` in the environment. The definition will be split the same way as
+        shell arguments, so spaces should be escaped.
+
+        :param plugin_definitions: A list of strings defining the required
+            plugins.
+        :param bundle_path: The location of the app bundle that requires the
+            plugins.
+        :returns: A dictionary of plugin ID->instantiated plugin instances.
+        """
+        plugins = {}
+        for plugin_definition in plugin_definitions:
+            # Split the plugin definition lexically.
+            # The last element is the plugin ID.
+            plugin_definition_parts = shlex.split(plugin_definition)
+            plugin_name = plugin_definition_parts[-1]
+
+            try:
+                plugin_klass = self.plugins[plugin_name]
+                self.command.logger.info(f"Using default {plugin_name} plugin")
+
+                plugin = plugin_klass.verify(self.command)
+            except KeyError:
+                if plugin_name.startswith(("https://", "http://")):
+                    self.command.logger.info(f"Using URL plugin {plugin_name}")
+                    plugin = LinuxDeployURLPlugin.verify(self.command, url=plugin_name)
+                else:
+                    self.command.logger.info(f"Using local file plugin {plugin_name}")
+                    plugin = LinuxDeployLocalFilePlugin.verify(
+                        self.command,
+                        plugin_path=Path(plugin_name),
+                        bundle_path=bundle_path,
+                    )
+
+            # Preserve the environment declarations required by the plugin.
+            for part in plugin_definition_parts[:-1]:
+                try:
+                    var, value = part.split("=", 1)
+                    plugin.env[var] = value
+                except ValueError:
+                    # `export FOO` is valid, if unusual
+                    plugin.env[part] = ""
+
+            plugins[plugin.plugin_id] = plugin
+
+        return plugins

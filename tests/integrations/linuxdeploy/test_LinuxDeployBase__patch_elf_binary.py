@@ -2,7 +2,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from briefcase.exceptions import CorruptToolError, MissingToolError
+from briefcase.exceptions import CorruptToolError
 from briefcase.integrations.linuxdeploy import (
     ELF_PATCH_OFFSET,
     ELF_PATCH_ORIGINAL_BYTES,
@@ -93,11 +93,4 @@ def test_patch_linuxdeploy_elf_header_bad_appimage(linuxdeploy, tmp_path):
 
     # Create a linuxdeploy wrapper, then patch the elf header
     with pytest.raises(CorruptToolError):
-        linuxdeploy = linuxdeploy.patch_elf_header()
-
-
-def test_patch_linuxdeploy_elf_header_no_file(linuxdeploy):
-    """If there is no linuxdeploy AppImage, raise an error."""
-    # Create a linuxdeploy wrapper, then patch the elf header
-    with pytest.raises(MissingToolError):
         linuxdeploy = linuxdeploy.patch_elf_header()

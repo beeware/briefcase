@@ -305,8 +305,6 @@ class AppConfig(BaseConfig):
         template=None,
         template_branch=None,
         supported=True,
-        linuxdeploy_plugins=None,
-        linuxdeploy_plugins_info=None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -327,8 +325,6 @@ class AppConfig(BaseConfig):
         self.template = template
         self.template_branch = template_branch
         self.supported = supported
-        self.linuxdeploy_plugins = linuxdeploy_plugins
-        self.linuxdeploy_plugins_info = linuxdeploy_plugins_info
 
         if not is_valid_app_name(self.app_name):
             raise BriefcaseConfigError(

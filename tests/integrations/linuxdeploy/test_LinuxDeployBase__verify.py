@@ -3,7 +3,10 @@ from requests import exceptions as requests_exceptions
 
 from briefcase.exceptions import MissingToolError, NetworkFailure
 from briefcase.integrations.linuxdeploy import LinuxDeployBase
-from tests.integrations.linuxdeploy.utils import create_mock_appimage
+from tests.integrations.linuxdeploy.utils import (
+    side_effect_create_mock_appimage,
+    side_effect_create_mock_tool,
+)
 
 
 class LinuxDeployDummy(LinuxDeployBase):
@@ -70,11 +73,9 @@ def test_verify_does_not_exist(mock_command, tmp_path):
     )
 
     # Mock a successful download
-    def side_effect_create_mock_appimage(*args, **kwargs):
-        create_mock_appimage(appimage_path=appimage_path)
-        return "new-downloaded-file"
-
-    mock_command.download_url.side_effect = side_effect_create_mock_appimage
+    mock_command.download_url.side_effect = side_effect_create_mock_appimage(
+        appimage_path
+    )
 
     # Create a linuxdeploy wrapper by verification, with some extra args
     linuxdeploy = LinuxDeployDummy.verify(mock_command, arg1="value1", arg2="value2")
@@ -103,13 +104,7 @@ def test_verify_does_not_exist_non_appimage(mock_command, tmp_path):
     tool_path = tmp_path / "tools" / "somewhere" / "linuxdeploy-dummy.sh"
 
     # Mock a successful download
-    def side_effect_create_mock_appimage(*args, **kwargs):
-        tool_path.parent.mkdir(parents=True)
-        with tool_path.open("w") as f:
-            f.write("I'm a complete tool")
-        return "new-downloaded-file"
-
-    mock_command.download_url.side_effect = side_effect_create_mock_appimage
+    mock_command.download_url.side_effect = side_effect_create_mock_tool(tool_path)
 
     # Create a linuxdeploy wrapper by verification
     linuxdeploy = LinuxDeployDummy.verify(mock_command, file_name=tool_path.name)
@@ -124,7 +119,7 @@ def test_verify_does_not_exist_non_appimage(mock_command, tmp_path):
 
     # The tool content hasn't been altered
     with tool_path.open("r") as f:
-        assert f.read() == "I'm a complete tool"
+        assert f.read() == "I am a complete tool"
 
     # The build command retains the path to the downloaded file.
     assert linuxdeploy.file_path == tool_path.parent

@@ -32,14 +32,3 @@ def test_download_url(linuxdeploy_plugin):
     # Local file plugins don't have download URL.
     with pytest.raises(RuntimeError):
         linuxdeploy_plugin.download_url
-
-
-def test_install(linuxdeploy_plugin, mock_command, tmp_path):
-    """Local file plugins are installed by copying."""
-
-    linuxdeploy_plugin.install()
-
-    mock_command.shutil.copy.assert_called_with(
-        tmp_path / "path" / "to" / "linuxdeploy-plugin-custom.sh",
-        tmp_path / "bundle" / "linuxdeploy-plugin-custom.sh",
-    )
