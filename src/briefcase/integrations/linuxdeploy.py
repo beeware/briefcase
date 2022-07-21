@@ -240,7 +240,13 @@ class LinuxDeployURLPlugin(LinuxDeployPluginBase):
         self._file_name = url_parts.path.split("/")[-1]
 
         # Build a hash of the download URL; this hash is used to
-        # idenfity plugins downloaded from different sources
+        # idenfity plugins downloaded from different sources. We don't
+        # just use the domain, because we need:
+        #  * http://example.com/release/linuxdeploy-plugin-foobar.sh
+        #  * http://example.com/dev/linuxdeploy-plugin-foobar.sh
+        #  * http://example.com/archive/linuxdeploy-plugin-foobar.sh?version=1
+        # to hash as different plugins, because we lose the path/query
+        # component when we cache the plugin locally.
         self.hash = hashlib.sha256()
         for part in url_parts:
             self.hash.update(part.encode("utf-8"))
