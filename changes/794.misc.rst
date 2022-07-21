@@ -1,0 +1,1 @@
+Allow non-Briefcase code to use print() during tests.

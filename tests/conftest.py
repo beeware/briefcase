@@ -21,19 +21,22 @@ def mock_git():
     return git
 
 
-def monkeypatched_print(*arg, **kwargs):
-    """Raise an error for calls to print."""
+# alias print() to allow non-briefcase code to use it
+_print = print
+
+
+def monkeypatched_print(*args, **kwargs):
+    """Raise an error for calls to print() from briefcase."""
     frame = inspect.currentframe().f_back
     module = inspect.getmodule(frame.f_code)
 
     # Disallow any use of a bare print() in the briefcase codebase
-    if (
-        module.__name__.startswith("briefcase.")
-        and module.__name__ != "briefcase.console"
-    ):
+    if module.__name__.startswith("briefcase."):
         pytest.fail(
             "print() should not be invoked directly. Use Log or Console for printing."
         )
+
+    _print(*args, **kwargs)
 
 
 @pytest.fixture(autouse=True)
