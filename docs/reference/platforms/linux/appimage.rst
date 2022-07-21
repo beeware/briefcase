@@ -99,7 +99,7 @@ environment, so if your app has any operating system dependencies, they
 
 A list of `linuxdeploy plugins
 <https://docs.appimage.org/packaging-guide/from-source/linuxdeploy-user-guide.html#plugin-system>`__
-that you wish to be inlcuded when building the AppImage. This is needed for
+that you wish to be included when building the AppImage. This is needed for
 applications that depend on libraries that have dependencies that cannot be
 automatically discovered by linuxdeploy. GTK and Qt both have complex
 runtime resource requirements that can be difficult for linuxdeploy to
