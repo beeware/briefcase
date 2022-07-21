@@ -19,7 +19,7 @@ def test_file_path(mock_command, linuxdeploy_plugin):
         == mock_command.tools_path
         / "linuxdeploy_plugins"
         / "foobar"
-        / "5a8b5d4227212665a4e6bfc04cf3ebb588e491a42e8a2daaceab49191b0f93ea"
+        / "dc66c26aaeb8083777d1975e55dfb5c197b5b54e7b46481793eab4b3f2ace1b3"
     )
 
 

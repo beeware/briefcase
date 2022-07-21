@@ -245,9 +245,7 @@ class LinuxDeployURLPlugin(LinuxDeployPluginBase):
         #  * http://example.com/archive/linuxdeploy-plugin-foobar.sh?version=1
         # to hash as different plugins, because we lose the path/query
         # component when we cache the plugin locally.
-        self.hash = hashlib.sha256()
-        for part in url_parts:
-            self.hash.update(part.encode("utf-8"))
+        self.hash = hashlib.sha256(url.encode("utf-8"))
 
         # Call the super last to ensure validation of the filename
         super().__init__(command)

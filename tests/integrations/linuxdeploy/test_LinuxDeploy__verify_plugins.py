@@ -87,7 +87,7 @@ def test_custom_url_plugin(linuxdeploy, mock_command, tmp_path):
         / "tools"
         / "linuxdeploy_plugins"
         / "sometool"
-        / "c217c55393ac3e43f7d558294bae580052b69764b423cc73fa57a47c65455467"
+        / "f3355f8e631ffc1abbb7afd37b36315f7846182ca2276c481fb9a43a7f4d239f"
         / "linuxdeploy-plugin-sometool-wonky.AppImage"
     )
 
@@ -105,7 +105,7 @@ def test_custom_url_plugin(linuxdeploy, mock_command, tmp_path):
         / "tools"
         / "linuxdeploy_plugins"
         / "sometool"
-        / "c217c55393ac3e43f7d558294bae580052b69764b423cc73fa57a47c65455467",
+        / "f3355f8e631ffc1abbb7afd37b36315f7846182ca2276c481fb9a43a7f4d239f",
     )
 
 
@@ -223,7 +223,7 @@ def test_complex_plugin_config(linuxdeploy, mock_command, tmp_path):
                 / "tools"
                 / "linuxdeploy_plugins"
                 / "sometool"
-                / "c217c55393ac3e43f7d558294bae580052b69764b423cc73fa57a47c65455467"
+                / "f3355f8e631ffc1abbb7afd37b36315f7846182ca2276c481fb9a43a7f4d239f"
                 / "linuxdeploy-plugin-network.sh"
             )(url, download_path)
         else:
