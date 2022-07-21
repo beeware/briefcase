@@ -185,7 +185,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
             )
         except AttributeError:
             self.logger.info("No linuxdeploy plugins configured.")
-            plugins = []
+            plugins = {}
 
         self.logger.info("Building AppImage...", prefix=app.app_name)
         with self.input.wait_bar("Building..."):
