@@ -159,7 +159,6 @@ class LinuxDeployPluginBase(LinuxDeployBase):
 
 
 class LinuxDeployGtkPlugin(LinuxDeployPluginBase):
-    plugin_id = "gtk"
     full_name = "linuxdeploy GTK plugin"
 
     @property
@@ -175,7 +174,6 @@ class LinuxDeployGtkPlugin(LinuxDeployPluginBase):
 
 
 class LinuxDeployQtPlugin(LinuxDeployPluginBase):
-    plugin_id = "qt"
     full_name = "linuxdeploy Qt plugin"
 
     @property
@@ -300,8 +298,8 @@ class LinuxDeploy(LinuxDeployBase):
     def plugins(self):
         """The known linuxdeploy plugins."""
         return {
-            plugin.plugin_id: plugin
-            for plugin in [LinuxDeployGtkPlugin, LinuxDeployQtPlugin]
+            "gtk": LinuxDeployGtkPlugin,
+            "qt": LinuxDeployQtPlugin,
         }
 
     def verify_plugins(self, plugin_definitions, bundle_path):
