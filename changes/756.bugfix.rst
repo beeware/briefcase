@@ -1,0 +1,1 @@
+Add support for using linuxdeploy plugins when building Linux AppImages; this resolves many issues with GTK app deployment.

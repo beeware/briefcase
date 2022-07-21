@@ -4,7 +4,15 @@ from briefcase.exceptions import BriefcaseCommandError
 
 
 def test_list_tools(
-    upgrade_command, ManagedSDK1, ManagedSDK2, NonManagedSDK, NonInstalledSDK, capsys
+    upgrade_command,
+    ManagedSDK1,
+    ManagedSDK2,
+    ManagedSDK2Plugin1,
+    ManagedSDK2Plugin2,
+    ManagedSDK2Plugin3,
+    NonManagedSDK,
+    NonInstalledSDK,
+    capsys,
 ):
     """The tools for upgrade can be listed."""
 
@@ -13,6 +21,9 @@ def test_list_tools(
     # The tools are all verified
     ManagedSDK1.verify.assert_called_with(upgrade_command, install=False)
     ManagedSDK2.verify.assert_called_with(upgrade_command, install=False)
+    ManagedSDK2Plugin1.verify.assert_called_with(upgrade_command, install=False)
+    ManagedSDK2Plugin2.verify.assert_called_with(upgrade_command, install=False)
+    ManagedSDK2Plugin3.verify.assert_called_with(upgrade_command, install=False)
     NonManagedSDK.verify.assert_called_with(upgrade_command, install=False)
     NonInstalledSDK.verify.assert_called_with(upgrade_command, install=False)
 
@@ -21,6 +32,9 @@ def test_list_tools(
     out = capsys.readouterr().out
     assert " - managed-1" in out
     assert " - managed-2" in out
+    assert " - managed-2-plugin-1" in out
+    assert " - managed-2-plugin-2" in out
+    assert " - managed-2-plugin-3" not in out
     assert " - non-managed" not in out
     assert " - non-installed" not in out
 

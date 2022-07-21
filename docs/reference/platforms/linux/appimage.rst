@@ -4,10 +4,12 @@ Linux AppImage
 
 `AppImage <https://appimage.org>`__ provides a way for developers to provide
 "native" binaries for Linux users. It allow packaging applications for any
-common Linux based operating system, including Ubuntu, Debian, Fedora, and
-more. AppImages contain all the dependencies that cannot be assumed to
-be part of each target system, and will run on most Linux distributions
-without further modifications.
+common Linux based operating system, including Ubuntu, Debian, Fedora, and more.
+AppImages contain all the dependencies that cannot be assumed to be part of each
+target system, and will run on most Linux distributions without further
+modifications. Briefcase uses `linuxdeploy
+<https://github.com/linuxdeploy/linuxdeploy>`__ to build the AppImage in the
+correct format.
 
 Packaging binaries for Linux is complicated, because of the inconsistent
 library versions present on each distribution. An AppImage can be executed on
@@ -92,6 +94,38 @@ a new environment that is completely isolated from your development
 environment, so if your app has any operating system dependencies, they
 *must* be listed in your ``system_requires`` definition.
 
+``linuxdeploy_plugins``
+~~~~~~~~~~~~~~~~~~~~~~~
+
+A list of `linuxdeploy plugins
+<https://docs.appimage.org/packaging-guide/from-source/linuxdeploy-user-guide.html#plugin-system>`__
+that you wish to be included when building the AppImage. This is needed for
+applications that depend on libraries that have dependencies that cannot be
+automatically discovered by linuxdeploy. GTK and Qt both have complex
+runtime resource requirements that can be difficult for linuxdeploy to
+identify automatically.
+
+The ``linuxdeploy_plugins`` declaration is a list of strings. Briefcase can take
+plugin definitions in three formats:
+
+1. The name of a plugin known by Briefcase. One of ``gtk`` or ``qt``.
+2. A URL where a plugin can be downloaded
+3. A path to a local plugin file
+
+If your plugin requires an environment variable for configuration, that
+environment variable can be provided as a prefix to the plugin declaration,
+similar to how environment variables can be defined for a shell command.
+
+For example, the ``gtk`` plugin requires the ``DEPLOY_GTK_VERSION`` environment
+variable. To set this variable with the Briefcase-managed GTK linuxdeploy plugin,
+you would define::
+
+    linuxdeploy_plugins = ["DEPLOY_GTK_VERSION=3 gtk"]
+
+Or, if you were using a plugin stored as a local file::
+
+    linuxdeploy_plugins = ["DEPLOY_GTK_VERSION=3 path/to/plugins/linuxdeploy-gtk-plugin.sh"]
+
 Runtime issues with AppImages
 =============================
 
@@ -99,16 +133,30 @@ Packaging on Linux is a difficult problem - especially when it comes to binary
 libraries. The following are some common problems you may see, and ways that
 they can be mitigated.
 
+Undefined symbol and Namespace not available errors
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you get the error::
+
+    ValueError: Namespace Something not available
+
+or::
+
+    ImportError: /usr/lib/libSomething.so.0: undefined symbol: some_symbol
+
+it is likely that one or more of the libraries you are using in your app
+requires a linuxdeploy plugin. GUI libraries, or libraries that do dynamic
+module loading are particularly prone to this problem.
+
 ELF load command address/offset not properly aligned
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The process of building an AppImage involves using a tool named ``linuxdeploy``.
-``linuxdeploy`` processes all the libraries used by an app so that they can be
-relocated into the final packaged binary. Building a ``manylinux`` binary wheel
-involves a tool called ``auditwheel`` that performs a very similar process.
-Unfortunately, processing a binary with ``linuxdeploy`` after it has been
-processed by ``auditwheel`` can result in a binary library that cannot be loaded
-at runtime.
+Briefcase uses a tool named ``linuxdeploy`` to build AppImages. ``linuxdeploy``
+processes all the libraries used by an app so that they can be relocated into
+the final packaged binary. Building a ``manylinux`` binary wheel involves a tool
+named ``auditwheel`` that performs a very similar process. Unfortunately,
+processing a binary with ``linuxdeploy`` after it has been processed by
+``auditwheel`` can result in a binary library that cannot be loaded at runtime.
 
 This is particularly common when a module installed as a binary wheel has a
 dependency on external libraries. For example, Pillow is a Python library that

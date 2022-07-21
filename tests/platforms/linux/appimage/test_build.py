@@ -50,7 +50,13 @@ def build_command(tmp_path, first_app_config):
         }
     }
     command.os = mock.MagicMock()
-    command.os.environ.copy.return_value = {"PATH": "/usr/local/bin:/usr/bin"}
+    command.os.environ = mock.MagicMock()
+    command.os.environ.__getitem__.return_value = (
+        "/usr/local/bin:/usr/bin:/path/to/somewhere"
+    )
+    command.os.environ.copy.return_value = {
+        "PATH": "/usr/local/bin:/usr/bin:/path/to/somewhere"
+    }
 
     # Store the underlying subprocess instance
     command._subprocess = mock.MagicMock()
@@ -127,7 +133,7 @@ def test_build_appimage(build_command, first_app, tmp_path):
     )
     build_command._subprocess.Popen.assert_called_with(
         [
-            os.fsdecode(build_command.linuxdeploy.appimage_path),
+            os.fsdecode(tmp_path / "data" / "tools" / "linuxdeploy-wonky.AppImage"),
             "--appimage-extract-and-run",
             f"--appdir={app_dir}",
             "-d",
@@ -142,8 +148,82 @@ def test_build_appimage(build_command, first_app, tmp_path):
             os.fsdecode(app_dir / "usr" / "app_packages" / "secondlib"),
         ],
         env={
-            "PATH": "/usr/local/bin:/usr/bin",
+            "PATH": "/usr/local/bin:/usr/bin:/path/to/somewhere",
             "VERSION": "0.0.1",
+            "DISABLE_COPYRIGHT_FILES_DEPLOYMENT": "1",
+        },
+        cwd=os.fsdecode(tmp_path / "project" / "linux"),
+        text=True,
+        encoding=mock.ANY,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+    )
+    # Binary is marked executable
+    build_command.os.chmod.assert_called_with(
+        tmp_path / "project" / "linux" / "First_App-0.0.1-wonky.AppImage", 0o755
+    )
+
+
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="Windows paths can't be passed to linuxdeploy",
+)
+def test_build_appimage_with_plugin(build_command, first_app, tmp_path):
+    """A Linux app can be packaged as an AppImage with a plugin."""
+    # Mock the existence of some plugins
+    gtk_plugin_path = (
+        tmp_path
+        / "data"
+        / "tools"
+        / "linuxdeploy_plugins"
+        / "gtk"
+        / "linuxdeploy-plugin-gtk.sh"
+    )
+    gtk_plugin_path.parent.mkdir(parents=True)
+    gtk_plugin_path.touch()
+
+    local_file_plugin_path = tmp_path / "local" / "linuxdeploy-plugin-something.sh"
+    local_file_plugin_path.parent.mkdir(parents=True)
+    local_file_plugin_path.touch()
+
+    # Configure the app to use the plugins
+    first_app.linuxdeploy_plugins = [
+        "DEPLOY_GTK_VERSION=3 gtk",
+        os.fsdecode(local_file_plugin_path),
+    ]
+
+    # Build the app
+    build_command.build_app(first_app)
+
+    # linuxdeploy was invoked
+    app_dir = (
+        tmp_path / "project" / "linux" / "appimage" / "First App" / "First App.AppDir"
+    )
+    build_command._subprocess.Popen.assert_called_with(
+        [
+            os.fsdecode(tmp_path / "data" / "tools" / "linuxdeploy-wonky.AppImage"),
+            "--appimage-extract-and-run",
+            f"--appdir={app_dir}",
+            "-d",
+            os.fsdecode(app_dir / "com.example.first-app.desktop"),
+            "-o",
+            "appimage",
+            "--deploy-deps-only",
+            os.fsdecode(app_dir / "usr" / "app" / "support"),
+            "--deploy-deps-only",
+            os.fsdecode(app_dir / "usr" / "app_packages" / "firstlib"),
+            "--deploy-deps-only",
+            os.fsdecode(app_dir / "usr" / "app_packages" / "secondlib"),
+            "--plugin",
+            "gtk",
+            "--plugin",
+            "something",
+        ],
+        env={
+            "PATH": f"{gtk_plugin_path.parent}:{app_dir.parent}:/usr/local/bin:/usr/bin:/path/to/somewhere",
+            "DEPLOY_GTK_VERSION": "3",
+            "VERSION": "0.0.1",
+            "DISABLE_COPYRIGHT_FILES_DEPLOYMENT": "1",
         },
         cwd=os.fsdecode(tmp_path / "project" / "linux"),
         text=True,
@@ -175,7 +255,7 @@ def test_build_failure(build_command, first_app, tmp_path):
     )
     build_command._subprocess.Popen.assert_called_with(
         [
-            os.fsdecode(build_command.linuxdeploy.appimage_path),
+            os.fsdecode(tmp_path / "data" / "tools" / "linuxdeploy-wonky.AppImage"),
             "--appimage-extract-and-run",
             f"--appdir={app_dir}",
             "-d",
@@ -190,8 +270,9 @@ def test_build_failure(build_command, first_app, tmp_path):
             os.fsdecode(app_dir / "usr" / "app_packages" / "secondlib"),
         ],
         env={
-            "PATH": "/usr/local/bin:/usr/bin",
+            "PATH": "/usr/local/bin:/usr/bin:/path/to/somewhere",
             "VERSION": "0.0.1",
+            "DISABLE_COPYRIGHT_FILES_DEPLOYMENT": "1",
         },
         cwd=os.fsdecode(tmp_path / "project" / "linux"),
         text=True,
@@ -207,8 +288,8 @@ def test_build_failure(build_command, first_app, tmp_path):
 @pytest.mark.skipif(
     sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
 )
-def test_build_appimage_with_docker(build_command, first_app, tmp_path):
-    """A Linux app can be packaged as an AppImage."""
+def test_build_appimage_in_docker(build_command, first_app, tmp_path):
+    """A Linux app can be packaged as an AppImage in a docker container."""
     # Enable docker, and move to a non-Linux OS.
     build_command.host_os = "TestOS"
     build_command.use_docker = True
@@ -216,7 +297,7 @@ def test_build_appimage_with_docker(build_command, first_app, tmp_path):
     build_command.build_app(first_app)
 
     # Ensure that the effect of the Docker context has been reversed.
-    assert type(build_command.subprocess) != Docker
+    assert build_command.subprocess != build_command.Docker
 
     # linuxdeploy was invoked inside Docker
     build_command._subprocess.Popen.assert_called_with(
@@ -226,12 +307,14 @@ def test_build_appimage_with_docker(build_command, first_app, tmp_path):
             "--volume",
             f"{build_command.platform_path}:/app:z",
             "--volume",
-            f"{build_command.data_path}:/home/brutus/.local/share/briefcase:z",
+            f"{build_command.data_path}:/home/brutus/.cache/briefcase:z",
             "--rm",
             "--env",
             "VERSION=0.0.1",
+            "--env",
+            "DISABLE_COPYRIGHT_FILES_DEPLOYMENT=1",
             f"briefcase/com.example.first-app:py3.{sys.version_info.minor}",
-            "/home/brutus/.local/share/briefcase/tools/linuxdeploy-wonky.AppImage",
+            "/home/brutus/.cache/briefcase/tools/linuxdeploy-wonky.AppImage",
             "--appimage-extract-and-run",
             "--appdir=/app/appimage/First App/First App.AppDir",
             "-d",
@@ -244,6 +327,98 @@ def test_build_appimage_with_docker(build_command, first_app, tmp_path):
             "/app/appimage/First App/First App.AppDir/usr/app_packages/firstlib",
             "--deploy-deps-only",
             "/app/appimage/First App/First App.AppDir/usr/app_packages/secondlib",
+        ],
+        cwd=os.fsdecode(tmp_path / "project" / "linux"),
+        text=True,
+        encoding=mock.ANY,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+    )
+    # Binary is marked executable
+    build_command.os.chmod.assert_called_with(
+        tmp_path / "project" / "linux" / "First_App-0.0.1-wonky.AppImage", 0o755
+    )
+
+
+@pytest.mark.skipif(
+    sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
+)
+def test_build_appimage_with_plugins_in_docker(build_command, first_app, tmp_path):
+    """A Linux app can be packaged as an AppImage with plugins in a Docker
+    container."""
+    # Mock the existence of some plugins
+    gtk_plugin_path = (
+        tmp_path
+        / "data"
+        / "tools"
+        / "linuxdeploy_plugins"
+        / "gtk"
+        / "linuxdeploy-plugin-gtk.sh"
+    )
+    gtk_plugin_path.parent.mkdir(parents=True)
+    gtk_plugin_path.touch()
+
+    local_file_plugin_path = tmp_path / "local" / "linuxdeploy-plugin-something.sh"
+    local_file_plugin_path.parent.mkdir(parents=True)
+    local_file_plugin_path.touch()
+
+    # Configure the app to use the plugins
+    first_app.linuxdeploy_plugins = [
+        "DEPLOY_GTK_VERSION=3 gtk",
+        os.fsdecode(local_file_plugin_path),
+    ]
+
+    # Mock Docker responses
+    build_command._subprocess.check_output.return_value = "/docker/bin:/docker/sbin"
+
+    # Enable docker, and move to a non-Linux OS.
+    build_command.host_os = "TestOS"
+    build_command.use_docker = True
+
+    build_command.build_app(first_app)
+
+    # Ensure that the effect of the Docker context has been reversed.
+    assert build_command.subprocess != build_command.Docker
+
+    # linuxdeploy was invoked inside Docker
+    build_command._subprocess.Popen.assert_called_with(
+        [
+            "docker",
+            "run",
+            "--volume",
+            f"{build_command.platform_path}:/app:z",
+            "--volume",
+            f"{build_command.data_path}:/home/brutus/.cache/briefcase:z",
+            "--rm",
+            "--env",
+            "DEPLOY_GTK_VERSION=3",
+            "--env",
+            (
+                "PATH=/home/brutus/.cache/briefcase/tools/linuxdeploy_plugins/gtk"
+                ":/app/appimage/First App:/docker/bin:/docker/sbin"
+            ),
+            "--env",
+            "VERSION=0.0.1",
+            "--env",
+            "DISABLE_COPYRIGHT_FILES_DEPLOYMENT=1",
+            f"briefcase/com.example.first-app:py3.{sys.version_info.minor}",
+            "/home/brutus/.cache/briefcase/tools/linuxdeploy-wonky.AppImage",
+            "--appimage-extract-and-run",
+            "--appdir=/app/appimage/First App/First App.AppDir",
+            "-d",
+            "/app/appimage/First App/First App.AppDir/com.example.first-app.desktop",
+            "-o",
+            "appimage",
+            "--deploy-deps-only",
+            "/app/appimage/First App/First App.AppDir/usr/app/support",
+            "--deploy-deps-only",
+            "/app/appimage/First App/First App.AppDir/usr/app_packages/firstlib",
+            "--deploy-deps-only",
+            "/app/appimage/First App/First App.AppDir/usr/app_packages/secondlib",
+            "--plugin",
+            "gtk",
+            "--plugin",
+            "something",
         ],
         cwd=os.fsdecode(tmp_path / "project" / "linux"),
         text=True,

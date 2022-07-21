@@ -10,7 +10,7 @@ from briefcase.commands import (
     RunCommand,
     UpdateCommand,
 )
-from briefcase.config import BaseConfig
+from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.docker import verify_docker
 from briefcase.integrations.linuxdeploy import LinuxDeploy
@@ -121,7 +121,7 @@ class LinuxAppImageCreateCommand(LinuxAppImageMixin, CreateCommand):
             ("arch", self.host_arch),
         ]
 
-    def install_app_dependencies(self, app: BaseConfig):
+    def install_app_dependencies(self, app: AppConfig):
         """Install application dependencies.
 
         This will be containerized in Docker to ensure that the right
@@ -142,41 +142,85 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
     description = "Build a Linux AppImage."
 
     def verify_tools(self):
+        """Verify that the AppImage linuxdeploy tool and plugins exist.
+
+        :param app: The application to build
+        """
         super().verify_tools()
         self.linuxdeploy = LinuxDeploy.verify(self)
 
-    def build_app(self, app: BaseConfig, **kwargs):
+    def build_app(self, app: AppConfig, **kwargs):
         """Build an application.
 
         :param app: The application to build
         """
-        self.logger.info("Building AppImage...", prefix=app.app_name)
+        # Build a dictionary of environment definitions that are required
+        env = {}
 
+        self.logger.info("Checking for Linuxdeploy plugins...", prefix=app.app_name)
+        try:
+            plugins = self.linuxdeploy.verify_plugins(
+                app.linuxdeploy_plugins,
+                bundle_path=self.bundle_path(app),
+            )
+
+            self.logger.info("Configuring Linuxdeploy plugins...", prefix=app.app_name)
+            # We need to add the location of the linuxdeploy plugins to the PATH.
+            # However, if we arerunning inside Docker, we need to know the
+            # environment *inside* the Docker container.
+            if self.use_docker:
+                echo_cmd = ["/bin/bash", "-c", "echo $PATH"]
+                base_path = self.Docker(self, app).check_output(echo_cmd).strip()
+            else:
+                base_path = self.os.environ["PATH"]
+
+            # Add any plugin-required environment variables
+            for plugin in plugins.values():
+                env.update(plugin.env)
+
+            # Construct a path that has been prepended with the path to the plugins
+            env["PATH"] = os.pathsep.join(
+                [os.fsdecode(plugin.file_path) for plugin in plugins.values()]
+                + [base_path]
+            )
+        except AttributeError:
+            self.logger.info("No linuxdeploy plugins configured.")
+            plugins = {}
+
+        self.logger.info("Building AppImage...", prefix=app.app_name)
         with self.input.wait_bar("Building..."):
             try:
-                # Build the AppImage.
                 # For some reason, the version has to be passed in as an
-                # environment variable, *not* in the configuration...
-                env = {"VERSION": app.version}
+                # environment variable, *not* in the configuration.
+                env["VERSION"] = app.version
+                # The internals of the binary aren't inherently visible, so
+                # there's no need to package copyright files. These files
+                # appear to be missing by default in the OS dev packages anyway,
+                # so this effectively silences a bunch of warnings that can't
+                # be easily resolved by the end user.
+                env["DISABLE_COPYRIGHT_FILES_DEPLOYMENT"] = "1"
 
                 # Find all the .so files in app and app_packages,
                 # so they can be passed in to linuxdeploy to have their
                 # dependencies added to the AppImage. Looks for any .so file
                 # in the application, and make sure it is marked for deployment.
-                so_folders = set()
-                for so_file in self.appdir_path(app).glob("**/*.so"):
-                    so_folders.add(so_file.parent)
+                so_folders = {
+                    so_file.parent for so_file in self.appdir_path(app).glob("**/*.so")
+                }
 
-                deploy_deps_args = []
+                additional_args = []
                 for folder in sorted(so_folders):
-                    deploy_deps_args.extend(["--deploy-deps-only", str(folder)])
+                    additional_args.extend(["--deploy-deps-only", str(folder)])
+
+                for plugin in plugins:
+                    additional_args.extend(["--plugin", plugin])
 
                 # Build the app image. We use `--appimage-extract-and-run`
                 # because AppImages won't run natively inside Docker.
                 with self.dockerize(app) as docker:
                     docker.run(
                         [
-                            self.linuxdeploy.appimage_path,
+                            self.linuxdeploy.file_path / self.linuxdeploy.file_name,
                             "--appimage-extract-and-run",
                             f"--appdir={self.appdir_path(app)}",
                             "-d",
@@ -187,7 +231,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
                             "-o",
                             "appimage",
                         ]
-                        + deploy_deps_args,
+                        + additional_args,
                         env=env,
                         check=True,
                         cwd=self.platform_path,
@@ -210,7 +254,7 @@ class LinuxAppImageRunCommand(LinuxAppImageMixin, RunCommand):
         if self.host_os != "Linux":
             raise BriefcaseCommandError("AppImages can only be executed on Linux.")
 
-    def run_app(self, app: BaseConfig, **kwargs):
+    def run_app(self, app: AppConfig, **kwargs):
         """Start the application.
 
         :param app: The config object for the app

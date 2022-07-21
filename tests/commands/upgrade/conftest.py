@@ -39,17 +39,58 @@ def ManagedSDK1():
     sdk.full_name = "Managed 1"
     sdk.exists.return_value = True
     sdk.managed_install = True
+    # No plugins defined on SDK1
+    sdk.plugins.values.side_effect = AttributeError
     return sdk
 
 
 @pytest.fixture
-def ManagedSDK2():
+def ManagedSDK2Plugin1():
+    sdk = MagicMock()
+    sdk.verify.return_value = sdk
+    sdk.name = "managed-2-plugin-1"
+    sdk.full_name = "Managed 2 plugin 1"
+    sdk.exists.return_value = True
+    sdk.managed_install = True
+    return sdk
+
+
+@pytest.fixture
+def ManagedSDK2Plugin2():
+    sdk = MagicMock()
+    sdk.verify.return_value = sdk
+    sdk.name = "managed-2-plugin-2"
+    sdk.full_name = "Managed 2 plugin 2"
+    sdk.exists.return_value = True
+    sdk.managed_install = True
+    return sdk
+
+
+@pytest.fixture
+def ManagedSDK2Plugin3():
+    sdk = MagicMock()
+    sdk.verify.return_value = sdk
+    sdk.name = "managed-2-plugin-3"
+    sdk.full_name = "Managed 2 plugin 3"
+    sdk.exists.return_value = False
+    sdk.verify.side_effect = MissingToolError("managed-2-plugin-3")
+    sdk.managed_install = True
+    return sdk
+
+
+@pytest.fixture
+def ManagedSDK2(ManagedSDK2Plugin1, ManagedSDK2Plugin2, ManagedSDK2Plugin3):
     sdk = MagicMock()
     sdk.verify.return_value = sdk
     sdk.name = "managed-2"
     sdk.full_name = "Managed 2"
     sdk.exists.return_value = True
     sdk.managed_install = True
+    sdk.plugins = {
+        "managed2-plugin1": ManagedSDK2Plugin1,
+        "managed2-plugin2": ManagedSDK2Plugin2,
+        "managed2-plugin3": ManagedSDK2Plugin3,
+    }
     return sdk
 
 

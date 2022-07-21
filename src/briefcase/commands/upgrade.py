@@ -19,7 +19,13 @@ class UpgradeCommand(BaseCommand):
 
     def __init__(self, *args, **options):
         super().__init__(*args, **options)
-        self.sdks = [AndroidSDK, LinuxDeploy, JDK, WiX, RCEdit]
+        self.sdks = [
+            AndroidSDK,
+            LinuxDeploy,
+            JDK,
+            WiX,
+            RCEdit,
+        ]
 
     @property
     def platform(self):
@@ -32,15 +38,15 @@ class UpgradeCommand(BaseCommand):
 
     def bundle_path(self, app):
         """A placeholder; Upgrade command doesn't have a bundle path."""
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: no cover
 
     def binary_path(self, app):
         """A placeholder; Upgrade command doesn't have a binary path."""
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: no cover
 
     def distribution_path(self, app, packaging_format):
         """A placeholder; Upgrade command doesn't have a distribution path."""
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: no cover
 
     def add_options(self, parser):
         parser.add_argument(
@@ -58,18 +64,31 @@ class UpgradeCommand(BaseCommand):
         )
 
     def __call__(self, tool_list: List[str], list_tools=False, **options):
-        # Verify all the managed SDKs to see which are present.
+        # Verify all the managed SDKs and plugins to see which are present.
         managed_tools = {}
         non_managed_tools = set()
+
         for klass in self.sdks:
             try:
                 tool = klass.verify(self, install=False)
                 if tool.managed_install:
                     managed_tools[klass.name] = tool
+                    try:
+                        for plugin_klass in tool.plugins.values():
+                            try:
+                                plugin = plugin_klass.verify(self, install=False)
+                                # All plugins are managed
+                                managed_tools[plugin.name] = plugin
+                            except BriefcaseCommandError:
+                                # Plugin doesn't exist
+                                non_managed_tools.add(klass.name)
+                    except AttributeError:
+                        # Tool doesn't have plugins
+                        pass
                 else:
                     non_managed_tools.add(klass.name)
             except BriefcaseCommandError:
-                # Tool doesn't exist, or can't be managed
+                # Tool doesn't exist
                 non_managed_tools.add(klass.name)
 
         # If a tool list wasn't provided, use the list of installed tools

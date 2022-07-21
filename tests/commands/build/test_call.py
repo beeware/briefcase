@@ -172,7 +172,7 @@ def test_update_unbuilt(build_command, first_app_unbuilt, second_app):
 
     # The right sequence of things will be done
     assert build_command.actions == [
-        # Verify
+        # Tools are verified
         ("verify",),
         # First App exists, but hasn't been built; it will updated then built.
         ("update", "first", {}),
