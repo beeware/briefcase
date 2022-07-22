@@ -1,4 +1,5 @@
 import os
+import shutil
 import zipfile
 from unittest import mock
 
@@ -12,12 +13,18 @@ from briefcase.exceptions import MissingNetworkResourceError, NetworkFailure
 def test_install_app_support_package(create_command, myapp, tmp_path, support_path):
     """A support package can be downloaded and unpacked where it is needed."""
     # Write a temporary support zip file
-    support_file = tmp_path / "out.zip"
+    support_file = tmp_path / "data" / "support" / "out.zip"
+    support_file.parent.mkdir(parents=True)
     with zipfile.ZipFile(support_file, "w") as support_zip:
         support_zip.writestr("internal/file.txt", data="hello world")
 
     # Modify download_url to return the temp zipfile
     create_command.download_url = mock.MagicMock(return_value=support_file)
+
+    # Mock shutil so we can confirm that unpack is called,
+    # but we still want the side effect of calling it
+    create_command.shutil = mock.MagicMock()
+    create_command.shutil.unpack_archive.side_effect = shutil.unpack_archive
 
     # Install the support package
     create_command.install_app_support_package(myapp)
@@ -26,6 +33,12 @@ def test_install_app_support_package(create_command, myapp, tmp_path, support_pa
     create_command.download_url.assert_called_with(
         download_path=create_command.data_path / "support",
         url="https://briefcase-support.org/python?platform=tester&version=3.X&arch=gothic",
+    )
+
+    # Confirm the right file was unpacked
+    create_command.shutil.unpack_archive.assert_called_with(
+        support_file,
+        extract_dir=support_path,
     )
 
     # Confirm that the full path to the support file
@@ -42,12 +55,18 @@ def test_install_pinned_app_support_package(
     myapp.support_revision = "42"
 
     # Write a temporary support zip file
-    support_file = tmp_path / "out.zip"
+    support_file = tmp_path / "data" / "support" / "out.zip"
+    support_file.parent.mkdir(parents=True)
     with zipfile.ZipFile(support_file, "w") as support_zip:
         support_zip.writestr("internal/file.txt", data="hello world")
 
     # Modify download_url to return the temp zipfile
     create_command.download_url = mock.MagicMock(return_value=support_file)
+
+    # Mock shutil so we can confirm that unpack is called,
+    # but we still want the side effect of calling it
+    create_command.shutil = mock.MagicMock()
+    create_command.shutil.unpack_archive.side_effect = shutil.unpack_archive
 
     # Install the support package
     create_command.install_app_support_package(myapp)
@@ -56,6 +75,12 @@ def test_install_pinned_app_support_package(
     create_command.download_url.assert_called_with(
         download_path=create_command.data_path / "support",
         url="https://briefcase-support.org/python?platform=tester&version=3.X&arch=gothic&revision=42",
+    )
+
+    # Confirm the right file was unpacked
+    create_command.shutil.unpack_archive.assert_called_with(
+        support_file,
+        extract_dir=support_path,
     )
 
     # Confirm that the full path to the support file
@@ -79,12 +104,23 @@ def test_install_custom_app_support_package_file(
     # Modify download_url to return the temp zipfile
     create_command.download_url = mock.MagicMock()
 
+    # Mock shutil so we can confirm that unpack is called,
+    # but we still want the side effect of calling it
+    create_command.shutil = mock.MagicMock()
+    create_command.shutil.unpack_archive.side_effect = shutil.unpack_archive
+
     # Install the support package
     create_command.install_app_support_package(myapp)
 
     # There should have been no download attempt,
     # as the resource is local.
     create_command.download_url.assert_not_called()
+
+    # Confirm the right file was unpacked
+    create_command.shutil.unpack_archive.assert_called_with(
+        support_file,
+        extract_dir=support_path,
+    )
 
     # Confirm that the full path to the support file
     # has been unpacked.
@@ -112,7 +148,11 @@ def test_support_package_url_with_invalid_custom_support_packge_url(
 
     # However, there will have been a download attempt
     create_command.download_url.assert_called_with(
-        download_path=create_command.data_path / "support",
+        download_path=(
+            create_command.data_path
+            / "support"
+            / "55441abbffa311f65622df45a943afc347a21ab40e8dcec79472c92ef467db24"
+        ),
         url=url,
     )
 
@@ -148,20 +188,42 @@ def test_install_custom_app_support_package_url(
     myapp.support_package = "https://example.com/custom/support.zip"
 
     # Write a temporary support zip file
-    support_file = tmp_path / "out.zip"
+    support_file = (
+        tmp_path
+        / "data"
+        / "support"
+        / "55441abbffa311f65622df45a943afc347a21ab40e8dcec79472c92ef467db24"
+        / "out.zip"
+    )
+    support_file.parent.mkdir(parents=True)
     with zipfile.ZipFile(support_file, "w") as support_zip:
         support_zip.writestr("internal/file.txt", data="hello world")
 
     # Modify download_url to return the temp zipfile
     create_command.download_url = mock.MagicMock(return_value=support_file)
 
+    # Mock shutil so we can confirm that unpack is called,
+    # but we still want the side effect of calling it
+    create_command.shutil = mock.MagicMock()
+    create_command.shutil.unpack_archive.side_effect = shutil.unpack_archive
+
     # Install the support package
     create_command.install_app_support_package(myapp)
 
-    # Confirm the right URL was used
+    # Confirm the right URL and download path was used
     create_command.download_url.assert_called_with(
-        download_path=create_command.data_path / "support",
+        download_path=(
+            create_command.data_path
+            / "support"
+            / "55441abbffa311f65622df45a943afc347a21ab40e8dcec79472c92ef467db24"
+        ),
         url="https://example.com/custom/support.zip",
+    )
+
+    # Confirm the right file was unpacked
+    create_command.shutil.unpack_archive.assert_called_with(
+        support_file,
+        extract_dir=support_path,
     )
 
     # Confirm that the full path to the support file
@@ -181,20 +243,42 @@ def test_install_pinned_custom_app_support_package_url(
     myapp.support_package = "https://example.com/custom/support.zip"
 
     # Write a temporary support zip file
-    support_file = tmp_path / "out.zip"
+    support_file = (
+        tmp_path
+        / "data"
+        / "support"
+        / "55441abbffa311f65622df45a943afc347a21ab40e8dcec79472c92ef467db24"
+        / "out.zip"
+    )
+    support_file.parent.mkdir(parents=True)
     with zipfile.ZipFile(support_file, "w") as support_zip:
         support_zip.writestr("internal/file.txt", data="hello world")
 
     # Modify download_url to return the temp zipfile
     create_command.download_url = mock.MagicMock(return_value=support_file)
 
+    # Mock shutil so we can confirm that unpack is called,
+    # but we still want the side effect of calling it
+    create_command.shutil = mock.MagicMock()
+    create_command.shutil.unpack_archive.side_effect = shutil.unpack_archive
+
     # Install the support package
     create_command.install_app_support_package(myapp)
 
-    # Confirm the right URL was used
+    # Confirm the right URL and download path was used
     create_command.download_url.assert_called_with(
-        download_path=create_command.data_path / "support",
+        download_path=(
+            create_command.data_path
+            / "support"
+            / "55441abbffa311f65622df45a943afc347a21ab40e8dcec79472c92ef467db24"
+        ),
         url="https://example.com/custom/support.zip?revision=42",
+    )
+
+    # Confirm the right file was unpacked
+    create_command.shutil.unpack_archive.assert_called_with(
+        support_file,
+        extract_dir=support_path,
     )
 
     # Confirm that the full path to the support file
@@ -214,20 +298,40 @@ def test_install_pinned_custom_app_support_package_url_with_args(
     myapp.support_package = "https://example.com/custom/support.zip?cool=Yes"
 
     # Write a temporary support zip file
-    support_file = tmp_path / "out.zip"
+    support_file = (
+        tmp_path
+        / "data"
+        / "support"
+        / "55441abbffa311f65622df45a943afc347a21ab40e8dcec79472c92ef467db24"
+        / "out.zip"
+    )
+    support_file.parent.mkdir(parents=True)
     with zipfile.ZipFile(support_file, "w") as support_zip:
         support_zip.writestr("internal/file.txt", data="hello world")
 
     # Modify download_url to return the temp zipfile
     create_command.download_url = mock.MagicMock(return_value=support_file)
 
+    # Mock shutil so we can confirm that unpack is called,
+    # but we still want the side effect of calling it
+    create_command.shutil = mock.MagicMock()
+    create_command.shutil.unpack_archive.side_effect = shutil.unpack_archive
+
     # Install the support package
     create_command.install_app_support_package(myapp)
 
     # Confirm the right URL was used
     create_command.download_url.assert_called_with(
-        download_path=create_command.data_path / "support",
+        download_path=create_command.data_path
+        / "support"
+        / "eb2519992f3776ae59dd0eb1ed6c79fa446a438e2bf4a6d5d61f1adad922f2dd",
         url="https://example.com/custom/support.zip?cool=Yes&revision=42",
+    )
+
+    # Confirm the right file was unpacked
+    create_command.shutil.unpack_archive.assert_called_with(
+        support_file,
+        extract_dir=support_path,
     )
 
     # Confirm that the full path to the support file
@@ -249,7 +353,8 @@ def test_offline_install(create_command, myapp, support_path):
 def test_invalid_support_package(create_command, myapp, tmp_path, support_path):
     """If the support package isn't a valid zipfile, an error is raised."""
     # Create a support package that isn't a zipfile
-    support_file = tmp_path / "out.zip"
+    support_file = tmp_path / "data" / "support" / "out.zip"
+    support_file.parent.mkdir(parents=True)
     with open(support_file, "w") as bad_support_zip:
         bad_support_zip.write("This isn't a zip file")
 

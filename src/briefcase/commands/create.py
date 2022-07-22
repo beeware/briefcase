@@ -1,3 +1,4 @@
+import hashlib
 import os
 import platform
 import shutil
@@ -315,6 +316,21 @@ class CreateCommand(BaseCommand):
                 self.logger.info(f"Using support package {support_package_url}")
 
             if support_package_url.startswith(("https://", "http://")):
+                if custom_support_package:
+                    # If the support package is custom, cache it using a hash of
+                    # the download URL. This is needed to differentiate to support
+                    # packages with the same filename, served at different URLs.
+                    # (or a custom package that collides with an official package name)
+                    download_path = (
+                        self.data_path
+                        / "support"
+                        / hashlib.sha256(
+                            support_package_url.encode("utf-8")
+                        ).hexdigest()
+                    )
+                else:
+                    download_path = self.data_path / "support"
+
                 try:
                     self.logger.info(f"... pinned to revision {app.support_revision}")
                     # If a revision has been specified, add the revision
@@ -336,7 +352,7 @@ class CreateCommand(BaseCommand):
                 # in the user's briefcase support cache directory.
                 support_filename = self.download_url(
                     url=support_package_url,
-                    download_path=self.data_path / "support",
+                    download_path=download_path,
                 )
             else:
                 support_filename = Path(support_package_url)
@@ -356,9 +372,9 @@ class CreateCommand(BaseCommand):
             with self.input.wait_bar("Unpacking support package..."):
                 support_path = self.support_path(app)
                 support_path.mkdir(parents=True, exist_ok=True)
-                # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
                 self.shutil.unpack_archive(
-                    os.fsdecode(support_filename), extract_dir=os.fsdecode(support_path)
+                    support_filename,
+                    extract_dir=support_path,
                 )
         except (shutil.ReadError, EOFError) as e:
             raise InvalidSupportPackage(support_package_url) from e
