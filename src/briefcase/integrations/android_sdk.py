@@ -3,6 +3,7 @@ import re
 import shutil
 import subprocess
 import time
+from contextlib import suppress
 from pathlib import Path
 
 from requests import exceptions as requests_exceptions
@@ -1004,7 +1005,8 @@ In future, you can specify this device by running:
             ],
             env=self.env,
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            bufsize=1,
             start_new_session=True,
         )
 
@@ -1013,55 +1015,17 @@ In future, you can specify this device by running:
         # not ready until the boot process has finished. To determine
         # the boot status, we need the device ID, and an ADB connection.
 
-        # Step 1: Wait for the device to appear so we can get an
+        # Phase 1: Wait for the device to appear so we can get an
         # ADB instance for the new device.
-        with self.command.input.wait_bar("Starting emulator..."):
-            adb = None
-            known_devices = set()
-            while adb is None:
-                if emulator_popen.poll() is not None:
-                    raise BriefcaseCommandError(
-                        f"""\
-Android emulator was unable to start!
-
-Try starting the emulator manually by running:
-
-    $ {' '.join(str(arg) for arg in emulator_popen.args)}
-
-Resolve any problems you discover, then try running your app again. You may
-find this page helpful in diagnosing emulator problems.
-
-    https://developer.android.com/studio/run/emulator-acceleration#accel-vm
-"""
-                    )
-
-                for device, details in sorted(self.devices().items()):
-                    # Only process authorized devices that we haven't seen.
-                    if details["authorized"] and device not in known_devices:
-                        adb = self.adb(device)
-                        device_avd = adb.avd_name()
-
-                        if device_avd == avd:
-                            # Found an active device that matches
-                            # the AVD we are starting.
-                            full_name = f"@{avd} (running emulator)"
-                            break
-                        else:
-                            # Not the one. Zathras knows.
-                            adb = None
-                            known_devices.add(device)
-
-                # Try again in 2 seconds...
-                self.sleep(2)
-
-        # Phase 2: Wait for the boot process to complete
-        if not adb.has_booted():
-            with self.command.input.wait_bar("Booting emulator..."):
-                while not adb.has_booted():
+        try:
+            with self.command.input.wait_bar("Starting emulator..."):
+                adb = None
+                known_devices = set()
+                while adb is None:
                     if emulator_popen.poll() is not None:
                         raise BriefcaseCommandError(
                             f"""\
-Android emulator was unable to boot!
+Android emulator was unable to start!
 
 Try starting the emulator manually by running:
 
@@ -1074,8 +1038,53 @@ find this page helpful in diagnosing emulator problems.
 """
                         )
 
+                    for device, details in sorted(self.devices().items()):
+                        # Only process authorized devices that we haven't seen.
+                        if details["authorized"] and device not in known_devices:
+                            adb = self.adb(device)
+                            device_avd = adb.avd_name()
+
+                            if device_avd == avd:
+                                # Found an active device that matches
+                                # the AVD we are starting.
+                                full_name = f"@{avd} (running emulator)"
+                                break
+                            else:
+                                # Not the one. Zathras knows.
+                                adb = None
+                                known_devices.add(device)
+
                     # Try again in 2 seconds...
                     self.sleep(2)
+
+            # Phase 2: Wait for the boot process to complete
+            if not adb.has_booted():
+                with self.command.input.wait_bar("Booting emulator..."):
+                    while not adb.has_booted():
+                        if emulator_popen.poll() is not None:
+                            raise BriefcaseCommandError(
+                                f"""\
+Android emulator was unable to boot!
+
+Try starting the emulator manually by running:
+
+    $ {' '.join(str(arg) for arg in emulator_popen.args)}
+
+Resolve any problems you discover, then try running your app again. You may
+find this page helpful in diagnosing emulator problems.
+
+    https://developer.android.com/studio/run/emulator-acceleration#accel-vm
+"""
+                            )
+
+                        # Try again in 2 seconds...
+                        self.sleep(2)
+        except Exception:
+            # if the emulator exited, this should return its output immediately;
+            # if it is still running, this will quickly time out and print nothing.
+            with suppress(subprocess.TimeoutExpired):
+                self.command.logger.info(emulator_popen.communicate(timeout=1)[0])
+            raise
 
         # Return the device ID and full name.
         return device, full_name

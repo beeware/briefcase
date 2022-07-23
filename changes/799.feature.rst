@@ -1,0 +1,1 @@
+Android emulator output is printed to the console if it fails to start properly.
