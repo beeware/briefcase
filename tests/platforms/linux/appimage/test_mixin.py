@@ -46,12 +46,13 @@ def test_docker_image_tag_uppercase_name(uppercase_app_config, tmp_path):
 def test_dockerize(first_app_config, tmp_path):
     command = LinuxAppImageCreateCommand(base_path=tmp_path)
     command.Docker = Docker
+    command.Docker.prepare = MagicMock()
     command.use_docker = True
 
     # Before dockerization, subprocess is native
     assert type(command.subprocess) == Subprocess
 
-    with command.dockerize(first_app_config):
+    with command.run_in_build_environment(first_app_config):
         # During dockerization, subprocess is a container
         assert type(command.subprocess) == Docker
 
@@ -68,7 +69,7 @@ def test_dockerize_nodocker(first_app_config, tmp_path):
     # Before dockerization, subprocess is native
     assert type(command.subprocess) == Subprocess
 
-    with command.dockerize(first_app_config):
+    with command.run_in_build_environment(first_app_config):
         # During dockerization, subprocess is *still* native
         assert type(command.subprocess) == Subprocess
 

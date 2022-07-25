@@ -82,31 +82,32 @@ class LinuxAppImageMixin(LinuxMixin):
             )
 
     @contextmanager
-    def dockerize(self, app):
-        """Enter a Docker container based on the properties of the app.
+    def run_in_build_environment(self, app):
+        """Manager to execute OS commands in the build environment.
 
-        Provides a context manager for the Docker context. The context
-        object is an object that exposes subprocess-analog calls.
+        Docker:
+        Provides a context manager for the Docker context based on the
+        properties of the app. This will replace self.subprocess with
+        a version that proxies all subprocess calls into a docker container.
 
-        This will replace self.subprocess with a version that proxies all
-        subprocess calls into the docker container.
-
-        If the user has selected --no-docker, this is a no-op.
+        Native:
+        If the user has selected --no-docker, this is a no-op and commands
+        are run in the native environment.
 
         :param app: The application that will determine the container image.
         """
         if self.use_docker:
-            # Enter the Docker context.
             self.logger.info("Entering Docker context...", prefix=app.app_name)
             orig_subprocess = self.subprocess
             self.subprocess = self.Docker(self, app)
+            self.subprocess.prepare()
 
-            yield self.subprocess
+            yield
 
-            self.logger.info("Leaving Docker context", prefix=app.app_name)
             self.subprocess = orig_subprocess
+            self.logger.info("Leaving Docker context", prefix=app.app_name)
         else:
-            yield self.subprocess
+            yield
 
 
 class LinuxAppImageCreateCommand(LinuxAppImageMixin, CreateCommand):
@@ -124,13 +125,10 @@ class LinuxAppImageCreateCommand(LinuxAppImageMixin, CreateCommand):
     def install_app_dependencies(self, app: AppConfig):
         """Install application dependencies.
 
-        This will be containerized in Docker to ensure that the right
-        binary versions are installed.
+        For Docker, using the container ensures that the right binary
+        versions are installed.
         """
-        with self.dockerize(app=app) as docker:
-            docker.prepare()
-
-            # Install dependencies. This will run inside a Docker container.
+        with self.run_in_build_environment(app=app):
             super().install_app_dependencies(app=app)
 
 
@@ -142,10 +140,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
     description = "Build a Linux AppImage."
 
     def verify_tools(self):
-        """Verify that the AppImage linuxdeploy tool and plugins exist.
-
-        :param app: The application to build
-        """
+        """Verify that the AppImage linuxdeploy tool and plugins exist."""
         super().verify_tools()
         self.linuxdeploy = LinuxDeploy.verify(self)
 
@@ -166,13 +161,11 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
 
             self.logger.info("Configuring Linuxdeploy plugins...", prefix=app.app_name)
             # We need to add the location of the linuxdeploy plugins to the PATH.
-            # However, if we arerunning inside Docker, we need to know the
+            # However, if we are running inside Docker, we need to know the
             # environment *inside* the Docker container.
-            if self.use_docker:
-                echo_cmd = ["/bin/bash", "-c", "echo $PATH"]
-                base_path = self.Docker(self, app).check_output(echo_cmd).strip()
-            else:
-                base_path = self.os.environ["PATH"]
+            with self.run_in_build_environment(app=app):
+                echo_cmd = ["/bin/sh", "-c", "echo $PATH"]
+                base_path = self.subprocess.check_output(echo_cmd).strip()
 
             # Add any plugin-required environment variables
             for plugin in plugins.values():
@@ -217,18 +210,18 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
 
                 # Build the app image. We use `--appimage-extract-and-run`
                 # because AppImages won't run natively inside Docker.
-                with self.dockerize(app) as docker:
-                    docker.run(
+                with self.run_in_build_environment(app=app):
+                    self.subprocess.run(
                         [
                             self.linuxdeploy.file_path / self.linuxdeploy.file_name,
                             "--appimage-extract-and-run",
                             f"--appdir={self.appdir_path(app)}",
-                            "-d",
+                            "--desktop-file",
                             os.fsdecode(
                                 self.appdir_path(app)
                                 / f"{app.bundle}.{app.app_name}.desktop"
                             ),
-                            "-o",
+                            "--output",
                             "appimage",
                         ]
                         + additional_args,
@@ -262,9 +255,7 @@ class LinuxAppImageRunCommand(LinuxAppImageMixin, RunCommand):
         self.logger.info("Starting app...", prefix=app.app_name)
         try:
             self.subprocess.run(
-                [
-                    os.fsdecode(self.binary_path(app)),
-                ],
+                [os.fsdecode(self.binary_path(app))],
                 check=True,
                 cwd=self.home_path,
             )

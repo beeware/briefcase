@@ -49,18 +49,20 @@ def build_command(tmp_path, first_app_config):
             "app_packages_path": "First App.AppDir/usr/app_packages",
         }
     }
-    command.os = mock.MagicMock()
-    command.os.environ = mock.MagicMock()
-    command.os.environ.__getitem__.return_value = (
-        "/usr/local/bin:/usr/bin:/path/to/somewhere"
-    )
-    command.os.environ.copy.return_value = {
-        "PATH": "/usr/local/bin:/usr/bin:/path/to/somewhere"
-    }
 
     # Store the underlying subprocess instance
     command._subprocess = mock.MagicMock()
     command.subprocess._subprocess = command._subprocess
+
+    command.os = mock.MagicMock()
+    command.os.environ.copy.return_value = {
+        "PATH": "/usr/local/bin:/usr/bin:/path/to/somewhere"
+    }
+
+    # mock `echo $PATH` check_output call
+    command.subprocess._subprocess.check_output.return_value = (
+        "/usr/local/bin:/usr/bin:/path/to/somewhere"
+    )
 
     # Short circuit the process streamer
     wait_bar_streamer = mock.MagicMock()
@@ -136,9 +138,9 @@ def test_build_appimage(build_command, first_app, tmp_path):
             os.fsdecode(tmp_path / "data" / "tools" / "linuxdeploy-wonky.AppImage"),
             "--appimage-extract-and-run",
             f"--appdir={app_dir}",
-            "-d",
+            "--desktop-file",
             os.fsdecode(app_dir / "com.example.first-app.desktop"),
-            "-o",
+            "--output",
             "appimage",
             "--deploy-deps-only",
             os.fsdecode(app_dir / "usr" / "app" / "support"),
@@ -205,9 +207,9 @@ def test_build_appimage_with_plugin(build_command, first_app, tmp_path):
             os.fsdecode(tmp_path / "data" / "tools" / "linuxdeploy-wonky.AppImage"),
             "--appimage-extract-and-run",
             f"--appdir={app_dir}",
-            "-d",
+            "--desktop-file",
             os.fsdecode(app_dir / "com.example.first-app.desktop"),
-            "-o",
+            "--output",
             "appimage",
             "--deploy-deps-only",
             os.fsdecode(app_dir / "usr" / "app" / "support"),
@@ -260,9 +262,9 @@ def test_build_failure(build_command, first_app, tmp_path):
             os.fsdecode(tmp_path / "data" / "tools" / "linuxdeploy-wonky.AppImage"),
             "--appimage-extract-and-run",
             f"--appdir={app_dir}",
-            "-d",
+            "--desktop-file",
             os.fsdecode(app_dir / "com.example.first-app.desktop"),
-            "-o",
+            "--output",
             "appimage",
             "--deploy-deps-only",
             os.fsdecode(app_dir / "usr" / "app" / "support"),
@@ -320,9 +322,9 @@ def test_build_appimage_in_docker(build_command, first_app, tmp_path):
             "/home/brutus/.cache/briefcase/tools/linuxdeploy-wonky.AppImage",
             "--appimage-extract-and-run",
             "--appdir=/app/appimage/First App/First App.AppDir",
-            "-d",
+            "--desktop-file",
             "/app/appimage/First App/First App.AppDir/com.example.first-app.desktop",
-            "-o",
+            "--output",
             "appimage",
             "--deploy-deps-only",
             "/app/appimage/First App/First App.AppDir/usr/app/support",
@@ -409,9 +411,9 @@ def test_build_appimage_with_plugins_in_docker(build_command, first_app, tmp_pat
             "/home/brutus/.cache/briefcase/tools/linuxdeploy-wonky.AppImage",
             "--appimage-extract-and-run",
             "--appdir=/app/appimage/First App/First App.AppDir",
-            "-d",
+            "--desktop-file",
             "/app/appimage/First App/First App.AppDir/com.example.first-app.desktop",
-            "-o",
+            "--output",
             "appimage",
             "--deploy-deps-only",
             "/app/appimage/First App/First App.AppDir/usr/app/support",

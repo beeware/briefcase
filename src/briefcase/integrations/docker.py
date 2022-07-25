@@ -194,6 +194,9 @@ installation, and try again.
 
 
 class Docker:
+    # Set of apps for which Docker has been prepared
+    prepared_apps = set()
+
     def __init__(self, command, app):
         self.command = command
         self._subprocess = command.subprocess
@@ -204,18 +207,25 @@ class Docker:
         """The briefcase data directory used inside container."""
         return "/home/brutus/.cache/briefcase"
 
-    def prepare(self):
-        try:
-            self.command.logger.info(
-                "Building Docker container image...",
-                prefix=self.app.app_name,
-            )
+    def prepare(self, force=False):
+        """Create the Docker image from the app's Dockerfile.
+
+        Only builds image once per app unless force=True.
+        """
+        if not force and self.app.app_name in self.prepared_apps:
+            return
+
+        self.command.logger.info(
+            "Building Docker container image...",
+            prefix=self.app.app_name,
+        )
+        with self.command.input.wait_bar("Building Docker image..."):
             try:
                 system_requires = " ".join(self.app.system_requires)
             except AttributeError:
                 system_requires = ""
 
-            with self.command.input.wait_bar("Building Docker image..."):
+            try:
                 self._subprocess.run(
                     [
                         "docker",
@@ -241,10 +251,12 @@ class Docker:
                     ],
                     check=True,
                 )
-        except subprocess.CalledProcessError as e:
-            raise BriefcaseCommandError(
-                f"Error building Docker image for {self.app.app_name}."
-            ) from e
+            except subprocess.CalledProcessError as e:
+                raise BriefcaseCommandError(
+                    f"Error building Docker image for {self.app.app_name}."
+                ) from e
+            else:
+                self.prepared_apps.add(self.app.app_name)
 
     def _dockerize_path(self, arg):
         """Relocate any local path into the equivalent location on the docker
@@ -267,7 +279,7 @@ class Docker:
 
     def _dockerize_args(self, args, env=None):
         """Convert arguments and environment into a Docker-compatible form.
-        Convert an argument and environment specifiation into a form that can
+        Convert an argument and environment specification into a form that can
         be used as arguments to invoke Docker. This involves:
 
          * Configuring the Docker invocation to reference the
@@ -280,7 +292,7 @@ class Docker:
         :returns: A list of arguments that can be used to invoke the command
             inside a docker container.
         """
-        # The :z suffix on volument mounts allows SELinux to modify the host
+        # The :z suffix on volume mounts allows SELinux to modify the host
         # mount; it is ignored on non-SELinux platforms.
         docker_args = [
             "docker",

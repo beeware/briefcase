@@ -87,8 +87,8 @@ def test_install_app_dependencies_no_docker(first_app_config, tmp_path):
     assert command.Docker.call_count == 0
     assert docker.prepare.call_count == 0
 
-    # The no-op prepare call was made.
-    command.subprocess.prepare.assert_called_with()
+    # The prepare call was NOT made for use_docker=False.
+    command.subprocess.prepare.assert_not_called()
 
     # pip was invoked natively
     command.subprocess.run.assert_called_with(

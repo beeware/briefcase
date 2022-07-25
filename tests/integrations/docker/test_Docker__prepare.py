@@ -48,7 +48,7 @@ def test_prepare_failure(mock_docker, tmp_path):
     )
 
     with pytest.raises(BriefcaseCommandError):
-        mock_docker.prepare()
+        mock_docker.prepare(force=True)
 
     mock_docker._subprocess._subprocess.Popen.assert_called_with(
         [

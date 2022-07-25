@@ -95,7 +95,7 @@ def write_dist_info(app: BaseConfig, dist_info_path: Path):
     """Install the dist-info folder for the application.
 
     :param app: The config object for the app
-    :param path: The path into which the dist-info folder should be written.
+    :param dist_info_path: The path into which the dist-info folder should be written.
     """
     # Create dist-info folder, and write a minimal metadata collection.
     dist_info_path.mkdir(exist_ok=True)
