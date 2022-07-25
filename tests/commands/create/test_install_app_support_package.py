@@ -270,7 +270,7 @@ def test_install_pinned_custom_app_support_package_url(
         download_path=(
             create_command.data_path
             / "support"
-            / "55441abbffa311f65622df45a943afc347a21ab40e8dcec79472c92ef467db24"
+            / "7c4f3b671064f584508d6bd326b7840ee6b8faa5cd6424f5e5cca7bd0eb9f2b6"
         ),
         url="https://example.com/custom/support.zip?revision=42",
     )
@@ -324,7 +324,7 @@ def test_install_pinned_custom_app_support_package_url_with_args(
     create_command.download_url.assert_called_with(
         download_path=create_command.data_path
         / "support"
-        / "eb2519992f3776ae59dd0eb1ed6c79fa446a438e2bf4a6d5d61f1adad922f2dd",
+        / "e765dbdacdac39d26c8a8ba0c75a5a3f281d7dd38f3d7013257c03df6ea37516",
         url="https://example.com/custom/support.zip?cool=Yes&revision=42",
     )
 
