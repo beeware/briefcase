@@ -21,11 +21,11 @@ def test_binary_path(first_app_config, tmp_path):
 def test_distribution_path(first_app_config, tmp_path):
     """The distribution path is a flatpak bundle."""
     command = LinuxFlatpakCreateCommand(base_path=tmp_path)
-    # Force the architecture to x86_64 for test purposes.
-    command.host_arch = "x86_64"
+    # Force the architecture to something odd for test purposes.
+    command.host_arch = "gothic"
     distribution_path = command.distribution_path(first_app_config, "flatpak")
 
-    assert distribution_path == tmp_path / "linux" / "First_App-0.0.1-x86_64.flatpak"
+    assert distribution_path == tmp_path / "linux" / "First_App-0.0.1-gothic.flatpak"
 
 
 def test_default_runtime_repo(first_app_config, tmp_path):
