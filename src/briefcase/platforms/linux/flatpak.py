@@ -1,1 +1,198 @@
-# An implementation would go here!
+from briefcase.commands import (
+    BuildCommand,
+    CreateCommand,
+    PackageCommand,
+    PublishCommand,
+    RunCommand,
+    UpdateCommand,
+)
+from briefcase.config import AppConfig
+from briefcase.exceptions import BriefcaseCommandError, BriefcaseConfigError
+from briefcase.integrations.flatpak import Flatpak
+from briefcase.platforms.linux import LinuxMixin
+
+
+class LinuxFlatpakMixin(LinuxMixin):
+    output_format = "flatpak"
+
+    def binary_path(self, app):
+        # Flatpak doesn't really produce an identifiable "binary" as part of it's
+        # build process, so the SDK wrapper creates a file that can use to identify
+        # if run has been invoked. As a neat side effect, it's also a shell script
+        # that can invoke the flatpak.
+        return self.bundle_path(app) / f"{app.bundle}.{app.app_name}"
+
+    def distribution_path(self, app, packaging_format):
+        binary_name = app.formal_name.replace(" ", "_")
+        return (
+            self.platform_path / f"{binary_name}-{app.version}-{self.host_arch}.flatpak"
+        )
+
+    def verify_tools(self):
+        """Verify that we're on Linux."""
+        super().verify_tools()
+        if self.host_os != "Linux":
+            raise BriefcaseCommandError("Flatpaks can only be generated on Linux.")
+        self.flatpak = Flatpak.verify(self)
+
+    def flatpak_runtime_repo(self, app):
+        try:
+            repo_url = app.flatpak_runtime_repo_url
+            try:
+                repo_alias = app.flatpak_runtime_repo_alias
+            except AttributeError:
+                raise BriefcaseConfigError(
+                    "If you specify a custom Flatpak runtime repository, "
+                    "you must also specify an alias for that repository using "
+                    "`flatpak_runtime_repo_alias`"
+                )
+
+        except AttributeError:
+            repo_alias = Flatpak.DEFAULT_REPO_ALIAS
+            repo_url = Flatpak.DEFAULT_REPO_URL
+
+        return repo_alias, repo_url
+
+    def flatpak_runtime(self, app):
+        return getattr(app, "flatpak_runtime", Flatpak.DEFAULT_RUNTIME)
+
+    def flatpak_runtime_version(self, app):
+        return getattr(app, "flatpak_runtime_version", Flatpak.DEFAULT_RUNTIME_VERSION)
+
+    def flatpak_sdk(self, app):
+        return getattr(app, "flatpak_sdk", Flatpak.DEFAULT_SDK)
+
+
+class LinuxFlatpakCreateCommand(LinuxFlatpakMixin, CreateCommand):
+    description = "Create and populate a Linux Flatpak."
+
+    @property
+    def support_package_url(self):
+        """The URL of the support package to use for apps of this type.
+
+        Flatpak uses the original CPython sources, and compiles them in
+        the flatpak sandbox.
+        """
+        base_version = ".".join(str(m) for m in self.sys.version_info[:3])
+        full_version = self.stdlib_platform.python_version()
+        return f"https://www.python.org/ftp/python/{base_version}/Python-{full_version}.tgz"
+
+    def output_format_template_context(self, app: AppConfig):
+        """Add flatpak runtime/SDK details to the app template."""
+        return {
+            "flatpak_runtime": self.flatpak_runtime(app),
+            "flatpak_runtime_version": self.flatpak_runtime_version(app),
+            "flatpak_sdk": self.flatpak_sdk(app),
+        }
+
+    def _unpack_support_package(self, app, support_file_path):
+        """Unpack the support package.
+
+        Flatpak doesn't unpack the support package; it copies the
+        tarball as-is into the source tree.
+        """
+        with self.input.wait_bar("Installing support file ..."):
+            self.shutil.copy(
+                support_file_path,
+                self.bundle_path(app) / support_file_path.name,
+            )
+
+    def install_app_dependencies(self, app: AppConfig):
+        """Configure application dependencies.
+
+        Flatpak needs to install it's own dependencies as part of the
+        build process, so we override the base implementation to write a
+        requirements file.
+        """
+        with self.input.wait_bar("Writing dependency file..."):
+            with (self.bundle_path(app) / "requirements.txt").open("w") as f:
+                if app.requires:
+                    for requirement in app.requires:
+                        f.write(f"{requirement}\n")
+
+
+class LinuxFlatpakUpdateCommand(LinuxFlatpakMixin, UpdateCommand):
+    description = "Update an existing Linux Flatpak."
+
+
+class LinuxFlatpakBuildCommand(LinuxFlatpakMixin, BuildCommand):
+    description = "Build a Linux Flatpak."
+
+    def build_app(self, app: AppConfig, **kwargs):
+        """Build an application.
+
+        :param app: The application to build
+        """
+        self.logger.info(
+            "Ensuring Flatpak runtime for the app is available...",
+            prefix=app.app_name,
+        )
+        flatpak_repo_alias, flatpak_repo_url = self.flatpak_runtime_repo(app)
+
+        with self.input.wait_bar("Ensuring Flatpak runtime repo is registered..."):
+            self.flatpak.verify_repo(
+                repo_alias=flatpak_repo_alias,
+                url=flatpak_repo_url,
+            )
+
+        with self.input.wait_bar("Installing runtime and SDK..."):
+            self.flatpak.verify_runtime(
+                repo_alias=flatpak_repo_alias,
+                runtime=self.flatpak_runtime(app),
+                runtime_version=self.flatpak_runtime_version(app),
+                sdk=self.flatpak_sdk(app),
+            )
+
+        self.logger.info("Building Flatpak...", prefix=app.app_name)
+        with self.input.wait_bar("Building..."):
+            self.flatpak.build(
+                bundle=app.bundle,
+                app_name=app.app_name,
+                path=self.bundle_path(app),
+            )
+
+
+class LinuxFlatpakRunCommand(LinuxFlatpakMixin, RunCommand):
+    description = "Run a Linux Flatpak."
+
+    def run_app(self, app: AppConfig, **kwargs):
+        """Start the application.
+
+        :param app: The config object for the app
+        """
+        self.logger.info("Starting app...", prefix=app.app_name)
+        self.flatpak.run(bundle=app.bundle, app_name=app.app_name)
+
+
+class LinuxFlatpakPackageCommand(LinuxFlatpakMixin, PackageCommand):
+    description = "Package a Linux Flatpak for distribution."
+
+    def package_app(self, app: AppConfig, **kwargs):
+        """Start the application.
+
+        :param app: The config object for the app
+        """
+        self.logger.info("Building bundle...", prefix=app.app_name)
+        with self.input.wait_bar("Bundling..."):
+            _, flatpak_repo_url = self.flatpak_runtime_repo(app)
+            self.flatpak.bundle(
+                repo_url=flatpak_repo_url,
+                bundle=app.bundle,
+                app_name=app.app_name,
+                version=app.version,
+                build_path=self.bundle_path(app),
+                output_path=self.distribution_path(app, "flatpak"),
+            )
+
+
+class LinuxFlatpakPublishCommand(LinuxFlatpakMixin, PublishCommand):
+    description = "Publish a Linux Flatpak."
+
+
+# Declare the briefcase command bindings
+create = LinuxFlatpakCreateCommand  # noqa
+update = LinuxFlatpakUpdateCommand  # noqa
+build = LinuxFlatpakBuildCommand  # noqa
+run = LinuxFlatpakRunCommand  # noqa
+package = LinuxFlatpakPackageCommand  # noqa
+publish = LinuxFlatpakPublishCommand  # noqa

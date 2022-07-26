@@ -4,7 +4,7 @@ from briefcase.exceptions import BriefcaseCommandError
 
 
 class Flatpak:
-    DEFAULT_REPO_ALIAS = "flatpak"
+    DEFAULT_REPO_ALIAS = "flathub"
     DEFAULT_REPO_URL = "https://flathub.org/repo/flathub.flatpakrepo"
 
     DEFAULT_RUNTIME = "org.freedesktop.Platform"

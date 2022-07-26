@@ -190,6 +190,7 @@ a custom location for Briefcase's tools.
         self.input = Console(enabled=input_enabled)
         self.os = os
         self.sys = sys
+        self.stdlib_platform = platform
         self.shutil = shutil
         self.subprocess = Subprocess(self)
 
