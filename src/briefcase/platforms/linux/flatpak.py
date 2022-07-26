@@ -135,13 +135,15 @@ class LinuxFlatpakBuildCommand(LinuxFlatpakMixin, BuildCommand):
                 url=flatpak_repo_url,
             )
 
-        with self.input.wait_bar("Installing runtime and SDK..."):
-            self.flatpak.verify_runtime(
-                repo_alias=flatpak_repo_alias,
-                runtime=self.flatpak_runtime(app),
-                runtime_version=self.flatpak_runtime_version(app),
-                sdk=self.flatpak_sdk(app),
-            )
+        # ``flatpak install`` uses a lot of console animations, and there
+        # doesn't appear to be a way to turn off these animations. Use those
+        # native animations rather than wrapping in a wait_bar.
+        self.flatpak.verify_runtime(
+            repo_alias=flatpak_repo_alias,
+            runtime=self.flatpak_runtime(app),
+            runtime_version=self.flatpak_runtime_version(app),
+            sdk=self.flatpak_sdk(app),
+        )
 
         self.logger.info("Building Flatpak...", prefix=app.app_name)
         with self.input.wait_bar("Building..."):
