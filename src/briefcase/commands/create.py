@@ -384,18 +384,31 @@ class CreateCommand(BaseCommand):
         # Now that we know we have the support package, unpack it.
         self._unpack_support_package(app, support_file_path)
 
-    def install_app_dependencies(self, app: BaseConfig):
-        """Install the dependencies for the app.
+    def _write_requirements_file(self, app: BaseConfig, requirements_path):
+        """Configure application dependencies by writing a requirements.txt
+        file.
 
-        :param app: The config object for the app
+        :param app: The app configuration
+        :param requirements_path: The full path to a requirements.txt file that
+            will be written.
         """
+        with self.input.wait_bar("Writing requirements file..."):
+            with (requirements_path).open("w") as f:
+                if app.requires:
+                    for requirement in app.requires:
+                        f.write(f"{requirement}\n")
 
-        target = self.app_packages_path(app)
+    def _install_app_dependencies(self, app: BaseConfig, app_packages_path):
+        """Install dependencies for the app with pip.
 
+        :param app: The app configuration
+        :param app_packages_path: The full path of the app_packages folder into which
+            dependencies should be installed.
+        """
         # Clear existing dependency directory
-        if target.is_dir():
-            self.shutil.rmtree(target)
-            self.os.mkdir(target)
+        if app_packages_path.is_dir():
+            self.shutil.rmtree(app_packages_path)
+            self.os.mkdir(app_packages_path)
 
         # Install dependencies
         if app.requires:
@@ -409,7 +422,7 @@ class CreateCommand(BaseCommand):
                             "install",
                             "--upgrade",
                             "--no-user",
-                            f"--target={target}",
+                            f"--target={app_packages_path}",
                         ]
                         + app.requires,
                         check=True,
@@ -418,6 +431,33 @@ class CreateCommand(BaseCommand):
                     raise DependencyInstallError() from e
         else:
             self.logger.info("No application dependencies.")
+
+    def install_app_dependencies(self, app: BaseConfig):
+        """Handle dependencies for the app.
+
+        This will result in either (in preferential order):
+         * a requirements.txt file being written at a location specified by
+           ``app_requirements_path`` in the template path index
+         * dependencies being installed with pip into the location specified
+           by the ``app_packages_path`` in the template path index.
+
+        If the path index doesn't specify either of the path index entries,
+        an error is raised.
+
+        :param app: The config object for the app
+        """
+        try:
+            path = self.app_requirements_path(app)
+            self._write_requirements_file(app, path)
+        except KeyError:
+            try:
+                path = self.app_packages_path(app)
+                self._install_app_dependencies(app, path)
+            except KeyError as e:
+                raise BriefcaseCommandError(
+                    "Application path index file does not define "
+                    "`app_requirements_path` or `app_packages_path`"
+                ) from e
 
     def install_app_code(self, app: BaseConfig):
         """Install the application code into the bundle.

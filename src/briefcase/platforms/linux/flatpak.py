@@ -97,19 +97,6 @@ class LinuxFlatpakCreateCommand(LinuxFlatpakMixin, CreateCommand):
                 self.bundle_path(app) / support_file_path.name,
             )
 
-    def install_app_dependencies(self, app: AppConfig):
-        """Configure application dependencies.
-
-        Flatpak needs to install it's own dependencies as part of the
-        build process, so we override the base implementation to write a
-        requirements file.
-        """
-        with self.input.wait_bar("Writing dependency file..."):
-            with (self.bundle_path(app) / "requirements.txt").open("w") as f:
-                if app.requires:
-                    for requirement in app.requires:
-                        f.write(f"{requirement}\n")
-
 
 class LinuxFlatpakUpdateCommand(LinuxFlatpakMixin, UpdateCommand):
     description = "Update an existing Linux Flatpak."

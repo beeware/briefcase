@@ -429,6 +429,20 @@ or delete the old data directory, and re-run Briefcase.
             path_index = self._load_path_index(app)
         return self.bundle_path(app) / path_index["support_path"]
 
+    def app_requirements_path(self, app: BaseConfig):
+        """Obtain the path into which a requirements.txt file should be
+        written.
+
+        :param app: The config object for the app
+        :return: The full path where the requirements.txt file should be written
+        """
+        # If the index file hasn't been loaded for this app, load it.
+        try:
+            path_index = self._path_index[app]
+        except KeyError:
+            path_index = self._load_path_index(app)
+        return self.bundle_path(app) / path_index["app_requirements_path"]
+
     def app_packages_path(self, app: BaseConfig):
         """Obtain the path into which dependencies should be installed.
 

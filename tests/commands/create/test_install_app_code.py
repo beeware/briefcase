@@ -33,7 +33,12 @@ Summary: This is a simple app
         )
 
 
-def test_no_code(create_command, myapp, app_path):
+def test_no_code(
+    create_command,
+    myapp,
+    app_path,
+    app_requirements_path_index,
+):
     """If an app has no code (?!), install_app_code is mostly a no-op; but
     distinfo is created."""
     # Mock shutil so we can track usage.
@@ -54,7 +59,12 @@ def test_no_code(create_command, myapp, app_path):
     assert_dist_info(app_path)
 
 
-def test_empty_code(create_command, myapp, app_path):
+def test_empty_code(
+    create_command,
+    myapp,
+    app_path,
+    app_requirements_path_index,
+):
     """If an app has an empty sources list (?!), install_app_code is mostly a
     no-op; but distinfo is created."""
     # Mock shutil so we can track usage.
@@ -75,7 +85,12 @@ def test_empty_code(create_command, myapp, app_path):
     assert_dist_info(app_path)
 
 
-def test_source_missing(create_command, myapp, app_path):
+def test_source_missing(
+    create_command,
+    myapp,
+    app_path,
+    app_requirements_path_index,
+):
     """If an app defines sources that are missing, an error is raised."""
     # Set the app definition to point at sources that don't exsit
     myapp.sources = ["missing"]
@@ -88,7 +103,13 @@ def test_source_missing(create_command, myapp, app_path):
     assert not dist_info_path.exists()
 
 
-def test_source_dir(create_command, myapp, tmp_path, app_path):
+def test_source_dir(
+    create_command,
+    myapp,
+    tmp_path,
+    app_path,
+    app_requirements_path_index,
+):
     """If an app defines directories of sources, the whole directory is
     copied."""
     # Create the mock sources
@@ -133,7 +154,13 @@ def test_source_dir(create_command, myapp, tmp_path, app_path):
     assert_dist_info(app_path)
 
 
-def test_source_file(create_command, myapp, tmp_path, app_path):
+def test_source_file(
+    create_command,
+    myapp,
+    tmp_path,
+    app_path,
+    app_requirements_path_index,
+):
     """If an app defines single file sources, the files are copied."""
     # Create the mock sources
     # src /
@@ -162,7 +189,13 @@ def test_source_file(create_command, myapp, tmp_path, app_path):
     assert_dist_info(app_path)
 
 
-def test_replace_sources(create_command, myapp, tmp_path, app_path):
+def test_replace_sources(
+    create_command,
+    myapp,
+    tmp_path,
+    app_path,
+    app_requirements_path_index,
+):
     """Stale sources and dist-info are removed on installation."""
     # Create the mock sources
     # src /
@@ -255,7 +288,12 @@ def test_replace_sources(create_command, myapp, tmp_path, app_path):
     assert_dist_info(app_path)
 
 
-def test_non_latin_metadata(create_command, myapp, app_path):
+def test_non_latin_metadata(
+    create_command,
+    myapp,
+    app_path,
+    app_requirements_path_index,
+):
     """If the app metadata contains non-Latin-1 characters, the METADATA file
     is written correctly (Briefcase#767)"""
     myapp.formal_name = "My büggy app"
