@@ -149,7 +149,7 @@ You must install both flatpak and flatpak-builder.
             with bin_path.open("w", encoding="utf-8") as f:
                 f.write(
                     f"""\
-#!/bin/bash
+#!/bin/sh
 # echo To run this flatpak, run:
 flatpak run {bundle}.{app_name}
 """
