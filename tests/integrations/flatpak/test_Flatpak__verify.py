@@ -10,6 +10,7 @@ from briefcase.integrations.flatpak import Flatpak
 @pytest.fixture
 def mock_command(tmp_path):
     command = mock.MagicMock()
+    command.host_arch = "gothic"
 
     # Mock os and subprocess
     command.subprocess = mock.MagicMock()
@@ -111,7 +112,7 @@ def test_installed(mock_command):
         "flatpak-builder 1.2.2",
     ]
 
-    Flatpak.verify(mock_command)
+    flatpak = Flatpak.verify(mock_command)
 
     mock_command.subprocess.check_output.assert_has_calls(
         [
@@ -120,3 +121,6 @@ def test_installed(mock_command):
         ],
         any_order=False,
     )
+
+    # The verified instance is bound to the host architecture.
+    assert flatpak.arch == mock_command.host_arch

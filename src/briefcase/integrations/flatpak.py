@@ -11,7 +11,8 @@ class Flatpak:
     DEFAULT_RUNTIME_VERSION = "21.08"
     DEFAULT_SDK = "org.freedesktop.Sdk"
 
-    def __init__(self, subprocess, os):
+    def __init__(self, arch, subprocess, os):
+        self.arch = arch
         self.subprocess = subprocess
         self.os = os
 
@@ -21,7 +22,11 @@ class Flatpak:
 
         :param command: The command that needs to use flatpak
         """
-        flatpak = Flatpak(subprocess=command.subprocess, os=command.os)
+        flatpak = Flatpak(
+            arch=command.host_arch,
+            subprocess=command.subprocess,
+            os=command.os,
+        )
         try:
             command.subprocess.check_output(["flatpak", "--version"])
         except FileNotFoundError as e:
@@ -99,15 +104,15 @@ You must install both flatpak and flatpak-builder.
                     "--assumeyes",
                     "--user",
                     repo_alias,
-                    f"{runtime}//{runtime_version}",
-                    f"{sdk}//{runtime_version}",
+                    f"{runtime}/{self.arch}/{runtime_version}",
+                    f"{sdk}/{self.arch}/{runtime_version}",
                 ],
                 check=True,
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(
-                f"Unable to install Flatpak runtime {runtime}//{runtime_version} "
-                f"and SDK {sdk}//{runtime_version} from repo {repo_alias}."
+                f"Unable to install Flatpak runtime {runtime}/{self.arch}/{runtime_version} "
+                f"and SDK {sdk}/{self.arch}/{runtime_version} from repo {repo_alias}."
             ) from e
 
     def build(self, bundle, app_name, path):

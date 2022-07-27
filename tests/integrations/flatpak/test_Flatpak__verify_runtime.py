@@ -23,8 +23,8 @@ def test_verify_runtime(flatpak):
             "--assumeyes",
             "--user",
             "test-alias",
-            "org.beeware.flatpak.Platform//37.42",
-            "org.beeware.flatpak.SDK//37.42",
+            "org.beeware.flatpak.Platform/gothic/37.42",
+            "org.beeware.flatpak.SDK/gothic/37.42",
         ],
         check=True,
     )
@@ -39,8 +39,8 @@ def test_verify_runtime_fail(flatpak):
     with pytest.raises(
         BriefcaseCommandError,
         match=(
-            r"Unable to install Flatpak runtime org.beeware.flatpak.Platform//37.42 "
-            r"and SDK org.beeware.flatpak.SDK//37.42 from repo test-alias."
+            r"Unable to install Flatpak runtime org.beeware.flatpak.Platform/gothic/37.42 "
+            r"and SDK org.beeware.flatpak.SDK/gothic/37.42 from repo test-alias."
         ),
     ):
         flatpak.verify_runtime(
