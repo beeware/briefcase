@@ -28,7 +28,44 @@ class Flatpak:
             os=command.os,
         )
         try:
-            command.subprocess.check_output(["flatpak", "--version"])
+            output = command.subprocess.check_output(["flatpak", "--version"]).strip(
+                "\n"
+            )
+            parts = output.split(" ")
+            try:
+                if parts[0] == "Flatpak":
+                    version = parts[1].split(".")
+                    if int(version[0]) < 1:
+                        raise BriefcaseCommandError(
+                            "Briefcase requires Flatpak 1.0 or later."
+                        )
+                else:
+                    raise ValueError(f"Unexpected tool name {parts[0]}")
+            except (ValueError, IndexError):
+                command.logger.warning(
+                    """\
+*************************************************************************
+** WARNING: Unable to determine the version of Flatpak                 **
+*************************************************************************
+
+    Briefcase will proceed, assuming everything is OK. If you
+    experience problems, this is almost certainly the cause of those
+    problems.
+
+    Please report this as a bug at:
+
+      https://github.com/beeware/briefcase/issues/new
+
+    In your report, please including the output from running:
+
+      flatpak --version
+
+    from the command prompt.
+
+*************************************************************************
+"""
+                )
+
         except FileNotFoundError as e:
             raise BriefcaseCommandError(
                 """\
@@ -45,7 +82,45 @@ You must install both flatpak and flatpak-builder.
             raise BriefcaseCommandError("Unable to invoke flatpak.") from e
 
         try:
-            command.subprocess.check_output(["flatpak-builder", "--version"])
+            output = command.subprocess.check_output(
+                ["flatpak-builder", "--version"]
+            ).strip("\n")
+
+            parts = output.split(" ")
+            try:
+                if parts[0] == "flatpak-builder":
+                    version = parts[1].split(".")
+                    if int(version[0]) < 1:
+                        raise BriefcaseCommandError(
+                            "Briefcase requires flatpak-builder 1.0 or later."
+                        )
+                else:
+                    raise ValueError(f"Unexpected tool name {parts[0]}")
+            except (ValueError, IndexError):
+                command.logger.warning(
+                    """\
+*************************************************************************
+** WARNING: Unable to determine the version of flatpak-builder         **
+*************************************************************************
+
+    Briefcase will proceed, assuming everything is OK. If you
+    experience problems, this is almost certainly the cause of those
+    problems.
+
+    Please report this as a bug at:
+
+      https://github.com/beeware/briefcase/issues/new
+
+    In your report, please including the output from running:
+
+      flatpak-builder --version
+
+    from the command prompt.
+
+*************************************************************************
+"""
+                )
+
         except FileNotFoundError as e:
             raise BriefcaseCommandError(
                 """\
