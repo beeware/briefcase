@@ -6,6 +6,7 @@ import subprocess
 import sys
 import threading
 import time
+from pathlib import Path
 
 import psutil
 
@@ -217,6 +218,7 @@ class Subprocess:
 
         # Otherwise, invoke run() normally.
         self._log_command(args)
+        self._log_cwd(kwargs.get("cwd"))
         self._log_environment(kwargs.get("env"))
 
         try:
@@ -291,6 +293,7 @@ class Subprocess:
            is returned as strings instead of bytes.
         """
         self._log_command(args)
+        self._log_cwd(kwargs.get("cwd"))
         self._log_environment(kwargs.get("env"))
 
         try:
@@ -355,6 +358,7 @@ class Subprocess:
            is returned as strings instead of bytes.
         """
         self._log_command(args)
+        self._log_cwd(kwargs.get("cwd"))
         self._log_environment(kwargs.get("env"))
 
         return self._subprocess.Popen(
@@ -435,6 +439,12 @@ class Subprocess:
         self.command.logger.debug(
             f"    {' '.join(shlex.quote(str(arg)) for arg in args)}"
         )
+
+    def _log_cwd(self, cwd):
+        """Log the working directory for the  command being executed."""
+        effective_cwd = Path.cwd() if cwd is None else cwd
+        self.command.logger.debug("Working Directory:")
+        self.command.logger.debug(f"    {effective_cwd}")
 
     def _log_environment(self, overrides):
         """Log the environment variables overrides prior to command execution.

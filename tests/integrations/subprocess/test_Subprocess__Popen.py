@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from unittest.mock import ANY
 
 import pytest
@@ -133,16 +134,20 @@ def test_debug_call(mock_sub, capsys):
         encoding=ANY,
     )
     assert capsys.readouterr().out == (
-        "\n" ">>> Running Command:\n" ">>>     hello world\n"
+        "\n"
+        ">>> Running Command:\n"
+        ">>>     hello world\n"
+        ">>> Working Directory:\n"
+        f">>>     {Path.cwd()}\n"
     )
 
 
-def test_debug_call_with_env(mock_sub, capsys):
+def test_debug_call_with_env(mock_sub, capsys, tmp_path):
     """If verbosity is turned up, and injected env vars are included output."""
     mock_sub.command.logger = Log(verbosity=2)
 
     env = {"NewVar": "NewVarValue"}
-    mock_sub.Popen(["hello", "world"], env=env)
+    mock_sub.Popen(["hello", "world"], env=env, cwd=tmp_path / "cwd")
 
     merged_env = mock_sub.command.os.environ.copy()
     merged_env.update(env)
@@ -150,6 +155,7 @@ def test_debug_call_with_env(mock_sub, capsys):
     mock_sub._subprocess.Popen.assert_called_with(
         ["hello", "world"],
         env=merged_env,
+        cwd=os.fsdecode(tmp_path / "cwd"),
         text=True,
         encoding=ANY,
     )
@@ -158,6 +164,8 @@ def test_debug_call_with_env(mock_sub, capsys):
         "\n"
         ">>> Running Command:\n"
         ">>>     hello world\n"
+        ">>> Working Directory:\n"
+        f">>>     {tmp_path / 'cwd'}\n"
         ">>> Environment Overrides:\n"
         ">>>     NewVar=NewVarValue\n"
     )
