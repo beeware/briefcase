@@ -393,7 +393,7 @@ class CreateCommand(BaseCommand):
             will be written.
         """
         with self.input.wait_bar("Writing requirements file..."):
-            with (requirements_path).open("w") as f:
+            with (requirements_path).open("w", encoding="utf-8") as f:
                 if app.requires:
                     for requirement in app.requires:
                         f.write(f"{requirement}\n")

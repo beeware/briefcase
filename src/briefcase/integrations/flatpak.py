@@ -146,7 +146,7 @@ You must install both flatpak and flatpak-builder.
             # and is an alias for the command that would actually start
             # the flatpak.
             bin_path = path / f"{bundle}.{app_name}"
-            with bin_path.open("w") as f:
+            with bin_path.open("w", encoding="utf-8") as f:
                 f.write(
                     f"""\
 #!/bin/bash
