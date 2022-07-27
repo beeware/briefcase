@@ -6,9 +6,13 @@ from briefcase.commands import DevCommand
 from briefcase.config import AppConfig
 
 
+class DummyDevCommand(DevCommand):
+    platform = "C64"
+
+
 @pytest.fixture
 def dev_command(tmp_path):
-    command = DevCommand(base_path=tmp_path)
+    command = DummyDevCommand(base_path=tmp_path)
     command.subprocess = mock.MagicMock()
     return command
 

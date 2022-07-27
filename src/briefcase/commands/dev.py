@@ -1,6 +1,7 @@
 import os
 import subprocess
 import sys
+from pathlib import Path
 from typing import Optional
 
 from briefcase.config import BaseConfig
@@ -89,6 +90,7 @@ class DevCommand(BaseCommand):
                 [sys.executable, "-m", app.module_name],
                 env=env,
                 check=True,
+                cwd=self.platform_path,
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(
@@ -98,7 +100,11 @@ class DevCommand(BaseCommand):
     def get_environment(self, app):
         # Create a shell environment where PYTHONPATH points to the source
         # directories described by the app config.
-        return {"PYTHONPATH": os.pathsep.join(app.PYTHONPATH)}
+        return {
+            "PYTHONPATH": os.pathsep.join(
+                os.fsdecode(Path.cwd() / path) for path in app.PYTHONPATH
+            )
+        }
 
     def __call__(
         self,
