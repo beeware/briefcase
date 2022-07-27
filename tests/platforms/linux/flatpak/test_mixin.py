@@ -88,7 +88,7 @@ def test_custom_runtime(first_app_config, tmp_path):
     assert command.flatpak_sdk(first_app_config) == "org.beeware.SDK"
 
 
-def test_custom_runtime_platform_only(first_app_config, tmp_path):
+def test_custom_runtime_runtime_only(first_app_config, tmp_path):
     """If the user only defines a runtime, accessing the SDK raises an
     error."""
     first_app_config.flatpak_runtime = "org.beeware.Platform"
@@ -98,7 +98,7 @@ def test_custom_runtime_platform_only(first_app_config, tmp_path):
 
     with pytest.raises(
         BriefcaseConfigError,
-        match=r"",
+        match=r"If you specify a custom Flatpak runtime, you must also specify a corresponding Flatpak SDK.",
     ):
         command.flatpak_runtime(first_app_config)
 
@@ -113,12 +113,12 @@ def test_custom_runtime_sdk_only(first_app_config, tmp_path):
 
     with pytest.raises(
         BriefcaseConfigError,
-        match=r"",
+        match=r"If you specify a custom Flatpak SDK, you must also specify a corresponding Flatpak runtime.",
     ):
         command.flatpak_sdk(first_app_config)
 
 
-def test_verify_linux_no_docker(tmp_path):
+def test_verify_linux(tmp_path):
     """Verifying on Linux creates an SDK wrapper."""
     command = LinuxFlatpakCreateCommand(base_path=tmp_path)
     command.host_os = "Linux"
@@ -131,7 +131,7 @@ def test_verify_linux_no_docker(tmp_path):
     assert isinstance(command.flatpak, Flatpak)
 
 
-def test_verify_non_linux_no_docker(tmp_path):
+def test_verify_non_linux(tmp_path):
     """Verifying on non-Linux raises an error."""
     command = LinuxFlatpakCreateCommand(base_path=tmp_path)
     command.host_os = "WeirdOS"
