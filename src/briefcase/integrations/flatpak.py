@@ -17,7 +17,7 @@ class Flatpak:
 
     @classmethod
     def verify(cls, command):
-        """Verify that linuxdeploy tool or plugin is available.
+        """Verify that the Flatpak toolchain is available.
 
         :param command: The command that needs to use flatpak
         """
@@ -177,7 +177,7 @@ flatpak run {bundle}.{app_name}
             raise BriefcaseCommandError(f"Unable to start app {app_name}.") from e
 
     def bundle(self, repo_url, bundle, app_name, version, build_path, output_path):
-        """Bubndle a Flatpak for distribution.
+        """Bundle a Flatpak for distribution.
 
         Generates a standalone .flatpak file that can be installed into another user's
         Flatpak repository.

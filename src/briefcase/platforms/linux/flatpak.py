@@ -16,7 +16,7 @@ class LinuxFlatpakMixin(LinuxMixin):
     output_format = "flatpak"
 
     def binary_path(self, app):
-        # Flatpak doesn't really produce an identifiable "binary" as part of it's
+        # Flatpak doesn't really produce an identifiable "binary" as part of its
         # build process, so the SDK wrapper creates a file that can use to identify
         # if run has been invoked. As a neat side effect, it's also a shell script
         # that can invoke the flatpak.

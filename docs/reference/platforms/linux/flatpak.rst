@@ -18,7 +18,7 @@ required by an application).
 The end user will install the Flatpak into their local app repository; this can
 be done by installing directly from a single file `.flatpak` bundle, or by
 installing from a package repository like `Flathub <https://flathub.org>`__.
-Apps can be installed into user-space, or if the user has sufficient priviliges,
+Apps can be installed into user-space, or if the user has sufficient privileges,
 they can be installed into a system-wide app repository.
 
 Briefcase currently supports creating `.flatpak` single file bundles; end users
