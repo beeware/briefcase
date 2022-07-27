@@ -137,7 +137,7 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        platform: ['macos-latest', 'windows-latest', 'ubuntu-latest']
+        platform: ['macos-latest', 'windows-latest', 'ubuntu-18.04']
         framework: ['toga', 'pyside2', 'pyside6', 'ppb']
         include:
         - platform: macos-latest
@@ -148,9 +148,10 @@ jobs:
           briefcase-data-dir: ~\AppData\Local\BeeWare\briefcase\Cache
           pip-cache-dir: ~\AppData\Local\pip\Cache
           docker-cache-dir: C:\ProgramData\DockerDesktop
-        - platform: ubuntu-latest
+        - platform: ubuntu-18.04
           briefcase-data-dir: ~/.cache/briefcase
           pip-cache-dir: ~/.cache/pip
+          briefcase-args: --no-docker
           # cache action cannot cache docker images (actions/cache#31)
           # docker-cache-dir: /var/lib/docker
     runs-on: ${{ matrix.platform }}
@@ -170,10 +171,15 @@ jobs:
       with:
         python-version: ${{ env.python_version }}
     - name: Install dependencies
+      if: matrix.platform == 'ubuntu=18.04'
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install -y python3-gi python3-gi-cairo gir1.2-gtk-3.0 python3-dev libgirepository1.0-dev libcairo2-dev pkg-config
+    - name: Install dependencies
       run: |
         pip install --upgrade pip
         pip install --upgrade setuptools
         pip install tox
     - name: Test
       run: |
-        tox -e verify-${{ matrix.framework }}
+        tox -e verify-${{ matrix.framework }} -- ${{ matrix.briefcase-args }}
