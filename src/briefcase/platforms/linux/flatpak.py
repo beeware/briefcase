@@ -54,13 +54,35 @@ class LinuxFlatpakMixin(LinuxMixin):
         return repo_alias, repo_url
 
     def flatpak_runtime(self, app):
-        return getattr(app, "flatpak_runtime", Flatpak.DEFAULT_RUNTIME)
+        # Verify that either both or neither of runtime *and* sdk are specified
+        try:
+            runtime = app.flatpak_runtime
+            if hasattr(app, "flatpak_sdk"):
+                return runtime
+            else:
+                raise BriefcaseConfigError(
+                    "If you specify a custom Flatpak runtime, "
+                    "you must also specify a corresponding Flatpak SDK."
+                )
+        except AttributeError:
+            return Flatpak.DEFAULT_RUNTIME
 
     def flatpak_runtime_version(self, app):
         return getattr(app, "flatpak_runtime_version", Flatpak.DEFAULT_RUNTIME_VERSION)
 
     def flatpak_sdk(self, app):
-        return getattr(app, "flatpak_sdk", Flatpak.DEFAULT_SDK)
+        # Verify that either both or neither of runtime *and* sdk are specified
+        try:
+            sdk = app.flatpak_sdk
+            if hasattr(app, "flatpak_runtime"):
+                return sdk
+            else:
+                raise BriefcaseConfigError(
+                    "If you specify a custom Flatpak SDK, "
+                    "you must also specify a corresponding Flatpak runtime."
+                )
+        except AttributeError:
+            return Flatpak.DEFAULT_SDK
 
 
 class LinuxFlatpakCreateCommand(LinuxFlatpakMixin, CreateCommand):

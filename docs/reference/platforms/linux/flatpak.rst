@@ -84,6 +84,9 @@ A string, identifying the runtime to use as a base for the Flatpak app. By
 default, Flatpaks build with Briefcase will use the ``org.freedesktop.Platform``
 runtime.
 
+The Flatpak runtime and SDK are paired; so if you define ``flatpak_runtime``,
+you *must* also define ``flatpak_sdk``.
+
 ``flatpak_runtime_version``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -98,6 +101,8 @@ A string, identifying the SDK associated with the platform that will be used to
 build the Flatpak app. By default, Flatpaks build with Briefcase will use the
 ``org.freedesktop.Sdk`` SDK. The SDK will use the same version as the runtime.
 
+The Flatpak runtime and SDK are paired; so if you define ``flatpak_sdk``,
+you *must* also define ``flatpak_runtime``.
 
 Compilation issues with Flatpak
 ===============================

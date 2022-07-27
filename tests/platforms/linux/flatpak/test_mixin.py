@@ -88,6 +88,36 @@ def test_custom_runtime(first_app_config, tmp_path):
     assert command.flatpak_sdk(first_app_config) == "org.beeware.SDK"
 
 
+def test_custom_runtime_platform_only(first_app_config, tmp_path):
+    """If the user only defines a runtime, accessing the SDK raises an
+    error."""
+    first_app_config.flatpak_runtime = "org.beeware.Platform"
+    first_app_config.flatpak_runtime_version = "37.42"
+
+    command = LinuxFlatpakCreateCommand(base_path=tmp_path)
+
+    with pytest.raises(
+        BriefcaseConfigError,
+        match=r"",
+    ):
+        command.flatpak_runtime(first_app_config)
+
+
+def test_custom_runtime_sdk_only(first_app_config, tmp_path):
+    """If the user only defines a SDK, accessing the runtime raises an
+    error."""
+    first_app_config.flatpak_runtime_version = "37.42"
+    first_app_config.flatpak_sdk = "org.beeware.SDK"
+
+    command = LinuxFlatpakCreateCommand(base_path=tmp_path)
+
+    with pytest.raises(
+        BriefcaseConfigError,
+        match=r"",
+    ):
+        command.flatpak_sdk(first_app_config)
+
+
 def test_verify_linux_no_docker(tmp_path):
     """Verifying on Linux creates an SDK wrapper."""
     command = LinuxFlatpakCreateCommand(base_path=tmp_path)
