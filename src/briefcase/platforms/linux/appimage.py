@@ -272,7 +272,7 @@ class LinuxAppImageRunCommand(LinuxAppImageMixin, RunCommand):
 
 
 class LinuxAppImagePackageCommand(LinuxAppImageMixin, PackageCommand):
-    description = "Publish a Linux AppImage."
+    description = "Package a Linux AppImage."
 
 
 class LinuxAppImagePublishCommand(LinuxAppImageMixin, PublishCommand):

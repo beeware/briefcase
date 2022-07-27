@@ -1,6 +1,6 @@
-==============
-Linux AppImage
-==============
+========
+AppImage
+========
 
 `AppImage <https://appimage.org>`__ provides a way for developers to provide
 "native" binaries for Linux users. It allow packaging applications for any
@@ -46,7 +46,15 @@ AppImage:
 Icon format
 ===========
 
-AppImages use ``.png`` format icons.
+AppImages uses ``.png`` format icons. An application must provide icons in
+the following sizes:
+
+  * 16px
+  * 32px
+  * 64px
+  * 128px
+  * 256px
+  * 512px
 
 Splash Image format
 ===================

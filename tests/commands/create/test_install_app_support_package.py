@@ -11,7 +11,13 @@ from briefcase.exceptions import MissingNetworkResourceError, NetworkFailure
 from ...utils import create_zip_file, mock_file_download, mock_zip_download
 
 
-def test_install_app_support_package(create_command, myapp, tmp_path, support_path):
+def test_install_app_support_package(
+    create_command,
+    myapp,
+    tmp_path,
+    support_path,
+    app_requirements_path_index,
+):
     """A support package can be downloaded and unpacked where it is needed."""
 
     # Mock download_url to return a support package
@@ -48,7 +54,11 @@ def test_install_app_support_package(create_command, myapp, tmp_path, support_pa
 
 
 def test_install_pinned_app_support_package(
-    create_command, myapp, tmp_path, support_path
+    create_command,
+    myapp,
+    tmp_path,
+    support_path,
+    app_requirements_path_index,
 ):
     """A pinned support package can be downloaded and unpacked where it is
     needed."""
@@ -89,7 +99,11 @@ def test_install_pinned_app_support_package(
 
 
 def test_install_custom_app_support_package_file(
-    create_command, myapp, tmp_path, support_path
+    create_command,
+    myapp,
+    tmp_path,
+    support_path,
+    app_requirements_path_index,
 ):
     """A custom support package can be specified as a local file."""
     # Provide an app-specific override of the package URL
@@ -181,7 +195,11 @@ def test_support_package_url_with_unsupported_platform(create_command, myapp):
 
 
 def test_install_custom_app_support_package_url(
-    create_command, myapp, tmp_path, support_path
+    create_command,
+    myapp,
+    tmp_path,
+    support_path,
+    app_requirements_path_index,
 ):
     """A custom support package can be specified as URL."""
     # Provide an app-specific override of the package URL
@@ -229,7 +247,11 @@ def test_install_custom_app_support_package_url(
 
 
 def test_install_pinned_custom_app_support_package_url(
-    create_command, myapp, tmp_path, support_path
+    create_command,
+    myapp,
+    tmp_path,
+    support_path,
+    app_requirements_path_index,
 ):
     """A custom support package can be specified as URL, and pinned to a
     revision."""
@@ -281,7 +303,11 @@ def test_install_pinned_custom_app_support_package_url(
 
 
 def test_install_pinned_custom_app_support_package_url_with_args(
-    create_command, myapp, tmp_path, support_path
+    create_command,
+    myapp,
+    tmp_path,
+    support_path,
+    app_requirements_path_index,
 ):
     """A custom support package can be specified as URL with args, and pinned
     to a revision."""
@@ -329,7 +355,12 @@ def test_install_pinned_custom_app_support_package_url_with_args(
     assert (support_path / "internal" / "file.txt").exists()
 
 
-def test_offline_install(create_command, myapp, support_path):
+def test_offline_install(
+    create_command,
+    myapp,
+    support_path,
+    app_requirements_path_index,
+):
     """If the computer is offline, an error is raised."""
     create_command.download_url = mock.MagicMock(
         side_effect=requests_exceptions.ConnectionError
@@ -340,7 +371,13 @@ def test_offline_install(create_command, myapp, support_path):
         create_command.install_app_support_package(myapp)
 
 
-def test_invalid_support_package(create_command, myapp, tmp_path, support_path):
+def test_invalid_support_package(
+    create_command,
+    myapp,
+    tmp_path,
+    support_path,
+    app_requirements_path_index,
+):
     """If the support package isn't a valid zipfile, an error is raised."""
     # Mock download_url to return a non-zip file
     create_command.download_url = mock.MagicMock(
@@ -355,7 +392,13 @@ def test_invalid_support_package(create_command, myapp, tmp_path, support_path):
         create_command.install_app_support_package(myapp)
 
 
-def test_missing_support_package(create_command, myapp, tmp_path, support_path):
+def test_missing_support_package(
+    create_command,
+    myapp,
+    tmp_path,
+    support_path,
+    app_requirements_path_index,
+):
     """If the path provided for the support package is bad, an error is
     raised."""
     # Set a custom support package that doesn't exist

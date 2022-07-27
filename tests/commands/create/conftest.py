@@ -156,8 +156,14 @@ def bundle_path(myapp, tmp_path):
     # exist, and the briefcase index file has been created.
     bundle_path = tmp_path / "project" / "tester" / f"{myapp.app_name}.bundle"
     (bundle_path / "path" / "to" / "app").mkdir(parents=True, exist_ok=True)
-    (bundle_path / "path" / "to" / "app_packages").mkdir(parents=True, exist_ok=True)
     (bundle_path / "path" / "to" / "support").mkdir(parents=True, exist_ok=True)
+
+    return bundle_path
+
+
+@pytest.fixture
+def app_packages_path_index(bundle_path):
+    (bundle_path / "path" / "to" / "app_packages").mkdir(parents=True, exist_ok=True)
     with (bundle_path / "briefcase.toml").open("wb") as f:
         index = {
             "paths": {
@@ -168,12 +174,28 @@ def bundle_path(myapp, tmp_path):
         }
         tomli_w.dump(index, f)
 
-    return bundle_path
+
+@pytest.fixture
+def app_requirements_path_index(bundle_path):
+    with (bundle_path / "briefcase.toml").open("wb") as f:
+        index = {
+            "paths": {
+                "app_path": "path/to/app",
+                "app_requirements_path": "path/to/requirements.txt",
+                "support_path": "path/to/support",
+            }
+        }
+        tomli_w.dump(index, f)
 
 
 @pytest.fixture
 def support_path(bundle_path):
     return bundle_path / "path" / "to" / "support"
+
+
+@pytest.fixture
+def app_requirements_path(bundle_path):
+    return bundle_path / "path" / "to" / "requirements.txt"
 
 
 @pytest.fixture
