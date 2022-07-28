@@ -90,7 +90,7 @@ class DevCommand(BaseCommand):
                 [sys.executable, "-m", app.module_name],
                 env=env,
                 check=True,
-                cwd=self.platform_path,
+                cwd=self.home_path,
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(

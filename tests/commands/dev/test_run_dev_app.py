@@ -12,7 +12,7 @@ def test_subprocess_running_successfully(dev_command, first_app, tmp_path):
     dev_command.subprocess.run.assert_called_once_with(
         [sys.executable, "-m", first_app.app_name],
         env=env,
-        cwd=tmp_path / "C64",
+        cwd=dev_command.home_path,
         check=True,
     )
 
@@ -27,6 +27,6 @@ def test_subprocess_throws_error(dev_command, first_app, tmp_path):
     dev_command.subprocess.run.assert_called_once_with(
         [sys.executable, "-m", first_app.app_name],
         env=env,
-        cwd=tmp_path / "C64",
+        cwd=dev_command.home_path,
         check=True,
     )
