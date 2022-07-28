@@ -42,7 +42,9 @@ def test_run_app(first_app_config, tmp_path, monkeypatch):
         bufsize=1,
     )
     command.subprocess.run.assert_called_with(
-        ["open", "-n", os.fsdecode(bin_path)], check=True
+        ["open", "-n", os.fsdecode(bin_path)],
+        cwd=tmp_path / "macOS",
+        check=True,
     )
     command.subprocess.stream_output.assert_called_with(
         "log stream", log_stream_process, stop_func=mock.ANY
@@ -83,7 +85,9 @@ def test_run_app_failed(first_app_config, tmp_path):
         bufsize=1,
     )
     command.subprocess.run.assert_called_with(
-        ["open", "-n", os.fsdecode(bin_path)], check=True
+        ["open", "-n", os.fsdecode(bin_path)],
+        cwd=tmp_path / "macOS",
+        check=True,
     )
 
     # No attempt was made to stream the log; but there was a cleanup
@@ -122,7 +126,9 @@ def test_run_app_find_pid_failed(first_app_config, tmp_path, monkeypatch, capsys
         bufsize=1,
     )
     command.subprocess.run.assert_called_with(
-        ["open", "-n", os.fsdecode(bin_path)], check=True
+        ["open", "-n", os.fsdecode(bin_path)],
+        cwd=tmp_path / "macOS",
+        check=True,
     )
     assert capsys.readouterr().out == (
         "\n"

@@ -26,5 +26,6 @@ def test_run_app(first_app_config, tmp_path):
                 / "First App.exe"
             ),
         ],
+        cwd=tmp_path / "windows",
         check=True,
     )

@@ -78,6 +78,7 @@ class macOSRunMixin:
                         "-n",  # Force a new app to be launched
                         os.fsdecode(self.binary_path(app)),
                     ],
+                    cwd=self.platform_path,
                     check=True,
                 )
             except subprocess.CalledProcessError:

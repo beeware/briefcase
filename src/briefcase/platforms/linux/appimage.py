@@ -266,6 +266,7 @@ class LinuxAppImageRunCommand(LinuxAppImageMixin, RunCommand):
                     os.fsdecode(self.binary_path(app)),
                 ],
                 check=True,
+                cwd=self.platform_path,
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(f"Unable to start app {app.app_name}.") from e

@@ -34,5 +34,7 @@ def test_run_app(first_app_config, tmp_path):
         bufsize=1,
     )
     command.subprocess.run.assert_called_with(
-        ["open", "-n", os.fsdecode(bin_path)], check=True
+        ["open", "-n", os.fsdecode(bin_path)],
+        cwd=tmp_path / "macOS",
+        check=True,
     )

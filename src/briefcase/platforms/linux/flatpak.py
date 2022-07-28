@@ -172,7 +172,10 @@ class LinuxFlatpakRunCommand(LinuxFlatpakMixin, RunCommand):
         :param app: The config object for the app
         """
         self.logger.info("Starting app...", prefix=app.app_name)
-        self.flatpak.run(bundle=app.bundle, app_name=app.app_name)
+        self.flatpak.run(
+            bundle=app.bundle,
+            app_name=app.app_name,
+        )
 
 
 class LinuxFlatpakPackageCommand(LinuxFlatpakMixin, PackageCommand):

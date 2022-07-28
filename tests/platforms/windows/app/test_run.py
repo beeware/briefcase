@@ -20,6 +20,7 @@ def test_run_app(first_app_config, tmp_path):
                 tmp_path / "windows" / "app" / "First App" / "src" / "First App.exe"
             ),
         ],
+        cwd=tmp_path / "windows",
         check=True,
     )
 
@@ -40,5 +41,6 @@ def test_run_app_failed(first_app_config, tmp_path):
                 tmp_path / "windows" / "app" / "First App" / "src" / "First App.exe"
             ),
         ],
+        cwd=tmp_path / "windows",
         check=True,
     )
