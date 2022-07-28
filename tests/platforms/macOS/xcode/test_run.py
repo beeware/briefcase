@@ -10,9 +10,11 @@ from briefcase.platforms.macOS.xcode import macOSXcodeRunCommand
 
 def test_run_app(first_app_config, tmp_path):
     """A macOS Xcode app can be started."""
-    command = macOSXcodeRunCommand(base_path=tmp_path)
+    command = macOSXcodeRunCommand(
+        base_path=tmp_path / "base",
+        home_path=tmp_path / "home",
+    )
     command.subprocess = mock.MagicMock()
-
     command.run_app(first_app_config)
 
     # Calls were made to start the app and to start a log stream.
@@ -35,6 +37,6 @@ def test_run_app(first_app_config, tmp_path):
     )
     command.subprocess.run.assert_called_with(
         ["open", "-n", os.fsdecode(bin_path)],
-        cwd=tmp_path / "macOS",
+        cwd=tmp_path / "home",
         check=True,
     )

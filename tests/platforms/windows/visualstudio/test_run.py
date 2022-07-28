@@ -9,7 +9,10 @@ from briefcase.platforms.windows.visualstudio import WindowsVisualStudioRunComma
 
 def test_run_app(first_app_config, tmp_path):
     """A windows Visual Studio project app can be started."""
-    command = WindowsVisualStudioRunCommand(base_path=tmp_path)
+    command = WindowsVisualStudioRunCommand(
+        base_path=tmp_path / "base",
+        home_path=tmp_path / "home",
+    )
     command.subprocess = mock.MagicMock()
 
     command.run_app(first_app_config)
@@ -18,6 +21,7 @@ def test_run_app(first_app_config, tmp_path):
         [
             os.fsdecode(
                 tmp_path
+                / "base"
                 / "windows"
                 / "VisualStudio"
                 / "First App"
@@ -26,6 +30,6 @@ def test_run_app(first_app_config, tmp_path):
                 / "First App.exe"
             ),
         ],
-        cwd=tmp_path / "windows",
+        cwd=tmp_path / "home",
         check=True,
     )

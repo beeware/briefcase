@@ -10,7 +10,10 @@ from briefcase.platforms.macOS.app import macOSAppRunCommand
 
 def test_run_app(first_app_config, tmp_path, monkeypatch):
     """A macOS app can be started."""
-    command = macOSAppRunCommand(base_path=tmp_path)
+    command = macOSAppRunCommand(
+        base_path=tmp_path / "base",
+        home_path=tmp_path / "home",
+    )
     command.subprocess = mock.MagicMock()
     log_stream_process = mock.MagicMock()
     command.subprocess.Popen.return_value = log_stream_process
@@ -43,7 +46,7 @@ def test_run_app(first_app_config, tmp_path, monkeypatch):
     )
     command.subprocess.run.assert_called_with(
         ["open", "-n", os.fsdecode(bin_path)],
-        cwd=tmp_path / "macOS",
+        cwd=tmp_path / "home",
         check=True,
     )
     command.subprocess.stream_output.assert_called_with(
@@ -54,7 +57,10 @@ def test_run_app(first_app_config, tmp_path, monkeypatch):
 
 def test_run_app_failed(first_app_config, tmp_path):
     """If there's a problem started the app, an exception is raised."""
-    command = macOSAppRunCommand(base_path=tmp_path)
+    command = macOSAppRunCommand(
+        base_path=tmp_path / "base",
+        home_path=tmp_path / "home",
+    )
     command.subprocess = mock.MagicMock()
     log_stream_process = mock.MagicMock()
     command.subprocess.Popen.return_value = log_stream_process
@@ -86,7 +92,7 @@ def test_run_app_failed(first_app_config, tmp_path):
     )
     command.subprocess.run.assert_called_with(
         ["open", "-n", os.fsdecode(bin_path)],
-        cwd=tmp_path / "macOS",
+        cwd=tmp_path / "home",
         check=True,
     )
 
@@ -97,7 +103,10 @@ def test_run_app_failed(first_app_config, tmp_path):
 
 def test_run_app_find_pid_failed(first_app_config, tmp_path, monkeypatch, capsys):
     """If after app is started, its pid is not found, do not stream output."""
-    command = macOSAppRunCommand(base_path=tmp_path)
+    command = macOSAppRunCommand(
+        base_path=tmp_path / "base",
+        home_path=tmp_path / "home",
+    )
     command.subprocess = mock.MagicMock()
     log_stream_process = mock.MagicMock()
     command.subprocess.Popen.return_value = log_stream_process
@@ -127,7 +136,7 @@ def test_run_app_find_pid_failed(first_app_config, tmp_path, monkeypatch, capsys
     )
     command.subprocess.run.assert_called_with(
         ["open", "-n", os.fsdecode(bin_path)],
-        cwd=tmp_path / "macOS",
+        cwd=tmp_path / "home",
         check=True,
     )
     assert capsys.readouterr().out == (
