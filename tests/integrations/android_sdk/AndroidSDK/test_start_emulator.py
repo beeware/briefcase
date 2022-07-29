@@ -119,7 +119,8 @@ def test_start_emulator(mock_sdk):
         ],
         env=mock_sdk.env,
         stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        bufsize=1,
         start_new_session=True,
     )
 
@@ -215,7 +216,8 @@ def test_emulator_fail_to_start(mock_sdk):
         ],
         env=mock_sdk.env,
         stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        bufsize=1,
         start_new_session=True,
     )
 
@@ -314,7 +316,8 @@ def test_emulator_fail_to_boot(mock_sdk):
         ],
         env=mock_sdk.env,
         stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        bufsize=1,
         start_new_session=True,
     )
 
