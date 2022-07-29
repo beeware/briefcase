@@ -87,7 +87,15 @@ class DevCommand(BaseCommand):
         try:
             # Invoke the app.
             self.subprocess.run(
-                [sys.executable, "-m", app.module_name],
+                [
+                    sys.executable,
+                    "-c",
+                    (
+                        "import runpy, sys;"
+                        "sys.path.pop(0);"
+                        f'runpy.run_module("{app.module_name}", run_name="__main__", alter_sys=True)'
+                    ),
+                ],
                 env=env,
                 check=True,
                 cwd=self.home_path,

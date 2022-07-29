@@ -10,7 +10,15 @@ def test_subprocess_running_successfully(dev_command, first_app, tmp_path):
     env = dict(a=1, b=2, c=3)
     dev_command.run_dev_app(first_app, env)
     dev_command.subprocess.run.assert_called_once_with(
-        [sys.executable, "-m", first_app.app_name],
+        [
+            sys.executable,
+            "-c",
+            (
+                "import runpy, sys;"
+                "sys.path.pop(0);"
+                'runpy.run_module("first", run_name="__main__", alter_sys=True)'
+            ),
+        ],
         env=env,
         cwd=dev_command.home_path,
         check=True,
@@ -25,7 +33,15 @@ def test_subprocess_throws_error(dev_command, first_app, tmp_path):
     ):
         dev_command.run_dev_app(first_app, env)
     dev_command.subprocess.run.assert_called_once_with(
-        [sys.executable, "-m", first_app.app_name],
+        [
+            sys.executable,
+            "-c",
+            (
+                "import runpy, sys;"
+                "sys.path.pop(0);"
+                'runpy.run_module("first", run_name="__main__", alter_sys=True)'
+            ),
+        ],
         env=env,
         cwd=dev_command.home_path,
         check=True,
