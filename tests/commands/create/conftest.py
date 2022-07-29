@@ -189,6 +189,18 @@ def app_requirements_path_index(bundle_path):
 
 
 @pytest.fixture
+def no_support_path_index(bundle_path):
+    with (bundle_path / "briefcase.toml").open("wb") as f:
+        index = {
+            "paths": {
+                "app_path": "path/to/app",
+                "app_requirements_path": "path/to/requirements.txt",
+            }
+        }
+        tomli_w.dump(index, f)
+
+
+@pytest.fixture
 def support_path(bundle_path):
     return bundle_path / "path" / "to" / "support"
 

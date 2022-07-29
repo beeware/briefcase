@@ -142,7 +142,7 @@ def test_install_custom_app_support_package_file(
 
 
 def test_support_package_url_with_invalid_custom_support_packge_url(
-    create_command, myapp
+    create_command, myapp, app_requirements_path_index
 ):
     """Invalid URL for a custom support package raises
     MissingNetworkResourceError."""
@@ -171,7 +171,9 @@ def test_support_package_url_with_invalid_custom_support_packge_url(
     )
 
 
-def test_support_package_url_with_unsupported_platform(create_command, myapp):
+def test_support_package_url_with_unsupported_platform(
+    create_command, myapp, app_requirements_path_index
+):
     """An unsupported platform raises MissingSupportPackage."""
     # Set the host architecture to something unsupported
     create_command.host_arch = "unknown"
@@ -407,3 +409,11 @@ def test_missing_support_package(
     # Installing the bad support package raises an error
     with pytest.raises(InvalidSupportPackage):
         create_command.install_app_support_package(myapp)
+
+
+def test_no_support_path(create_command, myapp, no_support_path_index):
+    """If support_path is not listed in briefcase.toml, a support package will
+    not be downloaded."""
+    create_command.download_url = mock.MagicMock()
+    create_command.install_app_support_package(myapp)
+    create_command.download_url.assert_not_called()

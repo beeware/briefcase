@@ -316,6 +316,15 @@ class CreateCommand(BaseCommand):
         :param app: The config object for the app
         """
         try:
+            self.support_path(app)
+        except KeyError:
+            self.logger.info("No support_path in briefcase.toml: skipping")
+        else:
+            support_file_path = self._download_support_package(app)
+            self._unpack_support_package(app, support_file_path)
+
+    def _download_support_package(self, app):
+        try:
             # Work out if the app defines a custom override for
             # the support package URL.
             try:
@@ -362,12 +371,12 @@ class CreateCommand(BaseCommand):
 
                 # Download the support file, caching the result
                 # in the user's briefcase support cache directory.
-                support_file_path = self.download_url(
+                return self.download_url(
                     url=support_package_url,
                     download_path=download_path,
                 )
             else:
-                support_file_path = Path(support_package_url)
+                return Path(support_package_url)
         except MissingNetworkResourceError as e:
             # If there is a custom support package, report the missing resource as-is.
             if custom_support_package:
@@ -380,9 +389,6 @@ class CreateCommand(BaseCommand):
 
         except requests_exceptions.ConnectionError as e:
             raise NetworkFailure("downloading support package") from e
-
-        # Now that we know we have the support package, unpack it.
-        self._unpack_support_package(app, support_file_path)
 
     def _write_requirements_file(self, app: BaseConfig, requirements_path):
         """Configure application dependencies by writing a requirements.txt
