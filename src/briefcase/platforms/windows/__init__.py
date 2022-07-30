@@ -86,6 +86,7 @@ class WindowsRunCommand(RunCommand):
             self.logger.info("=" * 75)
             self.subprocess.run(
                 [os.fsdecode(self.binary_path(app))],
+                cwd=self.home_path,
                 check=True,
             )
         except subprocess.CalledProcessError as e:

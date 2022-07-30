@@ -9,7 +9,10 @@ from briefcase.platforms.linux.appimage import LinuxAppImageRunCommand
 
 def test_verify_linux(tmp_path):
     """A linux App can be started on linux."""
-    command = LinuxAppImageRunCommand(base_path=tmp_path)
+    command = LinuxAppImageRunCommand(
+        base_path=tmp_path / "base",
+        home_path=tmp_path / "home",
+    )
     command.use_docker = True
     command.host_os = "Linux"
 
@@ -24,7 +27,10 @@ def test_verify_linux(tmp_path):
 
 def test_verify_non_linux(tmp_path):
     """A linux App can be started on linux, even if Docker is enabled."""
-    command = LinuxAppImageRunCommand(base_path=tmp_path)
+    command = LinuxAppImageRunCommand(
+        base_path=tmp_path / "base",
+        home_path=tmp_path / "home",
+    )
     command.use_docker = True
     command.host_os = "WierdOS"
 
@@ -40,7 +46,10 @@ def test_verify_non_linux(tmp_path):
 
 def test_run_app(first_app_config, tmp_path):
     """A linux App can be started."""
-    command = LinuxAppImageRunCommand(base_path=tmp_path)
+    command = LinuxAppImageRunCommand(
+        base_path=tmp_path / "base",
+        home_path=tmp_path / "home",
+    )
 
     # Set the host architecture for test purposes.
     command.host_arch = "wonky"
@@ -50,13 +59,18 @@ def test_run_app(first_app_config, tmp_path):
     command.run_app(first_app_config)
 
     command.subprocess.run.assert_called_with(
-        [os.fsdecode(tmp_path / "linux" / "First_App-0.0.1-wonky.AppImage")], check=True
+        [os.fsdecode(tmp_path / "base" / "linux" / "First_App-0.0.1-wonky.AppImage")],
+        cwd=tmp_path / "home",
+        check=True,
     )
 
 
 def test_run_app_failed(first_app_config, tmp_path):
     """If there's a problem started the app, an exception is raised."""
-    command = LinuxAppImageRunCommand(base_path=tmp_path)
+    command = LinuxAppImageRunCommand(
+        base_path=tmp_path / "base",
+        home_path=tmp_path / "home",
+    )
 
     # Set the host architecture for test purposes.
     command.host_arch = "wonky"
@@ -69,5 +83,7 @@ def test_run_app_failed(first_app_config, tmp_path):
 
     # The run command was still invoked, though
     command.subprocess.run.assert_called_with(
-        [os.fsdecode(tmp_path / "linux" / "First_App-0.0.1-wonky.AppImage")], check=True
+        [os.fsdecode(tmp_path / "base" / "linux" / "First_App-0.0.1-wonky.AppImage")],
+        cwd=tmp_path / "home",
+        check=True,
     )

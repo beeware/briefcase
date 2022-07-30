@@ -1,5 +1,6 @@
 import os
 import sys
+from pathlib import Path
 from unittest.mock import ANY
 
 import pytest
@@ -144,6 +145,8 @@ def test_simple_verbose_call(mock_docker, tmp_path, capsys):
         "--rm "
         "briefcase/com.example.myapp:py3.X "
         "hello world\n"
+        ">>> Working Directory:\n"
+        f">>>     {Path.cwd()}\n"
         ">>> Command Output:\n"
         ">>>     goodbye\n"
         ">>> Return code: 0\n"

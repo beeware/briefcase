@@ -1,6 +1,7 @@
 import os
 import subprocess
 import sys
+from pathlib import Path
 from typing import Optional
 
 from briefcase.config import BaseConfig
@@ -86,9 +87,18 @@ class DevCommand(BaseCommand):
         try:
             # Invoke the app.
             self.subprocess.run(
-                [sys.executable, "-m", app.module_name],
+                [
+                    sys.executable,
+                    "-c",
+                    (
+                        "import runpy, sys;"
+                        "sys.path.pop(0);"
+                        f'runpy.run_module("{app.module_name}", run_name="__main__", alter_sys=True)'
+                    ),
+                ],
                 env=env,
                 check=True,
+                cwd=self.home_path,
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(
@@ -98,7 +108,11 @@ class DevCommand(BaseCommand):
     def get_environment(self, app):
         # Create a shell environment where PYTHONPATH points to the source
         # directories described by the app config.
-        return {"PYTHONPATH": os.pathsep.join(app.PYTHONPATH)}
+        return {
+            "PYTHONPATH": os.pathsep.join(
+                os.fsdecode(Path.cwd() / path) for path in app.PYTHONPATH
+            )
+        }
 
     def __call__(
         self,
