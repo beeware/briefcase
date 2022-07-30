@@ -298,10 +298,14 @@ class CreateCommand(BaseCommand):
             # Branch does not exist for python version
             raise TemplateUnsupportedVersion(app.template_branch) from e
 
-    def _unpack_support_package(self, app, support_file_path):
+    def _unpack_support_package(self, support_file_path, support_path):
+        """Unpack a support package into a specific location.
+
+        :param support_file_path: The path to the support file to be unpacked.
+        :param support_path: The path where support files should unpacked.
+        """
         try:
             with self.input.wait_bar("Unpacking support package..."):
-                support_path = self.support_path(app)
                 support_path.mkdir(parents=True, exist_ok=True)
                 self.shutil.unpack_archive(
                     support_file_path,
@@ -316,12 +320,12 @@ class CreateCommand(BaseCommand):
         :param app: The config object for the app
         """
         try:
-            self.support_path(app)
+            support_path = self.support_path(app)
         except KeyError:
-            self.logger.info("No support_path in briefcase.toml: skipping")
+            self.logger.info("No support package required.")
         else:
             support_file_path = self._download_support_package(app)
-            self._unpack_support_package(app, support_file_path)
+            self._unpack_support_package(support_file_path, support_path)
 
     def _download_support_package(self, app):
         try:

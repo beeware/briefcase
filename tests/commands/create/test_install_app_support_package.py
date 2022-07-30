@@ -142,7 +142,9 @@ def test_install_custom_app_support_package_file(
 
 
 def test_support_package_url_with_invalid_custom_support_packge_url(
-    create_command, myapp, app_requirements_path_index
+    create_command,
+    myapp,
+    app_requirements_path_index,
 ):
     """Invalid URL for a custom support package raises
     MissingNetworkResourceError."""
@@ -172,7 +174,9 @@ def test_support_package_url_with_invalid_custom_support_packge_url(
 
 
 def test_support_package_url_with_unsupported_platform(
-    create_command, myapp, app_requirements_path_index
+    create_command,
+    myapp,
+    app_requirements_path_index,
 ):
     """An unsupported platform raises MissingSupportPackage."""
     # Set the host architecture to something unsupported
