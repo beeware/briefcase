@@ -123,11 +123,15 @@ def test_debug_call_with_env(mock_sub, capsys, tmp_path):
 @pytest.mark.parametrize(
     "in_kwargs, kwargs",
     [
-        ({}, {"text": True, "encoding": ANY}),
-        ({"text": True}, {"text": True, "encoding": ANY}),
-        ({"text": False}, {"text": False}),
-        ({"universal_newlines": False}, {"universal_newlines": False}),
-        ({"universal_newlines": True}, {"universal_newlines": True, "encoding": ANY}),
+        ({}, {"text": True, "encoding": ANY, "bufsize": 1}),
+        ({"text": True}, {"text": True, "encoding": ANY, "bufsize": 1}),
+        ({"text": False}, {"text": False, "bufsize": 1}),
+        ({"text": False, "bufsize": 42}, {"text": False, "bufsize": 42}),
+        ({"universal_newlines": False}, {"universal_newlines": False, "bufsize": 1}),
+        (
+            {"universal_newlines": True},
+            {"universal_newlines": True, "encoding": ANY, "bufsize": 1},
+        ),
     ],
 )
 def test_text_eq_true_default_overriding(mock_sub, in_kwargs, kwargs):
@@ -139,7 +143,6 @@ def test_text_eq_true_default_overriding(mock_sub, in_kwargs, kwargs):
         ["hello", "world"],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
-        bufsize=1,
         **kwargs,
     )
 
