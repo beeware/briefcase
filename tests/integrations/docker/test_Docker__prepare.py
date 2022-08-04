@@ -34,6 +34,7 @@ def test_prepare(mock_docker, tmp_path):
         ],
         stdout=-1,
         stderr=-2,
+        bufsize=1,
         text=True,
         encoding=ANY,
     )
@@ -71,6 +72,7 @@ def test_prepare_failure(mock_docker, tmp_path):
         ],
         stdout=-1,
         stderr=-2,
+        bufsize=1,
         text=True,
         encoding=ANY,
     )

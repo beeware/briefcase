@@ -25,6 +25,7 @@ def test_call(mock_sub, capsys):
         ["hello", "world"],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
+        bufsize=1,
         text=True,
         encoding=ANY,
     )
@@ -42,6 +43,7 @@ def test_call_with_arg(mock_sub, capsys):
         ["hello", "world"],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
+        bufsize=1,
         universal_newlines=True,
         encoding=ANY,
     )
@@ -60,6 +62,7 @@ def test_debug_call(mock_sub, capsys):
         ["hello", "world"],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
+        bufsize=1,
         text=True,
         encoding=ANY,
     )
@@ -96,6 +99,7 @@ def test_debug_call_with_env(mock_sub, capsys, tmp_path):
         cwd=os.fsdecode(tmp_path / "cwd"),
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
+        bufsize=1,
         text=True,
         encoding=ANY,
     )
@@ -135,6 +139,7 @@ def test_text_eq_true_default_overriding(mock_sub, in_kwargs, kwargs):
         ["hello", "world"],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
+        bufsize=1,
         **kwargs,
     )
 
@@ -151,6 +156,7 @@ def test_stderr_is_redirected(mock_sub, popen_process, capsys):
         ["hello", "world"],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
+        bufsize=1,
         text=True,
         encoding=ANY,
     )
@@ -171,6 +177,7 @@ def test_stderr_dev_null(mock_sub, popen_process, capsys):
         ["hello", "world"],
         stdout=subprocess.PIPE,
         stderr=subprocess.DEVNULL,
+        bufsize=1,
         text=True,
         encoding=ANY,
     )

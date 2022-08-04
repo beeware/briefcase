@@ -268,6 +268,8 @@ class Subprocess:
         kwargs["stdout"] = subprocess.PIPE
         # if stderr isn't explicitly redirected, then send it to stdout.
         kwargs.setdefault("stderr", subprocess.STDOUT)
+        # use line-buffered output by default
+        kwargs.setdefault("bufsize", 1)
 
         stderr = None
         with self.Popen(args, **kwargs) as process:
