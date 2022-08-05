@@ -157,6 +157,7 @@ def test_build_appimage(build_command, first_app, tmp_path):
         encoding=mock.ANY,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
+        bufsize=1,
     )
     # Binary is marked executable
     build_command.os.chmod.assert_called_with(
@@ -230,6 +231,7 @@ def test_build_appimage_with_plugin(build_command, first_app, tmp_path):
         encoding=mock.ANY,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
+        bufsize=1,
     )
     # Binary is marked executable
     build_command.os.chmod.assert_called_with(
@@ -279,6 +281,7 @@ def test_build_failure(build_command, first_app, tmp_path):
         encoding=mock.ANY,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
+        bufsize=1,
     )
 
     # chmod isn't invoked if the binary wasn't created.
@@ -333,6 +336,7 @@ def test_build_appimage_in_docker(build_command, first_app, tmp_path):
         encoding=mock.ANY,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
+        bufsize=1,
     )
     # Binary is marked executable
     build_command.os.chmod.assert_called_with(
@@ -425,6 +429,7 @@ def test_build_appimage_with_plugins_in_docker(build_command, first_app, tmp_pat
         encoding=mock.ANY,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
+        bufsize=1,
     )
     # Binary is marked executable
     build_command.os.chmod.assert_called_with(
