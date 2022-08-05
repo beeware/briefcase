@@ -81,6 +81,22 @@ class LinuxAppImageMixin(LinuxMixin):
                 "Linux AppImages can only be generated on Linux."
             )
 
+    def update_build_environment(self, app):
+        """Ensures the build environment is up-to-date with app requirements
+        and is prepared for use.
+
+        Docker:
+        Forces the (re)build of the Docker container image. Due to Docker's
+        image layer caching mechanisms, only layers with changes will
+        be re-run if the image already exists for the app. For instance,
+        if the system_requires changes, then those new packages are installed.
+
+        Native:
+        No-op. The user is expected to prepare the local native environment.
+        """
+        if self.use_docker:
+            self.Docker(self, app).prepare(force=True)
+
     @contextmanager
     def run_in_build_environment(self, app):
         """Manager to execute OS commands in the build environment.
@@ -101,9 +117,7 @@ class LinuxAppImageMixin(LinuxMixin):
             orig_subprocess = self.subprocess
             self.subprocess = self.Docker(self, app)
             self.subprocess.prepare()
-
             yield
-
             self.subprocess = orig_subprocess
             self.logger.info("Leaving Docker context", prefix=app.app_name)
         else:
@@ -149,6 +163,8 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
 
         :param app: The application to build
         """
+        self.update_build_environment(app=app)
+
         # Build a dictionary of environment definitions that are required
         env = {}
 

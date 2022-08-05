@@ -44,7 +44,7 @@ def test_install_app_dependencies(first_app_config, tmp_path):
     command.Docker.assert_called_with(command, first_app_config)
 
     # The docker container was prepared
-    docker.prepare.assert_called_with()
+    docker.prepare.assert_called_once_with()
 
     # pip was invoked inside docker.
     docker.run.assert_called_with(

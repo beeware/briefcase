@@ -59,6 +59,10 @@ def build_command(tmp_path, first_app_config):
         "PATH": "/usr/local/bin:/usr/bin:/path/to/somewhere"
     }
 
+    # mock user and group IDs for docker build
+    command.os.getuid.return_value = 1000
+    command.os.getgid.return_value = 1001
+
     # mock `echo $PATH` check_output call
     command.subprocess._subprocess.check_output.return_value = (
         "/usr/local/bin:/usr/bin:/path/to/somewhere"
@@ -299,10 +303,44 @@ def test_build_appimage_in_docker(build_command, first_app, tmp_path):
     build_command.host_os = "TestOS"
     build_command.use_docker = True
 
+    # Mock Docker responses for `docker images`
+    build_command._subprocess.check_output.side_effect = [
+        "1234567890ABCDEF",
+        "1234567890ABCDEF",
+    ]
+
     build_command.build_app(first_app)
 
     # Ensure that the effect of the Docker context has been reversed.
     assert build_command.subprocess != build_command.Docker
+
+    # Assert docker image built
+    build_command._subprocess.Popen.assert_any_call(
+        [
+            "docker",
+            "build",
+            "--progress",
+            "plain",
+            "--tag",
+            f"briefcase/com.example.first-app:py3.{sys.version_info.minor}",
+            "--file",
+            f"{tmp_path / 'project' / 'linux' / 'appimage' / 'First App' / 'Dockerfile'}",
+            "--build-arg",
+            f"PY_VERSION=3.{sys.version_info.minor}",
+            "--build-arg",
+            "SYSTEM_REQUIRES=",
+            "--build-arg",
+            "HOST_UID=1000",
+            "--build-arg",
+            "HOST_GID=1001",
+            f"{tmp_path / 'project' / 'src'}",
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        bufsize=1,
+        text=True,
+        encoding=mock.ANY,
+    )
 
     # linuxdeploy was invoked inside Docker
     build_command._subprocess.Popen.assert_called_with(
@@ -374,8 +412,13 @@ def test_build_appimage_with_plugins_in_docker(build_command, first_app, tmp_pat
         os.fsdecode(local_file_plugin_path),
     ]
 
-    # Mock Docker responses
-    build_command._subprocess.check_output.return_value = "/docker/bin:/docker/sbin"
+    # Mock Docker responses for `docker images` and `echo $PATH` calls
+    build_command._subprocess.check_output.side_effect = [
+        "1234567890ABCDEF",
+        "1234567890ABCDEF",
+        "/docker/bin:/docker/sbin",
+        "1234567890ABCDEF",
+    ]
 
     # Enable docker, and move to a non-Linux OS.
     build_command.host_os = "TestOS"
@@ -385,6 +428,34 @@ def test_build_appimage_with_plugins_in_docker(build_command, first_app, tmp_pat
 
     # Ensure that the effect of the Docker context has been reversed.
     assert build_command.subprocess != build_command.Docker
+
+    # Docker image is (re)built
+    build_command._subprocess.Popen.assert_any_call(
+        [
+            "docker",
+            "build",
+            "--progress",
+            "plain",
+            "--tag",
+            f"briefcase/com.example.first-app:py3.{sys.version_info.minor}",
+            "--file",
+            f"{tmp_path / 'project' / 'linux' / 'appimage' / 'First App' / 'Dockerfile'}",
+            "--build-arg",
+            f"PY_VERSION=3.{sys.version_info.minor}",
+            "--build-arg",
+            "SYSTEM_REQUIRES=",
+            "--build-arg",
+            "HOST_UID=1000",
+            "--build-arg",
+            "HOST_GID=1001",
+            f"{tmp_path / 'project' / 'src'}",
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        bufsize=1,
+        text=True,
+        encoding=mock.ANY,
+    )
 
     # linuxdeploy was invoked inside Docker
     build_command._subprocess.Popen.assert_called_with(

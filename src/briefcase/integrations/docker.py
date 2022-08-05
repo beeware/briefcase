@@ -194,9 +194,6 @@ installation, and try again.
 
 
 class Docker:
-    # Set of apps for which Docker has been prepared
-    prepared_apps = set()
-
     def __init__(self, command, app):
         self.command = command
         self._subprocess = command.subprocess
@@ -208,23 +205,30 @@ class Docker:
         return "/home/brutus/.cache/briefcase"
 
     def prepare(self, force=False):
-        """Create the Docker image from the app's Dockerfile.
+        """Create the Docker container image from the app's Dockerfile.
 
-        Only builds image once per app unless force=True.
+        Unless force=True, the docker container image will only be
+        built when an image does not already exist for the image
+        tag for the current app.
+
+        :param force: Build the docker image even if it already exists.
         """
-        if not force and self.app.app_name in self.prepared_apps:
+        is_docker_image_exists = bool(
+            # returns digest for docker image with matching tag if it exists else ""
+            self._subprocess.check_output(
+                ["docker", "images", "--quiet", self.command.docker_image_tag(self.app)]
+            ).strip()
+        )
+
+        if not force and is_docker_image_exists:
             return
 
+        image_action = "Updating" if is_docker_image_exists else "Building"
         self.command.logger.info(
-            "Building Docker container image...",
+            f"{image_action} Docker container image...",
             prefix=self.app.app_name,
         )
-        with self.command.input.wait_bar("Building Docker image..."):
-            try:
-                system_requires = " ".join(self.app.system_requires)
-            except AttributeError:
-                system_requires = ""
-
+        with self.command.input.wait_bar(f"{image_action} Docker image..."):
             try:
                 self._subprocess.run(
                     [
@@ -239,7 +243,7 @@ class Docker:
                         "--build-arg",
                         f"PY_VERSION={self.command.python_version_tag}",
                         "--build-arg",
-                        f"SYSTEM_REQUIRES={system_requires}",
+                        f"SYSTEM_REQUIRES={' '.join(getattr(self.app, 'system_requires', ''))}",
                         "--build-arg",
                         f"HOST_UID={self.command.os.getuid()}",
                         "--build-arg",
@@ -253,10 +257,8 @@ class Docker:
                 )
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
-                    f"Error building Docker image for {self.app.app_name}."
+                    f"Error {image_action.lower()} Docker container image for {self.app.app_name}."
                 ) from e
-            else:
-                self.prepared_apps.add(self.app.app_name)
 
     def _dockerize_path(self, arg):
         """Relocate any local path into the equivalent location on the docker
