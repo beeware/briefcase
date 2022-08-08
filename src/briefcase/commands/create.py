@@ -402,10 +402,23 @@ class CreateCommand(BaseCommand):
         :param requirements_path: The full path to a requirements.txt file that
             will be written.
         """
+        separators = [os.sep]
+        if os.altsep:
+            separators.append(os.altsep)
+
         with self.input.wait_bar("Writing requirements file..."):
             with (requirements_path).open("w", encoding="utf-8") as f:
                 if app.requires:
                     for requirement in app.requires:
+                        if any(
+                            sep in requirement for sep in separators
+                        ) and not os.path.isabs(requirement):
+                            # Update relative paths to be relative to the location of the
+                            # requirements file.
+                            requirement = os.path.relpath(
+                                self.base_path / requirement,
+                                os.path.dirname(requirements_path),
+                            )
                         f.write(f"{requirement}\n")
 
     def _install_app_dependencies(self, app: BaseConfig, app_packages_path):

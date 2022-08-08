@@ -1,5 +1,7 @@
+import os
 import subprocess
 import sys
+from os.path import normpath
 
 import pytest
 import tomli_w
@@ -344,3 +346,43 @@ def test_app_requirements_requires(
     assert app_requirements_path.exists()
     with app_requirements_path.open() as f:
         assert f.read() == "first\nsecond==1.2.3\nthird>=3.2.1\n"
+
+
+separators = [os.sep]
+if os.altsep:
+    separators.append(os.altsep)
+
+
+@pytest.mark.parametrize("sep", separators)
+def test_app_requirements_paths(
+    create_command,
+    myapp,
+    app_requirements_path,
+    app_requirements_path_index,
+    sep,
+):
+    """Requirements which are relative paths are updated to be relative to the
+    location of the requirements file; absolute paths are left unchanged."""
+    absolute = "C:\\absolute" if (os.name == "nt") else "/absolute"
+    myapp.requires = [
+        "not-a-path",
+        absolute,
+        sep.join([".", "single-dot"]),
+        sep.join(["..", "double-dot"]),
+        sep.join(["sub", "directory"]),
+    ]
+
+    create_command.install_app_dependencies(myapp)
+    with app_requirements_path.open() as f:
+        assert f.read() == (
+            "\n".join(
+                [
+                    "not-a-path",
+                    absolute,
+                    normpath("../../../../single-dot"),
+                    normpath("../../../../../double-dot"),
+                    normpath("../../../../sub/directory"),
+                ]
+            )
+            + "\n"
+        )
