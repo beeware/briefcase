@@ -273,12 +273,11 @@ class Console:
         self.print = printer
         self.input = printer.console.input
         self.enabled = enabled
+        self._wait_bar: Progress = None
         # Signal that Rich is dynamically controlling the console output.
         # Therefore, all output must be printed to the screen by Rich to
-        # prevent corruption of dynamic elements like Wait Bars.
+        # prevent corruption of dynamic elements like the Wait Bar.
         self.is_output_controlled = False
-        # Track the active Wait Bar to allow dynamic updates to it
-        self._active_wait_bar: Progress = None
 
     def prompt(self, *values, markup=False, **kwargs):
         """Print to the screen for soliciting user interaction.
@@ -310,76 +309,52 @@ class Console:
         transient=False,
         markup=False,
     ):
-        """Returns the Wait Bar as a context manager.
+        """Activates the Wait Bar as a context manager.
 
         If the Wait Bar is already active, then its message is updated for the new
         context. Once the new context is complete, the previous Wait Bar message
         is restored.
 
-        :param message: text explaining what is being awaited
+        :param message: text explaining what is being awaited; should end in '...'
         :param done_message: text appended to the message after exiting
         :param transient: if True, remove bar and message from screen after exiting;
             if False (default), the message will remain on the screen without pulsing bar.
         :param markup: whether to interpret Rich styling markup in the message; if True,
             the message must already be escaped; defaults False.
         """
-        # Create the Wait Bar since it is not already active
-        if self._active_wait_bar is None:
-            wait_bar = Progress(
+        if self._wait_bar is None:
+            self._wait_bar = Progress(
                 TextColumn("    "),
                 BarColumn(bar_width=20, style="black", pulse_style="white"),
                 TextColumn("{task.fields[message]}"),
                 transient=True,
                 console=self.print.console,
             )
-            # setting start=False causes the progress bar to pulse
-            wait_bar.add_task("", start=False, message=message)
-            try:
-                self.is_output_controlled = True
-                with wait_bar as current_wait_bar:
-                    self._active_wait_bar = current_wait_bar
-                    yield from self._start_wait_bar(
-                        message=message,
-                        done_message=done_message,
-                        transient=transient,
-                        markup=markup,
-                    )
-            finally:
-                self.is_output_controlled = False
-                self._active_wait_bar = None
+            # start=False causes the progress bar to "pulse"
+            # message=None is a sentinel the Wait Bar should be inactive
+            self._wait_bar.add_task("", start=False, message=None)
 
-        # If the Wait Bar is already active, update its message in the console
-        else:
-            wait_bar_task = self._active_wait_bar.tasks[0]
-            orig_message = wait_bar_task.fields["message"]
-            self._active_wait_bar.update(wait_bar_task.id, message=message)
-            try:
-                yield from self._start_wait_bar(
-                    message=message,
-                    done_message=done_message,
-                    transient=transient,
-                    markup=markup,
-                )
-            finally:
-                # Restore Wait Bar message to previous value
-                self._active_wait_bar.update(wait_bar_task.id, message=orig_message)
-
-    def _start_wait_bar(self, message, done_message, transient, markup):
-        """Activate the Wait Bar and manage its exit conditions."""
+        self.is_output_controlled = True
+        wait_bar_task = self._wait_bar.tasks[0]
+        previous_message = wait_bar_task.fields["message"]
+        self._wait_bar.update(wait_bar_task.id, message=message)
         try:
+            self._wait_bar.start()
             yield
         except BaseException:
             # ensure the message is left on the screen even if user sends CTRL+C
             if message and not transient:
-                self.print(message, markup=markup, stack_offset=4)
+                self.print(message, markup=markup)
             raise
         else:
             if message and not transient:
-                self.print(
-                    f'{message}{f" {done_message}" if done_message else ""}',
-                    markup=markup,
-                    stack_offset=6,
-                )
+                self.print(f"{message} {done_message}", markup=markup)
+        finally:
+            self._wait_bar.update(wait_bar_task.id, message=previous_message)
+            # Deactivate the Wait Bar if returning to its initial state
+            if previous_message is None:
+                self._wait_bar.stop()
+                self.is_output_controlled = False
 
     def boolean_input(self, question, default=False):
         """Get a boolean input from user, in the form of y/n.
