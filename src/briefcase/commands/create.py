@@ -402,6 +402,7 @@ class CreateCommand(BaseCommand):
         :param requirements_path: The full path to a requirements.txt file that
             will be written.
         """
+        # Windows allows both / and \ as a path separator in requirements.
         separators = [os.sep]
         if os.altsep:
             separators.append(os.altsep)
@@ -410,10 +411,12 @@ class CreateCommand(BaseCommand):
             with (requirements_path).open("w", encoding="utf-8") as f:
                 if app.requires:
                     for requirement in app.requires:
-                        # Update paths to be absolute, because flatpak moves the requirements
-                        # file to a different place before using it.
+                        # Use the presence of a seprator in the requirement as an
+                        # indicator that it is a path. If it is a path, modify the
+                        # path reference to be absolute, because Flatpak moves the
+                        # requirements file to a different place before using it.
                         if any(sep in requirement for sep in separators):
-                            requirement = os.path.abspath(self.base_path / requirement)
+                            requirement = (self.base_path / requirement).resolve()
                         f.write(f"{requirement}\n")
 
     def _install_app_dependencies(self, app: BaseConfig, app_packages_path):
