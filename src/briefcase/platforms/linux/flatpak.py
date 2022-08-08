@@ -107,12 +107,13 @@ class LinuxFlatpakCreateCommand(LinuxFlatpakMixin, CreateCommand):
             "flatpak_sdk": self.flatpak_sdk(app),
         }
 
-    def _unpack_support_package(self, app, support_file_path):
-        """Unpack the support package.
+    def install_app_support_package(self, app: AppConfig):
+        """Install the support package.
 
         Flatpak doesn't unpack the support package; it copies the
         tarball as-is into the source tree.
         """
+        support_file_path = self._download_support_package(app)
         with self.input.wait_bar("Installing support file ..."):
             self.shutil.copy(
                 support_file_path,
