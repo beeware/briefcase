@@ -410,15 +410,10 @@ class CreateCommand(BaseCommand):
             with (requirements_path).open("w", encoding="utf-8") as f:
                 if app.requires:
                     for requirement in app.requires:
-                        if any(
-                            sep in requirement for sep in separators
-                        ) and not os.path.isabs(requirement):
-                            # Update relative paths to be relative to the location of the
-                            # requirements file.
-                            requirement = os.path.relpath(
-                                self.base_path / requirement,
-                                os.path.dirname(requirements_path),
-                            )
+                        # Update paths to be absolute, because flatpak moves the requirements
+                        # file to a different place before using it.
+                        if any(sep in requirement for sep in separators):
+                            requirement = os.path.abspath(self.base_path / requirement)
                         f.write(f"{requirement}\n")
 
     def _install_app_dependencies(self, app: BaseConfig, app_packages_path):

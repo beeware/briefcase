@@ -1,7 +1,7 @@
 import os
 import subprocess
 import sys
-from os.path import normpath
+from os.path import abspath
 
 import pytest
 import tomli_w
@@ -359,10 +359,10 @@ def test_app_requirements_paths(
     myapp,
     app_requirements_path,
     app_requirements_path_index,
+    tmp_path,
     sep,
 ):
-    """Requirements which are relative paths are updated to be relative to the
-    location of the requirements file; absolute paths are left unchanged."""
+    """Requirements which are local paths are updated to be absolute."""
     absolute = "C:\\absolute" if (os.name == "nt") else "/absolute"
     myapp.requires = [
         "not-a-path",
@@ -379,9 +379,14 @@ def test_app_requirements_paths(
                 [
                     "not-a-path",
                     absolute,
-                    normpath("../../../../single-dot"),
-                    normpath("../../../../../double-dot"),
-                    normpath("../../../../sub/directory"),
+                ]
+                + [
+                    abspath(tmp_path / name)
+                    for name in [
+                        "project/single-dot",
+                        "double-dot",
+                        "project/sub/directory",
+                    ]
                 ]
             )
             + "\n"
