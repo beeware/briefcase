@@ -54,5 +54,5 @@ def popen_process():
         "",
         "",
     ]
-    process.poll.side_effect = [None, None, None, -3, -3, -3]
+    process.poll.return_value = -3
     return process

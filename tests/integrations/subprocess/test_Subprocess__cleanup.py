@@ -28,4 +28,4 @@ def test_dirty_termination(mock_sub, capsys):
     process.kill.assert_called_once_with()
 
     # Log contains a contextual message.
-    assert capsys.readouterr().out == ("Forcibly killing testing process...\n")
+    assert capsys.readouterr().out == "Forcibly killing testing process...\n"
