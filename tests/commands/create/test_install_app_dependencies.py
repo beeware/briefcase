@@ -1,7 +1,6 @@
-import os
 import subprocess
 import sys
-from os.path import abspath
+from pathlib import Path
 
 import pytest
 import tomli_w
@@ -348,46 +347,160 @@ def test_app_requirements_requires(
         assert f.read() == "first\nsecond==1.2.3\nthird>=3.2.1\n"
 
 
-separators = [os.sep]
-if os.altsep:
-    separators.append(os.altsep)
-
-
-@pytest.mark.parametrize("sep", separators)
-def test_app_requirements_paths(
+def _test_app_requirements_paths(
     create_command,
     myapp,
     app_requirements_path,
     app_requirements_path_index,
     tmp_path,
-    sep,
+    requirement,
+    converted,
 ):
-    """Requirements which are local paths are updated to be absolute."""
-    absolute = "C:\\absolute" if (os.name == "nt") else "/absolute"
-    myapp.requires = [
-        "not-a-path",
-        absolute,
-        sep.join([".", "single-dot"]),
-        sep.join(["..", "double-dot"]),
-        sep.join(["sub", "directory"]),
-    ]
+    """A utility method that can be used to test expansion of a specific
+    requirement."""
+    myapp.requires = ["first", requirement, "third"]
 
     create_command.install_app_dependencies(myapp)
     with app_requirements_path.open() as f:
         assert f.read() == (
             "\n".join(
                 [
-                    "not-a-path",
-                    absolute,
-                ]
-                + [
-                    abspath(tmp_path / name)
-                    for name in [
-                        "project/single-dot",
-                        "double-dot",
-                        "project/sub/directory",
-                    ]
+                    "first",
+                    str(Path(converted.format(tmp_path))),
+                    "third",
                 ]
             )
             + "\n"
         )
+
+
+@pytest.mark.parametrize(
+    ["requirement", "converted"],
+    [
+        # Simple PyPI package references
+        ("my-package", "my-package"),
+        ("my-package==1.2.3", "my-package==1.2.3"),
+        ("my-package<=1.2.3", "my-package<=1.2.3"),
+        # More complex PyPI references
+        ("my-package[optional]<=1.2.3", "my-package[optional]<=1.2.3"),
+        (
+            "my-package[optional]<=1.2.3; python_version<3.7",
+            "my-package[optional]<=1.2.3; python_version<3.7",
+        ),
+        # References that involve relative paths
+        ("./package/inside/project", "{}/project/package/inside/project"),
+        ("../package/outside/project", "{}/package/outside/project"),
+        ("sub/package/inside/project", "{}/project/sub/package/inside/project"),
+        # References to git packages
+        (
+            "git+https://github.com/project/package",
+            "git+https://github.com/project/package",
+        ),
+        (
+            "git+https://github.com/project/package#egg=my-package",
+            "git+https://github.com/project/package#egg=my-package",
+        ),
+        (
+            "git+https://github.com/project/package@deadbeef#egg=my-package",
+            "git+https://github.com/project/package@deadbeef#egg=my-package",
+        ),
+        (
+            "git+https://github.com/project/package@some-branch#egg=my-package",
+            "git+https://github.com/project/package@some-branch#egg=my-package",
+        ),
+        # URL references to wheels
+        (
+            "http://example.com/path/to/mypackage-1.2.3-py3-none-any.whl",
+            "http://example.com/path/to/my_package-1.2.3-py3-none-any.whl",
+        ),
+        # Zip file source installs
+        (
+            "my-package @ https://example.com/path/to/1.2.3.zip",
+            "my-package @ https://example.com/path/to/1.2.3.zip",
+        ),
+    ],
+)
+def test_app_requirements_paths_all(
+    create_command,
+    myapp,
+    app_requirements_path,
+    app_requirements_path_index,
+    tmp_path,
+    requirement,
+    converted,
+):
+    """Requirement paths are expanded correctly."""
+    _test_app_requirements_paths(
+        create_command,
+        myapp,
+        app_requirements_path,
+        app_requirements_path_index,
+        tmp_path,
+        requirement,
+        converted,
+    )
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Non-windows specific tests")
+@pytest.mark.parametrize(
+    ["requirement", "converted"],
+    [
+        # A reference that involves an absolute path
+        ("/absolute/path/to/package", "/absolute/path/to/package"),
+    ],
+)
+def test_app_requirements_paths_non_windows(
+    create_command,
+    myapp,
+    app_requirements_path,
+    app_requirements_path_index,
+    tmp_path,
+    requirement,
+    converted,
+):
+    """Requirement paths that have non-windows-specific interpretations are
+    expanded correctly."""
+    _test_app_requirements_paths(
+        create_command,
+        myapp,
+        app_requirements_path,
+        app_requirements_path_index,
+        tmp_path,
+        requirement,
+        converted,
+    )
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows specific tests")
+@pytest.mark.parametrize(
+    ["requirement", "converted"],
+    [
+        # A reference that involves an absolute path
+        ("/absolute/path/to/package", "C:/absolute/path/to/package"),
+        (r"C:\absolute\path\to\package", r"C:\absolute\path\to\package"),
+        # Relative paths using backslash separators
+        (r".\package\inside\project", r"{}\project\package\inside\project"),
+        (r"..\package\outside\project", r"{}\package\outside\project"),
+        (r"sub\package\inside\project", r"{}\project\sub\package\inside\project"),
+    ],
+)
+def test_app_requirements_paths_windows(
+    create_command,
+    myapp,
+    app_requirements_path,
+    app_requirements_path_index,
+    tmp_path,
+    requirement,
+    converted,
+):
+    """Requirement paths that have windows-specific interpretations are
+    expanded correctly."""
+    _test_app_requirements_paths(
+        create_command,
+        myapp,
+        app_requirements_path,
+        app_requirements_path_index,
+        tmp_path,
+        requirement,
+        converted,
+    )
