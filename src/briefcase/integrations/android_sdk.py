@@ -1244,17 +1244,6 @@ Activity class not found while starting app.
                 f"Unable to start {package}/{activity} on {self.device}"
             ) from e
 
-    def clear_log(self):
-        """Clear the log for the device.
-
-        Returns `None` on success; raises an exception on failure.
-        """
-        try:
-            # Invoke `adb logcat -c`
-            self.run("logcat", "-c")
-        except subprocess.CalledProcessError as e:
-            raise BriefcaseCommandError(f"Unable to clear log on {self.device}") from e
-
     def logcat(self, pid):
         """Start tailing the adb log for the device."""
         try:

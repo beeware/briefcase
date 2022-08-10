@@ -55,8 +55,6 @@ def test_run_existing_device(run_command, first_app_config):
         f"{first_app_config.package_name}.{first_app_config.module_name}",
     )
 
-    run_command.mock_adb.clear_log.assert_called_once_with()
-
     run_command.mock_adb.start_app.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
         "org.beeware.android.MainActivity",
@@ -118,8 +116,6 @@ def test_run_created_emulator(run_command, first_app_config):
         f"{first_app_config.package_name}.{first_app_config.module_name}",
     )
 
-    run_command.mock_adb.clear_log.assert_called_once_with()
-
     run_command.mock_adb.start_app.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
         "org.beeware.android.MainActivity",
@@ -164,8 +160,6 @@ def test_run_idle_device(run_command, first_app_config):
     run_command.mock_adb.force_stop_app.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
     )
-
-    run_command.mock_adb.clear_log.assert_called_once_with()
 
     run_command.mock_adb.start_app.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
