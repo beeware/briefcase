@@ -1,0 +1,1 @@
+``briefcase android run`` now shows logs from only the current process, and includes all log tags except some particularly noisy and useless ones. It also no longer clears the Logcat buffer.

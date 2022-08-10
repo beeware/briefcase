@@ -1244,18 +1244,7 @@ Activity class not found while starting app.
                 f"Unable to start {package}/{activity} on {self.device}"
             ) from e
 
-    def clear_log(self):
-        """Clear the log for the device.
-
-        Returns `None` on success; raises an exception on failure.
-        """
-        try:
-            # Invoke `adb logcat -c`
-            self.run("logcat", "-c")
-        except subprocess.CalledProcessError as e:
-            raise BriefcaseCommandError(f"Unable to clear log on {self.device}") from e
-
-    def logcat(self):
+    def logcat(self, pid):
         """Start tailing the adb log for the device."""
         try:
             # stream output so it's captured in logging
@@ -1265,11 +1254,11 @@ Activity class not found while starting app.
                     "-s",
                     self.device,
                     "logcat",
-                    "-s",
-                    "MainActivity:*",
-                    "stdio:*",
-                    "Python:*",
-                ],
+                    "--pid",  # This option is available since API level 24.
+                    pid,
+                ]
+                # Filter out some noisy and useless tags.
+                + [f"{tag}:S" for tag in ["EGL_emulation"]],
                 env=self.android_sdk.env,
                 check=True,
                 stream_output=True,
@@ -1281,3 +1270,15 @@ Activity class not found while starting app.
             # Exit normally since the user was instructed to use CTRL+C.
             if e.returncode not in {-2, 0xC000013A}:
                 raise BriefcaseCommandError("Error starting ADB logcat.") from e
+
+    def pidof(self, package):
+        """Return the PID of the given app as a string, or None if it isn't
+        running."""
+        # The pidof command is available since API level 24. The level 23 emulator image also
+        # includes it, but it doesn't work correctly (it returns all processes).
+        try:
+            # Exit status is unreliable: some devices (e.g. Nexus 4) return 0 even when no
+            # process was found.
+            return self.run("shell", "pidof", "-s", package).strip() or None
+        except subprocess.CalledProcessError:
+            return None

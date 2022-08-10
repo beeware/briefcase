@@ -1,4 +1,5 @@
-from unittest.mock import MagicMock
+import time
+from unittest.mock import MagicMock, call
 
 import pytest
 
@@ -13,6 +14,7 @@ def run_command(tmp_path, first_app_config):
     command.java_home_path = tmp_path / "java"
 
     command.mock_adb = MagicMock()
+    command.mock_adb.pidof = MagicMock(return_value="777")
     command.android_sdk = AndroidSDK(command, jdk=MagicMock(), root_path=tmp_path)
     command.android_sdk.adb = MagicMock(return_value=command.mock_adb)
 
@@ -53,14 +55,29 @@ def test_run_existing_device(run_command, first_app_config):
         f"{first_app_config.package_name}.{first_app_config.module_name}",
     )
 
-    run_command.mock_adb.clear_log.assert_called_once()
-
     run_command.mock_adb.start_app.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
         "org.beeware.android.MainActivity",
     )
 
-    run_command.mock_adb.logcat.assert_called_once()
+    run_command.mock_adb.pidof.assert_called_once_with(
+        f"{first_app_config.package_name}.{first_app_config.module_name}"
+    )
+    run_command.mock_adb.logcat.assert_called_once_with("777")
+
+
+def test_run_slow_start(run_command, first_app_config, monkeypatch):
+    run_command.android_sdk.select_target_device = MagicMock(
+        return_value=("exampleDevice", "ExampleDevice", None)
+    )
+    run_command.mock_adb.pidof.side_effect = [None, None, "888"]
+    monkeypatch.setattr(time, "sleep", MagicMock())
+
+    run_command.run_app(first_app_config, device_or_avd="exampleDevice")
+
+    assert run_command.mock_adb.pidof.mock_calls == [call("com.example.first_app")] * 3
+    assert time.sleep.mock_calls == [call(0.5)] * 2
+    run_command.mock_adb.logcat.assert_called_once_with("888")
 
 
 def test_run_created_emulator(run_command, first_app_config):
@@ -99,14 +116,12 @@ def test_run_created_emulator(run_command, first_app_config):
         f"{first_app_config.package_name}.{first_app_config.module_name}",
     )
 
-    run_command.mock_adb.clear_log.assert_called_once()
-
     run_command.mock_adb.start_app.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
         "org.beeware.android.MainActivity",
     )
 
-    run_command.mock_adb.logcat.assert_called_once()
+    run_command.mock_adb.logcat.assert_called_once_with("777")
 
 
 def test_run_idle_device(run_command, first_app_config):
@@ -146,11 +161,9 @@ def test_run_idle_device(run_command, first_app_config):
         f"{first_app_config.package_name}.{first_app_config.module_name}",
     )
 
-    run_command.mock_adb.clear_log.assert_called_once()
-
     run_command.mock_adb.start_app.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
         "org.beeware.android.MainActivity",
     )
 
-    run_command.mock_adb.logcat.assert_called_once()
+    run_command.mock_adb.logcat.assert_called_once_with("777")

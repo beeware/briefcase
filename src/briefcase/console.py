@@ -55,7 +55,9 @@ class Printer:
     """Interface for printing and managing output to the console and/or log."""
 
     # Console to manage console output.
-    console = RichConsole(highlighter=RichConsoleHighlighter(), emoji=False)
+    console = RichConsole(
+        highlighter=RichConsoleHighlighter(), emoji=False, soft_wrap=True
+    )
 
     # Console to record all logging to a buffer while not printing anything to the console.
     # We need to be wide enough to render `sdkmanager --list_installed` output without
