@@ -14,7 +14,7 @@ def test_logcat(mock_sdk):
     adb = ADB(mock_sdk, "exampleDevice")
 
     # Invoke logcat
-    adb.logcat()
+    adb.logcat("1234")
 
     # Validate call parameters.
     mock_sdk.command.subprocess.run.assert_called_once_with(
@@ -23,10 +23,9 @@ def test_logcat(mock_sdk):
             "-s",
             "exampleDevice",
             "logcat",
-            "-s",
-            "MainActivity:*",
-            "stdio:*",
-            "Python:*",
+            "--pid",
+            "1234",
+            "EGL_emulation:S",
         ],
         env=mock_sdk.env,
         check=True,
@@ -43,7 +42,7 @@ def test_adb_failure(mock_sdk):
     )
 
     with pytest.raises(BriefcaseCommandError):
-        adb.logcat()
+        adb.logcat("1234")
 
 
 @pytest.mark.parametrize(
@@ -65,4 +64,4 @@ def test_adb_ctrl_c(mock_sdk, return_code):
     )
 
     # does not raise BriefcaseCommandError
-    adb.logcat()
+    adb.logcat("1234")

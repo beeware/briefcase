@@ -1,5 +1,6 @@
 import re
 import subprocess
+import time
 
 from briefcase.commands import (
     BuildCommand,
@@ -219,13 +220,18 @@ class GradleRunCommand(GradleMixin, RunCommand):
         # To start the app, we launch `org.beeware.android.MainActivity`.
         with self.input.wait_bar("Launching app..."):
             adb.start_app(package, "org.beeware.android.MainActivity")
+            pid = None
+            while not pid:
+                pid = adb.pidof(package)
+                if not pid:
+                    time.sleep(0.5)
 
         self.logger.info(
             "Following device log output (type CTRL-C to stop log)...",
             prefix=app.app_name,
         )
         self.logger.info("=" * 75)
-        adb.logcat()
+        adb.logcat(pid)
 
 
 class GradlePackageCommand(GradleMixin, PackageCommand):
