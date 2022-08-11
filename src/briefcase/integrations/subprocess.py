@@ -5,8 +5,8 @@ import shlex
 import subprocess
 import sys
 import threading
+import time
 from pathlib import Path
-from time import sleep, time
 
 import psutil
 
@@ -393,15 +393,20 @@ class Subprocess:
             # joining the thread is avoided due to demonstrated
             # instability of thread interruption via CTRL+C (#809)
             while not stop_func() and output_streamer.is_alive():
-                sleep(0.1)
+                time.sleep(0.1)
         except KeyboardInterrupt:
+            self.command.logger.info("Stopping...")
             # allow time for CTRL+C to propagate to the child process
-            sleep(0.25)
+            time.sleep(0.25)
         finally:
             self.cleanup(label, popen_process)
-            streamer_deadline = time() + 3
-            while output_streamer.is_alive() and time() < streamer_deadline:
-                sleep(0.1)
+            streamer_deadline = time.time() + 3
+            while output_streamer.is_alive() and time.time() < streamer_deadline:
+                time.sleep(0.1)
+            if output_streamer.is_alive():
+                self.command.logger.error(
+                    "Log stream hasn't terminated; log output may be corrupted."
+                )
 
     def _stream_output_thread(self, popen_process):
         """Stream output for a Popen process in a Thread.
