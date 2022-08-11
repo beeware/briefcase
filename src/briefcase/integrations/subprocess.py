@@ -394,6 +394,7 @@ class Subprocess:
             # instability of thread interruption via CTRL+C (#809)
             while not stop_func() and output_streamer.is_alive():
                 time.sleep(0.1)
+            self.command.logger.info("Ended normally")
         except KeyboardInterrupt:
             self.command.logger.info("Stopping...")
             # allow time for CTRL+C to propagate to the child process
