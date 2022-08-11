@@ -411,11 +411,12 @@ class CreateCommand(BaseCommand):
             with (requirements_path).open("w", encoding="utf-8") as f:
                 if app.requires:
                     for requirement in app.requires:
-                        # Use the presence of a seprator in the requirement as an
-                        # indicator that it is a path. If it is a path, modify the
-                        # path reference to be absolute, because Flatpak moves the
-                        # requirements file to a different place before using it.
-                        if any(sep in requirement for sep in separators):
+                        # If the requirement is a local path, convert it to
+                        # absolute, because Flatpak moves the requirements file
+                        # to a different place before using it.
+                        if any(sep in requirement for sep in separators) and (
+                            not _has_url(requirement)
+                        ):
                             requirement = (self.base_path / requirement).resolve()
                         f.write(f"{requirement}\n")
 
@@ -706,3 +707,18 @@ class CreateCommand(BaseCommand):
                 state = self.create_app(app, **full_options(state, options))
 
         return state
+
+
+# Detects any of the URL schemes supported by pip
+# (https://pip.pypa.io/en/stable/topics/vcs-support/).
+def _has_url(requirement):
+    return any(
+        f"{scheme}:" in requirement
+        for scheme in (
+            ["http", "https", "file", "ftp"]
+            + ["git+file", "git+https", "git+ssh", "git+http", "git+git", "git"]
+            + ["hg+file", "hg+http", "hg+https", "hg+ssh", "hg+static-http"]
+            + ["svn", "svn+svn", "svn+http", "svn+https", "svn+ssh"]
+            + ["bzr+http", "bzr+https", "bzr+ssh", "bzr+sftp", "bzr+ftp", "bzr+lp"]
+        )
+    )
