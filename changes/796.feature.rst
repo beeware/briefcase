@@ -1,1 +1,1 @@
-The Docker image for AppImage builds will be created if absent and ensured up-to-date prior to app builds.
+The Docker image for AppImage builds is created and/or updated for all commands instead of just `create`.

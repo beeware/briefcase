@@ -1,6 +1,5 @@
 import os
 import subprocess
-from contextlib import contextmanager
 
 from briefcase.commands import (
     BuildCommand,
@@ -81,51 +80,41 @@ class LinuxAppImageMixin(LinuxMixin):
                 "Linux AppImages can only be generated on Linux."
             )
 
-    def update_build_environment(self, app):
-        """Ensures the build environment is up-to-date with app requirements
-        and is prepared for use.
+    def prepare_build_subprocess(self, app, build_subprocess=None):
+        """Returns a prepared subprocess for the build environment for the app.
 
         Docker:
-        Forces the (re)build of the Docker container image. Due to Docker's
-        image layer caching mechanisms, only layers with changes will
-        be re-run if the image already exists for the app. For instance,
-        if the system_requires changes, then those new packages are installed.
+        If a Docker build subprocess is not provided, one is created and
+        prepared. This ensures the Docker container image for the app is
+        updated to reflect any configuration changes e.g. system_requires.
 
         Native:
-        No-op. The user is expected to prepare the local native environment.
+        The subprocess for the local environment is used as is.
+
+        :param app: The application to build
+        :param build_subprocess: A prepared subprocess from a previous
+            command run such as `create`
         """
-        if self.use_docker:
-            self.Docker(self, app).prepare(force=True)
+        if build_subprocess is None:
+            if self.use_docker:
+                build_subprocess = self.Docker(self, app)
+            else:
+                build_subprocess = self.subprocess
+            build_subprocess.prepare()
 
-    @contextmanager
-    def run_in_build_environment(self, app):
-        """Manager to execute OS commands in the build environment.
-
-        Docker:
-        Provides a context manager for the Docker context based on the
-        properties of the app. This will replace self.subprocess with
-        a version that proxies all subprocess calls into a docker container.
-
-        Native:
-        If the user has selected --no-docker, this is a no-op and commands
-        are run in the native environment.
-
-        :param app: The application that will determine the container image.
-        """
-        if self.use_docker:
-            self.logger.info("Entering Docker context...", prefix=app.app_name)
-            orig_subprocess = self.subprocess
-            self.subprocess = self.Docker(self, app)
-            self.subprocess.prepare()
-            yield
-            self.subprocess = orig_subprocess
-            self.logger.info("Leaving Docker context", prefix=app.app_name)
-        else:
-            yield
+        return build_subprocess
 
 
 class LinuxAppImageCreateCommand(LinuxAppImageMixin, CreateCommand):
     description = "Create and populate a Linux AppImage."
+
+    def create_app(self, app: AppConfig, **options):
+        """Create AppImage bundle."""
+        # build env cannot be prepared until app template is generated
+        self.build_subprocess = None
+        super().create_app(app=app)
+        # returns prepared build subprocess in state
+        return {"build_subprocess": self.build_subprocess}
 
     @property
     def support_package_url_query(self):
@@ -139,11 +128,15 @@ class LinuxAppImageCreateCommand(LinuxAppImageMixin, CreateCommand):
     def install_app_dependencies(self, app: AppConfig):
         """Install application dependencies.
 
-        For Docker, using the container ensures that the right binary
-        versions are installed.
+        Ensure the app dependencies are installed in the build
+        environment. For Docker, using the container ensures that the
+        right binary versions are installed.
         """
-        with self.run_in_build_environment(app=app):
-            super().install_app_dependencies(app=app)
+        # swap out subprocess so dependencies are installed in build env
+        orig_subprocess = self.subprocess
+        self.subprocess = self.build_subprocess = self.prepare_build_subprocess(app)
+        super().install_app_dependencies(app=app)
+        self.subprocess = orig_subprocess
 
 
 class LinuxAppImageUpdateCommand(LinuxAppImageMixin, UpdateCommand):
@@ -158,12 +151,13 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
         super().verify_tools()
         self.linuxdeploy = LinuxDeploy.verify(self)
 
-    def build_app(self, app: AppConfig, **kwargs):
+    def build_app(self, app: AppConfig, build_subprocess=None, **kwargs):
         """Build an application.
 
         :param app: The application to build
+        :param build_subprocess: A prepared subprocess for the build environment
         """
-        self.update_build_environment(app=app)
+        build_subprocess = self.prepare_build_subprocess(app, build_subprocess)
 
         # Build a dictionary of environment definitions that are required
         env = {}
@@ -179,9 +173,8 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
             # We need to add the location of the linuxdeploy plugins to the PATH.
             # However, if we are running inside Docker, we need to know the
             # environment *inside* the Docker container.
-            with self.run_in_build_environment(app=app):
-                echo_cmd = ["/bin/sh", "-c", "echo $PATH"]
-                base_path = self.subprocess.check_output(echo_cmd).strip()
+            echo_cmd = ["/bin/sh", "-c", "echo $PATH"]
+            base_path = build_subprocess.check_output(echo_cmd).strip()
 
             # Add any plugin-required environment variables
             for plugin in plugins.values():
@@ -226,25 +219,24 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
 
                 # Build the app image. We use `--appimage-extract-and-run`
                 # because AppImages won't run natively inside Docker.
-                with self.run_in_build_environment(app=app):
-                    self.subprocess.run(
-                        [
-                            self.linuxdeploy.file_path / self.linuxdeploy.file_name,
-                            "--appimage-extract-and-run",
-                            f"--appdir={self.appdir_path(app)}",
-                            "--desktop-file",
-                            os.fsdecode(
-                                self.appdir_path(app)
-                                / f"{app.bundle}.{app.app_name}.desktop"
-                            ),
-                            "--output",
-                            "appimage",
-                        ]
-                        + additional_args,
-                        env=env,
-                        check=True,
-                        cwd=self.platform_path,
-                    )
+                build_subprocess.run(
+                    [
+                        self.linuxdeploy.file_path / self.linuxdeploy.file_name,
+                        "--appimage-extract-and-run",
+                        f"--appdir={self.appdir_path(app)}",
+                        "--desktop-file",
+                        os.fsdecode(
+                            self.appdir_path(app)
+                            / f"{app.bundle}.{app.app_name}.desktop"
+                        ),
+                        "--output",
+                        "appimage",
+                    ]
+                    + additional_args,
+                    env=env,
+                    check=True,
+                    cwd=self.platform_path,
+                )
 
                 # Make the binary executable.
                 self.os.chmod(self.binary_path(app), 0o755)
@@ -252,6 +244,8 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
                 raise BriefcaseCommandError(
                     f"Error while building app {app.app_name}."
                 ) from e
+
+        return {"build_subprocess": build_subprocess}
 
 
 class LinuxAppImageRunCommand(LinuxAppImageMixin, RunCommand):

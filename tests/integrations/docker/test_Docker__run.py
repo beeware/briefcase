@@ -29,7 +29,12 @@ def test_simple_call(mock_docker, tmp_path, capsys):
         text=True,
         encoding=ANY,
     )
-    assert capsys.readouterr().out == ""
+    assert capsys.readouterr().out == (
+        "\n"
+        "[myapp] Entering Docker context...\n"
+        "\n"
+        "[myapp] Leaving Docker context\n"
+    )
 
 
 def test_call_with_arg_and_env(mock_docker, tmp_path, capsys):
@@ -65,7 +70,12 @@ def test_call_with_arg_and_env(mock_docker, tmp_path, capsys):
         universal_newlines=True,
         encoding=ANY,
     )
-    assert capsys.readouterr().out == ""
+    assert capsys.readouterr().out == (
+        "\n"
+        "[myapp] Entering Docker context...\n"
+        "\n"
+        "[myapp] Leaving Docker context\n"
+    )
 
 
 @pytest.mark.skipif(
@@ -105,7 +115,12 @@ def test_call_with_path_arg_and_env(mock_docker, tmp_path, capsys):
         text=True,
         encoding=ANY,
     )
-    assert capsys.readouterr().out == ""
+    assert capsys.readouterr().out == (
+        "\n"
+        "[myapp] Entering Docker context...\n"
+        "\n"
+        "[myapp] Leaving Docker context\n"
+    )
 
 
 @pytest.mark.skipif(
@@ -135,6 +150,8 @@ def test_simple_verbose_call(mock_docker, tmp_path, capsys):
     )
     assert capsys.readouterr().out == (
         "\n"
+        "[myapp] Entering Docker context...\n"
+        "\n"
         ">>> Running Command:\n"
         ">>>     docker run "
         f"--volume {tmp_path / 'platform'}:/app:z "
@@ -145,4 +162,6 @@ def test_simple_verbose_call(mock_docker, tmp_path, capsys):
         ">>> Working Directory:\n"
         f">>>     {Path.cwd()}\n"
         ">>> Return code: 3\n"
+        "\n"
+        "[myapp] Leaving Docker context\n"
     )

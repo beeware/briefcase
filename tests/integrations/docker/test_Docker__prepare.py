@@ -10,7 +10,7 @@ from briefcase.exceptions import BriefcaseCommandError
 def test_prepare(mock_docker, tmp_path):
     """The Docker environment can be prepared."""
 
-    mock_docker.prepare(force=True)
+    mock_docker.prepare()
 
     mock_docker._subprocess._subprocess.Popen.assert_called_with(
         [
@@ -48,7 +48,7 @@ def test_prepare_failure(mock_docker, tmp_path):
     )
 
     with pytest.raises(BriefcaseCommandError):
-        mock_docker.prepare(force=True)
+        mock_docker.prepare()
 
     mock_docker._subprocess._subprocess.Popen.assert_called_with(
         [
@@ -76,25 +76,3 @@ def test_prepare_failure(mock_docker, tmp_path):
         text=True,
         encoding=ANY,
     )
-
-
-@pytest.mark.parametrize(
-    "force, digest, expected_call_count",
-    [
-        (True, "", 1),
-        (True, "0123456789ABCDEF", 1),
-        (False, "", 1),
-        (False, "0123456789ABCDEF", 0),
-    ],
-)
-def test_prepare_conditional_image_build(
-    mock_docker,
-    force,
-    digest,
-    expected_call_count,
-):
-    """Docker image is built or not built based on force and docker image
-    existence."""
-    mock_docker._subprocess._subprocess.check_output.return_value = digest
-    mock_docker.prepare(force=force)
-    assert mock_docker._subprocess._subprocess.Popen.call_count == expected_call_count

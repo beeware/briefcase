@@ -43,38 +43,27 @@ def test_docker_image_tag_uppercase_name(uppercase_app_config, tmp_path):
     assert image_tag == f"briefcase/com.example.first-app:py3.{sys.version_info.minor}"
 
 
-def test_dockerize(first_app_config, tmp_path):
+def test_prepare_build_subprocess(first_app_config, tmp_path):
+    """Build subprocess is a Docker proxy."""
     command = LinuxAppImageCreateCommand(base_path=tmp_path)
     command.Docker = Docker
     command.Docker.prepare = MagicMock()
     command.use_docker = True
 
-    # Before dockerization, subprocess is native
-    assert type(command.subprocess) == Subprocess
+    build_subprocess = command.prepare_build_subprocess(first_app_config)
 
-    with command.run_in_build_environment(first_app_config):
-        # During dockerization, subprocess is a container
-        assert type(command.subprocess) == Docker
-
-    # After dockerization, subprocess is native
-    assert type(command.subprocess) == Subprocess
+    assert type(build_subprocess) == Docker
 
 
-def test_dockerize_nodocker(first_app_config, tmp_path):
-    """If docker is not in use, dockerize() is a no-op."""
+def test_prepare_build_subprocess_no_docker(first_app_config, tmp_path):
+    """Build subprocess remains the subprocess for the local environment."""
     command = LinuxAppImageCreateCommand(base_path=tmp_path)
     command.Docker = Docker
     command.use_docker = False
 
-    # Before dockerization, subprocess is native
-    assert type(command.subprocess) == Subprocess
+    build_subprocess = command.prepare_build_subprocess(first_app_config)
 
-    with command.run_in_build_environment(first_app_config):
-        # During dockerization, subprocess is *still* native
-        assert type(command.subprocess) == Subprocess
-
-    # After dockerization, subprocess is native
-    assert type(command.subprocess) == Subprocess
+    assert type(build_subprocess) == Subprocess
 
 
 def test_verify_linux_no_docker(tmp_path):

@@ -50,11 +50,11 @@ def build_command(tmp_path, first_app_config):
         }
     }
 
-    # Store the underlying subprocess instance
-    command._subprocess = mock.MagicMock()
-    command.subprocess._subprocess = command._subprocess
-
     command.os = mock.MagicMock()
+    command.os.environ = mock.MagicMock()
+    command.os.environ.__getitem__.return_value = (
+        "/usr/local/bin:/usr/bin:/path/to/somewhere"
+    )
     command.os.environ.copy.return_value = {
         "PATH": "/usr/local/bin:/usr/bin:/path/to/somewhere"
     }
@@ -62,6 +62,10 @@ def build_command(tmp_path, first_app_config):
     # mock user and group IDs for docker build
     command.os.getuid.return_value = 1000
     command.os.getgid.return_value = 1001
+
+    # Store the underlying subprocess instance
+    command._subprocess = mock.MagicMock()
+    command.subprocess._subprocess = command._subprocess
 
     # mock `echo $PATH` check_output call
     command.subprocess._subprocess.check_output.return_value = (
@@ -303,12 +307,6 @@ def test_build_appimage_in_docker(build_command, first_app, tmp_path):
     build_command.host_os = "TestOS"
     build_command.use_docker = True
 
-    # Mock Docker responses for `docker images`
-    build_command._subprocess.check_output.side_effect = [
-        "1234567890ABCDEF",
-        "1234567890ABCDEF",
-    ]
-
     build_command.build_app(first_app)
 
     # Ensure that the effect of the Docker context has been reversed.
@@ -412,13 +410,7 @@ def test_build_appimage_with_plugins_in_docker(build_command, first_app, tmp_pat
         os.fsdecode(local_file_plugin_path),
     ]
 
-    # Mock Docker responses for `docker images` and `echo $PATH` calls
-    build_command._subprocess.check_output.side_effect = [
-        "1234567890ABCDEF",
-        "1234567890ABCDEF",
-        "/docker/bin:/docker/sbin",
-        "1234567890ABCDEF",
-    ]
+    build_command._subprocess.check_output.return_value = "/docker/bin:/docker/sbin"
 
     # Enable docker, and move to a non-Linux OS.
     build_command.host_os = "TestOS"
@@ -429,7 +421,7 @@ def test_build_appimage_with_plugins_in_docker(build_command, first_app, tmp_pat
     # Ensure that the effect of the Docker context has been reversed.
     assert build_command.subprocess != build_command.Docker
 
-    # Docker image is (re)built
+    # Docker image is built
     build_command._subprocess.Popen.assert_any_call(
         [
             "docker",

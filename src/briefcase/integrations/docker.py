@@ -204,31 +204,13 @@ class Docker:
         """The briefcase data directory used inside container."""
         return "/home/brutus/.cache/briefcase"
 
-    def prepare(self, force=False):
-        """Create the Docker container image from the app's Dockerfile.
-
-        Unless force=True, the docker container image will only be
-        built when an image does not already exist for the image
-        tag for the current app.
-
-        :param force: Build the docker image even if it already exists.
-        """
-        is_docker_image_exists = bool(
-            # returns digest for docker image with matching tag if it exists else ""
-            self._subprocess.check_output(
-                ["docker", "images", "--quiet", self.command.docker_image_tag(self.app)]
-            ).strip()
-        )
-
-        if not force and is_docker_image_exists:
-            return
-
-        image_action = "Updating" if is_docker_image_exists else "Building"
+    def prepare(self):
+        """Create/update the Docker image from the app's Dockerfile."""
         self.command.logger.info(
-            f"{image_action} Docker container image...",
+            "Building Docker container image...",
             prefix=self.app.app_name,
         )
-        with self.command.input.wait_bar(f"{image_action} Docker image..."):
+        with self.command.input.wait_bar("Building Docker image..."):
             try:
                 self._subprocess.run(
                     [
@@ -257,7 +239,7 @@ class Docker:
                 )
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
-                    f"Error {image_action.lower()} Docker container image for {self.app.app_name}."
+                    f"Error building Docker container image for {self.app.app_name}."
                 ) from e
 
     def _dockerize_path(self, arg):
@@ -325,10 +307,12 @@ class Docker:
         # Any exceptions from running the process are *not* caught.
         # This ensures that "docker.run()" behaves as closely to
         # "subprocess.run()" as possible.
+        self.command.logger.info("Entering Docker context...", prefix=self.app.app_name)
         self._subprocess.run(
             self._dockerize_args(args, env=env),
             **kwargs,
         )
+        self.command.logger.info("Leaving Docker context", prefix=self.app.app_name)
 
     def check_output(self, args, env=None, **kwargs):
         """Run a process inside a Docker container, capturing output."""
