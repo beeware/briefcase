@@ -392,15 +392,8 @@ class Subprocess:
             output_streamer.start()
             # joining the thread is avoided due to demonstrated
             # instability of thread interruption via CTRL+C (#809)
-            not_stopped = not stop_func()
-            is_alive = output_streamer.is_alive()
-            while not_stopped and is_alive:
+            while not stop_func() and output_streamer.is_alive():
                 time.sleep(0.1)
-                not_stopped = not stop_func()
-                is_alive = output_streamer.is_alive()
-            self.command.logger.info(
-                f"Ended normally, not_stopped={not_stopped}, is_alive={is_alive}"
-            )
         except KeyboardInterrupt:
             self.command.logger.info("Stopping...")
             # allow time for CTRL+C to propagate to the child process
