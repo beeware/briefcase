@@ -1,3 +1,4 @@
+import time
 from unittest.mock import MagicMock
 
 import pytest
@@ -41,18 +42,20 @@ def mock_sub():
 @pytest.fixture
 def popen_process():
     process = MagicMock()
-    # There are extra empty strings at the end to simulate readline
-    # continuously returning "" once it reaches EOF
-    process.stdout.readline.side_effect = [
-        "output line 1\n",
-        "\n",
-        "output line 3\n",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-    ]
-    process.poll.side_effect = [None, None, None, -3, -3, -3]
+
+    # Mock the readline values of an actual process. The final return value is "",
+    # indicating that the process has exited; however, we insert a short sleep
+    # to ensure that any other threads will have a chance to run before this
+    # thread acutally terminates.
+    def mock_readline():
+        yield from [
+            "output line 1\n",
+            "\n",
+            "output line 3\n",
+        ]
+        time.sleep(0.1)
+        yield ""
+
+    process.stdout.readline.side_effect = mock_readline()
+    process.poll.return_value = -3
     return process

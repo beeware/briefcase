@@ -179,7 +179,7 @@ def test_debug_call_with_env(mock_sub, capsys, tmp_path):
 
 
 def test_calledprocesserror_exception_logging(mock_sub, capsys):
-    mock_sub.command.logger = Log(verbosity=3)
+    mock_sub.command.logger = Log(verbosity=2)
 
     called_process_error = CalledProcessError(
         returncode=-1,

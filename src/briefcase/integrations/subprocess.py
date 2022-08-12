@@ -277,6 +277,7 @@ class Subprocess:
             if process.stderr and kwargs["stderr"] != subprocess.STDOUT:
                 stderr = process.stderr.read()
             return_code = process.poll()
+        self._log_return_code(return_code)
 
         if check and return_code:
             raise subprocess.CalledProcessError(return_code, args, stderr=stderr)
@@ -367,7 +368,7 @@ class Subprocess:
             [str(arg) for arg in args], **self.final_kwargs(**kwargs)
         )
 
-    def stream_output(self, label, popen_process, stop_func=None):
+    def stream_output(self, label, popen_process, stop_func=lambda: False):
         """Stream the output of a Popen process until the process exits. If the
         user sends CTRL+C, the process will be terminated.
 
@@ -385,19 +386,27 @@ class Subprocess:
             name=f"{label} output streamer",
             target=self._stream_output_thread,
             args=(popen_process,),
+            daemon=True,
         )
         try:
             output_streamer.start()
-            if stop_func:
-                while output_streamer.is_alive() and not stop_func():
-                    time.sleep(0.1)
-            else:
-                output_streamer.join()
+            # joining the thread is avoided due to demonstrated
+            # instability of thread interruption via CTRL+C (#809)
+            while not stop_func() and output_streamer.is_alive():
+                time.sleep(0.1)
         except KeyboardInterrupt:
-            pass  # allow CTRL+C to gracefully stop streaming
+            self.command.logger.info("Stopping...")
+            # allow time for CTRL+C to propagate to the child process
+            time.sleep(0.25)
         finally:
             self.cleanup(label, popen_process)
-            output_streamer.join()
+            streamer_deadline = time.time() + 3
+            while output_streamer.is_alive() and time.time() < streamer_deadline:
+                time.sleep(0.1)
+            if output_streamer.is_alive():
+                self.command.logger.error(
+                    "Log stream hasn't terminated; log output may be corrupted."
+                )
 
     def _stream_output_thread(self, popen_process):
         """Stream output for a Popen process in a Thread.
@@ -411,13 +420,7 @@ class Subprocess:
             if output_line:
                 self.command.logger.info(output_line)
             elif output_line == "":
-                # a return code will be available once the process returns one to the OS.
-                # by definition, that should mean the process has exited.
-                return_code = popen_process.poll()
-                # only return once all output has been read and the process has exited.
-                if return_code is not None:
-                    self._log_return_code(return_code)
-                    return
+                return
 
     def cleanup(self, label, popen_process):
         """Clean up after a Popen process, gracefully terminating if possible;
