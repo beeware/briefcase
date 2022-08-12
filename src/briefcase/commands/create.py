@@ -417,7 +417,9 @@ class CreateCommand(BaseCommand):
                         if any(sep in requirement for sep in separators) and (
                             not _has_url(requirement)
                         ):
-                            requirement = (self.base_path / requirement).resolve()
+                            # We use os.path.abspath() rather than Path.resolve()
+                            # because we *don't* want Path's symlink resolving behavior.
+                            requirement = os.path.abspath(self.base_path / requirement)
                         f.write(f"{requirement}\n")
 
     def _install_app_dependencies(self, app: BaseConfig, app_packages_path):
