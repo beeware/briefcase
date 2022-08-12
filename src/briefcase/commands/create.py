@@ -402,10 +402,24 @@ class CreateCommand(BaseCommand):
         :param requirements_path: The full path to a requirements.txt file that
             will be written.
         """
+        # Windows allows both / and \ as a path separator in requirements.
+        separators = [os.sep]
+        if os.altsep:
+            separators.append(os.altsep)
+
         with self.input.wait_bar("Writing requirements file..."):
             with (requirements_path).open("w", encoding="utf-8") as f:
                 if app.requires:
                     for requirement in app.requires:
+                        # If the requirement is a local path, convert it to
+                        # absolute, because Flatpak moves the requirements file
+                        # to a different place before using it.
+                        if any(sep in requirement for sep in separators) and (
+                            not _has_url(requirement)
+                        ):
+                            # We use os.path.abspath() rather than Path.resolve()
+                            # because we *don't* want Path's symlink resolving behavior.
+                            requirement = os.path.abspath(self.base_path / requirement)
                         f.write(f"{requirement}\n")
 
     def _install_app_dependencies(self, app: BaseConfig, app_packages_path):
@@ -695,3 +709,18 @@ class CreateCommand(BaseCommand):
                 state = self.create_app(app, **full_options(state, options))
 
         return state
+
+
+# Detects any of the URL schemes supported by pip
+# (https://pip.pypa.io/en/stable/topics/vcs-support/).
+def _has_url(requirement):
+    return any(
+        f"{scheme}:" in requirement
+        for scheme in (
+            ["http", "https", "file", "ftp"]
+            + ["git+file", "git+https", "git+ssh", "git+http", "git+git", "git"]
+            + ["hg+file", "hg+http", "hg+https", "hg+ssh", "hg+static-http"]
+            + ["svn", "svn+svn", "svn+http", "svn+https", "svn+ssh"]
+            + ["bzr+http", "bzr+https", "bzr+ssh", "bzr+sftp", "bzr+ftp", "bzr+lp"]
+        )
+    )
