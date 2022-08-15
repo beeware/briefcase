@@ -28,15 +28,15 @@ def test_create_app_creates_build_subprocess(first_app_config, tmp_path):
     state = command.create_app(first_app_config)
 
     # build_subprocess was returned as part of the state
-    assert state.get("build_subprocess") is docker
-    assert command.build_subprocess is docker
+    assert state["build_subprocesses"][first_app_config] is docker
+    assert command.build_subprocesses[first_app_config] is docker
 
     # A docker context was created
     command.Docker.assert_called_with(command, first_app_config)
 
     # The docker container was prepared
     docker.prepare.assert_called_once_with()
-    assert command.build_subprocess is docker
+    assert command.build_subprocesses[first_app_config] is docker
 
     # verify normal create_app process ran
     command.generate_app_template.assert_called_once_with(app=first_app_config)
@@ -67,15 +67,15 @@ def test_create_app_creates_build_subprocess_no_docker(first_app_config, tmp_pat
     state = command.create_app(first_app_config)
 
     # build_subprocess was returned as part of the state
-    assert state.get("build_subprocess") is command.subprocess
-    assert command.build_subprocess is command.subprocess
+    assert state["build_subprocesses"][first_app_config] is command.subprocess
+    assert command.build_subprocesses[first_app_config] is command.subprocess
 
     # A docker context was not created, nor was it prepared
     assert command.Docker.call_count == 0
     assert docker.prepare.call_count == 0
 
-    # The prepare call was made for subprocess
-    command.subprocess.prepare.assert_called_once()
+    # The prepare call was not made
+    assert command.subprocess.prepare.call_count == 0
 
     # verify normal create_app process ran
     command.generate_app_template.assert_called_once_with(app=first_app_config)
@@ -123,7 +123,7 @@ def test_install_app_dependencies(first_app_config, tmp_path):
 
     # The docker container was prepared
     docker.prepare.assert_called_once_with()
-    assert command.build_subprocess is docker
+    assert command.build_subprocesses[first_app_config] is docker
 
     # pip was invoked inside docker.
     docker.run.assert_called_with(
@@ -166,9 +166,9 @@ def test_install_app_dependencies_no_docker(first_app_config, tmp_path):
     assert command.Docker.call_count == 0
     assert docker.prepare.call_count == 0
 
-    # The prepare call was made for subprocess
-    command.subprocess.prepare.assert_called_once()
-    assert command.build_subprocess is command.subprocess
+    # The prepare call was not made for subprocess
+    assert command.subprocess.prepare.call_count == 0
+    assert command.build_subprocesses[first_app_config] is command.subprocess
 
     # pip was invoked natively
     command.subprocess.run.assert_called_with(

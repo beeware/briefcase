@@ -80,7 +80,7 @@ class LinuxAppImageMixin(LinuxMixin):
                 "Linux AppImages can only be generated on Linux."
             )
 
-    def prepare_build_subprocess(self, app, build_subprocess=None):
+    def prepare_build_environment(self, app: AppConfig):
         """Returns a prepared subprocess for the build environment for the app.
 
         Docker:
@@ -92,29 +92,18 @@ class LinuxAppImageMixin(LinuxMixin):
         The subprocess for the local environment is used as is.
 
         :param app: The application to build
-        :param build_subprocess: A prepared subprocess from a previous
-            command run such as `create`
         """
-        if build_subprocess is None:
-            if self.use_docker:
-                build_subprocess = self.Docker(self, app)
-            else:
-                build_subprocess = self.subprocess
+        if self.use_docker:
+            build_subprocess = self.Docker(self, app)
             build_subprocess.prepare()
+        else:
+            build_subprocess = super().prepare_build_environment(app)
 
         return build_subprocess
 
 
 class LinuxAppImageCreateCommand(LinuxAppImageMixin, CreateCommand):
     description = "Create and populate a Linux AppImage."
-
-    def create_app(self, app: AppConfig, **options):
-        """Create AppImage bundle."""
-        # build env cannot be prepared until app template is generated
-        self.build_subprocess = None
-        super().create_app(app=app)
-        # returns prepared build subprocess in state
-        return {"build_subprocess": self.build_subprocess}
 
     @property
     def support_package_url_query(self):
@@ -134,7 +123,7 @@ class LinuxAppImageCreateCommand(LinuxAppImageMixin, CreateCommand):
         """
         # swap out subprocess so dependencies are installed in build env
         orig_subprocess = self.subprocess
-        self.subprocess = self.build_subprocess = self.prepare_build_subprocess(app)
+        self.subprocess = self.verify_build_environment(app)
         super().install_app_dependencies(app=app)
         self.subprocess = orig_subprocess
 
@@ -151,13 +140,15 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
         super().verify_tools()
         self.linuxdeploy = LinuxDeploy.verify(self)
 
-    def build_app(self, app: AppConfig, build_subprocess=None, **kwargs):
+    def build_app(self, app: AppConfig, build_subprocesses=None, **kwargs):
         """Build an application.
 
         :param app: The application to build
-        :param build_subprocess: A prepared subprocess for the build environment
+        :param build_subprocesses: A dictionary of prepared subprocesses for the
+            build environment for each app. Will be `None` if a previous command
+            such as `create` did not run first.
         """
-        build_subprocess = self.prepare_build_subprocess(app, build_subprocess)
+        build_subprocess = self.verify_build_environment(app, build_subprocesses)
 
         # Build a dictionary of environment definitions that are required
         env = {}
@@ -245,7 +236,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
                     f"Error while building app {app.app_name}."
                 ) from e
 
-        return {"build_subprocess": build_subprocess}
+        return {"build_subprocesses": self.build_subprocesses}
 
 
 class LinuxAppImageRunCommand(LinuxAppImageMixin, RunCommand):

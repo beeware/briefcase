@@ -671,9 +671,10 @@ class CreateCommand(BaseCommand):
         self.install_app_resources(app=app)
 
         self.logger.info(
-            f"Created {self.bundle_path(app).relative_to(self.base_path)}",
-            prefix=app.app_name,
+            f"Created {bundle_path.relative_to(self.base_path)}", prefix=app.app_name
         )
+
+        return {"build_subprocesses": self.build_subprocesses}
 
     def verify_tools(self):
         """Verify that the tools needed to run this command exist.

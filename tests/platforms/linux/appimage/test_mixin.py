@@ -50,7 +50,7 @@ def test_prepare_build_subprocess(first_app_config, tmp_path):
     command.Docker.prepare = MagicMock()
     command.use_docker = True
 
-    build_subprocess = command.prepare_build_subprocess(first_app_config)
+    build_subprocess = command.prepare_build_environment(first_app_config)
 
     assert type(build_subprocess) == Docker
 
@@ -61,7 +61,7 @@ def test_prepare_build_subprocess_no_docker(first_app_config, tmp_path):
     command.Docker = Docker
     command.use_docker = False
 
-    build_subprocess = command.prepare_build_subprocess(first_app_config)
+    build_subprocess = command.prepare_build_environment(first_app_config)
 
     assert type(build_subprocess) == Subprocess
 

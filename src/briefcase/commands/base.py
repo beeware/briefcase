@@ -193,6 +193,7 @@ a custom location for Briefcase's tools.
         self.stdlib_platform = platform
         self.shutil = shutil
         self.subprocess = Subprocess(self)
+        self.build_subprocesses = {}
 
         # The internal Briefcase integrations API.
         self.integrations = integrations
@@ -740,3 +741,27 @@ or delete the old data directory, and re-run Briefcase.
             cached_template = template
 
         return cached_template
+
+    def verify_build_environment(self, app: BaseConfig, build_subprocesses=None):
+        """Ensures a build environment exists for the app and returns it.
+
+        By default, the build environment is the native environment and the
+        user manages its requirements and preparation. For AppImages, for
+        example, the build environment is a Docker container that must be
+        created and configured for building the app.
+
+        :param app: the app target for the build environment
+        :param build_subprocesses: A dictionary of prepared subprocesses from
+            a previous command such as `create`; keyed by the app.
+        """
+        if build_subprocesses and app in build_subprocesses:
+            self.build_subprocesses[app] = build_subprocesses[app]
+
+        elif app not in self.build_subprocesses:
+            self.build_subprocesses[app] = self.prepare_build_environment(app)
+
+        return self.build_subprocesses[app]
+
+    def prepare_build_environment(self, app: BaseConfig):
+        """Returns native subprocess as the default build environment."""
+        return self.subprocess
