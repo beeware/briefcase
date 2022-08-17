@@ -1,1 +1,0 @@
-Use absolute paths in requirements files.

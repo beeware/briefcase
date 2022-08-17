@@ -1,1 +1,0 @@
-Apps now have better isolation against the current working directory. This ensures that code in the current working directory isn't inadvertently included when an app runs.

@@ -4,6 +4,57 @@ Release History
 
 .. towncrier release notes start
 
+0.3.9 (2022-08-17)
+==================
+
+Features
+--------
+
+* Linux apps can now be packaged in Flatpak format. (#359)
+* SDKs, tools, and other downloads needed to support app builds are now stored
+  in an OS-native user cache directory instead of ``~/.briefcase``. (#374)
+* Windows MSI installers can now be configured to ask the user whether they want
+  a per-user or per-machine install. (#382)
+* The console output of Windows apps is now captured and displayed during
+  ``briefcase run``. (#620)
+* Windows apps are now packaged with a stub application. This ensures that
+  Windows apps present with the name and icon of the app, rather than the
+  ``pythonw.exe`` name and icon. It also allows for improvements in logging and
+  error handling. (#629)
+* Temporary docker containers are now cleaned up after use. The wording of
+  Docker progress messages has also been improved. (#774)
+* Users can now define a ``BRIEFCASE_HOME`` environment variable. This allows
+  you to specify the location of the Briefcase tool cache, allowing the user to
+  avoid issues with spaces in paths or disk space limitations. (#789)
+* Android emulator output is now printed to the console if it fails to start
+  properly. (#799)
+* ``briefcase android run`` now shows logs from only the current process, and
+  includes all log tags except some particularly noisy and useless ones. It also
+  no longer clears the Logcat buffer. (#814)
+
+
+Bugfixes
+--------
+
+* Apps now have better isolation against the current working directory. This
+  ensures that code in the current working directory isn't inadvertently
+  included when an app runs. (#662)
+* Windows MSI installers now install in ``Program Files``, rather than ``Program
+  Files (x86)``. (#688)
+* Linuxdeploy plugiuns can now be used when building Linux AppImages; this
+  resolves many issues with GTK app deployment. (#756)
+* Collision protection has been added to custom support packages that have the
+  same name, but are served by different URLs. (#797)
+* Python 3.7 and 3.8 on Windows will no longer deadlock when CTRL+C is sent
+  during a subprocess command. (#809)
+
+
+Misc
+----
+
+* #778, #783, #784, #785, #786, #787, #794, #800, #805, #810, #813, #815
+
+
 0.3.8 (2022-06-27)
 ==================
 

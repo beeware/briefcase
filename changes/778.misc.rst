@@ -1,1 +1,0 @@
-Reverted the removal of pip's progress bars from its output.

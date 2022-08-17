@@ -1,1 +1,0 @@
-Allow a template to disable support packages entirely by omitting support_path from briefcase.toml.

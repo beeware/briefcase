@@ -1,1 +1,0 @@
-Updates references for ``~/.briefcase`` to the appropriate OS-native data directory and add PowerShell compatible commands.
