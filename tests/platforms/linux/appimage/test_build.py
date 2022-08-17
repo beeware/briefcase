@@ -233,6 +233,16 @@ def test_build_appimage_with_plugin(build_command, first_app, tmp_path):
         stderr=subprocess.STDOUT,
         bufsize=1,
     )
+    # Local plugin marked executable
+    build_command.os.chmod.assert_any_call(
+        tmp_path
+        / "project"
+        / "linux"
+        / "appimage"
+        / "First App"
+        / "linuxdeploy-plugin-something.sh",
+        0o755,
+    )
     # Binary is marked executable
     build_command.os.chmod.assert_called_with(
         tmp_path / "project" / "linux" / "First_App-0.0.1-wonky.AppImage", 0o755
@@ -430,6 +440,16 @@ def test_build_appimage_with_plugins_in_docker(build_command, first_app, tmp_pat
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         bufsize=1,
+    )
+    # Local plugin marked executable
+    build_command.os.chmod.assert_any_call(
+        tmp_path
+        / "project"
+        / "linux"
+        / "appimage"
+        / "First App"
+        / "linuxdeploy-plugin-something.sh",
+        0o755,
     )
     # Binary is marked executable
     build_command.os.chmod.assert_called_with(

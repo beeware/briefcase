@@ -1,0 +1,1 @@
+Execute permissions are added to local plugin files for ``linuxdeploy`` to ensure they are used during the AppImage build.
