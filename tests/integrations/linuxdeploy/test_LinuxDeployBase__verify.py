@@ -92,7 +92,7 @@ def test_verify_does_not_exist(mock_command, tmp_path):
         download_path=tmp_path / "tools" / "somewhere",
     )
     # The downloaded file will be made executable
-    mock_command.os.chmod.assert_called_with("new-downloaded-file", 0o755)
+    mock_command.os.chmod.assert_called_with(appimage_path, 0o755)
 
     # The build command retains the path to the downloaded file.
     assert linuxdeploy.file_path == appimage_path.parent
@@ -115,7 +115,7 @@ def test_verify_does_not_exist_non_appimage(mock_command, tmp_path):
         download_path=tmp_path / "tools" / "somewhere",
     )
     # The downloaded file will be made executable
-    mock_command.os.chmod.assert_called_with("new-downloaded-file", 0o755)
+    mock_command.os.chmod.assert_called_with(tool_path, 0o755)
 
     # The tool content hasn't been altered
     with tool_path.open("r") as f:

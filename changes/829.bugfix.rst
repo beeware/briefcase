@@ -1,1 +1,1 @@
-Execute permissions are added to local plugin files for ``linuxdeploy`` to ensure they are used during the AppImage build.
+All ``linuxdeploy`` plugins are made executable and ELF headers for AppImage plugins are patched for use in ``Docker``.

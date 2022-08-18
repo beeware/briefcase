@@ -13,6 +13,7 @@ from briefcase.exceptions import (
     NetworkFailure,
 )
 
+ELF_HEADER_IDENT = bytes.fromhex("7F454C46")
 ELF_PATCH_OFFSET = 0x08
 ELF_PATCH_ORIGINAL_BYTES = bytes.fromhex("414902")
 ELF_PATCH_PATCHED_BYTES = bytes.fromhex("000000")
@@ -47,16 +48,23 @@ class LinuxDeployBase:
     def install(self):
         """Download and install linuxdeploy or plugin."""
         try:
-            download_path = self.command.download_url(
+            self.command.download_url(
                 url=self.download_url,
                 download_path=self.file_path,
             )
         except requests_exceptions.ConnectionError as e:
             raise NetworkFailure(f"download {self.full_name}") from e
 
-        with self.command.input.wait_bar(f"Installing {self.full_name}..."):
-            self.command.os.chmod(download_path, 0o755)
-            if self.file_name.endswith("AppImage"):
+    def post_install_processing(self):
+        """Update linuxdeploy and its plugins to allow execution.
+
+        All files must be made executable to run or for linuxdeploy to
+        use them as plugins while building the AppImage. ELF files need
+        special "magic" bytes zeroed to run properly in Docker.
+        """
+        with self.command.input.wait_bar(f"Installing {self.file_name}..."):
+            self.command.os.chmod(self.file_path / self.file_name, 0o755)
+            if self.is_elf_file():
                 self.patch_elf_header()
 
     @classmethod
@@ -78,6 +86,7 @@ class LinuxDeployBase:
                     prefix="linuxdeploy",
                 )
                 tool.install()
+                tool.post_install_processing()
             else:
                 raise MissingToolError(cls.name)
 
@@ -95,10 +104,20 @@ class LinuxDeployBase:
 
         self.uninstall()
         self.install()
+        self.post_install_processing()
+
+    def is_elf_file(self):
+        """Returns True if the file is an ELF object file.
+
+        The header for an ELF object file always starts with 0x7F454C46;
+        this is 0x7fELF if you interpret the last three bytes as ASCII.
+        """
+        with (self.file_path / self.file_name).open("r+b") as file:
+            return file.read(len(ELF_HEADER_IDENT)) == ELF_HEADER_IDENT
 
     def patch_elf_header(self):
-        """Patch the ELF header of the AppImage to ensure it's always
-        executable.
+        """Patch the ELF header of the AppImage to ensure it can successfully
+        run in all contexts.
 
         This patch is necessary on Linux hosts that use AppImageLauncher.
         AppImages use a modified ELF binary header starting at offset 0x08
@@ -122,13 +141,13 @@ class LinuxDeployBase:
                 appimage.write(ELF_PATCH_PATCHED_BYTES)
                 appimage.flush()
                 appimage.seek(0)
-                self.command.logger.info("Patched ELF header of linuxdeploy AppImage.")
+                self.command.logger.info(f"Patched ELF header for {self.file_name}.")
             # Else if the header is the patched value, do nothing.
             elif (
                 appimage.read(len(ELF_PATCH_ORIGINAL_BYTES)) == ELF_PATCH_PATCHED_BYTES
             ):
                 self.command.logger.info(
-                    "ELF header of linuxdeploy AppImage is already patched."
+                    f"ELF header for {self.file_name} is already patched."
                 )
             else:
                 # We should only get here if the file at the AppImage patch doesn't have
@@ -221,8 +240,6 @@ class LinuxDeployLocalFilePlugin(LinuxDeployPluginBase):
                 self.local_path / self.file_name,
                 self.file_path / self.file_name,
             )
-            # plugins must be executable
-            self.command.os.chmod(self.file_path / self.file_name, 0o755)
         except FileNotFoundError:
             raise BriefcaseCommandError(
                 f"Could not locate linuxdeploy plugin {self.local_path / self.file_name}. "

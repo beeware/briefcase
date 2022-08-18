@@ -1,5 +1,6 @@
 import os
 import sys
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -178,6 +179,7 @@ def test_plugin_env(
     expected_env,
 ):
     """All linuxdeploy installs are managed."""
+    linuxdeploy.plugins["gtk"].is_elf_file = MagicMock(return_value=False)
 
     plugins = linuxdeploy.verify_plugins(
         [plugin_declaration],
@@ -194,7 +196,7 @@ def test_plugin_env(
     reason="Windows paths can't be passed to linuxdeploy",
 )
 def test_complex_plugin_config(linuxdeploy, mock_command, tmp_path):
-    """A comple plugin configuration can be verified."""
+    """A complex plugin configuration can be verified."""
     # Define multiple plugins, of different types, each with different environments
 
     # Three tools are obtained by downloading.
@@ -222,8 +224,8 @@ def test_complex_plugin_config(linuxdeploy, mock_command, tmp_path):
                 tmp_path
                 / "tools"
                 / "linuxdeploy_plugins"
-                / "sometool"
-                / "f3355f8e631ffc1abbb7afd37b36315f7846182ca2276c481fb9a43a7f4d239f"
+                / "network"
+                / "f93c7e6d04425e4ed7e533655d9898c4984f104711f4ffd3b3966cfc92500b2d"
                 / "linuxdeploy-plugin-network.sh"
             )(url, download_path)
         else:
