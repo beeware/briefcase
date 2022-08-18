@@ -122,6 +122,10 @@ class BaseCommand(ABC):
         apps=None,
         input_enabled=True,
     ):
+        # Distinguish the top-level command from triggered commands, e.g. `run`
+        # may trigger `update` and `build`.
+        self.is_clone = False
+
         # Some details about the host machine
         self.host_arch = platform.machine()
         self.host_os = platform.system()
@@ -543,6 +547,7 @@ or delete the old data directory, and re-run Briefcase.
         """
         self.input.enabled = command.input.enabled
         self.logger = command.logger
+        self.is_clone = True
 
     def add_default_options(self, parser):
         """Add the default options that exist on *all* commands.

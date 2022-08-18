@@ -104,15 +104,6 @@ def test_succeeds_immediately_in_happy_path(mock_command, tmp_path, jdk):
     mock_command.subprocess.run.assert_not_called()
     mock_command.shutil.unpack_archive.assert_not_called()
 
-    # One call to check_output to dump the installed packages
-    mock_command.subprocess.check_output.assert_called_once_with(
-        [os.fsdecode(sdk_manager), "--list_installed"],
-        env={
-            "ANDROID_SDK_ROOT": os.fsdecode(android_sdk_root_path),
-            "JAVA_HOME": jdk.java_home,
-        },
-    )
-
     # The returned SDK has the expected root path.
     assert sdk.root_path == android_sdk_root_path
 
@@ -152,15 +143,6 @@ def test_succeeds_immediately_in_happy_path_with_debug(mock_command, tmp_path, j
     mock_command.download_url.assert_not_called()
     mock_command.shutil.unpack_archive.assert_not_called()
 
-    # One call to check_output to dump the installed packages
-    mock_command.subprocess.check_output.assert_called_once_with(
-        [os.fsdecode(sdk_manager), "--list_installed"],
-        env={
-            "ANDROID_SDK_ROOT": os.fsdecode(android_sdk_root_path),
-            "JAVA_HOME": jdk.java_home,
-        },
-    )
-
     # The returned SDK has the expected root path.
     assert sdk.root_path == android_sdk_root_path
 
@@ -196,15 +178,6 @@ def test_user_provided_sdk(mock_command, tmp_path, jdk):
     mock_command.download_url.assert_not_called()
     mock_command.shutil.unpack_archive.assert_not_called()
 
-    # One call to check_output to dump the installed packages
-    mock_command.subprocess.check_output.assert_called_once_with(
-        [os.fsdecode(sdk.sdkmanager_path), "--list_installed"],
-        env={
-            "ANDROID_SDK_ROOT": os.fsdecode(existing_android_sdk_root_path),
-            "JAVA_HOME": jdk.java_home,
-        },
-    )
-
     # The returned SDK has the expected root path.
     assert sdk.root_path == existing_android_sdk_root_path
 
@@ -239,15 +212,6 @@ def test_user_provided_sdk_with_debug(mock_command, tmp_path, jdk):
     mock_command.subprocess.run.assert_not_called()
     mock_command.shutil.unpack_archive.assert_not_called()
 
-    # One call to check_output to dump the installed packages
-    mock_command.subprocess.check_output.assert_called_once_with(
-        [os.fsdecode(sdk.sdkmanager_path), "--list_installed"],
-        env={
-            "ANDROID_SDK_ROOT": os.fsdecode(existing_android_sdk_root_path),
-            "JAVA_HOME": jdk.java_home,
-        },
-    )
-
     # The returned SDK has the expected root path.
     assert sdk.root_path == existing_android_sdk_root_path
 
@@ -280,15 +244,6 @@ def test_invalid_user_provided_sdk(mock_command, tmp_path, jdk):
     mock_command.download_url.assert_not_called()
     mock_command.subprocess.run.assert_not_called()
     mock_command.shutil.unpack_archive.assert_not_called()
-
-    # One call to check_output to dump the installed packages
-    mock_command.subprocess.check_output.assert_called_once_with(
-        [os.fsdecode(sdk.sdkmanager_path), "--list_installed"],
-        env={
-            "ANDROID_SDK_ROOT": os.fsdecode(android_sdk_root_path),
-            "JAVA_HOME": jdk.java_home,
-        },
-    )
 
     # The returned SDK has the expected root path.
     assert sdk.root_path == android_sdk_root_path
