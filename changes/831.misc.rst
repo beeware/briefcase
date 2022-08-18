@@ -1,0 +1,1 @@
+Update release script to include pushing to main, and adding a RTD tag.

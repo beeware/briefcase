@@ -46,9 +46,10 @@ The procedure for cutting a new release is as follows:
    to generate the updated release notes. Submit the PR; once it's been
    reviewed and merged, you can restart the release process from step 1.
 
-3. Tag the release, and push the tag upstream::
+3. Tag the release, and push the branch and tag upstream::
 
     $ git tag v1.2.3
+    $ git push upstream main
     $ git push upstream v1.2.3
 
 4. Pushing the tag will start a workflow to create a draft release on GitHub.
@@ -66,6 +67,10 @@ The procedure for cutting a new release is as follows:
 
 7. Wait for the `package to appear on PyPI
 <https://pypi.org/project/briefcase/>`__.
+
+8. Log into ReadTheDocs, visit the `Versions tab
+   <https://readthedocs.org/projects/briefcase/versions/>`__, and activate the
+   new version.
 
 Congratulations, you've just published a release!
 
