@@ -58,19 +58,20 @@ The procedure for cutting a new release is as follows:
    once the workflow completes, there should be a new `draft release
    <https://github.com/beeware/briefcase/releases>`__.
 
-5. Edit the GitHub release. Add release notes (you can use the text generated
+5. Log into ReadTheDocs, visit the `Versions tab
+   <https://readthedocs.org/projects/briefcase/versions/>`__, and activate the
+   new version. Ensure that the build completes; if there's a problem, you
+   may need to correct the build configuration, roll back and re-tag the release.
+
+6. Edit the GitHub release. Add release notes (you can use the text generated
    by towncrier). Check the pre-release checkbox (if necessary).
 
-6. Double check everything, then click Publish. This will trigger a
+7. Double check everything, then click Publish. This will trigger a
    `publication workflow on GitHub
    <https://github.com/beeware/briefcase/actions?query=workflow%3A%22Upload+Python+Package%22>`__.
 
-7. Wait for the `package to appear on PyPI
+8. Wait for the `package to appear on PyPI
 <https://pypi.org/project/briefcase/>`__.
-
-8. Log into ReadTheDocs, visit the `Versions tab
-   <https://readthedocs.org/projects/briefcase/versions/>`__, and activate the
-   new version.
 
 Congratulations, you've just published a release!
 
