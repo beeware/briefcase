@@ -156,10 +156,7 @@ class AndroidSDK:
             sdk = AndroidSDK(command=command, jdk=jdk, root_path=Path(sdk_root))
 
             if sdk.exists():
-                # Ensure licenses have been accepted
                 sdk.verify_license()
-                sdk.list_packages()
-
                 return sdk
             else:
                 command.logger.warning(
@@ -190,14 +187,9 @@ class AndroidSDK:
         )
 
         if sdk.exists():
-            # NOTE: For now, there's only one version of the cmdline-tools in the wild.
+            # NOTE: For now, all known versions of the cmdline-tools are compatible.
             # If/when that ever changes, do a verification check here.
-
-            # The sdkmanager binary exists in the `latest` location, and is executable.
-            # Ensure licenses have been accepted
             sdk.verify_license()
-            sdk.list_packages()
-
             return sdk
         elif (sdk_root_path / "tools").exists():
             # The legacy SDK Tools exist. Delete them.

@@ -90,6 +90,8 @@ class GradleMixin:
         this system, downloading tools as needed."""
         super().verify_tools()
         self.android_sdk = AndroidSDK.verify(self)
+        if not self.is_clone:
+            self.logger.add_log_file_extra(self.android_sdk.list_packages)
 
 
 class GradleCreateCommand(GradleMixin, CreateCommand):

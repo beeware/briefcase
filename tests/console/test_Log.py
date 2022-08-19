@@ -8,6 +8,9 @@ from rich.traceback import Trace
 import briefcase
 from briefcase.console import Log
 
+TRACEBACK_HEADER = "Traceback (most recent call last)"
+EXTRA_HEADER = "Extra information:"
+
 
 @pytest.fixture
 def now(monkeypatch):
@@ -81,7 +84,9 @@ def test_save_log_to_file_no_exception(tmp_path, now):
     assert "GITHUB_KEY=********************" in log_contents
     # Environment variables are sorted
     assert log_contents.index("ANDROID_SDK_ROOT") < log_contents.index("GITHUB_KEY")
-    assert "Traceback (most recent call last)" not in log_contents
+
+    assert TRACEBACK_HEADER not in log_contents
+    assert EXTRA_HEADER not in log_contents
 
 
 def test_save_log_to_file_with_exception(tmp_path, now):
@@ -105,8 +110,59 @@ def test_save_log_to_file_with_exception(tmp_path, now):
     log_contents = open(log_filepath, encoding="utf-8").read()
 
     assert log_contents.startswith("Date/Time:       2022-06-25 16:12:29")
-    assert "Traceback (most recent call last)" in log_contents
+    assert TRACEBACK_HEADER in log_contents
     assert log_contents.splitlines()[-1].startswith("ZeroDivisionError")
+
+
+def test_save_log_to_file_extra(tmp_path, now):
+    """Log file extras are called when the log is written."""
+    command = MagicMock()
+    command.base_path = Path(tmp_path)
+    command.command = "dev"
+    command.save_log = True
+    logger = Log()
+
+    def extra1():
+        logger.debug("Log extra 1")
+
+    def extra2():
+        raise ValueError("Log extra 2")
+
+    def extra3():
+        logger.debug("Log extra 3")
+
+    for extra in [extra1, extra2, extra3]:
+        logger.add_log_file_extra(extra)
+    logger.save_log_to_file(command=command)
+    log_filepath = tmp_path / "briefcase.2022_06_25-16_12_29.dev.log"
+    log_contents = open(log_filepath, encoding="utf-8").read()
+
+    assert EXTRA_HEADER in log_contents
+    assert "Log extra 1" in log_contents
+    assert TRACEBACK_HEADER in log_contents
+    assert "ValueError: Log extra 2" in log_contents
+    assert "Log extra 3" in log_contents
+
+
+def test_save_log_to_file_extra_interrupted(tmp_path, now):
+    """Log file extras can be interrupted by Ctrl-C."""
+    command = MagicMock()
+    command.base_path = Path(tmp_path)
+    command.command = "dev"
+    command.save_log = True
+    logger = Log()
+
+    def extra1():
+        raise KeyboardInterrupt()
+
+    extra2 = MagicMock()
+    for extra in [extra1, extra2]:
+        logger.add_log_file_extra(extra)
+    with pytest.raises(KeyboardInterrupt):
+        logger.save_log_to_file(command=command)
+    extra2.assert_not_called()
+    log_filepath = tmp_path / "briefcase.2022_06_25-16_12_29.dev.log"
+    assert log_filepath.stat().st_size == 0
 
 
 def test_save_log_to_file_fail_to_write_file(capsys):

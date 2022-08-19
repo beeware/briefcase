@@ -10,6 +10,9 @@ def main():
     command = None
     try:
         command, options = parse_cmdline(sys.argv[1:])
+        # Replace the top-level logger with the one used by the command.
+        # This is needed to preserve extra logging detail.
+        log = command.logger
         command.check_obsolete_data_dir()
         command.parse_config("pyproject.toml")
         command(**options)

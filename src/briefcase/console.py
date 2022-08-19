@@ -4,6 +4,7 @@ import os
 import platform
 import re
 import sys
+import traceback
 from datetime import datetime
 from pathlib import Path
 
@@ -126,6 +127,7 @@ class Log:
         self.verbosity = verbosity
         # preserved Rich stacktrace of exception for logging to file
         self.stacktrace = None
+        self.log_file_extras = []
 
     def _log(
         self,
@@ -198,6 +200,15 @@ class Log:
         """Preserve Rich stacktrace from exception while in except block."""
         self.stacktrace = Traceback.extract(*sys.exc_info(), show_locals=True)
 
+    def add_log_file_extra(self, func):
+        """Register a function to be called in the event that a log file is
+        written.
+
+        This can be used to provide additional debugging information
+        which is too expensive to gather pre-emptively.
+        """
+        self.log_file_extras.append(func)
+
     def save_log_to_file(self, command):
         """Save the current application log to file."""
         # only save the log if a command ran and it errored or --log was specified
@@ -233,6 +244,22 @@ class Log:
                 ),
                 new_line_start=True,
             )
+
+        if self.log_file_extras:
+            with command.input.wait_bar(
+                "Collecting extra information for log...",
+                transient=True,
+            ):
+                self.debug()
+                self.debug("Extra information:")
+                for func in self.log_file_extras:
+                    try:
+                        func()
+                    except KeyboardInterrupt:
+                        raise
+                    except Exception:
+                        self.error(traceback.format_exc())
+
         # build log header and export buffered log from Rich
         uname = platform.uname()
         sanitized_env_vars = "\n".join(
