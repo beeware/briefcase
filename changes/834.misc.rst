@@ -1,0 +1,1 @@
+Raise ``NetworkFailure`` directly when a download fails instead of catching ``ConnectionError`` upstream.

@@ -1,9 +1,14 @@
 from unittest import mock
 
 import pytest
-from urllib3.response import HTTPHeaderDict
+import requests.exceptions
+from urllib3._collections import HTTPHeaderDict
 
-from briefcase.exceptions import BadNetworkResourceError, MissingNetworkResourceError
+from briefcase.exceptions import (
+    BadNetworkResourceError,
+    MissingNetworkResourceError,
+    NetworkFailure,
+)
 
 
 @pytest.mark.parametrize(
@@ -58,7 +63,7 @@ def test_new_download_oneshot(base_command, url, content_disposition):
     base_command.requests.get.return_value = response
 
     # Download the file
-    filename = base_command.download_url(
+    filename = base_command.download_file(
         url="https://example.com/support?useful=Yes",
         download_path=base_command.base_path / "downloads",
     )
@@ -95,7 +100,7 @@ def test_new_download_chunked(base_command):
     base_command.requests.get.return_value = response
 
     # Download the file
-    filename = base_command.download_url(
+    filename = base_command.download_file(
         url="https://example.com/support?useful=Yes",
         download_path=base_command.base_path,
     )
@@ -131,7 +136,7 @@ def test_already_downloaded(base_command):
     base_command.requests.get.return_value = response
 
     # Download the file
-    filename = base_command.download_url(
+    filename = base_command.download_file(
         url="https://example.com/support?useful=Yes",
         download_path=base_command.base_path,
     )
@@ -161,7 +166,7 @@ def test_missing_resource(base_command):
 
     # Download the file
     with pytest.raises(MissingNetworkResourceError):
-        base_command.download_url(
+        base_command.download_file(
             url="https://example.com/support?useful=Yes",
             download_path=base_command.base_path,
         )
@@ -186,7 +191,7 @@ def test_bad_resource(base_command):
 
     # Download the file
     with pytest.raises(BadNetworkResourceError):
-        base_command.download_url(
+        base_command.download_file(
             url="https://example.com/support?useful=Yes",
             download_path=base_command.base_path,
         )
@@ -197,6 +202,91 @@ def test_bad_resource(base_command):
         stream=True,
     )
     response.headers.get.assert_not_called()
+
+    # The file doesn't exist as a result of the download failure
+    assert not (base_command.base_path / "something.zip").exists()
+
+
+def test_get_connection_error(base_command):
+    """NetworkFailure raises if requests.get() errors."""
+    base_command.requests = mock.MagicMock()
+    base_command.requests.get.side_effect = requests.exceptions.ConnectionError
+
+    # Download the file
+    with pytest.raises(
+        NetworkFailure,
+        match=r"Unable to download https\:\/\/example.com\/support\?useful=Yes",
+    ):
+        base_command.download_file(
+            url="https://example.com/support?useful=Yes",
+            download_path=base_command.base_path,
+        )
+
+    # requests.get has been invoked, but nothing else.
+    base_command.requests.get.assert_called_with(
+        "https://example.com/support?useful=Yes",
+        stream=True,
+    )
+
+    # The file doesn't exist as a result of the download failure
+    assert not (base_command.base_path / "something.zip").exists()
+
+
+def test_iter_content_connection_error(base_command):
+    """NetworkFailure raised if response.iter_content() errors."""
+    base_command.requests = mock.MagicMock()
+
+    response = mock.MagicMock()
+    response.url = "https://example.com/support?useful=Yes"
+    response.headers = mock.Mock(wraps=HTTPHeaderDict({"content-length": "100"}))
+    response.status_code = 200
+    response.iter_content.side_effect = requests.exceptions.ConnectionError
+    base_command.requests.get.return_value = response
+
+    # Download the file
+    with pytest.raises(NetworkFailure, match="Unable to download support"):
+        base_command.download_file(
+            url="https://example.com/support?useful=Yes",
+            download_path=base_command.base_path,
+        )
+
+    # requests.get has been invoked, but nothing else.
+    base_command.requests.get.assert_called_with(
+        "https://example.com/support?useful=Yes",
+        stream=True,
+    )
+    response.headers.get.assert_called_with("content-length")
+
+    # The file doesn't exist as a result of the download failure
+    assert not (base_command.base_path / "something.zip").exists()
+
+
+def test_content_connection_error(base_command):
+    """NetworkFailure raised if response.content errors."""
+    base_command.requests = mock.MagicMock()
+
+    response = mock.MagicMock()
+    response.url = "https://example.com/support?useful=Yes"
+    response.headers = mock.Mock(wraps=HTTPHeaderDict())
+    response.status_code = 200
+    type(response).content = mock.PropertyMock(
+        side_effect=requests.exceptions.ConnectionError
+    )
+    base_command.requests.get.return_value = response
+
+    # Download the file
+    with pytest.raises(NetworkFailure, match="Unable to download support"):
+        base_command.download_file(
+            url="https://example.com/support?useful=Yes",
+            download_path=base_command.base_path,
+        )
+
+    # requests.get has been invoked, but nothing else.
+    base_command.requests.get.assert_called_with(
+        "https://example.com/support?useful=Yes",
+        stream=True,
+    )
+    response.headers.get.assert_called_with("content-length")
 
     # The file doesn't exist as a result of the download failure
     assert not (base_command.base_path / "something.zip").exists()

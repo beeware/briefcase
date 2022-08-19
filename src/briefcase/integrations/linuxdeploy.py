@@ -4,13 +4,10 @@ from abc import abstractmethod
 from pathlib import Path
 from urllib.parse import urlparse
 
-from requests import exceptions as requests_exceptions
-
 from briefcase.exceptions import (
     BriefcaseCommandError,
     CorruptToolError,
     MissingToolError,
-    NetworkFailure,
 )
 
 ELF_PATCH_OFFSET = 0x08
@@ -46,13 +43,11 @@ class LinuxDeployBase:
 
     def install(self):
         """Download and install linuxdeploy or plugin."""
-        try:
-            download_path = self.command.download_url(
-                url=self.download_url,
-                download_path=self.file_path,
-            )
-        except requests_exceptions.ConnectionError as e:
-            raise NetworkFailure(f"download {self.full_name}") from e
+        download_path = self.command.download_file(
+            url=self.download_url,
+            download_path=self.file_path,
+            error_fragment=f"download {self.full_name}",
+        )
 
         with self.command.input.wait_bar(f"Installing {self.full_name}..."):
             self.command.os.chmod(download_path, 0o755)

@@ -70,7 +70,7 @@ def create_zip_file(zippath, content):
     return zippath
 
 
-def mock_file_download(filename, content, mode="w"):
+def mock_file_download(filename, content, mode="w", error_fragment=""):
     """Create a side effect function that mocks the download of a zip file.
 
     :param filename: The file name (*not* the path - just the file name) to
@@ -82,20 +82,20 @@ def mock_file_download(filename, content, mode="w"):
     :returns: a function that can act as a mock side effect for `download_url()`
     """
 
-    def _download_url(url, download_path):
+    def _download_url(url, download_path, error_fragment=""):
         return create_file(download_path / filename, content, mode=mode)
 
     return _download_url
 
 
-def mock_zip_download(filename, content):
+def mock_zip_download(filename, content, error_fragment=""):
     """Create a side effect function that mocks the download of a zip file.
 
     :param content: A string containing the content to write.
     :returns: a function that can act as a mock side effect for `download_url()`
     """
 
-    def _download_url(url, download_path):
+    def _download_url(url, download_path, error_fragment):
         return create_zip_file(download_path / filename, content)
 
     return _download_url

@@ -1,6 +1,4 @@
-from requests import exceptions as requests_exceptions
-
-from briefcase.exceptions import MissingToolError, NetworkFailure
+from briefcase.exceptions import MissingToolError
 
 
 class RCEdit:
@@ -51,12 +49,11 @@ class RCEdit:
 
     def install(self):
         """Download and install RCEdit."""
-        try:
-            self.command.download_url(
-                url=self.download_url, download_path=self.command.tools_path
-            )
-        except requests_exceptions.ConnectionError as e:
-            raise NetworkFailure("downloading RCEdit") from e
+        self.command.download_file(
+            url=self.download_url,
+            download_path=self.command.tools_path,
+            error_fragment="download RCEdit",
+        )
 
     def uninstall(self):
         """Uninstall RCEdit."""
