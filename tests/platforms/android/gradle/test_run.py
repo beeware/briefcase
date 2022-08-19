@@ -11,12 +11,21 @@ from briefcase.platforms.android.gradle import GradleRunCommand
 
 
 @pytest.fixture
+def jdk():
+    jdk = MagicMock()
+    jdk.java_home = Path("/path/to/java")
+    return jdk
+
+
+@pytest.fixture
 def run_command(tmp_path, first_app_config, jdk):
     command = GradleRunCommand(base_path=tmp_path)
     command.mock_adb = MagicMock()
     command.mock_adb.pidof = MagicMock(return_value="777")
     command.android_sdk = AndroidSDK(
-        command, jdk=jdk, root_path=Path("/path/to/android_sdk")
+        command,
+        jdk=jdk,
+        root_path=Path("/path/to/android_sdk"),
     )
     command.android_sdk.adb = MagicMock(return_value=command.mock_adb)
 
@@ -26,13 +35,6 @@ def run_command(tmp_path, first_app_config, jdk):
     command.subprocess = MagicMock()
     command.sys = MagicMock()
     return command
-
-
-@pytest.fixture
-def jdk():
-    jdk = MagicMock()
-    jdk.java_home = Path("/path/to/java")
-    return jdk
 
 
 def test_run_existing_device(run_command, first_app_config):
@@ -180,10 +182,9 @@ def test_run_idle_device(run_command, first_app_config):
 
 def test_log_file_extra(run_command, monkeypatch):
     """Android commands register a log file extra to list SDK packages."""
-    AndroidSDK = "briefcase.integrations.android_sdk.AndroidSDK"
     verify = MagicMock(return_value=run_command.android_sdk)
-    monkeypatch.setattr(AndroidSDK + ".verify", verify)
-    monkeypatch.setattr(AndroidSDK + ".verify_emulator", MagicMock())
+    monkeypatch.setattr(AndroidSDK, "verify", verify)
+    monkeypatch.setattr(AndroidSDK, "verify_emulator", MagicMock())
 
     # Even if one command triggers another, the sdkmanager should only be run once.
     run_command.update_command.verify_tools()
