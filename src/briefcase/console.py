@@ -246,15 +246,19 @@ class Log:
             )
 
         if self.log_file_extras:
-            self.debug()
-            self.debug("Extra information:")
-            for func in self.log_file_extras:
-                try:
-                    func()
-                except KeyboardInterrupt:
-                    raise
-                except Exception:
-                    self.error(traceback.format_exc())
+            with command.input.wait_bar(
+                "Collecting extra information for log...",
+                transient=True,
+            ):
+                self.debug()
+                self.debug("Extra information:")
+                for func in self.log_file_extras:
+                    try:
+                        func()
+                    except KeyboardInterrupt:
+                        raise
+                    except Exception:
+                        self.error(traceback.format_exc())
 
         # build log header and export buffered log from Rich
         uname = platform.uname()
