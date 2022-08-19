@@ -204,6 +204,11 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
                 # this environment variable instead of --appimage-extract-and-run
                 # is necessary to ensure AppImage plugins are extracted as well.
                 env["APPIMAGE_EXTRACT_AND_RUN"] = "1"
+                # Explicitly declare target architecture as the current architecture.
+                # While linuxdeploy does not use this setting directly, plugins
+                # specified for the app, such as Qt, may require disambiguation via
+                # this environment variable.
+                env["ARCH"] = self.host_arch
 
                 # Find all the .so files in app and app_packages,
                 # so they can be passed in to linuxdeploy to have their
@@ -226,7 +231,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
                         [
                             self.linuxdeploy.file_path / self.linuxdeploy.file_name,
                             "--appdir",
-                            self.appdir_path(app),
+                            os.fsdecode(self.appdir_path(app)),
                             "--desktop-file",
                             os.fsdecode(
                                 self.appdir_path(app)

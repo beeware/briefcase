@@ -55,7 +55,9 @@ class LinuxDeployBase:
         except requests_exceptions.ConnectionError as e:
             raise NetworkFailure(f"download {self.full_name}") from e
 
-    def post_install_processing(self):
+        self.install_executable()
+
+    def install_executable(self):
         """Update linuxdeploy and its plugins to allow execution.
 
         All files must be made executable to run or for linuxdeploy to
@@ -86,7 +88,6 @@ class LinuxDeployBase:
                     prefix="linuxdeploy",
                 )
                 tool.install()
-                tool.post_install_processing()
             else:
                 raise MissingToolError(cls.name)
 
@@ -104,7 +105,6 @@ class LinuxDeployBase:
 
         self.uninstall()
         self.install()
-        self.post_install_processing()
 
     def is_elf_file(self):
         """Returns True if the file is an ELF object file.
@@ -246,6 +246,8 @@ class LinuxDeployLocalFilePlugin(LinuxDeployPluginBase):
                 "Is the path correct?"
             )
 
+        self.install_executable()
+
 
 class LinuxDeployURLPlugin(LinuxDeployPluginBase):
     full_name = "user-provided linuxdeploy plugin from URL"
@@ -327,7 +329,7 @@ class LinuxDeploy(LinuxDeployBase):
          * A URL
          * A local file.
 
-        This definition can be preceeded by environment variables that must
+        This definition can be preceded by environment variables that must
         exist in the environment. For example, a plugin definition of:
 
             DEPLOY_GTK_VERSION=3 FOO='bar whiz' gtk
