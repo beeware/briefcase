@@ -6,7 +6,7 @@ def test_wait_bar_done_message(console, capsys):
     with console.wait_bar("Wait message...", done_message="finished"):
         pass
 
-    assert capsys.readouterr().out == "Wait message... finished\n\n"
+    assert capsys.readouterr().out == "Wait message... finished\n"
 
 
 def test_wait_bar_done_message_nested(console, capsys):
@@ -15,17 +15,21 @@ def test_wait_bar_done_message_nested(console, capsys):
         with console.wait_bar("Wait message 2...", done_message="finished"):
             pass
 
-    expected = "Wait message 2... finished\nWait message 1... finished\n\n"
-    assert capsys.readouterr().out == expected
+    # fmt: off
+    assert capsys.readouterr().out == (
+        "Wait message 2... finished\n"
+        "Wait message 1... finished\n"
+    )
+    # fmt: on
 
 
 @pytest.mark.parametrize(
     ("message", "transient", "output"),
     (
-        ("Wait message...", False, "Wait message... done\n\n"),
-        ("", False, "\n"),
-        ("Wait Message...", True, "\n"),
-        ("", True, "\n"),
+        ("Wait message...", False, "Wait message... done\n"),
+        ("", False, ""),
+        ("Wait Message...", True, ""),
+        ("", True, ""),
     ),
 )
 def test_wait_bar_transient(console, message, transient, output, capsys):
@@ -44,11 +48,11 @@ def test_wait_bar_transient(console, message, transient, output, capsys):
             "Wait message 1...",
             "Wait message 2...",
             False,
-            "Wait message 2... done\nWait message 1... done\n\n",
+            "Wait message 2... done\n" "Wait message 1... done\n",
         ),
-        ("", "", False, "\n"),
-        ("Wait message 1...", "Wait message 2...", True, "\n"),
-        ("", "", True, "\n"),
+        ("", "", False, ""),
+        ("Wait message 1...", "Wait message 2...", True, ""),
+        ("", "", True, ""),
     ),
 )
 def test_wait_bar_transient_nested(
@@ -71,10 +75,10 @@ def test_wait_bar_transient_nested(
 @pytest.mark.parametrize(
     ("message", "transient", "output"),
     (
-        ("Wait message...", False, "Wait message...\n\n"),
-        ("", False, "\n"),
-        ("Wait Message...", True, "\n"),
-        ("", True, "\n"),
+        ("Wait message...", False, "Wait message...\n"),
+        ("", False, ""),
+        ("Wait Message...", True, ""),
+        ("", True, ""),
     ),
 )
 def test_wait_bar_keyboard_interrupt(console, message, transient, output, capsys):
@@ -94,11 +98,11 @@ def test_wait_bar_keyboard_interrupt(console, message, transient, output, capsys
             "Wait message 1...",
             "Wait message 2...",
             False,
-            "Wait message 2...\nWait message 1...\n\n",
+            "Wait message 2...\nWait message 1...\n",
         ),
-        ("", "", False, "\n"),
-        ("Wait message 1...", "Wait message 2...", True, "\n"),
-        ("", "", True, "\n"),
+        ("", "", False, ""),
+        ("Wait message 1...", "Wait message 2...", True, ""),
+        ("", "", True, ""),
     ),
 )
 def test_wait_bar_keyboard_interrupt_nested(

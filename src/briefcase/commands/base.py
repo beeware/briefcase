@@ -663,9 +663,8 @@ or delete the old data directory, and re-run Briefcase.
                 if total is None:
                     f.write(response.content)
                 else:
-                    progress_bar = self.input.progress_bar()
-                    task_id = progress_bar.add_task("Downloader", total=int(total))
-                    with progress_bar:
+                    with self.input.progress_bar() as progress_bar:
+                        task_id = progress_bar.add_task("Downloader", total=int(total))
                         for data in response.iter_content(chunk_size=1024 * 1024):
                             f.write(data)
                             progress_bar.update(task_id, advance=len(data))

@@ -280,9 +280,8 @@ or
 
         # Signs code objects in reversed lexicographic order to ensure nesting order is respected
         # (objects must be signed from the inside out)
-        progress_bar = self.input.progress_bar()
-        task_id = progress_bar.add_task("Signing App", total=len(sign_targets))
-        with progress_bar:
+        with self.input.progress_bar() as progress_bar:
+            task_id = progress_bar.add_task("Signing App", total=len(sign_targets))
             for path in sorted(sign_targets, reverse=True):
                 self.sign_file(
                     path,

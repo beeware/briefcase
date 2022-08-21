@@ -9,6 +9,7 @@ from briefcase.console import Console
 def console():
     console = Console()
     console.input = mock.MagicMock()
+    console._live_display = mock.MagicMock()
     return console
 
 
@@ -16,4 +17,5 @@ def console():
 def disabled_console():
     console = Console(enabled=False)
     console.input = mock.MagicMock()
+    console._live_display = mock.MagicMock()
     return console

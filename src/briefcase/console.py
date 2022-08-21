@@ -9,7 +9,9 @@ from datetime import datetime
 from pathlib import Path
 
 from rich.console import Console as RichConsole
+from rich.console import Group
 from rich.highlighter import RegexHighlighter
+from rich.live import Live
 from rich.markup import escape
 from rich.progress import (
     BarColumn,
@@ -302,24 +304,75 @@ class Console:
         self.print = printer
         self.input = printer.console.input
         self.enabled = enabled
-        self._wait_bar: Progress = None
+
         # Signal that Rich is dynamically controlling the console output.
-        # Therefore, all output must be printed to the screen by Rich to
-        # prevent corruption of dynamic elements like the Wait Bar.
+        # Therefore, all output must be printed to the console by Rich to
+        # prevent corruption by dynamic elements like the Wait Bar.
         self.is_output_controlled = False
 
-    def prompt(self, *values, markup=False, **kwargs):
-        """Print to the screen for soliciting user interaction.
+        self._live_display: Live = None
+        self._live_display_stack = []
+        self._wait_bar: Progress = None
 
-        :param values: strings to print as the user prompt
-        :param markup: True if prompt contains Rich markup
+    def _live_display_add(self, renderable):
+        """Add a renderable to the top of the Live Display."""
+        if renderable not in self._live_display_stack:
+            self._live_display_stack.append(renderable)
+            self._live_display_update()
+
+    def _live_display_remove(self, renderable):
+        """Remove a renderable from the Live Display."""
+        with contextlib.suppress(ValueError):
+            self._live_display_stack.remove(renderable)
+        self._live_display_update()
+        # Print non-transient renderables so their final refresh remains in
+        # the console. When a renderable is removed from the Live Display,
+        # it is also completely removed from the console.
+        if not renderable.live.transient:
+            self.print(renderable)
+
+    def _live_display_update(self):
+        """Update the Live Display with the current stack of renderables."""
+        if not self._live_display:
+            self._live_display = Live(
+                refresh_per_second=15,
+                transient=True,
+                console=self.print.console,
+            )
+        if self._live_display_stack:
+            self.is_output_controlled = True
+            self._live_display.update(
+                Group(*self._live_display_stack[::-1]),
+                refresh=True,
+            )
+            self._live_display.start()
+        else:
+            self._live_display.stop()
+            self.is_output_controlled = False
+
+    def remove_dynamic_elements(self):
+        """Remove dynamic console elements such as the Wait bar.
+
+        Only remove with the intent to restore. Otherwise, when the
+        context managers for the currently active elements exit, screen
+        corruption may occur.
         """
-        if self.enabled:
-            self.print(*values, markup=markup, stack_offset=4, **kwargs)
+        if self._live_display:
+            self._live_display.stop()
+            # Force creation of new Live Display when it is restored.
+            # This ensures the Live Display doesn't corrupt console
+            # content created after the existing one was stopped.
+            self._live_display = None
+            self.is_output_controlled = False
 
+    def restore_dynamic_elements(self):
+        """Restore previously removed dynamic console elements."""
+        self._live_display_update()
+
+    @contextlib.contextmanager
     def progress_bar(self):
         """Returns a progress bar as a context manager."""
-        return Progress(
+        progress_bar = Progress(
             TextColumn("  "),
             SpinnerColumn("line", speed=1.5, style="default"),
             BarColumn(bar_width=50),
@@ -328,6 +381,11 @@ class Console:
             TimeRemainingColumn(compact=True, elapsed_when_finished=True),
             console=self.print.console,
         )
+        try:
+            self._live_display_add(progress_bar)
+            yield progress_bar
+        finally:
+            self._live_display_remove(progress_bar)
 
     @contextlib.contextmanager
     def wait_bar(
@@ -363,12 +421,11 @@ class Console:
             # message=None is a sentinel the Wait Bar should be inactive
             self._wait_bar.add_task("", start=False, message=None)
 
-        self.is_output_controlled = True
         wait_bar_task = self._wait_bar.tasks[0]
         previous_message = wait_bar_task.fields["message"]
         self._wait_bar.update(wait_bar_task.id, message=message)
+        self._live_display_add(self._wait_bar)
         try:
-            self._wait_bar.start()
             yield
         except BaseException:
             # ensure the message is left on the screen even if user sends CTRL+C
@@ -382,8 +439,7 @@ class Console:
             self._wait_bar.update(wait_bar_task.id, message=previous_message)
             # Deactivate the Wait Bar if returning to its initial state
             if previous_message is None:
-                self._wait_bar.stop()
-                self.is_output_controlled = False
+                self._live_display_remove(self._wait_bar)
 
     def boolean_input(self, question, default=False):
         """Get a boolean input from user, in the form of y/n.
@@ -473,6 +529,15 @@ class Console:
             raise
 
         return user_input
+
+    def prompt(self, *values, markup=False, **kwargs):
+        """Print to the screen for soliciting user interaction.
+
+        :param values: strings to print as the user prompt
+        :param markup: True if prompt contains Rich markup
+        """
+        if self.enabled:
+            self.print(*values, markup=markup, stack_offset=4, **kwargs)
 
     def __call__(self, prompt, *, markup=False):
         """Present input() interface."""

@@ -29,8 +29,13 @@ def test_call(mock_sub, capsys):
         text=True,
         encoding=ANY,
     )
-    expected_output = "output line 1\n" "\n" "output line 3\n" "\n"
-    assert capsys.readouterr().out == expected_output
+    # fmt: off
+    assert capsys.readouterr().out == (
+        "output line 1\n"
+        "\n"
+        "output line 3\n"
+    )
+    # fmt: on
 
 
 def test_call_with_arg(mock_sub, capsys):
@@ -47,8 +52,13 @@ def test_call_with_arg(mock_sub, capsys):
         universal_newlines=True,
         encoding=ANY,
     )
-    expected_output = "output line 1\n" "\n" "output line 3\n" "\n"
-    assert capsys.readouterr().out == expected_output
+    # fmt: off
+    assert capsys.readouterr().out == (
+        "output line 1\n"
+        "\n"
+        "output line 3\n"
+    )
+    # fmt: on
 
 
 def test_debug_call(mock_sub, capsys):
@@ -66,7 +76,7 @@ def test_debug_call(mock_sub, capsys):
         text=True,
         encoding=ANY,
     )
-    expected_output = (
+    assert capsys.readouterr().out == (
         "\n"
         ">>> Running Command:\n"
         ">>>     hello world\n"
@@ -76,9 +86,7 @@ def test_debug_call(mock_sub, capsys):
         "\n"
         "output line 3\n"
         ">>> Return code: -3\n"
-        "\n"
     )
-    assert capsys.readouterr().out == expected_output
 
 
 def test_debug_call_with_env(mock_sub, capsys, tmp_path):
@@ -103,7 +111,7 @@ def test_debug_call_with_env(mock_sub, capsys, tmp_path):
         text=True,
         encoding=ANY,
     )
-    expected_output = (
+    assert capsys.readouterr().out == (
         "\n"
         ">>> Running Command:\n"
         ">>>     hello world\n"
@@ -115,9 +123,7 @@ def test_debug_call_with_env(mock_sub, capsys, tmp_path):
         "\n"
         "output line 3\n"
         ">>> Return code: -3\n"
-        "\n"
     )
-    assert capsys.readouterr().out == expected_output
 
 
 @pytest.mark.parametrize(
@@ -163,9 +169,13 @@ def test_stderr_is_redirected(mock_sub, popen_process, capsys):
         text=True,
         encoding=ANY,
     )
-
-    expected_output = "output line 1\n" "\n" "output line 3\n" "\n"
-    assert capsys.readouterr().out == expected_output
+    # fmt: off
+    assert capsys.readouterr().out == (
+        "output line 1\n"
+        "\n"
+        "output line 3\n"
+    )
+    # fmt: on
     assert run_result.stderr == stderr_output
 
 
@@ -185,8 +195,13 @@ def test_stderr_dev_null(mock_sub, popen_process, capsys):
         encoding=ANY,
     )
 
-    expected_output = "output line 1\n" "\n" "output line 3\n" "\n"
-    assert capsys.readouterr().out == expected_output
+    # fmt: off
+    assert capsys.readouterr().out == (
+        "output line 1\n"
+        "\n"
+        "output line 3\n"
+    )
+    # fmt: on
     assert run_result.stderr is None
 
 
@@ -200,8 +215,13 @@ def test_calledprocesserror(mock_sub, popen_process, capsys):
         with mock_sub.command.input.wait_bar():
             mock_sub.run(["hello", "world"], check=True, stderr=subprocess.PIPE)
 
-    expected_output = "output line 1\n" "\n" "output line 3\n" "\n"
-    assert capsys.readouterr().out == expected_output
+    # fmt: off
+    assert capsys.readouterr().out == (
+        "output line 1\n"
+        "\n"
+        "output line 3\n"
+    )
+    # fmt: on
     assert exc.value.returncode == -3
     assert exc.value.cmd == ["hello", "world"]
     assert exc.value.stderr == stderr_output
