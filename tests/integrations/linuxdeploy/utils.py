@@ -25,6 +25,7 @@ def create_mock_appimage(appimage_path: Path, mock_appimage_kind: str = "origina
         "original": bytes.fromhex("7f454c46020101004149020000000000"),
         "patched": bytes.fromhex("7f454c46020101000000000000000000"),
         "corrupt": bytes.fromhex("%030x" % randrange(16**30)),
+        "empty": b"",
     }
 
     appimage_path.parent.mkdir(parents=True, exist_ok=True)

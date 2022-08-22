@@ -64,7 +64,7 @@ def test_upgrade_exists(linuxdeploy, mock_command, tmp_path):
         role="Dummy plugin",
     )
     # The downloaded file will be made executable
-    mock_command.os.chmod.assert_called_with("new-downloaded-file", 0o755)
+    mock_command.os.chmod.assert_called_with(appimage_path, 0o755)
 
 
 def test_upgrade_does_not_exist(linuxdeploy, mock_command):
