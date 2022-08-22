@@ -334,7 +334,7 @@ def test_successful_jdk_download(
     test_command.download_file.assert_called_with(
         url=jdk_url,
         download_path=tmp_path / "tools",
-        error_fragment="download Java 8 JDK",
+        role="Java 8 JDK",
     )
     # The archive was unpacked
     # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
@@ -376,7 +376,7 @@ def test_jdk_download_failure(test_command, tmp_path):
         url="https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/"
         "jdk8u242-b08/OpenJDK8U-jdk_x64_linux_hotspot_8u242b08.tar.gz",
         download_path=tmp_path / "tools",
-        error_fragment="download Java 8 JDK",
+        role="Java 8 JDK",
     )
     # No attempt was made to unpack the archive
     assert test_command.shutil.unpack_archive.call_count == 0
@@ -408,7 +408,7 @@ def test_invalid_jdk_archive(test_command, tmp_path):
         url="https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/"
         "jdk8u242-b08/OpenJDK8U-jdk_x64_linux_hotspot_8u242b08.tar.gz",
         download_path=tmp_path / "tools",
-        error_fragment="download Java 8 JDK",
+        role="Java 8 JDK",
     )
     # An attempt was made to unpack the archive.
     # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7

@@ -61,7 +61,7 @@ def test_upgrade_exists(linuxdeploy, mock_command, tmp_path):
     mock_command.download_file.assert_called_with(
         url="https://example.com/path/to/linuxdeploy-dummy-wonky.AppImage",
         download_path=tmp_path / "plugin",
-        error_fragment="download Dummy plugin",
+        role="Dummy plugin",
     )
     # The downloaded file will be made executable
     mock_command.os.chmod.assert_called_with("new-downloaded-file", 0o755)
@@ -98,5 +98,5 @@ def test_upgrade_linuxdeploy_download_failure(linuxdeploy, mock_command, tmp_pat
     mock_command.download_file.assert_called_with(
         url="https://example.com/path/to/linuxdeploy-dummy-wonky.AppImage",
         download_path=tmp_path / "plugin",
-        error_fragment="download Dummy plugin",
+        role="Dummy plugin",
     )

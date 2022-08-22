@@ -621,7 +621,7 @@ or delete the old data directory, and re-run Briefcase.
                 f"""Configuration file not found. Did you run briefcase in the directory that contains {filename!r}?"""
             ) from e
 
-    def download_file(self, url, download_path, error_fragment=None):
+    def download_file(self, url, download_path, role=None):
         """Download a given URL, caching it. If it has already been downloaded,
         return the value that has been cached.
 
@@ -632,8 +632,9 @@ or delete the old data directory, and re-run Briefcase.
         :param url: The URL to download
         :param download_path: The path to the download cache folder. This path
             will be created if it doesn't exist.
-        :param error_fragment: error text that completes "Unable to {action}"
-            error text for NetworkFailure exception.
+        :param role: A string describing the role played by the file being
+            downloaded; used to construct log and error messages. Should be
+            able to fit into the sentence "Error downloading {role}".
         :returns: The filename of the downloaded (or cached) file.
         """
         download_path.mkdir(parents=True, exist_ok=True)
@@ -678,9 +679,11 @@ or delete the old data directory, and re-run Briefcase.
                                 progress_bar.update(task_id, advance=len(data))
 
         except requests.exceptions.ConnectionError as e:
-            if not error_fragment:
-                error_fragment = f"download {filename.name if filename else url}"
-            raise NetworkFailure(error_fragment) from e
+            if role:
+                description = role
+            else:
+                description = filename.name if filename else url
+            raise NetworkFailure(f"download {description}") from e
 
         return filename
 

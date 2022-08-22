@@ -233,7 +233,7 @@ class JDK:
         jdk_zip_path = self.command.download_file(
             url=self.adoptOpenJDK_download_url,
             download_path=self.command.tools_path,
-            error_fragment="download Java 8 JDK",
+            role="Java 8 JDK",
         )
 
         with self.command.input.wait_bar("Installing AdoptOpenJDK..."):

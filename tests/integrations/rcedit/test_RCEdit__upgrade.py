@@ -42,7 +42,7 @@ def test_upgrade_exists(mock_command, tmp_path):
         url="https://github.com/electron/rcedit/"
         "releases/download/v1.1.1/rcedit-x64.exe",
         download_path=tmp_path / "tools",
-        error_fragment="download RCEdit",
+        role="RCEdit",
     )
 
 
@@ -80,5 +80,5 @@ def test_upgrade_rcedit_download_failure(mock_command, tmp_path):
         url="https://github.com/electron/rcedit/"
         "releases/download/v1.1.1/rcedit-x64.exe",
         download_path=tmp_path / "tools",
-        error_fragment="download RCEdit",
+        role="RCEdit",
     )

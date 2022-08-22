@@ -126,7 +126,7 @@ WiX Toolset. Current value: {wix_home!r}
         wix_zip_path = self.command.download_file(
             url=WIX_DOWNLOAD_URL,
             download_path=self.command.tools_path,
-            error_fragment="download WiX",
+            role="WiX",
         )
 
         try:

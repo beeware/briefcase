@@ -46,7 +46,7 @@ class LinuxDeployBase:
         download_path = self.command.download_file(
             url=self.download_url,
             download_path=self.file_path,
-            error_fragment=f"download {self.full_name}",
+            role=self.full_name,
         )
 
         with self.command.input.wait_bar(f"Installing {self.full_name}..."):

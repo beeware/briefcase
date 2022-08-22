@@ -35,7 +35,7 @@ def mock_command(tmp_path):
         "Linux": "linux",
     }[command.host_os]
     # Override some other modules so we can test side-effects.
-    command.download_url = MagicMock()
+    command.download_file = MagicMock()
     command.subprocess = MagicMock()
     command.shutil = MagicMock()
     # Use the original module rmtree implementation
@@ -274,7 +274,7 @@ def test_download_sdk(mock_command, tmp_path):
     mock_command.download_file.assert_called_once_with(
         url=url,
         download_path=mock_command.tools_path,
-        error_fragment="download Android SDK Command-Line Tools",
+        role="Android SDK Command-Line Tools",
     )
 
     mock_command.shutil.unpack_archive.assert_called_once_with(
@@ -343,7 +343,7 @@ def test_download_sdk_legacy_install(mock_command, tmp_path):
     mock_command.download_file.assert_called_once_with(
         url=url,
         download_path=mock_command.tools_path,
-        error_fragment="download Android SDK Command-Line Tools",
+        role="Android SDK Command-Line Tools",
     )
 
     mock_command.shutil.unpack_archive.assert_called_once_with(
@@ -425,7 +425,7 @@ def test_download_sdk_if_sdkmanager_not_executable(mock_command, tmp_path):
     mock_command.download_file.assert_called_once_with(
         url=url,
         download_path=mock_command.tools_path,
-        error_fragment="download Android SDK Command-Line Tools",
+        role="Android SDK Command-Line Tools",
     )
 
     mock_command.shutil.unpack_archive.assert_called_once_with(
@@ -457,7 +457,7 @@ def test_raises_networkfailure_on_connectionerror(mock_command):
     mock_command.download_file.assert_called_once_with(
         url=url,
         download_path=mock_command.tools_path,
-        error_fragment="download Android SDK Command-Line Tools",
+        role="Android SDK Command-Line Tools",
     )
     # But no unpack occurred
     assert mock_command.shutil.unpack_archive.call_count == 0
@@ -484,7 +484,7 @@ def test_detects_bad_zipfile(mock_command, tmp_path):
     mock_command.download_file.assert_called_once_with(
         url=url,
         download_path=mock_command.tools_path,
-        error_fragment="download Android SDK Command-Line Tools",
+        role="Android SDK Command-Line Tools",
     )
     mock_command.shutil.unpack_archive.assert_called_once_with(
         cache_file, extract_dir=android_sdk_root_path / "cmdline-tools"

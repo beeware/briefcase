@@ -15,7 +15,7 @@ def test_existing_skin(mock_sdk):
     # Verify the system image that we already have
     mock_sdk.verify_emulator_skin("pixel_X")
 
-    # download_url was *not* called.
+    # download_file was *not* called.
     mock_sdk.command.download_file.assert_not_called()
 
 
@@ -39,7 +39,7 @@ def test_new_skin(mock_sdk):
         "+archive/refs/heads/mirror-goog-studio-main/"
         "artwork/resources/device-art-resources/pixel_X.tar.gz",
         download_path=mock_sdk.root_path,
-        error_fragment="download pixel_X device skin",
+        role="pixel_X device skin",
     )
 
     # Skin is unpacked.
@@ -75,7 +75,7 @@ def test_skin_download_failure(mock_sdk, tmp_path):
         "+archive/refs/heads/mirror-goog-studio-main/"
         "artwork/resources/device-art-resources/pixel_X.tar.gz",
         download_path=mock_sdk.root_path,
-        error_fragment="download pixel_X device skin",
+        role="pixel_X device skin",
     )
 
     # Skin wasn't downloaded, so it wasn't unpacked
@@ -110,7 +110,7 @@ def test_unpack_failure(mock_sdk, tmp_path):
         "+archive/refs/heads/mirror-goog-studio-main/"
         "artwork/resources/device-art-resources/pixel_X.tar.gz",
         download_path=mock_sdk.root_path,
-        error_fragment="download pixel_X device skin",
+        role="pixel_X device skin",
     )
 
     # An attempt to unpack the skin was made.

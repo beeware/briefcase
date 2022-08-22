@@ -121,7 +121,7 @@ def test_download_wix(mock_command, tmp_path):
     mock_command.download_file.assert_called_with(
         url=WIX_DOWNLOAD_URL,
         download_path=tmp_path / "tools",
-        error_fragment="download WiX",
+        role="WiX",
     )
 
     # The download was unpacked.
@@ -175,7 +175,7 @@ def test_download_fail(mock_command, tmp_path):
     mock_command.download_file.assert_called_with(
         url=WIX_DOWNLOAD_URL,
         download_path=tmp_path / "tools",
-        error_fragment="download WiX",
+        role="WiX",
     )
 
     # ... but the unpack didn't happen
@@ -216,7 +216,7 @@ def test_unpack_fail(mock_command, tmp_path):
     mock_command.download_file.assert_called_with(
         url=WIX_DOWNLOAD_URL,
         download_path=tmp_path / "tools",
-        error_fragment="download WiX",
+        role="WiX",
     )
 
     # The download was unpacked.

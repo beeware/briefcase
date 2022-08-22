@@ -245,7 +245,7 @@ class AndroidSDK:
         cmdline_tools_zip_path = self.command.download_file(
             url=self.cmdline_tools_url,
             download_path=self.command.tools_path,
-            error_fragment="download Android SDK Command-Line Tools",
+            role="Android SDK Command-Line Tools",
         )
 
         # The cmdline-tools package *must* be installed as:
@@ -582,7 +582,7 @@ connection.
         skin_tgz_path = self.command.download_file(
             url=skin_url,
             download_path=self.root_path,
-            error_fragment=f"download {skin} device skin",
+            role=f"{skin} device skin",
         )
 
         # Unpack skin archive

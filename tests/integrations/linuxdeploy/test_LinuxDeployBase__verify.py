@@ -89,7 +89,7 @@ def test_verify_does_not_exist(mock_command, tmp_path):
     mock_command.download_file.assert_called_with(
         url="https://example.com/path/to/linuxdeploy-dummy-wonky.AppImage",
         download_path=tmp_path / "tools" / "somewhere",
-        error_fragment="download Dummy plugin",
+        role="Dummy plugin",
     )
     # The downloaded file will be made executable
     mock_command.os.chmod.assert_called_with("new-downloaded-file", 0o755)
@@ -113,7 +113,7 @@ def test_verify_does_not_exist_non_appimage(mock_command, tmp_path):
     mock_command.download_file.assert_called_with(
         url="https://example.com/path/to/linuxdeploy-dummy.sh",
         download_path=tmp_path / "tools" / "somewhere",
-        error_fragment="download Dummy plugin",
+        role="Dummy plugin",
     )
     # The downloaded file will be made executable
     mock_command.os.chmod.assert_called_with("new-downloaded-file", 0o755)
@@ -138,5 +138,5 @@ def test_verify_linuxdeploy_download_failure(mock_command, tmp_path):
     mock_command.download_file.assert_called_with(
         url="https://example.com/path/to/linuxdeploy-dummy-wonky.AppImage",
         download_path=tmp_path / "tools" / "somewhere",
-        error_fragment="download Dummy plugin",
+        role="Dummy plugin",
     )

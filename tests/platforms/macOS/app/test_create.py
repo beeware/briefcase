@@ -20,7 +20,7 @@ def test_install_app_support_package(first_app_config, tmp_path):
 
     create_command = macOSAppCreateCommand(base_path=tmp_path)
 
-    # Modify download_url to return the temp zipfile
+    # Modify download_file to return the temp zipfile
     create_command.download_file = mock.MagicMock(return_value=support_file)
 
     # Mock support package path

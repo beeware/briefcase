@@ -52,7 +52,7 @@ class RCEdit:
         self.command.download_file(
             url=self.download_url,
             download_path=self.command.tools_path,
-            error_fragment="download RCEdit",
+            role="RCEdit",
         )
 
     def uninstall(self):

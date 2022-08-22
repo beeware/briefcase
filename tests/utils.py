@@ -70,7 +70,7 @@ def create_zip_file(zippath, content):
     return zippath
 
 
-def mock_file_download(filename, content, mode="w", error_fragment=""):
+def mock_file_download(filename, content, mode="w", role=None):
     """Create a side effect function that mocks the download of a zip file.
 
     :param filename: The file name (*not* the path - just the file name) to
@@ -79,23 +79,24 @@ def mock_file_download(filename, content, mode="w", error_fragment=""):
     :param mode: The mode to open the file. This is `w` by default;
         use `wb` and provide content as a bitstring if you need to
         write a binary file.
-    :returns: a function that can act as a mock side effect for `download_url()`
+    :param role: The role played by the content being downloaded
+    :returns: a function that can act as a mock side effect for `download_file()`
     """
 
-    def _download_url(url, download_path, error_fragment=""):
+    def _download_file(url, download_path, role):
         return create_file(download_path / filename, content, mode=mode)
 
-    return _download_url
+    return _download_file
 
 
-def mock_zip_download(filename, content, error_fragment=""):
+def mock_zip_download(filename, content, role=None):
     """Create a side effect function that mocks the download of a zip file.
 
     :param content: A string containing the content to write.
-    :returns: a function that can act as a mock side effect for `download_url()`
+    :returns: a function that can act as a mock side effect for `download_file()`
     """
 
-    def _download_url(url, download_path, error_fragment):
+    def _download_file(url, download_path, role):
         return create_zip_file(download_path / filename, content)
 
-    return _download_url
+    return _download_file

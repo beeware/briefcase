@@ -35,7 +35,7 @@ def test_non_managed_install(mock_command, tmp_path, capsys):
         wix.upgrade()
 
     # No download was attempted
-    assert mock_command.download_url.call_count == 0
+    assert mock_command.download_file.call_count == 0
 
 
 def test_non_existing_wix_install(mock_command, tmp_path):
@@ -47,7 +47,7 @@ def test_non_existing_wix_install(mock_command, tmp_path):
         wix.upgrade()
 
     # No download was attempted
-    assert mock_command.download_url.call_count == 0
+    assert mock_command.download_file.call_count == 0
 
 
 def test_existing_wix_install(mock_command, tmp_path):
@@ -87,7 +87,7 @@ def test_existing_wix_install(mock_command, tmp_path):
     mock_command.download_file.assert_called_with(
         url=WIX_DOWNLOAD_URL,
         download_path=tmp_path / "tools",
-        error_fragment="download WiX",
+        role="WiX",
     )
 
     # The download was unpacked
@@ -123,7 +123,7 @@ def test_download_fail(mock_command, tmp_path):
     mock_command.download_file.assert_called_with(
         url=WIX_DOWNLOAD_URL,
         download_path=tmp_path / "tools",
-        error_fragment="download WiX",
+        role="WiX",
     )
 
     # ... but the unpack didn't happen
@@ -166,7 +166,7 @@ def test_unpack_fail(mock_command, tmp_path):
     mock_command.download_file.assert_called_with(
         url=WIX_DOWNLOAD_URL,
         download_path=tmp_path / "tools",
-        error_fragment="download WiX",
+        role="WiX",
     )
 
     # The download was unpacked.

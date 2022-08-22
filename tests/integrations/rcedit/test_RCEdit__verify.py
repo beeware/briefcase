@@ -68,7 +68,7 @@ def test_verify_does_not_exist(mock_command, tmp_path):
         url="https://github.com/electron/rcedit/"
         "releases/download/v1.1.1/rcedit-x64.exe",
         download_path=tmp_path / "tools",
-        error_fragment="download RCEdit",
+        role="RCEdit",
     )
 
     # The build command retains the path to the downloaded file.
@@ -88,5 +88,5 @@ def test_verify_rcedit_download_failure(mock_command, tmp_path):
         url="https://github.com/electron/rcedit/"
         "releases/download/v1.1.1/rcedit-x64.exe",
         download_path=tmp_path / "tools",
-        error_fragment="download RCEdit",
+        role="RCEdit",
     )

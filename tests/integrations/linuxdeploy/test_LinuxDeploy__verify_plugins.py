@@ -49,7 +49,7 @@ def test_gtk_plugin(linuxdeploy, mock_command, tmp_path):
     mock_command.download_file.assert_called_with(
         url="https://raw.githubusercontent.com/linuxdeploy/linuxdeploy-plugin-gtk/master/linuxdeploy-plugin-gtk.sh",
         download_path=tmp_path / "tools" / "linuxdeploy_plugins" / "gtk",
-        error_fragment="download linuxdeploy GTK plugin",
+        role="linuxdeploy GTK plugin",
     )
 
 
@@ -76,7 +76,7 @@ def test_qt_plugin(linuxdeploy, mock_command, tmp_path):
             "releases/download/continuous/linuxdeploy-plugin-qt-wonky.AppImage"
         ),
         download_path=tmp_path / "tools" / "linuxdeploy_plugins" / "qt",
-        error_fragment="download linuxdeploy Qt plugin",
+        role="linuxdeploy Qt plugin",
     )
 
 
@@ -108,7 +108,7 @@ def test_custom_url_plugin(linuxdeploy, mock_command, tmp_path):
         / "linuxdeploy_plugins"
         / "sometool"
         / "f3355f8e631ffc1abbb7afd37b36315f7846182ca2276c481fb9a43a7f4d239f",
-        error_fragment="download user-provided linuxdeploy plugin from URL",
+        role="user-provided linuxdeploy plugin from URL",
     )
 
 
@@ -203,7 +203,7 @@ def test_complex_plugin_config(linuxdeploy, mock_command, tmp_path):
     # Three tools are obtained by downloading.
     # We don't want the side effects to occur until the function is invoked;
     # so we need to wrap the side effect callables in another callable.
-    def mock_downloads(url, download_path, error_fragment):
+    def mock_downloads(url, download_path, role):
         if "linuxdeploy_plugins/gtk" in str(download_path):
             return side_effect_create_mock_tool(
                 tmp_path
@@ -211,7 +211,7 @@ def test_complex_plugin_config(linuxdeploy, mock_command, tmp_path):
                 / "linuxdeploy_plugins"
                 / "gtk"
                 / "linuxdeploy-plugin-gtk.sh"
-            )(url, download_path, error_fragment)
+            )(url, download_path, role)
         elif "linuxdeploy_plugins/qt" in str(download_path):
             return side_effect_create_mock_appimage(
                 tmp_path
@@ -219,7 +219,7 @@ def test_complex_plugin_config(linuxdeploy, mock_command, tmp_path):
                 / "linuxdeploy_plugins"
                 / "qt"
                 / "linuxdeploy-plugin-qt-wonky.AppImage"
-            )(url, download_path, error_fragment)
+            )(url, download_path, role)
         elif "linuxdeploy_plugins/network" in str(download_path):
             return side_effect_create_mock_tool(
                 tmp_path
@@ -228,7 +228,7 @@ def test_complex_plugin_config(linuxdeploy, mock_command, tmp_path):
                 / "sometool"
                 / "f3355f8e631ffc1abbb7afd37b36315f7846182ca2276c481fb9a43a7f4d239f"
                 / "linuxdeploy-plugin-network.sh"
-            )(url, download_path, error_fragment)
+            )(url, download_path, role)
         else:
             raise Exception("Unexpected download")
 

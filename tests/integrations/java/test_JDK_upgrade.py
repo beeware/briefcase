@@ -91,7 +91,7 @@ def test_existing_install(test_command, tmp_path):
         url="https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/"
         "jdk8u242-b08/OpenJDK8U-jdk_x64_linux_hotspot_8u242b08.tar.gz",
         download_path=tmp_path / "tools",
-        error_fragment="download Java 8 JDK",
+        role="Java 8 JDK",
     )
 
     # The archive was unpacked.
@@ -146,7 +146,7 @@ def test_macOS_existing_install(test_command, tmp_path):
         url="https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/"
         "jdk8u242-b08/OpenJDK8U-jdk_x64_mac_hotspot_8u242b08.tar.gz",
         download_path=tmp_path / "tools",
-        error_fragment="download Java 8 JDK",
+        role="Java 8 JDK",
     )
 
     # The archive was unpacked.
@@ -189,7 +189,7 @@ def test_download_fail(test_command, tmp_path):
         url="https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/"
         "jdk8u242-b08/OpenJDK8U-jdk_x64_linux_hotspot_8u242b08.tar.gz",
         download_path=tmp_path / "tools",
-        error_fragment="download Java 8 JDK",
+        role="Java 8 JDK",
     )
 
     # No attempt was made to unpack the archive
@@ -237,7 +237,7 @@ def test_unpack_fail(test_command, tmp_path):
         url="https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/"
         "jdk8u242-b08/OpenJDK8U-jdk_x64_linux_hotspot_8u242b08.tar.gz",
         download_path=tmp_path / "tools",
-        error_fragment="download Java 8 JDK",
+        role="Java 8 JDK",
     )
 
     # The archive was unpacked.

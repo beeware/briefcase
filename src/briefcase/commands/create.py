@@ -377,7 +377,7 @@ class CreateCommand(BaseCommand):
                 return self.download_file(
                     url=support_package_url,
                     download_path=download_path,
-                    error_fragment="download support package",
+                    role="support package",
                 )
             else:
                 return Path(support_package_url)
