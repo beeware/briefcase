@@ -205,9 +205,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
                 # is necessary to ensure AppImage plugins are extracted as well.
                 env["APPIMAGE_EXTRACT_AND_RUN"] = "1"
                 # Explicitly declare target architecture as the current architecture.
-                # While linuxdeploy does not use this setting directly, plugins
-                # specified for the app, such as Qt, may require disambiguation via
-                # this environment variable.
+                # This can be used by some linuxdeploy plugins.
                 env["ARCH"] = self.host_arch
 
                 # Find all the .so files in app and app_packages,
