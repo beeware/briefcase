@@ -134,11 +134,11 @@ def test_build_appimage(build_command, first_app, tmp_path):
     build_command._subprocess.Popen.assert_called_with(
         [
             os.fsdecode(tmp_path / "data" / "tools" / "linuxdeploy-wonky.AppImage"),
-            "--appimage-extract-and-run",
-            f"--appdir={app_dir}",
-            "-d",
+            "--appdir",
+            os.fsdecode(app_dir),
+            "--desktop-file",
             os.fsdecode(app_dir / "com.example.first-app.desktop"),
-            "-o",
+            "--output",
             "appimage",
             "--deploy-deps-only",
             os.fsdecode(app_dir / "usr" / "app" / "support"),
@@ -151,6 +151,8 @@ def test_build_appimage(build_command, first_app, tmp_path):
             "PATH": "/usr/local/bin:/usr/bin:/path/to/somewhere",
             "VERSION": "0.0.1",
             "DISABLE_COPYRIGHT_FILES_DEPLOYMENT": "1",
+            "APPIMAGE_EXTRACT_AND_RUN": "1",
+            "ARCH": "wonky",
         },
         cwd=os.fsdecode(tmp_path / "project" / "linux"),
         text=True,
@@ -203,11 +205,11 @@ def test_build_appimage_with_plugin(build_command, first_app, tmp_path):
     build_command._subprocess.Popen.assert_called_with(
         [
             os.fsdecode(tmp_path / "data" / "tools" / "linuxdeploy-wonky.AppImage"),
-            "--appimage-extract-and-run",
-            f"--appdir={app_dir}",
-            "-d",
+            "--appdir",
+            os.fsdecode(app_dir),
+            "--desktop-file",
             os.fsdecode(app_dir / "com.example.first-app.desktop"),
-            "-o",
+            "--output",
             "appimage",
             "--deploy-deps-only",
             os.fsdecode(app_dir / "usr" / "app" / "support"),
@@ -225,6 +227,8 @@ def test_build_appimage_with_plugin(build_command, first_app, tmp_path):
             "DEPLOY_GTK_VERSION": "3",
             "VERSION": "0.0.1",
             "DISABLE_COPYRIGHT_FILES_DEPLOYMENT": "1",
+            "APPIMAGE_EXTRACT_AND_RUN": "1",
+            "ARCH": "wonky",
         },
         cwd=os.fsdecode(tmp_path / "project" / "linux"),
         text=True,
@@ -232,6 +236,16 @@ def test_build_appimage_with_plugin(build_command, first_app, tmp_path):
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         bufsize=1,
+    )
+    # Local plugin marked executable
+    build_command.os.chmod.assert_any_call(
+        tmp_path
+        / "project"
+        / "linux"
+        / "appimage"
+        / "First App"
+        / "linuxdeploy-plugin-something.sh",
+        0o755,
     )
     # Binary is marked executable
     build_command.os.chmod.assert_called_with(
@@ -258,11 +272,11 @@ def test_build_failure(build_command, first_app, tmp_path):
     build_command._subprocess.Popen.assert_called_with(
         [
             os.fsdecode(tmp_path / "data" / "tools" / "linuxdeploy-wonky.AppImage"),
-            "--appimage-extract-and-run",
-            f"--appdir={app_dir}",
-            "-d",
+            "--appdir",
+            os.fsdecode(app_dir),
+            "--desktop-file",
             os.fsdecode(app_dir / "com.example.first-app.desktop"),
-            "-o",
+            "--output",
             "appimage",
             "--deploy-deps-only",
             os.fsdecode(app_dir / "usr" / "app" / "support"),
@@ -275,6 +289,8 @@ def test_build_failure(build_command, first_app, tmp_path):
             "PATH": "/usr/local/bin:/usr/bin:/path/to/somewhere",
             "VERSION": "0.0.1",
             "DISABLE_COPYRIGHT_FILES_DEPLOYMENT": "1",
+            "APPIMAGE_EXTRACT_AND_RUN": "1",
+            "ARCH": "wonky",
         },
         cwd=os.fsdecode(tmp_path / "project" / "linux"),
         text=True,
@@ -316,13 +332,17 @@ def test_build_appimage_in_docker(build_command, first_app, tmp_path):
             "VERSION=0.0.1",
             "--env",
             "DISABLE_COPYRIGHT_FILES_DEPLOYMENT=1",
+            "--env",
+            "APPIMAGE_EXTRACT_AND_RUN=1",
+            "--env",
+            "ARCH=wonky",
             f"briefcase/com.example.first-app:py3.{sys.version_info.minor}",
             "/home/brutus/.cache/briefcase/tools/linuxdeploy-wonky.AppImage",
-            "--appimage-extract-and-run",
-            "--appdir=/app/appimage/First App/First App.AppDir",
-            "-d",
+            "--appdir",
+            "/app/appimage/First App/First App.AppDir",
+            "--desktop-file",
             "/app/appimage/First App/First App.AppDir/com.example.first-app.desktop",
-            "-o",
+            "--output",
             "appimage",
             "--deploy-deps-only",
             "/app/appimage/First App/First App.AppDir/usr/app/support",
@@ -405,13 +425,17 @@ def test_build_appimage_with_plugins_in_docker(build_command, first_app, tmp_pat
             "VERSION=0.0.1",
             "--env",
             "DISABLE_COPYRIGHT_FILES_DEPLOYMENT=1",
+            "--env",
+            "APPIMAGE_EXTRACT_AND_RUN=1",
+            "--env",
+            "ARCH=wonky",
             f"briefcase/com.example.first-app:py3.{sys.version_info.minor}",
             "/home/brutus/.cache/briefcase/tools/linuxdeploy-wonky.AppImage",
-            "--appimage-extract-and-run",
-            "--appdir=/app/appimage/First App/First App.AppDir",
-            "-d",
+            "--appdir",
+            "/app/appimage/First App/First App.AppDir",
+            "--desktop-file",
             "/app/appimage/First App/First App.AppDir/com.example.first-app.desktop",
-            "-o",
+            "--output",
             "appimage",
             "--deploy-deps-only",
             "/app/appimage/First App/First App.AppDir/usr/app/support",
@@ -430,6 +454,16 @@ def test_build_appimage_with_plugins_in_docker(build_command, first_app, tmp_pat
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         bufsize=1,
+    )
+    # Local plugin marked executable
+    build_command.os.chmod.assert_any_call(
+        tmp_path
+        / "project"
+        / "linux"
+        / "appimage"
+        / "First App"
+        / "linuxdeploy-plugin-something.sh",
+        0o755,
     )
     # Binary is marked executable
     build_command.os.chmod.assert_called_with(
