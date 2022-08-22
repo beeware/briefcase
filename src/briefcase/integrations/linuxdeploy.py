@@ -55,9 +55,9 @@ class LinuxDeployBase:
         except requests_exceptions.ConnectionError as e:
             raise NetworkFailure(f"download {self.full_name}") from e
 
-        self.install_executable()
+        self.prepare_executable()
 
-    def install_executable(self):
+    def prepare_executable(self):
         """Update linuxdeploy and its plugins to allow execution.
 
         All files must be made executable to run or for linuxdeploy to
@@ -246,7 +246,7 @@ class LinuxDeployLocalFilePlugin(LinuxDeployPluginBase):
                 "Is the path correct?"
             )
 
-        self.install_executable()
+        self.prepare_executable()
 
 
 class LinuxDeployURLPlugin(LinuxDeployPluginBase):
