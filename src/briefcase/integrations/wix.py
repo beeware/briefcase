@@ -2,12 +2,9 @@ import os
 import shutil
 from pathlib import Path
 
-from requests import exceptions as requests_exceptions
-
 from briefcase.exceptions import (
     BriefcaseCommandError,
     MissingToolError,
-    NetworkFailure,
     NonManagedToolError,
 )
 
@@ -126,13 +123,11 @@ WiX Toolset. Current value: {wix_home!r}
 
     def install(self):
         """Download and install WiX."""
-        try:
-            wix_zip_path = self.command.download_url(
-                url=WIX_DOWNLOAD_URL,
-                download_path=self.command.tools_path,
-            )
-        except requests_exceptions.ConnectionError as e:
-            raise NetworkFailure("download WiX") from e
+        wix_zip_path = self.command.download_file(
+            url=WIX_DOWNLOAD_URL,
+            download_path=self.command.tools_path,
+            role="WiX",
+        )
 
         try:
             with self.command.input.wait_bar("Installing WiX..."):

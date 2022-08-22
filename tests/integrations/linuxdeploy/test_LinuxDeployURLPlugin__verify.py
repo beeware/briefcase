@@ -1,5 +1,4 @@
 import pytest
-from requests import exceptions as requests_exceptions
 
 from briefcase.exceptions import BriefcaseCommandError, NetworkFailure
 from briefcase.integrations.linuxdeploy import LinuxDeployURLPlugin
@@ -10,7 +9,7 @@ from .utils import side_effect_create_mock_appimage
 def test_verify(mock_command, tmp_path):
     """URL plugins will be downloaded."""
     # Mock a successful download
-    mock_command.download_url.side_effect = side_effect_create_mock_appimage(
+    mock_command.download_file.side_effect = side_effect_create_mock_appimage(
         tmp_path
         / "tools"
         / "linuxdeploy_plugins"
@@ -24,13 +23,14 @@ def test_verify(mock_command, tmp_path):
         url="https://example.com/path/to/linuxdeploy-plugin-sometool-wonky.AppImage",
     )
 
-    mock_command.download_url.assert_called_with(
+    mock_command.download_file.assert_called_with(
         url="https://example.com/path/to/linuxdeploy-plugin-sometool-wonky.AppImage",
         download_path=tmp_path
         / "tools"
         / "linuxdeploy_plugins"
         / "sometool"
         / "f3355f8e631ffc1abbb7afd37b36315f7846182ca2276c481fb9a43a7f4d239f",
+        role="user-provided linuxdeploy plugin from URL",
     )
 
 
@@ -38,13 +38,22 @@ def test_download_failure(mock_command, tmp_path):
     """A failure downloading a custom URL plugin raises an error."""
 
     # Mock a successful download
-    mock_command.download_url.side_effect = requests_exceptions.ConnectionError
+    mock_command.download_file.side_effect = NetworkFailure("mock")
 
-    with pytest.raises(NetworkFailure):
-        LinuxDeployURLPlugin.verify(
-            mock_command,
-            url="https://example.com/path/to/linuxdeploy-plugin-sometool-wonky.AppImage",
-        )
+    url = "https://example.com/path/to/linuxdeploy-plugin-sometool-wonky.AppImage"
+
+    with pytest.raises(NetworkFailure, match="Unable to mock"):
+        LinuxDeployURLPlugin.verify(mock_command, url=url)
+
+    # A download was invoked
+    mock_command.download_file.assert_called_with(
+        url=url,
+        download_path=mock_command.tools_path
+        / "linuxdeploy_plugins"
+        / "sometool"
+        / "f3355f8e631ffc1abbb7afd37b36315f7846182ca2276c481fb9a43a7f4d239f",
+        role="user-provided linuxdeploy plugin from URL",
+    )
 
 
 def test_invalid_plugin_name(mock_command, tmp_path):

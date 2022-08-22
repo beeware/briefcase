@@ -4,9 +4,8 @@ import sys
 from unittest import mock
 
 import pytest
-from requests import exceptions as requests_exceptions
 
-from briefcase.exceptions import BriefcaseCommandError
+from briefcase.exceptions import BriefcaseCommandError, NetworkFailure
 from briefcase.integrations.docker import Docker
 from briefcase.integrations.linuxdeploy import LinuxDeploy
 from briefcase.platforms.linux.appimage import LinuxAppImageBuildCommand
@@ -82,14 +81,14 @@ def test_verify_tools_wrong_platform(build_command):
 
     build_command.host_os = "TestOS"
     build_command.build_app = mock.MagicMock()
-    build_command.download_url = mock.MagicMock()
+    build_command.download_file = mock.MagicMock()
 
     # Try to invoke the build
     with pytest.raises(BriefcaseCommandError):
         build_command()
 
     # The download was not attempted
-    assert build_command.download_url.call_count == 0
+    assert build_command.download_file.call_count == 0
 
     # But it failed, so the file won't be made executable...
     assert build_command.os.chmod.call_count == 0
@@ -101,18 +100,17 @@ def test_verify_tools_wrong_platform(build_command):
 def test_verify_tools_download_failure(build_command):
     """If the build tools can't be retrieved, the build fails."""
     build_command.build_app = mock.MagicMock()
-    build_command.download_url = mock.MagicMock(
-        side_effect=requests_exceptions.ConnectionError
-    )
+    build_command.download_file = mock.MagicMock(side_effect=NetworkFailure("mock"))
 
     # Try to invoke the build
     with pytest.raises(BriefcaseCommandError):
         build_command()
 
     # The download was attempted
-    build_command.download_url.assert_called_with(
+    build_command.download_file.assert_called_with(
         url="https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-wonky.AppImage",
         download_path=build_command.tools_path,
+        role="linuxdeploy",
     )
 
     # But it failed, so the file won't be made executable...

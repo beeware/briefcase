@@ -177,7 +177,7 @@ def test_default_name(mock_sdk, tmp_path):
     # MagicMock below py3.8 doesn't has __fspath__ attribute.
     if sys.version_info < (3, 8):
         skin_tgz_path = FsPathMock("")
-        mock_sdk.command.download_url.return_value = skin_tgz_path
+        mock_sdk.command.download_file.return_value = skin_tgz_path
 
     # Create the emulator
     avd = mock_sdk.create_emulator()
@@ -214,7 +214,7 @@ def test_default_name_with_collisions(mock_sdk, tmp_path):
     # MagicMock below py3.8 doesn't has __fspath__ attribute.
     if sys.version_info < (3, 8):
         skin_tgz_path = FsPathMock("")
-        mock_sdk.command.download_url.return_value = skin_tgz_path
+        mock_sdk.command.download_file.return_value = skin_tgz_path
 
     # Create the emulator
     avd = mock_sdk.create_emulator()

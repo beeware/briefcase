@@ -4,13 +4,10 @@ from abc import abstractmethod
 from pathlib import Path
 from urllib.parse import urlparse
 
-from requests import exceptions as requests_exceptions
-
 from briefcase.exceptions import (
     BriefcaseCommandError,
     CorruptToolError,
     MissingToolError,
-    NetworkFailure,
 )
 
 ELF_HEADER_IDENT = bytes.fromhex("7F454C46")
@@ -47,13 +44,11 @@ class LinuxDeployBase:
 
     def install(self):
         """Download and install linuxdeploy or plugin."""
-        try:
-            self.command.download_url(
-                url=self.download_url,
-                download_path=self.file_path,
-            )
-        except requests_exceptions.ConnectionError as e:
-            raise NetworkFailure(f"download {self.full_name}") from e
+        self.command.download_file(
+            url=self.download_url,
+            download_path=self.file_path,
+            role=self.full_name,
+        )
 
         self.prepare_executable()
 

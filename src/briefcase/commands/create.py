@@ -10,7 +10,6 @@ from typing import Optional
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from cookiecutter import exceptions as cookiecutter_exceptions
-from requests import exceptions as requests_exceptions
 
 import briefcase
 from briefcase.config import BaseConfig
@@ -375,9 +374,10 @@ class CreateCommand(BaseCommand):
 
                 # Download the support file, caching the result
                 # in the user's briefcase support cache directory.
-                return self.download_url(
+                return self.download_file(
                     url=support_package_url,
                     download_path=download_path,
+                    role="support package",
                 )
             else:
                 return Path(support_package_url)
@@ -390,9 +390,6 @@ class CreateCommand(BaseCommand):
                     python_version_tag=self.python_version_tag,
                     host_arch=self.host_arch,
                 ) from e
-
-        except requests_exceptions.ConnectionError as e:
-            raise NetworkFailure("downloading support package") from e
 
     def _write_requirements_file(self, app: BaseConfig, requirements_path):
         """Configure application dependencies by writing a requirements.txt

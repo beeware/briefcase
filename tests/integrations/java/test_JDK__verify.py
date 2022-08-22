@@ -6,7 +6,6 @@ from pathlib import Path
 from unittest import mock
 
 import pytest
-from requests import exceptions as requests_exceptions
 
 from briefcase.console import Log
 from briefcase.exceptions import BriefcaseCommandError, MissingToolError, NetworkFailure
@@ -316,7 +315,7 @@ def test_successful_jdk_download(
     else:
         archive = mock.MagicMock()
         archive.__fspath__.return_value = "/path/to/download.zip"
-    test_command.download_url.return_value = archive
+    test_command.download_file.return_value = archive
 
     # Create a directory to make it look like Java was downloaded and unpacked.
     (tmp_path / "tools" / "jdk8u242-b08").mkdir(parents=True)
@@ -332,9 +331,10 @@ def test_successful_jdk_download(
     assert "** WARNING: JAVA_HOME does not point to a Java 8 JDK" in output.out
 
     # Download was invoked
-    test_command.download_url.assert_called_with(
+    test_command.download_file.assert_called_with(
         url=jdk_url,
         download_path=tmp_path / "tools",
+        role="Java 8 JDK",
     )
     # The archive was unpacked
     # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
@@ -356,7 +356,7 @@ def test_not_installed(test_command, tmp_path):
         JDK.verify(command=test_command, install=False)
 
     # Download was not invoked
-    assert test_command.download_url.call_count == 0
+    assert test_command.download_file.call_count == 0
 
 
 def test_jdk_download_failure(test_command, tmp_path):
@@ -365,17 +365,18 @@ def test_jdk_download_failure(test_command, tmp_path):
     test_command.host_os = "Linux"
 
     # Mock a failure on download
-    test_command.download_url.side_effect = requests_exceptions.ConnectionError
+    test_command.download_file.side_effect = NetworkFailure("mock")
 
     # Invoking verify_jdk causes a network failure.
-    with pytest.raises(NetworkFailure):
+    with pytest.raises(NetworkFailure, match="Unable to mock"):
         JDK.verify(command=test_command)
 
     # That download was attempted
-    test_command.download_url.assert_called_with(
+    test_command.download_file.assert_called_with(
         url="https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/"
         "jdk8u242-b08/OpenJDK8U-jdk_x64_linux_hotspot_8u242b08.tar.gz",
         download_path=tmp_path / "tools",
+        role="Java 8 JDK",
     )
     # No attempt was made to unpack the archive
     assert test_command.shutil.unpack_archive.call_count == 0
@@ -394,7 +395,7 @@ def test_invalid_jdk_archive(test_command, tmp_path):
     else:
         archive = mock.MagicMock()
         archive.__fspath__.return_value = "/path/to/download.zip"
-    test_command.download_url.return_value = archive
+    test_command.download_file.return_value = archive
 
     # Mock an unpack failure due to an invalid archive
     test_command.shutil.unpack_archive.side_effect = shutil.ReadError
@@ -403,10 +404,11 @@ def test_invalid_jdk_archive(test_command, tmp_path):
         JDK.verify(command=test_command)
 
     # The download occurred
-    test_command.download_url.assert_called_with(
+    test_command.download_file.assert_called_with(
         url="https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/"
         "jdk8u242-b08/OpenJDK8U-jdk_x64_linux_hotspot_8u242b08.tar.gz",
         download_path=tmp_path / "tools",
+        role="Java 8 JDK",
     )
     # An attempt was made to unpack the archive.
     # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7

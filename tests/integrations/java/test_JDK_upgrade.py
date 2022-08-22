@@ -4,7 +4,6 @@ import sys
 from unittest.mock import MagicMock
 
 import pytest
-from requests import exceptions as requests_exceptions
 
 from briefcase.exceptions import (
     BriefcaseCommandError,
@@ -37,7 +36,7 @@ def test_non_managed_install(test_command, tmp_path, capsys):
         jdk.upgrade()
 
     # No download was attempted
-    assert test_command.download_url.call_count == 0
+    assert test_command.download_file.call_count == 0
 
 
 def test_non_existing_install(test_command, tmp_path):
@@ -49,7 +48,7 @@ def test_non_existing_install(test_command, tmp_path):
         jdk.upgrade()
 
     # No download was attempted
-    assert test_command.download_url.call_count == 0
+    assert test_command.download_file.call_count == 0
 
 
 def test_existing_install(test_command, tmp_path):
@@ -73,7 +72,7 @@ def test_existing_install(test_command, tmp_path):
     else:
         archive = MagicMock()
         archive.__fspath__.return_value = "/path/to/download.zip"
-    test_command.download_url.return_value = archive
+    test_command.download_file.return_value = archive
 
     # Create a directory to make it look like Java was downloaded and unpacked.
     (tmp_path / "tools" / "jdk8u242-b08").mkdir(parents=True)
@@ -88,10 +87,11 @@ def test_existing_install(test_command, tmp_path):
     test_command.shutil.rmtree.assert_called_with(java_home)
 
     # A download was initiated
-    test_command.download_url.assert_called_with(
+    test_command.download_file.assert_called_with(
         url="https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/"
         "jdk8u242-b08/OpenJDK8U-jdk_x64_linux_hotspot_8u242b08.tar.gz",
         download_path=tmp_path / "tools",
+        role="Java 8 JDK",
     )
 
     # The archive was unpacked.
@@ -127,7 +127,7 @@ def test_macOS_existing_install(test_command, tmp_path):
     else:
         archive = MagicMock()
         archive.__fspath__.return_value = "/path/to/download.zip"
-    test_command.download_url.return_value = archive
+    test_command.download_file.return_value = archive
 
     # Create a directory to make it look like Java was downloaded and unpacked.
     (tmp_path / "tools" / "jdk8u242-b08").mkdir(parents=True)
@@ -142,10 +142,11 @@ def test_macOS_existing_install(test_command, tmp_path):
     test_command.shutil.rmtree.assert_called_with(tmp_path / "tools" / "java")
 
     # A download was initiated
-    test_command.download_url.assert_called_with(
+    test_command.download_file.assert_called_with(
         url="https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/"
         "jdk8u242-b08/OpenJDK8U-jdk_x64_mac_hotspot_8u242b08.tar.gz",
         download_path=tmp_path / "tools",
+        role="Java 8 JDK",
     )
 
     # The archive was unpacked.
@@ -171,23 +172,24 @@ def test_download_fail(test_command, tmp_path):
     test_command.shutil.rmtree.side_effect = rmtree
 
     # Mock a failure on download
-    test_command.download_url.side_effect = requests_exceptions.ConnectionError
+    test_command.download_file.side_effect = NetworkFailure("mock")
 
     # Create an SDK wrapper
     jdk = JDK(test_command, java_home=java_home)
 
     # Attempt an upgrade. This will fail along with the download
-    with pytest.raises(NetworkFailure):
+    with pytest.raises(NetworkFailure, match="Unable to mock"):
         jdk.upgrade()
 
     # The old version has been deleted
     test_command.shutil.rmtree.assert_called_with(java_home)
 
     # A download was initiated
-    test_command.download_url.assert_called_with(
+    test_command.download_file.assert_called_with(
         url="https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/"
         "jdk8u242-b08/OpenJDK8U-jdk_x64_linux_hotspot_8u242b08.tar.gz",
         download_path=tmp_path / "tools",
+        role="Java 8 JDK",
     )
 
     # No attempt was made to unpack the archive
@@ -215,7 +217,7 @@ def test_unpack_fail(test_command, tmp_path):
     else:
         archive = MagicMock()
         archive.__fspath__.return_value = "/path/to/download.zip"
-    test_command.download_url.return_value = archive
+    test_command.download_file.return_value = archive
 
     # Mock an unpack failure due to an invalid archive
     test_command.shutil.unpack_archive.side_effect = shutil.ReadError
@@ -231,10 +233,11 @@ def test_unpack_fail(test_command, tmp_path):
     test_command.shutil.rmtree.assert_called_with(java_home)
 
     # A download was initiated
-    test_command.download_url.assert_called_with(
+    test_command.download_file.assert_called_with(
         url="https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/"
         "jdk8u242-b08/OpenJDK8U-jdk_x64_linux_hotspot_8u242b08.tar.gz",
         download_path=tmp_path / "tools",
+        role="Java 8 JDK",
     )
 
     # The archive was unpacked.

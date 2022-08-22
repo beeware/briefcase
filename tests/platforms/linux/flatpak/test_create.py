@@ -53,7 +53,7 @@ def test_install_support_package(first_app_config, tmp_path):
     """Support files are copied into place, rather than being unpacked."""
     command = LinuxFlatpakCreateCommand(base_path=tmp_path)
     command.shutil = mock.MagicMock()
-    command.download_url = mock.MagicMock(
+    command.download_file = mock.MagicMock(
         return_value=tmp_path / "support" / "Python-3.X.Y.tgz"
     )
 

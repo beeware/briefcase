@@ -29,6 +29,7 @@ from briefcase.exceptions import (
     BriefcaseConfigError,
     InfoHelpText,
     MissingNetworkResourceError,
+    NetworkFailure,
 )
 from briefcase.integrations.subprocess import Subprocess
 
@@ -620,7 +621,7 @@ or delete the old data directory, and re-run Briefcase.
                 f"""Configuration file not found. Did you run briefcase in the directory that contains {filename!r}?"""
             ) from e
 
-    def download_url(self, url, download_path):
+    def download_file(self, url, download_path, role=None):
         """Download a given URL, caching it. If it has already been downloaded,
         return the value that has been cached.
 
@@ -631,46 +632,59 @@ or delete the old data directory, and re-run Briefcase.
         :param url: The URL to download
         :param download_path: The path to the download cache folder. This path
             will be created if it doesn't exist.
+        :param role: A string describing the role played by the file being
+            downloaded; used to construct log and error messages. Should be
+            able to fit into the sentence "Error downloading {role}".
         :returns: The filename of the downloaded (or cached) file.
         """
         download_path.mkdir(parents=True, exist_ok=True)
+        filename = None
+        try:
+            response = self.requests.get(url, stream=True)
+            if response.status_code == 404:
+                raise MissingNetworkResourceError(url=url)
+            elif response.status_code != 200:
+                raise BadNetworkResourceError(url=url, status_code=response.status_code)
 
-        response = self.requests.get(url, stream=True)
-        if response.status_code == 404:
-            raise MissingNetworkResourceError(url=url)
-        elif response.status_code != 200:
-            raise BadNetworkResourceError(url=url, status_code=response.status_code)
+            # The initial URL might (read: will) go through URL redirects, so
+            # we need the *final* response. We look at either the `Content-Disposition`
+            # header, or the final URL, to extract the cache filename.
+            cache_full_name = urlparse(response.url).path
+            header_value = response.headers.get("Content-Disposition")
+            if header_value:
+                # See also https://tools.ietf.org/html/rfc6266
+                value, parameters = parse_header(header_value)
+                content_type = value.split(":", 1)[-1].strip().lower()
+                if content_type == "attachment" and parameters.get("filename"):
+                    cache_full_name = parameters["filename"]
+            cache_name = cache_full_name.split("/")[-1]
+            filename = download_path / cache_name
 
-        # The initial URL might (read: will) go through URL redirects, so
-        # we need the *final* response. We look at either the `Content-Disposition`
-        # header, or the final URL, to extract the cache filename.
-        cache_full_name = urlparse(response.url).path
-        header_value = response.headers.get("Content-Disposition")
-        if header_value:
-            # See also https://tools.ietf.org/html/rfc6266
-            value, parameters = parse_header(header_value)
-            content_type = value.split(":", 1)[-1].strip().lower()
-            if content_type == "attachment" and parameters.get("filename"):
-                cache_full_name = parameters["filename"]
-        cache_name = cache_full_name.split("/")[-1]
-        filename = download_path / cache_name
-        if not filename.exists():
-            # We have meaningful content, and it hasn't been cached previously,
-            # so save it in the requested location
-            self.logger.info(f"Downloading {cache_name}...")
-            with filename.open("wb") as f:
-                total = response.headers.get("content-length")
-                if total is None:
-                    f.write(response.content)
-                else:
-                    progress_bar = self.input.progress_bar()
-                    task_id = progress_bar.add_task("Downloader", total=int(total))
-                    with progress_bar:
-                        for data in response.iter_content(chunk_size=1024 * 1024):
-                            f.write(data)
-                            progress_bar.update(task_id, advance=len(data))
-        else:
-            self.logger.info(f"{cache_name} already downloaded")
+            if filename.exists():
+                self.logger.info(f"{cache_name} already downloaded")
+            else:
+                # We have meaningful content, and it hasn't been cached previously,
+                # so save it in the requested location
+                self.logger.info(f"Downloading {cache_name}...")
+                with filename.open("wb") as f:
+                    total = response.headers.get("content-length")
+                    if total is None:
+                        f.write(response.content)
+                    else:
+                        progress_bar = self.input.progress_bar()
+                        task_id = progress_bar.add_task("Downloader", total=int(total))
+                        with progress_bar:
+                            for data in response.iter_content(chunk_size=1024 * 1024):
+                                f.write(data)
+                                progress_bar.update(task_id, advance=len(data))
+
+        except requests.exceptions.ConnectionError as e:
+            if role:
+                description = role
+            else:
+                description = filename.name if filename else url
+            raise NetworkFailure(f"download {description}") from e
+
         return filename
 
     def update_cookiecutter_cache(self, template: str, branch="master"):

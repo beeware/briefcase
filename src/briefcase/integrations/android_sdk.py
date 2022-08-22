@@ -6,15 +6,12 @@ import time
 from contextlib import suppress
 from pathlib import Path
 
-from requests import exceptions as requests_exceptions
-
 from briefcase.config import PEP508_NAME_RE
 from briefcase.console import InputDisabled, select_option
 from briefcase.exceptions import (
     BriefcaseCommandError,
     InvalidDeviceError,
     MissingToolError,
-    NetworkFailure,
 )
 from briefcase.integrations.java import JDK
 
@@ -245,13 +242,11 @@ class AndroidSDK:
 
     def install(self):
         """Download and install the Android SDK."""
-        try:
-            cmdline_tools_zip_path = self.command.download_url(
-                url=self.cmdline_tools_url,
-                download_path=self.command.tools_path,
-            )
-        except requests_exceptions.ConnectionError as e:
-            raise NetworkFailure("download Android SDK Command-Line Tools") from e
+        cmdline_tools_zip_path = self.command.download_file(
+            url=self.cmdline_tools_url,
+            download_path=self.command.tools_path,
+            role="Android SDK Command-Line Tools",
+        )
 
         # The cmdline-tools package *must* be installed as:
         #     <sdk_path>/cmdline-tools/latest
@@ -584,13 +579,11 @@ connection.
             f"artwork/resources/device-art-resources/{skin}.tar.gz"
         )
 
-        try:
-            skin_tgz_path = self.command.download_url(
-                url=skin_url,
-                download_path=self.root_path,
-            )
-        except requests_exceptions.ConnectionError as e:
-            raise NetworkFailure(f"download {skin} device skin") from e
+        skin_tgz_path = self.command.download_file(
+            url=skin_url,
+            download_path=self.root_path,
+            role=f"{skin} device skin",
+        )
 
         # Unpack skin archive
         with self.command.input.wait_bar("Installing device skin..."):

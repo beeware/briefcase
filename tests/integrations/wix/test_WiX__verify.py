@@ -3,7 +3,6 @@ import sys
 from unittest.mock import MagicMock
 
 import pytest
-from requests import exceptions as requests_exceptions
 
 from briefcase.exceptions import BriefcaseCommandError, MissingToolError, NetworkFailure
 from briefcase.integrations.wix import WIX_DOWNLOAD_URL, WiX
@@ -84,7 +83,7 @@ def test_existing_wix_install(mock_command, tmp_path):
     mock_command.os.environ.get.assert_called_with("WIX")
 
     # No download was attempted
-    assert mock_command.download_url.call_count == 0
+    assert mock_command.download_file.call_count == 0
 
     # The returned paths are as expected
     assert wix.heat_exe == tmp_path / "tools" / "wix" / "heat.exe"
@@ -110,7 +109,7 @@ def test_download_wix(mock_command, tmp_path):
         wix_zip = MagicMock()
         wix_zip.__fspath__.return_value = wix_zip_path
 
-    mock_command.download_url.return_value = wix_zip
+    mock_command.download_file.return_value = wix_zip
 
     # Verify the install. This will trigger a download
     wix = WiX.verify(mock_command)
@@ -119,9 +118,10 @@ def test_download_wix(mock_command, tmp_path):
     mock_command.os.environ.get.assert_called_with("WIX")
 
     # A download was initiated
-    mock_command.download_url.assert_called_with(
+    mock_command.download_file.assert_called_with(
         url=WIX_DOWNLOAD_URL,
         download_path=tmp_path / "tools",
+        role="WiX",
     )
 
     # The download was unpacked.
@@ -153,7 +153,7 @@ def test_dont_install(mock_command, tmp_path):
     mock_command.os.environ.get.assert_called_with("WIX")
 
     # No download was initiated
-    mock_command.download_url.assert_not_called()
+    mock_command.download_file.assert_not_called()
 
 
 def test_download_fail(mock_command, tmp_path):
@@ -162,19 +162,20 @@ def test_download_fail(mock_command, tmp_path):
     mock_command.os.environ.get.return_value = None
 
     # Mock the download failure
-    mock_command.download_url.side_effect = requests_exceptions.ConnectionError
+    mock_command.download_file.side_effect = NetworkFailure("mock")
 
     # Verify the install. This will trigger a download
-    with pytest.raises(NetworkFailure):
+    with pytest.raises(NetworkFailure, match="Unable to mock"):
         WiX.verify(mock_command)
 
     # The environment was queried.
     mock_command.os.environ.get.assert_called_with("WIX")
 
     # A download was initiated
-    mock_command.download_url.assert_called_with(
+    mock_command.download_file.assert_called_with(
         url=WIX_DOWNLOAD_URL,
         download_path=tmp_path / "tools",
+        role="WiX",
     )
 
     # ... but the unpack didn't happen
@@ -198,7 +199,7 @@ def test_unpack_fail(mock_command, tmp_path):
         wix_zip = MagicMock()
         wix_zip.__fspath__.return_value = wix_zip_path
 
-    mock_command.download_url.return_value = wix_zip
+    mock_command.download_file.return_value = wix_zip
 
     # Mock an unpack failure
     mock_command.shutil.unpack_archive.side_effect = EOFError
@@ -212,9 +213,10 @@ def test_unpack_fail(mock_command, tmp_path):
     mock_command.os.environ.get.assert_called_with("WIX")
 
     # A download was initiated
-    mock_command.download_url.assert_called_with(
+    mock_command.download_file.assert_called_with(
         url=WIX_DOWNLOAD_URL,
         download_path=tmp_path / "tools",
+        role="WiX",
     )
 
     # The download was unpacked.
