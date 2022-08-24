@@ -1,5 +1,6 @@
 import os
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -18,7 +19,12 @@ def test_simple_command(mock_sdk, tmp_path):
     # Check that adb was invoked with the expected commands
     mock_sdk.command.subprocess.check_output.assert_called_once_with(
         [
-            os.fsdecode(tmp_path / "sdk" / "platform-tools" / "adb"),
+            os.fsdecode(
+                tmp_path
+                / "sdk"
+                / "platform-tools"
+                / f"adb{'.exe' if sys.platform == 'win32' else ''}"
+            ),
             "-s",
             "exampleDevice",
             "example",
@@ -63,7 +69,12 @@ def test_error_handling(mock_sdk, tmp_path, name, exception):
     # Check that adb was invoked as expected
     mock_sdk.command.subprocess.check_output.assert_called_once_with(
         [
-            os.fsdecode(tmp_path / "sdk" / "platform-tools" / "adb"),
+            os.fsdecode(
+                tmp_path
+                / "sdk"
+                / "platform-tools"
+                / f"adb{'.exe' if sys.platform == 'win32' else ''}"
+            ),
             "-s",
             "exampleDevice",
             "example",

@@ -13,7 +13,7 @@ def create_emulator(root_path):
     # Create `emulator` within `root_path`.
     if sys.platform == "win32":
         create_file(
-            root_path / "emulator" / "emulator.bat", "The Emulator", chmod=0o755
+            root_path / "emulator" / "emulator.exe", "The Emulator", chmod=0o755
         )
     else:
         create_file(root_path / "emulator" / "emulator", "The Emulator", chmod=0o755)
