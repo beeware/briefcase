@@ -95,7 +95,9 @@ def test_run_app_simulator_booted(first_app_config, tmp_path):
             "--style",
             "compact",
             "--predicate",
-            'senderImagePath ENDSWITH "/First App"',
+            'senderImagePath ENDSWITH "/First App"'
+            ' OR (processImagePath ENDSWITH "/First App"'
+            ' AND senderImagePath ENDSWITH "-iphonesimulator.so")',
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -199,7 +201,9 @@ def test_run_app_simulator_shut_down(first_app_config, tmp_path):
             "--style",
             "compact",
             "--predicate",
-            'senderImagePath ENDSWITH "/First App"',
+            'senderImagePath ENDSWITH "/First App"'
+            ' OR (processImagePath ENDSWITH "/First App"'
+            ' AND senderImagePath ENDSWITH "-iphonesimulator.so")',
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -316,7 +320,9 @@ def test_run_app_simulator_shutting_down(first_app_config, tmp_path):
             "--style",
             "compact",
             "--predicate",
-            'senderImagePath ENDSWITH "/First App"',
+            'senderImagePath ENDSWITH "/First App"'
+            ' OR (processImagePath ENDSWITH "/First App"'
+            ' AND senderImagePath ENDSWITH "-iphonesimulator.so")',
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -669,7 +675,9 @@ def test_run_app_simulator_launch_failure(first_app_config, tmp_path):
             "--style",
             "compact",
             "--predicate",
-            'senderImagePath ENDSWITH "/First App"',
+            'senderImagePath ENDSWITH "/First App"'
+            ' OR (processImagePath ENDSWITH "/First App"'
+            ' AND senderImagePath ENDSWITH "-iphonesimulator.so")',
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
