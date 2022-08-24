@@ -5,6 +5,7 @@ from contextlib import contextmanager
 from briefcase.commands import (
     BuildCommand,
     CreateCommand,
+    OpenCommand,
     PackageCommand,
     PublishCommand,
     RunCommand,
@@ -22,6 +23,9 @@ class LinuxAppImageMixin(LinuxMixin):
 
     def appdir_path(self, app):
         return self.bundle_path(app) / f"{app.formal_name}.AppDir"
+
+    def project_path(self, app):
+        return self.bundle_path(app)
 
     def binary_path(self, app):
         binary_name = app.formal_name.replace(" ", "_")
@@ -136,6 +140,10 @@ class LinuxAppImageCreateCommand(LinuxAppImageMixin, CreateCommand):
 
 class LinuxAppImageUpdateCommand(LinuxAppImageMixin, UpdateCommand):
     description = "Update an existing Linux AppImage."
+
+
+class LinuxAppImageOpenCommand(LinuxAppImageMixin, OpenCommand):
+    description = "Open the folder containing an existing Linux AppImage project."
 
 
 class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
@@ -290,6 +298,7 @@ class LinuxAppImagePublishCommand(LinuxAppImageMixin, PublishCommand):
 # Declare the briefcase command bindings
 create = LinuxAppImageCreateCommand  # noqa
 update = LinuxAppImageUpdateCommand  # noqa
+open = LinuxAppImageOpenCommand  # noqa
 build = LinuxAppImageBuildCommand  # noqa
 run = LinuxAppImageRunCommand  # noqa
 package = LinuxAppImagePackageCommand  # noqa
