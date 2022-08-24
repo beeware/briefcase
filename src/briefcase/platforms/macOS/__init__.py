@@ -47,6 +47,10 @@ class macOSRunMixin:
         #  2. a log sender of libffi, and a process that matches the app binary.
         # Case (1) works for pre-Python 3.9 static linked binaries.
         # Case (2) works for Python 3.9+ dynamic linked binaries.
+        # It's not enough to filter on *just* the processImagePath,
+        # as the process will generate lots of system-level messages.
+        # We can't filter on *just* the senderImagePath, because other
+        # apps will generate log messages that would be caught by the filter.
         sender = os.fsdecode(
             self.binary_path(app) / "Contents" / "MacOS" / app.formal_name
         )

@@ -353,13 +353,17 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         # Start log stream for the app.
         # The following sets up a log stream filter that looks for:
         #  1. a log sender that matches that app binary; or,
-        #  2. a log sender of that is a Python exception module,
+        #  2. a log sender of that is a Python extension module,
         #     and a process that matches the app binary.
         # Case (1) works when the standard libary is statically linked,
         #   and for native NSLog() calls in the bootstrap binary
         # Case (2) works when the standard library is dynamically linked,
         #   and ctypes (which handles the NSLog integration) is an
         #   extension module.
+        # It's not enough to filter on *just* the processImagePath,
+        # as the process will generate lots of system-level messages.
+        # We can't filter on *just* the senderImagePath, because other
+        # apps will generate log messages that would be caught by the filter.
         simulator_log_popen = self.subprocess.Popen(
             [
                 "xcrun",
