@@ -47,6 +47,7 @@ def parse_cmdline(args):
             "upgrade",
             "create",
             "update",
+            "open",
             "build",
             "run",
             "package",
