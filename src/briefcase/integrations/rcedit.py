@@ -3,6 +3,7 @@ from briefcase.exceptions import MissingToolError
 
 class RCEdit:
     name = "rcedit"
+    full_name = "RCEdit"
 
     def __init__(self, command):
         self.command = command
