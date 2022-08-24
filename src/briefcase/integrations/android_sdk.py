@@ -406,7 +406,7 @@ connection.
         # might be missing.
         (self.root_path / "platforms").mkdir(exist_ok=True)
 
-        if (self.root_path / "emulator").exists():
+        if (self.emulator_path).exists():
             self.command.logger.debug("Android emulator is already installed.")
             return
 
