@@ -8,6 +8,20 @@ from briefcase.platforms.android.gradle import GradleOpenCommand
 from ....utils import create_file
 
 
+def create_sdk_manager(tmp_path, extension=""):
+    create_file(
+        tmp_path
+        / "data"
+        / "tools"
+        / "android_sdk"
+        / "cmdline-tools"
+        / "latest"
+        / "bin"
+        / f"sdkmanager{extension}",
+        "Android SDK manager",
+    )
+
+
 @pytest.fixture
 def open_command(tmp_path, first_app_config):
     command = GradleOpenCommand(
@@ -45,17 +59,7 @@ def test_open_macOS(open_command, first_app_config, tmp_path):
     open_command.project_path(first_app_config).mkdir(parents=True)
 
     # Create a stub sdkmanager
-    create_file(
-        tmp_path
-        / "data"
-        / "tools"
-        / "android_sdk"
-        / "cmdline-tools"
-        / "latest"
-        / "bin"
-        / "sdkmanager",
-        "Android SDK manager",
-    )
+    create_sdk_manager(tmp_path)
 
     open_command(first_app_config)
 
@@ -74,17 +78,7 @@ def test_open_linux(open_command, first_app_config, tmp_path):
     create_file(tmp_path / "data" / "tools" / "java" / "bin" / "java", "java")
 
     # Create a stub sdkmanager
-    create_file(
-        tmp_path
-        / "data"
-        / "tools"
-        / "android_sdk"
-        / "cmdline-tools"
-        / "latest"
-        / "bin"
-        / "sdkmanager",
-        "Android SDK manager",
-    )
+    create_sdk_manager(tmp_path)
 
     open_command(first_app_config)
 
@@ -103,17 +97,7 @@ def test_open_windows(open_command, first_app_config, tmp_path):
     create_file(tmp_path / "data" / "tools" / "java" / "bin" / "java", "java")
 
     # Create a stub sdkmanager
-    create_file(
-        tmp_path
-        / "data"
-        / "tools"
-        / "android_sdk"
-        / "cmdline-tools"
-        / "latest"
-        / "bin"
-        / "sdkmanager.bat",
-        "Android SDK manager",
-    )
+    create_sdk_manager(tmp_path, extension=".bat")
 
     open_command(first_app_config)
 
