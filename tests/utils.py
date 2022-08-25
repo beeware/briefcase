@@ -1,3 +1,4 @@
+import os
 import zipfile
 from unittest.mock import MagicMock
 
@@ -31,7 +32,7 @@ class FsPathMock(MagicMock):
         return MagicMock(**kw)
 
 
-def create_file(filepath, content, mode="w"):
+def create_file(filepath, content, mode="w", chmod=None):
     """A test utility to create a file with known content.
 
     Ensures that the directory for the file exists, and writes a file with
@@ -47,6 +48,9 @@ def create_file(filepath, content, mode="w"):
     filepath.parent.mkdir(parents=True, exist_ok=True)
     with filepath.open(mode) as f:
         f.write(content)
+
+    if chmod:
+        os.chmod(filepath, chmod)
 
     return filepath
 

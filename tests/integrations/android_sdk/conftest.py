@@ -1,3 +1,4 @@
+import platform
 from pathlib import Path
 from unittest.mock import MagicMock
 
@@ -17,9 +18,8 @@ def mock_sdk(tmp_path):
     command.input = DummyConsole()
     command.logger = Log(verbosity=1)
 
-    # For default test purposes, assume we're on macOS x86_64
-    command.host_os = "Darwin"
-    command.host_arch = "x86_64"
+    command.host_arch = platform.machine()
+    command.host_os = platform.system()
 
     # Mock an empty environment
     command.os.environ = {}
