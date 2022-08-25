@@ -28,6 +28,6 @@ def test_open_windows(open_command, tmp_path):
     """On Windows, open invokes `startfile`"""
     open_command(app=open_command.apps["first"])
 
-    assert open_command.os.startfile.assert_called_once_with(
+    open_command.os.startfile.assert_called_once_with(
         tmp_path / "tester" / "dummy" / "first" / "first.project"
     )
