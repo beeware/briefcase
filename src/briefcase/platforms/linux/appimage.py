@@ -18,7 +18,10 @@ from briefcase.integrations.linuxdeploy import LinuxDeploy
 from briefcase.platforms.linux import LinuxMixin
 
 
-class LinuxAppImageMixin(LinuxMixin):
+class LinuxAppImagePassiveMixin(LinuxMixin):
+    # The Passive mixin honors the docker options, but doesn't try to verify
+    # docker exists. It is used by commands that are "passive" from the
+    # perspective of the build system, like open and run.
     output_format = "appimage"
 
     def appdir_path(self, app):
@@ -60,6 +63,8 @@ class LinuxAppImageMixin(LinuxMixin):
         super().clone_options(command)
         self.use_docker = command.use_docker
 
+
+class LinuxAppImageMixin(LinuxAppImagePassiveMixin):
     def docker_image_tag(self, app):
         """The Docker image tag for an app."""
         return (
@@ -142,7 +147,7 @@ class LinuxAppImageUpdateCommand(LinuxAppImageMixin, UpdateCommand):
     description = "Update an existing Linux AppImage."
 
 
-class LinuxAppImageOpenCommand(LinuxAppImageMixin, OpenCommand):
+class LinuxAppImageOpenCommand(LinuxAppImagePassiveMixin, OpenCommand):
     description = "Open the folder containing an existing Linux AppImage project."
 
 
@@ -260,7 +265,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
                 ) from e
 
 
-class LinuxAppImageRunCommand(LinuxAppImageMixin, RunCommand):
+class LinuxAppImageRunCommand(LinuxAppImagePassiveMixin, RunCommand):
     description = "Run a Linux AppImage."
 
     def verify_tools(self):

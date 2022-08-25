@@ -14,9 +14,6 @@ def open_command(tmp_path, first_app_config):
     command.os = MagicMock()
     command.subprocess = MagicMock()
 
-    # Mock the fact that we don't need docker.
-    command.use_docker = False
-
     return command
 
 
