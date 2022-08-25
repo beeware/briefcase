@@ -12,11 +12,11 @@ from ....utils import create_file
 def create_emulator(root_path):
     # Create `emulator` within `root_path`.
     if sys.platform == "win32":
-        create_file(
-            root_path / "emulator" / "emulator.exe", "The Emulator", chmod=0o755
-        )
+        emulator_bin = "emulator.exe"
     else:
-        create_file(root_path / "emulator" / "emulator", "The Emulator", chmod=0o755)
+        emulator_bin = "emulator"
+
+    create_file(root_path / "emulator" / emulator_bin, "The Emulator", chmod=0o755)
 
 
 def test_succeeds_immediately_if_emulator_installed(mock_sdk):
