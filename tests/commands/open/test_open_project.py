@@ -3,7 +3,7 @@ import sys
 import pytest
 
 
-@pytest.mark.skipif(sys.platform != "darwin", reason="Windows specific test")
+@pytest.mark.skipif(sys.platform != "darwin", reason="macOS specific test")
 def test_open_macOS(open_command, tmp_path):
     """On macOS, open invokes `open`"""
     open_command(app=open_command.apps["first"])
@@ -13,7 +13,7 @@ def test_open_macOS(open_command, tmp_path):
     )
 
 
-@pytest.mark.skipif(sys.platform != "linux", reason="Windows specific test")
+@pytest.mark.skipif(sys.platform != "linux", reason="Linux specific test")
 def test_open_linux(open_command, tmp_path):
     """On linux, open invokes `xdg-open`"""
     open_command(app=open_command.apps["first"])
