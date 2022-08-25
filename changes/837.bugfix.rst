@@ -1,0 +1,1 @@
+The RCEdit plugin can now be upgraded.

@@ -1,0 +1,1 @@
+When verifying the existence of the Android emulator, Briefcase now looks for the actual binary, not the folder that contains the binary. This was causing false positives on some Android SDK setups.
