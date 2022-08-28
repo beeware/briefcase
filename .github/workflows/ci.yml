@@ -107,6 +107,13 @@ jobs:
     - name: Test
       run: |
         tox -e py
+    - name: Check coverage
+      uses: codecov/codecov-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: ./coverage.xml
+        flags: unittests
+        fail_ci_if_error: true
 
   platform-compat:
     name: Platform compatibility test
@@ -130,6 +137,13 @@ jobs:
     - name: Test
       run: |
         tox -e py
+    - name: Check coverage
+      uses: codecov/codecov-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: ./coverage.xml
+        flags: unittests
+        fail_ci_if_error: true
 
   verify-apps:
     name: App verification

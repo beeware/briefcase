@@ -5,6 +5,7 @@ from uuid import UUID
 from briefcase.commands import (
     BuildCommand,
     CreateCommand,
+    OpenCommand,
     PackageCommand,
     PublishCommand,
     RunCommand,
@@ -27,6 +28,9 @@ class iOSXcodePassiveMixin(iOSMixin):
     @property
     def default_packaging_format(self):
         return "ipa"
+
+    def project_path(self, app):
+        return self.bundle_path(app) / f"{app.formal_name}.xcodeproj"
 
     def binary_path(self, app):
         return (
@@ -209,6 +213,10 @@ class iOSXcodeUpdateCommand(iOSXcodePassiveMixin, UpdateCommand):
     description = "Update an existing iOS Xcode project."
 
 
+class iOSXcodeOpenCommand(iOSXcodePassiveMixin, OpenCommand):
+    description = "Open an existing iOS Xcode project."
+
+
 class iOSXcodeBuildCommand(iOSXcodeMixin, BuildCommand):
     description = "Build an iOS Xcode project."
 
@@ -238,7 +246,7 @@ class iOSXcodeBuildCommand(iOSXcodeMixin, BuildCommand):
                     [
                         "xcodebuild",
                         "-project",
-                        self.bundle_path(app) / f"{app.formal_name}.xcodeproj",
+                        self.project_path(app),
                         "-destination",
                         f'platform="iOS Simulator,name={device},OS={iOS_version}"',
                         "-quiet",
@@ -422,6 +430,7 @@ class iOSXcodePublishCommand(iOSXcodeMixin, PublishCommand):
 # Declare the briefcase command bindings
 create = iOSXcodeCreateCommand  # noqa
 update = iOSXcodeUpdateCommand  # noqa
+open = iOSXcodeOpenCommand  # noqa
 build = iOSXcodeBuildCommand  # noqa
 run = iOSXcodeRunCommand  # noqa
 package = iOSXcodePackageCommand  # noqa

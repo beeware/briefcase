@@ -5,6 +5,7 @@ from pathlib import Path
 from briefcase.commands import (
     BuildCommand,
     CreateCommand,
+    OpenCommand,
     PackageCommand,
     PublishCommand,
     RunCommand,
@@ -21,6 +22,9 @@ from briefcase.platforms.macOS import (
 
 class macOSAppMixin(macOSMixin):
     output_format = "app"
+
+    def project_path(self, app):
+        return self.binary_path(app) / "Contents"
 
     def binary_path(self, app):
         return self.bundle_path(app) / f"{app.formal_name}.app"
@@ -64,6 +68,10 @@ class macOSAppUpdateCommand(macOSAppMixin, UpdateCommand):
     description = "Update an existing macOS app."
 
 
+class macOSAppOpenCommand(macOSAppMixin, OpenCommand):
+    description = "Open the app bundle folder for a macOS app."
+
+
 class macOSAppBuildCommand(macOSAppMixin, macOSSigningMixin, BuildCommand):
     description = "Build a macOS app."
 
@@ -95,6 +103,7 @@ class macOSAppPublishCommand(macOSAppMixin, PublishCommand):
 # Declare the briefcase command bindings
 create = macOSAppCreateCommand  # noqa
 update = macOSAppUpdateCommand  # noqa
+open = macOSAppOpenCommand  # noqa
 build = macOSAppBuildCommand  # noqa
 run = macOSAppRunCommand  # noqa
 package = macOSAppPackageCommand  # noqa

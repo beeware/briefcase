@@ -1,7 +1,7 @@
 import subprocess
 from pathlib import Path
 
-from briefcase.commands import BuildCommand, PublishCommand, UpdateCommand
+from briefcase.commands import BuildCommand, OpenCommand, PublishCommand, UpdateCommand
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.visualstudio import VisualStudio
@@ -17,17 +17,24 @@ class WindowsVisualStudioMixin(WindowsMixin):
     output_format = "VisualStudio"
     packaging_root = Path("x64") / "Release"
 
+    def project_path(self, app):
+        return self.bundle_path(app) / f"{app.formal_name}.sln"
+
 
 class WindowsVisualStudioCreateCommand(WindowsVisualStudioMixin, WindowsCreateCommand):
-    description = "Create and populate a Visual Studio app project."
+    description = "Create and populate a Visual Studio project."
 
 
 class WindowsVisualStudioUpdateCommand(WindowsVisualStudioMixin, UpdateCommand):
-    description = "Update an existing Visual Studio app project."
+    description = "Update an existing Visual Studio project."
+
+
+class WindowsVisualStudioOpenCommand(WindowsVisualStudioMixin, OpenCommand):
+    description = "Open an existing Visual Studio project."
 
 
 class WindowsVisualStudioBuildCommand(WindowsVisualStudioMixin, BuildCommand):
-    description = "Build a Visual Studio app project."
+    description = "Build a Visual Studio project."
 
     def verify_tools(self):
         super().verify_tools()
@@ -61,23 +68,24 @@ class WindowsVisualStudioBuildCommand(WindowsVisualStudioMixin, BuildCommand):
 
 
 class WindowsVisualStudioRunCommand(WindowsVisualStudioMixin, WindowsRunCommand):
-    description = "Run a Visual Studio app project."
+    description = "Run a Visual Studio project."
 
 
 class WindowsVisualStudioPackageCommand(
     WindowsVisualStudioMixin,
     WindowsPackageCommand,
 ):
-    description = "Package a Visual Studio app project as an MSI."
+    description = "Package a Visual Studio project as an MSI."
 
 
 class WindowsVisualStudioPublishCommand(WindowsVisualStudioMixin, PublishCommand):
-    description = "Publish a Visual Studio app project."
+    description = "Publish a Visual Studio project."
 
 
 # Declare the briefcase command bindings
 create = WindowsVisualStudioCreateCommand  # noqa
 update = WindowsVisualStudioUpdateCommand  # noqa
+open = WindowsVisualStudioOpenCommand  # noqa
 build = WindowsVisualStudioBuildCommand  # noqa
 run = WindowsVisualStudioRunCommand  # noqa
 package = WindowsVisualStudioPackageCommand  # noqa
