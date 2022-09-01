@@ -125,7 +125,7 @@ def test_app_packages_valid_requires(
                 / "path"
                 / "to"
                 / "support"
-                / "cross-platform"
+                / "platform-site"
             )
         },
     )
@@ -202,7 +202,7 @@ def test_app_packages_invalid_requires(
                 / "path"
                 / "to"
                 / "support"
-                / "cross-platform"
+                / "platform-site"
             )
         },
     )
@@ -248,7 +248,7 @@ def test_app_packages_offline(
                 / "path"
                 / "to"
                 / "support"
-                / "cross-platform"
+                / "platform-site"
             )
         },
     )
@@ -294,7 +294,7 @@ def test_app_packages_install_dependencies(
                 / "path"
                 / "to"
                 / "support"
-                / "cross-platform"
+                / "platform-site"
             )
         },
     )
@@ -351,7 +351,7 @@ def test_app_packages_replace_existing_dependencies(
                 / "path"
                 / "to"
                 / "support"
-                / "cross-platform"
+                / "platform-site"
             )
         },
     )

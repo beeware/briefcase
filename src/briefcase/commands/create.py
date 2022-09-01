@@ -419,6 +419,15 @@ class CreateCommand(BaseCommand):
                             requirement = os.path.abspath(self.base_path / requirement)
                         f.write(f"{requirement}\n")
 
+    def _extra_pip_args(self, app: BaseConfig):
+        """Any additional arguments that must be passed to pip when installing
+        packages.
+
+        :param app: The app configuration
+        :returns: A list of additional arguments
+        """
+        return []
+
     def _install_app_dependencies(self, app: BaseConfig, app_packages_path):
         """Install dependencies for the app with pip.
 
@@ -457,6 +466,7 @@ class CreateCommand(BaseCommand):
                             "--no-user",
                             f"--target={app_packages_path}",
                         ]
+                        + self._extra_pip_args(app)
                         + app.requires,
                         check=True,
                         **pip_kwargs,

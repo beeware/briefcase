@@ -208,6 +208,17 @@ or:
 class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
     description = "Create and populate a iOS Xcode project."
 
+    def _extra_pip_args(self, app: BaseConfig):
+        """Any additional arguments that must be passed to pip when installing
+        packages.
+
+        :param app: The app configuration
+        :returns: A list of additional arguments
+        """
+        # TODO: Add the repo for BeeWare-provided binaries,
+        # by adding --extra-index-url https://briefcase-support.org/pypi
+        return []
+
 
 class iOSXcodeUpdateCommand(iOSXcodeCreateCommand, UpdateCommand):
     description = "Update an existing iOS Xcode project."
