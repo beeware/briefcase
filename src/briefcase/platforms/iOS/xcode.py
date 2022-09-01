@@ -209,7 +209,7 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
     description = "Create and populate a iOS Xcode project."
 
 
-class iOSXcodeUpdateCommand(iOSXcodePassiveMixin, UpdateCommand):
+class iOSXcodeUpdateCommand(iOSXcodeCreateCommand, UpdateCommand):
     description = "Update an existing iOS Xcode project."
 
 

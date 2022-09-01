@@ -124,7 +124,7 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
         }
 
 
-class GradleUpdateCommand(GradleMixin, UpdateCommand):
+class GradleUpdateCommand(GradleCreateCommand, UpdateCommand):
     description = "Update an existing Android Gradle project."
 
 

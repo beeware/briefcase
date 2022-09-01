@@ -64,7 +64,7 @@ class macOSAppCreateCommand(macOSAppMixin, CreateCommand):
             self.shutil.move(os.fsdecode(Path(tmpdir) / "lib"), os.fsdecode(lib_path))
 
 
-class macOSAppUpdateCommand(macOSAppMixin, UpdateCommand):
+class macOSAppUpdateCommand(macOSAppCreateCommand, UpdateCommand):
     description = "Update an existing macOS app."
 
 
