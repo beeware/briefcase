@@ -3,12 +3,9 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from requests import exceptions as requests_exceptions
-
 from briefcase.exceptions import (
     BriefcaseCommandError,
     MissingToolError,
-    NetworkFailure,
     NonManagedToolError,
 )
 
@@ -233,13 +230,11 @@ class JDK:
 
     def install(self):
         """Download and install a JDK."""
-        try:
-            jdk_zip_path = self.command.download_url(
-                url=self.adoptOpenJDK_download_url,
-                download_path=self.command.tools_path,
-            )
-        except requests_exceptions.ConnectionError as e:
-            raise NetworkFailure("download Java 8 JDK") from e
+        jdk_zip_path = self.command.download_file(
+            url=self.adoptOpenJDK_download_url,
+            download_path=self.command.tools_path,
+            role="Java 8 JDK",
+        )
 
         with self.command.input.wait_bar("Installing AdoptOpenJDK..."):
             try:

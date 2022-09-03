@@ -6,15 +6,12 @@ import time
 from contextlib import suppress
 from pathlib import Path
 
-from requests import exceptions as requests_exceptions
-
 from briefcase.config import PEP508_NAME_RE
 from briefcase.console import InputDisabled, select_option
 from briefcase.exceptions import (
     BriefcaseCommandError,
     InvalidDeviceError,
     MissingToolError,
-    NetworkFailure,
 )
 from briefcase.integrations.java import JDK
 
@@ -156,10 +153,7 @@ class AndroidSDK:
             sdk = AndroidSDK(command=command, jdk=jdk, root_path=Path(sdk_root))
 
             if sdk.exists():
-                # Ensure licenses have been accepted
                 sdk.verify_license()
-                sdk.list_packages()
-
                 return sdk
             else:
                 command.logger.warning(
@@ -190,14 +184,9 @@ class AndroidSDK:
         )
 
         if sdk.exists():
-            # NOTE: For now, there's only one version of the cmdline-tools in the wild.
+            # NOTE: For now, all known versions of the cmdline-tools are compatible.
             # If/when that ever changes, do a verification check here.
-
-            # The sdkmanager binary exists in the `latest` location, and is executable.
-            # Ensure licenses have been accepted
             sdk.verify_license()
-            sdk.list_packages()
-
             return sdk
         elif (sdk_root_path / "tools").exists():
             # The legacy SDK Tools exist. Delete them.
@@ -253,13 +242,11 @@ class AndroidSDK:
 
     def install(self):
         """Download and install the Android SDK."""
-        try:
-            cmdline_tools_zip_path = self.command.download_url(
-                url=self.cmdline_tools_url,
-                download_path=self.command.tools_path,
-            )
-        except requests_exceptions.ConnectionError as e:
-            raise NetworkFailure("download Android SDK Command-Line Tools") from e
+        cmdline_tools_zip_path = self.command.download_file(
+            url=self.cmdline_tools_url,
+            download_path=self.command.tools_path,
+            role="Android SDK Command-Line Tools",
+        )
 
         # The cmdline-tools package *must* be installed as:
         #     <sdk_path>/cmdline-tools/latest
@@ -419,7 +406,7 @@ connection.
         # might be missing.
         (self.root_path / "platforms").mkdir(exist_ok=True)
 
-        if (self.root_path / "emulator").exists():
+        if (self.emulator_path).exists():
             self.command.logger.debug("Android emulator is already installed.")
             return
 
@@ -592,13 +579,11 @@ connection.
             f"artwork/resources/device-art-resources/{skin}.tar.gz"
         )
 
-        try:
-            skin_tgz_path = self.command.download_url(
-                url=skin_url,
-                download_path=self.root_path,
-            )
-        except requests_exceptions.ConnectionError as e:
-            raise NetworkFailure(f"download {skin} device skin") from e
+        skin_tgz_path = self.command.download_file(
+            url=skin_url,
+            download_path=self.root_path,
+            role=f"{skin} device skin",
+        )
 
         # Unpack skin archive
         with self.command.input.wait_bar("Installing device skin..."):
@@ -1244,18 +1229,7 @@ Activity class not found while starting app.
                 f"Unable to start {package}/{activity} on {self.device}"
             ) from e
 
-    def clear_log(self):
-        """Clear the log for the device.
-
-        Returns `None` on success; raises an exception on failure.
-        """
-        try:
-            # Invoke `adb logcat -c`
-            self.run("logcat", "-c")
-        except subprocess.CalledProcessError as e:
-            raise BriefcaseCommandError(f"Unable to clear log on {self.device}") from e
-
-    def logcat(self):
+    def logcat(self, pid):
         """Start tailing the adb log for the device."""
         try:
             # stream output so it's captured in logging
@@ -1265,11 +1239,11 @@ Activity class not found while starting app.
                     "-s",
                     self.device,
                     "logcat",
-                    "-s",
-                    "MainActivity:*",
-                    "stdio:*",
-                    "Python:*",
-                ],
+                    "--pid",  # This option is available since API level 24.
+                    pid,
+                ]
+                # Filter out some noisy and useless tags.
+                + [f"{tag}:S" for tag in ["EGL_emulation"]],
                 env=self.android_sdk.env,
                 check=True,
                 stream_output=True,
@@ -1281,3 +1255,15 @@ Activity class not found while starting app.
             # Exit normally since the user was instructed to use CTRL+C.
             if e.returncode not in {-2, 0xC000013A}:
                 raise BriefcaseCommandError("Error starting ADB logcat.") from e
+
+    def pidof(self, package):
+        """Return the PID of the given app as a string, or None if it isn't
+        running."""
+        # The pidof command is available since API level 24. The level 23 emulator image also
+        # includes it, but it doesn't work correctly (it returns all processes).
+        try:
+            # Exit status is unreliable: some devices (e.g. Nexus 4) return 0 even when no
+            # process was found.
+            return self.run("shell", "pidof", "-s", package).strip() or None
+        except subprocess.CalledProcessError:
+            return None

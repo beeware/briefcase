@@ -1,4 +1,8 @@
-from unittest.mock import MagicMock
+import platform
+import time
+from os.path import normpath
+from pathlib import Path
+from unittest.mock import MagicMock, call
 
 import pytest
 
@@ -7,13 +11,22 @@ from briefcase.platforms.android.gradle import GradleRunCommand
 
 
 @pytest.fixture
-def run_command(tmp_path, first_app_config):
-    command = GradleRunCommand(base_path=tmp_path / "base_path")
-    command.data_path = tmp_path / "briefcase"
-    command.java_home_path = tmp_path / "java"
+def jdk():
+    jdk = MagicMock()
+    jdk.java_home = Path("/path/to/java")
+    return jdk
 
+
+@pytest.fixture
+def run_command(tmp_path, first_app_config, jdk):
+    command = GradleRunCommand(base_path=tmp_path)
     command.mock_adb = MagicMock()
-    command.android_sdk = AndroidSDK(command, jdk=MagicMock(), root_path=tmp_path)
+    command.mock_adb.pidof = MagicMock(return_value="777")
+    command.android_sdk = AndroidSDK(
+        command,
+        jdk=jdk,
+        root_path=Path("/path/to/android_sdk"),
+    )
     command.android_sdk.adb = MagicMock(return_value=command.mock_adb)
 
     command.os = MagicMock()
@@ -53,14 +66,29 @@ def test_run_existing_device(run_command, first_app_config):
         f"{first_app_config.package_name}.{first_app_config.module_name}",
     )
 
-    run_command.mock_adb.clear_log.assert_called_once()
-
     run_command.mock_adb.start_app.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
         "org.beeware.android.MainActivity",
     )
 
-    run_command.mock_adb.logcat.assert_called_once()
+    run_command.mock_adb.pidof.assert_called_once_with(
+        f"{first_app_config.package_name}.{first_app_config.module_name}"
+    )
+    run_command.mock_adb.logcat.assert_called_once_with("777")
+
+
+def test_run_slow_start(run_command, first_app_config, monkeypatch):
+    run_command.android_sdk.select_target_device = MagicMock(
+        return_value=("exampleDevice", "ExampleDevice", None)
+    )
+    run_command.mock_adb.pidof.side_effect = [None, None, "888"]
+    monkeypatch.setattr(time, "sleep", MagicMock())
+
+    run_command.run_app(first_app_config, device_or_avd="exampleDevice")
+
+    assert run_command.mock_adb.pidof.mock_calls == [call("com.example.first_app")] * 3
+    assert time.sleep.mock_calls == [call(0.5)] * 2
+    run_command.mock_adb.logcat.assert_called_once_with("888")
 
 
 def test_run_created_emulator(run_command, first_app_config):
@@ -99,14 +127,12 @@ def test_run_created_emulator(run_command, first_app_config):
         f"{first_app_config.package_name}.{first_app_config.module_name}",
     )
 
-    run_command.mock_adb.clear_log.assert_called_once()
-
     run_command.mock_adb.start_app.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
         "org.beeware.android.MainActivity",
     )
 
-    run_command.mock_adb.logcat.assert_called_once()
+    run_command.mock_adb.logcat.assert_called_once_with("777")
 
 
 def test_run_idle_device(run_command, first_app_config):
@@ -146,11 +172,35 @@ def test_run_idle_device(run_command, first_app_config):
         f"{first_app_config.package_name}.{first_app_config.module_name}",
     )
 
-    run_command.mock_adb.clear_log.assert_called_once()
-
     run_command.mock_adb.start_app.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
         "org.beeware.android.MainActivity",
     )
 
-    run_command.mock_adb.logcat.assert_called_once()
+    run_command.mock_adb.logcat.assert_called_once_with("777")
+
+
+def test_log_file_extra(run_command, monkeypatch):
+    """Android commands register a log file extra to list SDK packages."""
+    verify = MagicMock(return_value=run_command.android_sdk)
+    monkeypatch.setattr(AndroidSDK, "verify", verify)
+    monkeypatch.setattr(AndroidSDK, "verify_emulator", MagicMock())
+
+    # Even if one command triggers another, the sdkmanager should only be run once.
+    run_command.update_command.verify_tools()
+    run_command.verify_tools()
+
+    sdk_manager = "/path/to/android_sdk/cmdline-tools/latest/bin/sdkmanager"
+    if platform.system() == "Windows":
+        sdk_manager += ".bat"
+
+    run_command.save_log = True
+    run_command.subprocess.check_output.assert_not_called()
+    run_command.logger.save_log_to_file(run_command)
+    run_command.subprocess.check_output.assert_called_once_with(
+        [normpath(sdk_manager), "--list_installed"],
+        env={
+            "ANDROID_SDK_ROOT": str(run_command.android_sdk.root_path),
+            "JAVA_HOME": str(run_command.android_sdk.jdk.java_home),
+        },
+    )

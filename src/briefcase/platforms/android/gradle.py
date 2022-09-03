@@ -1,9 +1,11 @@
 import re
 import subprocess
+import time
 
 from briefcase.commands import (
     BuildCommand,
     CreateCommand,
+    OpenCommand,
     PackageCommand,
     PublishCommand,
     RunCommand,
@@ -58,6 +60,9 @@ class GradleMixin:
             self.platform_path / self.output_format / safe_formal_name(app.formal_name)
         )
 
+    def project_path(self, app):
+        return self.bundle_path(app)
+
     def binary_path(self, app):
         return (
             self.bundle_path(app)
@@ -89,10 +94,12 @@ class GradleMixin:
         this system, downloading tools as needed."""
         super().verify_tools()
         self.android_sdk = AndroidSDK.verify(self)
+        if not self.is_clone:
+            self.logger.add_log_file_extra(self.android_sdk.list_packages)
 
 
 class GradleCreateCommand(GradleMixin, CreateCommand):
-    description = "Create and populate an Android APK."
+    description = "Create and populate an Android Gradle project."
 
     def output_format_template_context(self, app: BaseConfig):
         """Additional template context required by the output format.
@@ -118,7 +125,11 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
 
 
 class GradleUpdateCommand(GradleMixin, UpdateCommand):
-    description = "Update an existing Android debug APK."
+    description = "Update an existing Android Gradle project."
+
+
+class GradleOpenCommand(GradleMixin, OpenCommand):
+    description = "Open the folder for an Android Gradle project."
 
 
 class GradleBuildCommand(GradleMixin, BuildCommand):
@@ -212,20 +223,21 @@ class GradleRunCommand(GradleMixin, RunCommand):
         with self.input.wait_bar("Installing new app version..."):
             adb.install_apk(self.binary_path(app))
 
-        self.logger.info("Starting app...", prefix=app.app_name)
-        with self.input.wait_bar("Clearing device log..."):
-            adb.clear_log()
-
         # To start the app, we launch `org.beeware.android.MainActivity`.
         with self.input.wait_bar("Launching app..."):
             adb.start_app(package, "org.beeware.android.MainActivity")
+            pid = None
+            while not pid:
+                pid = adb.pidof(package)
+                if not pid:
+                    time.sleep(0.5)
 
         self.logger.info(
             "Following device log output (type CTRL-C to stop log)...",
             prefix=app.app_name,
         )
         self.logger.info("=" * 75)
-        adb.logcat()
+        adb.logcat(pid)
 
 
 class GradlePackageCommand(GradleMixin, PackageCommand):
@@ -265,6 +277,7 @@ class GradlePublishCommand(GradleMixin, PublishCommand):
 
 # Declare the briefcase command bindings
 create = GradleCreateCommand  # noqa
+open = GradleOpenCommand  # noqa
 update = GradleUpdateCommand  # noqa
 build = GradleBuildCommand  # noqa
 run = GradleRunCommand  # noqa

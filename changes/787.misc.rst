@@ -1,1 +1,0 @@
-Ensure that RCEdit can be managed and upgraded.

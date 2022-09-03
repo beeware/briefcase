@@ -1,6 +1,7 @@
 from briefcase.commands import (
     BuildCommand,
     CreateCommand,
+    OpenCommand,
     PackageCommand,
     PublishCommand,
     RunCommand,
@@ -21,6 +22,9 @@ class LinuxFlatpakMixin(LinuxMixin):
         # if run has been invoked. As a neat side effect, it's also a shell script
         # that can invoke the flatpak.
         return self.bundle_path(app) / f"{app.bundle}.{app.app_name}"
+
+    def project_path(self, app):
+        return self.bundle_path(app)
 
     def distribution_path(self, app, packaging_format):
         binary_name = app.formal_name.replace(" ", "_")
@@ -107,12 +111,13 @@ class LinuxFlatpakCreateCommand(LinuxFlatpakMixin, CreateCommand):
             "flatpak_sdk": self.flatpak_sdk(app),
         }
 
-    def _unpack_support_package(self, app, support_file_path):
-        """Unpack the support package.
+    def install_app_support_package(self, app: AppConfig):
+        """Install the support package.
 
         Flatpak doesn't unpack the support package; it copies the
         tarball as-is into the source tree.
         """
+        support_file_path = self._download_support_package(app)
         with self.input.wait_bar("Installing support file ..."):
             self.shutil.copy(
                 support_file_path,
@@ -122,6 +127,10 @@ class LinuxFlatpakCreateCommand(LinuxFlatpakMixin, CreateCommand):
 
 class LinuxFlatpakUpdateCommand(LinuxFlatpakMixin, UpdateCommand):
     description = "Update an existing Linux Flatpak."
+
+
+class LinuxFlatpakOpenCommand(LinuxFlatpakMixin, OpenCommand):
+    description = "Open the folder containing an existing Linux Flatpak project."
 
 
 class LinuxFlatpakBuildCommand(LinuxFlatpakMixin, BuildCommand):
@@ -206,6 +215,7 @@ class LinuxFlatpakPublishCommand(LinuxFlatpakMixin, PublishCommand):
 # Declare the briefcase command bindings
 create = LinuxFlatpakCreateCommand  # noqa
 update = LinuxFlatpakUpdateCommand  # noqa
+open = LinuxFlatpakOpenCommand  # noqa
 build = LinuxFlatpakBuildCommand  # noqa
 run = LinuxFlatpakRunCommand  # noqa
 package = LinuxFlatpakPackageCommand  # noqa

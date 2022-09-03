@@ -1,7 +1,6 @@
 from unittest.mock import MagicMock
 
 import pytest
-from requests import exceptions as requests_exceptions
 
 from briefcase.exceptions import MissingToolError, NetworkFailure
 from briefcase.integrations.rcedit import RCEdit
@@ -29,7 +28,7 @@ def test_upgrade_exists(mock_command, tmp_path):
         rcedit_path.touch()
         return "new-downloaded-file"
 
-    mock_command.download_url.side_effect = side_effect_create_mock_appimage
+    mock_command.download_file.side_effect = side_effect_create_mock_appimage
 
     # Create a rcedit wrapper, then upgrade it
     rcedit = RCEdit(mock_command)
@@ -39,10 +38,11 @@ def test_upgrade_exists(mock_command, tmp_path):
     assert rcedit_path.exists()
 
     # A download is invoked
-    mock_command.download_url.assert_called_with(
+    mock_command.download_file.assert_called_with(
         url="https://github.com/electron/rcedit/"
         "releases/download/v1.1.1/rcedit-x64.exe",
         download_path=tmp_path / "tools",
+        role="RCEdit",
     )
 
 
@@ -54,7 +54,7 @@ def test_upgrade_does_not_exist(mock_command, tmp_path):
         rcedit.upgrade()
 
     # The tool wasn't already installed, so an error is raised.
-    assert mock_command.download_url.call_count == 0
+    assert mock_command.download_file.call_count == 0
 
 
 def test_upgrade_rcedit_download_failure(mock_command, tmp_path):
@@ -64,20 +64,21 @@ def test_upgrade_rcedit_download_failure(mock_command, tmp_path):
     rcedit_path = tmp_path / "tools" / "rcedit-x64.exe"
     rcedit_path.touch()
 
-    mock_command.download_url.side_effect = requests_exceptions.ConnectionError
+    mock_command.download_file.side_effect = NetworkFailure("mock")
 
     # Create a rcedit wrapper, then upgrade it.
     # The upgrade will fail
     rcedit = RCEdit(mock_command)
-    with pytest.raises(NetworkFailure):
+    with pytest.raises(NetworkFailure, match="Unable to mock"):
         rcedit.upgrade()
 
     # The mock file will be deleted
     assert not rcedit_path.exists()
 
     # A download was invoked
-    mock_command.download_url.assert_called_with(
+    mock_command.download_file.assert_called_with(
         url="https://github.com/electron/rcedit/"
         "releases/download/v1.1.1/rcedit-x64.exe",
         download_path=tmp_path / "tools",
+        role="RCEdit",
     )

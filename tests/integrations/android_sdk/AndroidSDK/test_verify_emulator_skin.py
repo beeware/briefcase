@@ -2,7 +2,6 @@ import sys
 from unittest.mock import MagicMock
 
 import pytest
-from requests import exceptions as requests_exceptions
 
 from briefcase.exceptions import BriefcaseCommandError, NetworkFailure
 from tests.utils import FsPathMock
@@ -16,8 +15,8 @@ def test_existing_skin(mock_sdk):
     # Verify the system image that we already have
     mock_sdk.verify_emulator_skin("pixel_X")
 
-    # download_url was *not* called.
-    mock_sdk.command.download_url.assert_not_called()
+    # download_file was *not* called.
+    mock_sdk.command.download_file.assert_not_called()
 
 
 def test_new_skin(mock_sdk):
@@ -29,17 +28,18 @@ def test_new_skin(mock_sdk):
     else:
         skin_tgz_path = MagicMock()
         skin_tgz_path.__fspath__.return_value = "/path/to/skin.tgz"
-    mock_sdk.command.download_url.return_value = skin_tgz_path
+    mock_sdk.command.download_file.return_value = skin_tgz_path
 
     # Verify the skin, triggering a download
     mock_sdk.verify_emulator_skin("pixel_X")
 
     # Skin was downloaded
-    mock_sdk.command.download_url.assert_called_once_with(
+    mock_sdk.command.download_file.assert_called_once_with(
         url="https://android.googlesource.com/platform/tools/adt/idea/"
         "+archive/refs/heads/mirror-goog-studio-main/"
         "artwork/resources/device-art-resources/pixel_X.tar.gz",
         download_path=mock_sdk.root_path,
+        role="pixel_X device skin",
     )
 
     # Skin is unpacked.
@@ -60,21 +60,22 @@ def test_skin_download_failure(mock_sdk, tmp_path):
     else:
         skin_tgz_path = MagicMock()
         skin_tgz_path.__fspath__.return_value = "/path/to/skin.tgz"
-    mock_sdk.command.download_url.return_value = skin_tgz_path
+    mock_sdk.command.download_file.return_value = skin_tgz_path
 
     # Mock a failure downloading the skin
-    mock_sdk.command.download_url.side_effect = requests_exceptions.ConnectionError
+    mock_sdk.command.download_file.side_effect = NetworkFailure("mock")
 
     # Verify the skin, triggering a download
-    with pytest.raises(NetworkFailure):
+    with pytest.raises(NetworkFailure, match="Unable to mock"):
         mock_sdk.verify_emulator_skin("pixel_X")
 
     # An attempt was made to download the skin
-    mock_sdk.command.download_url.assert_called_once_with(
+    mock_sdk.command.download_file.assert_called_once_with(
         url="https://android.googlesource.com/platform/tools/adt/idea/"
         "+archive/refs/heads/mirror-goog-studio-main/"
         "artwork/resources/device-art-resources/pixel_X.tar.gz",
         download_path=mock_sdk.root_path,
+        role="pixel_X device skin",
     )
 
     # Skin wasn't downloaded, so it wasn't unpacked
@@ -91,7 +92,7 @@ def test_unpack_failure(mock_sdk, tmp_path):
     else:
         skin_tgz_path = MagicMock()
         skin_tgz_path.__fspath__.return_value = "/path/to/skin.tgz"
-    mock_sdk.command.download_url.return_value = skin_tgz_path
+    mock_sdk.command.download_file.return_value = skin_tgz_path
 
     # Mock a failure unpacking the skin
     mock_sdk.command.shutil.unpack_archive.side_effect = EOFError
@@ -104,11 +105,12 @@ def test_unpack_failure(mock_sdk, tmp_path):
         mock_sdk.verify_emulator_skin("pixel_X")
 
     # Skin was downloaded
-    mock_sdk.command.download_url.assert_called_once_with(
+    mock_sdk.command.download_file.assert_called_once_with(
         url="https://android.googlesource.com/platform/tools/adt/idea/"
         "+archive/refs/heads/mirror-goog-studio-main/"
         "artwork/resources/device-art-resources/pixel_X.tar.gz",
         download_path=mock_sdk.root_path,
+        role="pixel_X device skin",
     )
 
     # An attempt to unpack the skin was made.

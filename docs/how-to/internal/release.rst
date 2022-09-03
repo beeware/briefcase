@@ -46,9 +46,10 @@ The procedure for cutting a new release is as follows:
    to generate the updated release notes. Submit the PR; once it's been
    reviewed and merged, you can restart the release process from step 1.
 
-3. Tag the release, and push the tag upstream::
+3. Tag the release, and push the branch and tag upstream::
 
     $ git tag v1.2.3
+    $ git push upstream main
     $ git push upstream v1.2.3
 
 4. Pushing the tag will start a workflow to create a draft release on GitHub.
@@ -57,14 +58,19 @@ The procedure for cutting a new release is as follows:
    once the workflow completes, there should be a new `draft release
    <https://github.com/beeware/briefcase/releases>`__.
 
-5. Edit the GitHub release. Add release notes (you can use the text generated
+5. Log into ReadTheDocs, visit the `Versions tab
+   <https://readthedocs.org/projects/briefcase/versions/>`__, and activate the
+   new version. Ensure that the build completes; if there's a problem, you
+   may need to correct the build configuration, roll back and re-tag the release.
+
+6. Edit the GitHub release. Add release notes (you can use the text generated
    by towncrier). Check the pre-release checkbox (if necessary).
 
-6. Double check everything, then click Publish. This will trigger a
+7. Double check everything, then click Publish. This will trigger a
    `publication workflow on GitHub
    <https://github.com/beeware/briefcase/actions?query=workflow%3A%22Upload+Python+Package%22>`__.
 
-7. Wait for the `package to appear on PyPI
+8. Wait for the `package to appear on PyPI
 <https://pypi.org/project/briefcase/>`__.
 
 Congratulations, you've just published a release!

@@ -1,1 +1,0 @@
-Streamline the Wait Bar's support for nesting.

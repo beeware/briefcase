@@ -1,1 +1,0 @@
-The console output of Windows apps is now captured and displayed during ``briefcase run``.

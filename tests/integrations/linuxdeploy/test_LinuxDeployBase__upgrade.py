@@ -1,7 +1,6 @@
 from unittest.mock import MagicMock
 
 import pytest
-from requests import exceptions as requests_exceptions
 
 from briefcase.exceptions import MissingToolError, NetworkFailure
 from briefcase.integrations.linuxdeploy import LinuxDeployBase
@@ -48,7 +47,7 @@ def test_upgrade_exists(linuxdeploy, mock_command, tmp_path):
     appimage_path.touch()
 
     # Mock a successful download
-    mock_command.download_url.side_effect = side_effect_create_mock_appimage(
+    mock_command.download_file.side_effect = side_effect_create_mock_appimage(
         appimage_path
     )
 
@@ -59,12 +58,13 @@ def test_upgrade_exists(linuxdeploy, mock_command, tmp_path):
     assert appimage_path.exists()
 
     # A download is invoked
-    mock_command.download_url.assert_called_with(
+    mock_command.download_file.assert_called_with(
         url="https://example.com/path/to/linuxdeploy-dummy-wonky.AppImage",
         download_path=tmp_path / "plugin",
+        role="Dummy plugin",
     )
     # The downloaded file will be made executable
-    mock_command.os.chmod.assert_called_with("new-downloaded-file", 0o755)
+    mock_command.os.chmod.assert_called_with(appimage_path, 0o755)
 
 
 def test_upgrade_does_not_exist(linuxdeploy, mock_command):
@@ -74,7 +74,7 @@ def test_upgrade_does_not_exist(linuxdeploy, mock_command):
         linuxdeploy.upgrade()
 
     # The tool wasn't already installed, so an error is raised.
-    assert mock_command.download_url.call_count == 0
+    assert mock_command.download_file.call_count == 0
 
 
 def test_upgrade_linuxdeploy_download_failure(linuxdeploy, mock_command, tmp_path):
@@ -85,17 +85,18 @@ def test_upgrade_linuxdeploy_download_failure(linuxdeploy, mock_command, tmp_pat
     appimage_path.parent.mkdir(parents=True)
     appimage_path.touch()
 
-    mock_command.download_url.side_effect = requests_exceptions.ConnectionError
+    mock_command.download_file.side_effect = NetworkFailure("mock")
 
     # Updated the linuxdeploy wrapper; the upgrade will fail
-    with pytest.raises(NetworkFailure):
+    with pytest.raises(NetworkFailure, match="Unable to mock"):
         linuxdeploy.upgrade()
 
     # The mock file will be deleted
     assert not appimage_path.exists()
 
     # A download was invoked
-    mock_command.download_url.assert_called_with(
+    mock_command.download_file.assert_called_with(
         url="https://example.com/path/to/linuxdeploy-dummy-wonky.AppImage",
         download_path=tmp_path / "plugin",
+        role="Dummy plugin",
     )

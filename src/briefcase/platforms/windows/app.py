@@ -1,7 +1,7 @@
 import subprocess
 from pathlib import Path
 
-from briefcase.commands import BuildCommand, PublishCommand, UpdateCommand
+from briefcase.commands import BuildCommand, OpenCommand, PublishCommand, UpdateCommand
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.rcedit import RCEdit
@@ -17,6 +17,9 @@ class WindowsAppMixin(WindowsMixin):
     output_format = "app"
     packaging_root = Path("src")
 
+    def project_path(self, app):
+        return self.bundle_path(app)
+
 
 class WindowsAppCreateCommand(WindowsAppMixin, WindowsCreateCommand):
     description = "Create and populate a Windows app."
@@ -24,6 +27,10 @@ class WindowsAppCreateCommand(WindowsAppMixin, WindowsCreateCommand):
 
 class WindowsAppUpdateCommand(WindowsAppMixin, UpdateCommand):
     description = "Update an existing Windows app."
+
+
+class WindowsAppOpenCommand(WindowsAppMixin, OpenCommand):
+    description = "Open the folder containing an existing Windows app."
 
 
 class WindowsAppBuildCommand(WindowsAppMixin, BuildCommand):
@@ -97,6 +104,7 @@ class WindowsAppPublishCommand(WindowsAppMixin, PublishCommand):
 # Declare the briefcase command bindings
 create = WindowsAppCreateCommand  # noqa
 update = WindowsAppUpdateCommand  # noqa
+open = WindowsAppOpenCommand  # noqa
 build = WindowsAppBuildCommand  # noqa
 run = WindowsAppRunCommand  # noqa
 package = WindowsAppPackageCommand  # noqa

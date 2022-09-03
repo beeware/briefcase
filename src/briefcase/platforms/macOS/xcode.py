@@ -3,6 +3,7 @@ import subprocess
 from briefcase.commands import (
     BuildCommand,
     CreateCommand,
+    OpenCommand,
     PackageCommand,
     PublishCommand,
     RunCommand,
@@ -32,6 +33,9 @@ class macOSXcodeMixin(macOSMixin):
         # git check *after* the xcode check.
         super().verify_tools()
 
+    def project_path(self, app):
+        return self.bundle_path(app) / f"{app.formal_name}.xcodeproj"
+
     def binary_path(self, app):
         return (
             self.platform_path
@@ -60,6 +64,10 @@ class macOSXcodeCreateCommand(macOSXcodeMixin, CreateCommand):
     description = "Create and populate a macOS Xcode project."
 
 
+class macOSXcodeOpenCommand(macOSXcodeMixin, OpenCommand):
+    description = "Open a macOS Xcode project."
+
+
 class macOSXcodeUpdateCommand(macOSXcodeMixin, UpdateCommand):
     description = "Update an existing macOS Xcode project."
 
@@ -80,7 +88,7 @@ class macOSXcodeBuildCommand(macOSXcodeMixin, BuildCommand):
                     [
                         "xcodebuild",
                         "-project",
-                        self.bundle_path(app) / f"{app.formal_name}.xcodeproj",
+                        self.project_path(app),
                         "-quiet",
                         "-configuration",
                         "Release",
@@ -110,6 +118,7 @@ class macOSXcodePublishCommand(macOSXcodeMixin, PublishCommand):
 # Declare the briefcase command bindings
 create = macOSXcodeCreateCommand  # noqa
 update = macOSXcodeUpdateCommand  # noqa
+open = macOSXcodeOpenCommand  # noqa
 build = macOSXcodeBuildCommand  # noqa
 run = macOSXcodeRunCommand  # noqa
 package = macOSXcodePackageCommand  # noqa

@@ -5,6 +5,7 @@ from uuid import UUID
 from briefcase.commands import (
     BuildCommand,
     CreateCommand,
+    OpenCommand,
     PackageCommand,
     PublishCommand,
     RunCommand,
@@ -27,6 +28,9 @@ class iOSXcodePassiveMixin(iOSMixin):
     @property
     def default_packaging_format(self):
         return "ipa"
+
+    def project_path(self, app):
+        return self.bundle_path(app) / f"{app.formal_name}.xcodeproj"
 
     def binary_path(self, app):
         return (
@@ -209,6 +213,10 @@ class iOSXcodeUpdateCommand(iOSXcodePassiveMixin, UpdateCommand):
     description = "Update an existing iOS Xcode project."
 
 
+class iOSXcodeOpenCommand(iOSXcodePassiveMixin, OpenCommand):
+    description = "Open an existing iOS Xcode project."
+
+
 class iOSXcodeBuildCommand(iOSXcodeMixin, BuildCommand):
     description = "Build an iOS Xcode project."
 
@@ -238,7 +246,7 @@ class iOSXcodeBuildCommand(iOSXcodeMixin, BuildCommand):
                     [
                         "xcodebuild",
                         "-project",
-                        self.bundle_path(app) / f"{app.formal_name}.xcodeproj",
+                        self.project_path(app),
                         "-destination",
                         f'platform="iOS Simulator,name={device},OS={iOS_version}"',
                         "-quiet",
@@ -351,6 +359,19 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
             ) from e
 
         # Start log stream for the app.
+        # The following sets up a log stream filter that looks for:
+        #  1. a log sender that matches that app binary; or,
+        #  2. a log sender of that is a Python extension module,
+        #     and a process that matches the app binary.
+        # Case (1) works when the standard libary is statically linked,
+        #   and for native NSLog() calls in the bootstrap binary
+        # Case (2) works when the standard library is dynamically linked,
+        #   and ctypes (which handles the NSLog integration) is an
+        #   extension module.
+        # It's not enough to filter on *just* the processImagePath,
+        # as the process will generate lots of system-level messages.
+        # We can't filter on *just* the senderImagePath, because other
+        # apps will generate log messages that would be caught by the filter.
         simulator_log_popen = self.subprocess.Popen(
             [
                 "xcrun",
@@ -362,7 +383,9 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                 "--style",
                 "compact",
                 "--predicate",
-                f'senderImagePath ENDSWITH "/{app.formal_name}"',
+                f'senderImagePath ENDSWITH "/{app.formal_name}"'
+                f' OR (processImagePath ENDSWITH "/{app.formal_name}"'
+                ' AND senderImagePath ENDSWITH "-iphonesimulator.so")',
             ],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
@@ -407,6 +430,7 @@ class iOSXcodePublishCommand(iOSXcodeMixin, PublishCommand):
 # Declare the briefcase command bindings
 create = iOSXcodeCreateCommand  # noqa
 update = iOSXcodeUpdateCommand  # noqa
+open = iOSXcodeOpenCommand  # noqa
 build = iOSXcodeBuildCommand  # noqa
 run = iOSXcodeRunCommand  # noqa
 package = iOSXcodePackageCommand  # noqa

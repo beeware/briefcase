@@ -1,1 +1,0 @@
-Linux apps can now be packaged in Flatpak format.

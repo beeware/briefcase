@@ -1,3 +1,4 @@
+import os
 import subprocess
 import sys
 
@@ -344,3 +345,141 @@ def test_app_requirements_requires(
     assert app_requirements_path.exists()
     with app_requirements_path.open() as f:
         assert f.read() == "first\nsecond==1.2.3\nthird>=3.2.1\n"
+
+
+def _test_app_requirements_paths(
+    create_command,
+    myapp,
+    app_requirements_path,
+    app_requirements_path_index,
+    tmp_path,
+    requirement,
+):
+    """A utility method that can be used to test expansion of a specific
+    requirement."""
+    if isinstance(requirement, tuple):
+        requirement, converted = requirement
+    else:
+        converted = requirement
+    myapp.requires = ["first", requirement, "third"]
+
+    create_command.install_app_dependencies(myapp)
+    with app_requirements_path.open() as f:
+        assert f.read() == (
+            "\n".join(
+                [
+                    "first",
+                    converted.format(tmp_path),
+                    "third",
+                ]
+            )
+            + "\n"
+        )
+
+
+@pytest.mark.parametrize(
+    "requirement",
+    [
+        # Simple PyPI package references
+        "my-package",
+        "my-package==1.2.3",
+        "my-package<=1.2.3",
+        # More complex PyPI references
+        "my-package[optional]<=1.2.3",
+        "my-package[optional]<=1.2.3; python_version<3.7",
+        # References to git packages
+        "git+https://github.com/project/package",
+        "git+https://github.com/project/package#egg=my-package",
+        "git+https://github.com/project/package@deadbeef#egg=my-package",
+        "git+https://github.com/project/package@some-branch#egg=my-package",
+        # URL references to wheels
+        "http://example.com/path/to/mypackage-1.2.3-py3-none-any.whl",
+        # Zip file source installs
+        "my-package @ https://example.com/path/to/1.2.3.zip",
+    ],
+)
+def test_app_requirements_non_paths(
+    create_command,
+    myapp,
+    app_requirements_path,
+    app_requirements_path_index,
+    tmp_path,
+    requirement,
+):
+    """Requirements which are not paths are left unchanged."""
+    _test_app_requirements_paths(
+        create_command,
+        myapp,
+        app_requirements_path,
+        app_requirements_path_index,
+        tmp_path,
+        requirement,
+    )
+
+
+@pytest.mark.skipif(os.name != "posix", reason="Unix specific tests")
+@pytest.mark.parametrize(
+    "requirement",
+    [
+        # A reference that involves an absolute path
+        "/absolute/path/to/package",
+        # Relative paths.
+        ("./package/inside/project", "{}/project/package/inside/project"),
+        ("../package/outside/project", "{}/package/outside/project"),
+        ("sub/package/inside/project", "{}/project/sub/package/inside/project"),
+    ],
+)
+def test_app_requirements_paths_unix(
+    create_command,
+    myapp,
+    app_requirements_path,
+    app_requirements_path_index,
+    tmp_path,
+    requirement,
+):
+    """Requirement paths in Unix format are expanded correctly."""
+    _test_app_requirements_paths(
+        create_command,
+        myapp,
+        app_requirements_path,
+        app_requirements_path_index,
+        tmp_path,
+        requirement,
+    )
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Windows specific tests")
+@pytest.mark.parametrize(
+    "requirement",
+    [
+        # A reference that involves an absolute path
+        r"C:\absolute\path\to\package",
+        ("C:/absolute/path/to/package", r"C:\absolute\path\to\package"),
+        ("/absolute/path/to/package", r"C:\absolute\path\to\package"),
+        # Relative paths using forward slash separators
+        ("./package/inside/project", r"{}\project\package\inside\project"),
+        ("../package/outside/project", r"{}\package\outside\project"),
+        ("sub/package/inside/project", r"{}\project\sub\package\inside\project"),
+        # Relative paths using backslash separators
+        (r".\package\inside\project", r"{}\project\package\inside\project"),
+        (r"..\package\outside\project", r"{}\package\outside\project"),
+        (r"sub\package\inside\project", r"{}\project\sub\package\inside\project"),
+    ],
+)
+def test_app_requirements_paths_windows(
+    create_command,
+    myapp,
+    app_requirements_path,
+    app_requirements_path_index,
+    tmp_path,
+    requirement,
+):
+    """Requirement paths in Windows format are expanded correctly."""
+    _test_app_requirements_paths(
+        create_command,
+        myapp,
+        app_requirements_path,
+        app_requirements_path_index,
+        tmp_path,
+        requirement,
+    )

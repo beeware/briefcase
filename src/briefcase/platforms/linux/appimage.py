@@ -4,6 +4,7 @@ import subprocess
 from briefcase.commands import (
     BuildCommand,
     CreateCommand,
+    OpenCommand,
     PackageCommand,
     PublishCommand,
     RunCommand,
@@ -16,11 +17,17 @@ from briefcase.integrations.linuxdeploy import LinuxDeploy
 from briefcase.platforms.linux import LinuxMixin
 
 
-class LinuxAppImageMixin(LinuxMixin):
+class LinuxAppImagePassiveMixin(LinuxMixin):
+    # The Passive mixin honors the docker options, but doesn't try to verify
+    # docker exists. It is used by commands that are "passive" from the
+    # perspective of the build system, like open and run.
     output_format = "appimage"
 
     def appdir_path(self, app):
         return self.bundle_path(app) / f"{app.formal_name}.AppDir"
+
+    def project_path(self, app):
+        return self.bundle_path(app)
 
     def binary_path(self, app):
         binary_name = app.formal_name.replace(" ", "_")
@@ -55,6 +62,8 @@ class LinuxAppImageMixin(LinuxMixin):
         super().clone_options(command)
         self.use_docker = command.use_docker
 
+
+class LinuxAppImageMixin(LinuxAppImagePassiveMixin):
     def docker_image_tag(self, app):
         """The Docker image tag for an app."""
         return (
@@ -132,6 +141,10 @@ class LinuxAppImageUpdateCommand(LinuxAppImageMixin, UpdateCommand):
     description = "Update an existing Linux AppImage."
 
 
+class LinuxAppImageOpenCommand(LinuxAppImagePassiveMixin, OpenCommand):
+    description = "Open the folder containing an existing Linux AppImage project."
+
+
 class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
     description = "Build a Linux AppImage."
 
@@ -192,6 +205,14 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
                 # so this effectively silences a bunch of warnings that can't
                 # be easily resolved by the end user.
                 env["DISABLE_COPYRIGHT_FILES_DEPLOYMENT"] = "1"
+                # AppImages do not run natively within a Docker container. This
+                # treats the AppImage like a self-extracting executable. Using
+                # this environment variable instead of --appimage-extract-and-run
+                # is necessary to ensure AppImage plugins are extracted as well.
+                env["APPIMAGE_EXTRACT_AND_RUN"] = "1"
+                # Explicitly declare target architecture as the current architecture.
+                # This can be used by some linuxdeploy plugins.
+                env["ARCH"] = self.host_arch
 
                 # Find all the .so files in app and app_packages,
                 # so they can be passed in to linuxdeploy to have their
@@ -208,13 +229,12 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
                 for plugin in plugins:
                     additional_args.extend(["--plugin", plugin])
 
-                # Build the app image. We use `--appimage-extract-and-run`
-                # because AppImages won't run natively inside Docker.
+                # Build the app image.
                 build_subprocess.run(
                     [
                         self.linuxdeploy.file_path / self.linuxdeploy.file_name,
-                        "--appimage-extract-and-run",
-                        f"--appdir={self.appdir_path(app)}",
+                        "--appdir",
+                        os.fsdecode(self.appdir_path(app)),
                         "--desktop-file",
                         os.fsdecode(
                             self.appdir_path(app)
@@ -239,7 +259,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
         return {"build_subprocesses": self.build_subprocesses}
 
 
-class LinuxAppImageRunCommand(LinuxAppImageMixin, RunCommand):
+class LinuxAppImageRunCommand(LinuxAppImagePassiveMixin, RunCommand):
     description = "Run a Linux AppImage."
 
     def verify_tools(self):
@@ -275,6 +295,7 @@ class LinuxAppImagePublishCommand(LinuxAppImageMixin, PublishCommand):
 # Declare the briefcase command bindings
 create = LinuxAppImageCreateCommand  # noqa
 update = LinuxAppImageUpdateCommand  # noqa
+open = LinuxAppImageOpenCommand  # noqa
 build = LinuxAppImageBuildCommand  # noqa
 run = LinuxAppImageRunCommand  # noqa
 package = LinuxAppImagePackageCommand  # noqa

@@ -1,1 +1,0 @@
-SDKs, tools, and other downloads needed to support app builds are now stored in an OS-native user cache directory instead of ``~/.briefcase``.

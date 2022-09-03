@@ -1,1 +1,0 @@
-Remove ``src`` from path to Briefcase version via ``attr:`` to avoid ``ModuleNotFoundError`` on Python 3.9 and below.

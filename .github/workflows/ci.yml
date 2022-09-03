@@ -107,6 +107,13 @@ jobs:
     - name: Test
       run: |
         tox -e py
+    - name: Check coverage
+      uses: codecov/codecov-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: ./coverage.xml
+        flags: unittests
+        fail_ci_if_error: true
 
   platform-compat:
     name: Platform compatibility test
@@ -130,28 +137,38 @@ jobs:
     - name: Test
       run: |
         tox -e py
+    - name: Check coverage
+      uses: codecov/codecov-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: ./coverage.xml
+        flags: unittests
+        fail_ci_if_error: true
 
-  verify-desktop:
-    name: Desktop app verification
-    needs: smoke
+  verify-apps:
+    name: App verification
+    needs: platform-compat
     strategy:
       max-parallel: 4
       matrix:
-        platform: ['macos-latest', 'windows-latest', 'ubuntu-18.04']
+        os_name: ['macOS', 'windows', 'linux']
         framework: ['toga', 'pyside2', 'pyside6', 'ppb']
         include:
-        - platform: macos-latest
+        - os_name: macOS
+          platform: macos-latest
           briefcase-data-dir: ~/Library/Caches/org.beeware.briefcase
           pip-cache-dir: ~/Library/Caches/pip
           docker-cache-dir: ~/Library/Containers/com.docker.docker/Data/vms/0/
-        - platform: windows-latest
+        - os_name: windows
+          platform: windows-latest
           briefcase-data-dir: ~\AppData\Local\BeeWare\briefcase\Cache
           pip-cache-dir: ~\AppData\Local\pip\Cache
           docker-cache-dir: C:\ProgramData\DockerDesktop
-        - platform: ubuntu-18.04
+        - os_name: linux
+          # Need to use at least 22.04 to get the bugfix in flatpak for handling spaces in filenames.
+          platform: ubuntu-22.04
           briefcase-data-dir: ~/.cache/briefcase
           pip-cache-dir: ~/.cache/pip
-          briefcase-args: --no-docker
           # cache action cannot cache docker images (actions/cache#31)
           # docker-cache-dir: /var/lib/docker
     runs-on: ${{ matrix.platform }}
@@ -170,16 +187,57 @@ jobs:
       uses: actions/setup-python@v3.1.2
       with:
         python-version: ${{ env.python_version }}
-    - name: Install dependencies
-      if: matrix.platform == 'ubuntu-18.04'
+    - name: Install system dependencies
+      if: matrix.platform == 'ubuntu-22.04'
       run: |
-        sudo apt-get update -y
-        sudo apt-get install -y python3-gi python3-gi-cairo gir1.2-gtk-3.0 python3-dev libgirepository1.0-dev libcairo2-dev pkg-config
+        sudo apt-get install -y flatpak flatpak-builder
     - name: Install dependencies
       run: |
         pip install --upgrade pip
         pip install --upgrade setuptools
-        pip install tox
-    - name: Test
+        pip install .
+    - name: Create App
       run: |
-        tox -e verify-${{ matrix.framework }} -- ${{ matrix.briefcase-args }}
+        cd tests/apps
+        cat verify-${{ matrix.framework }}.config | briefcase new
+    - name: Build App
+      run: |
+        cd tests/apps/verify-${{ matrix.framework }}
+        briefcase create
+        briefcase build
+        briefcase package --adhoc-sign
+    - name: Build Xcode project
+      if: matrix.os_name == 'macOS'
+      run: |
+        cd tests/apps/verify-${{ matrix.framework }}
+        briefcase create ${{ matrix.os_name }} Xcode
+        briefcase build ${{ matrix.os_name }} Xcode
+        briefcase package ${{ matrix.os_name }} Xcode --adhoc-sign
+    - name: Build Visual Studio project
+      if: matrix.os_name == 'windows'
+      run: |
+        cd tests/apps/verify-${{ matrix.framework }}
+        briefcase create ${{ matrix.os_name }} VisualStudio
+        briefcase build ${{ matrix.os_name }} VisualStudio
+        briefcase package ${{ matrix.os_name }} VisualStudio --adhoc-sign
+    - name: Build Flatpak project
+      if: matrix.os_name == 'linux' && matrix.framework == 'toga'
+      run: |
+        cd tests/apps/verify-${{ matrix.framework }}
+        briefcase create ${{ matrix.os_name }} flatpak
+        briefcase build ${{ matrix.os_name }} flatpak
+        briefcase package ${{ matrix.os_name }} flatpak --adhoc-sign
+    - name: Build Android App
+      if: matrix.framework == 'toga'
+      run: |
+        cd tests/apps/verify-${{ matrix.framework }}
+        briefcase create android
+        briefcase build android
+        briefcase package android --adhoc-sign
+    - name: Build iOS App
+      if: matrix.platform == 'macos-latest' && matrix.framework == 'toga'
+      run: |
+        cd tests/apps/verify-${{ matrix.framework }}
+        briefcase create iOS
+        briefcase build iOS -d "iPhone SE (2nd generation)"
+        briefcase package iOS --adhoc-sign

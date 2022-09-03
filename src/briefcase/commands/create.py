@@ -10,7 +10,6 @@ from typing import Optional
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from cookiecutter import exceptions as cookiecutter_exceptions
-from requests import exceptions as requests_exceptions
 
 import briefcase
 from briefcase.config import BaseConfig
@@ -375,9 +374,10 @@ class CreateCommand(BaseCommand):
 
                 # Download the support file, caching the result
                 # in the user's briefcase support cache directory.
-                return self.download_url(
+                return self.download_file(
                     url=support_package_url,
                     download_path=download_path,
+                    role="support package",
                 )
             else:
                 return Path(support_package_url)
@@ -391,9 +391,6 @@ class CreateCommand(BaseCommand):
                     host_arch=self.host_arch,
                 ) from e
 
-        except requests_exceptions.ConnectionError as e:
-            raise NetworkFailure("downloading support package") from e
-
     def _write_requirements_file(self, app: BaseConfig, requirements_path):
         """Configure application dependencies by writing a requirements.txt
         file.
@@ -402,10 +399,24 @@ class CreateCommand(BaseCommand):
         :param requirements_path: The full path to a requirements.txt file that
             will be written.
         """
+        # Windows allows both / and \ as a path separator in requirements.
+        separators = [os.sep]
+        if os.altsep:
+            separators.append(os.altsep)
+
         with self.input.wait_bar("Writing requirements file..."):
             with (requirements_path).open("w", encoding="utf-8") as f:
                 if app.requires:
                     for requirement in app.requires:
+                        # If the requirement is a local path, convert it to
+                        # absolute, because Flatpak moves the requirements file
+                        # to a different place before using it.
+                        if any(sep in requirement for sep in separators) and (
+                            not _has_url(requirement)
+                        ):
+                            # We use os.path.abspath() rather than Path.resolve()
+                            # because we *don't* want Path's symlink resolving behavior.
+                            requirement = os.path.abspath(self.base_path / requirement)
                         f.write(f"{requirement}\n")
 
     def _install_app_dependencies(self, app: BaseConfig, app_packages_path):
@@ -696,3 +707,18 @@ class CreateCommand(BaseCommand):
                 state = self.create_app(app, **full_options(state, options))
 
         return state
+
+
+# Detects any of the URL schemes supported by pip
+# (https://pip.pypa.io/en/stable/topics/vcs-support/).
+def _has_url(requirement):
+    return any(
+        f"{scheme}:" in requirement
+        for scheme in (
+            ["http", "https", "file", "ftp"]
+            + ["git+file", "git+https", "git+ssh", "git+http", "git+git", "git"]
+            + ["hg+file", "hg+http", "hg+https", "hg+ssh", "hg+static-http"]
+            + ["svn", "svn+svn", "svn+http", "svn+https", "svn+ssh"]
+            + ["bzr+http", "bzr+https", "bzr+ssh", "bzr+sftp", "bzr+ftp", "bzr+lp"]
+        )
+    )

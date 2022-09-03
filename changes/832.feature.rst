@@ -1,0 +1,1 @@
+Android commands now start faster, as they only gather a list of SDK packages when needed to write a log file.

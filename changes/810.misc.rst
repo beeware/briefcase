@@ -1,1 +1,0 @@
-Wait Bars can be nested by allowing a new Wait Bar to be started while one is already running.

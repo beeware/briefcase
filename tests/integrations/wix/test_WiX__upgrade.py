@@ -3,7 +3,6 @@ import sys
 from unittest.mock import MagicMock
 
 import pytest
-from requests import exceptions as requests_exceptions
 
 from briefcase.exceptions import (
     BriefcaseCommandError,
@@ -36,7 +35,7 @@ def test_non_managed_install(mock_command, tmp_path, capsys):
         wix.upgrade()
 
     # No download was attempted
-    assert mock_command.download_url.call_count == 0
+    assert mock_command.download_file.call_count == 0
 
 
 def test_non_existing_wix_install(mock_command, tmp_path):
@@ -48,7 +47,7 @@ def test_non_existing_wix_install(mock_command, tmp_path):
         wix.upgrade()
 
     # No download was attempted
-    assert mock_command.download_url.call_count == 0
+    assert mock_command.download_file.call_count == 0
 
 
 def test_existing_wix_install(mock_command, tmp_path):
@@ -73,7 +72,7 @@ def test_existing_wix_install(mock_command, tmp_path):
         wix_zip = MagicMock()
         wix_zip.__fspath__.return_value = wix_zip_path
 
-    mock_command.download_url.return_value = wix_zip
+    mock_command.download_file.return_value = wix_zip
 
     # Create an SDK wrapper
     wix = WiX(mock_command, wix_home=wix_path, bin_install=True)
@@ -85,9 +84,10 @@ def test_existing_wix_install(mock_command, tmp_path):
     mock_command.shutil.rmtree.assert_called_with(wix_path)
 
     # A download was initiated
-    mock_command.download_url.assert_called_with(
+    mock_command.download_file.assert_called_with(
         url=WIX_DOWNLOAD_URL,
         download_path=tmp_path / "tools",
+        role="WiX",
     )
 
     # The download was unpacked
@@ -110,19 +110,20 @@ def test_download_fail(mock_command, tmp_path):
     (wix_path / "candle.exe").touch()
 
     # Mock the download failure
-    mock_command.download_url.side_effect = requests_exceptions.ConnectionError
+    mock_command.download_file.side_effect = NetworkFailure("mock")
 
     # Create an SDK wrapper
     wix = WiX(mock_command, wix_home=wix_path, bin_install=True)
 
     # Upgrade the install. This will trigger a download that will fail
-    with pytest.raises(NetworkFailure):
+    with pytest.raises(NetworkFailure, match="Unable to mock"):
         wix.upgrade()
 
     # A download was initiated
-    mock_command.download_url.assert_called_with(
+    mock_command.download_file.assert_called_with(
         url=WIX_DOWNLOAD_URL,
         download_path=tmp_path / "tools",
+        role="WiX",
     )
 
     # ... but the unpack didn't happen
@@ -148,7 +149,7 @@ def test_unpack_fail(mock_command, tmp_path):
         wix_zip = MagicMock()
         wix_zip.__fspath__.return_value = wix_zip_path
 
-    mock_command.download_url.return_value = wix_zip
+    mock_command.download_file.return_value = wix_zip
 
     # Mock an unpack failure
     mock_command.shutil.unpack_archive.side_effect = EOFError
@@ -162,9 +163,10 @@ def test_unpack_fail(mock_command, tmp_path):
         wix.upgrade()
 
     # A download was initiated
-    mock_command.download_url.assert_called_with(
+    mock_command.download_file.assert_called_with(
         url=WIX_DOWNLOAD_URL,
         download_path=tmp_path / "tools",
+        role="WiX",
     )
 
     # The download was unpacked.
