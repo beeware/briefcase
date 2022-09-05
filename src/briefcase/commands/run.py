@@ -63,6 +63,7 @@ class RunCommand(BaseCommand):
         else:
             state = None
 
+        self.verify_app_tools(app)
         state = self.run_app(app, **full_options(state, options))
 
         return state

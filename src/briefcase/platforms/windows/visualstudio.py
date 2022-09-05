@@ -4,7 +4,6 @@ from pathlib import Path
 from briefcase.commands import BuildCommand, OpenCommand, PublishCommand, UpdateCommand
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.integrations.visualstudio import VisualStudio
 from briefcase.platforms.windows import (
     WindowsCreateCommand,
     WindowsMixin,
@@ -38,7 +37,7 @@ class WindowsVisualStudioBuildCommand(WindowsVisualStudioMixin, BuildCommand):
 
     def verify_tools(self):
         super().verify_tools()
-        self.visualstudio = VisualStudio.verify(self)
+        self.tools.verify_visualstudio(self)
 
     def build_app(self, app: BaseConfig, **kwargs):
         """Build the Visual Studio project.
@@ -51,7 +50,7 @@ class WindowsVisualStudioBuildCommand(WindowsVisualStudioMixin, BuildCommand):
             try:
                 self.subprocess.run(
                     [
-                        self.visualstudio.msbuild_path,
+                        self.tools.visualstudio.msbuild_path,
                         f"{app.formal_name}.sln",
                         "-target:restore",
                         "-property:RestorePackagesConfig=true",

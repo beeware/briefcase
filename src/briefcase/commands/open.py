@@ -31,6 +31,7 @@ class OpenCommand(BaseCommand):
             f"Opening {self.project_path(app).relative_to(self.base_path)}...",
             prefix=app.app_name,
         )
+        self.verify_app_tools(app)
         self.open_project(project_path)
 
         return state

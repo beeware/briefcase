@@ -28,6 +28,7 @@ def verify_command_line_tools_install(command):
     """
     ensure_command_line_tools_are_installed(command)
     confirm_xcode_license_accepted(command)
+    return True
 
 
 def verify_xcode_install(command, min_version=None):
@@ -53,6 +54,7 @@ def verify_xcode_install(command, min_version=None):
     ensure_xcode_is_installed(command, min_version=min_version)
     ensure_command_line_tools_are_installed(command)
     confirm_xcode_license_accepted(command)
+    return True
 
 
 def ensure_command_line_tools_are_installed(command):

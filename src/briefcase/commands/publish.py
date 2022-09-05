@@ -33,6 +33,7 @@ class PublishCommand(BaseCommand):
         :param app: The application to publish
         :param channel: The publication channel to use
         """
+        self.verify_app_tools(app)
         self.logger.info(f"TODO: Publish {app.app_name} to {channel}")
 
     def __call__(self, channel=None, **options):

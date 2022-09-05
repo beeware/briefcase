@@ -14,7 +14,7 @@ from .exceptions import (
 )
 
 
-def parse_cmdline(args):
+def parse_cmdline(args, logger=None):
     parser = argparse.ArgumentParser(
         prog="briefcase",
         description="Package Python code for distribution.",
@@ -160,6 +160,6 @@ def parse_cmdline(args):
         )
 
     # Construct a command, and parse the remaining arguments.
-    command = Command(base_path=Path.cwd())
+    command = Command(base_path=Path.cwd(), logger=logger)
     options = command.parse_options(extra=extra)
     return command, options

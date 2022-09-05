@@ -48,6 +48,7 @@ class PackageCommand(BaseCommand):
         else:
             state = None
 
+        self.verify_app_tools(app)
         state = self.package_app(
             app, packaging_format=packaging_format, **full_options(state, options)
         )

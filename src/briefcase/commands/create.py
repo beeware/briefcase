@@ -435,7 +435,7 @@ class CreateCommand(BaseCommand):
         if app.requires:
             with self.input.wait_bar("Installing app dependencies..."):
                 try:
-                    self.subprocess.run(
+                    self.tools.build_subprocess.run(
                         [
                             sys.executable,
                             "-m",
@@ -672,6 +672,10 @@ class CreateCommand(BaseCommand):
         self.logger.info("Installing support package...", prefix=app.app_name)
         self.install_app_support_package(app=app)
 
+        # Verify tools for the app after the app template and support package
+        # are in place since the app tools may be dependent on them.
+        self.verify_app_tools(app)
+
         self.logger.info("Installing dependencies...", prefix=app.app_name)
         self.install_app_dependencies(app=app)
 
@@ -685,15 +689,20 @@ class CreateCommand(BaseCommand):
             f"Created {bundle_path.relative_to(self.base_path)}", prefix=app.app_name
         )
 
-        return {"build_subprocesses": self.build_subprocesses}
-
     def verify_tools(self):
         """Verify that the tools needed to run this command exist.
 
         Raises MissingToolException if a required system tool is
         missing.
         """
-        self.git = self.integrations.git.verify_git_is_installed(self)
+        super().verify_tools()
+        self.tools.verify_git(self)
+
+    def verify_app_tools(self, app):
+        """Verify that the tools needed to run this command for this app
+        exist."""
+        super().verify_app_tools(app)
+        self.tools.verify_build_subprocess(self, app)
 
     def __call__(self, app: Optional[BaseConfig] = None, **options):
         # Confirm all required tools are available

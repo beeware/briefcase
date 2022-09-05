@@ -31,6 +31,7 @@ from briefcase.exceptions import (
     MissingNetworkResourceError,
     NetworkFailure,
 )
+from briefcase.integrations import ToolCache
 from briefcase.integrations.subprocess import Subprocess
 
 
@@ -122,6 +123,9 @@ class BaseCommand(ABC):
         data_path=None,
         apps=None,
         input_enabled=True,
+        logger=None,
+        console=None,
+        tools=None,
     ):
         # Distinguish the top-level command from triggered commands, e.g. `run`
         # may trigger `update` and `build`.
@@ -192,19 +196,20 @@ a custom location for Briefcase's tools.
         # These are abstracted to enable testing without patching.
         self.cookiecutter = cookiecutter
         self.requests = requests
-        self.input = Console(enabled=input_enabled)
+        self.input = console or Console(enabled=input_enabled)
         self.os = os
         self.sys = sys
         self.stdlib_platform = platform
         self.shutil = shutil
         self.subprocess = Subprocess(self)
-        self.build_subprocesses = {}
+
+        self.tools = tools or ToolCache()
 
         # The internal Briefcase integrations API.
-        self.integrations = integrations
+        self.integrations = integrations  # TODO: can likely be removed
 
-        # Initialize default logger (replaced when options are parsed).
-        self.logger = Log()
+        # Initialize logging.
+        self.logger = logger or Log()
         self.save_log = False
 
     def check_obsolete_data_dir(self):
@@ -295,7 +300,9 @@ or delete the old data directory, and re-run Briefcase.
         command = format_module.create(
             base_path=self.base_path,
             apps=self.apps,
-            input_enabled=self.input.enabled,
+            logger=self.logger,
+            console=self.input,
+            tools=self.tools,
         )
         command.clone_options(self)
         return command
@@ -308,7 +315,9 @@ or delete the old data directory, and re-run Briefcase.
         command = format_module.update(
             base_path=self.base_path,
             apps=self.apps,
-            input_enabled=self.input.enabled,
+            logger=self.logger,
+            console=self.input,
+            tools=self.tools,
         )
         command.clone_options(self)
         return command
@@ -321,7 +330,9 @@ or delete the old data directory, and re-run Briefcase.
         command = format_module.build(
             base_path=self.base_path,
             apps=self.apps,
-            input_enabled=self.input.enabled,
+            logger=self.logger,
+            console=self.input,
+            tools=self.tools,
         )
         command.clone_options(self)
         return command
@@ -334,7 +345,9 @@ or delete the old data directory, and re-run Briefcase.
         command = format_module.run(
             base_path=self.base_path,
             apps=self.apps,
-            input_enabled=self.input.enabled,
+            logger=self.logger,
+            console=self.input,
+            tools=self.tools,
         )
         command.clone_options(self)
         return command
@@ -347,7 +360,9 @@ or delete the old data directory, and re-run Briefcase.
         command = format_module.package(
             base_path=self.base_path,
             apps=self.apps,
-            input_enabled=self.input.enabled,
+            logger=self.logger,
+            console=self.input,
+            tools=self.tools,
         )
         command.clone_options(self)
         return command
@@ -360,7 +375,9 @@ or delete the old data directory, and re-run Briefcase.
         command = format_module.publish(
             base_path=self.base_path,
             apps=self.apps,
-            input_enabled=self.input.enabled,
+            logger=self.logger,
+            console=self.input,
+            tools=self.tools,
         )
         command.clone_options(self)
         return command
@@ -515,7 +532,9 @@ or delete the old data directory, and re-run Briefcase.
         Raises MissingToolException if a required system tool is
         missing.
         """
-        pass
+
+    def verify_app_tools(self, app):
+        """Verify that tools needed to run the command for this app exist."""
 
     def parse_options(self, extra):
         parser = argparse.ArgumentParser(
@@ -547,8 +566,6 @@ or delete the old data directory, and re-run Briefcase.
 
         :param command: The command whose options are to be cloned
         """
-        self.input.enabled = command.input.enabled
-        self.logger = command.logger
         self.is_clone = True
 
     def add_default_options(self, parser):
@@ -713,12 +730,12 @@ or delete the old data directory, and re-run Briefcase.
             # fall back to using the specified template directly.
             try:
                 cached_template = cookiecutter_cache_path(template)
-                repo = self.git.Repo(cached_template)
+                repo = self.tools.git.Repo(cached_template)
                 try:
                     # Attempt to update the repository
                     remote = repo.remote(name="origin")
                     remote.fetch()
-                except self.git.exc.GitCommandError:
+                except self.tools.git.exc.GitCommandError:
                     # We are offline, or otherwise unable to contact
                     # the origin git repo. It's OK to continue; but warn
                     # the user that the template may be stale.
@@ -747,11 +764,11 @@ or delete the old data directory, and re-run Briefcase.
                 except IndexError as e:
                     # No branch exists for the requested version.
                     raise TemplateUnsupportedVersion(branch) from e
-            except self.git.exc.NoSuchPathError:
+            except self.tools.git.exc.NoSuchPathError:
                 # Template cache path doesn't exist.
                 # Just use the template directly, rather than attempting an update.
                 cached_template = template
-            except self.git.exc.InvalidGitRepositoryError:
+            except self.tools.git.exc.InvalidGitRepositoryError:
                 # Template cache path exists, but isn't a git repository
                 # Just use the template directly, rather than attempting an update.
                 cached_template = template
@@ -760,26 +777,6 @@ or delete the old data directory, and re-run Briefcase.
             cached_template = template
 
         return cached_template
-
-    def verify_build_environment(self, app: BaseConfig, build_subprocesses=None):
-        """Ensures a build environment exists for the app and returns it.
-
-        By default, the build environment is the native environment and the
-        user manages its requirements and preparation. For AppImages, for
-        example, the build environment is a Docker container that must be
-        created and configured for building the app.
-
-        :param app: the app target for the build environment
-        :param build_subprocesses: A dictionary of prepared subprocesses from
-            a previous command such as `create`; keyed by the app.
-        """
-        if build_subprocesses and app in build_subprocesses:
-            self.build_subprocesses[app] = build_subprocesses[app]
-
-        elif app not in self.build_subprocesses:
-            self.build_subprocesses[app] = self.prepare_build_environment(app)
-
-        return self.build_subprocesses[app]
 
     def prepare_build_environment(self, app: BaseConfig):
         """Returns native subprocess as the default build environment."""

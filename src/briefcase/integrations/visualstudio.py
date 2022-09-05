@@ -41,7 +41,6 @@ class VisualStudio:
         """Verify that Visual Studio is available.
 
         :param command: The command that needs to use Visual Studio
-        :param install: Should the tool be installed if it is not found?
         :returns: A Visual Studio tool wrapper. Raises an exception if
             Visual Studio is not available.
         """

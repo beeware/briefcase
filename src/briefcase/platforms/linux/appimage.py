@@ -12,8 +12,6 @@ from briefcase.commands import (
 )
 from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.integrations.docker import verify_docker
-from briefcase.integrations.linuxdeploy import LinuxDeploy
 from briefcase.platforms.linux import LinuxMixin
 
 
@@ -80,13 +78,10 @@ class LinuxAppImageMixin(LinuxAppImagePassiveMixin):
                     "Linux AppImages cannot be generated on Windows."
                 )
             else:
-                self.Docker = verify_docker(self)
-        elif self.host_os == "Linux":
-            # Use subprocess natively. No Docker wrapper is needed
-            self.Docker = None
-        else:
+                self.tools.verify_docker(self)
+        elif self.host_os != "Linux":
             raise BriefcaseCommandError(
-                "Linux AppImages can only be generated on Linux."
+                "Linux AppImages can only be generated on Linux without Docker."
             )
 
     def prepare_build_environment(self, app: AppConfig):
@@ -103,7 +98,7 @@ class LinuxAppImageMixin(LinuxAppImagePassiveMixin):
         :param app: The application to build
         """
         if self.use_docker:
-            build_subprocess = self.Docker(self, app)
+            build_subprocess = self.tools.docker(self, app)
             build_subprocess.prepare()
         else:
             build_subprocess = super().prepare_build_environment(app)
@@ -123,19 +118,6 @@ class LinuxAppImageCreateCommand(LinuxAppImageMixin, CreateCommand):
             ("arch", self.host_arch),
         ]
 
-    def install_app_dependencies(self, app: AppConfig):
-        """Install application dependencies.
-
-        Ensure the app dependencies are installed in the build
-        environment. For Docker, using the container ensures that the
-        right binary versions are installed.
-        """
-        # swap out subprocess so dependencies are installed in build env
-        orig_subprocess = self.subprocess
-        self.subprocess = self.verify_build_environment(app)
-        super().install_app_dependencies(app=app)
-        self.subprocess = orig_subprocess
-
 
 class LinuxAppImageUpdateCommand(LinuxAppImageMixin, UpdateCommand):
     description = "Update an existing Linux AppImage."
@@ -149,26 +131,26 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
     description = "Build a Linux AppImage."
 
     def verify_tools(self):
-        """Verify that the AppImage linuxdeploy tool and plugins exist."""
+        """Verify the AppImage linuxdeploy tool and plugins exist."""
         super().verify_tools()
-        self.linuxdeploy = LinuxDeploy.verify(self)
+        self.tools.verify_linuxdeploy(self)
 
-    def build_app(self, app: AppConfig, build_subprocesses=None, **kwargs):
+    def verify_app_tools(self, app):
+        """Verify the Docker build environment is prepared."""
+        super().verify_app_tools(app)
+        self.tools.verify_build_subprocess(self, app)
+
+    def build_app(self, app: AppConfig, **kwargs):
         """Build an application.
 
         :param app: The application to build
-        :param build_subprocesses: A dictionary of prepared subprocesses for the
-            build environment for each app. Will be `None` if a previous command
-            such as `create` did not run first.
         """
-        build_subprocess = self.verify_build_environment(app, build_subprocesses)
-
         # Build a dictionary of environment definitions that are required
         env = {}
 
         self.logger.info("Checking for Linuxdeploy plugins...", prefix=app.app_name)
         try:
-            plugins = self.linuxdeploy.verify_plugins(
+            plugins = self.tools.linuxdeploy.verify_plugins(
                 app.linuxdeploy_plugins,
                 bundle_path=self.bundle_path(app),
             )
@@ -178,7 +160,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
             # However, if we are running inside Docker, we need to know the
             # environment *inside* the Docker container.
             echo_cmd = ["/bin/sh", "-c", "echo $PATH"]
-            base_path = build_subprocess.check_output(echo_cmd).strip()
+            base_path = self.tools.build_subprocess.check_output(echo_cmd).strip()
 
             # Add any plugin-required environment variables
             for plugin in plugins.values():
@@ -230,9 +212,10 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
                     additional_args.extend(["--plugin", plugin])
 
                 # Build the app image.
-                build_subprocess.run(
+                self.tools.build_subprocess.run(
                     [
-                        self.linuxdeploy.file_path / self.linuxdeploy.file_name,
+                        self.tools.linuxdeploy.file_path
+                        / self.tools.linuxdeploy.file_name,
                         "--appdir",
                         os.fsdecode(self.appdir_path(app)),
                         "--desktop-file",
@@ -256,8 +239,6 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
                     f"Error while building app {app.app_name}."
                 ) from e
 
-        return {"build_subprocesses": self.build_subprocesses}
-
 
 class LinuxAppImageRunCommand(LinuxAppImagePassiveMixin, RunCommand):
     description = "Run a Linux AppImage."
@@ -279,6 +260,7 @@ class LinuxAppImageRunCommand(LinuxAppImagePassiveMixin, RunCommand):
                 [os.fsdecode(self.binary_path(app))],
                 check=True,
                 cwd=self.home_path,
+                stream_output=True,
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(f"Unable to start app {app.app_name}.") from e

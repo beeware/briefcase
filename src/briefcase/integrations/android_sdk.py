@@ -13,7 +13,6 @@ from briefcase.exceptions import (
     InvalidDeviceError,
     MissingToolError,
 )
-from briefcase.integrations.java import JDK
 
 DEVICE_NOT_FOUND = re.compile(r"^error: device '[^']*' not found")
 
@@ -130,7 +129,7 @@ class AndroidSDK:
         )
 
     @classmethod
-    def verify(cls, command, install=True, jdk=None):
+    def verify(cls, command, install=True):
         """Verify an Android SDK is available.
 
         If the ANDROID_SDK_ROOT environment variable is set, that location will
@@ -141,16 +140,21 @@ class AndroidSDK:
 
         :param command: The command making the verification request.
         :param install: Should the tool be installed if it is not found?
-        :param jdk: The JDK instance to use.
         :returns: A valid Android SDK wrapper. If Android SDK is not
             available, and was not installed, raises MissingToolError.
         """
-        if jdk is None:
-            jdk = JDK.verify(command, install=install)
+
+        # TODO: update tests mock JDK through command.tools since param removed
+
+        command.tools.verify_java(command=command, install=install)
 
         sdk_root = command.os.environ.get("ANDROID_SDK_ROOT")
         if sdk_root:
-            sdk = AndroidSDK(command=command, jdk=jdk, root_path=Path(sdk_root))
+            sdk = AndroidSDK(
+                command=command,
+                jdk=command.tools.jdk,
+                root_path=Path(sdk_root),
+            )
 
             if sdk.exists():
                 sdk.verify_license()
@@ -179,7 +183,7 @@ class AndroidSDK:
         sdk_root_path = command.tools_path / "android_sdk"
         sdk = AndroidSDK(
             command=command,
-            jdk=jdk,
+            jdk=command.tools.jdk,
             root_path=sdk_root_path,
         )
 

@@ -6,7 +6,6 @@ import uuid
 from briefcase.commands import CreateCommand, PackageCommand, RunCommand
 from briefcase.config import BaseConfig, parsed_version
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.integrations.wix import WiX
 
 DEFAULT_OUTPUT_FORMAT = "app"
 
@@ -104,7 +103,7 @@ class WindowsPackageCommand(PackageCommand):
 
     def verify_tools(self):
         super().verify_tools()
-        self.wix = WiX.verify(self)
+        self.tools.verify_wix(self)
 
     def package_app(self, app: BaseConfig, **kwargs):
         """Package an application.
@@ -118,7 +117,7 @@ class WindowsPackageCommand(PackageCommand):
             with self.input.wait_bar("Compiling..."):
                 self.subprocess.run(
                     [
-                        self.wix.heat_exe,
+                        self.tools.wix.heat_exe,
                         "dir",
                         os.fsdecode(self.packaging_root),
                         "-nologo",  # Don't display startup text
@@ -149,7 +148,7 @@ class WindowsPackageCommand(PackageCommand):
             with self.input.wait_bar("Compiling..."):
                 self.subprocess.run(
                     [
-                        self.wix.candle_exe,
+                        self.tools.wix.candle_exe,
                         "-nologo",  # Don't display startup text
                         "-ext",
                         "WixUtilExtension",
@@ -172,7 +171,7 @@ class WindowsPackageCommand(PackageCommand):
             with self.input.wait_bar("Linking..."):
                 self.subprocess.run(
                     [
-                        self.wix.light_exe,
+                        self.tools.wix.light_exe,
                         "-nologo",  # Don't display startup text
                         "-ext",
                         "WixUtilExtension",

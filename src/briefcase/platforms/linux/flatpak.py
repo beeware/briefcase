@@ -37,7 +37,7 @@ class LinuxFlatpakMixin(LinuxMixin):
         super().verify_tools()
         if self.host_os != "Linux":
             raise BriefcaseCommandError("Flatpaks can only be generated on Linux.")
-        self.flatpak = Flatpak.verify(self)
+        self.tools.verify_flatpak(self)
 
     def flatpak_runtime_repo(self, app):
         try:
@@ -148,7 +148,7 @@ class LinuxFlatpakBuildCommand(LinuxFlatpakMixin, BuildCommand):
         flatpak_repo_alias, flatpak_repo_url = self.flatpak_runtime_repo(app)
 
         with self.input.wait_bar("Ensuring Flatpak runtime repo is registered..."):
-            self.flatpak.verify_repo(
+            self.tools.flatpak.verify_repo(
                 repo_alias=flatpak_repo_alias,
                 url=flatpak_repo_url,
             )
@@ -156,7 +156,7 @@ class LinuxFlatpakBuildCommand(LinuxFlatpakMixin, BuildCommand):
         # ``flatpak install`` uses a lot of console animations, and there
         # doesn't appear to be a way to turn off these animations. Use those
         # native animations rather than wrapping in a wait_bar.
-        self.flatpak.verify_runtime(
+        self.tools.flatpak.verify_runtime(
             repo_alias=flatpak_repo_alias,
             runtime=self.flatpak_runtime(app),
             runtime_version=self.flatpak_runtime_version(app),
@@ -165,7 +165,7 @@ class LinuxFlatpakBuildCommand(LinuxFlatpakMixin, BuildCommand):
 
         self.logger.info("Building Flatpak...", prefix=app.app_name)
         with self.input.wait_bar("Building..."):
-            self.flatpak.build(
+            self.tools.flatpak.build(
                 bundle=app.bundle,
                 app_name=app.app_name,
                 path=self.bundle_path(app),
@@ -181,7 +181,7 @@ class LinuxFlatpakRunCommand(LinuxFlatpakMixin, RunCommand):
         :param app: The config object for the app
         """
         self.logger.info("Starting app...", prefix=app.app_name)
-        self.flatpak.run(
+        self.tools.flatpak.run(
             bundle=app.bundle,
             app_name=app.app_name,
         )
@@ -198,7 +198,7 @@ class LinuxFlatpakPackageCommand(LinuxFlatpakMixin, PackageCommand):
         self.logger.info("Building bundle...", prefix=app.app_name)
         with self.input.wait_bar("Bundling..."):
             _, flatpak_repo_url = self.flatpak_runtime_repo(app)
-            self.flatpak.bundle(
+            self.tools.flatpak.bundle(
                 repo_url=flatpak_repo_url,
                 bundle=app.bundle,
                 app_name=app.app_name,
