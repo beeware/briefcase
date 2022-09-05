@@ -1,10 +1,10 @@
-import contextlib
 import operator
 import os
 import platform
 import re
 import sys
 import traceback
+from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 
@@ -255,8 +255,6 @@ class Log:
                 for func in self.log_file_extras:
                     try:
                         func()
-                    except KeyboardInterrupt:
-                        raise
                     except Exception:
                         self.error(traceback.format_exc())
 
@@ -329,7 +327,7 @@ class Console:
             console=self.print.console,
         )
 
-    @contextlib.contextmanager
+    @contextmanager
     def wait_bar(
         self,
         message="",

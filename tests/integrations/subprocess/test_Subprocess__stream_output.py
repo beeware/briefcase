@@ -53,7 +53,8 @@ def test_keyboard_interrupt(mock_sub, popen_process, capsys):
     send_ctrl_c = mock.MagicMock()
     send_ctrl_c.side_effect = [False, KeyboardInterrupt]
 
-    mock_sub.stream_output("testing", popen_process, stop_func=send_ctrl_c)
+    with pytest.raises(KeyboardInterrupt):
+        mock_sub.stream_output("testing", popen_process, stop_func=send_ctrl_c)
 
     assert (
         capsys.readouterr().out == "output line 1\n"
@@ -124,7 +125,8 @@ def test_stuck_streamer(mock_sub, popen_process, monkeypatch, capsys):
 
     send_ctrl_c = mock.MagicMock()
     send_ctrl_c.side_effect = [False, KeyboardInterrupt]
-    mock_sub.stream_output("testing", popen_process, stop_func=send_ctrl_c)
+    with pytest.raises(KeyboardInterrupt):
+        mock_sub.stream_output("testing", popen_process, stop_func=send_ctrl_c)
 
     # fmt: off
     assert capsys.readouterr().out == (
