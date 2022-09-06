@@ -6,38 +6,35 @@ from .exceptions import BriefcaseError, HelpText
 
 
 def main():
-    log = Log()
+    logger = Log()
     command = None
     try:
-        command, options = parse_cmdline(sys.argv[1:])
-        # Replace the top-level logger with the one used by the command.
-        # This is needed to preserve extra logging detail.
-        log = command.logger
+        command, options = parse_cmdline(sys.argv[1:], logger=logger)
         command.check_obsolete_data_dir()
         command.parse_config("pyproject.toml")
         command(**options)
         result = 0
     except HelpText as e:
-        log.info()
-        log.info(str(e))
+        logger.info()
+        logger.info(str(e))
         result = e.error_code
     except BriefcaseError as e:
-        log.error()
-        log.error(str(e))
+        logger.error()
+        logger.error(str(e))
         result = e.error_code
-        log.capture_stacktrace()
+        logger.capture_stacktrace()
     except Exception:
-        log.capture_stacktrace()
+        logger.capture_stacktrace()
         raise
     except KeyboardInterrupt:
-        log.warning()
-        log.warning("Aborted by user.")
-        log.warning()
+        logger.warning()
+        logger.warning("Aborted by user.")
+        logger.warning()
         result = -42
         if getattr(command, "save_log", False):
-            log.capture_stacktrace()
+            logger.capture_stacktrace()
     finally:
-        log.save_log_to_file(command)
+        logger.save_log_to_file(command)
 
     sys.exit(result)
 

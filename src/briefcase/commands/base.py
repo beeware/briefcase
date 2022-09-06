@@ -122,6 +122,8 @@ class BaseCommand(ABC):
         data_path=None,
         apps=None,
         input_enabled=True,
+        logger=None,
+        console=None,
     ):
         # Distinguish the top-level command from triggered commands, e.g. `run`
         # may trigger `update` and `build`.
@@ -192,7 +194,7 @@ a custom location for Briefcase's tools.
         # These are abstracted to enable testing without patching.
         self.cookiecutter = cookiecutter
         self.requests = requests
-        self.input = Console(enabled=input_enabled)
+        self.input = console or Console(enabled=input_enabled)
         self.os = os
         self.sys = sys
         self.stdlib_platform = platform
@@ -202,8 +204,8 @@ a custom location for Briefcase's tools.
         # The internal Briefcase integrations API.
         self.integrations = integrations
 
-        # Initialize default logger (replaced when options are parsed).
-        self.logger = Log()
+        # Initialize logging.
+        self.logger = logger or Log()
         self.save_log = False
 
     def check_obsolete_data_dir(self):
@@ -294,7 +296,8 @@ or delete the old data directory, and re-run Briefcase.
         command = format_module.create(
             base_path=self.base_path,
             apps=self.apps,
-            input_enabled=self.input.enabled,
+            logger=self.logger,
+            console=self.input,
         )
         command.clone_options(self)
         return command
@@ -307,7 +310,8 @@ or delete the old data directory, and re-run Briefcase.
         command = format_module.update(
             base_path=self.base_path,
             apps=self.apps,
-            input_enabled=self.input.enabled,
+            logger=self.logger,
+            console=self.input,
         )
         command.clone_options(self)
         return command
@@ -320,7 +324,8 @@ or delete the old data directory, and re-run Briefcase.
         command = format_module.build(
             base_path=self.base_path,
             apps=self.apps,
-            input_enabled=self.input.enabled,
+            logger=self.logger,
+            console=self.input,
         )
         command.clone_options(self)
         return command
@@ -333,7 +338,8 @@ or delete the old data directory, and re-run Briefcase.
         command = format_module.run(
             base_path=self.base_path,
             apps=self.apps,
-            input_enabled=self.input.enabled,
+            logger=self.logger,
+            console=self.input,
         )
         command.clone_options(self)
         return command
@@ -346,7 +352,8 @@ or delete the old data directory, and re-run Briefcase.
         command = format_module.package(
             base_path=self.base_path,
             apps=self.apps,
-            input_enabled=self.input.enabled,
+            logger=self.logger,
+            console=self.input,
         )
         command.clone_options(self)
         return command
@@ -359,7 +366,8 @@ or delete the old data directory, and re-run Briefcase.
         command = format_module.publish(
             base_path=self.base_path,
             apps=self.apps,
-            input_enabled=self.input.enabled,
+            logger=self.logger,
+            console=self.input,
         )
         command.clone_options(self)
         return command
@@ -546,9 +554,8 @@ or delete the old data directory, and re-run Briefcase.
 
         :param command: The command whose options are to be cloned
         """
-        self.input.enabled = command.input.enabled
-        self.logger = command.logger
         self.is_clone = True
+        self.save_log = command.save_log
 
     def add_default_options(self, parser):
         """Add the default options that exist on *all* commands.

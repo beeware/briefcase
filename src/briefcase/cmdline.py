@@ -14,7 +14,7 @@ from .exceptions import (
 )
 
 
-def parse_cmdline(args):
+def parse_cmdline(args, logger=None):
     parser = argparse.ArgumentParser(
         prog="briefcase",
         description="Package Python code for distribution.",
@@ -78,15 +78,15 @@ def parse_cmdline(args):
     if options.command is None:
         raise NoCommandError(parser.format_help())
     elif options.command == "new":
-        command = NewCommand(base_path=Path.cwd())
+        command = NewCommand(base_path=Path.cwd(), logger=logger)
         options = command.parse_options(extra=extra)
         return command, options
     elif options.command == "dev":
-        command = DevCommand(base_path=Path.cwd())
+        command = DevCommand(base_path=Path.cwd(), logger=logger)
         options = command.parse_options(extra=extra)
         return command, options
     elif options.command == "upgrade":
-        command = UpgradeCommand(base_path=Path.cwd())
+        command = UpgradeCommand(base_path=Path.cwd(), logger=logger)
         options = command.parse_options(extra=extra)
         return command, options
 
@@ -160,6 +160,6 @@ def parse_cmdline(args):
         )
 
     # Construct a command, and parse the remaining arguments.
-    command = Command(base_path=Path.cwd())
+    command = Command(base_path=Path.cwd(), logger=logger)
     options = command.parse_options(extra=extra)
     return command, options
