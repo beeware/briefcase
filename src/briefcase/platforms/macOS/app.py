@@ -49,19 +49,24 @@ class macOSAppCreateCommand(macOSAppMixin, CreateCommand):
         """
         super().install_app_support_package(app)
 
-        # keep only Python lib from support package
+        # Legacy support for the structure of pre-dynamic loading support packages.
+        # Keep only Python lib from the (old) support package. If the lib folder
+        # doesn't exist, then it's a new dynamic-loading support package.
         lib_path = (
             self.support_path(app).parent / "Support" / "Python" / "Resources" / "lib"
         )
+        if lib_path.exists():
+            with tempfile.TemporaryDirectory() as tmpdir:
+                # TODO: Py3.8 compatibility; os.fsdecode not required in Py3.9
+                self.shutil.move(os.fsdecode(lib_path), os.fsdecode(tmpdir))
+                self.shutil.rmtree(self.support_path(app))
 
-        with tempfile.TemporaryDirectory() as tmpdir:
-            # TODO: Py3.8 compatibility; os.fsdecode not required in Py3.9
-            self.shutil.move(os.fsdecode(lib_path), os.fsdecode(tmpdir))
-            self.shutil.rmtree(self.support_path(app))
-
-            self.os.makedirs(Path(lib_path).parent)
-            # TODO: Py3.8 compatibility; os.fsdecode not required in Py3.9
-            self.shutil.move(os.fsdecode(Path(tmpdir) / "lib"), os.fsdecode(lib_path))
+                self.os.makedirs(Path(lib_path).parent)
+                # TODO: Py3.8 compatibility; os.fsdecode not required in Py3.9
+                self.shutil.move(
+                    os.fsdecode(Path(tmpdir) / "lib"),
+                    os.fsdecode(lib_path),
+                )
 
 
 class macOSAppUpdateCommand(macOSAppCreateCommand, UpdateCommand):
