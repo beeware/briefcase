@@ -215,9 +215,10 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
         :param app: The app configuration
         :returns: A list of additional arguments
         """
-        # TODO: Add the repo for BeeWare-provided binaries,
-        # by adding --extra-index-url https://briefcase-support.org/pypi
-        return []
+        return [
+            "--extra-index-url",
+            "https://pypi.anaconda.org/beeware/simple",
+        ]
 
 
 class iOSXcodeUpdateCommand(iOSXcodeCreateCommand, UpdateCommand):

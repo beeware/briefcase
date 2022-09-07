@@ -22,7 +22,8 @@ def test_extra_pip_args(first_app_generated, tmp_path):
             "--upgrade",
             "--no-user",
             f"--target={tmp_path / 'iOS' / 'Xcode' / 'First App' / 'app_packages'}",
-            # TODO: Add the repo for BeeWare-provided binaries noqa:
+            "--extra-index-url",
+            "https://pypi.anaconda.org/beeware/simple",
             "something==1.2.3",
             "other>=2.3.4",
         ],
