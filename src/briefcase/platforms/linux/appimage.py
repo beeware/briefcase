@@ -143,7 +143,7 @@ class LinuxAppImageCreateCommand(LinuxAppImageMixin, CreateCommand):
             super().install_app_dependencies(app=app)
 
 
-class LinuxAppImageUpdateCommand(LinuxAppImageMixin, UpdateCommand):
+class LinuxAppImageUpdateCommand(LinuxAppImageCreateCommand, UpdateCommand):
     description = "Update an existing Linux AppImage."
 
 

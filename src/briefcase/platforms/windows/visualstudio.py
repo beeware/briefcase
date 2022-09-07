@@ -25,7 +25,7 @@ class WindowsVisualStudioCreateCommand(WindowsVisualStudioMixin, WindowsCreateCo
     description = "Create and populate a Visual Studio project."
 
 
-class WindowsVisualStudioUpdateCommand(WindowsVisualStudioMixin, UpdateCommand):
+class WindowsVisualStudioUpdateCommand(WindowsVisualStudioCreateCommand, UpdateCommand):
     description = "Update an existing Visual Studio project."
 
 

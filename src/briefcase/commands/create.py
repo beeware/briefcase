@@ -419,6 +419,15 @@ class CreateCommand(BaseCommand):
                             requirement = os.path.abspath(self.base_path / requirement)
                         f.write(f"{requirement}\n")
 
+    def _extra_pip_args(self, app: BaseConfig):
+        """Any additional arguments that must be passed to pip when installing
+        packages.
+
+        :param app: The app configuration
+        :returns: A list of additional arguments
+        """
+        return []
+
     def _install_app_dependencies(self, app: BaseConfig, app_packages_path):
         """Install dependencies for the app with pip.
 
@@ -434,6 +443,18 @@ class CreateCommand(BaseCommand):
         # Install dependencies
         if app.requires:
             with self.input.wait_bar("Installing app dependencies..."):
+                # If there is a support package provided, add the cross-platform
+                # folder of the support package to the PYTHONPATH. This allows
+                # a support package to specify a sitecustomize.py that will make
+                # pip behave as if it was being run on the target platform.
+                pip_kwargs = {}
+                try:
+                    pip_kwargs["env"] = {
+                        "PYTHONPATH": str(self.support_path(app) / "platform-site"),
+                    }
+                except KeyError:
+                    pass
+
                 try:
                     self.subprocess.run(
                         [
@@ -445,8 +466,10 @@ class CreateCommand(BaseCommand):
                             "--no-user",
                             f"--target={app_packages_path}",
                         ]
+                        + self._extra_pip_args(app)
                         + app.requires,
                         check=True,
+                        **pip_kwargs,
                     )
                 except subprocess.CalledProcessError as e:
                     raise DependencyInstallError() from e

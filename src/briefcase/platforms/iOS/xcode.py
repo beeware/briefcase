@@ -208,8 +208,20 @@ or:
 class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
     description = "Create and populate a iOS Xcode project."
 
+    def _extra_pip_args(self, app: BaseConfig):
+        """Any additional arguments that must be passed to pip when installing
+        packages.
 
-class iOSXcodeUpdateCommand(iOSXcodePassiveMixin, UpdateCommand):
+        :param app: The app configuration
+        :returns: A list of additional arguments
+        """
+        return [
+            "--extra-index-url",
+            "https://pypi.anaconda.org/beeware/simple",
+        ]
+
+
+class iOSXcodeUpdateCommand(iOSXcodeCreateCommand, UpdateCommand):
     description = "Update an existing iOS Xcode project."
 
 

@@ -119,6 +119,48 @@ def test_app_packages_valid_requires(
             "third>=3.2.1",
         ],
         check=True,
+        env={
+            "PYTHONPATH": str(
+                create_command.bundle_path(myapp)
+                / "path"
+                / "to"
+                / "support"
+                / "platform-site"
+            )
+        },
+    )
+
+
+def test_app_packages_valid_requires_no_support_package(
+    create_command,
+    myapp,
+    app_packages_path,
+    app_packages_path_index,
+):
+    """If the template doesn't specify a support package, the cross-platform
+    site isn't specified."""
+    myapp.requires = ["first", "second==1.2.3", "third>=3.2.1"]
+
+    # Override the cache of paths to specify an app packages path, but no support package path
+    create_command._path_index = {myapp: {"app_packages_path": "path/to/app_packages"}}
+
+    create_command.install_app_dependencies(myapp)
+
+    # A request was made to install dependencies
+    create_command.subprocess.run.assert_called_with(
+        [
+            sys.executable,
+            "-m",
+            "pip",
+            "install",
+            "--upgrade",
+            "--no-user",
+            f"--target={app_packages_path}",
+            "first",
+            "second==1.2.3",
+            "third>=3.2.1",
+        ],
+        check=True,
     )
 
 
@@ -154,6 +196,15 @@ def test_app_packages_invalid_requires(
             "does-not-exist",
         ],
         check=True,
+        env={
+            "PYTHONPATH": str(
+                create_command.bundle_path(myapp)
+                / "path"
+                / "to"
+                / "support"
+                / "platform-site"
+            )
+        },
     )
 
 
@@ -191,6 +242,15 @@ def test_app_packages_offline(
             "third",
         ],
         check=True,
+        env={
+            "PYTHONPATH": str(
+                create_command.bundle_path(myapp)
+                / "path"
+                / "to"
+                / "support"
+                / "platform-site"
+            )
+        },
     )
 
 
@@ -228,6 +288,15 @@ def test_app_packages_install_dependencies(
             "third",
         ],
         check=True,
+        env={
+            "PYTHONPATH": str(
+                create_command.bundle_path(myapp)
+                / "path"
+                / "to"
+                / "support"
+                / "platform-site"
+            )
+        },
     )
 
     # The new app packages have installation artefacts created
@@ -276,6 +345,15 @@ def test_app_packages_replace_existing_dependencies(
             "third",
         ],
         check=True,
+        env={
+            "PYTHONPATH": str(
+                create_command.bundle_path(myapp)
+                / "path"
+                / "to"
+                / "support"
+                / "platform-site"
+            )
+        },
     )
 
     # The new app packages have installation artefacts created

@@ -25,7 +25,7 @@ class WindowsAppCreateCommand(WindowsAppMixin, WindowsCreateCommand):
     description = "Create and populate a Windows app."
 
 
-class WindowsAppUpdateCommand(WindowsAppMixin, UpdateCommand):
+class WindowsAppUpdateCommand(WindowsAppCreateCommand, UpdateCommand):
     description = "Update an existing Windows app."
 
 
