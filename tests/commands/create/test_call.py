@@ -34,12 +34,14 @@ def test_create(tracking_create_command):
         ("dependencies", tracking_create_command.apps["first"]),
         ("code", tracking_create_command.apps["first"]),
         ("resources", tracking_create_command.apps["first"]),
+        ("cleanup", tracking_create_command.apps["first"]),
         # Create the second app
         ("generate", tracking_create_command.apps["second"]),
         ("support", tracking_create_command.apps["second"]),
         ("dependencies", tracking_create_command.apps["second"]),
         ("code", tracking_create_command.apps["second"]),
         ("resources", tracking_create_command.apps["second"]),
+        ("cleanup", tracking_create_command.apps["second"]),
     ]
 
     # New app content has been created
@@ -61,6 +63,7 @@ def test_create_single(tracking_create_command):
         ("dependencies", tracking_create_command.apps["first"]),
         ("code", tracking_create_command.apps["first"]),
         ("resources", tracking_create_command.apps["first"]),
+        ("cleanup", tracking_create_command.apps["first"]),
     ]
 
     # New app content has been created
