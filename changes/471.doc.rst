@@ -1,0 +1,1 @@
+Added FAQ entries on the state of binary package support on mobile.
