@@ -205,7 +205,7 @@ Paths can be:
    <https://docs.python.org/3/library/pathlib.html#pathlib.Path.glob>`__)
 
 Paths are treated as format strings prior to glob expansion. You can use Python
-string formatting to include references to configuration prioroty of the app
+string formatting to include references to configuration properties of the app
 (e.g., ``app.formal_name``, ``app.version``, etc).
 
 For example, the following ``cleanup_paths`` specification::
@@ -221,7 +221,7 @@ on an app with a formal name of "My App" would remove:
 
 1. The file ``path/to/unneeded_file.txt``
 2. The directory ``path/to/unneeded_directory``
-3. Any ``.exe`` file ``path``, or it's subdirectories.
+3. Any ``.exe`` file in ``path`` or its subdirectories.
 4. The file ``My App/content/extra.doc``.
 
 ``formal_name``
