@@ -57,6 +57,9 @@ class UpdateCommand(CreateCommand):
             )
             self.install_app_resources(app=app)
 
+        self.logger.info("Removing unneeded app content...", prefix=app.app_name)
+        self.cleanup_app_content(app=app)
+
         self.logger.info("Application updated.", prefix=app.app_name)
 
     def __call__(

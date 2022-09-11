@@ -5,6 +5,7 @@ def test_update_app(update_command, first_app):
     # The right sequence of things will be done
     assert update_command.actions == [
         ("code", update_command.apps["first"]),
+        ("cleanup", update_command.apps["first"]),
     ]
 
     # App content and resources have been updated
@@ -40,6 +41,7 @@ def test_update_app_with_dependencies(update_command, first_app):
     assert update_command.actions == [
         ("dependencies", update_command.apps["first"]),
         ("code", update_command.apps["first"]),
+        ("cleanup", update_command.apps["first"]),
     ]
 
     # App content has been updated
@@ -62,6 +64,7 @@ def test_update_app_with_resources(update_command, first_app):
     assert update_command.actions == [
         ("code", update_command.apps["first"]),
         ("resources", update_command.apps["first"]),
+        ("cleanup", update_command.apps["first"]),
     ]
 
     # App content and resources have been updated

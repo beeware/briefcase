@@ -33,8 +33,10 @@ def test_update(update_command, first_app, second_app):
         ("verify",),
         # Update the first app
         ("code", update_command.apps["first"]),
+        ("cleanup", update_command.apps["first"]),
         # Update the second app
         ("code", update_command.apps["second"]),
+        ("cleanup", update_command.apps["second"]),
     ]
 
 
@@ -51,6 +53,7 @@ def test_update_single(update_command, first_app, second_app):
         ("verify",),
         # update the first app
         ("code", update_command.apps["first"]),
+        ("cleanup", update_command.apps["first"]),
     ]
 
 
@@ -67,9 +70,11 @@ def test_update_with_dependencies(update_command, first_app, second_app):
         # Update the first app
         ("dependencies", update_command.apps["first"]),
         ("code", update_command.apps["first"]),
+        ("cleanup", update_command.apps["first"]),
         # Update the second app
         ("dependencies", update_command.apps["second"]),
         ("code", update_command.apps["second"]),
+        ("cleanup", update_command.apps["second"]),
     ]
 
 
@@ -86,7 +91,9 @@ def test_update_with_resources(update_command, first_app, second_app):
         # Update the first app
         ("code", update_command.apps["first"]),
         ("resources", update_command.apps["first"]),
+        ("cleanup", update_command.apps["first"]),
         # Update the second app
         ("code", update_command.apps["second"]),
         ("resources", update_command.apps["second"]),
+        ("cleanup", update_command.apps["second"]),
     ]
