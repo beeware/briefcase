@@ -10,7 +10,8 @@ def myapp_unrolled(myapp, support_path, app_packages_path_index):
     create_file(support_path / "dir1" / "a_file2.doc", "ham")
     create_file(support_path / "dir1" / "b_file.txt", "eggs")
     create_file(support_path / "dir2" / "b_file.txt", "spam")
-    create_file(support_path / "other" / "b_file.txt", "wigs")
+    create_file(support_path / "other" / "deep" / "b_file.doc", "wigs")
+    create_file(support_path / "other" / "deep" / "other.doc", "wigs")
 
     return myapp
 
@@ -26,7 +27,7 @@ def test_no_cleanup(create_command, myapp_unrolled, support_path):
     assert (support_path / "dir1" / "a_file2.doc").exists()
     assert (support_path / "dir1" / "b_file.txt").exists()
     assert (support_path / "dir2" / "b_file.txt").exists()
-    assert (support_path / "other" / "b_file.txt").exists()
+    assert (support_path / "other" / "deep" / "b_file.doc").exists()
 
 
 def test_dir_cleanup(create_command, myapp_unrolled, support_path):
@@ -36,12 +37,10 @@ def test_dir_cleanup(create_command, myapp_unrolled, support_path):
     # Cleanup app content
     create_command.cleanup_app_content(myapp_unrolled)
 
-    # Confirm the files in dir1 have been removed
-    assert not (support_path / "dir1" / "a_file1.txt").exists()
-    assert not (support_path / "dir1" / "a_file2.doc").exists()
-    assert not (support_path / "dir1" / "b_file.txt").exists()
+    # Confirm that dir1 has been removed
+    assert not (support_path / "dir1").exists()
     assert (support_path / "dir2" / "b_file.txt").exists()
-    assert (support_path / "other" / "b_file.txt").exists()
+    assert (support_path / "other" / "deep" / "b_file.doc").exists()
 
 
 def test_file_cleanup(create_command, myapp_unrolled, support_path):
@@ -56,7 +55,23 @@ def test_file_cleanup(create_command, myapp_unrolled, support_path):
     assert (support_path / "dir1" / "a_file2.doc").exists()
     assert (support_path / "dir1" / "b_file.txt").exists()
     assert (support_path / "dir2" / "b_file.txt").exists()
-    assert (support_path / "other" / "b_file.txt").exists()
+    assert (support_path / "other" / "deep" / "b_file.doc").exists()
+
+
+def test_all_files_in_dir_cleanup(create_command, myapp_unrolled, support_path):
+    """All files in a directory can be cleaned up."""
+    myapp_unrolled.cleanup_paths = ["path/to/support/dir1/*"]
+
+    # Cleanup app content
+    create_command.cleanup_app_content(myapp_unrolled)
+
+    # Confirm the named files have been removed, but the dir still exists
+    assert not (support_path / "dir1" / "a_file1.txt").exists()
+    assert not (support_path / "dir1" / "a_file2.doc").exists()
+    assert not (support_path / "dir1" / "b_file.txt").exists()
+    assert (support_path / "dir1").exists()
+    assert (support_path / "dir2" / "b_file.txt").exists()
+    assert (support_path / "other" / "deep" / "b_file.doc").exists()
 
 
 def test_dir_glob_cleanup(create_command, myapp_unrolled, support_path):
@@ -67,11 +82,9 @@ def test_dir_glob_cleanup(create_command, myapp_unrolled, support_path):
     create_command.cleanup_app_content(myapp_unrolled)
 
     # Confirm the matching directories have been removed
-    assert not (support_path / "dir1" / "a_file1.txt").exists()
-    assert not (support_path / "dir1" / "a_file2.doc").exists()
-    assert not (support_path / "dir1" / "b_file.txt").exists()
-    assert not (support_path / "dir2" / "b_file.txt").exists()
-    assert (support_path / "other" / "b_file.txt").exists()
+    assert not (support_path / "dir1").exists()
+    assert not (support_path / "dir2").exists()
+    assert (support_path / "other" / "deep" / "b_file.doc").exists()
 
 
 def test_file_glob_cleanup(create_command, myapp_unrolled, support_path):
@@ -86,7 +99,25 @@ def test_file_glob_cleanup(create_command, myapp_unrolled, support_path):
     assert (support_path / "dir1" / "a_file2.doc").exists()
     assert not (support_path / "dir1" / "b_file.txt").exists()
     assert (support_path / "dir2" / "b_file.txt").exists()
-    assert (support_path / "other" / "b_file.txt").exists()
+    assert (support_path / "other" / "deep" / "b_file.doc").exists()
+
+
+def test_deep_glob_cleanup(create_command, myapp_unrolled, support_path):
+    """A glob that matches all directories will be added to the cleanup
+    list."""
+    myapp_unrolled.cleanup_paths = ["path/to/support/**/b_file.*"]
+
+    # Cleanup app content
+    create_command.cleanup_app_content(myapp_unrolled)
+
+    # Confirm the matching files have been removed
+    assert (support_path / "dir1" / "a_file1.txt").exists()
+    assert (support_path / "dir1" / "a_file2.doc").exists()
+    assert not (support_path / "dir1" / "b_file.txt").exists()
+    assert not (support_path / "dir2" / "b_file.txt").exists()
+    assert not (support_path / "other" / "deep" / "b_file.doc").exists()
+    # The directory still exists
+    assert (support_path / "other" / "deep").exists()
 
 
 def test_template_glob_cleanup(create_command, myapp_unrolled, support_path):
@@ -108,7 +139,7 @@ def test_template_glob_cleanup(create_command, myapp_unrolled, support_path):
     assert not (support_path / "dir1" / "a_file2.doc").exists()
     assert (support_path / "dir1" / "b_file.txt").exists()
     assert (support_path / "dir2" / "b_file.txt").exists()
-    assert not (support_path / "other" / "b_file.txt").exists()
+    assert not (support_path / "other" / "deep" / "b_file.doc").exists()
 
 
 def test_non_existent_cleanup(create_command, myapp_unrolled, support_path):
@@ -131,4 +162,4 @@ def test_non_existent_cleanup(create_command, myapp_unrolled, support_path):
     assert (support_path / "dir1" / "a_file2.doc").exists()
     assert (support_path / "dir1" / "b_file.txt").exists()
     assert (support_path / "dir2" / "b_file.txt").exists()
-    assert (support_path / "other" / "b_file.txt").exists()
+    assert (support_path / "other" / "deep" / "b_file.doc").exists()
