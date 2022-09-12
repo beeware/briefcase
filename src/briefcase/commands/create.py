@@ -667,6 +667,39 @@ class CreateCommand(BaseCommand):
                     target=self.bundle_path(app) / target,
                 )
 
+    def cleanup_app_content(self, app: BaseConfig):
+        """Remove any content not needed by the final app bundle.
+
+        :param app: The config object for the app
+        """
+        try:
+            # Retrieve any cleanup paths defined by the app template
+            paths_to_remove = self.cleanup_paths(app)
+        except KeyError:
+            paths_to_remove = []
+
+        try:
+            # Add any user-specified paths, expanded using the app as template context.
+            paths_to_remove.extend([glob.format(app=app) for glob in app.cleanup_paths])
+        except AttributeError:
+            pass
+
+        if paths_to_remove:
+            with self.input.wait_bar("Removing unneeded app bundle content..."):
+                for glob in paths_to_remove:
+                    # Expand each glob into a full list of files that actually exist
+                    # on the file system.
+                    for path in self.bundle_path(app).glob(glob):
+                        relative_path = path.relative_to(self.bundle_path(app))
+                        if path.is_dir():
+                            self.logger.info(f"Removing directory {relative_path}")
+                            self.shutil.rmtree(path)
+                        else:
+                            self.logger.info(f"Removing {relative_path}")
+                            path.unlink()
+        else:
+            self.logger.info("No app content clean up required.")
+
     def create_app(self, app: BaseConfig, **options):
         """Create an application bundle.
 
@@ -703,6 +736,9 @@ class CreateCommand(BaseCommand):
 
         self.logger.info("Installing application resources...", prefix=app.app_name)
         self.install_app_resources(app=app)
+
+        self.logger.info("Removing unneeded app content...", prefix=app.app_name)
+        self.cleanup_app_content(app=app)
 
         self.logger.info(
             f"Created {self.bundle_path(app).relative_to(self.base_path)}",

@@ -189,6 +189,41 @@ application.
 A build identifier. An integer, used in addition to the version specifier,
 to identify a specific compiled version of an application.
 
+``cleanup_paths``
+~~~~~~~~~~~~~~~~~
+
+A list of strings describing paths that will be *removed* from the project after
+the installation of the support package and app code. The paths provided will be
+interpreted relative to the app bundle folder (e.g., the ``macOS/app/My App``
+folder in the case of a macOS app).
+
+Paths can be:
+ * An explicit reference to a single file
+ * An explicit reference to a single directory
+ * Any filesystem glob accepted by ``pathlib.glob`` (See `the Python
+   documentation for details
+   <https://docs.python.org/3/library/pathlib.html#pathlib.Path.glob>`__)
+
+Paths are treated as format strings prior to glob expansion. You can use Python
+string formatting to include references to configuration properties of the app
+(e.g., ``app.formal_name``, ``app.version``, etc).
+
+For example, the following ``cleanup_paths`` specification::
+
+    cleanup_paths = [
+        "path/to/unneeded_file.txt",
+        "path/to/unneeded_directory",
+        "path/**/*.exe",
+        "{app.formal_name}/content/extra.doc"
+    ]
+
+on an app with a formal name of "My App" would remove:
+
+1. The file ``path/to/unneeded_file.txt``
+2. The directory ``path/to/unneeded_directory``
+3. Any ``.exe`` file in ``path`` or its subdirectories.
+4. The file ``My App/content/extra.doc``.
+
 ``formal_name``
 ~~~~~~~~~~~~~~~
 

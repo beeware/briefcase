@@ -18,6 +18,7 @@ def test_create_app(tracking_create_command):
         ("dependencies", tracking_create_command.apps["first"]),
         ("code", tracking_create_command.apps["first"]),
         ("resources", tracking_create_command.apps["first"]),
+        ("cleanup", tracking_create_command.apps["first"]),
     ]
 
     # New app content has been created
@@ -49,6 +50,7 @@ def test_create_existing_app_overwrite(tracking_create_command):
         ("dependencies", tracking_create_command.apps["first"]),
         ("code", tracking_create_command.apps["first"]),
         ("resources", tracking_create_command.apps["first"]),
+        ("cleanup", tracking_create_command.apps["first"]),
     ]
 
     # Original content has been deleted

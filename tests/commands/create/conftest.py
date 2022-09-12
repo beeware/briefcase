@@ -99,6 +99,9 @@ class TrackingCreateCommand(DummyCreateCommand):
     def install_app_resources(self, app):
         self.actions.append(("resources", app))
 
+    def cleanup_app_content(self, app):
+        self.actions.append(("cleanup", app))
+
 
 @pytest.fixture
 def create_command(tmp_path, mock_git):
