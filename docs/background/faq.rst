@@ -60,10 +60,11 @@ that is on PyPI. If you experience problems when building or running an app on a
 mobile platform that appear to be related to a missing dependency, check the
 build logs for your app. If you see:
 
+* On Android: the error `"Chaquopy cannot compile native code"
+  <https://chaquo.com/chaquopy/doc/current/faq.html#chaquopy-cannot-compile-native-code>`__
+* On iOS: the error "Cannot compile native code"
 * A reference to downloading a ``.tar.gz`` version of the package
 * A reference to ``Building wheels for collected packages: <package>``
-* The error `"Chaquopy cannot compile native code"
-  <https://chaquo.com/chaquopy/doc/current/faq.html#chaquopy-cannot-compile-native-code>`__
 
 The binary dependency isn't supported on mobile. Binary mobile packages are
 currently maintained by the BeeWare team; if you have a particular third-party
