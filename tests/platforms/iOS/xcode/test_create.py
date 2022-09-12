@@ -22,6 +22,7 @@ def test_extra_pip_args(first_app_generated, tmp_path):
             "--upgrade",
             "--no-user",
             f"--target={tmp_path / 'iOS' / 'Xcode' / 'First App' / 'app_packages'}",
+            "--prefer-binary",
             "--extra-index-url",
             "https://pypi.anaconda.org/beeware/simple",
             "something==1.2.3",
