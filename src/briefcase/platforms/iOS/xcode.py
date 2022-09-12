@@ -216,6 +216,7 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
         :returns: A list of additional arguments
         """
         return [
+            "--prefer-binary",
             "--extra-index-url",
             "https://pypi.anaconda.org/beeware/simple",
         ]
