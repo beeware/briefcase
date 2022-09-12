@@ -62,7 +62,7 @@ build logs for your app. If you see:
 
 * On Android: the error `"Chaquopy cannot compile native code"
   <https://chaquo.com/chaquopy/doc/current/faq.html#chaquopy-cannot-compile-native-code>`__
-* On iOS: the error "Cannot compile native code"
+* On iOS: the error "Cannot compile native modules"
 * A reference to downloading a ``.tar.gz`` version of the package
 * A reference to ``Building wheels for collected packages: <package>``
 
