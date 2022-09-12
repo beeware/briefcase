@@ -116,8 +116,7 @@ def test_deep_glob_cleanup(create_command, myapp_unrolled, support_path):
     assert not (support_path / "dir1" / "b_file.txt").exists()
     assert not (support_path / "dir2" / "b_file.txt").exists()
     assert not (support_path / "other" / "deep" / "b_file.doc").exists()
-    # The directory still exists
-    assert (support_path / "other" / "deep").exists()
+    assert (support_path / "other" / "deep" / "other.doc").exists()
 
 
 def test_template_glob_cleanup(create_command, myapp_unrolled, support_path):
