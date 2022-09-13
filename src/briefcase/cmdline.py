@@ -77,87 +77,85 @@ def parse_cmdline(args, logger=None):
     # If no command has been provided, display top-level help.
     if options.command is None:
         raise NoCommandError(parser.format_help())
-    elif options.command == "new":
-        command = NewCommand(base_path=Path.cwd())
-        options = command.parse_options(extra=extra)
-        return command, options
+
+    # Commands agnostic to the platform and format
+    if options.command == "new":
+        Command = NewCommand
     elif options.command == "dev":
-        command = DevCommand(base_path=Path.cwd())
-        options = command.parse_options(extra=extra)
-        return command, options
+        Command = DevCommand
     elif options.command == "upgrade":
-        command = UpgradeCommand(base_path=Path.cwd())
-        options = command.parse_options(extra=extra)
-        return command, options
+        Command = UpgradeCommand
 
-    parser.add_argument(
-        "platform",
-        choices=list(platforms.keys()),
-        default={
-            "darwin": "macOS",
-            "linux": "linux",
-            "win32": "windows",
-        }[sys.platform],
-        metavar="platform",
-        nargs="?",
-        type=normalize,
-        help="The platform to target (one of %(choices)s; default: %(default)s",
-    )
-
-    # <format> is also optional, with the default being platform dependent.
-    # There's no way to encode option-dependent choices, so allow *any*
-    # input, and we'll manually validate.
-    parser.add_argument(
-        "output_format",
-        metavar="format",
-        nargs="?",
-        help="The output format to use (the available output formats are platform dependent)",
-    )
-
-    # Re-parse the arguments, now that we know it is a command that makes use
-    # of platform/output_format.
-    options, extra = parser.parse_known_args(args)
-
-    # Import the platform module
-    platform_module = platforms[options.platform]
-
-    output_formats = get_output_formats(options.platform)
-    # If the user requested a list of available output formats, output them.
-    if options.show_output_formats:
-        raise ShowOutputFormats(
-            platform=options.platform,
-            default=platform_module.DEFAULT_OUTPUT_FORMAT,
-            choices=list(output_formats.keys()),
-        )
-
-    # If the output format wasn't explicitly specified, check to see
-    # Otherwise, extract and use the default output_format for the platform.
-    if options.output_format is None:
-        output_format = platform_module.DEFAULT_OUTPUT_FORMAT
+    # Commands dependent on the platform and format
     else:
-        output_format = options.output_format
-
-    # Normalise casing of output_format to be more forgiving.
-    output_format = {n.lower(): n for n in output_formats}.get(
-        output_format.lower(), output_format
-    )
-
-    # We now know the command, platform, and format.
-    # Get the command class that corresponds to that definition.
-    try:
-        format_module = output_formats[output_format]
-        Command = getattr(format_module, options.command)
-    except KeyError:
-        raise InvalidFormatError(
-            requested=output_format,
-            choices=list(output_formats.keys()),
+        parser.add_argument(
+            "platform",
+            choices=list(platforms.keys()),
+            default={
+                "darwin": "macOS",
+                "linux": "linux",
+                "win32": "windows",
+            }[sys.platform],
+            metavar="platform",
+            nargs="?",
+            type=normalize,
+            help="The platform to target (one of %(choices)s; default: %(default)s",
         )
-    except AttributeError:
-        raise UnsupportedCommandError(
-            platform=options.platform,
-            output_format=output_format,
-            command=options.command,
+
+        # <format> is also optional, with the default being platform dependent.
+        # There's no way to encode option-dependent choices, so allow *any*
+        # input, and we'll manually validate.
+        parser.add_argument(
+            "output_format",
+            metavar="format",
+            nargs="?",
+            help="The output format to use (the available output formats are platform dependent)",
         )
+
+        # Re-parse the arguments, now that we know it is a command that makes use
+        # of platform/output_format.
+        options, extra = parser.parse_known_args(args)
+
+        # Import the platform module
+        platform_module = platforms[options.platform]
+
+        output_formats = get_output_formats(options.platform)
+        # If the user requested a list of available output formats, output them.
+        if options.show_output_formats:
+            raise ShowOutputFormats(
+                platform=options.platform,
+                default=platform_module.DEFAULT_OUTPUT_FORMAT,
+                choices=list(output_formats.keys()),
+            )
+
+        # If the output format wasn't explicitly specified, check to see
+        # Otherwise, extract and use the default output_format for the platform.
+        if options.output_format is None:
+            output_format = platform_module.DEFAULT_OUTPUT_FORMAT
+        else:
+            output_format = options.output_format
+
+        # Normalise casing of output_format to be more forgiving.
+        output_format = {n.lower(): n for n in output_formats}.get(
+            output_format.lower(), output_format
+        )
+
+        # We now know the command, platform, and format.
+        # Get the command class that corresponds to that definition.
+        try:
+            format_module = output_formats[output_format]
+            Command = getattr(format_module, options.command)
+        except KeyError:
+            raise InvalidFormatError(
+                requested=output_format,
+                choices=list(output_formats.keys()),
+            )
+        except AttributeError:
+            raise UnsupportedCommandError(
+                platform=options.platform,
+                output_format=output_format,
+                command=options.command,
+            )
 
     # Construct a command, and parse the remaining arguments.
     command = Command(base_path=Path.cwd(), logger=logger)

@@ -44,8 +44,25 @@ def test_input_state_transferred(tmp_path):
 
     # Check the enabled state of subcommands
     assert not command.create_command.input.enabled
+    assert command.create_command.logger is command.logger
+    assert command.create_command.input is command.input
+
     assert not command.update_command.input.enabled
+    assert command.update_command.logger is command.logger
+    assert command.update_command.input is command.input
+
     assert not command.build_command.input.enabled
+    assert command.build_command.logger is command.logger
+    assert command.build_command.input is command.input
+
     assert not command.run_command.input.enabled
+    assert command.run_command.logger is command.logger
+    assert command.run_command.input is command.input
+
     assert not command.package_command.input.enabled
+    assert command.package_command.logger is command.logger
+    assert command.package_command.input is command.input
+
     assert not command.publish_command.input.enabled
+    assert command.publish_command.logger is command.logger
+    assert command.publish_command.input is command.input

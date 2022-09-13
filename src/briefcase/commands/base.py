@@ -292,12 +292,14 @@ or delete the old data directory, and re-run Briefcase.
             # Create data directory to prevent full notice showing again.
             self.data_path.mkdir(parents=True, exist_ok=True)
 
-    @property
-    def create_command(self):
-        """Factory property; return an instance of a create command for the
-        same format."""
+    def _command_factory(self, command_name: str):
+        """Command factory for the current platform and format.
+
+        :param command_name: name of Command (e.g. 'create', 'build', 'run', etc.)
+        :return: instantiated Command
+        """
         format_module = importlib.import_module(self.__module__)
-        command = format_module.create(
+        command = getattr(format_module, command_name)(
             base_path=self.base_path,
             apps=self.apps,
             logger=self.logger,
@@ -306,81 +308,42 @@ or delete the old data directory, and re-run Briefcase.
         )
         command.clone_options(self)
         return command
+
+    @property
+    def create_command(self):
+        """Factory property; return an instance of CreateCommand for the same
+        format."""
+        return self._command_factory("create")
 
     @property
     def update_command(self):
-        """Factory property; return an instance of an update command for the
-        same format."""
-        format_module = importlib.import_module(self.__module__)
-        command = format_module.update(
-            base_path=self.base_path,
-            apps=self.apps,
-            logger=self.logger,
-            console=self.input,
-            tools=self.tools,
-        )
-        command.clone_options(self)
-        return command
+        """Factory property; return an instance of UpdateCommand for the same
+        format."""
+        return self._command_factory("update")
 
     @property
     def build_command(self):
-        """Factory property; return an instance of a build command for the same
+        """Factory property; return an instance of BuildCommand for the same
         format."""
-        format_module = importlib.import_module(self.__module__)
-        command = format_module.build(
-            base_path=self.base_path,
-            apps=self.apps,
-            logger=self.logger,
-            console=self.input,
-            tools=self.tools,
-        )
-        command.clone_options(self)
-        return command
+        return self._command_factory("build")
 
     @property
     def run_command(self):
-        """Factory property; return an instance of a run command for the same
+        """Factory property; return an instance of RunCommand for the same
         format."""
-        format_module = importlib.import_module(self.__module__)
-        command = format_module.run(
-            base_path=self.base_path,
-            apps=self.apps,
-            logger=self.logger,
-            console=self.input,
-            tools=self.tools,
-        )
-        command.clone_options(self)
-        return command
+        return self._command_factory("run")
 
     @property
     def package_command(self):
-        """Factory property; return an instance of a package command for the
-        same format."""
-        format_module = importlib.import_module(self.__module__)
-        command = format_module.package(
-            base_path=self.base_path,
-            apps=self.apps,
-            logger=self.logger,
-            console=self.input,
-            tools=self.tools,
-        )
-        command.clone_options(self)
-        return command
+        """Factory property; return an instance of PackageCommand for the same
+        format."""
+        return self._command_factory("package")
 
     @property
     def publish_command(self):
-        """Factory property; return an instance of a publish command for the
-        same format."""
-        format_module = importlib.import_module(self.__module__)
-        command = format_module.publish(
-            base_path=self.base_path,
-            apps=self.apps,
-            logger=self.logger,
-            console=self.input,
-            tools=self.tools,
-        )
-        command.clone_options(self)
-        return command
+        """Factory property; return an instance of PublishCommand for the same
+        format."""
+        return self._command_factory("publish")
 
     @property
     def platform_path(self):
@@ -567,6 +530,7 @@ or delete the old data directory, and re-run Briefcase.
         :param command: The command whose options are to be cloned
         """
         self.is_clone = True
+        self.save_log = command.save_log
 
     def add_default_options(self, parser):
         """Add the default options that exist on *all* commands.
