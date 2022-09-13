@@ -287,6 +287,7 @@ class LinuxAppImageRunCommand(LinuxAppImagePassiveMixin, RunCommand):
                 ],
                 check=True,
                 cwd=self.home_path,
+                stream_output=True,
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(f"Unable to start app {app.app_name}.") from e

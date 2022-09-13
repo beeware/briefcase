@@ -252,6 +252,7 @@ flatpak run {bundle}.{app_name}
                     f"{bundle}.{app_name}",
                 ],
                 check=True,
+                stream_output=True,
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(f"Unable to start app {app_name}.") from e

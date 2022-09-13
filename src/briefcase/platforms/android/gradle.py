@@ -180,7 +180,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
         """Start the application.
 
         :param app: The config object for the app
-        :param device: The device to target. If ``None``, the user will
+        :param device_or_avd: The device to target. If ``None``, the user will
             be asked to re-run the command selecting a specific device.
         """
         device, name, avd = self.android_sdk.select_target_device(

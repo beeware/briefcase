@@ -8,7 +8,7 @@ from briefcase.platforms.windows.app import WindowsAppRunCommand
 
 
 def test_run_app(first_app_config, tmp_path):
-    """A windows app can be started."""
+    """A Windows app can be started."""
     command = WindowsAppRunCommand(
         base_path=tmp_path / "base",
         home_path=tmp_path / "home",
@@ -31,6 +31,7 @@ def test_run_app(first_app_config, tmp_path):
         ],
         cwd=tmp_path / "home",
         check=True,
+        stream_output=True,
     )
 
 
@@ -61,4 +62,5 @@ def test_run_app_failed(first_app_config, tmp_path):
         ],
         cwd=tmp_path / "home",
         check=True,
+        stream_output=True,
     )

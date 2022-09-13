@@ -1,0 +1,1 @@
+When an app runs, its output is captured is the ``briefcase`` log.
