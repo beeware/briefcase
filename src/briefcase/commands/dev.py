@@ -99,6 +99,7 @@ class DevCommand(BaseCommand):
                 env=env,
                 check=True,
                 cwd=self.home_path,
+                stream_output=True,
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(

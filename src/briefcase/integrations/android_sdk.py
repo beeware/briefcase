@@ -1232,7 +1232,6 @@ Activity class not found while starting app.
     def logcat(self, pid):
         """Start tailing the adb log for the device."""
         try:
-            # stream output so it's captured in logging
             self.command.subprocess.run(
                 [
                     os.fsdecode(self.android_sdk.adb_path),

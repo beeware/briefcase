@@ -62,6 +62,7 @@ def test_run_app(first_app_config, tmp_path):
         [os.fsdecode(tmp_path / "base" / "linux" / "First_App-0.0.1-wonky.AppImage")],
         cwd=tmp_path / "home",
         check=True,
+        stream_output=True,
     )
 
 
@@ -86,4 +87,5 @@ def test_run_app_failed(first_app_config, tmp_path):
         [os.fsdecode(tmp_path / "base" / "linux" / "First_App-0.0.1-wonky.AppImage")],
         cwd=tmp_path / "home",
         check=True,
+        stream_output=True,
     )

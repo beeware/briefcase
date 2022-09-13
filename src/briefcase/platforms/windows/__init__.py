@@ -88,6 +88,7 @@ class WindowsRunCommand(RunCommand):
                 [os.fsdecode(self.binary_path(app))],
                 cwd=self.home_path,
                 check=True,
+                stream_output=True,
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(f"Unable to start app {app.app_name}.") from e
