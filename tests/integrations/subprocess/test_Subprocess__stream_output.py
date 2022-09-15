@@ -1,10 +1,12 @@
 import time
+from io import StringIO
 from threading import Event
 from unittest import mock
 
 import pytest
 
 from briefcase.console import Log
+from briefcase.integrations import subprocess
 
 
 @pytest.fixture()
@@ -136,3 +138,19 @@ def test_stuck_streamer(mock_sub, popen_process, monkeypatch, capsys):
     # fmt: on
 
     monkeypatched_streamer_should_exit.set()
+
+
+def test_stdout_closes_unexpectedly(mock_sub, popen_process, monkeypatch, capsys):
+    """Streamer silently exits from ValueError because stdout was closed."""
+
+    def monkeypatch_ensure_str(value):
+        """Close stdout when ensure_str() runs on output from readline()."""
+        popen_process.stdout.close()
+        return value
+
+    popen_process.stdout = StringIO(initial_value="output line 1\noutput line 2")
+    monkeypatch.setattr(subprocess, "ensure_str", monkeypatch_ensure_str)
+
+    mock_sub.stream_output("testing", popen_process)
+
+    assert capsys.readouterr().out == "output line 1\n"
