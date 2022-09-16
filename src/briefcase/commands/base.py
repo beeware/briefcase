@@ -3,15 +3,9 @@ import importlib
 import inspect
 import os
 import platform
-import shutil
-import sys
 from abc import ABC, abstractmethod
-from cgi import parse_header
 from pathlib import Path
-from urllib.parse import urlparse
 
-import requests
-from cookiecutter.main import cookiecutter
 from cookiecutter.repository import is_repo_url
 from platformdirs import PlatformDirs
 
@@ -20,18 +14,16 @@ try:
 except ModuleNotFoundError:
     import tomli as tomllib
 
-from briefcase import __version__, integrations
+from briefcase import __version__
 from briefcase.config import AppConfig, BaseConfig, GlobalConfig, parse_config
 from briefcase.console import Console, Log
 from briefcase.exceptions import (
-    BadNetworkResourceError,
     BriefcaseCommandError,
     BriefcaseConfigError,
     InfoHelpText,
-    MissingNetworkResourceError,
-    NetworkFailure,
 )
-from briefcase.integrations import ToolCache
+from briefcase.integrations.base import ToolCache
+from briefcase.integrations.download import Download
 from briefcase.integrations.subprocess import Subprocess
 
 
@@ -118,99 +110,54 @@ class BaseCommand(ABC):
 
     def __init__(
         self,
-        base_path,
-        home_path=None,
-        data_path=None,
-        apps=None,
-        input_enabled=True,
-        logger=None,
-        console=None,
-        tools=None,
+        logger: Log,
+        console: Console,
+        tools: ToolCache = None,
+        apps: dict = None,
+        base_path: Path = Path.cwd(),
+        data_path: Path = None,
+        is_clone: bool = False,
     ):
-        # Distinguish the top-level command from triggered commands, e.g. `run`
-        # may trigger `update` and `build`.
-        self.is_clone = False
+        """Base for all Commands.
 
-        # Some details about the host machine
-        self.host_arch = platform.machine()
-        self.host_os = platform.system()
-
+        :param logger: Logger for console and logfile.
+        :param console: Facilitates console interaction and input solicitation.
+        :param tools: Cache of tools populated by Commands as they are required.
+        :param apps: Dictionary of project's Apps keyed by app name.
+        :param base_path: Base directory for Briefcase project.
+        :param data_path: Base directory for Briefcase tools, support packages, etc.
+        :param is_clone: Flag that Command was triggered by the user's requested Command;
+            for instance, RunCommand can invoke UpdateCommand and/or BuildCommand.
+        """
         self.base_path = Path(base_path)
+        self.data_path = self.validate_data_path(data_path)
+        self.apps = {} if apps is None else apps
+        self.is_clone = is_clone
 
-        # If a home path is provided during construction, use it. This usually
-        # indicates we're under test conditions.
-        if home_path is None:
-            home_path = Path.home()
-        self.home_path = Path(home_path)
-
-        # If a data path is provided during construction, use it. This usually
-        # indicates we're under test conditions. If there's no data path
-        # provided, look for a BRIEFCASE_HOME environment variable. If that
-        # isn't defined, use a platform-specific default data path.
-        if data_path is None:
-            try:
-                briefcase_home = os.environ["BRIEFCASE_HOME"]
-                data_path = Path(briefcase_home).resolve()
-                # Path("") converts to ".", so check for that edge case.
-                if briefcase_home == "" or not data_path.exists():
-                    raise BriefcaseCommandError(
-                        "The path specified by BRIEFCASE_HOME does not exist."
-                    )
-            except KeyError:
-                if self.host_os == "Darwin":
-                    # macOS uses a bundle name, rather than just the app name
-                    app_name = "org.beeware.briefcase"
-                else:
-                    app_name = "briefcase"
-
-                data_path = PlatformDirs(
-                    appname=app_name,
-                    appauthor="BeeWare",
-                ).user_cache_path
-
-        if " " in os.fsdecode(data_path):
-            raise BriefcaseCommandError(
-                f"""
-The location Briefcase will use to store tools and support files:
-
-    {data_path}
-
-contains spaces. This will cause problems with some tools, preventing
-you from building and packaging applications.
-
-You can set the environment variable BRIEFCASE_HOME to specify
-a custom location for Briefcase's tools.
-
-"""
-            )
-
-        self.data_path = Path(data_path)
-
-        self.tools_path = self.data_path / "tools"
+        self.tools = tools or ToolCache(
+            logger=logger,
+            console=console,
+            base_path=self.data_path / "tools",
+        )
 
         self.global_config = None
-        self.apps = {} if apps is None else apps
         self._path_index = {}
 
-        # External service APIs.
-        # These are abstracted to enable testing without patching.
-        self.cookiecutter = cookiecutter
-        self.requests = requests
-        self.input = console or Console(enabled=input_enabled)
-        self.os = os
-        self.sys = sys
-        self.stdlib_platform = platform
-        self.shutil = shutil
-        self.subprocess = Subprocess(self)
+    @property
+    def logger(self):
+        return self.tools.logger
 
-        self.tools = tools or ToolCache()
+    @logger.setter
+    def logger(self, val):
+        raise RuntimeError("'logger' is a readonly property for Commands")
 
-        # The internal Briefcase integrations API.
-        self.integrations = integrations  # TODO: can likely be removed
+    @property
+    def input(self):
+        return self.tools.input
 
-        # Initialize logging.
-        self.logger = logger or Log()
-        self.save_log = False
+    @input.setter
+    def input(self, val):
+        raise RuntimeError("'input' is a readonly property for Commands")
 
     def check_obsolete_data_dir(self):
         """Inform user if obsolete data directory exists.
@@ -221,7 +168,7 @@ a custom location for Briefcase's tools.
         downloads, tools, etc. This check lets users know the old
         directory still exists and their options to migrate or clean up.
         """
-        dot_briefcase_path = self.home_path / ".briefcase"
+        dot_briefcase_path = self.tools.home_path / ".briefcase"
 
         # If there's no .briefcase path, no need to check for migration.
         if not dot_briefcase_path.exists():
@@ -292,6 +239,54 @@ or delete the old data directory, and re-run Briefcase.
             # Create data directory to prevent full notice showing again.
             self.data_path.mkdir(parents=True, exist_ok=True)
 
+    def validate_data_path(self, data_path):
+        """Validate provided data path or determine OS-specific path.
+
+        If a data path is provided during construction, use it. This
+        usually indicates we're under test conditions. If there's no
+        data path provided, look for a BRIEFCASE_HOME environment
+        variable. If that isn't defined, use a platform-specific default
+        data path.
+        """
+        if data_path is None:
+            try:
+                briefcase_home = os.environ["BRIEFCASE_HOME"]
+                data_path = Path(briefcase_home).resolve()
+                # Path("") converts to ".", so check for that edge case.
+                if briefcase_home == "" or not data_path.exists():
+                    raise BriefcaseCommandError(
+                        "The path specified by BRIEFCASE_HOME does not exist."
+                    )
+            except KeyError:
+                if platform.system() == "Darwin":
+                    # macOS uses a bundle name, rather than just the app name
+                    app_name = "org.beeware.briefcase"
+                else:
+                    app_name = "briefcase"
+
+                data_path = PlatformDirs(
+                    appname=app_name,
+                    appauthor="BeeWare",
+                ).user_cache_path
+
+        if " " in os.fsdecode(data_path):
+            raise BriefcaseCommandError(
+                f"""
+The location Briefcase will use to store tools and support files:
+
+    {data_path}
+
+contains spaces. This will cause problems with some tools, preventing
+you from building and packaging applications.
+
+You can set the environment variable BRIEFCASE_HOME to specify
+a custom location for Briefcase's tools.
+
+"""
+            )
+
+        return Path(data_path)
+
     def _command_factory(self, command_name: str):
         """Command factory for the current platform and format.
 
@@ -305,44 +300,39 @@ or delete the old data directory, and re-run Briefcase.
             logger=self.logger,
             console=self.input,
             tools=self.tools,
+            is_clone=True,
         )
         command.clone_options(self)
         return command
 
     @property
     def create_command(self):
-        """Factory property; return an instance of CreateCommand for the same
-        format."""
+        """Create Command factory for the same platform and format."""
         return self._command_factory("create")
 
     @property
     def update_command(self):
-        """Factory property; return an instance of UpdateCommand for the same
-        format."""
+        """Update Command factory for the same platform and format."""
         return self._command_factory("update")
 
     @property
     def build_command(self):
-        """Factory property; return an instance of BuildCommand for the same
-        format."""
+        """Build Command factory for the same platform and format."""
         return self._command_factory("build")
 
     @property
     def run_command(self):
-        """Factory property; return an instance of RunCommand for the same
-        format."""
+        """Run Command factory for the same platform and format."""
         return self._command_factory("run")
 
     @property
     def package_command(self):
-        """Factory property; return an instance of PackageCommand for the same
-        format."""
+        """Package Command factory for the same platform and format."""
         return self._command_factory("package")
 
     @property
     def publish_command(self):
-        """Factory property; return an instance of PublishCommand for the same
-        format."""
+        """Publish Command factory for the same platform and format."""
         return self._command_factory("publish")
 
     @property
@@ -487,7 +477,9 @@ or delete the old data directory, and re-run Briefcase.
         This is used as a repository label/tag to identify the
         appropriate templates, etc to use.
         """
-        return f"{self.sys.version_info.major}.{self.sys.version_info.minor}"
+        return (
+            f"{self.tools.sys.version_info.major}.{self.tools.sys.version_info.minor}"
+        )
 
     def verify_tools(self):
         """Verify that the tools needed to run this command exist.
@@ -495,8 +487,10 @@ or delete the old data directory, and re-run Briefcase.
         Raises MissingToolException if a required system tool is
         missing.
         """
+        Subprocess.verify(tools=self.tools)
+        Download.verify(tools=self.tools)
 
-    def verify_app_tools(self, app):
+    def verify_app_tools(self, app: BaseConfig):
         """Verify that tools needed to run the command for this app exist."""
 
     def parse_options(self, extra):
@@ -520,7 +514,7 @@ or delete the old data directory, and re-run Briefcase.
         # Extract the base default options onto the command
         self.input.enabled = options.pop("input_enabled")
         self.logger.verbosity = options.pop("verbosity")
-        self.save_log = options.pop("save_log")
+        self.logger.save_log = options.pop("save_log")
 
         return options
 
@@ -529,8 +523,7 @@ or delete the old data directory, and re-run Briefcase.
 
         :param command: The command whose options are to be cloned
         """
-        self.is_clone = True
-        self.save_log = command.save_log
+        pass
 
     def add_default_options(self, parser):
         """Add the default options that exist on *all* commands.
@@ -602,72 +595,6 @@ or delete the old data directory, and re-run Briefcase.
             raise BriefcaseConfigError(
                 f"""Configuration file not found. Did you run briefcase in the directory that contains {filename!r}?"""
             ) from e
-
-    def download_file(self, url, download_path, role=None):
-        """Download a given URL, caching it. If it has already been downloaded,
-        return the value that has been cached.
-
-        This is a utility method used to obtain assets used by the
-        install process. The cached filename will be the filename portion of
-        the URL, appended to the download path.
-
-        :param url: The URL to download
-        :param download_path: The path to the download cache folder. This path
-            will be created if it doesn't exist.
-        :param role: A string describing the role played by the file being
-            downloaded; used to construct log and error messages. Should be
-            able to fit into the sentence "Error downloading {role}".
-        :returns: The filename of the downloaded (or cached) file.
-        """
-        download_path.mkdir(parents=True, exist_ok=True)
-        filename = None
-        try:
-            response = self.requests.get(url, stream=True)
-            if response.status_code == 404:
-                raise MissingNetworkResourceError(url=url)
-            elif response.status_code != 200:
-                raise BadNetworkResourceError(url=url, status_code=response.status_code)
-
-            # The initial URL might (read: will) go through URL redirects, so
-            # we need the *final* response. We look at either the `Content-Disposition`
-            # header, or the final URL, to extract the cache filename.
-            cache_full_name = urlparse(response.url).path
-            header_value = response.headers.get("Content-Disposition")
-            if header_value:
-                # See also https://tools.ietf.org/html/rfc6266
-                value, parameters = parse_header(header_value)
-                content_type = value.split(":", 1)[-1].strip().lower()
-                if content_type == "attachment" and parameters.get("filename"):
-                    cache_full_name = parameters["filename"]
-            cache_name = cache_full_name.split("/")[-1]
-            filename = download_path / cache_name
-
-            if filename.exists():
-                self.logger.info(f"{cache_name} already downloaded")
-            else:
-                # We have meaningful content, and it hasn't been cached previously,
-                # so save it in the requested location
-                self.logger.info(f"Downloading {cache_name}...")
-                with filename.open("wb") as f:
-                    total = response.headers.get("content-length")
-                    if total is None:
-                        f.write(response.content)
-                    else:
-                        progress_bar = self.input.progress_bar()
-                        task_id = progress_bar.add_task("Downloader", total=int(total))
-                        with progress_bar:
-                            for data in response.iter_content(chunk_size=1024 * 1024):
-                                f.write(data)
-                                progress_bar.update(task_id, advance=len(data))
-
-        except requests.exceptions.ConnectionError as e:
-            if role:
-                description = role
-            else:
-                description = filename.name if filename else url
-            raise NetworkFailure(f"download {description}") from e
-
-        return filename
 
     def update_cookiecutter_cache(self, template: str, branch="master"):
         """Ensure that we have a current checkout of a template path.
@@ -741,7 +668,3 @@ or delete the old data directory, and re-run Briefcase.
             cached_template = template
 
         return cached_template
-
-    def prepare_build_environment(self, app: BaseConfig):
-        """Returns native subprocess as the default build environment."""
-        return self.subprocess

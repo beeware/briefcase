@@ -1,6 +1,5 @@
 import argparse
 import sys
-from pathlib import Path
 
 from briefcase import __version__
 from briefcase.commands import DevCommand, NewCommand, UpgradeCommand
@@ -14,7 +13,12 @@ from .exceptions import (
 )
 
 
-def parse_cmdline(args, logger=None):
+def parse_cmdline(args):
+    """Parses the command line to determine the Command and its arguments.
+
+    :param args: the arguments provided at the command line
+    :return: Command and command-specific arguments
+    """
     parser = argparse.ArgumentParser(
         prog="briefcase",
         description="Package Python code for distribution.",
@@ -157,7 +161,4 @@ def parse_cmdline(args, logger=None):
                 command=options.command,
             )
 
-    # Construct a command, and parse the remaining arguments.
-    command = Command(base_path=Path.cwd(), logger=logger)
-    options = command.parse_options(extra=extra)
-    return command, options
+    return Command, extra

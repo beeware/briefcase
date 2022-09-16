@@ -10,6 +10,7 @@ from cookiecutter import exceptions as cookiecutter_exceptions
 
 from briefcase.config import is_valid_app_name, is_valid_bundle_identifier
 from briefcase.exceptions import NetworkFailure
+from briefcase.integrations import git
 
 from .base import BaseCommand, BriefcaseCommandError
 from .create import InvalidTemplateRepository
@@ -497,7 +498,7 @@ What GUI toolkit do you want to use for this project?""",
 
         try:
             # Unroll the new app template
-            self.cookiecutter(
+            self.tools.cookiecutter(
                 str(cached_template),
                 no_input=True,
                 output_dir=os.fsdecode(self.base_path),
@@ -529,7 +530,7 @@ Application '{context['formal_name']}' has been generated. To run your applicati
         missing.
         """
         super().verify_tools()
-        self.tools.verify_git(self)
+        git.verify_git_is_installed(tools=self.tools)
 
     def __call__(self, template: Optional[str] = None, **options):
         # Confirm all required tools are available

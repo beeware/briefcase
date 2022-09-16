@@ -4,6 +4,7 @@ from pathlib import Path
 from briefcase.commands import BuildCommand, OpenCommand, PublishCommand, UpdateCommand
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError
+from briefcase.integrations.visualstudio import VisualStudio
 from briefcase.platforms.windows import (
     WindowsCreateCommand,
     WindowsMixin,
@@ -37,7 +38,7 @@ class WindowsVisualStudioBuildCommand(WindowsVisualStudioMixin, BuildCommand):
 
     def verify_tools(self):
         super().verify_tools()
-        self.tools.verify_visualstudio(self)
+        VisualStudio.verify(self.tools)
 
     def build_app(self, app: BaseConfig, **kwargs):
         """Build the Visual Studio project.
@@ -48,7 +49,7 @@ class WindowsVisualStudioBuildCommand(WindowsVisualStudioMixin, BuildCommand):
 
         with self.input.wait_bar("Building solution..."):
             try:
-                self.subprocess.run(
+                self.tools.subprocess.run(
                     [
                         self.tools.visualstudio.msbuild_path,
                         f"{app.formal_name}.sln",

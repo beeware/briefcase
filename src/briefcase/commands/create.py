@@ -18,6 +18,8 @@ from briefcase.exceptions import (
     MissingNetworkResourceError,
     NetworkFailure,
 )
+from briefcase.integrations import git
+from briefcase.integrations.subprocess import Subprocess
 
 from .base import (
     BaseCommand,
@@ -278,7 +280,7 @@ class CreateCommand(BaseCommand):
             output_path = self.bundle_path(app).parent
             output_path.mkdir(parents=True, exist_ok=True)
             # Unroll the template
-            self.cookiecutter(
+            self.tools.cookiecutter(
                 str(cached_template),
                 no_input=True,
                 output_dir=os.fsdecode(output_path),
@@ -306,7 +308,7 @@ class CreateCommand(BaseCommand):
         try:
             with self.input.wait_bar("Unpacking support package..."):
                 support_path.mkdir(parents=True, exist_ok=True)
-                self.shutil.unpack_archive(
+                self.tools.shutil.unpack_archive(
                     support_file_path,
                     extract_dir=support_path,
                 )
@@ -374,7 +376,7 @@ class CreateCommand(BaseCommand):
 
                 # Download the support file, caching the result
                 # in the user's briefcase support cache directory.
-                return self.download_file(
+                return self.tools.download.file(
                     url=support_package_url,
                     download_path=download_path,
                     role="support package",
@@ -388,7 +390,7 @@ class CreateCommand(BaseCommand):
             else:
                 raise MissingSupportPackage(
                     python_version_tag=self.python_version_tag,
-                    host_arch=self.host_arch,
+                    host_arch=self.tools.host_arch,
                 ) from e
 
     def _write_requirements_file(self, app: BaseConfig, requirements_path):
@@ -428,14 +430,14 @@ class CreateCommand(BaseCommand):
         """
         # Clear existing dependency directory
         if app_packages_path.is_dir():
-            self.shutil.rmtree(app_packages_path)
-            self.os.mkdir(app_packages_path)
+            self.tools.shutil.rmtree(app_packages_path)
+            self.tools.os.mkdir(app_packages_path)
 
         # Install dependencies
         if app.requires:
             with self.input.wait_bar("Installing app dependencies..."):
                 try:
-                    self.tools.build_subprocess.run(
+                    self.tools[app].subprocess.run(
                         [
                             sys.executable,
                             "-m",
@@ -489,8 +491,8 @@ class CreateCommand(BaseCommand):
         # Remove existing app folder
         app_path = self.app_path(app)
         if app_path.is_dir():
-            self.shutil.rmtree(app_path)
-            self.os.mkdir(app_path)
+            self.tools.shutil.rmtree(app_path)
+            self.tools.os.mkdir(app_path)
 
         # Install app code.
         if app.sources:
@@ -503,9 +505,9 @@ class CreateCommand(BaseCommand):
                     if not original.exists():
                         raise MissingAppSources(src)
                     elif original.is_dir():
-                        self.shutil.copytree(original, target)
+                        self.tools.shutil.copytree(original, target)
                     else:
-                        self.shutil.copy(original, target)
+                        self.tools.shutil.copy(original, target)
         else:
             self.logger.info(f"No sources defined for {app.app_name}.")
 
@@ -578,7 +580,7 @@ class CreateCommand(BaseCommand):
                     # Make sure the target directory exists
                     target.parent.mkdir(parents=True, exist_ok=True)
                     # Copy the source image to the target location
-                    self.shutil.copy(full_source, target)
+                    self.tools.shutil.copy(full_source, target)
             else:
                 self.logger.info(
                     f"Unable to find {source_filename} for {full_role}; using default"
@@ -664,7 +666,7 @@ class CreateCommand(BaseCommand):
                 )
                 return
             self.logger.info("Removing old application bundle...", prefix=app.app_name)
-            self.shutil.rmtree(bundle_path)
+            self.tools.shutil.rmtree(bundle_path)
 
         self.logger.info("Generating application template...", prefix=app.app_name)
         self.generate_app_template(app=app)
@@ -696,13 +698,13 @@ class CreateCommand(BaseCommand):
         missing.
         """
         super().verify_tools()
-        self.tools.verify_git(self)
+        git.verify_git_is_installed(tools=self.tools)
 
     def verify_app_tools(self, app):
         """Verify that the tools needed to run this command for this app
         exist."""
         super().verify_app_tools(app)
-        self.tools.verify_build_subprocess(self, app)
+        Subprocess.verify(tools=self.tools[app])
 
     def __call__(self, app: Optional[BaseConfig] = None, **options):
         # Confirm all required tools are available

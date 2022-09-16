@@ -123,10 +123,13 @@ class Log:
 
     def __init__(self, printer=Printer(), verbosity=1):
         self.print = printer
-        # verbosity will be 1 more than the number of v flags from invocation
+        # --verbosity flag: 1 for info, 2 for debug
         self.verbosity = verbosity
-        # preserved Rich stacktrace of exception for logging to file
+        # --log flag to force logfile creation
+        self.save_log = False
+        # Rich stacktrace of exception for logging to file
         self.stacktrace = None
+        # functions to run for additional logging if creating a logfile
         self.log_file_extras = []
 
     def _log(
@@ -212,7 +215,7 @@ class Log:
     def save_log_to_file(self, command):
         """Save the current application log to file."""
         # only save the log if a command ran and it errored or --log was specified
-        if command is None or (not self.stacktrace and not command.save_log):
+        if command is None or (not self.stacktrace and not self.save_log):
             return
 
         with command.input.wait_bar("Saving log...", transient=True):
@@ -264,7 +267,7 @@ class Log:
         uname = platform.uname()
         sanitized_env_vars = "\n".join(
             f"    {env_var}={value if not SENSITIVE_SETTING_RE.search(env_var) else '********************'}"
-            for env_var, value in sorted(command.os.environ.items())
+            for env_var, value in sorted(command.tools.os.environ.items())
         )
         return (
             f"Date/Time:       {datetime.now().strftime('%Y-%m-%d %H:%M:%S %Z')}\n"

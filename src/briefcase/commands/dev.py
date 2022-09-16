@@ -62,7 +62,7 @@ class DevCommand(BaseCommand):
         if app.requires:
             with self.input.wait_bar("Installing dev dependencies..."):
                 try:
-                    self.subprocess.run(
+                    self.tools.subprocess.run(
                         [
                             sys.executable,
                             "-m",
@@ -86,7 +86,7 @@ class DevCommand(BaseCommand):
         """
         try:
             # Invoke the app.
-            self.subprocess.run(
+            self.tools.subprocess.run(
                 [
                     sys.executable,
                     "-c",
@@ -98,7 +98,7 @@ class DevCommand(BaseCommand):
                 ],
                 env=env,
                 check=True,
-                cwd=self.home_path,
+                cwd=self.tools.home_path,
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(

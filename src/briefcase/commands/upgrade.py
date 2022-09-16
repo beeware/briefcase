@@ -3,9 +3,11 @@ from typing import List
 
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.android_sdk import AndroidSDK
+from briefcase.integrations.download import Download
 from briefcase.integrations.java import JDK
 from briefcase.integrations.linuxdeploy import LinuxDeploy
 from briefcase.integrations.rcedit import RCEdit
+from briefcase.integrations.subprocess import Subprocess
 from briefcase.integrations.wix import WiX
 
 from .base import BaseCommand
@@ -19,6 +21,8 @@ class UpgradeCommand(BaseCommand):
 
     def __init__(self, *args, **options):
         super().__init__(*args, **options)
+        Subprocess.verify(self.tools)
+        Download.verify(self.tools)
         self.sdks = [
             AndroidSDK,
             LinuxDeploy,
@@ -70,13 +74,14 @@ class UpgradeCommand(BaseCommand):
 
         for klass in self.sdks:
             try:
-                tool = klass.verify(self, install=False)
+                klass.verify(tools=self.tools, install=False)
+                tool = getattr(self.tools, klass.name)
                 if tool.managed_install:
                     managed_tools[klass.name] = tool
                     try:
                         for plugin_klass in tool.plugins.values():
                             try:
-                                plugin = plugin_klass.verify(self, install=False)
+                                plugin = plugin_klass.verify(self.tools, install=False)
                                 # All plugins are managed
                                 managed_tools[plugin.name] = plugin
                             except BriefcaseCommandError:

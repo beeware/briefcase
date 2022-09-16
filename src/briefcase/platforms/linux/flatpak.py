@@ -29,15 +29,16 @@ class LinuxFlatpakMixin(LinuxMixin):
     def distribution_path(self, app, packaging_format):
         binary_name = app.formal_name.replace(" ", "_")
         return (
-            self.platform_path / f"{binary_name}-{app.version}-{self.host_arch}.flatpak"
+            self.platform_path
+            / f"{binary_name}-{app.version}-{self.tools.host_arch}.flatpak"
         )
 
     def verify_tools(self):
         """Verify that we're on Linux."""
         super().verify_tools()
-        if self.host_os != "Linux":
+        if self.tools.host_os != "Linux":
             raise BriefcaseCommandError("Flatpaks can only be generated on Linux.")
-        self.tools.verify_flatpak(self)
+        Flatpak.verify(tools=self.tools)
 
     def flatpak_runtime_repo(self, app):
         try:
@@ -99,8 +100,8 @@ class LinuxFlatpakCreateCommand(LinuxFlatpakMixin, CreateCommand):
         Flatpak uses the original CPython sources, and compiles them in
         the flatpak sandbox.
         """
-        base_version = ".".join(str(m) for m in self.sys.version_info[:3])
-        full_version = self.stdlib_platform.python_version()
+        base_version = ".".join(str(m) for m in self.tools.sys.version_info[:3])
+        full_version = self.tools.platform.python_version()
         return f"https://www.python.org/ftp/python/{base_version}/Python-{full_version}.tgz"
 
     def output_format_template_context(self, app: AppConfig):
@@ -118,8 +119,8 @@ class LinuxFlatpakCreateCommand(LinuxFlatpakMixin, CreateCommand):
         tarball as-is into the source tree.
         """
         support_file_path = self._download_support_package(app)
-        with self.input.wait_bar("Installing support file ..."):
-            self.shutil.copy(
+        with self.input.wait_bar("Installing support file..."):
+            self.tools.shutil.copy(
                 support_file_path,
                 self.bundle_path(app) / support_file_path.name,
             )

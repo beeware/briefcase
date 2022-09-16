@@ -6,6 +6,7 @@ import uuid
 from briefcase.commands import CreateCommand, PackageCommand, RunCommand
 from briefcase.config import BaseConfig, parsed_version
 from briefcase.exceptions import BriefcaseCommandError
+from briefcase.integrations.wix import WiX
 
 DEFAULT_OUTPUT_FORMAT = "app"
 
@@ -83,9 +84,9 @@ class WindowsRunCommand(RunCommand):
         try:
             # Start streaming logs for the app.
             self.logger.info("=" * 75)
-            self.subprocess.run(
+            self.tools.subprocess.run(
                 [os.fsdecode(self.binary_path(app))],
-                cwd=self.home_path,
+                cwd=self.tools.home_path,
                 check=True,
             )
         except subprocess.CalledProcessError as e:
@@ -103,7 +104,7 @@ class WindowsPackageCommand(PackageCommand):
 
     def verify_tools(self):
         super().verify_tools()
-        self.tools.verify_wix(self)
+        WiX.verify(self)
 
     def package_app(self, app: BaseConfig, **kwargs):
         """Package an application.
@@ -115,7 +116,7 @@ class WindowsPackageCommand(PackageCommand):
         try:
             self.logger.info("Compiling application manifest...")
             with self.input.wait_bar("Compiling..."):
-                self.subprocess.run(
+                self.tools.subprocess.run(
                     [
                         self.tools.wix.heat_exe,
                         "dir",
@@ -146,7 +147,7 @@ class WindowsPackageCommand(PackageCommand):
         try:
             self.logger.info("Compiling application installer...")
             with self.input.wait_bar("Compiling..."):
-                self.subprocess.run(
+                self.tools.subprocess.run(
                     [
                         self.tools.wix.candle_exe,
                         "-nologo",  # Don't display startup text
@@ -169,7 +170,7 @@ class WindowsPackageCommand(PackageCommand):
         try:
             self.logger.info("Linking application installer...")
             with self.input.wait_bar("Linking..."):
-                self.subprocess.run(
+                self.tools.subprocess.run(
                     [
                         self.tools.wix.light_exe,
                         "-nologo",  # Don't display startup text

@@ -13,6 +13,7 @@ from briefcase.commands import (
 )
 from briefcase.config import BaseConfig, parsed_version
 from briefcase.exceptions import BriefcaseCommandError
+from briefcase.integrations.android_sdk import AndroidSDK
 
 
 def safe_formal_name(name):
@@ -85,14 +86,14 @@ class GradleMixin:
         )
 
     def gradlew_path(self, app):
-        gradlew = "gradlew.bat" if self.host_os == "Windows" else "gradlew"
+        gradlew = "gradlew.bat" if self.tools.host_os == "Windows" else "gradlew"
         return self.bundle_path(app) / gradlew
 
     def verify_tools(self):
         """Verify that the Android APK tools in `briefcase` will operate on
         this system, downloading tools as needed."""
         super().verify_tools()
-        self.tools.verify_android_sdk(self)
+        AndroidSDK.verify(tools=self.tools)
         if not self.is_clone:
             self.logger.add_log_file_extra(self.tools.android_sdk.list_packages)
 
@@ -142,7 +143,7 @@ class GradleBuildCommand(GradleMixin, BuildCommand):
         self.logger.info("Building Android APK...", prefix=app.app_name)
         with self.input.wait_bar("Building..."):
             try:
-                self.subprocess.run(
+                self.tools.subprocess.run(
                     # Windows needs the full path to `gradlew`; macOS & Linux can find it
                     # via `./gradlew`. For simplicity of implementation, we always provide
                     # the full path.
@@ -255,7 +256,7 @@ class GradlePackageCommand(GradleMixin, PackageCommand):
         )
         with self.input.wait_bar("Bundling..."):
             try:
-                self.subprocess.run(
+                self.tools.subprocess.run(
                     # Windows needs the full path to `gradlew`; macOS & Linux can find it
                     # via `./gradlew`. For simplicity of implementation, we always provide
                     # the full path.

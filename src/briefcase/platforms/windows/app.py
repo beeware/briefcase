@@ -4,6 +4,7 @@ from pathlib import Path
 from briefcase.commands import BuildCommand, OpenCommand, PublishCommand, UpdateCommand
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError
+from briefcase.integrations.rcedit import RCEdit
 from briefcase.platforms.windows import (
     WindowsCreateCommand,
     WindowsMixin,
@@ -37,7 +38,7 @@ class WindowsAppBuildCommand(WindowsAppMixin, BuildCommand):
 
     def verify_tools(self):
         super().verify_tools()
-        self.tools.verify_rcedit(self)
+        RCEdit.verify(tools=self.tools)
 
     def build_app(self, app: BaseConfig, **kwargs):
         """Build the application.
@@ -48,7 +49,7 @@ class WindowsAppBuildCommand(WindowsAppMixin, BuildCommand):
 
         with self.input.wait_bar("Setting stub app details..."):
             try:
-                self.subprocess.run(
+                self.tools.subprocess.run(
                     [
                         self.tools.rcedit.rcedit_path,
                         self.binary_path(app).relative_to(self.bundle_path(app)),

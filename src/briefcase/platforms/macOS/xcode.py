@@ -11,6 +11,7 @@ from briefcase.commands import (
 )
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError
+from briefcase.integrations.xcode import verify_xcode_install
 from briefcase.platforms.macOS import macOSMixin, macOSPackageMixin, macOSRunMixin
 
 
@@ -18,7 +19,7 @@ class macOSXcodeMixin(macOSMixin):
     output_format = "Xcode"
 
     def verify_tools(self):
-        if self.host_os != "Darwin":
+        if self.tools.host_os != "Darwin":
             raise BriefcaseCommandError(
                 "macOS applications require the Xcode command line tools, "
                 "which are only available on macOS."
@@ -26,7 +27,7 @@ class macOSXcodeMixin(macOSMixin):
         # Require XCode 10.0.0. There's no particular reason for this
         # specific version, other than it's a nice round number that's
         # not *that* old at time of writing.
-        self.tools.verify_xcode(self, min_version=(10, 0, 0))
+        verify_xcode_install(self.tools, min_version=(10, 0, 0))
 
         # Verify superclass tools *after* xcode. This ensures we get the
         # git check *after* the xcode check.
@@ -83,7 +84,7 @@ class macOSXcodeBuildCommand(macOSXcodeMixin, BuildCommand):
         self.logger.info("Building XCode project...", prefix=app.app_name)
         with self.input.wait_bar("Building..."):
             try:
-                self.subprocess.run(
+                self.tools.subprocess.run(
                     [
                         "xcodebuild",
                         "-project",

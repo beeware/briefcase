@@ -56,12 +56,14 @@ class macOSAppCreateCommand(macOSAppMixin, CreateCommand):
 
         with tempfile.TemporaryDirectory() as tmpdir:
             # TODO: Py3.8 compatibility; os.fsdecode not required in Py3.9
-            self.shutil.move(os.fsdecode(lib_path), os.fsdecode(tmpdir))
-            self.shutil.rmtree(self.support_path(app))
+            self.tools.shutil.move(os.fsdecode(lib_path), os.fsdecode(tmpdir))
+            self.tools.shutil.rmtree(self.support_path(app))
 
-            self.os.makedirs(Path(lib_path).parent)
+            self.tools.os.makedirs(Path(lib_path).parent)
             # TODO: Py3.8 compatibility; os.fsdecode not required in Py3.9
-            self.shutil.move(os.fsdecode(Path(tmpdir) / "lib"), os.fsdecode(lib_path))
+            self.tools.shutil.move(
+                os.fsdecode(Path(tmpdir) / "lib"), os.fsdecode(lib_path)
+            )
 
 
 class macOSAppUpdateCommand(macOSAppMixin, UpdateCommand):

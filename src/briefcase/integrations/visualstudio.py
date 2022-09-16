@@ -15,8 +15,8 @@ class VisualStudio:
       - C++/CLI support for v143 build tools
 """
 
-    def __init__(self, command, msbuild_path, install_metadata=None):
-        self.command = command
+    def __init__(self, tools, msbuild_path, install_metadata=None):
+        self.tools = tools
         self._msbuild_path = msbuild_path
         self._install_metadata = install_metadata
 
@@ -37,22 +37,26 @@ class VisualStudio:
         return self._install_metadata
 
     @classmethod
-    def verify(cls, command):
+    def verify(cls, tools):
         """Verify that Visual Studio is available.
 
-        :param command: The command that needs to use Visual Studio
-        :returns: A Visual Studio tool wrapper. Raises an exception if
-            Visual Studio is not available.
+        :param tools: ToolCache of available tools
         """
+        # short circuit since already verified and available
+        if hasattr(tools, "visualstudio"):
+            return
+
+        visualstudio = None
+
         # Try running MSBuild, assuming it is on the PATH.
         try:
-            command.subprocess.check_output(
+            tools.subprocess.check_output(
                 ["MSBuild.exe", "--version"],
                 stderr=subprocess.STDOUT,
             )
 
             # Create an explicit VisualStudio, with no install metadata
-            return VisualStudio(command, msbuild_path=Path("MSBuild.exe"))
+            visualstudio = VisualStudio(tools, msbuild_path=Path("MSBuild.exe"))
         except FileNotFoundError:
             # MSBuild isn't on the path
             pass
@@ -61,15 +65,17 @@ class VisualStudio:
                 """MSBuild is on the path, but Briefcase cannot start it."""
             ) from e
 
-        # Look for an %MSBUILD% environment variable
-        try:
-            msbuild_path = Path(command.os.environ["MSBUILD"])
-            install_metadata = None
+        # try to find Visual Studio
+        if visualstudio is None:
+            # Look for an %MSBUILD% environment variable
+            try:
+                msbuild_path = Path(tools.os.environ["MSBUILD"])
+                install_metadata = None
 
-            if not msbuild_path.exists():
-                # The location referenced by %MSBUILD% doesn't exist
-                raise BriefcaseCommandError(
-                    f"""\
+                if not msbuild_path.exists():
+                    # The location referenced by %MSBUILD% doesn't exist
+                    raise BriefcaseCommandError(
+                        f"""\
 The location referenced by the environment variable MSBUILD:
 
     {msbuild_path}
@@ -78,19 +84,19 @@ does not appear to point to a MSBuild executable. Correct
 or unset the environment variable; then re-run Briefcase.
 
 """
-                )
+                    )
 
-        except KeyError:
-            # No %MSBUILD% environment variable. Look for vswhere.exe
-            vswhere_path = (
-                Path(command.os.environ["ProgramFiles(x86)"])
-                / "Microsoft Visual Studio"
-                / "Installer"
-                / "vswhere.exe"
-            )
-            if not vswhere_path.exists():
-                raise BriefcaseCommandError(
-                    """\
+            except KeyError:
+                # No %MSBUILD% environment variable. Look for vswhere.exe
+                vswhere_path = (
+                    Path(tools.os.environ["ProgramFiles(x86)"])
+                    / "Microsoft Visual Studio"
+                    / "Installer"
+                    / "vswhere.exe"
+                )
+                if not vswhere_path.exists():
+                    raise BriefcaseCommandError(
+                        """\
 Visual Studio does not appear to be installed. Visual Studio 2022 Community
 Edition can be obtained as a free download from:
 
@@ -105,27 +111,29 @@ variable that points at the MSBuild.exe provided by your Visual Studio
 installation.
 
 """
-                )
-            try:
-                install_metadata = command.subprocess.parse_output(
-                    json_parser,
-                    [
-                        vswhere_path,
-                        "-latest",
-                        "-prerelease",
-                        "-format",
-                        "json",
-                    ],
-                    stderr=subprocess.STDOUT,
-                )[0]
-            except (
-                IndexError,
-                KeyError,
-                CommandOutputParseError,
-                subprocess.CalledProcessError,
-            ) as e:
-                raise BriefcaseCommandError(
-                    f"""\
+                    )
+
+                # Retrieve metadata for Visual Studio install
+                try:
+                    install_metadata = tools.subprocess.parse_output(
+                        json_parser,
+                        [
+                            vswhere_path,
+                            "-latest",
+                            "-prerelease",
+                            "-format",
+                            "json",
+                        ],
+                        stderr=subprocess.STDOUT,
+                    )[0]
+                except (
+                    IndexError,
+                    KeyError,
+                    CommandOutputParseError,
+                    subprocess.CalledProcessError,
+                ) as e:
+                    raise BriefcaseCommandError(
+                        f"""\
 Visual Studio appears to exist, but Briefcase can't retrieve installation metadata.
 Please report this as a bug at:
 
@@ -138,41 +146,43 @@ In your report, please including the output from running:
 from the command prompt.
 
 """
-                ) from e
+                    ) from e
 
-            msbuild_path = (
-                Path(install_metadata["installationPath"])
-                / "MSBuild"
-                / "Current"
-                / "Bin"
-                / "MSBuild.exe"
-            )
-            if not msbuild_path.exists():
-                raise BriefcaseCommandError(
-                    """\
+                msbuild_path = (
+                    Path(install_metadata["installationPath"])
+                    / "MSBuild"
+                    / "Current"
+                    / "Bin"
+                    / "MSBuild.exe"
+                )
+                if not msbuild_path.exists():
+                    raise BriefcaseCommandError(
+                        """\
 Your Visual Studio installation does not appear to provide MSBuild.
 Ensure that Visual Studio following workloads and components installed:
 {VSCODE_REQUIRED_COMPONENTS}
 Then restart Briefcase.
 """
+                    )
+
+            # Try to invoke MSBuild at the established location
+            try:
+                tools.subprocess.check_output(
+                    [msbuild_path, "--version"],
+                    stderr=subprocess.STDOUT,
+                )
+            except subprocess.CalledProcessError:
+                raise BriefcaseCommandError(
+                    "MSBuild appears to exist, but Briefcase can't start it."
                 )
 
-        try:
-            # Try to invoke MSBuild at the established location
-            command.subprocess.check_output(
-                [msbuild_path, "--version"], stderr=subprocess.STDOUT
+            visualstudio = VisualStudio(
+                tools,
+                msbuild_path=msbuild_path,
+                install_metadata=install_metadata,
             )
 
-        except subprocess.CalledProcessError:
-            raise BriefcaseCommandError(
-                "MSBuild appears to exist, but Briefcase can't start it."
-            )
-
-        return VisualStudio(
-            command,
-            msbuild_path=msbuild_path,
-            install_metadata=install_metadata,
-        )
+        tools.visualstudio = visualstudio
 
     @property
     def managed_install(self):

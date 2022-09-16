@@ -17,8 +17,8 @@ ELF_PATCH_PATCHED_BYTES = bytes.fromhex("000000")
 
 
 class LinuxDeployBase:
-    def __init__(self, command):
-        self.command = command
+    def __init__(self, tools):
+        self.tools = tools
 
     @property
     @abstractmethod
@@ -44,7 +44,7 @@ class LinuxDeployBase:
 
     def install(self):
         """Download and install linuxdeploy or plugin."""
-        self.command.download_file(
+        self.tools.download.file(
             url=self.download_url,
             download_path=self.file_path,
             role=self.full_name,
@@ -59,26 +59,31 @@ class LinuxDeployBase:
         use them as plugins while building the AppImage. ELF files need
         special "magic" bytes zeroed to run properly in Docker.
         """
-        with self.command.input.wait_bar(f"Installing {self.file_name}..."):
-            self.command.os.chmod(self.file_path / self.file_name, 0o755)
+        with self.tools.input.wait_bar(f"Installing {self.file_name}..."):
+            self.tools.os.chmod(self.file_path / self.file_name, 0o755)
             if self.is_elf_file():
                 self.patch_elf_header()
 
     @classmethod
-    def verify(cls, command, install=True, **kwargs):
+    def verify(cls, tools, install=True, **kwargs):
         """Verify that linuxdeploy tool or plugin is available.
 
-        :param command: The command that needs to use linuxdeploy
+        :param tools: ToolCache of available tools
         :param install: Should the tool/plugin be installed if it is not found?
         :param kwargs: Any additional keyword arguments that should be passed
             to the tool at time of construction.
-        :returns: A valid tool wrapper. If the tool/plugin is not
-            available, and was not installed, raises MissingToolError.
+        :returns: A plugin wrapper if a plugin is verified.
         """
-        tool = cls(command, **kwargs)
+        is_plugin = issubclass(cls, LinuxDeployPluginBase)
+
+        # short circuit since already verified and available
+        if not is_plugin and hasattr(tools, "linuxdeploy"):
+            return
+
+        tool = cls(tools, **kwargs)
         if not tool.exists():
             if install:
-                command.logger.info(
+                tools.logger.info(
                     cls.install_msg.format(full_name=cls.full_name),
                     prefix="linuxdeploy",
                 )
@@ -86,11 +91,15 @@ class LinuxDeployBase:
             else:
                 raise MissingToolError(cls.name)
 
-        return tool
+        # Return plugins so they can be used in context of the linuxdeploy tool
+        if is_plugin:
+            return tool
+
+        tools.linuxdeploy = tool
 
     def uninstall(self):
         """Uninstall tool."""
-        with self.command.input.wait_bar(f"Removing old {self.full_name} install..."):
+        with self.tools.input.wait_bar(f"Removing old {self.full_name} install..."):
             (self.file_path / self.file_name).unlink()
 
     def upgrade(self):
@@ -136,12 +145,12 @@ class LinuxDeployBase:
                 appimage.write(ELF_PATCH_PATCHED_BYTES)
                 appimage.flush()
                 appimage.seek(0)
-                self.command.logger.info(f"Patched ELF header for {self.file_name}.")
+                self.tools.logger.info(f"Patched ELF header for {self.file_name}.")
             # Else if the header is the patched value, do nothing.
             elif (
                 appimage.read(len(ELF_PATCH_ORIGINAL_BYTES)) == ELF_PATCH_PATCHED_BYTES
             ):
-                self.command.logger.info(
+                self.tools.logger.info(
                     f"ELF header for {self.file_name} is already patched."
                 )
             else:
@@ -169,7 +178,7 @@ class LinuxDeployPluginBase(LinuxDeployBase):
 
     @property
     def file_path(self):
-        return self.command.tools_path / "linuxdeploy_plugins" / self.plugin_id
+        return self.tools.base_path / "linuxdeploy_plugins" / self.plugin_id
 
 
 class LinuxDeployGtkPlugin(LinuxDeployPluginBase):
@@ -192,7 +201,7 @@ class LinuxDeployQtPlugin(LinuxDeployPluginBase):
 
     @property
     def file_name(self):
-        return f"linuxdeploy-plugin-qt-{self.command.host_arch}.AppImage"
+        return f"linuxdeploy-plugin-qt-{self.tools.host_arch}.AppImage"
 
     @property
     def download_url(self):
@@ -206,13 +215,13 @@ class LinuxDeployLocalFilePlugin(LinuxDeployPluginBase):
     full_name = "user-provided linuxdeploy plugin from local file"
     install_msg = "Copying user-provided plugin into project"
 
-    def __init__(self, command, plugin_path, bundle_path):
+    def __init__(self, tools, plugin_path, bundle_path):
         self._file_name = plugin_path.name
         self.local_path = plugin_path.parent
         self._file_path = bundle_path
 
         # Call the super last to ensure validation of the filename
-        super().__init__(command)
+        super().__init__(tools)
 
     @property
     def file_name(self):
@@ -231,7 +240,7 @@ class LinuxDeployLocalFilePlugin(LinuxDeployPluginBase):
         # folder. This is required to ensure that the file is available inside
         # the Docker context.
         try:
-            self.command.shutil.copy(
+            self.tools.shutil.copy(
                 self.local_path / self.file_name,
                 self.file_path / self.file_name,
             )
@@ -247,14 +256,14 @@ class LinuxDeployLocalFilePlugin(LinuxDeployPluginBase):
 class LinuxDeployURLPlugin(LinuxDeployPluginBase):
     full_name = "user-provided linuxdeploy plugin from URL"
 
-    def __init__(self, command, url):
+    def __init__(self, tools, url):
         self._download_url = url
 
         url_parts = urlparse(url)
         self._file_name = url_parts.path.split("/")[-1]
 
         # Build a hash of the download URL; this hash is used to
-        # idenfity plugins downloaded from different sources. We don't
+        # identify plugins downloaded from different sources. We don't
         # just use the domain, because we need:
         #  * http://example.com/release/linuxdeploy-plugin-foobar.sh
         #  * http://example.com/dev/linuxdeploy-plugin-foobar.sh
@@ -264,7 +273,7 @@ class LinuxDeployURLPlugin(LinuxDeployPluginBase):
         self.hash = hashlib.sha256(url.encode("utf-8"))
 
         # Call the super last to ensure validation of the filename
-        super().__init__(command)
+        super().__init__(tools)
 
     @property
     def file_name(self):
@@ -273,7 +282,7 @@ class LinuxDeployURLPlugin(LinuxDeployPluginBase):
     @property
     def file_path(self):
         return (
-            self.command.tools_path
+            self.tools.base_path
             / "linuxdeploy_plugins"
             / self.plugin_id
             / self.hash.hexdigest()
@@ -295,11 +304,11 @@ class LinuxDeploy(LinuxDeployBase):
 
     @property
     def file_path(self):
-        return self.command.tools_path
+        return self.tools.base_path
 
     @property
     def file_name(self):
-        return f"linuxdeploy-{self.command.host_arch}.AppImage"
+        return f"linuxdeploy-{self.tools.host_arch}.AppImage"
 
     @property
     def download_url(self):
@@ -348,17 +357,17 @@ class LinuxDeploy(LinuxDeployBase):
 
             try:
                 plugin_klass = self.plugins[plugin_name]
-                self.command.logger.info(f"Using default {plugin_name} plugin")
+                self.tools.logger.info(f"Using default {plugin_name} plugin")
 
-                plugin = plugin_klass.verify(self.command)
+                plugin = plugin_klass.verify(self.tools)
             except KeyError:
                 if plugin_name.startswith(("https://", "http://")):
-                    self.command.logger.info(f"Using URL plugin {plugin_name}")
-                    plugin = LinuxDeployURLPlugin.verify(self.command, url=plugin_name)
+                    self.tools.logger.info(f"Using URL plugin {plugin_name}")
+                    plugin = LinuxDeployURLPlugin.verify(self.tools, url=plugin_name)
                 else:
-                    self.command.logger.info(f"Using local file plugin {plugin_name}")
+                    self.tools.logger.info(f"Using local file plugin {plugin_name}")
                     plugin = LinuxDeployLocalFilePlugin.verify(
-                        self.command,
+                        self.tools,
                         plugin_path=Path(plugin_name),
                         bundle_path=bundle_path,
                     )

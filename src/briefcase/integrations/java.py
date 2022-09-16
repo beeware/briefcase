@@ -1,6 +1,7 @@
 import os
 import shutil
 import subprocess
+from contextlib import suppress
 from pathlib import Path
 
 from briefcase.exceptions import (
@@ -11,11 +12,11 @@ from briefcase.exceptions import (
 
 
 class JDK:
-    name = "java"
+    name = "jdk"
     full_name = "Java JDK"
 
-    def __init__(self, command, java_home):
-        self.command = command
+    def __init__(self, tools, java_home):
+        self.tools = tools
 
         # As of April 10 2020, 8u242-b08 is the current AdoptOpenJDK
         # https://adoptopenjdk.net/releases.html
@@ -30,11 +31,11 @@ class JDK:
             "Darwin": "mac",
             "Windows": "windows",
             "Linux": "linux",
-        }.get(self.command.host_os)
+        }.get(self.tools.host_os)
 
         extension = {
             "Windows": "zip",
-        }.get(self.command.host_os, "tar.gz")
+        }.get(self.tools.host_os, "tar.gz")
 
         return (
             "https://github.com/AdoptOpenJDK/openjdk8-binaries/"
@@ -43,7 +44,7 @@ class JDK:
         )
 
     @classmethod
-    def verify(cls, command, install=True):
+    def verify(cls, tools, install=True):
         """Verify that a Java 8 JDK exists.
 
         If ``JAVA_HOME`` is set, try that version. If it is a JRE, or its *not*
@@ -55,21 +56,24 @@ class JDK:
         Otherwise, download a JDK from AdoptOpenJDK and unpack it into the
         briefcase data directory.
 
-        :param command: The command that needs to perform the verification
-            check.
+        :param tools: ToolCache of available tools
         :param install: Should the tool be installed if it is not found?
-        :returns: A valid Java JDK wrapper. If a JDK is not available, and was
-            not installed, raises MissingToolError.
         """
-        java_home = command.os.environ.get("JAVA_HOME", "")
+        # short circuit since already verified and available
+        with suppress(AttributeError):
+            if tools.jdk:
+                return
+
+        jdk = None
+        java_home = tools.os.environ.get("JAVA_HOME", "")
         install_message = None
 
         # macOS has a helpful system utility to determine JAVA_HOME. Try it.
-        if not java_home and command.host_os == "Darwin":
+        if not java_home and tools.host_os == "Darwin":
             try:
                 # If no JRE/JDK is installed, /usr/libexec/java_home
                 # raises an error.
-                java_home = command.subprocess.check_output(
+                java_home = tools.subprocess.check_output(
                     ["/usr/libexec/java_home"],
                     stderr=subprocess.STDOUT,
                 ).strip("\n")
@@ -81,7 +85,7 @@ class JDK:
             try:
                 # If JAVA_HOME is defined, try to invoke javac.
                 # This verifies that we have a JDK, not a just a JRE.
-                output = command.subprocess.check_output(
+                output = tools.subprocess.check_output(
                     [
                         os.fsdecode(Path(java_home) / "bin" / "javac"),
                         "-version",
@@ -93,7 +97,7 @@ class JDK:
                 vparts = version_str.split(".")
                 if len(vparts) == 3 and vparts[:2] == ["1", "8"]:
                     # It appears to be a Java 8 JDK.
-                    return JDK(command, java_home=Path(java_home))
+                    jdk = JDK(tools, java_home=Path(java_home))
                 else:
                     # It's not a Java 8 JDK.
                     install_message = f"""
@@ -186,33 +190,33 @@ class JDK:
 
 """
 
-        # If we've reached this point, any user-provided JAVA_HOME is broken;
-        # use the Briefcase one.
-        java_home = command.tools_path / "java"
+        if jdk is None:
+            # If we've reached this point, any user-provided JAVA_HOME is broken;
+            # use the Briefcase one.
+            java_home = tools.base_path / "java"
 
-        # The macOS download has a weird layout (inherited from the official Oracle
-        # release). The actual JAVA_HOME is deeper inside the directory structure.
-        if command.host_os == "Darwin":
-            java_home = java_home / "Contents" / "Home"
+            # The macOS download has a weird layout (inherited from the official Oracle
+            # release). The actual JAVA_HOME is deeper inside the directory structure.
+            if tools.host_os == "Darwin":
+                java_home = java_home / "Contents" / "Home"
 
-        jdk = JDK(command, java_home=java_home)
+            jdk = JDK(tools, java_home=java_home)
 
-        if jdk.exists():
-            # Using briefcase-managed Java version
-            return jdk
-        if install:
-            # We only display the warning messages on the pass where we actually
-            # install the JDK.
-            if install_message:
-                command.logger.warning(install_message)
-            command.logger.info(
-                "The Java JDK was not found; downloading and installing...",
-                prefix=cls.name,
-            )
-            jdk.install()
-            return jdk
-        else:
-            raise MissingToolError("Java")
+            if not jdk.exists():
+                if install:
+                    # We only display the warning messages on the pass where we actually
+                    # install the JDK.
+                    if install_message:
+                        tools.logger.warning(install_message)
+                    tools.logger.info(
+                        "The Java JDK was not found; downloading and installing...",
+                        prefix=cls.name,
+                    )
+                    jdk.install()
+                else:
+                    raise MissingToolError("Java")
+
+        tools.jdk = jdk
 
     def exists(self):
         return (self.java_home / "bin").exists()
@@ -223,25 +227,25 @@ class JDK:
             # Determine if java_home is relative to the briefcase data directory.
             # If java_home isn't inside this directory, this will raise a ValueError,
             # indicating it is a non-managed install.
-            self.java_home.relative_to(self.command.tools_path)
+            self.java_home.relative_to(self.tools.base_path)
             return True
         except ValueError:
             return False
 
     def install(self):
         """Download and install a JDK."""
-        jdk_zip_path = self.command.download_file(
+        jdk_zip_path = self.tools.download.file(
             url=self.adoptOpenJDK_download_url,
-            download_path=self.command.tools_path,
+            download_path=self.tools.base_path,
             role="Java 8 JDK",
         )
 
-        with self.command.input.wait_bar("Installing AdoptOpenJDK..."):
+        with self.tools.input.wait_bar("Installing AdoptOpenJDK..."):
             try:
                 # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
-                self.command.shutil.unpack_archive(
+                self.tools.shutil.unpack_archive(
                     os.fsdecode(jdk_zip_path),
-                    extract_dir=os.fsdecode(self.command.tools_path),
+                    extract_dir=os.fsdecode(self.tools.base_path),
                 )
             except (shutil.ReadError, EOFError) as e:
                 raise BriefcaseCommandError(
@@ -258,18 +262,16 @@ Delete {jdk_zip_path} and run briefcase again.
             # The tarball will unpack into <briefcase data dir>/tools/jdk8u242-b08
             # (or whatever name matches the current release).
             # We turn this into <briefcase data dir>/tools/java so we have a consistent name.
-            java_unpack_path = (
-                self.command.tools_path / f"jdk{self.release}-{self.build}"
-            )
-            java_unpack_path.rename(self.command.tools_path / "java")
+            java_unpack_path = self.tools.base_path / f"jdk{self.release}-{self.build}"
+            java_unpack_path.rename(self.tools.base_path / "java")
 
     def uninstall(self):
         """Uninstall a JDK."""
-        with self.command.input.wait_bar("Removing old JDK install..."):
-            if self.command.host_os == "Darwin":
-                self.command.shutil.rmtree(self.java_home.parent.parent)
+        with self.tools.input.wait_bar("Removing old JDK install..."):
+            if self.tools.host_os == "Darwin":
+                self.tools.shutil.rmtree(self.java_home.parent.parent)
             else:
-                self.command.shutil.rmtree(self.java_home)
+                self.tools.shutil.rmtree(self.java_home)
 
     def upgrade(self):
         """Upgrade an existing JDK install."""

@@ -14,24 +14,7 @@ class DeviceState(enum.Enum):
     UNKNOWN = 99
 
 
-def verify_command_line_tools_install(command):
-    """Verify that command line developer tools are installed and ready for
-    use.
-
-    A completely clean machine will have neither Xcode *or* the Command Line
-    Tools. However, it's possible to install Xcode and *not* install the command
-    line tools, and vice versa.
-
-    Lastly, there is a license that needs to be accepted.
-
-    :param command: The command that needs to perform the verification check.
-    """
-    ensure_command_line_tools_are_installed(command)
-    confirm_xcode_license_accepted(command)
-    return True
-
-
-def verify_xcode_install(command, min_version=None):
+def verify_xcode_install(tools, min_version=None):
     """Verify that Xcode and the command line developer tools are installed and
     ready for use.
 
@@ -46,24 +29,48 @@ def verify_xcode_install(command, min_version=None):
 
     Lastly, we ensure that the iOS simulator is installed.
 
-    :param command: The command that needs to perform the verification check.
+    :param tools: ToolCache of available tools
     :param min_version: The minimum allowed version of Xcode, specified as a
         tuple of integers (e.g., (11, 2, 1)). Default: ``None``, meaning there
         is no minimum version.
     """
-    ensure_xcode_is_installed(command, min_version=min_version)
-    ensure_command_line_tools_are_installed(command)
-    confirm_xcode_license_accepted(command)
-    return True
+    # short circuit since already verified and available
+    if hasattr(tools, "xcode"):
+        return
+
+    ensure_xcode_is_installed(tools, min_version=min_version)
+    verify_command_line_tools_install(tools)
+    tools.xcode = True
 
 
-def ensure_command_line_tools_are_installed(command):
+def verify_command_line_tools_install(tools):
+    """Verify that command line developer tools are installed and ready for
+    use.
+
+    A completely clean machine will have neither Xcode *or* the Command Line
+    Tools. However, it's possible to install Xcode and *not* install the command
+    line tools, and vice versa.
+
+    Lastly, there is a license that needs to be accepted.
+
+    :param tools: ToolCache of available tools
+    """
+    # short circuit since already verified and available
+    if hasattr(tools, "xcode_cli"):
+        return
+
+    ensure_command_line_tools_are_installed(tools)
+    confirm_xcode_license_accepted(tools)
+    tools.xcode_cli = True
+
+
+def ensure_command_line_tools_are_installed(tools):
     """Determine if the Xcode command line tools are installed.
 
     If they are not installed, an exception is raised; in addition, a OS dialog
     will be displayed prompting the user to install Xcode.
 
-    :param command: The command that needs to perform the verification check.
+    :param tools: ToolCache of available tools
     """
     # We determine if the command line tools are installed by running:
     #
@@ -77,8 +84,9 @@ def ensure_command_line_tools_are_installed(command):
     #
     # Any other status code is a problem.
     try:
-        command.subprocess.check_output(
-            ["xcode-select", "--install"], stderr=subprocess.STDOUT
+        tools.subprocess.check_output(
+            ["xcode-select", "--install"],
+            stderr=subprocess.STDOUT,
         )
         raise BriefcaseCommandError(
             """\
@@ -93,7 +101,7 @@ Re-run Briefcase once that installation is complete.
         )
     except subprocess.CalledProcessError as e:
         if e.returncode != 1:
-            command.logger.warning(
+            tools.logger.warning(
                 """
 *************************************************************************
 ** WARNING: Unable to determine if Xcode is installed                  **
@@ -118,7 +126,7 @@ Re-run Briefcase once that installation is complete.
 
 
 def ensure_xcode_is_installed(
-    command,
+    tools,
     min_version=None,
     xcode_location="/Applications/Xcode.app",
 ):
@@ -128,7 +136,7 @@ def ensure_xcode_is_installed(
     Raises an exception if XCode isn't installed, or if the version of Xcode
     that is installed doesn't meet the minimum requirement.
 
-    :param command: The command that needs to perform the verification check.
+    :param tools: ToolCache of available tools
     :param min_version: The minimum allowed version of Xcode, specified as a
         tuple of integers (e.g., (11, 2, 1)). Default: ``None``, meaning there
         is no minimum version.
@@ -139,7 +147,7 @@ def ensure_xcode_is_installed(
     #  * The path to the currently active Xcode install; or
     #  * error code 2 - No Xcode installation
     try:
-        command.subprocess.check_output(
+        tools.subprocess.check_output(
             ["xcode-select", "-p"],
             stderr=subprocess.STDOUT,
         )
@@ -164,7 +172,7 @@ you can re-run Briefcase.
         #   xcode-select: error: tool 'xcodebuild' requires Xcode, but active
         #   developer directory '/Library/Developer/CommandLineTools' is a
         #   command line tools instance
-        output = command.subprocess.check_output(
+        output = tools.subprocess.check_output(
             ["xcodebuild", "-version"],
             stderr=subprocess.STDOUT,
         )
@@ -196,7 +204,7 @@ you can re-run Briefcase.
                 except IndexError:
                     pass
 
-            command.logger.warning(
+            tools.logger.warning(
                 """
 *************************************************************************
 ** WARNING: Unable to determine the version of Xcode that is installed **
@@ -267,21 +275,22 @@ installation is complete.
             ) from e
 
 
-def confirm_xcode_license_accepted(command):
+def confirm_xcode_license_accepted(tools):
     """Confirm if the Xcode license has been accepted.
 
-    :param command: The command that needs to perform the verification check.
+    :param tools: ToolCache of available tools
     """
     # Lastly, check if the XCode license has been accepted. The command line
     # tools return a status code of 69 (nice...) if the license has not been
     # accepted. In this case, we can prompt the user to accept the license.
     try:
-        command.subprocess.check_output(
-            ["/usr/bin/clang", "--version"], stderr=subprocess.STDOUT
+        tools.subprocess.check_output(
+            ["/usr/bin/clang", "--version"],
+            stderr=subprocess.STDOUT,
         )
     except subprocess.CalledProcessError as e:
         if e.returncode == 69:
-            command.logger.info(
+            tools.logger.info(
                 """
 Use of Xcode and the iOS developer tools are covered by a license that must be
 accepted before you can use those tools.
@@ -298,7 +307,7 @@ to enter your password (Briefcase will not store this password anywhere).
 """
             )
             try:
-                command.subprocess.run(
+                tools.subprocess.run(
                     ["sudo", "xcodebuild", "-license"],
                     check=True,
                 )
@@ -324,7 +333,7 @@ You need to accept the Xcode license before Briefcase can package your app.
 """
                     )
                 else:
-                    command.logger.warning(
+                    tools.logger.warning(
                         """
 *************************************************************************
 ** WARNING: Unable to determine if the Xcode license has been accepted **
@@ -347,7 +356,7 @@ You need to accept the Xcode license before Briefcase can package your app.
 """
                     )
         else:
-            command.logger.warning(
+            tools.logger.warning(
                 """
 *************************************************************************
 ** WARNING: Unable to determine if the Xcode license has been accepted **
@@ -372,7 +381,7 @@ You need to accept the Xcode license before Briefcase can package your app.
 
 
 def get_simulators(
-    command,
+    tools,
     os_name,
     simulator_location="/Library/Developer/PrivateFrameworks/CoreSimulator.framework/",
 ):
@@ -382,8 +391,7 @@ def get_simulators(
     keyed by OS version; the inner dictionary for each OS version
     contains the details of the available simulators, keyed by UDID.
 
-    :param command: The command that needs to know the list of available
-        simulators.
+    :param tools: ToolCache of available tools
     :param os_name: The OS that we want to simulate.
         One of `"iOS"`, `"watchOS"`, or `"tvOS"`.
     :param simulator_location: The filesystem path where the simulator
@@ -393,7 +401,7 @@ def get_simulators(
     # If the simulator frameworks don't exist, they will be downloaded
     # and installed. This should only occur on first execution.
     if not Path(simulator_location).exists():
-        command.input(
+        tools.input(
             f"""
 It looks like the {os_name} Simulator is not installed. The {os_name} Simulator
 must be installed with administrator privileges.
@@ -405,7 +413,7 @@ Press Return to continue: """
         )
 
     try:
-        simctl_data = command.subprocess.parse_output(
+        simctl_data = tools.subprocess.parse_output(
             json_parser,
             ["xcrun", "simctl", "list", "-j"],
         )
@@ -449,15 +457,15 @@ Press Return to continue: """
         raise BriefcaseCommandError("Unable to run xcrun simctl.") from e
 
 
-def get_device_state(command, udid):
+def get_device_state(tools, udid):
     """Determine the state of an iOS simulator device.
 
-    :param command: The command that needs to know the simulator device state.
+    :param tools: ToolCache of available tools
     :param udid: The UDID of the device to inspect
     :returns: The status of the device, as a DeviceState enum.
     """
     try:
-        simctl_data = command.subprocess.parse_output(
+        simctl_data = tools.subprocess.parse_output(
             json_parser,
             ["xcrun", "simctl", "list", "devices", "-j", udid],
         )
@@ -484,14 +492,14 @@ def get_device_state(command, udid):
 IDENTITY_RE = re.compile(r"\s*\d+\) ([0-9A-F]{40}) \"(.*)\"")
 
 
-def get_identities(command, policy):
+def get_identities(tools, policy):
     """Obtain a set of valid identities for the given policy.
 
-    :param command: The command that needs the identities.
+    :param tools: ToolCache of available tools
     :param policy: The identity policy to evaluate (e.g., ``codesigning``)
     """
     try:
-        output = command.subprocess.check_output(
+        output = tools.subprocess.check_output(
             ["security", "find-identity", "-v", "-p", policy],
         )
 
