@@ -1,4 +1,4 @@
-# The run command inherits most of it's behavior from the common base
+# The run command inherits most of its behavior from the common base
 # implementation. Do a surface-level verification here, but the app
 # tests provide the actual test coverage.
 import os
@@ -32,4 +32,5 @@ def test_run_app(first_app_config, tmp_path):
         ],
         cwd=tmp_path / "home",
         check=True,
+        stream_output=True,
     )

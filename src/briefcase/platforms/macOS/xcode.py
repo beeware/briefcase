@@ -68,7 +68,7 @@ class macOSXcodeOpenCommand(macOSXcodeMixin, OpenCommand):
     description = "Open a macOS Xcode project."
 
 
-class macOSXcodeUpdateCommand(macOSXcodeMixin, UpdateCommand):
+class macOSXcodeUpdateCommand(macOSXcodeCreateCommand, UpdateCommand):
     description = "Update an existing macOS Xcode project."
 
 

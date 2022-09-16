@@ -21,6 +21,7 @@ def test_run(flatpak):
             "com.example.my-app",
         ],
         check=True,
+        stream_output=True,
     )
 
 

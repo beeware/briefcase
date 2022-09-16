@@ -49,6 +49,9 @@ class DummyUpdateCommand(UpdateCommand):
         with (self.bundle_path(app) / "resources").open("w") as f:
             f.write("app resources")
 
+    def cleanup_app_content(self, app):
+        self.actions.append(("cleanup", app))
+
 
 @pytest.fixture
 def update_command(tmp_path):

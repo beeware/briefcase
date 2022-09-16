@@ -124,7 +124,7 @@ class LinuxAppImageCreateCommand(LinuxAppImageMixin, CreateCommand):
         ]
 
 
-class LinuxAppImageUpdateCommand(LinuxAppImageMixin, UpdateCommand):
+class LinuxAppImageUpdateCommand(LinuxAppImageCreateCommand, UpdateCommand):
     description = "Update an existing Linux AppImage."
 
 

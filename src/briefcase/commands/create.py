@@ -421,6 +421,15 @@ class CreateCommand(BaseCommand):
                             requirement = os.path.abspath(self.base_path / requirement)
                         f.write(f"{requirement}\n")
 
+    def _extra_pip_args(self, app: BaseConfig):
+        """Any additional arguments that must be passed to pip when installing
+        packages.
+
+        :param app: The app configuration
+        :returns: A list of additional arguments
+        """
+        return []
+
     def _install_app_dependencies(self, app: BaseConfig, app_packages_path):
         """Install dependencies for the app with pip.
 
@@ -436,6 +445,18 @@ class CreateCommand(BaseCommand):
         # Install dependencies
         if app.requires:
             with self.input.wait_bar("Installing app dependencies..."):
+                # If there is a support package provided, add the cross-platform
+                # folder of the support package to the PYTHONPATH. This allows
+                # a support package to specify a sitecustomize.py that will make
+                # pip behave as if it was being run on the target platform.
+                pip_kwargs = {}
+                try:
+                    pip_kwargs["env"] = {
+                        "PYTHONPATH": str(self.support_path(app) / "platform-site"),
+                    }
+                except KeyError:
+                    pass
+
                 try:
                     self.tools[app].subprocess.run(
                         [
@@ -447,8 +468,10 @@ class CreateCommand(BaseCommand):
                             "--no-user",
                             f"--target={app_packages_path}",
                         ]
+                        + self._extra_pip_args(app)
                         + app.requires,
                         check=True,
+                        **pip_kwargs,
                     )
                 except subprocess.CalledProcessError as e:
                     raise DependencyInstallError() from e
@@ -646,6 +669,39 @@ class CreateCommand(BaseCommand):
                     target=self.bundle_path(app) / target,
                 )
 
+    def cleanup_app_content(self, app: BaseConfig):
+        """Remove any content not needed by the final app bundle.
+
+        :param app: The config object for the app
+        """
+        try:
+            # Retrieve any cleanup paths defined by the app template
+            paths_to_remove = self.cleanup_paths(app)
+        except KeyError:
+            paths_to_remove = []
+
+        try:
+            # Add any user-specified paths, expanded using the app as template context.
+            paths_to_remove.extend([glob.format(app=app) for glob in app.cleanup_paths])
+        except AttributeError:
+            pass
+
+        if paths_to_remove:
+            with self.input.wait_bar("Removing unneeded app bundle content..."):
+                for glob in paths_to_remove:
+                    # Expand each glob into a full list of files that actually exist
+                    # on the file system.
+                    for path in self.bundle_path(app).glob(glob):
+                        relative_path = path.relative_to(self.bundle_path(app))
+                        if path.is_dir():
+                            self.logger.info(f"Removing directory {relative_path}")
+                            self.shutil.rmtree(path)
+                        else:
+                            self.logger.info(f"Removing {relative_path}")
+                            path.unlink()
+        else:
+            self.logger.info("No app content clean up required.")
+
     def create_app(self, app: BaseConfig, **options):
         """Create an application bundle.
 
@@ -686,6 +742,9 @@ class CreateCommand(BaseCommand):
 
         self.logger.info("Installing application resources...", prefix=app.app_name)
         self.install_app_resources(app=app)
+
+        self.logger.info("Removing unneeded app content...", prefix=app.app_name)
+        self.cleanup_app_content(app=app)
 
         self.logger.info(
             f"Created {bundle_path.relative_to(self.base_path)}", prefix=app.app_name

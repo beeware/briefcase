@@ -22,6 +22,7 @@ def test_subprocess_running_successfully(dev_command, first_app, tmp_path):
         env=env,
         cwd=dev_command.home_path,
         check=True,
+        stream_output=True,
     )
 
 
@@ -45,4 +46,5 @@ def test_subprocess_throws_error(dev_command, first_app, tmp_path):
         env=env,
         cwd=dev_command.home_path,
         check=True,
+        stream_output=True,
     )

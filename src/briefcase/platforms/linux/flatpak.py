@@ -126,7 +126,7 @@ class LinuxFlatpakCreateCommand(LinuxFlatpakMixin, CreateCommand):
             )
 
 
-class LinuxFlatpakUpdateCommand(LinuxFlatpakMixin, UpdateCommand):
+class LinuxFlatpakUpdateCommand(LinuxFlatpakCreateCommand, UpdateCommand):
     description = "Update an existing Linux Flatpak."
 
 
