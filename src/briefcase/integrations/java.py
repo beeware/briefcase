@@ -1,7 +1,6 @@
 import os
 import shutil
 import subprocess
-from contextlib import suppress
 from pathlib import Path
 
 from briefcase.exceptions import (
@@ -60,9 +59,8 @@ class JDK:
         :param install: Should the tool be installed if it is not found?
         """
         # short circuit since already verified and available
-        with suppress(AttributeError):
-            if tools.jdk:
-                return
+        if hasattr(tools, "jdk"):
+            return
 
         jdk = None
         java_home = tools.os.environ.get("JAVA_HOME", "")

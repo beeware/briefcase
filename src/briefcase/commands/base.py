@@ -23,8 +23,6 @@ from briefcase.exceptions import (
     InfoHelpText,
 )
 from briefcase.integrations.base import ToolCache
-from briefcase.integrations.download import Download
-from briefcase.integrations.subprocess import Subprocess
 
 
 class TemplateUnsupportedVersion(BriefcaseCommandError):
@@ -372,7 +370,7 @@ a custom location for Briefcase's tools.
         packaging format.
 
         This is the single file that should be uploaded for distribution.
-        This may be the binary (if the binary is a self contained executable);
+        This may be the binary (if the binary is a self-contained executable);
         however, if the output format produces an installer, it will be the
         path to the installer.
 
@@ -490,7 +488,7 @@ a custom location for Briefcase's tools.
         """The major.minor of the Python version in use, as a string.
 
         This is used as a repository label/tag to identify the
-        appropriate templates, etc to use.
+        appropriate templates, etc. to use.
         """
         return (
             f"{self.tools.sys.version_info.major}.{self.tools.sys.version_info.minor}"
@@ -502,8 +500,7 @@ a custom location for Briefcase's tools.
         Raises MissingToolException if a required system tool is
         missing.
         """
-        Subprocess.verify(tools=self.tools)
-        Download.verify(tools=self.tools)
+        pass
 
     def verify_app_tools(self, app: BaseConfig):
         """Verify that tools needed to run the command for this app exist."""

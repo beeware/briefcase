@@ -3,11 +3,9 @@ from typing import List
 
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.android_sdk import AndroidSDK
-from briefcase.integrations.download import Download
 from briefcase.integrations.java import JDK
 from briefcase.integrations.linuxdeploy import LinuxDeploy
 from briefcase.integrations.rcedit import RCEdit
-from briefcase.integrations.subprocess import Subprocess
 from briefcase.integrations.wix import WiX
 
 from .base import BaseCommand
@@ -21,8 +19,6 @@ class UpgradeCommand(BaseCommand):
 
     def __init__(self, *args, **options):
         super().__init__(*args, **options)
-        Subprocess.verify(self.tools)
-        Download.verify(self.tools)
         self.sdks = [
             AndroidSDK,
             LinuxDeploy,

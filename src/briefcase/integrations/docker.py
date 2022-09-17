@@ -216,7 +216,7 @@ def verify_docker_for_app(
     :param python_version: Version of python, e.g. 3.10
     """
     # short circuit since already verified and available
-    if hasattr(tools[app], "subprocess"):
+    if hasattr(tools[app], "subprocess") and isinstance(tools[app].subprocess, Docker):
         return
 
     tools[app].subprocess = Docker(tools, app)

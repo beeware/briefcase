@@ -14,7 +14,6 @@ from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.docker import verify_docker, verify_docker_for_app
 from briefcase.integrations.linuxdeploy import LinuxDeploy
-from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.linux import LinuxMixin
 
 
@@ -89,10 +88,11 @@ class LinuxAppImageMixin(LinuxAppImagePassiveMixin):
         """Verify App environment is prepared and available.
 
         When Docker is used, create or update a Docker image for the App.
-        Without Docker, use the host machine as the App environment.
+        Without Docker, the host machine will be used as the App environment.
 
         :param app: The application being built
         """
+        super().verify_app_tools(app)
         if self.use_docker:
             verify_docker_for_app(
                 tools=self.tools,
@@ -104,11 +104,6 @@ class LinuxAppImageMixin(LinuxAppImagePassiveMixin):
                 host_data_path=self.data_path,
                 python_version=self.python_version_tag,
             )
-        else:
-            Subprocess.verify(tools=self.tools[app])
-
-        # verify Docker first to ensure it is used as subprocess
-        super().verify_app_tools(app=app)
 
 
 class LinuxAppImageCreateCommand(LinuxAppImageMixin, CreateCommand):
@@ -211,7 +206,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
                 for plugin in plugins:
                     additional_args.extend(["--plugin", plugin])
 
-                # Build the app image.
+                # Build the AppImage.
                 self.tools[app].subprocess.run(
                     [
                         self.tools.linuxdeploy.file_path

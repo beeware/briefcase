@@ -15,6 +15,8 @@ from cookiecutter.main import cookiecutter
 
 from briefcase.config import AppConfig
 from briefcase.console import Console, Log
+from briefcase.integrations.download import Download
+from briefcase.integrations.subprocess import Subprocess
 
 
 # TODO: Implement Tool base class
@@ -67,6 +69,9 @@ class ToolCache(Mapping):
             )
         )
 
+        Subprocess.verify(tools=self)
+        Download.verify(tools=self)
+
     def __getitem__(self, app: AppConfig) -> ToolCache:
         return self.app_tools[app]
 
@@ -77,4 +82,5 @@ class ToolCache(Mapping):
         return len(self.app_tools)
 
     def __bool__(self):
+        # always True instead of __len__() != 0
         return True

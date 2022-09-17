@@ -337,7 +337,7 @@ its output for errors.
 
         :param device: The device ID to manage.
         """
-        return ADB(self, device=device)
+        return ADB(self.tools, device=device)
 
     def verify_license(self):
         """Verify that all necessary licenses have been accepted.

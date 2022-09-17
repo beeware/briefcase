@@ -105,7 +105,7 @@ class WindowsPackageCommand(PackageCommand):
 
     def verify_tools(self):
         super().verify_tools()
-        WiX.verify(self)
+        WiX.verify(self.tools)
 
     def package_app(self, app: BaseConfig, **kwargs):
         """Package an application.

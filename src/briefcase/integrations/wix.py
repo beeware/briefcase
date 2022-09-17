@@ -18,7 +18,7 @@ class WiX:
     def __init__(self, tools, wix_home=None, bin_install=False):
         """Create a wrapper around a WiX install.
 
-        :param tools: TToolCache of available tools.
+        :param tools: ToolCache of available tools.
         :param wix_home: The path of the WiX installation.
         :param bin_install: Is the install a binaries-only install? A full
             MSI install of WiX has a `/bin` folder in the paths; a
@@ -135,7 +135,8 @@ WiX Toolset. Current value: {wix_home!r}
             with self.tools.input.wait_bar("Installing WiX..."):
                 # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
                 self.tools.shutil.unpack_archive(
-                    os.fsdecode(wix_zip_path), extract_dir=os.fsdecode(self.wix_home)
+                    os.fsdecode(wix_zip_path),
+                    extract_dir=os.fsdecode(self.wix_home),
                 )
         except (shutil.ReadError, EOFError) as e:
             raise BriefcaseCommandError(

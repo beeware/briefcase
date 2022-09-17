@@ -1,1 +1,0 @@
-All Commands use the single instances of ``Log`` and ``Console`` instead of individual instances.

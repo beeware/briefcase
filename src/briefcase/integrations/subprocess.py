@@ -95,7 +95,7 @@ class Subprocess:
         self.tools = tools
         self._subprocess = subprocess
 
-    def prepare(self, **kwargs):
+    def prepare(self):
         """Perform any environment preparation required to execute
         processes."""
         # This is a no-op; the native subprocess environment is ready-to-use.

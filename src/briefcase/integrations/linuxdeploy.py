@@ -17,7 +17,7 @@ ELF_PATCH_PATCHED_BYTES = bytes.fromhex("000000")
 
 
 class LinuxDeployBase:
-    def __init__(self, tools):
+    def __init__(self, tools, **kwargs):
         self.tools = tools
 
     @property

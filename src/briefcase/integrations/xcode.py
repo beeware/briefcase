@@ -19,7 +19,7 @@ def verify_xcode_install(tools, min_version=None):
     ready for use.
 
     We need Xcode, *and* the Xcode Command Line Tools. A completely clean
-    machine will have neither Xcode *or* the Command Line Tools. However,
+    machine will have neither Xcode *nor* the Command Line Tools. However,
     it's possible to install Xcode and *not* install the command line tools,
     and vice versa.
 
@@ -47,7 +47,7 @@ def verify_command_line_tools_install(tools):
     """Verify that command line developer tools are installed and ready for
     use.
 
-    A completely clean machine will have neither Xcode *or* the Command Line
+    A completely clean machine will have neither Xcode *nor* the Command Line
     Tools. However, it's possible to install Xcode and *not* install the command
     line tools, and vice versa.
 
@@ -67,7 +67,7 @@ def verify_command_line_tools_install(tools):
 def ensure_command_line_tools_are_installed(tools):
     """Determine if the Xcode command line tools are installed.
 
-    If they are not installed, an exception is raised; in addition, a OS dialog
+    If they are not installed, an exception is raised; in addition, an OS dialog
     will be displayed prompting the user to install Xcode.
 
     :param tools: ToolCache of available tools

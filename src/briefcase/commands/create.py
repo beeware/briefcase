@@ -19,7 +19,6 @@ from briefcase.exceptions import (
     NetworkFailure,
 )
 from briefcase.integrations import git
-from briefcase.integrations.subprocess import Subprocess
 
 from .base import (
     BaseCommand,
@@ -303,7 +302,7 @@ class CreateCommand(BaseCommand):
         """Unpack a support package into a specific location.
 
         :param support_file_path: The path to the support file to be unpacked.
-        :param support_path: The path where support files should unpacked.
+        :param support_path: The path where support files should be unpacked.
         """
         try:
             with self.input.wait_bar("Unpacking support package..."):
@@ -407,7 +406,7 @@ class CreateCommand(BaseCommand):
             separators.append(os.altsep)
 
         with self.input.wait_bar("Writing requirements file..."):
-            with (requirements_path).open("w", encoding="utf-8") as f:
+            with requirements_path.open("w", encoding="utf-8") as f:
                 if app.requires:
                     for requirement in app.requires:
                         # If the requirement is a local path, convert it to
@@ -758,12 +757,6 @@ class CreateCommand(BaseCommand):
         """
         super().verify_tools()
         git.verify_git_is_installed(tools=self.tools)
-
-    def verify_app_tools(self, app):
-        """Verify that the tools needed to run this command for this app
-        exist."""
-        super().verify_app_tools(app)
-        Subprocess.verify(tools=self.tools[app])
 
     def __call__(self, app: Optional[BaseConfig] = None, **options):
         # Confirm all required tools are available
