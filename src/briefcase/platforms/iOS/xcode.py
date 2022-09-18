@@ -376,7 +376,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         #  1. a log sender that matches that app binary; or,
         #  2. a log sender of that is a Python extension module,
         #     and a process that matches the app binary.
-        # Case (1) works when the standard libary is statically linked,
+        # Case (1) works when the standard library is statically linked,
         #   and for native NSLog() calls in the bootstrap binary
         # Case (2) works when the standard library is dynamically linked,
         #   and ctypes (which handles the NSLog integration) is an
@@ -410,21 +410,25 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
 
         try:
             self.logger.info("Starting app...", prefix=app.app_name)
-            with self.input.wait_bar("Launching app..."):
-                self.subprocess.run(
-                    ["xcrun", "simctl", "launch", udid, app_identifier], check=True
-                )
-        except subprocess.CalledProcessError as e:
-            self.subprocess.cleanup("log stream", simulator_log_popen)
-            raise BriefcaseCommandError(f"Unable to launch app {app.app_name}.") from e
+            try:
+                with self.input.wait_bar("Launching app..."):
+                    self.subprocess.run(
+                        ["xcrun", "simctl", "launch", udid, app_identifier], check=True
+                    )
+            except subprocess.CalledProcessError as e:
+                raise BriefcaseCommandError(
+                    f"Unable to launch app {app.app_name}."
+                ) from e
 
-        # Start streaming logs for the app.
-        self.logger.info(
-            "Following simulator log output (type CTRL-C to stop log)...",
-            prefix=app.app_name,
-        )
-        self.logger.info("=" * 75)
-        self.subprocess.stream_output("log stream", simulator_log_popen)
+            # Start streaming logs for the app.
+            self.logger.info(
+                "Following simulator log output (type CTRL-C to stop log)...",
+                prefix=app.app_name,
+            )
+            self.logger.info("=" * 75)
+            self.subprocess.stream_output("log stream", simulator_log_popen)
+        finally:
+            self.subprocess.cleanup("log stream", simulator_log_popen)
 
         # Preserve the device selection as state.
         return {"udid": udid}

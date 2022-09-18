@@ -106,7 +106,7 @@ def test_run_app_simulator_booted(first_app_config, tmp_path):
     command.subprocess.stream_output.assert_called_with(
         "log stream", log_stream_process
     )
-    command.subprocess.cleanup.assert_not_called()
+    command.subprocess.cleanup.assert_called_with("log stream", log_stream_process)
 
 
 def test_run_app_simulator_shut_down(first_app_config, tmp_path):
@@ -212,7 +212,7 @@ def test_run_app_simulator_shut_down(first_app_config, tmp_path):
     command.subprocess.stream_output.assert_called_with(
         "log stream", log_stream_process
     )
-    command.subprocess.cleanup.assert_not_called()
+    command.subprocess.cleanup.assert_called_with("log stream", log_stream_process)
 
 
 def test_run_app_simulator_shutting_down(first_app_config, tmp_path):
@@ -331,7 +331,7 @@ def test_run_app_simulator_shutting_down(first_app_config, tmp_path):
     command.subprocess.stream_output.assert_called_with(
         "log stream", log_stream_process
     )
-    command.subprocess.cleanup.assert_not_called()
+    command.subprocess.cleanup.assert_called_with("log stream", log_stream_process)
 
 
 def test_run_app_simulator_boot_failure(first_app_config, tmp_path):

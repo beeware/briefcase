@@ -1,4 +1,5 @@
 import sys
+from contextlib import suppress
 
 from .cmdline import parse_cmdline
 from .console import Log
@@ -37,7 +38,8 @@ def main():
         if getattr(command, "save_log", False):
             log.capture_stacktrace()
     finally:
-        log.save_log_to_file(command)
+        with suppress(KeyboardInterrupt):
+            log.save_log_to_file(command)
 
     sys.exit(result)
 
