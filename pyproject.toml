@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=60", "setuptools_scm[toml]>=7.0"]
+build-backend = "setuptools.build_meta"
+
 [tool.isort]
 profile = "black"
 skip_glob = [
@@ -12,6 +16,9 @@ testpaths = ["tests"]
 
 # need to ensure build directories aren't excluded from recursion
 norecursedirs = []
+
+[tool.setuptools_scm]
+# To enable SCM versioning, we need an empty tool configuration for setuptools_scm
 
 [tool.towncrier]
 directory = "changes"
