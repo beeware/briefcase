@@ -11,7 +11,7 @@ skip_glob = [
 ]
 multi_line_output = 3
 
-[tool.pytest.ini_config]
+[tool.pytest.ini_options]
 testpaths = ["tests"]
 
 # need to ensure build directories aren't excluded from recursion

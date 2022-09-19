@@ -10,6 +10,7 @@ from typing import Optional
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from cookiecutter import exceptions as cookiecutter_exceptions
+from packaging.version import Version
 
 import briefcase
 from briefcase.config import BaseConfig
@@ -232,51 +233,26 @@ class CreateCommand(BaseCommand):
         """
         return {}
 
-    def generate_app_template(self, app: BaseConfig):
-        """Create an application bundle.
+    def _generate_app_template(self, app, extra_context):
+        """Perform the template update and clone for a specific app template.
+
+        Usually only called by `generate_app_template()`; assumes that app
+        has been updated with it's current template and template branch.
 
         :param app: The config object for the app
+        :param extra_context: Extra context to pass to the cookiecutter template
         """
-        # If the app config doesn't explicitly define a template,
-        # use a default template.
-        if app.template is None:
-            app.template = self.app_template_url
-        if app.template_branch is None:
-            app.template_branch = self.python_version_tag
-
-        self.logger.info(
-            f"Using app template: {app.template}, branch {app.template_branch}"
-        )
-
         # Make sure we have an updated cookiecutter template,
         # checked out to the right branch
         cached_template = self.update_cookiecutter_cache(
             template=app.template, branch=app.template_branch
         )
 
-        # Construct a template context from the app configuration.
-        extra_context = app.__dict__.copy()
-        # Augment with some extra fields.
-        extra_context.update(
-            {
-                # Properties of the generating environment
-                "python_version": platform.python_version(),
-                # Transformations of explicit properties into useful forms
-                "module_name": app.module_name,
-                "package_name": app.package_name,
-                # Properties that are a function of the execution
-                "year": date.today().strftime("%Y"),
-                "month": date.today().strftime("%B"),
-            }
-        )
-
-        # Add in any extra template context required by the output format.
-        extra_context.update(self.output_format_template_context(app))
+        # Create the platform directory (if it doesn't already exist)
+        output_path = self.bundle_path(app).parent
+        output_path.mkdir(parents=True, exist_ok=True)
 
         try:
-            # Create the platform directory (if it doesn't already exist)
-            output_path = self.bundle_path(app).parent
-            output_path.mkdir(parents=True, exist_ok=True)
             # Unroll the template
             self.cookiecutter(
                 str(cached_template),
@@ -294,8 +270,64 @@ class CreateCommand(BaseCommand):
             # or it isn't a cookiecutter template (i.e., no cookiecutter.json)
             raise InvalidTemplateRepository(app.template) from e
         except cookiecutter_exceptions.RepositoryCloneFailed as e:
-            # Branch does not exist for python version
+            # Branch does not exist.
             raise TemplateUnsupportedVersion(app.template_branch) from e
+
+    def generate_app_template(self, app: BaseConfig):
+        """Create an application bundle.
+
+        :param app: The config object for the app
+        """
+        # If the app config doesn't explicitly define a template,
+        # use a default template.
+        if app.template is None:
+            app.template = self.app_template_url
+        if app.template_branch is None:
+            version = Version(briefcase.__version__)
+            app.template_branch = f"v{version.base_version}"
+
+        # Construct a template context from the app configuration.
+        extra_context = app.__dict__.copy()
+
+        # Remove the context items that describe the template
+        extra_context.pop("template")
+        extra_context.pop("template_branch")
+
+        # Augment with some extra fields.
+        extra_context.update(
+            {
+                # Properties of the generating environment
+                # The full Python version string, including minor and dev/a/b/c suffixes (e.g., 3.11.0rc2)
+                "python_version": platform.python_version(),
+                # Transformations of explicit properties into useful forms
+                "module_name": app.module_name,
+                "package_name": app.package_name,
+                # Properties that are a function of the execution
+                "year": date.today().strftime("%Y"),
+                "month": date.today().strftime("%B"),
+            }
+        )
+
+        # Add in any extra template context required by the output format.
+        extra_context.update(self.output_format_template_context(app))
+
+        try:
+            self.logger.info(
+                f"Using app template: {app.template}, branch {app.template_branch}"
+            )
+            self._generate_app_template(app, extra_context)
+        except TemplateUnsupportedVersion:
+            # If we're *not* on a development branch, raise an error about
+            # the missing template branch.
+            if not version.dev:
+                raise
+
+            # Development branches can use the main template.
+            self.logger.info(
+                f"Branch template {app.template_branch} not found; falling back to development template"
+            )
+            app.template_branch = "main"
+            self._generate_app_template(app, extra_context)
 
     def _unpack_support_package(self, support_file_path, support_path):
         """Unpack a support package into a specific location.
