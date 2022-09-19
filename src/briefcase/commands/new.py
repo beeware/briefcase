@@ -7,7 +7,9 @@ from typing import Optional
 from urllib.parse import urlparse
 
 from cookiecutter import exceptions as cookiecutter_exceptions
+from packaging.version import Version
 
+import briefcase
 from briefcase.config import is_valid_app_name, is_valid_bundle_identifier
 from briefcase.exceptions import NetworkFailure
 
@@ -485,8 +487,11 @@ What GUI toolkit do you want to use for this project?""",
         self.logger.info()
         self.logger.info(f"Generating a new application '{context['formal_name']}'")
 
+        version = Version(briefcase.__version__)
+        branch = f"v{version.base_version}"
         cached_template = self.update_cookiecutter_cache(
-            template=template, branch="v0.3"
+            template=template,
+            branch=branch,
         )
 
         # Make extra sure we won't clobber an existing application.
@@ -501,7 +506,7 @@ What GUI toolkit do you want to use for this project?""",
                 str(cached_template),
                 no_input=True,
                 output_dir=os.fsdecode(self.base_path),
-                checkout="v0.3",
+                checkout=branch,
                 extra_context=context,
             )
         except subprocess.CalledProcessError as e:
