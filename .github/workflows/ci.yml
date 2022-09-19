@@ -195,6 +195,7 @@ jobs:
       run: |
         pip install --upgrade pip
         pip install --upgrade setuptools
+        pip install setuptools_scm
         pip install .
     - name: Create App
       run: |
