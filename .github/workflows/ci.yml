@@ -57,15 +57,15 @@ jobs:
         tox -e ${{ matrix.task }}
 
   smoke:
-    name: Smoke test (3.7)
+    name: Smoke test
     needs: beefore
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: Set up Python 3.7
+    - name: Set up Python
       uses: actions/setup-python@v3.1.2
       with:
-        python-version: "3.7"
+        python-version: ${{ env.python_version }}
     - name: Install dependencies
       run: |
         pip install --upgrade pip
@@ -92,7 +92,7 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.11.0-alpha - 3.11.0']
+        python-version: ['3.9', '3.10', '3.11.0-alpha - 3.11.0']
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
