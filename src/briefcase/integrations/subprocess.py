@@ -88,6 +88,23 @@ def get_process_id_by_command(
     return None
 
 
+class NativeAppContext:
+    """A wrapper around subprocess for use as an app-bound tool."""
+
+    def __init__(self, tools):
+        self.tools = tools
+
+    @classmethod
+    def verify(cls, tools, app):
+        """Make subprocess available as app-bound tool."""
+        # short circuit since already verified and available
+        if hasattr(tools[app], "app_context"):
+            return tools[app].app_context
+
+        tools[app].app_context = tools.subprocess
+        return tools[app].app_context
+
+
 class Subprocess:
     """A wrapper around subprocess that can be used as a logging point for
     commands that are executed."""
@@ -195,9 +212,10 @@ class Subprocess:
         """Make subprocess available in tool cache."""
         # short circuit since already verified and available
         if hasattr(tools, "subprocess"):
-            return
+            return tools.subprocess
 
         tools.subprocess = Subprocess(tools)
+        return tools.subprocess
 
     def run(self, args, stream_output=False, **kwargs):
         """A wrapper for subprocess.run().

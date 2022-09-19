@@ -1,1 +1,1 @@
-Briefcase performance improvements from third party tool creation and verification caching.
+The performance of Briefcase's tool verification process has been improved.

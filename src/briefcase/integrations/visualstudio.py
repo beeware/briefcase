@@ -44,7 +44,7 @@ class VisualStudio:
         """
         # short circuit since already verified and available
         if hasattr(tools, "visualstudio"):
-            return
+            return tools.visualstudio
 
         visualstudio = None
 
@@ -183,6 +183,7 @@ Then restart Briefcase.
             )
 
         tools.visualstudio = visualstudio
+        return visualstudio
 
     @property
     def managed_install(self):

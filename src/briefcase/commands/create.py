@@ -10,6 +10,7 @@ from typing import Optional
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from cookiecutter import exceptions as cookiecutter_exceptions
+from cookiecutter.main import cookiecutter
 
 import briefcase
 from briefcase.config import BaseConfig
@@ -19,6 +20,7 @@ from briefcase.exceptions import (
     NetworkFailure,
 )
 from briefcase.integrations import git
+from briefcase.integrations.subprocess import NativeAppContext
 
 from .base import (
     BaseCommand,
@@ -279,7 +281,7 @@ class CreateCommand(BaseCommand):
             output_path = self.bundle_path(app).parent
             output_path.mkdir(parents=True, exist_ok=True)
             # Unroll the template
-            self.tools.cookiecutter(
+            cookiecutter(
                 str(cached_template),
                 no_input=True,
                 output_dir=os.fsdecode(output_path),
@@ -457,7 +459,7 @@ class CreateCommand(BaseCommand):
                     pass
 
                 try:
-                    self.tools[app].subprocess.run(
+                    self.tools[app].app_context.run(
                         [
                             sys.executable,
                             "-m",
@@ -757,6 +759,11 @@ class CreateCommand(BaseCommand):
         """
         super().verify_tools()
         git.verify_git_is_installed(tools=self.tools)
+
+    def verify_app_tools(self, app: BaseConfig):
+        """Verify that tools needed to run the command for this app exist."""
+        super().verify_app_tools(app)
+        NativeAppContext.verify(tools=self.tools, app=app)
 
     def __call__(self, app: Optional[BaseConfig] = None, **options):
         # Confirm all required tools are available

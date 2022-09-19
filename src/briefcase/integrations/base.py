@@ -10,9 +10,6 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import DefaultDict
 
-import requests
-from cookiecutter.main import cookiecutter
-
 from briefcase.config import AppConfig
 from briefcase.console import Console, Log
 from briefcase.integrations.download import Download
@@ -27,11 +24,8 @@ class Tool(ABC):
 class ToolCache(Mapping):
     platform = platform
     os = os
-    requests = requests
     shutil = shutil
     sys = sys
-
-    cookiecutter = staticmethod(cookiecutter)
 
     def __init__(
         self,
@@ -45,7 +39,7 @@ class ToolCache(Mapping):
         Non-app-specific tools are available via attribute access:
             e.g.: tools.subprocess
         App-specific tools are available via dictionary access:
-            e.g.: tools[app].subprocess
+            e.g.: tools[app].app_context
 
         :param logger: Logger for console and logfile.
         :param console: Facilitates console interaction and input solicitation.
@@ -69,6 +63,7 @@ class ToolCache(Mapping):
             )
         )
 
+        # Built-in tools without any external dependencies
         Subprocess.verify(tools=self)
         Download.verify(tools=self)
 

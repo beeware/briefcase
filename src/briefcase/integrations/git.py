@@ -19,7 +19,7 @@ def verify_git_is_installed(tools):
     """
     # short circuit since already verified and available
     if hasattr(tools, "git"):
-        return
+        return tools.git
 
     # Check whether the git executable could be imported.
     try:
@@ -62,3 +62,4 @@ need to restart your terminal session.
             ) from e
 
     tools.git = git
+    return git

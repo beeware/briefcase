@@ -78,7 +78,7 @@ class LinuxDeployBase:
 
         # short circuit since already verified and available
         if not is_plugin and hasattr(tools, "linuxdeploy"):
-            return
+            return tools.linuxdeploy
 
         tool = cls(tools, **kwargs)
         if not tool.exists():
@@ -91,11 +91,10 @@ class LinuxDeployBase:
             else:
                 raise MissingToolError(cls.name)
 
-        # Return plugins so they can be used in context of the linuxdeploy tool
-        if is_plugin:
-            return tool
+        if not is_plugin:
+            tools.linuxdeploy = tool
 
-        tools.linuxdeploy = tool
+        return tool
 
     def uninstall(self):
         """Uninstall tool."""

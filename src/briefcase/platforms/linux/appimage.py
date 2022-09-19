@@ -12,8 +12,9 @@ from briefcase.commands import (
 )
 from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.integrations.docker import verify_docker, verify_docker_for_app
+from briefcase.integrations.docker import Docker, DockerAppContext
 from briefcase.integrations.linuxdeploy import LinuxDeploy
+from briefcase.integrations.subprocess import NativeAppContext
 from briefcase.platforms.linux import LinuxMixin
 
 
@@ -78,7 +79,7 @@ class LinuxAppImageMixin(LinuxAppImagePassiveMixin):
                     "Linux AppImages cannot be generated on Windows."
                 )
             else:
-                verify_docker(tools=self.tools)
+                Docker.verify(tools=self.tools)
         elif self.tools.host_os != "Linux":
             raise BriefcaseCommandError(
                 "Linux AppImages can only be generated on Linux without Docker."
@@ -92,9 +93,8 @@ class LinuxAppImageMixin(LinuxAppImagePassiveMixin):
 
         :param app: The application being built
         """
-        super().verify_app_tools(app)
         if self.use_docker:
-            verify_docker_for_app(
+            DockerAppContext.verify(
                 tools=self.tools,
                 app=app,
                 image_tag=self.docker_image_tag(app),
@@ -104,6 +104,11 @@ class LinuxAppImageMixin(LinuxAppImagePassiveMixin):
                 host_data_path=self.data_path,
                 python_version=self.python_version_tag,
             )
+        else:
+            NativeAppContext.verify(tools=self.tools, app=app)
+
+        # Establish Docker as app context before letting super set subprocess
+        super().verify_app_tools(app)
 
 
 class LinuxAppImageCreateCommand(LinuxAppImageMixin, CreateCommand):
@@ -155,7 +160,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
             # However, if we are running inside Docker, we need to know the
             # environment *inside* the Docker container.
             echo_cmd = ["/bin/sh", "-c", "echo $PATH"]
-            base_path = self.tools[app].subprocess.check_output(echo_cmd).strip()
+            base_path = self.tools[app].app_context.check_output(echo_cmd).strip()
 
             # Add any plugin-required environment variables
             for plugin in plugins.values():
@@ -207,7 +212,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
                     additional_args.extend(["--plugin", plugin])
 
                 # Build the AppImage.
-                self.tools[app].subprocess.run(
+                self.tools[app].app_context.run(
                     [
                         self.tools.linuxdeploy.file_path
                         / self.tools.linuxdeploy.file_name,

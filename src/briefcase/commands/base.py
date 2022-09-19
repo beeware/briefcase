@@ -145,17 +145,9 @@ class BaseCommand(ABC):
     def logger(self):
         return self.tools.logger
 
-    @logger.setter
-    def logger(self, val):
-        raise RuntimeError("'logger' is a readonly property for Commands")
-
     @property
     def input(self):
         return self.tools.input
-
-    @input.setter
-    def input(self, val):
-        raise RuntimeError("'input' is a readonly property for Commands")
 
     def check_obsolete_data_dir(self):
         """Inform user if obsolete data directory exists.
@@ -504,6 +496,7 @@ a custom location for Briefcase's tools.
 
     def verify_app_tools(self, app: BaseConfig):
         """Verify that tools needed to run the command for this app exist."""
+        pass
 
     def parse_options(self, extra):
         parser = argparse.ArgumentParser(

@@ -16,10 +16,13 @@ class Download:
 
     @classmethod
     def verify(cls, tools):
+        """Make downloader available in tool cache."""
+        # short circuit since already verified and available
         if hasattr(tools, "download"):
-            return
+            return tools.download
 
         tools.download = Download(tools=tools)
+        return tools.download
 
     def file(self, url, download_path, role=None):
         """Download a given URL, caching it. If it has already been downloaded,

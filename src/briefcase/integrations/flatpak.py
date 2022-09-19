@@ -22,7 +22,7 @@ class Flatpak:
         """
         # short circuit since already verified and available
         if hasattr(tools, "flatpak"):
-            return
+            return tools.flatpak
 
         flatpak = Flatpak(tools=tools)
         try:
@@ -134,6 +134,7 @@ You must install both flatpak and flatpak-builder.
             raise BriefcaseCommandError("Unable to invoke flatpak-builder.") from e
 
         tools.flatpak = flatpak
+        return flatpak
 
     def verify_repo(self, repo_alias, url):
         """Verify that the Flatpak repository has been registered.

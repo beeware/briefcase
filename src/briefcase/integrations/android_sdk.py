@@ -112,7 +112,7 @@ class AndroidSDK:
     def env(self):
         return {
             "ANDROID_SDK_ROOT": os.fsdecode(self.root_path),
-            "JAVA_HOME": str(self.tools.jdk.java_home),
+            "JAVA_HOME": str(self.tools.java.java_home),
         }
 
     @property
@@ -143,7 +143,7 @@ class AndroidSDK:
         """
         # short circuit since already verified and available
         if hasattr(tools, "android_sdk"):
-            return
+            return tools.android_sdk
 
         JDK.verify(tools=tools, install=install)
 
@@ -217,6 +217,7 @@ class AndroidSDK:
                     raise MissingToolError("Android SDK")
 
         tools.android_sdk = sdk
+        return sdk
 
     def exists(self):
         """Confirm that the SDK actually exists.

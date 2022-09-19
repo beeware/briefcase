@@ -67,7 +67,7 @@ class WiX:
         """
         # short circuit since already verified and available
         if hasattr(tools, "wix"):
-            return
+            return tools.wix
 
         if tools.host_os != "Windows":
             raise BriefcaseCommandError(
@@ -104,6 +104,7 @@ WiX Toolset. Current value: {wix_home!r}
                     raise MissingToolError("WiX")
 
         tools.wix = wix
+        return wix
 
     def exists(self):
         return (

@@ -11,7 +11,7 @@ from briefcase.exceptions import (
 
 
 class JDK:
-    name = "jdk"
+    name = "java"
     full_name = "Java JDK"
 
     def __init__(self, tools, java_home):
@@ -59,10 +59,10 @@ class JDK:
         :param install: Should the tool be installed if it is not found?
         """
         # short circuit since already verified and available
-        if hasattr(tools, "jdk"):
-            return
+        if hasattr(tools, "java"):
+            return tools.java
 
-        jdk = None
+        java = None
         java_home = tools.os.environ.get("JAVA_HOME", "")
         install_message = None
 
@@ -95,7 +95,7 @@ class JDK:
                 vparts = version_str.split(".")
                 if len(vparts) == 3 and vparts[:2] == ["1", "8"]:
                     # It appears to be a Java 8 JDK.
-                    jdk = JDK(tools, java_home=Path(java_home))
+                    java = JDK(tools, java_home=Path(java_home))
                 else:
                     # It's not a Java 8 JDK.
                     install_message = f"""
@@ -188,7 +188,7 @@ class JDK:
 
 """
 
-        if jdk is None:
+        if java is None:
             # If we've reached this point, any user-provided JAVA_HOME is broken;
             # use the Briefcase one.
             java_home = tools.base_path / "java"
@@ -198,9 +198,9 @@ class JDK:
             if tools.host_os == "Darwin":
                 java_home = java_home / "Contents" / "Home"
 
-            jdk = JDK(tools, java_home=java_home)
+            java = JDK(tools, java_home=java_home)
 
-            if not jdk.exists():
+            if not java.exists():
                 if install:
                     # We only display the warning messages on the pass where we actually
                     # install the JDK.
@@ -210,11 +210,12 @@ class JDK:
                         "The Java JDK was not found; downloading and installing...",
                         prefix=cls.name,
                     )
-                    jdk.install()
+                    java.install()
                 else:
                     raise MissingToolError("Java")
 
-        tools.jdk = jdk
+        tools.java = java
+        return java
 
     def exists(self):
         return (self.java_home / "bin").exists()

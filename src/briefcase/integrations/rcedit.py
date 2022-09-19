@@ -27,7 +27,7 @@ class RCEdit:
         """
         # short circuit since already verified and available
         if hasattr(tools, "rcedit"):
-            return
+            return tools.rcedit
 
         rcedit = RCEdit(tools)
 
@@ -42,6 +42,7 @@ class RCEdit:
                 raise MissingToolError("RCEdit")
 
         tools.rcedit = rcedit
+        return rcedit
 
     def exists(self):
         return self.rcedit_path.exists()
