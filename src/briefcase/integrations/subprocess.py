@@ -6,6 +6,7 @@ import subprocess
 import sys
 import threading
 import time
+from contextlib import suppress
 from pathlib import Path
 
 import psutil
@@ -285,7 +286,7 @@ class Subprocess:
             self.stream_output(args[0], process)
             if process.stderr and kwargs["stderr"] != subprocess.STDOUT:
                 stderr = process.stderr.read()
-            return_code = process.poll()
+        return_code = process.poll()
         self._log_return_code(return_code)
 
         if check and return_code:
@@ -407,6 +408,8 @@ class Subprocess:
             self.tools.logger.info("Stopping...")
             # allow time for CTRL+C to propagate to the child process
             time.sleep(0.25)
+            # re-raise to exit as "Aborted by user"
+            raise
         finally:
             self.cleanup(label, popen_process)
             streamer_deadline = time.time() + 3
@@ -422,14 +425,18 @@ class Subprocess:
 
         :param popen_process: popen process to stream stdout
         """
-        while True:
-            # readline should always return at least a newline (ie \n)
-            # UNLESS the underlying process is exiting/gone; then "" is returned
-            output_line = ensure_str(popen_process.stdout.readline())
-            if output_line:
-                self.tools.logger.info(output_line)
-            elif output_line == "":
-                return
+        # ValueError is raised if stdout is unexpectedly closed.
+        # This can happen if the user starts spamming CTRL+C, for instance.
+        # Silently exit to avoid Python printing the exception to the console.
+        with suppress(ValueError):
+            while True:
+                # readline should always return at least a newline (ie \n)
+                # UNLESS the underlying process is exiting/gone; then "" is returned
+                output_line = ensure_str(popen_process.stdout.readline())
+                if output_line:
+                    self.tools.logger.info(output_line)
+                elif output_line == "":
+                    return
 
     def cleanup(self, label, popen_process):
         """Clean up after a Popen process, gracefully terminating if possible;

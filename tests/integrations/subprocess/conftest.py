@@ -46,7 +46,7 @@ def popen_process():
     # Mock the readline values of an actual process. The final return value is "",
     # indicating that the process has exited; however, we insert a short sleep
     # to ensure that any other threads will have a chance to run before this
-    # thread acutally terminates.
+    # thread actually terminates.
     def mock_readline():
         yield from [
             "output line 1\n",
