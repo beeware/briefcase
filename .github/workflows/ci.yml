@@ -51,7 +51,7 @@ jobs:
       run: |
         pip install --upgrade pip
         pip install --upgrade setuptools
-        pip install tox
+        pip install setuptools_scm tox
     - name: Run pre-test check
       run: |
         tox -e ${{ matrix.task }}
@@ -70,7 +70,7 @@ jobs:
       run: |
         pip install --upgrade pip
         pip install --upgrade setuptools
-        pip install tox
+        pip install setuptools_scm tox
     - name: Test
       run: |
         tox -e py
@@ -103,7 +103,7 @@ jobs:
       run: |
         pip install --upgrade pip
         pip install --upgrade setuptools
-        pip install tox
+        pip install setuptools_scm tox
     - name: Test
       run: |
         tox -e py
@@ -133,7 +133,7 @@ jobs:
       run: |
         pip install --upgrade pip
         pip install --upgrade setuptools
-        pip install tox
+        pip install setuptools_scm tox
     - name: Test
       run: |
         tox -e py
