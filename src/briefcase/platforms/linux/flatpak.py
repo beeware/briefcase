@@ -92,8 +92,7 @@ class LinuxFlatpakMixin(LinuxMixin):
 class LinuxFlatpakCreateCommand(LinuxFlatpakMixin, CreateCommand):
     description = "Create and populate a Linux Flatpak."
 
-    @property
-    def support_package_url(self):
+    def support_package_url(self, support_revision):
         """The URL of the support package to use for apps of this type.
 
         Flatpak uses the original CPython sources, and compiles them in

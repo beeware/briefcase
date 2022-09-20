@@ -18,6 +18,9 @@ def test_install_app_support_package(first_app_config, tmp_path):
     support_path = lib_path / "Python" / "Support"
     support_path.mkdir(parents=True)
 
+    # To avoid needing to generate a briefcase.toml, set an app support revision
+    first_app_config.support_revision = 37
+
     create_command = macOSAppCreateCommand(base_path=tmp_path)
 
     # Modify download_file to return the temp zipfile

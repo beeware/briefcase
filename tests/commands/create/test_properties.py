@@ -104,8 +104,8 @@ def test_cleanup_paths(create_command, myapp):
 
 def test_support_package_url(create_command):
     # Retrieve the property, retrieving the support package URL.
-    url = "https://briefcase-support.org/python?platform=tester&version=3.X&arch=gothic"
-    assert create_command.support_package_url == url
+    url = "https://briefcase-support.s3.amazonaws.com/python/3.X/tester/Python-3.X-tester-support.b52.tar.gz"
+    assert create_command.support_package_url(52) == url
 
 
 def test_no_icon(create_command, myapp):

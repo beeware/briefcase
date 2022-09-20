@@ -1,5 +1,4 @@
 import os
-import struct
 import subprocess
 import uuid
 
@@ -22,14 +21,14 @@ class WindowsMixin:
 
 
 class WindowsCreateCommand(CreateCommand):
-    @property
-    def support_package_url_query(self):
-        """The query arguments to use in a support package query request."""
-        return [
-            ("platform", self.platform),
-            ("version", self.python_version_tag),
-            ("arch", "amd64" if (struct.calcsize("P") * 8) == 64 else "win32"),
-        ]
+    def support_package_filename(self, support_revision):
+        return f"python-{self.python_version_tag}.{support_revision}-embed-amd64.zip"
+
+    def support_package_url(self, support_revision):
+        return (
+            f"https://www.python.org/ftp/python/{self.python_version_tag}.{support_revision}/"
+            + self.support_package_filename(support_revision)
+        )
 
     def output_format_template_context(self, app: BaseConfig):
         """Additional template context required by the output format.

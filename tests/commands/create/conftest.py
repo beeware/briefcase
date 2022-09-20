@@ -173,6 +173,7 @@ def app_packages_path_index(bundle_path):
                 "app_path": "path/to/app",
                 "app_packages_path": "path/to/app_packages",
                 "support_path": "path/to/support",
+                "support_revision": 37,
             }
         }
         tomli_w.dump(index, f)
@@ -186,6 +187,7 @@ def app_requirements_path_index(bundle_path):
                 "app_path": "path/to/app",
                 "app_requirements_path": "path/to/requirements.txt",
                 "support_path": "path/to/support",
+                "support_revision": 37,
             }
         }
         tomli_w.dump(index, f)

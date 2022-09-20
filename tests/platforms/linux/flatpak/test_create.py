@@ -31,7 +31,7 @@ def test_support_package_url(tmp_path, sys_version_info, platform_version, url):
     command.stdlib_platform = mock.MagicMock()
     command.stdlib_platform.python_version.return_value = platform_version
 
-    assert command.support_package_url == url
+    assert command.support_package_url(52) == url
 
 
 def test_output_format_template_context(first_app_config, tmp_path):
@@ -56,6 +56,9 @@ def test_install_support_package(first_app_config, tmp_path):
     command.download_file = mock.MagicMock(
         return_value=tmp_path / "support" / "Python-3.X.Y.tgz"
     )
+
+    # To avoid needing to generate a briefcase.toml, set an app support revision
+    first_app_config.support_revision = 37
 
     command.install_app_support_package(first_app_config)
 

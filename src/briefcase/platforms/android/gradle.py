@@ -101,6 +101,12 @@ class GradleMixin:
 class GradleCreateCommand(GradleMixin, CreateCommand):
     description = "Create and populate an Android Gradle project."
 
+    def support_package_filename(self, support_revision):
+        """The query arguments to use in a support package query request."""
+        return (
+            f"Python-{self.python_version_tag}-Android-support.b{support_revision}.zip"
+        )
+
     def output_format_template_context(self, app: BaseConfig):
         """Additional template context required by the output format.
 

@@ -121,14 +121,9 @@ class LinuxAppImageMixin(LinuxAppImagePassiveMixin):
 class LinuxAppImageCreateCommand(LinuxAppImageMixin, CreateCommand):
     description = "Create and populate a Linux AppImage."
 
-    @property
-    def support_package_url_query(self):
+    def support_package_filename(self, support_revision):
         """The query arguments to use in a support package query request."""
-        return [
-            ("platform", self.platform),
-            ("version", self.python_version_tag),
-            ("arch", self.host_arch),
-        ]
+        return f"Python-{self.python_version_tag}-linux-{self.host_arch}-support.b{support_revision}.tar.gz"
 
     def install_app_dependencies(self, app: AppConfig):
         """Install application dependencies.
