@@ -10,8 +10,10 @@ from cookiecutter import exceptions as cookiecutter_exceptions
 from git import exc as git_exceptions
 
 import briefcase
-from briefcase.commands.base import TemplateUnsupportedVersion
-from briefcase.commands.create import InvalidTemplateRepository
+from briefcase.commands.base import (
+    InvalidTemplateRepository,
+    TemplateUnsupportedVersion,
+)
 from briefcase.exceptions import NetworkFailure
 
 

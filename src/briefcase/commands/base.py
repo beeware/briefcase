@@ -4,6 +4,7 @@ import inspect
 import os
 import platform
 import shutil
+import subprocess
 import sys
 from abc import ABC, abstractmethod
 from cgi import parse_header
@@ -11,6 +12,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 import requests
+from cookiecutter import exceptions as cookiecutter_exceptions
 from cookiecutter.main import cookiecutter
 from cookiecutter.repository import is_repo_url
 from platformdirs import PlatformDirs
@@ -32,6 +34,14 @@ from briefcase.exceptions import (
     NetworkFailure,
 )
 from briefcase.integrations.subprocess import Subprocess
+
+
+class InvalidTemplateRepository(BriefcaseCommandError):
+    def __init__(self, template):
+        self.template = template
+        super().__init__(
+            f"Unable to clone application template; is the template path {template!r} correct?"
+        )
 
 
 class TemplateUnsupportedVersion(BriefcaseCommandError):
@@ -768,3 +778,39 @@ or delete the old data directory, and re-run Briefcase.
             cached_template = template
 
         return cached_template
+
+    def generate_template(self, template, branch, output_path, extra_context):
+        """Perform the template update and clone for a specific app template.
+
+        Usually only called by `generate_app_template()`; assumes that app
+        has been updated with it's current template and template branch.
+
+        :param app: The config object for the app
+        :param extra_context: Extra context to pass to the cookiecutter template
+        """
+        # Make sure we have an updated cookiecutter template,
+        # checked out to the right branch
+        cached_template = self.update_cookiecutter_cache(
+            template=template, branch=branch
+        )
+
+        try:
+            # Unroll the template
+            self.cookiecutter(
+                str(cached_template),
+                no_input=True,
+                output_dir=str(output_path),
+                checkout=branch,
+                extra_context=extra_context,
+            )
+        except subprocess.CalledProcessError as e:
+            # Computer is offline
+            # status code == 128 - certificate validation error.
+            raise NetworkFailure("clone template repository") from e
+        except cookiecutter_exceptions.RepositoryNotFound as e:
+            # Either the template path is invalid,
+            # or it isn't a cookiecutter template (i.e., no cookiecutter.json)
+            raise InvalidTemplateRepository(template) from e
+        except cookiecutter_exceptions.RepositoryCloneFailed as e:
+            # Branch does not exist.
+            raise TemplateUnsupportedVersion(branch) from e

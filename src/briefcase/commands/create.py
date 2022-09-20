@@ -9,16 +9,11 @@ from pathlib import Path
 from typing import Optional
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
-from cookiecutter import exceptions as cookiecutter_exceptions
 from packaging.version import Version
 
 import briefcase
 from briefcase.config import BaseConfig
-from briefcase.exceptions import (
-    BriefcaseCommandError,
-    MissingNetworkResourceError,
-    NetworkFailure,
-)
+from briefcase.exceptions import BriefcaseCommandError, MissingNetworkResourceError
 
 from .base import (
     BaseCommand,
@@ -26,14 +21,6 @@ from .base import (
     UnsupportedPlatform,
     full_options,
 )
-
-
-class InvalidTemplateRepository(BriefcaseCommandError):
-    def __init__(self, template):
-        self.template = template
-        super().__init__(
-            f"Unable to clone application template; is the template path {template!r} correct?"
-        )
 
 
 class InvalidSupportPackage(BriefcaseCommandError):
@@ -233,46 +220,6 @@ class CreateCommand(BaseCommand):
         """
         return {}
 
-    def _generate_app_template(self, app, extra_context):
-        """Perform the template update and clone for a specific app template.
-
-        Usually only called by `generate_app_template()`; assumes that app
-        has been updated with it's current template and template branch.
-
-        :param app: The config object for the app
-        :param extra_context: Extra context to pass to the cookiecutter template
-        """
-        # Make sure we have an updated cookiecutter template,
-        # checked out to the right branch
-        cached_template = self.update_cookiecutter_cache(
-            template=app.template, branch=app.template_branch
-        )
-
-        # Create the platform directory (if it doesn't already exist)
-        output_path = self.bundle_path(app).parent
-        output_path.mkdir(parents=True, exist_ok=True)
-
-        try:
-            # Unroll the template
-            self.cookiecutter(
-                str(cached_template),
-                no_input=True,
-                output_dir=os.fsdecode(output_path),
-                checkout=app.template_branch,
-                extra_context=extra_context,
-            )
-        except subprocess.CalledProcessError as e:
-            # Computer is offline
-            # status code == 128 - certificate validation error.
-            raise NetworkFailure("clone template repository") from e
-        except cookiecutter_exceptions.RepositoryNotFound as e:
-            # Either the template path is invalid,
-            # or it isn't a cookiecutter template (i.e., no cookiecutter.json)
-            raise InvalidTemplateRepository(app.template) from e
-        except cookiecutter_exceptions.RepositoryCloneFailed as e:
-            # Branch does not exist.
-            raise TemplateUnsupportedVersion(app.template_branch) from e
-
     def generate_app_template(self, app: BaseConfig):
         """Create an application bundle.
 
@@ -311,11 +258,20 @@ class CreateCommand(BaseCommand):
         # Add in any extra template context required by the output format.
         extra_context.update(self.output_format_template_context(app))
 
+        # Create the platform directory (if it doesn't already exist)
+        output_path = self.bundle_path(app).parent
+        output_path.mkdir(parents=True, exist_ok=True)
+
         try:
             self.logger.info(
                 f"Using app template: {app.template}, branch {app.template_branch}"
             )
-            self._generate_app_template(app, extra_context)
+            self.generate_template(
+                template=app.template,
+                branch=app.template_branch,
+                output_path=output_path,
+                extra_context=extra_context,
+            )
         except TemplateUnsupportedVersion:
             # If we're *not* on a development branch, raise an error about
             # the missing template branch.
@@ -324,10 +280,15 @@ class CreateCommand(BaseCommand):
 
             # Development branches can use the main template.
             self.logger.info(
-                f"Branch template {app.template_branch} not found; falling back to development template"
+                f"Template branch {app.template_branch} not found; falling back to development template"
             )
             app.template_branch = "main"
-            self._generate_app_template(app, extra_context)
+            self.generate_template(
+                template=app.template,
+                branch=app.template_branch,
+                output_path=output_path,
+                extra_context=extra_context,
+            )
 
     def _unpack_support_package(self, support_file_path, support_path):
         """Unpack a support package into a specific location.
