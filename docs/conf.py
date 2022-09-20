@@ -12,7 +12,7 @@
 import os
 import sys
 
-from importlib.metadata import version as scm_version
+from importlib.metadata import version as metadata_version
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -49,7 +49,7 @@ copyright = "2019, Russell Keith-Magee"
 # built documents.
 #
 # The full version, including alpha/beta/rc tags.
-version = scm_version("briefcase")
+version = metadata_version("briefcase")
 
 autoclass_content = "both"
 
