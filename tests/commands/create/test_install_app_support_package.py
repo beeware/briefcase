@@ -370,3 +370,16 @@ def test_no_support_path(create_command, myapp, no_support_path_index):
     create_command.download_file = mock.MagicMock()
     create_command.install_app_support_package(myapp)
     create_command.download_file.assert_not_called()
+
+
+def test_no_support_revision(create_command, myapp, no_support_revision_index):
+    """If support_revision is not listed in briefcase.toml, a support package
+    will not be downloaded."""
+    create_command.download_file = mock.MagicMock()
+
+    # An error is raised when attempting to install the support package
+    with pytest.raises(MissingSupportPackage):
+        create_command.install_app_support_package(myapp)
+
+    # No download attempt is made.
+    create_command.download_file.assert_not_called()

@@ -1,3 +1,5 @@
+import sys
+
 import pytest
 
 from briefcase.platforms.android.gradle import GradleCreateCommand
@@ -7,6 +9,14 @@ from briefcase.platforms.android.gradle import GradleCreateCommand
 def create_command(tmp_path, first_app_config):
     command = GradleCreateCommand(base_path=tmp_path / "base_path")
     return command
+
+
+def test_support_package_filename(create_command):
+    """The Android support package filename has been customized."""
+    assert (
+        create_command.support_package_filename(52)
+        == f"Python-3.{sys.version_info.minor}-Android-support.b52.zip"
+    )
 
 
 @pytest.mark.parametrize(
