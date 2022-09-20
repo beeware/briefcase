@@ -6,15 +6,16 @@ import pytest
 from briefcase.platforms.linux.appimage import LinuxAppImageCreateCommand
 
 
-def test_support_package_filename(tmp_path):
+def test_support_package_url(tmp_path):
     command = LinuxAppImageCreateCommand(base_path=tmp_path)
 
     # Set some properties of the host system for test purposes.
     command.host_arch = "wonky"
 
     assert (
-        command.support_package_filename(52)
-        == f"Python-3.{sys.version_info.minor}-linux-wonky-support.b52.tar.gz"
+        command.support_package_url(52)
+        == f"https://briefcase-support.s3.amazonaws.com/python/3.{sys.version_info.minor}/linux/wonky/"
+        f"Python-3.{sys.version_info.minor}-linux-wonky-support.b52.tar.gz"
     )
 
 

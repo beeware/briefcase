@@ -125,6 +125,14 @@ class LinuxAppImageCreateCommand(LinuxAppImageMixin, CreateCommand):
         """The query arguments to use in a support package query request."""
         return f"Python-{self.python_version_tag}-linux-{self.host_arch}-support.b{support_revision}.tar.gz"
 
+    def support_package_url(self, support_revision):
+        """The URL of the support package to use for apps of this type."""
+        return (
+            "https://briefcase-support.s3.amazonaws.com/"
+            f"python/{self.python_version_tag}/{self.platform}/{self.host_arch}/"
+            + self.support_package_filename(support_revision)
+        )
+
     def install_app_dependencies(self, app: AppConfig):
         """Install application dependencies.
 
