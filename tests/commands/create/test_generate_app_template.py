@@ -48,18 +48,23 @@ def full_context():
 
 
 @pytest.mark.parametrize(
-    "briefcase_version",
+    "briefcase_version, expected_branch",
     [
-        "37.42.7",
-        "37.42.7.dev73+gad61a29.d20220919",
-        "37.42.7a1",
-        "37.42.7b2",
-        "37.42.7rc3",
-        "37.42.7.post1",
+        ("37.42.1", "v37.42.1"),
+        ("37.42.2.dev73+gad61a29.d20220919", "v37.42.2"),
+        ("37.42.3a1", "v37.42.3"),
+        ("37.42.4b2", "v37.42.4"),
+        ("37.42.5rc3", "v37.42.5"),
+        ("37.42.6.post1", "v37.42.6"),
     ],
 )
 def test_default_template(
-    monkeypatch, create_command, myapp, full_context, briefcase_version
+    monkeypatch,
+    create_command,
+    myapp,
+    full_context,
+    briefcase_version,
+    expected_branch,
 ):
     """Absent of other information, the briefcase version (without suffixes) is
     used as the template branch."""
@@ -83,7 +88,7 @@ def test_default_template(
     create_command.cookiecutter.assert_called_once_with(
         "https://github.com/beeware/briefcase-tester-dummy-template.git",
         no_input=True,
-        checkout="v37.42.7",
+        checkout=expected_branch,
         output_dir=os.fsdecode(create_command.platform_path),
         extra_context=full_context,
     )
@@ -117,24 +122,22 @@ def test_default_template_dev(monkeypatch, create_command, myapp, full_context):
     )
 
     # Cookiecutter was invoked with the expected template name and context.
-    create_command.cookiecutter.assert_has_calls(
-        [
-            mock.call(
-                "https://github.com/beeware/briefcase-tester-dummy-template.git",
-                no_input=True,
-                checkout="v37.42.7",
-                output_dir=os.fsdecode(create_command.platform_path),
-                extra_context=full_context,
-            ),
-            mock.call(
-                "https://github.com/beeware/briefcase-tester-dummy-template.git",
-                no_input=True,
-                checkout="main",
-                output_dir=os.fsdecode(create_command.platform_path),
-                extra_context=full_context,
-            ),
-        ]
-    )
+    assert create_command.cookiecutter.mock_calls == [
+        mock.call(
+            "https://github.com/beeware/briefcase-tester-dummy-template.git",
+            no_input=True,
+            checkout="v37.42.7",
+            output_dir=os.fsdecode(create_command.platform_path),
+            extra_context=full_context,
+        ),
+        mock.call(
+            "https://github.com/beeware/briefcase-tester-dummy-template.git",
+            no_input=True,
+            checkout="main",
+            output_dir=os.fsdecode(create_command.platform_path),
+            extra_context=full_context,
+        ),
+    ]
 
 
 def test_explicit_branch(monkeypatch, create_command, myapp, full_context):

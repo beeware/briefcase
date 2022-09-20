@@ -15,17 +15,23 @@ def new_command(tmp_path):
 
 
 @pytest.mark.parametrize(
-    "briefcase_version",
+    "briefcase_version, expected_branch",
     [
-        "37.42.7",
-        "37.42.7.dev73+gad61a29.d20220919",
-        "37.42.7a1",
-        "37.42.7b2",
-        "37.42.7rc3",
-        "37.42.7.post1",
+        ("37.42.1", "v37.42.1"),
+        ("37.42.2.dev73+gad61a29.d20220919", "v37.42.2"),
+        ("37.42.3a1", "v37.42.3"),
+        ("37.42.4b2", "v37.42.4"),
+        ("37.42.5rc3", "v37.42.5"),
+        ("37.42.6.post1", "v37.42.6"),
     ],
 )
-def test_new_app(monkeypatch, new_command, tmp_path, briefcase_version):
+def test_new_app(
+    monkeypatch,
+    new_command,
+    tmp_path,
+    briefcase_version,
+    expected_branch,
+):
     """A new app can be created with the default template."""
     monkeypatch.setattr(briefcase, "__version__", briefcase_version)
     app_context = {
@@ -47,14 +53,14 @@ def test_new_app(monkeypatch, new_command, tmp_path, briefcase_version):
     # Template is updated
     new_command.update_cookiecutter_cache.assert_called_with(
         template="https://github.com/beeware/briefcase-template",
-        branch="v37.42.7",
+        branch=expected_branch,
     )
     # Cookiecutter is invoked
     new_command.cookiecutter.assert_called_with(
         "~/.cookiecutters/briefcase-template",
         no_input=True,
         output_dir=os.fsdecode(tmp_path),
-        checkout="v37.42.7",
+        checkout=expected_branch,
         extra_context=app_context,
     )
 
@@ -88,18 +94,16 @@ def test_new_app_dev(monkeypatch, new_command, tmp_path):
     # App context is constructed
     new_command.build_app_context.assert_called_with()
     # Template is updated
-    new_command.update_cookiecutter_cache.assert_has_calls(
-        [
-            mock.call(
-                template="https://github.com/beeware/briefcase-template",
-                branch="v37.42.7",
-            ),
-            mock.call(
-                template="https://github.com/beeware/briefcase-template",
-                branch="main",
-            ),
-        ]
-    )
+    assert new_command.update_cookiecutter_cache.mock_calls == [
+        mock.call(
+            template="https://github.com/beeware/briefcase-template",
+            branch="v37.42.7",
+        ),
+        mock.call(
+            template="https://github.com/beeware/briefcase-template",
+            branch="main",
+        ),
+    ]
 
     # Cookiecutter is invoked twice
     new_command.cookiecutter.assert_has_calls(
