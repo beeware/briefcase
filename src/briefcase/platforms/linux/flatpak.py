@@ -102,6 +102,17 @@ class LinuxFlatpakCreateCommand(LinuxFlatpakMixin, CreateCommand):
         full_version = self.stdlib_platform.python_version()
         return f"https://www.python.org/ftp/python/{base_version}/Python-{full_version}.tgz"
 
+    def support_revision(self, app: AppConfig):
+        """The support package revision that the template requires.
+
+        Flatpak uses the original CPython sources, so a support revision
+        isn't needed.
+
+        :param app: The config object for the app
+        :return: None; value should be ignored.
+        """
+        return None
+
     def output_format_template_context(self, app: AppConfig):
         """Add flatpak runtime/SDK details to the app template."""
         return {
