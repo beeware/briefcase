@@ -3,6 +3,26 @@
 from jinja2.ext import Extension
 
 
+class PythonVersionExtension(Extension):
+    """Jinja2 extension to convert a full Python version string (3.11.0rc1)
+    into useful values."""
+
+    def __init__(self, environment):
+        """Initialize the extension with the given environment."""
+        super().__init__(environment)
+
+        def py_tag(obj):
+            """A Python version tag (3.11)"""
+            return ".".join(obj.split(".")[:2])
+
+        def py_libtag(obj):
+            """A Python version library tag (311)"""
+            return "".join(obj.split(".")[:2])
+
+        environment.filters["py_tag"] = py_tag
+        environment.filters["py_libtag"] = py_libtag
+
+
 class RGBExtension(Extension):
     """Jinja2 extension to convert a hex RGB color to float values."""
 
