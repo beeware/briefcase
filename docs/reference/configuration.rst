@@ -368,8 +368,10 @@ the output format and Python version.
 
 The branch of the project template to use when generating the app. If the
 template is a local file, this attribute will be ignored. If not specified,
-Briefcase will use a branch matching the Python version in use (i.e., the `3.8`
-branch will be used when Python 3.8 is used to generate the app).
+Briefcase will use a branch matching the version of Briefcase that is being used
+(i.e., if you're using Briefcase 0.3.9, Briefcase will use the `v0.3.9` template
+branch when generating the app). If you're using a development version of
+Briefcase, Briefcase will use the `main` branch of the template.
 
 ``url``
 ~~~~~~~
