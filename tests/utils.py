@@ -1,4 +1,6 @@
+import io
 import os
+import tarfile
 import zipfile
 from unittest.mock import MagicMock
 
@@ -56,7 +58,7 @@ def create_file(filepath, content, mode="w", chmod=None):
 
 
 def create_zip_file(zippath, content):
-    """A test utility to create a file with known content.
+    """A test utility to create a .zip file with known content.
 
     Ensures that the directory for the file exists, and writes a file with
     specific content.
@@ -72,6 +74,28 @@ def create_zip_file(zippath, content):
             f.writestr(path, data=data)
 
     return zippath
+
+
+def create_tgz_file(tgzpath, content):
+    """A test utility to create a .tar.gz file with known content.
+
+    Ensures that the directory for the file exists, and writes a file with
+    specific content.
+
+    :param tgzpath: The path for the ZIP file to create
+    :param content: A list of pairs; each pair is (path, data) describing
+        an item to be added to the zip file.
+    :returns: The path to the file that was created.
+    """
+    tgzpath.parent.mkdir(parents=True, exist_ok=True)
+    with tarfile.open(tgzpath, "w:gz") as f:
+        for path, data in content:
+            tarinfo = tarfile.TarInfo(path)
+            payload = data.encode("utf-8")
+            tarinfo.size = len(payload)
+            f.addfile(tarinfo, io.BytesIO(payload))
+
+    return tgzpath
 
 
 def mock_file_download(filename, content, mode="w", role=None):
@@ -102,5 +126,18 @@ def mock_zip_download(filename, content, role=None):
 
     def _download_file(url, download_path, role):
         return create_zip_file(download_path / filename, content)
+
+    return _download_file
+
+
+def mock_tgz_download(filename, content, role=None):
+    """Create a side effect function that mocks the download of a .tar.gz file.
+
+    :param content: A string containing the content to write.
+    :returns: a function that can act as a mock side effect for `download_file()`
+    """
+
+    def _download_file(url, download_path, role):
+        return create_tgz_file(download_path / filename, content)
 
     return _download_file
