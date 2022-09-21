@@ -155,6 +155,7 @@ class AndroidSDK:
             if sdk.exists():
                 sdk.verify_license()
             else:
+                sdk = None
                 tools.logger.warning(
                     f"""
 *************************************************************************

@@ -4,9 +4,9 @@ from briefcase.integrations.linuxdeploy import LinuxDeployLocalFilePlugin
 
 
 @pytest.fixture
-def linuxdeploy_plugin(mock_command, tmp_path):
+def linuxdeploy_plugin(mock_tools, tmp_path):
     return LinuxDeployLocalFilePlugin(
-        mock_command,
+        mock_tools,
         plugin_path=tmp_path / "path" / "to" / "linuxdeploy-plugin-custom.sh",
         bundle_path=tmp_path / "bundle",
     )

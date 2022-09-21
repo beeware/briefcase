@@ -20,25 +20,25 @@ from .utils import (
 
 
 @pytest.fixture
-def linuxdeploy(mock_command):
-    return LinuxDeploy(mock_command)
+def linuxdeploy(mock_tools):
+    return LinuxDeploy(mock_tools)
 
 
-def test_no_plugins(linuxdeploy, mock_command, tmp_path):
+def test_no_plugins(linuxdeploy, mock_tools, tmp_path):
     """If there are no plugins, verify is a no-op."""
 
     plugins = linuxdeploy.verify_plugins([], bundle_path=tmp_path / "bundle")
 
-    mock_command.download_file.assert_not_called()
+    mock_tools.download.file.assert_not_called()
 
     assert plugins == {}
 
 
-def test_gtk_plugin(linuxdeploy, mock_command, tmp_path):
+def test_gtk_plugin(linuxdeploy, mock_tools, tmp_path):
     """The GTK plugin can be verified."""
 
     # Mock a successful download
-    mock_command.download_file.side_effect = side_effect_create_mock_tool(
+    mock_tools.download.file.side_effect = side_effect_create_mock_tool(
         tmp_path / "tools" / "linuxdeploy_plugins" / "gtk" / "linuxdeploy-plugin-gtk.sh"
     )
 
@@ -47,18 +47,18 @@ def test_gtk_plugin(linuxdeploy, mock_command, tmp_path):
     assert plugins.keys() == {"gtk"}
     assert isinstance(plugins["gtk"], LinuxDeployGtkPlugin)
 
-    mock_command.download_file.assert_called_with(
+    mock_tools.download.file.assert_called_with(
         url="https://raw.githubusercontent.com/linuxdeploy/linuxdeploy-plugin-gtk/master/linuxdeploy-plugin-gtk.sh",
         download_path=tmp_path / "tools" / "linuxdeploy_plugins" / "gtk",
         role="linuxdeploy GTK plugin",
     )
 
 
-def test_qt_plugin(linuxdeploy, mock_command, tmp_path):
+def test_qt_plugin(linuxdeploy, mock_tools, tmp_path):
     """The Qt plugin can be verified."""
 
     # Mock a successful download
-    mock_command.download_file.side_effect = side_effect_create_mock_appimage(
+    mock_tools.download.file.side_effect = side_effect_create_mock_appimage(
         tmp_path
         / "tools"
         / "linuxdeploy_plugins"
@@ -71,7 +71,7 @@ def test_qt_plugin(linuxdeploy, mock_command, tmp_path):
     assert plugins.keys() == {"qt"}
     assert isinstance(plugins["qt"], LinuxDeployQtPlugin)
 
-    mock_command.download_file.assert_called_with(
+    mock_tools.download.file.assert_called_with(
         url=(
             "https://github.com/linuxdeploy/linuxdeploy-plugin-qt/"
             "releases/download/continuous/linuxdeploy-plugin-qt-wonky.AppImage"
@@ -81,11 +81,11 @@ def test_qt_plugin(linuxdeploy, mock_command, tmp_path):
     )
 
 
-def test_custom_url_plugin(linuxdeploy, mock_command, tmp_path):
+def test_custom_url_plugin(linuxdeploy, mock_tools, tmp_path):
     """A Custom URL plugin can be verified."""
 
     # Mock a successful download
-    mock_command.download_file.side_effect = side_effect_create_mock_appimage(
+    mock_tools.download.file.side_effect = side_effect_create_mock_appimage(
         tmp_path
         / "tools"
         / "linuxdeploy_plugins"
@@ -102,7 +102,7 @@ def test_custom_url_plugin(linuxdeploy, mock_command, tmp_path):
     assert plugins.keys() == {"sometool"}
     assert isinstance(plugins["sometool"], LinuxDeployURLPlugin)
 
-    mock_command.download_file.assert_called_with(
+    mock_tools.download.file.assert_called_with(
         url="https://example.com/path/to/linuxdeploy-plugin-sometool-wonky.AppImage",
         download_path=tmp_path
         / "tools"
@@ -117,7 +117,7 @@ def test_custom_url_plugin(linuxdeploy, mock_command, tmp_path):
     sys.platform == "win32",
     reason="Windows paths can't be passed to linuxdeploy",
 )
-def test_custom_local_file_plugin(linuxdeploy, mock_command, tmp_path):
+def test_custom_local_file_plugin(linuxdeploy, mock_tools, tmp_path):
     """A Custom local file plugin can be verified."""
 
     # Create a local file
@@ -135,7 +135,7 @@ def test_custom_local_file_plugin(linuxdeploy, mock_command, tmp_path):
     assert isinstance(plugins["sometool"], LinuxDeployLocalFilePlugin)
 
     # No download happened
-    mock_command.download_file.assert_not_called()
+    mock_tools.download.file.assert_not_called()
     # But a copy happened
     assert (tmp_path / "bundle" / "linuxdeploy-plugin-sometool-wonky.AppImage").exists()
 
@@ -198,7 +198,7 @@ def test_plugin_env(
     sys.platform == "win32",
     reason="Windows paths can't be passed to linuxdeploy",
 )
-def test_complex_plugin_config(linuxdeploy, mock_command, tmp_path):
+def test_complex_plugin_config(linuxdeploy, mock_tools, tmp_path):
     """A complex plugin configuration can be verified."""
     # Define multiple plugins, of different types, each with different environments
 
@@ -234,7 +234,7 @@ def test_complex_plugin_config(linuxdeploy, mock_command, tmp_path):
         else:
             raise Exception("Unexpected download")
 
-    mock_command.download_file.side_effect = mock_downloads
+    mock_tools.download.file.side_effect = mock_downloads
 
     # Local file tool is a local file.
     local_plugin_path = (

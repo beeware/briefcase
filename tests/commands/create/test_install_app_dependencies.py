@@ -1,11 +1,20 @@
 import os
 import subprocess
 import sys
+from unittest import mock
 
 import pytest
 import tomli_w
 
 from briefcase.commands.create import BriefcaseCommandError, DependencyInstallError
+from briefcase.integrations.subprocess import Subprocess
+
+
+@pytest.fixture
+def create_command(create_command, myapp):
+    # mock subprocess app context for this app
+    create_command.tools[myapp].app_context = mock.MagicMock(spec_set=Subprocess)
+    return create_command
 
 
 def create_installation_artefacts(app_packages_path, packages):
@@ -34,7 +43,6 @@ def create_installation_artefacts(app_packages_path, packages):
 def test_bad_path_index(create_command, myapp, bundle_path, app_requirements_path):
     """If the app's path index doesn't declare a destination for requirements,
     an error is raised."""
-
     # Write a briefcase.toml that is missing app_packages_path and app_requirements_path
     with (bundle_path / "briefcase.toml").open("wb") as f:
         index = {
@@ -56,7 +64,7 @@ def test_bad_path_index(create_command, myapp, bundle_path, app_requirements_pat
         create_command.install_app_dependencies(myapp)
 
     # pip wasn't invoked
-    create_command.subprocess.run.assert_not_called()
+    create_command.tools[myapp].app_context.run.assert_not_called()
 
     # requirements.txt doesn't exist either
     assert not app_requirements_path.exists()
@@ -74,7 +82,7 @@ def test_app_packages_no_requires(
     create_command.install_app_dependencies(myapp)
 
     # No request was made to install dependencies
-    create_command.subprocess.run.assert_not_called()
+    create_command.tools[myapp].app_context.run.assert_not_called()
 
 
 def test_app_packages_empty_requires(
@@ -90,7 +98,7 @@ def test_app_packages_empty_requires(
     create_command.install_app_dependencies(myapp)
 
     # No request was made to install dependencies
-    create_command.subprocess.run.assert_not_called()
+    create_command.tools[myapp].app_context.run.assert_not_called()
 
 
 def test_app_packages_valid_requires(
@@ -105,7 +113,7 @@ def test_app_packages_valid_requires(
     create_command.install_app_dependencies(myapp)
 
     # A request was made to install dependencies
-    create_command.subprocess.run.assert_called_with(
+    create_command.tools[myapp].app_context.run.assert_called_with(
         [
             sys.executable,
             "-m",
@@ -147,7 +155,7 @@ def test_app_packages_valid_requires_no_support_package(
     create_command.install_app_dependencies(myapp)
 
     # A request was made to install dependencies
-    create_command.subprocess.run.assert_called_with(
+    create_command.tools[myapp].app_context.run.assert_called_with(
         [
             sys.executable,
             "-m",
@@ -176,7 +184,9 @@ def test_app_packages_invalid_requires(
     # Unfortunately, no way to tell the difference between "offline" and
     # "your requirements are invalid"; pip returns status code 1 for all
     # failures.
-    create_command.subprocess.run.side_effect = subprocess.CalledProcessError(
+    create_command.tools[
+        myapp
+    ].app_context.run.side_effect = subprocess.CalledProcessError(
         cmd=["python", "-m", "pip", "..."], returncode=1
     )
 
@@ -184,7 +194,7 @@ def test_app_packages_invalid_requires(
         create_command.install_app_dependencies(myapp)
 
     # But the request to install was still made
-    create_command.subprocess.run.assert_called_with(
+    create_command.tools[myapp].app_context.run.assert_called_with(
         [
             sys.executable,
             "-m",
@@ -220,7 +230,9 @@ def test_app_packages_offline(
     # Unfortunately, no way to tell the difference between "offline" and
     # "your requirements are invalid"; pip returns status code 1 for all
     # failures.
-    create_command.subprocess.run.side_effect = subprocess.CalledProcessError(
+    create_command.tools[
+        myapp
+    ].app_context.run.side_effect = subprocess.CalledProcessError(
         cmd=["python", "-m", "pip", "..."], returncode=1
     )
 
@@ -228,7 +240,7 @@ def test_app_packages_offline(
         create_command.install_app_dependencies(myapp)
 
     # But the request to install was still made
-    create_command.subprocess.run.assert_called_with(
+    create_command.tools[myapp].app_context.run.assert_called_with(
         [
             sys.executable,
             "-m",
@@ -266,7 +278,9 @@ def test_app_packages_install_dependencies(
     myapp.requires = ["first", "second", "third"]
 
     # The side effect of calling pip is creating installation artefacts
-    create_command.subprocess.run.side_effect = create_installation_artefacts(
+    create_command.tools[
+        myapp
+    ].app_context.run.side_effect = create_installation_artefacts(
         app_packages_path, myapp.requires
     )
 
@@ -274,7 +288,7 @@ def test_app_packages_install_dependencies(
     create_command.install_app_dependencies(myapp)
 
     # The request to install was made
-    create_command.subprocess.run.assert_called_with(
+    create_command.tools[myapp].app_context.run.assert_called_with(
         [
             sys.executable,
             "-m",
@@ -323,7 +337,9 @@ def test_app_packages_replace_existing_dependencies(
     myapp.requires = ["first", "second", "third"]
 
     # The side effect of calling pip is creating installation artefacts
-    create_command.subprocess.run.side_effect = create_installation_artefacts(
+    create_command.tools[
+        myapp
+    ].app_context.run.side_effect = create_installation_artefacts(
         app_packages_path, myapp.requires
     )
 
@@ -331,7 +347,7 @@ def test_app_packages_replace_existing_dependencies(
     create_command.install_app_dependencies(myapp)
 
     # The request to install was still made
-    create_command.subprocess.run.assert_called_with(
+    create_command.tools[myapp].app_context.run.assert_called_with(
         [
             sys.executable,
             "-m",

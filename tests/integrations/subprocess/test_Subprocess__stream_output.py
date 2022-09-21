@@ -5,7 +5,6 @@ from unittest import mock
 
 import pytest
 
-from briefcase.console import Log
 from briefcase.integrations import subprocess
 
 
@@ -32,7 +31,7 @@ def test_output(mock_sub, popen_process, capsys):
 
 def test_output_debug(mock_sub, popen_process, capsys):
     """Process output is printed; no debug output for only stream_output."""
-    mock_sub.command.logger = Log(verbosity=2)
+    mock_sub.tools.logger.verbosity = 2
 
     mock_sub.stream_output("testing", popen_process)
 

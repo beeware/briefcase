@@ -91,9 +91,6 @@ def get_process_id_by_command(
 class NativeAppContext:
     """A wrapper around subprocess for use as an app-bound tool."""
 
-    def __init__(self, tools):
-        self.tools = tools
-
     @classmethod
     def verify(cls, tools, app):
         """Make subprocess available as app-bound tool."""

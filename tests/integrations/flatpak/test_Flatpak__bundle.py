@@ -18,7 +18,7 @@ def test_bundle(flatpak, tmp_path):
     )
 
     # The expected call was made
-    flatpak.subprocess.run.assert_called_once_with(
+    flatpak.tools.subprocess.run.assert_called_once_with(
         [
             "flatpak",
             "build-bundle",
@@ -36,7 +36,7 @@ def test_bundle(flatpak, tmp_path):
 
 def test_bundle_fail(flatpak, tmp_path):
     """If bundling fails, an error is raised."""
-    flatpak.subprocess.run.side_effect = subprocess.CalledProcessError(
+    flatpak.tools.subprocess.run.side_effect = subprocess.CalledProcessError(
         cmd="flatpak build-bundle", returncode=1
     )
 

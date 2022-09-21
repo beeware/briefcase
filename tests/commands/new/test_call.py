@@ -1,18 +1,16 @@
-from unittest import mock
-
 import pytest
 
+from briefcase.commands.create import git
 from briefcase.exceptions import BriefcaseCommandError
 
 
-def test_no_git(new_command):
+def test_no_git(new_command, monkeypatch):
     """If Git is not installed, an error is raised."""
-    # Mock a non-existent git
-    integrations = mock.MagicMock()
-    integrations.git.verify_git_is_installed.side_effect = BriefcaseCommandError(
-        "Briefcase requires git, but it is not installed"
-    )
-    new_command.integrations = integrations
+
+    def monkeypatch_verify_git(*a, **kw):
+        raise BriefcaseCommandError("Briefcase requires git, but it is not installed")
+
+    monkeypatch.setattr(git, "verify_git_is_installed", monkeypatch_verify_git)
 
     # The command will fail tool verification.
     with pytest.raises(

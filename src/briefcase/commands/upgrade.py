@@ -70,7 +70,7 @@ class UpgradeCommand(BaseCommand):
 
         for klass in self.sdks:
             try:
-                tool = klass.verify(tools=self.tools, install=False)
+                tool = klass.verify(self.tools, install=False)
                 if tool.managed_install:
                     managed_tools[klass.name] = tool
                     try:

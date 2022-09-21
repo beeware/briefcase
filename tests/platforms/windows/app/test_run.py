@@ -3,25 +3,30 @@ from unittest import mock
 
 import pytest
 
+from briefcase.console import Console, Log
 from briefcase.exceptions import BriefcaseCommandError
+from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.windows.app import WindowsAppRunCommand
 
 
 def test_run_app(first_app_config, tmp_path):
     """A Windows app can be started."""
     command = WindowsAppRunCommand(
-        base_path=tmp_path / "base",
-        home_path=tmp_path / "home",
+        logger=Log(),
+        console=Console(),
+        base_path=tmp_path / "base_path",
+        data_path=tmp_path / "briefcase",
     )
-    command.subprocess = mock.MagicMock()
+    command.tools.home_path = tmp_path / "home"
+    command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
 
     command.run_app(first_app_config)
 
-    command.subprocess.run.assert_called_with(
+    command.tools.subprocess.run.assert_called_with(
         [
             os.fsdecode(
                 tmp_path
-                / "base"
+                / "base_path"
                 / "windows"
                 / "app"
                 / "First App"
@@ -38,21 +43,24 @@ def test_run_app(first_app_config, tmp_path):
 def test_run_app_failed(first_app_config, tmp_path):
     """If there's a problem started the app, an exception is raised."""
     command = WindowsAppRunCommand(
-        base_path=tmp_path / "base",
-        home_path=tmp_path / "home",
+        logger=Log(),
+        console=Console(),
+        base_path=tmp_path / "base_path",
+        data_path=tmp_path / "briefcase",
     )
-    command.subprocess = mock.MagicMock()
-    command.subprocess.run.side_effect = BriefcaseCommandError("problem")
+    command.tools.home_path = tmp_path / "home"
+    command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
+    command.tools.subprocess.run.side_effect = BriefcaseCommandError("problem")
 
     with pytest.raises(BriefcaseCommandError):
         command.run_app(first_app_config)
 
     # The run command was still invoked, though
-    command.subprocess.run.assert_called_with(
+    command.tools.subprocess.run.assert_called_with(
         [
             os.fsdecode(
                 tmp_path
-                / "base"
+                / "base_path"
                 / "windows"
                 / "app"
                 / "First App"

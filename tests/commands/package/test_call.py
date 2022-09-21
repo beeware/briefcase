@@ -15,6 +15,8 @@ def test_no_args_package_one_app(package_command, first_app):
     assert package_command.actions == [
         # Tools are verified
         ("verify",),
+        # App tools are verified for app
+        ("verify-app-tools", "first"),
         # Package the first app
         (
             "package",
@@ -47,6 +49,8 @@ def test_no_args_package_two_app(package_command, first_app, second_app):
     assert package_command.actions == [
         # Tools are verified
         ("verify",),
+        # App tools are verified for first app
+        ("verify-app-tools", "first"),
         # Package the first app
         (
             "package",
@@ -58,6 +62,8 @@ def test_no_args_package_two_app(package_command, first_app, second_app):
                 "sign_app": True,
             },
         ),
+        # App tools are verified for second app
+        ("verify-app-tools", "second"),
         # package the second app
         (
             "package",
@@ -75,7 +81,7 @@ def test_no_args_package_two_app(package_command, first_app, second_app):
 
 
 def test_no_sign_package_one_app(package_command, first_app):
-    """If there is one app, and a --no-sign argument,package doesnt sign the
+    """If there is one app, and a --no-sign argument,package doesn't sign the
     app."""
     # Add a single app
     package_command.apps = {
@@ -92,6 +98,8 @@ def test_no_sign_package_one_app(package_command, first_app):
     assert package_command.actions == [
         # Tools are verified
         ("verify",),
+        # App tools are verified for app
+        ("verify-app-tools", "first"),
         # Package the first app
         (
             "package",
@@ -124,6 +132,8 @@ def test_identity_arg_package_one_app(package_command, first_app):
     assert package_command.actions == [
         # Tools are verified
         ("verify",),
+        # App tools are verified for app
+        ("verify-app-tools", "first"),
         # Package the first app
         (
             "package",
@@ -156,6 +166,8 @@ def test_adhoc_sign_package_one_app(package_command, first_app):
     assert package_command.actions == [
         # Tools are verified
         ("verify",),
+        # App tools are verified for app
+        ("verify-app-tools", "first"),
         # Package the first app
         (
             "package",
@@ -189,6 +201,8 @@ def test_no_sign_args_package_two_app(package_command, first_app, second_app):
     assert package_command.actions == [
         # Tools are verified
         ("verify",),
+        # App tools are verified for first app
+        ("verify-app-tools", "first"),
         # Package the first app
         (
             "package",
@@ -200,6 +214,8 @@ def test_no_sign_args_package_two_app(package_command, first_app, second_app):
                 "sign_app": False,
             },
         ),
+        # App tools are verified for second app
+        ("verify-app-tools", "second"),
         # package the second app
         (
             "package",
@@ -237,6 +253,8 @@ def test_adhoc_sign_args_package_two_app(package_command, first_app, second_app)
     assert package_command.actions == [
         # Tools are verified
         ("verify",),
+        # App tools are verified for first app
+        ("verify-app-tools", "first"),
         # Package the first app
         (
             "package",
@@ -248,6 +266,8 @@ def test_adhoc_sign_args_package_two_app(package_command, first_app, second_app)
                 "sign_app": True,
             },
         ),
+        # App tools are verified for second app
+        ("verify-app-tools", "second"),
         # package the second app
         (
             "package",
@@ -283,6 +303,8 @@ def test_identity_sign_args_package_two_app(package_command, first_app, second_a
     assert package_command.actions == [
         # Tools are verified
         ("verify",),
+        # App tools are verified for first app
+        ("verify-app-tools", "first"),
         # Package the first app
         (
             "package",
@@ -294,6 +316,8 @@ def test_identity_sign_args_package_two_app(package_command, first_app, second_a
                 "sign_app": True,
             },
         ),
+        # App tools are verified for second app
+        ("verify-app-tools", "second"),
         # package the second app
         (
             "package",
@@ -327,6 +351,8 @@ def test_package_alternate_format(package_command, first_app):
     assert package_command.actions == [
         # Tools are verified
         ("verify",),
+        # App tools are verified for app
+        ("verify-app-tools", "first"),
         # Package the first app
         (
             "package",
@@ -358,6 +384,8 @@ def test_update_package_one_app(package_command, first_app):
     assert package_command.actions == [
         # Tools are verified
         ("verify",),
+        # App tools are verified for app
+        ("verify-app-tools", "first"),
         # Update (and then build) the first app
         (
             "update",
@@ -412,6 +440,8 @@ def test_update_package_two_app(package_command, first_app, second_app):
     assert package_command.actions == [
         # Tools are verified
         ("verify",),
+        # App tools are verified for first app
+        ("verify-app-tools", "first"),
         # Update (and then build) the first app
         (
             "update",
@@ -445,6 +475,8 @@ def test_update_package_two_app(package_command, first_app, second_app):
                 "build_state": "first",
             },
         ),
+        # App tools are verified for second app
+        ("verify-app-tools", "second"),
         # Update (and then build) the second app
         (
             "update",

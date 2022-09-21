@@ -10,7 +10,6 @@ from typing import Optional
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from cookiecutter import exceptions as cookiecutter_exceptions
-from cookiecutter.main import cookiecutter
 
 import briefcase
 from briefcase.config import BaseConfig
@@ -281,7 +280,7 @@ class CreateCommand(BaseCommand):
             output_path = self.bundle_path(app).parent
             output_path.mkdir(parents=True, exist_ok=True)
             # Unroll the template
-            cookiecutter(
+            self.tools.cookiecutter(
                 str(cached_template),
                 no_input=True,
                 output_dir=os.fsdecode(output_path),
@@ -696,7 +695,7 @@ class CreateCommand(BaseCommand):
                         relative_path = path.relative_to(self.bundle_path(app))
                         if path.is_dir():
                             self.logger.info(f"Removing directory {relative_path}")
-                            self.shutil.rmtree(path)
+                            self.tools.shutil.rmtree(path)
                         else:
                             self.logger.info(f"Removing {relative_path}")
                             path.unlink()

@@ -7,7 +7,6 @@ from typing import Optional
 from urllib.parse import urlparse
 
 from cookiecutter import exceptions as cookiecutter_exceptions
-from cookiecutter.main import cookiecutter
 
 from briefcase.config import is_valid_app_name, is_valid_bundle_identifier
 from briefcase.exceptions import NetworkFailure
@@ -499,7 +498,7 @@ What GUI toolkit do you want to use for this project?""",
 
         try:
             # Unroll the new app template
-            cookiecutter(
+            self.tools.cookiecutter(
                 str(cached_template),
                 no_input=True,
                 output_dir=os.fsdecode(self.base_path),

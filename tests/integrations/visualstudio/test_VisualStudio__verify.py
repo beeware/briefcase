@@ -2,12 +2,11 @@ import json
 import os
 import subprocess
 from pathlib import Path
-from unittest.mock import MagicMock, call
+from unittest.mock import call
 
 import pytest
 
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.integrations.subprocess import Subprocess
 from briefcase.integrations.visualstudio import VisualStudio
 
 MSBUILD_OUTPUT = """Microsoft (R) Build Engine version 17.2.1+52cd2da31 for .NET Framework
@@ -15,23 +14,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
 17.2.1.25201
 """
-
-
-@pytest.fixture
-def mock_command(tmp_path):
-    command = MagicMock()
-    command.host_os = "Windows"
-    command.tools_path = tmp_path / "tools"
-
-    command.os = MagicMock()
-    command.os.environ = {
-        "ProgramFiles(x86)": os.fsdecode(tmp_path / "Program Files (x86)")
-    }
-
-    command.subprocess = Subprocess(command)
-    command.subprocess.check_output = MagicMock()
-
-    return command
 
 
 @pytest.fixture
@@ -76,13 +58,23 @@ def msbuild_path(tmp_path):
     return msbuild_path
 
 
-def test_msbuild_on_path(mock_command):
+def test_short_circuit(mock_tools):
+    """Tool is not created if already cached."""
+    mock_tools.visualstudio = "tool"
+
+    tool = VisualStudio.verify(mock_tools)
+
+    assert tool == "tool"
+    assert tool == mock_tools.visualstudio
+
+
+def test_msbuild_on_path(mock_tools):
     """If MSBuild is on the path, that version is used."""
     # MSBuild is on the path, so check_output succeeds
-    mock_command.subprocess.check_output.return_value = MSBUILD_OUTPUT
+    mock_tools.subprocess.check_output.return_value = MSBUILD_OUTPUT
 
     # Verify the installation
-    visualstudio = VisualStudio.verify(mock_command)
+    visualstudio = VisualStudio.verify(mock_tools)
 
     # Visual studio is configured to use an MSBuild with no path,
     # which provides no metadata.
@@ -90,17 +82,17 @@ def test_msbuild_on_path(mock_command):
     assert visualstudio.install_metadata is None
 
     # Verification calls are as expected
-    mock_command.subprocess.check_output.assert_has_calls(
+    mock_tools.subprocess.check_output.assert_has_calls(
         [call(["MSBuild.exe", "--version"], stderr=subprocess.STDOUT)],
         any_order=False,
     )
 
 
-def test_msbuild_on_path_corrupt(mock_command):
+def test_msbuild_on_path_corrupt(mock_tools):
     """If MSBuild is on the path, but it cannot be invoked, an error is
     raised."""
     # MSBuild is on the path, but raises an error when invoked
-    mock_command.subprocess.check_output.side_effect = subprocess.CalledProcessError(
+    mock_tools.subprocess.check_output.side_effect = subprocess.CalledProcessError(
         returncode=1,
         cmd="MSBuild.exe",
     )
@@ -110,28 +102,28 @@ def test_msbuild_on_path_corrupt(mock_command):
         BriefcaseCommandError,
         match=r"MSBuild is on the path, but Briefcase cannot start it.",
     ):
-        VisualStudio.verify(mock_command)
+        VisualStudio.verify(mock_tools)
 
     # Verification calls are as expected
-    mock_command.subprocess.check_output.assert_has_calls(
+    mock_tools.subprocess.check_output.assert_has_calls(
         [call(["MSBuild.exe", "--version"], stderr=subprocess.STDOUT)],
         any_order=False,
     )
 
 
-def test_msbuild_envvar(mock_command, custom_msbuild_path):
+def test_msbuild_envvar(mock_tools, custom_msbuild_path):
     """If MSBUILD is set in the environment, that executable is used."""
     # Point at the dummy MSBuild executable
-    mock_command.os.environ["MSBUILD"] = custom_msbuild_path
+    mock_tools.os.environ["MSBUILD"] = custom_msbuild_path
 
     # MSBuild is not on the path, but the
-    mock_command.subprocess.check_output.side_effect = [
+    mock_tools.subprocess.check_output.side_effect = [
         FileNotFoundError,  # Not on path
         0,  # Custom location succeeds
     ]
 
     # Verify the installation
-    visualstudio = VisualStudio.verify(mock_command)
+    visualstudio = VisualStudio.verify(mock_tools)
 
     # Visual studio is configured to use an MSBuild at the specified path
     # which provides no metadata.
@@ -139,7 +131,7 @@ def test_msbuild_envvar(mock_command, custom_msbuild_path):
     assert visualstudio.install_metadata is None
 
     # Verification calls are as expected
-    mock_command.subprocess.check_output.assert_has_calls(
+    mock_tools.subprocess.check_output.assert_has_calls(
         [
             call(["MSBuild.exe", "--version"], stderr=subprocess.STDOUT),
             call([custom_msbuild_path, "--version"], stderr=subprocess.STDOUT),
@@ -148,24 +140,24 @@ def test_msbuild_envvar(mock_command, custom_msbuild_path):
     )
 
 
-def test_msbuild_envvar_doesnt_exist(mock_command, tmp_path):
+def test_msbuild_envvar_doesnt_exist(mock_tools, tmp_path):
     """If MSBUILD is set in the environment, but it points to a non-existent
     file, an error is raised."""
     # Point at an MSBuild that does not exist
-    mock_command.os.environ["MSBUILD"] = tmp_path / "custom" / "MSBuild.exe"
+    mock_tools.os.environ["MSBUILD"] = tmp_path / "custom" / "MSBuild.exe"
 
     # MSBuild is not on the path
-    mock_command.subprocess.check_output.side_effect = FileNotFoundError
+    mock_tools.subprocess.check_output.side_effect = FileNotFoundError
 
     # Verify the installation
     with pytest.raises(
         BriefcaseCommandError,
         match=r"The location referenced by the environment variable MSBUILD:",
     ):
-        VisualStudio.verify(mock_command)
+        VisualStudio.verify(mock_tools)
 
     # Verification calls are as expected
-    mock_command.subprocess.check_output.assert_has_calls(
+    mock_tools.subprocess.check_output.assert_has_calls(
         [
             call(["MSBuild.exe", "--version"], stderr=subprocess.STDOUT),
         ],
@@ -173,14 +165,14 @@ def test_msbuild_envvar_doesnt_exist(mock_command, tmp_path):
     )
 
 
-def test_msbuild_envvar_bad_executable(mock_command, custom_msbuild_path):
+def test_msbuild_envvar_bad_executable(mock_tools, custom_msbuild_path):
     """If MSBUILD is set in the environment, but it can't be invoked, an error
     is raised."""
     # Point at the dummy MSBuild executable
-    mock_command.os.environ["MSBUILD"] = custom_msbuild_path
+    mock_tools.os.environ["MSBUILD"] = custom_msbuild_path
 
     # MSBuild is not on the path, and can't be invoked at the custom location
-    mock_command.subprocess.check_output.side_effect = [
+    mock_tools.subprocess.check_output.side_effect = [
         FileNotFoundError,  # Not on path
         subprocess.CalledProcessError(-1, custom_msbuild_path),  # Custom location fails
     ]
@@ -190,10 +182,10 @@ def test_msbuild_envvar_bad_executable(mock_command, custom_msbuild_path):
         BriefcaseCommandError,
         match=r"MSBuild appears to exist, but Briefcase can't start it.",
     ):
-        VisualStudio.verify(mock_command)
+        VisualStudio.verify(mock_tools)
 
     # Verification calls are as expected
-    mock_command.subprocess.check_output.assert_has_calls(
+    mock_tools.subprocess.check_output.assert_has_calls(
         [
             call(["MSBuild.exe", "--version"], stderr=subprocess.STDOUT),
             call([custom_msbuild_path, "--version"], stderr=subprocess.STDOUT),
@@ -202,20 +194,20 @@ def test_msbuild_envvar_bad_executable(mock_command, custom_msbuild_path):
     )
 
 
-def test_vswhere_does_not_exist(mock_command):
+def test_vswhere_does_not_exist(mock_tools):
     """If VSWhere does not exist, an error is raised."""
     # MSBuild is not on the path
-    mock_command.subprocess.check_output.side_effect = FileNotFoundError
+    mock_tools.subprocess.check_output.side_effect = FileNotFoundError
 
     # Verify the installation
     with pytest.raises(
         BriefcaseCommandError,
         match=r"Visual Studio does not appear to be installed.",
     ):
-        VisualStudio.verify(mock_command)
+        VisualStudio.verify(mock_tools)
 
     # Verification calls are as expected
-    mock_command.subprocess.check_output.assert_has_calls(
+    mock_tools.subprocess.check_output.assert_has_calls(
         [
             call(["MSBuild.exe", "--version"], stderr=subprocess.STDOUT),
         ],
@@ -223,10 +215,10 @@ def test_vswhere_does_not_exist(mock_command):
     )
 
 
-def test_vswhere_bad_executable(mock_command, vswhere_path):
+def test_vswhere_bad_executable(mock_tools, vswhere_path):
     """If VSWhere exists, but cannot be executed, an error is raised."""
     # MSBuild is not on the path, and vswhere raises an error
-    mock_command.subprocess.check_output.side_effect = [
+    mock_tools.subprocess.check_output.side_effect = [
         FileNotFoundError,  # MSBuild not on path
         subprocess.CalledProcessError(returncode=1, cmd=vswhere_path),  # vswhere fails
     ]
@@ -236,10 +228,10 @@ def test_vswhere_bad_executable(mock_command, vswhere_path):
         BriefcaseCommandError,
         match=r"Visual Studio appears to exist, but Briefcase can't retrieve installation metadata.",
     ):
-        VisualStudio.verify(mock_command)
+        VisualStudio.verify(mock_tools)
 
     # Verification calls are as expected
-    mock_command.subprocess.check_output.assert_has_calls(
+    mock_tools.subprocess.check_output.assert_has_calls(
         [
             call(["MSBuild.exe", "--version"], stderr=subprocess.STDOUT),
             call(
@@ -251,11 +243,11 @@ def test_vswhere_bad_executable(mock_command, vswhere_path):
     )
 
 
-def test_vswhere_bad_content(mock_command, vswhere_path):
+def test_vswhere_bad_content(mock_tools, vswhere_path):
     """If VSWhere can be executed, but returns garbage content, an error is
     raised."""
     # MSBuild is not on the path, and vswhere returns non-JSON content
-    mock_command.subprocess.check_output.side_effect = [
+    mock_tools.subprocess.check_output.side_effect = [
         FileNotFoundError,  # MSBuild not on path
         "This is not JSON content",  # vswhere returns non-JSON content
     ]
@@ -265,10 +257,10 @@ def test_vswhere_bad_content(mock_command, vswhere_path):
         BriefcaseCommandError,
         match=r"Visual Studio appears to exist, but Briefcase can't retrieve installation metadata.",
     ):
-        VisualStudio.verify(mock_command)
+        VisualStudio.verify(mock_tools)
 
     # Verification calls are as expected
-    mock_command.subprocess.check_output.assert_has_calls(
+    mock_tools.subprocess.check_output.assert_has_calls(
         [
             call(["MSBuild.exe", "--version"], stderr=subprocess.STDOUT),
             call(
@@ -280,11 +272,11 @@ def test_vswhere_bad_content(mock_command, vswhere_path):
     )
 
 
-def test_vswhere_non_list_content(mock_command, vswhere_path):
+def test_vswhere_non_list_content(mock_tools, vswhere_path):
     """If VSWhere can be executed, but the outermost content isn't a list, an
     error is raised."""
     # MSBuild is not on the path, and vswhere returns JSON content, but not in the format expected
-    mock_command.subprocess.check_output.side_effect = [
+    mock_tools.subprocess.check_output.side_effect = [
         FileNotFoundError,  # MSBuild not on path
         '{"problem": "JSON but not a list"}',  # vswhere returns JSON content, but not as a list.
     ]
@@ -294,10 +286,10 @@ def test_vswhere_non_list_content(mock_command, vswhere_path):
         BriefcaseCommandError,
         match=r"Visual Studio appears to exist, but Briefcase can't retrieve installation metadata.",
     ):
-        VisualStudio.verify(mock_command)
+        VisualStudio.verify(mock_tools)
 
     # Verification calls are as expected
-    mock_command.subprocess.check_output.assert_has_calls(
+    mock_tools.subprocess.check_output.assert_has_calls(
         [
             call(["MSBuild.exe", "--version"], stderr=subprocess.STDOUT),
             call(
@@ -309,11 +301,11 @@ def test_vswhere_non_list_content(mock_command, vswhere_path):
     )
 
 
-def test_vswhere_empty_list_content(mock_command, vswhere_path):
+def test_vswhere_empty_list_content(mock_tools, vswhere_path):
     """If VSWhere can be executed, but the outermost content is an empty list,
     an error is raised."""
     # MSBuild is not on the path, and vswhere returns JSON content, but not in the format expected
-    mock_command.subprocess.check_output.side_effect = [
+    mock_tools.subprocess.check_output.side_effect = [
         FileNotFoundError,  # MSBuild not on path
         "[]",  # vswhere returns empty list JSON content
     ]
@@ -323,10 +315,10 @@ def test_vswhere_empty_list_content(mock_command, vswhere_path):
         BriefcaseCommandError,
         match=r"Visual Studio appears to exist, but Briefcase can't retrieve installation metadata.",
     ):
-        VisualStudio.verify(mock_command)
+        VisualStudio.verify(mock_tools)
 
     # Verification calls are as expected
-    mock_command.subprocess.check_output.assert_has_calls(
+    mock_tools.subprocess.check_output.assert_has_calls(
         [
             call(["MSBuild.exe", "--version"], stderr=subprocess.STDOUT),
             call(
@@ -338,11 +330,11 @@ def test_vswhere_empty_list_content(mock_command, vswhere_path):
     )
 
 
-def test_vswhere_msbuild_not_installed(mock_command, tmp_path, vswhere_path):
+def test_vswhere_msbuild_not_installed(mock_tools, tmp_path, vswhere_path):
     """If VSWhere can be executed, but it doesn't point at an MSBuild
     executable, an error is raised."""
     # MSBuild is not on the path; vswhere a valid location, but there's no MSBuild there.
-    mock_command.subprocess.check_output.side_effect = [
+    mock_tools.subprocess.check_output.side_effect = [
         FileNotFoundError,  # MSBuild not on path
         json.dumps(
             [
@@ -360,10 +352,10 @@ def test_vswhere_msbuild_not_installed(mock_command, tmp_path, vswhere_path):
         BriefcaseCommandError,
         match=r"Your Visual Studio installation does not appear to provide MSBuild.",
     ):
-        VisualStudio.verify(mock_command)
+        VisualStudio.verify(mock_tools)
 
     # Verification calls are as expected
-    mock_command.subprocess.check_output.assert_has_calls(
+    mock_tools.subprocess.check_output.assert_has_calls(
         [
             call(["MSBuild.exe", "--version"], stderr=subprocess.STDOUT),
             call(
@@ -376,7 +368,7 @@ def test_vswhere_msbuild_not_installed(mock_command, tmp_path, vswhere_path):
 
 
 def test_vswhere_msbuild_bad_executable(
-    mock_command,
+    mock_tools,
     tmp_path,
     vswhere_path,
     msbuild_path,
@@ -384,7 +376,7 @@ def test_vswhere_msbuild_bad_executable(
     """If VSWhere points at an MSBuild executable, but that exe can't be
     started, an error is raised."""
     # MSBuild is not on the path; vswhere a valid location, but MSBuild fails.
-    mock_command.subprocess.check_output.side_effect = [
+    mock_tools.subprocess.check_output.side_effect = [
         FileNotFoundError,  # MSBuild not on path
         json.dumps(
             [
@@ -406,10 +398,10 @@ def test_vswhere_msbuild_bad_executable(
         BriefcaseCommandError,
         match=r"MSBuild appears to exist, but Briefcase can't start it.",
     ):
-        VisualStudio.verify(mock_command)
+        VisualStudio.verify(mock_tools)
 
     # Verification calls are as expected
-    mock_command.subprocess.check_output.assert_has_calls(
+    mock_tools.subprocess.check_output.assert_has_calls(
         [
             call(["MSBuild.exe", "--version"], stderr=subprocess.STDOUT),
             call(
@@ -422,11 +414,11 @@ def test_vswhere_msbuild_bad_executable(
     )
 
 
-def test_vswhere_install(mock_command, tmp_path, vswhere_path, msbuild_path):
+def test_vswhere_install(mock_tools, tmp_path, vswhere_path, msbuild_path):
     """If VSWhere points at a valid MSBuild executable, that executable is
     used."""
     # MSBuild is not on the path; vswhere a valid location, and MSBuild succeeds.
-    mock_command.subprocess.check_output.side_effect = [
+    mock_tools.subprocess.check_output.side_effect = [
         FileNotFoundError,  # MSBuild not on path
         json.dumps(
             [
@@ -441,13 +433,13 @@ def test_vswhere_install(mock_command, tmp_path, vswhere_path, msbuild_path):
     ]
 
     # Verify the installation
-    visualstudio = VisualStudio.verify(mock_command)
+    visualstudio = VisualStudio.verify(mock_tools)
 
     assert visualstudio.msbuild_path == msbuild_path
     assert visualstudio.install_metadata["instanceId"] == "deadbeef"
 
     # Verification calls are as expected
-    mock_command.subprocess.check_output.assert_has_calls(
+    mock_tools.subprocess.check_output.assert_has_calls(
         [
             call(["MSBuild.exe", "--version"], stderr=subprocess.STDOUT),
             call(

@@ -1,10 +1,8 @@
-from unittest.mock import MagicMock
-
 from briefcase.integrations.rcedit import RCEdit
 
 
-def test_managed_install():
+def test_managed_install(mock_tools):
     """All rcedit installs are managed."""
-    rcedit = RCEdit(MagicMock())
+    rcedit = RCEdit(mock_tools)
 
     assert rcedit.managed_install

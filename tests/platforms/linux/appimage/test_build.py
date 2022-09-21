@@ -5,8 +5,8 @@ from unittest import mock
 
 import pytest
 
+from briefcase.console import Console, Log
 from briefcase.exceptions import BriefcaseCommandError, NetworkFailure
-from briefcase.integrations.docker import Docker
 from briefcase.integrations.linuxdeploy import LinuxDeploy
 from briefcase.platforms.linux.appimage import LinuxAppImageBuildCommand
 
@@ -16,7 +16,7 @@ def first_app(first_app_config, tmp_path):
     """A fixture for the first app, rolled out on disk."""
     # Make it look like the template has been generated
     app_dir = (
-        tmp_path / "project" / "linux" / "appimage" / "First App" / "First App.AppDir"
+        tmp_path / "base_path" / "linux" / "appimage" / "First App" / "First App.AppDir"
     )
     (app_dir / "usr" / "app" / "support").mkdir(parents=True, exist_ok=True)
     (app_dir / "usr" / "app_packages" / "firstlib").mkdir(parents=True, exist_ok=True)
@@ -34,13 +34,14 @@ def first_app(first_app_config, tmp_path):
 @pytest.fixture
 def build_command(tmp_path, first_app_config):
     command = LinuxAppImageBuildCommand(
-        base_path=tmp_path / "project",
-        home_path=tmp_path / "home",
-        data_path=tmp_path / "data",
+        logger=Log(),
+        console=Console(),
+        base_path=tmp_path / "base_path",
+        data_path=tmp_path / "briefcase",
         apps={"first": first_app_config},
     )
-    command.host_os = "Linux"
-    command.host_arch = "wonky"
+    command.tools.host_os = "Linux"
+    command.tools.host_arch = "wonky"
     command.use_docker = False
     command._path_index = {
         first_app_config: {
@@ -49,25 +50,27 @@ def build_command(tmp_path, first_app_config):
         }
     }
 
-    command.os = mock.MagicMock()
-    command.os.environ = mock.MagicMock()
-    command.os.environ.__getitem__.return_value = (
+    # Reset `os` mock without `spec` so tests can run on Windows where os.getuid doesn't exist.
+    command.tools.os = mock.MagicMock()
+    # Mock user and group IDs for docker image
+    command.tools.os.environ = mock.MagicMock()
+    command.tools.os.environ.__getitem__.return_value = (
         "/usr/local/bin:/usr/bin:/path/to/somewhere"
     )
-    command.os.environ.copy.return_value = {
+    command.tools.os.environ.copy.return_value = {
         "PATH": "/usr/local/bin:/usr/bin:/path/to/somewhere"
     }
 
     # mock user and group IDs for docker build
-    command.os.getuid.return_value = 1000
-    command.os.getgid.return_value = 1001
+    command.tools.os.getuid.return_value = 1000
+    command.tools.os.getgid.return_value = 1001
 
     # Store the underlying subprocess instance
-    command._subprocess = mock.MagicMock()
-    command.subprocess._subprocess = command._subprocess
+    command._subprocess = mock.MagicMock(spec_set=subprocess)
+    command.tools.subprocess._subprocess = command._subprocess
 
     # mock `echo $PATH` check_output call
-    command.subprocess._subprocess.check_output.return_value = (
+    command.tools.subprocess._subprocess.check_output.return_value = (
         "/usr/local/bin:/usr/bin:/path/to/somewhere"
     )
 
@@ -75,33 +78,30 @@ def build_command(tmp_path, first_app_config):
     wait_bar_streamer = mock.MagicMock()
     wait_bar_streamer.stdout.readline.return_value = ""
     wait_bar_streamer.poll.return_value = 0
-    command.subprocess._subprocess.Popen.return_value.__enter__.return_value = (
+    command.tools.subprocess._subprocess.Popen.return_value.__enter__.return_value = (
         wait_bar_streamer
     )
 
-    # Set up a Docker wrapper
-    command.Docker = Docker
-
-    command.linuxdeploy = LinuxDeploy(command)
+    command.tools.linuxdeploy = LinuxDeploy(command.tools)
     return command
 
 
 def test_verify_tools_wrong_platform(build_command):
     """If we're not on Linux, the build fails."""
 
-    build_command.host_os = "TestOS"
+    build_command.tools.host_os = "TestOS"
     build_command.build_app = mock.MagicMock()
-    build_command.download_file = mock.MagicMock()
+    build_command.tools.download.file = mock.MagicMock()
 
     # Try to invoke the build
     with pytest.raises(BriefcaseCommandError):
         build_command()
 
     # The download was not attempted
-    assert build_command.download_file.call_count == 0
+    assert build_command.tools.download.file.call_count == 0
 
     # But it failed, so the file won't be made executable...
-    assert build_command.os.chmod.call_count == 0
+    assert build_command.tools.os.chmod.call_count == 0
 
     # and no build will be attempted
     assert build_command.build_app.call_count == 0
@@ -109,22 +109,27 @@ def test_verify_tools_wrong_platform(build_command):
 
 def test_verify_tools_download_failure(build_command):
     """If the build tools can't be retrieved, the build fails."""
+    # Remove linuxdeploy tool so download is attempted
+    delattr(build_command.tools, "linuxdeploy")
+
     build_command.build_app = mock.MagicMock()
-    build_command.download_file = mock.MagicMock(side_effect=NetworkFailure("mock"))
+    build_command.tools.download.file = mock.MagicMock(
+        side_effect=NetworkFailure("mock")
+    )
 
     # Try to invoke the build
     with pytest.raises(BriefcaseCommandError):
         build_command()
 
     # The download was attempted
-    build_command.download_file.assert_called_with(
+    build_command.tools.download.file.assert_called_with(
         url="https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-wonky.AppImage",
-        download_path=build_command.tools_path,
+        download_path=build_command.tools.base_path,
         role="linuxdeploy",
     )
 
     # But it failed, so the file won't be made executable...
-    assert build_command.os.chmod.call_count == 0
+    assert build_command.tools.os.chmod.call_count == 0
 
     # and no build will be attempted
     assert build_command.build_app.call_count == 0
@@ -133,15 +138,18 @@ def test_verify_tools_download_failure(build_command):
 def test_build_appimage(build_command, first_app, tmp_path):
     """A Linux app can be packaged as an AppImage."""
 
+    build_command.verify_app_tools(first_app)
     build_command.build_app(first_app)
 
     # linuxdeploy was invoked
     app_dir = (
-        tmp_path / "project" / "linux" / "appimage" / "First App" / "First App.AppDir"
+        tmp_path / "base_path" / "linux" / "appimage" / "First App" / "First App.AppDir"
     )
     build_command._subprocess.Popen.assert_called_with(
         [
-            os.fsdecode(tmp_path / "data" / "tools" / "linuxdeploy-wonky.AppImage"),
+            os.fsdecode(
+                tmp_path / "briefcase" / "tools" / "linuxdeploy-wonky.AppImage"
+            ),
             "--appdir",
             os.fsdecode(app_dir),
             "--desktop-file",
@@ -162,7 +170,7 @@ def test_build_appimage(build_command, first_app, tmp_path):
             "APPIMAGE_EXTRACT_AND_RUN": "1",
             "ARCH": "wonky",
         },
-        cwd=os.fsdecode(tmp_path / "project" / "linux"),
+        cwd=os.fsdecode(tmp_path / "base_path" / "linux"),
         text=True,
         encoding=mock.ANY,
         stdout=subprocess.PIPE,
@@ -170,8 +178,8 @@ def test_build_appimage(build_command, first_app, tmp_path):
         bufsize=1,
     )
     # Binary is marked executable
-    build_command.os.chmod.assert_called_with(
-        tmp_path / "project" / "linux" / "First_App-0.0.1-wonky.AppImage", 0o755
+    build_command.tools.os.chmod.assert_called_with(
+        tmp_path / "base_path" / "linux" / "First_App-0.0.1-wonky.AppImage", 0o755
     )
 
 
@@ -184,7 +192,7 @@ def test_build_appimage_with_plugin(build_command, first_app, tmp_path):
     # Mock the existence of some plugins
     gtk_plugin_path = (
         tmp_path
-        / "data"
+        / "briefcase"
         / "tools"
         / "linuxdeploy_plugins"
         / "gtk"
@@ -204,15 +212,18 @@ def test_build_appimage_with_plugin(build_command, first_app, tmp_path):
     ]
 
     # Build the app
+    build_command.verify_app_tools(first_app)
     build_command.build_app(first_app)
 
     # linuxdeploy was invoked
     app_dir = (
-        tmp_path / "project" / "linux" / "appimage" / "First App" / "First App.AppDir"
+        tmp_path / "base_path" / "linux" / "appimage" / "First App" / "First App.AppDir"
     )
     build_command._subprocess.Popen.assert_called_with(
         [
-            os.fsdecode(tmp_path / "data" / "tools" / "linuxdeploy-wonky.AppImage"),
+            os.fsdecode(
+                tmp_path / "briefcase" / "tools" / "linuxdeploy-wonky.AppImage"
+            ),
             "--appdir",
             os.fsdecode(app_dir),
             "--desktop-file",
@@ -238,7 +249,7 @@ def test_build_appimage_with_plugin(build_command, first_app, tmp_path):
             "APPIMAGE_EXTRACT_AND_RUN": "1",
             "ARCH": "wonky",
         },
-        cwd=os.fsdecode(tmp_path / "project" / "linux"),
+        cwd=os.fsdecode(tmp_path / "base_path" / "linux"),
         text=True,
         encoding=mock.ANY,
         stdout=subprocess.PIPE,
@@ -246,9 +257,9 @@ def test_build_appimage_with_plugin(build_command, first_app, tmp_path):
         bufsize=1,
     )
     # Local plugin marked executable
-    build_command.os.chmod.assert_any_call(
+    build_command.tools.os.chmod.assert_any_call(
         tmp_path
-        / "project"
+        / "base_path"
         / "linux"
         / "appimage"
         / "First App"
@@ -256,30 +267,33 @@ def test_build_appimage_with_plugin(build_command, first_app, tmp_path):
         0o755,
     )
     # Binary is marked executable
-    build_command.os.chmod.assert_called_with(
-        tmp_path / "project" / "linux" / "First_App-0.0.1-wonky.AppImage", 0o755
+    build_command.tools.os.chmod.assert_called_with(
+        tmp_path / "base_path" / "linux" / "First_App-0.0.1-wonky.AppImage", 0o755
     )
 
 
 def test_build_failure(build_command, first_app, tmp_path):
     """If linuxdeploy fails, the build is stopped."""
-
     # Mock a failure in the build
     build_command._subprocess.Popen.side_effect = subprocess.CalledProcessError(
-        cmd=["linuxdeploy-x86_64.AppImage", "..."], returncode=1
+        cmd=["linuxdeploy-x86_64.AppImage", "..."],
+        returncode=1,
     )
 
     # Invoking the build will raise an error.
+    build_command.verify_app_tools(first_app)
     with pytest.raises(BriefcaseCommandError):
         build_command.build_app(first_app)
 
     # linuxdeploy was invoked
     app_dir = (
-        tmp_path / "project" / "linux" / "appimage" / "First App" / "First App.AppDir"
+        tmp_path / "base_path" / "linux" / "appimage" / "First App" / "First App.AppDir"
     )
     build_command._subprocess.Popen.assert_called_with(
         [
-            os.fsdecode(tmp_path / "data" / "tools" / "linuxdeploy-wonky.AppImage"),
+            os.fsdecode(
+                tmp_path / "briefcase" / "tools" / "linuxdeploy-wonky.AppImage"
+            ),
             "--appdir",
             os.fsdecode(app_dir),
             "--desktop-file",
@@ -300,7 +314,7 @@ def test_build_failure(build_command, first_app, tmp_path):
             "APPIMAGE_EXTRACT_AND_RUN": "1",
             "ARCH": "wonky",
         },
-        cwd=os.fsdecode(tmp_path / "project" / "linux"),
+        cwd=os.fsdecode(tmp_path / "base_path" / "linux"),
         text=True,
         encoding=mock.ANY,
         stdout=subprocess.PIPE,
@@ -309,22 +323,20 @@ def test_build_failure(build_command, first_app, tmp_path):
     )
 
     # chmod isn't invoked if the binary wasn't created.
-    assert build_command.os.chmod.call_count == 0
+    assert build_command.tools.os.chmod.call_count == 0
 
 
 @pytest.mark.skipif(
     sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
 )
-def test_build_appimage_in_docker(build_command, first_app, tmp_path):
+def test_build_appimage_in_docker(build_command, first_app, tmp_path, monkeypatch):
     """A Linux app can be packaged as an AppImage in a docker container."""
+
     # Enable docker, and move to a non-Linux OS.
-    build_command.host_os = "TestOS"
+    build_command.tools.host_os = "TestOS"
     build_command.use_docker = True
 
-    build_command.build_app(first_app)
-
-    # Ensure that the effect of the Docker context has been reversed.
-    assert build_command.subprocess != build_command.Docker
+    build_command.verify_app_tools(first_app)
 
     # Assert docker image built
     build_command._subprocess.Popen.assert_any_call(
@@ -336,7 +348,7 @@ def test_build_appimage_in_docker(build_command, first_app, tmp_path):
             "--tag",
             f"briefcase/com.example.first-app:py3.{sys.version_info.minor}",
             "--file",
-            f"{tmp_path / 'project' / 'linux' / 'appimage' / 'First App' / 'Dockerfile'}",
+            f"{tmp_path / 'base_path' / 'linux' / 'appimage' / 'First App' / 'Dockerfile'}",
             "--build-arg",
             f"PY_VERSION=3.{sys.version_info.minor}",
             "--build-arg",
@@ -345,7 +357,7 @@ def test_build_appimage_in_docker(build_command, first_app, tmp_path):
             "HOST_UID=1000",
             "--build-arg",
             "HOST_GID=1001",
-            f"{tmp_path / 'project' / 'src'}",
+            f"{tmp_path / 'base_path' / 'src'}",
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -353,6 +365,8 @@ def test_build_appimage_in_docker(build_command, first_app, tmp_path):
         text=True,
         encoding=mock.ANY,
     )
+
+    build_command.build_app(first_app)
 
     # linuxdeploy was invoked inside Docker
     build_command._subprocess.Popen.assert_called_with(
@@ -387,7 +401,7 @@ def test_build_appimage_in_docker(build_command, first_app, tmp_path):
             "--deploy-deps-only",
             "/app/appimage/First App/First App.AppDir/usr/app_packages/secondlib",
         ],
-        cwd=os.fsdecode(tmp_path / "project" / "linux"),
+        cwd=os.fsdecode(tmp_path / "base_path" / "linux"),
         text=True,
         encoding=mock.ANY,
         stdout=subprocess.PIPE,
@@ -395,8 +409,8 @@ def test_build_appimage_in_docker(build_command, first_app, tmp_path):
         bufsize=1,
     )
     # Binary is marked executable
-    build_command.os.chmod.assert_called_with(
-        tmp_path / "project" / "linux" / "First_App-0.0.1-wonky.AppImage", 0o755
+    build_command.tools.os.chmod.assert_called_with(
+        tmp_path / "base_path" / "linux" / "First_App-0.0.1-wonky.AppImage", 0o755
     )
 
 
@@ -409,7 +423,7 @@ def test_build_appimage_with_plugins_in_docker(build_command, first_app, tmp_pat
     # Mock the existence of some plugins
     gtk_plugin_path = (
         tmp_path
-        / "data"
+        / "briefcase"
         / "tools"
         / "linuxdeploy_plugins"
         / "gtk"
@@ -431,13 +445,10 @@ def test_build_appimage_with_plugins_in_docker(build_command, first_app, tmp_pat
     build_command._subprocess.check_output.return_value = "/docker/bin:/docker/sbin"
 
     # Enable docker, and move to a non-Linux OS.
-    build_command.host_os = "TestOS"
+    build_command.tools.host_os = "TestOS"
     build_command.use_docker = True
 
-    build_command.build_app(first_app)
-
-    # Ensure that the effect of the Docker context has been reversed.
-    assert build_command.subprocess != build_command.Docker
+    build_command.verify_app_tools(first_app)
 
     # Docker image is built
     build_command._subprocess.Popen.assert_any_call(
@@ -449,7 +460,7 @@ def test_build_appimage_with_plugins_in_docker(build_command, first_app, tmp_pat
             "--tag",
             f"briefcase/com.example.first-app:py3.{sys.version_info.minor}",
             "--file",
-            f"{tmp_path / 'project' / 'linux' / 'appimage' / 'First App' / 'Dockerfile'}",
+            f"{tmp_path / 'base_path' / 'linux' / 'appimage' / 'First App' / 'Dockerfile'}",
             "--build-arg",
             f"PY_VERSION=3.{sys.version_info.minor}",
             "--build-arg",
@@ -458,7 +469,7 @@ def test_build_appimage_with_plugins_in_docker(build_command, first_app, tmp_pat
             "HOST_UID=1000",
             "--build-arg",
             "HOST_GID=1001",
-            f"{tmp_path / 'project' / 'src'}",
+            f"{tmp_path / 'base_path' / 'src'}",
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -466,6 +477,8 @@ def test_build_appimage_with_plugins_in_docker(build_command, first_app, tmp_pat
         text=True,
         encoding=mock.ANY,
     )
+
+    build_command.build_app(first_app)
 
     # linuxdeploy was invoked inside Docker
     build_command._subprocess.Popen.assert_called_with(
@@ -511,7 +524,7 @@ def test_build_appimage_with_plugins_in_docker(build_command, first_app, tmp_pat
             "--plugin",
             "something",
         ],
-        cwd=os.fsdecode(tmp_path / "project" / "linux"),
+        cwd=os.fsdecode(tmp_path / "base_path" / "linux"),
         text=True,
         encoding=mock.ANY,
         stdout=subprocess.PIPE,
@@ -519,9 +532,9 @@ def test_build_appimage_with_plugins_in_docker(build_command, first_app, tmp_pat
         bufsize=1,
     )
     # Local plugin marked executable
-    build_command.os.chmod.assert_any_call(
+    build_command.tools.os.chmod.assert_any_call(
         tmp_path
-        / "project"
+        / "base_path"
         / "linux"
         / "appimage"
         / "First App"
@@ -529,6 +542,6 @@ def test_build_appimage_with_plugins_in_docker(build_command, first_app, tmp_pat
         0o755,
     )
     # Binary is marked executable
-    build_command.os.chmod.assert_called_with(
-        tmp_path / "project" / "linux" / "First_App-0.0.1-wonky.AppImage", 0o755
+    build_command.tools.os.chmod.assert_called_with(
+        tmp_path / "base_path" / "linux" / "First_App-0.0.1-wonky.AppImage", 0o755
     )

@@ -2,14 +2,16 @@ import os
 from unittest import mock
 
 import pytest
+from cookiecutter.main import cookiecutter
 
 from briefcase.commands import NewCommand
+from briefcase.console import Console, Log
 from briefcase.exceptions import BriefcaseCommandError
 
 
 @pytest.fixture
 def new_command(tmp_path):
-    return NewCommand(base_path=tmp_path)
+    return NewCommand(base_path=tmp_path, logger=Log(), console=Console())
 
 
 def test_new_app(new_command, tmp_path):
@@ -23,7 +25,7 @@ def test_new_app(new_command, tmp_path):
     new_command.update_cookiecutter_cache = mock.MagicMock(
         return_value="~/.cookiecutters/briefcase-template"
     )
-    new_command.cookiecutter = mock.MagicMock()
+    new_command.tools.cookiecutter = mock.MagicMock(spec_set=cookiecutter)
 
     # Create the new app, using the default template.
     new_command.new_app()
@@ -36,7 +38,7 @@ def test_new_app(new_command, tmp_path):
         branch="v0.3",
     )
     # Cookiecutter is invoked
-    new_command.cookiecutter.assert_called_with(
+    new_command.tools.cookiecutter.assert_called_with(
         "~/.cookiecutters/briefcase-template",
         no_input=True,
         output_dir=os.fsdecode(tmp_path),
@@ -56,7 +58,7 @@ def test_new_app_with_template(new_command, tmp_path):
     new_command.update_cookiecutter_cache = mock.MagicMock(
         return_value="https://example.com/other.git"
     )
-    new_command.cookiecutter = mock.MagicMock()
+    new_command.tools.cookiecutter = mock.MagicMock(spec_set=cookiecutter)
 
     # Create a new app, with a specific template.
     new_command.new_app(template="https://example.com/other.git")
@@ -69,7 +71,7 @@ def test_new_app_with_template(new_command, tmp_path):
         branch="v0.3",
     )
     # Cookiecutter is invoked
-    new_command.cookiecutter.assert_called_with(
+    new_command.tools.cookiecutter.assert_called_with(
         "https://example.com/other.git",
         no_input=True,
         output_dir=os.fsdecode(tmp_path),
@@ -92,7 +94,7 @@ def test_abort_if_directory_exists(new_command, tmp_path):
     new_command.update_cookiecutter_cache = mock.MagicMock(
         return_value="~/.cookiecutters/briefcase-template"
     )
-    new_command.cookiecutter = mock.MagicMock()
+    new_command.tools.cookiecutter = mock.MagicMock(spec_set=cookiecutter)
 
     # Create the new app, using the default template.
     # This will raise an error due to the colliding directory
@@ -107,4 +109,4 @@ def test_abort_if_directory_exists(new_command, tmp_path):
         branch="v0.3",
     )
     # Cookiecutter was *not* invoked
-    new_command.cookiecutter.call_count == 0
+    assert new_command.tools.cookiecutter.call_count == 0

@@ -1,7 +1,7 @@
 from cgi import parse_header
 from urllib.parse import urlparse
 
-import requests
+import requests.exceptions as requests_exceptions
 
 from briefcase.exceptions import (
     BadNetworkResourceError,
@@ -43,7 +43,7 @@ class Download:
         download_path.mkdir(parents=True, exist_ok=True)
         filename = None
         try:
-            response = requests.get(url, stream=True)
+            response = self.tools.requests.get(url, stream=True)
             if response.status_code == 404:
                 raise MissingNetworkResourceError(url=url)
             elif response.status_code != 200:
@@ -81,7 +81,7 @@ class Download:
                                 f.write(data)
                                 progress_bar.update(task_id, advance=len(data))
 
-        except requests.exceptions.ConnectionError as e:
+        except requests_exceptions.ConnectionError as e:
             if role:
                 description = role
             else:

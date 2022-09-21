@@ -5,20 +5,24 @@ from unittest import mock
 import pytest
 
 from briefcase.commands.base import BaseCommand
+from briefcase.console import Console, Log
 from briefcase.exceptions import BriefcaseCommandError
+from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.macOS import macOSSigningMixin
 from briefcase.platforms.macOS.app import macOSAppMixin
 from tests.utils import DummyConsole
 
 
 class DummySigningCommand(macOSAppMixin, macOSSigningMixin, BaseCommand):
-    """A dummy command to expose code signing capapbilities."""
+    """A dummy command to expose code signing capabilities."""
 
     command = "sign"
 
     def __init__(self, base_path, **kwargs):
-        super().__init__(base_path=base_path, **kwargs)
-        self.input = DummyConsole()
+        kwargs.setdefault("logger", Log())
+        kwargs.setdefault("console", Console())
+        super().__init__(base_path=base_path / "base_path", **kwargs)
+        self.tools.input = DummyConsole()
 
 
 @pytest.fixture
@@ -33,7 +37,7 @@ def dummy_command(tmp_path):
     mock_get_identities = mock.MagicMock()
     cmd.get_identities = mock_get_identities
 
-    cmd.subprocess = mock.MagicMock()
+    cmd.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
 
     return cmd
 
@@ -60,7 +64,12 @@ def sign_call(
             [
                 "--entitlements",
                 os.fsdecode(
-                    tmp_path / "macOS" / "app" / "First App" / "Entitlements.plist"
+                    tmp_path
+                    / "base_path"
+                    / "macOS"
+                    / "app"
+                    / "First App"
+                    / "Entitlements.plist"
                 ),
             ]
         )
@@ -78,7 +87,7 @@ def sign_call(
 
 
 def mock_codesign(results):
-    """A utilty method for generating codesign side effects.
+    """A utility method for generating codesign side effects.
 
     :param results: A single error string; or a list of error strings to be returned
         on successive calls. If `None` is included in the list of results, no
@@ -107,7 +116,7 @@ def test_explicit_identity_checksum(dummy_command):
         "11E77FB58F13F6108B38110D5D92233C58ED38C5": "iPhone Developer: Jane Smith (BXAH5H869S)",
     }
 
-    # The identity will be the onethe user specified as an option.
+    # The identity will be the one the user specified as an option.
     result = dummy_command.select_identity("11E77FB58F13F6108B38110D5D92233C58ED38C5")
 
     assert result == (
@@ -127,7 +136,7 @@ def test_explicit_identity_name(dummy_command):
         "11E77FB58F13F6108B38110D5D92233C58ED38C5": "iPhone Developer: Jane Smith (BXAH5H869S)",
     }
 
-    # The identity will be the onethe user specified as an option.
+    # The identity will be the one the user specified as an option.
     result = dummy_command.select_identity("iPhone Developer: Jane Smith (BXAH5H869S)")
 
     assert result == (
@@ -147,7 +156,7 @@ def test_invalid_identity_name(dummy_command):
         "11E77FB58F13F6108B38110D5D92233C58ED38C5": "iPhone Developer: Jane Smith (BXAH5H869S)",
     }
 
-    # The identity will be the onethe user specified as an option.
+    # The identity will be the one the user specified as an option.
     with pytest.raises(BriefcaseCommandError):
         dummy_command.select_identity("not-an-identity")
 
@@ -200,14 +209,14 @@ def test_selected_identity(dummy_command):
 def test_sign_file_adhoc_identity(dummy_command, tmp_path):
     """If an adhoc identity is used, the runtime option isn't used."""
     # Sign the file with an adhoc identity
-    dummy_command.sign_file(tmp_path / "random.file", identity="-")
+    dummy_command.sign_file(tmp_path / "base_path" / "random.file", identity="-")
 
     # An attempt to codesign was made without the runtime option
-    dummy_command.subprocess.run.assert_has_calls(
+    dummy_command.tools.subprocess.run.assert_has_calls(
         [
             sign_call(
                 tmp_path,
-                tmp_path / "random.file",
+                tmp_path / "base_path" / "random.file",
                 identity="-",
                 entitlements=False,
                 runtime=False,
@@ -221,15 +230,20 @@ def test_sign_file_entitlements(dummy_command, tmp_path):
     """Entitlements can be included in a signing call."""
     # Sign the file with an adhoc identity
     dummy_command.sign_file(
-        tmp_path / "random.file",
+        tmp_path / "base_path" / "random.file",
         identity="Sekrit identity (DEADBEEF)",
-        entitlements=tmp_path / "macOS" / "app" / "First App" / "Entitlements.plist",
+        entitlements=tmp_path
+        / "base_path"
+        / "macOS"
+        / "app"
+        / "First App"
+        / "Entitlements.plist",
     )
 
     # An attempt to codesign was made without the runtime option
-    dummy_command.subprocess.run.assert_has_calls(
+    dummy_command.tools.subprocess.run.assert_has_calls(
         [
-            sign_call(tmp_path, tmp_path / "random.file"),
+            sign_call(tmp_path, tmp_path / "base_path" / "random.file"),
         ],
         any_order=False,
     )
@@ -238,21 +252,28 @@ def test_sign_file_entitlements(dummy_command, tmp_path):
 def test_sign_file_deep_sign(dummy_command, tmp_path, capsys):
     """A file can be identified as needing a deep sign."""
     # First call raises the deep sign warning; second call succeeds
-    dummy_command.subprocess.run.side_effect = mock_codesign(
+    dummy_command.tools.subprocess.run.side_effect = mock_codesign(
         [" code object is not signed at all", None]
     )
 
     # Sign the file
     dummy_command.sign_file(
-        tmp_path / "random.file", identity="Sekrit identity (DEADBEEF)"
+        tmp_path / "base_path" / "random.file", identity="Sekrit identity (DEADBEEF)"
     )
 
     # 2 attempt to codesign was made; the second enabled the deep argument.
-    dummy_command.subprocess.run.assert_has_calls(
+    dummy_command.tools.subprocess.run.assert_has_calls(
         [
-            sign_call(tmp_path, tmp_path / "random.file", entitlements=False),
             sign_call(
-                tmp_path, tmp_path / "random.file", entitlements=False, deep=True
+                tmp_path,
+                tmp_path / "base_path" / "random.file",
+                entitlements=False,
+            ),
+            sign_call(
+                tmp_path,
+                tmp_path / "base_path" / "random.file",
+                entitlements=False,
+                deep=True,
             ),
         ],
         any_order=False,
@@ -265,7 +286,7 @@ def test_sign_file_deep_sign(dummy_command, tmp_path, capsys):
 def test_sign_file_deep_sign_failure(dummy_command, tmp_path, capsys):
     """If deep signing fails, an error is raised."""
     # First invocation raises the deep sign error; second invocation raises some other error
-    dummy_command.subprocess.run.side_effect = mock_codesign(
+    dummy_command.tools.subprocess.run.side_effect = mock_codesign(
         [
             " code object is not signed at all",
             " something went wrong!",
@@ -275,13 +296,18 @@ def test_sign_file_deep_sign_failure(dummy_command, tmp_path, capsys):
     # Sign the file
     with pytest.raises(BriefcaseCommandError, match="Unable to deep code sign "):
         dummy_command.sign_file(
-            tmp_path / "random.file", identity="Sekrit identity (DEADBEEF)"
+            tmp_path / "base_path" / "random.file",
+            identity="Sekrit identity (DEADBEEF)",
         )
 
     # An attempt to codesign was made
-    dummy_command.subprocess.run.assert_has_calls(
+    dummy_command.tools.subprocess.run.assert_has_calls(
         [
-            sign_call(tmp_path, tmp_path / "random.file", entitlements=False),
+            sign_call(
+                tmp_path,
+                tmp_path / "base_path" / "random.file",
+                entitlements=False,
+            ),
         ],
         any_order=False,
     )
@@ -294,19 +320,24 @@ def test_sign_file_unsupported_format(dummy_command, tmp_path, capsys):
     """If codesign reports an unsupported format, the signing attempt is
     ignored with a warning."""
     # FIXME: I'm not sure how to manufacture this in practice.
-    dummy_command.subprocess.run.side_effect = mock_codesign(
+    dummy_command.tools.subprocess.run.side_effect = mock_codesign(
         "unsupported format for signature"
     )
 
     # Sign the file
     dummy_command.sign_file(
-        tmp_path / "random.file", identity="Sekrit identity (DEADBEEF)"
+        tmp_path / "base_path" / "random.file",
+        identity="Sekrit identity (DEADBEEF)",
     )
 
     # An attempt to codesign was made
-    dummy_command.subprocess.run.assert_has_calls(
+    dummy_command.tools.subprocess.run.assert_has_calls(
         [
-            sign_call(tmp_path, tmp_path / "random.file", entitlements=False),
+            sign_call(
+                tmp_path,
+                tmp_path / "base_path" / "random.file",
+                entitlements=False,
+            ),
         ],
         any_order=False,
     )
@@ -319,19 +350,24 @@ def test_sign_file_unknown_bundle_format(dummy_command, tmp_path, capsys):
     """If a folder happens to have a .framework extension, the signing attempt
     is ignored with a warning."""
     # Raise an error caused by an unknown bundle format during codesign
-    dummy_command.subprocess.run.side_effect = mock_codesign(
+    dummy_command.tools.subprocess.run.side_effect = mock_codesign(
         "bundle format unrecognized, invalid, or unsuitable"
     )
 
     # Sign the file
     dummy_command.sign_file(
-        tmp_path / "random.file", identity="Sekrit identity (DEADBEEF)"
+        tmp_path / "base_path" / "random.file",
+        identity="Sekrit identity (DEADBEEF)",
     )
 
     # An attempt to codesign was made
-    dummy_command.subprocess.run.assert_has_calls(
+    dummy_command.tools.subprocess.run.assert_has_calls(
         [
-            sign_call(tmp_path, tmp_path / "random.file", entitlements=False),
+            sign_call(
+                tmp_path,
+                tmp_path / "base_path" / "random.file",
+                entitlements=False,
+            ),
         ],
         any_order=False,
     )
@@ -343,17 +379,22 @@ def test_sign_file_unknown_bundle_format(dummy_command, tmp_path, capsys):
 def test_sign_file_unknown_error(dummy_command, tmp_path):
     """Any other codesigning error raises an error."""
     # Raise an unknown error during codesign
-    dummy_command.subprocess.run.side_effect = mock_codesign("Unknown error")
+    dummy_command.tools.subprocess.run.side_effect = mock_codesign("Unknown error")
 
     with pytest.raises(BriefcaseCommandError, match="Unable to code sign "):
         dummy_command.sign_file(
-            tmp_path / "random.file", identity="Sekrit identity (DEADBEEF)"
+            tmp_path / "base_path" / "random.file",
+            identity="Sekrit identity (DEADBEEF)",
         )
 
     # An attempt to codesign was made
-    dummy_command.subprocess.run.assert_has_calls(
+    dummy_command.tools.subprocess.run.assert_has_calls(
         [
-            sign_call(tmp_path, tmp_path / "random.file", entitlements=False),
+            sign_call(
+                tmp_path,
+                tmp_path / "base_path" / "random.file",
+                entitlements=False,
+            ),
         ],
         any_order=False,
     )
@@ -374,9 +415,9 @@ def test_sign_app(dummy_command, first_app_with_binaries, tmp_path):
     # * It *doesn't* discover directories
     # * It *doesn't* discover non-Mach-O binaries
     # * It traverses in "depth first" order
-    app_path = tmp_path / "macOS" / "app" / "First App" / "First App.app"
+    app_path = tmp_path / "base_path" / "macOS" / "app" / "First App" / "First App.app"
     lib_path = app_path / "Contents" / "Resources"
-    dummy_command.subprocess.run.assert_has_calls(
+    dummy_command.tools.subprocess.run.assert_has_calls(
         [
             sign_call(tmp_path, lib_path / "subfolder" / "second_so.so"),
             sign_call(tmp_path, lib_path / "subfolder" / "second_dylib.dylib"),

@@ -11,7 +11,7 @@ class DummyConsole(Console):
         self.prompts = []
         self.values = list(values)
 
-    def __call__(self, prompt):
+    def __call__(self, prompt, *args, **kwargs):
         if not self.enabled:
             raise InputDisabled()
         self.prompts.append(prompt)

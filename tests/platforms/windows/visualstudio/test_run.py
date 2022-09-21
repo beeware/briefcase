@@ -4,24 +4,29 @@
 import os
 from unittest import mock
 
+from briefcase.console import Console, Log
+from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.windows.visualstudio import WindowsVisualStudioRunCommand
 
 
 def test_run_app(first_app_config, tmp_path):
     """A windows Visual Studio project app can be started."""
     command = WindowsVisualStudioRunCommand(
-        base_path=tmp_path / "base",
-        home_path=tmp_path / "home",
+        logger=Log(),
+        console=Console(),
+        base_path=tmp_path / "base_path",
+        data_path=tmp_path / "briefcase",
     )
-    command.subprocess = mock.MagicMock()
+    command.tools.home_path = tmp_path / "home"
+    command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
 
     command.run_app(first_app_config)
 
-    command.subprocess.run.assert_called_with(
+    command.tools.subprocess.run.assert_called_with(
         [
             os.fsdecode(
                 tmp_path
-                / "base"
+                / "base_path"
                 / "windows"
                 / "VisualStudio"
                 / "First App"

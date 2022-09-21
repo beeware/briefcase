@@ -143,6 +143,8 @@ class DevCommand(BaseCommand):
                 "Project specifies more than one application; use --app to specify which one to start."
             )
 
+        self.verify_app_tools(app)
+
         # Look for the existence of a dist-info file.
         # If one exists, assume that the dependencies have already been
         # installed. If a dependency update has been manually requested,

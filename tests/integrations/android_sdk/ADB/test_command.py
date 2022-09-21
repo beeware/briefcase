@@ -9,15 +9,15 @@ from briefcase.exceptions import InvalidDeviceError
 from briefcase.integrations.android_sdk import ADB
 
 
-def test_simple_command(mock_sdk, tmp_path):
+def test_simple_command(mock_tools, tmp_path):
     """ADB.command() invokes adb with the provided arguments."""
     # Create an ADB instance and invoke command()
-    adb = ADB(mock_sdk, "exampleDevice")
+    adb = ADB(mock_tools, "exampleDevice")
 
     adb.run("example", "command")
 
     # Check that adb was invoked with the expected commands
-    mock_sdk.command.subprocess.check_output.assert_called_once_with(
+    mock_tools.subprocess.check_output.assert_called_once_with(
         [
             os.fsdecode(
                 tmp_path
@@ -45,7 +45,7 @@ def test_simple_command(mock_sdk, tmp_path):
         ("arbitrary-adb-error-unknown-command", subprocess.CalledProcessError),
     ],
 )
-def test_error_handling(mock_sdk, tmp_path, name, exception):
+def test_error_handling(mock_tools, tmp_path, name, exception):
     """ADB.command() can parse errors returned by adb."""
     # Set up a mock command with a subprocess module that has with sample data loaded.
     adb_samples = Path(__file__).parent / "adb_errors"
@@ -53,7 +53,7 @@ def test_error_handling(mock_sdk, tmp_path, name, exception):
         with (adb_samples / (name + ".returncode")).open(
             encoding="utf-8"
         ) as returncode_file:
-            mock_sdk.command.subprocess.check_output.side_effect = (
+            mock_tools.subprocess.check_output.side_effect = (
                 subprocess.CalledProcessError(
                     returncode=int(returncode_file.read().strip()),
                     cmd=["ignored"],
@@ -62,12 +62,12 @@ def test_error_handling(mock_sdk, tmp_path, name, exception):
             )
 
     # Create an ADB instance and invoke run()
-    adb = ADB(mock_sdk, "exampleDevice")
+    adb = ADB(mock_tools, "exampleDevice")
     with pytest.raises(exception):
         adb.run("example", "command")
 
     # Check that adb was invoked as expected
-    mock_sdk.command.subprocess.check_output.assert_called_once_with(
+    mock_tools.subprocess.check_output.assert_called_once_with(
         [
             os.fsdecode(
                 tmp_path

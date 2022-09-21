@@ -90,6 +90,23 @@ Briefcase was unable to use Docker commands. Check your Docker
 installation, and try again.
 """
 
+    # Platform-specific template context dictionary for Docker installation details
+    DOCKER_INSTALL_DETAILS = {
+        "Windows": {
+            "install_url": "https://docs.docker.com/docker-for-windows/install/",
+            "extra_content": "",
+        },
+        "Darwin": {
+            "install_url": "https://docs.docker.com/docker-for-mac/install/",
+            "extra_content": "",
+        },
+        "Linux": {
+            "install_url": "https://docs.docker.com/engine/install/#server",
+            "extra_content": "Alternatively, to run briefcase natively (i.e. without Docker), use the\n"
+            "`--no-docker` command-line argument.",
+        },
+    }
+
     def __init__(self, tools):
         self.tools = tools
 
@@ -99,23 +116,6 @@ installation, and try again.
         # short circuit since already verified and available
         if hasattr(tools, "docker"):
             return tools.docker
-
-        # Platform-specific template context dictionary for Docker installation details
-        docker_install_details = {
-            "Windows": {
-                "install_url": "https://docs.docker.com/docker-for-windows/install/",
-                "extra_content": "",
-            },
-            "Darwin": {
-                "install_url": "https://docs.docker.com/docker-for-mac/install/",
-                "extra_content": "",
-            },
-            "Linux": {
-                "install_url": "https://docs.docker.com/engine/install/#server",
-                "extra_content": "Alternatively, to run briefcase natively (i.e. without Docker), use the\n"
-                "`--no-docker` command-line argument.",
-            },
-        }
 
         # Verify Docker version is compatible.
         try:
@@ -136,7 +136,7 @@ installation, and try again.
                     raise BriefcaseCommandError(
                         cls.WRONG_DOCKER_VERSION_ERROR.format(
                             docker_version=docker_version,
-                            **docker_install_details[tools.host_os],
+                            **cls.DOCKER_INSTALL_DETAILS[tools.host_os],
                         )
                     )
 
@@ -148,7 +148,7 @@ installation, and try again.
             # Docker executable doesn't exist.
             raise BriefcaseCommandError(
                 cls.DOCKER_NOT_INSTALLED_ERROR.format(
-                    **docker_install_details[tools.host_os]
+                    **cls.DOCKER_INSTALL_DETAILS[tools.host_os]
                 )
             ) from e
 

@@ -1,3 +1,5 @@
+import os
+import shutil
 from unittest import mock
 
 import pytest
@@ -42,18 +44,18 @@ def test_no_code(
     """If an app has no code (?!), install_app_code is mostly a no-op; but
     distinfo is created."""
     # Mock shutil so we can track usage.
-    create_command.shutil = mock.MagicMock()
-    create_command.os = mock.MagicMock()
+    create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
+    create_command.tools.os = mock.MagicMock(spec_set=os)
 
     myapp.sources = None
 
     create_command.install_app_code(myapp)
 
     # No request was made to install dependencies
-    create_command.shutil.rmtree.assert_called_once_with(app_path)
-    create_command.os.mkdir.assert_called_once_with(app_path)
-    create_command.shutil.copytree.assert_not_called()
-    create_command.shutil.copy.assert_not_called()
+    create_command.tools.shutil.rmtree.assert_called_once_with(app_path)
+    create_command.tools.os.mkdir.assert_called_once_with(app_path)
+    create_command.tools.shutil.copytree.assert_not_called()
+    create_command.tools.shutil.copy.assert_not_called()
 
     # Metadata has been created
     assert_dist_info(app_path)
@@ -68,18 +70,18 @@ def test_empty_code(
     """If an app has an empty sources list (?!), install_app_code is mostly a
     no-op; but distinfo is created."""
     # Mock shutil so we can track usage.
-    create_command.shutil = mock.MagicMock()
-    create_command.os = mock.MagicMock()
+    create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
+    create_command.tools.os = mock.MagicMock(spec_set=os)
 
     myapp.sources = []
 
     create_command.install_app_code(myapp)
 
     # No request was made to install dependencies
-    create_command.shutil.rmtree.assert_called_once_with(app_path)
-    create_command.os.mkdir.assert_called_once_with(app_path)
-    create_command.shutil.copytree.assert_not_called()
-    create_command.shutil.copy.assert_not_called()
+    create_command.tools.shutil.rmtree.assert_called_once_with(app_path)
+    create_command.tools.os.mkdir.assert_called_once_with(app_path)
+    create_command.tools.shutil.copytree.assert_not_called()
+    create_command.tools.shutil.copy.assert_not_called()
 
     # Metadata has been created
     assert_dist_info(app_path)
@@ -92,7 +94,7 @@ def test_source_missing(
     app_requirements_path_index,
 ):
     """If an app defines sources that are missing, an error is raised."""
-    # Set the app definition to point at sources that don't exsit
+    # Set the app definition to point at sources that don't exist
     myapp.sources = ["missing"]
 
     with pytest.raises(MissingAppSources):
@@ -303,18 +305,18 @@ def test_non_latin_metadata(
     myapp.description = "A Møøse once bit my sister..."
 
     # Mock shutil so we can track usage.
-    create_command.shutil = mock.MagicMock()
-    create_command.os = mock.MagicMock()
+    create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
+    create_command.tools.os = mock.MagicMock(spec_set=os)
 
     myapp.sources = []
 
     create_command.install_app_code(myapp)
 
     # No request was made to install dependencies
-    create_command.shutil.rmtree.assert_called_once_with(app_path)
-    create_command.os.mkdir.assert_called_once_with(app_path)
-    create_command.shutil.copytree.assert_not_called()
-    create_command.shutil.copy.assert_not_called()
+    create_command.tools.shutil.rmtree.assert_called_once_with(app_path)
+    create_command.tools.os.mkdir.assert_called_once_with(app_path)
+    create_command.tools.shutil.copytree.assert_not_called()
+    create_command.tools.shutil.copy.assert_not_called()
 
     # The dist-info file was created, and is readable.
     dist_info_path = app_path / "my_app-1.2.3.dist-info"
