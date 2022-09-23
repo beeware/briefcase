@@ -332,15 +332,12 @@ package for the platform.
 ~~~~~~~~~~~~~~~~~~~~
 
 The specific revision of a support package that should be used. By default,
-Briefcase will always use the most recently released support package; if you
-specify a support revision, the support package will be pinned to that version
-for your app.
+Briefcase will use the support package revision nominated by the application
+template. If you specify a support revision, that will override the revision
+nominated by the application template.
 
-If the support package is a URL, a query argument of
-``revision=<support_revision>`` will be added to the support package URL when
-it is downloaded.
-
-If the support package is a file path, this argument is ignored.
+If you specify an explicit support package (either as a URL or a file path),
+this argument is ignored.
 
 ``supported``
 ~~~~~~~~~~~~~
