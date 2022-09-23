@@ -793,12 +793,12 @@ or delete the old data directory, and re-run Briefcase.
         return cached_template
 
     def generate_template(self, template, branch, output_path, extra_context):
-        """Perform the template update and clone for a specific app template.
+        """Ensure the named template is up to date for the given branch, and
+        roll out that template.
 
-        Usually only called by `generate_app_template()`; assumes that app
-        has been updated with it's current template and template branch.
-
-        :param app: The config object for the app
+        :param template: The template URL or path to generate
+        :param branch: The branch of the template to use
+        :param output_path: The filesystem path where the template will be generated.
         :param extra_context: Extra context to pass to the cookiecutter template
         """
         # Make sure we have an updated cookiecutter template,
