@@ -226,10 +226,17 @@ class CreateCommand(BaseCommand):
         # If the app config doesn't explicitly define a template,
         # use a default template.
         if app.template is None:
-            app.template = self.app_template_url
+            template = self.app_template_url
+        else:
+            template = app.template
+
+        # If the app config doesn't explicitly define a template branch,
+        # use the branch derived from the Briefcase version
+        version = Version(briefcase.__version__)
         if app.template_branch is None:
-            version = Version(briefcase.__version__)
-            app.template_branch = f"v{version.base_version}"
+            template_branch = f"v{version.base_version}"
+        else:
+            template_branch = app.template_branch
 
         # Construct a template context from the app configuration.
         extra_context = app.__dict__.copy()
@@ -262,31 +269,32 @@ class CreateCommand(BaseCommand):
 
         try:
             self.logger.info(
-                f"Using app template: {app.template}, branch {app.template_branch}"
+                f"Using app template: {template}, branch {template_branch}"
             )
             self.generate_template(
-                template=app.template,
-                branch=app.template_branch,
+                template=template,
+                branch=template_branch,
                 output_path=output_path,
                 extra_context=extra_context,
             )
         except TemplateUnsupportedVersion:
-            # If we're *not* on a development branch, raise an error about
-            # the missing template branch.
-            if not version.dev:
+            # If we're on a development branch, and the template branch was *not*
+            # provided explicity, we can use a fallback development template.
+            # Otherwise, re-raise the exception about the unsupported template version.
+            if version.dev and app.template_branch is None:
+                # Development branches can use the main template.
+                self.logger.info(
+                    f"Template branch {template_branch} not found; falling back to development template"
+                )
+                template_branch = "main"
+                self.generate_template(
+                    template=template,
+                    branch=template_branch,
+                    output_path=output_path,
+                    extra_context=extra_context,
+                )
+            else:
                 raise
-
-            # Development branches can use the main template.
-            self.logger.info(
-                f"Template branch {app.template_branch} not found; falling back to development template"
-            )
-            app.template_branch = "main"
-            self.generate_template(
-                template=app.template,
-                branch=app.template_branch,
-                output_path=output_path,
-                extra_context=extra_context,
-            )
 
     def _unpack_support_package(self, support_file_path, support_path):
         """Unpack a support package into a specific location.
