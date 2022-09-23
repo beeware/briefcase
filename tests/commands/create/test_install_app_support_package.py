@@ -148,6 +148,55 @@ def test_install_custom_app_support_package_file(
     assert (support_path / "internal" / "file.txt").exists()
 
 
+def test_install_custom_app_support_package_file_with_revision(
+    create_command,
+    myapp,
+    tmp_path,
+    support_path,
+    app_requirements_path_index,
+    capsys,
+):
+    """If a custom support package file also specifies a revision, the revision
+    is ignored with a warning."""
+    # Provide an app-specific override of the package URL
+    myapp.support_package = os.fsdecode(tmp_path / "custom" / "support.zip")
+    myapp.support_revision = "42"
+
+    # Write a temporary support zip file
+    support_file = create_zip_file(
+        tmp_path / "custom" / "support.zip",
+        [("internal/file.txt", "hello world")],
+    )
+
+    # Modify download_file to return the temp zipfile
+    create_command.download_file = mock.MagicMock()
+
+    # Mock shutil so we can confirm that unpack is called,
+    # but we still want the side effect of calling it
+    create_command.shutil = mock.MagicMock()
+    create_command.shutil.unpack_archive.side_effect = shutil.unpack_archive
+
+    # Install the support package
+    create_command.install_app_support_package(myapp)
+
+    # There should have been no download attempt,
+    # as the resource is local.
+    create_command.download_file.assert_not_called()
+
+    # Confirm the right file was unpacked
+    create_command.shutil.unpack_archive.assert_called_with(
+        support_file,
+        extract_dir=support_path,
+    )
+
+    # Confirm that the full path to the support file
+    # has been unpacked.
+    assert (support_path / "internal" / "file.txt").exists()
+
+    # A warning about the support revision was generated.
+    assert "support revision will be ignored." in capsys.readouterr().out
+
+
 def test_support_package_url_with_invalid_custom_support_packge_url(
     create_command,
     myapp,
@@ -259,15 +308,73 @@ def test_install_custom_app_support_package_url(
     assert (support_path / "internal" / "file.txt").exists()
 
 
-def test_install_pinned_custom_app_support_package_url_with_args(
+def test_install_custom_app_support_package_url_with_revision(
+    create_command,
+    myapp,
+    tmp_path,
+    support_path,
+    app_requirements_path_index,
+    capsys,
+):
+    """If a custom support package URL also specifies a revision, the revision
+    is ignored with a warning."""
+    # Provide an app-specific override of the package URL and revision
+    myapp.support_package = "https://example.com/custom/custom-support.zip"
+    myapp.support_revision = "42"
+
+    # Mock download_file to return a support package
+    create_command.download_file = mock.MagicMock(
+        side_effect=mock_zip_download(
+            "custom-support.zip",
+            [("internal/file.txt", "hello world")],
+        )
+    )
+
+    # Mock shutil so we can confirm that unpack is called,
+    # but we still want the side effect of calling it
+    create_command.shutil = mock.MagicMock()
+    create_command.shutil.unpack_archive.side_effect = shutil.unpack_archive
+
+    # Install the support package
+    create_command.install_app_support_package(myapp)
+
+    # Confirm the right URL and download path was used
+    create_command.download_file.assert_called_with(
+        download_path=(
+            create_command.data_path
+            / "support"
+            / "1d3ac0e09eb22abc63c4e7b699b6ab5d58e277015eeae61070e3f9f11512e6b3"
+        ),
+        url="https://example.com/custom/custom-support.zip",
+        role="support package",
+    )
+
+    # Confirm the right file was unpacked into the hashed location
+    create_command.shutil.unpack_archive.assert_called_with(
+        tmp_path
+        / "data"
+        / "support"
+        / "1d3ac0e09eb22abc63c4e7b699b6ab5d58e277015eeae61070e3f9f11512e6b3"
+        / "custom-support.zip",
+        extract_dir=support_path,
+    )
+
+    # Confirm that the full path to the support file
+    # has been unpacked.
+    assert (support_path / "internal" / "file.txt").exists()
+
+    # A warning about the support revision was generated.
+    assert "support revision will be ignored." in capsys.readouterr().out
+
+
+def test_install_custom_app_support_package_url_with_args(
     create_command,
     myapp,
     tmp_path,
     support_path,
     app_requirements_path_index,
 ):
-    """A custom support package can be specified as URL with args, and pinned
-    to a revision."""
+    """A custom support package can be specified as URL with args."""
     # Provide an app-specific override of the package URL
     myapp.support_package = "https://example.com/custom/custom-support.zip?cool=Yes"
 

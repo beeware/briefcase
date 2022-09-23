@@ -333,6 +333,16 @@ class CreateCommand(BaseCommand):
                 support_package_url = app.support_package
                 custom_support_package = True
                 self.logger.info(f"Using custom support package {support_package_url}")
+                try:
+                    # If the app has a custom support package *and* a support revision,
+                    # that's an error.
+                    app.support_revision
+                    self.logger.warning(
+                        "App specifies both a support package and a support revision; "
+                        "support revision will be ignored."
+                    )
+                except AttributeError:
+                    pass
             except AttributeError:
                 # If the app specifies a support revision, use it;
                 # otherwise, use the support revision named by the template
