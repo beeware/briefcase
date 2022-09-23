@@ -95,7 +95,7 @@ def test_no_requested_size_invalid_path(create_command, tmp_path, capsys):
 
 
 def test_requested_size(create_command, tmp_path, capsys):
-    """If the app specifies a sized image, an anoated image filename is
+    """If the app specifies a sized image, an annotated image filename is
     used."""
     create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
 
@@ -127,7 +127,7 @@ def test_requested_size(create_command, tmp_path, capsys):
 
 
 def test_requested_size_invalid_path(create_command, tmp_path, capsys):
-    """If the app specifies an sized image that doesn't exist, an error is
+    """If the app specifies a sized image that doesn't exist, an error is
     raised."""
     create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
     create_command.tools.shutil.copy.side_effect = FileNotFoundError
@@ -216,7 +216,7 @@ def test_variant_without_variant_source_and_no_requested_size(
 
 
 def test_unknown_variant_with_no_requested_size(create_command, tmp_path, capsys):
-    """If the app specifies an unknown variant, an message is reported."""
+    """If the app specifies an unknown variant, a message is reported."""
     create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
 
     # Create the source image

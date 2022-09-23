@@ -20,10 +20,13 @@ def mock_tools(mock_tools, tmp_path) -> ToolCache:
     mock_tools.java = MagicMock(spec=JDK)
     mock_tools.java.java_home = Path("/path/to/jdk")
 
+    return mock_tools
+
+
+@pytest.fixture
+def android_sdk(mock_tools, tmp_path) -> AndroidSDK:
     # Ensure root directory for SDK exists
     sdk_root = tmp_path / "sdk"
     sdk_root.mkdir(parents=True)
 
-    mock_tools.android_sdk = AndroidSDK(mock_tools, root_path=sdk_root)
-
-    return mock_tools
+    return AndroidSDK(mock_tools, root_path=sdk_root)

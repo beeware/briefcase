@@ -220,6 +220,7 @@ class DockerAppContext:
         :param host_platform_path: Base directory for where App is built
         :param host_data_path: Base directory for host's Briefcase data
         :param python_version: Version of python, e.g. 3.10
+        :returns: A wrapper for a Docker app context.
         """
         # short circuit since already verified and available
         if hasattr(tools[app], "app_context"):

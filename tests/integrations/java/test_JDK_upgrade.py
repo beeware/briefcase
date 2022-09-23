@@ -119,7 +119,7 @@ def test_macOS_existing_install(mock_tools, tmp_path):
 
     # Mock the cached download path.
     # Consider to remove if block when we drop py3.7 support, only keep statements from else.
-    # MagicMock below py3.8 doesn't has __fspath__ attribute.
+    # MagicMock below py3.8 doesn't have __fspath__ attribute.
     if sys.version_info < (3, 8):
         archive = FsPathMock("/path/to/download.zip")
     else:
@@ -209,7 +209,7 @@ def test_unpack_fail(mock_tools, tmp_path):
 
     # Mock the cached download path
     # Consider to remove if block when we drop py3.7 support, only keep statements from else.
-    # MagicMock below py3.8 doesn't has __fspath__ attribute.
+    # MagicMock below py3.8 doesn't have __fspath__ attribute.
     if sys.version_info < (3, 8):
         archive = FsPathMock("/path/to/download.zip")
     else:

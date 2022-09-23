@@ -72,7 +72,8 @@ class LinuxDeployBase:
         :param install: Should the tool/plugin be installed if it is not found?
         :param kwargs: Any additional keyword arguments that should be passed
             to the tool at time of construction.
-        :returns: A plugin wrapper if a plugin is verified.
+        :returns: A valid tool wrapper. If the tool/plugin is not
+            available, and was not installed, raises MissingToolError.
         """
         is_plugin = issubclass(cls, LinuxDeployPluginBase)
 

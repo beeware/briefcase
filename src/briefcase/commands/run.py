@@ -50,8 +50,6 @@ class RunCommand(BaseCommand):
                 "Project specifies more than one application; use --app to specify which one to start."
             )
 
-        self.verify_app_tools(app)
-
         template_file = self.bundle_path(app)
         binary_file = self.binary_path(app)
         if not template_file.exists():
@@ -64,6 +62,8 @@ class RunCommand(BaseCommand):
             state = self.build_command(app, **options)
         else:
             state = None
+
+        self.verify_app_tools(app)
 
         state = self.run_app(app, **full_options(state, options))
 

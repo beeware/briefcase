@@ -21,13 +21,13 @@ class OpenCommand(BaseCommand):
 
         :param app: The application to open
         """
-        self.verify_app_tools(app)
-
         project_path = self.project_path(app)
         if not project_path.exists():
             state = self.create_command(app, **options)
         else:
             state = None
+
+        self.verify_app_tools(app)
 
         self.logger.info(
             f"Opening {self.project_path(app).relative_to(self.base_path)}...",

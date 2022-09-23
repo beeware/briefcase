@@ -13,7 +13,7 @@ from briefcase.exceptions import BriefcaseCommandError
         ("Linux", "arm64"),
     ],
 )
-def test_unsupported_abi(mock_tools, host_os, host_arch):
+def test_unsupported_abi(mock_tools, android_sdk, host_os, host_arch):
     """If the system has an unsupported ABI, raise an error."""
     # Mock the hardware and OS
     mock_tools.host_os = host_os
@@ -23,9 +23,7 @@ def test_unsupported_abi(mock_tools, host_os, host_arch):
         BriefcaseCommandError,
         match=f"The Android emulator does not currently support {host_os} {host_arch} hardware",
     ):
-        mock_tools.android_sdk.verify_system_image(
-            "system-images;android-31;default;x86_64"
-        )
+        android_sdk.verify_system_image("system-images;android-31;default;x86_64")
 
 
 @pytest.mark.parametrize(
@@ -41,7 +39,7 @@ def test_unsupported_abi(mock_tools, host_os, host_arch):
         "system-image;android-31;default;anything",
     ],
 )
-def test_invalid_system_image(mock_tools, bad_image_name):
+def test_invalid_system_image(mock_tools, android_sdk, bad_image_name):
     """If the system image name doesn't make sense, raise an error."""
     # Mock the host arch
     mock_tools.host_arch = "x86_64"
@@ -51,19 +49,17 @@ def test_invalid_system_image(mock_tools, bad_image_name):
         BriefcaseCommandError,
         match=rf"{bad_image_name!r} is not a valid system image name.",
     ):
-        mock_tools.android_sdk.verify_system_image(bad_image_name)
+        android_sdk.verify_system_image(bad_image_name)
 
 
-def test_incompatible_abi(mock_tools, capsys):
+def test_incompatible_abi(mock_tools, android_sdk, capsys):
     """If the system image doesn't match the emulator ABI, warn the user, but
     continue."""
     # Mock the host arch
     mock_tools.host_arch = "x86_64"
 
-    # Verify an system image that doesn't match the host architecture
-    mock_tools.android_sdk.verify_system_image(
-        "system-images;android-31;default;anything"
-    )
+    # Verify a system image that doesn't match the host architecture
+    android_sdk.verify_system_image("system-images;android-31;default;anything")
 
     # A warning message was output
     assert "WARNING: Unexpected emulator ABI" in capsys.readouterr().out
@@ -71,15 +67,15 @@ def test_incompatible_abi(mock_tools, capsys):
     # The system image was installed.
     mock_tools.subprocess.run.assert_called_once_with(
         [
-            os.fsdecode(mock_tools.android_sdk.sdkmanager_path),
+            os.fsdecode(android_sdk.sdkmanager_path),
             "system-images;android-31;default;anything",
         ],
-        env=mock_tools.android_sdk.env,
+        env=android_sdk.env,
         check=True,
     )
 
 
-def test_existing_system_image(mock_tools):
+def test_existing_system_image(mock_tools, android_sdk):
     """If the system image already exists, don't attempt to download it
     again."""
     # Mock the host arch
@@ -87,44 +83,36 @@ def test_existing_system_image(mock_tools):
 
     # Mock the existence of a system image
     (
-        mock_tools.android_sdk.root_path
-        / "system-images"
-        / "android-31"
-        / "default"
-        / "x86_64"
+        android_sdk.root_path / "system-images" / "android-31" / "default" / "x86_64"
     ).mkdir(parents=True)
 
     # Verify the system image that we already have
-    mock_tools.android_sdk.verify_system_image(
-        "system-images;android-31;default;x86_64"
-    )
+    android_sdk.verify_system_image("system-images;android-31;default;x86_64")
 
     # sdkmanager was *not* called.
     mock_tools.subprocess.run.assert_not_called()
 
 
-def test_new_system_image(mock_tools):
+def test_new_system_image(mock_tools, android_sdk):
     """If the system image doesn't exist locally, it will be installed."""
     # Mock the host arch
     mock_tools.host_arch = "x86_64"
 
     # Verify the system image, triggering a download
-    mock_tools.android_sdk.verify_system_image(
-        "system-images;android-31;default;x86_64"
-    )
+    android_sdk.verify_system_image("system-images;android-31;default;x86_64")
 
     # The system image was installed.
     mock_tools.subprocess.run.assert_called_once_with(
         [
-            os.fsdecode(mock_tools.android_sdk.sdkmanager_path),
+            os.fsdecode(android_sdk.sdkmanager_path),
             "system-images;android-31;default;x86_64",
         ],
-        env=mock_tools.android_sdk.env,
+        env=android_sdk.env,
         check=True,
     )
 
 
-def test_problem_downloading_system_image(mock_tools):
+def test_problem_downloading_system_image(mock_tools, android_sdk):
     """If there is a failure downloading the system image, an error is
     raised."""
     # Mock the host arch
@@ -141,16 +129,14 @@ def test_problem_downloading_system_image(mock_tools):
         BriefcaseCommandError,
         match="Error while installing the 'system-images;android-31;default;x86_64' Android system image.",
     ):
-        mock_tools.android_sdk.verify_system_image(
-            "system-images;android-31;default;x86_64"
-        )
+        android_sdk.verify_system_image("system-images;android-31;default;x86_64")
 
     # An attempt to install the system image was made
     mock_tools.subprocess.run.assert_called_once_with(
         [
-            os.fsdecode(mock_tools.android_sdk.sdkmanager_path),
+            os.fsdecode(android_sdk.sdkmanager_path),
             "system-images;android-31;default;x86_64",
         ],
-        env=mock_tools.android_sdk.env,
+        env=android_sdk.env,
         check=True,
     )

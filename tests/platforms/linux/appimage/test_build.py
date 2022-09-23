@@ -7,6 +7,7 @@ import pytest
 
 from briefcase.console import Console, Log
 from briefcase.exceptions import BriefcaseCommandError, NetworkFailure
+from briefcase.integrations.docker import DockerAppContext
 from briefcase.integrations.linuxdeploy import LinuxDeploy
 from briefcase.platforms.linux.appimage import LinuxAppImageBuildCommand
 
@@ -336,34 +337,23 @@ def test_build_appimage_in_docker(build_command, first_app, tmp_path, monkeypatc
     build_command.tools.host_os = "TestOS"
     build_command.use_docker = True
 
-    build_command.verify_app_tools(first_app)
-
-    # Assert docker image built
-    build_command._subprocess.Popen.assert_any_call(
-        [
-            "docker",
-            "build",
-            "--progress",
-            "plain",
-            "--tag",
-            f"briefcase/com.example.first-app:py3.{sys.version_info.minor}",
-            "--file",
-            f"{tmp_path / 'base_path' / 'linux' / 'appimage' / 'First App' / 'Dockerfile'}",
-            "--build-arg",
-            f"PY_VERSION=3.{sys.version_info.minor}",
-            "--build-arg",
-            "SYSTEM_REQUIRES=",
-            "--build-arg",
-            "HOST_UID=1000",
-            "--build-arg",
-            "HOST_GID=1001",
-            f"{tmp_path / 'base_path' / 'src'}",
-        ],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        bufsize=1,
-        text=True,
-        encoding=mock.ANY,
+    # Provide Docker app context
+    build_command.tools[first_app].app_context = DockerAppContext(
+        tools=build_command.tools,
+        app=first_app,
+    )
+    build_command.tools[first_app].app_context.prepare(
+        image_tag=f"briefcase/com.example.first-app:py3.{sys.version_info.minor}",
+        dockerfile_path=tmp_path
+        / "base_path"
+        / "linux"
+        / "appimage"
+        / "First App"
+        / "Dockerfile",
+        app_base_path=tmp_path / "base_path",
+        host_platform_path=tmp_path / "base_path" / "linux",
+        host_data_path=tmp_path / "briefcase",
+        python_version=f"3.{sys.version_info.minor}",
     )
 
     build_command.build_app(first_app)
@@ -448,34 +438,23 @@ def test_build_appimage_with_plugins_in_docker(build_command, first_app, tmp_pat
     build_command.tools.host_os = "TestOS"
     build_command.use_docker = True
 
-    build_command.verify_app_tools(first_app)
-
-    # Docker image is built
-    build_command._subprocess.Popen.assert_any_call(
-        [
-            "docker",
-            "build",
-            "--progress",
-            "plain",
-            "--tag",
-            f"briefcase/com.example.first-app:py3.{sys.version_info.minor}",
-            "--file",
-            f"{tmp_path / 'base_path' / 'linux' / 'appimage' / 'First App' / 'Dockerfile'}",
-            "--build-arg",
-            f"PY_VERSION=3.{sys.version_info.minor}",
-            "--build-arg",
-            "SYSTEM_REQUIRES=",
-            "--build-arg",
-            "HOST_UID=1000",
-            "--build-arg",
-            "HOST_GID=1001",
-            f"{tmp_path / 'base_path' / 'src'}",
-        ],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        bufsize=1,
-        text=True,
-        encoding=mock.ANY,
+    # Provide Docker app context
+    build_command.tools[first_app].app_context = DockerAppContext(
+        tools=build_command.tools,
+        app=first_app,
+    )
+    build_command.tools[first_app].app_context.prepare(
+        image_tag=f"briefcase/com.example.first-app:py3.{sys.version_info.minor}",
+        dockerfile_path=tmp_path
+        / "base_path"
+        / "linux"
+        / "appimage"
+        / "First App"
+        / "Dockerfile",
+        app_base_path=tmp_path / "base_path",
+        host_platform_path=tmp_path / "base_path" / "linux",
+        host_data_path=tmp_path / "briefcase",
+        python_version=f"3.{sys.version_info.minor}",
     )
 
     build_command.build_app(first_app)

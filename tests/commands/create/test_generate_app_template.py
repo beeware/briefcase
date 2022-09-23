@@ -49,7 +49,6 @@ def full_context(extra):
 def test_default_template(create_command, myapp):
     """Absent of other information, the default template is used."""
     # There won't be a cookiecutter cache, so there won't be a cache path (yet).
-    print(create_command.tools.git)
     create_command.tools.git.Repo.side_effect = git_exceptions.NoSuchPathError
 
     # Generate the template.

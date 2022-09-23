@@ -19,6 +19,7 @@ class Flatpak:
         """Verify that the Flatpak toolchain is available.
 
         :param tools: ToolCache of available tools
+        :returns: A wrapper for the Flatpak tools.
         """
         # short circuit since already verified and available
         if hasattr(tools, "flatpak"):

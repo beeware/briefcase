@@ -140,6 +140,8 @@ class AndroidSDK:
 
         :param tools: ToolCache of available tools
         :param install: Should the tool be installed if it is not found?
+        :returns: A valid Android SDK wrapper. If Android SDK is not
+            available, and was not installed, raises MissingToolError.
         """
         # short circuit since already verified and available
         if hasattr(tools, "android_sdk"):

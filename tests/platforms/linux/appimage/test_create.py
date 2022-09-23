@@ -1,11 +1,10 @@
-import os
 import sys
 from unittest.mock import MagicMock
 
 import pytest
 
 from briefcase.console import Console, Log
-from briefcase.integrations.docker import Docker, DockerAppContext
+from briefcase.integrations.docker import DockerAppContext
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.linux.appimage import LinuxAppImageCreateCommand
 
@@ -32,17 +31,11 @@ def test_support_package_url(first_app_config, tmp_path):
 @pytest.mark.skipif(
     sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
 )
-def test_install_app_dependencies(first_app_config, tmp_path, monkeypatch):
+def test_install_app_dependencies_in_docker(first_app_config, tmp_path):
     """If Docker is in use, a docker context is used to invoke pip."""
-
-    class TestLinuxAppImageCreateCommand(LinuxAppImageCreateCommand):
-        @property
-        def python_version_tag(self):
-            return "3.X"
-
     first_app_config.requires = ["foo==1.2.3", "bar>=4.5"]
 
-    command = TestLinuxAppImageCreateCommand(
+    command = LinuxAppImageCreateCommand(
         logger=Log(),
         console=Console(),
         base_path=tmp_path / "base_path",
@@ -52,48 +45,28 @@ def test_install_app_dependencies(first_app_config, tmp_path, monkeypatch):
 
     # Mock the existence of Docker.
     command.tools.subprocess = MagicMock(spec_set=Subprocess)
-    command.tools.subprocess.check_output.side_effect = [
-        "Docker version 19.03.8, build afacb8b\n",
-        "docker info return value",
-    ]
-    command.tools.os = MagicMock(spec_set=os)
-    # Mock user and group IDs for docker image
-    command.tools.os.getuid.return_value = "37"
-    command.tools.os.getgid.return_value = "42"
 
     command._path_index = {
         first_app_config: {"app_packages_path": "path/to/app_packages"}
     }
 
-    command.verify_tools()
-    command.verify_app_tools(first_app_config)
-
-    # Docker was verified.
-    assert isinstance(command.tools.docker, Docker)
-
-    # The docker image was prepared.
-    assert isinstance(command.tools[first_app_config].app_context, DockerAppContext)
-    command.tools.subprocess.run.assert_called_with(
-        [
-            "docker",
-            "build",
-            "--progress",
-            "plain",
-            "--tag",
-            "briefcase/com.example.first-app:py3.X",
-            "--file",
-            tmp_path / "base_path" / "linux" / "appimage" / "First App" / "Dockerfile",
-            "--build-arg",
-            "PY_VERSION=3.X",
-            "--build-arg",
-            "SYSTEM_REQUIRES=",
-            "--build-arg",
-            "HOST_UID=37",
-            "--build-arg",
-            "HOST_GID=42",
-            tmp_path / "base_path" / "src",
-        ],
-        check=True,
+    # Provide Docker app context
+    command.tools[first_app_config].app_context = DockerAppContext(
+        tools=command.tools,
+        app=first_app_config,
+    )
+    command.tools[first_app_config].app_context.prepare(
+        image_tag="briefcase/com.example.first-app:py3.X",
+        dockerfile_path=tmp_path
+        / "base_path"
+        / "linux"
+        / "appimage"
+        / "First App"
+        / "Dockerfile",
+        app_base_path=tmp_path / "base_path",
+        host_platform_path=tmp_path / "base_path" / "linux",
+        host_data_path=tmp_path / "briefcase",
+        python_version="3.X",
     )
 
     command.install_app_dependencies(first_app_config)

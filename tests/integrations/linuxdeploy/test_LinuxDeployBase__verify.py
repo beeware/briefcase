@@ -70,7 +70,7 @@ def test_verify_does_not_exist_dont_install(mock_tools):
     with pytest.raises(MissingToolError):
         LinuxDeployDummy.verify(mock_tools, install=False)
 
-    # No download occured
+    # No download occurred
     assert mock_tools.download.file.call_count == 0
     assert mock_tools.os.chmod.call_count == 0
 

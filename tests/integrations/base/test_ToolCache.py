@@ -2,7 +2,6 @@ import os
 import platform
 import shutil
 import sys
-from collections import defaultdict
 from pathlib import Path
 
 import pytest
@@ -38,32 +37,27 @@ def test_third_party_tools_available():
 def test_default_tools_available(simple_tools):
     """Default tools are always available."""
     assert isinstance(simple_tools.subprocess, Subprocess)
-    assert isinstance(simple_tools["asdf"].subprocess, Subprocess)
+    assert isinstance(simple_tools["app"].subprocess, Subprocess)
     assert isinstance(simple_tools.download, Download)
-    assert isinstance(simple_tools["asdf"].download, Download)
+    assert isinstance(simple_tools["app"].download, Download)
 
 
 def test_always_true(simple_tools, tmp_path):
     """Implicit boolean casts are always True."""
     assert simple_tools or False
-    simple_tools["asdf"].app_context = "asdf"
-    assert simple_tools or False
+    simple_tools["app-1"].app_context = "tool"
+    assert simple_tools["app-1"] or False
 
 
 def test_mapping_protocol(simple_tools):
     """ToolCache is a mapping."""
-    simple_tools["app-1"].asdf = "asdf"
-    simple_tools["app-2"].asdf = "asdf"
+    simple_tools["app-1"].tool = "tool 1"
+    simple_tools["app-2"].tool = "tool 2"
 
     assert [app for app in simple_tools] == ["app-1", "app-2"]
     assert len(simple_tools) == 2
-    assert simple_tools["app-1"].asdf == "asdf"
-
-
-def test_app_tools_defaultdict(simple_tools, tmp_path):
-    """App tools are implemented in a defaultdict."""
-    assert isinstance(simple_tools.app_tools, defaultdict)
-    assert isinstance(simple_tools["asdf"], ToolCache)
+    assert simple_tools["app-1"].tool == "tool 1"
+    assert simple_tools["app-2"].tool == "tool 2"
 
 
 def test_host_arch_and_os(simple_tools):

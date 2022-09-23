@@ -1,10 +1,9 @@
 import pytest
 
 from briefcase.exceptions import MissingToolError, NetworkFailure
-from briefcase.integrations.rcedit import RCEdit
 
 
-def test_upgrade_exists(mock_tools, tmp_path):
+def test_upgrade_exists(mock_tools, rcedit, tmp_path):
     """If rcedit already exists, upgrading deletes first."""
     rcedit_path = tmp_path / "tools" / "rcedit-x64.exe"
 
@@ -18,8 +17,7 @@ def test_upgrade_exists(mock_tools, tmp_path):
 
     mock_tools.download.file.side_effect = side_effect_create_mock_appimage
 
-    # Create a rcedit wrapper, then upgrade it
-    rcedit = RCEdit(mock_tools)
+    # Do upgrade
     rcedit.upgrade()
 
     # The mock file should exist as the upgraded version
@@ -34,10 +32,9 @@ def test_upgrade_exists(mock_tools, tmp_path):
     )
 
 
-def test_upgrade_does_not_exist(mock_tools, tmp_path):
+def test_upgrade_does_not_exist(mock_tools, rcedit, tmp_path):
     """If rcedit doesn't already exist, upgrading is an error."""
-    # Create a rcedit wrapper, then upgrade it
-    rcedit = RCEdit(mock_tools)
+    # Do upgrade
     with pytest.raises(MissingToolError):
         rcedit.upgrade()
 
@@ -45,7 +42,7 @@ def test_upgrade_does_not_exist(mock_tools, tmp_path):
     assert mock_tools.download.file.call_count == 0
 
 
-def test_upgrade_rcedit_download_failure(mock_tools, tmp_path):
+def test_upgrade_rcedit_download_failure(mock_tools, rcedit, tmp_path):
     """If rcedit doesn't exist, but a download failure occurs, an error is
     raised."""
     # Mock the existence of an install
@@ -54,9 +51,7 @@ def test_upgrade_rcedit_download_failure(mock_tools, tmp_path):
 
     mock_tools.download.file.side_effect = NetworkFailure("mock")
 
-    # Create a rcedit wrapper, then upgrade it.
     # The upgrade will fail
-    rcedit = RCEdit(mock_tools)
     with pytest.raises(NetworkFailure, match="Unable to mock"):
         rcedit.upgrade()
 

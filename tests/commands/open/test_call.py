@@ -43,8 +43,8 @@ def test_create_before_open(open_command, tmp_path):
     # The right sequence of things will be done
     assert open_command.actions == [
         ("verify",),
-        ("verify-app-tools", "first"),
         # create, then open the first app
         ("create", "first", {}),
+        ("verify-app-tools", "first"),
         ("open", tmp_path / "tester" / "dummy" / "first" / "first.project"),
     ]

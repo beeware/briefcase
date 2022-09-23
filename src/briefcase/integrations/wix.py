@@ -23,6 +23,8 @@ class WiX:
         :param bin_install: Is the install a binaries-only install? A full
             MSI install of WiX has a `/bin` folder in the paths; a
             binaries-only install does not.
+        :returns: A valid WiX SDK wrapper. If WiX is not available, and was
+            not installed, raises MissingToolError.
         """
         self.tools = tools
         if wix_home:

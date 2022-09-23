@@ -10,7 +10,7 @@ from briefcase.integrations.subprocess import Subprocess
 
 @pytest.fixture
 def dev_command(tmp_path):
-    command = DevCommand(base_path=tmp_path, logger=Log(), console=Console())
+    command = DevCommand(logger=Log(), console=Console(), base_path=tmp_path)
     command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
     return command
 

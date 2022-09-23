@@ -3,6 +3,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from briefcase.integrations.download import Download
+from briefcase.integrations.rcedit import RCEdit
 from briefcase.integrations.subprocess import Subprocess
 
 
@@ -15,3 +16,8 @@ def mock_tools(tmp_path, mock_tools):
     mock_tools.download = MagicMock(spec_set=Download)
 
     return mock_tools
+
+
+@pytest.fixture
+def rcedit(mock_tools) -> RCEdit:
+    return RCEdit(mock_tools)

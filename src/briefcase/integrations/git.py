@@ -16,6 +16,7 @@ def verify_git_is_installed(tools):
     without raising an error.
 
     :param tools: ToolCache of available tools
+    :returns: The git module, if `git` is installed and available.
     """
     # short circuit since already verified and available
     if hasattr(tools, "git"):

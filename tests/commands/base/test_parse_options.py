@@ -31,7 +31,7 @@ def test_unknown_option(other_command, capsys):
     with pytest.raises(SystemExit) as excinfo:
         other_command.parse_options(extra=("-y", "because"))
 
-    # Error code for a unknown option
+    # Error code for an unknown option
     assert excinfo.value.code == 2
     # Error message about unknown option is displayed
     err = capsys.readouterr().err
@@ -43,7 +43,7 @@ def test_no_options(other_command, capsys):
     with pytest.raises(SystemExit) as excinfo:
         other_command.parse_options(extra=("-x", "wibble"))
 
-    # Error code for a unknown option
+    # Error code for an unknown option
     assert excinfo.value.code == 2
     # Error message about unknown option is displayed
     err = capsys.readouterr().err

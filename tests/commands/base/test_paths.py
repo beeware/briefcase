@@ -107,7 +107,7 @@ def test_macOS_paths(
     )
 
 
-@pytest.mark.skipif(platform.system() != "Windows", reason="Windoes specific tests")
+@pytest.mark.skipif(platform.system() != "Windows", reason="Windows specific tests")
 @pytest.mark.parametrize(
     "data_path, environ_path, expected_data_path",
     [

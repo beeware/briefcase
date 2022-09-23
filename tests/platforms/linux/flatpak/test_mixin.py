@@ -154,7 +154,7 @@ def test_custom_runtime_runtime_only(first_app_config, tmp_path):
 
 
 def test_custom_runtime_sdk_only(first_app_config, tmp_path):
-    """If the user only defines a SDK, accessing the runtime raises an
+    """If the user only defines an SDK, accessing the runtime raises an
     error."""
     first_app_config.flatpak_runtime_version = "37.42"
     first_app_config.flatpak_sdk = "org.beeware.SDK"

@@ -8,13 +8,11 @@ import pytest
 
 from briefcase.exceptions import BriefcaseCommandError, MissingToolError, NetworkFailure
 from briefcase.integrations.android_sdk import AndroidSDK
+from briefcase.integrations.base import ToolCache
 
 
 @pytest.fixture
-def mock_tools(mock_tools):
-    # Unset existing AndroidSDK
-    delattr(mock_tools, "android_sdk")
-
+def mock_tools(mock_tools) -> ToolCache:
     # Mock the os environment, but copy over other key functions.
     mock_tools.os.environ = {}
     mock_tools.os.fsdecode = os.fsdecode

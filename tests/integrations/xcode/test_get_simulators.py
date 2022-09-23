@@ -7,12 +7,13 @@ import pytest
 
 from briefcase.console import Console
 from briefcase.exceptions import BriefcaseError
+from briefcase.integrations.base import ToolCache
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.integrations.xcode import get_simulators
 
 
 @pytest.fixture
-def mock_tools(mock_tools):
+def mock_tools(mock_tools) -> ToolCache:
     mock_tools.input = mock.MagicMock(spec_set=Console)
     mock_tools.subprocess = Subprocess(mock_tools)
     mock_tools.subprocess._subprocess = mock.MagicMock(spec_set=subprocess)

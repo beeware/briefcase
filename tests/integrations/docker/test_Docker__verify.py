@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, call
 import pytest
 
 from briefcase.exceptions import BriefcaseCommandError
+from briefcase.integrations.base import ToolCache
 from briefcase.integrations.docker import Docker
 from briefcase.integrations.subprocess import Subprocess
 
@@ -14,7 +15,7 @@ def valid_docker_version():
 
 
 @pytest.fixture
-def mock_tools(mock_tools):
+def mock_tools(mock_tools) -> ToolCache:
     mock_tools.subprocess = MagicMock(spec_set=Subprocess)
     return mock_tools
 

@@ -747,7 +747,8 @@ class CreateCommand(BaseCommand):
         self.cleanup_app_content(app=app)
 
         self.logger.info(
-            f"Created {bundle_path.relative_to(self.base_path)}", prefix=app.app_name
+            f"Created {bundle_path.relative_to(self.base_path)}",
+            prefix=app.app_name,
         )
 
     def verify_tools(self):

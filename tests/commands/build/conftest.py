@@ -17,7 +17,9 @@ class DummyBuildCommand(BuildCommand):
     description = "Dummy build command"
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, apps={}, logger=Log(), console=Console(), **kwargs)
+        kwargs.setdefault("logger", Log())
+        kwargs.setdefault("console", Console())
+        super().__init__(*args, apps={}, **kwargs)
 
         self.actions = []
 

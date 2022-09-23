@@ -124,7 +124,7 @@ def test_source_dir(
     #       deeper.py
     first_src = tmp_path / "project" / "src" / "first" / "demo.py"
     first_src.parent.mkdir(parents=True)
-    with (first_src).open("w") as f:
+    with first_src.open("w") as f:
         f.write("print('hello first')\n")
 
     second_shallow_src = tmp_path / "project" / "src" / "second" / "shallow.py"
@@ -132,9 +132,9 @@ def test_source_dir(
         tmp_path / "project" / "src" / "second" / "submodule" / "deeper.py"
     )
     second_deep_src.parent.mkdir(parents=True)
-    with (second_shallow_src).open("w") as f:
+    with second_shallow_src.open("w") as f:
         f.write("print('hello shallow second')\n")
-    with (second_deep_src).open("w") as f:
+    with second_deep_src.open("w") as f:
         f.write("print('hello deep second')\n")
 
     # Set the app definition, and install sources
@@ -171,11 +171,11 @@ def test_source_file(
     #   other.py
     first_src = tmp_path / "project" / "src" / "first" / "demo.py"
     first_src.parent.mkdir(parents=True)
-    with (first_src).open("w") as f:
+    with first_src.open("w") as f:
         f.write("print('hello first')\n")
 
     second_src = tmp_path / "project" / "src" / "other.py"
-    with (second_src).open("w") as f:
+    with second_src.open("w") as f:
         f.write("print('hello second')\n")
 
     # Set the app definition, and install sources
@@ -209,7 +209,7 @@ def test_replace_sources(
     #       deeper.py
     first_src = tmp_path / "project" / "src" / "first" / "demo.py"
     first_src.parent.mkdir(parents=True)
-    with (first_src).open("w") as f:
+    with first_src.open("w") as f:
         f.write("print('hello first')\n")
 
     second_shallow_src = tmp_path / "project" / "src" / "second" / "shallow.py"
@@ -217,9 +217,9 @@ def test_replace_sources(
         tmp_path / "project" / "src" / "second" / "submodule" / "deeper.py"
     )
     second_deep_src.parent.mkdir(parents=True)
-    with (second_shallow_src).open("w") as f:
+    with second_shallow_src.open("w") as f:
         f.write("print('hello shallow second')\n")
-    with (second_deep_src).open("w") as f:
+    with second_deep_src.open("w") as f:
         f.write("print('hello deep second')\n")
 
     # Also create some existing sources:
@@ -236,11 +236,11 @@ def test_replace_sources(
     #   my_app-1.2.2.dist-info /
 
     old_first_src = app_path / "demo.py"
-    with (old_first_src).open("w") as f:
+    with old_first_src.open("w") as f:
         f.write("print('old hello first')\n")
 
     old_stale_src = app_path / "stale.py"
-    with (old_stale_src).open("w") as f:
+    with old_stale_src.open("w") as f:
         f.write("print('stale hello first')\n")
 
     old_dist_info_dir = app_path / "my_app-1.2.2.dist-info"
@@ -251,13 +251,13 @@ def test_replace_sources(
     old_dist_info_dir.mkdir()
     old_second_deep_src.parent.mkdir(parents=True)
     old_second_broken_src.parent.mkdir(parents=True)
-    with (old_second_shallow_src).open("w") as f:
+    with old_second_shallow_src.open("w") as f:
         f.write("print('old hello shallow second')\n")
-    with (old_second_stale_src).open("w") as f:
+    with old_second_stale_src.open("w") as f:
         f.write("print('hello second stale')\n")
-    with (old_second_deep_src).open("w") as f:
+    with old_second_deep_src.open("w") as f:
         f.write("print('old hello deep second')\n")
-    with (old_second_broken_src).open("w") as f:
+    with old_second_broken_src.open("w") as f:
         f.write("print('hello second deep broken')\n")
 
     # Set the app definition, and install sources

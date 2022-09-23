@@ -36,7 +36,7 @@ def test_call_with_arg(mock_sub, capsys):
 
 
 def test_call_with_path_arg(mock_sub, capsys, tmp_path):
-    """Path-based arguments are converted to strings andpassed in as-is."""
+    """Path-based arguments are converted to strings and passed in as-is."""
 
     mock_sub.Popen(["hello", tmp_path / "location"], cwd=tmp_path / "cwd")
 

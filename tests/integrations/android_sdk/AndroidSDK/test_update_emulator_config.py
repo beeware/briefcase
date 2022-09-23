@@ -30,10 +30,10 @@ disk.cachePartition.size=42M
     return config_file
 
 
-def test_update_existing(mock_tools, test_device):
+def test_update_existing(android_sdk, test_device):
     """Existing keys in an Android AVD config can be updated."""
     # Update 2 keys in the config
-    mock_tools.android_sdk.update_emulator_config(
+    android_sdk.update_emulator_config(
         "testDevice",
         {
             "avd.name": "testDevice",
@@ -59,10 +59,10 @@ disk.cachePartition.size=37MB
     )
 
 
-def test_new_content(mock_tools, test_device):
+def test_new_content(android_sdk, test_device):
     """New keys can be added to an Android AVD config."""
     # Add 2 new keys to the config
-    mock_tools.android_sdk.update_emulator_config(
+    android_sdk.update_emulator_config(
         "testDevice",
         {
             "skin.name": "pixel_3a",

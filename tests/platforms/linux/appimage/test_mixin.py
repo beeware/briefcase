@@ -5,7 +5,7 @@ import pytest
 
 from briefcase.console import Console, Log
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.integrations.docker import Docker
+from briefcase.integrations.docker import Docker, DockerAppContext
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.linux.appimage import LinuxAppImageCreateCommand
 
@@ -88,7 +88,7 @@ def test_verify_linux_no_docker(tmp_path, first_app_config):
     # No error and Subprocess is used.
     assert isinstance(command.tools[first_app_config].app_context, Subprocess)
     # Docker is not verified.
-    assert getattr(command.tools, "docker", "MISSING") == "MISSING"
+    assert not hasattr(command.tools, "docker")
 
 
 def test_verify_non_linux_no_docker(tmp_path):
@@ -110,76 +110,47 @@ def test_verify_non_linux_no_docker(tmp_path):
         command.verify_tools()
 
 
-def test_verify_linux_docker(tmp_path, first_app_config):
+def test_verify_linux_docker(tmp_path, first_app_config, monkeypatch):
     """If Docker is enabled on Linux, the Docker alias is set."""
-
-    class TestLinuxAppImageCreateCommand(LinuxAppImageCreateCommand):
-        @property
-        def python_version_tag(self):
-            return "3.X"
-
-    command = TestLinuxAppImageCreateCommand(
+    command = LinuxAppImageCreateCommand(
         logger=Log(),
         console=Console(),
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
     )
-
     command.tools.host_os = "Linux"
     command.use_docker = True
 
-    # Mock the existence of Docker.
-    command.tools.subprocess = MagicMock(spec_set=Subprocess)
-    command.tools.subprocess.check_output.side_effect = [
-        "Docker version 19.03.8, build afacb8b\n",
-        "docker info return value",
-    ]
-    command.tools.os = MagicMock()
-    # Mock user and group IDs for docker image
-    command.tools.os.getuid.return_value = "37"
-    command.tools.os.getgid.return_value = "42"
+    # Mock Docker tool verification
+    Docker.verify = MagicMock()
+    DockerAppContext.verify = MagicMock()
 
     # Verify the tools
     command.verify_tools()
     command.verify_app_tools(app=first_app_config)
 
-    # The Docker wrapper is set.
-    assert isinstance(command.tools.docker, Docker)
-
-    # Docker image is prepared.
-    command.tools.subprocess.run.assert_called_with(
-        [
-            "docker",
-            "build",
-            "--progress",
-            "plain",
-            "--tag",
-            "briefcase/com.example.first-app:py3.X",
-            "--file",
-            tmp_path / "base_path" / "linux" / "appimage" / "First App" / "Dockerfile",
-            "--build-arg",
-            "PY_VERSION=3.X",
-            "--build-arg",
-            "SYSTEM_REQUIRES=",
-            "--build-arg",
-            "HOST_UID=37",
-            "--build-arg",
-            "HOST_GID=42",
-            tmp_path / "base_path" / "src",
-        ],
-        check=True,
+    # Docker and Docker app context are verified
+    Docker.verify.assert_called_with(tools=command.tools)
+    DockerAppContext.verify.assert_called_with(
+        tools=command.tools,
+        app=first_app_config,
+        image_tag=f"briefcase/com.example.first-app:py3.{sys.version_info.minor}",
+        dockerfile_path=tmp_path
+        / "base_path"
+        / "linux"
+        / "appimage"
+        / "First App"
+        / "Dockerfile",
+        app_base_path=tmp_path / "base_path",
+        host_platform_path=tmp_path / "base_path" / "linux",
+        host_data_path=tmp_path / "briefcase",
+        python_version=f"3.{sys.version_info.minor}",
     )
 
 
 def test_verify_non_linux_docker(tmp_path, first_app_config):
     """If Docker is enabled on non-Linux, the Docker alias is set."""
-
-    class TestLinuxAppImageCreateCommand(LinuxAppImageCreateCommand):
-        @property
-        def python_version_tag(self):
-            return "3.X"
-
-    command = TestLinuxAppImageCreateCommand(
+    command = LinuxAppImageCreateCommand(
         logger=Log(),
         console=Console(),
         base_path=tmp_path / "base_path",
@@ -188,46 +159,30 @@ def test_verify_non_linux_docker(tmp_path, first_app_config):
     command.tools.host_os = "WeirdOS"
     command.use_docker = True
 
-    # Mock the existence of Docker.
-    command.tools.subprocess = MagicMock(spec_set=Subprocess)
-    command.tools.subprocess.check_output.side_effect = [
-        "Docker version 19.03.8, build afacb8b\n",
-        "docker info return value",
-    ]
-    command.tools.os = MagicMock()
-    # Mock user and group IDs for docker image
-    command.tools.os.getuid.return_value = "37"
-    command.tools.os.getgid.return_value = "42"
+    # Mock Docker tool verification
+    Docker.verify = MagicMock()
+    DockerAppContext.verify = MagicMock()
 
     # Verify the tools
     command.verify_tools()
     command.verify_app_tools(app=first_app_config)
 
-    # The Docker wrapper is set.
-    assert isinstance(command.tools.docker, Docker)
-
-    # Docker image is prepared.
-    command.tools.subprocess.run.assert_called_with(
-        [
-            "docker",
-            "build",
-            "--progress",
-            "plain",
-            "--tag",
-            "briefcase/com.example.first-app:py3.X",
-            "--file",
-            tmp_path / "base_path" / "linux" / "appimage" / "First App" / "Dockerfile",
-            "--build-arg",
-            "PY_VERSION=3.X",
-            "--build-arg",
-            "SYSTEM_REQUIRES=",
-            "--build-arg",
-            "HOST_UID=37",
-            "--build-arg",
-            "HOST_GID=42",
-            tmp_path / "base_path" / "src",
-        ],
-        check=True,
+    # Docker and Docker app context are verified
+    Docker.verify.assert_called_with(tools=command.tools)
+    DockerAppContext.verify.assert_called_with(
+        tools=command.tools,
+        app=first_app_config,
+        image_tag=f"briefcase/com.example.first-app:py3.{sys.version_info.minor}",
+        dockerfile_path=tmp_path
+        / "base_path"
+        / "linux"
+        / "appimage"
+        / "First App"
+        / "Dockerfile",
+        app_base_path=tmp_path / "base_path",
+        host_platform_path=tmp_path / "base_path" / "linux",
+        host_data_path=tmp_path / "briefcase",
+        python_version=f"3.{sys.version_info.minor}",
     )
 
 

@@ -107,7 +107,7 @@ def test_app_packages_valid_requires(
     app_packages_path,
     app_packages_path_index,
 ):
-    """If an app has an valid list of requirements, pip is invoked."""
+    """If an app has a valid list of requirements, pip is invoked."""
     myapp.requires = ["first", "second==1.2.3", "third>=3.2.1"]
 
     create_command.install_app_dependencies(myapp)
@@ -178,7 +178,7 @@ def test_app_packages_invalid_requires(
     app_packages_path,
     app_packages_path_index,
 ):
-    """If an app has an valid list of requirements, pip is invoked."""
+    """If an app has a valid list of requirements, pip is invoked."""
     myapp.requires = ["does-not-exist"]
 
     # Unfortunately, no way to tell the difference between "offline" and
