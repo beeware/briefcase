@@ -3,6 +3,7 @@ from unittest import mock
 
 import pytest
 from cookiecutter import exceptions as cookiecutter_exceptions
+from cookiecutter.main import cookiecutter
 
 import briefcase
 from briefcase.commands import NewCommand
@@ -10,12 +11,13 @@ from briefcase.commands.base import (
     InvalidTemplateRepository,
     TemplateUnsupportedVersion,
 )
+from briefcase.console import Console, Log
 from briefcase.exceptions import BriefcaseCommandError
 
 
 @pytest.fixture
 def new_command(tmp_path):
-    return NewCommand(base_path=tmp_path)
+    return NewCommand(base_path=tmp_path, logger=Log(), console=Console())
 
 
 @pytest.mark.parametrize(
@@ -47,7 +49,7 @@ def test_new_app(
     new_command.update_cookiecutter_cache = mock.MagicMock(
         return_value="~/.cookiecutters/briefcase-template"
     )
-    new_command.cookiecutter = mock.MagicMock()
+    new_command.tools.cookiecutter = mock.MagicMock(spec_set=cookiecutter)
 
     # Create the new app, using the default template.
     new_command.new_app()
@@ -60,7 +62,7 @@ def test_new_app(
         branch=expected_branch,
     )
     # Cookiecutter is invoked
-    new_command.cookiecutter.assert_called_once_with(
+    new_command.tools.cookiecutter.assert_called_once_with(
         "~/.cookiecutters/briefcase-template",
         no_input=True,
         output_dir=os.fsdecode(tmp_path),
@@ -81,10 +83,12 @@ def test_new_app_missing_template(monkeypatch, new_command, tmp_path):
     new_command.update_cookiecutter_cache = mock.MagicMock(
         return_value="~/.cookiecutters/briefcase-template"
     )
-    new_command.cookiecutter = mock.MagicMock()
+    new_command.tools.cookiecutter = mock.MagicMock()
 
     # Mock a failed call to cookiecutter when requesting the branch
-    new_command.cookiecutter.side_effect = cookiecutter_exceptions.RepositoryCloneFailed
+    new_command.tools.cookiecutter.side_effect = (
+        cookiecutter_exceptions.RepositoryCloneFailed
+    )
 
     # Create the new app, using the default template. This raises an error.
     with pytest.raises(TemplateUnsupportedVersion):
@@ -100,7 +104,7 @@ def test_new_app_missing_template(monkeypatch, new_command, tmp_path):
     )
 
     # Cookiecutter is invoked twice
-    new_command.cookiecutter.assert_called_once_with(
+    new_command.tools.cookiecutter.assert_called_once_with(
         "~/.cookiecutters/briefcase-template",
         no_input=True,
         output_dir=os.fsdecode(tmp_path),
@@ -122,12 +126,12 @@ def test_new_app_dev(monkeypatch, new_command, tmp_path):
     new_command.update_cookiecutter_cache = mock.MagicMock(
         return_value="~/.cookiecutters/briefcase-template"
     )
-    new_command.cookiecutter = mock.MagicMock()
+    new_command.tools.cookiecutter = mock.MagicMock()
 
     # There will be two calls to cookiecutter; one on the versioned branch,
     # and one on the `main` branch. The first call will fail because the
     # template doesn't exist yet; the second will succeed.
-    new_command.cookiecutter.side_effect = [
+    new_command.tools.cookiecutter.side_effect = [
         cookiecutter_exceptions.RepositoryCloneFailed,
         None,
     ]
@@ -150,7 +154,7 @@ def test_new_app_dev(monkeypatch, new_command, tmp_path):
     ]
 
     # Cookiecutter is invoked twice
-    new_command.cookiecutter.assert_has_calls(
+    new_command.tools.cookiecutter.assert_has_calls(
         [
             mock.call(
                 "~/.cookiecutters/briefcase-template",
@@ -183,7 +187,7 @@ def test_new_app_with_template(monkeypatch, new_command, tmp_path):
     new_command.update_cookiecutter_cache = mock.MagicMock(
         return_value="https://example.com/other.git"
     )
-    new_command.cookiecutter = mock.MagicMock()
+    new_command.tools.cookiecutter = mock.MagicMock(spec_set=cookiecutter)
 
     # Create a new app, with a specific template.
     new_command.new_app(template="https://example.com/other.git")
@@ -196,7 +200,7 @@ def test_new_app_with_template(monkeypatch, new_command, tmp_path):
         branch="v37.42.7",
     )
     # Cookiecutter is invoked
-    new_command.cookiecutter.assert_called_once_with(
+    new_command.tools.cookiecutter.assert_called_once_with(
         "https://example.com/other.git",
         no_input=True,
         output_dir=os.fsdecode(tmp_path),
@@ -218,10 +222,12 @@ def test_new_app_with_invalid_template(monkeypatch, new_command, tmp_path):
     new_command.update_cookiecutter_cache = mock.MagicMock(
         return_value="https://example.com/other.git"
     )
-    new_command.cookiecutter = mock.MagicMock()
+    new_command.tools.cookiecutter = mock.MagicMock()
 
     # Mock an error due to a missing repository
-    new_command.cookiecutter.side_effect = cookiecutter_exceptions.RepositoryNotFound
+    new_command.tools.cookiecutter.side_effect = (
+        cookiecutter_exceptions.RepositoryNotFound
+    )
 
     # Create a new app, with a specific template.
     with pytest.raises(InvalidTemplateRepository):
@@ -235,7 +241,7 @@ def test_new_app_with_invalid_template(monkeypatch, new_command, tmp_path):
         branch="v37.42.7",
     )
     # Cookiecutter is invoked
-    new_command.cookiecutter.assert_called_once_with(
+    new_command.tools.cookiecutter.assert_called_once_with(
         "https://example.com/other.git",
         no_input=True,
         output_dir=os.fsdecode(tmp_path),
@@ -258,10 +264,12 @@ def test_new_app_with_invalid_template_branch(monkeypatch, new_command, tmp_path
     new_command.update_cookiecutter_cache = mock.MagicMock(
         return_value="https://example.com/other.git"
     )
-    new_command.cookiecutter = mock.MagicMock()
+    new_command.tools.cookiecutter = mock.MagicMock()
 
     # Mock the error when the branch doesn't exist
-    new_command.cookiecutter.side_effect = cookiecutter_exceptions.RepositoryCloneFailed
+    new_command.tools.cookiecutter.side_effect = (
+        cookiecutter_exceptions.RepositoryCloneFailed
+    )
 
     # Create a new app, with a specific template; this raises an error
     with pytest.raises(TemplateUnsupportedVersion):
@@ -277,7 +285,7 @@ def test_new_app_with_invalid_template_branch(monkeypatch, new_command, tmp_path
     )
 
     # Cookiecutter is invoked
-    new_command.cookiecutter.assert_called_once_with(
+    new_command.tools.cookiecutter.assert_called_once_with(
         "https://example.com/other.git",
         no_input=True,
         output_dir=os.fsdecode(tmp_path),
@@ -302,7 +310,7 @@ def test_abort_if_directory_exists(monkeypatch, new_command, tmp_path):
     new_command.update_cookiecutter_cache = mock.MagicMock(
         return_value="~/.cookiecutters/briefcase-template"
     )
-    new_command.cookiecutter = mock.MagicMock()
+    new_command.tools.cookiecutter = mock.MagicMock(spec_set=cookiecutter)
 
     # Create the new app, using the default template.
     # This will raise an error due to the colliding directory
@@ -314,4 +322,4 @@ def test_abort_if_directory_exists(monkeypatch, new_command, tmp_path):
     # Template won't be updated or unrolled
     # Cookiecutter was *not* invoked
     new_command.update_cookiecutter_cache.call_count == 0
-    new_command.cookiecutter.call_count == 0
+    assert new_command.tools.cookiecutter.call_count == 0

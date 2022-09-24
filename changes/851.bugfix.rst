@@ -1,0 +1,1 @@
+When CTRL+C is entered while an external program is running, ``briefcase`` will properly abort and exit.

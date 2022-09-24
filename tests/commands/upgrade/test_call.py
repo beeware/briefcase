@@ -19,13 +19,13 @@ def test_list_tools(
     upgrade_command(tool_list=[], list_tools=True)
 
     # The tools are all verified
-    ManagedSDK1.verify.assert_called_with(upgrade_command, install=False)
-    ManagedSDK2.verify.assert_called_with(upgrade_command, install=False)
-    ManagedSDK2Plugin1.verify.assert_called_with(upgrade_command, install=False)
-    ManagedSDK2Plugin2.verify.assert_called_with(upgrade_command, install=False)
-    ManagedSDK2Plugin3.verify.assert_called_with(upgrade_command, install=False)
-    NonManagedSDK.verify.assert_called_with(upgrade_command, install=False)
-    NonInstalledSDK.verify.assert_called_with(upgrade_command, install=False)
+    ManagedSDK1.verify.assert_called_with(upgrade_command.tools, install=False)
+    ManagedSDK2.verify.assert_called_with(upgrade_command.tools, install=False)
+    ManagedSDK2Plugin1.verify.assert_called_with(upgrade_command.tools, install=False)
+    ManagedSDK2Plugin2.verify.assert_called_with(upgrade_command.tools, install=False)
+    ManagedSDK2Plugin3.verify.assert_called_with(upgrade_command.tools, install=False)
+    NonManagedSDK.verify.assert_called_with(upgrade_command.tools, install=False)
+    NonInstalledSDK.verify.assert_called_with(upgrade_command.tools, install=False)
 
     # The console contains the lines we expect, but not the non-managed and
     # non-installed tools.
@@ -40,7 +40,12 @@ def test_list_tools(
 
 
 def test_list_specific_tools(
-    upgrade_command, ManagedSDK1, ManagedSDK2, NonManagedSDK, NonInstalledSDK, capsys
+    upgrade_command,
+    ManagedSDK1,
+    ManagedSDK2,
+    NonManagedSDK,
+    NonInstalledSDK,
+    capsys,
 ):
     """If a list of tools is provided, only those are listed."""
 
@@ -49,10 +54,10 @@ def test_list_specific_tools(
     )
 
     # All tools are verified
-    ManagedSDK1.verify.assert_called_with(upgrade_command, install=False)
-    ManagedSDK2.verify.assert_called_with(upgrade_command, install=False)
-    NonManagedSDK.verify.assert_called_with(upgrade_command, install=False)
-    NonInstalledSDK.verify.assert_called_with(upgrade_command, install=False)
+    ManagedSDK1.verify.assert_called_with(upgrade_command.tools, install=False)
+    ManagedSDK2.verify.assert_called_with(upgrade_command.tools, install=False)
+    NonManagedSDK.verify.assert_called_with(upgrade_command.tools, install=False)
+    NonInstalledSDK.verify.assert_called_with(upgrade_command.tools, install=False)
 
     # The console contains the lines we expect, but not the non-requested,
     # non-managed, and non-installed tools.
@@ -64,16 +69,21 @@ def test_list_specific_tools(
 
 
 def test_upgrade_tools(
-    upgrade_command, ManagedSDK1, ManagedSDK2, NonManagedSDK, NonInstalledSDK, capsys
+    upgrade_command,
+    ManagedSDK1,
+    ManagedSDK2,
+    NonManagedSDK,
+    NonInstalledSDK,
+    capsys,
 ):
     """All managed tools can be upgraded."""
     upgrade_command(tool_list=[])
 
     # All tools are verified
-    ManagedSDK1.verify.assert_called_with(upgrade_command, install=False)
-    ManagedSDK2.verify.assert_called_with(upgrade_command, install=False)
-    NonManagedSDK.verify.assert_called_with(upgrade_command, install=False)
-    NonInstalledSDK.verify.assert_called_with(upgrade_command, install=False)
+    ManagedSDK1.verify.assert_called_with(upgrade_command.tools, install=False)
+    ManagedSDK2.verify.assert_called_with(upgrade_command.tools, install=False)
+    NonManagedSDK.verify.assert_called_with(upgrade_command.tools, install=False)
+    NonInstalledSDK.verify.assert_called_with(upgrade_command.tools, install=False)
 
     # The console contains the lines we expect, but not the non-managed and
     # non-installed tools.
@@ -95,7 +105,12 @@ def test_upgrade_tools(
 
 
 def test_upgrade_specific_tools(
-    upgrade_command, ManagedSDK1, ManagedSDK2, NonManagedSDK, NonInstalledSDK, capsys
+    upgrade_command,
+    ManagedSDK1,
+    ManagedSDK2,
+    NonManagedSDK,
+    NonInstalledSDK,
+    capsys,
 ):
     """If a list of tools is provided, only those are listed."""
 
@@ -104,10 +119,10 @@ def test_upgrade_specific_tools(
     )
 
     # All tools are verified
-    ManagedSDK1.verify.assert_called_with(upgrade_command, install=False)
-    ManagedSDK2.verify.assert_called_with(upgrade_command, install=False)
-    NonManagedSDK.verify.assert_called_with(upgrade_command, install=False)
-    NonInstalledSDK.verify.assert_called_with(upgrade_command, install=False)
+    ManagedSDK1.verify.assert_called_with(upgrade_command.tools, install=False)
+    ManagedSDK2.verify.assert_called_with(upgrade_command.tools, install=False)
+    NonManagedSDK.verify.assert_called_with(upgrade_command.tools, install=False)
+    NonInstalledSDK.verify.assert_called_with(upgrade_command.tools, install=False)
 
     # The console contains the lines we expect, but not the non-requested,
     # non-managed, and non-installed tools.
@@ -128,7 +143,12 @@ def test_upgrade_specific_tools(
 
 
 def test_upgrade_no__tools(
-    upgrade_command, ManagedSDK1, ManagedSDK2, NonManagedSDK, NonInstalledSDK, capsys
+    upgrade_command,
+    ManagedSDK1,
+    ManagedSDK2,
+    NonManagedSDK,
+    NonInstalledSDK,
+    capsys,
 ):
     """If there is nothing up upgrade, a message is returned."""
 
@@ -137,10 +157,10 @@ def test_upgrade_no__tools(
     )
 
     # All tools are verified
-    ManagedSDK1.verify.assert_called_with(upgrade_command, install=False)
-    ManagedSDK2.verify.assert_called_with(upgrade_command, install=False)
-    NonManagedSDK.verify.assert_called_with(upgrade_command, install=False)
-    NonInstalledSDK.verify.assert_called_with(upgrade_command, install=False)
+    ManagedSDK1.verify.assert_called_with(upgrade_command.tools, install=False)
+    ManagedSDK2.verify.assert_called_with(upgrade_command.tools, install=False)
+    NonManagedSDK.verify.assert_called_with(upgrade_command.tools, install=False)
+    NonInstalledSDK.verify.assert_called_with(upgrade_command.tools, install=False)
 
     # The console contains no mention of tools...
     out = capsys.readouterr().out
@@ -160,7 +180,12 @@ def test_upgrade_no__tools(
 
 
 def test_unknown_tool(
-    upgrade_command, ManagedSDK1, ManagedSDK2, NonManagedSDK, NonInstalledSDK, capsys
+    upgrade_command,
+    ManagedSDK1,
+    ManagedSDK2,
+    NonManagedSDK,
+    NonInstalledSDK,
+    capsys,
 ):
     """If a list of tools is provided, only those are listed."""
 
@@ -169,7 +194,7 @@ def test_unknown_tool(
         upgrade_command(tool_list=["managed-1", "unknown-tool"])
 
     # All tools are still verified
-    ManagedSDK1.verify.assert_called_with(upgrade_command, install=False)
-    ManagedSDK2.verify.assert_called_with(upgrade_command, install=False)
-    NonManagedSDK.verify.assert_called_with(upgrade_command, install=False)
-    NonInstalledSDK.verify.assert_called_with(upgrade_command, install=False)
+    ManagedSDK1.verify.assert_called_with(upgrade_command.tools, install=False)
+    ManagedSDK2.verify.assert_called_with(upgrade_command.tools, install=False)
+    NonManagedSDK.verify.assert_called_with(upgrade_command.tools, install=False)
+    NonInstalledSDK.verify.assert_called_with(upgrade_command.tools, install=False)

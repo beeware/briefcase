@@ -2,12 +2,18 @@ import sys
 
 import pytest
 
+from briefcase.console import Console, Log
 from briefcase.platforms.android.gradle import GradleCreateCommand
 
 
 @pytest.fixture
 def create_command(tmp_path, first_app_config):
-    command = GradleCreateCommand(base_path=tmp_path / "base_path")
+    command = GradleCreateCommand(
+        logger=Log(),
+        console=Console(),
+        base_path=tmp_path / "base_path",
+        data_path=tmp_path / "briefcase",
+    )
     return command
 
 
@@ -56,5 +62,5 @@ def test_version_code(create_command, first_app_config, version, build, version_
         "version_code": version_code,
         "safe_formal_name": "First App",
     }
-    # Version code must be less than a 32 bit signed integer MAXINT.
+    # Version code must be less than a 32-bit signed integer MAXINT.
     assert int(version_code) < 2147483647

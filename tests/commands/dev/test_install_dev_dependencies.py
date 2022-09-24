@@ -12,7 +12,7 @@ def test_install_dependencies_no_error(dev_command, first_app):
 
     dev_command.install_dev_dependencies(app=first_app)
 
-    dev_command.subprocess.run.assert_called_once_with(
+    dev_command.tools.subprocess.run.assert_called_once_with(
         [
             sys.executable,
             "-m",
@@ -31,14 +31,14 @@ def test_install_dependencies_error(dev_command, first_app):
     """Ensure DependencyInstallError exception is raised for install errors."""
     first_app.requires = ["package-one", "package_two", "packagethree"]
 
-    dev_command.subprocess.run.side_effect = CalledProcessError(
+    dev_command.tools.subprocess.run.side_effect = CalledProcessError(
         returncode=-1, cmd="pip"
     )
 
     with pytest.raises(DependencyInstallError, match="Unable to install dependencies."):
         dev_command.install_dev_dependencies(app=first_app)
 
-    dev_command.subprocess.run.assert_called_once_with(
+    dev_command.tools.subprocess.run.assert_called_once_with(
         [
             sys.executable,
             "-m",
@@ -60,4 +60,4 @@ def test_no_dependencies(dev_command, first_app):
 
     dev_command.install_dev_dependencies(app=first_app)
 
-    dev_command.subprocess.run.assert_not_called()
+    dev_command.tools.subprocess.run.assert_not_called()

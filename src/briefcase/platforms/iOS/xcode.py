@@ -85,7 +85,7 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
         :returns: A tuple containing the udid, iOS version, and device name
             for the selected device.
         """
-        simulators = self.get_simulators(self, "iOS")
+        simulators = self.get_simulators(self.tools, "iOS")
 
         try:
             # Try to convert to a UDID. If this succeeds, then the argument
@@ -255,7 +255,7 @@ class iOSXcodeBuildCommand(iOSXcodeMixin, BuildCommand):
         self.logger.info("Building XCode project...", prefix=app.app_name)
         with self.input.wait_bar("Building..."):
             try:
-                self.subprocess.run(
+                self.tools.subprocess.run(
                     [
                         "xcodebuild",
                         "-project",
@@ -266,7 +266,7 @@ class iOSXcodeBuildCommand(iOSXcodeMixin, BuildCommand):
                         "-configuration",
                         "Debug",
                         "-arch",
-                        self.host_arch,
+                        self.tools.host_arch,
                         "-sdk",
                         "iphonesimulator",
                         "build",
@@ -315,19 +315,22 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         # The simulator needs to be booted before being started.
         # If it's shut down, we can boot it again; but if it's currently
         # shutting down, we need to wait for it to shut down before restarting.
-        device_state = self.get_device_state(self, udid)
+        device_state = self.get_device_state(self.tools, udid)
         if device_state not in {DeviceState.SHUTDOWN, DeviceState.BOOTED}:
             with self.input.wait_bar("Waiting for simulator shutdown..."):
                 while device_state not in {DeviceState.SHUTDOWN, DeviceState.BOOTED}:
                     self.sleep(2)
-                    device_state = self.get_device_state(self, udid)
+                    device_state = self.get_device_state(self.tools, udid)
 
         # We now know the simulator is either shut down or booted;
         # if it's shut down, start it again.
         if device_state == DeviceState.SHUTDOWN:
             try:
                 with self.input.wait_bar("Booting simulator..."):
-                    self.subprocess.run(["xcrun", "simctl", "boot", udid], check=True)
+                    self.tools.subprocess.run(
+                        ["xcrun", "simctl", "boot", udid],
+                        check=True,
+                    )
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
                     f"Unable to boot {device} simulator running {iOS_version}"
@@ -336,7 +339,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         # We now know the simulator is *running*, so we can open it.
         try:
             with self.input.wait_bar("Opening simulator..."):
-                self.subprocess.run(
+                self.tools.subprocess.run(
                     ["open", "-a", "Simulator", "--args", "-CurrentDeviceUDID", udid],
                     check=True,
                 )
@@ -351,8 +354,9 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         try:
             self.logger.info("Installing app...", prefix=app.app_name)
             with self.input.wait_bar("Uninstalling any existing app version..."):
-                self.subprocess.run(
-                    ["xcrun", "simctl", "uninstall", udid, app_identifier], check=True
+                self.tools.subprocess.run(
+                    ["xcrun", "simctl", "uninstall", udid, app_identifier],
+                    check=True,
                 )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(
@@ -362,7 +366,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         # Install the app.
         try:
             with self.input.wait_bar("Installing new app version..."):
-                self.subprocess.run(
+                self.tools.subprocess.run(
                     ["xcrun", "simctl", "install", udid, self.binary_path(app)],
                     check=True,
                 )
@@ -376,7 +380,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         #  1. a log sender that matches that app binary; or,
         #  2. a log sender of that is a Python extension module,
         #     and a process that matches the app binary.
-        # Case (1) works when the standard libary is statically linked,
+        # Case (1) works when the standard library is statically linked,
         #   and for native NSLog() calls in the bootstrap binary
         # Case (2) works when the standard library is dynamically linked,
         #   and ctypes (which handles the NSLog integration) is an
@@ -385,7 +389,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         # as the process will generate lots of system-level messages.
         # We can't filter on *just* the senderImagePath, because other
         # apps will generate log messages that would be caught by the filter.
-        simulator_log_popen = self.subprocess.Popen(
+        simulator_log_popen = self.tools.subprocess.Popen(
             [
                 "xcrun",
                 "simctl",
@@ -410,21 +414,26 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
 
         try:
             self.logger.info("Starting app...", prefix=app.app_name)
-            with self.input.wait_bar("Launching app..."):
-                self.subprocess.run(
-                    ["xcrun", "simctl", "launch", udid, app_identifier], check=True
-                )
-        except subprocess.CalledProcessError as e:
-            self.subprocess.cleanup("log stream", simulator_log_popen)
-            raise BriefcaseCommandError(f"Unable to launch app {app.app_name}.") from e
+            try:
+                with self.input.wait_bar("Launching app..."):
+                    self.tools.subprocess.run(
+                        ["xcrun", "simctl", "launch", udid, app_identifier],
+                        check=True,
+                    )
+            except subprocess.CalledProcessError as e:
+                raise BriefcaseCommandError(
+                    f"Unable to launch app {app.app_name}."
+                ) from e
 
-        # Start streaming logs for the app.
-        self.logger.info(
-            "Following simulator log output (type CTRL-C to stop log)...",
-            prefix=app.app_name,
-        )
-        self.logger.info("=" * 75)
-        self.subprocess.stream_output("log stream", simulator_log_popen)
+            # Start streaming logs for the app.
+            self.logger.info(
+                "Following simulator log output (type CTRL-C to stop log)...",
+                prefix=app.app_name,
+            )
+            self.logger.info("=" * 75)
+            self.tools.subprocess.stream_output("log stream", simulator_log_popen)
+        finally:
+            self.tools.subprocess.cleanup("log stream", simulator_log_popen)
 
         # Preserve the device selection as state.
         return {"udid": udid}

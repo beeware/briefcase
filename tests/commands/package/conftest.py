@@ -3,12 +3,13 @@ import pytest
 from briefcase.commands import PackageCommand
 from briefcase.commands.base import full_options
 from briefcase.config import AppConfig
+from briefcase.console import Console, Log
 
 
 class DummyPackageCommand(PackageCommand):
     """A dummy package command that doesn't actually do anything.
 
-    It only serves to track which actions would be performend.
+    It only serves to track which actions would be performed.
     """
 
     platform = "tester"
@@ -24,7 +25,9 @@ class DummyPackageCommand(PackageCommand):
         return "pkg"
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, apps=[], **kwargs)
+        kwargs.setdefault("logger", Log())
+        kwargs.setdefault("console", Console())
+        super().__init__(*args, apps={}, **kwargs)
 
         self.actions = []
 
@@ -40,6 +43,10 @@ class DummyPackageCommand(PackageCommand):
     def verify_tools(self):
         super().verify_tools()
         self.actions.append(("verify",))
+
+    def verify_app_tools(self, app):
+        super().verify_app_tools(app=app)
+        self.actions.append(("verify-app-tools", app.app_name))
 
     def package_app(self, app, **kwargs):
         self.actions.append(("package", app.app_name, kwargs))

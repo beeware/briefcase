@@ -5,8 +5,6 @@ from unittest.mock import ANY
 
 import pytest
 
-from briefcase.console import Log
-
 from .conftest import CREATE_NEW_PROCESS_GROUP, CREATE_NO_WINDOW
 
 
@@ -14,7 +12,7 @@ from .conftest import CREATE_NEW_PROCESS_GROUP, CREATE_NO_WINDOW
 def test_call(mock_sub, capsys, platform):
     """A simple call will be invoked."""
 
-    mock_sub.command.host_os = platform
+    mock_sub.tools.host_os = platform
     mock_sub.check_output(["hello", "world"])
 
     mock_sub._subprocess.check_output.assert_called_with(
@@ -39,7 +37,7 @@ def test_call_with_arg(mock_sub, capsys):
 
 
 def test_call_with_path_arg(mock_sub, capsys, tmp_path):
-    """Path-based arguments are converted to strings andpassed in as-is."""
+    """Path-based arguments are converted to strings and passed in as-is."""
 
     mock_sub.check_output(["hello", tmp_path / "location"], cwd=tmp_path / "cwd")
 
@@ -71,12 +69,16 @@ def test_call_with_path_arg(mock_sub, capsys, tmp_path):
     ],
 )
 def test_call_with_start_new_session(
-    mock_sub, capsys, platform, start_new_session, check_output_kwargs
+    mock_sub,
+    capsys,
+    platform,
+    start_new_session,
+    check_output_kwargs,
 ):
     """start_new_session is passed thru on Linux and macOS but converted for
     Windows."""
 
-    mock_sub.command.host_os = platform
+    mock_sub.tools.host_os = platform
     mock_sub.check_output(["hello", "world"], start_new_session=start_new_session)
 
     if platform == "Windows":
@@ -107,12 +109,15 @@ def test_call_with_start_new_session(
     ],
 )
 def test_call_windows_with_start_new_session_and_creationflags(
-    mock_sub, capsys, creationflags, final_creationflags
+    mock_sub,
+    capsys,
+    creationflags,
+    final_creationflags,
 ):
     """creationflags used to simulate start_new_session=True should be merged
     with any existing flags."""
 
-    mock_sub.command.host_os = "Windows"
+    mock_sub.tools.host_os = "Windows"
 
     # use commented test below when merging creationflags is allowed
     with pytest.raises(
@@ -125,7 +130,7 @@ def test_call_windows_with_start_new_session_and_creationflags(
 
 def test_debug_call(mock_sub, capsys):
     """If verbosity is turned up, there is output."""
-    mock_sub.command.logger = Log(verbosity=2)
+    mock_sub.tools.logger.verbosity = 2
 
     mock_sub.check_output(["hello", "world"])
 
@@ -152,12 +157,12 @@ def test_debug_call(mock_sub, capsys):
 
 def test_debug_call_with_env(mock_sub, capsys, tmp_path):
     """If verbosity is turned up, injected env vars are included in output."""
-    mock_sub.command.logger = Log(verbosity=2)
+    mock_sub.tools.logger.verbosity = 2
 
     env = {"NewVar": "NewVarValue"}
     mock_sub.check_output(["hello", "world"], env=env, cwd=tmp_path / "cwd")
 
-    merged_env = mock_sub.command.os.environ.copy()
+    merged_env = mock_sub.tools.os.environ.copy()
     merged_env.update(env)
 
     mock_sub._subprocess.check_output.assert_called_with(
@@ -187,7 +192,7 @@ def test_debug_call_with_env(mock_sub, capsys, tmp_path):
 
 def test_calledprocesserror_exception_logging(mock_sub, capsys):
     """If command errors, ensure command output is printed."""
-    mock_sub.command.logger = Log(verbosity=2)
+    mock_sub.tools.logger.verbosity = 2
 
     called_process_error = CalledProcessError(
         returncode=-1,

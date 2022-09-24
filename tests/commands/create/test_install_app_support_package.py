@@ -25,8 +25,8 @@ def test_install_app_support_package(
 ):
     """A support package can be downloaded and unpacked where it is needed."""
 
-    # Mock download_file to return a support package
-    create_command.download_file = mock.MagicMock(
+    # Mock download.file to return a support package
+    create_command.tools.download.file = mock.MagicMock(
         side_effect=mock_tgz_download(
             "Python-3.X-tester-support.b37.tar.gz",
             [("internal/file.txt", "hello world")],
@@ -35,21 +35,21 @@ def test_install_app_support_package(
 
     # Mock shutil so we can confirm that unpack is called,
     # but we still want the side effect of calling it
-    create_command.shutil = mock.MagicMock()
-    create_command.shutil.unpack_archive.side_effect = shutil.unpack_archive
+    create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
+    create_command.tools.shutil.unpack_archive.side_effect = shutil.unpack_archive
 
     # Install the support package
     create_command.install_app_support_package(myapp)
 
     # Confirm the right URL was used
-    create_command.download_file.assert_called_with(
+    create_command.tools.download.file.assert_called_with(
         download_path=create_command.data_path / "support",
         url="https://briefcase-support.s3.amazonaws.com/python/3.X/tester/Python-3.X-tester-support.b37.tar.gz",
         role="support package",
     )
 
     # Confirm the right file was unpacked
-    create_command.shutil.unpack_archive.assert_called_with(
+    create_command.tools.shutil.unpack_archive.assert_called_with(
         tmp_path / "data" / "support" / "Python-3.X-tester-support.b37.tar.gz",
         extract_dir=support_path,
     )
@@ -71,8 +71,8 @@ def test_install_pinned_app_support_package(
     # Pin the support revision
     myapp.support_revision = "42"
 
-    # Mock download_file to return a support package
-    create_command.download_file = mock.MagicMock(
+    # Mock download.file to return a support package
+    create_command.tools.download.file = mock.MagicMock(
         side_effect=mock_tgz_download(
             "Python-3.X-tester-support.b42.tar.gz",
             [("internal/file.txt", "hello world")],
@@ -81,21 +81,21 @@ def test_install_pinned_app_support_package(
 
     # Mock shutil so we can confirm that unpack is called,
     # but we still want the side effect of calling it
-    create_command.shutil = mock.MagicMock()
-    create_command.shutil.unpack_archive.side_effect = shutil.unpack_archive
+    create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
+    create_command.tools.shutil.unpack_archive.side_effect = shutil.unpack_archive
 
     # Install the support package
     create_command.install_app_support_package(myapp)
 
     # Confirm the right URL was used
-    create_command.download_file.assert_called_with(
+    create_command.tools.download.file.assert_called_with(
         download_path=create_command.data_path / "support",
         url="https://briefcase-support.s3.amazonaws.com/python/3.X/tester/Python-3.X-tester-support.b42.tar.gz",
         role="support package",
     )
 
     # Confirm the right file was unpacked
-    create_command.shutil.unpack_archive.assert_called_with(
+    create_command.tools.shutil.unpack_archive.assert_called_with(
         tmp_path / "data" / "support" / "Python-3.X-tester-support.b42.tar.gz",
         extract_dir=support_path,
     )
@@ -122,23 +122,23 @@ def test_install_custom_app_support_package_file(
         [("internal/file.txt", "hello world")],
     )
 
-    # Modify download_file to return the temp zipfile
-    create_command.download_file = mock.MagicMock()
+    # Modify download.file to return the temp zipfile
+    create_command.tools.download.file = mock.MagicMock()
 
     # Mock shutil so we can confirm that unpack is called,
     # but we still want the side effect of calling it
-    create_command.shutil = mock.MagicMock()
-    create_command.shutil.unpack_archive.side_effect = shutil.unpack_archive
+    create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
+    create_command.tools.shutil.unpack_archive.side_effect = shutil.unpack_archive
 
     # Install the support package
     create_command.install_app_support_package(myapp)
 
     # There should have been no download attempt,
     # as the resource is local.
-    create_command.download_file.assert_not_called()
+    create_command.tools.download.file.assert_not_called()
 
     # Confirm the right file was unpacked
-    create_command.shutil.unpack_archive.assert_called_with(
+    create_command.tools.shutil.unpack_archive.assert_called_with(
         support_file,
         extract_dir=support_path,
     )
@@ -168,23 +168,23 @@ def test_install_custom_app_support_package_file_with_revision(
         [("internal/file.txt", "hello world")],
     )
 
-    # Modify download_file to return the temp zipfile
-    create_command.download_file = mock.MagicMock()
+    # Modify download.file to return the temp zipfile
+    create_command.tools.download.file = mock.MagicMock()
 
     # Mock shutil so we can confirm that unpack is called,
     # but we still want the side effect of calling it
-    create_command.shutil = mock.MagicMock()
-    create_command.shutil.unpack_archive.side_effect = shutil.unpack_archive
+    create_command.tools.shutil = mock.MagicMock()
+    create_command.tools.shutil.unpack_archive.side_effect = shutil.unpack_archive
 
     # Install the support package
     create_command.install_app_support_package(myapp)
 
     # There should have been no download attempt,
     # as the resource is local.
-    create_command.download_file.assert_not_called()
+    create_command.tools.download.file.assert_not_called()
 
     # Confirm the right file was unpacked
-    create_command.shutil.unpack_archive.assert_called_with(
+    create_command.tools.shutil.unpack_archive.assert_called_with(
         support_file,
         extract_dir=support_path,
     )
@@ -209,8 +209,8 @@ def test_support_package_url_with_invalid_custom_support_packge_url(
     url = "https://example.com/custom/support.zip"
     myapp.support_package = url
 
-    # Modify download_file to raise an exception
-    create_command.download_file = mock.MagicMock(
+    # Modify download.file to raise an exception
+    create_command.tools.download.file = mock.MagicMock(
         side_effect=MissingNetworkResourceError(url)
     )
 
@@ -219,7 +219,7 @@ def test_support_package_url_with_invalid_custom_support_packge_url(
         create_command.install_app_support_package(myapp)
 
     # However, there will have been a download attempt
-    create_command.download_file.assert_called_with(
+    create_command.tools.download.file.assert_called_with(
         download_path=(
             create_command.data_path
             / "support"
@@ -236,8 +236,8 @@ def test_support_package_url_with_unsupported_platform(
     app_requirements_path_index,
 ):
     """An unsupported platform raises MissingSupportPackage."""
-    # Modify download_file to raise an exception due to missing support package
-    create_command.download_file = mock.MagicMock(
+    # Modify download.file to raise an exception due to missing support package
+    create_command.tools.download.file = mock.MagicMock(
         side_effect=MissingNetworkResourceError(
             url="https://briefcase-support.s3.amazonaws.com/python/3.X/tester/Python-3.X-tester-support.b37.tar.gz",
         )
@@ -248,7 +248,7 @@ def test_support_package_url_with_unsupported_platform(
         create_command.install_app_support_package(myapp)
 
     # However, there will have been a download attempt
-    create_command.download_file.assert_called_with(
+    create_command.tools.download.file.assert_called_with(
         download_path=create_command.data_path / "support",
         url="https://briefcase-support.s3.amazonaws.com/python/3.X/tester/Python-3.X-tester-support.b37.tar.gz",
         role="support package",
@@ -266,8 +266,8 @@ def test_install_custom_app_support_package_url(
     # Provide an app-specific override of the package URL
     myapp.support_package = "https://example.com/custom/custom-support.zip"
 
-    # Mock download_file to return a support package
-    create_command.download_file = mock.MagicMock(
+    # Mock download.file to return a support package
+    create_command.tools.download.file = mock.MagicMock(
         side_effect=mock_zip_download(
             "custom-support.zip",
             [("internal/file.txt", "hello world")],
@@ -276,14 +276,14 @@ def test_install_custom_app_support_package_url(
 
     # Mock shutil so we can confirm that unpack is called,
     # but we still want the side effect of calling it
-    create_command.shutil = mock.MagicMock()
-    create_command.shutil.unpack_archive.side_effect = shutil.unpack_archive
+    create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
+    create_command.tools.shutil.unpack_archive.side_effect = shutil.unpack_archive
 
     # Install the support package
     create_command.install_app_support_package(myapp)
 
     # Confirm the right URL and download path was used
-    create_command.download_file.assert_called_with(
+    create_command.tools.download.file.assert_called_with(
         download_path=(
             create_command.data_path
             / "support"
@@ -294,7 +294,7 @@ def test_install_custom_app_support_package_url(
     )
 
     # Confirm the right file was unpacked into the hashed location
-    create_command.shutil.unpack_archive.assert_called_with(
+    create_command.tools.shutil.unpack_archive.assert_called_with(
         tmp_path
         / "data"
         / "support"
@@ -322,8 +322,8 @@ def test_install_custom_app_support_package_url_with_revision(
     myapp.support_package = "https://example.com/custom/custom-support.zip"
     myapp.support_revision = "42"
 
-    # Mock download_file to return a support package
-    create_command.download_file = mock.MagicMock(
+    # Mock download.file to return a support package
+    create_command.tools.download.file = mock.MagicMock(
         side_effect=mock_zip_download(
             "custom-support.zip",
             [("internal/file.txt", "hello world")],
@@ -332,14 +332,14 @@ def test_install_custom_app_support_package_url_with_revision(
 
     # Mock shutil so we can confirm that unpack is called,
     # but we still want the side effect of calling it
-    create_command.shutil = mock.MagicMock()
-    create_command.shutil.unpack_archive.side_effect = shutil.unpack_archive
+    create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
+    create_command.tools.shutil.unpack_archive.side_effect = shutil.unpack_archive
 
     # Install the support package
     create_command.install_app_support_package(myapp)
 
     # Confirm the right URL and download path was used
-    create_command.download_file.assert_called_with(
+    create_command.tools.download.file.assert_called_with(
         download_path=(
             create_command.data_path
             / "support"
@@ -350,7 +350,7 @@ def test_install_custom_app_support_package_url_with_revision(
     )
 
     # Confirm the right file was unpacked into the hashed location
-    create_command.shutil.unpack_archive.assert_called_with(
+    create_command.tools.shutil.unpack_archive.assert_called_with(
         tmp_path
         / "data"
         / "support"
@@ -378,8 +378,8 @@ def test_install_custom_app_support_package_url_with_args(
     # Provide an app-specific override of the package URL
     myapp.support_package = "https://example.com/custom/custom-support.zip?cool=Yes"
 
-    # Mock download_file to return a support package
-    create_command.download_file = mock.MagicMock(
+    # Mock download.file to return a support package
+    create_command.tools.download.file = mock.MagicMock(
         side_effect=mock_zip_download(
             "custom-support.zip",
             [("internal/file.txt", "hello world")],
@@ -387,14 +387,14 @@ def test_install_custom_app_support_package_url_with_args(
     )
     # Mock shutil so we can confirm that unpack is called,
     # but we still want the side effect of calling it
-    create_command.shutil = mock.MagicMock()
-    create_command.shutil.unpack_archive.side_effect = shutil.unpack_archive
+    create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
+    create_command.tools.shutil.unpack_archive.side_effect = shutil.unpack_archive
 
     # Install the support package
     create_command.install_app_support_package(myapp)
 
     # Confirm the right URL was used
-    create_command.download_file.assert_called_with(
+    create_command.tools.download.file.assert_called_with(
         download_path=create_command.data_path
         / "support"
         / "f8cf64ad2ba249a1efbb63db60ebdc64f043035fbdd81934c6ad1e84a030c429",
@@ -403,7 +403,7 @@ def test_install_custom_app_support_package_url_with_args(
     )
 
     # Confirm the right file was unpacked
-    create_command.shutil.unpack_archive.assert_called_with(
+    create_command.tools.shutil.unpack_archive.assert_called_with(
         tmp_path
         / "data"
         / "support"
@@ -424,7 +424,7 @@ def test_offline_install(
     app_requirements_path_index,
 ):
     """If the computer is offline, an error is raised."""
-    create_command.requests.get = mock.MagicMock(
+    create_command.tools.requests.get = mock.MagicMock(
         side_effect=requests_exceptions.ConnectionError
     )
 
@@ -441,8 +441,8 @@ def test_invalid_support_package(
     app_requirements_path_index,
 ):
     """If the support package isn't a valid zipfile, an error is raised."""
-    # Mock download_file to return a non-zip file
-    create_command.download_file = mock.MagicMock(
+    # Mock download.file to return a non-zip file
+    create_command.tools.download.file = mock.MagicMock(
         side_effect=mock_file_download(
             "not-a.zip",
             "This isn't a zip file",
@@ -474,19 +474,19 @@ def test_missing_support_package(
 def test_no_support_path(create_command, myapp, no_support_path_index):
     """If support_path is not listed in briefcase.toml, a support package will
     not be downloaded."""
-    create_command.download_file = mock.MagicMock()
+    create_command.tools.download.file = mock.MagicMock()
     create_command.install_app_support_package(myapp)
-    create_command.download_file.assert_not_called()
+    create_command.tools.download.file.assert_not_called()
 
 
 def test_no_support_revision(create_command, myapp, no_support_revision_index):
     """If support_revision is not listed in briefcase.toml, a support package
     will not be downloaded."""
-    create_command.download_file = mock.MagicMock()
+    create_command.tools.download.file = mock.MagicMock()
 
     # An error is raised when attempting to install the support package
     with pytest.raises(MissingSupportPackage):
         create_command.install_app_support_package(myapp)
 
     # No download attempt is made.
-    create_command.download_file.assert_not_called()
+    create_command.tools.download.file.assert_not_called()

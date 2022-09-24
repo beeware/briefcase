@@ -73,13 +73,13 @@ def test_default_template(
 
     # There won't be a cookiecutter cache, so there won't be
     # a cache path (yet).
-    create_command.git.Repo.side_effect = git_exceptions.NoSuchPathError
+    create_command.tools.git.Repo.side_effect = git_exceptions.NoSuchPathError
 
     # Generate the template.
     create_command.generate_app_template(myapp)
 
     # Cookiecutter was invoked with the expected template name and context.
-    create_command.cookiecutter.assert_called_once_with(
+    create_command.tools.cookiecutter.assert_called_once_with(
         "https://github.com/beeware/briefcase-tester-dummy-template.git",
         no_input=True,
         checkout=expected_branch,
@@ -96,12 +96,12 @@ def test_default_template_dev(monkeypatch, create_command, myapp, full_context):
 
     # There won't be a cookiecutter cache, so there won't be
     # a cache path (yet).
-    create_command.git.Repo.side_effect = git_exceptions.NoSuchPathError
+    create_command.tools.git.Repo.side_effect = git_exceptions.NoSuchPathError
 
     # There will be two calls to cookiecutter; one on the versioned branch,
     # and one on the `main` branch. The first call will fail because the
     # template doesn't exist yet; the second will succeed.
-    create_command.cookiecutter.side_effect = [
+    create_command.tools.cookiecutter.side_effect = [
         cookiecutter_exceptions.RepositoryCloneFailed,
         None,
     ]
@@ -110,7 +110,7 @@ def test_default_template_dev(monkeypatch, create_command, myapp, full_context):
     create_command.generate_app_template(myapp)
 
     # Cookiecutter was invoked with the expected template name and context.
-    assert create_command.cookiecutter.mock_calls == [
+    assert create_command.tools.cookiecutter.mock_calls == [
         mock.call(
             "https://github.com/beeware/briefcase-tester-dummy-template.git",
             no_input=True,
@@ -141,13 +141,13 @@ def test_default_template_dev_explicit_branch(
 
     # There won't be a cookiecutter cache, so there won't be
     # a cache path (yet).
-    create_command.git.Repo.side_effect = git_exceptions.NoSuchPathError
+    create_command.tools.git.Repo.side_effect = git_exceptions.NoSuchPathError
 
     # Generate the template.
     create_command.generate_app_template(myapp)
 
     # Cookiecutter was invoked (once) with the expected template name and context.
-    assert create_command.cookiecutter.mock_calls == [
+    assert create_command.tools.cookiecutter.mock_calls == [
         mock.call(
             "https://github.com/beeware/briefcase-tester-dummy-template.git",
             no_input=True,
@@ -172,10 +172,10 @@ def test_default_template_dev_explicit_invalid_branch(
 
     # There won't be a cookiecutter cache, so there won't be
     # a cache path (yet).
-    create_command.git.Repo.side_effect = git_exceptions.NoSuchPathError
+    create_command.tools.git.Repo.side_effect = git_exceptions.NoSuchPathError
 
     # There will be only 1 call to cookiecutter; the one on the versioned branch.
-    create_command.cookiecutter.side_effect = (
+    create_command.tools.cookiecutter.side_effect = (
         cookiecutter_exceptions.RepositoryCloneFailed
     )
 
@@ -184,7 +184,7 @@ def test_default_template_dev_explicit_invalid_branch(
         create_command.generate_app_template(myapp)
 
     # Cookiecutter was invoked (once) with the expected template name and context.
-    assert create_command.cookiecutter.mock_calls == [
+    assert create_command.tools.cookiecutter.mock_calls == [
         mock.call(
             "https://github.com/beeware/briefcase-tester-dummy-template.git",
             no_input=True,
@@ -206,13 +206,13 @@ def test_explicit_branch(monkeypatch, create_command, myapp, full_context):
 
     # There won't be a cookiecutter cache, so there won't be
     # a cache path (yet).
-    create_command.git.Repo.side_effect = git_exceptions.NoSuchPathError
+    create_command.tools.git.Repo.side_effect = git_exceptions.NoSuchPathError
 
     # Generate the template.
     create_command.generate_app_template(myapp)
 
     # Cookiecutter was invoked with the expected template name and context.
-    create_command.cookiecutter.assert_called_once_with(
+    create_command.tools.cookiecutter.assert_called_once_with(
         "https://github.com/beeware/briefcase-tester-dummy-template.git",
         no_input=True,
         checkout=branch,
@@ -228,7 +228,7 @@ def test_platform_exists(monkeypatch, create_command, myapp, full_context):
 
     # There won't be a cookiecutter cache, so there won't be
     # a cache path (yet).
-    create_command.git.Repo.side_effect = git_exceptions.NoSuchPathError
+    create_command.tools.git.Repo.side_effect = git_exceptions.NoSuchPathError
 
     # Create the platform directory
     create_command.platform_path.mkdir(parents=True)
@@ -237,7 +237,7 @@ def test_platform_exists(monkeypatch, create_command, myapp, full_context):
     create_command.generate_app_template(myapp)
 
     # Cookiecutter was invoked with the expected template name and context.
-    create_command.cookiecutter.assert_called_once_with(
+    create_command.tools.cookiecutter.assert_called_once_with(
         "https://github.com/beeware/briefcase-tester-dummy-template.git",
         no_input=True,
         checkout="v37.42.7",
@@ -255,13 +255,13 @@ def test_explicit_repo_template(monkeypatch, create_command, myapp, full_context
 
     # There won't be a cookiecutter cache, so there won't be
     # a repo path (yet).
-    create_command.git.Repo.side_effect = git_exceptions.NoSuchPathError
+    create_command.tools.git.Repo.side_effect = git_exceptions.NoSuchPathError
 
     # Generate the template.
     create_command.generate_app_template(myapp)
 
     # Cookiecutter was invoked with the expected template name and context.
-    create_command.cookiecutter.assert_called_once_with(
+    create_command.tools.cookiecutter.assert_called_once_with(
         "https://example.com/magic/special-template.git",
         no_input=True,
         checkout="v37.42.7",
@@ -287,13 +287,13 @@ def test_explicit_repo_template_and_branch(
 
     # There won't be a cookiecutter cache, so there won't be
     # a repo path (yet).
-    create_command.git.Repo.side_effect = git_exceptions.NoSuchPathError
+    create_command.tools.git.Repo.side_effect = git_exceptions.NoSuchPathError
 
     # Generate the template.
     create_command.generate_app_template(myapp)
 
     # Cookiecutter was invoked with the expected template name and context.
-    create_command.cookiecutter.assert_called_once_with(
+    create_command.tools.cookiecutter.assert_called_once_with(
         "https://example.com/magic/special-template.git",
         no_input=True,
         checkout=branch,
@@ -313,7 +313,7 @@ def test_explicit_local_template(monkeypatch, create_command, myapp, full_contex
     create_command.generate_app_template(myapp)
 
     # Cookiecutter was invoked with the expected template name and context.
-    create_command.cookiecutter.assert_called_once_with(
+    create_command.tools.cookiecutter.assert_called_once_with(
         "/path/to/special-template",
         no_input=True,
         checkout="v37.42.7",
@@ -322,7 +322,7 @@ def test_explicit_local_template(monkeypatch, create_command, myapp, full_contex
     )
 
     # The template is a local directory, so there won't be any calls on git.
-    assert create_command.git.Repo.call_count == 0
+    assert create_command.tools.git.Repo.call_count == 0
 
 
 def test_explicit_local_template_and_branch(
@@ -344,7 +344,7 @@ def test_explicit_local_template_and_branch(
     create_command.generate_app_template(myapp)
 
     # Cookiecutter was invoked with the expected template name and context.
-    create_command.cookiecutter.assert_called_once_with(
+    create_command.tools.cookiecutter.assert_called_once_with(
         "/path/to/special-template",
         no_input=True,
         checkout=branch,
@@ -353,7 +353,7 @@ def test_explicit_local_template_and_branch(
     )
 
     # The template is a local directory, so there won't be any calls on git.
-    assert create_command.git.Repo.call_count == 0
+    assert create_command.tools.git.Repo.call_count == 0
 
 
 def test_offline_repo_template(monkeypatch, create_command, myapp, full_context):
@@ -364,10 +364,10 @@ def test_offline_repo_template(monkeypatch, create_command, myapp, full_context)
 
     # There won't be a cookiecutter cache, so there won't be
     # a repo path (yet).
-    create_command.git.Repo.side_effect = git_exceptions.NoSuchPathError
+    create_command.tools.git.Repo.side_effect = git_exceptions.NoSuchPathError
 
     # Calling cookiecutter on a repository while offline causes a CalledProcessError
-    create_command.cookiecutter.side_effect = subprocess.CalledProcessError(
+    create_command.tools.cookiecutter.side_effect = subprocess.CalledProcessError(
         cmd=[
             "git",
             "clone",
@@ -381,7 +381,7 @@ def test_offline_repo_template(monkeypatch, create_command, myapp, full_context)
         create_command.generate_app_template(myapp)
 
     # Cookiecutter was invoked with the expected template name and context.
-    create_command.cookiecutter.assert_called_once_with(
+    create_command.tools.cookiecutter.assert_called_once_with(
         "https://github.com/beeware/briefcase-tester-dummy-template.git",
         no_input=True,
         checkout="v37.42.7",
@@ -399,17 +399,19 @@ def test_invalid_repo_template(monkeypatch, create_command, myapp, full_context)
 
     # There won't be a cookiecutter cache, so there won't be
     # a repo path (yet).
-    create_command.git.Repo.side_effect = git_exceptions.NoSuchPathError
+    create_command.tools.git.Repo.side_effect = git_exceptions.NoSuchPathError
 
     # Calling cookiecutter on a URL that isn't a valid repository causes an error
-    create_command.cookiecutter.side_effect = cookiecutter_exceptions.RepositoryNotFound
+    create_command.tools.cookiecutter.side_effect = (
+        cookiecutter_exceptions.RepositoryNotFound
+    )
 
     # Generating the template under there conditions raises an error
     with pytest.raises(InvalidTemplateRepository):
         create_command.generate_app_template(myapp)
 
     # Cookiecutter was invoked with the expected template name and context.
-    create_command.cookiecutter.assert_called_once_with(
+    create_command.tools.cookiecutter.assert_called_once_with(
         "https://example.com/somewhere/not-a-repo.git",
         no_input=True,
         checkout="v37.42.7",
@@ -428,11 +430,11 @@ def test_missing_branch_template(monkeypatch, create_command, myapp, full_contex
 
     # There won't be a cookiecutter cache, so there won't be
     # a repo path (yet).
-    create_command.git.Repo.side_effect = git_exceptions.NoSuchPathError
+    create_command.tools.git.Repo.side_effect = git_exceptions.NoSuchPathError
 
     # Calling cookiecutter on a URL that doesn't have the requested branch
     # causes an error
-    create_command.cookiecutter.side_effect = (
+    create_command.tools.cookiecutter.side_effect = (
         cookiecutter_exceptions.RepositoryCloneFailed
     )
 
@@ -441,7 +443,7 @@ def test_missing_branch_template(monkeypatch, create_command, myapp, full_contex
         create_command.generate_app_template(myapp)
 
     # Cookiecutter was invoked with the expected template name and context.
-    create_command.cookiecutter.assert_called_once_with(
+    create_command.tools.cookiecutter.assert_called_once_with(
         "https://example.com/somewhere/missing-branch.git",
         no_input=True,
         checkout="v37.42.7",
@@ -461,7 +463,7 @@ def test_cached_template(monkeypatch, create_command, myapp, full_context):
 
     # Git returns a Repo, that repo can return a remote, and it has
     # heads that can be accessed.
-    create_command.git.Repo.return_value = mock_repo
+    create_command.tools.git.Repo.return_value = mock_repo
     mock_repo.remote.return_value = mock_remote
     mock_remote.refs.__getitem__.return_value = mock_remote_head
 
@@ -476,7 +478,7 @@ def test_cached_template(monkeypatch, create_command, myapp, full_context):
     mock_remote_head.checkout.assert_called_once_with()
 
     # Cookiecutter was invoked with the path to the *cached* template name
-    create_command.cookiecutter.assert_called_once_with(
+    create_command.tools.cookiecutter.assert_called_once_with(
         os.fsdecode(Path.home() / ".cookiecutters" / "briefcase-tester-dummy-template"),
         no_input=True,
         checkout="v37.42.7",
@@ -500,7 +502,7 @@ def test_cached_template_offline(
     # Git returns a Repo, that repo can return a remote, and it has
     # heads that can be accessed. However, calling fetch on the remote
     # will cause a git error (error code 128).
-    create_command.git.Repo.return_value = mock_repo
+    create_command.tools.git.Repo.return_value = mock_repo
     mock_repo.remote.return_value = mock_remote
     mock_remote.refs.__getitem__.return_value = mock_remote_head
     mock_remote.fetch.side_effect = git_exceptions.GitCommandError("git", 128)
@@ -520,7 +522,7 @@ def test_cached_template_offline(
     mock_remote_head.checkout.assert_called_once_with()
 
     # Cookiecutter was invoked with the path to the *cached* template name
-    create_command.cookiecutter.assert_called_once_with(
+    create_command.tools.cookiecutter.assert_called_once_with(
         os.fsdecode(Path.home() / ".cookiecutters" / "briefcase-tester-dummy-template"),
         no_input=True,
         checkout="v37.42.7",
@@ -543,7 +545,7 @@ def test_cached_missing_branch_template(
     # Git returns a Repo, that repo can return a remote. However, it doesn't
     # have a head corresponding to the requested Python version, so it
     # raises an IndexError
-    create_command.git.Repo.return_value = mock_repo
+    create_command.tools.git.Repo.return_value = mock_repo
     mock_repo.remote.return_value = mock_remote
     mock_remote.refs.__getitem__.side_effect = IndexError
 

@@ -1,3 +1,4 @@
+import os
 from unittest.mock import MagicMock
 
 import pytest
@@ -5,6 +6,8 @@ import pytest
 from briefcase.commands import OpenCommand
 from briefcase.commands.base import full_options
 from briefcase.config import AppConfig
+from briefcase.console import Console, Log
+from briefcase.integrations.subprocess import Subprocess
 
 from ...utils import create_file
 
@@ -12,7 +15,7 @@ from ...utils import create_file
 class DummyOpenCommand(OpenCommand):
     """A dummy open command that doesn't actually do anything.
 
-    It only serves to track which actions would be performend.
+    It only serves to track which actions would be performed.
     """
 
     platform = "tester"
@@ -20,11 +23,13 @@ class DummyOpenCommand(OpenCommand):
     description = "Dummy Open command"
 
     def __init__(self, *args, apps, **kwargs):
+        kwargs.setdefault("logger", Log())
+        kwargs.setdefault("console", Console())
         super().__init__(*args, apps=apps, **kwargs)
 
         # Override the OS services that are used when opening
-        self.os = MagicMock()
-        self.subprocess = MagicMock()
+        self.tools.os = MagicMock(spec_set=os)
+        self.tools.subprocess = MagicMock(spec_set=Subprocess)
 
         self.actions = []
 
@@ -44,6 +49,10 @@ class DummyOpenCommand(OpenCommand):
     def verify_tools(self):
         super().verify_tools()
         self.actions.append(("verify",))
+
+    def verify_app_tools(self, app):
+        super().verify_app_tools(app=app)
+        self.actions.append(("verify-app-tools", app.app_name))
 
     def open_project(self, project_path):
         super().open_project(project_path)

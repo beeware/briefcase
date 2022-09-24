@@ -13,7 +13,7 @@ class DummyConsole(Console):
         self.prompts = []
         self.values = list(values)
 
-    def __call__(self, prompt):
+    def __call__(self, prompt, *args, **kwargs):
         if not self.enabled:
             raise InputDisabled()
         self.prompts.append(prompt)
@@ -45,6 +45,7 @@ def create_file(filepath, content, mode="w", chmod=None):
     :param mode: The mode to open the file. This is `w` by default;
         use `wb` and provide content as a bitstring if you need to
         write a binary file.
+    :param chmod: file permissions to apply
     :returns: The path to the file that was created.
     """
     filepath.parent.mkdir(parents=True, exist_ok=True)
@@ -108,7 +109,7 @@ def mock_file_download(filename, content, mode="w", role=None):
         use `wb` and provide content as a bitstring if you need to
         write a binary file.
     :param role: The role played by the content being downloaded
-    :returns: a function that can act as a mock side effect for `download_file()`
+    :returns: a function that can act as a mock side effect for `download.file()`
     """
 
     def _download_file(url, download_path, role):
@@ -120,8 +121,11 @@ def mock_file_download(filename, content, mode="w", role=None):
 def mock_zip_download(filename, content, role=None):
     """Create a side effect function that mocks the download of a zip file.
 
+    :param filename: The file name (*not* the path - just the file name) to
+        create as a side effect
     :param content: A string containing the content to write.
-    :returns: a function that can act as a mock side effect for `download_file()`
+    :param role: The role played by the content being downloaded
+    :returns: a function that can act as a mock side effect for `download.file()`
     """
 
     def _download_file(url, download_path, role):
@@ -134,7 +138,7 @@ def mock_tgz_download(filename, content, role=None):
     """Create a side effect function that mocks the download of a .tar.gz file.
 
     :param content: A string containing the content to write.
-    :returns: a function that can act as a mock side effect for `download_file()`
+    :returns: a function that can act as a mock side effect for `download.file()`
     """
 
     def _download_file(url, download_path, role):

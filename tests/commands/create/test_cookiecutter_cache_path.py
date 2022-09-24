@@ -31,7 +31,7 @@ from briefcase.commands.create import cookiecutter_cache_path
     ],
 )
 def test_cookiecutter_cache_path(template, cache_dir):
-    """The cookiecutter cache path can be determiend for various template
+    """The cookiecutter cache path can be determined for various template
     types."""
     assert cookiecutter_cache_path(template) == (
         Path.home() / ".cookiecutters" / cache_dir

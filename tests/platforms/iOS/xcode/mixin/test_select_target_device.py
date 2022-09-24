@@ -3,6 +3,7 @@ from unittest import mock
 import pytest
 
 from briefcase.commands.base import BaseCommand
+from briefcase.console import Console, Log
 from briefcase.exceptions import BriefcaseCommandError, InvalidDeviceError
 from briefcase.platforms.iOS.xcode import iOSXcodeMixin
 from tests.utils import DummyConsole
@@ -14,8 +15,10 @@ class DummyCommand(iOSXcodeMixin, BaseCommand):
     command = "dummy"
 
     def __init__(self, base_path, **kwargs):
+        kwargs.setdefault("logger", Log())
+        kwargs.setdefault("console", Console())
         super().__init__(base_path=base_path, **kwargs)
-        self.input = DummyConsole()
+        self.tools.input = DummyConsole()
 
 
 @pytest.fixture

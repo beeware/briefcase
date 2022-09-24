@@ -3,13 +3,14 @@ from unittest.mock import MagicMock
 import pytest
 
 from briefcase.commands import UpgradeCommand
+from briefcase.console import Console, Log
 from briefcase.exceptions import MissingToolError
 
 
 class DummyUpgradeCommand(UpgradeCommand):
     """A dummy upgrade command that doesn't actually do anything.
 
-    It only serves to track which actions would be performend.
+    It only serves to track which actions would be performed.
     """
 
     platform = "tester"
@@ -17,6 +18,8 @@ class DummyUpgradeCommand(UpgradeCommand):
     description = "Dummy update command"
 
     def __init__(self, *args, sdks, **kwargs):
+        kwargs.setdefault("logger", Log())
+        kwargs.setdefault("console", Console())
         super().__init__(*args, **kwargs)
 
         self.sdks = sdks

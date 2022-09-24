@@ -14,7 +14,7 @@ def test_run(flatpak):
     )
 
     # The expected call was made
-    flatpak.subprocess.run.assert_called_once_with(
+    flatpak.tools.subprocess.run.assert_called_once_with(
         [
             "flatpak",
             "run",
@@ -27,7 +27,7 @@ def test_run(flatpak):
 
 def test_run_fail(flatpak):
     """If execution fails, an error is raised."""
-    flatpak.subprocess.run.side_effect = subprocess.CalledProcessError(
+    flatpak.tools.subprocess.run.side_effect = subprocess.CalledProcessError(
         cmd="flatpak install", returncode=1
     )
 

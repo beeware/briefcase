@@ -1,9 +1,9 @@
+import subprocess
 import time
 from unittest.mock import MagicMock
 
 import pytest
 
-from briefcase.console import Console, Log
 from briefcase.integrations.subprocess import Subprocess
 
 # hardcoded here since subprocess will only include these constants if Python is literally on Windows
@@ -12,22 +12,17 @@ CREATE_NEW_PROCESS_GROUP = 0x200
 
 
 @pytest.fixture
-def mock_sub():
-    command = MagicMock()
-    command.logger = Log(verbosity=1)
-    command.input = Console()
-
-    command.os = MagicMock()
-    command.os.environ = {
+def mock_sub(mock_tools):
+    mock_tools.os.environ = {
         "VAR1": "Value 1",
         "PS1": "\nLine 2\n\nLine 4",
         "PWD": "/home/user/",
     }
 
-    sub = Subprocess(command)
-    sub._subprocess = MagicMock()
+    sub = Subprocess(mock_tools)
+    sub._subprocess = MagicMock(spec=subprocess)
 
-    run_result = MagicMock()
+    run_result = MagicMock(spec=subprocess.CompletedProcess)
     run_result.returncode = 0
     sub._subprocess.run.return_value = run_result
 
@@ -46,7 +41,7 @@ def popen_process():
     # Mock the readline values of an actual process. The final return value is "",
     # indicating that the process has exited; however, we insert a short sleep
     # to ensure that any other threads will have a chance to run before this
-    # thread acutally terminates.
+    # thread actually terminates.
     def mock_readline():
         yield from [
             "output line 1\n",

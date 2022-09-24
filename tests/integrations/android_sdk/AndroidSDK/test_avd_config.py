@@ -1,4 +1,4 @@
-def test_avd_config(mock_sdk, tmp_path):
+def test_avd_config(mock_tools, android_sdk, tmp_path):
     """An AVD configuration can be read."""
     config_file = (
         tmp_path / "home" / ".android" / "avd" / "testDevice.avd" / "config.ini"
@@ -23,7 +23,7 @@ disk.cachePartition.size=37MB
 """
         )
 
-    assert mock_sdk.avd_config("testDevice") == {
+    assert android_sdk.avd_config("testDevice") == {
         "avd.ini.encoding": "UTF-8",
         "hw.device.manufacturer": "Google",
         "hw.device.name": "pixel",
@@ -35,7 +35,7 @@ disk.cachePartition.size=37MB
     }
 
 
-def test_avd_config_with_space(mock_sdk, tmp_path):
+def test_avd_config_with_space(mock_tools, android_sdk, tmp_path):
     """An AVD configuration that contains spaces can be read."""
     config_file = (
         tmp_path / "home" / ".android" / "avd" / "testDevice.avd" / "config.ini"
@@ -61,7 +61,7 @@ disk.cachePartition.size = 37MB
 """
         )
 
-    assert mock_sdk.avd_config("testDevice") == {
+    assert android_sdk.avd_config("testDevice") == {
         "avd.ini.encoding": "UTF-8",
         "hw.device.manufacturer": "Google",
         "hw.device.name": "pixel",

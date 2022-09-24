@@ -6,6 +6,7 @@ import subprocess
 import sys
 import threading
 import time
+from contextlib import suppress
 from pathlib import Path
 
 import psutil
@@ -87,12 +88,26 @@ def get_process_id_by_command(
     return None
 
 
+class NativeAppContext:
+    """A wrapper around subprocess for use as an app-bound tool."""
+
+    @classmethod
+    def verify(cls, tools, app):
+        """Make subprocess available as app-bound tool."""
+        # short circuit since already verified and available
+        if hasattr(tools[app], "app_context"):
+            return tools[app].app_context
+
+        tools[app].app_context = tools.subprocess
+        return tools[app].app_context
+
+
 class Subprocess:
     """A wrapper around subprocess that can be used as a logging point for
     commands that are executed."""
 
-    def __init__(self, command):
-        self.command = command
+    def __init__(self, tools):
+        self.tools = tools
         self._subprocess = subprocess
 
     def prepare(self):
@@ -107,7 +122,7 @@ class Subprocess:
         :param overrides: The environment passed to the subprocess call;
             can be `None` if there are no explicit environment changes.
         """
-        env = self.command.os.environ.copy()
+        env = self.tools.os.environ.copy()
         if overrides:
             env.update(overrides)
         return env
@@ -158,7 +173,7 @@ class Subprocess:
             )
 
         # For Windows, convert start_new_session=True to creation flags
-        if self.command.host_os == "Windows":
+        if self.tools.host_os == "Windows":
             try:
                 if kwargs.pop("start_new_session") is True:
                     if "creationflags" in kwargs:
@@ -189,6 +204,16 @@ class Subprocess:
 
         return kwargs
 
+    @classmethod
+    def verify(cls, tools):
+        """Make subprocess available in tool cache."""
+        # short circuit since already verified and available
+        if hasattr(tools, "subprocess"):
+            return tools.subprocess
+
+        tools.subprocess = Subprocess(tools)
+        return tools.subprocess
+
     def run(self, args, stream_output=False, **kwargs):
         """A wrapper for subprocess.run().
 
@@ -212,7 +237,7 @@ class Subprocess:
             kwargs.get("stdout") and kwargs.get("stderr")
         )
         if stream_output or (
-            self.command.input.is_output_controlled and not is_output_redirected
+            self.tools.input.is_output_controlled and not is_output_redirected
         ):
             return self._run_and_stream_output(args, **kwargs)
 
@@ -276,7 +301,7 @@ class Subprocess:
             self.stream_output(args[0], process)
             if process.stderr and kwargs["stderr"] != subprocess.STDOUT:
                 stderr = process.stderr.read()
-            return_code = process.poll()
+        return_code = process.poll()
         self._log_return_code(return_code)
 
         if check and return_code:
@@ -337,16 +362,16 @@ class Subprocess:
                 str(e)
                 or f"Failed to parse command output using '{output_parser.__name__}'"
             )
-            self.command.logger.error()
-            self.command.logger.error("Command Output Parsing Error:")
-            self.command.logger.error(f"    {error_reason}")
-            self.command.logger.error("Command:")
-            self.command.logger.error(
+            self.tools.logger.error()
+            self.tools.logger.error("Command Output Parsing Error:")
+            self.tools.logger.error(f"    {error_reason}")
+            self.tools.logger.error("Command:")
+            self.tools.logger.error(
                 f"    {' '.join(shlex.quote(str(arg)) for arg in args)}"
             )
-            self.command.logger.error("Command Output:")
+            self.tools.logger.error("Command Output:")
             for line in ensure_str(cmd_output).splitlines():
-                self.command.logger.error(f"    {line}")
+                self.tools.logger.error(f"    {line}")
             raise CommandOutputParseError(error_reason) from e
 
     def Popen(self, args, **kwargs):
@@ -395,16 +420,18 @@ class Subprocess:
             while not stop_func() and output_streamer.is_alive():
                 time.sleep(0.1)
         except KeyboardInterrupt:
-            self.command.logger.info("Stopping...")
+            self.tools.logger.info("Stopping...")
             # allow time for CTRL+C to propagate to the child process
             time.sleep(0.25)
+            # re-raise to exit as "Aborted by user"
+            raise
         finally:
             self.cleanup(label, popen_process)
             streamer_deadline = time.time() + 3
             while output_streamer.is_alive() and time.time() < streamer_deadline:
                 time.sleep(0.1)
             if output_streamer.is_alive():
-                self.command.logger.error(
+                self.tools.logger.error(
                     "Log stream hasn't terminated; log output may be corrupted."
                 )
 
@@ -413,14 +440,18 @@ class Subprocess:
 
         :param popen_process: popen process to stream stdout
         """
-        while True:
-            # readline should always return at least a newline (ie \n)
-            # UNLESS the underlying process is exiting/gone; then "" is returned
-            output_line = ensure_str(popen_process.stdout.readline())
-            if output_line:
-                self.command.logger.info(output_line)
-            elif output_line == "":
-                return
+        # ValueError is raised if stdout is unexpectedly closed.
+        # This can happen if the user starts spamming CTRL+C, for instance.
+        # Silently exit to avoid Python printing the exception to the console.
+        with suppress(ValueError):
+            while True:
+                # readline should always return at least a newline (ie \n)
+                # UNLESS the underlying process is exiting/gone; then "" is returned
+                output_line = ensure_str(popen_process.stdout.readline())
+                if output_line:
+                    self.tools.logger.info(output_line)
+                elif output_line == "":
+                    return
 
     def cleanup(self, label, popen_process):
         """Clean up after a Popen process, gracefully terminating if possible;
@@ -434,22 +465,22 @@ class Subprocess:
         try:
             popen_process.wait(timeout=3)
         except subprocess.TimeoutExpired:
-            self.command.logger.warning(f"Forcibly killing {label}...")
+            self.tools.logger.warning(f"Forcibly killing {label}...")
             popen_process.kill()
 
     def _log_command(self, args):
         """Log the entire console command being executed."""
-        self.command.logger.debug()
-        self.command.logger.debug("Running Command:")
-        self.command.logger.debug(
+        self.tools.logger.debug()
+        self.tools.logger.debug("Running Command:")
+        self.tools.logger.debug(
             f"    {' '.join(shlex.quote(str(arg)) for arg in args)}"
         )
 
     def _log_cwd(self, cwd):
         """Log the working directory for the  command being executed."""
         effective_cwd = Path.cwd() if cwd is None else cwd
-        self.command.logger.debug("Working Directory:")
-        self.command.logger.debug(f"    {effective_cwd}")
+        self.tools.logger.debug("Working Directory:")
+        self.tools.logger.debug(f"    {effective_cwd}")
 
     def _log_environment(self, overrides):
         """Log the environment variables overrides prior to command execution.
@@ -458,22 +489,22 @@ class Subprocess:
             can be `None` if there are no explicit environment changes.
         """
         if overrides:
-            self.command.logger.debug("Environment Overrides:")
+            self.tools.logger.debug("Environment Overrides:")
             for env_var, value in overrides.items():
-                self.command.logger.debug(f"    {env_var}={value}")
+                self.tools.logger.debug(f"    {env_var}={value}")
 
     def _log_output(self, output, stderr=None):
         """Log the output of the executed command."""
         if output:
-            self.command.logger.debug("Command Output:")
+            self.tools.logger.debug("Command Output:")
             for line in ensure_str(output).splitlines():
-                self.command.logger.debug(f"    {line}")
+                self.tools.logger.debug(f"    {line}")
 
         if stderr:
-            self.command.logger.debug("Command Error Output (stderr):")
+            self.tools.logger.debug("Command Error Output (stderr):")
             for line in ensure_str(stderr).splitlines():
-                self.command.logger.debug(f"    {line}")
+                self.tools.logger.debug(f"    {line}")
 
     def _log_return_code(self, return_code):
         """Log the output value of the executed command."""
-        self.command.logger.debug(f"Return code: {return_code}")
+        self.tools.logger.debug(f"Return code: {return_code}")

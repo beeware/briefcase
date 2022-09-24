@@ -1,6 +1,7 @@
 import zipfile
 from unittest import mock
 
+from briefcase.console import Console, Log
 from briefcase.platforms.macOS.app import macOSAppCreateCommand
 
 
@@ -21,10 +22,15 @@ def test_install_app_support_package(first_app_config, tmp_path):
     # To avoid needing to generate a briefcase.toml, set an app support revision
     first_app_config.support_revision = 37
 
-    create_command = macOSAppCreateCommand(base_path=tmp_path)
+    create_command = macOSAppCreateCommand(
+        logger=Log(),
+        console=Console(),
+        base_path=tmp_path / "base_path",
+        data_path=tmp_path / "briefcase",
+    )
 
-    # Modify download_file to return the temp zipfile
-    create_command.download_file = mock.MagicMock(return_value=support_file)
+    # Modify file download to return the temp zipfile
+    create_command.tools.download.file = mock.MagicMock(return_value=support_file)
 
     # Mock support package path
     create_command.support_path = mock.MagicMock(return_value=support_path)

@@ -4,7 +4,7 @@ from unittest import mock
 
 def test_clean_termination(mock_sub, capsys):
     """A popen process can be cleanly terminated."""
-    process = mock.MagicMock()
+    process = mock.MagicMock(spec_set=subprocess.Popen)
 
     mock_sub.cleanup("testing process", process)
 
@@ -18,7 +18,7 @@ def test_clean_termination(mock_sub, capsys):
 
 def test_dirty_termination(mock_sub, capsys):
     """If terminate doesn't stop the process, it will be forcibly killed."""
-    process = mock.MagicMock()
+    process = mock.MagicMock(spec_set=subprocess.Popen)
     process.wait.side_effect = subprocess.TimeoutExpired(cmd="ls", timeout=3)
 
     mock_sub.cleanup("testing process", process)

@@ -3,30 +3,42 @@ from unittest import mock
 
 import pytest
 
+from briefcase.console import Console, Log
 from briefcase.exceptions import BriefcaseCommandError
+from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.iOS.xcode import iOSXcodeBuildCommand
 
 
 def test_build_app(first_app_config, tmp_path):
     """An iOS App can be built."""
-    command = iOSXcodeBuildCommand(base_path=tmp_path)
+    command = iOSXcodeBuildCommand(
+        logger=Log(),
+        console=Console(),
+        base_path=tmp_path / "base_path",
+        data_path=tmp_path / "briefcase",
+    )
 
     # A valid target device will be selected.
     command.select_target_device = mock.MagicMock(
         return_value=("2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D", "13.2", "iPhone 11")
     )
-    command.subprocess = mock.MagicMock()
+    command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
 
     # Mock the host's CPU architecture to ensure it's reflected in the Xcode call
-    command.host_arch = "weird"
+    command.tools.host_arch = "weird"
 
     command.build_app(first_app_config)
 
-    command.subprocess.run.assert_called_with(
+    command.tools.subprocess.run.assert_called_with(
         [
             "xcodebuild",
             "-project",
-            tmp_path / "iOS" / "Xcode" / "First App" / "First App.xcodeproj",
+            tmp_path
+            / "base_path"
+            / "iOS"
+            / "Xcode"
+            / "First App"
+            / "First App.xcodeproj",
             "-destination",
             'platform="iOS Simulator,name=iPhone 11,OS=13.2"',
             "-quiet",
@@ -44,29 +56,39 @@ def test_build_app(first_app_config, tmp_path):
 
 def test_build_app_failed(first_app_config, tmp_path):
     """If xcodebuild fails, an error is raised."""
-    command = iOSXcodeBuildCommand(base_path=tmp_path)
+    command = iOSXcodeBuildCommand(
+        logger=Log(),
+        console=Console(),
+        base_path=tmp_path / "base_path",
+        data_path=tmp_path / "briefcase",
+    )
 
     # A valid target device will be selected.
     command.select_target_device = mock.MagicMock(
         return_value=("2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D", "13.2", "iPhone 11")
     )
     # The subprocess.run() call will raise an error
-    command.subprocess = mock.MagicMock()
-    command.subprocess.run.side_effect = subprocess.CalledProcessError(
+    command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
+    command.tools.subprocess.run.side_effect = subprocess.CalledProcessError(
         cmd=["xcodebuild", "..."], returncode=1
     )
 
     # Mock the host's CPU architecture to ensure it's reflected in the Xcode call
-    command.host_arch = "weird"
+    command.tools.host_arch = "weird"
 
     with pytest.raises(BriefcaseCommandError):
         command.build_app(first_app_config)
 
-    command.subprocess.run.assert_called_with(
+    command.tools.subprocess.run.assert_called_with(
         [
             "xcodebuild",
             "-project",
-            tmp_path / "iOS" / "Xcode" / "First App" / "First App.xcodeproj",
+            tmp_path
+            / "base_path"
+            / "iOS"
+            / "Xcode"
+            / "First App"
+            / "First App.xcodeproj",
             "-destination",
             'platform="iOS Simulator,name=iPhone 11,OS=13.2"',
             "-quiet",

@@ -38,7 +38,7 @@ class WindowsVisualStudioBuildCommand(WindowsVisualStudioMixin, BuildCommand):
 
     def verify_tools(self):
         super().verify_tools()
-        self.visualstudio = VisualStudio.verify(self)
+        VisualStudio.verify(self.tools)
 
     def build_app(self, app: BaseConfig, **kwargs):
         """Build the Visual Studio project.
@@ -49,9 +49,9 @@ class WindowsVisualStudioBuildCommand(WindowsVisualStudioMixin, BuildCommand):
 
         with self.input.wait_bar("Building solution..."):
             try:
-                self.subprocess.run(
+                self.tools.subprocess.run(
                     [
-                        self.visualstudio.msbuild_path,
+                        self.tools.visualstudio.msbuild_path,
                         f"{app.formal_name}.sln",
                         "-target:restore",
                         "-property:RestorePackagesConfig=true",

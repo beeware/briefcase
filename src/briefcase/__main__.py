@@ -1,43 +1,45 @@
 import sys
+from contextlib import suppress
 
-from .cmdline import parse_cmdline
-from .console import Log
-from .exceptions import BriefcaseError, HelpText
+from briefcase.cmdline import parse_cmdline
+from briefcase.console import Console, Log
+from briefcase.exceptions import BriefcaseError, HelpText
 
 
 def main():
-    log = Log()
+    result = 0
     command = None
+    logger = Log()
+    console = Console()
     try:
-        command, options = parse_cmdline(sys.argv[1:])
-        # Replace the top-level logger with the one used by the command.
-        # This is needed to preserve extra logging detail.
-        log = command.logger
+        Command, extra_cmdline = parse_cmdline(sys.argv[1:])
+        command = Command(logger=logger, console=console)
+        options = command.parse_options(extra=extra_cmdline)
         command.check_obsolete_data_dir()
         command.parse_config("pyproject.toml")
         command(**options)
-        result = 0
     except HelpText as e:
-        log.info()
-        log.info(str(e))
+        logger.info()
+        logger.info(str(e))
         result = e.error_code
     except BriefcaseError as e:
-        log.error()
-        log.error(str(e))
+        logger.error()
+        logger.error(str(e))
         result = e.error_code
-        log.capture_stacktrace()
+        logger.capture_stacktrace()
     except Exception:
-        log.capture_stacktrace()
+        logger.capture_stacktrace()
         raise
     except KeyboardInterrupt:
-        log.warning()
-        log.warning("Aborted by user.")
-        log.warning()
+        logger.warning()
+        logger.warning("Aborted by user.")
+        logger.warning()
         result = -42
-        if getattr(command, "save_log", False):
-            log.capture_stacktrace()
+        if logger.save_log:
+            logger.capture_stacktrace()
     finally:
-        log.save_log_to_file(command)
+        with suppress(KeyboardInterrupt):
+            logger.save_log_to_file(command)
 
     sys.exit(result)
 

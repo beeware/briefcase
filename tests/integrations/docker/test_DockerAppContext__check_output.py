@@ -5,14 +5,12 @@ from unittest.mock import ANY
 
 import pytest
 
-from briefcase.console import Log
 
-
-def test_simple_call(mock_docker, tmp_path, capsys):
+def test_simple_call(mock_docker_app_context, tmp_path, capsys):
     """A simple call will be invoked."""
-    assert mock_docker.check_output(["hello", "world"]) == "goodbye\n"
+    assert mock_docker_app_context.check_output(["hello", "world"]) == "goodbye\n"
 
-    mock_docker._subprocess._subprocess.check_output.assert_called_with(
+    mock_docker_app_context.tools.subprocess._subprocess.check_output.assert_called_with(
         [
             "docker",
             "run",
@@ -31,22 +29,20 @@ def test_simple_call(mock_docker, tmp_path, capsys):
     assert capsys.readouterr().out == ""
 
 
-def test_call_with_arg_and_env(mock_docker, tmp_path, capsys):
+def test_call_with_arg_and_env(mock_docker_app_context, tmp_path, capsys):
     """Extra keyword arguments are passed through as-is; env modifications are
     converted."""
-    assert (
-        mock_docker.check_output(
-            ["hello", "world"],
-            env={
-                "MAGIC": "True",
-                "IMPORTANCE": "super high",
-            },
-            universal_newlines=True,
-        )
-        == "goodbye\n"
+    output = mock_docker_app_context.check_output(
+        ["hello", "world"],
+        env={
+            "MAGIC": "True",
+            "IMPORTANCE": "super high",
+        },
+        universal_newlines=True,
     )
+    assert output == "goodbye\n"
 
-    mock_docker._subprocess._subprocess.check_output.assert_called_with(
+    mock_docker_app_context.tools.subprocess._subprocess.check_output.assert_called_with(
         [
             "docker",
             "run",
@@ -70,24 +66,23 @@ def test_call_with_arg_and_env(mock_docker, tmp_path, capsys):
 
 
 @pytest.mark.skipif(
-    sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
+    sys.platform == "win32",
+    reason="Windows paths aren't converted in Docker context",
 )
-def test_call_with_path_arg_and_env(mock_docker, tmp_path, capsys):
+def test_call_with_path_arg_and_env(mock_docker_app_context, tmp_path, capsys):
     """Path-based arguments and environment are converted to strings and passed
     in as-is."""
-    assert (
-        mock_docker.check_output(
-            ["hello", tmp_path / "location"],
-            env={
-                "MAGIC": "True",
-                "PATH": f"/somewhere/safe:{tmp_path / 'briefcase' / 'tools'}:{tmp_path / 'platform' / 'location'}",
-            },
-            cwd=tmp_path / "cwd",
-        )
-        == "goodbye\n"
+    output = mock_docker_app_context.check_output(
+        ["hello", tmp_path / "location"],
+        env={
+            "MAGIC": "True",
+            "PATH": f"/somewhere/safe:{tmp_path / 'briefcase' / 'tools'}:{tmp_path / 'platform' / 'location'}",
+        },
+        cwd=tmp_path / "cwd",
     )
+    assert output == "goodbye\n"
 
-    mock_docker._subprocess._subprocess.check_output.assert_called_with(
+    mock_docker_app_context.tools.subprocess._subprocess.check_output.assert_called_with(
         [
             "docker",
             "run",
@@ -114,13 +109,13 @@ def test_call_with_path_arg_and_env(mock_docker, tmp_path, capsys):
 @pytest.mark.skipif(
     sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
 )
-def test_simple_verbose_call(mock_docker, tmp_path, capsys):
+def test_simple_verbose_call(mock_docker_app_context, tmp_path, capsys):
     """If verbosity is turned out, there is output."""
-    mock_docker.command.logger = Log(verbosity=2)
+    mock_docker_app_context.tools.logger.verbosity = 2
 
-    assert mock_docker.check_output(["hello", "world"]) == "goodbye\n"
+    assert mock_docker_app_context.check_output(["hello", "world"]) == "goodbye\n"
 
-    mock_docker._subprocess._subprocess.check_output.assert_called_with(
+    mock_docker_app_context.tools.subprocess._subprocess.check_output.assert_called_with(
         [
             "docker",
             "run",
