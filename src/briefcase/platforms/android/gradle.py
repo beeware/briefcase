@@ -86,16 +86,16 @@ class GradleMixin:
         )
 
     def gradlew_path(self, app):
-        gradlew = "gradlew.bat" if self.host_os == "Windows" else "gradlew"
+        gradlew = "gradlew.bat" if self.tools.host_os == "Windows" else "gradlew"
         return self.bundle_path(app) / gradlew
 
     def verify_tools(self):
         """Verify that the Android APK tools in `briefcase` will operate on
         this system, downloading tools as needed."""
         super().verify_tools()
-        self.android_sdk = AndroidSDK.verify(self)
+        AndroidSDK.verify(tools=self.tools)
         if not self.is_clone:
-            self.logger.add_log_file_extra(self.android_sdk.list_packages)
+            self.logger.add_log_file_extra(self.tools.android_sdk.list_packages)
 
 
 class GradleCreateCommand(GradleMixin, CreateCommand):
@@ -143,12 +143,12 @@ class GradleBuildCommand(GradleMixin, BuildCommand):
         self.logger.info("Building Android APK...", prefix=app.app_name)
         with self.input.wait_bar("Building..."):
             try:
-                self.subprocess.run(
+                self.tools.subprocess.run(
                     # Windows needs the full path to `gradlew`; macOS & Linux can find it
                     # via `./gradlew`. For simplicity of implementation, we always provide
                     # the full path.
                     [self.gradlew_path(app), "assembleDebug", "--console", "plain"],
-                    env=self.android_sdk.env,
+                    env=self.tools.android_sdk.env,
                     # Set working directory so gradle can use the app bundle path as its
                     # project root, i.e., to avoid 'Task assembleDebug not found'.
                     cwd=self.bundle_path(app),
@@ -163,7 +163,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
 
     def verify_tools(self):
         super().verify_tools()
-        self.android_sdk.verify_emulator()
+        self.tools.android_sdk.verify_emulator()
 
     def add_options(self, parser):
         super().add_options(parser)
@@ -183,7 +183,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
         :param device_or_avd: The device to target. If ``None``, the user will
             be asked to re-run the command selecting a specific device.
         """
-        device, name, avd = self.android_sdk.select_target_device(
+        device, name, avd = self.tools.android_sdk.select_target_device(
             device_or_avd=device_or_avd
         )
 
@@ -193,22 +193,22 @@ class GradleRunCommand(GradleMixin, RunCommand):
         # then start it.
         if device is None:
             if avd is None:
-                avd = self.android_sdk.create_emulator()
+                avd = self.tools.android_sdk.create_emulator()
             else:
                 # Ensure the system image for the requested emulator is available.
                 # This step is only needed if the AVD already existed; you have to
                 # have an image available to create an AVD.
-                self.android_sdk.verify_avd(avd)
+                self.tools.android_sdk.verify_avd(avd)
 
             self.logger.info(f"Starting emulator {avd}...", prefix=app.app_name)
-            device, name = self.android_sdk.start_emulator(avd)
+            device, name = self.tools.android_sdk.start_emulator(avd)
 
         self.logger.info(
             f"Starting app on {name} (device ID {device})", prefix=app.app_name
         )
 
         # Create an ADB wrapper for the selected device
-        adb = self.android_sdk.adb(device=device)
+        adb = self.tools.android_sdk.adb(device=device)
 
         # Compute Android package name. The Android template uses
         # `package_name` and `module_name`, so we use those here as well.
@@ -256,12 +256,12 @@ class GradlePackageCommand(GradleMixin, PackageCommand):
         )
         with self.input.wait_bar("Bundling..."):
             try:
-                self.subprocess.run(
+                self.tools.subprocess.run(
                     # Windows needs the full path to `gradlew`; macOS & Linux can find it
                     # via `./gradlew`. For simplicity of implementation, we always provide
                     # the full path.
                     [self.gradlew_path(app), "bundleRelease", "--console", "plain"],
-                    env=self.android_sdk.env,
+                    env=self.tools.android_sdk.env,
                     # Set working directory so gradle can use the app bundle path as its
                     # project root, i.e., to avoid 'Task bundleRelease not found'.
                     cwd=self.bundle_path(app),

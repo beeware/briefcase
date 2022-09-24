@@ -2,6 +2,7 @@ import pytest
 
 from briefcase.commands.base import BaseCommand
 from briefcase.config import AppConfig, BaseConfig
+from briefcase.console import Console, Log
 
 
 class DummyCommand(BaseCommand):
@@ -13,6 +14,8 @@ class DummyCommand(BaseCommand):
     description = "Dummy base command"
 
     def __init__(self, *args, **kwargs):
+        kwargs.setdefault("logger", Log())
+        kwargs.setdefault("console", Console())
         super().__init__(*args, **kwargs)
 
     def add_options(self, parser):
@@ -119,7 +122,7 @@ class OtherDummyCommand(BaseCommand):
 
 @pytest.fixture
 def other_command(tmp_path):
-    return OtherDummyCommand(base_path=tmp_path)
+    return OtherDummyCommand(base_path=tmp_path, logger=Log(), console=Console())
 
 
 @pytest.fixture

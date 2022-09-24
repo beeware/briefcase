@@ -14,7 +14,7 @@ def test_verify_repo(flatpak):
     )
 
     # The expected call was made
-    flatpak.subprocess.run.assert_called_once_with(
+    flatpak.tools.subprocess.run.assert_called_once_with(
         [
             "flatpak",
             "remote-add",
@@ -29,7 +29,7 @@ def test_verify_repo(flatpak):
 
 def test_verify_repo_fail(flatpak):
     """If repo verification fails, an error is raised."""
-    flatpak.subprocess.run.side_effect = subprocess.CalledProcessError(
+    flatpak.tools.subprocess.run.side_effect = subprocess.CalledProcessError(
         cmd="flatpak repo-add", returncode=1
     )
 

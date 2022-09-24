@@ -70,13 +70,13 @@ class UpgradeCommand(BaseCommand):
 
         for klass in self.sdks:
             try:
-                tool = klass.verify(self, install=False)
+                tool = klass.verify(self.tools, install=False)
                 if tool.managed_install:
                     managed_tools[klass.name] = tool
                     try:
                         for plugin_klass in tool.plugins.values():
                             try:
-                                plugin = plugin_klass.verify(self, install=False)
+                                plugin = plugin_klass.verify(self.tools, install=False)
                                 # All plugins are managed
                                 managed_tools[plugin.name] = plugin
                             except BriefcaseCommandError:

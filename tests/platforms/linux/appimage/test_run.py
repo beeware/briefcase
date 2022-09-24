@@ -3,22 +3,27 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from briefcase.console import Console, Log
 from briefcase.exceptions import BriefcaseCommandError
+from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.linux.appimage import LinuxAppImageRunCommand
 
 
 def test_verify_linux(tmp_path):
     """A linux App can be started on linux."""
     command = LinuxAppImageRunCommand(
-        base_path=tmp_path / "base",
-        home_path=tmp_path / "home",
+        logger=Log(),
+        console=Console(),
+        base_path=tmp_path / "base_path",
+        data_path=tmp_path / "briefcase",
     )
+    command.tools.home_path = tmp_path / "home"
     command.use_docker = True
-    command.host_os = "Linux"
+    command.tools.host_os = "Linux"
 
     # Mock the existence of Docker.
-    command.subprocess = MagicMock()
-    command.subprocess.check_output.return_value = (
+    command.tools.subprocess = MagicMock(spec_set=Subprocess)
+    command.tools.subprocess.check_output.return_value = (
         "Docker version 19.03.8, build afacb8b\n"
     )
 
@@ -26,40 +31,52 @@ def test_verify_linux(tmp_path):
 
 
 def test_verify_non_linux(tmp_path):
-    """A linux App can be started on linux, even if Docker is enabled."""
+    """A linux App cannot be started on linux, even if Docker is enabled."""
     command = LinuxAppImageRunCommand(
-        base_path=tmp_path / "base",
-        home_path=tmp_path / "home",
+        logger=Log(),
+        console=Console(),
+        base_path=tmp_path / "base_path",
+        data_path=tmp_path / "briefcase",
     )
+    command.tools.home_path = tmp_path / "home"
     command.use_docker = True
-    command.host_os = "WierdOS"
+    command.tools.host_os = "WierdOS"
 
     # Mock the existence of Docker.
-    command.subprocess = MagicMock()
-    command.subprocess.check_output.return_value = (
+    command.tools.subprocess = MagicMock(spec_set=Subprocess)
+    command.tools.subprocess.check_output.return_value = (
         "Docker version 19.03.8, build afacb8b\n"
     )
 
-    with pytest.raises(BriefcaseCommandError):
+    with pytest.raises(
+        BriefcaseCommandError, match="AppImages can only be executed on Linux"
+    ):
         command.verify_tools()
 
 
 def test_run_app(first_app_config, tmp_path):
     """A linux App can be started."""
     command = LinuxAppImageRunCommand(
-        base_path=tmp_path / "base",
-        home_path=tmp_path / "home",
+        logger=Log(),
+        console=Console(),
+        base_path=tmp_path / "base_path",
+        data_path=tmp_path / "briefcase",
     )
+    command.tools.home_path = tmp_path / "home"
 
     # Set the host architecture for test purposes.
-    command.host_arch = "wonky"
+    command.tools.host_arch = "wonky"
 
-    command.subprocess = MagicMock()
+    command.tools.subprocess = MagicMock(spec_set=Subprocess)
 
     command.run_app(first_app_config)
 
-    command.subprocess.run.assert_called_with(
-        [os.fsdecode(tmp_path / "base" / "linux" / "First_App-0.0.1-wonky.AppImage")],
+    command.tools.subprocess.run.assert_called_with(
+        [
+            os.fsdecode(
+                tmp_path / "base_path" / "linux" / "First_App-0.0.1-wonky.AppImage"
+            )
+        ],
         cwd=tmp_path / "home",
         check=True,
         stream_output=True,
@@ -69,22 +86,29 @@ def test_run_app(first_app_config, tmp_path):
 def test_run_app_failed(first_app_config, tmp_path):
     """If there's a problem started the app, an exception is raised."""
     command = LinuxAppImageRunCommand(
-        base_path=tmp_path / "base",
-        home_path=tmp_path / "home",
+        logger=Log(),
+        console=Console(),
+        base_path=tmp_path / "base_path",
+        data_path=tmp_path / "briefcase",
     )
+    command.tools.home_path = tmp_path / "home"
 
     # Set the host architecture for test purposes.
-    command.host_arch = "wonky"
+    command.tools.host_arch = "wonky"
 
-    command.subprocess = MagicMock()
-    command.subprocess.run.side_effect = BriefcaseCommandError("problem")
+    command.tools.subprocess = MagicMock(spec_set=Subprocess)
+    command.tools.subprocess.run.side_effect = BriefcaseCommandError("problem")
 
     with pytest.raises(BriefcaseCommandError):
         command.run_app(first_app_config)
 
     # The run command was still invoked, though
-    command.subprocess.run.assert_called_with(
-        [os.fsdecode(tmp_path / "base" / "linux" / "First_App-0.0.1-wonky.AppImage")],
+    command.tools.subprocess.run.assert_called_with(
+        [
+            os.fsdecode(
+                tmp_path / "base_path" / "linux" / "First_App-0.0.1-wonky.AppImage"
+            )
+        ],
         cwd=tmp_path / "home",
         check=True,
         stream_output=True,

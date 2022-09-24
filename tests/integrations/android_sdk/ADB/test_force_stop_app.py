@@ -7,11 +7,11 @@ from briefcase.exceptions import BriefcaseCommandError, InvalidDeviceError
 from briefcase.integrations.android_sdk import ADB
 
 
-def test_force_stop_app(mock_sdk, capsys):
+def test_force_stop_app(mock_tools, capsys):
     """Invoking `force_stop_app()` calls `run()` with the appropriate
     parameters."""
     # Mock out the run command on an adb instance
-    adb = ADB(mock_sdk, "exampleDevice")
+    adb = ADB(mock_tools, "exampleDevice")
     adb.run = MagicMock(return_value="example normal adb output")
 
     # Invoke force_stop_app
@@ -27,10 +27,10 @@ def test_force_stop_app(mock_sdk, capsys):
     assert "normal adb output" not in capsys.readouterr()
 
 
-def test_force_top_fail(mock_sdk, capsys):
+def test_force_top_fail(mock_tools, capsys):
     """If `force_stop_app()` fails, an error is raised."""
     # Mock out the run command on an adb instance
-    adb = ADB(mock_sdk, "exampleDevice")
+    adb = ADB(mock_tools, "exampleDevice")
     adb.run = MagicMock(
         side_effect=subprocess.CalledProcessError(returncode=69, cmd="force-stop")
     )
@@ -45,10 +45,10 @@ def test_force_top_fail(mock_sdk, capsys):
     )
 
 
-def test_invalid_device(mock_sdk, capsys):
+def test_invalid_device(mock_tools, capsys):
     """Invoking `force_stop_app()` on an invalid device raises an error."""
     # Mock out the run command on an adb instance
-    adb = ADB(mock_sdk, "exampleDevice")
+    adb = ADB(mock_tools, "exampleDevice")
     adb.run = MagicMock(side_effect=InvalidDeviceError("device", "exampleDevice"))
 
     # Invoke force_stop_app

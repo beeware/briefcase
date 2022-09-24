@@ -2,12 +2,13 @@ import pytest
 
 from briefcase.commands import UpdateCommand
 from briefcase.config import AppConfig
+from briefcase.console import Console, Log
 
 
 class DummyUpdateCommand(UpdateCommand):
     """A dummy update command that doesn't actually do anything.
 
-    It only serves to track which actions would be performend.
+    It only serves to track which actions would be performed.
     """
 
     platform = "tester"
@@ -15,6 +16,8 @@ class DummyUpdateCommand(UpdateCommand):
     description = "Dummy update command"
 
     def __init__(self, *args, apps, **kwargs):
+        kwargs.setdefault("logger", Log())
+        kwargs.setdefault("console", Console())
         super().__init__(*args, apps=apps, **kwargs)
 
         self.actions = []
