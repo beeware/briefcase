@@ -2,22 +2,25 @@ import pytest
 
 from briefcase.commands import NewCommand
 from briefcase.commands.base import full_options
+from briefcase.console import Console, Log
 from tests.utils import DummyConsole
 
 
 class DummyNewCommand(NewCommand):
     """A dummy new command that doesn't actually do anything.
 
-    It only serves to track which actions would be performend.
+    It only serves to track which actions would be performed.
     """
 
     description = "Dummy new command"
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, apps=[], **kwargs)
+        kwargs.setdefault("logger", Log())
+        kwargs.setdefault("console", Console())
+        super().__init__(*args, apps={}, **kwargs)
 
         self.actions = []
-        self.input = DummyConsole()
+        self.tools.input = DummyConsole()
 
     def verify_tools(self):
         super().verify_tools()

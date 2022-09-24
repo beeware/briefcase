@@ -1,22 +1,25 @@
 from unittest.mock import MagicMock
 
+import pytest
+
+from briefcase.integrations.base import ToolCache
 from briefcase.integrations.visualstudio import VisualStudio
 
 
-def test_managed_install(tmp_path):
-    """All Visual Studio installs are unmanaged."""
+@pytest.fixture
+def visualstudio(mock_tools, tmp_path) -> VisualStudio:
     msbuild_path = tmp_path / "Visual Studio" / "MSBuild.exe"
-    visualstudio = VisualStudio(MagicMock(), msbuild_path=msbuild_path)
+    return VisualStudio(mock_tools, msbuild_path=msbuild_path)
 
+
+def test_managed_install(visualstudio, tmp_path):
+    """All Visual Studio installs are unmanaged."""
     assert not visualstudio.managed_install
 
 
-def test_msbuild_path(tmp_path):
-    """The MSBUild path is the one used for construction."""
-    msbuild_path = tmp_path / "Visual Studio" / "MSBuild.exe"
-    visualstudio = VisualStudio(MagicMock(), msbuild_path=msbuild_path)
-
-    assert visualstudio.msbuild_path == msbuild_path
+def test_msbuild_path(visualstudio, tmp_path):
+    """The MSBuild path is the one used for construction."""
+    assert visualstudio.msbuild_path == tmp_path / "Visual Studio" / "MSBuild.exe"
 
 
 def test_install_metadata(tmp_path):
@@ -27,7 +30,7 @@ def test_install_metadata(tmp_path):
         "installDate": "2022-07-14T10:42:37Z",
     }
     visualstudio = VisualStudio(
-        MagicMock(),
+        MagicMock(spec_set=ToolCache),
         msbuild_path=msbuild_path,
         install_metadata=install_metadata,
     )
@@ -36,9 +39,6 @@ def test_install_metadata(tmp_path):
     assert visualstudio.install_metadata["installDate"] == "2022-07-14T10:42:37Z"
 
 
-def test_no_install_metadata(tmp_path):
+def test_no_install_metadata(visualstudio, tmp_path):
     """Install metadata is optional."""
-    msbuild_path = tmp_path / "Visual Studio" / "MSBuild.exe"
-    visualstudio = VisualStudio(MagicMock, msbuild_path=msbuild_path)
-
     assert visualstudio.install_metadata is None

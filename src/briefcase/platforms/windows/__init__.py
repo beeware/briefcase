@@ -84,9 +84,9 @@ class WindowsRunCommand(RunCommand):
         try:
             # Start streaming logs for the app.
             self.logger.info("=" * 75)
-            self.subprocess.run(
+            self.tools.subprocess.run(
                 [os.fsdecode(self.binary_path(app))],
-                cwd=self.home_path,
+                cwd=self.tools.home_path,
                 check=True,
                 stream_output=True,
             )
@@ -105,7 +105,7 @@ class WindowsPackageCommand(PackageCommand):
 
     def verify_tools(self):
         super().verify_tools()
-        self.wix = WiX.verify(self)
+        WiX.verify(self.tools)
 
     def package_app(self, app: BaseConfig, **kwargs):
         """Package an application.
@@ -117,9 +117,9 @@ class WindowsPackageCommand(PackageCommand):
         try:
             self.logger.info("Compiling application manifest...")
             with self.input.wait_bar("Compiling..."):
-                self.subprocess.run(
+                self.tools.subprocess.run(
                     [
-                        self.wix.heat_exe,
+                        self.tools.wix.heat_exe,
                         "dir",
                         os.fsdecode(self.packaging_root),
                         "-nologo",  # Don't display startup text
@@ -148,9 +148,9 @@ class WindowsPackageCommand(PackageCommand):
         try:
             self.logger.info("Compiling application installer...")
             with self.input.wait_bar("Compiling..."):
-                self.subprocess.run(
+                self.tools.subprocess.run(
                     [
-                        self.wix.candle_exe,
+                        self.tools.wix.candle_exe,
                         "-nologo",  # Don't display startup text
                         "-ext",
                         "WixUtilExtension",
@@ -171,9 +171,9 @@ class WindowsPackageCommand(PackageCommand):
         try:
             self.logger.info("Linking application installer...")
             with self.input.wait_bar("Linking..."):
-                self.subprocess.run(
+                self.tools.subprocess.run(
                     [
-                        self.wix.light_exe,
+                        self.tools.wix.light_exe,
                         "-nologo",  # Don't display startup text
                         "-ext",
                         "WixUtilExtension",

@@ -8,18 +8,18 @@ from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.android_sdk import ADB
 
 
-def test_logcat(mock_sdk):
+def test_logcat(mock_tools):
     """Invoking `logcat()` calls `run()` with the appropriate parameters."""
     # Mock out the run command on an adb instance
-    adb = ADB(mock_sdk, "exampleDevice")
+    adb = ADB(mock_tools, "exampleDevice")
 
     # Invoke logcat
     adb.logcat("1234")
 
     # Validate call parameters.
-    mock_sdk.command.subprocess.run.assert_called_once_with(
+    mock_tools.subprocess.run.assert_called_once_with(
         [
-            os.fsdecode(mock_sdk.adb_path),
+            os.fsdecode(mock_tools.android_sdk.adb_path),
             "-s",
             "exampleDevice",
             "logcat",
@@ -27,17 +27,17 @@ def test_logcat(mock_sdk):
             "1234",
             "EGL_emulation:S",
         ],
-        env=mock_sdk.env,
+        env=mock_tools.android_sdk.env,
         check=True,
         stream_output=True,
     )
 
 
-def test_adb_failure(mock_sdk):
+def test_adb_failure(mock_tools):
     """If adb logcat fails, the error is caught."""
     # Mock out the run command on an adb instance
-    adb = ADB(mock_sdk, "exampleDevice")
-    mock_sdk.command.subprocess.run = MagicMock(
+    adb = ADB(mock_tools, "exampleDevice")
+    mock_tools.subprocess.run = MagicMock(
         side_effect=subprocess.CalledProcessError(returncode=1, cmd="adb logcat")
     )
 
@@ -53,11 +53,11 @@ def test_adb_failure(mock_sdk):
         -2,  # Linux/macOS
     ),
 )
-def test_adb_ctrl_c(mock_sdk, return_code):
+def test_adb_ctrl_c(mock_tools, return_code):
     """When the user sends CTRL+C, exit normally."""
     # Mock out the run command on an adb instance
-    adb = ADB(mock_sdk, "exampleDevice")
-    mock_sdk.command.subprocess.run = MagicMock(
+    adb = ADB(mock_tools, "exampleDevice")
+    mock_tools.subprocess.run = MagicMock(
         side_effect=subprocess.CalledProcessError(
             returncode=return_code, cmd="adb logcat"
         )

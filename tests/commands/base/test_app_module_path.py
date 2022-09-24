@@ -54,7 +54,7 @@ def test_multiple_match(base_command, my_app):
 
 
 def test_hyphen_source(base_command, my_app):
-    """If an app provides a single source location with a hypye, an error is
+    """If an app provides a single source location with a hyphen, an error is
     raised."""
     # The source directory must be a valid module, so hyphens aren't legal.
     my_app.sources = ["src/my-app"]

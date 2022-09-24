@@ -54,7 +54,7 @@ class macOSRunMixin:
         sender = os.fsdecode(
             self.binary_path(app) / "Contents" / "MacOS" / app.formal_name
         )
-        log_popen = self.subprocess.Popen(
+        log_popen = self.tools.subprocess.Popen(
             [
                 "log",
                 "stream",
@@ -76,13 +76,13 @@ class macOSRunMixin:
         try:
             self.logger.info("Starting app...", prefix=app.app_name)
             try:
-                self.subprocess.run(
+                self.tools.subprocess.run(
                     [
                         "open",
                         "-n",  # Force a new app to be launched
                         os.fsdecode(self.binary_path(app)),
                     ],
-                    cwd=self.home_path,
+                    cwd=self.tools.home_path,
                     check=True,
                 )
             except subprocess.CalledProcessError:
@@ -104,11 +104,11 @@ class macOSRunMixin:
                     prefix=app.app_name,
                 )
                 self.logger.info("=" * 75)
-                self.subprocess.stream_output(
+                self.tools.subprocess.stream_output(
                     "log stream", log_popen, stop_func=lambda: is_process_dead(app_pid)
                 )
         finally:
-            self.subprocess.cleanup("log stream", log_popen)
+            self.tools.subprocess.cleanup("log stream", log_popen)
 
 
 def is_mach_o_binary(path):
@@ -153,7 +153,7 @@ class macOSSigningMixin:
         :returns: The final identity to use
         """
         # Obtain the valid codesigning identities.
-        identities = self.get_identities(self, "codesigning")
+        identities = self.get_identities(self.tools, "codesigning")
 
         if identity:
             try:
@@ -221,7 +221,7 @@ or
 
         self.logger.info(f"Signing {Path(path).relative_to(self.base_path)}")
         try:
-            self.subprocess.run(
+            self.tools.subprocess.run(
                 process_command,
                 stderr=subprocess.PIPE,
                 check=True,
@@ -231,7 +231,7 @@ or
             if "code object is not signed at all" in errors:
                 self.logger.info("... file requires a deep sign; retrying")
                 try:
-                    self.subprocess.run(
+                    self.tools.subprocess.run(
                         process_command + ["--deep"],
                         stderr=subprocess.PIPE,
                         check=True,
@@ -320,13 +320,13 @@ class macOSPackageMixin(macOSSigningMixin):
         )
 
     def verify_tools(self):
-        if self.host_os != "Darwin":
+        if self.tools.host_os != "Darwin":
             raise BriefcaseCommandError(
                 "Code signing and / or building a DMG requires running on macOS."
             )
 
         # Require the XCode command line tools.
-        verify_command_line_tools_install(self)
+        verify_command_line_tools_install(self.tools)
 
         # Verify superclass tools *after* xcode. This ensures we get the
         # git check *after* the xcode check.
@@ -418,7 +418,7 @@ password:
 """
                     )
                     try:
-                        self.subprocess.run(
+                        self.tools.subprocess.run(
                             [
                                 "xcrun",
                                 "notarytool",
@@ -437,7 +437,7 @@ password:
                 # Attempt the notarization
                 try:
                     self.logger.info()
-                    self.subprocess.run(
+                    self.tools.subprocess.run(
                         [
                             "xcrun",
                             "notarytool",
@@ -463,16 +463,16 @@ password:
                             f"Unable to submit {filename.relative_to(self.base_path)} for notarization."
                         ) from e
         finally:
-            # Clean up house; we don't need the archive any more.
+            # Clean up house; we don't need the archive anymore.
             if archive_filename != filename:
-                self.os.unlink(archive_filename)
+                self.tools.os.unlink(archive_filename)
 
         try:
             self.logger.info()
             self.logger.info(
                 f"Stapling notarization onto {filename.relative_to(self.base_path)}..."
             )
-            self.subprocess.run(
+            self.tools.subprocess.run(
                 [
                     "xcrun",
                     "stapler",

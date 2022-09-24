@@ -63,7 +63,7 @@ def test_single_minimal_app():
     # There's a single global option
     assert global_options == {"value": 42}
 
-    # The app gets the name from it's header line.
+    # The app gets the name from its header line.
     # It inherits the value from the base definition.
     assert apps == {"my_app": {"app_name": "my_app", "value": 42}}
 
@@ -89,8 +89,8 @@ def test_multiple_minimal_apps():
     # There are no global options
     assert global_options == {}
 
-    # The apps gets their name from the header lines.
-    # The second tool overrides it's app name
+    # The apps get their name from the header lines.
+    # The second tool overrides its app name
     assert apps == {
         "first": {
             "app_name": "first",
@@ -144,7 +144,7 @@ def test_platform_override():
     # The second app doesn't provide an explicit app-level config, but
     # the app exists because the platform exists.
     # Platforms should be processed in sorted order, which means that linux
-    # will be processed before macos.
+    # will be processed before macOS.
     assert apps == {
         "my_app": {
             "app_name": "my_app",
@@ -200,7 +200,7 @@ def test_platform_override_ordering():
     # The second app doesn't provide an explicit app-level config, but
     # the app exists because the platform exists.
     # Platforms should be processed in order, which means that windows
-    # will be processed after macos.
+    # will be processed after macOS.
     assert apps == {
         "my_app": {
             "app_name": "my_app",

@@ -9,12 +9,12 @@ class OpenCommand(BaseCommand):
     command = "open"
 
     def open_project(self, project_path):
-        if self.host_os == "Windows":
-            self.os.startfile(project_path)
-        elif self.host_os == "Darwin":
-            self.subprocess.Popen(["open", project_path])
+        if self.tools.host_os == "Windows":
+            self.tools.os.startfile(project_path)
+        elif self.tools.host_os == "Darwin":
+            self.tools.subprocess.Popen(["open", project_path])
         else:
-            self.subprocess.Popen(["xdg-open", project_path])
+            self.tools.subprocess.Popen(["xdg-open", project_path])
 
     def open_app(self, app: BaseConfig, **options):
         """Open the project for an app.
@@ -26,6 +26,8 @@ class OpenCommand(BaseCommand):
             state = self.create_command(app, **options)
         else:
             state = None
+
+        self.verify_app_tools(app)
 
         self.logger.info(
             f"Opening {self.project_path(app).relative_to(self.base_path)}...",

@@ -16,7 +16,7 @@ def test_verify_runtime(flatpak):
     )
 
     # The expected call was made
-    flatpak.subprocess.run.assert_called_once_with(
+    flatpak.tools.subprocess.run.assert_called_once_with(
         [
             "flatpak",
             "install",
@@ -32,7 +32,7 @@ def test_verify_runtime(flatpak):
 
 def test_verify_runtime_fail(flatpak):
     """If runtime verification fails, an error is raised."""
-    flatpak.subprocess.run.side_effect = subprocess.CalledProcessError(
+    flatpak.tools.subprocess.run.side_effect = subprocess.CalledProcessError(
         cmd="flatpak install", returncode=1
     )
 

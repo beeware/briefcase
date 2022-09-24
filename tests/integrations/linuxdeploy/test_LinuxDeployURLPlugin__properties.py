@@ -4,19 +4,19 @@ from briefcase.integrations.linuxdeploy import LinuxDeployURLPlugin
 
 
 @pytest.fixture
-def linuxdeploy_plugin(mock_command):
+def linuxdeploy_plugin(mock_tools):
     return LinuxDeployURLPlugin(
-        mock_command,
+        mock_tools,
         url="https://example.com/path/to/linuxdeploy-plugin-foobar.sh",
     )
 
 
-def test_file_path(mock_command, linuxdeploy_plugin):
+def test_file_path(mock_tools, linuxdeploy_plugin):
     """Custom URL plugins are in the linuxdeploy plugins folder, behind a
     hash."""
     assert (
         linuxdeploy_plugin.file_path
-        == mock_command.tools_path
+        == mock_tools.base_path
         / "linuxdeploy_plugins"
         / "foobar"
         / "dc66c26aaeb8083777d1975e55dfb5c197b5b54e7b46481793eab4b3f2ace1b3"

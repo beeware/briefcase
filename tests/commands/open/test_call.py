@@ -8,8 +8,10 @@ def test_open(open_command, first_app, second_app):
     # The right sequence of things will be done
     assert open_command.actions == [
         ("verify",),
+        ("verify-app-tools", "first"),
         # open the first app
         ("open", first_app),
+        ("verify-app-tools", "second"),
         # open the second app
         ("open", second_app),
     ]
@@ -25,6 +27,7 @@ def test_open_single(open_command, first_app):
     # The right sequence of things will be done
     assert open_command.actions == [
         ("verify",),
+        ("verify-app-tools", "first"),
         # open the first app
         ("open", first_app),
     ]
@@ -42,5 +45,6 @@ def test_create_before_open(open_command, tmp_path):
         ("verify",),
         # create, then open the first app
         ("create", "first", {}),
+        ("verify-app-tools", "first"),
         ("open", tmp_path / "tester" / "dummy" / "first" / "first.project"),
     ]

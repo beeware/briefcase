@@ -4,15 +4,15 @@ from briefcase.integrations.linuxdeploy import LinuxDeployQtPlugin
 
 
 @pytest.fixture
-def linuxdeploy_plugin(mock_command):
-    return LinuxDeployQtPlugin(mock_command)
+def linuxdeploy_plugin(mock_tools):
+    return LinuxDeployQtPlugin(mock_tools)
 
 
-def test_file_path(mock_command, linuxdeploy_plugin):
+def test_file_path(mock_tools, linuxdeploy_plugin):
     """Default Linuxdeploy plugins reside in the linuxdeploy plugins path."""
     assert (
         linuxdeploy_plugin.file_path
-        == mock_command.tools_path / "linuxdeploy_plugins" / "qt"
+        == mock_tools.base_path / "linuxdeploy_plugins" / "qt"
     )
 
 

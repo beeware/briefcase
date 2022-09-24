@@ -36,6 +36,8 @@ class BuildCommand(BaseCommand):
         else:
             state = None
 
+        self.verify_app_tools(app)
+
         state = self.build_app(app, **full_options(state, options))
 
         self.logger.info(

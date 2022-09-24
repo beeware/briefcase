@@ -4,15 +4,15 @@ from briefcase.integrations.linuxdeploy import LinuxDeployGtkPlugin
 
 
 @pytest.fixture
-def linuxdeploy_plugin(mock_command):
-    return LinuxDeployGtkPlugin(mock_command)
+def linuxdeploy_plugin(mock_tools):
+    return LinuxDeployGtkPlugin(mock_tools)
 
 
-def test_file_path(linuxdeploy_plugin, mock_command):
+def test_file_path(linuxdeploy_plugin, mock_tools):
     """Default Linuxdeploy plugins reside in the linuxdeploy plugins path."""
     assert (
         linuxdeploy_plugin.file_path
-        == mock_command.tools_path / "linuxdeploy_plugins" / "gtk"
+        == mock_tools.base_path / "linuxdeploy_plugins" / "gtk"
     )
 
 
