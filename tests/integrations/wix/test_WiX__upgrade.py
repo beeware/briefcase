@@ -1,5 +1,4 @@
 import os
-import sys
 from unittest.mock import MagicMock
 
 import pytest
@@ -11,7 +10,6 @@ from briefcase.exceptions import (
     NonManagedToolError,
 )
 from briefcase.integrations.wix import WIX_DOWNLOAD_URL, WiX
-from tests.utils import FsPathMock
 
 
 def test_non_managed_install(mock_tools, tmp_path, capsys):
@@ -57,11 +55,8 @@ def test_existing_wix_install(mock_tools, tmp_path):
     wix_zip_path = os.fsdecode(tmp_path / "tools" / "wix.zip")
     # Consider to remove if block when we drop py3.7 support, only keep statements from else.
     # MagicMock below py3.8 doesn't have __fspath__ attribute.
-    if sys.version_info < (3, 8):
-        wix_zip = FsPathMock(wix_zip_path)
-    else:
-        wix_zip = MagicMock()
-        wix_zip.__fspath__.return_value = wix_zip_path
+    wix_zip = MagicMock()
+    wix_zip.__fspath__.return_value = wix_zip_path
 
     mock_tools.download.file.return_value = wix_zip
 
@@ -134,11 +129,8 @@ def test_unpack_fail(mock_tools, tmp_path):
     wix_zip_path = os.fsdecode(tmp_path / "tools" / "wix.zip")
     # Consider to remove if block when we drop py3.7 support, only keep statements from else.
     # MagicMock below py3.8 doesn't have __fspath__ attribute.
-    if sys.version_info < (3, 8):
-        wix_zip = FsPathMock(wix_zip_path)
-    else:
-        wix_zip = MagicMock()
-        wix_zip.__fspath__.return_value = wix_zip_path
+    wix_zip = MagicMock()
+    wix_zip.__fspath__.return_value = wix_zip_path
 
     mock_tools.download.file.return_value = wix_zip
 
