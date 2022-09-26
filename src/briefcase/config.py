@@ -390,7 +390,7 @@ class AppConfig(BaseConfig):
         """The PYTHONPATH modifications needed to run this app."""
         paths = []
         for source in self.sources:
-            path = source.rsplit("/", 1)[0]
+            path = "/".join(source.rsplit("/", 1)[:-1])
             if path not in paths:
                 paths.append(path)
         return paths
