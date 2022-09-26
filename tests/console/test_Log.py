@@ -69,7 +69,8 @@ def test_save_log_to_file_no_exception(tmp_path, now):
     log_filepath = tmp_path / "briefcase.2022_06_25-16_12_29.dev.log"
 
     assert log_filepath.exists()
-    log_contents = open(log_filepath, encoding="utf-8").read()
+    with open(log_filepath, encoding="utf-8") as log:
+        log_contents = log.read()
 
     assert log_contents.startswith("Date/Time:       2022-06-25 16:12:29")
     assert f"{Log.DEBUG_PREFACE}this is debug output" in log_contents
@@ -108,7 +109,8 @@ def test_save_log_to_file_with_exception(tmp_path, now):
     log_filepath = tmp_path / "briefcase.2022_06_25-16_12_29.dev.log"
 
     log_filepath.exists()
-    log_contents = open(log_filepath, encoding="utf-8").read()
+    with open(log_filepath, encoding="utf-8") as log:
+        log_contents = log.read()
 
     assert log_contents.startswith("Date/Time:       2022-06-25 16:12:29")
     assert TRACEBACK_HEADER in log_contents
@@ -137,7 +139,8 @@ def test_save_log_to_file_extra(tmp_path, now):
         logger.add_log_file_extra(extra)
     logger.save_log_to_file(command=command)
     log_filepath = tmp_path / "briefcase.2022_06_25-16_12_29.dev.log"
-    log_contents = open(log_filepath, encoding="utf-8").read()
+    with open(log_filepath, encoding="utf-8") as log:
+        log_contents = log.read()
 
     assert EXTRA_HEADER in log_contents
     assert "Log extra 1" in log_contents

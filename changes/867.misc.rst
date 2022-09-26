@@ -1,0 +1,1 @@
+Dependencies are now monitored by dependabot and requirements are moved in to setup.cfg.
