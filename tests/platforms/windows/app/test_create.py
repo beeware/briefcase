@@ -89,18 +89,11 @@ def test_support_package_url(first_app_config, tmp_path):
         data_path=tmp_path / "briefcase",
     )
 
-    # Set some properties of the host system for test purposes.
-    command.tools.host_arch = "wonky"
-    command.platform = "tester"
-
-    # This test result is dependent on whether we're using a 32-bit (win32)
-    # or 64-bit (amd64) machine.
-    arch = "amd64" if sys.maxsize.bit_length() == 63 else "win32"
-    assert command.support_package_url_query == [
-        ("platform", "tester"),
-        ("version", f"3.{sys.version_info.minor}"),
-        ("arch", arch),
-    ]
+    assert (
+        command.support_package_url(4)
+        == f"https://www.python.org/ftp/python/{sys.version_info.major}.{sys.version_info.minor}.4/"
+        f"python-{sys.version_info.major}.{sys.version_info.minor}.4-embed-amd64.zip"
+    )
 
 
 def test_default_install_scope(first_app_config, tmp_path):

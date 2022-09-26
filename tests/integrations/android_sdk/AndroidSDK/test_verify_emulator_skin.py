@@ -16,7 +16,7 @@ def test_existing_skin(mock_tools, android_sdk):
     # Verify the system image that we already have
     android_sdk.verify_emulator_skin("pixel_X")
 
-    # download_file was *not* called.
+    # download.file was *not* called.
     mock_tools.download.file.assert_not_called()
 
 

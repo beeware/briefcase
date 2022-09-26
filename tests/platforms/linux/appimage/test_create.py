@@ -9,7 +9,7 @@ from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.linux.appimage import LinuxAppImageCreateCommand
 
 
-def test_support_package_url(first_app_config, tmp_path):
+def test_support_package_url(tmp_path):
     command = LinuxAppImageCreateCommand(
         logger=Log(),
         console=Console(),
@@ -19,13 +19,12 @@ def test_support_package_url(first_app_config, tmp_path):
 
     # Set some properties of the host system for test purposes.
     command.tools.host_arch = "wonky"
-    command.platform = "tester"
 
-    assert command.support_package_url_query == [
-        ("platform", "tester"),
-        ("version", f"3.{sys.version_info.minor}"),
-        ("arch", "wonky"),
-    ]
+    assert (
+        command.support_package_url(52)
+        == f"https://briefcase-support.s3.amazonaws.com/python/3.{sys.version_info.minor}/linux/wonky/"
+        f"Python-3.{sys.version_info.minor}-linux-wonky-support.b52.tar.gz"
+    )
 
 
 @pytest.mark.skipif(

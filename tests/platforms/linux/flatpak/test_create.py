@@ -40,7 +40,7 @@ def test_support_package_url(tmp_path, sys_version_info, platform_version, url):
     command.tools.platform = mock.MagicMock(spec_set=platform)
     command.tools.platform.python_version.return_value = platform_version
 
-    assert command.support_package_url == url
+    assert command.support_package_url(52) == url
 
 
 def test_output_format_template_context(first_app_config, tmp_path):

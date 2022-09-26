@@ -93,8 +93,7 @@ class LinuxFlatpakMixin(LinuxMixin):
 class LinuxFlatpakCreateCommand(LinuxFlatpakMixin, CreateCommand):
     description = "Create and populate a Linux Flatpak."
 
-    @property
-    def support_package_url(self):
+    def support_package_url(self, support_revision):
         """The URL of the support package to use for apps of this type.
 
         Flatpak uses the original CPython sources, and compiles them in
@@ -103,6 +102,17 @@ class LinuxFlatpakCreateCommand(LinuxFlatpakMixin, CreateCommand):
         base_version = ".".join(str(m) for m in self.tools.sys.version_info[:3])
         full_version = self.tools.platform.python_version()
         return f"https://www.python.org/ftp/python/{base_version}/Python-{full_version}.tgz"
+
+    def support_revision(self, app: AppConfig):
+        """The support package revision that the template requires.
+
+        Flatpak uses the original CPython sources, so a support revision
+        isn't needed.
+
+        :param app: The config object for the app
+        :return: None; value should be ignored.
+        """
+        return None
 
     def output_format_template_context(self, app: AppConfig):
         """Add flatpak runtime/SDK details to the app template."""

@@ -10,8 +10,9 @@
 # serve to show the default.
 
 import os
-import re
 import sys
+
+from importlib.metadata import version as metadata_version
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -48,17 +49,7 @@ copyright = "2019, Russell Keith-Magee"
 # built documents.
 #
 # The full version, including alpha/beta/rc tags.
-with open("../src/briefcase/__init__.py", encoding="utf8") as version_file:
-    version_match = re.search(
-        r"^__version__ = ['\"]([^'\"]*)['\"]", version_file.read(), re.M
-    )
-    if version_match:
-        release = version_match.group(1)
-    else:
-        raise RuntimeError("Unable to find version string.")
-
-# The short X.Y version.
-version = ".".join(release.split(".")[:2])
+version = metadata_version("briefcase")
 
 autoclass_content = "both"
 

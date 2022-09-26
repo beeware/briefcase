@@ -1,3 +1,5 @@
+import sys
+
 import pytest
 
 from briefcase.console import Console, Log
@@ -13,6 +15,14 @@ def create_command(tmp_path, first_app_config):
         data_path=tmp_path / "briefcase",
     )
     return command
+
+
+def test_support_package_filename(create_command):
+    """The Android support package filename has been customized."""
+    assert (
+        create_command.support_package_filename(52)
+        == f"Python-3.{sys.version_info.minor}-Android-support.b52.zip"
+    )
 
 
 @pytest.mark.parametrize(

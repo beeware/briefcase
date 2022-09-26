@@ -114,14 +114,17 @@ class LinuxAppImageMixin(LinuxAppImagePassiveMixin):
 class LinuxAppImageCreateCommand(LinuxAppImageMixin, CreateCommand):
     description = "Create and populate a Linux AppImage."
 
-    @property
-    def support_package_url_query(self):
+    def support_package_filename(self, support_revision):
         """The query arguments to use in a support package query request."""
-        return [
-            ("platform", self.platform),
-            ("version", self.python_version_tag),
-            ("arch", self.tools.host_arch),
-        ]
+        return f"Python-{self.python_version_tag}-linux-{self.tools.host_arch}-support.b{support_revision}.tar.gz"
+
+    def support_package_url(self, support_revision):
+        """The URL of the support package to use for apps of this type."""
+        return (
+            "https://briefcase-support.s3.amazonaws.com/"
+            f"python/{self.python_version_tag}/{self.platform}/{self.tools.host_arch}/"
+            + self.support_package_filename(support_revision)
+        )
 
 
 class LinuxAppImageUpdateCommand(LinuxAppImageCreateCommand, UpdateCommand):

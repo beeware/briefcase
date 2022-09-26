@@ -13,8 +13,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v3.0.2
+      - uses: actions/checkout@v3
         with:
+          fetch-depth: 0
           ref: ${{ github.event.pull_request.head.sha }}
       - name: Set up Python
         uses: actions/setup-python@v3.1.2
@@ -51,26 +52,28 @@ jobs:
       run: |
         pip install --upgrade pip
         pip install --upgrade setuptools
-        pip install tox
+        pip install setuptools_scm tox
     - name: Run pre-test check
       run: |
         tox -e ${{ matrix.task }}
 
   smoke:
-    name: Smoke test (3.7)
+    name: Smoke test
     needs: beefore
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: Set up Python 3.7
+      with:
+        fetch-depth: 0
+    - name: Set up Python
       uses: actions/setup-python@v3.1.2
       with:
-        python-version: "3.7"
+        python-version: ${{ env.python_version }}
     - name: Install dependencies
       run: |
         pip install --upgrade pip
         pip install --upgrade setuptools
-        pip install tox
+        pip install setuptools_scm tox
     - name: Test
       run: |
         tox -e py
@@ -92,9 +95,11 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.11.0-alpha - 3.11.0']
+        python-version: ['3.8', '3.10', '3.11.0-alpha - 3.11.0']
     steps:
     - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v3.1.2
       with:
@@ -103,7 +108,7 @@ jobs:
       run: |
         pip install --upgrade pip
         pip install --upgrade setuptools
-        pip install tox
+        pip install setuptools_scm tox
     - name: Test
       run: |
         tox -e py
@@ -125,6 +130,8 @@ jobs:
     runs-on: ${{ matrix.platform }}
     steps:
     - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
     - name: Set up Python
       uses: actions/setup-python@v3.1.2
       with:
@@ -133,7 +140,7 @@ jobs:
       run: |
         pip install --upgrade pip
         pip install --upgrade setuptools
-        pip install tox
+        pip install setuptools_scm tox
     - name: Test
       run: |
         tox -e py
@@ -183,6 +190,8 @@ jobs:
           ${{ matrix.pip-cache-dir }}
           ${{ matrix.docker-cache-dir }}
     - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
     - name: Set up Python
       uses: actions/setup-python@v3.1.2
       with:
@@ -195,6 +204,7 @@ jobs:
       run: |
         pip install --upgrade pip
         pip install --upgrade setuptools
+        pip install setuptools_scm
         pip install .
     - name: Create App
       run: |
