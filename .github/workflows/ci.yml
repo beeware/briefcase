@@ -33,7 +33,6 @@ jobs:
       matrix:
         task:
         - 'towncrier-check'
-        - 'docs'
         - 'package'
     steps:
     # Check out main; needed for towncrier comparisons.
