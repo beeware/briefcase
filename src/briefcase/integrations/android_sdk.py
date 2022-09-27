@@ -643,7 +643,7 @@ connection.
                     if parts[1] == "device":
                         try:
                             name = details["model"].replace("_", " ")
-                        except:
+                        except KeyError:
                             name = "Unknown device (no model name)"
                         authorized = True
                     elif parts[1] == "offline":
