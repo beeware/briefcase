@@ -7,6 +7,7 @@ import sys
 import threading
 import time
 from contextlib import suppress
+from functools import wraps
 from pathlib import Path
 
 import psutil
@@ -86,6 +87,46 @@ def get_process_id_by_command(
         return pid
 
     return None
+
+
+def pause_console_control_if(sub_method):
+    """Decorator for Subprocess methods to conditionally remove dynamic console
+    elements such as the Wait Bar prior to running the subprocess command.
+
+    :param sub_method: wrapped Subprocess method
+    """
+
+    @wraps(sub_method)
+    def inner(sub, cmdline, **kwargs):
+        """Evaluate whether conditions are met to remove any dynamic elements
+        in the console before returning control to Subprocess.
+
+        :param sub: Subprocess object
+        :param cmdline: list of implicit strings that will be run as subprocess command
+        :return: the return value for the Subprocess method
+        """
+        # Just run the command if no dynamic elements are active
+        if not sub.tools.input.is_console_controlled:
+            return sub_method(sub, cmdline, **kwargs)
+
+        remove_dynamic_elements = False
+
+        # Batch (.bat) scripts on Windows.
+        # If cmd.exe is interrupted with CTRL+C while running a bat script,
+        # it may prompt the user to abort the script and dynamic elements
+        # such as the Wait Bar can hide this message from the user.
+        if not remove_dynamic_elements:
+            if sub.tools.host_os == "Windows":
+                executable = str(cmdline[0]).strip() if cmdline else ""
+                remove_dynamic_elements = executable.lower().endswith(".bat")
+
+        # Run subprocess command with or without console control
+        if remove_dynamic_elements:
+            with sub.tools.input.release_console_control():
+                return sub_method(sub, cmdline, **kwargs)
+        return sub_method(sub, cmdline, **kwargs)
+
+    return inner
 
 
 class NativeAppContext:
@@ -214,7 +255,8 @@ class Subprocess:
         tools.subprocess = Subprocess(tools)
         return tools.subprocess
 
-    def run(self, args, stream_output=False, **kwargs):
+    @pause_console_control_if
+    def run(self, args, /, stream_output=False, **kwargs):
         """A wrapper for subprocess.run().
 
         :param args: args for subprocess.run()
@@ -231,13 +273,13 @@ class Subprocess:
          - The `text` argument is defaulted to True so all output is returned
            as strings instead of bytes.
         """
-        # If `stream_output` or dynamic screen content (e.g. a Wait Bar) is
+        # If `stream_output` or dynamic screen content (e.g. the Wait Bar) is
         # active and output is not redirected, use run with output streaming.
         is_output_redirected = kwargs.get("capture_output") or (
             kwargs.get("stdout") and kwargs.get("stderr")
         )
         if stream_output or (
-            self.tools.input.is_output_controlled and not is_output_redirected
+            self.tools.input.is_console_controlled and not is_output_redirected
         ):
             return self._run_and_stream_output(args, **kwargs)
 
@@ -309,7 +351,8 @@ class Subprocess:
 
         return subprocess.CompletedProcess(args, return_code, stderr=stderr)
 
-    def check_output(self, args, **kwargs):
+    @pause_console_control_if
+    def check_output(self, args, /, **kwargs):
         """A wrapper for subprocess.check_output()
 
         The behavior of this method is identical to
@@ -337,7 +380,7 @@ class Subprocess:
         self._log_return_code(0)
         return cmd_output
 
-    def parse_output(self, output_parser, args, **kwargs):
+    def parse_output(self, output_parser, args, /, **kwargs):
         """A wrapper for check_output() where the command output is processed
         through the supplied parser function.
 
@@ -374,7 +417,7 @@ class Subprocess:
                 self.tools.logger.error(f"    {line}")
             raise CommandOutputParseError(error_reason) from e
 
-    def Popen(self, args, **kwargs):
+    def Popen(self, args, /, **kwargs):
         """A wrapper for subprocess.Popen()
 
         The behavior of this method is identical to
