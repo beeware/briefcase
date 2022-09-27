@@ -180,7 +180,7 @@ Server:
 ERROR: Got permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: """
 
     message2 = """Get http://%2Fvar%2Frun%2Fdocker.sock/v1.40/info: dial unix /var/run/docker.sock: connect: permission denied
-errors pretty printing info"""
+errors pretty printing info"""  # noqa: E501
 
     error_message = message1 + message2
     # splitting it up is to appease flake8 line length - not sure how to add noqa to a triple quoted string line

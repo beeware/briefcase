@@ -13,6 +13,11 @@ multi_line_output = 3
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+filterwarnings = [
+    "error",
+    # the cgi module is being deprecated in Python 3.13 (#868)
+    "ignore:'cgi':DeprecationWarning:briefcase.integrations.download:1",
+]
 
 # need to ensure build directories aren't excluded from recursion
 norecursedirs = []

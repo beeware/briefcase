@@ -1,6 +1,5 @@
 import os
 import subprocess
-import sys
 from unittest.mock import ANY, MagicMock
 
 import pytest
@@ -9,7 +8,6 @@ from briefcase.console import Console
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.android_sdk import AndroidSDK
 from briefcase.integrations.base import ToolCache
-from tests.utils import FsPathMock
 
 
 @pytest.fixture
@@ -182,12 +180,6 @@ def test_default_name(mock_tools, android_sdk, tmp_path):
     with avd_config_path.open("w") as f:
         f.write("hw.device.name=pixel\n")
 
-    # Consider to remove if block when we drop py3.7 support.
-    # MagicMock below py3.8 doesn't have __fspath__ attribute.
-    if sys.version_info < (3, 8):
-        skin_tgz_path = FsPathMock("")
-        mock_tools.download.file.return_value = skin_tgz_path
-
     # Create the emulator
     avd = android_sdk.create_emulator()
 
@@ -218,12 +210,6 @@ def test_default_name_with_collisions(mock_tools, android_sdk, tmp_path):
     avd_config_path.parent.mkdir(parents=True)
     with avd_config_path.open("w") as f:
         f.write("hw.device.name=pixel\n")
-
-    # Consider to remove if block when we drop py3.7 support.
-    # MagicMock below py3.8 doesn't have __fspath__ attribute.
-    if sys.version_info < (3, 8):
-        skin_tgz_path = FsPathMock("")
-        mock_tools.download.file.return_value = skin_tgz_path
 
     # Create the emulator
     avd = android_sdk.create_emulator()

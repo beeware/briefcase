@@ -1,7 +1,6 @@
 import os
 import shutil
 import subprocess
-import sys
 from pathlib import Path
 from unittest import mock
 
@@ -9,7 +8,6 @@ import pytest
 
 from briefcase.exceptions import BriefcaseCommandError, MissingToolError, NetworkFailure
 from briefcase.integrations.java import JDK
-from tests.utils import FsPathMock
 
 
 def test_short_circuit(mock_tools):
@@ -356,11 +354,8 @@ def test_successful_jdk_download(
     # Mock the cached download path
     # Consider to remove if block when we drop py3.7 support, only keep statements from else.
     # MagicMock below py3.8 doesn't have __fspath__ attribute.
-    if sys.version_info < (3, 8):
-        archive = FsPathMock("/path/to/download.zip")
-    else:
-        archive = mock.MagicMock()
-        archive.__fspath__.return_value = "/path/to/download.zip"
+    archive = mock.MagicMock()
+    archive.__fspath__.return_value = "/path/to/download.zip"
     mock_tools.download.file.return_value = archive
 
     # Create a directory to make it look like Java was downloaded and unpacked.
@@ -436,11 +431,8 @@ def test_invalid_jdk_archive(mock_tools, tmp_path):
     # Mock the cached download path
     # Consider to remove if block when we drop py3.7 support, only keep statements from else.
     # MagicMock below py3.8 doesn't have __fspath__ attribute.
-    if sys.version_info < (3, 8):
-        archive = FsPathMock("/path/to/download.zip")
-    else:
-        archive = mock.MagicMock()
-        archive.__fspath__.return_value = "/path/to/download.zip"
+    archive = mock.MagicMock()
+    archive.__fspath__.return_value = "/path/to/download.zip"
     mock_tools.download.file.return_value = archive
 
     # Mock an unpack failure due to an invalid archive
