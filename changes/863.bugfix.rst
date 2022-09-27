@@ -1,0 +1,1 @@
+An issue with running `briefcase dev` on projects that put their application module in the project root has been resolved.

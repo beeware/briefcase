@@ -38,7 +38,7 @@ def test_save_log_to_file_do_not_log():
     logger.save_log_to_file(command=None)
 
     command = MagicMock()
-    command.save_log = False
+    logger.save_log = False
     logger.save_log_to_file(command=command)
     command.input.wait_bar.assert_not_called()
 
@@ -49,13 +49,13 @@ def test_save_log_to_file_no_exception(tmp_path, now):
     command = MagicMock()
     command.base_path = Path(tmp_path)
     command.command = "dev"
-    command.save_log = True
-    command.os.environ = {
+    command.tools.os.environ = {
         "GITHUB_KEY": "super-secret-key",
         "ANDROID_SDK_ROOT": "/androidsdk",
     }
 
     logger = Log(verbosity=2)
+    logger.save_log = True
     logger.debug("this is debug output")
     logger.info("this is info output")
     logger.warning("this is warning output")
@@ -69,7 +69,8 @@ def test_save_log_to_file_no_exception(tmp_path, now):
     log_filepath = tmp_path / "briefcase.2022_06_25-16_12_29.dev.log"
 
     assert log_filepath.exists()
-    log_contents = open(log_filepath, encoding="utf-8").read()
+    with open(log_filepath, encoding="utf-8") as log:
+        log_contents = log.read()
 
     assert log_contents.startswith("Date/Time:       2022-06-25 16:12:29")
     assert f"{Log.DEBUG_PREFACE}this is debug output" in log_contents
@@ -82,6 +83,7 @@ def test_save_log_to_file_no_exception(tmp_path, now):
     # Environment variables are in the output
     assert "ANDROID_SDK_ROOT=/androidsdk" in log_contents
     assert "GITHUB_KEY=********************" in log_contents
+    assert "GITHUB_KEY=super-secret-key" not in log_contents
     # Environment variables are sorted
     assert log_contents.index("ANDROID_SDK_ROOT") < log_contents.index("GITHUB_KEY")
 
@@ -94,10 +96,10 @@ def test_save_log_to_file_with_exception(tmp_path, now):
     command = MagicMock()
     command.base_path = Path(tmp_path)
     command.command = "dev"
-    command.save_log = True
-    command.os.environ = {}
+    command.tools.os.environ = {}
 
     logger = Log()
+    logger.save_log = True
     try:
         1 / 0
     except ZeroDivisionError:
@@ -107,7 +109,8 @@ def test_save_log_to_file_with_exception(tmp_path, now):
     log_filepath = tmp_path / "briefcase.2022_06_25-16_12_29.dev.log"
 
     log_filepath.exists()
-    log_contents = open(log_filepath, encoding="utf-8").read()
+    with open(log_filepath, encoding="utf-8") as log:
+        log_contents = log.read()
 
     assert log_contents.startswith("Date/Time:       2022-06-25 16:12:29")
     assert TRACEBACK_HEADER in log_contents
@@ -119,8 +122,9 @@ def test_save_log_to_file_extra(tmp_path, now):
     command = MagicMock()
     command.base_path = Path(tmp_path)
     command.command = "dev"
-    command.save_log = True
+
     logger = Log()
+    logger.save_log = True
 
     def extra1():
         logger.debug("Log extra 1")
@@ -135,7 +139,8 @@ def test_save_log_to_file_extra(tmp_path, now):
         logger.add_log_file_extra(extra)
     logger.save_log_to_file(command=command)
     log_filepath = tmp_path / "briefcase.2022_06_25-16_12_29.dev.log"
-    log_contents = open(log_filepath, encoding="utf-8").read()
+    with open(log_filepath, encoding="utf-8") as log:
+        log_contents = log.read()
 
     assert EXTRA_HEADER in log_contents
     assert "Log extra 1" in log_contents
@@ -149,8 +154,9 @@ def test_save_log_to_file_extra_interrupted(tmp_path, now):
     command = MagicMock()
     command.base_path = Path(tmp_path)
     command.command = "dev"
-    command.save_log = True
+
     logger = Log()
+    logger.save_log = True
 
     def extra1():
         raise KeyboardInterrupt()
@@ -170,10 +176,11 @@ def test_save_log_to_file_fail_to_write_file(capsys):
     command = MagicMock()
     command.base_path = Path("/a-path-that-will-cause-an-OSError...")
     command.command = "dev"
-    command.save_log = True
-    command.os.environ = {}
+    command.tools.os.environ = {}
 
     logger = Log()
+    logger.save_log = True
+
     logger.print("a line of output")
     logger.save_log_to_file(command=command)
 

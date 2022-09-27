@@ -1,0 +1,1 @@
+Briefcase templates are now versioned by the Briefcase version, rather than the Python version.

@@ -7,7 +7,7 @@ import pytest
 @pytest.fixture
 def first_app_with_binaries(first_app_config, tmp_path):
     # Create some libraries that need to be signed.
-    app_path = tmp_path / "macOS" / "app" / "First App" / "First App.app"
+    app_path = tmp_path / "base_path" / "macOS" / "app" / "First App" / "First App.app"
     lib_path = app_path / "Contents" / "Resources"
     for lib in [
         "first_so.so",

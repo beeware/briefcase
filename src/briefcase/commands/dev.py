@@ -62,7 +62,7 @@ class DevCommand(BaseCommand):
         if app.requires:
             with self.input.wait_bar("Installing dev dependencies..."):
                 try:
-                    self.subprocess.run(
+                    self.tools.subprocess.run(
                         [
                             sys.executable,
                             "-m",
@@ -86,7 +86,7 @@ class DevCommand(BaseCommand):
         """
         try:
             # Invoke the app.
-            self.subprocess.run(
+            self.tools.subprocess.run(
                 [
                     sys.executable,
                     "-c",
@@ -98,7 +98,7 @@ class DevCommand(BaseCommand):
                 ],
                 env=env,
                 check=True,
-                cwd=self.home_path,
+                cwd=self.tools.home_path,
                 stream_output=True,
             )
         except subprocess.CalledProcessError as e:
@@ -142,6 +142,8 @@ class DevCommand(BaseCommand):
             raise BriefcaseCommandError(
                 "Project specifies more than one application; use --app to specify which one to start."
             )
+
+        self.verify_app_tools(app)
 
         # Look for the existence of a dist-info file.
         # If one exists, assume that the dependencies have already been

@@ -34,7 +34,7 @@ import pytest
     ],
 )
 def test_dockerize_path(
-    mock_docker,
+    mock_docker_app_context,
     tmp_path,
     monkeypatch,
     original,
@@ -42,4 +42,7 @@ def test_dockerize_path(
 ):
     monkeypatch.setattr("sys.executable", "/path/to/python")
 
-    assert mock_docker._dockerize_path(original.format(tmp_path=tmp_path)) == dockerized
+    assert (
+        mock_docker_app_context._dockerize_path(original.format(tmp_path=tmp_path))
+        == dockerized
+    )

@@ -10,6 +10,7 @@ include tox.ini
 include .coveragerc
 include .git-blame-ignore-revs
 include .pre-commit-config.yaml
+include .readthedocs.yaml
 recursive-include changes *.rst
 recursive-include src *.py
 recursive-include docs *.bat

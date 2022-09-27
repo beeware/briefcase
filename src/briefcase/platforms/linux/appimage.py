@@ -1,6 +1,5 @@
 import os
 import subprocess
-from contextlib import contextmanager
 
 from briefcase.commands import (
     BuildCommand,
@@ -13,8 +12,9 @@ from briefcase.commands import (
 )
 from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.integrations.docker import verify_docker
+from briefcase.integrations.docker import Docker, DockerAppContext
 from briefcase.integrations.linuxdeploy import LinuxDeploy
+from briefcase.integrations.subprocess import NativeAppContext
 from briefcase.platforms.linux import LinuxMixin
 
 
@@ -34,7 +34,7 @@ class LinuxAppImagePassiveMixin(LinuxMixin):
         binary_name = app.formal_name.replace(" ", "_")
         return (
             self.platform_path
-            / f"{binary_name}-{app.version}-{self.host_arch}.AppImage"
+            / f"{binary_name}-{app.version}-{self.tools.host_arch}.AppImage"
         )
 
     def distribution_path(self, app, packaging_format):
@@ -53,9 +53,7 @@ class LinuxAppImagePassiveMixin(LinuxMixin):
     def parse_options(self, extra):
         """Extract the use_docker option."""
         options = super().parse_options(extra)
-
         self.use_docker = options.pop("use_docker")
-
         return options
 
     def clone_options(self, command):
@@ -76,71 +74,57 @@ class LinuxAppImageMixin(LinuxAppImagePassiveMixin):
         Linux."""
         super().verify_tools()
         if self.use_docker:
-            if self.host_os == "Windows":
+            if self.tools.host_os == "Windows":
                 raise BriefcaseCommandError(
                     "Linux AppImages cannot be generated on Windows."
                 )
             else:
-                self.Docker = verify_docker(self)
-        elif self.host_os == "Linux":
-            # Use subprocess natively. No Docker wrapper is needed
-            self.Docker = None
-        else:
+                Docker.verify(tools=self.tools)
+        elif self.tools.host_os != "Linux":
             raise BriefcaseCommandError(
-                "Linux AppImages can only be generated on Linux."
+                "Linux AppImages can only be generated on Linux without Docker."
             )
 
-    @contextmanager
-    def dockerize(self, app):
-        """Enter a Docker container based on the properties of the app.
+    def verify_app_tools(self, app: AppConfig):
+        """Verify App environment is prepared and available.
 
-        Provides a context manager for the Docker context. The context
-        object is an object that exposes subprocess-analog calls.
+        When Docker is used, create or update a Docker image for the App.
+        Without Docker, the host machine will be used as the App environment.
 
-        This will replace self.subprocess with a version that proxies all
-        subprocess calls into the docker container.
-
-        If the user has selected --no-docker, this is a no-op.
-
-        :param app: The application that will determine the container image.
+        :param app: The application being built
         """
         if self.use_docker:
-            # Enter the Docker context.
-            self.logger.info("Entering Docker context...", prefix=app.app_name)
-            orig_subprocess = self.subprocess
-            self.subprocess = self.Docker(self, app)
-
-            yield self.subprocess
-
-            self.logger.info("Leaving Docker context", prefix=app.app_name)
-            self.subprocess = orig_subprocess
+            DockerAppContext.verify(
+                tools=self.tools,
+                app=app,
+                image_tag=self.docker_image_tag(app),
+                dockerfile_path=self.bundle_path(app) / "Dockerfile",
+                app_base_path=self.base_path,
+                host_platform_path=self.platform_path,
+                host_data_path=self.data_path,
+                python_version=self.python_version_tag,
+            )
         else:
-            yield self.subprocess
+            NativeAppContext.verify(tools=self.tools, app=app)
+
+        # Establish Docker as app context before letting super set subprocess
+        super().verify_app_tools(app)
 
 
 class LinuxAppImageCreateCommand(LinuxAppImageMixin, CreateCommand):
     description = "Create and populate a Linux AppImage."
 
-    @property
-    def support_package_url_query(self):
+    def support_package_filename(self, support_revision):
         """The query arguments to use in a support package query request."""
-        return [
-            ("platform", self.platform),
-            ("version", self.python_version_tag),
-            ("arch", self.host_arch),
-        ]
+        return f"Python-{self.python_version_tag}-linux-{self.tools.host_arch}-support.b{support_revision}.tar.gz"
 
-    def install_app_dependencies(self, app: AppConfig):
-        """Install application dependencies.
-
-        This will be containerized in Docker to ensure that the right
-        binary versions are installed.
-        """
-        with self.dockerize(app=app) as docker:
-            docker.prepare()
-
-            # Install dependencies. This will run inside a Docker container.
-            super().install_app_dependencies(app=app)
+    def support_package_url(self, support_revision):
+        """The URL of the support package to use for apps of this type."""
+        return (
+            "https://briefcase-support.s3.amazonaws.com/"
+            f"python/{self.python_version_tag}/{self.platform}/{self.tools.host_arch}/"
+            + self.support_package_filename(support_revision)
+        )
 
 
 class LinuxAppImageUpdateCommand(LinuxAppImageCreateCommand, UpdateCommand):
@@ -155,12 +139,9 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
     description = "Build a Linux AppImage."
 
     def verify_tools(self):
-        """Verify that the AppImage linuxdeploy tool and plugins exist.
-
-        :param app: The application to build
-        """
+        """Verify the AppImage linuxdeploy tool and plugins exist."""
         super().verify_tools()
-        self.linuxdeploy = LinuxDeploy.verify(self)
+        LinuxDeploy.verify(tools=self.tools)
 
     def build_app(self, app: AppConfig, **kwargs):
         """Build an application.
@@ -172,20 +153,17 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
 
         self.logger.info("Checking for Linuxdeploy plugins...", prefix=app.app_name)
         try:
-            plugins = self.linuxdeploy.verify_plugins(
+            plugins = self.tools.linuxdeploy.verify_plugins(
                 app.linuxdeploy_plugins,
                 bundle_path=self.bundle_path(app),
             )
 
             self.logger.info("Configuring Linuxdeploy plugins...", prefix=app.app_name)
             # We need to add the location of the linuxdeploy plugins to the PATH.
-            # However, if we arerunning inside Docker, we need to know the
+            # However, if we are running inside Docker, we need to know the
             # environment *inside* the Docker container.
-            if self.use_docker:
-                echo_cmd = ["/bin/bash", "-c", "echo $PATH"]
-                base_path = self.Docker(self, app).check_output(echo_cmd).strip()
-            else:
-                base_path = self.os.environ["PATH"]
+            echo_cmd = ["/bin/sh", "-c", "echo $PATH"]
+            base_path = self.tools[app].app_context.check_output(echo_cmd).strip()
 
             # Add any plugin-required environment variables
             for plugin in plugins.values():
@@ -219,7 +197,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
                 env["APPIMAGE_EXTRACT_AND_RUN"] = "1"
                 # Explicitly declare target architecture as the current architecture.
                 # This can be used by some linuxdeploy plugins.
-                env["ARCH"] = self.host_arch
+                env["ARCH"] = self.tools.host_arch
 
                 # Find all the .so files in app and app_packages,
                 # so they can be passed in to linuxdeploy to have their
@@ -237,28 +215,28 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
                     additional_args.extend(["--plugin", plugin])
 
                 # Build the AppImage.
-                with self.dockerize(app) as docker:
-                    docker.run(
-                        [
-                            self.linuxdeploy.file_path / self.linuxdeploy.file_name,
-                            "--appdir",
-                            os.fsdecode(self.appdir_path(app)),
-                            "--desktop-file",
-                            os.fsdecode(
-                                self.appdir_path(app)
-                                / f"{app.bundle}.{app.app_name}.desktop"
-                            ),
-                            "--output",
-                            "appimage",
-                        ]
-                        + additional_args,
-                        env=env,
-                        check=True,
-                        cwd=self.platform_path,
-                    )
+                self.tools[app].app_context.run(
+                    [
+                        self.tools.linuxdeploy.file_path
+                        / self.tools.linuxdeploy.file_name,
+                        "--appdir",
+                        os.fsdecode(self.appdir_path(app)),
+                        "--desktop-file",
+                        os.fsdecode(
+                            self.appdir_path(app)
+                            / f"{app.bundle}.{app.app_name}.desktop"
+                        ),
+                        "--output",
+                        "appimage",
+                    ]
+                    + additional_args,
+                    env=env,
+                    check=True,
+                    cwd=self.platform_path,
+                )
 
                 # Make the binary executable.
-                self.os.chmod(self.binary_path(app), 0o755)
+                self.tools.os.chmod(self.binary_path(app), 0o755)
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
                     f"Error while building app {app.app_name}."
@@ -271,7 +249,7 @@ class LinuxAppImageRunCommand(LinuxAppImagePassiveMixin, RunCommand):
     def verify_tools(self):
         """Verify that we're on Linux."""
         super().verify_tools()
-        if self.host_os != "Linux":
+        if self.tools.host_os != "Linux":
             raise BriefcaseCommandError("AppImages can only be executed on Linux.")
 
     def run_app(self, app: AppConfig, **kwargs):
@@ -281,12 +259,10 @@ class LinuxAppImageRunCommand(LinuxAppImagePassiveMixin, RunCommand):
         """
         self.logger.info("Starting app...", prefix=app.app_name)
         try:
-            self.subprocess.run(
-                [
-                    os.fsdecode(self.binary_path(app)),
-                ],
+            self.tools.subprocess.run(
+                [os.fsdecode(self.binary_path(app))],
                 check=True,
-                cwd=self.home_path,
+                cwd=self.tools.home_path,
                 stream_output=True,
             )
         except subprocess.CalledProcessError as e:

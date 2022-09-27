@@ -59,7 +59,7 @@ def test_incomplete_config(base_command):
 
 
 def test_parse_config(base_command):
-    """A well formed configuration file can be augmented by the command
+    """A well-formed configuration file can be augmented by the command
     line."""
     filename = base_command.base_path / "pyproject.toml"
     with open(filename, "w") as config_file:
@@ -170,7 +170,7 @@ def test_parse_config_custom_config_classes_missing_app_arg(other_command):
 
 
 def test_parse_config_custom_config_classes(other_command):
-    """A well formed configuration file can be augmented by the command
+    """A well-formed configuration file can be augmented by the command
     line."""
     filename = other_command.base_path / "pyproject.toml"
     with open(filename, "w") as config_file:

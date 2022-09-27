@@ -21,8 +21,12 @@ def test_publish(publish_command, first_app, second_app):
     assert publish_command.actions == [
         # Tools are verified
         ("verify",),
+        # App tools are verified for first app
+        ("verify-app-tools", "first"),
         # Publish the first app to s3
         ("publish", "first", "s3", {}),
+        # App tools are verified for second app
+        ("verify-app-tools", "second"),
         # Publish the second app to s3
         ("publish", "second", "s3", {"publish_state": "first"}),
     ]
@@ -46,8 +50,12 @@ def test_publish_alternative_channel(publish_command, first_app, second_app):
     assert publish_command.actions == [
         # Tools are verified
         ("verify",),
+        # App tools are verified for first app
+        ("verify-app-tools", "first"),
         # Publish the first app to the alternative channel
         ("publish", "first", "alternative", {}),
+        # App tools are verified for second app
+        ("verify-app-tools", "second"),
         # Publish the second app to the alternative channel
         ("publish", "second", "alternative", {"publish_state": "first"}),
     ]

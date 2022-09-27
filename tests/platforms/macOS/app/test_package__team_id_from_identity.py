@@ -1,12 +1,18 @@
 import pytest
 
+from briefcase.console import Console, Log
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.platforms.macOS.app import macOSAppPackageCommand
 
 
 @pytest.fixture
 def package_command(tmp_path):
-    command = macOSAppPackageCommand(base_path=tmp_path)
+    command = macOSAppPackageCommand(
+        logger=Log(),
+        console=Console(),
+        base_path=tmp_path / "base_path",
+        data_path=tmp_path / "briefcase",
+    )
     return command
 
 

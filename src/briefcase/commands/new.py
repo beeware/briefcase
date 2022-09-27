@@ -1,18 +1,16 @@
-import os
 import re
-import subprocess
 import unicodedata
 from email.utils import parseaddr
 from typing import Optional
 from urllib.parse import urlparse
 
-from cookiecutter import exceptions as cookiecutter_exceptions
+from packaging.version import Version
 
+import briefcase
 from briefcase.config import is_valid_app_name, is_valid_bundle_identifier
-from briefcase.exceptions import NetworkFailure
+from briefcase.integrations import git
 
-from .base import BaseCommand, BriefcaseCommandError
-from .create import InvalidTemplateRepository
+from .base import BaseCommand, BriefcaseCommandError, TemplateUnsupportedVersion
 
 
 def titlecase(s):
@@ -485,9 +483,8 @@ What GUI toolkit do you want to use for this project?""",
         self.logger.info()
         self.logger.info(f"Generating a new application '{context['formal_name']}'")
 
-        cached_template = self.update_cookiecutter_cache(
-            template=template, branch="v0.3"
-        )
+        version = Version(briefcase.__version__)
+        branch = f"v{version.base_version}"
 
         # Make extra sure we won't clobber an existing application.
         if (self.base_path / context["app_name"]).exists():
@@ -497,21 +494,29 @@ What GUI toolkit do you want to use for this project?""",
 
         try:
             # Unroll the new app template
-            self.cookiecutter(
-                str(cached_template),
-                no_input=True,
-                output_dir=os.fsdecode(self.base_path),
-                checkout="v0.3",
+            self.generate_template(
+                template=template,
+                branch=branch,
+                output_path=self.base_path,
                 extra_context=context,
             )
-        except subprocess.CalledProcessError as e:
-            # Computer is offline
-            # status code == 128 - certificate validation error.
-            raise NetworkFailure("clone template repository") from e
-        except cookiecutter_exceptions.RepositoryNotFound as e:
-            # Either the template path is invalid,
-            # or it isn't a cookiecutter template (i.e., no cookiecutter.json)
-            raise InvalidTemplateRepository(template) from e
+        except TemplateUnsupportedVersion:
+            # If we're *not* on a development branch, raise an error about
+            # the missing template branch.
+            if not version.dev:
+                raise
+
+            # Development branches can use the main template.
+            self.logger.info(
+                f"Template branch {branch} not found; falling back to development template"
+            )
+            branch = "main"
+            self.generate_template(
+                template=template,
+                branch=branch,
+                output_path=self.base_path,
+                extra_context=context,
+            )
 
         self.logger.info(
             f"""
@@ -528,7 +533,8 @@ Application '{context['formal_name']}' has been generated. To run your applicati
         Raises MissingToolException if a required system tool is
         missing.
         """
-        self.git = self.integrations.git.verify_git_is_installed(self)
+        super().verify_tools()
+        git.verify_git_is_installed(tools=self.tools)
 
     def __call__(self, template: Optional[str] = None, **options):
         # Confirm all required tools are available

@@ -1,5 +1,4 @@
 import os
-import struct
 import subprocess
 import uuid
 
@@ -22,14 +21,14 @@ class WindowsMixin:
 
 
 class WindowsCreateCommand(CreateCommand):
-    @property
-    def support_package_url_query(self):
-        """The query arguments to use in a support package query request."""
-        return [
-            ("platform", self.platform),
-            ("version", self.python_version_tag),
-            ("arch", "amd64" if (struct.calcsize("P") * 8) == 64 else "win32"),
-        ]
+    def support_package_filename(self, support_revision):
+        return f"python-{self.python_version_tag}.{support_revision}-embed-amd64.zip"
+
+    def support_package_url(self, support_revision):
+        return (
+            f"https://www.python.org/ftp/python/{self.python_version_tag}.{support_revision}/"
+            + self.support_package_filename(support_revision)
+        )
 
     def output_format_template_context(self, app: BaseConfig):
         """Additional template context required by the output format.
@@ -84,9 +83,9 @@ class WindowsRunCommand(RunCommand):
         try:
             # Start streaming logs for the app.
             self.logger.info("=" * 75)
-            self.subprocess.run(
+            self.tools.subprocess.run(
                 [os.fsdecode(self.binary_path(app))],
-                cwd=self.home_path,
+                cwd=self.tools.home_path,
                 check=True,
                 stream_output=True,
             )
@@ -105,7 +104,7 @@ class WindowsPackageCommand(PackageCommand):
 
     def verify_tools(self):
         super().verify_tools()
-        self.wix = WiX.verify(self)
+        WiX.verify(self.tools)
 
     def package_app(self, app: BaseConfig, **kwargs):
         """Package an application.
@@ -117,9 +116,9 @@ class WindowsPackageCommand(PackageCommand):
         try:
             self.logger.info("Compiling application manifest...")
             with self.input.wait_bar("Compiling..."):
-                self.subprocess.run(
+                self.tools.subprocess.run(
                     [
-                        self.wix.heat_exe,
+                        self.tools.wix.heat_exe,
                         "dir",
                         os.fsdecode(self.packaging_root),
                         "-nologo",  # Don't display startup text
@@ -148,9 +147,9 @@ class WindowsPackageCommand(PackageCommand):
         try:
             self.logger.info("Compiling application installer...")
             with self.input.wait_bar("Compiling..."):
-                self.subprocess.run(
+                self.tools.subprocess.run(
                     [
-                        self.wix.candle_exe,
+                        self.tools.wix.candle_exe,
                         "-nologo",  # Don't display startup text
                         "-ext",
                         "WixUtilExtension",
@@ -171,9 +170,9 @@ class WindowsPackageCommand(PackageCommand):
         try:
             self.logger.info("Linking application installer...")
             with self.input.wait_bar("Linking..."):
-                self.subprocess.run(
+                self.tools.subprocess.run(
                     [
-                        self.wix.light_exe,
+                        self.tools.wix.light_exe,
                         "-nologo",  # Don't display startup text
                         "-ext",
                         "WixUtilExtension",

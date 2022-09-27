@@ -17,5 +17,5 @@ def test_state():
 
 
 def test_state_with_overlap():
-    """If theres overlap between state and kwargs, state takes precedence."""
+    """If there's overlap between state and kwargs, state takes precedence."""
     assert full_options({"a": 3, "d": 4}, {"a": 1, "b": 2}) == {"a": 3, "b": 2, "d": 4}

@@ -38,7 +38,7 @@ class WindowsAppBuildCommand(WindowsAppMixin, BuildCommand):
 
     def verify_tools(self):
         super().verify_tools()
-        self.rcedit = RCEdit.verify(self)
+        RCEdit.verify(tools=self.tools)
 
     def build_app(self, app: BaseConfig, **kwargs):
         """Build the application.
@@ -49,9 +49,9 @@ class WindowsAppBuildCommand(WindowsAppMixin, BuildCommand):
 
         with self.input.wait_bar("Setting stub app details..."):
             try:
-                self.subprocess.run(
+                self.tools.subprocess.run(
                     [
-                        self.rcedit.rcedit_path,
+                        self.tools.rcedit.rcedit_path,
                         self.binary_path(app).relative_to(self.bundle_path(app)),
                         "--set-version-string",
                         "CompanyName",

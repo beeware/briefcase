@@ -1,6 +1,7 @@
+import io
 import os
+import tarfile
 import zipfile
-from unittest.mock import MagicMock
 
 from briefcase.console import Console, InputDisabled
 
@@ -11,25 +12,11 @@ class DummyConsole(Console):
         self.prompts = []
         self.values = list(values)
 
-    def __call__(self, prompt):
+    def __call__(self, prompt, *args, **kwargs):
         if not self.enabled:
             raise InputDisabled()
         self.prompts.append(prompt)
         return self.values.pop(0)
-
-
-# Consider to remove  class definition when we drop python 3.7 support.
-class FsPathMock(MagicMock):
-    def __init__(self, path):
-        super().__init__()
-        self.path = path
-
-    def __fspath__(self):
-        return self.path
-
-    def _get_child_mock(self, **kw):
-        """Create child mocks with right MagicMock class."""
-        return MagicMock(**kw)
 
 
 def create_file(filepath, content, mode="w", chmod=None):
@@ -43,6 +30,7 @@ def create_file(filepath, content, mode="w", chmod=None):
     :param mode: The mode to open the file. This is `w` by default;
         use `wb` and provide content as a bitstring if you need to
         write a binary file.
+    :param chmod: file permissions to apply
     :returns: The path to the file that was created.
     """
     filepath.parent.mkdir(parents=True, exist_ok=True)
@@ -56,7 +44,7 @@ def create_file(filepath, content, mode="w", chmod=None):
 
 
 def create_zip_file(zippath, content):
-    """A test utility to create a file with known content.
+    """A test utility to create a .zip file with known content.
 
     Ensures that the directory for the file exists, and writes a file with
     specific content.
@@ -74,6 +62,28 @@ def create_zip_file(zippath, content):
     return zippath
 
 
+def create_tgz_file(tgzpath, content):
+    """A test utility to create a .tar.gz file with known content.
+
+    Ensures that the directory for the file exists, and writes a file with
+    specific content.
+
+    :param tgzpath: The path for the ZIP file to create
+    :param content: A list of pairs; each pair is (path, data) describing
+        an item to be added to the zip file.
+    :returns: The path to the file that was created.
+    """
+    tgzpath.parent.mkdir(parents=True, exist_ok=True)
+    with tarfile.open(tgzpath, "w:gz") as f:
+        for path, data in content:
+            tarinfo = tarfile.TarInfo(path)
+            payload = data.encode("utf-8")
+            tarinfo.size = len(payload)
+            f.addfile(tarinfo, io.BytesIO(payload))
+
+    return tgzpath
+
+
 def mock_file_download(filename, content, mode="w", role=None):
     """Create a side effect function that mocks the download of a zip file.
 
@@ -84,7 +94,7 @@ def mock_file_download(filename, content, mode="w", role=None):
         use `wb` and provide content as a bitstring if you need to
         write a binary file.
     :param role: The role played by the content being downloaded
-    :returns: a function that can act as a mock side effect for `download_file()`
+    :returns: a function that can act as a mock side effect for `download.file()`
     """
 
     def _download_file(url, download_path, role):
@@ -96,11 +106,27 @@ def mock_file_download(filename, content, mode="w", role=None):
 def mock_zip_download(filename, content, role=None):
     """Create a side effect function that mocks the download of a zip file.
 
+    :param filename: The file name (*not* the path - just the file name) to
+        create as a side effect
     :param content: A string containing the content to write.
-    :returns: a function that can act as a mock side effect for `download_file()`
+    :param role: The role played by the content being downloaded
+    :returns: a function that can act as a mock side effect for `download.file()`
     """
 
     def _download_file(url, download_path, role):
         return create_zip_file(download_path / filename, content)
+
+    return _download_file
+
+
+def mock_tgz_download(filename, content, role=None):
+    """Create a side effect function that mocks the download of a .tar.gz file.
+
+    :param content: A string containing the content to write.
+    :returns: a function that can act as a mock side effect for `download.file()`
+    """
+
+    def _download_file(url, download_path, role):
+        return create_tgz_file(download_path / filename, content)
 
     return _download_file

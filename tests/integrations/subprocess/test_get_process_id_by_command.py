@@ -67,7 +67,12 @@ process_list_two_procs_same_cmd = [
     ],
 )
 def test_get_process_id_by_command_w_command_line(
-    process_list, command_list, expected_pid, expected_stdout, monkeypatch, capsys
+    process_list,
+    command_list,
+    expected_pid,
+    expected_stdout,
+    monkeypatch,
+    capsys,
 ):
     """Finds correct process for command line or returns None."""
     monkeypatch.setattr("psutil.process_iter", lambda attrs: process_list)
@@ -97,7 +102,12 @@ def test_get_process_id_by_command_w_command_line(
     ],
 )
 def test_get_process_id_by_command_w_command(
-    process_list, command, expected_pid, expected_stdout, monkeypatch, capsys
+    process_list,
+    command,
+    expected_pid,
+    expected_stdout,
+    monkeypatch,
+    capsys,
 ):
     """Finds correct process for command or returns None."""
     monkeypatch.setattr("psutil.process_iter", lambda attrs: process_list)
