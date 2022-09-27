@@ -22,7 +22,7 @@ jobs:
         with:
           python-version: ${{ env.python_version }}
       - name: Lint with Pre-commit
-        uses: pre-commit/action@v2.0.3
+        uses: pre-commit/action@v3.0.0
 
   beefore:
     name: Pre-test checks
