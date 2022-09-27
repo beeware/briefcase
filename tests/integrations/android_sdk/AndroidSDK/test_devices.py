@@ -21,6 +21,18 @@ def test_no_devices(mock_sdk):
     assert mock_sdk.devices() == {}
 
 
+def test_no_model(mock_sdk):
+    """If there is no model, return Unknown device (no model name)"""
+    mock_sdk.command.subprocess.check_output.return_value = devices_result("no_model")
+
+    assert mock_sdk.devices() == {
+        "emulator-5554": {
+            "name": "Unknown device (no model name)",
+            "authorized": True
+        }
+    }
+
+
 def test_one_emulator(mock_sdk):
     """If there is a single emulator, it is returned."""
     mock_sdk.command.subprocess.check_output.return_value = devices_result(
