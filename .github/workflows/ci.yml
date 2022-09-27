@@ -161,7 +161,7 @@ jobs:
         framework: ['toga', 'pyside2', 'pyside6', 'ppb']
         include:
         - os_name: macOS
-          platform: macos-latest
+          platform: macos-12
           briefcase-data-dir: ~/Library/Caches/org.beeware.briefcase
           pip-cache-dir: ~/Library/Caches/pip
           docker-cache-dir: ~/Library/Containers/com.docker.docker/Data/vms/0/
@@ -244,7 +244,7 @@ jobs:
         briefcase build android
         briefcase package android --adhoc-sign
     - name: Build iOS App
-      if: matrix.platform == 'macos-latest' && matrix.framework == 'toga'
+      if: matrix.platform == 'macos-12' && matrix.framework == 'toga'
       run: |
         cd tests/apps/verify-${{ matrix.framework }}
         briefcase create iOS
