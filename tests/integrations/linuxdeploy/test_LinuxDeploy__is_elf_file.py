@@ -5,7 +5,7 @@ from tests.integrations.linuxdeploy.utils import create_mock_appimage
 
 
 @pytest.fixture
-def linuxdeploy(mock_command, tmp_path):
+def linuxdeploy(mock_tools, tmp_path):
     class LinuxDeployDummy(LinuxDeployBase):
         name = "dummy-plugin"
 
@@ -21,7 +21,7 @@ def linuxdeploy(mock_command, tmp_path):
         def file_path(self):
             return tmp_path / "plugin"
 
-    return LinuxDeployDummy(mock_command)
+    return LinuxDeployDummy(mock_tools)
 
 
 def test_is_elf_header_positive_detection(linuxdeploy, tmp_path):

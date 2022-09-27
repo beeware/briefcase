@@ -3,17 +3,23 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from briefcase.integrations.base import ToolCache
+from briefcase.integrations.download import Download
+from briefcase.integrations.subprocess import Subprocess
+
 
 @pytest.fixture
-def mock_command(tmp_path):
-    command = MagicMock()
-    command.host_arch = "wonky"
-    command.tools_path = tmp_path / "tools"
-    command.tools_path.mkdir()
+def mock_tools(tmp_path, mock_tools) -> ToolCache:
+    mock_tools.host_arch = "wonky"
 
-    command.shutil = shutil
+    # Mock default tools
+    mock_tools.subprocess = MagicMock(spec_set=Subprocess)
+    mock_tools.download = MagicMock(spec_set=Download)
+
+    # Restore shutil
+    mock_tools.shutil = shutil
 
     # Create a dummy bundle path
     (tmp_path / "bundle").mkdir()
 
-    return command
+    return mock_tools

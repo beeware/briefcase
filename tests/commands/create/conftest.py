@@ -2,9 +2,12 @@ from unittest import mock
 
 import pytest
 import tomli_w
+from cookiecutter.main import cookiecutter
 
 from briefcase.commands import CreateCommand
 from briefcase.config import AppConfig
+from briefcase.console import Console, Log
+from briefcase.integrations.subprocess import Subprocess
 from tests.utils import DummyConsole
 
 
@@ -16,23 +19,27 @@ class DummyCreateCommand(CreateCommand):
     output_format = "dummy"
     description = "Dummy create command"
 
-    def __init__(self, *args, support_file=None, git=None, **kwargs):
+    def __init__(self, *args, support_file=None, git=None, home_path=None, **kwargs):
+        kwargs.setdefault("logger", Log())
+        kwargs.setdefault("console", Console())
         super().__init__(*args, **kwargs)
 
         # Override the host properties
-        self.host_arch = "gothic"
-        self.host_os = "c64"
+        self.tools.host_arch = "gothic"
+        self.tools.host_os = "c64"
+
+        self.tools.home_path = home_path
 
         # If a test sets this property, the tool verification step will
         # fail.
         self._missing_tool = None
 
         # Mock the external services
-        self.git = git
-        self.cookiecutter = mock.MagicMock()
-        self.subprocess = mock.MagicMock()
+        self.tools.git = git
+        self.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
         self.support_file = support_file
-        self.input = DummyConsole()
+        self.tools.input = DummyConsole()
+        self.tools.cookiecutter = mock.MagicMock(spec_set=cookiecutter)
 
     @property
     def support_package_url_query(self):
@@ -40,7 +47,7 @@ class DummyCreateCommand(CreateCommand):
         return [
             ("platform", self.platform),
             ("version", self.python_version_tag),
-            ("arch", self.host_arch),
+            ("arch", self.tools.host_arch),
         ]
 
     def bundle_path(self, app):
@@ -65,7 +72,7 @@ class DummyCreateCommand(CreateCommand):
 class TrackingCreateCommand(DummyCreateCommand):
     """A dummy creation command that doesn't actually do anything.
 
-    It only serves to track which actions would be performend.
+    It only serves to track which actions would be performed.
     """
 
     def __init__(self, *args, **kwargs):
@@ -76,6 +83,10 @@ class TrackingCreateCommand(DummyCreateCommand):
     def verify_tools(self):
         super().verify_tools()
         self.actions.append(("verify",))
+
+    def verify_app_tools(self, app):
+        super().verify_app_tools(app=app)
+        self.actions.append(("verify-app-tools", app))
 
     # Override all the body methods of a CreateCommand
     # with versions that we can use to track actions performed.
@@ -107,9 +118,9 @@ class TrackingCreateCommand(DummyCreateCommand):
 def create_command(tmp_path, mock_git):
     return DummyCreateCommand(
         base_path=tmp_path / "project",
-        home_path=tmp_path / "home",
         data_path=tmp_path / "data",
         git=mock_git,
+        home_path=tmp_path / "home",
     )
 
 
@@ -173,6 +184,7 @@ def app_packages_path_index(bundle_path):
                 "app_path": "path/to/app",
                 "app_packages_path": "path/to/app_packages",
                 "support_path": "path/to/support",
+                "support_revision": 37,
             }
         }
         tomli_w.dump(index, f)
@@ -180,6 +192,20 @@ def app_packages_path_index(bundle_path):
 
 @pytest.fixture
 def app_requirements_path_index(bundle_path):
+    with (bundle_path / "briefcase.toml").open("wb") as f:
+        index = {
+            "paths": {
+                "app_path": "path/to/app",
+                "app_requirements_path": "path/to/requirements.txt",
+                "support_path": "path/to/support",
+                "support_revision": 37,
+            }
+        }
+        tomli_w.dump(index, f)
+
+
+@pytest.fixture
+def no_support_revision_index(bundle_path):
     with (bundle_path / "briefcase.toml").open("wb") as f:
         index = {
             "paths": {

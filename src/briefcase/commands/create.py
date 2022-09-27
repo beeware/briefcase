@@ -7,17 +7,14 @@ import sys
 from datetime import date
 from pathlib import Path
 from typing import Optional
-from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
-from cookiecutter import exceptions as cookiecutter_exceptions
+from packaging.version import Version
 
 import briefcase
 from briefcase.config import BaseConfig
-from briefcase.exceptions import (
-    BriefcaseCommandError,
-    MissingNetworkResourceError,
-    NetworkFailure,
-)
+from briefcase.exceptions import BriefcaseCommandError, MissingNetworkResourceError
+from briefcase.integrations import git
+from briefcase.integrations.subprocess import NativeAppContext
 
 from .base import (
     BaseCommand,
@@ -27,14 +24,6 @@ from .base import (
 )
 
 
-class InvalidTemplateRepository(BriefcaseCommandError):
-    def __init__(self, template):
-        self.template = template
-        super().__init__(
-            f"Unable to clone application template; is the template path {template!r} correct?"
-        )
-
-
 class InvalidSupportPackage(BriefcaseCommandError):
     def __init__(self, filename):
         self.filename = filename
@@ -42,15 +31,16 @@ class InvalidSupportPackage(BriefcaseCommandError):
 
 
 class MissingSupportPackage(BriefcaseCommandError):
-    def __init__(self, python_version_tag, host_arch):
+    def __init__(self, python_version_tag, platform, host_arch):
         self.python_version_tag = python_version_tag
+        self.platform = platform
         self.host_arch = host_arch
         super().__init__(
             f"""\
-Unable to download a support package for Python {self.python_version_tag} on {self.host_arch}.
+Unable to download {self.platform} support package for Python {self.python_version_tag} on {self.host_arch}.
 
 This is likely because either Python {self.python_version_tag} and/or {self.host_arch}
-is not yet supported. You will need to:
+is not yet supported on {self.platform}. You will need to:
     * Use an older version of Python; or
     * Compile your own custom support package.
 """
@@ -94,7 +84,7 @@ def write_dist_info(app: BaseConfig, dist_info_path: Path):
     """Install the dist-info folder for the application.
 
     :param app: The config object for the app
-    :param path: The path into which the dist-info folder should be written.
+    :param dist_info_path: The path into which the dist-info folder should be written.
     """
     # Create dist-info folder, and write a minimal metadata collection.
     dist_info_path.mkdir(exist_ok=True)
@@ -128,18 +118,16 @@ class CreateCommand(BaseCommand):
         """The URL for a cookiecutter repository to use when creating apps."""
         return f"https://github.com/beeware/briefcase-{self.platform}-{self.output_format}-template.git"
 
-    @property
-    def support_package_url_query(self):
+    def support_package_filename(self, support_revision):
         """The query arguments to use in a support package query request."""
-        return [
-            ("platform", self.platform),
-            ("version", self.python_version_tag),
-        ]
+        return f"Python-{self.python_version_tag}-{self.platform}-support.b{support_revision}.tar.gz"
 
-    @property
-    def support_package_url(self):
+    def support_package_url(self, support_revision):
         """The URL of the support package to use for apps of this type."""
-        return f"https://briefcase-support.org/python?{urlencode(self.support_package_url_query)}"
+        return (
+            f"https://briefcase-support.s3.amazonaws.com/python/{self.python_version_tag}/{self.platform}/"
+            + self.support_package_filename(support_revision)
+        )
 
     def icon_targets(self, app: BaseConfig):
         """Obtain the dictionary of icon targets that the template requires.
@@ -240,26 +228,30 @@ class CreateCommand(BaseCommand):
         # If the app config doesn't explicitly define a template,
         # use a default template.
         if app.template is None:
-            app.template = self.app_template_url
+            template = self.app_template_url
+        else:
+            template = app.template
+
+        # If the app config doesn't explicitly define a template branch,
+        # use the branch derived from the Briefcase version
+        version = Version(briefcase.__version__)
         if app.template_branch is None:
-            app.template_branch = self.python_version_tag
-
-        self.logger.info(
-            f"Using app template: {app.template}, branch {app.template_branch}"
-        )
-
-        # Make sure we have an updated cookiecutter template,
-        # checked out to the right branch
-        cached_template = self.update_cookiecutter_cache(
-            template=app.template, branch=app.template_branch
-        )
+            template_branch = f"v{version.base_version}"
+        else:
+            template_branch = app.template_branch
 
         # Construct a template context from the app configuration.
         extra_context = app.__dict__.copy()
+
+        # Remove the context items that describe the template
+        extra_context.pop("template")
+        extra_context.pop("template_branch")
+
         # Augment with some extra fields.
         extra_context.update(
             {
                 # Properties of the generating environment
+                # The full Python version string, including minor and dev/a/b/c suffixes (e.g., 3.11.0rc2)
                 "python_version": platform.python_version(),
                 # Transformations of explicit properties into useful forms
                 "module_name": app.module_name,
@@ -273,40 +265,49 @@ class CreateCommand(BaseCommand):
         # Add in any extra template context required by the output format.
         extra_context.update(self.output_format_template_context(app))
 
+        # Create the platform directory (if it doesn't already exist)
+        output_path = self.bundle_path(app).parent
+        output_path.mkdir(parents=True, exist_ok=True)
+
         try:
-            # Create the platform directory (if it doesn't already exist)
-            output_path = self.bundle_path(app).parent
-            output_path.mkdir(parents=True, exist_ok=True)
-            # Unroll the template
-            self.cookiecutter(
-                str(cached_template),
-                no_input=True,
-                output_dir=os.fsdecode(output_path),
-                checkout=app.template_branch,
+            self.logger.info(
+                f"Using app template: {template}, branch {template_branch}"
+            )
+            self.generate_template(
+                template=template,
+                branch=template_branch,
+                output_path=output_path,
                 extra_context=extra_context,
             )
-        except subprocess.CalledProcessError as e:
-            # Computer is offline
-            # status code == 128 - certificate validation error.
-            raise NetworkFailure("clone template repository") from e
-        except cookiecutter_exceptions.RepositoryNotFound as e:
-            # Either the template path is invalid,
-            # or it isn't a cookiecutter template (i.e., no cookiecutter.json)
-            raise InvalidTemplateRepository(app.template) from e
-        except cookiecutter_exceptions.RepositoryCloneFailed as e:
-            # Branch does not exist for python version
-            raise TemplateUnsupportedVersion(app.template_branch) from e
+        except TemplateUnsupportedVersion:
+            # If we're on a development branch, and the template branch was *not*
+            # provided explicity, we can use a fallback development template.
+            # Otherwise, re-raise the exception about the unsupported template version.
+            if version.dev and app.template_branch is None:
+                # Development branches can use the main template.
+                self.logger.info(
+                    f"Template branch {template_branch} not found; falling back to development template"
+                )
+                template_branch = "main"
+                self.generate_template(
+                    template=template,
+                    branch=template_branch,
+                    output_path=output_path,
+                    extra_context=extra_context,
+                )
+            else:
+                raise
 
     def _unpack_support_package(self, support_file_path, support_path):
         """Unpack a support package into a specific location.
 
         :param support_file_path: The path to the support file to be unpacked.
-        :param support_path: The path where support files should unpacked.
+        :param support_path: The path where support files should be unpacked.
         """
         try:
             with self.input.wait_bar("Unpacking support package..."):
                 support_path.mkdir(parents=True, exist_ok=True)
-                self.shutil.unpack_archive(
+                self.tools.shutil.unpack_archive(
                     support_file_path,
                     extract_dir=support_path,
                 )
@@ -334,29 +335,38 @@ class CreateCommand(BaseCommand):
                 support_package_url = app.support_package
                 custom_support_package = True
                 self.logger.info(f"Using custom support package {support_package_url}")
+                try:
+                    # If the app has a custom support package *and* a support revision,
+                    # that's an error.
+                    app.support_revision
+                    self.logger.warning(
+                        "App specifies both a support package and a support revision; "
+                        "support revision will be ignored."
+                    )
+                except AttributeError:
+                    pass
             except AttributeError:
-                support_package_url = self.support_package_url
+                # If the app specifies a support revision, use it;
+                # otherwise, use the support revision named by the template
+                try:
+                    support_revision = app.support_revision
+                except AttributeError:
+                    # No support revision specified; use the template-specified version
+                    try:
+                        support_revision = self.support_revision(app)
+                    except KeyError:
+                        # No template-specified support revision
+                        raise MissingSupportPackage(
+                            python_version_tag=self.python_version_tag,
+                            platform=self.platform,
+                            host_arch=self.tools.host_arch,
+                        )
+
+                support_package_url = self.support_package_url(support_revision)
                 custom_support_package = False
                 self.logger.info(f"Using support package {support_package_url}")
 
             if support_package_url.startswith(("https://", "http://")):
-                try:
-                    self.logger.info(f"... pinned to revision {app.support_revision}")
-                    # If a revision has been specified, add the revision
-                    # as a query argument in the support package URL.
-                    # This is a lot more painful than "add arg to query" should
-                    # be because (a) url splits aren't appendable, and
-                    # (b) Python 3.5 doesn't guarantee dictionary order.
-                    url_parts = list(urlsplit(support_package_url))
-                    query = list(parse_qsl(url_parts[3]))
-                    query.append(("revision", app.support_revision))
-                    url_parts[3] = urlencode(query)
-                    support_package_url = urlunsplit(url_parts)
-
-                except AttributeError:
-                    # No support revision specified.
-                    self.logger.info("... using most recent revision")
-
                 if custom_support_package:
                     # If the support package is custom, cache it using a hash of
                     # the download URL. This is needed to differentiate to support
@@ -374,7 +384,7 @@ class CreateCommand(BaseCommand):
 
                 # Download the support file, caching the result
                 # in the user's briefcase support cache directory.
-                return self.download_file(
+                return self.tools.download.file(
                     url=support_package_url,
                     download_path=download_path,
                     role="support package",
@@ -388,7 +398,8 @@ class CreateCommand(BaseCommand):
             else:
                 raise MissingSupportPackage(
                     python_version_tag=self.python_version_tag,
-                    host_arch=self.host_arch,
+                    platform=self.platform,
+                    host_arch=self.tools.host_arch,
                 ) from e
 
     def _write_requirements_file(self, app: BaseConfig, requirements_path):
@@ -405,7 +416,7 @@ class CreateCommand(BaseCommand):
             separators.append(os.altsep)
 
         with self.input.wait_bar("Writing requirements file..."):
-            with (requirements_path).open("w", encoding="utf-8") as f:
+            with requirements_path.open("w", encoding="utf-8") as f:
                 if app.requires:
                     for requirement in app.requires:
                         # If the requirement is a local path, convert it to
@@ -437,8 +448,8 @@ class CreateCommand(BaseCommand):
         """
         # Clear existing dependency directory
         if app_packages_path.is_dir():
-            self.shutil.rmtree(app_packages_path)
-            self.os.mkdir(app_packages_path)
+            self.tools.shutil.rmtree(app_packages_path)
+            self.tools.os.mkdir(app_packages_path)
 
         # Install dependencies
         if app.requires:
@@ -456,7 +467,7 @@ class CreateCommand(BaseCommand):
                     pass
 
                 try:
-                    self.subprocess.run(
+                    self.tools[app].app_context.run(
                         [
                             sys.executable,
                             "-m",
@@ -512,8 +523,8 @@ class CreateCommand(BaseCommand):
         # Remove existing app folder
         app_path = self.app_path(app)
         if app_path.is_dir():
-            self.shutil.rmtree(app_path)
-            self.os.mkdir(app_path)
+            self.tools.shutil.rmtree(app_path)
+            self.tools.os.mkdir(app_path)
 
         # Install app code.
         if app.sources:
@@ -526,9 +537,9 @@ class CreateCommand(BaseCommand):
                     if not original.exists():
                         raise MissingAppSources(src)
                     elif original.is_dir():
-                        self.shutil.copytree(original, target)
+                        self.tools.shutil.copytree(original, target)
                     else:
-                        self.shutil.copy(original, target)
+                        self.tools.shutil.copy(original, target)
         else:
             self.logger.info(f"No sources defined for {app.app_name}.")
 
@@ -601,7 +612,7 @@ class CreateCommand(BaseCommand):
                     # Make sure the target directory exists
                     target.parent.mkdir(parents=True, exist_ok=True)
                     # Copy the source image to the target location
-                    self.shutil.copy(full_source, target)
+                    self.tools.shutil.copy(full_source, target)
             else:
                 self.logger.info(
                     f"Unable to find {source_filename} for {full_role}; using default"
@@ -693,7 +704,7 @@ class CreateCommand(BaseCommand):
                         relative_path = path.relative_to(self.bundle_path(app))
                         if path.is_dir():
                             self.logger.info(f"Removing directory {relative_path}")
-                            self.shutil.rmtree(path)
+                            self.tools.shutil.rmtree(path)
                         else:
                             self.logger.info(f"Removing {relative_path}")
                             path.unlink()
@@ -720,13 +731,17 @@ class CreateCommand(BaseCommand):
                 )
                 return
             self.logger.info("Removing old application bundle...", prefix=app.app_name)
-            self.shutil.rmtree(bundle_path)
+            self.tools.shutil.rmtree(bundle_path)
 
         self.logger.info("Generating application template...", prefix=app.app_name)
         self.generate_app_template(app=app)
 
         self.logger.info("Installing support package...", prefix=app.app_name)
         self.install_app_support_package(app=app)
+
+        # Verify tools for the app after the app template and support package
+        # are in place since the app tools may be dependent on them.
+        self.verify_app_tools(app)
 
         self.logger.info("Installing dependencies...", prefix=app.app_name)
         self.install_app_dependencies(app=app)
@@ -741,7 +756,7 @@ class CreateCommand(BaseCommand):
         self.cleanup_app_content(app=app)
 
         self.logger.info(
-            f"Created {self.bundle_path(app).relative_to(self.base_path)}",
+            f"Created {bundle_path.relative_to(self.base_path)}",
             prefix=app.app_name,
         )
 
@@ -751,7 +766,13 @@ class CreateCommand(BaseCommand):
         Raises MissingToolException if a required system tool is
         missing.
         """
-        self.git = self.integrations.git.verify_git_is_installed(self)
+        super().verify_tools()
+        git.verify_git_is_installed(tools=self.tools)
+
+    def verify_app_tools(self, app: BaseConfig):
+        """Verify that tools needed to run the command for this app exist."""
+        super().verify_app_tools(app)
+        NativeAppContext.verify(tools=self.tools, app=app)
 
     def __call__(self, app: Optional[BaseConfig] = None, **options):
         # Confirm all required tools are available

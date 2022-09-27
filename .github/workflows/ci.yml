@@ -15,13 +15,14 @@ jobs:
     steps:
       - uses: actions/checkout@v3.0.2
         with:
+          fetch-depth: 0
           ref: ${{ github.event.pull_request.head.sha }}
       - name: Set up Python
-        uses: actions/setup-python@v3.1.2
+        uses: actions/setup-python@v4.2.0
         with:
           python-version: ${{ env.python_version }}
       - name: Lint with Pre-commit
-        uses: pre-commit/action@v2.0.3
+        uses: pre-commit/action@v3.0.0
 
   beefore:
     name: Pre-test checks
@@ -32,50 +33,51 @@ jobs:
       matrix:
         task:
         - 'towncrier-check'
-        - 'docs'
         - 'package'
     steps:
     # Check out main; needed for towncrier comparisons.
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v3.0.2
       with:
         fetch-depth: 0
         ref: main
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v3.0.2
       with:
         fetch-depth: 0
     - name: Set up Python
-      uses: actions/setup-python@v3.1.2
+      uses: actions/setup-python@v4.2.0
       with:
         python-version: ${{ env.python_version }}
     - name: Install dependencies
       run: |
         pip install --upgrade pip
         pip install --upgrade setuptools
-        pip install tox
+        pip install setuptools_scm tox
     - name: Run pre-test check
       run: |
         tox -e ${{ matrix.task }}
 
   smoke:
-    name: Smoke test (3.7)
+    name: Smoke test
     needs: beefore
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python 3.7
-      uses: actions/setup-python@v3.1.2
+    - uses: actions/checkout@v3.0.2
       with:
-        python-version: "3.7"
+        fetch-depth: 0
+    - name: Set up Python
+      uses: actions/setup-python@v4.2.0
+      with:
+        python-version: ${{ env.python_version }}
     - name: Install dependencies
       run: |
         pip install --upgrade pip
         pip install --upgrade setuptools
-        pip install tox
+        pip install setuptools_scm tox
     - name: Test
       run: |
         tox -e py
     - name: Check coverage
-      uses: codecov/codecov-action@v1
+      uses: codecov/codecov-action@v3.1.1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: ./coverage.xml
@@ -92,23 +94,25 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.11.0-alpha - 3.11.0']
+        python-version: ['3.8', '3.10', '3.11.0-alpha - 3.11.0']
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v3.0.2
+      with:
+        fetch-depth: 0
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3.1.2
+      uses: actions/setup-python@v4.2.0
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
         pip install --upgrade pip
         pip install --upgrade setuptools
-        pip install tox
+        pip install setuptools_scm tox
     - name: Test
       run: |
         tox -e py
     - name: Check coverage
-      uses: codecov/codecov-action@v1
+      uses: codecov/codecov-action@v3.1.1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: ./coverage.xml
@@ -124,21 +128,23 @@ jobs:
         platform: ['macos-latest', 'windows-latest']
     runs-on: ${{ matrix.platform }}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v3.0.2
+      with:
+        fetch-depth: 0
     - name: Set up Python
-      uses: actions/setup-python@v3.1.2
+      uses: actions/setup-python@v4.2.0
       with:
         python-version: ${{ env.python_version }}
     - name: Install dependencies
       run: |
         pip install --upgrade pip
         pip install --upgrade setuptools
-        pip install tox
+        pip install setuptools_scm tox
     - name: Test
       run: |
         tox -e py
     - name: Check coverage
-      uses: codecov/codecov-action@v1
+      uses: codecov/codecov-action@v3.1.1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: ./coverage.xml
@@ -155,7 +161,7 @@ jobs:
         framework: ['toga', 'pyside2', 'pyside6', 'ppb']
         include:
         - os_name: macOS
-          platform: macos-latest
+          platform: macos-12
           briefcase-data-dir: ~/Library/Caches/org.beeware.briefcase
           pip-cache-dir: ~/Library/Caches/pip
           docker-cache-dir: ~/Library/Containers/com.docker.docker/Data/vms/0/
@@ -174,7 +180,7 @@ jobs:
     runs-on: ${{ matrix.platform }}
     steps:
     - name: Cache Briefcase tools
-      uses: actions/cache@v3
+      uses: actions/cache@v3.0.8
       with:
         key: briefcase-${{ matrix.platform }}
         path: |
@@ -182,9 +188,11 @@ jobs:
           ${{ matrix.briefcase-data-dir }}
           ${{ matrix.pip-cache-dir }}
           ${{ matrix.docker-cache-dir }}
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v3.0.2
+      with:
+        fetch-depth: 0
     - name: Set up Python
-      uses: actions/setup-python@v3.1.2
+      uses: actions/setup-python@v4.2.0
       with:
         python-version: ${{ env.python_version }}
     - name: Install system dependencies
@@ -195,6 +203,7 @@ jobs:
       run: |
         pip install --upgrade pip
         pip install --upgrade setuptools
+        pip install setuptools_scm
         pip install .
     - name: Create App
       run: |
@@ -235,7 +244,7 @@ jobs:
         briefcase build android
         briefcase package android --adhoc-sign
     - name: Build iOS App
-      if: matrix.platform == 'macos-latest' && matrix.framework == 'toga'
+      if: matrix.platform == 'macos-12' && matrix.framework == 'toga'
       run: |
         cd tests/apps/verify-${{ matrix.framework }}
         briefcase create iOS

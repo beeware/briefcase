@@ -3,6 +3,7 @@ import pytest
 from briefcase.commands import RunCommand
 from briefcase.commands.base import full_options
 from briefcase.config import AppConfig
+from briefcase.console import Console, Log
 
 
 class DummyRunCommand(RunCommand):
@@ -16,7 +17,9 @@ class DummyRunCommand(RunCommand):
     description = "Dummy run command"
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, apps=[], **kwargs)
+        kwargs.setdefault("logger", Log())
+        kwargs.setdefault("console", Console())
+        super().__init__(*args, apps={}, **kwargs)
 
         self.actions = []
 

@@ -9,41 +9,37 @@ from briefcase.integrations.android_sdk import ADB, AndroidSDK
 
 
 @pytest.fixture
-def mock_sdk(tmp_path):
-    command = MagicMock()
-    command.host_platform = "unknown"
+def android_sdk(android_sdk, mock_tools, tmp_path) -> AndroidSDK:
+    android_sdk.sleep = MagicMock()
 
-    sdk = AndroidSDK(command, jdk=MagicMock(), root_path=tmp_path)
-    sdk.sleep = MagicMock()
-
-    sdk.mock_run = MagicMock()
+    android_sdk.mock_run = MagicMock(spec_set=ADB.run)
 
     def mock_adb(device):
-        adb = ADB(sdk, device)
-        adb.run = sdk.mock_run
+        adb = ADB(mock_tools, device)
+        adb.run = android_sdk.mock_run
         return adb
 
-    sdk.adb = mock_adb
+    android_sdk.adb = mock_adb
 
     # Mock some existing emulators
-    sdk.emulators = MagicMock(
+    android_sdk.emulators = MagicMock(
         return_value=[
             "runningEmulator",
             "idleEmulator",
         ]
     )
 
-    return sdk
+    return android_sdk
 
 
-def test_invalid_emulator(mock_sdk):
+def test_invalid_emulator(android_sdk):
     """Attempting to start an invalid emulator raises an error."""
 
     with pytest.raises(InvalidDeviceError):
-        mock_sdk.start_emulator("no-such-avd")
+        android_sdk.start_emulator("no-such-avd")
 
 
-def test_start_emulator(mock_sdk):
+def test_start_emulator(mock_tools, android_sdk):
     """An emulator can be started."""
     # Mock 4 calls to devices.
     # First call returns 3 devices, but not the new emulator.
@@ -76,7 +72,7 @@ def test_start_emulator(mock_sdk):
     }
 
     # This will result in 4 calls to get devices
-    mock_sdk.devices = MagicMock(
+    android_sdk.devices = MagicMock(
         side_effect=[
             devices,
             devices,
@@ -87,7 +83,7 @@ def test_start_emulator(mock_sdk):
 
     # There will be 5 calls on adb.run (3 calls to avd_name, then
     # 2 calls to getprop)
-    mock_sdk.mock_run.side_effect = [
+    android_sdk.mock_run.side_effect = [
         # emu avd_name
         subprocess.CalledProcessError(returncode=1, cmd="emu avd name"),
         "runningEmulator\nOK",
@@ -98,26 +94,26 @@ def test_start_emulator(mock_sdk):
     ]
 
     # poll() on the process continues to return None, indicating no problem.
-    emu_popen = MagicMock()
+    emu_popen = MagicMock(spec_set=subprocess.Popen)
     emu_popen.poll.return_value = None
-    mock_sdk.command.subprocess.Popen.return_value = emu_popen
+    mock_tools.subprocess.Popen.return_value = emu_popen
 
     # Start the emulator
-    device, name = mock_sdk.start_emulator("idleEmulator")
+    device, name = android_sdk.start_emulator("idleEmulator")
 
     # The device details are as expected
     assert device == "emulator-5556"
     assert name == "@idleEmulator (running emulator)"
 
     # The process was started.
-    mock_sdk.command.subprocess.Popen.assert_called_with(
+    mock_tools.subprocess.Popen.assert_called_with(
         [
-            os.fsdecode(mock_sdk.emulator_path),
+            os.fsdecode(android_sdk.emulator_path),
             "@idleEmulator",
             "-dns-server",
             "8.8.8.8",
         ],
-        env=mock_sdk.env,
+        env=android_sdk.env,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         bufsize=1,
@@ -125,7 +121,7 @@ def test_start_emulator(mock_sdk):
     )
 
     # There were 5 calls to run
-    mock_sdk.mock_run.assert_has_calls(
+    android_sdk.mock_run.assert_has_calls(
         [
             # Three calls to get avd name
             call("emu", "avd", "name"),
@@ -138,10 +134,10 @@ def test_start_emulator(mock_sdk):
     )
 
     # Took a total of 5 naps.
-    assert mock_sdk.sleep.call_count == 4
+    assert android_sdk.sleep.call_count == 4
 
 
-def test_emulator_fail_to_start(mock_sdk):
+def test_emulator_fail_to_start(mock_tools, android_sdk):
     """If the emulator fails to start, and error is displayed."""
     # Mock 4 calls to devices.
     # First call returns 3 devices, but not the new emulator.
@@ -174,7 +170,7 @@ def test_emulator_fail_to_start(mock_sdk):
     }
 
     # This will result in 4 calls to get devices
-    mock_sdk.devices = MagicMock(
+    android_sdk.devices = MagicMock(
         side_effect=[
             devices,
             devices,
@@ -185,7 +181,7 @@ def test_emulator_fail_to_start(mock_sdk):
 
     # This will result in 5 calls on adb.run (3 calls to avd_name, then
     # 2 calls to getprop)
-    mock_sdk.mock_run.side_effect = [
+    android_sdk.mock_run.side_effect = [
         # emu avd_name
         subprocess.CalledProcessError(returncode=1, cmd="emu avd name"),
         "runningEmulator\nOK",
@@ -197,24 +193,24 @@ def test_emulator_fail_to_start(mock_sdk):
 
     # poll() on the process returns None for the first two attempts, but then
     # returns 1 indicating failure.
-    emu_popen = MagicMock()
+    emu_popen = MagicMock(spec=subprocess.Popen)
     emu_popen.poll.side_effect = [None, None, 1]
-    emu_popen.args = [mock_sdk.emulator_path, "@idleEmulator"]
-    mock_sdk.command.subprocess.Popen.return_value = emu_popen
+    emu_popen.args = [android_sdk.emulator_path, "@idleEmulator"]
+    mock_tools.subprocess.Popen.return_value = emu_popen
 
     # Start the emulator
     with pytest.raises(BriefcaseCommandError):
-        mock_sdk.start_emulator("idleEmulator")
+        android_sdk.start_emulator("idleEmulator")
 
     # The process was started.
-    mock_sdk.command.subprocess.Popen.assert_called_with(
+    mock_tools.subprocess.Popen.assert_called_with(
         [
-            os.fsdecode(mock_sdk.emulator_path),
+            os.fsdecode(android_sdk.emulator_path),
             "@idleEmulator",
             "-dns-server",
             "8.8.8.8",
         ],
-        env=mock_sdk.env,
+        env=android_sdk.env,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         bufsize=1,
@@ -222,7 +218,7 @@ def test_emulator_fail_to_start(mock_sdk):
     )
 
     # There were 2 calls to run, both to get AVD name
-    mock_sdk.mock_run.assert_has_calls(
+    android_sdk.mock_run.assert_has_calls(
         [
             call("emu", "avd", "name"),
             call("emu", "avd", "name"),
@@ -230,10 +226,10 @@ def test_emulator_fail_to_start(mock_sdk):
     )
 
     # Took a total of 2 naps before failing.
-    assert mock_sdk.sleep.call_count == 2
+    assert android_sdk.sleep.call_count == 2
 
 
-def test_emulator_fail_to_boot(mock_sdk):
+def test_emulator_fail_to_boot(mock_tools, android_sdk):
     """If the emulator fails to boot, and error is displayed."""
     # Mock 4 calls to devices.
     # First call returns 3 devices, but not the new emulator.
@@ -266,7 +262,7 @@ def test_emulator_fail_to_boot(mock_sdk):
     }
 
     # This will result in 4 calls to get devices
-    mock_sdk.devices = MagicMock(
+    android_sdk.devices = MagicMock(
         side_effect=[
             devices,
             devices,
@@ -277,7 +273,7 @@ def test_emulator_fail_to_boot(mock_sdk):
 
     # This will result in 6 calls on adb.run
     # 3 calls to avd_name and then 3 calls to getprop
-    mock_sdk.mock_run.side_effect = [
+    android_sdk.mock_run.side_effect = [
         # emu avd_name
         subprocess.CalledProcessError(returncode=1, cmd="emu avd name"),
         "runningEmulator\nOK",
@@ -290,7 +286,7 @@ def test_emulator_fail_to_boot(mock_sdk):
     ]
 
     # poll() on the process returns failure during simulator boot
-    emu_popen = MagicMock()
+    emu_popen = MagicMock(spec=subprocess.Popen)
     emu_popen.poll.side_effect = [
         None,  # in start loop without emulator in device list
         None,  # in start loop without emulator in device list
@@ -299,22 +295,22 @@ def test_emulator_fail_to_boot(mock_sdk):
         None,  # in boot loop waiting for emulator to finish booting
         1,  # invoke failure mode for simulator boot
     ]
-    emu_popen.args = [mock_sdk.emulator_path, "@idleEmulator"]
-    mock_sdk.command.subprocess.Popen.return_value = emu_popen
+    emu_popen.args = [android_sdk.emulator_path, "@idleEmulator"]
+    mock_tools.subprocess.Popen.return_value = emu_popen
 
     # Start the emulator
     with pytest.raises(BriefcaseCommandError):
-        mock_sdk.start_emulator("idleEmulator")
+        android_sdk.start_emulator("idleEmulator")
 
     # The process was started.
-    mock_sdk.command.subprocess.Popen.assert_called_with(
+    mock_tools.subprocess.Popen.assert_called_with(
         [
-            os.fsdecode(mock_sdk.emulator_path),
+            os.fsdecode(android_sdk.emulator_path),
             "@idleEmulator",
             "-dns-server",
             "8.8.8.8",
         ],
-        env=mock_sdk.env,
+        env=android_sdk.env,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         bufsize=1,
@@ -322,7 +318,7 @@ def test_emulator_fail_to_boot(mock_sdk):
     )
 
     # There were 6 calls to run before failure
-    mock_sdk.mock_run.assert_has_calls(
+    android_sdk.mock_run.assert_has_calls(
         [
             # 3 calls to get avd name
             call("emu", "avd", "name"),
@@ -337,4 +333,4 @@ def test_emulator_fail_to_boot(mock_sdk):
     )
 
     # Took a total of 5 naps.
-    assert mock_sdk.sleep.call_count == 5
+    assert android_sdk.sleep.call_count == 5

@@ -2,6 +2,7 @@ import sys
 
 import pytest
 
+from briefcase.console import Console, Log
 from briefcase.platforms.windows.app import WindowsAppCreateCommand
 
 
@@ -20,7 +21,12 @@ from briefcase.platforms.windows.app import WindowsAppCreateCommand
     ],
 )
 def test_version_triple(first_app_config, tmp_path, version, version_triple):
-    command = WindowsAppCreateCommand(base_path=tmp_path)
+    command = WindowsAppCreateCommand(
+        logger=Log(),
+        console=Console(),
+        base_path=tmp_path / "base_path",
+        data_path=tmp_path / "briefcase",
+    )
 
     first_app_config.version = version
     context = command.output_format_template_context(first_app_config)
@@ -29,7 +35,12 @@ def test_version_triple(first_app_config, tmp_path, version, version_triple):
 
 
 def test_explicit_version_triple(first_app_config, tmp_path):
-    command = WindowsAppCreateCommand(base_path=tmp_path)
+    command = WindowsAppCreateCommand(
+        logger=Log(),
+        console=Console(),
+        base_path=tmp_path / "base_path",
+        data_path=tmp_path / "briefcase",
+    )
 
     first_app_config.version = "1.2.3a1"
     first_app_config.version_triple = "2.3.4"
@@ -41,8 +52,13 @@ def test_explicit_version_triple(first_app_config, tmp_path):
 
 
 def test_guid(first_app_config, tmp_path):
-    """A preictable GUID will be generated from the bundle."""
-    command = WindowsAppCreateCommand(base_path=tmp_path)
+    """A predictable GUID will be generated from the bundle."""
+    command = WindowsAppCreateCommand(
+        logger=Log(),
+        console=Console(),
+        base_path=tmp_path / "base_path",
+        data_path=tmp_path / "briefcase",
+    )
 
     context = command.output_format_template_context(first_app_config)
 
@@ -51,7 +67,12 @@ def test_guid(first_app_config, tmp_path):
 
 def test_explicit_guid(first_app_config, tmp_path):
     """If a GUID is explicitly provided, it is used."""
-    command = WindowsAppCreateCommand(base_path=tmp_path)
+    command = WindowsAppCreateCommand(
+        logger=Log(),
+        console=Console(),
+        base_path=tmp_path / "base_path",
+        data_path=tmp_path / "briefcase",
+    )
 
     first_app_config.guid = "e822176f-b755-589f-849c-6c6600f7efb1"
     context = command.output_format_template_context(first_app_config)
@@ -61,25 +82,28 @@ def test_explicit_guid(first_app_config, tmp_path):
 
 
 def test_support_package_url(first_app_config, tmp_path):
-    command = WindowsAppCreateCommand(base_path=tmp_path)
+    command = WindowsAppCreateCommand(
+        logger=Log(),
+        console=Console(),
+        base_path=tmp_path / "base_path",
+        data_path=tmp_path / "briefcase",
+    )
 
-    # Set some properties of the host system for test purposes.
-    command.host_arch = "wonky"
-    command.platform = "tester"
-
-    # This test result is dependent on whether we're using a 32-bit (win32)
-    # or 64-bit (amd64) machine.
-    arch = "amd64" if sys.maxsize.bit_length() == 63 else "win32"
-    assert command.support_package_url_query == [
-        ("platform", "tester"),
-        ("version", f"3.{sys.version_info.minor}"),
-        ("arch", arch),
-    ]
+    assert (
+        command.support_package_url(4)
+        == f"https://www.python.org/ftp/python/{sys.version_info.major}.{sys.version_info.minor}.4/"
+        f"python-{sys.version_info.major}.{sys.version_info.minor}.4-embed-amd64.zip"
+    )
 
 
 def test_default_install_scope(first_app_config, tmp_path):
     """By default, app should be installed per user."""
-    command = WindowsAppCreateCommand(base_path=tmp_path)
+    command = WindowsAppCreateCommand(
+        logger=Log(),
+        console=Console(),
+        base_path=tmp_path / "base_path",
+        data_path=tmp_path / "briefcase",
+    )
 
     context = command.output_format_template_context(first_app_config)
 
@@ -92,7 +116,12 @@ def test_default_install_scope(first_app_config, tmp_path):
 
 def test_per_machine_install_scope(first_app_config, tmp_path):
     """By default, app should be installed per user."""
-    command = WindowsAppCreateCommand(base_path=tmp_path)
+    command = WindowsAppCreateCommand(
+        logger=Log(),
+        console=Console(),
+        base_path=tmp_path / "base_path",
+        data_path=tmp_path / "briefcase",
+    )
     first_app_config.system_installer = True
 
     context = command.output_format_template_context(first_app_config)
@@ -106,7 +135,12 @@ def test_per_machine_install_scope(first_app_config, tmp_path):
 
 def test_per_user_install_scope(first_app_config, tmp_path):
     """App can be set to have explicit per-user scope."""
-    command = WindowsAppCreateCommand(base_path=tmp_path)
+    command = WindowsAppCreateCommand(
+        logger=Log(),
+        console=Console(),
+        base_path=tmp_path / "base_path",
+        data_path=tmp_path / "briefcase",
+    )
     first_app_config.system_installer = False
 
     context = command.output_format_template_context(first_app_config)

@@ -3,12 +3,13 @@ import pytest
 from briefcase.commands import PublishCommand
 from briefcase.commands.base import full_options
 from briefcase.config import AppConfig
+from briefcase.console import Console, Log
 
 
 class DummyPublishCommand(PublishCommand):
     """A dummy publish command that doesn't actually do anything.
 
-    It only serves to track which actions would be performend.
+    It only serves to track which actions would be performed.
     """
 
     platform = "tester"
@@ -16,7 +17,9 @@ class DummyPublishCommand(PublishCommand):
     description = "Dummy publish command"
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, apps=[], **kwargs)
+        kwargs.setdefault("logger", Log())
+        kwargs.setdefault("console", Console())
+        super().__init__(*args, apps={}, **kwargs)
 
         self.actions = []
 
@@ -32,6 +35,10 @@ class DummyPublishCommand(PublishCommand):
     def verify_tools(self):
         super().verify_tools()
         self.actions.append(("verify",))
+
+    def verify_app_tools(self, app):
+        super().verify_app_tools(app=app)
+        self.actions.append(("verify-app-tools", app.app_name))
 
     @property
     def publication_channels(self):

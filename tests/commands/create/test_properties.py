@@ -81,6 +81,29 @@ def test_support_path(create_command, myapp):
     assert create_command.support_path(myapp) == bundle_path / "path" / "to" / "support"
 
 
+def test_support_revision(create_command, myapp):
+    bundle_path = create_command.bundle_path(myapp)
+    bundle_path.mkdir(parents=True)
+    with (bundle_path / "briefcase.toml").open("wb") as f:
+        index = {
+            "paths": {
+                "app_path": "path/to/app",
+                "app_packages_path": "path/to/app_packages",
+                "support_path": "path/to/support",
+                "support_revision": 42,
+            }
+        }
+        tomli_w.dump(index, f)
+
+    assert create_command.support_revision(myapp) == 42
+
+    # Requesting a second time should hit the cache,
+    # so the briefcase file won't be needed.
+    # Delete it to make sure the cache is used.
+    (bundle_path / "briefcase.toml").unlink()
+    assert create_command.support_revision(myapp) == 42
+
+
 def test_cleanup_paths(create_command, myapp):
     bundle_path = create_command.bundle_path(myapp)
     bundle_path.mkdir(parents=True)
@@ -104,8 +127,8 @@ def test_cleanup_paths(create_command, myapp):
 
 def test_support_package_url(create_command):
     # Retrieve the property, retrieving the support package URL.
-    url = "https://briefcase-support.org/python?platform=tester&version=3.X&arch=gothic"
-    assert create_command.support_package_url == url
+    url = "https://briefcase-support.s3.amazonaws.com/python/3.X/tester/Python-3.X-tester-support.b52.tar.gz"
+    assert create_command.support_package_url(52) == url
 
 
 def test_no_icon(create_command, myapp):

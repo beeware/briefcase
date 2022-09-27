@@ -7,10 +7,10 @@ from briefcase.exceptions import BriefcaseCommandError, InvalidDeviceError
 from briefcase.integrations.android_sdk import ADB
 
 
-def test_emulator(mock_sdk, capsys):
+def test_emulator(mock_tools, capsys):
     """Invoking `avd_name()` on an emulator returns the AVD."""
     # Mock out the adb response for an emulator
-    adb = ADB(mock_sdk, "deafbeefcafe")
+    adb = ADB(mock_tools, "deafbeefcafe")
     adb.run = MagicMock(return_value="exampledevice\nOK\n")
 
     # Invoke avd_name
@@ -20,10 +20,10 @@ def test_emulator(mock_sdk, capsys):
     adb.run.assert_called_once_with("emu", "avd", "name")
 
 
-def test_device(mock_sdk, capsys):
+def test_device(mock_tools, capsys):
     """Invoking `avd_name()` on a device returns None."""
     # Mock out the adb response for a physical device
-    adb = ADB(mock_sdk, "deafbeefcafe")
+    adb = ADB(mock_tools, "deafbeefcafe")
     adb.run = MagicMock(
         side_effect=subprocess.CalledProcessError(returncode=1, cmd="emu avd name")
     )
@@ -35,10 +35,10 @@ def test_device(mock_sdk, capsys):
     adb.run.assert_called_once_with("emu", "avd", "name")
 
 
-def test_adb_failure(mock_sdk, capsys):
+def test_adb_failure(mock_tools, capsys):
     """If `adb()` fails for a miscellaneous reason, an error is raised."""
     # Mock out the run command on an adb instance
-    adb = ADB(mock_sdk, "exampleDevice")
+    adb = ADB(mock_tools, "exampleDevice")
     adb.run = MagicMock(
         side_effect=subprocess.CalledProcessError(returncode=69, cmd="emu avd name")
     )
@@ -51,10 +51,10 @@ def test_adb_failure(mock_sdk, capsys):
     adb.run.assert_called_once_with("emu", "avd", "name")
 
 
-def test_invalid_device(mock_sdk, capsys):
+def test_invalid_device(mock_tools, capsys):
     """Invoking `avd_name()` on an invalid device raises an error."""
     # Mock out the run command on an adb instance
-    adb = ADB(mock_sdk, "exampleDevice")
+    adb = ADB(mock_tools, "exampleDevice")
     adb.run = MagicMock(side_effect=InvalidDeviceError("device", "exampleDevice"))
 
     # Invoke install

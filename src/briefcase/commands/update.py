@@ -44,6 +44,8 @@ class UpdateCommand(CreateCommand):
             )
             return
 
+        self.verify_app_tools(app)
+
         if update_dependencies:
             self.logger.info("Updating dependencies...", prefix=app.app_name)
             self.install_app_dependencies(app=app)

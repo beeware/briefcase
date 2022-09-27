@@ -6,49 +6,29 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from briefcase.console import Log
 from briefcase.exceptions import BriefcaseCommandError, MissingToolError, NetworkFailure
 from briefcase.integrations.android_sdk import AndroidSDK
+from briefcase.integrations.base import ToolCache
 
 
 @pytest.fixture
-def mock_command(tmp_path):
-    command = MagicMock()
-
-    command.logger = Log(verbosity=1)
-
-    # Mock-out the `sys` module so we can mock out the Python version in some tests.
-    command.sys = MagicMock()
-    command.tools_path = tmp_path / "tools"
-
+def mock_tools(mock_tools) -> ToolCache:
     # Mock the os environment, but copy over other key functions.
-    command.os = MagicMock()
-    command.os.environ = {}
-    command.os.fsdecode = os.fsdecode
-    command.os.access = os.access
+    mock_tools.os.environ = {}
+    mock_tools.os.fsdecode = os.fsdecode
+    mock_tools.os.access = os.access
 
     # Identify the host platform
-    command.host_os = platform.system()
-    command._test_download_tag = {
+    mock_tools._test_download_tag = {
         "Windows": "win",
         "Darwin": "mac",
         "Linux": "linux",
-    }[command.host_os]
-    # Override some other modules so we can test side-effects.
-    command.download_file = MagicMock()
-    command.subprocess = MagicMock()
-    command.shutil = MagicMock()
+    }[mock_tools.host_os]
+
     # Use the original module rmtree implementation
-    command.shutil.rmtree = shutil.rmtree
+    mock_tools.shutil.rmtree = shutil.rmtree
 
-    return command
-
-
-@pytest.fixture
-def jdk():
-    jdk = MagicMock()
-    jdk.java_home = "/path/to/java"
-    return jdk
+    return mock_tools
 
 
 def mock_unpack(filename, extract_dir):
@@ -70,7 +50,17 @@ def accept_license(android_sdk_root_path):
     return _side_effect
 
 
-def test_succeeds_immediately_in_happy_path(mock_command, tmp_path, jdk):
+def test_short_circuit(mock_tools):
+    """Tool is not created if already cached."""
+    mock_tools.android_sdk = "tool"
+
+    tool = AndroidSDK.verify(mock_tools)
+
+    assert tool == "tool"
+    assert tool == mock_tools.android_sdk
+
+
+def test_succeeds_immediately_in_happy_path(mock_tools, tmp_path):
     """If verify is invoked on a path containing an Android SDK, it does
     nothing."""
     # If `sdkmanager` exists and has the right permissions, and
@@ -96,22 +86,22 @@ def test_succeeds_immediately_in_happy_path(mock_command, tmp_path, jdk):
     accept_license(android_sdk_root_path)()
 
     # Expect verify() to succeed
-    sdk = AndroidSDK.verify(mock_command, jdk=jdk)
+    sdk = AndroidSDK.verify(mock_tools)
 
     # No calls to download, run or unpack anything.
-    mock_command.download_file.assert_not_called()
-    mock_command.subprocess.run.assert_not_called()
-    mock_command.shutil.unpack_archive.assert_not_called()
+    mock_tools.download.file.assert_not_called()
+    mock_tools.subprocess.run.assert_not_called()
+    mock_tools.shutil.unpack_archive.assert_not_called()
 
     # The returned SDK has the expected root path.
     assert sdk.root_path == android_sdk_root_path
 
 
-def test_succeeds_immediately_in_happy_path_with_debug(mock_command, tmp_path, jdk):
+def test_succeeds_immediately_in_happy_path_with_debug(mock_tools, tmp_path):
     """If debug is enabled, a verify call will display the installed
     packages."""
     # Increase the log level.
-    mock_command.logger.verbosity = 2
+    mock_tools.logger.verbosity = 2
 
     # If `sdkmanager` exists and has the right permissions, and
     # `android-sdk-license` exists, verify() should
@@ -136,20 +126,20 @@ def test_succeeds_immediately_in_happy_path_with_debug(mock_command, tmp_path, j
     accept_license(android_sdk_root_path)()
 
     # Expect verify() to succeed
-    sdk = AndroidSDK.verify(mock_command, jdk=jdk)
+    sdk = AndroidSDK.verify(mock_tools)
 
     # No calls to download or unpack anything.
-    mock_command.download_file.assert_not_called()
-    mock_command.shutil.unpack_archive.assert_not_called()
+    mock_tools.download.file.assert_not_called()
+    mock_tools.shutil.unpack_archive.assert_not_called()
 
     # The returned SDK has the expected root path.
     assert sdk.root_path == android_sdk_root_path
 
 
-def test_user_provided_sdk(mock_command, tmp_path, jdk):
+def test_user_provided_sdk(mock_tools, tmp_path):
     """If the user specifies a valid ANDROID_SDK_ROOT, it is used."""
     # Increase the log level.
-    mock_command.logger.verbosity = 2
+    mock_tools.logger.verbosity = 2
 
     # Create `sdkmanager` and the license file.
     existing_android_sdk_root_path = tmp_path / "other_sdk"
@@ -166,22 +156,22 @@ def test_user_provided_sdk(mock_command, tmp_path, jdk):
     accept_license(existing_android_sdk_root_path)()
 
     # Set the environment to specify ANDROID_SDK_ROOT
-    mock_command.os.environ = {
+    mock_tools.os.environ = {
         "ANDROID_SDK_ROOT": os.fsdecode(existing_android_sdk_root_path)
     }
 
     # Expect verify() to succeed
-    sdk = AndroidSDK.verify(mock_command, jdk=jdk)
+    sdk = AndroidSDK.verify(mock_tools)
 
     # No calls to download or unpack anything.
-    mock_command.download_file.assert_not_called()
-    mock_command.shutil.unpack_archive.assert_not_called()
+    mock_tools.download.file.assert_not_called()
+    mock_tools.shutil.unpack_archive.assert_not_called()
 
     # The returned SDK has the expected root path.
     assert sdk.root_path == existing_android_sdk_root_path
 
 
-def test_user_provided_sdk_with_debug(mock_command, tmp_path, jdk):
+def test_user_provided_sdk_with_debug(mock_tools, tmp_path):
     """If the has debug with a user-specified ANDROID_SDK_ROOT, the packages
     are listed."""
     # Create `sdkmanager` and the license file.
@@ -199,23 +189,23 @@ def test_user_provided_sdk_with_debug(mock_command, tmp_path, jdk):
     accept_license(existing_android_sdk_root_path)()
 
     # Set the environment to specify ANDROID_SDK_ROOT
-    mock_command.os.environ = {
+    mock_tools.os.environ = {
         "ANDROID_SDK_ROOT": os.fsdecode(existing_android_sdk_root_path)
     }
 
     # Expect verify() to succeed
-    sdk = AndroidSDK.verify(mock_command, jdk=jdk)
+    sdk = AndroidSDK.verify(mock_tools)
 
     # No calls to download, run or unpack anything.
-    mock_command.download_file.assert_not_called()
-    mock_command.subprocess.run.assert_not_called()
-    mock_command.shutil.unpack_archive.assert_not_called()
+    mock_tools.download.file.assert_not_called()
+    mock_tools.subprocess.run.assert_not_called()
+    mock_tools.shutil.unpack_archive.assert_not_called()
 
     # The returned SDK has the expected root path.
     assert sdk.root_path == existing_android_sdk_root_path
 
 
-def test_invalid_user_provided_sdk(mock_command, tmp_path, jdk):
+def test_invalid_user_provided_sdk(mock_tools, tmp_path):
     """If the user specifies an invalid ANDROID_SDK_ROOT, it is ignored."""
 
     # Create `sdkmanager` and the license file
@@ -234,50 +224,50 @@ def test_invalid_user_provided_sdk(mock_command, tmp_path, jdk):
     accept_license(android_sdk_root_path)()
 
     # Set the environment to specify an ANDROID_SDK_ROOT that doesn't exist
-    mock_command.os.environ = {"ANDROID_SDK_ROOT": os.fsdecode(tmp_path / "other_sdk")}
+    mock_tools.os.environ = {"ANDROID_SDK_ROOT": os.fsdecode(tmp_path / "other_sdk")}
 
     # Expect verify() to succeed
-    sdk = AndroidSDK.verify(mock_command, jdk=jdk)
+    sdk = AndroidSDK.verify(mock_tools)
 
     # No calls to download, run or unpack anything.
-    mock_command.download_file.assert_not_called()
-    mock_command.subprocess.run.assert_not_called()
-    mock_command.shutil.unpack_archive.assert_not_called()
+    mock_tools.download.file.assert_not_called()
+    mock_tools.subprocess.run.assert_not_called()
+    mock_tools.shutil.unpack_archive.assert_not_called()
 
     # The returned SDK has the expected root path.
     assert sdk.root_path == android_sdk_root_path
 
 
-def test_download_sdk(mock_command, tmp_path):
+def test_download_sdk(mock_tools, tmp_path):
     """If an SDK is not available, one will be downloaded."""
     android_sdk_root_path = tmp_path / "tools" / "android_sdk"
     cmdline_tools_base_path = android_sdk_root_path / "cmdline-tools"
 
     # The download will produce a cached file.
     cache_file = MagicMock()
-    mock_command.download_file.return_value = cache_file
+    mock_tools.download.file.return_value = cache_file
 
     # Calling unpack will create files
-    mock_command.shutil.unpack_archive.side_effect = mock_unpack
+    mock_tools.shutil.unpack_archive.side_effect = mock_unpack
 
     # Set up a side effect for accepting the license
-    mock_command.subprocess.run.side_effect = accept_license(android_sdk_root_path)
+    mock_tools.subprocess.run.side_effect = accept_license(android_sdk_root_path)
 
     # Call `verify()`
-    sdk = AndroidSDK.verify(mock_command, jdk=MagicMock())
+    sdk = AndroidSDK.verify(mock_tools)
 
     # Validate that the SDK was downloaded and unpacked
     url = (
         "https://dl.google.com/android/repository/"
-        f"commandlinetools-{mock_command._test_download_tag}-8092744_latest.zip"
+        f"commandlinetools-{mock_tools._test_download_tag}-8092744_latest.zip"
     )
-    mock_command.download_file.assert_called_once_with(
+    mock_tools.download.file.assert_called_once_with(
         url=url,
-        download_path=mock_command.tools_path,
+        download_path=mock_tools.base_path,
         role="Android SDK Command-Line Tools",
     )
 
-    mock_command.shutil.unpack_archive.assert_called_once_with(
+    mock_tools.shutil.unpack_archive.assert_called_once_with(
         cache_file, extract_dir=cmdline_tools_base_path
     )
 
@@ -305,7 +295,7 @@ def test_download_sdk(mock_command, tmp_path):
     assert sdk.root_path == android_sdk_root_path
 
 
-def test_download_sdk_legacy_install(mock_command, tmp_path):
+def test_download_sdk_legacy_install(mock_tools, tmp_path):
     """If the legacy SDK tools are present, they will be deleted."""
     android_sdk_root_path = tmp_path / "tools" / "android_sdk"
     cmdline_tools_base_path = android_sdk_root_path / "cmdline-tools"
@@ -324,29 +314,29 @@ def test_download_sdk_legacy_install(mock_command, tmp_path):
 
     # The download will produce a cached file.
     cache_file = MagicMock()
-    mock_command.download_file.return_value = cache_file
+    mock_tools.download.file.return_value = cache_file
 
     # Calling unpack will create files
-    mock_command.shutil.unpack_archive.side_effect = mock_unpack
+    mock_tools.shutil.unpack_archive.side_effect = mock_unpack
 
     # Set up a side effect for accepting the license
-    mock_command.subprocess.run.side_effect = accept_license(android_sdk_root_path)
+    mock_tools.subprocess.run.side_effect = accept_license(android_sdk_root_path)
 
     # Call `verify()`
-    sdk = AndroidSDK.verify(mock_command, jdk=MagicMock())
+    sdk = AndroidSDK.verify(mock_tools)
 
     # Validate that the SDK was downloaded and unpacked
     url = (
         "https://dl.google.com/android/repository/"
-        f"commandlinetools-{mock_command._test_download_tag}-8092744_latest.zip"
+        f"commandlinetools-{mock_tools._test_download_tag}-8092744_latest.zip"
     )
-    mock_command.download_file.assert_called_once_with(
+    mock_tools.download.file.assert_called_once_with(
         url=url,
-        download_path=mock_command.tools_path,
+        download_path=mock_tools.base_path,
         role="Android SDK Command-Line Tools",
     )
 
-    mock_command.shutil.unpack_archive.assert_called_once_with(
+    mock_tools.shutil.unpack_archive.assert_called_once_with(
         cache_file, extract_dir=cmdline_tools_base_path
     )
 
@@ -378,23 +368,23 @@ def test_download_sdk_legacy_install(mock_command, tmp_path):
     assert sdk.root_path == android_sdk_root_path
 
 
-def test_no_install(mock_command, tmp_path):
+def test_no_install(mock_tools, tmp_path):
     """If an SDK is not available, and install is not requested, an error is
     raised."""
 
     # Call `verify()`
     with pytest.raises(MissingToolError):
-        AndroidSDK.verify(mock_command, jdk=MagicMock(), install=False)
+        AndroidSDK.verify(mock_tools, install=False)
 
-    assert mock_command.download_file.call_count == 0
+    assert mock_tools.download.file.call_count == 0
 
 
 @pytest.mark.skipif(
     sys.platform == "win32",
     reason="executable permission doesn't make sense on Windows",
 )
-def test_download_sdk_if_sdkmanager_not_executable(mock_command, tmp_path):
-    """An SDK will be downloaded and unpackged if `tools/bin/sdkmanager` exists
+def test_download_sdk_if_sdkmanager_not_executable(mock_tools, tmp_path):
+    """An SDK will be downloaded and unpacked if `tools/bin/sdkmanager` exists
     but does not have its permissions set properly."""
     android_sdk_root_path = tmp_path / "tools" / "android_sdk"
     cmdline_tools_base_path = android_sdk_root_path / "cmdline-tools"
@@ -406,30 +396,31 @@ def test_download_sdk_if_sdkmanager_not_executable(mock_command, tmp_path):
 
     # The download will produce a cached file
     cache_file = MagicMock()
-    mock_command.download_file.return_value = cache_file
+    mock_tools.download.file.return_value = cache_file
 
     # Calling unpack will create files
-    mock_command.shutil.unpack_archive.side_effect = mock_unpack
+    mock_tools.shutil.unpack_archive.side_effect = mock_unpack
 
     # Set up a side effect for accepting the license
-    mock_command.subprocess.run.side_effect = accept_license(android_sdk_root_path)
+    mock_tools.subprocess.run.side_effect = accept_license(android_sdk_root_path)
 
     # Call `verify()`
-    sdk = AndroidSDK.verify(mock_command, jdk=MagicMock())
+    sdk = AndroidSDK.verify(mock_tools)
 
     # Validate that the SDK was downloaded and unpacked
     url = (
         "https://dl.google.com/android/repository/"
-        f"commandlinetools-{mock_command._test_download_tag}-8092744_latest.zip"
+        f"commandlinetools-{mock_tools._test_download_tag}-8092744_latest.zip"
     )
-    mock_command.download_file.assert_called_once_with(
+    mock_tools.download.file.assert_called_once_with(
         url=url,
-        download_path=mock_command.tools_path,
+        download_path=mock_tools.base_path,
         role="Android SDK Command-Line Tools",
     )
 
-    mock_command.shutil.unpack_archive.assert_called_once_with(
-        cache_file, extract_dir=cmdline_tools_base_path
+    mock_tools.shutil.unpack_archive.assert_called_once_with(
+        cache_file,
+        extract_dir=cmdline_tools_base_path,
     )
 
     # The cached file will be deleted
@@ -442,50 +433,50 @@ def test_download_sdk_if_sdkmanager_not_executable(mock_command, tmp_path):
     assert sdk.root_path == android_sdk_root_path
 
 
-def test_raises_networkfailure_on_connectionerror(mock_command):
+def test_raises_networkfailure_on_connectionerror(mock_tools):
     """If an error occurs downloading the ZIP file, and error is raised."""
-    mock_command.download_file.side_effect = NetworkFailure("mock")
+    mock_tools.download.file.side_effect = NetworkFailure("mock")
 
     with pytest.raises(NetworkFailure, match="Unable to mock"):
-        AndroidSDK.verify(mock_command, jdk=MagicMock())
+        AndroidSDK.verify(mock_tools)
 
     # The download was attempted
     url = (
         "https://dl.google.com/android/repository/"
-        f"commandlinetools-{mock_command._test_download_tag}-8092744_latest.zip"
+        f"commandlinetools-{mock_tools._test_download_tag}-8092744_latest.zip"
     )
-    mock_command.download_file.assert_called_once_with(
+    mock_tools.download.file.assert_called_once_with(
         url=url,
-        download_path=mock_command.tools_path,
+        download_path=mock_tools.base_path,
         role="Android SDK Command-Line Tools",
     )
     # But no unpack occurred
-    assert mock_command.shutil.unpack_archive.call_count == 0
+    assert mock_tools.shutil.unpack_archive.call_count == 0
 
 
-def test_detects_bad_zipfile(mock_command, tmp_path):
+def test_detects_bad_zipfile(mock_tools, tmp_path):
     """If the ZIP file is corrupted, an error is raised."""
     android_sdk_root_path = tmp_path / "tools" / "android_sdk"
 
     cache_file = MagicMock()
-    mock_command.download_file.return_value = cache_file
+    mock_tools.download.file.return_value = cache_file
 
     # But the unpack will fail.
-    mock_command.shutil.unpack_archive.side_effect = shutil.ReadError
+    mock_tools.shutil.unpack_archive.side_effect = shutil.ReadError
 
     with pytest.raises(BriefcaseCommandError):
-        AndroidSDK.verify(mock_command, jdk=MagicMock())
+        AndroidSDK.verify(mock_tools)
 
     # The download attempt was made.
     url = (
         "https://dl.google.com/android/repository/"
-        f"commandlinetools-{mock_command._test_download_tag}-8092744_latest.zip"
+        f"commandlinetools-{mock_tools._test_download_tag}-8092744_latest.zip"
     )
-    mock_command.download_file.assert_called_once_with(
+    mock_tools.download.file.assert_called_once_with(
         url=url,
-        download_path=mock_command.tools_path,
+        download_path=mock_tools.base_path,
         role="Android SDK Command-Line Tools",
     )
-    mock_command.shutil.unpack_archive.assert_called_once_with(
+    mock_tools.shutil.unpack_archive.assert_called_once_with(
         cache_file, extract_dir=android_sdk_root_path / "cmdline-tools"
     )

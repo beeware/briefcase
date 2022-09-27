@@ -15,7 +15,7 @@ Setting up your development environment
 
 The recommended way of setting up your development environment for Briefcase is
 to use a `virtual environment <https://docs.python.org/3/library/venv.html>`__,
-and then install the development dependencies:
+and then install the development version of Briefcase and its dependencies:
 
 .. tabs::
 
@@ -27,7 +27,7 @@ and then install the development dependencies:
       $ cd briefcase
       $ python3 -m venv venv
       $ . venv/bin/activate
-      (venv) $ python3 -m pip install -r requirements.dev.txt
+      (venv) $ python3 -m pip install -Ue .[dev]
 
   .. group-tab:: Linux
 
@@ -37,7 +37,7 @@ and then install the development dependencies:
       $ cd briefcase
       $ python3 -m venv venv
       $ . venv/bin/activate
-      (venv) $ python3 -m pip install -r requirements.dev.txt
+      (venv) $ python3 -m pip install -Ue .[dev]
 
   .. group-tab:: Windows
 
@@ -47,30 +47,7 @@ and then install the development dependencies:
       C:\...>cd briefcase
       C:\...>py -m venv venv
       C:\...>venv\Scripts\activate
-      (venv) C:\...>python3 -m pip install -r requirements.dev.txt
-
-To install all the development version of Briefcase, along with all it's
-requirements, run the following commands within your virtual environment:
-
-.. tabs::
-
-  .. group-tab:: macOS
-
-    .. code-block:: bash
-
-      (venv) $ pip install -e .
-
-  .. group-tab:: Linux
-
-    .. code-block:: bash
-
-      (venv) $ pip install -e .
-
-  .. group-tab:: Windows
-
-    .. code-block:: doscon
-
-      (venv) C:\...>pip install -e .
+      (venv) C:\...>python3 -m pip install -Ue .[dev]
 
 Briefcase uses a tool called `Pre-Commit <https://pre-commit.com>`__ to identify
 simple issues and standardize code formatting. It does this by installing a git
