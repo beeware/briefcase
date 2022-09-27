@@ -1,4 +1,4 @@
-from cgi import parse_header
+from email.message import Message
 from urllib.parse import urlparse
 
 import requests.exceptions as requests_exceptions
@@ -55,11 +55,19 @@ class Download:
             cache_full_name = urlparse(response.url).path
             header_value = response.headers.get("Content-Disposition")
             if header_value:
-                # See also https://tools.ietf.org/html/rfc6266
-                value, parameters = parse_header(header_value)
-                content_type = value.split(":", 1)[-1].strip().lower()
-                if content_type == "attachment" and parameters.get("filename"):
-                    cache_full_name = parameters["filename"]
+                # Neither requests nor httplib provides a way to parse RFC6266 headers.
+                # The cgi module *did* have a way to parse these headers, but
+                # it was deprecated as part of PEP594. PEP594 recommends
+                # using the email.message module to parse these headers as they
+                # are near identical format.
+                # See also:
+                # * https://tools.ietf.org/html/rfc6266
+                # * https://peps.python.org/pep-0594/#cgi
+                msg = Message()
+                msg["Content-Disposition"] = header_value
+                filename = msg.get_filename()
+                if filename:
+                    cache_full_name = filename
             cache_name = cache_full_name.split("/")[-1]
             filename = download_path / cache_name
 
