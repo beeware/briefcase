@@ -20,16 +20,13 @@ def test_no_devices(mock_tools, android_sdk):
 
     assert android_sdk.devices() == {}
 
-    
-def test_no_model(mock_sdk):
-    """If there is no model, return Unknown device (no model name)"""
-    mock_sdk.command.subprocess.check_output.return_value = devices_result("no_model")
 
-    assert mock_sdk.devices() == {
-        "emulator-5554": {
-            "name": "Unknown device (no model name)",
-            "authorized": True
-        }
+def test_no_model(mock_tools, android_sdk):
+    """If there is no model, return Unknown device (no model name)"""
+    mock_tools.subprocess.check_output.return_value = devices_result("no_model")
+
+    assert android_sdk.devices() == {
+        "emulator-5554": {"name": "Unknown device (no model name)", "authorized": True}
     }
 
 
