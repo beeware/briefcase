@@ -7,6 +7,7 @@ import sys
 import threading
 import time
 from contextlib import suppress
+from functools import wraps
 from pathlib import Path
 
 import psutil
@@ -86,6 +87,46 @@ def get_process_id_by_command(
         return pid
 
     return None
+
+
+def ensure_console_is_safe(sub_method):
+    """Decorator for Subprocess methods to conditionally remove dynamic console
+    elements such as the Wait Bar prior to running the subprocess command.
+
+    :param sub_method: wrapped Subprocess method
+    """
+
+    @wraps(sub_method)
+    def inner(sub, args, **kwargs):
+        """Evaluate whether conditions are met to remove any dynamic elements
+        in the console before returning control to Subprocess.
+
+        :param sub: Subprocess object
+        :param args: list of implicit strings that will be run as subprocess command
+        :return: the return value for the Subprocess method
+        """
+        # Just run the command if no dynamic elements are active
+        if not sub.tools.input.is_console_controlled:
+            return sub_method(sub, args, **kwargs)
+
+        remove_dynamic_elements = False
+
+        # Batch (.bat) scripts on Windows.
+        # If cmd.exe is interrupted with CTRL+C while running a bat script,
+        # it may prompt the user to abort the script and dynamic elements
+        # such as the Wait Bar can hide this message from the user.
+        if sub.tools.host_os == "Windows":
+            executable = str(args[0]).strip() if args else ""
+            remove_dynamic_elements = executable.lower().endswith(".bat")
+
+        # Run subprocess command with or without console control
+        if remove_dynamic_elements:
+            with sub.tools.input.release_console_control():
+                return sub_method(sub, args, **kwargs)
+        else:
+            return sub_method(sub, args, **kwargs)
+
+    return inner
 
 
 class NativeAppContext:
@@ -214,6 +255,7 @@ class Subprocess:
         tools.subprocess = Subprocess(tools)
         return tools.subprocess
 
+    @ensure_console_is_safe
     def run(self, args, stream_output=False, **kwargs):
         """A wrapper for subprocess.run().
 
@@ -231,13 +273,13 @@ class Subprocess:
          - The `text` argument is defaulted to True so all output is returned
            as strings instead of bytes.
         """
-        # If `stream_output` or dynamic screen content (e.g. a Wait Bar) is
+        # If `stream_output` or dynamic screen content (e.g. the Wait Bar) is
         # active and output is not redirected, use run with output streaming.
         is_output_redirected = kwargs.get("capture_output") or (
             kwargs.get("stdout") and kwargs.get("stderr")
         )
         if stream_output or (
-            self.tools.input.is_output_controlled and not is_output_redirected
+            self.tools.input.is_console_controlled and not is_output_redirected
         ):
             return self._run_and_stream_output(args, **kwargs)
 
@@ -309,6 +351,7 @@ class Subprocess:
 
         return subprocess.CompletedProcess(args, return_code, stderr=stderr)
 
+    @ensure_console_is_safe
     def check_output(self, args, **kwargs):
         """A wrapper for subprocess.check_output()
 

@@ -307,7 +307,7 @@ class Console:
         # Signal that Rich is dynamically controlling the console output.
         # Therefore, all output must be printed to the screen by Rich to
         # prevent corruption of dynamic elements like the Wait Bar.
-        self.is_output_controlled = False
+        self.is_console_controlled = False
 
     def prompt(self, *values, markup=False, **kwargs):
         """Print to the screen for soliciting user interaction.
@@ -364,7 +364,7 @@ class Console:
             # message=None is a sentinel the Wait Bar should be inactive
             self._wait_bar.add_task("", start=False, message=None)
 
-        self.is_output_controlled = True
+        self.is_console_controlled = True
         wait_bar_task = self._wait_bar.tasks[0]
         previous_message = wait_bar_task.fields["message"]
         self._wait_bar.update(wait_bar_task.id, message=message)
@@ -384,7 +384,35 @@ class Console:
             # Deactivate the Wait Bar if returning to its initial state
             if previous_message is None:
                 self._wait_bar.stop()
-                self.is_output_controlled = False
+                self.is_console_controlled = False
+
+    @contextmanager
+    def release_console_control(self):
+        """Context manager to remove console elements such as the Wait Bar.
+
+        This is useful to temporarily release control of the console
+        when, e.g., a process is interrupted or a user needs to be
+        prompted. For instance, when batch scripts are interrupted by
+        CTRL+C in cmd.exe, the user may be prompted to abort the script;
+        so, the console cannot be controlled while such scripts run or
+        the prompt may be hidden from the user.
+        """
+        # Preserve current console state
+        is_output_controlled = self.is_console_controlled
+        is_wait_bar_running = self._wait_bar and self._wait_bar.live.is_started
+
+        # Stop any active dynamic console elements
+        if is_wait_bar_running:
+            self._wait_bar.stop()
+
+        self.is_console_controlled = False
+        try:
+            yield
+        finally:
+            self.is_console_controlled = is_output_controlled
+            # Restore previous console state
+            if is_wait_bar_running:
+                self._wait_bar.start()
 
     def boolean_input(self, question, default=False):
         """Get a boolean input from user, in the form of y/n.
