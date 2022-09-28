@@ -25,3 +25,26 @@ jobs:
           release_name: ${{ github.ref }}
           draft: true
           prerelease: false
+      - name: Set up Python
+        uses: actions/setup-python@v4.2.0
+        with:
+          python-version: '3.x'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --upgrade setuptools
+          pip install check_manifest twine wheel
+      - name: Check manifest
+        run: |
+          check-manifest -v
+      - name: Build release artefacts
+        run: |
+          python setup.py sdist
+          pip wheel --no-deps .
+      - name: Check release artefacts
+        run: |
+          python -m twine check dist/*
+      - name: Upload release artefacts
+        uses: actions/upload-artifact@v3
+        with:
+          path: dist/*
