@@ -1,0 +1,1 @@
+The ``/dev/null`` file handle for the logfile Rich Console is now closed before pytest exits to avoid ResourceWarning errors being printed.

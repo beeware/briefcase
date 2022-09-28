@@ -8,11 +8,11 @@ from git import exc as git_exceptions
 from briefcase.config import AppConfig
 from briefcase.console import Printer
 
-# Stop Rich from inserting line breaks in to long lines of text.
-# Rich does this to prevent individual words being split between
-# two lines in the terminal...however, these additional line breaks
-# cause some tests to fail unexpectedly.
-Printer.console.soft_wrap = True
+
+def pytest_sessionfinish(session, exitstatus):
+    """When pytest is wrapping up, close the /dev/null file handle for the
+    logfile Rich Console to avoid spurious ResourceWarning errors."""
+    Printer.dev_null.close()
 
 
 @pytest.fixture
