@@ -35,6 +35,22 @@ class PublishCommand(BaseCommand):
         """
         self.logger.info(f"TODO: Publish {app.app_name} to {channel}")
 
+    def _publish_app(self, app: BaseConfig, channel: str, **options):
+        """Internal method to publish a single app. Ensures the app exists, and
+        has been packaged before attempting to issue the actual publish
+        command.
+
+        :param app: The application to publish
+        :param channel: The publication channel to use
+        """
+        # TODO: Verify the app has been packaged
+        state = None
+        self.verify_app_tools(app)
+
+        state = self.publish_app(app, channel=channel, **full_options(state, options))
+
+        return state
+
     def __call__(self, channel=None, **options):
         # Confirm all required tools are available
         self.verify_tools()
@@ -51,8 +67,7 @@ class PublishCommand(BaseCommand):
         # Then publish them all to the selected channel.
         state = None
         for app_name, app in sorted(self.apps.items()):
-            self.verify_app_tools(app)
-            state = self.publish_app(
+            state = self._publish_app(
                 app, channel=channel, **full_options(state, options)
             )
 

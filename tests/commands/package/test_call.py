@@ -384,8 +384,6 @@ def test_update_package_one_app(package_command, first_app):
     assert package_command.actions == [
         # Tools are verified
         ("verify",),
-        # App tools are verified for app
-        ("verify-app-tools", "first"),
         # Update (and then build) the first app
         (
             "update",
@@ -406,6 +404,8 @@ def test_update_package_one_app(package_command, first_app):
                 "update_state": "first",
             },
         ),
+        # App tools are verified for app
+        ("verify-app-tools", "first"),
         # Package the first app
         (
             "package",
@@ -440,8 +440,6 @@ def test_update_package_two_app(package_command, first_app, second_app):
     assert package_command.actions == [
         # Tools are verified
         ("verify",),
-        # App tools are verified for first app
-        ("verify-app-tools", "first"),
         # Update (and then build) the first app
         (
             "update",
@@ -462,6 +460,8 @@ def test_update_package_two_app(package_command, first_app, second_app):
                 "update_state": "first",
             },
         ),
+        # App tools are verified for first app
+        ("verify-app-tools", "first"),
         # Package the first app
         (
             "package",
@@ -475,8 +475,6 @@ def test_update_package_two_app(package_command, first_app, second_app):
                 "build_state": "first",
             },
         ),
-        # App tools are verified for second app
-        ("verify-app-tools", "second"),
         # Update (and then build) the second app
         (
             "update",
@@ -504,6 +502,8 @@ def test_update_package_two_app(package_command, first_app, second_app):
                 "package_state": "first",
             },
         ),
+        # App tools are verified for second app
+        ("verify-app-tools", "second"),
         # package the second app
         (
             "package",

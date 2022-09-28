@@ -48,6 +48,8 @@ class PackageCommand(BaseCommand):
         else:
             state = None
 
+        self.verify_app_tools(app)
+
         state = self.package_app(
             app, packaging_format=packaging_format, **full_options(state, options)
         )
@@ -103,7 +105,6 @@ class PackageCommand(BaseCommand):
         else:
             state = None
             for app_name, app in sorted(self.apps.items()):
-                self.verify_app_tools(app)
                 state = self._package_app(
                     app, update=update, **full_options(state, options)
                 )
