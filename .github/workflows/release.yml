@@ -33,18 +33,29 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install --upgrade setuptools
-          pip install check_manifest twine wheel
+          pip install check_manifest setuptools_scm twine wheel
       - name: Check manifest
         run: |
           check-manifest -v
-      - name: Build release artefacts
+      - name: Build source tarball
         run: |
           python setup.py sdist
-          pip wheel --no-deps .
-      - name: Check release artefacts
+      - name: Check source tarball
         run: |
-          python -m twine check dist/*
-      - name: Upload release artefacts
+          python -m twine check dist/*.tar.gz
+      - name: Upload source tarball
         uses: actions/upload-artifact@v3
         with:
-          path: dist/*
+          name: source
+          path: dist/*.tar.gz
+      - name: Build wheel
+        run: |
+          pip wheel --no-deps --wheel-dir dist .
+      - name: Check wheel
+        run: |
+          python -m twine check *.whl
+      - name: Upload wheel
+        uses: actions/upload-artifact@v3
+        with:
+          name: wheel
+          path: dist/*.whl

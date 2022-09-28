@@ -21,10 +21,16 @@ jobs:
         python -m pip install --upgrade pip
         python -m pip install --upgrade setuptools
         python -m pip install twine
-    - name: Download release artefacts
+    - name: Download source tarball
       uses: actions/download-artifact@v3
       with:
-        path: dist/*
+        name: source
+        path: dist
+    - name: Download wheel
+      uses: actions/download-artifact@v3
+      with:
+        name: wheel
+        path: dist
     - name: Publish release
       env:
         TWINE_USERNAME: __token__
@@ -32,5 +38,5 @@ jobs:
       run: |
         echo Twine username is ${{ env.TWINE_USERNAME }} (or $TWINE_USERNAME )
         echo Files:
-        ls dist/*
+        ls -1 dist
         # python -m twine upload dist/*
