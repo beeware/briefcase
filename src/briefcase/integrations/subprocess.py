@@ -380,7 +380,7 @@ class Subprocess:
         self._log_return_code(0)
         return cmd_output
 
-    def parse_output(self, output_parser, args, /, **kwargs):
+    def parse_output(self, output_parser, args, **kwargs):
         """A wrapper for check_output() where the command output is processed
         through the supplied parser function.
 
@@ -417,7 +417,7 @@ class Subprocess:
                 self.tools.logger.error(f"    {line}")
             raise CommandOutputParseError(error_reason) from e
 
-    def Popen(self, args, /, **kwargs):
+    def Popen(self, args, **kwargs):
         """A wrapper for subprocess.Popen()
 
         The behavior of this method is identical to
