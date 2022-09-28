@@ -1,1 +1,0 @@
-The performance of Briefcase's tool verification process has been improved.

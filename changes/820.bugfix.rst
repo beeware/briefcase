@@ -1,1 +1,0 @@
-Android emulators that don't provide a model identifier can now be used to launch apps.

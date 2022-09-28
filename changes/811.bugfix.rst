@@ -1,1 +1,0 @@
-The Wait Bar is disabled for batch scripts on Windows to prevent hiding user prompts when CTRL+C is pressed.

@@ -1,1 +1,0 @@
-Apps can now selectively remove files from the final app bundle using the ``cleanup_paths`` attribute.

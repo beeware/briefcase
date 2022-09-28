@@ -1,1 +1,0 @@
-Updated FAQ to include the iOS message when compiling binary modules.

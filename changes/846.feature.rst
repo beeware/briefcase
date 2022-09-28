@@ -1,1 +1,0 @@
-Added an "open" command that can be used to open projects in IDEs.

@@ -1,1 +1,0 @@
-Linux tests are now run in Docker on CI; iOS, Android, Linux Flatpak, macOS Xcode, and Windows VisualStudio are tested.

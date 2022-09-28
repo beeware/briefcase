@@ -1,1 +1,0 @@
-All ``linuxdeploy`` plugins are made executable and ELF headers for AppImage plugins are patched for use in ``Docker``.

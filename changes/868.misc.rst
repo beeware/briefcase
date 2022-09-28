@@ -1,1 +1,0 @@
-Removed use of deprecated cgi module when parsing RFC6266 headers.

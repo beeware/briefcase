@@ -1,1 +1,0 @@
-iOS now supports the installation of binary packages.

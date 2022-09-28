@@ -4,6 +4,44 @@ Release History
 
 .. towncrier release notes start
 
+0.3.10 (2022-09-28)
+===================
+
+Features
+--------
+
+* iOS and Android now supports the installation of binary packages. (#471)
+* Apps can now selectively remove files from the final app bundle using the ``cleanup_paths`` attribute. (#550)
+* The Docker image for AppImage builds is created or updated for all commands instead of just ``create``. (#796)
+* The performance of Briefcase's tool verification process has been improved. (#801)
+* Briefcase templates are now versioned by the Briefcase version, rather than the Python version. (#824)
+* Android commands now start faster, as they only gather a list of SDK packages when needed to write a log file. (#832)
+* Log messages can be captured on iOS if they originate from a dynamically loaded module. (#842)
+* Added an "open" command that can be used to open projects in IDEs. (#846)
+
+Bugfixes
+--------
+
+* The Wait Bar is disabled for batch scripts on Windows to prevent hiding user prompts when CTRL+C is pressed. (#811)
+* Android emulators that don't provide a model identifier can now be used to launch apps. (#820)
+* All ``linuxdeploy`` plugins are made executable and ELF headers for AppImage plugins are patched for use in ``Docker``. (#829)
+* The RCEdit plugin can now be upgraded. (#837)
+* When verifying the existence of the Android emulator, Briefcase now looks for the actual binary, not the folder
+  that contains the binary. This was causing false positives on some Android SDK setups. (#841)
+* When CTRL+C is entered while an external program is running, ``briefcase`` will properly abort and exit. (#851)
+* An issue with running `briefcase dev` on projects that put their application module in the project root has been resolved. (#863)
+
+Improved Documentation
+----------------------
+
+* Added FAQ entries on the state of binary package support on mobile. (#471)
+
+Misc
+----
+
+* #831, #834, #840, #844, #857, #859, #867, #868, #874, #878, #879
+
+
 0.3.9 (2022-08-17)
 ==================
 
