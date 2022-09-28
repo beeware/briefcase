@@ -64,11 +64,12 @@ class Printer:
     # We need to be wide enough to render `sdkmanager --list_installed` output without
     # line wrapping.
     LOG_FILE_WIDTH = 180
+    # Rich only records what's being logged if it is actually written somewhere;
+    # writing to /dev/null allows Rich to do so without needing to print the logs
+    # in the console or save them to file before it is known a file is wanted.
+    dev_null = open(os.devnull, "w", encoding="utf-8", errors="ignore")
     log = RichConsole(
-        # Rich only records what's being logged if it is actually written somewhere;
-        # writing to /dev/null allows Rich to do so without needing to print the logs
-        # in the console or save them to file before it is known a file is wanted.
-        file=open(os.devnull, "w", encoding="utf-8", errors="ignore"),
+        file=dev_null,
         record=True,
         width=LOG_FILE_WIDTH,
         no_color=True,
