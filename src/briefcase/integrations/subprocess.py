@@ -89,7 +89,7 @@ def get_process_id_by_command(
     return None
 
 
-def pause_console_control_if(sub_method):
+def ensure_console_is_safe(sub_method):
     """Decorator for Subprocess methods to conditionally remove dynamic console
     elements such as the Wait Bar prior to running the subprocess command.
 
@@ -97,17 +97,17 @@ def pause_console_control_if(sub_method):
     """
 
     @wraps(sub_method)
-    def inner(sub, cmdline, **kwargs):
+    def inner(sub, args, **kwargs):
         """Evaluate whether conditions are met to remove any dynamic elements
         in the console before returning control to Subprocess.
 
         :param sub: Subprocess object
-        :param cmdline: list of implicit strings that will be run as subprocess command
+        :param args: list of implicit strings that will be run as subprocess command
         :return: the return value for the Subprocess method
         """
         # Just run the command if no dynamic elements are active
         if not sub.tools.input.is_console_controlled:
-            return sub_method(sub, cmdline, **kwargs)
+            return sub_method(sub, args, **kwargs)
 
         remove_dynamic_elements = False
 
@@ -115,16 +115,16 @@ def pause_console_control_if(sub_method):
         # If cmd.exe is interrupted with CTRL+C while running a bat script,
         # it may prompt the user to abort the script and dynamic elements
         # such as the Wait Bar can hide this message from the user.
-        if not remove_dynamic_elements:
-            if sub.tools.host_os == "Windows":
-                executable = str(cmdline[0]).strip() if cmdline else ""
-                remove_dynamic_elements = executable.lower().endswith(".bat")
+        if sub.tools.host_os == "Windows":
+            executable = str(args[0]).strip() if args else ""
+            remove_dynamic_elements = executable.lower().endswith(".bat")
 
         # Run subprocess command with or without console control
         if remove_dynamic_elements:
             with sub.tools.input.release_console_control():
-                return sub_method(sub, cmdline, **kwargs)
-        return sub_method(sub, cmdline, **kwargs)
+                return sub_method(sub, args, **kwargs)
+        else:
+            return sub_method(sub, args, **kwargs)
 
     return inner
 
@@ -255,8 +255,8 @@ class Subprocess:
         tools.subprocess = Subprocess(tools)
         return tools.subprocess
 
-    @pause_console_control_if
-    def run(self, args, /, stream_output=False, **kwargs):
+    @ensure_console_is_safe
+    def run(self, args, stream_output=False, **kwargs):
         """A wrapper for subprocess.run().
 
         :param args: args for subprocess.run()
@@ -351,8 +351,8 @@ class Subprocess:
 
         return subprocess.CompletedProcess(args, return_code, stderr=stderr)
 
-    @pause_console_control_if
-    def check_output(self, args, /, **kwargs):
+    @ensure_console_is_safe
+    def check_output(self, args, **kwargs):
         """A wrapper for subprocess.check_output()
 
         The behavior of this method is identical to
