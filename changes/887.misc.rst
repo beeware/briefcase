@@ -1,0 +1,1 @@
+Branch coverage was added to the test suite.
