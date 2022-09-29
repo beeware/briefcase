@@ -46,6 +46,6 @@ jobs:
           # --only-binary :all: forces a wheel download
           pip download --index-url https://test.pypi.org/simple/ --no-cache --no-build-isolation --dest dist --no-deps --only-binary :all: briefcase==${{ env.VERSION }}
       - name: Publish release to production PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@v1.5.1
         with:
           password: ${{ secrets.PYPI_PASSWORD }}
