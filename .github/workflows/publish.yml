@@ -12,31 +12,32 @@ jobs:
       with:
         fetch-depth: 0
         ref: main
+    - name: Set build variables
+      run: |
+        export TAG=${{ github.event.release.tag_name }}
+        echo "VERSION=${TAG#v}"
+        echo "VERSION=${TAG#v}" >> $GITHUB_ENV
     - name: Set up Python
       uses: actions/setup-python@v4.2.0
       with:
         python-version: '3.x'
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        python -m pip install --upgrade setuptools
-        python -m pip install twine
-    - name: Download source tarball
-      uses: actions/download-artifact@v3
+    - name: Download release artefacts
+      uses: actions/download-artefact@v3
       with:
-        name: source
         path: dist
-    - name: Download wheel
-      uses: actions/download-artifact@v3
-      with:
-        name: wheel
-        path: dist
-    - name: Publish release
-      env:
-        TWINE_USERNAME: __token__
-        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+    - name: Manual download release artefacts
       run: |
-        echo Twine username is ${{ env.TWINE_USERNAME }} (or $TWINE_USERNAME )
-        echo Files:
+        mkdir -p dist2
+        curl -o dist2/briefcase-${{ env.VERSION }}.tar.gz -L https://github.com/beeware/briefcase/releases/download/${{ github.event.release.tag_name }}/briefcase-${{ env.VERSION }}.tar.gz
+        curl -o dist2/briefcase-${{ env.VERSION }}-py3-none-any.whl -L https://github.com/beeware/briefcase/releases/download/${{ github.event.release.tag_name }}/briefcase-${{ env.VERSION }}-py3-none-any.whl
+    - name: Check files
+      run: |
         ls -1 dist
-        # python -m twine upload dist/*
+    - name: Check files 2
+      run: |
+        ls -1 dist2
+
+    # - name: Publish release
+    #   uses: pypa/gh-action-pypi-publish@release/v1
+    #   with:
+    #     password: ${{ secrets.PYPI_PASSWORD }}
