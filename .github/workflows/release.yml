@@ -39,7 +39,7 @@ jobs:
           check-manifest -v
       - name: Build release artefacts
         run: |
-          python -m build --sdist --wheel dist/ .
+          python -m build --sdist --wheel --outdir dist/ .
       - name: Check release artefacts
         run: |
           python -m twine check dist/*
