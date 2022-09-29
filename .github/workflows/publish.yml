@@ -8,36 +8,38 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3.0.2
-      with:
-        fetch-depth: 0
-        ref: main
-    - name: Set build variables
-      run: |
-        export TAG=${{ github.event.release.tag_name }}
-        echo "VERSION=${TAG#v}"
-        echo "VERSION=${TAG#v}" >> $GITHUB_ENV
-    - name: Set up Python
-      uses: actions/setup-python@v4.2.0
-      with:
-        python-version: '3.x'
-    - name: Download release artefacts
-      uses: actions/download-artefact@v3
-      with:
-        path: dist
-    - name: Manual download release artefacts
-      run: |
-        mkdir -p dist2
-        curl -o dist2/briefcase-${{ env.VERSION }}.tar.gz -L https://github.com/beeware/briefcase/releases/download/${{ github.event.release.tag_name }}/briefcase-${{ env.VERSION }}.tar.gz
-        curl -o dist2/briefcase-${{ env.VERSION }}-py3-none-any.whl -L https://github.com/beeware/briefcase/releases/download/${{ github.event.release.tag_name }}/briefcase-${{ env.VERSION }}-py3-none-any.whl
-    - name: Check files
-      run: |
-        ls -1 dist
-    - name: Check files 2
-      run: |
-        ls -1 dist2
+      - uses: actions/checkout@v3.0.2
+        with:
+          fetch-depth: 0
+          ref: main
+      - name: Set build variables
+        run: |
+          export TAG=${{ github.event.release.tag_name }}
+          echo "TAG=${TAG}"
+          echo "VERSION=${TAG#v}"
+          echo "TAG=${TAG}" >> $GITHUB_ENV
+          echo "VERSION=${TAG#v}" >> $GITHUB_ENV
+      - name: Set up Python
+        uses: actions/setup-python@v4.2.0
+        with:
+          python-version: '3.x'
+      - name: Download release artefacts
+        uses: actions/download-artefact@v3
+        with:
+          path: dist
+      - name: Manual download release artefacts
+        run: |
+          mkdir -p dist2
+          curl -o dist2/briefcase-${{ env.VERSION }}.tar.gz -L https://github.com/beeware/briefcase/releases/download/${{ env.TAG }}/briefcase-${{ env.VERSION }}.tar.gz
+          curl -o dist2/briefcase-${{ env.VERSION }}-py3-none-any.whl -L https://github.com/beeware/briefcase/releases/download/${{ env.TAG }}/briefcase-${{ env.VERSION }}-py3-none-any.whl
+      - name: Check files
+        run: |
+          ls -1 dist
+      - name: Check files 2
+        run: |
+          ls -1 dist2
 
-    # - name: Publish release
-    #   uses: pypa/gh-action-pypi-publish@release/v1
-    #   with:
-    #     password: ${{ secrets.PYPI_PASSWORD }}
+      # - name: Publish release
+      #   uses: pypa/gh-action-pypi-publish@release/v1
+      #   with:
+      #     password: ${{ secrets.PYPI_PASSWORD }}
