@@ -26,15 +26,24 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-      - name: Download release artefacts
+          python -m pip install --upgrade setuptools
+      - name: Download release artefacts from Test PyPI
         run: |
-          pip download --dest dist --no-deps briefcase --no-binary :all: briefcase==${{ env.VERSION }}
-          pip download --dest dist --no-deps briefcase --only-binary :all: briefcase==${{ env.VERSION }}
-      - name: Check files
-        run: |
-          ls -1 dist
+          # --no-deps only downloads the specific package that was requested.
+          # This causes the download to fail because the build environment
+          # doesn't have setuptools in it, and `pip download` does a partial
+          # build of package metadata.
+          #
+          # To avoid this, we use --no-build-isolation to use the pre-existing
+          # build environment, which *does* have setuptools. See
+          # https://github.com/pypa/pip/issues/1884 for details.
+
+          # --no-binary :all: forces a source download
+          pip download --index-url https://test.pypi.org/simple/ --no-build-isolation --dest dist --no-deps briefcase --no-binary :all: briefcase==${{ env.VERSION }}
+
+          # --only-binary :all: forces a wheel download
+          pip download --index-url https://test.pypi.org/simple/ --no-build-isolation --dest dist --no-deps briefcase --only-binary :all: briefcase==${{ env.VERSION }}
       - name: Publish release to production PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          repository_url: https://test.pypi.org/legacy/
-          password: ${{ secrets.TEST_PYPI_PASSWORD }}
+          password: ${{ secrets.PYPI_PASSWORD }}
