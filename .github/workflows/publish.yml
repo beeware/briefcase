@@ -29,17 +29,14 @@ jobs:
           path: dist
       - name: Manual download release artefacts
         run: |
-          mkdir -p dist2
-          curl -o dist2/briefcase-${{ env.VERSION }}.tar.gz -L https://github.com/beeware/briefcase/releases/download/${{ env.TAG }}/briefcase-${{ env.VERSION }}.tar.gz
-          curl -o dist2/briefcase-${{ env.VERSION }}-py3-none-any.whl -L https://github.com/beeware/briefcase/releases/download/${{ env.TAG }}/briefcase-${{ env.VERSION }}-py3-none-any.whl
+          mkdir -p dist
+          curl -o dist/briefcase-${{ env.VERSION }}.tar.gz -L https://github.com/beeware/briefcase/releases/download/${{ env.TAG }}/briefcase-${{ env.VERSION }}.tar.gz
+          curl -o dist/briefcase-${{ env.VERSION }}-py3-none-any.whl -L https://github.com/beeware/briefcase/releases/download/${{ env.TAG }}/briefcase-${{ env.VERSION }}-py3-none-any.whl
       - name: Check files
         run: |
           ls -1 dist
-      - name: Check files 2
-        run: |
-          ls -1 dist2
-
-      # - name: Publish release
-      #   uses: pypa/gh-action-pypi-publish@release/v1
-      #   with:
-      #     password: ${{ secrets.PYPI_PASSWORD }}
+      - name: Publish release
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository_url: https://test.pypi.org/legacy/
+          password: ${{ secrets.PYPI_PASSWORD }}
