@@ -41,10 +41,10 @@ jobs:
           # We also use --no-cache to make sure we don't get anything stale
 
           # --no-binary :all: forces a source download
-          pip download --index-url https://test.pypi.org/simple/ --no-cache --no-build-isolation --dest dist --no-deps briefcase --no-binary :all: briefcase==${{ env.VERSION }}
+          pip download --index-url https://test.pypi.org/simple/ --no-cache --no-build-isolation --dest dist --no-deps --no-binary :all: briefcase==${{ env.VERSION }}
 
           # --only-binary :all: forces a wheel download
-          pip download --index-url https://test.pypi.org/simple/ --no-cache --no-build-isolation --dest dist --no-deps briefcase --only-binary :all: briefcase==${{ env.VERSION }}
+          pip download --index-url https://test.pypi.org/simple/ --no-cache --no-build-isolation --dest dist --no-deps --only-binary :all: briefcase==${{ env.VERSION }}
       - name: Publish release to production PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
