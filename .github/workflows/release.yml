@@ -53,7 +53,7 @@ jobs:
         run: |
           python -m twine check dist/*
       - name: Publish release to Test PyPI
-        uses: pypa/gh-action-pypi-publish@v1.5.1
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
           repository_url: https://test.pypi.org/legacy/
           password: ${{ secrets.TEST_PYPI_PASSWORD }}
