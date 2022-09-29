@@ -52,21 +52,8 @@ jobs:
       - name: Check release artefacts
         run: |
           python -m twine check dist/*
-      - name: Upload source tarball
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish release to Test PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/briefcase-${{ env.VERSION }}.tar.gz
-          asset_name: briefcase-${{ env.VERSION }}.tar.gz
-          asset_content_type: application/gzip
-      - name: Upload wheel
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/briefcase-${{ env.VERSION }}-py3-none-any.whl
-          asset_name: briefcase-${{ env.VERSION }}-py3-none-any.whl
-          asset_content_type: application/gzip
+          repository_url: https://test.pypi.org/legacy/
+          password: ${{ secrets.TEST_PYPI_PASSWORD }}

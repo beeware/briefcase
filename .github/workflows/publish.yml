@@ -23,20 +23,18 @@ jobs:
         uses: actions/setup-python@v4.2.0
         with:
           python-version: '3.x'
-      - name: Download release artefacts
-        uses: actions/download-artifact@v3
-        with:
-          path: dist
-      - name: Manual download release artefacts
+      - name: Install dependencies
         run: |
-          mkdir -p dist
-          curl -o dist/briefcase-${{ env.VERSION }}.tar.gz -L https://github.com/beeware/briefcase/releases/download/${{ env.TAG }}/briefcase-${{ env.VERSION }}.tar.gz
-          curl -o dist/briefcase-${{ env.VERSION }}-py3-none-any.whl -L https://github.com/beeware/briefcase/releases/download/${{ env.TAG }}/briefcase-${{ env.VERSION }}-py3-none-any.whl
+          python -m pip install --upgrade pip
+      - name: Download release artefacts
+        run: |
+          pip download --dest dist --no-deps briefcase --no-binary :all: briefcase==${{ env.VERSION }}
+          pip download --dest dist --no-deps briefcase --only-binary :all: briefcase==${{ env.VERSION }}
       - name: Check files
         run: |
           ls -1 dist
-      - name: Publish release
+      - name: Publish release to production PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           repository_url: https://test.pypi.org/legacy/
-          password: ${{ secrets.PYPI_PASSWORD }}
+          password: ${{ secrets.TEST_PYPI_PASSWORD }}
