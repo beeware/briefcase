@@ -16,8 +16,10 @@ jobs:
           fetch-depth: 0
           ref: main
       - name: Set build variables
+        env:
+          TAG_NAME: ${{ github.ref }}
         run: |
-          export TAG=${{ github.ref }}
+          export TAG=$(basename $TAG_NAME)
           echo "TAG=${TAG}"
           echo "VERSION=${TAG#v}"
           echo "TAG=${TAG}" >> $GITHUB_ENV
