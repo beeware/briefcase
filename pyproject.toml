@@ -2,6 +2,21 @@
 requires = ["setuptools>=60", "setuptools_scm[toml]>=7.0"]
 build-backend = "setuptools.build_meta"
 
+[tool.coverage.run]
+branch = true
+source = ["src/briefcase"]
+omit = [
+    "src/**/__init__.py",
+    "src/briefcase/__main__.pyx",
+]
+
+[tool.coverage.report]
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "@(abc\\.)?abstractmethod",
+]
+
 [tool.isort]
 profile = "black"
 skip_glob = [
