@@ -24,7 +24,7 @@ jobs:
         with:
           python-version: '3.x'
       - name: Download release artefacts
-        uses: actions/download-artefact@v3
+        uses: actions/download-artifact@v3
         with:
           path: dist
       - name: Manual download release artefacts
