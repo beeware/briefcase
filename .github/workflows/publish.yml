@@ -27,6 +27,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install --upgrade setuptools
+          python -m pip install --upgrade wheel
       - name: Download release artefacts from Test PyPI
         run: |
           # --no-deps only downloads the specific package that was requested.
@@ -37,12 +38,13 @@ jobs:
           # To avoid this, we use --no-build-isolation to use the pre-existing
           # build environment, which *does* have setuptools. See
           # https://github.com/pypa/pip/issues/1884 for details.
+          # We also use --no-cache to make sure we don't get anything stale
 
           # --no-binary :all: forces a source download
-          pip download --index-url https://test.pypi.org/simple/ --no-build-isolation --dest dist --no-deps briefcase --no-binary :all: briefcase==${{ env.VERSION }}
+          pip download --index-url https://test.pypi.org/simple/ --no-cache --no-build-isolation --dest dist --no-deps briefcase --no-binary :all: briefcase==${{ env.VERSION }}
 
           # --only-binary :all: forces a wheel download
-          pip download --index-url https://test.pypi.org/simple/ --no-build-isolation --dest dist --no-deps briefcase --only-binary :all: briefcase==${{ env.VERSION }}
+          pip download --index-url https://test.pypi.org/simple/ --no-cache --no-build-isolation --dest dist --no-deps briefcase --only-binary :all: briefcase==${{ env.VERSION }}
       - name: Publish release to production PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
