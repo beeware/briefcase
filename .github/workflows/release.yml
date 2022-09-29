@@ -17,7 +17,7 @@ jobs:
           ref: main
       - name: Set build variables
         run: |
-          export TAG=${{ github.event.release.tag_name }}
+          export TAG=${{ github.ref }}
           echo "TAG=${TAG}"
           echo "VERSION=${TAG#v}"
           echo "TAG=${TAG}" >> $GITHUB_ENV
@@ -55,7 +55,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ needs.make-release.outputs.upload_url }}
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./dist/briefcase-${{ env.VERSION }}.tar.gz
           asset_name: briefcase-${{ env.VERSION }}.tar.gz
           asset_content_type: application/gzip
@@ -64,7 +64,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ needs.make-release.outputs.upload_url }}
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./dist/briefcase-${{ env.VERSION }}-py3-none-any.whl
           asset_name: briefcase-${{ env.VERSION }}-py3-none-any.whl
           asset_content_type: application/gzip
