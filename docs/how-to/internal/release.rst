@@ -62,7 +62,7 @@ The procedure for cutting a new release is as follows:
 
     $ python3 -m venv testvenv
     $ . ./testvenv/bin/activate
-    $ pip install --index-url https://test.pypi.org/simple/ briefcase==1.2.3rc1
+    $ pip install --extra-index-url https://test.pypi.org/simple/ briefcase==1.2.3rc1
     $ briefcase --version
     briefcase 1.2.3rc1
 
