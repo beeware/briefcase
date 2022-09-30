@@ -169,10 +169,13 @@ jobs:
       uses: actions/download-artifact@v2
       with:
         name: coverage-data
+    - name: Normalize paths in coverage data
+      run: |
+        for coverage in `ls .coverage.*`; do
+          sqlite3 $coverage "update file set path = replace(path, '\\', '/')"
+        done
     - name: Combine coverage & fail if it's <100%.
       run: |
-        pwd
-        ls -laR
         python -m coverage combine
         python -m coverage html --skip-covered --skip-empty
         python -m coverage report --fail-under=100

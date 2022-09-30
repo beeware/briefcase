@@ -5,10 +5,14 @@ build-backend = "setuptools.build_meta"
 [tool.coverage.run]
 parallel = true
 branch = true
+relative_files = true
 source = ["src/briefcase"]
 
 [tool.coverage.report]
 show_missing = true
+skip_covered = true
+skip_empty = true
+precision = 1
 exclude_lines = [
     "pragma: no cover",
     "@(abc\\.)?abstractmethod",
