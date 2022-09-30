@@ -1,0 +1,1 @@
+Corrected typo when generating a change note for Dependabot pull requests.

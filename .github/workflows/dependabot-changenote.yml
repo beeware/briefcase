@@ -33,7 +33,7 @@ jobs:
           PR_NUM=$(curl -s -H "Accept: application/vnd.github+json" "${API_URL}" | jq -r '.[].number')
 
           # Create change note from first line of dependabot commit
-          NEWS=$(printf "${{ github.event.head_commit.message }}" | head -n1 | sed -e 's/Bumps/Updated/')
+          NEWS=$(printf "${{ github.event.head_commit.message }}" | head -n1 | sed -e 's/Bump/Updated/')
           printf "${NEWS}.\n" > "./changes/${PR_NUM}.misc.rst"
 
           # Commit the change note
