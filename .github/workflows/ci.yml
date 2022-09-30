@@ -76,13 +76,6 @@ jobs:
     - name: Test
       run: |
         tox -e py
-    - name: Check coverage
-      uses: codecov/codecov-action@v3.1.1
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        file: ./coverage.xml
-        flags: unittests
-        fail_ci_if_error: true
     - name: Report coverage
       uses: actions/upload-artifact@v2
       with:
@@ -114,13 +107,6 @@ jobs:
     - name: Test
       run: |
         tox -e py
-    - name: Check coverage
-      uses: codecov/codecov-action@v3.1.1
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        file: ./coverage.xml
-        flags: unittests
-        fail_ci_if_error: true
     - name: Report coverage
       uses: actions/upload-artifact@v2
       with:
@@ -152,13 +138,6 @@ jobs:
     - name: Test
       run: |
         tox -e py
-    - name: Check coverage
-      uses: codecov/codecov-action@v3.1.1
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        file: ./coverage.xml
-        flags: unittests
-        fail_ci_if_error: true
     - name: Report coverage
       uses: actions/upload-artifact@v2
       with:

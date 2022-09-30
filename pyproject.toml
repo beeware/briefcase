@@ -3,11 +3,12 @@ requires = ["setuptools>=60", "setuptools_scm[toml]>=7.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.coverage.run]
+parallel = true
 branch = true
 source = ["src/briefcase"]
 omit = [
     "src/**/__init__.py",
-    "src/briefcase/__main__.pyx",
+    "src/briefcase/__main__.py",
 ]
 
 [tool.coverage.report]
