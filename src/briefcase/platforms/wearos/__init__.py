@@ -1,1 +1,0 @@
-DEFAULT_OUTPUT_FORMAT = "gradle"
