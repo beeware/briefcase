@@ -36,13 +36,13 @@ def first_app_with_binaries(first_app_config, tmp_path):
         f.write(b"\xCA\xFE\xBA\xBEBinary content here")
 
     # Make sure there are some files in the bundle that *don't* need to be signed...
-    with (app_path / "Contents" / "first.other").open("w") as f:
+    with (lib_path / "first.other").open("w") as f:
         f.write("other")
-    with (app_path / "Contents" / "second.other").open("w") as f:
+    with (lib_path / "second.other").open("w") as f:
         f.write("other")
 
     # A file that has a Mach-O header, but isn't executable
-    with (app_path / "Contents" / "unknown.binary").open("wb") as f:
+    with (lib_path / "unknown.binary").open("wb") as f:
         f.write(b"\xCA\xFE\xBA\xBEother")
 
     return first_app_config

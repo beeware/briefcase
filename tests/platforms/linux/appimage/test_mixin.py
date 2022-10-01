@@ -7,7 +7,10 @@ from briefcase.console import Console, Log
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.docker import Docker, DockerAppContext
 from briefcase.integrations.subprocess import Subprocess
-from briefcase.platforms.linux.appimage import LinuxAppImageCreateCommand
+from briefcase.platforms.linux.appimage import (
+    LinuxAppImageBuildCommand,
+    LinuxAppImageCreateCommand,
+)
 
 
 def test_binary_path(first_app_config, tmp_path):
@@ -200,3 +203,20 @@ def test_verify_windows_docker(tmp_path):
     # Verify the tools
     with pytest.raises(BriefcaseCommandError):
         command.verify_tools()
+
+
+def test_clone_options(tmp_path):
+    """Docker options are cloned."""
+    build_command = LinuxAppImageBuildCommand(
+        logger=Log(),
+        console=Console(),
+        base_path=tmp_path / "base_path",
+        data_path=tmp_path / "briefcase",
+    )
+    build_command.use_docker = True
+
+    create_command = build_command.create_command
+
+    # Confirm the use_docker option has been cloned.
+    assert create_command.is_clone
+    assert create_command.use_docker

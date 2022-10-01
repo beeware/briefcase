@@ -183,6 +183,18 @@ def test_implied_identity(dummy_command):
     assert dummy_command.input.prompts == []
 
 
+def test_no_identities(dummy_command):
+    """If there are no identities an error is raised."""
+    # get_identities will return some options.
+    dummy_command.get_identities.return_value = {}
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"No code signing identities are available.",
+    ):
+        dummy_command.select_identity()
+
+
 def test_selected_identity(dummy_command):
     """If there is only one identity, it is automatically picked."""
     # get_identities will return some options.

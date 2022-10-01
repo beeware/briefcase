@@ -1,4 +1,5 @@
 import os
+from subprocess import CalledProcessError
 from unittest import mock
 
 import pytest
@@ -50,9 +51,11 @@ def test_run_app_failed(first_app_config, tmp_path):
     )
     command.tools.home_path = tmp_path / "home"
     command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
-    command.tools.subprocess.run.side_effect = BriefcaseCommandError("problem")
+    command.tools.subprocess.run.side_effect = CalledProcessError(
+        cmd=["First App.exe"], returncode=1
+    )
 
-    with pytest.raises(BriefcaseCommandError):
+    with pytest.raises(BriefcaseCommandError, match=r"Unable to start app first-app."):
         command.run_app(first_app_config)
 
     # The run command was still invoked, though

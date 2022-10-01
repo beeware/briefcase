@@ -185,8 +185,8 @@ def test_invalid_explicit_device_name(dummy_command):
     assert dummy_command.input.prompts == []
 
 
-def test_invalid_explicit_device_name_and_version(dummy_command):
-    """If the user nominates an invalid device name and version, an error is
+def test_explicit_name_invalid_version(dummy_command):
+    """If the user nominates an device name but an invalid version, an error is
     raised."""
     # get_simulators will some options.
     dummy_command.get_simulators.return_value = {
@@ -201,6 +201,24 @@ def test_invalid_explicit_device_name_and_version(dummy_command):
     # doesn't exist.
     with pytest.raises(InvalidDeviceError):
         dummy_command.select_target_device("iphone 11::37.42")
+
+
+def test_invalid_explicit_device_name_valid_version(dummy_command):
+    """If the user nominates an invalid device name but a valid version, an
+    error is raised."""
+    # get_simulators will some options.
+    dummy_command.get_simulators.return_value = {
+        "iOS 13.2": {
+            "C9A005C8-9468-47C5-8376-68A6E3408209": "iPhone 8",
+            "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D": "iPhone 11",
+            "EEEBA06C-81F9-407C-885A-2261306DB2BE": "iPhone 11 Pro Max",
+        }
+    }
+
+    # The user nominates a valid device name, but on a version that
+    # doesn't exist.
+    with pytest.raises(InvalidDeviceError):
+        dummy_command.select_target_device("iphone 99::iOS 13.2")
 
 
 def test_implied_device(dummy_command):

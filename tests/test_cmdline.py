@@ -37,7 +37,7 @@ def do_cmdline_parse(cmdline: list, logger: Log, console: Console):
 
 def test_empty():
     """``briefcase`` returns basic usage."""
-    with pytest.raises(NoCommandError) as excinfo:
+    with pytest.raises(NoCommandError, match=r"usage: briefcase") as excinfo:
         parse_cmdline("".split())
 
     assert excinfo.value.msg.startswith(
@@ -51,7 +51,7 @@ def test_empty():
 
 def test_help_only():
     """``briefcase -h`` returns basic usage."""
-    with pytest.raises(NoCommandError) as excinfo:
+    with pytest.raises(NoCommandError, match=r"usage: briefcase") as excinfo:
         parse_cmdline("-h".split())
 
     assert excinfo.value.msg.startswith(
@@ -77,7 +77,7 @@ def test_version_only(capsys):
 
 def test_show_output_formats_only():
     """``briefcase -f`` returns basic usage as a command is needed."""
-    with pytest.raises(NoCommandError) as excinfo:
+    with pytest.raises(NoCommandError, match=r"usage: briefcase") as excinfo:
         parse_cmdline("-f".split())
 
     assert excinfo.value.msg.startswith(
@@ -383,7 +383,10 @@ def test_command_explicit_unsupported_format(monkeypatch, logger, console):
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, "platform", "darwin")
 
-    with pytest.raises(UnsupportedCommandError):
+    with pytest.raises(
+        UnsupportedCommandError,
+        match=r"The create command for the macOS homebrew format has not been implemented \(yet!\).",
+    ):
         do_cmdline_parse("create macOS homebrew".split(), logger, console)
 
 

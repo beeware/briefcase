@@ -12,7 +12,7 @@ from briefcase.platforms.windows.app import WindowsAppBuildCommand
 
 
 @pytest.fixture
-def package_command(tmp_path):
+def build_command(tmp_path):
     command = WindowsAppBuildCommand(
         logger=Log(),
         console=Console(),
@@ -24,12 +24,23 @@ def package_command(tmp_path):
     return command
 
 
-def test_build_app(package_command, first_app_config, tmp_path):
+def test_verify(build_command):
+    """Verifying on Windows creates an RCEdit wrapper."""
+
+    build_command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
+
+    build_command.verify_tools()
+
+    # No error, and an SDK wrapper is created
+    assert isinstance(build_command.tools.rcedit, RCEdit)
+
+
+def test_build_app(build_command, first_app_config, tmp_path):
     """The stub binary will be updated when a Windows app is built."""
 
-    package_command.build_app(first_app_config)
+    build_command.build_app(first_app_config)
 
-    package_command.tools.subprocess.run.assert_has_calls(
+    build_command.tools.subprocess.run.assert_has_calls(
         [
             # Collect manifest
             mock.call(
@@ -67,10 +78,10 @@ def test_build_app(package_command, first_app_config, tmp_path):
     )
 
 
-def test_build_app_failure(package_command, first_app_config, tmp_path):
+def test_build_app_failure(build_command, first_app_config, tmp_path):
     """If the stub binary cannot be updated, an error is raised."""
 
-    package_command.tools.subprocess.run.side_effect = subprocess.CalledProcessError(
+    build_command.tools.subprocess.run.side_effect = subprocess.CalledProcessError(
         returncode=1,
         cmd="rcedit-x64.exe",
     )
@@ -79,4 +90,4 @@ def test_build_app_failure(package_command, first_app_config, tmp_path):
         BriefcaseCommandError,
         match=r"Unable to update details on stub app for first-app.",
     ):
-        package_command.build_app(first_app_config)
+        build_command.build_app(first_app_config)

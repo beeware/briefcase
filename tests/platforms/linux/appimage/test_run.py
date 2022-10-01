@@ -1,4 +1,5 @@
 import os
+from subprocess import CalledProcessError
 from unittest.mock import MagicMock
 
 import pytest
@@ -97,7 +98,9 @@ def test_run_app_failed(first_app_config, tmp_path):
     command.tools.host_arch = "wonky"
 
     command.tools.subprocess = MagicMock(spec_set=Subprocess)
-    command.tools.subprocess.run.side_effect = BriefcaseCommandError("problem")
+    command.tools.subprocess.run.side_effect = CalledProcessError(
+        cmd=["First App.AppImage"], returncode=1
+    )
 
     with pytest.raises(BriefcaseCommandError):
         command.run_app(first_app_config)

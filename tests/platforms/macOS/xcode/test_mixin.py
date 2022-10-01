@@ -1,15 +1,24 @@
+import sys
+
+import pytest
+
 from briefcase.console import Console, Log
+from briefcase.exceptions import BriefcaseCommandError
 from briefcase.platforms.macOS.xcode import macOSXcodeCreateCommand
 
 
-def test_binary_path(first_app_config, tmp_path):
-    command = macOSXcodeCreateCommand(
+@pytest.fixture
+def create_command(tmp_path):
+    return macOSXcodeCreateCommand(
         logger=Log(),
         console=Console(),
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
     )
-    binary_path = command.binary_path(first_app_config)
+
+
+def test_binary_path(create_command, first_app_config, tmp_path):
+    binary_path = create_command.binary_path(first_app_config)
 
     assert (
         binary_path
@@ -24,15 +33,8 @@ def test_binary_path(first_app_config, tmp_path):
     )
 
 
-def test_distribution_path_app(first_app_config, tmp_path):
-    command = macOSXcodeCreateCommand(
-        logger=Log(),
-        console=Console(),
-        base_path=tmp_path / "base_path",
-        data_path=tmp_path / "briefcase",
-    )
-
-    distribution_path = command.distribution_path(first_app_config, "app")
+def test_distribution_path_app(create_command, first_app_config, tmp_path):
+    distribution_path = create_command.distribution_path(first_app_config, "app")
 
     assert (
         distribution_path
@@ -47,27 +49,14 @@ def test_distribution_path_app(first_app_config, tmp_path):
     )
 
 
-def test_distribution_path_dmg(first_app_config, tmp_path):
-    command = macOSXcodeCreateCommand(
-        logger=Log(),
-        console=Console(),
-        base_path=tmp_path / "base_path",
-        data_path=tmp_path / "briefcase",
-    )
-
-    distribution_path = command.distribution_path(first_app_config, "dmg")
+def test_distribution_path_dmg(create_command, first_app_config, tmp_path):
+    distribution_path = create_command.distribution_path(first_app_config, "dmg")
 
     assert distribution_path == tmp_path / "base_path" / "macOS" / "First App-0.0.1.dmg"
 
 
-def test_entitlements_path(first_app_config, tmp_path):
-    command = macOSXcodeCreateCommand(
-        logger=Log(),
-        console=Console(),
-        base_path=tmp_path / "base_path",
-        data_path=tmp_path / "briefcase",
-    )
-    entitlements_path = command.entitlements_path(first_app_config)
+def test_entitlements_path(create_command, first_app_config, tmp_path):
+    entitlements_path = create_command.entitlements_path(first_app_config)
 
     assert (
         entitlements_path
@@ -79,3 +68,15 @@ def test_entitlements_path(first_app_config, tmp_path):
         / "First App"
         / "first-app.entitlements"
     )
+
+
+@pytest.mark.skipif(sys.platform == "darwin", reason="non-macOS specific test")
+def test_verify_non_macOS(create_command):
+    "If you're not on macOS, you can't verify tools."
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match="macOS applications require the Xcode command line tools, "
+        "which are only available on macOS.",
+    ):
+        create_command.verify_tools()
