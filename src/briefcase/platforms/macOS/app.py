@@ -1,7 +1,3 @@
-import os
-import tempfile
-from pathlib import Path
-
 from briefcase.commands import (
     BuildCommand,
     CreateCommand,
@@ -41,32 +37,6 @@ class macOSAppMixin(macOSMixin):
 
 class macOSAppCreateCommand(macOSAppMixin, CreateCommand):
     description = "Create and populate a macOS app."
-
-    def install_app_support_package(self, app: BaseConfig):
-        """Install the application support package.
-
-        :param app: The config object for the app
-        """
-        super().install_app_support_package(app)
-
-        # Legacy support for the structure of pre-dynamic loading support packages.
-        # Keep only Python lib from the (old) support package. If the lib folder
-        # doesn't exist, then it's a new dynamic-loading support package.
-        lib_path = (
-            self.support_path(app).parent / "Support" / "Python" / "Resources" / "lib"
-        )
-        if lib_path.exists():
-            with tempfile.TemporaryDirectory() as tmpdir:
-                # TODO: Py3.8 compatibility; os.fsdecode not required in Py3.9
-                self.tools.shutil.move(os.fsdecode(lib_path), os.fsdecode(tmpdir))
-                self.tools.shutil.rmtree(self.support_path(app))
-
-                self.tools.os.makedirs(Path(lib_path).parent)
-                # TODO: Py3.8 compatibility; os.fsdecode not required in Py3.9
-                self.tools.shutil.move(
-                    os.fsdecode(Path(tmpdir) / "lib"),
-                    os.fsdecode(lib_path),
-                )
 
 
 class macOSAppUpdateCommand(macOSAppCreateCommand, UpdateCommand):
