@@ -479,17 +479,17 @@ a custom location for Briefcase's tools.
             for path in app.sources
             if path.rsplit("/", 1)[-1] == app.module_name
         ]
-        try:
-            if len(app_home) == 1:
-                path = Path(str(self.base_path), *app_home[0])
-            else:
-                raise BriefcaseCommandError(
-                    f"Multiple paths in sources found for application '{app.app_name}'"
-                )
-        except IndexError as e:
+
+        if len(app_home) == 0:
             raise BriefcaseCommandError(
-                f"Unable to find code for application '{app.app_name}'"
-            ) from e
+                f"Unable to find code for application {app.app_name!r}"
+            )
+        elif len(app_home) == 1:
+            path = Path(str(self.base_path), *app_home[0])
+        else:
+            raise BriefcaseCommandError(
+                f"Multiple paths in sources found for application {app.app_name!r}"
+            )
 
         return path
 
