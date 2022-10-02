@@ -1,3 +1,4 @@
+from subprocess import CalledProcessError
 from unittest.mock import MagicMock
 
 import pytest
@@ -61,4 +62,16 @@ def test_invalid_device(mock_tools):
     adb.run = MagicMock(side_effect=InvalidDeviceError("device", "exampleDevice"))
 
     with pytest.raises(InvalidDeviceError):
+        adb.start_app("com.example.sample.package", "com.example.sample.activity")
+
+
+def test_unable_to_start(mock_tools):
+    """If the adb calls for other reasons, the error is caught."""
+    adb = ADB(mock_tools, "exampleDevice")
+    adb.run = MagicMock(side_effect=CalledProcessError(cmd=["adb"], returncode=1))
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Unable to start com.example.sample.package/com.example.sample.activity on exampleDevice",
+    ):
         adb.start_app("com.example.sample.package", "com.example.sample.activity")

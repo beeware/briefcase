@@ -223,6 +223,37 @@ def test_calledprocesserror_exception_logging(mock_sub, capsys):
     assert capsys.readouterr().out == expected_output
 
 
+def test_calledprocesserror_exception_logging_no_cmd_output(mock_sub, capsys):
+    """If command errors, and there is no command output, errors are still
+    printed."""
+    mock_sub.tools.logger.verbosity = 2
+
+    called_process_error = CalledProcessError(
+        returncode=-1,
+        cmd="hello world",
+        output=None,
+        stderr="error line 1\nerror line 2",
+    )
+    mock_sub._subprocess.check_output.side_effect = called_process_error
+
+    with pytest.raises(CalledProcessError):
+        mock_sub.check_output(["hello", "world"])
+
+    expected_output = (
+        "\n"
+        ">>> Running Command:\n"
+        ">>>     hello world\n"
+        ">>> Working Directory:\n"
+        f">>>     {Path.cwd()}\n"
+        ">>> Command Error Output (stderr):\n"
+        ">>>     error line 1\n"
+        ">>>     error line 2\n"
+        ">>> Return code: -1\n"
+    )
+
+    assert capsys.readouterr().out == expected_output
+
+
 @pytest.mark.parametrize(
     "in_kwargs, kwargs",
     [

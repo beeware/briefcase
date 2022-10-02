@@ -1,4 +1,5 @@
 import os
+import subprocess
 import sys
 from unittest import mock
 
@@ -23,6 +24,7 @@ def package_command(tmp_path):
     command.sign_file = mock.MagicMock()
     command.notarize = mock.MagicMock()
     command.dmgbuild = mock.MagicMock()
+    command.tools.subprocess = mock.MagicMock(spec=subprocess)
 
     return command
 
@@ -774,6 +776,20 @@ def test_dmg_with_missing_installer_background(
         "Can't find pretty_background.png to use as DMG background\n"
         in capsys.readouterr().out
     )
+
+
+@pytest.mark.skipif(sys.platform != "darwin", reason="macOS specific test")
+def test_verify(package_command):
+    "If you're on macOS, you can verify tools."
+    # Mock the existence of the command line tools
+    package_command.tools.subprocess.check_output.side_effect = [
+        subprocess.CalledProcessError(cmd=["xcode-select", "--install"], returncode=1),
+        "clang 37.42",  # clang --version
+    ]
+
+    package_command.verify_tools()
+
+    assert package_command.tools.xcode_cli is not None
 
 
 @pytest.mark.skipif(sys.platform == "darwin", reason="non-macOS specific test")
