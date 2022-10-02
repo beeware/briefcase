@@ -82,6 +82,12 @@ jobs:
         name: coverage-data
         path: ".coverage.*"
         if-no-files-found: ignore
+    - name: Report smoke coverage
+      run: |
+        ls .coverage.*
+        python -m pip install coverage
+        python -m coverage combine
+        python -m coverage report
 
   python-versions:
     name: Python compatibility test
@@ -113,6 +119,12 @@ jobs:
         name: coverage-data
         path: ".coverage.*"
         if-no-files-found: ignore
+    - name: Report version coverage
+      run: |
+        ls .coverage.*
+        python -m pip install coverage
+        python -m coverage combine
+        python -m coverage report
 
   platform-compat:
     name: Platform compatibility test
@@ -144,6 +156,12 @@ jobs:
         name: coverage-data
         path: ".coverage.*"
         if-no-files-found: ignore
+    - name: Report platform coverage
+      run: |
+        ls .coverage.*
+        python -m pip install coverage
+        python -m coverage combine
+        python -m coverage report
 
   coverage:
     name: Combine & check coverage.
