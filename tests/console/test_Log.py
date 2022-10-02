@@ -58,13 +58,22 @@ def test_save_log_to_file_no_exception(tmp_path, now):
     logger.save_log = True
     logger.debug("this is debug output")
     logger.info("this is info output")
-    logger.info("this is [bold]info output with markup[/bold]")
-    logger.info("this is [bold]info output with escaped markup[/bold]", markup=True)
     logger.warning("this is warning output")
     logger.error("this is error output")
     logger.print("this is print output")
     logger.print.to_log("this is log output")
     logger.print.to_console("this is console output")
+
+    logger.info("this is [bold]info output with markup[/bold]")
+    logger.info(
+        "this is [bold]info output with markup and a prefix[/bold]", prefix="wibble"
+    )
+    logger.info("this is [bold]info output with escaped markup[/bold]", markup=True)
+    logger.info(
+        "this is [bold]info output with escaped markup and a prefix[/bold]",
+        prefix="wibble",
+        markup=True,
+    )
 
     logger.save_log_to_file(command=command)
 

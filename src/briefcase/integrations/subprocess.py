@@ -493,7 +493,7 @@ class Subprocess:
                 output_line = ensure_str(popen_process.stdout.readline())
                 if output_line:
                     self.tools.logger.info(output_line)
-                elif output_line == "":
+                else:
                     return
 
     def cleanup(self, label, popen_process):
