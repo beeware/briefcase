@@ -11,6 +11,24 @@ from briefcase.integrations.subprocess import Subprocess
 from tests.utils import DummyConsole
 
 
+class DefaultCreateCommand(CreateCommand):
+    # An instance of CreateCommand that inherits the default
+    # behavior of create handling.
+
+    # Two methods that are required by the interface, but are not needed
+    # for these tests.
+    def binary_path(self, app):
+        return NotImplementedError()
+
+    def distribution_path(self, app, packaging_format):
+        return NotImplementedError()
+
+
+@pytest.fixture
+def default_create_command(tmp_path):
+    return DefaultCreateCommand(base_path=tmp_path, logger=Log(), console=Console())
+
+
 class DummyCreateCommand(CreateCommand):
     """A dummy create command that stubs out all the required interfaces of the
     Create command."""

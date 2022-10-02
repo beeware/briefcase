@@ -7,6 +7,9 @@ parallel = true
 branch = true
 relative_files = true
 source = ["src/briefcase"]
+omit = [
+    "src/briefcase/__init__.py",
+]
 
 [tool.coverage.report]
 show_missing = true
@@ -16,6 +19,7 @@ precision = 1
 exclude_lines = [
     "pragma: no cover",
     "@(abc\\.)?abstractmethod",
+    "NotImplementedError\\(\\)"
 ]
 
 [tool.isort]

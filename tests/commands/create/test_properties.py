@@ -339,3 +339,8 @@ def test_document_type_multiple_icons(create_command, myapp):
             "20": "path/to/otherdoc-icon-20.png",
         },
     }
+
+
+def test_default_output_format_template_context(default_create_command, myapp):
+    """The default output format template context is empty."""
+    assert default_create_command.output_format_template_context(myapp) == {}

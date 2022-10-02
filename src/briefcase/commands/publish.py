@@ -33,7 +33,9 @@ class PublishCommand(BaseCommand):
         :param app: The application to publish
         :param channel: The publication channel to use
         """
-        self.logger.info(f"TODO: Publish {app.app_name} to {channel}")
+        self.logger.info(
+            f"TODO: Publish {app.app_name} to {channel}"
+        )  # pragma: no cover
 
     def _publish_app(self, app: BaseConfig, channel: str, **options):
         """Internal method to publish a single app. Ensures the app exists, and
