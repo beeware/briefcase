@@ -117,7 +117,7 @@ class BaseCommand(ABC):
         console: Console,
         tools: ToolCache = None,
         apps: dict = None,
-        base_path: Path = Path.cwd(),
+        base_path: Path = None,
         data_path: Path = None,
         is_clone: bool = False,
     ):
@@ -132,7 +132,10 @@ class BaseCommand(ABC):
         :param is_clone: Flag that Command was triggered by the user's requested Command;
             for instance, RunCommand can invoke UpdateCommand and/or BuildCommand.
         """
-        self.base_path = Path(base_path)
+        if base_path is None:
+            self.base_path = Path.cwd()
+        else:
+            self.base_path = base_path
         self.data_path = self.validate_data_path(data_path)
         self.apps = {} if apps is None else apps
         self.is_clone = is_clone
