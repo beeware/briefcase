@@ -166,20 +166,19 @@ def test_source_file(
     """If an app defines single file sources, the files are copied."""
     # Create the mock sources
     # src /
-    #   first /
-    #     demo.py
-    #   other.py
-    first_src = tmp_path / "project" / "src" / "first" / "demo.py"
+    #   demo.py
+    # other.py
+    first_src = tmp_path / "project" / "src" / "demo.py"
     first_src.parent.mkdir(parents=True)
     with first_src.open("w") as f:
         f.write("print('hello first')\n")
 
-    second_src = tmp_path / "project" / "src" / "other.py"
+    second_src = tmp_path / "project" / "other.py"
     with second_src.open("w") as f:
         f.write("print('hello second')\n")
 
     # Set the app definition, and install sources
-    myapp.sources = ["src/first/demo.py", "src/other.py"]
+    myapp.sources = ["src/demo.py", "other.py"]
 
     create_command.install_app_code(myapp)
 

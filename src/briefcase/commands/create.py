@@ -519,12 +519,10 @@ class CreateCommand(BaseCommand):
 
         :param app: The config object for the app
         """
-
         # Remove existing app folder
         app_path = self.app_path(app)
-        if app_path.is_dir():
-            self.tools.shutil.rmtree(app_path)
-            self.tools.os.mkdir(app_path)
+        self.tools.shutil.rmtree(app_path)
+        self.tools.os.mkdir(app_path)
 
         # Install app code.
         if app.sources:
