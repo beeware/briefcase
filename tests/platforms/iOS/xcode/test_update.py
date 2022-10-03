@@ -23,6 +23,7 @@ def test_extra_pip_args(first_app_generated, tmp_path):
     command.tools[first_app_generated].app_context.run.assert_called_once_with(
         [
             sys.executable,
+            "-u",
             "-m",
             "pip",
             "install",

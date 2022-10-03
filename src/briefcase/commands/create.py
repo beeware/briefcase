@@ -470,6 +470,7 @@ class CreateCommand(BaseCommand):
                     self.tools[app].app_context.run(
                         [
                             sys.executable,
+                            "-u",
                             "-m",
                             "pip",
                             "install",

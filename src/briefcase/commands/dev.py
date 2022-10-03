@@ -65,6 +65,7 @@ class DevCommand(BaseCommand):
                     self.tools.subprocess.run(
                         [
                             sys.executable,
+                            "-u",
                             "-m",
                             "pip",
                             "install",
@@ -89,6 +90,7 @@ class DevCommand(BaseCommand):
             self.tools.subprocess.run(
                 [
                     sys.executable,
+                    "-u",
                     "-c",
                     (
                         "import runpy, sys;"
