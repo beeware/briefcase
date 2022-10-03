@@ -81,7 +81,7 @@ jobs:
     - name: Test
       run: |
         tox -e py
-    - name: Report coverage
+    - name: Store coverage data
       uses: actions/upload-artifact@v2
       with:
         name: coverage-data
@@ -110,7 +110,7 @@ jobs:
         pip install --upgrade pip
         pip install --upgrade setuptools
         pip install coverage[toml]
-    - name: Download coverage data.
+    - name: Retrieve coverage data
       uses: actions/download-artifact@v2
       with:
         name: coverage-data
@@ -119,9 +119,11 @@ jobs:
         for coverage in `ls .coverage.*`; do
           sqlite3 $coverage "update file set path = replace(path, '\\', '/')"
         done
-    - name: Combine coverage & fail if it's <100%.
+    - name: Combine coverage
       run: |
         python -m coverage combine
+    - name: Generate coverage report
+      run: |
         python -m coverage html --skip-covered --skip-empty
         python -m coverage report --fail-under=100
     - name: Upload HTML report if check failed.
