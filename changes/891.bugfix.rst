@@ -1,0 +1,1 @@
+Output from spawned Python processes, such as when running ``briefcase dev``, is no longer buffered and displays in the console immediately.

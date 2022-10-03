@@ -82,6 +82,7 @@ def test_install_app_dependencies_in_docker(first_app_config, tmp_path):
             "--rm",
             "briefcase/com.example.first-app:py3.X",
             "python3.X",
+            "-u",
             "-m",
             "pip",
             "install",
@@ -132,6 +133,7 @@ def test_install_app_dependencies_no_docker(first_app_config, tmp_path):
     command.tools[first_app_config].app_context.run.assert_called_with(
         [
             sys.executable,
+            "-u",
             "-m",
             "pip",
             "install",

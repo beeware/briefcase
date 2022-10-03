@@ -15,6 +15,7 @@ def test_install_dependencies_no_error(dev_command, first_app):
     dev_command.tools.subprocess.run.assert_called_once_with(
         [
             sys.executable,
+            "-u",
             "-m",
             "pip",
             "install",
@@ -41,6 +42,7 @@ def test_install_dependencies_error(dev_command, first_app):
     dev_command.tools.subprocess.run.assert_called_once_with(
         [
             sys.executable,
+            "-u",
             "-m",
             "pip",
             "install",

@@ -116,6 +116,7 @@ def test_app_packages_valid_requires(
     create_command.tools[myapp].app_context.run.assert_called_with(
         [
             sys.executable,
+            "-u",
             "-m",
             "pip",
             "install",
@@ -158,6 +159,7 @@ def test_app_packages_valid_requires_no_support_package(
     create_command.tools[myapp].app_context.run.assert_called_with(
         [
             sys.executable,
+            "-u",
             "-m",
             "pip",
             "install",
@@ -187,7 +189,7 @@ def test_app_packages_invalid_requires(
     create_command.tools[
         myapp
     ].app_context.run.side_effect = subprocess.CalledProcessError(
-        cmd=["python", "-m", "pip", "..."], returncode=1
+        cmd=["python", "-u", "-m", "pip", "..."], returncode=1
     )
 
     with pytest.raises(DependencyInstallError):
@@ -197,6 +199,7 @@ def test_app_packages_invalid_requires(
     create_command.tools[myapp].app_context.run.assert_called_with(
         [
             sys.executable,
+            "-u",
             "-m",
             "pip",
             "install",
@@ -233,7 +236,7 @@ def test_app_packages_offline(
     create_command.tools[
         myapp
     ].app_context.run.side_effect = subprocess.CalledProcessError(
-        cmd=["python", "-m", "pip", "..."], returncode=1
+        cmd=["python", "-u", "-m", "pip", "..."], returncode=1
     )
 
     with pytest.raises(DependencyInstallError):
@@ -243,6 +246,7 @@ def test_app_packages_offline(
     create_command.tools[myapp].app_context.run.assert_called_with(
         [
             sys.executable,
+            "-u",
             "-m",
             "pip",
             "install",
@@ -291,6 +295,7 @@ def test_app_packages_install_dependencies(
     create_command.tools[myapp].app_context.run.assert_called_with(
         [
             sys.executable,
+            "-u",
             "-m",
             "pip",
             "install",
@@ -350,6 +355,7 @@ def test_app_packages_replace_existing_dependencies(
     create_command.tools[myapp].app_context.run.assert_called_with(
         [
             sys.executable,
+            "-u",
             "-m",
             "pip",
             "install",

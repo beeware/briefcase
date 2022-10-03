@@ -12,6 +12,7 @@ def test_subprocess_running_successfully(dev_command, first_app, tmp_path):
     dev_command.tools.subprocess.run.assert_called_once_with(
         [
             sys.executable,
+            "-u",
             "-c",
             (
                 "import runpy, sys;"
@@ -38,6 +39,7 @@ def test_subprocess_throws_error(dev_command, first_app, tmp_path):
     dev_command.tools.subprocess.run.assert_called_once_with(
         [
             sys.executable,
+            "-u",
             "-c",
             (
                 "import runpy, sys;"
