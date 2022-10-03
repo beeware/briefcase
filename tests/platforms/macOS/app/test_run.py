@@ -23,11 +23,15 @@ def test_run_app(first_app_config, tmp_path, monkeypatch):
     log_stream_process = mock.MagicMock(spec_set=subprocess.Popen)
     command.tools.subprocess.Popen.return_value = log_stream_process
 
+    # To satisfy coverage, the stop function must be invoked at least once
+    # when invoking stream_output.
+    def mock_stream_output(label, popen_process, stop_func):
+        stop_func()
+
+    command.tools.subprocess.stream_output.side_effect = mock_stream_output
+
     monkeypatch.setattr(
         "briefcase.platforms.macOS.get_process_id_by_command", lambda *a, **kw: 100
-    )
-    monkeypatch.setattr(
-        "briefcase.platforms.macOS.is_process_dead", lambda *a, **kw: False
     )
     command.run_app(first_app_config)
 

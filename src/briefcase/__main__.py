@@ -1,5 +1,6 @@
 import sys
 from contextlib import suppress
+from pathlib import Path
 
 from briefcase.cmdline import parse_cmdline
 from briefcase.console import Console, Log
@@ -16,7 +17,7 @@ def main():
         command = Command(logger=logger, console=console)
         options = command.parse_options(extra=extra_cmdline)
         command.check_obsolete_data_dir()
-        command.parse_config("pyproject.toml")
+        command.parse_config(Path.cwd() / "pyproject.toml")
         command(**options)
     except HelpText as e:
         logger.info()
@@ -41,8 +42,8 @@ def main():
         with suppress(KeyboardInterrupt):
             logger.save_log_to_file(command)
 
-    sys.exit(result)
+    return result
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())  # pragma: no cover

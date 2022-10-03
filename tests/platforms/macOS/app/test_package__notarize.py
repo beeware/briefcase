@@ -130,9 +130,9 @@ def test_notarize_unknown_format(package_command, tmp_path):
         package_command.notarize(pkg_path, team_id="DEADBEEF")
 
 
-def test_notarize_unknown_credentials(package_command, first_app_dmg):
-    """If credentials haven't been stored, the user will be prompted to store
-    them."""
+def test_notarize_dmg_unknown_credentials(package_command, first_app_dmg):
+    """When notarizing a DMG, if credentials haven't been stored, the user will
+    be prompted to store them."""
     # Set up subprocess to fail on the first notarization attempt
     package_command.tools.subprocess.run.side_effect = [
         subprocess.CalledProcessError(
@@ -204,7 +204,77 @@ def test_notarize_unknown_credentials(package_command, first_app_dmg):
     )
 
 
-def test_credential_storage_failure(package_command, first_app_dmg):
+def test_credential_storage_failure_app(
+    package_command,
+    first_app_with_binaries,
+    tmp_path,
+):
+    """When submitting an app, if credentials haven't been stored, and storage
+    fails, an error is raised."""
+    app_path = tmp_path / "base_path" / "macOS" / "app" / "First App" / "First App.app"
+    archive_path = (
+        tmp_path / "base_path" / "macOS" / "app" / "First App" / "archive.zip"
+    )
+
+    # Set up subprocess to fail on the first notarization attempt,
+    # then fail on the storage of credentials
+    package_command.tools.subprocess.run.side_effect = [
+        subprocess.CalledProcessError(
+            returncode=69,
+            cmd=["xcrun", "notarytool", "submit"],
+        ),  # Unknown credential failure
+        subprocess.CalledProcessError(
+            returncode=1,
+            cmd=["xcrun", "notarytool", "store-credentials"],
+        ),  # Credential verification failed
+    ]
+
+    # The notarization call will fail with an error
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Unable to store credentials for team ID DEADBEEF.",
+    ):
+        package_command.notarize(app_path, team_id="DEADBEEF")
+
+    # As a result of mocking os.unlink, the zip archive won't be
+    # cleaned up, so we can test for its existence, but also
+    # verify that it *would* have been deleted.
+    assert archive_path.exists()
+    package_command.tools.os.unlink.assert_called_with(archive_path)
+
+    # The calls to notarize were made
+    package_command.tools.subprocess.run.assert_has_calls(
+        [
+            # Submit for notarization
+            mock.call(
+                [
+                    "xcrun",
+                    "notarytool",
+                    "submit",
+                    os.fsdecode(archive_path),
+                    "--keychain-profile",
+                    "briefcase-macOS-DEADBEEF",
+                    "--wait",
+                ],
+                check=True,
+            ),
+            # Store credentials in the keychain
+            mock.call(
+                [
+                    "xcrun",
+                    "notarytool",
+                    "store-credentials",
+                    "--team-id",
+                    "DEADBEEF",
+                    "briefcase-macOS-DEADBEEF",
+                ],
+                check=True,
+            ),
+        ]
+    )
+
+
+def test_credential_storage_failure_dmg(package_command, first_app_dmg):
     """If credentials haven't been stored, and storage fails, an error is
     raised."""
     # Set up subprocess to fail on the first notarization attempt,
@@ -262,9 +332,62 @@ def test_credential_storage_failure(package_command, first_app_dmg):
     )
 
 
-def test_credential_storage_disabled_input(package_command, first_app_dmg):
-    """If credentials haven't been stored, and input is disabled, an error is
-    raised."""
+def test_credential_storage_disabled_input_app(
+    package_command, first_app_with_binaries, tmp_path
+):
+    """When packaging an app, if credentials haven't been stored, and input is
+    disabled, an error is raised."""
+    app_path = tmp_path / "base_path" / "macOS" / "app" / "First App" / "First App.app"
+    archive_path = (
+        tmp_path / "base_path" / "macOS" / "app" / "First App" / "archive.zip"
+    )
+
+    # Set up subprocess to fail on the first notarization attempt.
+    package_command.tools.subprocess.run.side_effect = [
+        subprocess.CalledProcessError(
+            returncode=69,
+            cmd=["xcrun", "notarytool", "submit"],
+        ),  # Unknown credential failure
+    ]
+    # Disable console input
+    package_command.tools.input.enabled = False
+
+    # The notarization call will fail with an error
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"The keychain does not contain credentials for the profile briefcase-macOS-DEADBEEF.",
+    ):
+        package_command.notarize(app_path, team_id="DEADBEEF")
+
+    # As a result of mocking os.unlink, the zip archive won't be
+    # cleaned up, so we can test for its existence, but also
+    # verify that it *would* have been deleted.
+    assert archive_path.exists()
+    package_command.tools.os.unlink.assert_called_with(archive_path)
+
+    # The calls to notarize were made
+    package_command.tools.subprocess.run.assert_has_calls(
+        [
+            # Submit for notarization
+            mock.call(
+                [
+                    "xcrun",
+                    "notarytool",
+                    "submit",
+                    os.fsdecode(archive_path),
+                    "--keychain-profile",
+                    "briefcase-macOS-DEADBEEF",
+                    "--wait",
+                ],
+                check=True,
+            ),
+        ]
+    )
+
+
+def test_credential_storage_disabled_input_dmg(package_command, first_app_dmg):
+    """When packaging a DMG, if credentials haven't been stored, and input is
+    disabled, an error is raised."""
     # Set up subprocess to fail on the first notarization attempt.
     package_command.tools.subprocess.run.side_effect = [
         subprocess.CalledProcessError(
@@ -377,9 +500,63 @@ def test_notarize_unknown_credentials_after_storage(package_command, first_app_d
     )
 
 
-def test_notarization_failure_with_credentials(package_command, first_app_dmg):
-    """If the notarization process fails for a reason other than credentials,
-    an error is raised."""
+def test_app_notarization_failure_with_credentials(
+    package_command,
+    first_app_with_binaries,
+    tmp_path,
+):
+    """If the notarization process for an app fails for a reason other than
+    credentials, an error is raised."""
+    app_path = tmp_path / "base_path" / "macOS" / "app" / "First App" / "First App.app"
+    archive_path = (
+        tmp_path / "base_path" / "macOS" / "app" / "First App" / "archive.zip"
+    )
+
+    # Set up subprocess to fail on the first notarization attempt
+    # for a reason other than credentials
+    package_command.tools.subprocess.run.side_effect = [
+        subprocess.CalledProcessError(
+            returncode=42,
+            cmd=["xcrun", "notarytool", "submit"],
+        ),  # Notarization failure; error code 42 is a fake value
+    ]
+
+    # The notarization call will fail with an error
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Unable to submit macOS[/\\]app[/\\]First App[/\\]First App.app for notarization.",
+    ):
+        package_command.notarize(app_path, team_id="DEADBEEF")
+
+    # As a result of mocking os.unlink, the zip archive won't be
+    # cleaned up, so we can test for its existence, but also
+    # verify that it *would* have been deleted.
+    assert archive_path.exists()
+    package_command.tools.os.unlink.assert_called_with(archive_path)
+
+    # The calls to notarize were made
+    package_command.tools.subprocess.run.assert_has_calls(
+        [
+            # Submit for notarization
+            mock.call(
+                [
+                    "xcrun",
+                    "notarytool",
+                    "submit",
+                    os.fsdecode(archive_path),
+                    "--keychain-profile",
+                    "briefcase-macOS-DEADBEEF",
+                    "--wait",
+                ],
+                check=True,
+            ),
+        ]
+    )
+
+
+def test_dmg_notarization_failure_with_credentials(package_command, first_app_dmg):
+    """If the notarization process for a DMG fails for a reason other than
+    credentials, an error is raised."""
     # Set up subprocess to fail on the first notarization attempt
     # for a reason other than credentials
     package_command.tools.subprocess.run.side_effect = [

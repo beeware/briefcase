@@ -1,0 +1,1 @@
+Switch to using locally-hosted coverage reporting, rather than codecov.git

@@ -1,4 +1,6 @@
 import os
+import subprocess
+import sys
 from unittest import mock
 
 import pytest
@@ -22,8 +24,29 @@ def package_command(tmp_path):
     command.sign_file = mock.MagicMock()
     command.notarize = mock.MagicMock()
     command.dmgbuild = mock.MagicMock()
+    command.tools.subprocess = mock.MagicMock(spec=subprocess)
 
     return command
+
+
+def test_package_formats(package_command):
+    "Packaging formats are as expected"
+    assert package_command.packaging_formats == ["app", "dmg"]
+    assert package_command.default_packaging_format == "dmg"
+
+
+def test_device_option(package_command):
+    """The -d option can be parsed."""
+    options = package_command.parse_options(["--no-notarize"])
+
+    assert options == {
+        "adhoc_sign": False,
+        "identity": None,
+        "notarize_app": False,
+        "packaging_format": "dmg",
+        "sign_app": True,
+        "update": False,
+    }
 
 
 def test_package_app(package_command, first_app_with_binaries, tmp_path, capsys):
@@ -190,6 +213,28 @@ def test_package_app_no_sign(package_command, first_app_with_binaries):
         sign_app=False,
         notarize_app=False,
     )
+
+    # No code signing or notarization has been performed.
+    assert package_command.select_identity.call_count == 0
+    assert package_command.sign_app.call_count == 0
+    assert package_command.sign_file.call_count == 0
+    assert package_command.notarize.call_count == 0
+
+
+def test_package_app_notarize_adhoc_signed(package_command, first_app_with_binaries):
+    """A macOS App cannot be notarized if adhoc signing is requested."""
+
+    # Package the app without code signing
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Can't notarize an app with an adhoc signing identity",
+    ):
+        package_command.package_app(
+            first_app_with_binaries,
+            sign_app=True,
+            notarize_app=True,
+            adhoc_sign=True,
+        )
 
     # No code signing or notarization has been performed.
     assert package_command.select_identity.call_count == 0
@@ -731,3 +776,28 @@ def test_dmg_with_missing_installer_background(
         "Can't find pretty_background.png to use as DMG background\n"
         in capsys.readouterr().out
     )
+
+
+@pytest.mark.skipif(sys.platform != "darwin", reason="macOS specific test")
+def test_verify(package_command):
+    "If you're on macOS, you can verify tools."
+    # Mock the existence of the command line tools
+    package_command.tools.subprocess.check_output.side_effect = [
+        subprocess.CalledProcessError(cmd=["xcode-select", "--install"], returncode=1),
+        "clang 37.42",  # clang --version
+    ]
+
+    package_command.verify_tools()
+
+    assert package_command.tools.xcode_cli is not None
+
+
+@pytest.mark.skipif(sys.platform == "darwin", reason="non-macOS specific test")
+def test_verify_non_macOS(package_command):
+    "If you're not on macOS, you can't verify tools."
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match="Code signing and / or building a DMG requires running on macOS.",
+    ):
+        package_command.verify_tools()

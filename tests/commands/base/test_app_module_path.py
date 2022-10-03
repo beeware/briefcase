@@ -49,7 +49,10 @@ def test_multiple_match(base_command, my_app):
     raised."""
     my_app.sources = ["src/my_app", "extra/my_app"]
 
-    with pytest.raises(BriefcaseCommandError):
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Multiple paths in sources found for application 'my-app'",
+    ):
         base_command.app_module_path(my_app)
 
 
@@ -59,7 +62,10 @@ def test_hyphen_source(base_command, my_app):
     # The source directory must be a valid module, so hyphens aren't legal.
     my_app.sources = ["src/my-app"]
 
-    with pytest.raises(BriefcaseCommandError):
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Unable to find code for application 'my-app'",
+    ):
         base_command.app_module_path(my_app)
 
 
@@ -68,7 +74,10 @@ def test_no_match(base_command, my_app):
     is raised."""
     my_app.sources = ["src/pork", "src/spam"]
 
-    with pytest.raises(BriefcaseCommandError):
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Unable to find code for application 'my-app'",
+    ):
         base_command.app_module_path(my_app)
 
 
@@ -76,5 +85,8 @@ def test_no_source(base_command, my_app):
     """If an app provides no source locations, an error is raised."""
     my_app.sources = []
 
-    with pytest.raises(BriefcaseCommandError):
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Unable to find code for application 'my-app'",
+    ):
         base_command.app_module_path(my_app)

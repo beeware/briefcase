@@ -8,6 +8,12 @@
     ],
     "com.apple.CoreSimulator.SimRuntime.iOS-13-2" : [
       {
+        "state" : "Shutdown",
+        "udid" : "91314875-180C-41BB-AE5C-968C8B89897D",
+        "isAvailable" : true,
+        "name" : "iPhone 14"
+      },
+      {
         "state" : "Booting",
         "isAvailable" : true,
         "name" : "iPhone 11",

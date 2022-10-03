@@ -56,73 +56,14 @@ jobs:
       run: |
         tox -e ${{ matrix.task }}
 
-  smoke:
-    name: Smoke test
+  unit-tests:
+    name: Unit tests
     needs: beefore
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3.0.2
-      with:
-        fetch-depth: 0
-    - name: Set up Python
-      uses: actions/setup-python@v4.2.0
-      with:
-        python-version: ${{ env.python_version }}
-    - name: Install dependencies
-      run: |
-        pip install --upgrade pip
-        pip install --upgrade setuptools
-        pip install setuptools_scm tox
-    - name: Test
-      run: |
-        tox -e py
-    - name: Check coverage
-      uses: codecov/codecov-action@v3.1.1
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        file: ./coverage.xml
-        flags: unittests
-        fail_ci_if_error: true
-
-  python-versions:
-    name: Python compatibility test
-    needs: smoke
-    runs-on: ubuntu-latest
     strategy:
       max-parallel: 4
       matrix:
-        python-version: ['3.8', '3.10', '3.11.0-alpha - 3.11.0']
-    steps:
-    - uses: actions/checkout@v3.0.2
-      with:
-        fetch-depth: 0
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4.2.0
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
-      run: |
-        pip install --upgrade pip
-        pip install --upgrade setuptools
-        pip install setuptools_scm tox
-    - name: Test
-      run: |
-        tox -e py
-    - name: Check coverage
-      uses: codecov/codecov-action@v3.1.1
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        file: ./coverage.xml
-        flags: unittests
-        fail_ci_if_error: true
-
-  platform-compat:
-    name: Platform compatibility test
-    needs: smoke
-    strategy:
-      max-parallel: 4
-      matrix:
-        platform: ['macos-latest', 'windows-latest']
+        platform: ['macos-latest', 'ubuntu-latest', 'windows-latest']
+        python-version: ['3.8', '3.9', '3.10', '3.11.0-alpha - 3.11.0']
     runs-on: ${{ matrix.platform }}
     steps:
     - uses: actions/checkout@v3.0.2
@@ -131,26 +72,71 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4.2.0
       with:
-        python-version: ${{ env.python_version }}
+        python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
         pip install --upgrade pip
         pip install --upgrade setuptools
-        pip install setuptools_scm tox
+        pip install setuptools_scm tox coverage[toml]
     - name: Test
       run: |
         tox -e py
-    - name: Check coverage
-      uses: codecov/codecov-action@v3.1.1
+    - name: Store coverage data
+      uses: actions/upload-artifact@v2
       with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        file: ./coverage.xml
-        flags: unittests
-        fail_ci_if_error: true
+        name: coverage-data
+        path: ".coverage.*"
+        if-no-files-found: ignore
+    - name: Report platform coverage
+      run: |
+        python -m coverage combine
+        python -m coverage report
+
+  coverage:
+    name: Combine & check coverage.
+    runs-on: ubuntu-latest
+    needs:
+    - unit-tests
+    steps:
+    - uses: actions/checkout@v3.0.2
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-python@v2
+      with:
+        # Use latest, so it understands all syntax.
+        python-version: "3.10"
+    - name: Install dependencies
+      run: |
+        pip install --upgrade pip
+        pip install --upgrade setuptools
+        pip install coverage[toml]
+    - name: Retrieve coverage data
+      uses: actions/download-artifact@v2
+      with:
+        name: coverage-data
+    - name: Normalize paths in coverage data
+      run: |
+        # See https://github.com/nedbat/coveragepy/issues/991
+        for coverage in `ls .coverage.*`; do
+          sqlite3 $coverage "update file set path = replace(path, '\\', '/')"
+        done
+    - name: Combine coverage
+      run: |
+        python -m coverage combine
+    - name: Generate coverage report
+      run: |
+        python -m coverage html --skip-covered --skip-empty
+        python -m coverage report --fail-under=100
+    - name: Upload HTML report if check failed.
+      uses: actions/upload-artifact@v2
+      with:
+        name: html-coverage-report
+        path: htmlcov
+      if: ${{ failure() }}
 
   verify-apps:
     name: App verification
-    needs: platform-compat
+    needs: unit-tests
     strategy:
       max-parallel: 4
       matrix:

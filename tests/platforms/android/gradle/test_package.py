@@ -38,6 +38,23 @@ def test_default_packaging_format(package_command):
     assert package_command.default_packaging_format == "aab"
 
 
+def test_distribution_path(package_command, first_app_config, tmp_path):
+    assert (
+        package_command.distribution_path(first_app_config, packaging_format="any")
+        == tmp_path
+        / "base_path"
+        / "android"
+        / "gradle"
+        / "First App"
+        / "app"
+        / "build"
+        / "outputs"
+        / "bundle"
+        / "release"
+        / "app-release.aab"
+    )
+
+
 @pytest.mark.parametrize(
     "host_os,gradlew_name",
     [("Windows", "gradlew.bat"), ("NonWindows", "gradlew")],

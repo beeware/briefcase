@@ -138,6 +138,30 @@ def test_create_app_before_start(run_command, first_app_config):
     ]
 
 
+def test_build_app_before_start(run_command, first_app_uncompiled):
+    """The run command can request that an uncompiled app is compiled first."""
+    # Add a single app
+    run_command.apps = {
+        "first": first_app_uncompiled,
+    }
+
+    # Configure no command line options
+    options = run_command.parse_options([])
+
+    # Run the run command
+    run_command(**options)
+
+    # The right sequence of things will be done
+    assert run_command.actions == [
+        # Tools are verified
+        ("verify",),
+        # A build was requested
+        ("build", "first", {}),
+        # Then, it will be started
+        ("run", "first", {"build_state": "first"}),
+    ]
+
+
 def test_update_app(run_command, first_app):
     """The run command can request that the app is updated first."""
     # Add a single app
@@ -145,7 +169,7 @@ def test_update_app(run_command, first_app):
         "first": first_app,
     }
 
-    # Configure no command line options
+    # Configure an update option
     options = run_command.parse_options(["-u"])
 
     # Run the run command
@@ -170,7 +194,7 @@ def test_update_uncompiled_app(run_command, first_app_uncompiled):
         "first": first_app_uncompiled,
     }
 
-    # Configure no command line options
+    # Configure an update option
     options = run_command.parse_options(["-u"])
 
     # Run the run command
@@ -195,7 +219,7 @@ def test_update_non_existent(run_command, first_app_config):
         "first": first_app_config,
     }
 
-    # Configure no command line options
+    # Configure an update option
     options = run_command.parse_options(["-u"])
 
     # Run the run command

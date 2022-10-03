@@ -17,6 +17,19 @@ def test_no_overrides(mock_sub):
     }
 
 
+def test_explicit_no_overrides(mock_sub):
+    """With explicitly no overrides, there are still kwargs."""
+    assert mock_sub.final_kwargs(env=None) == {
+        "env": {
+            "VAR1": "Value 1",
+            "PS1": "\nLine 2\n\nLine 4",
+            "PWD": "/home/user/",
+        },
+        "text": True,
+        "encoding": CONSOLE_ENCODING,
+    }
+
+
 def test_env_overrides(mock_sub):
     """If environmental overrides are provided, they supercede the default
     environment."""

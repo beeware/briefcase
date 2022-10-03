@@ -792,19 +792,20 @@ Use the -d/--device option to explicitly specify the device to use.
             avd = choice[1:]
         else:
             # Either a running emulator, or a physical device. Regardless,
-            # we need to check if the device is developer enabled
-            try:
-                details = running_devices[choice]
-                if not details["authorized"]:
-                    # An unauthorized physical device
-                    raise AndroidDeviceNotAuthorized(choice)
+            # we need to check if the device is developer enabled.
+            # Functionally, we know the the device *must* be in the list of
+            # choices; which means it's also in the list of running devices
+            # and the list of device choices, so any KeyError on those lookups
+            # indicates a deeper problem.
+            details = running_devices[choice]
+            if not details["authorized"]:
+                # An unauthorized physical device
+                raise AndroidDeviceNotAuthorized(choice)
 
-                # Return the device ID and name.
-                device = choice
-                name = device_choices[choice]
-                avd = details.get("avd")
-            except KeyError as e:
-                raise InvalidDeviceError("device ID", choice) from e
+            # Return the device ID and name.
+            device = choice
+            name = device_choices[choice]
+            avd = details.get("avd")
 
         if avd:
             self.tools.logger.info(
@@ -983,6 +984,7 @@ In future, you can specify this device by running:
         """
         if avd not in set(self.emulators()):
             raise InvalidDeviceError("emulator AVD", avd)
+
         emulator_popen = self.tools.subprocess.Popen(
             [
                 os.fsdecode(self.emulator_path),
@@ -1041,8 +1043,9 @@ find this page helpful in diagnosing emulator problems.
                                 adb = None
                                 known_devices.add(device)
 
-                    # Try again in 2 seconds...
-                    self.sleep(2)
+                    # If we haven't found a device, try again in 2 seconds...
+                    if adb is None:
+                        self.sleep(2)
 
             # Phase 2: Wait for the boot process to complete
             if not adb.has_booted():

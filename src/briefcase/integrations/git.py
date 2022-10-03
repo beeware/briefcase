@@ -25,7 +25,7 @@ def verify_git_is_installed(tools):
     # Check whether the git executable could be imported.
     try:
         import git
-    except ImportError as e:
+    except ImportError as e:  # pragma: no cover
         # macOS provides git as part of the Xcode command line tools,
         # and also hijacks /usr/bin/git with a trigger that prompts the
         # installation of those tools. Customize the message to account

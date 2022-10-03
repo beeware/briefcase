@@ -37,6 +37,8 @@ def mock_unpack(filename, extract_dir):
     (extract_dir / "cmdline-tools" / "bin").mkdir(parents=True)
     (extract_dir / "cmdline-tools" / "bin" / "sdkmanager").touch(mode=0o644)
     (extract_dir / "cmdline-tools" / "bin" / "avdmanager").touch(mode=0o644)
+    # Include an extra tool that is already executable.
+    (extract_dir / "cmdline-tools" / "bin" / "other").touch(mode=0o755)
 
 
 def accept_license(android_sdk_root_path):

@@ -133,8 +133,86 @@ def test_start_emulator(mock_tools, android_sdk):
         ]
     )
 
-    # Took a total of 5 naps.
-    assert android_sdk.sleep.call_count == 4
+    # Took a total of 3 naps.
+    assert android_sdk.sleep.call_count == 3
+
+
+def test_start_emulator_fast_start(mock_tools, android_sdk):
+    """If the emulator starts quickly, that's OK."""
+    # If the emulator starts *really* fast, there will only be 1 call to devices.
+    devices = {
+        "041234567892009a": {
+            "name": "Unknown device (not authorized for development)",
+            "authorized": False,
+        },
+        "KABCDABCDA1513": {
+            "name": "Kogan Agora 9",
+            "authorized": True,
+        },
+        "emulator-5554": {
+            "name": "generic_x86",
+            "authorized": True,
+        },
+    }
+
+    android_sdk.devices = MagicMock(
+        side_effect=[
+            devices,
+        ]
+    )
+
+    # There will be 3 calls on adb.run (2 calls to avd_name, then
+    # 1 call to getprop)
+    android_sdk.mock_run.side_effect = [
+        # emu avd_name
+        subprocess.CalledProcessError(
+            returncode=1, cmd="emu avd name"
+        ),  # phyiscal device
+        "idleEmulator\nOK",  # running emulator
+        # shell getprop sys.boot_completed
+        "1\n",
+    ]
+
+    # poll() on the process continues to return None, indicating no problem.
+    emu_popen = MagicMock(spec_set=subprocess.Popen)
+    emu_popen.poll.return_value = None
+    mock_tools.subprocess.Popen.return_value = emu_popen
+
+    # Start the emulator
+    device, name = android_sdk.start_emulator("idleEmulator")
+
+    # The device details are as expected
+    assert device == "emulator-5554"
+    assert name == "@idleEmulator (running emulator)"
+
+    # The process was started.
+    mock_tools.subprocess.Popen.assert_called_with(
+        [
+            os.fsdecode(android_sdk.emulator_path),
+            "@idleEmulator",
+            "-dns-server",
+            "8.8.8.8",
+        ],
+        env=android_sdk.env,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        bufsize=1,
+        start_new_session=True,
+    )
+
+    # There were 3 calls to run
+    android_sdk.mock_run.assert_has_calls(
+        [
+            # 2 calls to get avd name
+            call("emu", "avd", "name"),
+            call("emu", "avd", "name"),
+            # 1 calls to get boot property
+            call("shell", "getprop", "sys.boot_completed"),
+        ]
+    )
+
+    # Took no naps, as everything was ready when we found it.
+    assert android_sdk.sleep.call_count == 0
 
 
 def test_emulator_fail_to_start(mock_tools, android_sdk):
@@ -332,5 +410,5 @@ def test_emulator_fail_to_boot(mock_tools, android_sdk):
         ]
     )
 
-    # Took a total of 5 naps.
-    assert android_sdk.sleep.call_count == 5
+    # Took a total of 4 naps.
+    assert android_sdk.sleep.call_count == 4

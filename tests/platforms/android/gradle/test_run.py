@@ -51,6 +51,30 @@ def run_command(tmp_path, first_app_config, jdk):
     return command
 
 
+def test_binary_path(run_command, first_app_config, tmp_path):
+    assert (
+        run_command.binary_path(first_app_config)
+        == tmp_path
+        / "base_path"
+        / "android"
+        / "gradle"
+        / "First App"
+        / "app"
+        / "build"
+        / "outputs"
+        / "apk"
+        / "debug"
+        / "app-debug.apk"
+    )
+
+
+def test_device_option(run_command):
+    """The -d option can be parsed."""
+    options = run_command.parse_options(["-d", "myphone"])
+
+    assert options == {"device_or_avd": "myphone", "appname": None, "update": False}
+
+
 def test_run_existing_device(run_command, first_app_config):
     """An app can be run on an existing device."""
     # Set up device selection to return a running physical device.

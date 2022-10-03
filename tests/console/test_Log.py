@@ -64,6 +64,17 @@ def test_save_log_to_file_no_exception(tmp_path, now):
     logger.print.to_log("this is log output")
     logger.print.to_console("this is console output")
 
+    logger.info("this is [bold]info output with markup[/bold]")
+    logger.info(
+        "this is [bold]info output with markup and a prefix[/bold]", prefix="wibble"
+    )
+    logger.info("this is [bold]info output with escaped markup[/bold]", markup=True)
+    logger.info(
+        "this is [bold]info output with escaped markup and a prefix[/bold]",
+        prefix="wibble",
+        markup=True,
+    )
+
     logger.save_log_to_file(command=command)
 
     log_filepath = tmp_path / "briefcase.2022_06_25-16_12_29.dev.log"
@@ -75,6 +86,8 @@ def test_save_log_to_file_no_exception(tmp_path, now):
     assert log_contents.startswith("Date/Time:       2022-06-25 16:12:29")
     assert f"{Log.DEBUG_PREFACE}this is debug output" in log_contents
     assert "this is info output" in log_contents
+    assert "this is [bold]info output with markup[/bold]" in log_contents
+    assert "this is info output with escaped markup" in log_contents
     assert "this is warning output" in log_contents
     assert "this is error output" in log_contents
     assert "this is print output" in log_contents

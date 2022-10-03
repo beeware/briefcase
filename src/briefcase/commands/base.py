@@ -117,7 +117,7 @@ class BaseCommand(ABC):
         console: Console,
         tools: ToolCache = None,
         apps: dict = None,
-        base_path: Path = Path.cwd(),
+        base_path: Path = None,
         data_path: Path = None,
         is_clone: bool = False,
     ):
@@ -132,7 +132,10 @@ class BaseCommand(ABC):
         :param is_clone: Flag that Command was triggered by the user's requested Command;
             for instance, RunCommand can invoke UpdateCommand and/or BuildCommand.
         """
-        self.base_path = Path(base_path)
+        if base_path is None:
+            self.base_path = Path.cwd()
+        else:
+            self.base_path = base_path
         self.data_path = self.validate_data_path(data_path)
         self.apps = {} if apps is None else apps
         self.is_clone = is_clone
@@ -479,17 +482,17 @@ a custom location for Briefcase's tools.
             for path in app.sources
             if path.rsplit("/", 1)[-1] == app.module_name
         ]
-        try:
-            if len(app_home) == 1:
-                path = Path(str(self.base_path), *app_home[0])
-            else:
-                raise BriefcaseCommandError(
-                    f"Multiple paths in sources found for application '{app.app_name}'"
-                )
-        except IndexError as e:
+
+        if len(app_home) == 0:
             raise BriefcaseCommandError(
-                f"Unable to find code for application '{app.app_name}'"
-            ) from e
+                f"Unable to find code for application {app.app_name!r}"
+            )
+        elif len(app_home) == 1:
+            path = Path(str(self.base_path), *app_home[0])
+        else:
+            raise BriefcaseCommandError(
+                f"Multiple paths in sources found for application {app.app_name!r}"
+            )
 
         return path
 
