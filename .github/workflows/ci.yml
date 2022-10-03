@@ -56,83 +56,14 @@ jobs:
       run: |
         tox -e ${{ matrix.task }}
 
-  smoke:
-    name: Smoke test
+  unit-tests:
+    name: Unit tests
     needs: beefore
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3.0.2
-      with:
-        fetch-depth: 0
-    - name: Set up Python
-      uses: actions/setup-python@v4.2.0
-      with:
-        python-version: ${{ env.python_version }}
-    - name: Install dependencies
-      run: |
-        pip install --upgrade pip
-        pip install --upgrade setuptools
-        pip install setuptools_scm tox
-    - name: Test
-      run: |
-        tox -e py
-    - name: Report coverage
-      uses: actions/upload-artifact@v2
-      with:
-        name: coverage-data
-        path: ".coverage.*"
-        if-no-files-found: ignore
-    - name: Report smoke coverage
-      run: |
-        ls .coverage.*
-        python -m pip install coverage
-        python -m coverage combine
-        python -m coverage report
-
-  python-versions:
-    name: Python compatibility test
-    needs: smoke
-    runs-on: ubuntu-latest
     strategy:
       max-parallel: 4
       matrix:
-        python-version: ['3.8', '3.10', '3.11.0-alpha - 3.11.0']
-    steps:
-    - uses: actions/checkout@v3.0.2
-      with:
-        fetch-depth: 0
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4.2.0
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
-      run: |
-        pip install --upgrade pip
-        pip install --upgrade setuptools
-        pip install setuptools_scm tox
-    - name: Test
-      run: |
-        tox -e py
-    - name: Report coverage
-      uses: actions/upload-artifact@v2
-      with:
-        name: coverage-data
-        path: ".coverage.*"
-        if-no-files-found: ignore
-    - name: Report version coverage
-      run: |
-        ls .coverage.*
-        python -m pip install coverage
-        python -m coverage combine
-        python -m coverage report
-
-  platform-compat:
-    name: Platform compatibility test
-    needs: smoke
-    strategy:
-      max-parallel: 4
-      matrix:
-        platform: ['macos-latest', 'windows-latest']
+        platform: ['macos-latest', 'ubuntu-latest', 'windows-latest']
+        python-version: ['3.8', '3.9', '3.10', '3.11.0-alpha - 3.11.0']
     runs-on: ${{ matrix.platform }}
     steps:
     - uses: actions/checkout@v3.0.2
@@ -141,12 +72,12 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4.2.0
       with:
-        python-version: ${{ env.python_version }}
+        python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
         pip install --upgrade pip
         pip install --upgrade setuptools
-        pip install setuptools_scm tox
+        pip install setuptools_scm tox coverage[toml]
     - name: Test
       run: |
         tox -e py
@@ -158,8 +89,6 @@ jobs:
         if-no-files-found: ignore
     - name: Report platform coverage
       run: |
-        ls .coverage.*
-        python -m pip install coverage
         python -m coverage combine
         python -m coverage report
 
@@ -167,9 +96,7 @@ jobs:
     name: Combine & check coverage.
     runs-on: ubuntu-latest
     needs:
-    - smoke
-    - python-versions
-    - platform-compat
+    - unit-tests
     steps:
     - uses: actions/checkout@v2
       with:
@@ -206,7 +133,7 @@ jobs:
 
   verify-apps:
     name: App verification
-    needs: platform-compat
+    needs: unit-tests
     strategy:
       max-parallel: 4
       matrix:
