@@ -98,7 +98,7 @@ jobs:
     needs:
     - unit-tests
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3.0.2
       with:
         fetch-depth: 0
     - uses: actions/setup-python@v2
@@ -116,6 +116,7 @@ jobs:
         name: coverage-data
     - name: Normalize paths in coverage data
       run: |
+        # See https://github.com/nedbat/coveragepy/issues/991
         for coverage in `ls .coverage.*`; do
           sqlite3 $coverage "update file set path = replace(path, '\\', '/')"
         done
