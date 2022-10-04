@@ -82,7 +82,7 @@ jobs:
       run: |
         tox -e py
     - name: Store coverage data
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: coverage-data
         path: ".coverage.*"
@@ -128,7 +128,7 @@ jobs:
         python -m coverage html --skip-covered --skip-empty
         python -m coverage report --fail-under=100
     - name: Upload HTML report if check failed.
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: html-coverage-report
         path: htmlcov
