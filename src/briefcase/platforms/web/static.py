@@ -1,3 +1,5 @@
+import subprocess
+import sys
 import webbrowser
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 
@@ -10,7 +12,8 @@ from briefcase.commands import (
     RunCommand,
     UpdateCommand,
 )
-from briefcase.config import BaseConfig
+from briefcase.config import AppConfig
+from briefcase.exceptions import BriefcaseCommandError
 
 
 class StaticWebMixin:
@@ -31,6 +34,9 @@ class StaticWebMixin:
     def binary_path(self, app):
         return self.bundle_path(app) / "www" / "index.html"
 
+    def wheel_path(self, app):
+        return self.project_path(app) / "static" / "wheels"
+
     def distribution_path(self, app, packaging_format):
         return self.binary_path(app)
 
@@ -50,14 +56,77 @@ class StaticWebOpenCommand(StaticWebMixin, OpenCommand):
 class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
     description = "Build a static web project."
 
-    def build_app(self, app: BaseConfig, **kwargs):
+    def build_app(self, app: AppConfig, **kwargs):
         """Build the static web deployment for the application.
 
         :param app: The application to build
         """
         self.logger.info("Building web project...", prefix=app.app_name)
-        with self.input.wait_bar("Building..."):
-            pass
+
+        if self.wheel_path(app).exists():
+            with self.input.wait_bar("Removing old wheels..."):
+                self.tools.shutil.rmtree(self.wheel_path(app))
+                self.wheel_path(app).mkdir(parents=True)
+
+        with self.input.wait_bar("Building app wheel..."):
+            try:
+                self.tools.subprocess.run(
+                    [
+                        sys.executable,
+                        "-u",
+                        "-m",
+                        "wheel",
+                        "pack",
+                        self.app_path(app),
+                        "--dest-dir",
+                        self.wheel_path(app),
+                    ],
+                    check=True,
+                )
+            except subprocess.CalledProcessError as e:
+                raise BriefcaseCommandError(
+                    f"Unable to build wheel for app {app.app_name!r}"
+                ) from e
+
+        with self.input.wait_bar("Installing wheels for dependencies..."):
+            try:
+                self.tools.subprocess.run(
+                    [
+                        sys.executable,
+                        "-u",
+                        "-m",
+                        "pip",
+                        "wheel",
+                        "--wheel-dir",
+                        self.wheel_path(app),
+                        "-r",
+                        self.bundle_path(app) / "requirements.txt",
+                    ],
+                    check=True,
+                )
+            except subprocess.CalledProcessError as e:
+                raise BriefcaseCommandError(
+                    f"Unable to install dependencies for app {app.app_name!r}"
+                ) from e
+
+        with (self.project_path(app) / "pyscript.toml").open(
+            "w", encoding="utf-8"
+        ) as f:
+            f.write("autoclose_loader = true\n")
+            f.write(f"name = '{app.formal_name}'\n")
+            f.write(f"description = '{app.description}'\n")
+            f.write(f"version = '{app.version}'\n")
+            f.write("packages = [\n")
+            f.write(
+                "\n".join(
+                    f'    "./{wheel.relative_to(self.project_path(app))}",'
+                    for wheel in self.wheel_path(app).glob("*.whl")
+                )
+            )
+            f.write("\n]\n")
+
+        # Extracting static resources from packaged wheels
+        # for wheel in self.wheel_path(app).glob("*.whl"):
 
         return {}
 
@@ -105,7 +174,7 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
             required=False,
         )
 
-    def run_app(self, app: BaseConfig, host, port, open_browser, **kwargs):
+    def run_app(self, app: AppConfig, host, port, open_browser, **kwargs):
         """Start the application.
 
         :param app: The config object for the app

@@ -28,6 +28,7 @@ Formal-Name: My App
 App-ID: com.example.my-app
 Version: 1.2.3
 Home-page: https://example.com
+Download-URL: https://example.com
 Author: First Last
 Author-email: first@example.com
 Summary: This is a simple app
@@ -337,6 +338,7 @@ Formal-Name: My büggy app
 App-ID: com.example.my-app
 Version: 1.2.3
 Home-page: https://xn--7qvx15a.cn
+Download-URL: https://xn--7qvx15a.cn
 Author: José Weiß-Müller
 Author-email: 钱华林@中科院.中国
 Summary: A Møøse once bit my sister...
