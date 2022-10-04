@@ -111,7 +111,7 @@ jobs:
         pip install --upgrade setuptools
         pip install coverage[toml]
     - name: Retrieve coverage data
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v3
       with:
         name: coverage-data
     - name: Normalize paths in coverage data
