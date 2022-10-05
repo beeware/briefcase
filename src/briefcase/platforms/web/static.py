@@ -40,7 +40,7 @@ class StaticWebMixin:
         return self.project_path(app) / "static" / "wheels"
 
     def distribution_path(self, app, packaging_format):
-        return self.binary_path(app)
+        return self.platform_path / f"{app.formal_name}-{app.version}.zip"
 
 
 class StaticWebCreateCommand(StaticWebMixin, CreateCommand):
@@ -290,11 +290,43 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
 
 
 class StaticWebPackageCommand(StaticWebMixin, PackageCommand):
-    description = "Package an iOS app."
+    description = "Package a static web app."
+
+    @property
+    def packaging_formats(self):
+        return ["zip"]
+
+    @property
+    def default_packaging_format(self):
+        return "zip"
+
+    def package_app(self, app: AppConfig, packaging_format="zip", **kwargs):
+        if packaging_format != "zip":
+            raise BriefcaseCommandError(
+                f"Unknown packaging format {packaging_format!r}"
+            )
+
+        self.logger.info(
+            "Packaging web app for distribution...",
+            prefix=app.app_name,
+        )
+
+        with self.input.wait_bar("Building archive..."):
+            with ZipFile(
+                self.distribution_path(app, packaging_format=packaging_format), "w"
+            ) as archive:
+
+                for filename in self.project_path(app).glob("**/*"):
+                    self.logger.info(
+                        f"Adding {filename.relative_to(self.project_path(app))}"
+                    )
+                    archive.write(
+                        filename, arcname=filename.relative_to(self.project_path(app))
+                    )
 
 
 class StaticWebPublishCommand(StaticWebMixin, PublishCommand):
-    description = "Publish an iOS app."
+    description = "Publish a static web app."
     publication_channels = ["s3"]
     default_publication_channel = "s3"
 
