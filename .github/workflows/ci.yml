@@ -233,3 +233,8 @@ jobs:
         briefcase create iOS
         briefcase build iOS -d "iPhone SE (2nd generation)"
         briefcase package iOS --adhoc-sign
+    - name: Build Web App
+      if: matrix.framework == 'toga'
+        briefcase create web
+        briefcase build web
+        briefcase package web
