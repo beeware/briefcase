@@ -235,6 +235,7 @@ jobs:
         briefcase package iOS --adhoc-sign
     - name: Build Web App
       if: matrix.framework == 'toga'
+      run: |
         briefcase create web
         briefcase build web
         briefcase package web
