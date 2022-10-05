@@ -37,8 +37,9 @@ application. You can package projects for:
 * Linux
 * iPhone/iPad
 * Android
+* Web
 
-Support for AppleTV, watchOS, wearOS and web deployments is planned.
+Support for AppleTV, watchOS, and wearOS deployments is planned.
 
 If you want to see Briefcase in action, try the `BeeWare tutorial
 <https://beeware.readthedocs.io>`__. That tutorial walks you through the

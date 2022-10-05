@@ -37,6 +37,7 @@ native application. It supports producing binaries for:
 * Linux, as an AppImage;
 * iOS, as an XCode project; and
 * Android, as a Gradle project.
+* the Web, as a static web site using PyScript for client-side Python.
 
 It is also extensible, allowing for additional platforms and installation
 formats to be produced.
