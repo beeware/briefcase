@@ -57,5 +57,8 @@ The device simulator to target. Can be either a UDID, a device name (e.g.,
 run
 ---
 
+``-d <device>`` / ``--device <device>``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 The device simulator to target. Can be either a UDID, a device name (e.g.,
 ``"iPhone 11"``), or a device name and OS version (``"iPhone 11::13.3"``).

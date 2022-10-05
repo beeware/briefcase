@@ -10,3 +10,4 @@ Platform support
    linux/index
    iOS
    android
+   web
