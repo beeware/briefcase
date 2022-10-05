@@ -176,7 +176,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 f.write("packages = [\n")
                 f.write(
                     "\n".join(
-                        f'    "./{wheel.relative_to(self.project_path(app))}",'
+                        f'    "/{wheel.relative_to(self.project_path(app))}",'
                         for wheel in self.wheel_path(app).glob("*.whl")
                     )
                 )
