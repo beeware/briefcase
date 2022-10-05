@@ -2,6 +2,8 @@ import subprocess
 import sys
 import webbrowser
 from http.server import HTTPServer, SimpleHTTPRequestHandler
+from pathlib import Path
+from zipfile import ZipFile
 
 from briefcase.commands import (
     BuildCommand,
@@ -44,6 +46,12 @@ class StaticWebMixin:
 class StaticWebCreateCommand(StaticWebMixin, CreateCommand):
     description = "Create and populate a static web project."
 
+    def output_format_template_context(self, app: AppConfig):
+        """Add style framework details to the app template."""
+        return {
+            "style_framework": getattr(app, "style_framework", "None"),
+        }
+
 
 class StaticWebUpdateCommand(StaticWebCreateCommand, UpdateCommand):
     description = "Update an existing static web project."
@@ -55,6 +63,53 @@ class StaticWebOpenCommand(StaticWebMixin, OpenCommand):
 
 class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
     description = "Build a static web project."
+
+    def _trim_file(self, path, sentinel):
+        """Re-write a file to strip any content after a sentinel line.
+
+        The file is stored in-memory, so it shouldn't be used on files
+        with a *lot* of content before the sentinel.
+
+        :param path: The path to the file to be trimmed
+        :param sentinel: The content of the sentinel line. This will
+            become the last line in the trimmed file.
+        """
+        content = []
+        with path.open("r", encoding="utf-8") as f:
+            for line in f:
+                if line.strip() == sentinel:
+                    content.append(line)
+                    break
+                else:
+                    content.append(line)
+
+        with path.open("w", encoding="utf-8") as f:
+            for line in content:
+                f.write(line)
+
+    def _process_wheel(self, wheelfile, css_file):
+        """Process a wheel, extracting any content that needs to be compiled
+        into the final project.
+
+        :param wheelfile: The path to the wheel file to be processed.
+        :param css_file: A file handle, opened for write/append, to which
+            any extracted CSS content will be appended.
+        """
+        package = " ".join(wheelfile.name.split("-")[:2])
+        with ZipFile(wheelfile) as wheel:
+            for filename in wheel.namelist():
+                path = Path(filename)
+                # Any CSS file in a `static` folder is appended
+                if path.parts[1] == "static" and path.suffix == ".css":
+                    self.logger.info(f"Found {filename}")
+                    css_file.write(
+                        "\n/*******************************************************\n"
+                    )
+                    css_file.write(f" * {package}::{'.'.join(path.parts[2:])}\n")
+                    css_file.write(
+                        " *******************************************************/\n\n"
+                    )
+                    css_file.write(wheel.read(filename).decode("utf-8"))
 
     def build_app(self, app: AppConfig, **kwargs):
         """Build the static web deployment for the application.
@@ -109,24 +164,40 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                     f"Unable to install dependencies for app {app.app_name!r}"
                 ) from e
 
-        with (self.project_path(app) / "pyscript.toml").open(
-            "w", encoding="utf-8"
-        ) as f:
-            f.write("autoclose_loader = true\n")
-            f.write(f"name = '{app.formal_name}'\n")
-            f.write(f"description = '{app.description}'\n")
-            f.write(f"version = '{app.version}'\n")
-            f.write("packages = [\n")
-            f.write(
-                "\n".join(
-                    f'    "./{wheel.relative_to(self.project_path(app))}",'
-                    for wheel in self.wheel_path(app).glob("*.whl")
+        with self.input.wait_bar("Writing Pyscript configuration file..."):
+            with (self.project_path(app) / "pyscript.toml").open(
+                "w", encoding="utf-8"
+            ) as f:
+                f.write(f"name = '{app.formal_name}'\n")
+                f.write(f"description = '{app.description}'\n")
+                f.write(f"version = '{app.version}'\n")
+                f.write("\n")
+                f.write("autoclose_loader = true\n")
+                f.write("packages = [\n")
+                f.write(
+                    "\n".join(
+                        f'    "./{wheel.relative_to(self.project_path(app))}",'
+                        for wheel in self.wheel_path(app).glob("*.whl")
+                    )
                 )
-            )
-            f.write("\n]\n")
+                f.write("\n]\n")
 
-        # Extracting static resources from packaged wheels
-        # for wheel in self.wheel_path(app).glob("*.whl"):
+        self.logger.info("Compile static web content from wheels...")
+        with self.input.wait_bar("Compiling static web content from wheels..."):
+            # Trim previously compiled content out of briefcase.css
+            briefcase_css_path = (
+                self.project_path(app) / "static" / "css" / "briefcase.css"
+            )
+            self._trim_file(
+                briefcase_css_path,
+                sentinel=" ******************* Wheel contributed styles **********************/",
+            )
+
+            # Extract static resources from packaged wheels
+            for wheelfile in self.wheel_path(app).glob("*.whl"):
+                self.logger.info(f"Processing {wheelfile.name}...")
+                with briefcase_css_path.open("a", encoding="utf-8") as css_file:
+                    self._process_wheel(wheelfile, css_file=css_file)
 
         return {}
 
