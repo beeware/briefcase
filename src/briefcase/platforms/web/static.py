@@ -22,14 +22,6 @@ class StaticWebMixin:
     output_format = "static"
     platform = "web"
 
-    @property
-    def packaging_formats(self):
-        return ["zip"]
-
-    @property
-    def default_packaging_format(self):
-        return "zip"
-
     def project_path(self, app):
         return self.bundle_path(app) / "www"
 
@@ -77,7 +69,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         content = []
         with path.open("r", encoding="utf-8") as f:
             for line in f:
-                if line.strip() == sentinel:
+                if line.rstrip("\n") == sentinel:
                     content.append(line)
                     break
                 else:
@@ -100,12 +92,16 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
             for filename in wheel.namelist():
                 path = Path(filename)
                 # Any CSS file in a `static` folder is appended
-                if path.parts[1] == "static" and path.suffix == ".css":
+                if (
+                    len(path.parts) > 1
+                    and path.parts[1] == "static"
+                    and path.suffix == ".css"
+                ):
                     self.logger.info(f"Found {filename}")
                     css_file.write(
                         "\n/*******************************************************\n"
                     )
-                    css_file.write(f" * {package}::{'.'.join(path.parts[2:])}\n")
+                    css_file.write(f" * {package}::{'/'.join(path.parts[2:])}\n")
                     css_file.write(
                         " *******************************************************/\n\n"
                     )
@@ -121,7 +117,8 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         if self.wheel_path(app).exists():
             with self.input.wait_bar("Removing old wheels..."):
                 self.tools.shutil.rmtree(self.wheel_path(app))
-                self.wheel_path(app).mkdir(parents=True)
+
+        self.wheel_path(app).mkdir(parents=True)
 
         with self.input.wait_bar("Building app wheel..."):
             try:
@@ -252,13 +249,15 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
         :param host: The host on which to run the server
         :param port: The device UDID to target. If ``None``, the user will
             be asked to select a device at runtime.
-        :param open_browser: Should a browser be opened on the newly
+        :param open_browser: Should a browser be opened on the newly started
+            server.
         """
         self.logger.info(
             f"Starting web server on http://{host}:{port}/",
             prefix=app.app_name,
         )
 
+        httpd = None
         try:
             # Create a local HTTP server
             httpd = LocalHTTPServer(
@@ -283,8 +282,14 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
             # CTRL-C is the accepted way to stop the server.
             pass
         finally:
-            with self.input.wait_bar("Shutting down server..."):
-                httpd.server_close()
+            if httpd:
+                with self.input.wait_bar("Shutting down server..."):
+                    httpd.server_close()
+
+            # Not sure why, but this is needed to mollify coverage for the
+            # "test_cleanup_server_error" case. Without this pass, a missing branch
+            # is reported for the "if httpd: -> exit" branch
+            pass
 
         return {}
 
@@ -300,12 +305,13 @@ class StaticWebPackageCommand(StaticWebMixin, PackageCommand):
     def default_packaging_format(self):
         return "zip"
 
-    def package_app(self, app: AppConfig, packaging_format="zip", **kwargs):
-        if packaging_format != "zip":
-            raise BriefcaseCommandError(
-                f"Unknown packaging format {packaging_format!r}"
-            )
+    def package_app(self, app: AppConfig, packaging_format: str, **kwargs):
+        """Package an app for distribution.
 
+        :param app: The app to package.
+        :param packaging_format: The packaging format; the only supported value
+            is ``zip``, enforced at the command level.
+        """
         self.logger.info(
             "Packaging web app for distribution...",
             prefix=app.app_name,

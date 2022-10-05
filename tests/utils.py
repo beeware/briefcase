@@ -130,3 +130,34 @@ def mock_tgz_download(filename, content, role=None):
         return create_tgz_file(download_path / filename, content)
 
     return _download_file
+
+
+def create_wheel(path, package="dummy", version="1.2.3", extra_content=None):
+    """Create a sample wheel file.
+
+    :param path: The folder where the wheel should be writter.
+    :param package: The name of the package in the wheel. Defaults to ``dummy``
+    :param version: The version number of the package. Defaults to ``1.2.3``
+    :param extra_content: Optional. A list of tuples of ``(path, content)`` that
+        will be added to the wheel.
+    """
+    wheel_filename = path / f"{package}-{version}-py3-none-any.whl"
+
+    create_zip_file(
+        wheel_filename,
+        content=[
+            (f"{package}/__init__.py", ""),
+            (f"{package}/app.py", "# This is the app"),
+        ]
+        + (extra_content if extra_content else [])
+        + [
+            # Create an empty dist-info
+            (f"{package}-{version}.dist-info/INSTALLER", ""),
+            (f"{package}-{version}.dist-info/METADATA", ""),
+            (f"{package}-{version}.dist-info/WHEEL", ""),
+            (f"{package}-{version}.dist-info/top_level.txt", ""),
+            (f"{package}-{version}.dist-info/RECORD", ""),
+        ],
+    )
+
+    return wheel_filename
