@@ -27,7 +27,7 @@ and then install the development version of Briefcase and its dependencies:
       $ cd briefcase
       $ python3 -m venv venv
       $ . venv/bin/activate
-      (venv) $ python3 -m pip install -Ue .[dev]
+      (venv) $ python3 -m pip install -Ue ".[dev]"
 
   .. group-tab:: Linux
 
@@ -37,7 +37,7 @@ and then install the development version of Briefcase and its dependencies:
       $ cd briefcase
       $ python3 -m venv venv
       $ . venv/bin/activate
-      (venv) $ python3 -m pip install -Ue .[dev]
+      (venv) $ python3 -m pip install -Ue ".[dev]"
 
   .. group-tab:: Windows
 
