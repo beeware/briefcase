@@ -5,6 +5,7 @@ from unittest import mock
 import pytest
 
 from briefcase.console import Console, Log
+from briefcase.exceptions import BriefcaseCommandError
 from briefcase.platforms.web.static import HTTPHandler, StaticWebRunCommand
 
 
@@ -84,6 +85,46 @@ def test_run(monkeypatch, run_command, first_app_built):
 
     # The webserver was closed.
     mock_server_close.assert_called_once_with()
+
+
+def test_cleanup_server_permission_error(monkeypatch, run_command, first_app_built):
+    """If the server raises an error, it is cleaned up."""
+    # Mock server creation, raising an error due to a bad port.
+    mock_server_init = mock.MagicMock(side_effect=PermissionError())
+    monkeypatch.setattr(HTTPServer, "__init__", mock_server_init)
+
+    # Mock server execution
+    mock_serve_forever = mock.MagicMock()
+    monkeypatch.setattr(HTTPServer, "serve_forever", mock_serve_forever)
+
+    # Mock shutdown
+    mock_shutdown = mock.MagicMock()
+    monkeypatch.setattr(HTTPServer, "shutdown", mock_shutdown)
+
+    # Mock server close
+    mock_server_close = mock.MagicMock()
+    monkeypatch.setattr(HTTPServer, "server_close", mock_server_close)
+
+    # Mock the webbrowser
+    mock_open_new_tab = mock.MagicMock()
+    monkeypatch.setattr(webbrowser, "open_new_tab", mock_open_new_tab)
+
+    # Run the app; an error is raised
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Unable to start web server. Are you sure you specified a valid host and port\?",
+    ):
+        run_command.run_app(first_app_built, "localhost", 8080, open_browser=True)
+
+    # The browser was not opened
+    mock_open_new_tab.assert_not_called()
+
+    # The server was not started
+    mock_serve_forever.assert_not_called()
+
+    # The webserver was never started, so it wasn't shut down either.
+    mock_shutdown.assert_not_called()
+    mock_server_close.assert_not_called()
 
 
 def test_cleanup_server_error(monkeypatch, run_command, first_app_built):
