@@ -249,8 +249,7 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
 
         :param app: The config object for the app
         :param host: The host on which to run the server
-        :param port: The device UDID to target. If ``None``, the user will
-            be asked to select a device at runtime.
+        :param port: The port on which to run the server
         :param open_browser: Should a browser be opened on the newly started
             server.
         """
