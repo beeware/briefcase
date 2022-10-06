@@ -111,9 +111,9 @@ def test_build_app(build_command, first_app_generated, tmp_path):
             f.read()
             == "\n".join(
                 [
-                    "name = 'First App'",
-                    "description = 'The first simple app'",
-                    "version = '0.0.1'",
+                    'name = "First App"',
+                    'description = "The first simple app"',
+                    'version = "0.0.1"',
                     "",
                     "autoclose_loader = true",
                     "packages = [",
@@ -290,9 +290,9 @@ def test_build_app_no_dependencies(build_command, first_app_generated, tmp_path)
             f.read()
             == "\n".join(
                 [
-                    "name = 'First App'",
-                    "description = 'The first simple app'",
-                    "version = '0.0.1'",
+                    'name = "First App"',
+                    'description = "The first simple app"',
+                    'version = "0.0.1"',
                     "",
                     "autoclose_loader = true",
                     "packages = [",

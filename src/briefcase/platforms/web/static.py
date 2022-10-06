@@ -165,9 +165,9 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
             with (self.project_path(app) / "pyscript.toml").open(
                 "w", encoding="utf-8"
             ) as f:
-                f.write(f"name = '{app.formal_name}'\n")
-                f.write(f"description = '{app.description}'\n")
-                f.write(f"version = '{app.version}'\n")
+                f.write(f'name = "{app.formal_name}"\n')
+                f.write(f'description = "{app.description}"\n')
+                f.write(f'version = "{app.version}"\n')
                 f.write("\n")
                 f.write("autoclose_loader = true\n")
                 f.write("packages = [\n")
