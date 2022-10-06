@@ -58,7 +58,11 @@ def test_run(monkeypatch, run_command, first_app_built):
     mock_serve_forever = mock.MagicMock(side_effect=KeyboardInterrupt())
     monkeypatch.setattr(HTTPServer, "serve_forever", mock_serve_forever)
 
-    # Mock server shutdown
+    # Mock shutdown
+    mock_shutdown = mock.MagicMock()
+    monkeypatch.setattr(HTTPServer, "shutdown", mock_shutdown)
+
+    # Mock server close
     mock_server_close = mock.MagicMock()
     monkeypatch.setattr(HTTPServer, "server_close", mock_server_close)
 
@@ -76,6 +80,9 @@ def test_run(monkeypatch, run_command, first_app_built):
     mock_serve_forever.assert_called_once_with()
 
     # The webserver was shutdown.
+    mock_shutdown.assert_called_once_with()
+
+    # The webserver was closed.
     mock_server_close.assert_called_once_with()
 
 
@@ -89,7 +96,11 @@ def test_cleanup_server_error(monkeypatch, run_command, first_app_built):
     mock_serve_forever = mock.MagicMock()
     monkeypatch.setattr(HTTPServer, "serve_forever", mock_serve_forever)
 
-    # Mock server shutdown
+    # Mock shutdown
+    mock_shutdown = mock.MagicMock()
+    monkeypatch.setattr(HTTPServer, "shutdown", mock_shutdown)
+
+    # Mock server close
     mock_server_close = mock.MagicMock()
     monkeypatch.setattr(HTTPServer, "server_close", mock_server_close)
 
@@ -108,6 +119,7 @@ def test_cleanup_server_error(monkeypatch, run_command, first_app_built):
     mock_serve_forever.assert_not_called()
 
     # The webserver was never started, so it wasn't shut down either.
+    mock_shutdown.assert_not_called()
     mock_server_close.assert_not_called()
 
 
@@ -121,7 +133,11 @@ def test_cleanup_runtime_server_error(monkeypatch, run_command, first_app_built)
     mock_serve_forever = mock.MagicMock(side_effect=ValueError())
     monkeypatch.setattr(HTTPServer, "serve_forever", mock_serve_forever)
 
-    # Mock server shutdown
+    # Mock shutdown
+    mock_shutdown = mock.MagicMock()
+    monkeypatch.setattr(HTTPServer, "shutdown", mock_shutdown)
+
+    # Mock server close
     mock_server_close = mock.MagicMock()
     monkeypatch.setattr(HTTPServer, "server_close", mock_server_close)
 
@@ -139,7 +155,10 @@ def test_cleanup_runtime_server_error(monkeypatch, run_command, first_app_built)
     # The server was started
     mock_serve_forever.assert_called_once_with()
 
-    # The webserver was shutdown.
+    # The server crashed, so it won't need to be shut down
+    mock_shutdown.assert_not_called()
+
+    # The webserver was closed.
     mock_server_close.assert_called_once_with()
 
 
@@ -153,7 +172,11 @@ def test_run_without_browser(monkeypatch, run_command, first_app_built):
     mock_serve_forever = mock.MagicMock(side_effect=KeyboardInterrupt())
     monkeypatch.setattr(HTTPServer, "serve_forever", mock_serve_forever)
 
-    # Mock server shutdown
+    # Mock shutdown
+    mock_shutdown = mock.MagicMock()
+    monkeypatch.setattr(HTTPServer, "shutdown", mock_shutdown)
+
+    # Mock server close
     mock_server_close = mock.MagicMock()
     monkeypatch.setattr(HTTPServer, "server_close", mock_server_close)
 
@@ -170,7 +193,10 @@ def test_run_without_browser(monkeypatch, run_command, first_app_built):
     # The server was started
     mock_serve_forever.assert_called_once_with()
 
-    # The webserver was shutdown.
+    # The webserver was shut down.
+    mock_shutdown.assert_called_once_with()
+
+    # The webserver was closed.
     mock_server_close.assert_called_once_with()
 
 

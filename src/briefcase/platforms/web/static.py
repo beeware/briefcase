@@ -282,7 +282,7 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
             httpd.serve_forever()
         except KeyboardInterrupt:
             # CTRL-C is the accepted way to stop the server.
-            pass
+            httpd.shutdown()
         finally:
             if httpd:
                 with self.input.wait_bar("Shutting down server..."):
