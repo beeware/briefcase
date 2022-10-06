@@ -171,9 +171,11 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 f.write("\n")
                 f.write("autoclose_loader = true\n")
                 f.write("packages = [\n")
+                # Ensure that we're using Unix path separators, as the content
+                # will be parsed by pyscript in the browser.
                 f.write(
                     "\n".join(
-                        f'    "/{wheel.relative_to(self.project_path(app))}",'
+                        f'    "/{"/".join(wheel.relative_to(self.project_path(app)).parts)}",'
                         for wheel in sorted(self.wheel_path(app).glob("*.whl"))
                     )
                 )
