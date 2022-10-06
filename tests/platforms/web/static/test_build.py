@@ -117,9 +117,9 @@ def test_build_app(build_command, first_app_generated, tmp_path):
                     "",
                     "autoclose_loader = true",
                     "packages = [",
-                    '    "/static/wheels/other-1.2.3-py3-none-any.whl",',
                     '    "/static/wheels/dependency-1.2.3-py3-none-any.whl",',
                     '    "/static/wheels/first_app-1.2.3-py3-none-any.whl",',
+                    '    "/static/wheels/other-1.2.3-py3-none-any.whl",',
                     "]",
                 ]
             )
@@ -142,12 +142,6 @@ def test_build_app(build_command, first_app_generated, tmp_path):
                     " ******************** Wheel contributed styles ********************/",
                     "",
                     "/*******************************************************",
-                    " * other 1.2.3::style.css",
-                    " *******************************************************/",
-                    "",
-                    "div { padding: 10px; }",
-                    "",
-                    "/*******************************************************",
                     " * dependency 1.2.3::style.css",
                     " *******************************************************/",
                     "",
@@ -158,6 +152,12 @@ def test_build_app(build_command, first_app_generated, tmp_path):
                     " *******************************************************/",
                     "",
                     "span { margin: 10px; }",
+                    "",
+                    "/*******************************************************",
+                    " * other 1.2.3::style.css",
+                    " *******************************************************/",
+                    "",
+                    "div { padding: 10px; }",
                 ]
             )
             + "\n"

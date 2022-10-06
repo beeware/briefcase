@@ -174,7 +174,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 f.write(
                     "\n".join(
                         f'    "/{wheel.relative_to(self.project_path(app))}",'
-                        for wheel in self.wheel_path(app).glob("*.whl")
+                        for wheel in sorted(self.wheel_path(app).glob("*.whl"))
                     )
                 )
                 f.write("\n]\n")
@@ -191,7 +191,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
             )
 
             # Extract static resources from packaged wheels
-            for wheelfile in self.wheel_path(app).glob("*.whl"):
+            for wheelfile in sorted(self.wheel_path(app).glob("*.whl")):
                 self.logger.info(f"Processing {wheelfile.name}...")
                 with briefcase_css_path.open("a", encoding="utf-8") as css_file:
                     self._process_wheel(wheelfile, css_file=css_file)
