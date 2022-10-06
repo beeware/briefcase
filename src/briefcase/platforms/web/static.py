@@ -279,10 +279,10 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
 
             # Run the server.
             httpd.serve_forever()
-        except PermissionError:
+        except PermissionError as e:
             raise BriefcaseCommandError(
                 "Unable to start web server. Are you sure you specified a valid host and port?"
-            )
+            ) from e
         except KeyboardInterrupt:
             # CTRL-C is the accepted way to stop the server.
             httpd.shutdown()
