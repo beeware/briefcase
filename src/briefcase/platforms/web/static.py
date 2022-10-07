@@ -1,7 +1,7 @@
 import subprocess
 import sys
 import webbrowser
-from http.server import HTTPServer, SimpleHTTPRequestHandler
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from zipfile import ZipFile
 
@@ -209,7 +209,7 @@ class HTTPHandler(SimpleHTTPRequestHandler):
         return str(self.server.base_path / path[1:])
 
 
-class LocalHTTPServer(HTTPServer):
+class LocalHTTPServer(ThreadingHTTPServer):
     """A HTTP server that serves local static content."""
 
     def __init__(self, base_path, host, port, RequestHandlerClass=HTTPHandler):
