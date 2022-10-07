@@ -1,3 +1,4 @@
+import errno
 import subprocess
 import sys
 import webbrowser
@@ -278,8 +279,28 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
             # Run the server.
             httpd.serve_forever()
         except PermissionError as e:
+            if port < 1024:
+                raise BriefcaseCommandError(
+                    "Unable to start web server; Permission denied. Try using a port > 1023."
+                ) from e
+            else:
+                raise BriefcaseCommandError(
+                    "Unable to start web server; Permission denied. Did you specify a valid host and port?"
+                ) from e
+        except OSError as e:
+            if e.errno in (errno.EADDRINUSE, errno.ENOSR):
+                raise BriefcaseCommandError(
+                    f"Unable to start web server. {host}:{port} is already in use."
+                ) from e
+            elif e.errno in (errno.EADDRNOTAVAIL, errno.ENOSTR):
+                raise BriefcaseCommandError(
+                    f"Unable to start web server. {host} is not a valid hostname."
+                ) from e
+            else:
+                raise BriefcaseCommandError(f"Unable to start web server. {e}") from e
+        except OverflowError as e:
             raise BriefcaseCommandError(
-                "Unable to start web server. Are you sure you specified a valid host and port?"
+                "Unable to start web server. Port must be in the range 0-65535."
             ) from e
         except KeyboardInterrupt:
             # CTRL-C is the accepted way to stop the server.

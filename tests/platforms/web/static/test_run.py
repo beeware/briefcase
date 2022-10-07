@@ -1,3 +1,4 @@
+import errno
 import webbrowser
 from http.server import HTTPServer
 from unittest import mock
@@ -87,10 +88,73 @@ def test_run(monkeypatch, run_command, first_app_built):
     mock_server_close.assert_called_once_with()
 
 
-def test_cleanup_server_permission_error(monkeypatch, run_command, first_app_built):
+# OSError doesn't expose errno in the constructor; create some
+# custom exceptions that mock common connection errors.
+class ErrnoError(OSError):
+    def __init__(self, errno):
+        super().__init__()
+        self.errno = errno
+
+
+@pytest.mark.parametrize(
+    "host, port, exception, message",
+    [
+        (
+            "localhost",
+            80,
+            PermissionError(),
+            r"Try using a port > 1023\.",
+        ),
+        (
+            "localhost",
+            8080,
+            PermissionError(),
+            r"Did you specify a valid host and port\?",
+        ),
+        (
+            "localhost",
+            8080,
+            ErrnoError(errno.EADDRINUSE),
+            r"localhost:8080 is already in use.",
+        ),
+        (
+            "localhost",
+            8080,
+            ErrnoError(errno.ENOSR),
+            r"localhost:8080 is already in use.",
+        ),
+        (
+            "999.999.999.999",
+            8080,
+            ErrnoError(errno.EADDRNOTAVAIL),
+            r"999.999.999.999 is not a valid hostname.",
+        ),
+        (
+            "999.999.999.999",
+            8080,
+            ErrnoError(errno.ENOSTR),
+            r"999.999.999.999 is not a valid hostname.",
+        ),
+        (
+            "localhost",
+            8080,
+            OSError("Unknown error"),
+            r"Unknown error",
+        ),
+        (
+            "localhost",
+            99999,
+            OverflowError(),
+            r"Port must be in the range 0-65535.",
+        ),
+    ],
+)
+def test_cleanup_server_error(
+    monkeypatch, run_command, first_app_built, host, port, exception, message
+):
     """If the server raises an error, it is cleaned up."""
-    # Mock server creation, raising an error due to a bad port.
-    mock_server_init = mock.MagicMock(side_effect=PermissionError())
+    # Mock server creation, raising an error.
+    mock_server_init = mock.MagicMock(side_effect=exception)
     monkeypatch.setattr(HTTPServer, "__init__", mock_server_init)
 
     # Mock server execution
@@ -110,48 +174,8 @@ def test_cleanup_server_permission_error(monkeypatch, run_command, first_app_bui
     monkeypatch.setattr(webbrowser, "open_new_tab", mock_open_new_tab)
 
     # Run the app; an error is raised
-    with pytest.raises(
-        BriefcaseCommandError,
-        match=r"Unable to start web server. Are you sure you specified a valid host and port\?",
-    ):
-        run_command.run_app(first_app_built, "localhost", 8080, open_browser=True)
-
-    # The browser was not opened
-    mock_open_new_tab.assert_not_called()
-
-    # The server was not started
-    mock_serve_forever.assert_not_called()
-
-    # The webserver was never started, so it wasn't shut down either.
-    mock_shutdown.assert_not_called()
-    mock_server_close.assert_not_called()
-
-
-def test_cleanup_server_error(monkeypatch, run_command, first_app_built):
-    """If the server raises an error, it is cleaned up."""
-    # Mock server creation, raising an error due to an already used port.
-    mock_server_init = mock.MagicMock(side_effect=OSError())
-    monkeypatch.setattr(HTTPServer, "__init__", mock_server_init)
-
-    # Mock server execution
-    mock_serve_forever = mock.MagicMock()
-    monkeypatch.setattr(HTTPServer, "serve_forever", mock_serve_forever)
-
-    # Mock shutdown
-    mock_shutdown = mock.MagicMock()
-    monkeypatch.setattr(HTTPServer, "shutdown", mock_shutdown)
-
-    # Mock server close
-    mock_server_close = mock.MagicMock()
-    monkeypatch.setattr(HTTPServer, "server_close", mock_server_close)
-
-    # Mock the webbrowser
-    mock_open_new_tab = mock.MagicMock()
-    monkeypatch.setattr(webbrowser, "open_new_tab", mock_open_new_tab)
-
-    # Run the app; an error is raised
-    with pytest.raises(OSError):
-        run_command.run_app(first_app_built, "localhost", 8080, open_browser=True)
+    with pytest.raises(BriefcaseCommandError, match=message):
+        run_command.run_app(first_app_built, host, port, open_browser=True)
 
     # The browser was not opened
     mock_open_new_tab.assert_not_called()
