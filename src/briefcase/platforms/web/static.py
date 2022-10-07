@@ -97,7 +97,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                     and path.parts[1] == "static"
                     and path.suffix == ".css"
                 ):
-                    self.logger.info(f"Found {filename}")
+                    self.logger.info(f"    Found {filename}")
                     css_file.write(
                         "\n/*******************************************************\n"
                     )
@@ -181,7 +181,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 )
                 f.write("\n]\n")
 
-        self.logger.info("Compile static web content from wheels...")
+        self.logger.info("Compile static web content from wheels")
         with self.input.wait_bar("Compiling static web content from wheels..."):
             # Trim previously compiled content out of briefcase.css
             briefcase_css_path = (
@@ -194,7 +194,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
 
             # Extract static resources from packaged wheels
             for wheelfile in sorted(self.wheel_path(app).glob("*.whl")):
-                self.logger.info(f"Processing {wheelfile.name}...")
+                self.logger.info(f"  Processing {wheelfile.name}...")
                 with briefcase_css_path.open("a", encoding="utf-8") as css_file:
                     self._process_wheel(wheelfile, css_file=css_file)
 
