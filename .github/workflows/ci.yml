@@ -236,6 +236,7 @@ jobs:
     - name: Build Web App
       if: matrix.framework == 'toga'
       run: |
+        cd tests/apps/verify-${{ matrix.framework }}
         briefcase create web
         briefcase build web
         briefcase package web
