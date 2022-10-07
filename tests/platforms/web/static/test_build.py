@@ -3,6 +3,11 @@ import subprocess
 import sys
 from unittest import mock
 
+try:
+    import tomllib
+except ModuleNotFoundError:
+    import tomli as tomllib
+
 import pytest
 
 from briefcase.console import Console, Log
@@ -106,25 +111,18 @@ def test_build_app(build_command, first_app_generated, tmp_path):
     ]
 
     # Pyscript.toml has been written
-    with (bundle_path / "www" / "pyscript.toml").open(encoding="utf-8") as f:
-        assert (
-            f.read()
-            == "\n".join(
-                [
-                    'name = "First App"',
-                    'description = "The first simple app"',
-                    'version = "0.0.1"',
-                    "",
-                    "autoclose_loader = true",
-                    "packages = [",
-                    '    "/static/wheels/dependency-1.2.3-py3-none-any.whl",',
-                    '    "/static/wheels/first_app-1.2.3-py3-none-any.whl",',
-                    '    "/static/wheels/other-1.2.3-py3-none-any.whl",',
-                    "]",
-                ]
-            )
-            + "\n"
-        )
+    with (bundle_path / "www" / "pyscript.toml").open("rb") as f:
+        assert tomllib.load(f) == {
+            "name": "First App",
+            "description": "The first simple app \\ demonstration",
+            "version": "0.0.1",
+            "autoclose_loader": True,
+            "packages": [
+                "/static/wheels/dependency-1.2.3-py3-none-any.whl",
+                "/static/wheels/first_app-1.2.3-py3-none-any.whl",
+                "/static/wheels/other-1.2.3-py3-none-any.whl",
+            ],
+        }
 
     # briefcase.css has been appended
     with (bundle_path / "www" / "static" / "css" / "briefcase.css").open(
@@ -285,23 +283,16 @@ def test_build_app_no_dependencies(build_command, first_app_generated, tmp_path)
     ]
 
     # Pyscript.toml has been written
-    with (bundle_path / "www" / "pyscript.toml").open(encoding="utf-8") as f:
-        assert (
-            f.read()
-            == "\n".join(
-                [
-                    'name = "First App"',
-                    'description = "The first simple app"',
-                    'version = "0.0.1"',
-                    "",
-                    "autoclose_loader = true",
-                    "packages = [",
-                    '    "/static/wheels/first_app-1.2.3-py3-none-any.whl",',
-                    "]",
-                ]
-            )
-            + "\n"
-        )
+    with (bundle_path / "www" / "pyscript.toml").open("rb") as f:
+        assert tomllib.load(f) == {
+            "name": "First App",
+            "description": "The first simple app \\ demonstration",
+            "version": "0.0.1",
+            "autoclose_loader": True,
+            "packages": [
+                "/static/wheels/first_app-1.2.3-py3-none-any.whl",
+            ],
+        }
 
     # briefcase.css has been appended
     with (bundle_path / "www" / "static" / "css" / "briefcase.css").open(

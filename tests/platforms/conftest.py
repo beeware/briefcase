@@ -12,7 +12,7 @@ def first_app_config():
         author="Megacorp",
         bundle="com.example",
         version="0.0.1",
-        description="The first simple app",
+        description="The first simple app \\ demonstration",
         sources=["src/first_app"],
     )
 

@@ -5,6 +5,8 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from zipfile import ZipFile
 
+import tomli_w
+
 from briefcase.commands import (
     BuildCommand,
     CreateCommand,
@@ -162,24 +164,20 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 ) from e
 
         with self.input.wait_bar("Writing Pyscript configuration file..."):
-            with (self.project_path(app) / "pyscript.toml").open(
-                "w", encoding="utf-8"
-            ) as f:
-                f.write(f'name = "{app.formal_name}"\n')
-                f.write(f'description = "{app.description}"\n')
-                f.write(f'version = "{app.version}"\n')
-                f.write("\n")
-                f.write("autoclose_loader = true\n")
-                f.write("packages = [\n")
-                # Ensure that we're using Unix path separators, as the content
-                # will be parsed by pyscript in the browser.
-                f.write(
-                    "\n".join(
-                        f'    "/{"/".join(wheel.relative_to(self.project_path(app)).parts)}",'
+            with (self.project_path(app) / "pyscript.toml").open("wb") as f:
+                config = {
+                    "name": app.formal_name,
+                    "description": app.description,
+                    "version": app.version,
+                    "autoclose_loader": True,
+                    # Ensure that we're using Unix path separators, as the content
+                    # will be parsed by pyscript in the browser.
+                    "packages": [
+                        f'/{"/".join(wheel.relative_to(self.project_path(app)).parts)}'
                         for wheel in sorted(self.wheel_path(app).glob("*.whl"))
-                    )
-                )
-                f.write("\n]\n")
+                    ],
+                }
+                tomli_w.dump(config, f)
 
         self.logger.info("Compile static web content from wheels")
         with self.input.wait_bar("Compiling static web content from wheels..."):
