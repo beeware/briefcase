@@ -12,6 +12,20 @@ not be used in production**. If you wish to serve your app in production, you
 can unzip the ``.zip`` file in the root of any webserver that can serve static
 web content.
 
+.. admonition:: Web support is experimental!
+
+    WASM support is a recent addtion to CPython (formally added in Python 3.11);
+    `PyScript <https://pyscript.net>`__ (which forms the base of for Briefcase's
+    web backend) is a new project; and Toga's web backend is very new. As a
+    result this web backend should be considered experimental.
+
+    There are also a `number of constraints
+    <https://pyodide.org/en/stable/usage/wasm-constraints.html>`__ on what you
+    can do in a web environment. Some of these are fundamental constraints on
+    the web as a platform; some are known issues with Pyscript and Pyodide as
+    runtime environments. You shouldn't expect that arbitrary third-party Python
+    packages will "just run" in a web environment.
+
 Icon format
 ===========
 
