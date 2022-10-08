@@ -90,6 +90,11 @@ def write_dist_info(app: BaseConfig, dist_info_path: Path):
     dist_info_path.mkdir(exist_ok=True)
     with (dist_info_path / "INSTALLER").open("w", encoding="utf-8") as f:
         f.write("briefcase\n")
+    with (dist_info_path / "WHEEL").open("w", encoding="utf-8") as f:
+        f.write("Wheel-Version: 1.0\n")
+        f.write("Root-Is-Purelib: true\n")
+        f.write(f"Generator: briefcase ({briefcase.__version__})\n")
+        f.write("Tag: py3-none-any\n")
     with (dist_info_path / "METADATA").open("w", encoding="utf-8") as f:
         f.write("Metadata-Version: 2.1\n")
         f.write(f"Briefcase-Version: {briefcase.__version__}\n")
@@ -99,11 +104,16 @@ def write_dist_info(app: BaseConfig, dist_info_path: Path):
         f.write(f"Version: {app.version}\n")
         if app.url:
             f.write(f"Home-page: {app.url}\n")
+            f.write(f"Download-URL: {app.url}\n")
+        else:
+            f.write("Download-URL: \n")
         if app.author:
             f.write(f"Author: {app.author}\n")
         if app.author_email:
             f.write(f"Author-email: {app.author_email}\n")
         f.write(f"Summary: {app.description}\n")
+    with (dist_info_path / "top_level.txt").open("w", encoding="utf-8") as f:
+        f.write(f"{app.module_name}\n")
 
 
 class CreateCommand(BaseCommand):
