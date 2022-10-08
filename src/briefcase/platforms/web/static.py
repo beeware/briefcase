@@ -252,10 +252,7 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
         :param open_browser: Should a browser be opened on the newly started
             server.
         """
-        self.logger.info(
-            f"Starting web server on http://{host}:{port}/",
-            prefix=app.app_name,
-        )
+        self.logger.info("Starting web server...", prefix=app.app_name)
 
         httpd = None
         try:
@@ -266,9 +263,15 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
                 port=port,
             )
 
+            # Extract the host and port from the server. This is needed
+            # because specifying a port of 0 lets the server pick a port.
+            host, port = httpd.socket.getsockname()
+            url = f"http://{host}:{port}"
+
+            self.logger.info(f"Web server open on {url}")
             # If requested, open a brower tab on the newly opened server.
             if open_browser:
-                webbrowser.open_new_tab(f"http://{host}:{port}")
+                webbrowser.open_new_tab(url)
 
             self.logger.info(
                 "Web server log output (type CTRL-C to stop log)...",

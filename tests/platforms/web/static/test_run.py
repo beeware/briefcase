@@ -7,7 +7,11 @@ import pytest
 
 from briefcase.console import Console, Log
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.platforms.web.static import HTTPHandler, StaticWebRunCommand
+from briefcase.platforms.web.static import (
+    HTTPHandler,
+    LocalHTTPServer,
+    StaticWebRunCommand,
+)
 
 
 @pytest.fixture
@@ -53,8 +57,13 @@ def test_options(run_command):
 def test_run(monkeypatch, run_command, first_app_built):
     """A static web app can be launched as a server."""
     # Mock server creation
-    mock_server_init = mock.MagicMock()
+    mock_server_init = mock.MagicMock(spec_set=HTTPServer)
     monkeypatch.setattr(HTTPServer, "__init__", mock_server_init)
+
+    # Mock the socket name returned by the server.
+    socket = mock.MagicMock()
+    socket.getsockname.return_value = ("127.0.0.1", "8080")
+    LocalHTTPServer.socket = socket
 
     # Mock server execution, raising a user exit.
     mock_serve_forever = mock.MagicMock(side_effect=KeyboardInterrupt())
@@ -76,7 +85,7 @@ def test_run(monkeypatch, run_command, first_app_built):
     run_command.run_app(first_app_built, "localhost", 8080, open_browser=True)
 
     # The browser was opened
-    mock_open_new_tab.assert_called_once_with("http://localhost:8080")
+    mock_open_new_tab.assert_called_once_with("http://127.0.0.1:8080")
 
     # The server was started
     mock_serve_forever.assert_called_once_with()
@@ -194,6 +203,11 @@ def test_cleanup_runtime_server_error(monkeypatch, run_command, first_app_built)
     mock_server_init = mock.MagicMock()
     monkeypatch.setattr(HTTPServer, "__init__", mock_server_init)
 
+    # Mock the socket name returned by the server.
+    socket = mock.MagicMock()
+    socket.getsockname.return_value = ("127.0.0.1", "8080")
+    LocalHTTPServer.socket = socket
+
     # Mock server execution
     mock_serve_forever = mock.MagicMock(side_effect=ValueError())
     monkeypatch.setattr(HTTPServer, "serve_forever", mock_serve_forever)
@@ -215,7 +229,7 @@ def test_cleanup_runtime_server_error(monkeypatch, run_command, first_app_built)
         run_command.run_app(first_app_built, "localhost", 8080, open_browser=True)
 
     # The browser was opened
-    mock_open_new_tab.assert_called_once_with("http://localhost:8080")
+    mock_open_new_tab.assert_called_once_with("http://127.0.0.1:8080")
 
     # The server was started
     mock_serve_forever.assert_called_once_with()
@@ -230,8 +244,13 @@ def test_cleanup_runtime_server_error(monkeypatch, run_command, first_app_built)
 def test_run_without_browser(monkeypatch, run_command, first_app_built):
     """A static web app can be launched as a server."""
     # Mock server creation
-    mock_server_init = mock.MagicMock()
+    mock_server_init = mock.MagicMock(return_value=mock.MagicMock())
     monkeypatch.setattr(HTTPServer, "__init__", mock_server_init)
+
+    # Mock the socket name returned by the server.
+    socket = mock.MagicMock()
+    socket.getsockname.return_value = ("127.0.0.1", "8080")
+    LocalHTTPServer.socket = socket
 
     # Mock server execution, raising a user exit.
     mock_serve_forever = mock.MagicMock(side_effect=KeyboardInterrupt())
@@ -254,6 +273,50 @@ def test_run_without_browser(monkeypatch, run_command, first_app_built):
 
     # The browser was not opened
     mock_open_new_tab.assert_not_called()
+
+    # The server was started
+    mock_serve_forever.assert_called_once_with()
+
+    # The webserver was shut down.
+    mock_shutdown.assert_called_once_with()
+
+    # The webserver was closed.
+    mock_server_close.assert_called_once_with()
+
+
+def test_run_autoselect_port(monkeypatch, run_command, first_app_built):
+    """A static web app can be launched as a server."""
+    # Mock server creation
+    mock_server_init = mock.MagicMock(return_value=mock.MagicMock())
+    monkeypatch.setattr(HTTPServer, "__init__", mock_server_init)
+
+    # Mock the socket name returned by the server.
+    # This value has been auto-selected by the server.
+    socket = mock.MagicMock()
+    socket.getsockname.return_value = ("127.0.0.1", "12345")
+    LocalHTTPServer.socket = socket
+
+    # Mock server execution, raising a user exit.
+    mock_serve_forever = mock.MagicMock(side_effect=KeyboardInterrupt())
+    monkeypatch.setattr(HTTPServer, "serve_forever", mock_serve_forever)
+
+    # Mock shutdown
+    mock_shutdown = mock.MagicMock()
+    monkeypatch.setattr(HTTPServer, "shutdown", mock_shutdown)
+
+    # Mock server close
+    mock_server_close = mock.MagicMock()
+    monkeypatch.setattr(HTTPServer, "server_close", mock_server_close)
+
+    # Mock the webbrowser
+    mock_open_new_tab = mock.MagicMock()
+    monkeypatch.setattr(webbrowser, "open_new_tab", mock_open_new_tab)
+
+    # Run the app on an autoselected port
+    run_command.run_app(first_app_built, "localhost", 0, open_browser=True)
+
+    # The browser was opened
+    mock_open_new_tab.assert_called_once_with("http://127.0.0.1:12345")
 
     # The server was started
     mock_serve_forever.assert_called_once_with()
