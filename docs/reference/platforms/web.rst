@@ -2,7 +2,7 @@
 Web
 ===
 
-When generating an web project, Briefcase produces a static folder of HTML, CSS
+When generating a web project, Briefcase produces a static folder of HTML, CSS
 and JavaScript resources that can be deployed as a web site. The static web site
 is packaged as a ``.zip`` file for distribution.
 
