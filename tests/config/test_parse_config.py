@@ -243,10 +243,6 @@ def test_format_override():
         value = 22
         formatvalue = "xcode format"
 
-        [tool.briefcase.app.my_app.macOS.homebrew]
-        value = 23
-        formatvalue = "homebrew format"
-
         [tool.briefcase.app.my_app.linux]
         value = 3
         platformvalue = "linux platform"
@@ -277,7 +273,7 @@ def test_format_override():
     # The second app doesn't provide an explicit app-level config, but
     # the app exists because the platform exists.
     # Formats should be processed in order, which means that app
-    # will be processed before dmg and homebrew.
+    # will be processed before dmg.
     assert apps == {
         "my_app": {
             "app_name": "my_app",
@@ -320,10 +316,6 @@ def test_format_override_ordering():
         value = 22
         formatvalue = "app format"
 
-        [tool.briefcase.app.my_app.macOS.homebrew]
-        value = 23
-        formatvalue = "homebrew format"
-
         [tool.briefcase.app.my_app.linux]
         value = 3
         platformvalue = "linux platform"
@@ -354,7 +346,7 @@ def test_format_override_ordering():
     # The second app doesn't provide an explicit app-level config, but
     # the app exists because the platform exists.
     # Formats should be processed in order, which means that dmg
-    # will be processed after app, but before homebrew.
+    # will be processed after app.
     assert apps == {
         "my_app": {
             "app_name": "my_app",

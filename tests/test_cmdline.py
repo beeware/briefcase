@@ -1,9 +1,9 @@
 import sys
+from unittest import mock
 
 import pytest
 
-from briefcase import __version__
-from briefcase.cmdline import parse_cmdline
+from briefcase import __version__, cmdline
 from briefcase.commands import DevCommand, NewCommand, UpgradeCommand
 from briefcase.console import Console, Log
 from briefcase.exceptions import (
@@ -27,9 +27,9 @@ def console() -> Console:
     return Console()
 
 
-def do_cmdline_parse(cmdline: list, logger: Log, console: Console):
+def do_cmdline_parse(args: list, logger: Log, console: Console):
     """Simulate process to parse command line."""
-    Command, extra_cmdline = parse_cmdline(cmdline)
+    Command, extra_cmdline = cmdline.parse_cmdline(args)
     cmd = Command(logger=logger, console=console)
     options = cmd.parse_options(extra=extra_cmdline)
     return cmd, options
@@ -38,7 +38,7 @@ def do_cmdline_parse(cmdline: list, logger: Log, console: Console):
 def test_empty():
     """``briefcase`` returns basic usage."""
     with pytest.raises(NoCommandError, match=r"usage: briefcase") as excinfo:
-        parse_cmdline("".split())
+        cmdline.parse_cmdline("".split())
 
     assert excinfo.value.msg.startswith(
         "usage: briefcase [-h] <command> [<platform>] [<format>] ...\n"
@@ -52,7 +52,7 @@ def test_empty():
 def test_help_only():
     """``briefcase -h`` returns basic usage."""
     with pytest.raises(NoCommandError, match=r"usage: briefcase") as excinfo:
-        parse_cmdline("-h".split())
+        cmdline.parse_cmdline("-h".split())
 
     assert excinfo.value.msg.startswith(
         "usage: briefcase [-h] <command> [<platform>] [<format>] ...\n"
@@ -66,7 +66,7 @@ def test_help_only():
 def test_version_only(capsys):
     """``briefcase -V`` returns current version."""
     with pytest.raises(SystemExit) as excinfo:
-        parse_cmdline("-V".split())
+        cmdline.parse_cmdline("-V".split())
 
     # Normal exit due to displaying help
     assert excinfo.value.code == 0
@@ -78,7 +78,7 @@ def test_version_only(capsys):
 def test_show_output_formats_only():
     """``briefcase -f`` returns basic usage as a command is needed."""
     with pytest.raises(NoCommandError, match=r"usage: briefcase") as excinfo:
-        parse_cmdline("-f".split())
+        cmdline.parse_cmdline("-f".split())
 
     assert excinfo.value.msg.startswith(
         "usage: briefcase [-h] <command> [<platform>] [<format>] ...\n"
@@ -92,7 +92,7 @@ def test_show_output_formats_only():
 def test_unknown_command():
     """``briefcase foobar`` fails as an invalid command."""
     with pytest.raises(SystemExit) as excinfo:
-        parse_cmdline("foobar".split())
+        cmdline.parse_cmdline("foobar".split())
 
     assert excinfo.value.code == 2
     assert excinfo.value.__context__.argument_name == "command"
@@ -262,7 +262,7 @@ def test_bare_command_show_formats(monkeypatch, logger, console):
 
     assert excinfo.value.platform == "macOS"
     assert excinfo.value.default == "app"
-    assert set(excinfo.value.choices) == {"xcode", "app", "homebrew"}
+    assert set(excinfo.value.choices) == {"xcode", "app"}
 
 
 def test_command_unknown_platform(monkeypatch, logger, console):
@@ -345,7 +345,7 @@ def test_command_explicit_platform_show_formats(monkeypatch, logger, console):
 
     assert excinfo.value.platform == "macOS"
     assert excinfo.value.default == "app"
-    assert set(excinfo.value.choices) == {"xcode", "app", "homebrew"}
+    assert set(excinfo.value.choices) == {"xcode", "app"}
 
 
 def test_command_explicit_format(monkeypatch, logger, console):
@@ -370,9 +370,7 @@ def test_command_unknown_format(monkeypatch, logger, console):
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, "platform", "darwin")
 
-    expected_exc_regex = (
-        r"Invalid format 'foobar'; \(choose from: app, homebrew, xcode\)"
-    )
+    expected_exc_regex = r"Invalid format 'foobar'; \(choose from: app, xcode\)"
     with pytest.raises(InvalidFormatError, match=expected_exc_regex):
         do_cmdline_parse("create macOS foobar".split(), logger, console)
 
@@ -380,6 +378,13 @@ def test_command_unknown_format(monkeypatch, logger, console):
 def test_command_explicit_unsupported_format(monkeypatch, logger, console):
     """``briefcase create macOS homebrew`` raises an error because the format
     isn't supported (yet)"""
+    # Mock the output formats to include a "homebrew" backend with no commands.
+    monkeypatch.setattr(
+        cmdline,
+        "get_output_formats",
+        mock.MagicMock(return_value={"homebrew": None}),
+    )
+
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, "platform", "darwin")
 
@@ -419,7 +424,7 @@ def test_command_explicit_format_show_formats(monkeypatch, logger, console):
 
     assert excinfo.value.platform == "macOS"
     assert excinfo.value.default == "app"
-    assert set(excinfo.value.choices) == {"xcode", "app", "homebrew"}
+    assert set(excinfo.value.choices) == {"xcode", "app"}
 
 
 def test_command_disable_input(monkeypatch, logger, console):
