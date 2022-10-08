@@ -55,7 +55,7 @@ in your app's ``pyproject.toml`` configuration:
   * **Author-email** - ``author_email``
 
 For example, the metadata for the app constructed by the `Beeware Tutorial
-<https://docs.beeware.org/en/latest/tutorial/tutorial-1.html/>`_ would
+<https://docs.beeware.org/en/latest/tutorial/tutorial-1.html>`_ would
 contain::
 
     Metadata-Version: 2.1
