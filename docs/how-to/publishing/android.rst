@@ -46,7 +46,7 @@ This will result in an Android App Bundle file being generated. An `Android App
 Bundle <https://developer.android.com/guide/app-bundle>`__ is a publishing
 format that includes all your app’s compiled code and resources.
 
-.. note:: AAB and APK
+.. admonition:: AAB and APK
 
     APK (Android Package) files can be directly installed on a device. AAB
     is a newer format that simplifies the process of uploading your app to the
@@ -56,7 +56,7 @@ format that includes all your app’s compiled code and resources.
 Sign the Android App Bundle
 ---------------------------
 
-.. admonition:: Create code signing identity
+.. note::
 
   Before you sign the APK files, you need to :doc:`create a code signing
   identity. <../code-signing/android>`
@@ -261,7 +261,7 @@ Click **App releases** in the navigation pane. To produce a production app
 **Manage** within the **Production track**, then select **Create Release.**
 If prompted to enable App Signing by Google Play, click **Continue**.
 
-.. note:: Non-production releases
+.. admonition:: Non-production releases
 
     The Play Store also supports releasing your app for internal, alpha and
     beta testing. Google's documentation `contains more details about creating
