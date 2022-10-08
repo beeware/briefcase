@@ -7,6 +7,7 @@ from rich.traceback import Trace
 
 import briefcase
 from briefcase.console import Log
+from briefcase.exceptions import BriefcaseError
 
 TRACEBACK_HEADER = "Traceback (most recent call last)"
 EXTRA_HEADER = "Extra information:"
@@ -25,11 +26,30 @@ def now(monkeypatch):
 def test_capture_stacktrace():
     """capture_stacktrace sets Log.stacktrace."""
     logger = Log()
+    assert logger.skip_log is False
+
     try:
         1 / 0
     except ZeroDivisionError:
         logger.capture_stacktrace()
+
     assert isinstance(logger.stacktrace, Trace)
+    assert logger.skip_log is False
+
+
+@pytest.mark.parametrize("skip_logfile", [True, False])
+def test_capture_stacktrace_for_briefcaseerror(skip_logfile):
+    """skip_log is updated for BriefcaseError exceptions."""
+    logger = Log()
+    assert logger.skip_log is False
+
+    try:
+        raise BriefcaseError(error_code=542, skip_logfile=skip_logfile)
+    except BriefcaseError:
+        logger.capture_stacktrace()
+
+    assert isinstance(logger.stacktrace, Trace)
+    assert logger.skip_log is skip_logfile
 
 
 def test_save_log_to_file_do_not_log():

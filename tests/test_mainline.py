@@ -35,7 +35,7 @@ sources = ["myapp"]
 
 
 def test_help(monkeypatch, tmp_path, capsys):
-    "Briefcase can output help."
+    """Briefcase can output help."""
     # Set the test command line
     monkeypatch.setattr(sys, "argv", ["briefcase", "--help"])
 
@@ -52,7 +52,7 @@ def test_help(monkeypatch, tmp_path, capsys):
 
 
 def test_command(monkeypatch, tmp_path, capsys):
-    "A command can be successful"
+    """A command can be successful."""
     # Monkeypatch cwd() to use a test folder.
     monkeypatch.setattr(Path, "cwd", lambda: tmp_path)
 
@@ -80,14 +80,14 @@ def test_command(monkeypatch, tmp_path, capsys):
 
 
 def test_command_error(monkeypatch, tmp_path, capsys):
-    "A command can raise a known error"
+    """A command can raise a known error."""
     # Monkeypatch cwd() to use a test folder.
     monkeypatch.setattr(Path, "cwd", lambda: tmp_path)
 
     # Set the test command line
     monkeypatch.setattr(sys, "argv", ["briefcase", "create"])
 
-    # Help has a return code of -10
+    # BriefcaseConfigError has a return code of 100
     assert main() == 100
 
     output = capsys.readouterr().out
@@ -95,12 +95,12 @@ def test_command_error(monkeypatch, tmp_path, capsys):
         "\nBriefcase configuration error: Configuration file not found."
     )
 
-    # A log file was not written
+    # Log files are not created for BriefcaseConfigError errors
     assert len(list(tmp_path.glob(f"{Log.LOG_DIR}/briefcase.*.create.log"))) == 0
 
 
 def test_unknown_command_error(monkeypatch, pyproject_toml, capsys):
-    "A command can raise an unknown error"
+    """A command can raise an unknown error."""
     monkeypatch.setattr(sys, "argv", ["briefcase", "create"])
 
     # Monkeypatch an error into the create command
@@ -117,7 +117,7 @@ def test_unknown_command_error(monkeypatch, pyproject_toml, capsys):
 
 
 def test_interrupted_command(monkeypatch, pyproject_toml, tmp_path, capsys):
-    "A command can be interrupted"
+    """A command can be interrupted."""
     monkeypatch.setattr(sys, "argv", ["briefcase", "create"])
 
     # Monkeypatch a keyboard interrupt into the create command
@@ -139,7 +139,7 @@ def test_interrupted_command(monkeypatch, pyproject_toml, tmp_path, capsys):
 
 
 def test_interrupted_command_with_log(monkeypatch, pyproject_toml, tmp_path, capsys):
-    "A log can be generated when a command is interrupted"
+    """A log can be generated when a command is interrupted."""
     monkeypatch.setattr(sys, "argv", ["briefcase", "create", "--log"])
 
     # Monkeypatch a keyboard interrupt into the create command
