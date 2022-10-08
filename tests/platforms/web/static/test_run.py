@@ -1,6 +1,6 @@
 import errno
 import webbrowser
-from http.server import HTTPServer
+from http.server import HTTPServer, SimpleHTTPRequestHandler
 from unittest import mock
 
 import pytest
@@ -244,7 +244,7 @@ def test_cleanup_runtime_server_error(monkeypatch, run_command, first_app_built)
 def test_run_without_browser(monkeypatch, run_command, first_app_built):
     """A static web app can be launched as a server."""
     # Mock server creation
-    mock_server_init = mock.MagicMock(return_value=mock.MagicMock())
+    mock_server_init = mock.MagicMock()
     monkeypatch.setattr(HTTPServer, "__init__", mock_server_init)
 
     # Mock the socket name returned by the server.
@@ -287,7 +287,7 @@ def test_run_without_browser(monkeypatch, run_command, first_app_built):
 def test_run_autoselect_port(monkeypatch, run_command, first_app_built):
     """A static web app can be launched as a server."""
     # Mock server creation
-    mock_server_init = mock.MagicMock(return_value=mock.MagicMock())
+    mock_server_init = mock.MagicMock()
     monkeypatch.setattr(HTTPServer, "__init__", mock_server_init)
 
     # Mock the socket name returned by the server.
@@ -328,14 +328,57 @@ def test_run_autoselect_port(monkeypatch, run_command, first_app_built):
     mock_server_close.assert_called_once_with()
 
 
-def test_served_paths(tmp_path):
+def test_served_paths(monkeypatch, tmp_path):
     "URLs are converted into paths in the project www folder"
-    # Mock a handler with a server working on a known path.
-    handler = mock.MagicMock()
+    # Mock server creation
+    mock_server_init = mock.MagicMock(return_value=None)
+    monkeypatch.setattr(SimpleHTTPRequestHandler, "__init__", mock_server_init)
+
+    # Create a handler instance.
+    request = mock.MagicMock()
+    server = mock.MagicMock()
+    handler = HTTPHandler(request, ("localhost", 8080), server)
+
+    # We need some properties that are set on the handler instance
+    # by the superclass; force set them here for test purposes.
+    handler.server = server
     handler.server.base_path = tmp_path / "base_path"
 
     # Invoke this as a static method because we don't want to
     # instantiate a full server just to verify that URL rewriting works.
-    assert HTTPHandler.translate_path(handler, "/static/css/briefcase.css") == str(
+    assert handler.translate_path("/static/css/briefcase.css") == str(
         tmp_path / "base_path" / "static" / "css" / "briefcase.css"
     )
+
+
+def test_cache_headers(monkeypatch, tmp_path):
+    "Server sets no-cache headers"
+    # Mock server creation
+    mock_server_init = mock.MagicMock(return_value=None)
+    monkeypatch.setattr(SimpleHTTPRequestHandler, "__init__", mock_server_init)
+
+    # Mock end_headers on the base class
+    mock_end_headers = mock.MagicMock()
+    monkeypatch.setattr(SimpleHTTPRequestHandler, "end_headers", mock_end_headers)
+
+    # Create a handler instance.
+    request = mock.MagicMock()
+    server = mock.MagicMock()
+    handler = HTTPHandler(request, ("localhost", 8080), server)
+
+    # We need some properties that are set on the handler instance
+    # by the superclass; force set them here for test purposes.
+    handler.request_version = "HTTP/1.1"
+
+    # Invoke end_headers()
+    handler.end_headers()
+
+    # end_headers was invoked on the base class...
+    mock_end_headers.assert_called_once_with(handler)
+
+    # ..but the custom handler added cache control headers.
+    assert handler._headers_buffer == [
+        b"Cache-Control: no-cache, no-store, must-revalidate\r\n",
+        b"Pragma: no-cache\r\n",
+        b"Expires: 0\r\n",
+    ]
