@@ -1,0 +1,1 @@
+Briefcase log files are now stored in the ``logs`` subdirectory and only when the current directory is a Briefcase project.

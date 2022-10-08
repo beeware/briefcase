@@ -5,6 +5,7 @@ import pytest
 
 from briefcase.__main__ import main
 from briefcase.commands.create import CreateCommand
+from briefcase.console import Log
 
 from .utils import create_file
 
@@ -47,7 +48,7 @@ def test_help(monkeypatch, tmp_path, capsys):
     )
 
     # No log file was written
-    assert len(list(tmp_path.glob("briefcase.*.log"))) == 0
+    assert len(list(tmp_path.glob(f"{Log.LOG_DIR}/briefcase.*.log"))) == 0
 
 
 def test_command(monkeypatch, tmp_path, capsys):
@@ -75,7 +76,7 @@ def test_command(monkeypatch, tmp_path, capsys):
     assert output.startswith("\nGenerating a new application 'Hello World'\n")
 
     # No log file was written
-    assert len(list(tmp_path.glob("briefcase.*.log"))) == 0
+    assert len(list(tmp_path.glob(f"{Log.LOG_DIR}/briefcase.*.log"))) == 0
 
 
 def test_command_error(monkeypatch, tmp_path, capsys):
@@ -94,8 +95,8 @@ def test_command_error(monkeypatch, tmp_path, capsys):
         "\nBriefcase configuration error: Configuration file not found."
     )
 
-    # A log file was written
-    assert len(list(tmp_path.glob("briefcase.*.create.log"))) == 1
+    # A log file was not written
+    assert len(list(tmp_path.glob(f"{Log.LOG_DIR}/briefcase.*.create.log"))) == 0
 
 
 def test_unknown_command_error(monkeypatch, pyproject_toml, capsys):
@@ -134,7 +135,7 @@ def test_interrupted_command(monkeypatch, pyproject_toml, tmp_path, capsys):
     assert "\nAborted by user.\n" in output
 
     # No log file was written
-    assert len(list(tmp_path.glob("briefcase.*.create.log"))) == 0
+    assert len(list(tmp_path.glob(f"{Log.LOG_DIR}/briefcase.*.create.log"))) == 0
 
 
 def test_interrupted_command_with_log(monkeypatch, pyproject_toml, tmp_path, capsys):
@@ -156,4 +157,4 @@ def test_interrupted_command_with_log(monkeypatch, pyproject_toml, tmp_path, cap
     assert "\nAborted by user.\n" in output
 
     # A log file was written
-    assert len(list(tmp_path.glob("briefcase.*.create.log"))) == 1
+    assert len(list(tmp_path.glob(f"{Log.LOG_DIR}/briefcase.*.create.log"))) == 1
