@@ -374,7 +374,7 @@ def test_cache_headers(monkeypatch, tmp_path):
     handler.end_headers()
 
     # end_headers was invoked on the base class...
-    mock_end_headers.assert_called_once_with(handler)
+    mock_end_headers.assert_called_once_with()
 
     # ..but the custom handler added cache control headers.
     assert handler._headers_buffer == [
