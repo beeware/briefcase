@@ -1,6 +1,7 @@
 class BriefcaseError(Exception):
-    def __init__(self, error_code):
+    def __init__(self, error_code, skip_logfile=False):
         self.error_code = error_code
+        self.skip_logfile = skip_logfile
 
 
 class HelpText(BriefcaseError):
@@ -10,7 +11,7 @@ class HelpText(BriefcaseError):
 
 class InfoHelpText(HelpText):
     def __init__(self, msg):
-        super().__init__(0)
+        super().__init__(error_code=0, skip_logfile=True)
         self.msg = msg
 
     def __str__(self):
@@ -19,7 +20,7 @@ class InfoHelpText(HelpText):
 
 class NoCommandError(HelpText):
     def __init__(self, msg):
-        super().__init__(-10)
+        super().__init__(error_code=-10, skip_logfile=True)
         self.msg = msg
 
     def __str__(self):
@@ -39,7 +40,7 @@ class ShowOutputFormats(InfoHelpText):
 
 class InvalidFormatError(BriefcaseError):
     def __init__(self, requested, choices):
-        super().__init__(-21)
+        super().__init__(error_code=-21, skip_logfile=True)
         self.requested = requested
         self.choices = choices
 
@@ -50,7 +51,7 @@ class InvalidFormatError(BriefcaseError):
 
 class UnsupportedCommandError(BriefcaseError):
     def __init__(self, platform, output_format, command):
-        super().__init__(-30)
+        super().__init__(error_code=-30, skip_logfile=True)
         self.platform = platform
         self.output_format = output_format
         self.command = command
@@ -64,7 +65,7 @@ class UnsupportedCommandError(BriefcaseError):
 
 class BriefcaseConfigError(BriefcaseError):
     def __init__(self, msg):
-        super().__init__(100)
+        super().__init__(error_code=100, skip_logfile=True)
         self.msg = msg
 
     def __str__(self):
@@ -73,7 +74,7 @@ class BriefcaseConfigError(BriefcaseError):
 
 class BriefcaseCommandError(BriefcaseError):
     def __init__(self, msg):
-        super().__init__(200)
+        super().__init__(error_code=200)
         self.msg = msg
 
     def __str__(self):

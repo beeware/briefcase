@@ -619,7 +619,9 @@ a custom location for Briefcase's tools.
 
         except FileNotFoundError as e:
             raise BriefcaseConfigError(
-                f"""Configuration file not found. Did you run briefcase in the directory that contains {filename!r}?"""
+                f"""Configuration file not found.
+
+Did you run Briefcase in a project directory that contains {filename.name!r}?"""
             ) from e
 
     def update_cookiecutter_cache(self, template: str, branch="master"):
@@ -696,7 +698,7 @@ a custom location for Briefcase's tools.
         return cached_template
 
     def generate_template(self, template, branch, output_path, extra_context):
-        """Ensure the named template is up to date for the given branch, and
+        """Ensure the named template is up-to-date for the given branch, and
         roll out that template.
 
         :param template: The template URL or path to generate

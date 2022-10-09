@@ -121,6 +121,8 @@ class Log:
     DEBUG = 2
     # printed at the beginning of all debug output
     DEBUG_PREFACE = ">>> "
+    # subdirectory of command.base_path to store log files
+    LOG_DIR = "logs"
 
     def __init__(self, printer=Printer(), verbosity=1):
         self.print = printer
@@ -128,6 +130,8 @@ class Log:
         self.verbosity = verbosity
         # --log flag to force logfile creation
         self.save_log = False
+        # flag set by exceptions to skip writing the log; save_log takes precedence.
+        self.skip_log = False
         # Rich stacktrace of exception for logging to file
         self.stacktrace = None
         # functions to run for additional logging if creating a logfile
@@ -202,7 +206,12 @@ class Log:
 
     def capture_stacktrace(self):
         """Preserve Rich stacktrace from exception while in except block."""
-        self.stacktrace = Traceback.extract(*sys.exc_info(), show_locals=True)
+        exc_info = sys.exc_info()
+        try:
+            self.skip_log = exc_info[1].skip_logfile
+        except AttributeError:
+            pass
+        self.stacktrace = Traceback.extract(*exc_info, show_locals=True)
 
     def add_log_file_extra(self, func):
         """Register a function to be called in the event that a log file is
@@ -215,15 +224,18 @@ class Log:
 
     def save_log_to_file(self, command):
         """Save the current application log to file."""
-        # only save the log if a command ran and it errored or --log was specified
-        if command is None or (not self.stacktrace and not self.save_log):
+        # A log file is always written if a Command ran and `--log` was provided.
+        # If `--log` was not provided, then the log is written when an exception
+        # occurred and the exception was not explicitly configured to skip the log.
+        if not (command and (self.save_log or (self.stacktrace and not self.skip_log))):
             return
 
         with command.input.wait_bar("Saving log...", transient=True):
             self.print.to_console()
             log_filename = f"briefcase.{datetime.now().strftime('%Y_%m_%d-%H_%M_%S')}.{command.command}.log"
-            log_filepath = command.base_path / log_filename
+            log_filepath = command.base_path / self.LOG_DIR / log_filename
             try:
+                log_filepath.parent.mkdir(parents=True, exist_ok=True)
                 with open(
                     log_filepath, "w", encoding="utf-8", errors="backslashreplace"
                 ) as log_file:

@@ -5,6 +5,7 @@ import pytest
 
 from briefcase.__main__ import main
 from briefcase.commands.create import CreateCommand
+from briefcase.console import Log
 
 from .utils import create_file
 
@@ -34,7 +35,7 @@ sources = ["myapp"]
 
 
 def test_help(monkeypatch, tmp_path, capsys):
-    "Briefcase can output help."
+    """Briefcase can output help."""
     # Set the test command line
     monkeypatch.setattr(sys, "argv", ["briefcase", "--help"])
 
@@ -47,11 +48,11 @@ def test_help(monkeypatch, tmp_path, capsys):
     )
 
     # No log file was written
-    assert len(list(tmp_path.glob("briefcase.*.log"))) == 0
+    assert len(list(tmp_path.glob(f"{Log.LOG_DIR}/briefcase.*.log"))) == 0
 
 
 def test_command(monkeypatch, tmp_path, capsys):
-    "A command can be successful"
+    """A command can be successful."""
     # Monkeypatch cwd() to use a test folder.
     monkeypatch.setattr(Path, "cwd", lambda: tmp_path)
 
@@ -75,18 +76,18 @@ def test_command(monkeypatch, tmp_path, capsys):
     assert output.startswith("\nGenerating a new application 'Hello World'\n")
 
     # No log file was written
-    assert len(list(tmp_path.glob("briefcase.*.log"))) == 0
+    assert len(list(tmp_path.glob(f"{Log.LOG_DIR}/briefcase.*.log"))) == 0
 
 
 def test_command_error(monkeypatch, tmp_path, capsys):
-    "A command can raise a known error"
+    """A command can raise a known error."""
     # Monkeypatch cwd() to use a test folder.
     monkeypatch.setattr(Path, "cwd", lambda: tmp_path)
 
     # Set the test command line
     monkeypatch.setattr(sys, "argv", ["briefcase", "create"])
 
-    # Help has a return code of -10
+    # BriefcaseConfigError has a return code of 100
     assert main() == 100
 
     output = capsys.readouterr().out
@@ -94,12 +95,12 @@ def test_command_error(monkeypatch, tmp_path, capsys):
         "\nBriefcase configuration error: Configuration file not found."
     )
 
-    # A log file was written
-    assert len(list(tmp_path.glob("briefcase.*.create.log"))) == 1
+    # Log files are not created for BriefcaseConfigError errors
+    assert len(list(tmp_path.glob(f"{Log.LOG_DIR}/briefcase.*.create.log"))) == 0
 
 
 def test_unknown_command_error(monkeypatch, pyproject_toml, capsys):
-    "A command can raise an unknown error"
+    """A command can raise an unknown error."""
     monkeypatch.setattr(sys, "argv", ["briefcase", "create"])
 
     # Monkeypatch an error into the create command
@@ -116,7 +117,7 @@ def test_unknown_command_error(monkeypatch, pyproject_toml, capsys):
 
 
 def test_interrupted_command(monkeypatch, pyproject_toml, tmp_path, capsys):
-    "A command can be interrupted"
+    """A command can be interrupted."""
     monkeypatch.setattr(sys, "argv", ["briefcase", "create"])
 
     # Monkeypatch a keyboard interrupt into the create command
@@ -134,11 +135,11 @@ def test_interrupted_command(monkeypatch, pyproject_toml, tmp_path, capsys):
     assert "\nAborted by user.\n" in output
 
     # No log file was written
-    assert len(list(tmp_path.glob("briefcase.*.create.log"))) == 0
+    assert len(list(tmp_path.glob(f"{Log.LOG_DIR}/briefcase.*.create.log"))) == 0
 
 
 def test_interrupted_command_with_log(monkeypatch, pyproject_toml, tmp_path, capsys):
-    "A log can be generated when a command is interrupted"
+    """A log can be generated when a command is interrupted."""
     monkeypatch.setattr(sys, "argv", ["briefcase", "create", "--log"])
 
     # Monkeypatch a keyboard interrupt into the create command
@@ -156,4 +157,4 @@ def test_interrupted_command_with_log(monkeypatch, pyproject_toml, tmp_path, cap
     assert "\nAborted by user.\n" in output
 
     # A log file was written
-    assert len(list(tmp_path.glob("briefcase.*.create.log"))) == 1
+    assert len(list(tmp_path.glob(f"{Log.LOG_DIR}/briefcase.*.create.log"))) == 1

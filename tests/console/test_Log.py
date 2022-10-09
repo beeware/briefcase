@@ -7,6 +7,7 @@ from rich.traceback import Trace
 
 import briefcase
 from briefcase.console import Log
+from briefcase.exceptions import BriefcaseError
 
 TRACEBACK_HEADER = "Traceback (most recent call last)"
 EXTRA_HEADER = "Extra information:"
@@ -25,11 +26,30 @@ def now(monkeypatch):
 def test_capture_stacktrace():
     """capture_stacktrace sets Log.stacktrace."""
     logger = Log()
+    assert logger.skip_log is False
+
     try:
         1 / 0
     except ZeroDivisionError:
         logger.capture_stacktrace()
+
     assert isinstance(logger.stacktrace, Trace)
+    assert logger.skip_log is False
+
+
+@pytest.mark.parametrize("skip_logfile", [True, False])
+def test_capture_stacktrace_for_briefcaseerror(skip_logfile):
+    """skip_log is updated for BriefcaseError exceptions."""
+    logger = Log()
+    assert logger.skip_log is False
+
+    try:
+        raise BriefcaseError(error_code=542, skip_logfile=skip_logfile)
+    except BriefcaseError:
+        logger.capture_stacktrace()
+
+    assert isinstance(logger.stacktrace, Trace)
+    assert logger.skip_log is skip_logfile
 
 
 def test_save_log_to_file_do_not_log():
@@ -77,7 +97,7 @@ def test_save_log_to_file_no_exception(tmp_path, now):
 
     logger.save_log_to_file(command=command)
 
-    log_filepath = tmp_path / "briefcase.2022_06_25-16_12_29.dev.log"
+    log_filepath = tmp_path / logger.LOG_DIR / "briefcase.2022_06_25-16_12_29.dev.log"
 
     assert log_filepath.exists()
     with open(log_filepath, encoding="utf-8") as log:
@@ -119,7 +139,7 @@ def test_save_log_to_file_with_exception(tmp_path, now):
         logger.capture_stacktrace()
     logger.save_log_to_file(command=command)
 
-    log_filepath = tmp_path / "briefcase.2022_06_25-16_12_29.dev.log"
+    log_filepath = tmp_path / logger.LOG_DIR / "briefcase.2022_06_25-16_12_29.dev.log"
 
     log_filepath.exists()
     with open(log_filepath, encoding="utf-8") as log:
@@ -151,7 +171,7 @@ def test_save_log_to_file_extra(tmp_path, now):
     for extra in [extra1, extra2, extra3]:
         logger.add_log_file_extra(extra)
     logger.save_log_to_file(command=command)
-    log_filepath = tmp_path / "briefcase.2022_06_25-16_12_29.dev.log"
+    log_filepath = tmp_path / logger.LOG_DIR / "briefcase.2022_06_25-16_12_29.dev.log"
     with open(log_filepath, encoding="utf-8") as log:
         log_contents = log.read()
 
@@ -180,7 +200,7 @@ def test_save_log_to_file_extra_interrupted(tmp_path, now):
     with pytest.raises(KeyboardInterrupt):
         logger.save_log_to_file(command=command)
     extra2.assert_not_called()
-    log_filepath = tmp_path / "briefcase.2022_06_25-16_12_29.dev.log"
+    log_filepath = tmp_path / logger.LOG_DIR / "briefcase.2022_06_25-16_12_29.dev.log"
     assert log_filepath.stat().st_size == 0
 
 
