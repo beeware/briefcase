@@ -46,17 +46,17 @@ This will result in an Android App Bundle file being generated. An `Android App
 Bundle <https://developer.android.com/guide/app-bundle>`__ is a publishing
 format that includes all your app’s compiled code and resources.
 
-.. note:: AAB and APK
+.. admonition:: AAB and APK
 
-    You may have heard of the "Android Package", or APK format. The AAB format
+    APK (Android Package) files can be directly installed on a device. AAB
     is a newer format that simplifies the process of uploading your app to the
-    Play Store, allows Google to manage the signing process, and allows the app
-    bundle that is installed on your end-user's device to be smaller.
+    Play Store, allows Google to manage the signing process, and allows the APK
+    that is installed on your end-user's device to be smaller.
 
 Sign the Android App Bundle
 ---------------------------
 
-.. admonition:: Create code signing identity
+.. note::
 
   Before you sign the APK files, you need to :doc:`create a code signing
   identity. <../code-signing/android>`
@@ -180,7 +180,7 @@ Add the app to the Google Play store
 ------------------------------------
 
 To publish to the Google Play store, you will need a Google Play Developer
-account, which costs ~$25 USD per year. You will then need to provide
+account, which costs 25 USD. You will then need to provide
 information for your app's store listing including an icon and screenshots,
 upload the app to Google, and finally roll the app out to production.
 
@@ -261,7 +261,7 @@ Click **App releases** in the navigation pane. To produce a production app
 **Manage** within the **Production track**, then select **Create Release.**
 If prompted to enable App Signing by Google Play, click **Continue**.
 
-.. note:: Non-production releases
+.. admonition:: Non-production releases
 
     The Play Store also supports releasing your app for internal, alpha and
     beta testing. Google's documentation `contains more details about creating

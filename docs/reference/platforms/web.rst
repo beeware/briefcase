@@ -2,7 +2,7 @@
 Web
 ===
 
-When generating an web project, Briefcase produces a static folder of HTML, CSS
+When generating a web project, Briefcase produces a static folder of HTML, CSS
 and JavaScript resources that can be deployed as a web site. The static web site
 is packaged as a ``.zip`` file for distribution.
 
@@ -14,10 +14,12 @@ web content.
 
 .. admonition:: Web support is experimental!
 
-    WASM support is a recent addtion to CPython (formally added in Python 3.11);
-    `PyScript <https://pyscript.net>`__ (which forms the base of for Briefcase's
+    `PyScript <https://pyscript.net>`__ (which forms the base of Briefcase's
     web backend) is a new project; and Toga's web backend is very new. As a
     result this web backend should be considered experimental.
+
+    Regardless of what Python version you run Briefcase with, the app will use
+    PyScript's current Python version (as of October 2022, this is 3.10).
 
     There are also a `number of constraints
     <https://pyodide.org/en/stable/usage/wasm-constraints.html>`__ on what you
