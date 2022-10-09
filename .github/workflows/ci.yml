@@ -197,9 +197,9 @@ jobs:
     - name: Build App
       run: |
         cd tests/apps/verify-${{ matrix.framework }}
-        briefcase create
-        briefcase build
-        briefcase package --adhoc-sign
+        briefcase create || exit 1
+        briefcase build || exit 1
+        briefcase package --adhoc-sign || exit 1
     # - name: Build Xcode project
     #   if: matrix.os_name == 'macOS'
     #   run: |
@@ -211,9 +211,9 @@ jobs:
       if: matrix.os_name == 'windows'
       run: |
         cd tests/apps/verify-${{ matrix.framework }}
-        briefcase create ${{ matrix.os_name }} VisualStudio
-        briefcase build ${{ matrix.os_name }} VisualStudio
-        briefcase package ${{ matrix.os_name }} VisualStudio --adhoc-sign
+        briefcase create ${{ matrix.os_name }} VisualStudio || exit 1
+        briefcase build ${{ matrix.os_name }} VisualStudio || exit 1
+        briefcase package ${{ matrix.os_name }} VisualStudio --adhoc-sign || exit 1
     # - name: Build Flatpak project
     #   if: matrix.os_name == 'linux' && matrix.framework == 'toga'
     #   run: |
