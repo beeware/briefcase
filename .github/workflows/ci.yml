@@ -8,140 +8,142 @@ env:
   python_version: '3.9'
 
 jobs:
-  pre-commit:
-    name: Pre-commit code style checks
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v3.1.0
-        with:
-          fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.sha }}
-      - name: Set up Python
-        uses: actions/setup-python@v4.2.0
-        with:
-          python-version: ${{ env.python_version }}
-      - name: Lint with Pre-commit
-        uses: pre-commit/action@v3.0.0
+  # pre-commit:
+  #   name: Pre-commit code style checks
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 10
+  #   steps:
+  #     - uses: actions/checkout@v3.1.0
+  #       with:
+  #         fetch-depth: 0
+  #         ref: ${{ github.event.pull_request.head.sha }}
+  #     - name: Set up Python
+  #       uses: actions/setup-python@v4.2.0
+  #       with:
+  #         python-version: ${{ env.python_version }}
+  #     - name: Lint with Pre-commit
+  #       uses: pre-commit/action@v3.0.0
 
-  beefore:
-    name: Pre-test checks
-    needs: pre-commit
-    runs-on: ubuntu-latest
-    strategy:
-      max-parallel: 4
-      matrix:
-        task:
-        - 'towncrier-check'
-        - 'package'
-    steps:
-    # Check out main; needed for towncrier comparisons.
-    - uses: actions/checkout@v3.1.0
-      with:
-        fetch-depth: 0
-        ref: main
-    - uses: actions/checkout@v3.1.0
-      with:
-        fetch-depth: 0
-    - name: Set up Python
-      uses: actions/setup-python@v4.2.0
-      with:
-        python-version: ${{ env.python_version }}
-    - name: Install dependencies
-      run: |
-        pip install --upgrade pip
-        pip install --upgrade setuptools
-        pip install setuptools_scm tox
-    - name: Run pre-test check
-      run: |
-        tox -e ${{ matrix.task }}
+  # beefore:
+  #   name: Pre-test checks
+  #   needs: pre-commit
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     max-parallel: 4
+  #     matrix:
+  #       task:
+  #       - 'towncrier-check'
+  #       - 'package'
+  #   steps:
+  #   # Check out main; needed for towncrier comparisons.
+  #   - uses: actions/checkout@v3.1.0
+  #     with:
+  #       fetch-depth: 0
+  #       ref: main
+  #   - uses: actions/checkout@v3.1.0
+  #     with:
+  #       fetch-depth: 0
+  #   - name: Set up Python
+  #     uses: actions/setup-python@v4.2.0
+  #     with:
+  #       python-version: ${{ env.python_version }}
+  #   - name: Install dependencies
+  #     run: |
+  #       pip install --upgrade pip
+  #       pip install --upgrade setuptools
+  #       pip install setuptools_scm tox
+  #   - name: Run pre-test check
+  #     run: |
+  #       tox -e ${{ matrix.task }}
 
-  unit-tests:
-    name: Unit tests
-    needs: beefore
-    strategy:
-      max-parallel: 4
-      matrix:
-        platform: ['macos-latest', 'ubuntu-latest', 'windows-latest']
-        python-version: ['3.8', '3.9', '3.10', '3.11.0-alpha - 3.11.0']
-    runs-on: ${{ matrix.platform }}
-    steps:
-    - uses: actions/checkout@v3.1.0
-      with:
-        fetch-depth: 0
-    - name: Set up Python
-      uses: actions/setup-python@v4.2.0
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
-      run: |
-        pip install --upgrade pip
-        pip install --upgrade setuptools
-        pip install setuptools_scm tox coverage[toml]
-    - name: Test
-      run: |
-        tox -e py
-    - name: Store coverage data
-      uses: actions/upload-artifact@v3
-      with:
-        name: coverage-data
-        path: ".coverage.*"
-        if-no-files-found: ignore
-    - name: Report platform coverage
-      run: |
-        python -m coverage combine
-        python -m coverage report
+  # unit-tests:
+  #   name: Unit tests
+  #   needs: beefore
+  #   strategy:
+  #     max-parallel: 4
+  #     matrix:
+  #       platform: ['macos-latest', 'ubuntu-latest', 'windows-latest']
+  #       python-version: ['3.8', '3.9', '3.10', '3.11.0-alpha - 3.11.0']
+  #   runs-on: ${{ matrix.platform }}
+  #   steps:
+  #   - uses: actions/checkout@v3.1.0
+  #     with:
+  #       fetch-depth: 0
+  #   - name: Set up Python
+  #     uses: actions/setup-python@v4.2.0
+  #     with:
+  #       python-version: ${{ matrix.python-version }}
+  #   - name: Install dependencies
+  #     run: |
+  #       pip install --upgrade pip
+  #       pip install --upgrade setuptools
+  #       pip install setuptools_scm tox coverage[toml]
+  #   - name: Test
+  #     run: |
+  #       tox -e py
+  #   - name: Store coverage data
+  #     uses: actions/upload-artifact@v3
+  #     with:
+  #       name: coverage-data
+  #       path: ".coverage.*"
+  #       if-no-files-found: ignore
+  #   - name: Report platform coverage
+  #     run: |
+  #       python -m coverage combine
+  #       python -m coverage report
 
-  coverage:
-    name: Combine & check coverage.
-    runs-on: ubuntu-latest
-    needs:
-    - unit-tests
-    steps:
-    - uses: actions/checkout@v3.1.0
-      with:
-        fetch-depth: 0
-    - uses: actions/setup-python@v2
-      with:
-        # Use latest, so it understands all syntax.
-        python-version: "3.10"
-    - name: Install dependencies
-      run: |
-        pip install --upgrade pip
-        pip install --upgrade setuptools
-        pip install coverage[toml]
-    - name: Retrieve coverage data
-      uses: actions/download-artifact@v3
-      with:
-        name: coverage-data
-    - name: Normalize paths in coverage data
-      run: |
-        # See https://github.com/nedbat/coveragepy/issues/991
-        for coverage in `ls .coverage.*`; do
-          sqlite3 $coverage "update file set path = replace(path, '\\', '/')"
-        done
-    - name: Combine coverage
-      run: |
-        python -m coverage combine
-    - name: Generate coverage report
-      run: |
-        python -m coverage html --skip-covered --skip-empty
-        python -m coverage report --fail-under=100
-    - name: Upload HTML report if check failed.
-      uses: actions/upload-artifact@v3
-      with:
-        name: html-coverage-report
-        path: htmlcov
-      if: ${{ failure() }}
+  # coverage:
+  #   name: Combine & check coverage.
+  #   runs-on: ubuntu-latest
+  #   needs:
+  #   - unit-tests
+  #   steps:
+  #   - uses: actions/checkout@v3.1.0
+  #     with:
+  #       fetch-depth: 0
+  #   - uses: actions/setup-python@v2
+  #     with:
+  #       # Use latest, so it understands all syntax.
+  #       python-version: "3.10"
+  #   - name: Install dependencies
+  #     run: |
+  #       pip install --upgrade pip
+  #       pip install --upgrade setuptools
+  #       pip install coverage[toml]
+  #   - name: Retrieve coverage data
+  #     uses: actions/download-artifact@v3
+  #     with:
+  #       name: coverage-data
+  #   - name: Normalize paths in coverage data
+  #     run: |
+  #       # See https://github.com/nedbat/coveragepy/issues/991
+  #       for coverage in `ls .coverage.*`; do
+  #         sqlite3 $coverage "update file set path = replace(path, '\\', '/')"
+  #       done
+  #   - name: Combine coverage
+  #     run: |
+  #       python -m coverage combine
+  #   - name: Generate coverage report
+  #     run: |
+  #       python -m coverage html --skip-covered --skip-empty
+  #       python -m coverage report --fail-under=100
+  #   - name: Upload HTML report if check failed.
+  #     uses: actions/upload-artifact@v3
+  #     with:
+  #       name: html-coverage-report
+  #       path: htmlcov
+  #     if: ${{ failure() }}
 
   verify-apps:
     name: App verification
-    needs: unit-tests
+    # needs: unit-tests
     strategy:
       max-parallel: 4
       matrix:
-        os_name: ['macOS', 'windows', 'linux']
-        framework: ['toga', 'pyside2', 'pyside6', 'ppb']
+        # os_name: ['macOS', 'windows', 'linux']
+        # framework: ['toga', 'pyside2', 'pyside6', 'ppb']
+        os_name: ['windows']
+        framework: ['toga']
         include:
         - os_name: macOS
           platform: macos-12
@@ -198,13 +200,13 @@ jobs:
         briefcase create
         briefcase build
         briefcase package --adhoc-sign
-    - name: Build Xcode project
-      if: matrix.os_name == 'macOS'
-      run: |
-        cd tests/apps/verify-${{ matrix.framework }}
-        briefcase create ${{ matrix.os_name }} Xcode
-        briefcase build ${{ matrix.os_name }} Xcode
-        briefcase package ${{ matrix.os_name }} Xcode --adhoc-sign
+    # - name: Build Xcode project
+    #   if: matrix.os_name == 'macOS'
+    #   run: |
+    #     cd tests/apps/verify-${{ matrix.framework }}
+    #     briefcase create ${{ matrix.os_name }} Xcode
+    #     briefcase build ${{ matrix.os_name }} Xcode
+    #     briefcase package ${{ matrix.os_name }} Xcode --adhoc-sign
     - name: Build Visual Studio project
       if: matrix.os_name == 'windows'
       run: |
@@ -212,31 +214,31 @@ jobs:
         briefcase create ${{ matrix.os_name }} VisualStudio
         briefcase build ${{ matrix.os_name }} VisualStudio
         briefcase package ${{ matrix.os_name }} VisualStudio --adhoc-sign
-    - name: Build Flatpak project
-      if: matrix.os_name == 'linux' && matrix.framework == 'toga'
-      run: |
-        cd tests/apps/verify-${{ matrix.framework }}
-        briefcase create ${{ matrix.os_name }} flatpak
-        briefcase build ${{ matrix.os_name }} flatpak
-        briefcase package ${{ matrix.os_name }} flatpak --adhoc-sign
-    - name: Build Android App
-      if: matrix.framework == 'toga'
-      run: |
-        cd tests/apps/verify-${{ matrix.framework }}
-        briefcase create android
-        briefcase build android
-        briefcase package android --adhoc-sign
-    - name: Build iOS App
-      if: matrix.platform == 'macos-12' && matrix.framework == 'toga'
-      run: |
-        cd tests/apps/verify-${{ matrix.framework }}
-        briefcase create iOS
-        briefcase build iOS -d "iPhone SE (2nd generation)"
-        briefcase package iOS --adhoc-sign
-    - name: Build Web App
-      if: matrix.framework == 'toga'
-      run: |
-        cd tests/apps/verify-${{ matrix.framework }}
-        briefcase create web
-        briefcase build web
-        briefcase package web
+    # - name: Build Flatpak project
+    #   if: matrix.os_name == 'linux' && matrix.framework == 'toga'
+    #   run: |
+    #     cd tests/apps/verify-${{ matrix.framework }}
+    #     briefcase create ${{ matrix.os_name }} flatpak
+    #     briefcase build ${{ matrix.os_name }} flatpak
+    #     briefcase package ${{ matrix.os_name }} flatpak --adhoc-sign
+    # - name: Build Android App
+    #   if: matrix.framework == 'toga'
+    #   run: |
+    #     cd tests/apps/verify-${{ matrix.framework }}
+    #     briefcase create android
+    #     briefcase build android
+    #     briefcase package android --adhoc-sign
+    # - name: Build iOS App
+    #   if: matrix.platform == 'macos-12' && matrix.framework == 'toga'
+    #   run: |
+    #     cd tests/apps/verify-${{ matrix.framework }}
+    #     briefcase create iOS
+    #     briefcase build iOS -d "iPhone SE (2nd generation)"
+    #     briefcase package iOS --adhoc-sign
+    # - name: Build Web App
+    #   if: matrix.framework == 'toga'
+    #   run: |
+    #     cd tests/apps/verify-${{ matrix.framework }}
+    #     briefcase create web
+    #     briefcase build web
+    #     briefcase package web
