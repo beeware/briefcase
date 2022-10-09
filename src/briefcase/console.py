@@ -21,7 +21,6 @@ from rich.progress import (
 from rich.traceback import Traceback
 
 from briefcase import __version__
-from briefcase.exceptions import BriefcaseError
 
 # Regex to identify settings likely to contain sensitive information
 SENSITIVE_SETTING_RE = re.compile(r"API|TOKEN|KEY|SECRET|PASS|SIGNATURE", flags=re.I)
@@ -208,8 +207,10 @@ class Log:
     def capture_stacktrace(self):
         """Preserve Rich stacktrace from exception while in except block."""
         exc_info = sys.exc_info()
-        if isinstance(exc_info[1], BriefcaseError):
+        try:
             self.skip_log = exc_info[1].skip_logfile
+        except AttributeError:
+            pass
         self.stacktrace = Traceback.extract(*exc_info, show_locals=True)
 
     def add_log_file_extra(self, func):
