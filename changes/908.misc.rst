@@ -1,0 +1,1 @@
+Failures on intermediate commands in CI are correctly surfaced as CI errors.

@@ -193,6 +193,7 @@ jobs:
         cd tests/apps
         cat verify-${{ matrix.framework }}.config | briefcase new
     - name: Build App
+      shell: bash
       run: |
         cd tests/apps/verify-${{ matrix.framework }}
         briefcase create
@@ -200,6 +201,7 @@ jobs:
         briefcase package --adhoc-sign
     - name: Build Xcode project
       if: matrix.os_name == 'macOS'
+      shell: bash
       run: |
         cd tests/apps/verify-${{ matrix.framework }}
         briefcase create ${{ matrix.os_name }} Xcode
@@ -207,6 +209,7 @@ jobs:
         briefcase package ${{ matrix.os_name }} Xcode --adhoc-sign
     - name: Build Visual Studio project
       if: matrix.os_name == 'windows'
+      shell: bash
       run: |
         cd tests/apps/verify-${{ matrix.framework }}
         briefcase create ${{ matrix.os_name }} VisualStudio
@@ -214,6 +217,7 @@ jobs:
         briefcase package ${{ matrix.os_name }} VisualStudio --adhoc-sign
     - name: Build Flatpak project
       if: matrix.os_name == 'linux' && matrix.framework == 'toga'
+      shell: bash
       run: |
         cd tests/apps/verify-${{ matrix.framework }}
         briefcase create ${{ matrix.os_name }} flatpak
@@ -221,6 +225,7 @@ jobs:
         briefcase package ${{ matrix.os_name }} flatpak --adhoc-sign
     - name: Build Android App
       if: matrix.framework == 'toga'
+      shell: bash
       run: |
         cd tests/apps/verify-${{ matrix.framework }}
         briefcase create android
@@ -228,6 +233,7 @@ jobs:
         briefcase package android --adhoc-sign
     - name: Build iOS App
       if: matrix.platform == 'macos-12' && matrix.framework == 'toga'
+      shell: bash
       run: |
         cd tests/apps/verify-${{ matrix.framework }}
         briefcase create iOS
@@ -235,6 +241,7 @@ jobs:
         briefcase package iOS --adhoc-sign
     - name: Build Web App
       if: matrix.framework == 'toga'
+      shell: bash
       run: |
         cd tests/apps/verify-${{ matrix.framework }}
         briefcase create web
