@@ -7,6 +7,8 @@ import pytest
 import briefcase
 from briefcase.commands.create import MissingAppSources
 
+from ...utils import create_file
+
 
 def assert_dist_info(app_path):
     dist_info_path = app_path / "my_app-1.2.3.dist-info"
@@ -123,20 +125,18 @@ def test_source_dir(
     #     shallow.py
     #     submodule /
     #       deeper.py
-    first_src = tmp_path / "project" / "src" / "first" / "demo.py"
-    first_src.parent.mkdir(parents=True)
-    with first_src.open("w") as f:
-        f.write("print('hello first')\n")
-
-    second_shallow_src = tmp_path / "project" / "src" / "second" / "shallow.py"
-    second_deep_src = (
-        tmp_path / "project" / "src" / "second" / "submodule" / "deeper.py"
+    create_file(
+        tmp_path / "project" / "src" / "first" / "demo.py",
+        "print('hello first')\n",
     )
-    second_deep_src.parent.mkdir(parents=True)
-    with second_shallow_src.open("w") as f:
-        f.write("print('hello shallow second')\n")
-    with second_deep_src.open("w") as f:
-        f.write("print('hello deep second')\n")
+    create_file(
+        tmp_path / "project" / "src" / "second" / "shallow.py",
+        "print('hello shallow second')\n",
+    )
+    create_file(
+        tmp_path / "project" / "src" / "second" / "submodule" / "deeper.py",
+        "print('hello deep second')\n",
+    )
 
     # Set the app definition, and install sources
     myapp.sources = ["src/first", "src/second"]
@@ -169,14 +169,14 @@ def test_source_file(
     # src /
     #   demo.py
     # other.py
-    first_src = tmp_path / "project" / "src" / "demo.py"
-    first_src.parent.mkdir(parents=True)
-    with first_src.open("w") as f:
-        f.write("print('hello first')\n")
-
-    second_src = tmp_path / "project" / "other.py"
-    with second_src.open("w") as f:
-        f.write("print('hello second')\n")
+    create_file(
+        tmp_path / "project" / "src" / "demo.py",
+        "print('hello first')\n",
+    )
+    create_file(
+        tmp_path / "project" / "other.py",
+        "print('hello second')\n",
+    )
 
     # Set the app definition, and install sources
     myapp.sources = ["src/demo.py", "other.py"]
@@ -188,6 +188,68 @@ def test_source_file(
     assert (app_path / "other.py").exists()
 
     # Metadata has been created
+    assert_dist_info(app_path)
+
+
+def test_no_existing_app_folder(
+    create_command,
+    myapp,
+    tmp_path,
+    app_path,
+    app_requirements_path_index,
+):
+    """If there's no pre-existing app folder, one is created."""
+    # Create the mock sources
+    # src /
+    #   first /
+    #     demo.py
+    #   second /
+    #     shallow.py
+    #     submodule /
+    #       deeper.py
+    create_file(
+        tmp_path / "project" / "src" / "first" / "demo.py",
+        "print('hello first')\n",
+    )
+    create_file(
+        tmp_path / "project" / "src" / "second" / "shallow.py",
+        "print('hello shallow second')\n",
+    )
+    create_file(
+        tmp_path / "project" / "src" / "second" / "submodule" / "deeper.py",
+        "print('hello deep second')\n",
+    )
+
+    # Remove the app folder created by the test fixture.
+    shutil.rmtree(app_path)
+
+    # Set the app definition, and install sources
+    myapp.sources = ["src/first/demo.py", "src/second"]
+
+    create_command.install_app_code(myapp)
+
+    # All the new sources exist, and contain the new content.
+    assert (app_path / "demo.py").exists()
+    with (app_path / "demo.py").open() as f:
+        assert f.read() == "print('hello first')\n"
+
+    assert (app_path / "second").exists()
+    assert (app_path / "second" / "shallow.py").exists()
+    with (app_path / "second" / "shallow.py").open() as f:
+        assert f.read() == "print('hello shallow second')\n"
+
+    assert (app_path / "second" / "submodule").exists()
+    assert (app_path / "second" / "submodule" / "deeper.py").exists()
+    with (app_path / "second" / "submodule" / "deeper.py").open() as f:
+        assert f.read() == "print('hello deep second')\n"
+
+    # The stale/broken modules have been removed.
+    assert not (app_path / "stale.py").exists()
+    assert not (app_path / "second" / "stale.py").exists()
+    assert not (app_path / "second" / "broken").exists()
+
+    # Metadata has been updated.
+    assert not (app_path / "my_app-1.2.2.dist-info").exists()
     assert_dist_info(app_path)
 
 
@@ -207,20 +269,18 @@ def test_replace_sources(
     #     shallow.py
     #     submodule /
     #       deeper.py
-    first_src = tmp_path / "project" / "src" / "first" / "demo.py"
-    first_src.parent.mkdir(parents=True)
-    with first_src.open("w") as f:
-        f.write("print('hello first')\n")
-
-    second_shallow_src = tmp_path / "project" / "src" / "second" / "shallow.py"
-    second_deep_src = (
-        tmp_path / "project" / "src" / "second" / "submodule" / "deeper.py"
+    create_file(
+        tmp_path / "project" / "src" / "first" / "demo.py",
+        "print('hello first')\n",
     )
-    second_deep_src.parent.mkdir(parents=True)
-    with second_shallow_src.open("w") as f:
-        f.write("print('hello shallow second')\n")
-    with second_deep_src.open("w") as f:
-        f.write("print('hello deep second')\n")
+    create_file(
+        tmp_path / "project" / "src" / "second" / "shallow.py",
+        "print('hello shallow second')\n",
+    )
+    create_file(
+        tmp_path / "project" / "src" / "second" / "submodule" / "deeper.py",
+        "print('hello deep second')\n",
+    )
 
     # Also create some existing sources:
     # path / to / app /
@@ -234,31 +294,33 @@ def test_replace_sources(
     #     broken /
     #       other.py
     #   my_app-1.2.2.dist-info /
-
-    old_first_src = app_path / "demo.py"
-    with old_first_src.open("w") as f:
-        f.write("print('old hello first')\n")
-
-    old_stale_src = app_path / "stale.py"
-    with old_stale_src.open("w") as f:
-        f.write("print('stale hello first')\n")
+    create_file(
+        app_path / "src" / "demo.py",
+        "print('old hello first')\n",
+    )
+    create_file(
+        app_path / "src" / "stale.py",
+        "print('stale hello first')\n",
+    )
+    create_file(
+        app_path / "src" / "second" / "shallow.py",
+        "print('old hello shallow second')\n",
+    )
+    create_file(
+        app_path / "src" / "second" / "stale.py",
+        "print('hello second stale')\n",
+    )
+    create_file(
+        app_path / "src" / "second" / "submodule" / "deeper.py",
+        "print('hello deep second')\n",
+    )
+    create_file(
+        app_path / "src" / "second" / "broken" / "other.py",
+        "print('hello second deep broken')\n",
+    )
 
     old_dist_info_dir = app_path / "my_app-1.2.2.dist-info"
-    old_second_shallow_src = app_path / "src" / "second" / "shallow.py"
-    old_second_stale_src = app_path / "src" / "second" / "stale.py"
-    old_second_deep_src = app_path / "src" / "second" / "submodule" / "deeper.py"
-    old_second_broken_src = app_path / "src" / "second" / "broken" / "other.py"
     old_dist_info_dir.mkdir()
-    old_second_deep_src.parent.mkdir(parents=True)
-    old_second_broken_src.parent.mkdir(parents=True)
-    with old_second_shallow_src.open("w") as f:
-        f.write("print('old hello shallow second')\n")
-    with old_second_stale_src.open("w") as f:
-        f.write("print('hello second stale')\n")
-    with old_second_deep_src.open("w") as f:
-        f.write("print('old hello deep second')\n")
-    with old_second_broken_src.open("w") as f:
-        f.write("print('hello second deep broken')\n")
 
     # Set the app definition, and install sources
     myapp.sources = ["src/first/demo.py", "src/second"]
