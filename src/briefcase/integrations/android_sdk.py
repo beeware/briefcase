@@ -3,7 +3,6 @@ import re
 import shutil
 import subprocess
 import time
-from contextlib import suppress
 from pathlib import Path
 
 from briefcase.config import PEP508_NAME_RE
@@ -1069,11 +1068,16 @@ find this page helpful in diagnosing emulator problems.
 
                         # Try again in 2 seconds...
                         self.sleep(2)
-        except Exception:
-            # if the emulator exited, this should return its output immediately;
-            # if it is still running, this will quickly time out and print nothing.
-            with suppress(subprocess.TimeoutExpired):
-                self.tools.logger.info(emulator_popen.communicate(timeout=1)[0])
+        except BaseException:
+            # if the emulator exited or the user sent CTRL+C, show the
+            # available output from the emulator to the user before exiting.
+            output_deadline = time.time() + 1
+            self.tools.subprocess.stream_output(
+                label="Android emulator",
+                popen_process=emulator_popen,
+                stop_func=lambda: time.time() > output_deadline,
+                skip_cleanup=True,
+            )
             raise
 
         # Return the device ID and full name.

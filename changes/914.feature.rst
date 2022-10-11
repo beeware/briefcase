@@ -1,0 +1,1 @@
+When the Android emulator startup process is interrupted with CTRL+C, the emulator output is now printed in the console.

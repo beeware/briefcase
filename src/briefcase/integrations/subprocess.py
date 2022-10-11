@@ -436,7 +436,13 @@ class Subprocess:
             [str(arg) for arg in args], **self.final_kwargs(**kwargs)
         )
 
-    def stream_output(self, label, popen_process, stop_func=lambda: False):
+    def stream_output(
+        self,
+        label,
+        popen_process,
+        stop_func=lambda: False,
+        skip_cleanup=False,
+    ):
         """Stream the output of a Popen process until the process exits. If the
         user sends CTRL+C, the process will be terminated.
 
@@ -449,11 +455,17 @@ class Subprocess:
         :param popen_process: a running Popen process with output to print
         :param stop_func: a Callable that returns True when output streaming
             should stop and the popen_process should be terminated.
+        :param skip_cleanup: True to skip terminating the process. Defaults False.
+            This leaves the process running in the background and instructs the
+            output streamer to stop printing its output as soon as it can. Due
+            to the implementation of readline(), the output streamer thread may
+            persist until Python exits.
         """
+        output_streamer_stop_flag = threading.Event()
         output_streamer = threading.Thread(
             name=f"{label} output streamer",
             target=self._stream_output_thread,
-            args=(popen_process,),
+            args=(popen_process, output_streamer_stop_flag),
             daemon=True,
         )
         try:
@@ -469,19 +481,23 @@ class Subprocess:
             # re-raise to exit as "Aborted by user"
             raise
         finally:
-            self.cleanup(label, popen_process)
-            streamer_deadline = time.time() + 3
-            while output_streamer.is_alive() and time.time() < streamer_deadline:
-                time.sleep(0.1)
-            if output_streamer.is_alive():
-                self.tools.logger.error(
-                    "Log stream hasn't terminated; log output may be corrupted."
-                )
+            if skip_cleanup:
+                output_streamer_stop_flag.set()
+            else:
+                self.cleanup(label, popen_process)
+                streamer_deadline = time.time() + 3
+                while output_streamer.is_alive() and time.time() < streamer_deadline:
+                    time.sleep(0.1)
+                if output_streamer.is_alive():
+                    self.tools.logger.error(
+                        "Log stream hasn't terminated; log output may be corrupted."
+                    )
 
-    def _stream_output_thread(self, popen_process):
+    def _stream_output_thread(self, popen_process, stop_flag: threading.Event):
         """Stream output for a Popen process in a Thread.
 
         :param popen_process: popen process to stream stdout
+        :param stop_flag: flag to stop streaming output from process
         """
         # ValueError is raised if stdout is unexpectedly closed.
         # This can happen if the user starts spamming CTRL+C, for instance.
@@ -491,7 +507,7 @@ class Subprocess:
                 # readline should always return at least a newline (ie \n)
                 # UNLESS the underlying process is exiting/gone; then "" is returned
                 output_line = ensure_str(popen_process.stdout.readline())
-                if output_line:
+                if output_line and not stop_flag.is_set():
                     self.tools.logger.info(output_line)
                 else:
                     return
