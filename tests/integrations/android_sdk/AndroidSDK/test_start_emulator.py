@@ -1,6 +1,6 @@
 import os
 import subprocess
-from unittest.mock import MagicMock, call
+from unittest.mock import ANY, MagicMock, call
 
 import pytest
 
@@ -303,6 +303,14 @@ def test_emulator_fail_to_start(mock_tools, android_sdk):
         ]
     )
 
+    # Emulator output printed to the console
+    mock_tools.subprocess.stream_output.assert_called_with(
+        label="Android emulator",
+        popen_process=ANY,
+        stop_func=ANY,
+        skip_cleanup=True,
+    )
+
     # Took a total of 2 naps before failing.
     assert android_sdk.sleep.call_count == 2
 
@@ -408,6 +416,14 @@ def test_emulator_fail_to_boot(mock_tools, android_sdk):
             call("shell", "getprop", "sys.boot_completed"),
             call("shell", "getprop", "sys.boot_completed"),
         ]
+    )
+
+    # Emulator output printed to the console
+    mock_tools.subprocess.stream_output.assert_called_with(
+        label="Android emulator",
+        popen_process=ANY,
+        stop_func=ANY,
+        skip_cleanup=True,
     )
 
     # Took a total of 4 naps.

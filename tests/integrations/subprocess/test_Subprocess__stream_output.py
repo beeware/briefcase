@@ -97,6 +97,20 @@ def test_stop_func(mock_sub, popen_process, stop_func_ret_val, capsys):
     mock_sub.cleanup.assert_called_once_with("testing", popen_process)
 
 
+def test_skip_cleanup(mock_sub, popen_process, capsys):
+    """Process clean up is not attempted for skip_cleanup=True."""
+    mock_sub.stream_output("testing", popen_process, skip_cleanup=True)
+
+    # fmt: off
+    assert capsys.readouterr().out == (
+        "output line 1\n"
+        "\n"
+        "output line 3\n"
+    )
+    # fmt: on
+    mock_sub.cleanup.assert_not_called()
+
+
 def test_stuck_streamer(mock_sub, popen_process, monkeypatch, capsys):
     """Following a KeyboardInterrupt, output streaming returns even if the
     output streamer becomes stuck."""
@@ -153,3 +167,28 @@ def test_stdout_closes_unexpectedly(mock_sub, popen_process, monkeypatch, capsys
     mock_sub.stream_output("testing", popen_process)
 
     assert capsys.readouterr().out == "output line 1\n"
+
+
+def test_stop_flag_set(mock_tools, popen_process, capsys):
+    """The stop flag Event is respected when set."""
+    stop_flag = Event()
+    stop_flag.set()
+
+    subprocess.Subprocess(mock_tools)._stream_output_thread(popen_process, stop_flag)
+
+    assert capsys.readouterr().out == ""
+
+
+def test_stop_flag_not_set(mock_tools, popen_process, capsys):
+    """The stop flag Event does not affect output when not set."""
+    stop_flag = Event()
+
+    subprocess.Subprocess(mock_tools)._stream_output_thread(popen_process, stop_flag)
+
+    # fmt: off
+    assert capsys.readouterr().out == (
+        "output line 1\n"
+        "\n"
+        "output line 3\n"
+    )
+    # fmt: on
