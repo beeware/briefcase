@@ -24,47 +24,45 @@ jobs:
       - name: Lint with Pre-commit
         uses: pre-commit/action@v3.0.0
 
-  beefore:
-    name: Pre-test checks
-    needs: pre-commit
+  towncrier:
     runs-on: ubuntu-latest
-    strategy:
-      max-parallel: 4
-      matrix:
-        task:
-        - 'towncrier-check'
-        - 'package'
     steps:
-    # Check out main; needed for towncrier comparisons.
+    # Fetch main branch for comparison, then check out current branch.
     - uses: actions/checkout@v3.1.0
       with:
-        fetch-depth: 0
         ref: main
     - uses: actions/checkout@v3.1.0
-      with:
-        fetch-depth: 0
-    - name: Set up Python
-      uses: actions/setup-python@v4.2.0
+    - uses: actions/setup-python@v4.2.0
       with:
         python-version: ${{ env.python_version }}
-    - name: Install dependencies
-      run: |
-        pip install --upgrade pip
-        pip install --upgrade setuptools
-        pip install setuptools_scm tox
-    - name: Run pre-test check
-      run: |
-        tox -e ${{ matrix.task }}
+    - run: |
+        pip install tox
+        tox -e towncrier-check
+
+  package:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3.1.0
+    - uses: actions/setup-python@v4.2.0
+      with:
+        python-version: ${{ env.python_version }}
+    - run: |
+        pip install tox
+        tox -e package
+    - uses: actions/upload-artifact@v3
+      with:
+        name: packages
+        path: dist
+        if-no-files-found: error
 
   unit-tests:
-    name: Unit tests
-    needs: beefore
+    needs: [pre-commit, towncrier, package]
     strategy:
       max-parallel: 4
       matrix:
-        platform: ['macos-latest', 'ubuntu-latest', 'windows-latest']
+        platform: ['macos', 'ubuntu', 'windows']
         python-version: ['3.8', '3.9', '3.10', '3.11.0-alpha - 3.11.0']
-    runs-on: ${{ matrix.platform }}
+    runs-on: ${{ matrix.platform }}-latest
     steps:
     - uses: actions/checkout@v3.1.0
       with:
@@ -73,6 +71,10 @@ jobs:
       uses: actions/setup-python@v4.2.0
       with:
         python-version: ${{ matrix.python-version }}
+    - name: Get packages
+      uses: actions/download-artifact@v3
+      with:
+        name: packages
     - name: Install dependencies
       run: |
         pip install --upgrade pip
@@ -80,7 +82,7 @@ jobs:
         pip install setuptools_scm tox coverage[toml]
     - name: Test
       run: |
-        tox -e py
+        tox -e py --installpkg dist/*.whl
     - name: Store coverage data
       uses: actions/upload-artifact@v3
       with:
@@ -135,7 +137,6 @@ jobs:
       if: ${{ failure() }}
 
   verify-apps:
-    name: App verification
     needs: unit-tests
     strategy:
       max-parallel: 4
@@ -182,12 +183,13 @@ jobs:
       if: matrix.platform == 'ubuntu-22.04'
       run: |
         sudo apt-get install -y flatpak flatpak-builder
-    - name: Install dependencies
+    - name: Get packages
+      uses: actions/download-artifact@v3
+      with:
+        name: packages
+    - name: Install packages
       run: |
-        pip install --upgrade pip
-        pip install --upgrade setuptools
-        pip install setuptools_scm
-        pip install .
+        pip install dist/*.whl
     - name: Create App
       run: |
         cd tests/apps
