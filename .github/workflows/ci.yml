@@ -30,14 +30,16 @@ jobs:
     # Fetch main branch for comparison, then check out current branch.
     - uses: actions/checkout@v3.1.0
       with:
+        fetch-depth: 0
         ref: main
     - uses: actions/checkout@v3.1.0
+      with:
+        fetch-depth: 0
     - uses: actions/setup-python@v4.2.0
       with:
         python-version: ${{ env.python_version }}
-    - run: |
-        pip install tox
-        tox -e towncrier-check
+    - run: pip install tox
+    - run: tox -e towncrier-check
 
   package:
     runs-on: ubuntu-latest
@@ -46,9 +48,8 @@ jobs:
     - uses: actions/setup-python@v4.2.0
       with:
         python-version: ${{ env.python_version }}
-    - run: |
-        pip install tox
-        tox -e package
+    - run: pip install tox
+    - run: tox -e package
     - uses: actions/upload-artifact@v3
       with:
         name: packages
