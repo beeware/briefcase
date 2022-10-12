@@ -30,6 +30,8 @@ jobs:
       - name: Install packages
         run: pip install dist/*.whl
       - name: Check version number
+        # Check that the setuptools_scm-generated version number is still the same when
+        # installed from a wheel with setuptools_scm not present.
         run: |
           set -x
           test $(briefcase --version) = $VERSION
