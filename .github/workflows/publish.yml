@@ -8,43 +8,12 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.1.0
+      - uses: dsaltares/fetch-gh-release-asset@1.0.0
         with:
-          fetch-depth: 0
-          ref: main
-      - name: Set build variables
-        run: |
-          export TAG=${{ github.event.release.tag_name }}
-          echo "TAG=${TAG}"
-          echo "VERSION=${TAG#v}"
-          echo "TAG=${TAG}" >> $GITHUB_ENV
-          echo "VERSION=${TAG#v}" >> $GITHUB_ENV
-      - name: Set up Python
-        uses: actions/setup-python@v4.2.0
-        with:
-          python-version: '3.x'
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install --upgrade setuptools
-          python -m pip install wheel setuptools_scm
-      - name: Download release artefacts from Test PyPI
-        run: |
-          # --no-deps only downloads the specific package that was requested.
-          # This causes the download to fail because the build environment
-          # doesn't have setuptools in it, and `pip download` does a partial
-          # build of package metadata.
-          #
-          # To avoid this, we use --no-build-isolation to use the pre-existing
-          # build environment, which *does* have setuptools. See
-          # https://github.com/pypa/pip/issues/1884 for details.
-          # We also use --no-cache to make sure we don't get anything stale
-
-          # --no-binary :all: forces a source download
-          pip download --index-url https://test.pypi.org/simple/ --no-cache --no-build-isolation --dest dist --no-deps --no-binary :all: briefcase==${{ env.VERSION }}
-
-          # --only-binary :all: forces a wheel download
-          pip download --index-url https://test.pypi.org/simple/ --no-cache --no-build-isolation --dest dist --no-deps --only-binary :all: briefcase==${{ env.VERSION }}
+          version: tags/${{ env.GITHUB_REF_NAME }}
+          file: "${{ github.event.repository.name }}.*"
+          regex: true
+          target: dist/
       - name: Publish release to production PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:

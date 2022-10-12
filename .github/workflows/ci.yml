@@ -47,7 +47,10 @@ jobs:
   package:
     runs-on: ubuntu-latest
     steps:
+    # Fetch all refs so setuptools_scm can generate the correct version number.
     - uses: actions/checkout@v3.1.0
+      with:
+        fetch-depth: 0
     - uses: actions/setup-python@v4.2.0
       with:
         python-version: ${{ env.python_version }}
