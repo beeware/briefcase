@@ -57,9 +57,9 @@ jobs:
         if-no-files-found: error
 
   unit-tests:
+    name: Unit tests
     needs: [pre-commit, towncrier, package]
     strategy:
-      max-parallel: 4
       matrix:
         platform: ['macos', 'ubuntu', 'windows']
         python-version: ['3.8', '3.9', '3.10', '3.11.0-alpha - 3.11.0']
@@ -76,6 +76,7 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: packages
+        path: dist
     - name: Install dependencies
       run: |
         pip install --upgrade pip
@@ -138,9 +139,9 @@ jobs:
       if: ${{ failure() }}
 
   verify-apps:
+    name: Build apps
     needs: unit-tests
     strategy:
-      max-parallel: 4
       matrix:
         os_name: ['macOS', 'windows', 'linux']
         framework: ['toga', 'pyside2', 'pyside6', 'ppb']
@@ -188,6 +189,7 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: packages
+        path: dist
     - name: Install packages
       run: |
         pip install dist/*.whl
