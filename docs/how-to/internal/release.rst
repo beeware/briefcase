@@ -58,15 +58,34 @@ The procedure for cutting a new release is as follows:
    <https://github.com/beeware/briefcase/releases>`__, and an entry on the
    `Test PyPI server <https://test.pypi.org/project/briefcase/>`__.
 
-   Test PyPI is not well-maintained, so if the upload fails, you can perform the
-   next step using the "packages" artifact from the GitHub workflow instead.
+   Confirm that this action successfully completes. If it fails, there's a
+   couple of possible causes:
+
+   a. The final upload to Test PyPI failed. Test PyPI is not have the same
+      service monitoring as PyPI-proper, so it sometimes has problems. However,
+      it's also not critical to the release process; if this step fails, you can
+      perform Step 6 by manually downloading the "packages" artifact from the
+      GitHub workflow instead.
+   b. The test apps fail to build. This is likely because you forgot to branch
+      one (or more) of the templates mentioned in Step 3. If this happens, you
+      can correct the missing template, and re-run the action through the Github
+      Actions GUI.
+   c. Something else fails in the build process. If the problem can be fixed
+      without a code change to the Briefcase repository (e.g., a transient
+      problem with build machines not being available), you can re-run the
+      action that failed through the Github Actions GUI. If the fix requires a
+      code change, delete the old tag, make the code change, and re-tag the
+      release.
 
 6. Create a clean virtual environment, install the new release from Test PyPI, and
    perform any pre-release testing that may be appropriate::
 
     $ python3 -m venv testvenv
     $ . ./testvenv/bin/activate
-    $ pip install --extra-index-url https://test.pypi.org/simple/ briefcase==1.2.3
+    (testvenv) $ pip install --extra-index-url https://test.pypi.org/simple/ briefcase==1.2.3
+    (testvenv) $ briefcase --version
+    briefcase 1.2.3
+    (testvenv) $ ... any other manual checks you want to perform ...
 
 7. Log into ReadTheDocs, visit the `Versions tab
    <https://readthedocs.org/projects/briefcase/versions/>`__, and activate the
