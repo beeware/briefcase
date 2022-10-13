@@ -31,7 +31,7 @@ The procedure for cutting a new release is as follows:
 
    to generate the updated release notes.
 
-3. Ensure that there is a version branch for the new Briefcase version
+3. Ensure that there is a version branch for the new Briefcase version in
    every template that Briefcase will use at runtime:
 
    * briefcase-template
@@ -43,12 +43,13 @@ The procedure for cutting a new release is as follows:
    * briefcase-linux-flatpak-template
    * briefcase-iOS-Xcode-template
    * briefcase-android-gradle-template
+   * briefcase-web-static-template
 
-4. Tag a release candidate, and push the branch and tag upstream::
+4. Tag the release, and push the branch and tag upstream::
 
-    $ git tag v1.2.3rc1
+    $ git tag v1.2.3
     $ git push upstream main
-    $ git push upstream v1.2.3rc1
+    $ git push upstream v1.2.3
 
 5. Pushing the tag will start a workflow to create a draft release on GitHub.
    You can `follow the progress of the workflow on GitHub
@@ -57,14 +58,34 @@ The procedure for cutting a new release is as follows:
    <https://github.com/beeware/briefcase/releases>`__, and an entry on the
    `Test PyPI server <https://test.pypi.org/project/briefcase/>`__.
 
+   Confirm that this action successfully completes. If it fails, there's a
+   couple of possible causes:
+
+   a. The final upload to Test PyPI failed. Test PyPI is not have the same
+      service monitoring as PyPI-proper, so it sometimes has problems. However,
+      it's also not critical to the release process; if this step fails, you can
+      perform Step 6 by manually downloading the "packages" artifact from the
+      GitHub workflow instead.
+   b. The test apps fail to build. This is likely because you forgot to branch
+      one (or more) of the templates mentioned in Step 3. If this happens, you
+      can correct the missing template, and re-run the action through the Github
+      Actions GUI.
+   c. Something else fails in the build process. If the problem can be fixed
+      without a code change to the Briefcase repository (e.g., a transient
+      problem with build machines not being available), you can re-run the
+      action that failed through the Github Actions GUI. If the fix requires a
+      code change, delete the old tag, make the code change, and re-tag the
+      release.
+
 6. Create a clean virtual environment, install the new release from Test PyPI, and
    perform any pre-release testing that may be appropriate::
 
     $ python3 -m venv testvenv
     $ . ./testvenv/bin/activate
-    $ pip install --extra-index-url https://test.pypi.org/simple/ briefcase==1.2.3rc1
-    $ briefcase --version
-    briefcase 1.2.3rc1
+    (testvenv) $ pip install --extra-index-url https://test.pypi.org/simple/ briefcase==1.2.3
+    (testvenv) $ briefcase --version
+    briefcase 1.2.3
+    (testvenv) $ ... any other manual checks you want to perform ...
 
 7. Log into ReadTheDocs, visit the `Versions tab
    <https://readthedocs.org/projects/briefcase/versions/>`__, and activate the
@@ -87,6 +108,3 @@ If anything went wrong during steps 4-10, you will need to re-start from step 4
 with a new version number. Once the release has successfully appeared on PyPI
 (or Test PyPI), it cannot be changed; if you spot a problem in a published
 package, you'll need to tag a completely new release.
-
-If the release candidate has been published successfully, you can repeat steps
-4-10 with an acutal release number (i.e., no `rc` suffix).

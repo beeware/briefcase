@@ -4,8 +4,14 @@ on:
   push:
     branches:
       - main
+  workflow_call:
+
 env:
   python_version: '3.9'
+
+defaults:
+  run:
+    shell: bash  # https://github.com/beeware/briefcase/pull/912
 
 jobs:
   pre-commit:
@@ -14,9 +20,6 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v3.1.0
-        with:
-          fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.sha }}
       - name: Set up Python
         uses: actions/setup-python@v4.2.0
         with:
@@ -24,18 +27,10 @@ jobs:
       - name: Lint with Pre-commit
         uses: pre-commit/action@v3.0.0
 
-  beefore:
-    name: Pre-test checks
-    needs: pre-commit
+  towncrier:
     runs-on: ubuntu-latest
-    strategy:
-      max-parallel: 4
-      matrix:
-        task:
-        - 'towncrier-check'
-        - 'package'
     steps:
-    # Check out main; needed for towncrier comparisons.
+    # Fetch main branch for comparison, then check out current branch.
     - uses: actions/checkout@v3.1.0
       with:
         fetch-depth: 0
@@ -43,28 +38,38 @@ jobs:
     - uses: actions/checkout@v3.1.0
       with:
         fetch-depth: 0
-    - name: Set up Python
-      uses: actions/setup-python@v4.2.0
+    - uses: actions/setup-python@v4.2.0
       with:
         python-version: ${{ env.python_version }}
-    - name: Install dependencies
-      run: |
-        pip install --upgrade pip
-        pip install --upgrade setuptools
-        pip install setuptools_scm tox
-    - name: Run pre-test check
-      run: |
-        tox -e ${{ matrix.task }}
+    - run: pip install tox
+    - run: tox -e towncrier-check
+
+  package:
+    runs-on: ubuntu-latest
+    steps:
+    # Fetch all refs so setuptools_scm can generate the correct version number.
+    - uses: actions/checkout@v3.1.0
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-python@v4.2.0
+      with:
+        python-version: ${{ env.python_version }}
+    - run: pip install tox
+    - run: tox -e package
+    - uses: actions/upload-artifact@v3
+      with:
+        name: packages
+        path: dist
+        if-no-files-found: error
 
   unit-tests:
     name: Unit tests
-    needs: beefore
+    needs: [pre-commit, towncrier, package]
     strategy:
-      max-parallel: 4
       matrix:
-        platform: ['macos-latest', 'ubuntu-latest', 'windows-latest']
+        platform: ['macos', 'ubuntu', 'windows']
         python-version: ['3.8', '3.9', '3.10', '3.11.0-alpha - 3.11.0']
-    runs-on: ${{ matrix.platform }}
+    runs-on: ${{ matrix.platform }}-latest
     steps:
     - uses: actions/checkout@v3.1.0
       with:
@@ -73,6 +78,11 @@ jobs:
       uses: actions/setup-python@v4.2.0
       with:
         python-version: ${{ matrix.python-version }}
+    - name: Get packages
+      uses: actions/download-artifact@v3
+      with:
+        name: packages
+        path: dist
     - name: Install dependencies
       run: |
         pip install --upgrade pip
@@ -80,7 +90,7 @@ jobs:
         pip install setuptools_scm tox coverage[toml]
     - name: Test
       run: |
-        tox -e py
+        tox -e py --installpkg dist/*.whl
     - name: Store coverage data
       uses: actions/upload-artifact@v3
       with:
@@ -135,10 +145,9 @@ jobs:
       if: ${{ failure() }}
 
   verify-apps:
-    name: App verification
+    name: Build apps
     needs: unit-tests
     strategy:
-      max-parallel: 4
       matrix:
         os_name: ['macOS', 'windows', 'linux']
         framework: ['toga', 'pyside2', 'pyside6', 'ppb']
@@ -182,18 +191,18 @@ jobs:
       if: matrix.platform == 'ubuntu-22.04'
       run: |
         sudo apt-get install -y flatpak flatpak-builder
-    - name: Install dependencies
-      run: |
-        pip install --upgrade pip
-        pip install --upgrade setuptools
-        pip install setuptools_scm
-        pip install .
+    - name: Get packages
+      uses: actions/download-artifact@v3
+      with:
+        name: packages
+        path: dist
+    - name: Install packages
+      run: pip install dist/*.whl
     - name: Create App
       run: |
         cd tests/apps
         cat verify-${{ matrix.framework }}.config | briefcase new
     - name: Build App
-      shell: bash
       run: |
         cd tests/apps/verify-${{ matrix.framework }}
         briefcase create
@@ -201,7 +210,6 @@ jobs:
         briefcase package --adhoc-sign
     - name: Build Xcode project
       if: matrix.os_name == 'macOS'
-      shell: bash
       run: |
         cd tests/apps/verify-${{ matrix.framework }}
         briefcase create ${{ matrix.os_name }} Xcode
@@ -209,7 +217,6 @@ jobs:
         briefcase package ${{ matrix.os_name }} Xcode --adhoc-sign
     - name: Build Visual Studio project
       if: matrix.os_name == 'windows'
-      shell: bash
       run: |
         cd tests/apps/verify-${{ matrix.framework }}
         briefcase create ${{ matrix.os_name }} VisualStudio
@@ -217,7 +224,6 @@ jobs:
         briefcase package ${{ matrix.os_name }} VisualStudio --adhoc-sign
     - name: Build Flatpak project
       if: matrix.os_name == 'linux' && matrix.framework == 'toga'
-      shell: bash
       run: |
         cd tests/apps/verify-${{ matrix.framework }}
         briefcase create ${{ matrix.os_name }} flatpak
@@ -225,7 +231,6 @@ jobs:
         briefcase package ${{ matrix.os_name }} flatpak --adhoc-sign
     - name: Build Android App
       if: matrix.framework == 'toga'
-      shell: bash
       run: |
         cd tests/apps/verify-${{ matrix.framework }}
         briefcase create android
@@ -233,7 +238,6 @@ jobs:
         briefcase package android --adhoc-sign
     - name: Build iOS App
       if: matrix.platform == 'macos-12' && matrix.framework == 'toga'
-      shell: bash
       run: |
         cd tests/apps/verify-${{ matrix.framework }}
         briefcase create iOS
@@ -241,7 +245,6 @@ jobs:
         briefcase package iOS --adhoc-sign
     - name: Build Web App
       if: matrix.framework == 'toga'
-      shell: bash
       run: |
         cd tests/apps/verify-${{ matrix.framework }}
         briefcase create web
