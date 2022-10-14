@@ -1,1 +1,0 @@
-``briefcase create`` no longer fails if a template doesn't provide an empty ``app`` folder.

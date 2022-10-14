@@ -1,1 +1,0 @@
-Added quotes to documentation in order to support zsh

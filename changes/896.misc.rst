@@ -1,1 +1,0 @@
-The dependabot release cadence was relaxed to weekly.

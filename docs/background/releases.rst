@@ -4,6 +4,26 @@ Release History
 
 .. towncrier release notes start
 
+0.3.11 (2022-10-14)
+===================
+
+Features
+--------
+
+* Added support for deploying an app as a static web page using PyScript. (#3)
+* Briefcase log files are now stored in the ``logs`` subdirectory and only when the current directory is a Briefcase project. (#883)
+
+Bugfixes
+--------
+
+* Output from spawned Python processes, such as when running ``briefcase dev``, is no longer buffered and displays in the console immediately. (#891)
+
+Misc
+----
+
+* #848, #885, #887, #888, #889, #893, #894, #895, #896, #897, #899, #900, #908, #909, #910, #915
+
+
 0.3.10 (2022-09-28)
 ===================
 

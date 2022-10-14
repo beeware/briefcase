@@ -1,1 +1,0 @@
-Added a Github Action workflow that automatically adds a change note to Dependabot PRs.
