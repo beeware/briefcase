@@ -34,3 +34,4 @@ venv*/
 *.wp[ur]
 
 tests/apps/verify-*/
+logs/
