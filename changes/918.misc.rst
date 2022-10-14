@@ -1,0 +1,1 @@
+Minor problems with the release instructions were corrected.
