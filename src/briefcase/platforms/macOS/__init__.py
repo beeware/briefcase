@@ -107,6 +107,8 @@ class macOSRunMixin:
                 self.tools.subprocess.stream_output(
                     "log stream", log_popen, stop_func=lambda: is_process_dead(app_pid)
                 )
+        except KeyboardInterrupt:
+            pass  # catch CTRL-C to exit normally
         finally:
             self.tools.subprocess.cleanup("log stream", log_popen)
 

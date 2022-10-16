@@ -1,0 +1,1 @@
+Briefcase now exits normally when CTRL-C is sent while tailing logs for the App when using ``briefcase run``.

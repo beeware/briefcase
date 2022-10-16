@@ -238,12 +238,15 @@ class GradleRunCommand(GradleMixin, RunCommand):
                 if not pid:
                     time.sleep(0.5)
 
-        self.logger.info(
-            "Following device log output (type CTRL-C to stop log)...",
-            prefix=app.app_name,
-        )
-        self.logger.info("=" * 75)
-        adb.logcat(pid)
+        try:
+            self.logger.info(
+                "Following device log output (type CTRL-C to stop log)...",
+                prefix=app.app_name,
+            )
+            self.logger.info("=" * 75)
+            adb.logcat(pid)
+        except KeyboardInterrupt:
+            pass  # catch CTRL-C to exit normally
 
 
 class GradlePackageCommand(GradleMixin, PackageCommand):
