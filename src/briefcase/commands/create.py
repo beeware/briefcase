@@ -291,9 +291,9 @@ class CreateCommand(BaseCommand):
             )
         except TemplateUnsupportedVersion:
             # If we're on a development branch, and the template branch was *not*
-            # provided explicity, we can use a fallback development template.
+            # provided explicitly, we can use a fallback development template.
             # Otherwise, re-raise the exception about the unsupported template version.
-            if version.dev and app.template_branch is None:
+            if version.dev is not None and app.template_branch is None:
                 # Development branches can use the main template.
                 self.logger.info(
                     f"Template branch {template_branch} not found; falling back to development template"
