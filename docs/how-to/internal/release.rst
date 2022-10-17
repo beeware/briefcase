@@ -48,7 +48,7 @@ The procedure for cutting a new release is as follows:
 4. Tag the release, and push the branch and tag upstream::
 
     $ git tag v1.2.3
-    $ git push upstream main
+    $ git push upstream HEAD:main
     $ git push upstream v1.2.3
 
 5. Pushing the tag will start a workflow to create a draft release on GitHub.
