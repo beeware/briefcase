@@ -24,11 +24,12 @@ def new_command(tmp_path):
     "briefcase_version, expected_branch",
     [
         ("37.42.1", "v37.42.1"),
-        ("37.42.2.dev73+gad61a29.d20220919", "v37.42.2"),
-        ("37.42.3a1", "v37.42.3"),
-        ("37.42.4b2", "v37.42.4"),
-        ("37.42.5rc3", "v37.42.5"),
-        ("37.42.6.post1", "v37.42.6"),
+        ("37.42.2.dev0+gad61a29.d20220919", "v37.42.2"),
+        ("37.42.3.dev73+gad61a29.d20220919", "v37.42.3"),
+        ("37.42.4a1", "v37.42.4"),
+        ("37.42.5b2", "v37.42.5"),
+        ("37.42.6rc3", "v37.42.6"),
+        ("37.42.7.post1", "v37.42.7"),
     ],
 )
 def test_new_app(
@@ -113,10 +114,14 @@ def test_new_app_missing_template(monkeypatch, new_command, tmp_path):
     )
 
 
-def test_new_app_dev(monkeypatch, new_command, tmp_path):
+@pytest.mark.parametrize(
+    "briefcase_version",
+    ("37.42.7.dev0+gad61a29.d20220919", "37.42.7.dev73+gad61a29.d20220919"),
+)
+def test_new_app_dev(monkeypatch, new_command, tmp_path, briefcase_version):
     """In a dev version, template will fall back to the 'main' branch if a
     versioned template doesn't exist."""
-    monkeypatch.setattr(briefcase, "__version__", "37.42.7.dev73+gad61a29.d20220919")
+    monkeypatch.setattr(briefcase, "__version__", briefcase_version)
     app_context = {
         "formal_name": "My Application",
         "class_name": "MyApplication",

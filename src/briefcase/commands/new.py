@@ -503,7 +503,7 @@ What GUI toolkit do you want to use for this project?""",
         except TemplateUnsupportedVersion:
             # If we're *not* on a development branch, raise an error about
             # the missing template branch.
-            if not version.dev:
+            if version.dev is None:
                 raise
 
             # Development branches can use the main template.
