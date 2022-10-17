@@ -51,11 +51,12 @@ def full_context():
     "briefcase_version, expected_branch",
     [
         ("37.42.1", "v37.42.1"),
-        ("37.42.2.dev73+gad61a29.d20220919", "v37.42.2"),
-        ("37.42.3a1", "v37.42.3"),
-        ("37.42.4b2", "v37.42.4"),
-        ("37.42.5rc3", "v37.42.5"),
-        ("37.42.6.post1", "v37.42.6"),
+        ("37.42.2.dev0+gad61a29.d20220919", "v37.42.2"),
+        ("37.42.3.dev73+gad61a29.d20220919", "v37.42.3"),
+        ("37.42.4a1", "v37.42.4"),
+        ("37.42.5b2", "v37.42.5"),
+        ("37.42.6rc3", "v37.42.6"),
+        ("37.42.7.post1", "v37.42.7"),
     ],
 )
 def test_default_template(
@@ -88,11 +89,21 @@ def test_default_template(
     )
 
 
-def test_default_template_dev(monkeypatch, create_command, myapp, full_context):
+@pytest.mark.parametrize(
+    "briefcase_version",
+    ("37.42.7.dev0+gad61a29.d20220919", "37.42.7.dev73+gad61a29.d20220919"),
+)
+def test_default_template_dev(
+    monkeypatch,
+    create_command,
+    myapp,
+    full_context,
+    briefcase_version,
+):
     """In a dev version, template will fall back to the 'main' branch if a
     versioned template doesn't exist."""
     # Set the Briefcase version
-    monkeypatch.setattr(briefcase, "__version__", "37.42.7.dev73+gad61a29.d20220919")
+    monkeypatch.setattr(briefcase, "__version__", briefcase_version)
 
     # There won't be a cookiecutter cache, so there won't be
     # a cache path (yet).
@@ -128,12 +139,20 @@ def test_default_template_dev(monkeypatch, create_command, myapp, full_context):
     ]
 
 
+@pytest.mark.parametrize(
+    "briefcase_version",
+    ("37.42.7.dev0+gad61a29.d20220919", "37.42.7.dev73+gad61a29.d20220919"),
+)
 def test_default_template_dev_explicit_branch(
-    monkeypatch, create_command, myapp, full_context
+    monkeypatch,
+    create_command,
+    myapp,
+    full_context,
+    briefcase_version,
 ):
     """In a dev version, if an explicit branch is provided, it is used."""
     # Set the Briefcase version
-    monkeypatch.setattr(briefcase, "__version__", "37.42.7.dev73+gad61a29.d20220919")
+    monkeypatch.setattr(briefcase, "__version__", briefcase_version)
 
     # Set an explicit branch
     branch = "some_branch"
@@ -158,13 +177,21 @@ def test_default_template_dev_explicit_branch(
     ]
 
 
+@pytest.mark.parametrize(
+    "briefcase_version",
+    ("37.42.7.dev0+gad61a29.d20220919", "37.42.7.dev73+gad61a29.d20220919"),
+)
 def test_default_template_dev_explicit_invalid_branch(
-    monkeypatch, create_command, myapp, full_context
+    monkeypatch,
+    create_command,
+    myapp,
+    full_context,
+    briefcase_version,
 ):
     """In a dev version, if an explicit (but invalid) branch is provided, the
-    fall back to the 'main' branch will not occur."""
+    fallback to the 'main' branch will not occur."""
     # Set the Briefcase version to a dev version
-    monkeypatch.setattr(briefcase, "__version__", "37.42.7.dev73+gad61a29.d20220919")
+    monkeypatch.setattr(briefcase, "__version__", briefcase_version)
 
     # Set an explicit branch
     branch = "some_branch"
@@ -488,7 +515,11 @@ def test_cached_template(monkeypatch, create_command, myapp, full_context):
 
 
 def test_cached_template_offline(
-    monkeypatch, create_command, myapp, full_context, capsys
+    monkeypatch,
+    create_command,
+    myapp,
+    full_context,
+    capsys,
 ):
     """If the user is offline, a cached template won't be updated, but will
     still work."""
@@ -532,7 +563,10 @@ def test_cached_template_offline(
 
 
 def test_cached_missing_branch_template(
-    monkeypatch, create_command, myapp, full_context
+    monkeypatch,
+    create_command,
+    myapp,
+    full_context,
 ):
     """If the cached repo doesn't have a branch for this Briefcase version, an
     error is raised."""
