@@ -196,7 +196,7 @@ def test_select_running_emulator(mock_tools, android_sdk, capsys):
 
     # A re-run prompt has been provided
     out = capsys.readouterr().out
-    assert "briefcase run android -d @runningEmulator" in out
+    assert 'briefcase run android -d "@runningEmulator"' in out
 
 
 def test_select_idle_emulator(mock_tools, android_sdk, capsys):
@@ -214,7 +214,7 @@ def test_select_idle_emulator(mock_tools, android_sdk, capsys):
 
     # A re-run prompt has been provided
     out = capsys.readouterr().out
-    assert "briefcase run android -d @idleEmulator" in out
+    assert 'briefcase run android -d "@idleEmulator"' in out
 
 
 def test_select_create_emulator(mock_tools, android_sdk, capsys):
