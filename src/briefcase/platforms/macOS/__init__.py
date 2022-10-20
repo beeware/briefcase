@@ -3,6 +3,7 @@ import re
 import subprocess
 import time
 from pathlib import Path
+from signal import SIGTERM
 from zipfile import ZipFile
 
 from briefcase.config import BaseConfig
@@ -92,23 +93,23 @@ class macOSRunMixin:
             app_pid = get_process_id_by_command(
                 command=str(self.binary_path(app)), logger=self.logger
             )
+
             if app_pid is None:
-                self.logger.error()
-                self.logger.error(
+                raise BriefcaseCommandError(
                     f"Unable to find process for app {app.app_name} to start log streaming."
                 )
-            else:
+
+            try:
                 # Start streaming logs for the app.
-                self.logger.info(
-                    "Following system log output (type CTRL-C to stop log)...",
-                    prefix=app.app_name,
-                )
                 self.logger.info("=" * 75)
                 self.tools.subprocess.stream_output(
                     "log stream", log_popen, stop_func=lambda: is_process_dead(app_pid)
                 )
+            finally:
+                # Ensure the App also terminates when exiting
+                self.tools.os.kill(app_pid, SIGTERM)
         except KeyboardInterrupt:
-            pass  # catch CTRL-C to exit normally
+            pass  # Catch CTRL-C to exit normally
         finally:
             self.tools.subprocess.cleanup("log stream", log_popen)
 

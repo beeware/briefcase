@@ -89,6 +89,8 @@ class WindowsRunCommand(RunCommand):
                 check=True,
                 stream_output=True,
             )
+        except KeyboardInterrupt:
+            pass  # Catch CTRL-C to exit normally
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(f"Unable to start app {app.app_name}.") from e
 

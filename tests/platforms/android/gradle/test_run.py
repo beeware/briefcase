@@ -90,7 +90,7 @@ def test_run_existing_device(run_command, first_app_config):
 
     # select_target_device was invoked with a specific device
     run_command.tools.android_sdk.select_target_device.assert_called_once_with(
-        device_or_avd="exampleDevice"
+        "exampleDevice"
     )
 
     # The ADB wrapper is created

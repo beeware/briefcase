@@ -3,6 +3,7 @@
 # the app backend for exhaustive tests.
 import os
 import subprocess
+from signal import SIGTERM
 from unittest.mock import MagicMock
 
 from briefcase.console import Console, Log
@@ -10,7 +11,7 @@ from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.macOS.xcode import macOSXcodeRunCommand
 
 
-def test_run_app(first_app_config, tmp_path):
+def test_run_app(first_app_config, tmp_path, monkeypatch):
     """A macOS Xcode app can be started."""
     command = macOSXcodeRunCommand(
         logger=Log(),
@@ -20,6 +21,14 @@ def test_run_app(first_app_config, tmp_path):
     )
     command.tools.home_path = tmp_path / "home"
     command.tools.subprocess = MagicMock(spec_set=Subprocess)
+    log_stream_process = MagicMock(spec_set=subprocess.Popen)
+    command.tools.subprocess.Popen.return_value = log_stream_process
+    command.tools.os.kill = MagicMock()
+
+    monkeypatch.setattr(
+        "briefcase.platforms.macOS.get_process_id_by_command", lambda *a, **kw: 100
+    )
+
     command.run_app(first_app_config)
 
     # Calls were made to start the app and to start a log stream.
@@ -44,4 +53,8 @@ def test_run_app(first_app_config, tmp_path):
         ["open", "-n", os.fsdecode(bin_path)],
         cwd=tmp_path / "home",
         check=True,
+    )
+    command.tools.os.kill.assert_called_with(100, SIGTERM)
+    command.tools.subprocess.cleanup.assert_called_with(
+        "log stream", log_stream_process
     )

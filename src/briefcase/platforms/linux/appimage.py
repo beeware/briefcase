@@ -259,12 +259,16 @@ class LinuxAppImageRunCommand(LinuxAppImagePassiveMixin, RunCommand):
         """
         self.logger.info("Starting app...", prefix=app.app_name)
         try:
+            # Start streaming logs for the app.
+            self.logger.info("=" * 75)
             self.tools.subprocess.run(
                 [os.fsdecode(self.binary_path(app))],
                 check=True,
                 cwd=self.tools.home_path,
                 stream_output=True,
             )
+        except KeyboardInterrupt:
+            pass  # Catch CTRL-C to exit normally
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(f"Unable to start app {app.app_name}.") from e
 
