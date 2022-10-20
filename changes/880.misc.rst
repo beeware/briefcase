@@ -1,0 +1,1 @@
+Logged `template` & `branch` while creating a new project with `briefcase new` command.
