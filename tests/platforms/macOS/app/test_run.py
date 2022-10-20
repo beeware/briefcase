@@ -174,3 +174,39 @@ def test_run_app_find_pid_failed(first_app_config, tmp_path, monkeypatch, capsys
     command.tools.subprocess.cleanup.assert_called_with(
         "log stream", log_stream_process
     )
+
+
+def test_run_app_ctrl_c(first_app_config, tmp_path, monkeypatch, capsys):
+    """When CTRL-C is sent during log streaming, Briefcase exits normally."""
+    command = macOSAppRunCommand(
+        logger=Log(),
+        console=Console(),
+        base_path=tmp_path / "base_path",
+        data_path=tmp_path / "briefcase",
+    )
+    command.tools.home_path = tmp_path / "home"
+    command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
+    log_stream_process = mock.MagicMock(spec_set=subprocess.Popen)
+    command.tools.subprocess.Popen.return_value = log_stream_process
+    command.tools.os.kill = mock.MagicMock()
+    command.tools.subprocess.stream_output.side_effect = KeyboardInterrupt
+
+    monkeypatch.setattr(
+        "briefcase.platforms.macOS.get_process_id_by_command", lambda *a, **kw: 100
+    )
+
+    # Invoke run_app (and KeyboardInterrupt does not surface)
+    command.run_app(first_app_config)
+
+    # log streaming is started
+    command.tools.subprocess.stream_output.assert_called_with(
+        "log stream",
+        log_stream_process,
+        stop_func=mock.ANY,
+    )
+
+    # Shows the try block for KeyboardInterrupt was entered
+    assert capsys.readouterr().out.endswith(
+        "[first-app] Starting app...\n"
+        "===========================================================================\n"
+    )

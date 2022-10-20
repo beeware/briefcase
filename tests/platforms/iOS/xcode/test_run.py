@@ -118,7 +118,7 @@ def test_run_app_simulator_booted(run_command, first_app_config, tmp_path):
             ),
         ]
     )
-    # The log is being tailed; no process cleanup is triggered
+    # The log is being tailed and process cleanup is triggered
     run_command.tools.subprocess.Popen.assert_called_with(
         [
             "xcrun",
@@ -225,7 +225,7 @@ def test_run_app_simulator_shut_down(run_command, first_app_config, tmp_path):
             ),
         ]
     )
-    # The log is being tailed; no process cleanup is triggered
+    # The log is being tailed and process cleanup is triggered
     run_command.tools.subprocess.Popen.assert_called_with(
         [
             "xcrun",
@@ -345,7 +345,7 @@ def test_run_app_simulator_shutting_down(run_command, first_app_config, tmp_path
             ),
         ]
     )
-    # The log is being tailed; no process cleanup has occurred
+    # The log is being tailed and process cleanup is triggered
     run_command.tools.subprocess.Popen.assert_called_with(
         [
             "xcrun",
@@ -720,4 +720,37 @@ def test_run_app_simulator_launch_failure(run_command, first_app_config, tmp_pat
     # The log process was cleaned up.
     run_command.tools.subprocess.cleanup.assert_called_once_with(
         "log stream", log_stream_process
+    )
+
+
+def test_run_app_ctrl_c(run_command, first_app_config, tmp_path, capsys):
+    """When CTRL-C is sent during log streaming, Briefcase exits normally."""
+    # A valid target device will be selected.
+    run_command.select_target_device = mock.MagicMock(
+        return_value=("2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D", "13.2", "iPhone 11")
+    )
+
+    # Simulator is already booted
+    run_command.get_device_state = mock.MagicMock(return_value=DeviceState.BOOTED)
+
+    run_command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
+    log_stream_process = mock.MagicMock(spec_set=subprocess.Popen)
+    run_command.tools.subprocess.Popen.return_value = log_stream_process
+    run_command.tools.subprocess.stream_output.side_effect = KeyboardInterrupt
+
+    # Run the app (and KeyboardInterrupt does not surface)
+    run_command.run_app(first_app_config)
+
+    # The log is being tailed and process cleanup is triggered
+    run_command.tools.subprocess.stream_output.assert_called_with(
+        "log stream", log_stream_process
+    )
+    run_command.tools.subprocess.cleanup.assert_called_with(
+        "log stream", log_stream_process
+    )
+
+    # Shows the try block for KeyboardInterrupt was entered
+    assert capsys.readouterr().out.endswith(
+        "[first-app] Following simulator log output (type CTRL-C to stop log)...\n"
+        "===========================================================================\n"
     )
