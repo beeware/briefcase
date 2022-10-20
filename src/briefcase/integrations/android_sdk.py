@@ -999,7 +999,7 @@ In future, you can specify this device by running:
             start_new_session=True,
         )
 
-        # wrap AVD name in quotes since '@' is a special char on Windows
+        # wrap AVD name in quotes since '@' is a special char in PowerShell
         emulator_command = " ".join(
             f'"{arg}"' if arg.startswith("@") else arg
             for arg in map(str, emulator_popen.args)
