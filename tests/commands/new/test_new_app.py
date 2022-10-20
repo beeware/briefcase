@@ -41,12 +41,13 @@ def test_new_app(
 ):
     """A new app can be created with the default template."""
     monkeypatch.setattr(briefcase, "__version__", briefcase_version)
-    app_context = {
-        "formal_name": "My Application",
-        "class_name": "MyApplication",
-        "app_name": "myapplication",
-    }
-    new_command.build_app_context = mock.MagicMock(return_value=app_context.copy())
+    new_command.build_app_context = mock.MagicMock(
+        return_value={
+            "formal_name": "My Application",
+            "class_name": "MyApplication",
+            "app_name": "myapplication",
+        }
+    )
     new_command.update_cookiecutter_cache = mock.MagicMock(
         return_value="~/.cookiecutters/briefcase-template"
     )
@@ -62,23 +63,22 @@ def test_new_app(
         template="https://github.com/beeware/briefcase-template",
         branch=expected_branch,
     )
-    # The expected app context
-    # should now also contain the
-    # default template and branch
-    expected_app_context = app_context
-    expected_app_context.update(
-        {
-            "template": "https://github.com/beeware/briefcase-template",
-            "branch": expected_branch,
-        }
-    )
     # Cookiecutter is invoked
     new_command.tools.cookiecutter.assert_called_once_with(
         "~/.cookiecutters/briefcase-template",
         no_input=True,
         output_dir=os.fsdecode(tmp_path),
         checkout=expected_branch,
-        extra_context=expected_app_context,
+        extra_context={
+            "formal_name": "My Application",
+            "class_name": "MyApplication",
+            "app_name": "myapplication",
+            # The expected app context
+            # should now also contain the
+            # default template and branch
+            "template": "https://github.com/beeware/briefcase-template",
+            "branch": expected_branch,
+        },
     )
 
 
