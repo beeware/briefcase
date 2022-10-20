@@ -85,12 +85,13 @@ def test_new_app(
 def test_new_app_missing_template(monkeypatch, new_command, tmp_path):
     """If a versioned branch doesn't exist, an error is raised."""
     monkeypatch.setattr(briefcase, "__version__", "37.42.7")
-    app_context = {
-        "formal_name": "My Application",
-        "class_name": "MyApplication",
-        "app_name": "myapplication",
-    }
-    new_command.build_app_context = mock.MagicMock(return_value=app_context)
+    new_command.build_app_context = mock.MagicMock(
+        return_value={
+            "formal_name": "My Application",
+            "class_name": "MyApplication",
+            "app_name": "myapplication",
+        }
+    )
     new_command.update_cookiecutter_cache = mock.MagicMock(
         return_value="~/.cookiecutters/briefcase-template"
     )
@@ -120,7 +121,16 @@ def test_new_app_missing_template(monkeypatch, new_command, tmp_path):
         no_input=True,
         output_dir=os.fsdecode(tmp_path),
         checkout="v37.42.7",
-        extra_context=app_context,
+        extra_context={
+            "formal_name": "My Application",
+            "class_name": "MyApplication",
+            "app_name": "myapplication",
+            # The expected app context
+            # should now also contain the
+            # default template and branch
+            "template": "https://github.com/beeware/briefcase-template",
+            "branch": "v37.42.7",
+        },
     )
 
 
@@ -132,12 +142,13 @@ def test_new_app_dev(monkeypatch, new_command, tmp_path, briefcase_version):
     """In a dev version, template will fall back to the 'main' branch if a
     versioned template doesn't exist."""
     monkeypatch.setattr(briefcase, "__version__", briefcase_version)
-    app_context = {
-        "formal_name": "My Application",
-        "class_name": "MyApplication",
-        "app_name": "myapplication",
-    }
-    new_command.build_app_context = mock.MagicMock(return_value=app_context)
+    new_command.build_app_context = mock.MagicMock(
+        return_value={
+            "formal_name": "My Application",
+            "class_name": "MyApplication",
+            "app_name": "myapplication",
+        }
+    )
     new_command.update_cookiecutter_cache = mock.MagicMock(
         return_value="~/.cookiecutters/briefcase-template"
     )
@@ -176,14 +187,32 @@ def test_new_app_dev(monkeypatch, new_command, tmp_path, briefcase_version):
                 no_input=True,
                 output_dir=os.fsdecode(tmp_path),
                 checkout="v37.42.7",
-                extra_context=app_context,
+                extra_context={
+                    "formal_name": "My Application",
+                    "class_name": "MyApplication",
+                    "app_name": "myapplication",
+                    # The expected app context
+                    # should now also contain the
+                    # default template and branch
+                    "template": "https://github.com/beeware/briefcase-template",
+                    "branch": "v37.42.7",
+                },
             ),
             mock.call(
                 "~/.cookiecutters/briefcase-template",
                 no_input=True,
                 output_dir=os.fsdecode(tmp_path),
                 checkout="main",
-                extra_context=app_context,
+                extra_context={
+                    "formal_name": "My Application",
+                    "class_name": "MyApplication",
+                    "app_name": "myapplication",
+                    # The expected app context
+                    # should now also contain the
+                    # default template and branch
+                    "template": "https://github.com/beeware/briefcase-template",
+                    "branch": "v37.42.7",
+                },
             ),
         ]
     )
@@ -193,12 +222,13 @@ def test_new_app_with_template(monkeypatch, new_command, tmp_path):
     """A specific template can be requested."""
     monkeypatch.setattr(briefcase, "__version__", "37.42.7")
 
-    app_context = {
-        "formal_name": "My Application",
-        "class_name": "MyApplication",
-        "app_name": "myapplication",
-    }
-    new_command.build_app_context = mock.MagicMock(return_value=app_context)
+    new_command.build_app_context = mock.MagicMock(
+        return_value={
+            "formal_name": "My Application",
+            "class_name": "MyApplication",
+            "app_name": "myapplication",
+        }
+    )
     new_command.update_cookiecutter_cache = mock.MagicMock(
         return_value="https://example.com/other.git"
     )
@@ -220,7 +250,16 @@ def test_new_app_with_template(monkeypatch, new_command, tmp_path):
         no_input=True,
         output_dir=os.fsdecode(tmp_path),
         checkout="v37.42.7",
-        extra_context=app_context,
+        extra_context={
+            "formal_name": "My Application",
+            "class_name": "MyApplication",
+            "app_name": "myapplication",
+            # The expected app context
+            # should now also contain the
+            # default template and branch
+            "template": "https://example.com/other.git",
+            "branch": "v37.42.7",
+        },
     )
 
 
@@ -228,12 +267,13 @@ def test_new_app_with_invalid_template(monkeypatch, new_command, tmp_path):
     """If the custom template is invalid, an error is raised."""
     monkeypatch.setattr(briefcase, "__version__", "37.42.7")
 
-    app_context = {
-        "formal_name": "My Application",
-        "class_name": "MyApplication",
-        "app_name": "myapplication",
-    }
-    new_command.build_app_context = mock.MagicMock(return_value=app_context)
+    new_command.build_app_context = mock.MagicMock(
+        return_value={
+            "formal_name": "My Application",
+            "class_name": "MyApplication",
+            "app_name": "myapplication",
+        }
+    )
     new_command.update_cookiecutter_cache = mock.MagicMock(
         return_value="https://example.com/other.git"
     )
@@ -261,7 +301,16 @@ def test_new_app_with_invalid_template(monkeypatch, new_command, tmp_path):
         no_input=True,
         output_dir=os.fsdecode(tmp_path),
         checkout="v37.42.7",
-        extra_context=app_context,
+        extra_context={
+            "formal_name": "My Application",
+            "class_name": "MyApplication",
+            "app_name": "myapplication",
+            # The expected app context
+            # should now also contain the
+            # default template and branch
+            "template": "https://example.com/other.git",
+            "branch": "v37.42.7",
+        },
     )
 
 
@@ -270,12 +319,13 @@ def test_new_app_with_invalid_template_branch(monkeypatch, new_command, tmp_path
     is raised."""
     monkeypatch.setattr(briefcase, "__version__", "37.42.7")
 
-    app_context = {
-        "formal_name": "My Application",
-        "class_name": "MyApplication",
-        "app_name": "myapplication",
-    }
-    new_command.build_app_context = mock.MagicMock(return_value=app_context)
+    new_command.build_app_context = mock.MagicMock(
+        return_value={
+            "formal_name": "My Application",
+            "class_name": "MyApplication",
+            "app_name": "myapplication",
+        }
+    )
     new_command.update_cookiecutter_cache = mock.MagicMock(
         return_value="https://example.com/other.git"
     )
@@ -305,7 +355,16 @@ def test_new_app_with_invalid_template_branch(monkeypatch, new_command, tmp_path
         no_input=True,
         output_dir=os.fsdecode(tmp_path),
         checkout="v37.42.7",
-        extra_context=app_context,
+        extra_context={
+            "formal_name": "My Application",
+            "class_name": "MyApplication",
+            "app_name": "myapplication",
+            # The expected app context
+            # should now also contain the
+            # default template and branch
+            "template": "https://example.com/other.git",
+            "branch": "v37.42.7",
+        },
     )
 
 
