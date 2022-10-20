@@ -493,6 +493,7 @@ What GUI toolkit do you want to use for this project?""",
             )
 
         try:
+            self.logger.info(f"Using app template: {template}, branch {branch}")
             # Unroll the new app template
             self.generate_template(
                 template=template,
