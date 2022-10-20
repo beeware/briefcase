@@ -256,7 +256,7 @@ def test_new_app_with_template(monkeypatch, new_command, tmp_path):
             "app_name": "myapplication",
             # The expected app context
             # should now also contain the
-            # default template and branch
+            # template and branch
             "template": "https://example.com/other.git",
             "branch": "v37.42.7",
         },
@@ -307,7 +307,7 @@ def test_new_app_with_invalid_template(monkeypatch, new_command, tmp_path):
             "app_name": "myapplication",
             # The expected app context
             # should now also contain the
-            # default template and branch
+            # template and branch
             "template": "https://example.com/other.git",
             "branch": "v37.42.7",
         },
@@ -361,7 +361,7 @@ def test_new_app_with_invalid_template_branch(monkeypatch, new_command, tmp_path
             "app_name": "myapplication",
             # The expected app context
             # should now also contain the
-            # default template and branch
+            # template and branch
             "template": "https://example.com/other.git",
             "branch": "v37.42.7",
         },
