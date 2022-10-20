@@ -1,0 +1,1 @@
+When generating a new template using `briefcase new`, the template & branch that created the project is logged.
