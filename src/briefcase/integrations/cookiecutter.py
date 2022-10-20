@@ -60,8 +60,8 @@ class TOMLEscape(Extension):
         """Initialize the extension with the given environment."""
         super().__init__(environment)
 
-        def escape_tag(obj):
+        def escape_toml(obj):
             """Escapes double quotes and backslashes."""
             return obj.replace('"', '"').replace("\\", "\\\\")
 
-        environment.filters["escape_tag"] = escape_tag
+        environment.filters["escape_toml"] = escape_toml

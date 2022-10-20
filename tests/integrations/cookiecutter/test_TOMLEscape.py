@@ -18,4 +18,4 @@ def test_escape_tag(value, expected):
     env = MagicMock()
     env.filters = {}
     TOMLEscape(env)
-    assert env.filters["escape_tag"](value) == expected
+    assert env.filters["escape_toml"](value) == expected
