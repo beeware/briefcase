@@ -14,7 +14,7 @@ from briefcase.integrations.cookiecutter import TOMLEscape
         ("Hello \\ World", "Hello \\\\ World"),
     ],
 )
-def test_escape_tag(value, expected):
+def test_escape_toml(value, expected):
     env = MagicMock()
     env.filters = {}
     TOMLEscape(env)
