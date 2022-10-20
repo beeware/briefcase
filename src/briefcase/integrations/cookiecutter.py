@@ -51,3 +51,17 @@ class RGBExtension(Extension):
         environment.filters["float_red"] = float_red
         environment.filters["float_green"] = float_green
         environment.filters["float_blue"] = float_blue
+
+
+class TOMLEscape(Extension):
+    """Jinja2 extension to escape strings so TOML don't break."""
+
+    def __init__(self, environment):
+        """Initialize the extension with the given environment."""
+        super().__init__(environment)
+
+        def escape_tag(obj):
+            """Escapes double quotes and backslashes."""
+            return obj.replace('"', '"').replace("\\", "\\\\")
+
+        environment.filters["escape_tag"] = escape_tag
