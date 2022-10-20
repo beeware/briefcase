@@ -94,7 +94,8 @@ def test_start_emulator(mock_tools, android_sdk):
     ]
 
     # poll() on the process continues to return None, indicating no problem.
-    emu_popen = MagicMock(spec_set=subprocess.Popen)
+    emu_popen = MagicMock(spec=subprocess.Popen)
+    emu_popen.args = [android_sdk.emulator_path, "@idleEmulator"]
     emu_popen.poll.return_value = None
     mock_tools.subprocess.Popen.return_value = emu_popen
 
@@ -167,14 +168,15 @@ def test_start_emulator_fast_start(mock_tools, android_sdk):
         # emu avd_name
         subprocess.CalledProcessError(
             returncode=1, cmd="emu avd name"
-        ),  # phyiscal device
+        ),  # physical device
         "idleEmulator\nOK",  # running emulator
         # shell getprop sys.boot_completed
         "1\n",
     ]
 
     # poll() on the process continues to return None, indicating no problem.
-    emu_popen = MagicMock(spec_set=subprocess.Popen)
+    emu_popen = MagicMock(spec=subprocess.Popen)
+    emu_popen.args = [android_sdk.emulator_path, "@idleEmulator"]
     emu_popen.poll.return_value = None
     mock_tools.subprocess.Popen.return_value = emu_popen
 
@@ -272,12 +274,12 @@ def test_emulator_fail_to_start(mock_tools, android_sdk):
     # poll() on the process returns None for the first two attempts, but then
     # returns 1 indicating failure.
     emu_popen = MagicMock(spec=subprocess.Popen)
-    emu_popen.poll.side_effect = [None, None, 1]
     emu_popen.args = [android_sdk.emulator_path, "@idleEmulator"]
+    emu_popen.poll.side_effect = [None, None, 1]
     mock_tools.subprocess.Popen.return_value = emu_popen
 
     # Start the emulator
-    with pytest.raises(BriefcaseCommandError):
+    with pytest.raises(BriefcaseCommandError) as exc_info:
         android_sdk.start_emulator("idleEmulator")
 
     # The process was started.
@@ -305,6 +307,9 @@ def test_emulator_fail_to_start(mock_tools, android_sdk):
 
     # Took a total of 2 naps before failing.
     assert android_sdk.sleep.call_count == 2
+
+    # Expected error message was printed
+    assert "Android emulator was unable to start!" in exc_info.value.msg
 
 
 def test_emulator_fail_to_boot(mock_tools, android_sdk):
@@ -365,6 +370,7 @@ def test_emulator_fail_to_boot(mock_tools, android_sdk):
 
     # poll() on the process returns failure during simulator boot
     emu_popen = MagicMock(spec=subprocess.Popen)
+    emu_popen.args = [android_sdk.emulator_path, "@idleEmulator"]
     emu_popen.poll.side_effect = [
         None,  # in start loop without emulator in device list
         None,  # in start loop without emulator in device list
@@ -377,7 +383,7 @@ def test_emulator_fail_to_boot(mock_tools, android_sdk):
     mock_tools.subprocess.Popen.return_value = emu_popen
 
     # Start the emulator
-    with pytest.raises(BriefcaseCommandError):
+    with pytest.raises(BriefcaseCommandError) as exc_info:
         android_sdk.start_emulator("idleEmulator")
 
     # The process was started.
@@ -412,3 +418,47 @@ def test_emulator_fail_to_boot(mock_tools, android_sdk):
 
     # Took a total of 4 naps.
     assert android_sdk.sleep.call_count == 4
+
+    # Expected error message was printed.
+    assert "Android emulator was unable to boot!" in exc_info.value.msg
+
+
+def test_emulator_ctrl_c(mock_tools, android_sdk, capsys):
+    """If emulator startup is interrupted by the user, an error is
+    displayed."""
+    # Short circuit device loop by returning no devices
+    android_sdk.devices = MagicMock(side_effect=[{}, {}])
+
+    # poll() on the process returns None for the first two attempts, but then
+    # raises KeyboardInterrupt to simulate the user sending CTRL-C
+    emu_popen = MagicMock(spec=subprocess.Popen)
+    emu_popen.args = [android_sdk.emulator_path, "@idleEmulator"]
+    emu_popen.poll.side_effect = [None, None, KeyboardInterrupt]
+    mock_tools.subprocess.Popen.return_value = emu_popen
+
+    # Start the emulator
+    with pytest.raises(KeyboardInterrupt):
+        android_sdk.start_emulator("idleEmulator")
+
+    # The process was started.
+    mock_tools.subprocess.Popen.assert_called_with(
+        [
+            os.fsdecode(android_sdk.emulator_path),
+            "@idleEmulator",
+            "-dns-server",
+            "8.8.8.8",
+        ],
+        env=android_sdk.env,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        bufsize=1,
+        start_new_session=True,
+    )
+
+    # Took a total of 2 naps before KeyboardInterrupt.
+    assert android_sdk.sleep.call_count == 2
+
+    # Expected error message was printed.
+    assert (
+        "Is the Android emulator not starting up properly?" in capsys.readouterr().out
+    )
