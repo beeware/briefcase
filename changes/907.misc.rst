@@ -1,0 +1,1 @@
+Commands now display help descriptions in CLI
