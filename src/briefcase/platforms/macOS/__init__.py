@@ -2,6 +2,7 @@ import os
 import re
 import subprocess
 import time
+from contextlib import suppress
 from pathlib import Path
 from signal import SIGTERM
 from zipfile import ZipFile
@@ -107,7 +108,8 @@ class macOSRunMixin:
                 )
             finally:
                 # Ensure the App also terminates when exiting
-                self.tools.os.kill(app_pid, SIGTERM)
+                with suppress(ProcessLookupError):
+                    self.tools.os.kill(app_pid, SIGTERM)
         except KeyboardInterrupt:
             pass  # Catch CTRL-C to exit normally
         finally:
