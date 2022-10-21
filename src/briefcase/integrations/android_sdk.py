@@ -828,6 +828,20 @@ In future, you can specify this device by running:
         return device, name, avd
 
     def detect_system_images(self):
+<<<<<<< HEAD
+=======
+        """Detects available system images for user to choose.
+
+        Filters list to only include system images that correspond to the
+        minimum of supported Android versions for the current architecture.
+
+        :returns: name of user chosen system image
+        :rtype: string
+        """
+        # Add separation line for aesthetics
+        self.tools.input.prompt()
+        # Try to retrieve all available system images
+>>>>>>> 9d42a311 (Provide list of system images for user to choose)
         with self.tools.input.wait_bar("Retrieving list of available system images..."):
             try:
                 download_options = self.tools.subprocess.check_output(
@@ -835,6 +849,7 @@ In future, you can specify this device by running:
                     env=self.env,
                     stderr=subprocess.STDOUT,
                 )
+<<<<<<< HEAD
                 options = download_options.splitlines()
                 images = []
                 for line in options:
@@ -853,6 +868,39 @@ In future, you can specify this device by running:
         self.tools.input.prompt()
         system_image = select_option(images, input=self.tools.input)
         return system_image
+=======
+            except subprocess.CalledProcessError as e:
+                # This exception does not raise an error if *downloading* list
+                # of available options fails
+                # SDK Manager simply continues and only considers what is already
+                # locally installed
+                raise BriefcaseCommandError("Unable to retrieve system images") from e
+        # Parse names of available system images
+        options = download_options.splitlines()
+        # Check if there are any system image names in `options`
+        images = []
+        for line in options:
+            if re.match(
+                rf"\s\ssystem-images;android-([2-9][6-9]|[3-9][0-9]|\d{3,});default;{self.emulator_abi}",
+                line,
+            ):
+                strip_line = line.strip().split(" ")[0]
+                images.append((strip_line, strip_line))
+        # If above `download_options` failed to download system image names,
+        # user likely does not have or lost internet connection
+        # Therefore `images` would end up empty
+        if images == []:
+            raise BriefcaseCommandError(
+                "Unable to retrieve system images\nLost internet connection?"
+            )
+        else:
+            # Show user system image options to choose
+            self.tools.input.prompt()
+            self.tools.input.prompt("Select system image:")
+            self.tools.input.prompt()
+            system_image = select_option(images, input=self.tools.input)
+            return system_image
+>>>>>>> 9d42a311 (Provide list of system images for user to choose)
 
     def create_emulator(self):
         """Create a new Android emulator.
