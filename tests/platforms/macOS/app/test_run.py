@@ -1,5 +1,6 @@
 import os
 import subprocess
+from signal import SIGTERM
 from unittest import mock
 
 import pytest
@@ -22,6 +23,7 @@ def test_run_app(first_app_config, tmp_path, monkeypatch):
     command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
     log_stream_process = mock.MagicMock(spec_set=subprocess.Popen)
     command.tools.subprocess.Popen.return_value = log_stream_process
+    command.tools.os.kill = mock.MagicMock()
 
     # To satisfy coverage, the stop function must be invoked at least once
     # when invoking stream_output.
@@ -33,6 +35,7 @@ def test_run_app(first_app_config, tmp_path, monkeypatch):
     monkeypatch.setattr(
         "briefcase.platforms.macOS.get_process_id_by_command", lambda *a, **kw: 100
     )
+
     command.run_app(first_app_config)
 
     # Calls were made to start the app and to start a log stream.
@@ -63,6 +66,7 @@ def test_run_app(first_app_config, tmp_path, monkeypatch):
         log_stream_process,
         stop_func=mock.ANY,
     )
+    command.tools.os.kill.assert_called_with(100, SIGTERM)
     command.tools.subprocess.cleanup.assert_called_with(
         "log stream", log_stream_process
     )
@@ -136,7 +140,9 @@ def test_run_app_find_pid_failed(first_app_config, tmp_path, monkeypatch, capsys
         "briefcase.platforms.macOS.get_process_id_by_command",
         lambda *a, **kw: None,
     )
-    command.run_app(first_app_config)
+
+    with pytest.raises(BriefcaseCommandError) as exc_info:
+        command.run_app(first_app_config)
 
     # Calls were made to start the app and to start a log stream.
     bin_path = command.binary_path(first_app_config)
@@ -161,13 +167,46 @@ def test_run_app_find_pid_failed(first_app_config, tmp_path, monkeypatch, capsys
         cwd=tmp_path / "home",
         check=True,
     )
-    assert capsys.readouterr().out == (
-        "\n"
-        "[first-app] Starting app...\n"
-        "\n"
-        "Unable to find process for app first-app to start log streaming.\n"
+    assert exc_info.value.msg == (
+        "Unable to find process for app first-app to start log streaming."
     )
     command.tools.subprocess.stream_output.assert_not_called()
     command.tools.subprocess.cleanup.assert_called_with(
         "log stream", log_stream_process
+    )
+
+
+def test_run_app_ctrl_c(first_app_config, tmp_path, monkeypatch, capsys):
+    """When CTRL-C is sent during log streaming, Briefcase exits normally."""
+    command = macOSAppRunCommand(
+        logger=Log(),
+        console=Console(),
+        base_path=tmp_path / "base_path",
+        data_path=tmp_path / "briefcase",
+    )
+    command.tools.home_path = tmp_path / "home"
+    command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
+    log_stream_process = mock.MagicMock(spec_set=subprocess.Popen)
+    command.tools.subprocess.Popen.return_value = log_stream_process
+    command.tools.os.kill = mock.MagicMock()
+    command.tools.subprocess.stream_output.side_effect = KeyboardInterrupt
+
+    monkeypatch.setattr(
+        "briefcase.platforms.macOS.get_process_id_by_command", lambda *a, **kw: 100
+    )
+
+    # Invoke run_app (and KeyboardInterrupt does not surface)
+    command.run_app(first_app_config)
+
+    # log streaming is started
+    command.tools.subprocess.stream_output.assert_called_with(
+        "log stream",
+        log_stream_process,
+        stop_func=mock.ANY,
+    )
+
+    # Shows the try block for KeyboardInterrupt was entered
+    assert capsys.readouterr().out.endswith(
+        "[first-app] Starting app...\n"
+        "===========================================================================\n"
     )
