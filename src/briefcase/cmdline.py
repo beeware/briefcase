@@ -31,6 +31,12 @@ def get_command(
     platform={"darwin": "macOS", "linux": "linux", "win32": "windows"}[sys.platform],
     output_format=None,
 ):
+    """Given a command and optional filters, returns the command class.
+
+    :param command: command entered from the command line
+    :param platform: specified platform
+    :param output_format: specified output format
+    """
     # These commands are agnostic of platform or format
     if command == "new":
         return NewCommand
