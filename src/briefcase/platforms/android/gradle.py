@@ -189,9 +189,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
         :param device_or_avd: The device to target. If ``None``, the user will
             be asked to re-run the command selecting a specific device.
         """
-        device, name, avd = self.tools.android_sdk.select_target_device(
-            device_or_avd=device_or_avd
-        )
+        device, name, avd = self.tools.android_sdk.select_target_device(device_or_avd)
 
         # If there's no device ID, that means the emulator isn't running.
         # If there's no AVD either, it means the user has chosen to create
@@ -238,12 +236,15 @@ class GradleRunCommand(GradleMixin, RunCommand):
                 if not pid:
                     time.sleep(0.5)
 
-        self.logger.info(
-            "Following device log output (type CTRL-C to stop log)...",
-            prefix=app.app_name,
-        )
-        self.logger.info("=" * 75)
-        adb.logcat(pid)
+        try:
+            self.logger.info(
+                "Following device log output (type CTRL-C to stop log)...",
+                prefix=app.app_name,
+            )
+            self.logger.info("=" * 75)
+            adb.logcat(pid)
+        except KeyboardInterrupt:
+            pass  # catch CTRL-C to exit normally
 
 
 class GradlePackageCommand(GradleMixin, PackageCommand):

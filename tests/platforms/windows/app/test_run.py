@@ -75,3 +75,44 @@ def test_run_app_failed(first_app_config, tmp_path):
         check=True,
         stream_output=True,
     )
+
+
+def test_run_app_ctrl_c(first_app_config, tmp_path, capsys):
+    """When CTRL-C is sent while the App is running, Briefcase exits
+    normally."""
+    command = WindowsAppRunCommand(
+        logger=Log(),
+        console=Console(),
+        base_path=tmp_path / "base_path",
+        data_path=tmp_path / "briefcase",
+    )
+    command.tools.home_path = tmp_path / "home"
+    command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
+    command.tools.subprocess.run.side_effect = KeyboardInterrupt
+
+    # Invoke run_app (and KeyboardInterrupt does not surface)
+    command.run_app(first_app_config)
+
+    # App is started
+    command.tools.subprocess.run.assert_called_with(
+        [
+            os.fsdecode(
+                tmp_path
+                / "base_path"
+                / "windows"
+                / "app"
+                / "First App"
+                / "src"
+                / "First App.exe"
+            ),
+        ],
+        cwd=tmp_path / "home",
+        check=True,
+        stream_output=True,
+    )
+
+    # Shows the try block for KeyboardInterrupt was entered
+    assert capsys.readouterr().out.endswith(
+        "[first-app] Starting app...\n"
+        "===========================================================================\n"
+    )

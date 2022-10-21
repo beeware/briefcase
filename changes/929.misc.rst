@@ -1,0 +1,1 @@
+If the user sends CTRL-C while the Android emulator is starting, the troubleshooting steps are printed.

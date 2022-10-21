@@ -468,8 +468,9 @@ connection.
         try:
             skin = avd_config["skin.name"]
             skin_path = Path(avd_config["skin.path"])
-
-            if skin_path != Path("skins") / skin:
+            if skin_path == Path("_no_skin"):
+                self.tools.logger.debug("Emulator does not use a skin.")
+            elif skin_path != Path("skins") / skin:
                 self.tools.logger.warning(
                     f"""
 *************************************************************************
@@ -812,7 +813,7 @@ Use the -d/--device option to explicitly specify the device to use.
                 f"""
 In future, you can specify this device by running:
 
-    $ briefcase run android -d @{avd}
+    $ briefcase run android -d "@{avd}"
 """
             )
         elif device:
@@ -999,6 +1000,27 @@ In future, you can specify this device by running:
             start_new_session=True,
         )
 
+        # wrap AVD name in quotes since '@' is a special char in PowerShell
+        emulator_command = " ".join(
+            f'"{arg}"' if arg.startswith("@") else arg
+            for arg in map(str, emulator_popen.args)
+        )
+
+        error_msg = (
+            "{prologue}"
+            + f"""
+
+Try starting the emulator manually by running:
+
+    $ {emulator_command}
+
+Resolve any problems you discover, then try running your app again. You may
+find this page helpful in diagnosing emulator problems.
+
+    https://developer.android.com/studio/run/emulator-acceleration#accel-vm
+"""
+        )
+
         # The boot process happens in 2 phases.
         # First, the emulator appears in the device list. However, it's
         # not ready until the boot process has finished. To determine
@@ -1013,18 +1035,9 @@ In future, you can specify this device by running:
                 while adb is None:
                     if emulator_popen.poll() is not None:
                         raise BriefcaseCommandError(
-                            f"""\
-Android emulator was unable to start!
-
-Try starting the emulator manually by running:
-
-    $ {' '.join(str(arg) for arg in emulator_popen.args)}
-
-Resolve any problems you discover, then try running your app again. You may
-find this page helpful in diagnosing emulator problems.
-
-    https://developer.android.com/studio/run/emulator-acceleration#accel-vm
-"""
+                            error_msg.format(
+                                prologue="Android emulator was unable to start!"
+                            )
                         )
 
                     for device, details in sorted(self.devices().items()):
@@ -1053,27 +1066,28 @@ find this page helpful in diagnosing emulator problems.
                     while not adb.has_booted():
                         if emulator_popen.poll() is not None:
                             raise BriefcaseCommandError(
-                                f"""\
-Android emulator was unable to boot!
-
-Try starting the emulator manually by running:
-
-    $ {' '.join(str(arg) for arg in emulator_popen.args)}
-
-Resolve any problems you discover, then try running your app again. You may
-find this page helpful in diagnosing emulator problems.
-
-    https://developer.android.com/studio/run/emulator-acceleration#accel-vm
-"""
+                                error_msg.format(
+                                    prologue="Android emulator was unable to boot!"
+                                )
                             )
 
                         # Try again in 2 seconds...
                         self.sleep(2)
-        except Exception:
+        except BaseException as e:
             # if the emulator exited, this should return its output immediately;
             # if it is still running, this will quickly time out and print nothing.
             with suppress(subprocess.TimeoutExpired):
                 self.tools.logger.info(emulator_popen.communicate(timeout=1)[0])
+
+            # Provide troubleshooting steps if user gives up on the emulator starting
+            if isinstance(e, KeyboardInterrupt):
+                self.tools.logger.warning()
+                self.tools.logger.warning(
+                    error_msg.format(
+                        prologue="Is the Android emulator not starting up properly?"
+                    )
+                )
+
             raise
 
         # Return the device ID and full name.

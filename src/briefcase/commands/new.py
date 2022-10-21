@@ -492,7 +492,13 @@ What GUI toolkit do you want to use for this project?""",
                 f"A directory named '{context['app_name']}' already exists."
             )
 
+        # This is to have briefcase template file
+        # mentioning extra context on which template/branch
+        # the project was generated from.
+        context.update({"template": template, "branch": branch})
+
         try:
+            self.logger.info(f"Using app template: {template}, branch {branch}")
             # Unroll the new app template
             self.generate_template(
                 template=template,
