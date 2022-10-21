@@ -1,1 +1,1 @@
-Briefcase will no longer display warning about missing skin when running Android emulator with skin path set to `_no_skin`
+Android emulators configured with `_no_skin` will no longer generate a warning.
