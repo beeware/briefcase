@@ -828,8 +828,6 @@ In future, you can specify this device by running:
         return device, name, avd
 
     def detect_system_images(self):
-<<<<<<< HEAD
-=======
         """Detects available system images for user to choose.
 
         Filters list to only include system images that correspond to the
@@ -841,7 +839,6 @@ In future, you can specify this device by running:
         # Add separation line for aesthetics
         self.tools.input.prompt()
         # Try to retrieve all available system images
->>>>>>> 9d42a311 (Provide list of system images for user to choose)
         with self.tools.input.wait_bar("Retrieving list of available system images..."):
             try:
                 download_options = self.tools.subprocess.check_output(
@@ -849,26 +846,6 @@ In future, you can specify this device by running:
                     env=self.env,
                     stderr=subprocess.STDOUT,
                 )
-<<<<<<< HEAD
-                options = download_options.splitlines()
-                images = []
-                for line in options:
-                    if re.match(
-                        rf"\s\ssystem-images;android-([2-9][6-9]|[3-9][0-9]|\d{3,});default;{self.emulator_abi}",
-                        line,
-                    ):
-                        strip_line = line.strip().split(" ")[0]
-                        if (strip_line, strip_line) not in images:
-                            images.append((strip_line, strip_line))
-            except subprocess.CalledProcessError as e:
-                raise BriefcaseCommandError("Unable to retrieve system images") from e
-        # Show image options to the user.
-        self.tools.input.prompt()
-        self.tools.input.prompt("Select system image:")
-        self.tools.input.prompt()
-        system_image = select_option(images, input=self.tools.input)
-        return system_image
-=======
             except subprocess.CalledProcessError as e:
                 # This exception does not raise an error if *downloading* list
                 # of available options fails
@@ -900,7 +877,6 @@ In future, you can specify this device by running:
             self.tools.input.prompt()
             system_image = select_option(images, input=self.tools.input)
             return system_image
->>>>>>> 9d42a311 (Provide list of system images for user to choose)
 
     def create_emulator(self):
         """Create a new Android emulator.
