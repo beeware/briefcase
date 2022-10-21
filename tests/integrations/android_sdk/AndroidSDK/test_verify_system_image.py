@@ -83,7 +83,12 @@ def test_existing_system_image(mock_tools, android_sdk):
 
     # Mock the existence of a system image
     (
-        android_sdk.root_path / "system-images" / "android-31" / "default" / "x86_64"
+        android_sdk.root_path
+        / "system-images"
+        / "android-31"
+        / "default"
+        / "x86_64"
+        / "system.img"
     ).mkdir(parents=True)
 
     # Verify the system image that we already have
