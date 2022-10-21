@@ -12,6 +12,64 @@ from .exceptions import (
     UnsupportedCommandError,
 )
 
+COMMANDS = [
+    "new",
+    "dev",
+    "upgrade",
+    "create",
+    "update",
+    "open",
+    "build",
+    "run",
+    "package",
+    "publish",
+]
+
+
+def get_command(
+    command,
+    platform={"darwin": "macOS", "linux": "linux", "win32": "windows"}[sys.platform],
+    output_format=None,
+):
+    # These commands are agnostic of platform or format
+    if command == "new":
+        return NewCommand
+    elif command == "dev":
+        return DevCommand
+    elif command == "upgrade":
+        return UpgradeCommand
+    # These commands are platform/format dependent
+    else:
+        platforms = get_platforms()
+        output_formats = get_output_formats(platform)
+        platform_module = platforms[platform]
+        if output_format is None:
+            output_format = platform_module.DEFAULT_OUTPUT_FORMAT
+        else:
+            output_format = output_format
+        # Normalise casing of output_format to be more forgiving.
+    output_format = {n.lower(): n for n in output_formats}.get(
+        output_format.lower(), output_format
+    )
+
+    # We now know the command, platform, and format.
+    # Get the command class that corresponds to that definition.
+    try:
+        format_module = output_formats[output_format]
+        Command = getattr(format_module, command)
+    except KeyError:
+        raise InvalidFormatError(
+            requested=output_format,
+            choices=list(output_formats.keys()),
+        )
+    except AttributeError:
+        raise UnsupportedCommandError(
+            platform=platform,
+            output_format=output_format,
+            command=command,
+        )
+    return Command
+
 
 def parse_cmdline(args):
     """Parses the command line to determine the Command and its arguments.
@@ -82,14 +140,6 @@ def parse_cmdline(args):
     if options.command is None:
         raise NoCommandError(parser.format_help())
 
-    # Commands agnostic to the platform and format
-    if options.command == "new":
-        Command = NewCommand
-    elif options.command == "dev":
-        Command = DevCommand
-    elif options.command == "upgrade":
-        Command = UpgradeCommand
-
     # Commands dependent on the platform and format
     else:
         parser.add_argument(
@@ -144,21 +194,7 @@ def parse_cmdline(args):
             output_format.lower(), output_format
         )
 
-        # We now know the command, platform, and format.
-        # Get the command class that corresponds to that definition.
-        try:
-            format_module = output_formats[output_format]
-            Command = getattr(format_module, options.command)
-        except KeyError:
-            raise InvalidFormatError(
-                requested=output_format,
-                choices=list(output_formats.keys()),
-            )
-        except AttributeError:
-            raise UnsupportedCommandError(
-                platform=options.platform,
-                output_format=output_format,
-                command=options.command,
-            )
-
+    Command = get_command(
+        command=options.command, platform=options.platform, output_format=output_format
+    )
     return Command, extra
