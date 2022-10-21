@@ -468,8 +468,9 @@ connection.
         try:
             skin = avd_config["skin.name"]
             skin_path = Path(avd_config["skin.path"])
-
-            if skin_path != Path("skins") / skin:
+            if skin_path == Path("_no_skin"):
+                self.tools.logger.debug("Emulator does not use a skin.")
+            elif skin_path != Path("skins") / skin:
                 self.tools.logger.warning(
                     f"""
 *************************************************************************

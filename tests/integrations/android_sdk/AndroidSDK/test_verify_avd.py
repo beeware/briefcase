@@ -163,3 +163,42 @@ def test_unrecognized_emulator_skin(android_sdk, capsys):
 
     # The emulator skin was not verified
     android_sdk.verify_emulator_skin.assert_not_called()
+
+
+def test_no_skin_emulator_skin(android_sdk, capsys):
+    """If the AVD config contains an emulator skin set to _no_skin continiue
+    without validation."""
+    # Mock an AVD configuration that contains a skin.name and skin.path
+    # in an unexpected location
+    android_sdk.avd_config = mock.MagicMock(
+        return_value={
+            "avd.ini.encoding": "UTF-8",
+            "hw.device.manufacturer": "Google",
+            "hw.device.name": "pixel",
+            "weird.key": "good=bad",
+            "PlayStore.enabled": "no",
+            "avd.name": "beePhone",
+            "disk.cachePartition": "yes",
+            "disk.cachePartition.size": "42M",
+            # Add an emulator skin.
+            "skin.name": "768x1280",
+            "skin.path": "_no_skin",
+        }
+    )
+    android_sdk.verify_system_image = mock.MagicMock()
+    android_sdk.verify_emulator_skin = mock.MagicMock()
+
+    # Verify the AVD
+    android_sdk.verify_avd("goodDevice")
+
+    # The AVD config was loaded.
+    android_sdk.avd_config.assert_called_with("goodDevice")
+
+    # A warning message should not be output
+    assert "WARNING: Unrecognized device skin" not in capsys.readouterr().out
+
+    # The system image was not verified
+    android_sdk.verify_system_image.assert_not_called()
+
+    # The emulator skin was not verified
+    android_sdk.verify_emulator_skin.assert_not_called()
