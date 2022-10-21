@@ -500,7 +500,6 @@ connection.
             image (e.g., ``"system-images;android-31;default;x86_64"``)
         """
         # Look for the directory named as a system image.
-        # If it exists, we already have the system image.
         system_image_parts = system_image.split(";")
 
         if len(system_image_parts) < 4 or system_image_parts[0] != "system-images":
@@ -527,13 +526,15 @@ connection.
             )
 
         # Convert the system image into a path where that system image
-        # would be expected, and see if the location exists.
+        # files would be expected, and see if the `system.img` exists.
         system_image_path = self.root_path
         for part in system_image_parts:
             system_image_path = system_image_path / part
 
-        if system_image_path.exists():
-            # Found the system image.
+        system_image_file = system_image_path / "system.img"
+
+        if system_image_file.exists():
+            # Found the system image file.
             return
 
         # System image not found; download it.
@@ -885,8 +886,31 @@ An emulator named '{avd}' already exists.
         # Ensure the required skin is available.
         self.verify_emulator_skin(skin)
 
-        # TODO: Provide a list of options for system images.
-        system_image = f"system-images;android-31;default;{self.emulator_abi}"
+        # Provide a list of options for system images.
+        with self.tools.input.wait_bar("Retrieving list of available system images..."):
+            try:
+                download_options = self.tools.subprocess.check_output(
+                    [os.fsdecode(self.sdkmanager_path), "--list"],
+                    env=self.env,
+                    stderr=subprocess.STDOUT,
+                )
+                options = download_options.splitlines()
+                images = []
+                for line in options:
+                    if re.match(
+                        rf"\s\ssystem-images;android-([2-9][6-9]|[3-9][0-9]|\d{3,});default;{self.emulator_abi}",
+                        line,
+                    ):
+                        strip_line = line.strip().split(" ")[0]
+                        if (strip_line, strip_line) not in images:
+                            images.append((strip_line, strip_line))
+            except subprocess.CalledProcessError as e:
+                raise BriefcaseCommandError("Unable to retrieve system images") from e
+        # Show image options to the user.
+        self.tools.input.prompt()
+        self.tools.input.prompt("Select system image:")
+        self.tools.input.prompt()
+        system_image = select_option(images, input=self.tools.input)
 
         # Ensure the required system image is available.
         self.verify_system_image(system_image)
