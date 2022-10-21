@@ -827,19 +827,19 @@ In future, you can specify this device by running:
 
         return device, name, avd
 
-    def detect_system_images(self):
-        """Detects available system images for user to choose.
+    def select_system_images(self, images):
+        """Detects available system images for user to use or download.
 
         Filters list to only include system images that correspond to the
         minimum of supported Android versions for the current architecture.
 
+        :param images: list of default and previously downloaded system images
+        :type images: str
         :returns: name of user chosen system image
-        :rtype: string
+        :rtype: str
         """
-        # Add separation line for aesthetics
-        self.tools.input.prompt()
-        # Try to retrieve all available system images
-        with self.tools.input.wait_bar("Retrieving list of available system images..."):
+        # Download list of all available system images
+        with self.tools.input.wait_bar("Retrieving list of system images..."):
             try:
                 download_options = self.tools.subprocess.check_output(
                     [os.fsdecode(self.sdkmanager_path), "--list"],
@@ -847,36 +847,81 @@ In future, you can specify this device by running:
                     stderr=subprocess.STDOUT,
                 )
             except subprocess.CalledProcessError as e:
-                # This exception does not raise an error if *downloading* list
-                # of available options fails
-                # SDK Manager simply continues and only considers what is already
-                # locally installed
                 raise BriefcaseCommandError("Unable to retrieve system images") from e
         # Parse names of available system images
         options = download_options.splitlines()
-        # Check if there are any system image names in `options`
-        images = []
+        # Remove previous "Obtain non-default system image" option
+        images.pop()
+        # Add any non-default or previously downloaded system image names to list
+        system_images = images
         for line in options:
             if re.match(
                 rf"\s\ssystem-images;android-([2-9][6-9]|[3-9][0-9]|\d{3,});default;{self.emulator_abi}",
                 line,
             ):
                 strip_line = line.strip().split(" ")[0]
-                images.append((strip_line, strip_line))
-        # If above `download_options` failed to download system image names,
-        # user likely does not have or lost internet connection
-        # Therefore `images` would end up empty
-        if images == []:
-            raise BriefcaseCommandError(
-                "Unable to retrieve system images\nLost internet connection?"
+                if (strip_line, strip_line) not in system_images:
+                    system_images.append((strip_line, strip_line))
+        # Show user system image options to choose
+        self.tools.input.prompt()
+        self.tools.input.prompt("Select system image:")
+        self.tools.input.prompt()
+        system_image = select_option(images, input=self.tools.input)
+        return system_image
+
+    def detect_system_images(self):
+        """Detects available system images for user to choose.
+
+        User is presented with a list of system images. The list always
+        includes the Briefcase default system image and the option to download
+        a different system image. List also includes any previously downloaded
+        system images.
+
+        :returns: name of user chosen system image
+        :rtype: str
+        """
+        # Retrieve currently available system images to choose
+        with self.tools.input.wait_bar("Retrieving list of available system images..."):
+            try:
+                download_options = self.tools.subprocess.check_output(
+                    [os.fsdecode(self.sdkmanager_path), "--list_installed"],
+                    env=self.env,
+                    stderr=subprocess.STDOUT,
+                )
+            except subprocess.CalledProcessError as e:
+                raise BriefcaseCommandError("Unable to retrieve system images") from e
+        # Parse names of available system images
+        options = download_options.splitlines()
+        # Check if there are any system images other than the default
+        images = [
+            (
+                f"system-images;android-31;default;{self.emulator_abi}",
+                f"system-images;android-31;default;{self.emulator_abi}",
             )
-        else:
-            # Show user system image options to choose
-            self.tools.input.prompt()
-            self.tools.input.prompt("Select system image:")
-            self.tools.input.prompt()
-            system_image = select_option(images, input=self.tools.input)
-            return system_image
+        ]
+        for line in options:
+            if re.match(
+                rf"\s\ssystem-images;android-([2-9][6-9]|[3-9][0-9]|\d{3,});default;{self.emulator_abi}",
+                line,
+            ):
+                strip_line = line.strip().split(" ")[0]
+                if (strip_line, strip_line) not in images:
+                    images.append((strip_line, strip_line))
+        # Append the option to download a non-default system image
+        images.append(
+            (
+                "Obtain non-default system image",
+                "Obtain non-default system image",
+            )
+        )
+        # Show user options to choose
+        self.tools.input.prompt()
+        self.tools.input.prompt("Select system image:\n")
+        self.tools.input.prompt()
+        system_image = select_option(images, input=self.tools.input)
+        if system_image == "Obtain non-default system image":
+            return self.select_system_images(images)
+        return system_image
 
     def create_emulator(self):
         """Create a new Android emulator.
@@ -937,7 +982,7 @@ An emulator named '{avd}' already exists.
         # Ensure the required skin is available.
         self.verify_emulator_skin(skin)
 
-        # Provide a list of options for system images.
+        # Provide a list of system image options.
         system_image = self.detect_system_images()
 
         # Ensure the required system image is available.

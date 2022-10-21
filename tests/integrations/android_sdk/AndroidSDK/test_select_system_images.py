@@ -1,5 +1,5 @@
 import subprocess
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -35,19 +35,18 @@ def android_sdk(android_sdk, tmp_path) -> AndroidSDK:
 
 
 def test_detect_system_images(android_sdk, mock_tools):
+    images = [
+        (
+            "system-images;android-31;default;x86_64",
+            "system-images;android-31;default;x86_64",
+        ),
+        (
+            "Obtain non-default system image",
+            "Obtain non-default system image",
+        ),
+    ]
     mock_tools.input.values = ["1"]
-    system_image = android_sdk.detect_system_images()
-    assert system_image == "system-images;android-31;default;x86_64"
-    assert len(mock_tools.input.prompts) == 1
-
-
-@patch("briefcase.integrations.android_sdk.AndroidSDK.select_system_images")
-def test_detect_system_images_obtain_new(
-    mock_select_system_images, android_sdk, mock_tools
-):
-    mock_tools.input.values = ["3"]
-    mock_select_system_images.return_value = "system-images;android-31;default;x86_64"
-    system_image = android_sdk.detect_system_images()
+    system_image = android_sdk.select_system_images(images)
     assert system_image == "system-images;android-31;default;x86_64"
     assert len(mock_tools.input.prompts) == 1
 
@@ -55,9 +54,19 @@ def test_detect_system_images_obtain_new(
 def test_detect_system_images_error(android_sdk, mock_tools):
     """If there is a problem retrieving the system image list, an error is
     returned."""
+    images = [
+        (
+            "system-images;android-31;default;x86_64",
+            "system-images;android-31;default;x86_64",
+        ),
+        (
+            "Obtain non-default system image",
+            "Obtain non-default system image",
+        ),
+    ]
     mock_tools.subprocess.check_output.side_effect = subprocess.CalledProcessError(
         cmd="sdkmanager --list",
         returncode=None,
     )
     with pytest.raises(BriefcaseCommandError):
-        android_sdk.detect_system_images()
+        android_sdk.select_system_images(images)
