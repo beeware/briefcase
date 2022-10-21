@@ -90,7 +90,7 @@ def test_run_existing_device(run_command, first_app_config):
 
     # select_target_device was invoked with a specific device
     run_command.tools.android_sdk.select_target_device.assert_called_once_with(
-        device_or_avd="exampleDevice"
+        "exampleDevice"
     )
 
     # The ADB wrapper is created
@@ -219,6 +219,28 @@ def test_run_idle_device(run_command, first_app_config):
     )
 
     run_command.tools.mock_adb.logcat.assert_called_once_with("777")
+
+
+def test_run_ctrl_c(run_command, first_app_config, capsys):
+    """When CTRL-C is sent during logcat, Briefcase exits normally."""
+    # Set up device selection to return a running physical device.
+    run_command.tools.android_sdk.select_target_device = MagicMock(
+        return_value=("exampleDevice", "ExampleDevice", None)
+    )
+
+    run_command.tools.mock_adb.logcat.side_effect = KeyboardInterrupt
+
+    # Invoke run_app (and KeyboardInterrupt does not surface)
+    run_command.run_app(first_app_config, device_or_avd="exampleDevice")
+
+    # logcat is called and raised KeyboardInterrupt
+    run_command.tools.mock_adb.logcat.assert_called_once_with("777")
+
+    # Shows the try block for KeyboardInterrupt was entered
+    assert capsys.readouterr().out.endswith(
+        "[first-app] Following device log output (type CTRL-C to stop log)...\n"
+        "===========================================================================\n"
+    )
 
 
 def test_log_file_extra(run_command, monkeypatch):

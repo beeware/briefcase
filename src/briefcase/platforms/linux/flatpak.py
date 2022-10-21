@@ -192,10 +192,15 @@ class LinuxFlatpakRunCommand(LinuxFlatpakMixin, RunCommand):
         :param app: The config object for the app
         """
         self.logger.info("Starting app...", prefix=app.app_name)
-        self.tools.flatpak.run(
-            bundle=app.bundle,
-            app_name=app.app_name,
-        )
+        try:
+            # Start streaming logs for the app.
+            self.tools.logger.info("=" * 75)
+            self.tools.flatpak.run(
+                bundle=app.bundle,
+                app_name=app.app_name,
+            )
+        except KeyboardInterrupt:
+            pass  # Catch CTRL-C to exit normally
 
 
 class LinuxFlatpakPackageCommand(LinuxFlatpakMixin, PackageCommand):

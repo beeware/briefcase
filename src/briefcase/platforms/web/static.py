@@ -275,7 +275,7 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
             url = f"http://{host}:{port}"
 
             self.logger.info(f"Web server open on {url}")
-            # If requested, open a brower tab on the newly opened server.
+            # If requested, open a browser tab on the newly opened server.
             if open_browser:
                 webbrowser.open_new_tab(url)
 

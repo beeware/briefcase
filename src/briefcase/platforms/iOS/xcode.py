@@ -432,6 +432,8 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
             )
             self.logger.info("=" * 75)
             self.tools.subprocess.stream_output("log stream", simulator_log_popen)
+        except KeyboardInterrupt:
+            pass  # catch CTRL-C to exit normally
         finally:
             self.tools.subprocess.cleanup("log stream", simulator_log_popen)
 
