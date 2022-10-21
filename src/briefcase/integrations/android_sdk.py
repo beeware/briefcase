@@ -468,8 +468,11 @@ connection.
         try:
             skin = avd_config["skin.name"]
             skin_path = Path(avd_config["skin.path"])
-
-            if skin_path != Path("skins") / skin:
+            if skin_path == Path("_no_skin"):
+                self.tools.logger.debug(
+                    "Skipping skin validation due to '_no_skin' being set as path."
+                )
+            elif skin_path != Path("skins") / skin:
                 self.tools.logger.warning(
                     f"""
 *************************************************************************
