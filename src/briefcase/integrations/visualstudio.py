@@ -98,7 +98,7 @@ or unset the environment variable; then re-run Briefcase.
                 )
                 if not vswhere_path.exists():
                     raise BriefcaseCommandError(
-                        """\
+                        f"""\
 Visual Studio does not appear to be installed. Visual Studio 2022 Community
 Edition can be obtained as a free download from:
 
@@ -106,7 +106,7 @@ Edition can be obtained as a free download from:
 
 When you install Visual Studio, ensure you install the following workloads
 and additional components:
-{VSCODE_REQUIRED_COMPONENTS}
+{cls.VSCODE_REQUIRED_COMPONENTS}
 If you have Visual Studio installed in a non-default location, you must
 either put MSBuild.exe in your path, or define an MSBUILD environment
 variable that points at the MSBuild.exe provided by your Visual Studio
@@ -159,10 +159,10 @@ from the command prompt.
                 )
                 if not msbuild_path.exists():
                     raise BriefcaseCommandError(
-                        """\
+                        f"""\
 Your Visual Studio installation does not appear to provide MSBuild.
 Ensure that Visual Studio following workloads and components installed:
-{VSCODE_REQUIRED_COMPONENTS}
+{cls.VSCODE_REQUIRED_COMPONENTS}
 Then restart Briefcase.
 """
                     )

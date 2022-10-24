@@ -1,0 +1,1 @@
+The required Visual Studio Code components are now included in verification errors for Visual Studio Apps.
