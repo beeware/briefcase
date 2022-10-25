@@ -87,7 +87,6 @@ class WindowsRunCommand(RunCommand):
                 [os.fsdecode(self.binary_path(app))],
                 cwd=self.tools.home_path,
                 check=True,
-                stream_output=True,
             )
         except KeyboardInterrupt:
             pass  # Catch CTRL-C to exit normally

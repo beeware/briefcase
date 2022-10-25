@@ -312,6 +312,7 @@ Delete {cmdline_tools_zip_path} and run briefcase again.
                 [os.fsdecode(self.sdkmanager_path), "--update"],
                 env=self.env,
                 check=True,
+                stream_output=False,
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(
@@ -330,6 +331,7 @@ its output for errors.
             self.tools.subprocess.check_output(
                 [os.fsdecode(self.sdkmanager_path), "--list_installed"],
                 env=self.env,
+                stderr=subprocess.STDOUT,
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(
@@ -367,6 +369,7 @@ before you may use those tools.
                 [os.fsdecode(self.sdkmanager_path), "--licenses"],
                 env=self.env,
                 check=True,
+                stream_output=False,
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(
@@ -419,6 +422,7 @@ connection.
                 ],
                 env=self.env,
                 check=True,
+                stream_output=False,
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(
@@ -550,6 +554,7 @@ connection.
                 ],
                 env=self.env,
                 check=True,
+                stream_output=False,
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(
@@ -1263,7 +1268,6 @@ Activity class not found while starting app.
                 + [f"{tag}:S" for tag in ["EGL_emulation"]],
                 env=self.tools.android_sdk.env,
                 check=True,
-                stream_output=True,
             )
         except subprocess.CalledProcessError as e:
             # If the user sends CTRL+C:

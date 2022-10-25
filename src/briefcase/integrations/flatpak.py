@@ -181,6 +181,8 @@ You must install both flatpak and flatpak-builder.
                     f"{sdk}/{self.tools.host_arch}/{runtime_version}",
                 ],
                 check=True,
+                # flatpak install uses many animations that cannot be disabled
+                stream_output=False,
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(
@@ -250,7 +252,6 @@ flatpak run {bundle}.{app_name}
                     f"{bundle}.{app_name}",
                 ],
                 check=True,
-                stream_output=True,
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(f"Unable to start app {app_name}.") from e
