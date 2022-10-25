@@ -256,7 +256,7 @@ class Subprocess:
         return tools.subprocess
 
     @ensure_console_is_safe
-    def run(self, args, stream_output=False, **kwargs):
+    def run(self, args, stream_output=True, **kwargs):
         """A wrapper for subprocess.run().
 
         :param args: args for subprocess.run()
