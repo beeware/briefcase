@@ -13,7 +13,7 @@ def test_call(mock_sub, capsys, platform):
     """A simple call will be invoked."""
 
     mock_sub.tools.sys.platform = platform
-    mock_sub.run(["hello", "world"])
+    mock_sub.run(["hello", "world"], stream_output=False)
 
     mock_sub._subprocess.run.assert_called_with(
         ["hello", "world"],
@@ -26,7 +26,7 @@ def test_call(mock_sub, capsys, platform):
 def test_call_with_arg(mock_sub, capsys):
     """Any extra keyword arguments are passed through as-is."""
 
-    mock_sub.run(["hello", "world"], universal_newlines=True)
+    mock_sub.run(["hello", "world"], universal_newlines=True, stream_output=False)
 
     mock_sub._subprocess.run.assert_called_with(
         ["hello", "world"],
@@ -39,7 +39,11 @@ def test_call_with_arg(mock_sub, capsys):
 def test_call_with_path_arg(mock_sub, capsys, tmp_path):
     """Path-based arguments are converted to strings and passed in as-is."""
 
-    mock_sub.run(["hello", tmp_path / "location"], cwd=tmp_path / "cwd")
+    mock_sub.run(
+        ["hello", tmp_path / "location"],
+        cwd=tmp_path / "cwd",
+        stream_output=False,
+    )
 
     mock_sub._subprocess.run.assert_called_with(
         ["hello", os.fsdecode(tmp_path / "location")],
@@ -79,7 +83,11 @@ def test_call_with_start_new_session(
     Windows."""
 
     mock_sub.tools.host_os = platform
-    mock_sub.run(["hello", "world"], start_new_session=start_new_session)
+    mock_sub.run(
+        ["hello", "world"],
+        start_new_session=start_new_session,
+        stream_output=False,
+    )
 
     if platform == "Windows":
         mock_sub._subprocess.run.assert_called_with(
@@ -124,7 +132,10 @@ def test_call_windows_with_start_new_session_and_creationflags(
         AssertionError, match="Subprocess called with creationflags set"
     ):
         mock_sub.run(
-            ["hello", "world"], start_new_session=True, creationflags=creationflags
+            ["hello", "world"],
+            start_new_session=True,
+            creationflags=creationflags,
+            stream_output=False,
         )
 
 
@@ -132,7 +143,7 @@ def test_debug_call(mock_sub, capsys):
     """If verbosity is turned up, there is output."""
     mock_sub.tools.logger.verbosity = 2
 
-    mock_sub.run(["hello", "world"])
+    mock_sub.run(["hello", "world"], stream_output=False)
 
     mock_sub._subprocess.run.assert_called_with(
         ["hello", "world"],
@@ -158,7 +169,7 @@ def test_debug_call_with_env(mock_sub, capsys, tmp_path):
     mock_sub.tools.logger.verbosity = 2
 
     env = {"NewVar": "NewVarValue"}
-    mock_sub.run(["hello", "world"], env=env, cwd=tmp_path / "cwd")
+    mock_sub.run(["hello", "world"], env=env, cwd=tmp_path / "cwd", stream_output=False)
 
     merged_env = mock_sub.tools.os.environ.copy()
     merged_env.update(env)
@@ -195,7 +206,7 @@ def test_calledprocesserror_exception_logging(mock_sub, capsys):
     mock_sub._subprocess.run.side_effect = called_process_error
 
     with pytest.raises(CalledProcessError):
-        mock_sub.run(["hello", "world"])
+        mock_sub.run(["hello", "world"], stream_output=False)
 
     # fmt: off
     expected_output = (
@@ -225,5 +236,5 @@ def test_text_eq_true_default_overriding(mock_sub, in_kwargs, kwargs):
     """if text or universal_newlines is explicitly provided, those should
     override text=true default."""
 
-    mock_sub.run(["hello", "world"], **in_kwargs)
+    mock_sub.run(["hello", "world"], stream_output=False, **in_kwargs)
     mock_sub._subprocess.run.assert_called_with(["hello", "world"], **kwargs)

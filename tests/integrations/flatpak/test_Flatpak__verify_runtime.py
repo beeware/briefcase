@@ -27,6 +27,7 @@ def test_verify_runtime(flatpak):
             "org.beeware.flatpak.SDK/gothic/37.42",
         ],
         check=True,
+        stream_output=False,
     )
 
 

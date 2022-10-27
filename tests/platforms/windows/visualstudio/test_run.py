@@ -37,5 +37,4 @@ def test_run_app(first_app_config, tmp_path):
         ],
         cwd=tmp_path / "home",
         check=True,
-        stream_output=True,
     )

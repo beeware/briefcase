@@ -60,6 +60,7 @@ def test_accept_license(mock_tools):
     mock_tools.subprocess.run.assert_called_once_with(
         ["sudo", "xcodebuild", "-license"],
         check=True,
+        stream_output=False,
     )
 
 
@@ -87,6 +88,7 @@ def test_sudo_fail(mock_tools):
     mock_tools.subprocess.run.assert_called_once_with(
         ["sudo", "xcodebuild", "-license"],
         check=True,
+        stream_output=False,
     )
 
 
@@ -113,6 +115,7 @@ def test_license_not_accepted(mock_tools):
     mock_tools.subprocess.run.assert_called_once_with(
         ["sudo", "xcodebuild", "-license"],
         check=True,
+        stream_output=False,
     )
 
 
@@ -136,6 +139,7 @@ def test_license_status_unknown(capsys, mock_tools):
     mock_tools.subprocess.run.assert_called_once_with(
         ["sudo", "xcodebuild", "-license"],
         check=True,
+        stream_output=False,
     )
 
     # ...but stdout contains a warning

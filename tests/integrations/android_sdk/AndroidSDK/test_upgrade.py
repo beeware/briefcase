@@ -14,6 +14,7 @@ def test_upgrade(mock_tools, android_sdk):
         [os.fsdecode(android_sdk.sdkmanager_path), "--update"],
         env=android_sdk.env,
         check=True,
+        stream_output=False,
     )
 
 
@@ -27,4 +28,5 @@ def test_upgrade_failure(mock_tools, android_sdk):
         [os.fsdecode(android_sdk.sdkmanager_path), "--update"],
         env=android_sdk.env,
         check=True,
+        stream_output=False,
     )

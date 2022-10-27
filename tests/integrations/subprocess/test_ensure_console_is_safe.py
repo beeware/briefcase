@@ -1,3 +1,4 @@
+import subprocess
 from unittest.mock import ANY, MagicMock, Mock
 
 import pytest
@@ -11,9 +12,8 @@ def mock_sub(mock_tools):
         wraps=mock_tools.input.release_console_control
     )
     mock_sub = Subprocess(mock_tools)
+    mock_sub._subprocess = MagicMock(spec_set=subprocess)
     mock_sub._run_and_stream_output = MagicMock()
-    mock_sub._subprocess.run = MagicMock()
-    mock_sub._subprocess.check_output = MagicMock()
     return mock_sub
 
 
@@ -26,11 +26,7 @@ def test_run_windows_batch_script(mock_sub, batch_script):
     with mock_sub.tools.input.wait_bar("Testing..."):
         mock_sub.run([batch_script, "World"])
 
-    mock_sub._subprocess.run.assert_called_with(
-        [batch_script, "World"],
-        text=True,
-        encoding=ANY,
-    )
+    mock_sub._run_and_stream_output.assert_called_with([batch_script, "World"])
     mock_sub.tools.input.release_console_control.assert_called_once()
 
 
@@ -64,12 +60,7 @@ def test_negative_condition_not_controlled(mock_sub, cmdline, kwargs):
     """Passthrough to Subprocess if conditions to release console control are
     not met while the console is not controlled."""
     mock_sub.run(cmdline, **kwargs)
-    mock_sub._subprocess.run.assert_called_with(
-        cmdline,
-        **kwargs,
-        text=True,
-        encoding=ANY,
-    )
+    mock_sub._run_and_stream_output.assert_called_with(cmdline, **kwargs)
 
     mock_sub.check_output(cmdline, **kwargs)
     mock_sub._subprocess.check_output.assert_called_with(
