@@ -197,13 +197,12 @@ def test_debug_call_with_env(mock_sub, capsys, tmp_path):
 def test_calledprocesserror_exception_logging(mock_sub, capsys):
     mock_sub.tools.logger.verbosity = 2
 
-    called_process_error = CalledProcessError(
+    mock_sub._subprocess.run.side_effect = CalledProcessError(
         returncode=-1,
         cmd="hello world",
         output="output line 1\noutput line 2",
         stderr="error line 1\nerror line 2",
     )
-    mock_sub._subprocess.run.side_effect = called_process_error
 
     with pytest.raises(CalledProcessError):
         mock_sub.run(["hello", "world"], stream_output=False)
@@ -218,7 +217,6 @@ def test_calledprocesserror_exception_logging(mock_sub, capsys):
         ">>> Return code: -1\n"
     )
     # fmt: on
-
     assert capsys.readouterr().out == expected_output
 
 
@@ -233,8 +231,8 @@ def test_calledprocesserror_exception_logging(mock_sub, capsys):
     ],
 )
 def test_text_eq_true_default_overriding(mock_sub, in_kwargs, kwargs):
-    """if text or universal_newlines is explicitly provided, those should
+    """If text or universal_newlines is explicitly provided, those should
     override text=true default."""
-
     mock_sub.run(["hello", "world"], stream_output=False, **in_kwargs)
+
     mock_sub._subprocess.run.assert_called_with(["hello", "world"], **kwargs)

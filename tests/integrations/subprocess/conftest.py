@@ -12,30 +12,9 @@ CREATE_NEW_PROCESS_GROUP = 0x200
 
 
 @pytest.fixture
-def mock_sub(mock_tools):
-    mock_tools.os.environ = {
-        "VAR1": "Value 1",
-        "PS1": "\nLine 2\n\nLine 4",
-        "PWD": "/home/user/",
-    }
-
-    sub = Subprocess(mock_tools)
-    sub._subprocess = MagicMock(spec=subprocess)
-
-    run_result = MagicMock(spec=subprocess.CompletedProcess)
-    run_result.returncode = 0
-    sub._subprocess.run.return_value = run_result
-
-    sub._subprocess.check_output.return_value = "some output line 1\nmore output line 2"
-
-    sub._subprocess.CREATE_NO_WINDOW = CREATE_NO_WINDOW
-    sub._subprocess.CREATE_NEW_PROCESS_GROUP = CREATE_NEW_PROCESS_GROUP
-
-    return sub
-
-
-@pytest.fixture
-def popen_process():
+def streaming_process():
+    """Mock process returned for Popen context manager in
+    Subprocess._run_and_stream_output."""
     process = MagicMock()
 
     # Mock the readline values of an actual process. The final return value is "",
@@ -54,3 +33,29 @@ def popen_process():
     process.stdout.readline.side_effect = mock_readline()
     process.poll.return_value = -3
     return process
+
+
+@pytest.fixture
+def mock_sub(mock_tools, streaming_process):
+    mock_tools.os.environ = {
+        "VAR1": "Value 1",
+        "PS1": "\nLine 2\n\nLine 4",
+        "PWD": "/home/user/",
+    }
+
+    sub = Subprocess(mock_tools)
+    sub._subprocess = MagicMock(spec=subprocess)
+
+    run_result = MagicMock(spec=subprocess.CompletedProcess)
+    run_result.returncode = 0
+    sub._subprocess.run.return_value = run_result
+
+    sub._subprocess.check_output.return_value = "some output line 1\nmore output line 2"
+
+    sub._subprocess.CREATE_NO_WINDOW = CREATE_NO_WINDOW
+    sub._subprocess.CREATE_NEW_PROCESS_GROUP = CREATE_NEW_PROCESS_GROUP
+
+    # Return the streaming process for output streaming
+    sub._subprocess.Popen.return_value.__enter__.return_value = streaming_process
+
+    return sub
