@@ -72,6 +72,7 @@ def test_incompatible_abi(mock_tools, android_sdk, capsys):
         ],
         env=android_sdk.env,
         check=True,
+        stream_output=False,
     )
 
 
@@ -109,6 +110,7 @@ def test_new_system_image(mock_tools, android_sdk):
         ],
         env=android_sdk.env,
         check=True,
+        stream_output=False,
     )
 
 
@@ -139,4 +141,5 @@ def test_problem_downloading_system_image(mock_tools, android_sdk):
         ],
         env=android_sdk.env,
         check=True,
+        stream_output=False,
     )

@@ -256,22 +256,114 @@ class Subprocess:
         return tools.subprocess
 
     @ensure_console_is_safe
-    def run(self, args, stream_output=False, **kwargs):
+    def run(self, args, stream_output=True, **kwargs):
         """A wrapper for subprocess.run().
 
-        :param args: args for subprocess.run()
-        :param stream_output: simulate run() while streaming the output to the console
-        :param kwargs: keywords args for subprocess.run()
+        This method implements the behavior of subprocess.run() with some
+        notable differences:
 
-        The behavior of this method is identical to subprocess.run(),
-        except for:
-         - If a Wait Bar is active and IO is not redirected, subprocess.run()
-           will be simulated so the output can be proxied via stream_output.
-         - If the `env` argument is provided, the current system environment
-           will be copied, and the contents of env overwritten into that
-           environment.
-         - The `text` argument is defaulted to True so all output is returned
-           as strings instead of bytes.
+          - The command's output is streamed if ``stream_output=True`` or if
+            dynamic console content such as the Wait Bar is active and I/O is
+            not redirected.
+          - If dynamic content is not active, ``stream_output=False`` will
+            disable streaming.
+          - If the ``env`` argument is provided, the current system environment
+            will be copied, and the contents of env overwritten into that
+            environment.
+          - The ``text`` argument is defaulted to True so all output is returned
+            as strings instead of bytes.
+
+        Output Streaming Primer
+        ~~~~~~~~~~~~~~~~~~~~~~~
+
+        What is output streaming?
+        -------------------------
+
+        When a command is invoked via ``subprocess.run()``, by default, its
+        stdout and stderr are connected directly to the console and the output
+        is presented to the user as though the command was invoked natively.
+        When output streaming is active, Briefcase reads the command's output
+        and prints it in to the console on behalf of the command.
+
+        Why is output streaming necessary?
+        ----------------------------------
+
+        Allowing commands to print directly to the console can provide superior
+        UX since it allows tools to provide their native experience to users.
+
+        However, a primary mechanism for providing support for Briefcase is
+        asking users to provide the log file when errors occur. Often, these
+        errors are raised by invoked commands; streaming the output of commands
+        allows Briefcase to capture that output and include it in the log file
+        as well as the console.
+
+        Additionally, the content of the console can become corrupted if other
+        processes print to the console while Rich's dynamic console elements
+        such as a Progress Bar are active. Streaming such output allows Rich to
+        maintain integrity of all the console content.
+
+        How does output streaming work?
+        -------------------------------
+
+        Streaming is activated when:
+
+          1. dynamic content such as the Wait Bar is active and I/O is not
+             redirected
+
+          2. the ``stream_output`` argument is ``True`` (as it is by default)
+
+        I/O is considered redirected when both ``stdout`` and ``stderr`` are
+        specified (e.g., when ``stdout`` and ``stderr`` are set
+        to``subprocess.PIPE`` so the output is available to the caller).
+
+        To facilitate streaming the output, ``stdout`` is set to
+        ``subprocess.PIPE``. If ``stderr`` is not specified by calling code,
+        then it is set to ``subprocess.STDOUT`` so it is interlaced with stdout
+        output.
+
+        The process is created for the command with ``Popen``, and a separate
+        thread is started for continuously reading and printing the stdout to
+        the console from the command process. It is necessary to read from
+        stdout in a thread because the read is uninterruptible; so, a user may
+        not be able to abort with CTRL-C.
+
+        When the process ends (or the user sends CTRL-C), a call is made to
+        ensure the command process terminates; this, in turn, ensures the thread
+        for streaming can properly exit its otherwise infinite loop. The calling
+        code is either returned a ``CompletedProcess`` object or
+        ``CalledProcessError`` could be raised.
+
+        Output streaming ultimately strives to simulate calling
+        ``subprocess.run()`` while proxying the command's output to the console.
+
+        When *not* to use output streaming?
+        -----------------------------------
+
+        When streaming is disabled, the command's output **WILL NOT** be
+        included the Briefcase log file. This makes troubleshooting difficult
+        and should be avoided. However, there are some situations where disabling
+        streaming is unavoidable.
+
+        Some commands use their own dynamic console content such as progress
+        bars, spinners, and other animations. When such output is streamed, its
+        quality can be significantly compromised and look terrible in the
+        console for users. If it is not possible to disable such output with
+        e.g. a flag for the command, then disabling streaming may be necessary.
+        As an example, the ``flatpak install`` command uses many animations.
+
+        If a command requires user input, do not use output streaming. The
+        output streaming implementation doesn't provide any facilities to send
+        input to the process and doesn't provide any special handling of stdin.
+        Additionally, when the command process prompts the user for input, that
+        doesn't always trigger ``readline()`` to return; so, the console may
+        actually end up waiting for user input before displaying a prompt to the
+        user. As an example, accepting Android SDK licenses requires user input.
+
+        :param args: args for subprocess.run()
+        :param stream_output: simulate run() while streaming the output to the
+            console. Set to False if the command requires user interaction.
+        :param kwargs: keyword args for subprocess.run()
+        :return: `CompletedProcess` for invoked process
         """
         # If `stream_output` or dynamic screen content (e.g. the Wait Bar) is
         # active and output is not redirected, use run with output streaming.

@@ -29,7 +29,6 @@ def test_logcat(mock_tools):
         ],
         env=mock_tools.android_sdk.env,
         check=True,
-        stream_output=True,
     )
 
 

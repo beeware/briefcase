@@ -15,9 +15,9 @@ def mock_sub(mock_sub):
     return mock_sub
 
 
-def test_output(mock_sub, popen_process, capsys):
+def test_output(mock_sub, streaming_process, capsys):
     """Process output is printed."""
-    mock_sub.stream_output("testing", popen_process)
+    mock_sub.stream_output("testing", streaming_process)
 
     # fmt: off
     assert capsys.readouterr().out == (
@@ -26,14 +26,14 @@ def test_output(mock_sub, popen_process, capsys):
         "output line 3\n"
     )
     # fmt: on
-    mock_sub.cleanup.assert_called_once_with("testing", popen_process)
+    mock_sub.cleanup.assert_called_once_with("testing", streaming_process)
 
 
-def test_output_debug(mock_sub, popen_process, capsys):
+def test_output_debug(mock_sub, streaming_process, capsys):
     """Process output is printed; no debug output for only stream_output."""
     mock_sub.tools.logger.verbosity = 2
 
-    mock_sub.stream_output("testing", popen_process)
+    mock_sub.stream_output("testing", streaming_process)
 
     # fmt: off
     expected_output = (
@@ -44,10 +44,10 @@ def test_output_debug(mock_sub, popen_process, capsys):
     # fmt: on
     assert capsys.readouterr().out == expected_output
 
-    mock_sub.cleanup.assert_called_once_with("testing", popen_process)
+    mock_sub.cleanup.assert_called_once_with("testing", streaming_process)
 
 
-def test_keyboard_interrupt(mock_sub, popen_process, capsys):
+def test_keyboard_interrupt(mock_sub, streaming_process, capsys):
     """KeyboardInterrupt is suppressed if user sends CTRL+C and all output is
     printed."""
 
@@ -55,7 +55,7 @@ def test_keyboard_interrupt(mock_sub, popen_process, capsys):
     send_ctrl_c.side_effect = [False, KeyboardInterrupt]
 
     with pytest.raises(KeyboardInterrupt):
-        mock_sub.stream_output("testing", popen_process, stop_func=send_ctrl_c)
+        mock_sub.stream_output("testing", streaming_process, stop_func=send_ctrl_c)
 
     assert (
         capsys.readouterr().out == "output line 1\n"
@@ -63,14 +63,14 @@ def test_keyboard_interrupt(mock_sub, popen_process, capsys):
         "output line 3\n"
         "Stopping...\n"
     )
-    mock_sub.cleanup.assert_called_once_with("testing", popen_process)
+    mock_sub.cleanup.assert_called_once_with("testing", streaming_process)
 
 
-def test_process_exit_with_queued_output(mock_sub, popen_process, capsys):
+def test_process_exit_with_queued_output(mock_sub, streaming_process, capsys):
     """All output is printed despite the process exiting early."""
-    popen_process.poll.side_effect = [None, -3, -3, -3]
+    streaming_process.poll.side_effect = [None, -3, -3, -3]
 
-    mock_sub.stream_output("testing", popen_process)
+    mock_sub.stream_output("testing", streaming_process)
     # fmt: off
     assert capsys.readouterr().out == (
         "output line 1\n"
@@ -78,14 +78,14 @@ def test_process_exit_with_queued_output(mock_sub, popen_process, capsys):
         "output line 3\n"
     )
     # fmt: on
-    mock_sub.cleanup.assert_called_once_with("testing", popen_process)
+    mock_sub.cleanup.assert_called_once_with("testing", streaming_process)
 
 
 @pytest.mark.parametrize("stop_func_ret_val", (True, False))
-def test_stop_func(mock_sub, popen_process, stop_func_ret_val, capsys):
+def test_stop_func(mock_sub, streaming_process, stop_func_ret_val, capsys):
     """All output is printed whether stop_func aborts streaming or not."""
     mock_sub.stream_output(
-        "testing", popen_process, stop_func=lambda: stop_func_ret_val
+        "testing", streaming_process, stop_func=lambda: stop_func_ret_val
     )
     # fmt: off
     assert capsys.readouterr().out == (
@@ -94,10 +94,10 @@ def test_stop_func(mock_sub, popen_process, stop_func_ret_val, capsys):
         "output line 3\n"
     )
     # fmt: on
-    mock_sub.cleanup.assert_called_once_with("testing", popen_process)
+    mock_sub.cleanup.assert_called_once_with("testing", streaming_process)
 
 
-def test_stuck_streamer(mock_sub, popen_process, monkeypatch, capsys):
+def test_stuck_streamer(mock_sub, streaming_process, monkeypatch, capsys):
     """Following a KeyboardInterrupt, output streaming returns even if the
     output streamer becomes stuck."""
 
@@ -127,7 +127,7 @@ def test_stuck_streamer(mock_sub, popen_process, monkeypatch, capsys):
     send_ctrl_c = mock.MagicMock()
     send_ctrl_c.side_effect = [False, KeyboardInterrupt]
     with pytest.raises(KeyboardInterrupt):
-        mock_sub.stream_output("testing", popen_process, stop_func=send_ctrl_c)
+        mock_sub.stream_output("testing", streaming_process, stop_func=send_ctrl_c)
 
     # fmt: off
     assert capsys.readouterr().out == (
@@ -139,17 +139,17 @@ def test_stuck_streamer(mock_sub, popen_process, monkeypatch, capsys):
     monkeypatched_streamer_should_exit.set()
 
 
-def test_stdout_closes_unexpectedly(mock_sub, popen_process, monkeypatch, capsys):
+def test_stdout_closes_unexpectedly(mock_sub, streaming_process, monkeypatch, capsys):
     """Streamer silently exits from ValueError because stdout was closed."""
 
     def monkeypatch_ensure_str(value):
         """Close stdout when ensure_str() runs on output from readline()."""
-        popen_process.stdout.close()
+        streaming_process.stdout.close()
         return value
 
-    popen_process.stdout = StringIO(initial_value="output line 1\noutput line 2")
+    streaming_process.stdout = StringIO(initial_value="output line 1\noutput line 2")
     monkeypatch.setattr(subprocess, "ensure_str", monkeypatch_ensure_str)
 
-    mock_sub.stream_output("testing", popen_process)
+    mock_sub.stream_output("testing", streaming_process)
 
     assert capsys.readouterr().out == "output line 1\n"

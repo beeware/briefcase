@@ -265,7 +265,6 @@ class LinuxAppImageRunCommand(LinuxAppImagePassiveMixin, RunCommand):
                 [os.fsdecode(self.binary_path(app))],
                 check=True,
                 cwd=self.tools.home_path,
-                stream_output=True,
             )
         except KeyboardInterrupt:
             pass  # Catch CTRL-C to exit normally

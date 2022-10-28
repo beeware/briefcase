@@ -69,6 +69,7 @@ def test_installs_android_emulator(mock_tools, android_sdk):
         ],
         env=android_sdk.env,
         check=True,
+        stream_output=False,
     )
 
 
@@ -91,6 +92,7 @@ def test_partial_android_emulator_install(mock_tools, android_sdk):
         ],
         env=android_sdk.env,
         check=True,
+        stream_output=False,
     )
 
 

@@ -310,6 +310,7 @@ to enter your password (Briefcase will not store this password anywhere).
                 tools.subprocess.run(
                     ["sudo", "xcodebuild", "-license"],
                     check=True,
+                    stream_output=False,
                 )
             except subprocess.CalledProcessError as e:
                 # status code 1 - sudo fail

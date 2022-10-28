@@ -37,7 +37,6 @@ def test_run_app(first_app_config, tmp_path):
         ],
         cwd=tmp_path / "home",
         check=True,
-        stream_output=True,
     )
 
 
@@ -73,7 +72,6 @@ def test_run_app_failed(first_app_config, tmp_path):
         ],
         cwd=tmp_path / "home",
         check=True,
-        stream_output=True,
     )
 
 
@@ -108,7 +106,6 @@ def test_run_app_ctrl_c(first_app_config, tmp_path, capsys):
         ],
         cwd=tmp_path / "home",
         check=True,
-        stream_output=True,
     )
 
     # Shows the try block for KeyboardInterrupt was entered

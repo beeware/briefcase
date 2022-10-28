@@ -1,4 +1,5 @@
 import os
+import subprocess
 import sys
 from pathlib import Path
 from unittest.mock import ANY
@@ -11,7 +12,7 @@ def test_simple_call(mock_docker_app_context, tmp_path, capsys):
 
     mock_docker_app_context.run(["hello", "world"])
 
-    mock_docker_app_context.tools.subprocess._subprocess.run.assert_called_with(
+    mock_docker_app_context.tools.subprocess._subprocess.Popen.assert_called_with(
         [
             "docker",
             "run",
@@ -26,6 +27,9 @@ def test_simple_call(mock_docker_app_context, tmp_path, capsys):
         ],
         text=True,
         encoding=ANY,
+        bufsize=1,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
     )
     assert capsys.readouterr().out == (
         "\n"
@@ -48,7 +52,7 @@ def test_call_with_arg_and_env(mock_docker_app_context, tmp_path, capsys):
         universal_newlines=True,
     )
 
-    mock_docker_app_context.tools.subprocess._subprocess.run.assert_called_with(
+    mock_docker_app_context.tools.subprocess._subprocess.Popen.assert_called_with(
         [
             "docker",
             "run",
@@ -67,6 +71,9 @@ def test_call_with_arg_and_env(mock_docker_app_context, tmp_path, capsys):
         ],
         universal_newlines=True,
         encoding=ANY,
+        bufsize=1,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
     )
     assert capsys.readouterr().out == (
         "\n"
@@ -92,7 +99,7 @@ def test_call_with_path_arg_and_env(mock_docker_app_context, tmp_path, capsys):
         cwd=tmp_path / "cwd",
     )
 
-    mock_docker_app_context.tools.subprocess._subprocess.run.assert_called_with(
+    mock_docker_app_context.tools.subprocess._subprocess.Popen.assert_called_with(
         [
             "docker",
             "run",
@@ -112,6 +119,9 @@ def test_call_with_path_arg_and_env(mock_docker_app_context, tmp_path, capsys):
         cwd=os.fsdecode(tmp_path / "cwd"),
         text=True,
         encoding=ANY,
+        bufsize=1,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
     )
     assert capsys.readouterr().out == (
         "\n"
@@ -130,7 +140,7 @@ def test_simple_verbose_call(mock_docker_app_context, tmp_path, capsys):
 
     mock_docker_app_context.run(["hello", "world"])
 
-    mock_docker_app_context.tools.subprocess._subprocess.run.assert_called_with(
+    mock_docker_app_context.tools.subprocess._subprocess.Popen.assert_called_with(
         [
             "docker",
             "run",
@@ -145,6 +155,9 @@ def test_simple_verbose_call(mock_docker_app_context, tmp_path, capsys):
         ],
         text=True,
         encoding=ANY,
+        bufsize=1,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
     )
     assert capsys.readouterr().out == (
         "\n"
@@ -159,7 +172,7 @@ def test_simple_verbose_call(mock_docker_app_context, tmp_path, capsys):
         "hello world\n"
         ">>> Working Directory:\n"
         f">>>     {Path.cwd()}\n"
-        ">>> Return code: 3\n"
+        ">>> Return code: 0\n"
         "\n"
         "[myapp] Leaving Docker context\n"
     )
