@@ -53,6 +53,7 @@ def parse_cmdline(args):
             "update",
             "open",
             "build",
+            "test",
             "run",
             "package",
             "publish",

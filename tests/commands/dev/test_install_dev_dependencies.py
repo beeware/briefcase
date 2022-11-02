@@ -3,7 +3,7 @@ from subprocess import CalledProcessError
 
 import pytest
 
-from briefcase.commands.create import DependencyInstallError
+from briefcase.commands.base import DependencyInstallError
 
 
 def test_install_dependencies_no_error(dev_command, first_app):

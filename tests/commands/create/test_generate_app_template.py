@@ -26,6 +26,8 @@ def full_context():
         "version": "1.2.3",
         "description": "This is a simple app",
         "sources": ["src/my_app"],
+        "test_sources": None,
+        "test_requires": None,
         "url": "https://example.com",
         "author": "First Last",
         "author_email": "first@example.com",

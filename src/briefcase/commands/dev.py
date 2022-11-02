@@ -7,8 +7,8 @@ from typing import Optional
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError
 
-from .base import BaseCommand
-from .create import DependencyInstallError, write_dist_info
+from .base import BaseCommand, DependencyInstallError
+from .create import write_dist_info
 
 
 class DevCommand(BaseCommand):

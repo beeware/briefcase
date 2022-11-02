@@ -1,9 +1,6 @@
 import hashlib
-import os
 import platform
 import shutil
-import subprocess
-import sys
 from datetime import date
 from pathlib import Path
 from typing import Optional
@@ -43,17 +40,6 @@ This is likely because either Python {self.python_version_tag} and/or {self.host
 is not yet supported on {self.platform}. You will need to:
     * Use an older version of Python; or
     * Compile your own custom support package.
-"""
-        )
-
-
-class DependencyInstallError(BriefcaseCommandError):
-    def __init__(self):
-        super().__init__(
-            """\
-Unable to install dependencies. This may be because one of your
-dependencies is invalid, or because pip was unable to connect
-to the PyPI server.
 """
         )
 
@@ -412,92 +398,6 @@ class CreateCommand(BaseCommand):
                     host_arch=self.tools.host_arch,
                 ) from e
 
-    def _write_requirements_file(self, app: BaseConfig, requirements_path):
-        """Configure application dependencies by writing a requirements.txt
-        file.
-
-        :param app: The app configuration
-        :param requirements_path: The full path to a requirements.txt file that
-            will be written.
-        """
-        # Windows allows both / and \ as a path separator in requirements.
-        separators = [os.sep]
-        if os.altsep:
-            separators.append(os.altsep)
-
-        with self.input.wait_bar("Writing requirements file..."):
-            with requirements_path.open("w", encoding="utf-8") as f:
-                if app.requires:
-                    for requirement in app.requires:
-                        # If the requirement is a local path, convert it to
-                        # absolute, because Flatpak moves the requirements file
-                        # to a different place before using it.
-                        if any(sep in requirement for sep in separators) and (
-                            not _has_url(requirement)
-                        ):
-                            # We use os.path.abspath() rather than Path.resolve()
-                            # because we *don't* want Path's symlink resolving behavior.
-                            requirement = os.path.abspath(self.base_path / requirement)
-                        f.write(f"{requirement}\n")
-
-    def _extra_pip_args(self, app: BaseConfig):
-        """Any additional arguments that must be passed to pip when installing
-        packages.
-
-        :param app: The app configuration
-        :returns: A list of additional arguments
-        """
-        return []
-
-    def _install_app_dependencies(self, app: BaseConfig, app_packages_path):
-        """Install dependencies for the app with pip.
-
-        :param app: The app configuration
-        :param app_packages_path: The full path of the app_packages folder into which
-            dependencies should be installed.
-        """
-        # Clear existing dependency directory
-        if app_packages_path.is_dir():
-            self.tools.shutil.rmtree(app_packages_path)
-            self.tools.os.mkdir(app_packages_path)
-
-        # Install dependencies
-        if app.requires:
-            with self.input.wait_bar("Installing app dependencies..."):
-                # If there is a support package provided, add the cross-platform
-                # folder of the support package to the PYTHONPATH. This allows
-                # a support package to specify a sitecustomize.py that will make
-                # pip behave as if it was being run on the target platform.
-                pip_kwargs = {}
-                try:
-                    pip_kwargs["env"] = {
-                        "PYTHONPATH": str(self.support_path(app) / "platform-site"),
-                    }
-                except KeyError:
-                    pass
-
-                try:
-                    self.tools[app].app_context.run(
-                        [
-                            sys.executable,
-                            "-u",
-                            "-m",
-                            "pip",
-                            "install",
-                            "--upgrade",
-                            "--no-user",
-                            f"--target={app_packages_path}",
-                        ]
-                        + self._extra_pip_args(app)
-                        + app.requires,
-                        check=True,
-                        **pip_kwargs,
-                    )
-                except subprocess.CalledProcessError as e:
-                    raise DependencyInstallError() from e
-        else:
-            self.logger.info("No application dependencies.")
-
     def install_app_dependencies(self, app: BaseConfig):
         """Handle dependencies for the app.
 
@@ -513,12 +413,22 @@ class CreateCommand(BaseCommand):
         :param app: The config object for the app
         """
         try:
-            path = self.app_requirements_path(app)
-            self._write_requirements_file(app, path)
+            app_packages_path = self.app_requirements_path(app)
+            self.write_requirements_file(
+                "app",
+                app=app,
+                requires=app.requires,
+                requirements_path=app_packages_path,
+            )
         except KeyError:
             try:
-                path = self.app_packages_path(app)
-                self._install_app_dependencies(app, path)
+                app_packages_path = self.app_packages_path(app)
+                self.install_dependencies(
+                    "app",
+                    app=app,
+                    requires=app.requires,
+                    path=app_packages_path,
+                )
             except KeyError as e:
                 raise BriefcaseCommandError(
                     "Application path index file does not define "
@@ -796,18 +706,3 @@ class CreateCommand(BaseCommand):
                 state = self.create_app(app, **full_options(state, options))
 
         return state
-
-
-# Detects any of the URL schemes supported by pip
-# (https://pip.pypa.io/en/stable/topics/vcs-support/).
-def _has_url(requirement):
-    return any(
-        f"{scheme}:" in requirement
-        for scheme in (
-            ["http", "https", "file", "ftp"]
-            + ["git+file", "git+https", "git+ssh", "git+http", "git+git", "git"]
-            + ["hg+file", "hg+http", "hg+https", "hg+ssh", "hg+static-http"]
-            + ["svn", "svn+svn", "svn+http", "svn+https", "svn+ssh"]
-            + ["bzr+http", "bzr+https", "bzr+ssh", "bzr+sftp", "bzr+ftp", "bzr+lp"]
-        )
-    )
