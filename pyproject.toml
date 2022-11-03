@@ -6,7 +6,13 @@ build-backend = "setuptools.build_meta"
 parallel = true
 branch = true
 relative_files = true
-source = ["src/briefcase"]
+source_pkgs = ["briefcase"]
+
+[tool.coverage.paths]
+source = [
+    "src",
+    "**/site-packages",
+]
 
 [tool.coverage.report]
 show_missing = true
