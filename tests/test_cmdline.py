@@ -262,7 +262,7 @@ def test_bare_command_show_formats(monkeypatch, logger, console):
 
     assert excinfo.value.platform == "macOS"
     assert excinfo.value.default == "app"
-    assert set(excinfo.value.choices) == {"xcode", "app"}
+    assert set(excinfo.value.choices) == {"Xcode", "app"}
 
 
 def test_command_unknown_platform(monkeypatch, logger, console):
@@ -345,7 +345,7 @@ def test_command_explicit_platform_show_formats(monkeypatch, logger, console):
 
     assert excinfo.value.platform == "macOS"
     assert excinfo.value.default == "app"
-    assert set(excinfo.value.choices) == {"xcode", "app"}
+    assert set(excinfo.value.choices) == {"Xcode", "app"}
 
 
 def test_command_explicit_format(monkeypatch, logger, console):
@@ -370,7 +370,7 @@ def test_command_unknown_format(monkeypatch, logger, console):
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, "platform", "darwin")
 
-    expected_exc_regex = r"Invalid format 'foobar'; \(choose from: app, xcode\)"
+    expected_exc_regex = r"Invalid format 'foobar'; \(choose from: Xcode, app\)"
     with pytest.raises(InvalidFormatError, match=expected_exc_regex):
         do_cmdline_parse("create macOS foobar".split(), logger, console)
 
@@ -424,7 +424,7 @@ def test_command_explicit_format_show_formats(monkeypatch, logger, console):
 
     assert excinfo.value.platform == "macOS"
     assert excinfo.value.default == "app"
-    assert set(excinfo.value.choices) == {"xcode", "app"}
+    assert set(excinfo.value.choices) == {"Xcode", "app"}
 
 
 def test_command_disable_input(monkeypatch, logger, console):

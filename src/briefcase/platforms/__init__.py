@@ -17,10 +17,15 @@ def get_platforms():
 
 
 def get_output_formats(platform):
-    # Entry point section identifiers (briefcase.formats.macos) are always
-    # in lower case, regardless of how they're registered. However, the
-    # actual entry point names preserve case.
-    return {
-        entry_point.name: entry_point.load()
-        for entry_point in entry_points(group=f"briefcase.formats.{platform.lower()}")
-    }
+    # The values for output format entry points are the importable module names,
+    # which may not match the human-readable name. (e.g., the Xcode format is in
+    # the briefcase.platforms.macOS.xcode module). The human-readable names for
+    # formats must be extracted from the `output_format` attribute of a command
+    # *in* the module; every output format has a `create` command, so we use
+    # that.
+    output_formats = {}
+    for entry_point in entry_points(group=f"briefcase.formats.{platform}"):
+        module = entry_point.load()
+        output_formats[module.create.output_format] = module
+
+    return output_formats
