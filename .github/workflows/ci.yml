@@ -241,7 +241,7 @@ jobs:
       run: |
         cd tests/apps/verify-${{ matrix.framework }}
         briefcase create iOS
-        briefcase build iOS -d "iPhone SE (2nd generation)"
+        briefcase build iOS
         briefcase package iOS --adhoc-sign
     - name: Build Web App
       if: matrix.framework == 'toga'
