@@ -91,7 +91,7 @@ def test_new_download_oneshot(mock_tools, url, content_disposition):
 
     # Temporary file was upgraded to intended destination
     mock_tools.shutil.move.assert_called_with(mock.ANY, filename)
-    mock_tools.os.chmod.assert_called_with(filename, 0o664)
+    mock_tools.os.chmod.assert_called_with(filename, mock.ANY)
     mock_tools.os.remove.assert_called_with(mock.ANY)
 
     # File content is as expected
@@ -132,7 +132,7 @@ def test_new_download_chunked(mock_tools):
 
     # Temporary file was upgraded to intended destination
     mock_tools.shutil.move.assert_called_with(mock.ANY, filename)
-    mock_tools.os.chmod.assert_called_with(filename, 0o664)
+    mock_tools.os.chmod.assert_called_with(filename, mock.ANY)
     mock_tools.os.remove.assert_called_with(mock.ANY)
 
     # The downloaded file exists, and content is as expected

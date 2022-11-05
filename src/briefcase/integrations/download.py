@@ -1,3 +1,4 @@
+import os
 import tempfile
 from contextlib import suppress
 from email.message import Message
@@ -113,7 +114,9 @@ class Download:
                             progress_bar.update(task_id, advance=len(data))
 
             self.tools.shutil.move(temp_file.name, filename)
-            self.tools.os.chmod(filename, 0o664)
+            # retrieving the current umask requires changing it...
+            os.umask(current_umask := os.umask(0o022))
+            self.tools.os.chmod(filename, 0o664 & ~current_umask)
         finally:
             # Ensure the temporary file is deleted; this file may still
             # exist if the download fails or the user sends CTRL+C.
