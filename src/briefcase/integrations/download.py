@@ -76,34 +76,8 @@ class Download:
             if filename.exists():
                 self.tools.logger.info(f"{cache_name} already downloaded")
             else:
-                # We have meaningful content, and it hasn't been cached previously,
-                # so save it in the requested location
                 self.tools.logger.info(f"Downloading {cache_name}...")
-
-                # Using a temporary file avoids a partially downloaded file from
-                # masquerading as a complete file in later Briefcase runs
-                temp_file = tempfile.NamedTemporaryFile(delete=False)
-
-                try:
-                    total = response.headers.get("content-length")
-                    if total is None:
-                        temp_file.write(response.content)
-                    else:
-                        progress_bar = self.tools.input.progress_bar()
-                        task_id = progress_bar.add_task("Downloader", total=int(total))
-                        with progress_bar:
-                            for data in response.iter_content(chunk_size=1024 * 1024):
-                                temp_file.write(data)
-                                progress_bar.update(task_id, advance=len(data))
-
-                    self.tools.shutil.move(temp_file.name, filename)
-                    self.tools.os.chmod(filename, 0o664)
-                finally:
-                    # Ensure the temporary file is deleted; this file may still
-                    # exist if the download fails or the user sends CTRL+C.
-                    with suppress(OSError):
-                        self.tools.os.remove(temp_file.name)
-
+                self._fetch_and_write_content(response, filename)
         except requests_exceptions.ConnectionError as e:
             if role:
                 description = role
@@ -112,3 +86,36 @@ class Download:
             raise NetworkFailure(f"download {description}") from e
 
         return filename
+
+    def _fetch_and_write_content(self, response, filename):
+        """Write the content from the Requests response to file.
+
+        The data is written in to a temporary file in a filesystem location
+        designated by the platform. This avoids partially downloaded files
+        masquerading as complete downloads in later Briefcase runs.
+        The temporary file is only moved to ``filename`` if the download
+        is successful; otherwise, it is deleted.
+
+        :param response: ``requests.Response``
+        :param filename: full filesystem path to save data
+        """
+        try:
+            with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+                total = response.headers.get("content-length")
+                if total is None:
+                    temp_file.write(response.content)
+                else:
+                    progress_bar = self.tools.input.progress_bar()
+                    task_id = progress_bar.add_task("Downloader", total=int(total))
+                    with progress_bar:
+                        for data in response.iter_content(chunk_size=1024 * 1024):
+                            temp_file.write(data)
+                            progress_bar.update(task_id, advance=len(data))
+
+            self.tools.shutil.move(temp_file.name, filename)
+            self.tools.os.chmod(filename, 0o664)
+        finally:
+            # Ensure the temporary file is deleted; this file may still
+            # exist if the download fails or the user sends CTRL+C.
+            with suppress(OSError):
+                self.tools.os.remove(temp_file.name)
