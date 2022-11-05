@@ -1,3 +1,4 @@
+import shutil
 from unittest import mock
 
 import pytest
@@ -16,6 +17,8 @@ from briefcase.integrations.base import ToolCache
 @pytest.fixture
 def mock_tools(mock_tools) -> ToolCache:
     mock_tools.requests = mock.MagicMock(spec_set=requests)
+    # Restore move so the temporary file can be moved after downloaded
+    mock_tools.shutil.move = mock.MagicMock(wraps=shutil.move)
     return mock_tools
 
 
@@ -86,6 +89,11 @@ def test_new_download_oneshot(mock_tools, url, content_disposition):
     # The filename is derived from the URL or header
     assert filename == mock_tools.base_path / "downloads" / "something.zip"
 
+    # Temporary file was upgraded to intended destination
+    mock_tools.shutil.move.assert_called_with(mock.ANY, filename)
+    mock_tools.os.chmod.assert_called_with(filename, 0o664)
+    mock_tools.os.remove.assert_called_with(mock.ANY)
+
     # File content is as expected
     with (mock_tools.base_path / "downloads" / "something.zip").open() as f:
         assert f.read() == "all content"
@@ -121,6 +129,11 @@ def test_new_download_chunked(mock_tools):
 
     # The filename is derived from the URL
     assert filename == mock_tools.base_path / "something.zip"
+
+    # Temporary file was upgraded to intended destination
+    mock_tools.shutil.move.assert_called_with(mock.ANY, filename)
+    mock_tools.os.chmod.assert_called_with(filename, 0o664)
+    mock_tools.os.remove.assert_called_with(mock.ANY)
 
     # The downloaded file exists, and content is as expected
     assert filename.exists()
@@ -161,6 +174,11 @@ def test_already_downloaded(mock_tools):
     assert filename == existing_file
     assert filename.exists()
 
+    # Temporary file was not moved
+    mock_tools.shutil.move.assert_not_called()
+    mock_tools.os.chmod.assert_not_called()
+    mock_tools.os.remove.assert_not_called()
+
 
 def test_missing_resource(mock_tools):
     response = mock.MagicMock()
@@ -184,6 +202,11 @@ def test_missing_resource(mock_tools):
 
     # The file doesn't exist as a result of the download failure
     assert not (mock_tools.base_path / "something.zip").exists()
+
+    # Temporary file was not moved
+    mock_tools.shutil.move.assert_not_called()
+    mock_tools.os.chmod.assert_not_called()
+    mock_tools.os.remove.assert_not_called()
 
 
 def test_bad_resource(mock_tools):
@@ -209,6 +232,11 @@ def test_bad_resource(mock_tools):
     # The file doesn't exist as a result of the download failure
     assert not (mock_tools.base_path / "something.zip").exists()
 
+    # Temporary file was not moved
+    mock_tools.shutil.move.assert_not_called()
+    mock_tools.os.chmod.assert_not_called()
+    mock_tools.os.remove.assert_not_called()
+
 
 def test_get_connection_error(mock_tools):
     """NetworkFailure raises if requests.get() errors."""
@@ -232,6 +260,11 @@ def test_get_connection_error(mock_tools):
 
     # The file doesn't exist as a result of the download failure
     assert not (mock_tools.base_path / "something.zip").exists()
+
+    # Temporary file was not moved
+    mock_tools.shutil.move.assert_not_called()
+    mock_tools.os.chmod.assert_not_called()
+    mock_tools.os.remove.assert_not_called()
 
 
 def test_iter_content_connection_error(mock_tools):
@@ -259,6 +292,11 @@ def test_iter_content_connection_error(mock_tools):
 
     # The file doesn't exist as a result of the download failure
     assert not (mock_tools.base_path / "something.zip").exists()
+
+    # Temporary file was not moved but it was deleted
+    mock_tools.shutil.move.assert_not_called()
+    mock_tools.os.chmod.assert_not_called()
+    mock_tools.os.remove.assert_called_with(mock.ANY)
 
 
 def test_content_connection_error(mock_tools):
@@ -289,3 +327,8 @@ def test_content_connection_error(mock_tools):
 
     # The file doesn't exist as a result of the download failure
     assert not (mock_tools.base_path / "something.zip").exists()
+
+    # Temporary file was not moved but it was deleted
+    mock_tools.shutil.move.assert_not_called()
+    mock_tools.os.chmod.assert_not_called()
+    mock_tools.os.remove.assert_called_with(mock.ANY)
