@@ -89,19 +89,24 @@ class Download:
         return filename
 
     def _fetch_and_write_content(self, response, filename):
-        """Write the content from the Requests response to file.
+        """Write the content from the requests Response to file.
 
-        The data is written in to a temporary file in a filesystem location
-        designated by the platform. This avoids partially downloaded files
-        masquerading as complete downloads in later Briefcase runs.
-        The temporary file is only moved to ``filename`` if the download
-        is successful; otherwise, it is deleted.
+        The data is initially written in to a temporary file in the Briefcase
+        cache. This avoids partially downloaded files masquerading as complete
+        downloads in later Briefcase runs. The temporary file is only moved
+        to ``filename`` if the download is successful; otherwise, it is deleted.
 
         :param response: ``requests.Response``
         :param filename: full filesystem path to save data
         """
+        temp_file = tempfile.NamedTemporaryFile(
+            dir=filename.parent,
+            prefix=f"{filename.name}.",
+            suffix=".download",
+            delete=False,
+        )
         try:
-            with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+            with temp_file:
                 total = response.headers.get("content-length")
                 if total is None:
                     temp_file.write(response.content)
@@ -120,5 +125,5 @@ class Download:
         finally:
             # Ensure the temporary file is deleted; this file may still
             # exist if the download fails or the user sends CTRL+C.
-            with suppress(OSError):
+            with suppress(FileNotFoundError):
                 self.tools.os.remove(temp_file.name)

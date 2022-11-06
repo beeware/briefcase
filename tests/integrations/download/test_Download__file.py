@@ -301,7 +301,6 @@ def test_iter_content_connection_error(mock_tools):
 
 def test_content_connection_error(mock_tools):
     """NetworkFailure raised if response.content errors."""
-
     response = mock.MagicMock(spec=requests.Response)
     response.url = "https://example.com/support?useful=Yes"
     response.headers = mock.Mock(wraps=HTTPHeaderDict())
