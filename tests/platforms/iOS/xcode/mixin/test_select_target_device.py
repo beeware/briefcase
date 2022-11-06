@@ -52,7 +52,7 @@ def test_explicit_device_udid(dummy_command):
     udid, iOS_version, device = result
 
     assert udid == "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D"
-    assert iOS_version == "iOS 13.2"
+    assert iOS_version == "13.2"
     assert device == "iPhone 11"
 
 
@@ -78,7 +78,7 @@ def test_explicit_device_name_should_find_highest_version(dummy_command):
     udid, iOS_version, device = dummy_command.select_target_device("iphone 8")
 
     assert udid == "C9A005C8-9468-47C5-8376-68A6E3408209"
-    assert iOS_version == "iOS 13.2"
+    assert iOS_version == "13.2"
     assert device == "iPhone 8"
 
     # User input was not solicited
@@ -140,7 +140,7 @@ def test_explicit_device_name_and_version(dummy_command):
     udid, iOS_version, device = dummy_command.select_target_device("iphone 8::ios 10.3")
 
     assert udid == "68A6E340-8376-47C5-9468-C9A005C88209"
-    assert iOS_version == "iOS 10.3"
+    assert iOS_version == "10.3"
     assert device == "iPhone 8"
 
     # User input was not solicited
@@ -234,7 +234,7 @@ def test_implied_device(dummy_command):
     udid, iOS_version, device = dummy_command.select_target_device()
 
     assert udid == "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D"
-    assert iOS_version == "iOS 13.2"
+    assert iOS_version == "13.2"
     assert device == "iPhone 11"
 
     # No user input was solicited
@@ -258,7 +258,7 @@ def test_implied_os(dummy_command):
     udid, iOS_version, device = dummy_command.select_target_device()
 
     assert udid == "EEEBA06C-81F9-407C-885A-2261306DB2BE"
-    assert iOS_version == "iOS 13.2"
+    assert iOS_version == "13.2"
     assert device == "iPhone 11 Pro Max"
 
     # User input was solicited once
@@ -287,7 +287,7 @@ def test_multiple_os_implied_device(dummy_command):
     udid, iOS_version, device = dummy_command.select_target_device()
 
     assert udid == "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D"
-    assert iOS_version == "iOS 13.2"
+    assert iOS_version == "13.2"
     assert device == "iPhone 11"
 
     # User input was solicited once
@@ -317,7 +317,7 @@ def test_os_and_device_options(dummy_command):
     udid, iOS_version, device = dummy_command.select_target_device()
 
     assert udid == "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D"
-    assert iOS_version == "iOS 13.2"
+    assert iOS_version == "13.2"
     assert device == "iPhone 11"
 
     # User input was solicited twice

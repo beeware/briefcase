@@ -1,0 +1,1 @@
+It is no longer necessary to specify a device when building an iOS project.

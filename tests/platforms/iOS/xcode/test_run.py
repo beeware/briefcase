@@ -20,6 +20,13 @@ def run_command(tmp_path):
     )
 
 
+def test_device_option(run_command):
+    """The -d option can be parsed."""
+    options = run_command.parse_options(["-d", "myphone"])
+
+    assert options == {"udid": "myphone", "update": False, "appname": None}
+
+
 def test_run_multiple_devices_input_disabled(run_command, first_app_config):
     """If input is disabled, but there are multiple devices, an error is
     raised."""
