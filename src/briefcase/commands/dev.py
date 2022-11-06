@@ -91,6 +91,8 @@ class DevCommand(BaseCommand):
                 [
                     sys.executable,
                     "-u",
+                    "-X",
+                    "dev",
                     "-c",
                     (
                         "import runpy, sys;"

@@ -13,6 +13,8 @@ def test_subprocess_running_successfully(dev_command, first_app, tmp_path):
         [
             sys.executable,
             "-u",
+            "-X",
+            "dev",
             "-c",
             (
                 "import runpy, sys;"
@@ -39,6 +41,8 @@ def test_subprocess_throws_error(dev_command, first_app, tmp_path):
         [
             sys.executable,
             "-u",
+            "-X",
+            "dev",
             "-c",
             (
                 "import runpy, sys;"
