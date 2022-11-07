@@ -39,6 +39,19 @@ class iOSXcodePassiveMixin(iOSMixin):
     def project_path(self, app):
         return self.bundle_path(app) / f"{app.formal_name}.xcodeproj"
 
+    def _extra_pip_args(self, app: BaseConfig):
+        """Any additional arguments that must be passed to pip when installing
+        packages.
+
+        :param app: The app configuration
+        :returns: A list of additional arguments
+        """
+        return [
+            "--prefer-binary",
+            "--extra-index-url",
+            "https://pypi.anaconda.org/beeware/simple",
+        ]
+
     def info_plist_path(self, app: BaseConfig):
         """Obtain the path to the application's plist file.
 
@@ -261,19 +274,6 @@ or:
 
 class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
     description = "Create and populate a iOS Xcode project."
-
-    def _extra_pip_args(self, app: BaseConfig):
-        """Any additional arguments that must be passed to pip when installing
-        packages.
-
-        :param app: The app configuration
-        :returns: A list of additional arguments
-        """
-        return [
-            "--prefer-binary",
-            "--extra-index-url",
-            "https://pypi.anaconda.org/beeware/simple",
-        ]
 
 
 class iOSXcodeUpdateCommand(iOSXcodeCreateCommand, UpdateCommand):
