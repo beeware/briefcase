@@ -1,4 +1,8 @@
+import os
+import platform
 import shutil
+import stat
+from pathlib import Path
 from unittest import mock
 
 import pytest
@@ -13,6 +17,8 @@ from briefcase.exceptions import (
 )
 from briefcase.integrations.base import ToolCache
 
+TEMPORARY_DOWNLOAD_FILE_SUFFIX = ".download"
+
 
 @pytest.fixture
 def mock_tools(mock_tools) -> ToolCache:
@@ -20,6 +26,24 @@ def mock_tools(mock_tools) -> ToolCache:
     # Restore move so the temporary file can be moved after downloaded
     mock_tools.shutil.move = mock.MagicMock(wraps=shutil.move)
     return mock_tools
+
+
+@pytest.fixture
+def file_perms() -> int:
+    """The expected permissions for the downloaded file.
+
+    Since umask can vary on different systems, it is updated to a known
+    value and reset after the test finishes.
+
+    On Windows, the umask seems to always be zero and chmod doesn't really
+    do anything anyway.
+    """
+    if platform.system() == "Windows":
+        yield 0o666
+    else:
+        orig_umask = os.umask(0o077)
+        yield 0o600
+        os.umask(orig_umask)
 
 
 @pytest.mark.parametrize(
@@ -56,7 +80,7 @@ def mock_tools(mock_tools) -> ToolCache:
         ),
     ],
 )
-def test_new_download_oneshot(mock_tools, url, content_disposition):
+def test_new_download_oneshot(mock_tools, file_perms, url, content_disposition):
     response = mock.MagicMock(spec=requests.Response)
     response.url = url
     response.status_code = 200
@@ -89,17 +113,26 @@ def test_new_download_oneshot(mock_tools, url, content_disposition):
     # The filename is derived from the URL or header
     assert filename == mock_tools.base_path / "downloads" / "something.zip"
 
-    # Temporary file was upgraded to intended destination
-    mock_tools.shutil.move.assert_called_with(mock.ANY, filename)
-    mock_tools.os.chmod.assert_called_with(filename, mock.ANY)
-    mock_tools.os.remove.assert_called_with(mock.ANY)
+    # Temporary file was created in download dir and was renamed
+    temp_filename = Path(mock_tools.shutil.move.call_args_list[0].args[0])
+    assert temp_filename.parent == mock_tools.base_path / "downloads"
+    assert temp_filename.name.startswith("something.zip.")
+    assert temp_filename.name.endswith(TEMPORARY_DOWNLOAD_FILE_SUFFIX)
+    mock_tools.shutil.move.assert_called_with(str(temp_filename), filename)
+
+    # File permissions were set
+    mock_tools.os.chmod.assert_called_with(filename, file_perms)
+    assert stat.S_IMODE(os.stat(filename).st_mode) == file_perms
+
+    # Attempt to delete Temporary file was made
+    mock_tools.os.remove.assert_called_with(str(temp_filename))
 
     # File content is as expected
     with (mock_tools.base_path / "downloads" / "something.zip").open() as f:
         assert f.read() == "all content"
 
 
-def test_new_download_chunked(mock_tools):
+def test_new_download_chunked(mock_tools, file_perms):
     response = mock.MagicMock()
     response.url = "https://example.com/path/to/something.zip"
     response.status_code = 200
@@ -130,10 +163,19 @@ def test_new_download_chunked(mock_tools):
     # The filename is derived from the URL
     assert filename == mock_tools.base_path / "something.zip"
 
-    # Temporary file was upgraded to intended destination
-    mock_tools.shutil.move.assert_called_with(mock.ANY, filename)
-    mock_tools.os.chmod.assert_called_with(filename, mock.ANY)
-    mock_tools.os.remove.assert_called_with(mock.ANY)
+    # Temporary file was created in download dir and was renamed
+    temp_filename = Path(mock_tools.shutil.move.call_args_list[0].args[0])
+    assert temp_filename.parent == mock_tools.base_path
+    assert temp_filename.name.startswith("something.zip.")
+    assert temp_filename.name.endswith(TEMPORARY_DOWNLOAD_FILE_SUFFIX)
+    mock_tools.shutil.move.assert_called_with(str(temp_filename), filename)
+
+    # File permissions were set
+    mock_tools.os.chmod.assert_called_with(filename, file_perms)
+    assert stat.S_IMODE(os.stat(filename).st_mode) == file_perms
+
+    # Attempt to delete Temporary file was made
+    mock_tools.os.remove.assert_called_with(str(temp_filename))
 
     # The downloaded file exists, and content is as expected
     assert filename.exists()
@@ -174,7 +216,7 @@ def test_already_downloaded(mock_tools):
     assert filename == existing_file
     assert filename.exists()
 
-    # Temporary file was not moved
+    # Temporary file was not created, moved, or deleted
     mock_tools.shutil.move.assert_not_called()
     mock_tools.os.chmod.assert_not_called()
     mock_tools.os.remove.assert_not_called()
@@ -189,13 +231,13 @@ def test_missing_resource(mock_tools):
     # Download the file
     with pytest.raises(MissingNetworkResourceError):
         mock_tools.download.file(
-            url="https://example.com/support?useful=Yes",
+            url="https://example.com/something.zip?useful=Yes",
             download_path=mock_tools.base_path,
         )
 
     # requests.get has been invoked, but nothing else.
     mock_tools.requests.get.assert_called_with(
-        "https://example.com/support?useful=Yes",
+        "https://example.com/something.zip?useful=Yes",
         stream=True,
     )
     response.headers.get.assert_not_called()
@@ -203,7 +245,7 @@ def test_missing_resource(mock_tools):
     # The file doesn't exist as a result of the download failure
     assert not (mock_tools.base_path / "something.zip").exists()
 
-    # Temporary file was not moved
+    # Temporary file was not created, moved, or deleted
     mock_tools.shutil.move.assert_not_called()
     mock_tools.os.chmod.assert_not_called()
     mock_tools.os.remove.assert_not_called()
@@ -218,13 +260,13 @@ def test_bad_resource(mock_tools):
     # Download the file
     with pytest.raises(BadNetworkResourceError):
         mock_tools.download.file(
-            url="https://example.com/support?useful=Yes",
+            url="https://example.com/something.zip?useful=Yes",
             download_path=mock_tools.base_path,
         )
 
     # requests.get has been invoked, but nothing else.
     mock_tools.requests.get.assert_called_with(
-        "https://example.com/support?useful=Yes",
+        "https://example.com/something.zip?useful=Yes",
         stream=True,
     )
     response.headers.get.assert_not_called()
@@ -232,7 +274,7 @@ def test_bad_resource(mock_tools):
     # The file doesn't exist as a result of the download failure
     assert not (mock_tools.base_path / "something.zip").exists()
 
-    # Temporary file was not moved
+    # Temporary file was not created, moved, or deleted
     mock_tools.shutil.move.assert_not_called()
     mock_tools.os.chmod.assert_not_called()
     mock_tools.os.remove.assert_not_called()
@@ -245,23 +287,23 @@ def test_get_connection_error(mock_tools):
     # Download the file
     with pytest.raises(
         NetworkFailure,
-        match=r"Unable to download https\:\/\/example.com\/support\?useful=Yes",
+        match=r"Unable to download https\:\/\/example.com\/something\.zip\?useful=Yes",
     ):
         mock_tools.download.file(
-            url="https://example.com/support?useful=Yes",
+            url="https://example.com/something.zip?useful=Yes",
             download_path=mock_tools.base_path,
         )
 
     # requests.get has been invoked, but nothing else.
     mock_tools.requests.get.assert_called_with(
-        "https://example.com/support?useful=Yes",
+        "https://example.com/something.zip?useful=Yes",
         stream=True,
     )
 
     # The file doesn't exist as a result of the download failure
     assert not (mock_tools.base_path / "something.zip").exists()
 
-    # Temporary file was not moved
+    # Temporary file was not created, moved, or deleted
     mock_tools.shutil.move.assert_not_called()
     mock_tools.os.chmod.assert_not_called()
     mock_tools.os.remove.assert_not_called()
@@ -270,22 +312,22 @@ def test_get_connection_error(mock_tools):
 def test_iter_content_connection_error(mock_tools):
     """NetworkFailure raised if response.iter_content() errors."""
     response = mock.MagicMock(spec=requests.Response)
-    response.url = "https://example.com/support?useful=Yes"
+    response.url = "https://example.com/something.zip?useful=Yes"
     response.headers = mock.Mock(wraps=HTTPHeaderDict({"content-length": "100"}))
     response.status_code = 200
     response.iter_content.side_effect = requests.exceptions.ConnectionError
     mock_tools.requests.get.return_value = response
 
     # Download the file
-    with pytest.raises(NetworkFailure, match="Unable to download support"):
+    with pytest.raises(NetworkFailure, match="Unable to download something.zip"):
         mock_tools.download.file(
-            url="https://example.com/support?useful=Yes",
+            url="https://example.com/something.zip?useful=Yes",
             download_path=mock_tools.base_path,
         )
 
     # requests.get has been invoked, but nothing else.
     mock_tools.requests.get.assert_called_with(
-        "https://example.com/support?useful=Yes",
+        "https://example.com/something.zip?useful=Yes",
         stream=True,
     )
     response.headers.get.assert_called_with("content-length")
@@ -293,16 +335,22 @@ def test_iter_content_connection_error(mock_tools):
     # The file doesn't exist as a result of the download failure
     assert not (mock_tools.base_path / "something.zip").exists()
 
-    # Temporary file was not moved but it was deleted
+    # Temporary file was not moved
     mock_tools.shutil.move.assert_not_called()
     mock_tools.os.chmod.assert_not_called()
-    mock_tools.os.remove.assert_called_with(mock.ANY)
+
+    # Temporary file was created and named appropriately and then deleted
+    temp_filename = Path(mock_tools.os.remove.call_args_list[0].args[0])
+    assert temp_filename.parent == mock_tools.base_path
+    assert temp_filename.name.startswith("something.zip.")
+    assert temp_filename.name.endswith(TEMPORARY_DOWNLOAD_FILE_SUFFIX)
+    mock_tools.os.remove.assert_called_with(str(temp_filename))
 
 
 def test_content_connection_error(mock_tools):
     """NetworkFailure raised if response.content errors."""
     response = mock.MagicMock(spec=requests.Response)
-    response.url = "https://example.com/support?useful=Yes"
+    response.url = "https://example.com/something.zip?useful=Yes"
     response.headers = mock.Mock(wraps=HTTPHeaderDict())
     response.status_code = 200
     type(response).content = mock.PropertyMock(
@@ -311,15 +359,15 @@ def test_content_connection_error(mock_tools):
     mock_tools.requests.get.return_value = response
 
     # Download the file
-    with pytest.raises(NetworkFailure, match="Unable to download support"):
+    with pytest.raises(NetworkFailure, match="Unable to download something.zip"):
         mock_tools.download.file(
-            url="https://example.com/support?useful=Yes",
+            url="https://example.com/something.zip?useful=Yes",
             download_path=mock_tools.base_path,
         )
 
     # requests.get has been invoked, but nothing else.
     mock_tools.requests.get.assert_called_with(
-        "https://example.com/support?useful=Yes",
+        "https://example.com/something.zip?useful=Yes",
         stream=True,
     )
     response.headers.get.assert_called_with("content-length")
@@ -330,4 +378,10 @@ def test_content_connection_error(mock_tools):
     # Temporary file was not moved but it was deleted
     mock_tools.shutil.move.assert_not_called()
     mock_tools.os.chmod.assert_not_called()
-    mock_tools.os.remove.assert_called_with(mock.ANY)
+
+    # Temporary file was created and named appropriately and then deleted
+    temp_filename = Path(mock_tools.os.remove.call_args_list[0].args[0])
+    assert temp_filename.parent == mock_tools.base_path
+    assert temp_filename.name.startswith("something.zip.")
+    assert temp_filename.name.endswith(TEMPORARY_DOWNLOAD_FILE_SUFFIX)
+    mock_tools.os.remove.assert_called_with(str(temp_filename))
