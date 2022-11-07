@@ -4,8 +4,10 @@ import inspect
 import os
 import platform
 import subprocess
+import sys
 from abc import ABC, abstractmethod
 from pathlib import Path
+from typing import List, Optional
 
 from cookiecutter import exceptions as cookiecutter_exceptions
 from cookiecutter.repository import is_repo_url
@@ -104,6 +106,74 @@ def full_options(state, options):
         full = options
 
     return full
+
+
+# Detects any of the URL schemes supported by pip
+# (https://pip.pypa.io/en/stable/topics/vcs-support/).
+def _has_url(requirement):
+    return any(
+        f"{scheme}:" in requirement
+        for scheme in (
+            ["http", "https", "file", "ftp"]
+            + ["git+file", "git+https", "git+ssh", "git+http", "git+git", "git"]
+            + ["hg+file", "hg+http", "hg+https", "hg+ssh", "hg+static-http"]
+            + ["svn", "svn+svn", "svn+http", "svn+https", "svn+ssh"]
+            + ["bzr+http", "bzr+https", "bzr+ssh", "bzr+sftp", "bzr+ftp", "bzr+lp"]
+        )
+    )
+
+
+class DependencyInstallError(BriefcaseCommandError):
+    def __init__(self):
+        super().__init__(
+            """\
+Unable to install dependencies. This may be because one of your
+dependencies is invalid, or because pip was unable to connect
+to the PyPI server.
+"""
+        )
+
+
+class MissingAppSources(BriefcaseCommandError):
+    def __init__(self, src):
+        self.src = src
+        super().__init__(f"Application source {src!r} does not exist.")
+
+
+def write_dist_info(app: BaseConfig, dist_info_path: Path):
+    """Install the dist-info folder for the application.
+
+    :param app: The config object for the app
+    :param dist_info_path: The path into which the dist-info folder should be written.
+    """
+    # Create dist-info folder, and write a minimal metadata collection.
+    dist_info_path.mkdir(exist_ok=True)
+    with (dist_info_path / "INSTALLER").open("w", encoding="utf-8") as f:
+        f.write("briefcase\n")
+    with (dist_info_path / "WHEEL").open("w", encoding="utf-8") as f:
+        f.write("Wheel-Version: 1.0\n")
+        f.write("Root-Is-Purelib: true\n")
+        f.write(f"Generator: briefcase ({__version__})\n")
+        f.write("Tag: py3-none-any\n")
+    with (dist_info_path / "METADATA").open("w", encoding="utf-8") as f:
+        f.write("Metadata-Version: 2.1\n")
+        f.write(f"Briefcase-Version: {__version__}\n")
+        f.write(f"Name: {app.app_name}\n")
+        f.write(f"Formal-Name: {app.formal_name}\n")
+        f.write(f"App-ID: {app.bundle}.{app.app_name}\n")
+        f.write(f"Version: {app.version}\n")
+        if app.url:
+            f.write(f"Home-page: {app.url}\n")
+            f.write(f"Download-URL: {app.url}\n")
+        else:
+            f.write("Download-URL: \n")
+        if app.author:
+            f.write(f"Author: {app.author}\n")
+        if app.author_email:
+            f.write(f"Author-email: {app.author_email}\n")
+        f.write(f"Summary: {app.description}\n")
+    with (dist_info_path / "top_level.txt").open("w", encoding="utf-8") as f:
+        f.write(f"{app.module_name}\n")
 
 
 class BaseCommand(ABC):
@@ -732,3 +802,188 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
         except cookiecutter_exceptions.RepositoryCloneFailed as e:
             # Branch does not exist.
             raise TemplateUnsupportedVersion(branch) from e
+
+    def _write_requirements_file(
+        self,
+        app: BaseConfig,
+        requirements_path: Path,
+        requires: List[str],
+    ):
+        """Configure application dependencies by writing a requirements.txt
+        file.
+
+        :param app: The app configuration
+        :param requirements_path: The full path to a requirements.txt file that
+            will be written.
+        :param requires: The full list of requirements to install
+        """
+        # Windows allows both / and \ as a path separator in requirements.
+        separators = [os.sep]
+        if os.altsep:
+            separators.append(os.altsep)
+
+        with self.input.wait_bar("Writing requirements file..."):
+            with requirements_path.open("w", encoding="utf-8") as f:
+                if requires:
+                    for requirement in requires:
+                        # If the requirement is a local path, convert it to
+                        # absolute, because Flatpak moves the requirements file
+                        # to a different place before using it.
+                        if any(sep in requirement for sep in separators) and (
+                            not _has_url(requirement)
+                        ):
+                            # We use os.path.abspath() rather than Path.resolve()
+                            # because we *don't* want Path's symlink resolving behavior.
+                            requirement = os.path.abspath(self.base_path / requirement)
+                        f.write(f"{requirement}\n")
+
+    def _extra_pip_args(self, app: BaseConfig):
+        """Any additional arguments that must be passed to pip when installing
+        packages.
+
+        :param app: The app configuration
+        :returns: A list of additional arguments
+        """
+        return []
+
+    def _install_app_dependencies(
+        self,
+        app: BaseConfig,
+        app_packages_path: Path,
+        requires: List[str],
+    ):
+        """Install dependencies for the app with pip.
+
+        :param app: The app configuration
+        :param app_packages_path: The full path of the app_packages folder into which
+            dependencies should be installed.
+        :param requires: The full list of requirements to install
+        """
+        # Clear existing dependency directory
+        if app_packages_path.is_dir():
+            self.tools.shutil.rmtree(app_packages_path)
+            self.tools.os.mkdir(app_packages_path)
+
+        # Install dependencies
+        if requires:
+            with self.input.wait_bar("Installing app dependencies..."):
+                # If there is a support package provided, add the cross-platform
+                # folder of the support package to the PYTHONPATH. This allows
+                # a support package to specify a sitecustomize.py that will make
+                # pip behave as if it was being run on the target platform.
+                pip_kwargs = {}
+                try:
+                    pip_kwargs["env"] = {
+                        "PYTHONPATH": str(self.support_path(app) / "platform-site"),
+                    }
+                except KeyError:
+                    pass
+
+                try:
+                    self.tools[app].app_context.run(
+                        [
+                            sys.executable,
+                            "-u",
+                            "-m",
+                            "pip",
+                            "install",
+                            "--upgrade",
+                            "--no-user",
+                            f"--target={app_packages_path}",
+                        ]
+                        + self._extra_pip_args(app)
+                        + requires,
+                        check=True,
+                        **pip_kwargs,
+                    )
+                except subprocess.CalledProcessError as e:
+                    raise DependencyInstallError() from e
+        else:
+            self.logger.info("No application dependencies.")
+
+    def install_app_dependencies(
+        self,
+        app: BaseConfig,
+        extra_requires: Optional[List[str]] = None,
+    ):
+        """Handle dependencies for the app.
+
+        This will result in either (in preferential order):
+         * a requirements.txt file being written at a location specified by
+           ``app_requirements_path`` in the template path index
+         * dependencies being installed with pip into the location specified
+           by the ``app_packages_path`` in the template path index.
+
+        If the path index doesn't specify either of the path index entries,
+        an error is raised.
+
+        :param app: The config object for the app
+        :param extra_requires: Any additional requirements, on top of those
+            specified by ``app.requires``
+        """
+        # Build the full list of requirements
+        requires = app.requires if app.requires else []
+        if extra_requires:
+            requires.extend(extra_requires)
+
+        try:
+            app_requirements_path = self.app_requirements_path(app)
+            self._write_requirements_file(
+                app,
+                requirements_path=app_requirements_path,
+                requires=requires,
+            )
+        except KeyError:
+            try:
+                app_packages_path = self.app_packages_path(app)
+                self._install_app_dependencies(
+                    app,
+                    app_packages_path=app_packages_path,
+                    requires=requires,
+                )
+            except KeyError as e:
+                raise BriefcaseCommandError(
+                    "Application path index file does not define "
+                    "`app_requirements_path` or `app_packages_path`"
+                ) from e
+
+    def install_app_code(self, app: BaseConfig, extra_sources: List[str] = None):
+        """Install the application code into the bundle.
+
+        :param app: The config object for the app
+        :param extra_sources: Any additional sources to include, on top
+            of those defined by ``app.sources``
+        """
+        # Remove existing app folder if it exists
+        app_path = self.app_path(app)
+        if app_path.exists():
+            self.tools.shutil.rmtree(app_path)
+        self.tools.os.mkdir(app_path)
+
+        sources = app.sources if app.sources else []
+        if extra_sources:
+            sources.extend(extra_sources)
+
+        # Install app code.
+        if sources:
+            for src in sources:
+                with self.input.wait_bar(f"Installing {src}..."):
+                    original = self.base_path / src
+                    target = app_path / original.name
+
+                    # Install the new copy of the app code.
+                    if not original.exists():
+                        raise MissingAppSources(src)
+                    elif original.is_dir():
+                        self.tools.shutil.copytree(original, target)
+                    else:
+                        self.tools.shutil.copy(original, target)
+        else:
+            self.logger.info(f"No sources defined for {app.app_name}.")
+
+        # Write the dist-info folder for the application.
+        write_dist_info(
+            app=app,
+            dist_info_path=self.app_path(app)
+            / f"{app.module_name}-{app.version}.dist-info",
+        )

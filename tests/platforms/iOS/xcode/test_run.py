@@ -146,7 +146,7 @@ def test_run_app_simulator_booted(run_command, first_app_config, tmp_path):
         bufsize=1,
     )
     run_command.tools.subprocess.stream_output.assert_called_with(
-        "log stream", log_stream_process
+        "log stream", log_stream_process, filter_func=mock.ANY
     )
     run_command.tools.subprocess.cleanup.assert_called_with(
         "log stream", log_stream_process
@@ -253,7 +253,7 @@ def test_run_app_simulator_shut_down(run_command, first_app_config, tmp_path):
         bufsize=1,
     )
     run_command.tools.subprocess.stream_output.assert_called_with(
-        "log stream", log_stream_process
+        "log stream", log_stream_process, filter_func=mock.ANY
     )
     run_command.tools.subprocess.cleanup.assert_called_with(
         "log stream", log_stream_process
@@ -373,7 +373,7 @@ def test_run_app_simulator_shutting_down(run_command, first_app_config, tmp_path
         bufsize=1,
     )
     run_command.tools.subprocess.stream_output.assert_called_with(
-        "log stream", log_stream_process
+        "log stream", log_stream_process, filter_func=mock.ANY
     )
     run_command.tools.subprocess.cleanup.assert_called_with(
         "log stream", log_stream_process
@@ -750,7 +750,7 @@ def test_run_app_ctrl_c(run_command, first_app_config, tmp_path, capsys):
 
     # The log is being tailed and process cleanup is triggered
     run_command.tools.subprocess.stream_output.assert_called_with(
-        "log stream", log_stream_process
+        "log stream", log_stream_process, filter_func=mock.ANY
     )
     run_command.tools.subprocess.cleanup.assert_called_with(
         "log stream", log_stream_process

@@ -1,3 +1,5 @@
+import plistlib
+import signal
 import subprocess
 import time
 from uuid import UUID
@@ -9,11 +11,16 @@ from briefcase.commands import (
     PackageCommand,
     PublishCommand,
     RunCommand,
+    TestCommand,
     UpdateCommand,
 )
 from briefcase.config import BaseConfig
 from briefcase.console import InputDisabled, select_option
-from briefcase.exceptions import BriefcaseCommandError, InvalidDeviceError
+from briefcase.exceptions import (
+    BriefcaseCommandError,
+    InvalidDeviceError,
+    TestSuiteFailure,
+)
 from briefcase.integrations.xcode import DeviceState, get_device_state, get_simulators
 from briefcase.platforms.iOS import iOSMixin
 
@@ -31,6 +38,34 @@ class iOSXcodePassiveMixin(iOSMixin):
 
     def project_path(self, app):
         return self.bundle_path(app) / f"{app.formal_name}.xcodeproj"
+
+    def info_plist_path(self, app: BaseConfig):
+        """Obtain the path to the application's plist file.
+
+        :param app: The config object for the app
+        :return: The full path of the application's plist file.
+        """
+        # If the index file hasn't been loaded for this app, load it.
+        try:
+            path_index = self._path_index[app]
+        except KeyError:
+            path_index = self._load_path_index(app)
+        return self.bundle_path(app) / path_index["info_plist_path"]
+
+    def write_app_plist(self, app: BaseConfig, test_mode=False):
+        # Load the original plist
+        with self.info_plist_path(app).open("rb") as f:
+            info_plist = plistlib.load(f)
+
+        # If we're in test mode, change the name of the app module.
+        if test_mode:
+            info_plist["MainModule"] = f"tests.{app.module_name}"
+        else:
+            info_plist["MainModule"] = app.module_name
+
+        # Write the modified plist
+        with self.info_plist_path(app).open("wb") as f:
+            plistlib.dump(info_plist, f)
 
     def binary_path(self, app):
         return (
@@ -51,6 +86,8 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
         # External service APIs.
         # These are abstracted to enable testing without patching.
         self.get_simulators = get_simulators
+        self.get_device_state = get_device_state
+        self.sleep = time.sleep
 
     def add_options(self, parser):
         super().add_options(parser)
@@ -255,6 +292,9 @@ class iOSXcodeBuildCommand(iOSXcodePassiveMixin, BuildCommand):
 
         :param app: The application to build
         """
+        self.logger.info("Updating application metadata...", prefix=app.app_name)
+        self.write_app_plist(app=app)
+
         self.logger.info("Building XCode project...", prefix=app.app_name)
         with self.input.wait_bar("Building..."):
             try:
@@ -282,16 +322,204 @@ class iOSXcodeBuildCommand(iOSXcodePassiveMixin, BuildCommand):
                 ) from e
 
 
+class LogFilter:
+    def __init__(self, log_popen):
+        self.log_popen = log_popen
+        self.passed = None
+
+    def __call__(self, line):
+        if line.endswith(" >>>>>>>>>> Test Suite Passed <<<<<<<<<<\n"):
+            self.passed = True
+            self.log_popen.send_signal(signal.SIGINT)
+        elif line.endswith(" >>>>>>>>>> Test Suite Failed <<<<<<<<<<\n"):
+            self.passed = False
+            self.log_popen.send_signal(signal.SIGINT)
+        elif line.endswith(" >>>>>>>>>> App Terminated <<<<<<<<<<\n"):
+            self.passed = False
+            self.log_popen.send_signal(signal.SIGINT)
+        else:
+            return line
+
+
+class iOSXcodeTestCommand(iOSXcodeMixin, TestCommand):
+    description = "Test an iOS Xcode project."
+
+    def test_app(self, app: BaseConfig, udid=None, **kwargs):
+        """Test the Xcode project for the application.
+
+        :param app: The application to test
+        :param udid: The device UDID to target. If ``None``, the user will
+            be asked to select a device at runtime.
+        """
+        try:
+            udid, iOS_version, device = self.select_target_device(udid)
+        except InputDisabled as e:
+            raise BriefcaseCommandError(
+                "Input has been disabled; can't select a device to target."
+            ) from e
+
+        self.logger.info(
+            f"Targeting an {device} running iOS {iOS_version} (device UDID {udid})",
+            prefix=app.app_name,
+        )
+
+        """Test the Xcode project for the application.
+
+        :param app: The application to test
+        """
+        self.logger.info("Installing Test code...", prefix=app.app_name)
+        self.install_app_code(app=app, extra_sources=app.test_sources)
+
+        self.logger.info("Installing Test dependencies...", prefix=app.app_name)
+        self.install_app_dependencies(app=app, extra_requires=app.test_requires)
+
+        self.logger.info("Writing application test metadata...", prefix=app.app_name)
+        self.write_app_plist(app=app, test_mode=True)
+
+        self.logger.info("Building XCode Test project...", prefix=app.app_name)
+        with self.input.wait_bar("Building..."):
+            try:
+                self.tools.subprocess.run(
+                    [
+                        "xcodebuild",
+                        "build",
+                        "-project",
+                        self.project_path(app),
+                        "-destination",
+                        'platform="iOS Simulator"',
+                        "-configuration",
+                        "Debug",
+                        "-arch",
+                        self.tools.host_arch,
+                        "-sdk",
+                        "iphonesimulator",
+                        "-quiet",
+                    ],
+                    check=True,
+                )
+            except subprocess.CalledProcessError as e:
+                raise BriefcaseCommandError(
+                    f"Unable to build test app {app.app_name}."
+                ) from e
+
+        try:
+            # The simulator needs to be booted before being started.
+            # If it's shut down, we can boot it again; but if it's currently
+            # shutting down, we need to wait for it to shut down before restarting.
+            device_state = self.get_device_state(self.tools, udid)
+            if device_state not in {DeviceState.SHUTDOWN, DeviceState.BOOTED}:
+                with self.input.wait_bar("Waiting for simulator shutdown..."):
+                    while device_state not in {
+                        DeviceState.SHUTDOWN,
+                        DeviceState.BOOTED,
+                    }:
+                        self.sleep(2)
+                        device_state = self.get_device_state(self.tools, udid)
+
+            # We now know the simulator is either shut down or booted;
+            # if it's shut down, start it again.
+            if device_state == DeviceState.SHUTDOWN:
+                try:
+                    with self.input.wait_bar("Booting simulator..."):
+                        self.tools.subprocess.run(
+                            ["xcrun", "simctl", "boot", udid],
+                            check=True,
+                        )
+                except subprocess.CalledProcessError as e:
+                    raise BriefcaseCommandError(
+                        f"Unable to boot {device} simulator running {iOS_version}"
+                    ) from e
+
+            # Try to uninstall the app first. If the app hasn't been installed
+            # before, this will still succeed.
+            app_identifier = ".".join([app.bundle, app.app_name])
+            try:
+                self.logger.info("Installing app...", prefix=app.app_name)
+                with self.input.wait_bar("Uninstalling any existing app version..."):
+                    self.tools.subprocess.run(
+                        ["xcrun", "simctl", "uninstall", udid, app_identifier],
+                        check=True,
+                    )
+            except subprocess.CalledProcessError as e:
+                raise BriefcaseCommandError(
+                    f"Unable to uninstall old version of app {app.app_name}."
+                ) from e
+
+            # Install the app.
+            try:
+                with self.input.wait_bar("Installing new app version..."):
+                    self.tools.subprocess.run(
+                        ["xcrun", "simctl", "install", udid, self.binary_path(app)],
+                        check=True,
+                    )
+            except subprocess.CalledProcessError as e:
+                raise BriefcaseCommandError(
+                    f"Unable to install new version of app {app.app_name}."
+                ) from e
+
+            # Start the logger
+            self.logger.info("Starting logger...", prefix=app.app_name)
+            log_popen = self.tools.subprocess.Popen(
+                [
+                    "log",
+                    "stream",
+                    "--style",
+                    "compact",
+                    "--predicate",
+                    f'senderImagePath ENDSWITH "/{app.formal_name}"'
+                    f'OR (processImagePath ENDSWITH "/{app.formal_name}"'
+                    ' AND senderImagePath ENDSWITH "-iphonesimulator.so")',
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                bufsize=1,
+            )
+
+            # Wait for the log stream start up
+            time.sleep(0.25)
+
+            self.logger.info("Starting test app...", prefix=app.app_name)
+            try:
+                with self.input.wait_bar("Launching test app..."):
+                    self.tools.subprocess.run(
+                        ["xcrun", "simctl", "launch", udid, app_identifier],
+                        check=True,
+                    )
+            except subprocess.CalledProcessError as e:
+                raise BriefcaseCommandError(
+                    f"Unable to launch app {app.app_name}."
+                ) from e
+
+            test_suite_result = LogFilter(log_popen)
+
+            # Start streaming logs for the test.
+            self.logger.info("=" * 75)
+            self.tools.subprocess.stream_output(
+                "log stream",
+                log_popen,
+                filter_func=test_suite_result,
+            )
+            self.logger.info("=" * 75)
+
+            if test_suite_result.passed:
+                self.logger.info("Test suite passed!", prefix=app.app_name)
+            else:
+                if test_suite_result.passed is None:
+                    raise BriefcaseCommandError("Test suite didn't report a result.")
+                else:
+                    self.logger.error("Test suite failed!", prefix=app.app_name)
+                    raise TestSuiteFailure()
+        except KeyboardInterrupt:
+            pass  # Catch CTRL-C to exit normally
+        finally:
+            self.tools.subprocess.cleanup("log stream", log_popen)
+
+        # Preserve the device selection as state.
+        return {"udid": udid}
+
+
 class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
     description = "Run an iOS Xcode project."
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        # External service APIs.
-        # These are abstracted to enable testing without patching.
-        self.get_device_state = get_device_state
-        self.sleep = time.sleep
 
     def run_app(self, app: BaseConfig, udid=None, **kwargs):
         """Start the application.
@@ -430,8 +658,15 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                 "Following simulator log output (type CTRL-C to stop log)...",
                 prefix=app.app_name,
             )
+            log_monitor = LogFilter(simulator_log_popen)
+
             self.logger.info("=" * 75)
-            self.tools.subprocess.stream_output("log stream", simulator_log_popen)
+            self.tools.subprocess.stream_output(
+                "log stream",
+                simulator_log_popen,
+                filter_func=log_monitor,
+            )
+
         except KeyboardInterrupt:
             pass  # catch CTRL-C to exit normally
         finally:
@@ -456,6 +691,7 @@ create = iOSXcodeCreateCommand  # noqa
 update = iOSXcodeUpdateCommand  # noqa
 open = iOSXcodeOpenCommand  # noqa
 build = iOSXcodeBuildCommand  # noqa
+test = iOSXcodeTestCommand  # noqa
 run = iOSXcodeRunCommand  # noqa
 package = iOSXcodePackageCommand  # noqa
 publish = iOSXcodePublishCommand  # noqa

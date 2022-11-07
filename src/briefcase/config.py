@@ -304,6 +304,8 @@ class AppConfig(BaseConfig):
         document_type=None,
         template=None,
         template_branch=None,
+        test_sources=None,
+        test_requires=None,
         supported=True,
         **kwargs,
     ):
@@ -324,6 +326,8 @@ class AppConfig(BaseConfig):
         self.document_types = {} if document_type is None else document_type
         self.template = template
         self.template_branch = template_branch
+        self.test_sources = test_sources
+        self.test_requires = test_requires
         self.supported = supported
 
         if not is_valid_app_name(self.app_name):
@@ -403,7 +407,7 @@ def merge_config(config, data):
         is modified in-situ.
     :param data: The new configuration data to merge into the configuration.
     """
-    for option in ["requires", "sources"]:
+    for option in ["requires", "sources", "test_requires", "test_sources"]:
         value = data.pop(option, [])
 
         if value:

@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from briefcase.commands.create import cookiecutter_cache_path
+from briefcase.commands.base import cookiecutter_cache_path
 
 
 @pytest.mark.parametrize(
