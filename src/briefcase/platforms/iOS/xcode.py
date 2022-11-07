@@ -363,10 +363,6 @@ class iOSXcodeTestCommand(iOSXcodeMixin, TestCommand):
             prefix=app.app_name,
         )
 
-        """Test the Xcode project for the application.
-
-        :param app: The application to test
-        """
         self.logger.info("Installing Test code...", prefix=app.app_name)
         self.install_app_code(app=app, extra_sources=app.test_sources)
 

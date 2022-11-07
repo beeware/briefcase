@@ -5,6 +5,7 @@ from briefcase.commands import (
     PackageCommand,
     PublishCommand,
     RunCommand,
+    TestCommand,
     UpdateCommand,
 )
 from briefcase.config import BaseConfig
@@ -13,6 +14,7 @@ from briefcase.platforms.macOS import (
     macOSPackageMixin,
     macOSRunMixin,
     macOSSigningMixin,
+    macOSTestMixin,
 )
 
 
@@ -63,6 +65,23 @@ class macOSAppBuildCommand(macOSAppMixin, macOSSigningMixin, BuildCommand):
         self.sign_app(app=app, identity="-")
 
 
+class macOSAppTestCommand(
+    macOSTestMixin,
+    macOSSigningMixin,
+    macOSAppMixin,
+    TestCommand,
+):
+    description = "Test a macOS app."
+
+    def build_test_app(self, app: BaseConfig):
+        # macOS apps don't have anything to compile, but they do need to be
+        # signed to be able to execute on M1 hardware - even if it's only an
+        # adhoc signing identity. Apply an adhoc signing identity to the
+        # app bundle.
+        self.logger.info("Adhoc signing app...", prefix=app.app_name)
+        self.sign_app(app=app, identity="-")
+
+
 class macOSAppRunCommand(macOSRunMixin, macOSAppMixin, RunCommand):
     description = "Run a macOS app."
 
@@ -80,6 +99,7 @@ create = macOSAppCreateCommand  # noqa
 update = macOSAppUpdateCommand  # noqa
 open = macOSAppOpenCommand  # noqa
 build = macOSAppBuildCommand  # noqa
+test = macOSAppTestCommand  # noqa
 run = macOSAppRunCommand  # noqa
 package = macOSAppPackageCommand  # noqa
 publish = macOSAppPublishCommand  # noqa

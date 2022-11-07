@@ -1,15 +1,16 @@
 import os
+import plistlib
 import re
 import subprocess
 import time
 from contextlib import suppress
 from pathlib import Path
-from signal import SIGTERM
+from signal import SIGINT, SIGTERM
 from zipfile import ZipFile
 
 from briefcase.config import BaseConfig
 from briefcase.console import select_option
-from briefcase.exceptions import BriefcaseCommandError
+from briefcase.exceptions import BriefcaseCommandError, TestSuiteFailure
 from briefcase.integrations.subprocess import get_process_id_by_command, is_process_dead
 from briefcase.integrations.xcode import (
     get_identities,
@@ -29,6 +30,53 @@ DEFAULT_OUTPUT_FORMAT = "app"
 
 class macOSMixin:
     platform = "macOS"
+
+    def info_plist_path(self, app: BaseConfig):
+        """Obtain the path to the application's plist file.
+
+        :param app: The config object for the app
+        :return: The full path of the application's plist file.
+        """
+        # If the index file hasn't been loaded for this app, load it.
+        try:
+            path_index = self._path_index[app]
+        except KeyError:
+            path_index = self._load_path_index(app)
+        return self.bundle_path(app) / path_index["info_plist_path"]
+
+    def write_app_plist(self, app: BaseConfig, test_mode=False):
+        # Load the original plist
+        with self.info_plist_path(app).open("rb") as f:
+            info_plist = plistlib.load(f)
+
+        # If we're in test mode, change the name of the app module.
+        if test_mode:
+            info_plist["MainModule"] = f"tests.{app.module_name}"
+        else:
+            info_plist["MainModule"] = app.module_name
+
+        # Write the modified plist
+        with self.info_plist_path(app).open("wb") as f:
+            plistlib.dump(info_plist, f)
+
+
+class LogFilter:
+    def __init__(self, log_popen):
+        self.log_popen = log_popen
+        self.passed = None
+
+    def __call__(self, line):
+        if line.endswith(" >>>>>>>>>> Test Suite Passed <<<<<<<<<<\n"):
+            self.passed = True
+            self.log_popen.send_signal(SIGINT)
+        elif line.endswith(" >>>>>>>>>> Test Suite Failed <<<<<<<<<<\n"):
+            self.passed = False
+            self.log_popen.send_signal(SIGINT)
+        elif line.endswith(" >>>>>>>>>> App Terminated <<<<<<<<<<\n"):
+            self.passed = False
+            self.log_popen.send_signal(SIGINT)
+        else:
+            return line
 
 
 class macOSRunMixin:
@@ -625,3 +673,113 @@ password:
                         prefix=app.app_name,
                     )
                     self.notarize(dmg_path, team_id=team_id)
+
+
+class macOSTestMixin:
+    def test_app(self, app: BaseConfig, **kwargs):
+        self.logger.info("Installing Test code...", prefix=app.app_name)
+        self.install_app_code(app=app, extra_sources=app.test_sources)
+
+        self.logger.info("Installing Test dependencies...", prefix=app.app_name)
+        self.install_app_dependencies(app=app, extra_requires=app.test_requires)
+
+        self.logger.info("Writing application test metadata...", prefix=app.app_name)
+        self.write_app_plist(app=app, test_mode=True)
+
+        self.build_test_app(app=app)
+
+        # Start log stream for the app.
+        # Streaming the system log is... a mess. The system log contains a
+        # *lot* of noise from other processes; even if you filter by
+        # process, there's a lot of macOS-generated noise. It's very
+        # difficult to extract just the "user generated" stdout/err log
+        # messages.
+        #
+        # The following sets up a log stream filter that looks for:
+        #  1. a log sender that matches that app binary; or,
+        #  2. a log sender of libffi, and a process that matches the app binary.
+        # Case (1) works for pre-Python 3.9 static linked binaries.
+        # Case (2) works for Python 3.9+ dynamic linked binaries.
+        # It's not enough to filter on *just* the processImagePath,
+        # as the process will generate lots of system-level messages.
+        # We can't filter on *just* the senderImagePath, because other
+        # apps will generate log messages that would be caught by the filter.
+        try:
+            sender = os.fsdecode(
+                self.binary_path(app) / "Contents" / "MacOS" / app.formal_name
+            )
+            log_popen = self.tools.subprocess.Popen(
+                [
+                    "log",
+                    "stream",
+                    "--style",
+                    "compact",
+                    "--predicate",
+                    f'senderImagePath=="{sender}"'
+                    f' OR (processImagePath=="{sender}"'
+                    ' AND senderImagePath=="/usr/lib/libffi.dylib")',
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                bufsize=1,
+            )
+
+            # Wait for the log stream start up
+            time.sleep(0.25)
+
+            self.logger.info("Starting app...", prefix=app.app_name)
+            try:
+                self.tools.subprocess.run(
+                    [
+                        "open",
+                        "-n",  # Force a new app to be launched
+                        os.fsdecode(self.binary_path(app)),
+                    ],
+                    cwd=self.tools.home_path,
+                    env={"BRIEFCASE_HEADLESS": "1"},
+                    check=True,
+                )
+            except subprocess.CalledProcessError:
+                raise BriefcaseCommandError(f"Unable to start app {app.app_name}.")
+
+            # Find the App process ID so log streaming can exit when the app exits
+            app_pid = get_process_id_by_command(
+                command=str(self.binary_path(app)), logger=self.logger
+            )
+
+            if app_pid is None:
+                raise BriefcaseCommandError(
+                    f"Unable to find process for app {app.app_name} to start log streaming."
+                )
+
+            try:
+                test_suite_result = LogFilter(log_popen)
+                # Start streaming logs for the app.
+                self.logger.info("=" * 75)
+                self.tools.subprocess.stream_output(
+                    "log stream",
+                    log_popen,
+                    stop_func=lambda: is_process_dead(app_pid),
+                    filter_func=test_suite_result,
+                )
+                self.logger.info("=" * 75)
+
+                if test_suite_result.passed:
+                    self.logger.info("Test suite passed!", prefix=app.app_name)
+                else:
+                    if test_suite_result.passed is None:
+                        raise BriefcaseCommandError(
+                            "Test suite didn't report a result."
+                        )
+                    else:
+                        self.logger.error("Test suite failed!", prefix=app.app_name)
+                        raise TestSuiteFailure()
+            finally:
+                # Ensure the App also terminates when exiting
+                with suppress(ProcessLookupError):
+                    self.tools.os.kill(app_pid, SIGTERM)
+
+        except KeyboardInterrupt:
+            pass  # Catch CTRL-C to exit normally
+        finally:
+            self.tools.subprocess.cleanup("log stream", log_popen)
