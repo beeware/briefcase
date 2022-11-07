@@ -134,6 +134,14 @@ Or, if you were using a plugin stored as a local file::
 
     linuxdeploy_plugins = ["DEPLOY_GTK_VERSION=3 path/to/plugins/linuxdeploy-gtk-plugin.sh"]
 
+``dockerfile_extra_content``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Any additional Docker instructions that are required to configure the container
+used to build your Python app. For example, any dependencies that cannot be
+configured with ``apt-get`` could be installed. ``dockerfile_extra_content`` is
+string literal that will be added verbatim to the end of the project Dockerfile.
+
 Runtime issues with AppImages
 =============================
 
