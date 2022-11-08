@@ -721,10 +721,11 @@ class CreateCommand(BaseCommand):
         else:
             self.logger.info("No app content clean up required.")
 
-    def create_app(self, app: BaseConfig, **options):
+    def create_app(self, app: BaseConfig, test_mode: bool = False, **options):
         """Create an application bundle.
 
         :param app: The config object for the app
+        :param test_mode: Should the app be updated in test mode? (default: False)
         """
         if not app.supported:
             raise UnsupportedPlatform(self.platform)

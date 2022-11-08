@@ -1,15 +1,16 @@
 import os
+import plistlib
 import re
 import subprocess
 import time
 from contextlib import suppress
 from pathlib import Path
-from signal import SIGTERM
+from signal import SIGINT, SIGTERM
 from zipfile import ZipFile
 
 from briefcase.config import BaseConfig
 from briefcase.console import select_option
-from briefcase.exceptions import BriefcaseCommandError
+from briefcase.exceptions import BriefcaseCommandError, TestSuiteFailure
 from briefcase.integrations.subprocess import get_process_id_by_command, is_process_dead
 from briefcase.integrations.xcode import (
     get_identities,
@@ -31,11 +32,59 @@ class macOSMixin:
     platform = "macOS"
 
 
+class macOSBuildMixin:
+    def info_plist_path(self, app: BaseConfig):
+        """Obtain the path to the application's plist file.
+
+        :param app: The config object for the app
+        :return: The full path of the application's plist file.
+        """
+        # If the index file hasn't been loaded for this app, load it.
+        try:
+            path_index = self._path_index[app]
+        except KeyError:
+            path_index = self._load_path_index(app)
+        return self.bundle_path(app) / path_index["info_plist_path"]
+
+    def update_app_metadata(self, app: BaseConfig, test_mode: bool):
+        with self.input.wait_bar("Setting main module..."):
+            # Load the original plist
+            with self.info_plist_path(app).open("rb") as f:
+                info_plist = plistlib.load(f)
+
+            # If we're in test mode, change the name of the app module.
+            if test_mode:
+                info_plist["MainModule"] = f"tests.{app.module_name}"
+            else:
+                info_plist["MainModule"] = app.module_name
+
+            # Write the modified plist
+            with self.info_plist_path(app).open("wb") as f:
+                plistlib.dump(info_plist, f)
+
+
+class LogFilter:
+    def __init__(self, log_popen):
+        self.log_popen = log_popen
+        self.test_suite_passed = None
+
+    def __call__(self, line):
+        if line.endswith(" >>>>>>>>>> Test Suite Passed <<<<<<<<<<\n"):
+            self.test_suite_passed = True
+            self.log_popen.send_signal(SIGINT)
+        elif line.endswith(" >>>>>>>>>> Test Suite Failed <<<<<<<<<<\n"):
+            self.test_suite_passed = False
+            self.log_popen.send_signal(SIGINT)
+        else:
+            return line
+
+
 class macOSRunMixin:
-    def run_app(self, app: BaseConfig, **kwargs):
+    def run_app(self, app: BaseConfig, test_mode: bool, **kwargs):
         """Start the application.
 
         :param app: The config object for the app
+        :param test_mode: Boolean; Is the app running in test mode?
         """
         # Start log stream for the app.
         # Streaming the system log is... a mess. The system log contains a
@@ -78,6 +127,11 @@ class macOSRunMixin:
         try:
             self.logger.info("Starting app...", prefix=app.app_name)
             try:
+                if test_mode:
+                    kwargs = {"env": {"HEADLESS": "1"}}
+                else:
+                    kwargs = {}
+
                 self.tools.subprocess.run(
                     [
                         "open",
@@ -86,6 +140,7 @@ class macOSRunMixin:
                     ],
                     cwd=self.tools.home_path,
                     check=True,
+                    **kwargs,
                 )
             except subprocess.CalledProcessError:
                 raise BriefcaseCommandError(f"Unable to start app {app.app_name}.")
@@ -100,12 +155,31 @@ class macOSRunMixin:
                     f"Unable to find process for app {app.app_name} to start log streaming."
                 )
 
+            log_filter = LogFilter(log_popen)
             try:
                 # Start streaming logs for the app.
                 self.logger.info("=" * 75)
                 self.tools.subprocess.stream_output(
-                    "log stream", log_popen, stop_func=lambda: is_process_dead(app_pid)
+                    "log stream",
+                    log_popen,
+                    stop_func=lambda: is_process_dead(app_pid),
+                    filter_func=log_filter,
                 )
+
+                # If we're in test mode, and log streaming ends,
+                # check for the status of the test suite.
+                if test_mode:
+                    self.logger.info("=" * 75)
+                    if log_filter.test_suite_passed:
+                        self.logger.info("Test suite passed!", prefix=app.app_name)
+                    else:
+                        if log_filter.test_suite_passed is None:
+                            raise BriefcaseCommandError(
+                                "Test suite didn't report a result."
+                            )
+                        else:
+                            self.logger.error("Test suite failed!", prefix=app.app_name)
+                            raise TestSuiteFailure()
             finally:
                 # Ensure the App also terminates when exiting
                 with suppress(ProcessLookupError):

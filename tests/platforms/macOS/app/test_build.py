@@ -25,7 +25,7 @@ def build_command(tmp_path):
 def test_build_app(build_command, first_app_with_binaries):
     """A macOS App is adhoc signed as part of the build process."""
     # Build the app
-    build_command.build_app(first_app_with_binaries)
+    build_command.build_app(first_app_with_binaries, test_mode=False)
 
     # A request has been made to sign the app
     build_command.sign_app.assert_called_once_with(

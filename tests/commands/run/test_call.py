@@ -21,7 +21,7 @@ def test_no_args_one_app(run_command, first_app):
         # Tools are verified
         ("verify",),
         # Run the first app
-        ("run", "first", {}),
+        ("run", "first", False, {}),
     ]
 
 
@@ -64,7 +64,7 @@ def test_with_arg_one_app(run_command, first_app):
         # Tools are verified
         ("verify",),
         # Run the first app
-        ("run", "first", {}),
+        ("run", "first", False, {}),
     ]
 
 
@@ -87,7 +87,7 @@ def test_with_arg_two_apps(run_command, first_app, second_app):
         # Tools are verified
         ("verify",),
         # Run the second app
-        ("run", "second", {}),
+        ("run", "second", False, {}),
     ]
 
 
@@ -131,10 +131,15 @@ def test_create_app_before_start(run_command, first_app_config):
         # Tools are verified
         ("verify",),
         # App doesn't exist, so it will be created and built
-        ("create", "first", {}),
-        ("build", "first", {"create_state": "first"}),
+        ("create", "first", False, {}),
+        ("build", "first", False, {"create_state": "first"}),
         # Then, it will be started
-        ("run", "first", {"create_state": "first", "build_state": "first"}),
+        (
+            "run",
+            "first",
+            False,
+            {"create_state": "first", "build_state": "first"},
+        ),
     ]
 
 
@@ -156,9 +161,9 @@ def test_build_app_before_start(run_command, first_app_uncompiled):
         # Tools are verified
         ("verify",),
         # A build was requested
-        ("build", "first", {}),
+        ("build", "first", False, {}),
         # Then, it will be started
-        ("run", "first", {"build_state": "first"}),
+        ("run", "first", False, {"build_state": "first"}),
     ]
 
 
@@ -180,10 +185,15 @@ def test_update_app(run_command, first_app):
         # Tools are verified
         ("verify",),
         # An update was requested
-        ("update", "first", {}),
-        ("build", "first", {"update_state": "first"}),
+        ("update", "first", False, {}),
+        ("build", "first", False, {"update_state": "first"}),
         # Then, it will be started
-        ("run", "first", {"update_state": "first", "build_state": "first"}),
+        (
+            "run",
+            "first",
+            False,
+            {"update_state": "first", "build_state": "first"},
+        ),
     ]
 
 
@@ -205,10 +215,15 @@ def test_update_uncompiled_app(run_command, first_app_uncompiled):
         # Tools are verified
         ("verify",),
         # An update was requested
-        ("update", "first", {}),
-        ("build", "first", {"update_state": "first"}),
+        ("update", "first", False, {}),
+        ("build", "first", False, {"update_state": "first"}),
         # Then, it will be started
-        ("run", "first", {"update_state": "first", "build_state": "first"}),
+        (
+            "run",
+            "first",
+            False,
+            {"update_state": "first", "build_state": "first"},
+        ),
     ]
 
 
@@ -230,8 +245,13 @@ def test_update_non_existent(run_command, first_app_config):
         # Tools are verified
         ("verify",),
         # App doesn't exist, so it will be created and built
-        ("create", "first", {}),
-        ("build", "first", {"create_state": "first"}),
+        ("create", "first", False, {}),
+        ("build", "first", False, {"create_state": "first"}),
         # Then, it will be started
-        ("run", "first", {"create_state": "first", "build_state": "first"}),
+        (
+            "run",
+            "first",
+            False,
+            {"create_state": "first", "build_state": "first"},
+        ),
     ]

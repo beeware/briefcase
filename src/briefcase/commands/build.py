@@ -20,34 +20,45 @@ class BuildCommand(BaseCommand):
         """
         # Default implementation; nothing to build.
 
-    def _build_app(self, app: BaseConfig, update: bool, **options):
+    def _build_app(
+        self,
+        app: BaseConfig,
+        update: bool,
+        test_mode: bool = False,
+        **options,
+    ):
         """Internal method to invoke a build on a single app. Ensures the app
         exists, and has been updated (if requested) before attempting to issue
         the actual build command.
 
         :param app: The application to build?
         :param update: Should the application be updated first?
+        :param test_mode: Is the app being build in test mode? (Default: False)
         """
         target_file = self.bundle_path(app)
         if not target_file.exists():
-            state = self.create_command(app, **options)
+            state = self.create_command(app, test_mode=test_mode, **options)
         elif update:
-            state = self.update_command(app, **options)
+            state = self.update_command(app, test_mode=test_mode, **options)
         else:
             state = None
 
         self.verify_app_tools(app)
 
-        state = self.build_app(app, **full_options(state, options))
+        state = self.build_app(app, test_mode=test_mode, **full_options(state, options))
 
+        qualifier = " (test mode)" if test_mode else ""
         self.logger.info(
-            f"Built {self.binary_path(app).relative_to(self.base_path)}",
+            f"Built {self.binary_path(app).relative_to(self.base_path)}{qualifier}",
             prefix=app.app_name,
         )
         return state
 
     def __call__(
-        self, app: Optional[BaseConfig] = None, update: bool = False, **options
+        self,
+        app: Optional[BaseConfig] = None,
+        update: bool = False,
+        **options,
     ):
         # Confirm all required tools are available
         self.verify_tools()

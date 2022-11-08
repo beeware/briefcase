@@ -36,23 +36,23 @@ class DummyRunCommand(RunCommand):
         super().verify_tools()
         self.actions.append(("verify",))
 
-    def run_app(self, app, **kwargs):
-        self.actions.append(("run", app.app_name, kwargs))
+    def run_app(self, app, test_mode, **kwargs):
+        self.actions.append(("run", app.app_name, test_mode, kwargs))
         return full_options({"run_state": app.app_name}, kwargs)
 
     # These commands override the default behavior, simply tracking that
     # they were invoked, rather than instantiating a Create/Update/Build command.
     # This is for testing purposes.
-    def create_command(self, app, **kwargs):
-        self.actions.append(("create", app.app_name, kwargs))
+    def create_command(self, app, test_mode, **kwargs):
+        self.actions.append(("create", app.app_name, test_mode, kwargs))
         return full_options({"create_state": app.app_name}, kwargs)
 
-    def update_command(self, app, **kwargs):
-        self.actions.append(("update", app.app_name, kwargs))
+    def update_command(self, app, test_mode, **kwargs):
+        self.actions.append(("update", app.app_name, test_mode, kwargs))
         return full_options({"update_state": app.app_name}, kwargs)
 
-    def build_command(self, app, **kwargs):
-        self.actions.append(("build", app.app_name, kwargs))
+    def build_command(self, app, test_mode, **kwargs):
+        self.actions.append(("build", app.app_name, test_mode, kwargs))
         return full_options({"build_state": app.app_name}, kwargs)
 
 

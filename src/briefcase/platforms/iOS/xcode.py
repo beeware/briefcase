@@ -1,5 +1,7 @@
+import plistlib
 import subprocess
 import time
+from signal import SIGINT
 from uuid import UUID
 
 from briefcase.commands import (
@@ -13,7 +15,11 @@ from briefcase.commands import (
 )
 from briefcase.config import BaseConfig
 from briefcase.console import InputDisabled, select_option
-from briefcase.exceptions import BriefcaseCommandError, InvalidDeviceError
+from briefcase.exceptions import (
+    BriefcaseCommandError,
+    InvalidDeviceError,
+    TestSuiteFailure,
+)
 from briefcase.integrations.xcode import DeviceState, get_device_state, get_simulators
 from briefcase.platforms.iOS import iOSMixin
 
@@ -250,11 +256,44 @@ class iOSXcodeOpenCommand(iOSXcodePassiveMixin, OpenCommand):
 class iOSXcodeBuildCommand(iOSXcodePassiveMixin, BuildCommand):
     description = "Build an iOS Xcode project."
 
-    def build_app(self, app: BaseConfig, **kwargs):
+    def info_plist_path(self, app: BaseConfig):
+        """Obtain the path to the application's plist file.
+
+        :param app: The config object for the app
+        :return: The full path of the application's plist file.
+        """
+        # If the index file hasn't been loaded for this app, load it.
+        try:
+            path_index = self._path_index[app]
+        except KeyError:
+            path_index = self._load_path_index(app)
+        return self.bundle_path(app) / path_index["info_plist_path"]
+
+    def update_app_metadata(self, app: BaseConfig, test_mode: bool):
+        with self.input.wait_bar("Setting main module..."):
+            # Load the original plist
+            with self.info_plist_path(app).open("rb") as f:
+                info_plist = plistlib.load(f)
+
+            # If we're in test mode, change the name of the app module.
+            if test_mode:
+                info_plist["MainModule"] = f"tests.{app.module_name}"
+            else:
+                info_plist["MainModule"] = app.module_name
+
+            # Write the modified plist
+            with self.info_plist_path(app).open("wb") as f:
+                plistlib.dump(info_plist, f)
+
+    def build_app(self, app: BaseConfig, test_mode: bool = False, **kwargs):
         """Build the Xcode project for the application.
 
         :param app: The application to build
+        :param test_mode: Should the app be updated in test mode? (default: False)
         """
+        self.logger.info("Updating app metadata...", prefix=app.app_name)
+        self.update_app_metadata(app=app, test_mode=test_mode)
+
         self.logger.info("Building XCode project...", prefix=app.app_name)
         with self.input.wait_bar("Building..."):
             try:
@@ -282,6 +321,22 @@ class iOSXcodeBuildCommand(iOSXcodePassiveMixin, BuildCommand):
                 ) from e
 
 
+class LogFilter:
+    def __init__(self, log_popen):
+        self.log_popen = log_popen
+        self.test_suite_passed = None
+
+    def __call__(self, line):
+        if line.endswith(" >>>>>>>>>> Test Suite Passed <<<<<<<<<<\n"):
+            self.test_suite_passed = True
+            self.log_popen.send_signal(SIGINT)
+        elif line.endswith(" >>>>>>>>>> Test Suite Failed <<<<<<<<<<\n"):
+            self.test_suite_passed = False
+            self.log_popen.send_signal(SIGINT)
+        else:
+            return line
+
+
 class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
     description = "Run an iOS Xcode project."
 
@@ -293,10 +348,11 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         self.get_device_state = get_device_state
         self.sleep = time.sleep
 
-    def run_app(self, app: BaseConfig, udid=None, **kwargs):
+    def run_app(self, app: BaseConfig, test_mode: bool, udid=None, **kwargs):
         """Start the application.
 
         :param app: The config object for the app
+        :param test_mode: Boolean; Is the app running in test mode?
         :param udid: The device UDID to target. If ``None``, the user will
             be asked to select a device at runtime.
         """
@@ -307,8 +363,13 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                 "Input has been disabled; can't select a device to target."
             ) from e
 
+        if test_mode:
+            label = "test suite"
+        else:
+            label = "app"
+
         self.logger.info(
-            f"Starting app on an {device} running iOS {iOS_version} (device UDID {udid})",
+            f"Starting {label} on an {device} running iOS {iOS_version} (device UDID {udid})",
             prefix=app.app_name,
         )
 
@@ -336,23 +397,32 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                     f"Unable to boot {device} simulator running {iOS_version}"
                 ) from e
 
-        # We now know the simulator is *running*, so we can open it.
-        try:
-            with self.input.wait_bar("Opening simulator..."):
-                self.tools.subprocess.run(
-                    ["open", "-a", "Simulator", "--args", "-CurrentDeviceUDID", udid],
-                    check=True,
-                )
-        except subprocess.CalledProcessError as e:
-            raise BriefcaseCommandError(
-                f"Unable to open {device} simulator running {iOS_version}"
-            ) from e
+        if not test_mode:
+            # We now know the simulator is *running*, so we can open it.
+            # We don't need to open the simulator to run the test suite.
+            try:
+                with self.input.wait_bar("Opening simulator..."):
+                    self.tools.subprocess.run(
+                        [
+                            "open",
+                            "-a",
+                            "Simulator",
+                            "--args",
+                            "-CurrentDeviceUDID",
+                            udid,
+                        ],
+                        check=True,
+                    )
+            except subprocess.CalledProcessError as e:
+                raise BriefcaseCommandError(
+                    f"Unable to open {device} simulator running {iOS_version}"
+                ) from e
 
         # Try to uninstall the app first. If the app hasn't been installed
         # before, this will still succeed.
+        self.logger.info(f"Installing {label}...", prefix=app.app_name)
         app_identifier = ".".join([app.bundle, app.app_name])
         try:
-            self.logger.info("Installing app...", prefix=app.app_name)
             with self.input.wait_bar("Uninstalling any existing app version..."):
                 self.tools.subprocess.run(
                     ["xcrun", "simctl", "uninstall", udid, app_identifier],
@@ -413,16 +483,16 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         self.sleep(0.25)
 
         try:
-            self.logger.info("Starting app...", prefix=app.app_name)
+            self.logger.info(f"Starting {label}...", prefix=app.app_name)
             try:
-                with self.input.wait_bar("Launching app..."):
+                with self.input.wait_bar(f"Launching {label}..."):
                     self.tools.subprocess.run(
                         ["xcrun", "simctl", "launch", udid, app_identifier],
                         check=True,
                     )
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
-                    f"Unable to launch app {app.app_name}."
+                    f"Unable to launch {label} {app.app_name}."
                 ) from e
 
             # Start streaming logs for the app.
@@ -430,8 +500,30 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                 "Following simulator log output (type CTRL-C to stop log)...",
                 prefix=app.app_name,
             )
+
+            log_filter = LogFilter(simulator_log_popen)
             self.logger.info("=" * 75)
-            self.tools.subprocess.stream_output("log stream", simulator_log_popen)
+            self.tools.subprocess.stream_output(
+                "log stream",
+                simulator_log_popen,
+                filter_func=log_filter,
+            )
+
+            # If we're in test mode, and log streaming ends,
+            # check for the status of the test suite.
+            if test_mode:
+                self.logger.info("=" * 75)
+                if log_filter.test_suite_passed:
+                    self.logger.info("Test suite passed!", prefix=app.app_name)
+                else:
+                    if log_filter.test_suite_passed is None:
+                        raise BriefcaseCommandError(
+                            "Test suite didn't report a result."
+                        )
+                    else:
+                        self.logger.error("Test suite failed!", prefix=app.app_name)
+                        raise TestSuiteFailure()
+
         except KeyboardInterrupt:
             pass  # catch CTRL-C to exit normally
         finally:

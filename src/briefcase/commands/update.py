@@ -28,6 +28,7 @@ class UpdateCommand(CreateCommand):
         app: BaseConfig,
         update_dependencies=False,
         update_resources=False,
+        test_mode=False,
         **options,
     ):
         """Update an existing application bundle.
@@ -35,6 +36,7 @@ class UpdateCommand(CreateCommand):
         :param app: The config object for the app
         :param update_dependencies: Should dependencies be updated? (default: False)
         :param update_resources: Should extra resources be updated? (default: False)
+        :param test_mode: Should the app be updated in test mode? (default: False)
         """
 
         bundle_path = self.bundle_path(app)

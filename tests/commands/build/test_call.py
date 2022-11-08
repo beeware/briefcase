@@ -19,7 +19,7 @@ def test_specific_app(build_command, first_app, second_app):
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Build the first app; no state
-        ("build", "first", {}),
+        ("build", "first", False, {}),
     ]
 
 
@@ -44,11 +44,11 @@ def test_multiple_apps(build_command, first_app, second_app):
         # App tools are verified for first app
         ("verify-app-tools", "first"),
         # Build the first app; no state
-        ("build", "first", {}),
+        ("build", "first", False, {}),
         # App tools are verified for second app
         ("verify-app-tools", "second"),
         # Build the second apps; state from previous build.
-        ("build", "second", {"build_state": "first"}),
+        ("build", "second", False, {"build_state": "first"}),
     ]
 
 
@@ -71,14 +71,14 @@ def test_non_existent(build_command, first_app_config, second_app):
         # Tools are verified
         ("verify",),
         # First App doesn't exist, so it will be created, then built
-        ("create", "first", {}),
+        ("create", "first", False, {}),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
-        ("build", "first", {"create_state": "first"}),
+        ("build", "first", False, {"create_state": "first"}),
         # App tools are verified for second app
         ("verify-app-tools", "second"),
         # Second app *does* exist, so it only be built
-        ("build", "second", {"create_state": "first", "build_state": "first"}),
+        ("build", "second", False, {"create_state": "first", "build_state": "first"}),
     ]
 
 
@@ -104,11 +104,11 @@ def test_unbuilt(build_command, first_app_unbuilt, second_app):
         # App tools are verified for first app
         ("verify-app-tools", "first"),
         # First App exists, but hasn't been built; it will be built.
-        ("build", "first", {}),
+        ("build", "first", False, {}),
         # App tools are verified for second app
         ("verify-app-tools", "second"),
         # Second app has been built before; it will be built again.
-        ("build", "second", {"build_state": "first"}),
+        ("build", "second", False, {"build_state": "first"}),
     ]
 
 
@@ -131,15 +131,15 @@ def test_update_app(build_command, first_app, second_app):
         # Tools are verified
         ("verify",),
         # Update then build the first app
-        ("update", "first", {}),
+        ("update", "first", False, {}),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
-        ("build", "first", {"update_state": "first"}),
+        ("build", "first", False, {"update_state": "first"}),
         # Update then build the second app
-        ("update", "second", {"update_state": "first", "build_state": "first"}),
+        ("update", "second", False, {"update_state": "first", "build_state": "first"}),
         # App tools are verified for second app
         ("verify-app-tools", "second"),
-        ("build", "second", {"update_state": "second", "build_state": "first"}),
+        ("build", "second", False, {"update_state": "second", "build_state": "first"}),
     ]
 
 
@@ -162,17 +162,18 @@ def test_update_non_existent(build_command, first_app_config, second_app):
         # Tools are verified
         ("verify",),
         # First App doesn't exist, so it will be created, then built
-        ("create", "first", {}),
+        ("create", "first", False, {}),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
-        ("build", "first", {"create_state": "first"}),
+        ("build", "first", False, {"create_state": "first"}),
         # Second app *does* exist, so it will be updated, then built
-        ("update", "second", {"create_state": "first", "build_state": "first"}),
+        ("update", "second", False, {"create_state": "first", "build_state": "first"}),
         # App tools are verified for second app
         ("verify-app-tools", "second"),
         (
             "build",
             "second",
+            False,
             {"create_state": "first", "build_state": "first", "update_state": "second"},
         ),
     ]
@@ -197,13 +198,13 @@ def test_update_unbuilt(build_command, first_app_unbuilt, second_app):
         # Tools are verified
         ("verify",),
         # First App exists, but hasn't been built; it will be updated then built.
-        ("update", "first", {}),
+        ("update", "first", False, {}),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
-        ("build", "first", {"update_state": "first"}),
+        ("build", "first", False, {"update_state": "first"}),
         # Second app has been built before; it will be built again.
-        ("update", "second", {"update_state": "first", "build_state": "first"}),
+        ("update", "second", False, {"update_state": "first", "build_state": "first"}),
         # App tools are verified for second app
         ("verify-app-tools", "second"),
-        ("build", "second", {"update_state": "second", "build_state": "first"}),
+        ("build", "second", False, {"update_state": "second", "build_state": "first"}),
     ]

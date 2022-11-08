@@ -24,7 +24,12 @@ def test_device_option(run_command):
     """The -d option can be parsed."""
     options = run_command.parse_options(["-d", "myphone"])
 
-    assert options == {"udid": "myphone", "update": False, "appname": None}
+    assert options == {
+        "udid": "myphone",
+        "update": False,
+        "test_mode": False,
+        "appname": None,
+    }
 
 
 def test_run_multiple_devices_input_disabled(run_command, first_app_config):
@@ -48,7 +53,7 @@ def test_run_multiple_devices_input_disabled(run_command, first_app_config):
         BriefcaseCommandError,
         match=r"Input has been disabled; can't select a device to target.",
     ):
-        run_command.run_app(first_app_config)
+        run_command.run_app(first_app_config, test_mode=False)
 
 
 def test_run_app_simulator_booted(run_command, first_app_config, tmp_path):
@@ -66,7 +71,7 @@ def test_run_app_simulator_booted(run_command, first_app_config, tmp_path):
     run_command.tools.subprocess.Popen.return_value = log_stream_process
 
     # Run the app
-    run_command.run_app(first_app_config)
+    run_command.run_app(first_app_config, test_mode=False)
 
     # The correct sequence of commands was issued.
     run_command.tools.subprocess.run.assert_has_calls(
@@ -146,7 +151,7 @@ def test_run_app_simulator_booted(run_command, first_app_config, tmp_path):
         bufsize=1,
     )
     run_command.tools.subprocess.stream_output.assert_called_with(
-        "log stream", log_stream_process
+        "log stream", log_stream_process, filter_func=mock.ANY
     )
     run_command.tools.subprocess.cleanup.assert_called_with(
         "log stream", log_stream_process
@@ -168,7 +173,7 @@ def test_run_app_simulator_shut_down(run_command, first_app_config, tmp_path):
     run_command.tools.subprocess.Popen.return_value = log_stream_process
 
     # Run the app
-    run_command.run_app(first_app_config)
+    run_command.run_app(first_app_config, test_mode=False)
 
     # The correct sequence of commands was issued.
     run_command.tools.subprocess.run.assert_has_calls(
@@ -253,7 +258,7 @@ def test_run_app_simulator_shut_down(run_command, first_app_config, tmp_path):
         bufsize=1,
     )
     run_command.tools.subprocess.stream_output.assert_called_with(
-        "log stream", log_stream_process
+        "log stream", log_stream_process, filter_func=mock.ANY
     )
     run_command.tools.subprocess.cleanup.assert_called_with(
         "log stream", log_stream_process
@@ -285,7 +290,7 @@ def test_run_app_simulator_shutting_down(run_command, first_app_config, tmp_path
     run_command.tools.subprocess.Popen.return_value = log_stream_process
 
     # Run the app
-    run_command.run_app(first_app_config)
+    run_command.run_app(first_app_config, test_mode=False)
 
     # We should have slept 4 times
     assert run_command.sleep.call_count == 4
@@ -373,7 +378,7 @@ def test_run_app_simulator_shutting_down(run_command, first_app_config, tmp_path
         bufsize=1,
     )
     run_command.tools.subprocess.stream_output.assert_called_with(
-        "log stream", log_stream_process
+        "log stream", log_stream_process, filter_func=mock.ANY
     )
     run_command.tools.subprocess.cleanup.assert_called_with(
         "log stream", log_stream_process
@@ -397,7 +402,7 @@ def test_run_app_simulator_boot_failure(run_command, first_app_config):
 
     # Run the app
     with pytest.raises(BriefcaseCommandError):
-        run_command.run_app(first_app_config)
+        run_command.run_app(first_app_config, test_mode=False)
 
     # The correct sequence of commands was issued.
     run_command.tools.subprocess.run.assert_has_calls(
@@ -437,7 +442,7 @@ def test_run_app_simulator_open_failure(run_command, first_app_config):
 
     # Run the app
     with pytest.raises(BriefcaseCommandError):
-        run_command.run_app(first_app_config)
+        run_command.run_app(first_app_config, test_mode=False)
 
     # The correct sequence of commands was issued.
     run_command.tools.subprocess.run.assert_has_calls(
@@ -489,7 +494,7 @@ def test_run_app_simulator_uninstall_failure(run_command, first_app_config):
 
     # Run the app
     with pytest.raises(BriefcaseCommandError):
-        run_command.run_app(first_app_config)
+        run_command.run_app(first_app_config, test_mode=False)
 
     # The correct sequence of commands was issued.
     run_command.tools.subprocess.run.assert_has_calls(
@@ -553,7 +558,7 @@ def test_run_app_simulator_install_failure(run_command, first_app_config, tmp_pa
 
     # Run the app
     with pytest.raises(BriefcaseCommandError):
-        run_command.run_app(first_app_config)
+        run_command.run_app(first_app_config, test_mode=False)
 
     # The correct sequence of commands was issued.
     run_command.tools.subprocess.run.assert_has_calls(
@@ -638,7 +643,7 @@ def test_run_app_simulator_launch_failure(run_command, first_app_config, tmp_pat
 
     # Run the app
     with pytest.raises(BriefcaseCommandError):
-        run_command.run_app(first_app_config)
+        run_command.run_app(first_app_config, test_mode=False)
 
     # The correct sequence of commands was issued.
     run_command.tools.subprocess.run.assert_has_calls(
@@ -746,11 +751,11 @@ def test_run_app_ctrl_c(run_command, first_app_config, tmp_path, capsys):
     run_command.tools.subprocess.stream_output.side_effect = KeyboardInterrupt
 
     # Run the app (and KeyboardInterrupt does not surface)
-    run_command.run_app(first_app_config)
+    run_command.run_app(first_app_config, test_mode=False)
 
     # The log is being tailed and process cleanup is triggered
     run_command.tools.subprocess.stream_output.assert_called_with(
-        "log stream", log_stream_process
+        "log stream", log_stream_process, filter_func=mock.ANY
     )
     run_command.tools.subprocess.cleanup.assert_called_with(
         "log stream", log_stream_process

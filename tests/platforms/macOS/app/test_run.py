@@ -27,7 +27,7 @@ def test_run_app(first_app_config, tmp_path, monkeypatch):
 
     # To satisfy coverage, the stop function must be invoked at least once
     # when invoking stream_output.
-    def mock_stream_output(label, popen_process, stop_func):
+    def mock_stream_output(label, popen_process, stop_func, filter_func):
         stop_func()
 
     command.tools.subprocess.stream_output.side_effect = mock_stream_output
@@ -36,7 +36,7 @@ def test_run_app(first_app_config, tmp_path, monkeypatch):
         "briefcase.platforms.macOS.get_process_id_by_command", lambda *a, **kw: 100
     )
 
-    command.run_app(first_app_config)
+    command.run_app(first_app_config, test_mode=False)
 
     # Calls were made to start the app and to start a log stream.
     bin_path = command.binary_path(first_app_config)
@@ -65,6 +65,7 @@ def test_run_app(first_app_config, tmp_path, monkeypatch):
         "log stream",
         log_stream_process,
         stop_func=mock.ANY,
+        filter_func=mock.ANY,
     )
     command.tools.os.kill.assert_called_with(100, SIGTERM)
     command.tools.subprocess.cleanup.assert_called_with(
@@ -90,7 +91,7 @@ def test_run_app_failed(first_app_config, tmp_path):
     )
 
     with pytest.raises(BriefcaseCommandError):
-        command.run_app(first_app_config)
+        command.run_app(first_app_config, test_mode=False)
 
     # Calls were made to start the app and to start a log stream.
     bin_path = command.binary_path(first_app_config)
@@ -142,7 +143,7 @@ def test_run_app_find_pid_failed(first_app_config, tmp_path, monkeypatch, capsys
     )
 
     with pytest.raises(BriefcaseCommandError) as exc_info:
-        command.run_app(first_app_config)
+        command.run_app(first_app_config, test_mode=False)
 
     # Calls were made to start the app and to start a log stream.
     bin_path = command.binary_path(first_app_config)
@@ -196,13 +197,14 @@ def test_run_app_ctrl_c(first_app_config, tmp_path, monkeypatch, capsys):
     )
 
     # Invoke run_app (and KeyboardInterrupt does not surface)
-    command.run_app(first_app_config)
+    command.run_app(first_app_config, test_mode=False)
 
     # log streaming is started
     command.tools.subprocess.stream_output.assert_called_with(
         "log stream",
         log_stream_process,
         stop_func=mock.ANY,
+        filter_func=mock.ANY,
     )
 
     # Shows the try block for KeyboardInterrupt was entered

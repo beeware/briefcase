@@ -3,11 +3,33 @@ from pathlib import Path
 
 import pytest
 
+from ....utils import create_file, create_plist_file
+
 
 @pytest.fixture
 def first_app_with_binaries(first_app_config, tmp_path):
-    # Create some libraries that need to be signed.
     app_path = tmp_path / "base_path" / "macOS" / "app" / "First App" / "First App.app"
+
+    # Create the briefcase.toml file
+    create_file(
+        tmp_path / "base_path" / "macOS" / "app" / "First App" / "briefcase.toml",
+        """
+[paths]
+app_packages_path="First App.app/Contents/Resources/app_packages"
+support_path="First App.app/Contents/Resources/support"
+info_plist_path="First App.app/Contents/Info.plist"
+""",
+    )
+
+    # Create the plist file for the app
+    create_plist_file(
+        app_path / "Contents" / "Info.plist",
+        {
+            "MainModule": "first_app",
+        },
+    )
+
+    # Create some libraries that need to be signed.
     lib_path = app_path / "Contents" / "Resources"
     for lib in [
         "first_so.so",

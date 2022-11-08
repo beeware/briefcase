@@ -11,12 +11,23 @@ class RunCommand(BaseCommand):
     command = "run"
 
     def add_options(self, parser):
-        parser.add_argument("-a", "--app", dest="appname", help="The app to run")
+        parser.add_argument(
+            "-a",
+            "--app",
+            dest="appname",
+            help="The app to run",
+        )
         parser.add_argument(
             "-u",
             "--update",
             action="store_true",
             help="Update the app before execution",
+        )
+        parser.add_argument(
+            "--test",
+            dest="test_mode",
+            action="store_true",
+            help="Run the app in test mode",
         )
 
     @abstractmethod
@@ -28,7 +39,11 @@ class RunCommand(BaseCommand):
         ...
 
     def __call__(
-        self, appname: Optional[str] = None, update: Optional[bool] = False, **options
+        self,
+        appname: Optional[str] = None,
+        update: Optional[bool] = False,
+        test_mode: Optional[bool] = False,
+        **options,
     ):
         # Confirm all required tools are available
         self.verify_tools()
@@ -53,18 +68,22 @@ class RunCommand(BaseCommand):
         template_file = self.bundle_path(app)
         binary_file = self.binary_path(app)
         if not template_file.exists():
-            state = self.create_command(app, **options)
-            state = self.build_command(app, **full_options(state, options))
-        elif update:
-            state = self.update_command(app, **options)
-            state = self.build_command(app, **full_options(state, options))
+            state = self.create_command(app, test_mode=test_mode, **options)
+            state = self.build_command(
+                app, test_mode=test_mode, **full_options(state, options)
+            )
+        elif update or test_mode:
+            state = self.update_command(app, test_mode=test_mode, **options)
+            state = self.build_command(
+                app, test_mode=test_mode, **full_options(state, options)
+            )
         elif not binary_file.exists():
-            state = self.build_command(app, **options)
+            state = self.build_command(app, test_mode=test_mode, **options)
         else:
             state = None
 
         self.verify_app_tools(app)
 
-        state = self.run_app(app, **full_options(state, options))
+        state = self.run_app(app, test_mode=test_mode, **full_options(state, options))
 
         return state

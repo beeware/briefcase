@@ -19,14 +19,14 @@ def build_command(tmp_path):
     )
 
 
-def test_build_app(build_command, first_app_config, tmp_path):
+def test_build_app(build_command, first_app_generated, tmp_path):
     """An iOS App can be built."""
     build_command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
 
     # Mock the host's CPU architecture to ensure it's reflected in the Xcode call
     build_command.tools.host_arch = "weird"
 
-    build_command.build_app(first_app_config)
+    build_command.build_app(first_app_generated)
 
     build_command.tools.subprocess.run.assert_called_with(
         [
@@ -53,7 +53,7 @@ def test_build_app(build_command, first_app_config, tmp_path):
     )
 
 
-def test_build_app_failed(build_command, first_app_config, tmp_path):
+def test_build_app_failed(build_command, first_app_generated, tmp_path):
     """If xcodebuild fails, an error is raised."""
     # The subprocess.run() call will raise an error
     build_command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
@@ -65,7 +65,7 @@ def test_build_app_failed(build_command, first_app_config, tmp_path):
     build_command.tools.host_arch = "weird"
 
     with pytest.raises(BriefcaseCommandError):
-        build_command.build_app(first_app_config)
+        build_command.build_app(first_app_generated)
 
     build_command.tools.subprocess.run.assert_called_with(
         [

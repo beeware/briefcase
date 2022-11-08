@@ -29,7 +29,7 @@ def test_run_app(first_app_config, tmp_path, monkeypatch):
         "briefcase.platforms.macOS.get_process_id_by_command", lambda *a, **kw: 100
     )
 
-    command.run_app(first_app_config)
+    command.run_app(first_app_config, test_mode=False)
 
     # Calls were made to start the app and to start a log stream.
     bin_path = command.binary_path(first_app_config)

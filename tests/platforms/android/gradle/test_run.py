@@ -73,7 +73,12 @@ def test_device_option(run_command):
     """The -d option can be parsed."""
     options = run_command.parse_options(["-d", "myphone"])
 
-    assert options == {"device_or_avd": "myphone", "appname": None, "update": False}
+    assert options == {
+        "device_or_avd": "myphone",
+        "appname": None,
+        "update": False,
+        "test_mode": False,
+    }
 
 
 def test_run_existing_device(run_command, first_app_config):

@@ -33,6 +33,7 @@ def test_default_options(run_command):
     assert options == {
         "appname": None,
         "update": False,
+        "test_mode": False,
         "host": "localhost",
         "port": 8080,
         "open_browser": True,
@@ -48,6 +49,7 @@ def test_options(run_command):
     assert options == {
         "appname": None,
         "update": False,
+        "test_mode": False,
         "host": "myhost",
         "port": 1234,
         "open_browser": False,
