@@ -528,7 +528,13 @@ class Subprocess:
             [str(arg) for arg in args], **self.final_kwargs(**kwargs)
         )
 
-    def stream_output(self, label, popen_process, stop_func=lambda: False):
+    def stream_output(
+        self,
+        label,
+        popen_process,
+        stop_func=lambda: False,
+        filter_func=None,
+    ):
         """Stream the output of a Popen process until the process exits. If the
         user sends CTRL+C, the process will be terminated.
 
@@ -541,11 +547,13 @@ class Subprocess:
         :param popen_process: a running Popen process with output to print
         :param stop_func: a Callable that returns True when output streaming
             should stop and the popen_process should be terminated.
+        :param filter_func: a callable that will be invoked on every line
+            of output that is streamed.
         """
         output_streamer = threading.Thread(
             name=f"{label} output streamer",
             target=self._stream_output_thread,
-            args=(popen_process,),
+            args=(popen_process, filter_func),
             daemon=True,
         )
         try:
@@ -570,10 +578,12 @@ class Subprocess:
                     "Log stream hasn't terminated; log output may be corrupted."
                 )
 
-    def _stream_output_thread(self, popen_process):
+    def _stream_output_thread(self, popen_process, filter_func):
         """Stream output for a Popen process in a Thread.
 
         :param popen_process: popen process to stream stdout
+        :param filter_func: a callable that will be invoked on every line
+            of output that is streamed.
         """
         # ValueError is raised if stdout is unexpectedly closed.
         # This can happen if the user starts spamming CTRL+C, for instance.
@@ -584,7 +594,12 @@ class Subprocess:
                 # UNLESS the underlying process is exiting/gone; then "" is returned
                 output_line = ensure_str(popen_process.stdout.readline())
                 if output_line:
-                    self.tools.logger.info(output_line)
+                    if filter_func:
+                        filtered_output = filter_func(output_line)
+                        if filtered_output:
+                            self.tools.logger.info(filtered_output)
+                    else:
+                        self.tools.logger.info(output_line)
                 else:
                     return
 
