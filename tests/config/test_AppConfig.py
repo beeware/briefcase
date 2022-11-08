@@ -30,7 +30,9 @@ def test_minimal_AppConfig():
     assert config.splash is None
 
     # The PYTHONPATH is derived correctly
-    assert config.PYTHONPATH == ["src", "somewhere/else", ""]
+    assert config.PYTHONPATH(False) == ["src", "somewhere/else", ""]
+    # The test mode PYTHONPATH is the same
+    assert config.PYTHONPATH(True) == ["src", "somewhere/else", ""]
 
     # The object has a meaningful REPL
     assert repr(config) == "<org.beeware.myapp v1.2.3 AppConfig>"

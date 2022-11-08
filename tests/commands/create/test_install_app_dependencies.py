@@ -62,7 +62,7 @@ def test_bad_path_index(create_command, myapp, bundle_path, app_requirements_pat
         BriefcaseCommandError,
         match=r"Application path index file does not define `app_requirements_path` or `app_packages_path`",
     ):
-        create_command.install_app_dependencies(myapp)
+        create_command.install_app_dependencies(myapp, test_mode=False)
 
     # pip wasn't invoked
     create_command.tools[myapp].app_context.run.assert_not_called()
@@ -80,7 +80,7 @@ def test_app_packages_no_requires(
     """If an app has no requirements, install_app_dependencies is a no-op."""
     myapp.requires = None
 
-    create_command.install_app_dependencies(myapp)
+    create_command.install_app_dependencies(myapp, test_mode=False)
 
     # No request was made to install dependencies
     create_command.tools[myapp].app_context.run.assert_not_called()
@@ -96,7 +96,7 @@ def test_app_packages_empty_requires(
     no-op."""
     myapp.requires = []
 
-    create_command.install_app_dependencies(myapp)
+    create_command.install_app_dependencies(myapp, test_mode=False)
 
     # No request was made to install dependencies
     create_command.tools[myapp].app_context.run.assert_not_called()
@@ -111,7 +111,7 @@ def test_app_packages_valid_requires(
     """If an app has a valid list of requirements, pip is invoked."""
     myapp.requires = ["first", "second==1.2.3", "third>=3.2.1"]
 
-    create_command.install_app_dependencies(myapp)
+    create_command.install_app_dependencies(myapp, test_mode=False)
 
     # A request was made to install dependencies
     create_command.tools[myapp].app_context.run.assert_called_with(
@@ -154,7 +154,7 @@ def test_app_packages_valid_requires_no_support_package(
     # Override the cache of paths to specify an app packages path, but no support package path
     create_command._path_index = {myapp: {"app_packages_path": "path/to/app_packages"}}
 
-    create_command.install_app_dependencies(myapp)
+    create_command.install_app_dependencies(myapp, test_mode=False)
 
     # A request was made to install dependencies
     create_command.tools[myapp].app_context.run.assert_called_with(
@@ -194,7 +194,7 @@ def test_app_packages_invalid_requires(
     )
 
     with pytest.raises(DependencyInstallError):
-        create_command.install_app_dependencies(myapp)
+        create_command.install_app_dependencies(myapp, test_mode=False)
 
     # But the request to install was still made
     create_command.tools[myapp].app_context.run.assert_called_with(
@@ -241,7 +241,7 @@ def test_app_packages_offline(
     )
 
     with pytest.raises(DependencyInstallError):
-        create_command.install_app_dependencies(myapp)
+        create_command.install_app_dependencies(myapp, test_mode=False)
 
     # But the request to install was still made
     create_command.tools[myapp].app_context.run.assert_called_with(
@@ -290,7 +290,7 @@ def test_app_packages_install_dependencies(
     )
 
     # Install the dependencies
-    create_command.install_app_dependencies(myapp)
+    create_command.install_app_dependencies(myapp, test_mode=False)
 
     # The request to install was made
     create_command.tools[myapp].app_context.run.assert_called_with(
@@ -350,7 +350,7 @@ def test_app_packages_replace_existing_dependencies(
     )
 
     # Install the dependencies
-    create_command.install_app_dependencies(myapp)
+    create_command.install_app_dependencies(myapp, test_mode=False)
 
     # The request to install was still made
     create_command.tools[myapp].app_context.run.assert_called_with(
@@ -402,7 +402,7 @@ def test_app_requirements_no_requires(
     myapp.requires = None
 
     # Install dependencies into the bundle
-    create_command.install_app_dependencies(myapp)
+    create_command.install_app_dependencies(myapp, test_mode=False)
 
     # requirements.txt doesn't exist either
     assert app_requirements_path.exists()
@@ -421,7 +421,7 @@ def test_app_requirements_empty_requires(
     myapp.requires = []
 
     # Install dependencies into the bundle
-    create_command.install_app_dependencies(myapp)
+    create_command.install_app_dependencies(myapp, test_mode=False)
 
     # requirements.txt doesn't exist either
     assert app_requirements_path.exists()
@@ -440,7 +440,7 @@ def test_app_requirements_requires(
     myapp.requires = ["first", "second==1.2.3", "third>=3.2.1"]
 
     # Install dependencies into the bundle
-    create_command.install_app_dependencies(myapp)
+    create_command.install_app_dependencies(myapp, test_mode=False)
 
     # requirements.txt doesn't exist either
     assert app_requirements_path.exists()
@@ -464,7 +464,7 @@ def _test_app_requirements_paths(
         converted = requirement
     myapp.requires = ["first", requirement, "third"]
 
-    create_command.install_app_dependencies(myapp)
+    create_command.install_app_dependencies(myapp, test_mode=False)
     with app_requirements_path.open() as f:
         assert f.read() == (
             "\n".join(

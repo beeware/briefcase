@@ -52,7 +52,7 @@ def test_no_code(
 
     myapp.sources = None
 
-    create_command.install_app_code(myapp)
+    create_command.install_app_code(myapp, test_mode=False)
 
     # No request was made to install dependencies
     create_command.tools.shutil.rmtree.assert_called_once_with(app_path)
@@ -78,7 +78,7 @@ def test_empty_code(
 
     myapp.sources = []
 
-    create_command.install_app_code(myapp)
+    create_command.install_app_code(myapp, test_mode=False)
 
     # No request was made to install dependencies
     create_command.tools.shutil.rmtree.assert_called_once_with(app_path)
@@ -101,7 +101,7 @@ def test_source_missing(
     myapp.sources = ["missing"]
 
     with pytest.raises(MissingAppSources):
-        create_command.install_app_code(myapp)
+        create_command.install_app_code(myapp, test_mode=False)
 
     # Distinfo won't be created.
     dist_info_path = app_path / "myapp-1.2.3.dist-info"
@@ -141,7 +141,7 @@ def test_source_dir(
     # Set the app definition, and install sources
     myapp.sources = ["src/first", "src/second"]
 
-    create_command.install_app_code(myapp)
+    create_command.install_app_code(myapp, test_mode=False)
 
     # All the sources exist.
     assert (app_path / "first").exists()
@@ -181,7 +181,7 @@ def test_source_file(
     # Set the app definition, and install sources
     myapp.sources = ["src/demo.py", "other.py"]
 
-    create_command.install_app_code(myapp)
+    create_command.install_app_code(myapp, test_mode=False)
 
     # All the sources exist.
     assert (app_path / "demo.py").exists()
@@ -226,7 +226,7 @@ def test_no_existing_app_folder(
     # Set the app definition, and install sources
     myapp.sources = ["src/first/demo.py", "src/second"]
 
-    create_command.install_app_code(myapp)
+    create_command.install_app_code(myapp, test_mode=False)
 
     # All the new sources exist, and contain the new content.
     assert (app_path / "demo.py").exists()
@@ -325,7 +325,7 @@ def test_replace_sources(
     # Set the app definition, and install sources
     myapp.sources = ["src/first/demo.py", "src/second"]
 
-    create_command.install_app_code(myapp)
+    create_command.install_app_code(myapp, test_mode=False)
 
     # All the new sources exist, and contain the new content.
     assert (app_path / "demo.py").exists()
@@ -372,7 +372,7 @@ def test_non_latin_metadata(
 
     myapp.sources = []
 
-    create_command.install_app_code(myapp)
+    create_command.install_app_code(myapp, test_mode=False)
 
     # No request was made to install dependencies
     create_command.tools.shutil.rmtree.assert_called_once_with(app_path)

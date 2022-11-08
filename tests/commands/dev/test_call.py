@@ -35,7 +35,7 @@ class DummyDevCommand(DevCommand):
     def install_dev_dependencies(self, app, **kwargs):
         self.actions.append(("dev_dependencies", app.app_name, kwargs))
 
-    def get_environment(self, app):
+    def get_environment(self, app, test_mode):
         return self.env
 
     def run_dev_app(self, app, env, **kwargs):

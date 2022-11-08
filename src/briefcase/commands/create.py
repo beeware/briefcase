@@ -6,7 +6,7 @@ import subprocess
 import sys
 from datetime import date
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
 
 from packaging.version import Version
 
@@ -412,11 +412,17 @@ class CreateCommand(BaseCommand):
                     host_arch=self.tools.host_arch,
                 ) from e
 
-    def _write_requirements_file(self, app: BaseConfig, requirements_path):
+    def _write_requirements_file(
+        self,
+        app: BaseConfig,
+        requires: List[str],
+        requirements_path: Path,
+    ):
         """Configure application dependencies by writing a requirements.txt
         file.
 
         :param app: The app configuration
+        :param requires: The full list of requirements
         :param requirements_path: The full path to a requirements.txt file that
             will be written.
         """
@@ -427,8 +433,8 @@ class CreateCommand(BaseCommand):
 
         with self.input.wait_bar("Writing requirements file..."):
             with requirements_path.open("w", encoding="utf-8") as f:
-                if app.requires:
-                    for requirement in app.requires:
+                if requires:
+                    for requirement in requires:
                         # If the requirement is a local path, convert it to
                         # absolute, because Flatpak moves the requirements file
                         # to a different place before using it.
@@ -449,10 +455,16 @@ class CreateCommand(BaseCommand):
         """
         return []
 
-    def _install_app_dependencies(self, app: BaseConfig, app_packages_path):
+    def _install_app_dependencies(
+        self,
+        app: BaseConfig,
+        requires: List[str],
+        app_packages_path: Path,
+    ):
         """Install dependencies for the app with pip.
 
         :param app: The app configuration
+        :param requires: The list of requirements to install
         :param app_packages_path: The full path of the app_packages folder into which
             dependencies should be installed.
         """
@@ -462,7 +474,7 @@ class CreateCommand(BaseCommand):
             self.tools.os.mkdir(app_packages_path)
 
         # Install dependencies
-        if app.requires:
+        if requires:
             with self.input.wait_bar("Installing app dependencies..."):
                 # If there is a support package provided, add the cross-platform
                 # folder of the support package to the PYTHONPATH. This allows
@@ -489,7 +501,7 @@ class CreateCommand(BaseCommand):
                             f"--target={app_packages_path}",
                         ]
                         + self._extra_pip_args(app)
-                        + app.requires,
+                        + requires,
                         check=True,
                         **pip_kwargs,
                     )
@@ -498,7 +510,7 @@ class CreateCommand(BaseCommand):
         else:
             self.logger.info("No application dependencies.")
 
-    def install_app_dependencies(self, app: BaseConfig):
+    def install_app_dependencies(self, app: BaseConfig, test_mode: bool):
         """Handle dependencies for the app.
 
         This will result in either (in preferential order):
@@ -507,28 +519,44 @@ class CreateCommand(BaseCommand):
          * dependencies being installed with pip into the location specified
            by the ``app_packages_path`` in the template path index.
 
+        If ``test_mode`` is True, the test requirements will also be installed.
+
         If the path index doesn't specify either of the path index entries,
         an error is raised.
 
         :param app: The config object for the app
+        :param test_mode: Should the test dependencies be installed?
         """
+        requires = app.requires if app.requires else []
+        if test_mode and app.test_requires:
+            requires.extend(app.test_requires)
+
         try:
-            path = self.app_requirements_path(app)
-            self._write_requirements_file(app, path)
+            requirements_path = self.app_requirements_path(app)
+            self._write_requirements_file(
+                app,
+                requires=requires,
+                requirements_path=requirements_path,
+            )
         except KeyError:
             try:
-                path = self.app_packages_path(app)
-                self._install_app_dependencies(app, path)
+                app_packages_path = self.app_packages_path(app)
+                self._install_app_dependencies(
+                    app,
+                    requires=requires,
+                    app_packages_path=app_packages_path,
+                )
             except KeyError as e:
                 raise BriefcaseCommandError(
                     "Application path index file does not define "
                     "`app_requirements_path` or `app_packages_path`"
                 ) from e
 
-    def install_app_code(self, app: BaseConfig):
+    def install_app_code(self, app: BaseConfig, test_mode: bool):
         """Install the application code into the bundle.
 
         :param app: The config object for the app
+        :param test_mode: Should the application test code also be installed?
         """
         # Remove existing app folder if it exists
         app_path = self.app_path(app)
@@ -536,9 +564,13 @@ class CreateCommand(BaseCommand):
             self.tools.shutil.rmtree(app_path)
         self.tools.os.mkdir(app_path)
 
+        sources = app.sources if app.sources else []
+        if test_mode and app.test_sources:
+            sources.extend(app.test_sources)
+
         # Install app code.
-        if app.sources:
-            for src in app.sources:
+        if sources:
+            for src in sources:
                 with self.input.wait_bar(f"Installing {src}..."):
                     original = self.base_path / src
                     target = app_path / original.name
@@ -755,10 +787,10 @@ class CreateCommand(BaseCommand):
         self.verify_app_tools(app)
 
         self.logger.info("Installing dependencies...", prefix=app.app_name)
-        self.install_app_dependencies(app=app)
+        self.install_app_dependencies(app=app, test_mode=test_mode)
 
         self.logger.info("Installing application code...", prefix=app.app_name)
-        self.install_app_code(app=app)
+        self.install_app_code(app=app, test_mode=test_mode)
 
         self.logger.info("Installing application resources...", prefix=app.app_name)
         self.install_app_resources(app=app)

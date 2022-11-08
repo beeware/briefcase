@@ -304,6 +304,8 @@ class AppConfig(BaseConfig):
         document_type=None,
         template=None,
         template_branch=None,
+        test_sources=None,
+        test_requires=None,
         supported=True,
         **kwargs,
     ):
@@ -324,6 +326,8 @@ class AppConfig(BaseConfig):
         self.document_types = {} if document_type is None else document_type
         self.template = template
         self.template_branch = template_branch
+        self.test_sources = test_sources
+        self.test_requires = test_requires
         self.supported = supported
 
         if not is_valid_app_name(self.app_name):
@@ -385,11 +389,17 @@ class AppConfig(BaseConfig):
         similar to `module_name`."""
         return self.bundle.replace("-", "_")
 
-    @property
-    def PYTHONPATH(self):
-        """The PYTHONPATH modifications needed to run this app."""
+    def PYTHONPATH(self, test_mode=False):
+        """The PYTHONPATH modifications needed to run this app.
+
+        :param test_mode: Should test_mode sources be included?
+        """
         paths = []
-        for source in self.sources:
+        sources = self.sources
+        if test_mode and self.test_sources:
+            sources.extend(self.test_sources)
+
+        for source in sources:
             path = "/".join(source.rsplit("/", 1)[:-1])
             if path not in paths:
                 paths.append(path)
@@ -403,7 +413,7 @@ def merge_config(config, data):
         is modified in-situ.
     :param data: The new configuration data to merge into the configuration.
     """
-    for option in ["requires", "sources"]:
+    for option in ["requires", "sources", "test_requires", "test_sources"]:
         value = data.pop(option, [])
 
         if value:

@@ -61,10 +61,16 @@ class DevCommand(BaseCommand):
         )
 
     def install_dev_dependencies(self, app: BaseConfig, **options):
-        """Install the dependencies for the app devly.
+        """Install the dependencies for the app dev.
+
+        This will always include test dependencies, if specified.
 
         :param app: The config object for the app
         """
+        requires = app.requires if app.requires else []
+        if app.test_requires:
+            requires.extend(app.test_requires)
+
         if app.requires:
             with self.input.wait_bar("Installing dev dependencies..."):
                 try:
@@ -77,7 +83,7 @@ class DevCommand(BaseCommand):
                             "install",
                             "--upgrade",
                         ]
-                        + app.requires,
+                        + requires,
                         check=True,
                     )
                 except subprocess.CalledProcessError as e:
@@ -126,12 +132,12 @@ class DevCommand(BaseCommand):
                     f"Unable to start application {exec_module!r}"
                 ) from e
 
-    def get_environment(self, app):
+    def get_environment(self, app, test_mode: bool = False):
         # Create a shell environment where PYTHONPATH points to the source
         # directories described by the app config.
         return {
             "PYTHONPATH": os.pathsep.join(
-                os.fsdecode(Path.cwd() / path) for path in app.PYTHONPATH
+                os.fsdecode(Path.cwd() / path) for path in app.PYTHONPATH(test_mode)
             )
         }
 
@@ -188,5 +194,5 @@ class DevCommand(BaseCommand):
                 )
             else:
                 self.logger.info("Starting in dev mode...", prefix=app.app_name)
-            env = self.get_environment(app)
+            env = self.get_environment(app, test_mode=test_mode)
             return self.run_dev_app(app, env, test_mode=test_mode, **options)

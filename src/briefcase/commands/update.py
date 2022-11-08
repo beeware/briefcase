@@ -50,10 +50,10 @@ class UpdateCommand(CreateCommand):
 
         if update_dependencies:
             self.logger.info("Updating dependencies...", prefix=app.app_name)
-            self.install_app_dependencies(app=app)
+            self.install_app_dependencies(app=app, test_mode=test_mode)
 
         self.logger.info("Updating application code...", prefix=app.app_name)
-        self.install_app_code(app=app)
+        self.install_app_code(app=app, test_mode=test_mode)
 
         if update_resources:
             self.logger.info(
