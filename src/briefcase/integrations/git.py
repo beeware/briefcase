@@ -1,7 +1,14 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from briefcase.exceptions import BriefcaseCommandError
 
+if TYPE_CHECKING:  # pragma: no cover
+    from briefcase.integrations.base import ToolCache
 
-def verify_git_is_installed(tools):
+
+def verify_git_is_installed(tools: ToolCache):
     """Verify if git is installed.
 
     Unfortunately, `import git` triggers a call on the operating system

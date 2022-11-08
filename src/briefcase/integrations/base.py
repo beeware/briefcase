@@ -8,7 +8,7 @@ from abc import ABC
 from collections import defaultdict
 from collections.abc import Mapping
 from pathlib import Path
-from typing import DefaultDict
+from typing import TYPE_CHECKING, DefaultDict
 
 import requests
 from cookiecutter.main import cookiecutter
@@ -18,6 +18,18 @@ from briefcase.console import Console, Log
 from briefcase.integrations.download import Download
 from briefcase.integrations.subprocess import Subprocess
 
+if TYPE_CHECKING:  # pragma: no cover
+    import git as _git
+
+    from briefcase.integrations.android_sdk import AndroidSDK
+    from briefcase.integrations.docker import Docker, DockerAppContext
+    from briefcase.integrations.flatpak import Flatpak
+    from briefcase.integrations.java import JDK
+    from briefcase.integrations.linuxdeploy import LinuxDeploy
+    from briefcase.integrations.rcedit import RCEdit
+    from briefcase.integrations.visualstudio import VisualStudio
+    from briefcase.integrations.wix import Wix
+
 
 # TODO: Implement Tool base class
 class Tool(ABC):
@@ -25,11 +37,29 @@ class Tool(ABC):
 
 
 class ToolCache(Mapping):
+    # Briefcase tools
+    android_sdk: AndroidSDK
+    app_context: Subprocess | DockerAppContext
+    docker: Docker
+    download: Download
+    flatpak: Flatpak
+    git: _git
+    java: JDK
+    linuxdeploy: LinuxDeploy
+    rcedit: RCEdit
+    subprocess: Subprocess
+    visualstudio: VisualStudio
+    wix: Wix
+    xcode: bool
+    xcode_cli: bool
+
+    # Python stdlib tools
     platform = platform
     os = os
     shutil = shutil
     sys = sys
 
+    # Third party tools
     cookiecutter = staticmethod(cookiecutter)
     requests = requests
 

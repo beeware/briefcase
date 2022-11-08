@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 import hashlib
 import shlex
 from abc import abstractmethod
 from pathlib import Path
+from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
 from briefcase.exceptions import (
@@ -10,6 +13,9 @@ from briefcase.exceptions import (
     MissingToolError,
 )
 
+if TYPE_CHECKING:  # pragma: no cover
+    from briefcase.integrations.base import ToolCache
+
 ELF_HEADER_IDENT = bytes.fromhex("7F454C46")
 ELF_PATCH_OFFSET = 0x08
 ELF_PATCH_ORIGINAL_BYTES = bytes.fromhex("414902")
@@ -17,7 +23,11 @@ ELF_PATCH_PATCHED_BYTES = bytes.fromhex("000000")
 
 
 class LinuxDeployBase:
-    def __init__(self, tools, **kwargs):
+    name: str
+    full_name: str
+    install_msg: str
+
+    def __init__(self, tools: ToolCache, **kwargs):
         self.tools = tools
 
     @property
@@ -62,7 +72,7 @@ class LinuxDeployBase:
                 self.patch_elf_header()
 
     @classmethod
-    def verify(cls, tools, install=True, **kwargs):
+    def verify(cls, tools: ToolCache, install=True, **kwargs):
         """Verify that linuxdeploy tool or plugin is available.
 
         :param tools: ToolCache of available tools

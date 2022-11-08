@@ -1,8 +1,14 @@
+from __future__ import annotations
+
 import subprocess
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from briefcase.exceptions import BriefcaseCommandError, CommandOutputParseError
 from briefcase.integrations.subprocess import json_parser
+
+if TYPE_CHECKING:  # pragma: no cover
+    from briefcase.integrations.base import ToolCache
 
 
 class VisualStudio:
@@ -15,7 +21,7 @@ class VisualStudio:
       - C++/CLI support for v143 build tools
 """
 
-    def __init__(self, tools, msbuild_path, install_metadata=None):
+    def __init__(self, tools: ToolCache, msbuild_path: Path, install_metadata=None):
         self.tools = tools
         self._msbuild_path = msbuild_path
         self._install_metadata = install_metadata
@@ -37,7 +43,7 @@ class VisualStudio:
         return self._install_metadata
 
     @classmethod
-    def verify(cls, tools):
+    def verify(cls, tools: ToolCache):
         """Verify that Visual Studio is available.
 
         :param tools: ToolCache of available tools

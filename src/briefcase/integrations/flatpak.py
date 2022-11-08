@@ -1,6 +1,12 @@
+from __future__ import annotations
+
 import subprocess
+from typing import TYPE_CHECKING
 
 from briefcase.exceptions import BriefcaseCommandError
+
+if TYPE_CHECKING:  # pragma: no cover
+    from briefcase.integrations.base import ToolCache
 
 
 class Flatpak:
@@ -11,11 +17,11 @@ class Flatpak:
     DEFAULT_RUNTIME_VERSION = "21.08"
     DEFAULT_SDK = "org.freedesktop.Sdk"
 
-    def __init__(self, tools):
+    def __init__(self, tools: ToolCache):
         self.tools = tools
 
     @classmethod
-    def verify(cls, tools):
+    def verify(cls, tools: ToolCache):
         """Verify that the Flatpak toolchain is available.
 
         :param tools: ToolCache of available tools

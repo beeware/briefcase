@@ -1,10 +1,16 @@
+from __future__ import annotations
+
 import enum
 import re
 import subprocess
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from briefcase.exceptions import BriefcaseCommandError, CommandOutputParseError
 from briefcase.integrations.subprocess import json_parser
+
+if TYPE_CHECKING:  # pragma: no cover
+    from briefcase.integrations.base import ToolCache
 
 
 class DeviceState(enum.Enum):
@@ -14,7 +20,7 @@ class DeviceState(enum.Enum):
     UNKNOWN = 99
 
 
-def verify_xcode_install(tools, min_version=None):
+def verify_xcode_install(tools: ToolCache, min_version=None):
     """Verify that Xcode and the command line developer tools are installed and
     ready for use.
 
@@ -43,7 +49,7 @@ def verify_xcode_install(tools, min_version=None):
     tools.xcode = True
 
 
-def verify_command_line_tools_install(tools):
+def verify_command_line_tools_install(tools: ToolCache):
     """Verify that command line developer tools are installed and ready for
     use.
 
@@ -64,7 +70,7 @@ def verify_command_line_tools_install(tools):
     tools.xcode_cli = True
 
 
-def ensure_command_line_tools_are_installed(tools):
+def ensure_command_line_tools_are_installed(tools: ToolCache):
     """Determine if the Xcode command line tools are installed.
 
     If they are not installed, an exception is raised; in addition, an OS dialog
@@ -126,7 +132,7 @@ Re-run Briefcase once that installation is complete.
 
 
 def ensure_xcode_is_installed(
-    tools,
+    tools: ToolCache,
     min_version=None,
     xcode_location="/Applications/Xcode.app",
 ):
@@ -275,7 +281,7 @@ installation is complete.
             ) from e
 
 
-def confirm_xcode_license_accepted(tools):
+def confirm_xcode_license_accepted(tools: ToolCache):
     """Confirm if the Xcode license has been accepted.
 
     :param tools: ToolCache of available tools
@@ -382,8 +388,8 @@ You need to accept the Xcode license before Briefcase can package your app.
 
 
 def get_simulators(
-    tools,
-    os_name,
+    tools: ToolCache,
+    os_name: str,
     simulator_location="/Library/Developer/PrivateFrameworks/CoreSimulator.framework/",
 ):
     """Obtain the simulators available on this machine.
@@ -458,7 +464,7 @@ Press Return to continue: """
         raise BriefcaseCommandError("Unable to run xcrun simctl.") from e
 
 
-def get_device_state(tools, udid):
+def get_device_state(tools: ToolCache, udid: str):
     """Determine the state of an iOS simulator device.
 
     :param tools: ToolCache of available tools
@@ -493,7 +499,7 @@ def get_device_state(tools, udid):
 IDENTITY_RE = re.compile(r"\s*\d+\) ([0-9A-F]{40}) \"(.*)\"")
 
 
-def get_identities(tools, policy):
+def get_identities(tools: ToolCache, policy: str):
     """Obtain a set of valid identities for the given policy.
 
     :param tools: ToolCache of available tools

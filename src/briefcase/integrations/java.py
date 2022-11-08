@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 import os
 import shutil
 import subprocess
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from briefcase.exceptions import (
     BriefcaseCommandError,
@@ -9,12 +12,15 @@ from briefcase.exceptions import (
     NonManagedToolError,
 )
 
+if TYPE_CHECKING:  # pragma: no cover
+    from briefcase.integrations.base import ToolCache
+
 
 class JDK:
     name = "java"
     full_name = "Java JDK"
 
-    def __init__(self, tools, java_home):
+    def __init__(self, tools: ToolCache, java_home: Path):
         self.tools = tools
 
         # As of April 10 2020, 8u242-b08 is the current AdoptOpenJDK
@@ -43,7 +49,7 @@ class JDK:
         )
 
     @classmethod
-    def verify(cls, tools, install=True):
+    def verify(cls, tools: ToolCache, install=True):
         """Verify that a Java 8 JDK exists.
 
         If ``JAVA_HOME`` is set, try that version. If it is a JRE, or its *not*

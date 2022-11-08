@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 import operator
 import os
@@ -9,11 +11,16 @@ import time
 from contextlib import suppress
 from functools import wraps
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import psutil
 
+from briefcase.config import AppConfig
 from briefcase.console import Log
 from briefcase.exceptions import CommandOutputParseError
+
+if TYPE_CHECKING:  # pragma: no cover
+    from briefcase.integrations.base import ToolCache
 
 
 class ParseError(Exception):
@@ -97,7 +104,7 @@ def ensure_console_is_safe(sub_method):
     """
 
     @wraps(sub_method)
-    def inner(sub, args, **kwargs):
+    def inner(sub: Subprocess, args, **kwargs):
         """Evaluate whether conditions are met to remove any dynamic elements
         in the console before returning control to Subprocess.
 
@@ -133,7 +140,7 @@ class NativeAppContext:
     """A wrapper around subprocess for use as an app-bound tool."""
 
     @classmethod
-    def verify(cls, tools, app):
+    def verify(cls, tools: ToolCache, app: AppConfig):
         """Make subprocess available as app-bound tool."""
         # short circuit since already verified and available
         if hasattr(tools[app], "app_context"):
@@ -147,7 +154,7 @@ class Subprocess:
     """A wrapper around subprocess that can be used as a logging point for
     commands that are executed."""
 
-    def __init__(self, tools):
+    def __init__(self, tools: ToolCache):
         self.tools = tools
         self._subprocess = subprocess
 
@@ -246,7 +253,7 @@ class Subprocess:
         return kwargs
 
     @classmethod
-    def verify(cls, tools):
+    def verify(cls, tools: ToolCache):
         """Make subprocess available in tool cache."""
         # short circuit since already verified and available
         if hasattr(tools, "subprocess"):

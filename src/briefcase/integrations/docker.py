@@ -1,9 +1,16 @@
+from __future__ import annotations
+
 import os
 import subprocess
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
 
+from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseCommandError
+
+if TYPE_CHECKING:  # pragma: no cover
+    from briefcase.integrations.base import ToolCache
 
 
 class Docker:
@@ -107,11 +114,11 @@ installation, and try again.
         },
     }
 
-    def __init__(self, tools):
+    def __init__(self, tools: ToolCache):
         self.tools = tools
 
     @classmethod
-    def verify(cls, tools):
+    def verify(cls, tools: ToolCache):
         """Verify Docker is installed and operational."""
         # short circuit since already verified and available
         if hasattr(tools, "docker"):
@@ -180,7 +187,7 @@ installation, and try again.
 
 
 class DockerAppContext:
-    def __init__(self, tools, app):
+    def __init__(self, tools: ToolCache, app: AppConfig):
         self.tools = tools
         self.app = app
 
@@ -198,8 +205,8 @@ class DockerAppContext:
     @classmethod
     def verify(
         cls,
-        tools,
-        app,
+        tools: ToolCache,
+        app: AppConfig,
         image_tag: str,
         dockerfile_path: Path,
         app_base_path: Path,

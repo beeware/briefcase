@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 import os
 import tempfile
 from contextlib import suppress
 from email.message import Message
+from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
 import requests.exceptions as requests_exceptions
@@ -12,13 +15,16 @@ from briefcase.exceptions import (
     NetworkFailure,
 )
 
+if TYPE_CHECKING:  # pragma: no cover
+    from briefcase.integrations.base import ToolCache
+
 
 class Download:
-    def __init__(self, tools):
+    def __init__(self, tools: ToolCache):
         self.tools = tools
 
     @classmethod
-    def verify(cls, tools):
+    def verify(cls, tools: ToolCache):
         """Make downloader available in tool cache."""
         # short circuit since already verified and available
         if hasattr(tools, "download"):
@@ -31,9 +37,9 @@ class Download:
         """Download a given URL, caching it. If it has already been downloaded,
         return the value that has been cached.
 
-        This is a utility method used to obtain assets used by the
-        install process. The cached filename will be the filename portion of
-        the URL, appended to the download path.
+        This is a utility method used to obtain assets used by the installation
+        process. The cached filename will be the filename portion of the URL,
+        appended to the download path.
 
         :param url: The URL to download
         :param download_path: The path to the download cache folder. This path
