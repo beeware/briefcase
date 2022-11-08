@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Optional
 
 from briefcase.config import BaseConfig
-from briefcase.exceptions import BriefcaseCommandError
+from briefcase.exceptions import BriefcaseCommandError, TestSuiteFailure
 
 from .base import BaseCommand
 from .create import DependencyInstallError, write_dist_info
@@ -53,6 +53,12 @@ class DevCommand(BaseCommand):
             default=True,
             help="Do not run the app, just install dependencies.",
         )
+        parser.add_argument(
+            "--test",
+            dest="test_mode",
+            action="store_true",
+            help="Run the app in test mode",
+        )
 
     def install_dev_dependencies(self, app: BaseConfig, **options):
         """Install the dependencies for the app devly.
@@ -79,13 +85,21 @@ class DevCommand(BaseCommand):
         else:
             self.logger.info("No application dependencies.")
 
-    def run_dev_app(self, app: BaseConfig, env: dict, **options):
+    def run_dev_app(
+        self, app: BaseConfig, env: dict, test_mode: bool = False, **options
+    ):
         """Run the app in the dev environment.
 
         :param app: The config object for the app
         :param env: environment dictionary for sub command
+        :param test_mode: Run the test suite, rather than the app? (default: False)
         """
         try:
+            if test_mode:
+                exec_module = f"tests.{app.module_name}"
+            else:
+                exec_module = app.module_name
+
             # Invoke the app.
             self.tools.subprocess.run(
                 [
@@ -97,7 +111,7 @@ class DevCommand(BaseCommand):
                     (
                         "import runpy, sys;"
                         "sys.path.pop(0);"
-                        f'runpy.run_module("{app.module_name}", run_name="__main__", alter_sys=True)'
+                        f'runpy.run_module("{exec_module}", run_name="__main__", alter_sys=True)'
                     ),
                 ],
                 env=env,
@@ -105,9 +119,12 @@ class DevCommand(BaseCommand):
                 cwd=self.tools.home_path,
             )
         except subprocess.CalledProcessError as e:
-            raise BriefcaseCommandError(
-                f"Unable to start application '{app.app_name}'"
-            ) from e
+            if test_mode:
+                raise TestSuiteFailure()
+            else:
+                raise BriefcaseCommandError(
+                    f"Unable to start application {exec_module!r}"
+                ) from e
 
     def get_environment(self, app):
         # Create a shell environment where PYTHONPATH points to the source
@@ -123,6 +140,7 @@ class DevCommand(BaseCommand):
         appname: Optional[str] = None,
         update_dependencies: Optional[bool] = False,
         run_app: Optional[bool] = True,
+        test_mode: Optional[bool] = False,
         **options,
     ):
         # Confirm all required tools are available
@@ -164,6 +182,11 @@ class DevCommand(BaseCommand):
             write_dist_info(app, dist_info_path)
 
         if run_app:
-            self.logger.info("Starting in dev mode...", prefix=app.app_name)
+            if test_mode:
+                self.logger.info(
+                    "Running test suite in dev environment...", prefix=app.app_name
+                )
+            else:
+                self.logger.info("Starting in dev mode...", prefix=app.app_name)
             env = self.get_environment(app)
-            return self.run_dev_app(app, env, **options)
+            return self.run_dev_app(app, env, test_mode=test_mode, **options)

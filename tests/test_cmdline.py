@@ -129,7 +129,12 @@ def test_dev_command(monkeypatch, logger, console):
     assert cmd.logger.verbosity == 1
     assert cmd.logger is logger
     assert cmd.input is console
-    assert options == {"appname": None, "update_dependencies": False, "run_app": True}
+    assert options == {
+        "appname": None,
+        "update_dependencies": False,
+        "run_app": True,
+        "test_mode": False,
+    }
 
 
 def test_upgrade_command(monkeypatch, logger, console):
