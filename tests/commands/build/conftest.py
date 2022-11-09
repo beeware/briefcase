@@ -40,19 +40,25 @@ class DummyBuildCommand(BuildCommand):
         super().verify_app_tools(app=app)
         self.actions.append(("verify-app-tools", app.app_name))
 
-    def build_app(self, app, test_mode, **kwargs):
-        self.actions.append(("build", app.app_name, test_mode, kwargs))
+    def build_app(self, app, **kwargs):
+        self.actions.append(("build", app.app_name, kwargs.copy()))
         return full_options({"build_state": app.app_name}, kwargs)
 
     # These commands override the default behavior, simply tracking that
     # they were invoked, rather than instantiating a Create/Update command.
     # This is for testing purposes.
-    def create_command(self, app, test_mode, **kwargs):
-        self.actions.append(("create", app.app_name, test_mode, kwargs))
+    def create_command(self, app, **kwargs):
+        self.actions.append(("create", app.app_name, kwargs.copy()))
+        # Remove arguments consumed by the underlying call to create_app()
+        kwargs.pop("test_mode", None)
         return full_options({"create_state": app.app_name}, kwargs)
 
-    def update_command(self, app, test_mode, **kwargs):
-        self.actions.append(("update", app.app_name, test_mode, kwargs))
+    def update_command(self, app, **kwargs):
+        self.actions.append(("update", app.app_name, kwargs.copy()))
+        # Remove arguments consumed by the underlying call to update_app()
+        kwargs.pop("test_mode", None)
+        kwargs.pop("update_dependencies", None)
+        kwargs.pop("update_resources", None)
         return full_options({"update_state": app.app_name}, kwargs)
 
 

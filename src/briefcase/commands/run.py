@@ -64,18 +64,21 @@ class RunCommand(BaseCommand):
             raise BriefcaseCommandError(
                 "Project specifies more than one application; use --app to specify which one to start."
             )
-
         template_file = self.bundle_path(app)
         binary_file = self.binary_path(app)
         if not template_file.exists():
             state = self.create_command(app, test_mode=test_mode, **options)
             state = self.build_command(
-                app, test_mode=test_mode, **full_options(state, options)
+                app,
+                test_mode=test_mode,
+                **full_options(state, options),
             )
         elif update or test_mode:
             state = self.update_command(app, test_mode=test_mode, **options)
             state = self.build_command(
-                app, test_mode=test_mode, **full_options(state, options)
+                app,
+                test_mode=test_mode,
+                **full_options(state, options),
             )
         elif not binary_file.exists():
             state = self.build_command(app, test_mode=test_mode, **options)

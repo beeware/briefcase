@@ -48,14 +48,14 @@ class UpdateCommand(CreateCommand):
 
         self.verify_app_tools(app)
 
-        if update_dependencies:
+        if update_dependencies or test_mode:
             self.logger.info("Updating dependencies...", prefix=app.app_name)
             self.install_app_dependencies(app=app, test_mode=test_mode)
 
         self.logger.info("Updating application code...", prefix=app.app_name)
         self.install_app_code(app=app, test_mode=test_mode)
 
-        if update_resources:
+        if update_resources or test_mode:
             self.logger.info(
                 "Updating extra application resources...", prefix=app.app_name
             )
