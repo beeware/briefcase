@@ -14,7 +14,7 @@ from briefcase.platforms.android.gradle import GradleBuildCommand
 
 
 @pytest.fixture
-def build_command(tmp_path, first_app_config):
+def build_command(tmp_path, first_app_generated):
     command = GradleBuildCommand(
         logger=Log(),
         console=Console(),
@@ -34,7 +34,7 @@ def build_command(tmp_path, first_app_config):
     "host_os, gradlew_name",
     [("Windows", "gradlew.bat"), ("NonWindows", "gradlew")],
 )
-def test_execute_gradle(build_command, first_app_config, host_os, gradlew_name):
+def test_execute_gradle(build_command, first_app_generated, host_os, gradlew_name):
     """Validate that build_app() will launch `gradlew assembleDebug` with the
     appropriate environment & cwd, and that it will use `gradlew.bat` on
     Windows but `gradlew` elsewhere."""
@@ -43,21 +43,21 @@ def test_execute_gradle(build_command, first_app_config, host_os, gradlew_name):
     # Create mock environment with `key`, which we expect to be preserved, and
     # `ANDROID_SDK_ROOT`, which we expect to be overwritten.
     build_command.tools.os.environ = {"ANDROID_SDK_ROOT": "somewhere", "key": "value"}
-    build_command.build_app(first_app_config)
+    build_command.build_app(first_app_generated, test_mode=False)
     build_command.tools.subprocess.run.assert_called_once_with(
         [
-            build_command.bundle_path(first_app_config) / gradlew_name,
+            build_command.bundle_path(first_app_generated) / gradlew_name,
             "assembleDebug",
             "--console",
             "plain",
         ],
-        cwd=build_command.bundle_path(first_app_config),
+        cwd=build_command.bundle_path(first_app_generated),
         env=build_command.tools.android_sdk.env,
         check=True,
     )
 
 
-def test_print_gradle_errors(build_command, first_app_config):
+def test_print_gradle_errors(build_command, first_app_generated):
     """Validate that build_app() will convert stderr/stdout from the process
     into exception text."""
     # Create a mock subprocess that crashes, printing text partly in non-ASCII.
@@ -66,4 +66,4 @@ def test_print_gradle_errors(build_command, first_app_config):
         cmd=["ignored"],
     )
     with pytest.raises(BriefcaseCommandError):
-        build_command.build_app(first_app_config)
+        build_command.build_app(first_app_generated, test_mode=False)

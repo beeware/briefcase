@@ -238,13 +238,26 @@ flatpak run {bundle}.{app_name}
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(f"Error while building app {app_name}.") from e
 
-    def run(self, bundle, app_name):
+    def run(self, bundle, app_name, main_module=None):
         """Run a Flatpak.
 
         :param bundle: The bundle identifier for the app being built.
         :param app_name: The app name.
+        :param main_module: (Optional) The main module to run. Only required if you
+            want to override the default main module for the app.
         """
         try:
+            if main_module:
+                # Set a BRIEFCASE_MAIN_MODULE environment variable
+                # to override the module at startup
+                kwargs = {
+                    "env": {
+                        "BRIEFCASE_MAIN_MODULE": main_module,
+                    }
+                }
+            else:
+                kwargs = {}
+
             self.tools.subprocess.run(
                 [
                     "flatpak",
@@ -252,6 +265,7 @@ flatpak run {bundle}.{app_name}
                     f"{bundle}.{app_name}",
                 ],
                 check=True,
+                **kwargs,
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(f"Unable to start app {app_name}.") from e

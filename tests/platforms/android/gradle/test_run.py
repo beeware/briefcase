@@ -92,7 +92,11 @@ def test_run_existing_device(run_command, first_app_config):
     first_app_config.bundle = "com.ex-ample"
 
     # Invoke run_app
-    run_command.run_app(first_app_config, device_or_avd="exampleDevice")
+    run_command.run_app(
+        first_app_config,
+        device_or_avd="exampleDevice",
+        test_mode=False,
+    )
 
     # select_target_device was invoked with a specific device
     run_command.tools.android_sdk.select_target_device.assert_called_once_with(
@@ -128,7 +132,11 @@ def test_run_slow_start(run_command, first_app_config, monkeypatch):
     run_command.tools.mock_adb.pidof.side_effect = [None, None, "888"]
     monkeypatch.setattr(time, "sleep", MagicMock())
 
-    run_command.run_app(first_app_config, device_or_avd="exampleDevice")
+    run_command.run_app(
+        first_app_config,
+        device_or_avd="exampleDevice",
+        test_mode=False,
+    )
 
     assert (
         run_command.tools.mock_adb.pidof.mock_calls
@@ -151,7 +159,7 @@ def test_run_created_emulator(run_command, first_app_config):
     )
 
     # Invoke run_app
-    run_command.run_app(first_app_config)
+    run_command.run_app(first_app_config, test_mode=False)
 
     # A new emulator was created
     run_command.tools.android_sdk.create_emulator.assert_called_once_with()
@@ -197,7 +205,7 @@ def test_run_idle_device(run_command, first_app_config):
     )
 
     # Invoke run_app
-    run_command.run_app(first_app_config)
+    run_command.run_app(first_app_config, test_mode=False)
 
     # No attempt was made to create a new emulator
     run_command.tools.android_sdk.create_emulator.assert_not_called()
@@ -237,7 +245,11 @@ def test_run_ctrl_c(run_command, first_app_config, capsys):
     run_command.tools.mock_adb.logcat.side_effect = KeyboardInterrupt
 
     # Invoke run_app (and KeyboardInterrupt does not surface)
-    run_command.run_app(first_app_config, device_or_avd="exampleDevice")
+    run_command.run_app(
+        first_app_config,
+        device_or_avd="exampleDevice",
+        test_mode=False,
+    )
 
     # logcat is called and raised KeyboardInterrupt
     run_command.tools.mock_adb.logcat.assert_called_once_with("777")

@@ -15,7 +15,7 @@ def test_run(first_app_config, tmp_path):
     )
     command.tools.flatpak = mock.MagicMock(spec_set=Flatpak)
 
-    command.run_app(first_app_config)
+    command.run_app(first_app_config, test_mode=False)
 
     # App is executed
     command.tools.flatpak.run.assert_called_once_with(
@@ -37,7 +37,7 @@ def test_run_ctrl_c(first_app_config, tmp_path, capsys):
     command.tools.flatpak.run.side_effect = KeyboardInterrupt
 
     # Invoke run_app (and KeyboardInterrupt does not surface)
-    command.run_app(first_app_config)
+    command.run_app(first_app_config, test_mode=False)
 
     # App is executed
     command.tools.flatpak.run.assert_called_once_with(

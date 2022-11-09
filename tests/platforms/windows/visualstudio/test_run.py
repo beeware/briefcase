@@ -20,7 +20,7 @@ def test_run_app(first_app_config, tmp_path):
     command.tools.home_path = tmp_path / "home"
     command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
 
-    command.run_app(first_app_config)
+    command.run_app(first_app_config, test_mode=False)
 
     command.tools.subprocess.run.assert_called_with(
         [

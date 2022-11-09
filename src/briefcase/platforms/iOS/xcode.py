@@ -435,7 +435,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
 
         # Install the app.
         try:
-            with self.input.wait_bar("Installing new app version..."):
+            with self.input.wait_bar(f"Installing new {label} version..."):
                 self.tools.subprocess.run(
                     ["xcrun", "simctl", "install", udid, self.binary_path(app)],
                     check=True,

@@ -70,7 +70,7 @@ def test_run_app(first_app_config, tmp_path):
 
     command.tools.subprocess = MagicMock(spec_set=Subprocess)
 
-    command.run_app(first_app_config)
+    command.run_app(first_app_config, test_mode=False)
 
     command.tools.subprocess.run.assert_called_with(
         [
@@ -102,7 +102,7 @@ def test_run_app_failed(first_app_config, tmp_path):
     )
 
     with pytest.raises(BriefcaseCommandError):
-        command.run_app(first_app_config)
+        command.run_app(first_app_config, test_mode=False)
 
     # The run command was still invoked, though
     command.tools.subprocess.run.assert_called_with(
@@ -134,7 +134,7 @@ def test_run_app_ctrl_c(first_app_config, tmp_path, capsys):
     command.tools.subprocess.run.side_effect = KeyboardInterrupt
 
     # Invoke run_app (and KeyboardInterrupt does not surface)
-    command.run_app(first_app_config)
+    command.run_app(first_app_config, test_mode=False)
 
     # AppImage is run and raises KeyboardInterrupt
     command.tools.subprocess.run.assert_called_with(

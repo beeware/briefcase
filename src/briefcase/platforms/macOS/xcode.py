@@ -12,12 +12,7 @@ from briefcase.commands import (
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.xcode import verify_xcode_install
-from briefcase.platforms.macOS import (
-    macOSBuildMixin,
-    macOSMixin,
-    macOSPackageMixin,
-    macOSRunMixin,
-)
+from briefcase.platforms.macOS import macOSMixin, macOSPackageMixin, macOSRunMixin
 
 
 class macOSXcodeMixin(macOSMixin):
@@ -77,18 +72,14 @@ class macOSXcodeUpdateCommand(macOSXcodeCreateCommand, UpdateCommand):
     description = "Update an existing macOS Xcode project."
 
 
-class macOSXcodeBuildCommand(macOSXcodeMixin, macOSBuildMixin, BuildCommand):
+class macOSXcodeBuildCommand(macOSXcodeMixin, BuildCommand):
     description = "Build a macOS Xcode project."
 
-    def build_app(self, app: BaseConfig, test_mode: bool, **kwargs):
+    def build_app(self, app: BaseConfig, **kwargs):
         """Build the Xcode project for the application.
 
         :param app: The application to build
-        :param test_mode: Should the app be updated in test mode? (default: False)
         """
-        self.logger.info("Updating app metadata...", prefix=app.app_name)
-        self.update_app_metadata(app=app, test_mode=test_mode)
-
         self.logger.info("Building XCode project...", prefix=app.app_name)
         with self.input.wait_bar("Building..."):
             try:

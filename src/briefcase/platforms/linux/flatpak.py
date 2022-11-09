@@ -186,18 +186,28 @@ class LinuxFlatpakBuildCommand(LinuxFlatpakMixin, BuildCommand):
 class LinuxFlatpakRunCommand(LinuxFlatpakMixin, RunCommand):
     description = "Run a Linux Flatpak."
 
-    def run_app(self, app: AppConfig, **kwargs):
+    def run_app(self, app: AppConfig, test_mode: bool, **kwargs):
         """Start the application.
 
         :param app: The config object for the app
+        :param test_mode: Boolean; Is the app running in test mode?
         """
-        self.logger.info("Starting app...", prefix=app.app_name)
         try:
+            if test_mode:
+                self.logger.info("Starting test suite...", prefix=app.app_name)
+                kwargs = {
+                    "main_module": f"tests.{app.module_name}",
+                }
+            else:
+                self.logger.info("Starting app...", prefix=app.app_name)
+                kwargs = {}
+
             # Start streaming logs for the app.
             self.tools.logger.info("=" * 75)
             self.tools.flatpak.run(
                 bundle=app.bundle,
                 app_name=app.app_name,
+                **kwargs,
             )
         except KeyboardInterrupt:
             pass  # Catch CTRL-C to exit normally

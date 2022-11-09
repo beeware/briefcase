@@ -1,5 +1,4 @@
 import os
-import plistlib
 import re
 import subprocess
 import time
@@ -30,37 +29,6 @@ DEFAULT_OUTPUT_FORMAT = "app"
 
 class macOSMixin:
     platform = "macOS"
-
-
-class macOSBuildMixin:
-    def info_plist_path(self, app: BaseConfig):
-        """Obtain the path to the application's plist file.
-
-        :param app: The config object for the app
-        :return: The full path of the application's plist file.
-        """
-        # If the index file hasn't been loaded for this app, load it.
-        try:
-            path_index = self._path_index[app]
-        except KeyError:
-            path_index = self._load_path_index(app)
-        return self.bundle_path(app) / path_index["info_plist_path"]
-
-    def update_app_metadata(self, app: BaseConfig, test_mode: bool):
-        with self.input.wait_bar("Setting main module..."):
-            # Load the original plist
-            with self.info_plist_path(app).open("rb") as f:
-                info_plist = plistlib.load(f)
-
-            # If we're in test mode, change the name of the app module.
-            if test_mode:
-                info_plist["MainModule"] = f"tests.{app.module_name}"
-            else:
-                info_plist["MainModule"] = app.module_name
-
-            # Write the modified plist
-            with self.info_plist_path(app).open("wb") as f:
-                plistlib.dump(info_plist, f)
 
 
 class LogFilter:
@@ -125,11 +93,18 @@ class macOSRunMixin:
         time.sleep(0.25)
 
         try:
-            self.logger.info("Starting app...", prefix=app.app_name)
             try:
                 if test_mode:
-                    kwargs = {"env": {"HEADLESS": "1"}}
+                    self.logger.info("Starting test suite...", prefix=app.app_name)
+                    # In test mode, set a BRIEFCASE_MAIN_MODULE environment variable
+                    # to override the module at startup
+                    kwargs = {
+                        "env": {
+                            "BRIEFCASE_MAIN_MODULE": f"tests.{app.module_name}",
+                        }
+                    }
                 else:
+                    self.logger.info("Starting app...", prefix=app.app_name)
                     kwargs = {}
 
                 self.tools.subprocess.run(

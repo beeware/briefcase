@@ -84,7 +84,13 @@ def test_run(monkeypatch, run_command, first_app_built):
     monkeypatch.setattr(webbrowser, "open_new_tab", mock_open_new_tab)
 
     # Run the app
-    run_command.run_app(first_app_built, "localhost", 8080, open_browser=True)
+    run_command.run_app(
+        first_app_built,
+        test_mode=False,
+        host="localhost",
+        port=8080,
+        open_browser=True,
+    )
 
     # The browser was opened
     mock_open_new_tab.assert_called_once_with("http://127.0.0.1:8080")
@@ -186,7 +192,13 @@ def test_cleanup_server_error(
 
     # Run the app; an error is raised
     with pytest.raises(BriefcaseCommandError, match=message):
-        run_command.run_app(first_app_built, host, port, open_browser=True)
+        run_command.run_app(
+            first_app_built,
+            test_mode=False,
+            host=host,
+            port=port,
+            open_browser=True,
+        )
 
     # The browser was not opened
     mock_open_new_tab.assert_not_called()
@@ -228,7 +240,13 @@ def test_cleanup_runtime_server_error(monkeypatch, run_command, first_app_built)
 
     # Run the app; it raises an error
     with pytest.raises(ValueError):
-        run_command.run_app(first_app_built, "localhost", 8080, open_browser=True)
+        run_command.run_app(
+            first_app_built,
+            test_mode=False,
+            host="localhost",
+            port=8080,
+            open_browser=True,
+        )
 
     # The browser was opened
     mock_open_new_tab.assert_called_once_with("http://127.0.0.1:8080")
@@ -271,7 +289,13 @@ def test_run_without_browser(monkeypatch, run_command, first_app_built):
     monkeypatch.setattr(webbrowser, "open_new_tab", mock_open_new_tab)
 
     # Run the app
-    run_command.run_app(first_app_built, "localhost", 8080, open_browser=False)
+    run_command.run_app(
+        first_app_built,
+        test_mode=False,
+        host="localhost",
+        port=8080,
+        open_browser=False,
+    )
 
     # The browser was not opened
     mock_open_new_tab.assert_not_called()
@@ -315,7 +339,13 @@ def test_run_autoselect_port(monkeypatch, run_command, first_app_built):
     monkeypatch.setattr(webbrowser, "open_new_tab", mock_open_new_tab)
 
     # Run the app on an autoselected port
-    run_command.run_app(first_app_built, "localhost", 0, open_browser=True)
+    run_command.run_app(
+        first_app_built,
+        test_mode=False,
+        host="localhost",
+        port=0,
+        open_browser=True,
+    )
 
     # The browser was opened
     mock_open_new_tab.assert_called_once_with("http://127.0.0.1:12345")

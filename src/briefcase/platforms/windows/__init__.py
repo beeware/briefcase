@@ -74,19 +74,33 @@ class WindowsCreateCommand(CreateCommand):
 
 
 class WindowsRunCommand(RunCommand):
-    def run_app(self, app: BaseConfig, **kwargs):
+    def run_app(self, app: BaseConfig, test_mode: bool, **kwargs):
         """Start the application.
 
         :param app: The config object for the app
+        :param test_mode: Boolean; Is the app running in test mode?
         """
-        self.logger.info("Starting app...", prefix=app.app_name)
         try:
+            if test_mode:
+                # In test mode, set a BRIEFCASE_MAIN_MODULE environment variable
+                # to override the module at startup
+                self.logger.info("Starting test_suite...", prefix=app.app_name)
+                kwargs = {
+                    "env": {
+                        "BRIEFCASE_MAIN_MODULE": f"tests.{app.module_name}",
+                    }
+                }
+            else:
+                self.logger.info("Starting app...", prefix=app.app_name)
+                kwargs = {}
+
             # Start streaming logs for the app.
             self.logger.info("=" * 75)
             self.tools.subprocess.run(
                 [os.fsdecode(self.binary_path(app))],
                 cwd=self.tools.home_path,
                 check=True,
+                **kwargs,
             )
         except KeyboardInterrupt:
             pass  # Catch CTRL-C to exit normally

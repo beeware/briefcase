@@ -141,11 +141,44 @@ class GradleOpenCommand(GradleMixin, OpenCommand):
 class GradleBuildCommand(GradleMixin, BuildCommand):
     description = "Build an Android debug APK."
 
-    def build_app(self, app: BaseConfig, **kwargs):
+    def metadata_resource_path(self, app: BaseConfig):
+        """Obtain the path to the application's plist file.
+
+        :param app: The config object for the app
+        :return: The full path of the application's plist file.
+        """
+        # If the index file hasn't been loaded for this app, load it.
+        try:
+            path_index = self._path_index[app]
+        except KeyError:
+            path_index = self._load_path_index(app)
+        return self.bundle_path(app) / path_index["metadata_resource_path"]
+
+    def update_app_metadata(self, app: BaseConfig, test_mode: bool):
+        with self.input.wait_bar("Setting main module..."):
+            with self.metadata_resource_path(app).open("w", encoding="utf-8") as f:
+                if test_mode:
+                    main_module = f"tests.{app.module_name}"
+                else:
+                    main_module = app.module_name
+
+                f.write(
+                    f"""\
+<resources>
+    <string name="main_module">{main_module}</string>
+</resources>
+"""
+                )
+
+    def build_app(self, app: BaseConfig, test_mode: bool, **kwargs):
         """Build an application.
 
         :param app: The application to build
+        :param test_mode: Should the app be updated in test mode? (default: False)
         """
+        self.logger.info("Updating app metadata...", prefix=app.app_name)
+        self.update_app_metadata(app=app, test_mode=test_mode)
+
         self.logger.info("Building Android APK...", prefix=app.app_name)
         with self.input.wait_bar("Building..."):
             try:

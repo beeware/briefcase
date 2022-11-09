@@ -9,7 +9,6 @@ from briefcase.commands import (
 )
 from briefcase.config import BaseConfig
 from briefcase.platforms.macOS import (
-    macOSBuildMixin,
     macOSMixin,
     macOSPackageMixin,
     macOSRunMixin,
@@ -48,23 +47,14 @@ class macOSAppOpenCommand(macOSAppMixin, OpenCommand):
     description = "Open the app bundle folder for a macOS app."
 
 
-class macOSAppBuildCommand(
-    macOSAppMixin,
-    macOSBuildMixin,
-    macOSSigningMixin,
-    BuildCommand,
-):
+class macOSAppBuildCommand(macOSAppMixin, macOSSigningMixin, BuildCommand):
     description = "Build a macOS app."
 
-    def build_app(self, app: BaseConfig, test_mode: bool, **kwargs):
+    def build_app(self, app: BaseConfig, **kwargs):
         """Build the macOS app.
 
         :param app: The application to build
-        :param test_mode: Should the app be updated in test mode? (default: False)
         """
-        self.logger.info("Updating app metadata...", prefix=app.app_name)
-        self.update_app_metadata(app=app, test_mode=test_mode)
-
         # macOS apps don't have anything to compile, but they do need to be
         # signed to be able to execute on M1 hardware - even if it's only an
         # adhoc signing identity. Apply an adhoc signing identity to the
