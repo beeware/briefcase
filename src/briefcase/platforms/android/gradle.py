@@ -253,7 +253,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
                     prefix=app.app_name,
                 )
                 self.logger.info("=" * 75)
-                log_popen = adb.logcat_stream(pid=pid)
+                log_popen = adb.logcat(pid=pid)
 
                 self.tools.subprocess.stream_output(
                     "log stream",
@@ -273,7 +273,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
 
             # Show the log from the start time of the app
             self.logger.error("=" * 75)
-            adb.logcat(since=start_time)
+            adb.logcat_tail(since=start_time)
             raise BriefcaseCommandError(f"Problem starting app {app.app_name!r}")
 
 

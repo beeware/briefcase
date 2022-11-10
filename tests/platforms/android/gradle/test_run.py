@@ -87,7 +87,7 @@ def test_run_existing_device(run_command, first_app_config):
 
     # Set up the log streamer to return a known stream
     log_popen = mock.MagicMock()
-    run_command.tools.mock_adb.logcat_stream.return_value = log_popen
+    run_command.tools.mock_adb.logcat.return_value = log_popen
 
     # To satisfy coverage, the stop function must be invoked at least once
     # when invoking stream_output.
@@ -128,7 +128,7 @@ def test_run_existing_device(run_command, first_app_config):
         f"{first_app_config.package_name}.{first_app_config.module_name}",
         stealth=True,
     )
-    run_command.tools.mock_adb.logcat_stream.assert_called_once_with(pid="777")
+    run_command.tools.mock_adb.logcat.assert_called_once_with(pid="777")
 
     run_command.tools.subprocess.stream_output.assert_called_once_with(
         "log stream", log_popen, stop_func=mock.ANY
@@ -143,7 +143,7 @@ def test_run_slow_start(run_command, first_app_config, monkeypatch):
 
     # Set up the log streamer to return a known stream
     log_popen = mock.MagicMock()
-    run_command.tools.mock_adb.logcat_stream.return_value = log_popen
+    run_command.tools.mock_adb.logcat.return_value = log_popen
 
     # Mock the pidof call taking 3 attempts to return
     run_command.tools.mock_adb.pidof.side_effect = [None, None, "888"]
@@ -156,7 +156,7 @@ def test_run_slow_start(run_command, first_app_config, monkeypatch):
         == [mock.call("com.example.first_app", stealth=True)] * 3
     )
     assert time.sleep.mock_calls == [mock.call(0.01)] * 2
-    run_command.tools.mock_adb.logcat_stream.assert_called_once_with(pid="888")
+    run_command.tools.mock_adb.logcat.assert_called_once_with(pid="888")
 
     run_command.tools.subprocess.stream_output.assert_called_once_with(
         "log stream", log_popen, stop_func=mock.ANY
@@ -191,10 +191,10 @@ def test_run_crash_at_start(run_command, first_app_config, monkeypatch):
     assert time.sleep.mock_calls == [mock.call(0.01)] * 500
 
     # The PID was never found, so logs can't be streamed
-    run_command.tools.mock_adb.logcat_stream.assert_not_called()
+    run_command.tools.mock_adb.logcat.assert_not_called()
 
-    # But we will get a log dump from
-    run_command.tools.mock_adb.logcat.assert_called_once_with(
+    # But we will get a log dump from logcat_tail
+    run_command.tools.mock_adb.logcat_tail.assert_called_once_with(
         since=start_datetime - datetime.timedelta(seconds=10)
     )
 
@@ -215,7 +215,7 @@ def test_run_created_emulator(run_command, first_app_config):
 
     # Set up the log streamer to return a known stream
     log_popen = mock.MagicMock()
-    run_command.tools.mock_adb.logcat_stream.return_value = log_popen
+    run_command.tools.mock_adb.logcat.return_value = log_popen
 
     # Invoke run_app
     run_command.run_app(first_app_config)
@@ -246,7 +246,7 @@ def test_run_created_emulator(run_command, first_app_config):
         "org.beeware.android.MainActivity",
     )
 
-    run_command.tools.mock_adb.logcat_stream.assert_called_once_with(pid="777")
+    run_command.tools.mock_adb.logcat.assert_called_once_with(pid="777")
 
     run_command.tools.subprocess.stream_output.assert_called_once_with(
         "log stream", log_popen, stop_func=mock.ANY
@@ -269,7 +269,7 @@ def test_run_idle_device(run_command, first_app_config):
 
     # Set up the log streamer to return a known stream
     log_popen = mock.MagicMock()
-    run_command.tools.mock_adb.logcat_stream.return_value = log_popen
+    run_command.tools.mock_adb.logcat.return_value = log_popen
 
     # Invoke run_app
     run_command.run_app(first_app_config)
@@ -299,7 +299,7 @@ def test_run_idle_device(run_command, first_app_config):
         "org.beeware.android.MainActivity",
     )
 
-    run_command.tools.mock_adb.logcat_stream.assert_called_once_with(pid="777")
+    run_command.tools.mock_adb.logcat.assert_called_once_with(pid="777")
 
     run_command.tools.subprocess.stream_output.assert_called_once_with(
         "log stream", log_popen, stop_func=mock.ANY
@@ -315,7 +315,7 @@ def test_run_ctrl_c(run_command, first_app_config, capsys):
 
     # Set up the log streamer to return a known stream
     log_popen = mock.MagicMock()
-    run_command.tools.mock_adb.logcat_stream.return_value = log_popen
+    run_command.tools.mock_adb.logcat.return_value = log_popen
 
     # Mock the effect of CTRL-C being hit while streaming
     run_command.tools.subprocess.stream_output.side_effect = KeyboardInterrupt
@@ -324,7 +324,7 @@ def test_run_ctrl_c(run_command, first_app_config, capsys):
     run_command.run_app(first_app_config, device_or_avd="exampleDevice")
 
     # logcat is called and raised KeyboardInterrupt
-    run_command.tools.mock_adb.logcat_stream.assert_called_once_with(pid="777")
+    run_command.tools.mock_adb.logcat.assert_called_once_with(pid="777")
 
     run_command.tools.subprocess.stream_output.assert_called_once_with(
         "log stream", log_popen, stop_func=mock.ANY

@@ -1258,8 +1258,8 @@ Activity class not found while starting app.
                 f"Unable to start {package}/{activity} on {self.device}"
             ) from e
 
-    def logcat_stream(self, pid):
-        """Start tailing the adb log for the device.
+    def logcat(self, pid):
+        """Start following the adb log for the device.
 
         :param pid: The PID whose logs you want to display.
         :returns: A Popen object for the logcat call
@@ -1281,8 +1281,9 @@ Activity class not found while starting app.
             bufsize=1,
         )
 
-    def logcat(self, since=None):
-        """Show the logs for Python-like apps, starting from a given timestamp.
+    def logcat_tail(self, since=None):
+        """Show the tail of the logs for Python-like apps, starting from a
+        given timestamp.
 
         :param since: The start time from which logs should be displayed
         """
