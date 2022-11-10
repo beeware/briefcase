@@ -21,7 +21,7 @@ def test_pid_exists_stealth(mock_tools):
 
 
 def test_pid_does_not_exist(mock_tools):
-    "If adb.pid_exists() returns a PID of 0, it is interpreted as the process not existing."
+    "If adb.pid_exists() returns a status code of 1, it is interpreted as the process not existing."
     adb = ADB(mock_tools, "exampleDevice")
     adb.run = Mock(side_effect=subprocess.CalledProcessError(returncode=1, cmd="test"))
     assert not adb.pid_exists("9999") is None

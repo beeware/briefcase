@@ -10,7 +10,7 @@ def test_logcat(mock_tools):
     # Mock out the run command on an adb instance
     adb = ADB(mock_tools, "exampleDevice")
 
-    # Mock the
+    # Mock the result of calling Popen so we can compare against this return value
     popen = mock.MagicMock()
     mock_tools.subprocess.Popen.return_value = popen
 
