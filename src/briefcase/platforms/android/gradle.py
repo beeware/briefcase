@@ -234,7 +234,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
             while not pid:
                 pid = adb.pidof(package)
                 if not pid:
-                    time.sleep(0.5)
+                    time.sleep(0.05)
 
         try:
             self.logger.info(

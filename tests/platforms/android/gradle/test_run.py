@@ -129,7 +129,7 @@ def test_run_slow_start(run_command, first_app_config, monkeypatch):
         run_command.tools.mock_adb.pidof.mock_calls
         == [call("com.example.first_app")] * 3
     )
-    assert time.sleep.mock_calls == [call(0.5)] * 2
+    assert time.sleep.mock_calls == [call(0.05)] * 2
     run_command.tools.mock_adb.logcat.assert_called_once_with("888")
 
 
