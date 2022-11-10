@@ -444,7 +444,7 @@ class Subprocess:
         return subprocess.CompletedProcess(args, return_code, stderr=stderr)
 
     @ensure_console_is_safe
-    def check_output(self, args, **kwargs):
+    def check_output(self, args, stealth=False, **kwargs):
         """A wrapper for subprocess.check_output()
 
         The behavior of this method is identical to
@@ -454,22 +454,32 @@ class Subprocess:
            environment.
          - The `text` argument is defaulted to True so all output
            is returned as strings instead of bytes.
+
+        :param stealth: Should the invocation of this command be silent, and
+            *not* appear in the logs? This should almost always be False;
+            however, for some calls (most notably, calls that are called
+            frequently to evaluate the status of another process), logging can
+            be turned off so that log output isn't corrupted by thousands of
+            polling calls.
         """
-        self._log_command(args)
-        self._log_cwd(kwargs.get("cwd"))
-        self._log_environment(kwargs.get("env"))
+        if not stealth:
+            self._log_command(args)
+            self._log_cwd(kwargs.get("cwd"))
+            self._log_environment(kwargs.get("env"))
 
         try:
             cmd_output = self._subprocess.check_output(
                 [str(arg) for arg in args], **self.final_kwargs(**kwargs)
             )
         except subprocess.CalledProcessError as e:
-            self._log_output(e.output, e.stderr)
-            self._log_return_code(e.returncode)
+            if not stealth:
+                self._log_output(e.output, e.stderr)
+                self._log_return_code(e.returncode)
             raise
 
-        self._log_output(cmd_output)
-        self._log_return_code(0)
+        if not stealth:
+            self._log_output(cmd_output)
+            self._log_return_code(0)
         return cmd_output
 
     def parse_output(self, output_parser, args, **kwargs):

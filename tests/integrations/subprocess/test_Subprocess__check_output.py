@@ -190,6 +190,34 @@ def test_debug_call_with_env(mock_sub, capsys, tmp_path):
     assert capsys.readouterr().out == expected_output
 
 
+def test_debug_call_with_stealth(mock_sub, capsys, tmp_path):
+    """If stealth is on, calls aren't logged, even if verbosity is turned
+    up."""
+    mock_sub.tools.logger.verbosity = 2
+
+    env = {"NewVar": "NewVarValue"}
+    mock_sub.check_output(
+        ["hello", "world"],
+        env=env,
+        cwd=tmp_path / "cwd",
+        stealth=True,
+    )
+
+    merged_env = mock_sub.tools.os.environ.copy()
+    merged_env.update(env)
+
+    mock_sub._subprocess.check_output.assert_called_with(
+        ["hello", "world"],
+        env=merged_env,
+        cwd=os.fsdecode(tmp_path / "cwd"),
+        text=True,
+        encoding=ANY,
+    )
+
+    # No output
+    assert capsys.readouterr().out == ""
+
+
 def test_calledprocesserror_exception_logging(mock_sub, capsys):
     """If command errors, ensure command output is printed."""
     mock_sub.tools.logger.verbosity = 2
