@@ -251,6 +251,25 @@ def test_calledprocesserror_exception_logging(mock_sub, capsys):
     assert capsys.readouterr().out == expected_output
 
 
+def test_calledprocesserror_exception_stealth(mock_sub, capsys):
+    """If command errors in stealth mode, no command output is printed."""
+    mock_sub.tools.logger.verbosity = 2
+
+    called_process_error = CalledProcessError(
+        returncode=-1,
+        cmd="hello world",
+        output="output line 1\noutput line 2",
+        stderr="error line 1\nerror line 2",
+    )
+    mock_sub._subprocess.check_output.side_effect = called_process_error
+
+    with pytest.raises(CalledProcessError):
+        mock_sub.check_output(["hello", "world"], stealth=True)
+
+    # No ouput in stealth mode
+    assert capsys.readouterr().out == ""
+
+
 def test_calledprocesserror_exception_logging_no_cmd_output(mock_sub, capsys):
     """If command errors, and there is no command output, errors are still
     printed."""
