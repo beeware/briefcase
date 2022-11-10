@@ -1309,14 +1309,23 @@ Activity class not found while starting app.
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError("Error starting ADB logcat.") from e
 
-    def pidof(self, package):
-        """Return the PID of the given app as a string, or None if it isn't
-        running."""
+    def pidof(self, package, stealth=False):
+        """Obtain the PID of a running app by package name.
+
+        :param package: The package ID for the application (e.g.,
+            ``org.beeware.tutorial``)
+        :param stealth: Should this be executed in stealth mode?
+        :returns: The PID of the given app as a string, or None if it isn't
+        running.
+        """
         # The pidof command is available since API level 24. The level 23 emulator image also
         # includes it, but it doesn't work correctly (it returns all processes).
         try:
             # Exit status is unreliable: some devices (e.g. Nexus 4) return 0 even when no
             # process was found.
-            return self.run("shell", "pidof", "-s", package).strip() or None
+            return (
+                self.run("shell", "pidof", "-s", package, stealth=stealth).strip()
+                or None
+            )
         except subprocess.CalledProcessError:
             return None
