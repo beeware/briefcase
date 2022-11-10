@@ -1,14 +1,8 @@
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
-
 from briefcase.exceptions import MissingToolError
-
-if TYPE_CHECKING:  # pragma: no cover
-    from briefcase.integrations.base import ToolCache
+from briefcase.integrations.base import Tool, ToolCache
 
 
-class RCEdit:
+class RCEdit(Tool):
     name = "rcedit"
     full_name = "RCEdit"
 
@@ -50,8 +44,7 @@ class RCEdit:
             else:
                 raise MissingToolError("RCEdit")
 
-        tools.rcedit = rcedit
-        return rcedit
+        return tools.add_tool(name=cls.name, tool=rcedit)
 
     def exists(self):
         return self.rcedit_path.exists()

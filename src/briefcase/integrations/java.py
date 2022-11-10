@@ -1,22 +1,17 @@
-from __future__ import annotations
-
 import os
 import shutil
 import subprocess
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from briefcase.exceptions import (
     BriefcaseCommandError,
     MissingToolError,
     NonManagedToolError,
 )
-
-if TYPE_CHECKING:  # pragma: no cover
-    from briefcase.integrations.base import ToolCache
+from briefcase.integrations.base import Tool, ToolCache
 
 
-class JDK:
+class JDK(Tool):
     name = "java"
     full_name = "Java JDK"
 
@@ -222,8 +217,7 @@ class JDK:
                 else:
                     raise MissingToolError("Java")
 
-        tools.java = java
-        return java
+        return tools.add_tool(name=cls.name, tool=java)
 
     def exists(self):
         return (self.java_home / "bin").exists()

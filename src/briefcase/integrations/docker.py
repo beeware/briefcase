@@ -1,19 +1,17 @@
-from __future__ import annotations
-
 import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseCommandError
-
-if TYPE_CHECKING:  # pragma: no cover
-    from briefcase.integrations.base import ToolCache
+from briefcase.integrations.base import Tool, ToolCache
 
 
-class Docker:
+class Docker(Tool):
+    name = "docker"
+    full_name = "Docker"
+
     WRONG_DOCKER_VERSION_ERROR = """\
 Briefcase requires Docker 19 or higher, but you are currently running
 version {docker_version}. Visit:
@@ -182,11 +180,10 @@ installation, and try again.
             else:
                 raise BriefcaseCommandError(cls.GENERIC_DOCKER_ERROR) from e
 
-        tools.docker = Docker(tools=tools)
-        return tools.docker
+        return tools.add_tool(name=cls.name, tool=Docker(tools=tools))
 
 
-class DockerAppContext:
+class DockerAppContext(Tool):
     def __init__(self, tools: ToolCache, app: AppConfig):
         self.tools = tools
         self.app = app
@@ -235,7 +232,7 @@ class DockerAppContext:
 
         Docker.verify(tools=tools)
 
-        tools[app].app_context = DockerAppContext(tools, app)
+        tools[app].add_tool(name="app_context", tool=DockerAppContext(tools, app))
         tools[app].app_context.prepare(
             image_tag=image_tag,
             dockerfile_path=dockerfile_path,

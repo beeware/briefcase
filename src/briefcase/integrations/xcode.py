@@ -1,16 +1,11 @@
-from __future__ import annotations
-
 import enum
 import re
 import subprocess
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from briefcase.exceptions import BriefcaseCommandError, CommandOutputParseError
+from briefcase.integrations.base import ToolCache
 from briefcase.integrations.subprocess import json_parser
-
-if TYPE_CHECKING:  # pragma: no cover
-    from briefcase.integrations.base import ToolCache
 
 
 class DeviceState(enum.Enum):
@@ -20,7 +15,7 @@ class DeviceState(enum.Enum):
     UNKNOWN = 99
 
 
-def verify_xcode_install(tools: ToolCache, min_version=None):
+def verify_xcode_install(tools: ToolCache, min_version: tuple = None):
     """Verify that Xcode and the command line developer tools are installed and
     ready for use.
 
@@ -133,7 +128,7 @@ Re-run Briefcase once that installation is complete.
 
 def ensure_xcode_is_installed(
     tools: ToolCache,
-    min_version=None,
+    min_version: tuple = None,
     xcode_location="/Applications/Xcode.app",
 ):
     """Determine if Xcode is installed; and if so, that it meets minimum

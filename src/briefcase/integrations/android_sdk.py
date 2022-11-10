@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import os
 import re
 import shutil
@@ -7,7 +5,6 @@ import subprocess
 import time
 from contextlib import suppress
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from briefcase.config import PEP508_NAME_RE
 from briefcase.console import InputDisabled, select_option
@@ -16,10 +13,8 @@ from briefcase.exceptions import (
     InvalidDeviceError,
     MissingToolError,
 )
+from briefcase.integrations.base import Tool, ToolCache
 from briefcase.integrations.java import JDK
-
-if TYPE_CHECKING:  # pragma: no cover
-    from briefcase.integrations.base import ToolCache
 
 DEVICE_NOT_FOUND = re.compile(r"^error: device '[^']*' not found")
 
@@ -42,7 +37,7 @@ this device as a deployment target.
         )
 
 
-class AndroidSDK:
+class AndroidSDK(Tool):
     name = "android_sdk"
     full_name = "Android SDK"
 
@@ -225,8 +220,7 @@ class AndroidSDK:
                 else:
                     raise MissingToolError("Android SDK")
 
-        tools.android_sdk = sdk
-        return sdk
+        return tools.add_tool(name=cls.name, tool=sdk)
 
     def exists(self):
         """Confirm that the SDK actually exists.
@@ -1106,7 +1100,7 @@ find this page helpful in diagnosing emulator problems.
 
 
 class ADB:
-    def __init__(self, tools: ToolCache, device):
+    def __init__(self, tools: ToolCache, device: str):
         """An API integration for the Android Debug Bridge (ADB).
 
         :param tools: ToolCache of available tools

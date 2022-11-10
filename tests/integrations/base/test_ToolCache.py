@@ -10,8 +10,6 @@ from cookiecutter.main import cookiecutter
 
 from briefcase.console import Console, Log
 from briefcase.integrations.base import ToolCache
-from briefcase.integrations.download import Download
-from briefcase.integrations.subprocess import Subprocess
 
 
 @pytest.fixture
@@ -23,6 +21,29 @@ def simple_tools(tmp_path):
     )
 
 
+def test_toolcache_typing():
+    """Tool typing for ToolCache is correct."""
+    expected_type_defs = {
+        "android_sdk": "AndroidSDK",
+        "docker": "Docker",
+        "download": "Download",
+        "flatpak": "Flatpak",
+        "java": "JDK",
+        "linuxdeploy": "LinuxDeploy",
+        "rcedit": "RCEdit",
+        "subprocess": "Subprocess",
+        "visualstudio": "VisualStudio",
+        "wix": "WiX",
+        "xcode": "bool",
+        "xcode_cli": "bool",
+    }
+    for tool_name, tool_type in expected_type_defs.items():
+        assert ToolCache.__annotations__[tool_name] == tool_type
+
+    assert "DockerAppContext" in ToolCache.__annotations__["app_context"]
+    assert "Subprocess" in ToolCache.__annotations__["app_context"]
+
+
 def test_third_party_tools_available():
     """Third party tools are available."""
     assert ToolCache.os is os
@@ -32,14 +53,6 @@ def test_third_party_tools_available():
 
     assert ToolCache.cookiecutter is cookiecutter
     assert ToolCache.requests is requests
-
-
-def test_default_tools_available(simple_tools):
-    """Default tools are always available."""
-    assert isinstance(simple_tools.subprocess, Subprocess)
-    assert isinstance(simple_tools["app"].subprocess, Subprocess)
-    assert isinstance(simple_tools.download, Download)
-    assert isinstance(simple_tools["app"].download, Download)
 
 
 def test_always_true(simple_tools, tmp_path):
@@ -123,3 +136,17 @@ def test_windows_home_path(home_path, expected_path, tmp_path):
         home_path=home_path,
     )
     assert tools.home_path == expected_path
+
+
+def test_add_tool():
+    """Added tools are returned and available via attribute."""
+    tools = ToolCache(
+        logger=Log(),
+        console=Console(),
+        base_path="/home/data",
+    )
+    tool_name = "toolname"
+    tool = object()
+
+    assert tools.add_tool(name=tool_name, tool=tool) is tool
+    assert getattr(tools, tool_name) is tool

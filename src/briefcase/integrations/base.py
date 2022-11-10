@@ -8,32 +8,36 @@ from abc import ABC
 from collections import defaultdict
 from collections.abc import Mapping
 from pathlib import Path
-from typing import TYPE_CHECKING, DefaultDict
+from types import ModuleType
+from typing import TYPE_CHECKING, DefaultDict, TypeVar, Union
 
 import requests
 from cookiecutter.main import cookiecutter
 
 from briefcase.config import AppConfig
 from briefcase.console import Console, Log
-from briefcase.integrations.download import Download
-from briefcase.integrations.subprocess import Subprocess
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     import git as _git
 
     from briefcase.integrations.android_sdk import AndroidSDK
     from briefcase.integrations.docker import Docker, DockerAppContext
+    from briefcase.integrations.download import Download
     from briefcase.integrations.flatpak import Flatpak
     from briefcase.integrations.java import JDK
     from briefcase.integrations.linuxdeploy import LinuxDeploy
     from briefcase.integrations.rcedit import RCEdit
+    from briefcase.integrations.subprocess import Subprocess
     from briefcase.integrations.visualstudio import VisualStudio
-    from briefcase.integrations.wix import Wix
+    from briefcase.integrations.wix import WiX
 
 
 # TODO: Implement Tool base class
 class Tool(ABC):
     """Tool Base."""  # pragma: no cover
+
+
+TOOL_T = TypeVar("TOOL_T", bound=Union[Tool, ModuleType])
 
 
 class ToolCache(Mapping):
@@ -49,7 +53,7 @@ class ToolCache(Mapping):
     rcedit: RCEdit
     subprocess: Subprocess
     visualstudio: VisualStudio
-    wix: Wix
+    wix: WiX
     xcode: bool
     xcode_cli: bool
 
@@ -101,9 +105,16 @@ class ToolCache(Mapping):
             )
         )
 
-        # Built-in tools without any external dependencies
-        Subprocess.verify(tools=self)
-        Download.verify(tools=self)
+    def add_tool(self, name: str, tool: TOOL_T) -> TOOL_T:
+        """Add a tool to the cache.
+
+        :param name: Name of the tool to add to the cache; The tool will be
+            accessible as an attribute of the ToolCache using this name.
+        :param tool: The instantiated Tool to make available.
+        :return: The added Tool.
+        """
+        setattr(self, name, tool)
+        return tool
 
     def __getitem__(self, app: AppConfig) -> ToolCache:
         return self.app_tools[app]

@@ -1,10 +1,7 @@
-from __future__ import annotations
-
 import hashlib
 import shlex
 from abc import abstractmethod
 from pathlib import Path
-from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
 from briefcase.exceptions import (
@@ -12,9 +9,7 @@ from briefcase.exceptions import (
     CorruptToolError,
     MissingToolError,
 )
-
-if TYPE_CHECKING:  # pragma: no cover
-    from briefcase.integrations.base import ToolCache
+from briefcase.integrations.base import Tool, ToolCache
 
 ELF_HEADER_IDENT = bytes.fromhex("7F454C46")
 ELF_PATCH_OFFSET = 0x08
@@ -22,7 +17,7 @@ ELF_PATCH_ORIGINAL_BYTES = bytes.fromhex("414902")
 ELF_PATCH_PATCHED_BYTES = bytes.fromhex("000000")
 
 
-class LinuxDeployBase:
+class LinuxDeployBase(Tool):
     name: str
     full_name: str
     install_msg: str
@@ -100,7 +95,7 @@ class LinuxDeployBase:
                 raise MissingToolError(cls.name)
 
         if not is_plugin:
-            tools.linuxdeploy = tool
+            tools.add_tool(name=cls.name, tool=tool)
 
         return tool
 

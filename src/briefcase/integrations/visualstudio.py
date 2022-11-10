@@ -1,18 +1,14 @@
-from __future__ import annotations
-
 import subprocess
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from briefcase.exceptions import BriefcaseCommandError, CommandOutputParseError
+from briefcase.integrations.base import Tool, ToolCache
 from briefcase.integrations.subprocess import json_parser
 
-if TYPE_CHECKING:  # pragma: no cover
-    from briefcase.integrations.base import ToolCache
 
-
-class VisualStudio:
+class VisualStudio(Tool):
     name = "visualstudio"
+    full_name = "Visual Studio"
     VSCODE_REQUIRED_COMPONENTS = """
     * .NET Desktop Development
       - Default packages
@@ -21,7 +17,12 @@ class VisualStudio:
       - C++/CLI support for v143 build tools
 """
 
-    def __init__(self, tools: ToolCache, msbuild_path: Path, install_metadata=None):
+    def __init__(
+        self,
+        tools: ToolCache,
+        msbuild_path: Path,
+        install_metadata: dict = None,
+    ):
         self.tools = tools
         self._msbuild_path = msbuild_path
         self._install_metadata = install_metadata
@@ -190,8 +191,7 @@ Then restart Briefcase.
                 install_metadata=install_metadata,
             )
 
-        tools.visualstudio = visualstudio
-        return visualstudio
+        return tools.add_tool(name=cls.name, tool=visualstudio)
 
     @property
     def managed_install(self):

@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import json
 import operator
 import os
@@ -11,16 +9,13 @@ import time
 from contextlib import suppress
 from functools import wraps
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import psutil
 
 from briefcase.config import AppConfig
 from briefcase.console import Log
 from briefcase.exceptions import CommandOutputParseError
-
-if TYPE_CHECKING:  # pragma: no cover
-    from briefcase.integrations.base import ToolCache
+from briefcase.integrations.base import Tool, ToolCache
 
 
 class ParseError(Exception):
@@ -58,7 +53,9 @@ def is_process_dead(pid: int):
 
 
 def get_process_id_by_command(
-    command_list: list = None, command: str = "", logger: Log = None
+    command_list: list = None,
+    command: str = "",
+    logger: Log = None,
 ):
     """Find a Process ID (PID) a by its command. If multiple processes are
     found, then the most recently created process ID is returned.
@@ -104,7 +101,7 @@ def ensure_console_is_safe(sub_method):
     """
 
     @wraps(sub_method)
-    def inner(sub: Subprocess, args, **kwargs):
+    def inner(sub, args, **kwargs):
         """Evaluate whether conditions are met to remove any dynamic elements
         in the console before returning control to Subprocess.
 
@@ -136,7 +133,7 @@ def ensure_console_is_safe(sub_method):
     return inner
 
 
-class NativeAppContext:
+class NativeAppContext(Tool):
     """A wrapper around subprocess for use as an app-bound tool."""
 
     @classmethod
@@ -146,13 +143,15 @@ class NativeAppContext:
         if hasattr(tools[app], "app_context"):
             return tools[app].app_context
 
-        tools[app].app_context = tools.subprocess
-        return tools[app].app_context
+        return tools[app].add_tool(name="app_context", tool=tools.subprocess)
 
 
-class Subprocess:
+class Subprocess(Tool):
     """A wrapper around subprocess that can be used as a logging point for
     commands that are executed."""
+
+    name = "subprocess"
+    full_name = "Subprocess"
 
     def __init__(self, tools: ToolCache):
         self.tools = tools
@@ -259,8 +258,7 @@ class Subprocess:
         if hasattr(tools, "subprocess"):
             return tools.subprocess
 
-        tools.subprocess = Subprocess(tools)
-        return tools.subprocess
+        return tools.add_tool(name=cls.name, tool=Subprocess(tools))
 
     @ensure_console_is_safe
     def run(self, args, stream_output=True, **kwargs):

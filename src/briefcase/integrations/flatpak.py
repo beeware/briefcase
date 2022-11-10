@@ -1,15 +1,13 @@
-from __future__ import annotations
-
 import subprocess
-from typing import TYPE_CHECKING
 
 from briefcase.exceptions import BriefcaseCommandError
-
-if TYPE_CHECKING:  # pragma: no cover
-    from briefcase.integrations.base import ToolCache
+from briefcase.integrations.base import Tool, ToolCache
 
 
-class Flatpak:
+class Flatpak(Tool):
+    name = "flatpak"
+    full_name = "Flatpak"
+
     DEFAULT_REPO_ALIAS = "flathub"
     DEFAULT_REPO_URL = "https://flathub.org/repo/flathub.flatpakrepo"
 
@@ -140,8 +138,7 @@ You must install both flatpak and flatpak-builder.
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError("Unable to invoke flatpak-builder.") from e
 
-        tools.flatpak = flatpak
-        return flatpak
+        return tools.add_tool(name=cls.name, tool=flatpak)
 
     def verify_repo(self, repo_alias, url):
         """Verify that the Flatpak repository has been registered.

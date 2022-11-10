@@ -1,11 +1,5 @@
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
-
 from briefcase.exceptions import BriefcaseCommandError
-
-if TYPE_CHECKING:  # pragma: no cover
-    from briefcase.integrations.base import ToolCache
+from briefcase.integrations.base import ToolCache
 
 
 def verify_git_is_installed(tools: ToolCache):
@@ -69,5 +63,4 @@ need to restart your terminal session.
 """
             ) from e
 
-    tools.git = git
-    return git
+    return tools.add_tool(name="git", tool=git)

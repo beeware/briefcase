@@ -1,10 +1,7 @@
-from __future__ import annotations
-
 import os
 import tempfile
 from contextlib import suppress
 from email.message import Message
-from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
 import requests.exceptions as requests_exceptions
@@ -14,12 +11,13 @@ from briefcase.exceptions import (
     MissingNetworkResourceError,
     NetworkFailure,
 )
-
-if TYPE_CHECKING:  # pragma: no cover
-    from briefcase.integrations.base import ToolCache
+from briefcase.integrations.base import Tool, ToolCache
 
 
-class Download:
+class Download(Tool):
+    name = "download"
+    full_name = "Download"
+
     def __init__(self, tools: ToolCache):
         self.tools = tools
 
@@ -30,8 +28,7 @@ class Download:
         if hasattr(tools, "download"):
             return tools.download
 
-        tools.download = Download(tools=tools)
-        return tools.download
+        return tools.add_tool(name=cls.name, tool=Download(tools=tools))
 
     def file(self, url, download_path, role=None):
         """Download a given URL, caching it. If it has already been downloaded,

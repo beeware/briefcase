@@ -1,23 +1,18 @@
-from __future__ import annotations
-
 import os
 import shutil
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from briefcase.exceptions import (
     BriefcaseCommandError,
     MissingToolError,
     NonManagedToolError,
 )
-
-if TYPE_CHECKING:  # pragma: no cover
-    from briefcase.integrations.base import ToolCache
+from briefcase.integrations.base import Tool, ToolCache
 
 WIX_DOWNLOAD_URL = "https://github.com/wixtoolset/wix3/releases/download/wix3112rtm/wix311-binaries.zip"
 
 
-class WiX:
+class WiX(Tool):
     name = "wix"
     full_name = "WiX"
 
@@ -111,8 +106,7 @@ WiX Toolset. Current value: {wix_home!r}
                 else:
                     raise MissingToolError("WiX")
 
-        tools.wix = wix
-        return wix
+        return tools.add_tool(name=cls.name, tool=wix)
 
     def exists(self):
         return (
