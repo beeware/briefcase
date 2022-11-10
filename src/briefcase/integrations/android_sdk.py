@@ -1329,3 +1329,18 @@ Activity class not found while starting app.
             )
         except subprocess.CalledProcessError:
             return None
+
+    def pid_exists(self, pid, stealth=False):
+        """Confirm if the PID exists on the emulator.
+
+        :param pid: The PID to check
+        :param stealth: Should this be executed in stealth mode?
+        :returns: True if the PID exists, False if it doesn't.
+        """
+        # Look for the existence of /proc/<PID> on the device filesystem.
+        # If that file exists, so does the process.
+        try:
+            self.run("shell", "test", "-e", f"/proc/{pid}", stealth=stealth)
+            return True
+        except subprocess.CalledProcessError:
+            return False
