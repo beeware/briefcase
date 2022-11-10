@@ -1281,6 +1281,34 @@ Activity class not found while starting app.
             bufsize=1,
         )
 
+    def logcat(self, since=None):
+        """Show the logs for Python-like apps, starting from a given timestamp.
+
+        :param since: The start time from which logs should be displayed
+        """
+        try:
+            self.tools.subprocess.run(
+                [
+                    os.fsdecode(self.tools.android_sdk.adb_path),
+                    "-s",
+                    self.device,
+                    "logcat",
+                    "-t",
+                    since.strftime("%m-%d %H:%M:%S.000000"),
+                    "-s",
+                    # This is a collection of log labels that should catch
+                    # most Python app output.
+                    "MainActivity:*",
+                    "stdio:*",
+                    "python.stdout:*",
+                    "AndroidRuntime:*",
+                ],
+                env=self.tools.android_sdk.env,
+                check=True,
+            )
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError("Error starting ADB logcat.") from e
+
     def pidof(self, package):
         """Return the PID of the given app as a string, or None if it isn't
         running."""
