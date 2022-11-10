@@ -1,8 +1,12 @@
-import winreg
+from importlib.util import find_spec
 from pathlib import Path
 from typing import Generator, Tuple
 
 from briefcase.exceptions import MissingToolError
+
+# winreg can only be imported on Windows
+if find_spec("winreg"):
+    import winreg
 
 
 class WindowsSDK:

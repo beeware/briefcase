@@ -1,11 +1,14 @@
 import os
+import re
 import subprocess
 import uuid
 from typing import List
+from pathlib import Path
 
 from briefcase.commands import CreateCommand, PackageCommand, RunCommand
-from briefcase.config import BaseConfig, parsed_version
+from briefcase.config import AppConfig, parsed_version
 from briefcase.exceptions import BriefcaseCommandError
+from briefcase.integrations.windows_sdk import WindowsSDK
 from briefcase.integrations.wix import WiX
 
 DEFAULT_OUTPUT_FORMAT = "app"
@@ -33,7 +36,7 @@ class WindowsCreateCommand(CreateCommand):
             + self.support_package_filename(support_revision)
         )
 
-    def output_format_template_context(self, app: BaseConfig):
+    def output_format_template_context(self, app: AppConfig):
         """Additional template context required by the output format.
 
         :param app: The config object for the app
@@ -124,14 +127,113 @@ class WindowsPackageCommand(PackageCommand):
     def verify_tools(self):
         super().verify_tools()
         WiX.verify(self.tools)
+        WindowsSDK.verify(self.tools)
 
-    def package_app(self, app: BaseConfig, **kwargs):
+    def get_signing_options(self, identity):
+        """Gather configuration for App codesigning.
+
+        :param identity: SHA-1 certificate thumbprint
+        :return: dictionary of codesigning options
+        """
+        options = {}
+
+        if not re.match(r"^[0-9a-f]{40}$", identity, flags=re.IGNORECASE):
+            raise BriefcaseCommandError(
+                f"Codesigning identify {identity!r} should be a certificate SHA-1 thumbprint."
+            )
+        options["cert_thumbprint"] = identity
+
+        options["file_digest"] = self.tools.input.text_input(
+            "Hashing algorithm for the signatures [sha256]: ",
+            default="sha256",
+        )
+
+        store = self.tools.input.text_input(
+            "Certificate is stored in the Current User's or Local Machine's certificate stores: [Current User]: ",
+            default="Current User",
+        )
+        options["cert_store_location"] = (
+            "Local Machine" if store[0].upper() == "L" else "Current User"
+        )
+
+        options["cert_store"] = self.tools.input.text_input(
+            "Name of the certificate store containing the certificate [My]: ",
+            default="My",
+        )
+
+        options["timestamp_url"] = self.tools.input.text_input(
+            "Timestamp authority server for the signatures [http://timestamp.digicert.com]: ",
+            default="http://timestamp.digicert.com",
+        )
+        options["timestamp_digest"] = self.tools.input.text_input(
+            "Hashing algorithm to request for the timestamp server signature [sha256]: ",
+            default="sha256",
+        )
+
+        return options
+
+    def sign_file(self, app: AppConfig, filepath: Path, options: dict):
+        """Sign a file.
+
+        :param app: Application being signed
+        :param filepath: Filepath for file to sign
+        :param options: Options for signtool signing
+        """
+        sign_command = [
+            self.tools.windows_sdk.signtool_exe,
+            "sign",
+            "/s",
+            options["cert_store"],
+            "/sha1",
+            options["cert_thumbprint"],
+            "/fd",
+            options["file_digest"],
+            "/d",
+            app.description,
+            "/du",
+            app.url,
+            "/tr",
+            options["timestamp_url"],
+            "/td",
+            options["timestamp_digest"],
+            # TODO:PR: remove debug
+            "/debug",
+        ]
+
+        if options["cert_store_location"] == "Local Machine":
+            sign_command.append("/sm")
+
+        # Filepath to sign must come last
+        sign_command.append(os.fsdecode(filepath))
+
+        try:
+            self.tools.subprocess.run(sign_command, check=True)
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(f"Unable to sign {filepath}") from e
+
+    def package_app(self, app: AppConfig, sign_app, identity, **kwargs):
         """Package an application.
 
         :param app: The application to package
+        :param sign_app: Should the application be signed? Default: ``True``
+        :param identity: The code signing identity to use. This can be either
+            the SHA-1 thumbprint for the cert, or filepath to the cert.
+            Ignored if ``sign_app`` is ``False``.
         """
-        self.logger.info("Building MSI...", prefix=app.app_name)
 
+        if sign_app and not identity:
+            sign_app = False
+
+        if sign_app:
+            self.logger.info("Signing App Binary", prefix=app.app_name)
+            sign_options = self.get_signing_options(identity=identity)
+            self.sign_file(
+                app=app,
+                filepath=self.binary_path(app),
+                options=sign_options,
+            )
+
+        self.logger.info("Building MSI...", prefix=app.app_name)
         try:
             self.logger.info("Compiling application manifest...")
             with self.input.wait_bar("Compiling..."):
@@ -209,3 +311,11 @@ class WindowsPackageCommand(PackageCommand):
                 )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(f"Unable to link app {app.app_name}.") from e
+
+        if sign_app:
+            self.logger.info("Signing MSI", prefix=app.app_name)
+            self.sign_file(
+                app=app,
+                filepath=self.distribution_path(app, packaging_format="msi"),
+                options=sign_options,
+            )
