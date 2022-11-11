@@ -1,3 +1,5 @@
+import subprocess
+
 from briefcase.commands import (
     BuildCommand,
     CreateCommand,
@@ -193,14 +195,41 @@ class LinuxFlatpakRunCommand(LinuxFlatpakMixin, RunCommand):
         """
         self.logger.info("Starting app...", prefix=app.app_name)
         try:
-            # Start streaming logs for the app.
-            self.tools.logger.info("=" * 75)
-            self.tools.flatpak.run(
+            # Start the app in a way that lets us stream the logs
+            log_popen = self.tools.flatpak.run(
                 bundle=app.bundle,
                 app_name=app.app_name,
             )
+
+            try:
+                # Start streaming logs for the app.
+                self.logger.info(
+                    "Following log output (type CTRL-C to stop log)...",
+                    prefix=app.app_name,
+                )
+                self.logger.info("=" * 75)
+                self.tools.subprocess.stream_output(
+                    "log stream",
+                    log_popen,
+                    stop_func=lambda: log_popen.poll() is not None,
+                )
+            finally:
+                # If the app hasn't exited, ensure it is terminated
+                # This is unlikely to happen unless the streamer stops
+                # for some reason, but clean up just in case.
+                return_code = log_popen.poll()
+                if return_code is None:
+                    log_popen.terminate()
+                    try:
+                        log_popen.wait(timeout=3)
+                    except subprocess.TimeoutExpired:
+                        self.tools.logger.warning(f"Forcibly killing {app.app_name}...")
+                        log_popen.kill()
+
         except KeyboardInterrupt:
             pass  # Catch CTRL-C to exit normally
+        except OSError as e:
+            raise BriefcaseCommandError(f"Unable to start app {app.app_name}.") from e
 
 
 class LinuxFlatpakPackageCommand(LinuxFlatpakMixin, PackageCommand):

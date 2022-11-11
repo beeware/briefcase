@@ -165,7 +165,7 @@ def test_run_app_ctrl_c(run_command, first_app_config, tmp_path, capsys):
         "===========================================================================\n"
     )
 
-    # The app was poll in the finally block
+    # The app was polled in the finally block
     log_popen.poll.assert_called_once_with()
 
     # A successful attempt to terminate occured
@@ -221,7 +221,7 @@ def test_run_app_terminate_failure(run_command, first_app_config, tmp_path, caps
         "Forcibly killing first-app...\n"
     )
 
-    # The app was poll in the finally block
+    # The app was polled in the finally block
     log_popen.poll.assert_called_once_with()
 
     # A successful attempt to terminate occured
