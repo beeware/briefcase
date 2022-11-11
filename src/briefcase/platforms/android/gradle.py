@@ -240,9 +240,9 @@ class GradleRunCommand(GradleMixin, RunCommand):
             # Try to get the PID for 5 seconds.
             fail_time = start_time + datetime.timedelta(seconds=5)
             while not pid and datetime.datetime.now() < fail_time:
-                # Try to get the PID; run in stealth mode because we may
+                # Try to get the PID; run in quiet mode because we may
                 # need to do this a lot in the next 5 seconds.
-                pid = adb.pidof(package, stealth=True)
+                pid = adb.pidof(package, quiet=True)
                 if not pid:
                     time.sleep(delay)
                 attempts += 1
@@ -259,8 +259,8 @@ class GradleRunCommand(GradleMixin, RunCommand):
                 self.tools.subprocess.stream_output(
                     "log stream",
                     log_popen,
-                    # Check for the PID in stealth mode so logs aren't corrupted.
-                    stop_func=lambda: not adb.pid_exists(pid=pid, stealth=True),
+                    # Check for the PID in quiet mode so logs aren't corrupted.
+                    stop_func=lambda: not adb.pid_exists(pid=pid, quiet=True),
                 )
 
             except KeyboardInterrupt:

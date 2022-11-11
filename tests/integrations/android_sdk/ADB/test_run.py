@@ -31,16 +31,16 @@ def test_simple_command(mock_tools, tmp_path):
             "command",
         ],
         stderr=subprocess.STDOUT,
-        stealth=False,
+        quiet=False,
     )
 
 
-def test_stealth_command(mock_tools, tmp_path):
-    """ADB.run() can be invoked in stealth mode."""
+def test_quiet_command(mock_tools, tmp_path):
+    """ADB.run() can be invoked in quiet mode."""
     # Create an ADB instance and invoke command()
     adb = ADB(mock_tools, "exampleDevice")
 
-    adb.run("example", "command", stealth=True)
+    adb.run("example", "command", quiet=True)
 
     # Check that adb was invoked with the expected commands
     mock_tools.subprocess.check_output.assert_called_once_with(
@@ -57,7 +57,7 @@ def test_stealth_command(mock_tools, tmp_path):
             "command",
         ],
         stderr=subprocess.STDOUT,
-        stealth=True,
+        quiet=True,
     )
 
 
@@ -108,5 +108,5 @@ def test_error_handling(mock_tools, tmp_path, name, exception):
             "command",
         ],
         stderr=subprocess.STDOUT,
-        stealth=False,
+        quiet=False,
     )

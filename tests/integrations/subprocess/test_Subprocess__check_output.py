@@ -190,8 +190,8 @@ def test_debug_call_with_env(mock_sub, capsys, tmp_path):
     assert capsys.readouterr().out == expected_output
 
 
-def test_debug_call_with_stealth(mock_sub, capsys, tmp_path):
-    """If stealth is on, calls aren't logged, even if verbosity is turned
+def test_debug_call_with_quiet(mock_sub, capsys, tmp_path):
+    """If quiet mode is on, calls aren't logged, even if verbosity is turned
     up."""
     mock_sub.tools.logger.verbosity = 2
 
@@ -200,7 +200,7 @@ def test_debug_call_with_stealth(mock_sub, capsys, tmp_path):
         ["hello", "world"],
         env=env,
         cwd=tmp_path / "cwd",
-        stealth=True,
+        quiet=True,
     )
 
     merged_env = mock_sub.tools.os.environ.copy()
@@ -251,8 +251,8 @@ def test_calledprocesserror_exception_logging(mock_sub, capsys):
     assert capsys.readouterr().out == expected_output
 
 
-def test_calledprocesserror_exception_stealth(mock_sub, capsys):
-    """If command errors in stealth mode, no command output is printed."""
+def test_calledprocesserror_exception_quiet(mock_sub, capsys):
+    """If command errors in quiet mode, no command output is printed."""
     mock_sub.tools.logger.verbosity = 2
 
     called_process_error = CalledProcessError(
@@ -264,9 +264,9 @@ def test_calledprocesserror_exception_stealth(mock_sub, capsys):
     mock_sub._subprocess.check_output.side_effect = called_process_error
 
     with pytest.raises(CalledProcessError):
-        mock_sub.check_output(["hello", "world"], stealth=True)
+        mock_sub.check_output(["hello", "world"], quiet=True)
 
-    # No ouput in stealth mode
+    # No ouput in quiet mode
     assert capsys.readouterr().out == ""
 
 

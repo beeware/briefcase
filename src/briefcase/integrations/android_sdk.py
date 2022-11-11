@@ -1144,13 +1144,13 @@ class ADB:
                 f"Unable to determine if emulator {self.device} has booted."
             ) from e
 
-    def run(self, *arguments, stealth=False):
+    def run(self, *arguments, quiet=False):
         """Run a command on a device using Android debug bridge, `adb`. The
         device name is mandatory to ensure clarity in the case of multiple
         attached devices.
 
         :param arguments: List of strings to pass to `adb` as arguments.
-        :param stealth: Should the invocation of this command be silent, and
+        :param quiet: Should the invocation of this command be silent, and
             *not* appear in the logs? This should almost always be False;
             however, for some calls (most notably, calls that are called
             frequently to evaluate the status of another process), logging can
@@ -1175,7 +1175,7 @@ class ADB:
                     for arg in arguments
                 ],
                 stderr=subprocess.STDOUT,
-                stealth=stealth,
+                quiet=quiet,
             )
         except subprocess.CalledProcessError as e:
             if any(DEVICE_NOT_FOUND.match(line) for line in e.output.split("\n")):
@@ -1310,12 +1310,11 @@ Activity class not found while starting app.
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError("Error starting ADB logcat.") from e
 
-    def pidof(self, package, stealth=False):
+    def pidof(self, package, **kwargs):
         """Obtain the PID of a running app by package name.
 
         :param package: The package ID for the application (e.g.,
             ``org.beeware.tutorial``)
-        :param stealth: Should this be executed in stealth mode?
         :returns: The PID of the given app as a string, or None if it isn't
         running.
         """
@@ -1324,24 +1323,20 @@ Activity class not found while starting app.
         try:
             # Exit status is unreliable: some devices (e.g. Nexus 4) return 0 even when no
             # process was found.
-            return (
-                self.run("shell", "pidof", "-s", package, stealth=stealth).strip()
-                or None
-            )
+            return self.run("shell", "pidof", "-s", package, **kwargs).strip() or None
         except subprocess.CalledProcessError:
             return None
 
-    def pid_exists(self, pid, stealth=False):
+    def pid_exists(self, pid, **kwargs):
         """Confirm if the PID exists on the emulator.
 
         :param pid: The PID to check
-        :param stealth: Should this be executed in stealth mode?
         :returns: True if the PID exists, False if it doesn't.
         """
         # Look for the existence of /proc/<PID> on the device filesystem.
         # If that file exists, so does the process.
         try:
-            self.run("shell", "test", "-e", f"/proc/{pid}", stealth=stealth)
+            self.run("shell", "test", "-e", f"/proc/{pid}", **kwargs)
             return True
         except subprocess.CalledProcessError:
             return False
