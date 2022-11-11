@@ -231,16 +231,17 @@ class GradleRunCommand(GradleMixin, RunCommand):
         # To start the app, we launch `org.beeware.android.MainActivity`.
         with self.input.wait_bar("Launching app..."):
             # Any log after this point must be associated with the new instance
-            # Pad by a few seconds because the android emulator's clock and the
-            # local system clock may not be perfectly aligned.
-            start_time = datetime.datetime.now() - datetime.timedelta(seconds=10)
+            start_time = datetime.datetime.now()
             adb.start_app(package, "org.beeware.android.MainActivity")
             pid = None
             attempts = 0
             delay = 0.01
-            while not pid and attempts < 500:
-                # Try to get the PID; run in stealth mode because we're going
-                # to do this a lot in the next 5 seconds.
+
+            # Try to get the PID for 5 seconds.
+            fail_time = start_time + datetime.timedelta(seconds=5)
+            while not pid and datetime.datetime.now() < fail_time:
+                # Try to get the PID; run in stealth mode because we may
+                # need to do this a lot in the next 5 seconds.
                 pid = adb.pidof(package, stealth=True)
                 if not pid:
                     time.sleep(delay)
@@ -273,7 +274,10 @@ class GradleRunCommand(GradleMixin, RunCommand):
 
             # Show the log from the start time of the app
             self.logger.error("=" * 75)
-            adb.logcat_tail(since=start_time)
+
+            # Pad by a few seconds because the android emulator's clock and the
+            # local system clock may not be perfectly aligned.
+            adb.logcat_tail(since=start_time - datetime.timedelta(seconds=10))
             raise BriefcaseCommandError(f"Problem starting app {app.app_name!r}")
 
 

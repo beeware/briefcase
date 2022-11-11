@@ -169,14 +169,18 @@ def test_run_crash_at_start(run_command, first_app_config, monkeypatch):
         return_value=("exampleDevice", "ExampleDevice", None)
     )
 
-    # Mock the pidof call failing 500 times
-    run_command.tools.mock_adb.pidof.side_effect = [None] * 500
+    # Mock the pidof call failing multiple times before a timeout.
+    run_command.tools.mock_adb.pidof.side_effect = [None] * 5
     monkeypatch.setattr(time, "sleep", mock.MagicMock())
 
     # It's the eternal september...
     start_datetime = datetime.datetime(2022, 9, 8, 7, 6, 42)
     mock_datetime = mock.MagicMock(spec=datetime.datetime)
-    mock_datetime.now.return_value = start_datetime
+    # Mock datetime.now() at +0s, +0.5s, +1.5s,... +5.5s
+    mock_datetime.now.side_effect = [
+        start_datetime + datetime.timedelta(seconds=delay)
+        for delay in [0] + [x + 0.5 for x in range(0, 6)]
+    ]
     monkeypatch.setattr(datetime, "datetime", mock_datetime)
 
     with pytest.raises(
@@ -186,9 +190,9 @@ def test_run_crash_at_start(run_command, first_app_config, monkeypatch):
 
     assert (
         run_command.tools.mock_adb.pidof.mock_calls
-        == [mock.call("com.example.first_app", stealth=True)] * 500
+        == [mock.call("com.example.first_app", stealth=True)] * 5
     )
-    assert time.sleep.mock_calls == [mock.call(0.01)] * 500
+    assert time.sleep.mock_calls == [mock.call(0.01)] * 5
 
     # The PID was never found, so logs can't be streamed
     run_command.tools.mock_adb.logcat.assert_not_called()
