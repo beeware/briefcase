@@ -63,9 +63,6 @@ def test_run_app(run_command, first_app_config, tmp_path):
     log_popen = mock.MagicMock()
     run_command.tools.subprocess.Popen.return_value = log_popen
 
-    # Set a normal return code for the process
-    log_popen.poll.return_value = 0
-
     # To satisfy coverage, the stop function must be invoked at least once
     # when invoking stream_output.
     def mock_stream_output(label, popen_process, stop_func):
@@ -91,12 +88,11 @@ def test_run_app(run_command, first_app_config, tmp_path):
 
     # The streamer was started
     run_command.tools.subprocess.stream_output.assert_called_once_with(
-        "log stream", log_popen, stop_func=mock.ANY
+        "first-app", log_popen, stop_func=mock.ANY
     )
 
-    # The app was polled twice; once by the stream stop function,
-    # and once in the finally block.
-    assert log_popen.poll.mock_calls == [mock.call()] * 2
+    # The stream was cleaned up
+    run_command.tools.subprocess.cleanup.assert_called_once_with("first-app", log_popen)
 
 
 def test_run_app_failed(run_command, first_app_config, tmp_path):
@@ -130,9 +126,6 @@ def test_run_app_ctrl_c(run_command, first_app_config, tmp_path, capsys):
     log_popen = mock.MagicMock()
     run_command.tools.subprocess.Popen.return_value = log_popen
 
-    # When polled, the process is still running
-    log_popen.poll.return_value = None
-
     # Mock the effect of CTRL-C being hit while streaming
     run_command.tools.subprocess.stream_output.side_effect = KeyboardInterrupt
 
@@ -154,7 +147,7 @@ def test_run_app_ctrl_c(run_command, first_app_config, tmp_path, capsys):
 
     # An attempt was made to stream
     run_command.tools.subprocess.stream_output.assert_called_once_with(
-        "log stream", log_popen, stop_func=mock.ANY
+        "first-app", log_popen, stop_func=mock.ANY
     )
 
     # Shows the try block for KeyboardInterrupt was entered
@@ -165,68 +158,5 @@ def test_run_app_ctrl_c(run_command, first_app_config, tmp_path, capsys):
         "===========================================================================\n"
     )
 
-    # The app was polled in the finally block
-    log_popen.poll.assert_called_once_with()
-
-    # A successful attempt to terminate occured
-    log_popen.terminate.assert_called_once_with()
-    log_popen.wait.assert_called_once_with(timeout=3)
-
-    # No kill call was made
-    log_popen.kill.assert_not_called()
-
-
-def test_run_app_terminate_failure(run_command, first_app_config, tmp_path, capsys):
-    """If the app can't be terminated on exit, it's force killed.."""
-    # Set up the log streamer to return a known stream
-    log_popen = mock.MagicMock()
-    run_command.tools.subprocess.Popen.return_value = log_popen
-
-    # When polled, the process is still running
-    log_popen.poll.return_value = None
-
-    # Mock the effect of an unsuccessful termination.
-    log_popen.wait.side_effect = subprocess.TimeoutExpired(cmd="appimage", timeout=3)
-
-    # Mock the effect of CTRL-C being hit while streaming
-    run_command.tools.subprocess.stream_output.side_effect = KeyboardInterrupt
-
-    # Invoke run_app (and KeyboardInterrupt does not surface)
-    run_command.run_app(first_app_config)
-
-    # AppImage is run
-    run_command.tools.subprocess.Popen.assert_called_with(
-        [
-            os.fsdecode(
-                tmp_path / "base_path" / "linux" / "First_App-0.0.1-wonky.AppImage"
-            )
-        ],
-        cwd=tmp_path / "home",
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        bufsize=1,
-    )
-
-    # An attempt was made to stream
-    run_command.tools.subprocess.stream_output.assert_called_once_with(
-        "log stream", log_popen, stop_func=mock.ANY
-    )
-
-    # Shows the try block for KeyboardInterrupt was entered
-    assert capsys.readouterr().out.endswith(
-        "[first-app] Starting app...\n"
-        "\n"
-        "[first-app] Following log output (type CTRL-C to stop log)...\n"
-        "===========================================================================\n"
-        "Forcibly killing first-app...\n"
-    )
-
-    # The app was polled in the finally block
-    log_popen.poll.assert_called_once_with()
-
-    # A successful attempt to terminate occured
-    log_popen.terminate.assert_called_once_with()
-    log_popen.wait.assert_called_once_with(timeout=3)
-
-    # A kill call was made
-    log_popen.kill.assert_called_once_with()
+    # The stream was cleaned up
+    run_command.tools.subprocess.cleanup.assert_called_once_with("first-app", log_popen)

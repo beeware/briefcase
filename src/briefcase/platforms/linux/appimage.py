@@ -276,22 +276,12 @@ class LinuxAppImageRunCommand(LinuxAppImagePassiveMixin, RunCommand):
                 )
                 self.logger.info("=" * 75)
                 self.tools.subprocess.stream_output(
-                    "log stream",
+                    app.app_name,
                     log_popen,
                     stop_func=lambda: log_popen.poll() is not None,
                 )
             finally:
-                # If the app hasn't exited, ensure it is terminated
-                # This is unlikely to happen unless the streamer stops
-                # for some reason, but clean up just in case.
-                return_code = log_popen.poll()
-                if return_code is None:
-                    log_popen.terminate()
-                    try:
-                        log_popen.wait(timeout=3)
-                    except subprocess.TimeoutExpired:
-                        self.tools.logger.warning(f"Forcibly killing {app.app_name}...")
-                        log_popen.kill()
+                self.tools.subprocess.cleanup(app.app_name, log_popen)
 
         except KeyboardInterrupt:
             pass  # Catch CTRL-C to exit normally
