@@ -143,7 +143,8 @@ class NativeAppContext(Tool):
         if hasattr(tools[app], "app_context"):
             return tools[app].app_context
 
-        return tools[app].add_tool(name="app_context", tool=tools.subprocess)
+        tools[app].app_context = tools.subprocess
+        return tools[app].app_context
 
 
 class Subprocess(Tool):
@@ -258,7 +259,8 @@ class Subprocess(Tool):
         if hasattr(tools, "subprocess"):
             return tools.subprocess
 
-        return tools.add_tool(name=cls.name, tool=Subprocess(tools))
+        tools.subprocess = Subprocess(tools)
+        return tools.subprocess
 
     @ensure_console_is_safe
     def run(self, args, stream_output=True, **kwargs):

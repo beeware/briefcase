@@ -8,8 +8,7 @@ from abc import ABC
 from collections import defaultdict
 from collections.abc import Mapping
 from pathlib import Path
-from types import ModuleType
-from typing import TYPE_CHECKING, DefaultDict, TypeVar, Union
+from typing import TYPE_CHECKING, DefaultDict
 
 import requests
 from cookiecutter.main import cookiecutter
@@ -18,7 +17,9 @@ from briefcase.config import AppConfig
 from briefcase.console import Console, Log
 
 if TYPE_CHECKING:
-    import git as _git
+    # Tools are imported only for type checking
+    # to avoid circular import errors.
+    import git as git_
 
     from briefcase.integrations.android_sdk import AndroidSDK
     from briefcase.integrations.docker import Docker, DockerAppContext
@@ -37,9 +38,6 @@ class Tool(ABC):
     """Tool Base."""  # pragma: no cover
 
 
-TOOL_T = TypeVar("TOOL_T", bound=Union[Tool, ModuleType])
-
-
 class ToolCache(Mapping):
     # Briefcase tools
     android_sdk: AndroidSDK
@@ -47,7 +45,7 @@ class ToolCache(Mapping):
     docker: Docker
     download: Download
     flatpak: Flatpak
-    git: _git
+    git: git_
     java: JDK
     linuxdeploy: LinuxDeploy
     rcedit: RCEdit
@@ -104,17 +102,6 @@ class ToolCache(Mapping):
                 home_path=self.home_path,
             )
         )
-
-    def add_tool(self, name: str, tool: TOOL_T) -> TOOL_T:
-        """Add a tool to the cache.
-
-        :param name: Name of the tool to add to the cache; The tool will be
-            accessible as an attribute of the ToolCache using this name.
-        :param tool: The instantiated Tool to make available.
-        :return: The added Tool.
-        """
-        setattr(self, name, tool)
-        return tool
 
     def __getitem__(self, app: AppConfig) -> ToolCache:
         return self.app_tools[app]

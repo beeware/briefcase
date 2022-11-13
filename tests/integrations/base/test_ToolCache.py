@@ -1,3 +1,5 @@
+import importlib
+import inspect
 import os
 import platform
 import shutil
@@ -8,8 +10,9 @@ import pytest
 import requests
 from cookiecutter.main import cookiecutter
 
+import briefcase.integrations
 from briefcase.console import Console, Log
-from briefcase.integrations.base import ToolCache
+from briefcase.integrations.base import Tool, ToolCache
 
 
 @pytest.fixture
@@ -21,27 +24,60 @@ def simple_tools(tmp_path):
     )
 
 
+def tools_for_module(tool_module_name: str) -> set:
+    """Return names of classes that subclass Tool in a module in
+    ``briefcase.integrations``, e.g. "android_sdk"."""
+    return {
+        klass_name
+        for klass_name, _ in inspect.getmembers(
+            sys.modules[f"briefcase.integrations.{tool_module_name}"],
+            lambda klass: (
+                inspect.isclass(klass) and issubclass(klass, Tool) and klass is not Tool
+            ),
+        )
+    }
+
+
 def test_toolcache_typing():
     """Tool typing for ToolCache is correct."""
-    expected_type_defs = {
-        "android_sdk": "AndroidSDK",
-        "docker": "Docker",
-        "download": "Download",
-        "flatpak": "Flatpak",
-        "java": "JDK",
-        "linuxdeploy": "LinuxDeploy",
-        "rcedit": "RCEdit",
-        "subprocess": "Subprocess",
-        "visualstudio": "VisualStudio",
-        "wix": "WiX",
-        "xcode": "bool",
-        "xcode_cli": "bool",
-    }
-    for tool_name, tool_type in expected_type_defs.items():
-        assert ToolCache.__annotations__[tool_name] == tool_type
+    # Tools that are intentionally not annotated in ToolCache.
+    tools_unannotated = {"cookiecutter"}
+    # Tool names to exclude from the dynamic annotation checks; they are manually checked.
+    tool_names_skip_dynamic_check = {"app_context", "git", "xcode", "xcode_cli"}
+    # Tool classes to exclude from dynamic annotation checks.
+    tool_klasses_skip_dynamic_checks = {"DockerAppContext", "NativeAppContext"}
 
-    assert "DockerAppContext" in ToolCache.__annotations__["app_context"]
-    assert "Subprocess" in ToolCache.__annotations__["app_context"]
+    # Ensure defined Tool modules/classes are annotated in ToolCache.
+    for tool_module_name in briefcase.integrations.__all__:
+        if tool_module_name not in tools_unannotated:
+            assert tool_module_name in ToolCache.__annotations__.keys()
+        for tool_name in tools_for_module(tool_module_name):
+            if tool_name not in tool_klasses_skip_dynamic_checks:
+                assert tool_name in ToolCache.__annotations__.values()
+
+    # Ensure annotated tools use valid Tool names.
+    for tool_name, tool_klass_name in ToolCache.__annotations__.items():
+        if tool_name not in tool_names_skip_dynamic_check:
+            assert tool_name in briefcase.integrations.__all__
+            assert tool_klass_name in tools_for_module(tool_name)
+            tool_klass = getattr(
+                importlib.import_module(f"briefcase.integrations.{tool_name}"),
+                tool_klass_name,
+            )
+            assert tool_name == tool_klass.name
+
+    # Manually check tools that aren't Tool classes or use special annotations.
+    app_context_klasses = [
+        briefcase.integrations.docker.DockerAppContext.__name__,
+        briefcase.integrations.subprocess.Subprocess.__name__,
+    ]
+    app_context_annotated = ToolCache.__annotations__["app_context"].split(" | ")
+    assert sorted(app_context_klasses) == sorted(app_context_annotated)
+
+    assert ToolCache.__annotations__["xcode"] == "bool"
+    assert ToolCache.__annotations__["xcode_cli"] == "bool"
+
+    assert ToolCache.__annotations__["git"] == "git_"
 
 
 def test_third_party_tools_available():
@@ -136,17 +172,3 @@ def test_windows_home_path(home_path, expected_path, tmp_path):
         home_path=home_path,
     )
     assert tools.home_path == expected_path
-
-
-def test_add_tool():
-    """Added tools are returned and available via attribute."""
-    tools = ToolCache(
-        logger=Log(),
-        console=Console(),
-        base_path="/home/data",
-    )
-    tool_name = "toolname"
-    tool = object()
-
-    assert tools.add_tool(name=tool_name, tool=tool) is tool
-    assert getattr(tools, tool_name) is tool

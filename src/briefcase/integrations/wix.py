@@ -106,7 +106,8 @@ WiX Toolset. Current value: {wix_home!r}
                 else:
                     raise MissingToolError("WiX")
 
-        return tools.add_tool(name=cls.name, tool=wix)
+        tools.wix = wix
+        return wix
 
     def exists(self):
         return (

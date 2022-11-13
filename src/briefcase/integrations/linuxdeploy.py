@@ -17,7 +17,7 @@ ELF_PATCH_ORIGINAL_BYTES = bytes.fromhex("414902")
 ELF_PATCH_PATCHED_BYTES = bytes.fromhex("000000")
 
 
-class LinuxDeployBase(Tool):
+class LinuxDeployBase:
     name: str
     full_name: str
     install_msg: str
@@ -95,7 +95,7 @@ class LinuxDeployBase(Tool):
                 raise MissingToolError(cls.name)
 
         if not is_plugin:
-            tools.add_tool(name=cls.name, tool=tool)
+            tools.linuxdeploy = tool
 
         return tool
 
@@ -295,7 +295,7 @@ class LinuxDeployURLPlugin(LinuxDeployPluginBase):
         return self._download_url
 
 
-class LinuxDeploy(LinuxDeployBase):
+class LinuxDeploy(LinuxDeployBase, Tool):
     name = "linuxdeploy"
     full_name = "linuxdeploy"
     install_msg = "linuxdeploy was not found; downloading and installing..."

@@ -220,7 +220,8 @@ class AndroidSDK(Tool):
                 else:
                     raise MissingToolError("Android SDK")
 
-        return tools.add_tool(name=cls.name, tool=sdk)
+        tools.android_sdk = sdk
+        return sdk
 
     def exists(self):
         """Confirm that the SDK actually exists.

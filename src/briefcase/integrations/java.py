@@ -217,7 +217,8 @@ class JDK(Tool):
                 else:
                     raise MissingToolError("Java")
 
-        return tools.add_tool(name=cls.name, tool=java)
+        tools.java = java
+        return java
 
     def exists(self):
         return (self.java_home / "bin").exists()

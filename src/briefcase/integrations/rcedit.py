@@ -44,7 +44,8 @@ class RCEdit(Tool):
             else:
                 raise MissingToolError("RCEdit")
 
-        return tools.add_tool(name=cls.name, tool=rcedit)
+        tools.rcedit = rcedit
+        return rcedit
 
     def exists(self):
         return self.rcedit_path.exists()

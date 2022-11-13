@@ -63,4 +63,5 @@ need to restart your terminal session.
 """
             ) from e
 
-    return tools.add_tool(name="git", tool=git)
+    tools.git = git
+    return git

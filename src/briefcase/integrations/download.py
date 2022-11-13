@@ -28,7 +28,8 @@ class Download(Tool):
         if hasattr(tools, "download"):
             return tools.download
 
-        return tools.add_tool(name=cls.name, tool=Download(tools=tools))
+        tools.download = Download(tools=tools)
+        return tools.download
 
     def file(self, url, download_path, role=None):
         """Download a given URL, caching it. If it has already been downloaded,

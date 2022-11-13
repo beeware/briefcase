@@ -138,7 +138,8 @@ You must install both flatpak and flatpak-builder.
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError("Unable to invoke flatpak-builder.") from e
 
-        return tools.add_tool(name=cls.name, tool=flatpak)
+        tools.flatpak = flatpak
+        return flatpak
 
     def verify_repo(self, repo_alias, url):
         """Verify that the Flatpak repository has been registered.

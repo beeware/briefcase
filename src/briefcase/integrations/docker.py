@@ -180,7 +180,8 @@ installation, and try again.
             else:
                 raise BriefcaseCommandError(cls.GENERIC_DOCKER_ERROR) from e
 
-        return tools.add_tool(name=cls.name, tool=Docker(tools=tools))
+        tools.docker = Docker(tools=tools)
+        return tools.docker
 
 
 class DockerAppContext(Tool):
@@ -232,7 +233,7 @@ class DockerAppContext(Tool):
 
         Docker.verify(tools=tools)
 
-        tools[app].add_tool(name="app_context", tool=DockerAppContext(tools, app))
+        tools[app].app_context = DockerAppContext(tools, app)
         tools[app].app_context.prepare(
             image_tag=image_tag,
             dockerfile_path=dockerfile_path,

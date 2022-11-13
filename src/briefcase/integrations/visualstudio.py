@@ -191,7 +191,8 @@ Then restart Briefcase.
                 install_metadata=install_metadata,
             )
 
-        return tools.add_tool(name=cls.name, tool=visualstudio)
+        tools.visualstudio = visualstudio
+        return visualstudio
 
     @property
     def managed_install(self):

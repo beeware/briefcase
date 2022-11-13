@@ -14,17 +14,9 @@ from briefcase.integrations.subprocess import Subprocess
 from tests.utils import DummyConsole
 
 
-class ProxyToolCache(ToolCache):
-    def add_tool(self, name, tool):
-        """Ensure any tools being added are properly typed in ToolCache."""
-        if "dummy" not in name.lower():  # ignore testing tools
-            assert name in ToolCache.__annotations__
-        return super().add_tool(name=name, tool=tool)
-
-
 @pytest.fixture
 def mock_tools(tmp_path) -> ToolCache:
-    mock_tools = ProxyToolCache(
+    mock_tools = ToolCache(
         logger=Log(),
         console=DummyConsole(),
         base_path=tmp_path / "tools",
