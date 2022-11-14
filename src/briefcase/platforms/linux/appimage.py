@@ -270,15 +270,10 @@ class LinuxAppImageRunCommand(LinuxAppImagePassiveMixin, RunCommand):
 
             try:
                 # Start streaming logs for the app.
-                self.logger.info(
-                    "Following log output (type CTRL-C to stop log)...",
-                    prefix=app.app_name,
-                )
                 self.logger.info("=" * 75)
                 self.tools.subprocess.stream_output(
                     app.app_name,
                     log_popen,
-                    stop_func=lambda: log_popen.poll() is not None,
                 )
             finally:
                 self.tools.subprocess.cleanup(app.app_name, log_popen)

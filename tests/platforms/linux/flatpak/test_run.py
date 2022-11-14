@@ -29,13 +29,6 @@ def test_run(run_command, first_app_config):
     log_popen = mock.MagicMock()
     run_command.tools.flatpak.run.return_value = log_popen
 
-    # To satisfy coverage, the stop function must be invoked at least once
-    # when invoking stream_output.
-    def mock_stream_output(label, popen_process, stop_func):
-        stop_func()
-
-    run_command.tools.subprocess.stream_output.side_effect = mock_stream_output
-
     # Run the app
     run_command.run_app(first_app_config)
 
@@ -47,7 +40,8 @@ def test_run(run_command, first_app_config):
 
     # The streamer was started
     run_command.tools.subprocess.stream_output.assert_called_once_with(
-        "first-app", log_popen, stop_func=mock.ANY
+        "first-app",
+        log_popen,
     )
 
     # The stream was cleaned up
@@ -92,14 +86,13 @@ def test_run_ctrl_c(run_command, first_app_config, capsys):
 
     # An attempt was made to stream
     run_command.tools.subprocess.stream_output.assert_called_once_with(
-        "first-app", log_popen, stop_func=mock.ANY
+        "first-app",
+        log_popen,
     )
 
     # Shows the try block for KeyboardInterrupt was entered
     assert capsys.readouterr().out.endswith(
         "[first-app] Starting app...\n"
-        "\n"
-        "[first-app] Following log output (type CTRL-C to stop log)...\n"
         "===========================================================================\n"
     )
 
