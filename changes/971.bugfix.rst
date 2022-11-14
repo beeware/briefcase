@@ -1,0 +1,1 @@
+Code-sign any frameworks contained in the macOS app bundle inside "Contents/Frameworks".
