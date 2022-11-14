@@ -10,7 +10,7 @@ from briefcase.integrations.android_sdk import ADB
 
 
 def test_simple_command(mock_tools, tmp_path):
-    """ADB.command() invokes adb with the provided arguments."""
+    """ADB.run() invokes adb with the provided arguments."""
     # Create an ADB instance and invoke command()
     adb = ADB(mock_tools, "exampleDevice")
 
@@ -31,6 +31,33 @@ def test_simple_command(mock_tools, tmp_path):
             "command",
         ],
         stderr=subprocess.STDOUT,
+        quiet=False,
+    )
+
+
+def test_quiet_command(mock_tools, tmp_path):
+    """ADB.run() can be invoked in quiet mode."""
+    # Create an ADB instance and invoke command()
+    adb = ADB(mock_tools, "exampleDevice")
+
+    adb.run("example", "command", quiet=True)
+
+    # Check that adb was invoked with the expected commands
+    mock_tools.subprocess.check_output.assert_called_once_with(
+        [
+            os.fsdecode(
+                tmp_path
+                / "sdk"
+                / "platform-tools"
+                / f"adb{'.exe' if sys.platform == 'win32' else ''}"
+            ),
+            "-s",
+            "exampleDevice",
+            "example",
+            "command",
+        ],
+        stderr=subprocess.STDOUT,
+        quiet=True,
     )
 
 
@@ -46,7 +73,7 @@ def test_simple_command(mock_tools, tmp_path):
     ],
 )
 def test_error_handling(mock_tools, tmp_path, name, exception):
-    """ADB.command() can parse errors returned by adb."""
+    """ADB.run() can parse errors returned by adb."""
     # Set up a mock command with a subprocess module that has with sample data loaded.
     adb_samples = Path(__file__).parent / "adb_errors"
     with (adb_samples / (name + ".out")).open("r") as adb_output_file:
@@ -81,4 +108,5 @@ def test_error_handling(mock_tools, tmp_path, name, exception):
             "command",
         ],
         stderr=subprocess.STDOUT,
+        quiet=False,
     )

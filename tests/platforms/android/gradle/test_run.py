@@ -1,3 +1,4 @@
+import datetime
 import os
 import platform
 import subprocess
@@ -5,12 +6,13 @@ import sys
 import time
 from os.path import normpath
 from pathlib import Path
-from unittest.mock import MagicMock, call
+from unittest import mock
 
 import pytest
 import requests
 
 from briefcase.console import Console, Log
+from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.android_sdk import ADB, AndroidSDK
 from briefcase.integrations.java import JDK
 from briefcase.integrations.subprocess import Subprocess
@@ -19,7 +21,7 @@ from briefcase.platforms.android.gradle import GradleRunCommand
 
 @pytest.fixture
 def jdk():
-    jdk = MagicMock()
+    jdk = mock.MagicMock()
     jdk.java_home = Path("/path/to/java")
     return jdk
 
@@ -32,21 +34,21 @@ def run_command(tmp_path, first_app_config, jdk):
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
     )
-    command.tools.mock_adb = MagicMock(spec_set=ADB)
-    command.tools.mock_adb.pidof = MagicMock(return_value="777")
-    command.tools.java = MagicMock(spec=JDK)
+    command.tools.mock_adb = mock.MagicMock(spec_set=ADB)
+    command.tools.mock_adb.pidof = mock.MagicMock(return_value="777")
+    command.tools.java = mock.MagicMock(spec=JDK)
     command.tools.java.java_home = "/path/to/java"
     command.tools.android_sdk = AndroidSDK(
         command.tools,
         root_path=Path("/path/to/android_sdk"),
     )
-    command.tools.android_sdk.adb = MagicMock(return_value=command.tools.mock_adb)
+    command.tools.android_sdk.adb = mock.MagicMock(return_value=command.tools.mock_adb)
 
-    command.tools.os = MagicMock(spec_set=os)
+    command.tools.os = mock.MagicMock(spec_set=os)
     command.tools.os.environ = {}
-    command.tools.requests = MagicMock(spec_set=requests)
-    command.tools.subprocess = MagicMock(spec_set=Subprocess)
-    command.tools.sys = MagicMock(spec_set=sys)
+    command.tools.requests = mock.MagicMock(spec_set=requests)
+    command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
+    command.tools.sys = mock.MagicMock(spec_set=sys)
 
     command.base_path.mkdir(parents=True)
     return command
@@ -79,9 +81,21 @@ def test_device_option(run_command):
 def test_run_existing_device(run_command, first_app_config):
     """An app can be run on an existing device."""
     # Set up device selection to return a running physical device.
-    run_command.tools.android_sdk.select_target_device = MagicMock(
+    run_command.tools.android_sdk.select_target_device = mock.MagicMock(
         return_value=("exampleDevice", "ExampleDevice", None)
     )
+
+    # Set up the log streamer to return a known stream
+    log_popen = mock.MagicMock()
+    run_command.tools.mock_adb.logcat.return_value = log_popen
+
+    # To satisfy coverage, the stop function must be invoked at least once
+    # when invoking stream_output.
+    def mock_stream_output(label, popen_process, stop_func):
+        stop_func()
+
+    run_command.tools.subprocess.stream_output.side_effect = mock_stream_output
+
     # Set up app config to have a `-` in the `bundle`, to ensure it gets
     # normalized into a `_` via `package_name`.
     first_app_config.bundle = "com.ex-ample"
@@ -111,39 +125,101 @@ def test_run_existing_device(run_command, first_app_config):
     )
 
     run_command.tools.mock_adb.pidof.assert_called_once_with(
-        f"{first_app_config.package_name}.{first_app_config.module_name}"
+        f"{first_app_config.package_name}.{first_app_config.module_name}",
+        quiet=True,
     )
-    run_command.tools.mock_adb.logcat.assert_called_once_with("777")
+    run_command.tools.mock_adb.logcat.assert_called_once_with(pid="777")
+
+    run_command.tools.subprocess.stream_output.assert_called_once_with(
+        "log stream", log_popen, stop_func=mock.ANY
+    )
 
 
 def test_run_slow_start(run_command, first_app_config, monkeypatch):
-    run_command.tools.android_sdk.select_target_device = MagicMock(
+    """If the app is slow to start, multiple calls to pidof will be made."""
+    run_command.tools.android_sdk.select_target_device = mock.MagicMock(
         return_value=("exampleDevice", "ExampleDevice", None)
     )
+
+    # Set up the log streamer to return a known stream
+    log_popen = mock.MagicMock()
+    run_command.tools.mock_adb.logcat.return_value = log_popen
+
+    # Mock the pidof call taking 3 attempts to return
     run_command.tools.mock_adb.pidof.side_effect = [None, None, "888"]
-    monkeypatch.setattr(time, "sleep", MagicMock())
+    monkeypatch.setattr(time, "sleep", mock.MagicMock())
 
     run_command.run_app(first_app_config, device_or_avd="exampleDevice")
 
     assert (
         run_command.tools.mock_adb.pidof.mock_calls
-        == [call("com.example.first_app")] * 3
+        == [mock.call("com.example.first_app", quiet=True)] * 3
     )
-    assert time.sleep.mock_calls == [call(0.5)] * 2
-    run_command.tools.mock_adb.logcat.assert_called_once_with("888")
+    assert time.sleep.mock_calls == [mock.call(0.01)] * 2
+    run_command.tools.mock_adb.logcat.assert_called_once_with(pid="888")
+
+    run_command.tools.subprocess.stream_output.assert_called_once_with(
+        "log stream", log_popen, stop_func=mock.ANY
+    )
+
+
+def test_run_crash_at_start(run_command, first_app_config, monkeypatch):
+    """If the app crashes before a PID can be read, a log dump is shown."""
+    run_command.tools.android_sdk.select_target_device = mock.MagicMock(
+        return_value=("exampleDevice", "ExampleDevice", None)
+    )
+
+    # Mock the pidof call failing multiple times before a timeout.
+    run_command.tools.mock_adb.pidof.side_effect = [None] * 5
+    monkeypatch.setattr(time, "sleep", mock.MagicMock())
+
+    # It's the eternal september...
+    start_datetime = datetime.datetime(2022, 9, 8, 7, 6, 42)
+    mock_datetime = mock.MagicMock(spec=datetime.datetime)
+    # Mock datetime.now() at +0s, +0.5s, +1.5s,... +5.5s
+    mock_datetime.now.side_effect = [
+        start_datetime + datetime.timedelta(seconds=delay)
+        for delay in [0] + [x + 0.5 for x in range(0, 6)]
+    ]
+    monkeypatch.setattr(datetime, "datetime", mock_datetime)
+
+    with pytest.raises(
+        BriefcaseCommandError, match=r"Problem starting app 'first-app'"
+    ):
+        run_command.run_app(first_app_config, device_or_avd="exampleDevice")
+
+    assert (
+        run_command.tools.mock_adb.pidof.mock_calls
+        == [mock.call("com.example.first_app", quiet=True)] * 5
+    )
+    assert time.sleep.mock_calls == [mock.call(0.01)] * 5
+
+    # The PID was never found, so logs can't be streamed
+    run_command.tools.mock_adb.logcat.assert_not_called()
+
+    # But we will get a log dump from logcat_tail
+    run_command.tools.mock_adb.logcat_tail.assert_called_once_with(
+        since=start_datetime - datetime.timedelta(seconds=10)
+    )
 
 
 def test_run_created_emulator(run_command, first_app_config):
     """The user can choose to run on a newly created emulator."""
     # Set up device selection to return a completely new emulator
-    run_command.tools.android_sdk.select_target_device = MagicMock(
+    run_command.tools.android_sdk.select_target_device = mock.MagicMock(
         return_value=(None, None, None)
     )
-    run_command.tools.android_sdk.create_emulator = MagicMock(return_value="newDevice")
-    run_command.tools.android_sdk.verify_avd = MagicMock()
-    run_command.tools.android_sdk.start_emulator = MagicMock(
+    run_command.tools.android_sdk.create_emulator = mock.MagicMock(
+        return_value="newDevice"
+    )
+    run_command.tools.android_sdk.verify_avd = mock.MagicMock()
+    run_command.tools.android_sdk.start_emulator = mock.MagicMock(
         return_value=("emulator-3742", "New Device")
     )
+
+    # Set up the log streamer to return a known stream
+    log_popen = mock.MagicMock()
+    run_command.tools.mock_adb.logcat.return_value = log_popen
 
     # Invoke run_app
     run_command.run_app(first_app_config)
@@ -174,22 +250,30 @@ def test_run_created_emulator(run_command, first_app_config):
         "org.beeware.android.MainActivity",
     )
 
-    run_command.tools.mock_adb.logcat.assert_called_once_with("777")
+    run_command.tools.mock_adb.logcat.assert_called_once_with(pid="777")
+
+    run_command.tools.subprocess.stream_output.assert_called_once_with(
+        "log stream", log_popen, stop_func=mock.ANY
+    )
 
 
 def test_run_idle_device(run_command, first_app_config):
     """The user can choose to run on an idle device."""
     # Set up device selection to return a new device that has an AVD,
     # but not a device ID.
-    run_command.tools.android_sdk.select_target_device = MagicMock(
+    run_command.tools.android_sdk.select_target_device = mock.MagicMock(
         return_value=(None, "Idle Device", "idleDevice")
     )
 
-    run_command.tools.android_sdk.create_emulator = MagicMock()
-    run_command.tools.android_sdk.verify_avd = MagicMock()
-    run_command.tools.android_sdk.start_emulator = MagicMock(
+    run_command.tools.android_sdk.create_emulator = mock.MagicMock()
+    run_command.tools.android_sdk.verify_avd = mock.MagicMock()
+    run_command.tools.android_sdk.start_emulator = mock.MagicMock(
         return_value=("emulator-3742", "Idle Device")
     )
+
+    # Set up the log streamer to return a known stream
+    log_popen = mock.MagicMock()
+    run_command.tools.mock_adb.logcat.return_value = log_popen
 
     # Invoke run_app
     run_command.run_app(first_app_config)
@@ -219,23 +303,41 @@ def test_run_idle_device(run_command, first_app_config):
         "org.beeware.android.MainActivity",
     )
 
-    run_command.tools.mock_adb.logcat.assert_called_once_with("777")
+    run_command.tools.mock_adb.logcat.assert_called_once_with(pid="777")
+
+    run_command.tools.subprocess.stream_output.assert_called_once_with(
+        "log stream", log_popen, stop_func=mock.ANY
+    )
 
 
 def test_run_ctrl_c(run_command, first_app_config, capsys):
     """When CTRL-C is sent during logcat, Briefcase exits normally."""
     # Set up device selection to return a running physical device.
-    run_command.tools.android_sdk.select_target_device = MagicMock(
+    run_command.tools.android_sdk.select_target_device = mock.MagicMock(
         return_value=("exampleDevice", "ExampleDevice", None)
     )
 
-    run_command.tools.mock_adb.logcat.side_effect = KeyboardInterrupt
+    # Set up the log streamer to return a known stream
+    log_popen = mock.MagicMock()
+    run_command.tools.mock_adb.logcat.return_value = log_popen
+
+    # Mock the effect of CTRL-C being hit while streaming
+    run_command.tools.subprocess.stream_output.side_effect = KeyboardInterrupt
 
     # Invoke run_app (and KeyboardInterrupt does not surface)
     run_command.run_app(first_app_config, device_or_avd="exampleDevice")
 
     # logcat is called and raised KeyboardInterrupt
-    run_command.tools.mock_adb.logcat.assert_called_once_with("777")
+    run_command.tools.mock_adb.logcat.assert_called_once_with(pid="777")
+
+    run_command.tools.subprocess.stream_output.assert_called_once_with(
+        "log stream", log_popen, stop_func=mock.ANY
+    )
+
+    # An attempt was made to clean up the log stream
+    run_command.tools.subprocess.cleanup.assert_called_once_with(
+        "log stream", log_popen
+    )
 
     # Shows the try block for KeyboardInterrupt was entered
     assert capsys.readouterr().out.endswith(
@@ -246,9 +348,9 @@ def test_run_ctrl_c(run_command, first_app_config, capsys):
 
 def test_log_file_extra(run_command, monkeypatch):
     """Android commands register a log file extra to list SDK packages."""
-    verify = MagicMock(return_value=run_command.tools.android_sdk)
+    verify = mock.MagicMock(return_value=run_command.tools.android_sdk)
     monkeypatch.setattr(AndroidSDK, "verify", verify)
-    monkeypatch.setattr(AndroidSDK, "verify_emulator", MagicMock())
+    monkeypatch.setattr(AndroidSDK, "verify_emulator", mock.MagicMock())
 
     # Even if one command triggers another, the sdkmanager should only be run once.
     run_command.update_command.verify_tools()
