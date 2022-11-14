@@ -100,6 +100,9 @@ class WindowsRunCommand(RunCommand):
             finally:
                 self.tools.subprocess.cleanup(app.app_name, log_popen)
 
+            # If the process didn't exit cleanly, raise an error.
+            if log_popen.returncode != 0:
+                raise BriefcaseCommandError(f"Problem running app {app.app_name}.")
         except KeyboardInterrupt:
             pass  # Catch CTRL-C to exit normally
         except OSError as e:

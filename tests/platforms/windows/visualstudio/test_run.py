@@ -21,8 +21,9 @@ def test_run_app(first_app_config, tmp_path):
     command.tools.home_path = tmp_path / "home"
     command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
 
-    # Set up the log streamer to return a known stream
+    # Set up the log streamer to return a known stream with a good returncode
     log_popen = mock.MagicMock()
+    log_popen.returncode = 0
     command.tools.subprocess.Popen.return_value = log_popen
 
     # Run the app
