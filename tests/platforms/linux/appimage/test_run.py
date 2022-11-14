@@ -59,8 +59,9 @@ def test_verify_non_linux(run_command):
 
 def test_run_app(run_command, first_app_config, tmp_path):
     """A linux App can be started."""
-    # Set up the log streamer to return a known stream
+    # Set up the log streamer to return a known stream with a good return code
     log_popen = mock.MagicMock()
+    log_popen.returncode = 0
     run_command.tools.subprocess.Popen.return_value = log_popen
 
     # Run the app
@@ -111,6 +112,43 @@ def test_run_app_failed(run_command, first_app_config, tmp_path):
 
     # No attempt to stream was made
     run_command.tools.subprocess.stream_output.assert_not_called()
+
+
+def test_run_app_error(run_command, first_app_config, tmp_path):
+    """A linux App that returns a nonzero return code raises an error."""
+    # Set up the log streamer to return a known stream with a bad return code
+    log_popen = mock.MagicMock()
+    log_popen.returncode = 42
+    run_command.tools.subprocess.Popen.return_value = log_popen
+
+    # Run the app
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Problem running app first-app.",
+    ):
+        run_command.run_app(first_app_config)
+
+    # The process was started
+    run_command.tools.subprocess.Popen.assert_called_with(
+        [
+            os.fsdecode(
+                tmp_path / "base_path" / "linux" / "First_App-0.0.1-wonky.AppImage"
+            )
+        ],
+        cwd=tmp_path / "home",
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        bufsize=1,
+    )
+
+    # The streamer was started
+    run_command.tools.subprocess.stream_output.assert_called_once_with(
+        "first-app",
+        log_popen,
+    )
+
+    # The stream was cleaned up
+    run_command.tools.subprocess.cleanup.assert_called_once_with("first-app", log_popen)
 
 
 def test_run_app_ctrl_c(run_command, first_app_config, tmp_path, capsys):

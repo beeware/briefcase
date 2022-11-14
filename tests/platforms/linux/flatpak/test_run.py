@@ -25,8 +25,9 @@ def run_command(tmp_path):
 
 def test_run(run_command, first_app_config):
     """A flatpak can be executed."""
-    # Set up the log streamer to return a known stream
+    # Set up the log streamer to return a known stream and a good return code
     log_popen = mock.MagicMock()
+    log_popen.returncode = 0
     run_command.tools.flatpak.run.return_value = log_popen
 
     # Run the app
@@ -63,6 +64,36 @@ def test_run_app_failed(run_command, first_app_config, tmp_path):
 
     # No attempt to stream was made
     run_command.tools.subprocess.stream_output.assert_not_called()
+
+
+def test_run_error(run_command, first_app_config):
+    """A flatpak that returns a bad error cdoe can be executed."""
+    # Set up the log streamer to return a known stream and a bad return code
+    log_popen = mock.MagicMock()
+    log_popen.returncode = 42
+    run_command.tools.flatpak.run.return_value = log_popen
+
+    # Run the app
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Problem running app first-app.",
+    ):
+        run_command.run_app(first_app_config)
+
+    # App is executed
+    run_command.tools.flatpak.run.assert_called_once_with(
+        bundle="com.example",
+        app_name="first-app",
+    )
+
+    # The streamer was started
+    run_command.tools.subprocess.stream_output.assert_called_once_with(
+        "first-app",
+        log_popen,
+    )
+
+    # The stream was cleaned up
+    run_command.tools.subprocess.cleanup.assert_called_once_with("first-app", log_popen)
 
 
 def test_run_ctrl_c(run_command, first_app_config, capsys):
