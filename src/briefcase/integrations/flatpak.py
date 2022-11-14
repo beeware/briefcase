@@ -1,9 +1,13 @@
 import subprocess
 
 from briefcase.exceptions import BriefcaseCommandError
+from briefcase.integrations.base import Tool, ToolCache
 
 
-class Flatpak:
+class Flatpak(Tool):
+    name = "flatpak"
+    full_name = "Flatpak"
+
     DEFAULT_REPO_ALIAS = "flathub"
     DEFAULT_REPO_URL = "https://flathub.org/repo/flathub.flatpakrepo"
 
@@ -11,11 +15,11 @@ class Flatpak:
     DEFAULT_RUNTIME_VERSION = "21.08"
     DEFAULT_SDK = "org.freedesktop.Sdk"
 
-    def __init__(self, tools):
+    def __init__(self, tools: ToolCache):
         self.tools = tools
 
     @classmethod
-    def verify(cls, tools):
+    def verify(cls, tools: ToolCache):
         """Verify that the Flatpak toolchain is available.
 
         :param tools: ToolCache of available tools

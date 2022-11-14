@@ -2,13 +2,14 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from briefcase.integrations.base import ToolCache
 from briefcase.integrations.download import Download
 from briefcase.integrations.rcedit import RCEdit
 from briefcase.integrations.subprocess import Subprocess
 
 
 @pytest.fixture
-def mock_tools(tmp_path, mock_tools):
+def mock_tools(tmp_path, mock_tools) -> ToolCache:
     mock_tools.host_arch = "wonky"
 
     # Mock default tools

@@ -12,8 +12,10 @@ from pathlib import Path
 
 import psutil
 
+from briefcase.config import AppConfig
 from briefcase.console import Log
 from briefcase.exceptions import CommandOutputParseError
+from briefcase.integrations.base import Tool, ToolCache
 
 
 class ParseError(Exception):
@@ -51,7 +53,9 @@ def is_process_dead(pid: int):
 
 
 def get_process_id_by_command(
-    command_list: list = None, command: str = "", logger: Log = None
+    command_list: list = None,
+    command: str = "",
+    logger: Log = None,
 ):
     """Find a Process ID (PID) a by its command. If multiple processes are
     found, then the most recently created process ID is returned.
@@ -129,11 +133,11 @@ def ensure_console_is_safe(sub_method):
     return inner
 
 
-class NativeAppContext:
+class NativeAppContext(Tool):
     """A wrapper around subprocess for use as an app-bound tool."""
 
     @classmethod
-    def verify(cls, tools, app):
+    def verify(cls, tools: ToolCache, app: AppConfig):
         """Make subprocess available as app-bound tool."""
         # short circuit since already verified and available
         if hasattr(tools[app], "app_context"):
@@ -143,11 +147,14 @@ class NativeAppContext:
         return tools[app].app_context
 
 
-class Subprocess:
+class Subprocess(Tool):
     """A wrapper around subprocess that can be used as a logging point for
     commands that are executed."""
 
-    def __init__(self, tools):
+    name = "subprocess"
+    full_name = "Subprocess"
+
+    def __init__(self, tools: ToolCache):
         self.tools = tools
         self._subprocess = subprocess
 
@@ -246,7 +253,7 @@ class Subprocess:
         return kwargs
 
     @classmethod
-    def verify(cls, tools):
+    def verify(cls, tools: ToolCache):
         """Make subprocess available in tool cache."""
         # short circuit since already verified and available
         if hasattr(tools, "subprocess"):
