@@ -2,6 +2,7 @@
 # implementation. Do a surface-level verification here, but the app
 # tests provide the actual test coverage.
 import os
+import subprocess
 from unittest import mock
 
 from briefcase.console import Console, Log
@@ -20,9 +21,15 @@ def test_run_app(first_app_config, tmp_path):
     command.tools.home_path = tmp_path / "home"
     command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
 
+    # Set up the log streamer to return a known stream
+    log_popen = mock.MagicMock()
+    command.tools.subprocess.Popen.return_value = log_popen
+
+    # Run the app
     command.run_app(first_app_config)
 
-    command.tools.subprocess.run.assert_called_with(
+    # Popen was called
+    command.tools.subprocess.Popen.assert_called_with(
         [
             os.fsdecode(
                 tmp_path
@@ -36,5 +43,16 @@ def test_run_app(first_app_config, tmp_path):
             ),
         ],
         cwd=tmp_path / "home",
-        check=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        bufsize=1,
     )
+
+    # The streamer was started
+    command.tools.subprocess.stream_output.assert_called_once_with(
+        "first-app",
+        log_popen,
+    )
+
+    # The stream was cleaned up
+    command.tools.subprocess.cleanup.assert_called_once_with("first-app", log_popen)

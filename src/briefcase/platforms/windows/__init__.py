@@ -82,15 +82,27 @@ class WindowsRunCommand(RunCommand):
         self.logger.info("Starting app...", prefix=app.app_name)
         try:
             # Start streaming logs for the app.
-            self.logger.info("=" * 75)
-            self.tools.subprocess.run(
+            log_popen = self.tools.subprocess.Popen(
                 [os.fsdecode(self.binary_path(app))],
                 cwd=self.tools.home_path,
-                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                bufsize=1,
             )
+
+            try:
+                # Start streaming logs for the app.
+                self.logger.info("=" * 75)
+                self.tools.subprocess.stream_output(
+                    app.app_name,
+                    log_popen,
+                )
+            finally:
+                self.tools.subprocess.cleanup(app.app_name, log_popen)
+
         except KeyboardInterrupt:
             pass  # Catch CTRL-C to exit normally
-        except subprocess.CalledProcessError as e:
+        except OSError as e:
             raise BriefcaseCommandError(f"Unable to start app {app.app_name}.") from e
 
 
