@@ -45,9 +45,6 @@ def test_run(run_command, first_app_config):
         log_popen,
     )
 
-    # The stream was cleaned up
-    run_command.tools.subprocess.cleanup.assert_called_once_with("first-app", log_popen)
-
 
 def test_run_app_failed(run_command, first_app_config, tmp_path):
     """If there's a problem starting the app, an exception is raised."""
@@ -92,9 +89,6 @@ def test_run_error(run_command, first_app_config):
         log_popen,
     )
 
-    # The stream was cleaned up
-    run_command.tools.subprocess.cleanup.assert_called_once_with("first-app", log_popen)
-
 
 def test_run_ctrl_c(run_command, first_app_config, capsys):
     """When CTRL-C is sent while the App is running, Briefcase exits
@@ -126,6 +120,3 @@ def test_run_ctrl_c(run_command, first_app_config, capsys):
         "[first-app] Starting app...\n"
         "===========================================================================\n"
     )
-
-    # The stream was cleaned up
-    run_command.tools.subprocess.cleanup.assert_called_once_with("first-app", log_popen)

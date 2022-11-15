@@ -54,6 +54,3 @@ def test_run_app(first_app_config, tmp_path):
         "first-app",
         log_popen,
     )
-
-    # The stream was cleaned up
-    command.tools.subprocess.cleanup.assert_called_once_with("first-app", log_popen)
