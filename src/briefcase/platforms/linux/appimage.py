@@ -268,15 +268,12 @@ class LinuxAppImageRunCommand(LinuxAppImagePassiveMixin, RunCommand):
                 bufsize=1,
             )
 
-            try:
-                # Start streaming logs for the app.
-                self.logger.info("=" * 75)
-                self.tools.subprocess.stream_output(
-                    app.app_name,
-                    log_popen,
-                )
-            finally:
-                self.tools.subprocess.cleanup(app.app_name, log_popen)
+            # Start streaming logs for the app.
+            self.logger.info("=" * 75)
+            self.tools.subprocess.stream_output(
+                app.app_name,
+                log_popen,
+            )
 
             # If the process didn't exit cleanly, raise an error.
             if log_popen.returncode != 0:
