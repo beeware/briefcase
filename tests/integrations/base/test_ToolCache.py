@@ -1,6 +1,7 @@
 import importlib
 import inspect
 import os
+import pkgutil
 import platform
 import shutil
 import sys
@@ -51,13 +52,10 @@ def test_toolcache_typing():
 
     # Ensure all modules containing Tools are exported in ``briefcase.integrations``.
     tool_modules = {
-        module
-        for module, _ in inspect.getmembers(
-            sys.modules["briefcase.integrations"],
-            inspect.ismodule,
-        )
+        module.name
+        for module in pkgutil.iter_modules(briefcase.integrations.__path__)
+        if module.name not in nontool_modules
     }
-    tool_modules = tool_modules - nontool_modules
     assert sorted(tool_modules) == sorted(briefcase.integrations.__all__)
 
     # Ensure defined Tool modules/classes are annotated in ToolCache.
