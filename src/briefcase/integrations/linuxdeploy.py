@@ -9,6 +9,7 @@ from briefcase.exceptions import (
     CorruptToolError,
     MissingToolError,
 )
+from briefcase.integrations.base import Tool, ToolCache
 
 ELF_HEADER_IDENT = bytes.fromhex("7F454C46")
 ELF_PATCH_OFFSET = 0x08
@@ -17,7 +18,11 @@ ELF_PATCH_PATCHED_BYTES = bytes.fromhex("000000")
 
 
 class LinuxDeployBase:
-    def __init__(self, tools, **kwargs):
+    name: str
+    full_name: str
+    install_msg: str
+
+    def __init__(self, tools: ToolCache, **kwargs):
         self.tools = tools
 
     @property
@@ -62,7 +67,7 @@ class LinuxDeployBase:
                 self.patch_elf_header()
 
     @classmethod
-    def verify(cls, tools, install=True, **kwargs):
+    def verify(cls, tools: ToolCache, install=True, **kwargs):
         """Verify that linuxdeploy tool or plugin is available.
 
         :param tools: ToolCache of available tools
@@ -290,7 +295,7 @@ class LinuxDeployURLPlugin(LinuxDeployPluginBase):
         return self._download_url
 
 
-class LinuxDeploy(LinuxDeployBase):
+class LinuxDeploy(LinuxDeployBase, Tool):
     name = "linuxdeploy"
     full_name = "linuxdeploy"
     install_msg = "linuxdeploy was not found; downloading and installing..."

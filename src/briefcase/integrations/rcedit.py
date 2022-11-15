@@ -1,11 +1,12 @@
 from briefcase.exceptions import MissingToolError
+from briefcase.integrations.base import Tool, ToolCache
 
 
-class RCEdit:
+class RCEdit(Tool):
     name = "rcedit"
     full_name = "RCEdit"
 
-    def __init__(self, tools):
+    def __init__(self, tools: ToolCache):
         self.tools = tools
 
     @property
@@ -19,7 +20,7 @@ class RCEdit:
         return self.tools.base_path / "rcedit-x64.exe"
 
     @classmethod
-    def verify(cls, tools, install=True):
+    def verify(cls, tools: ToolCache, install=True):
         """Verify that rcedit is available.
 
         :param tools: ToolCache of available tools

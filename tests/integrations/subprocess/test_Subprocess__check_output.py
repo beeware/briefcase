@@ -190,6 +190,34 @@ def test_debug_call_with_env(mock_sub, capsys, tmp_path):
     assert capsys.readouterr().out == expected_output
 
 
+def test_debug_call_with_quiet(mock_sub, capsys, tmp_path):
+    """If quiet mode is on, calls aren't logged, even if verbosity is turned
+    up."""
+    mock_sub.tools.logger.verbosity = 2
+
+    env = {"NewVar": "NewVarValue"}
+    mock_sub.check_output(
+        ["hello", "world"],
+        env=env,
+        cwd=tmp_path / "cwd",
+        quiet=True,
+    )
+
+    merged_env = mock_sub.tools.os.environ.copy()
+    merged_env.update(env)
+
+    mock_sub._subprocess.check_output.assert_called_with(
+        ["hello", "world"],
+        env=merged_env,
+        cwd=os.fsdecode(tmp_path / "cwd"),
+        text=True,
+        encoding=ANY,
+    )
+
+    # No output
+    assert capsys.readouterr().out == ""
+
+
 def test_calledprocesserror_exception_logging(mock_sub, capsys):
     """If command errors, ensure command output is printed."""
     mock_sub.tools.logger.verbosity = 2
@@ -221,6 +249,25 @@ def test_calledprocesserror_exception_logging(mock_sub, capsys):
     )
 
     assert capsys.readouterr().out == expected_output
+
+
+def test_calledprocesserror_exception_quiet(mock_sub, capsys):
+    """If command errors in quiet mode, no command output is printed."""
+    mock_sub.tools.logger.verbosity = 2
+
+    called_process_error = CalledProcessError(
+        returncode=-1,
+        cmd="hello world",
+        output="output line 1\noutput line 2",
+        stderr="error line 1\nerror line 2",
+    )
+    mock_sub._subprocess.check_output.side_effect = called_process_error
+
+    with pytest.raises(CalledProcessError):
+        mock_sub.check_output(["hello", "world"], quiet=True)
+
+    # No ouput in quiet mode
+    assert capsys.readouterr().out == ""
 
 
 def test_calledprocesserror_exception_logging_no_cmd_output(mock_sub, capsys):

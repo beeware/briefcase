@@ -319,19 +319,23 @@ or
         """
         bundle_path = self.binary_path(app)
         resources_path = bundle_path / "Contents" / "Resources"
+        frameworks_path = bundle_path / "Contents" / "Frameworks"
 
-        # Sign all Mach-O executable objects
-        sign_targets = [
-            path
-            for path in resources_path.rglob("*")
-            if not path.is_dir() and is_mach_o_binary(path)
-        ]
+        sign_targets = []
 
-        # Sign all embedded frameworks
-        sign_targets.extend(resources_path.rglob("*.framework"))
+        for folder in (resources_path, frameworks_path):
+            # Sign all Mach-O executable objects
+            sign_targets.extend(
+                path
+                for path in folder.rglob("*")
+                if not path.is_dir() and is_mach_o_binary(path)
+            )
 
-        # Sign all embedded app objets
-        sign_targets.extend(resources_path.rglob("*.app"))
+            # Sign all embedded frameworks
+            sign_targets.extend(folder.rglob("*.framework"))
+
+            # Sign all embedded app objets
+            sign_targets.extend(folder.rglob("*.app"))
 
         # Sign the bundle path itself
         sign_targets.append(bundle_path)

@@ -429,6 +429,7 @@ def test_sign_app(dummy_command, first_app_with_binaries, tmp_path):
     # * It traverses in "depth first" order
     app_path = tmp_path / "base_path" / "macOS" / "app" / "First App" / "First App.app"
     lib_path = app_path / "Contents" / "Resources"
+    frameworks_path = app_path / "Contents" / "Frameworks"
     dummy_command.tools.subprocess.run.assert_has_calls(
         [
             sign_call(tmp_path, lib_path / "subfolder" / "second_so.so"),
@@ -438,13 +439,14 @@ def test_sign_app(dummy_command, first_app_with_binaries, tmp_path):
             sign_call(tmp_path, lib_path / "first_so.so"),
             sign_call(tmp_path, lib_path / "first_dylib.dylib"),
             sign_call(
-                tmp_path, lib_path / "Extras.framework" / "Resources" / "extras.dylib"
-            ),
-            sign_call(tmp_path, lib_path / "Extras.framework"),
-            sign_call(
                 tmp_path, lib_path / "Extras.app" / "Contents" / "MacOS" / "Extras"
             ),
             sign_call(tmp_path, lib_path / "Extras.app"),
+            sign_call(
+                tmp_path,
+                frameworks_path / "Extras.framework" / "Resources" / "extras.dylib",
+            ),
+            sign_call(tmp_path, frameworks_path / "Extras.framework"),
             sign_call(tmp_path, app_path),
         ],
         any_order=False,

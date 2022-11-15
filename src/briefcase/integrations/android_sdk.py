@@ -13,6 +13,7 @@ from briefcase.exceptions import (
     InvalidDeviceError,
     MissingToolError,
 )
+from briefcase.integrations.base import Tool, ToolCache
 from briefcase.integrations.java import JDK
 
 DEVICE_NOT_FOUND = re.compile(r"^error: device '[^']*' not found")
@@ -36,11 +37,11 @@ this device as a deployment target.
         )
 
 
-class AndroidSDK:
+class AndroidSDK(Tool):
     name = "android_sdk"
     full_name = "Android SDK"
 
-    def __init__(self, tools, root_path):
+    def __init__(self, tools: ToolCache, root_path: Path):
         self.tools = tools
         self.dot_android_path = self.tools.home_path / ".android"
         self.root_path = root_path
@@ -129,7 +130,7 @@ class AndroidSDK:
         )
 
     @classmethod
-    def verify(cls, tools, install=True):
+    def verify(cls, tools: ToolCache, install=True):
         """Verify an Android SDK is available.
 
         If the ANDROID_SDK_ROOT environment variable is set, that location will
@@ -1100,7 +1101,7 @@ find this page helpful in diagnosing emulator problems.
 
 
 class ADB:
-    def __init__(self, tools, device):
+    def __init__(self, tools: ToolCache, device: str):
         """An API integration for the Android Debug Bridge (ADB).
 
         :param tools: ToolCache of available tools
@@ -1144,14 +1145,19 @@ class ADB:
                 f"Unable to determine if emulator {self.device} has booted."
             ) from e
 
-    def run(self, *arguments):
+    def run(self, *arguments, quiet=False):
         """Run a command on a device using Android debug bridge, `adb`. The
         device name is mandatory to ensure clarity in the case of multiple
         attached devices.
 
         :param arguments: List of strings to pass to `adb` as arguments.
-
-        Returns `adb` output on success; raises an exception on failure.
+        :param quiet: Should the invocation of this command be silent, and
+            *not* appear in the logs? This should almost always be False;
+            however, for some calls (most notably, calls that are called
+            frequently to evaluate the status of another process), logging can
+            be turned off so that log output isn't corrupted by thousands of
+            polling calls.
+        :returns: `adb` output on success; raises an exception on failure.
         """
         # The ADB integration operates on the basis of running commands before
         # checking that they are valid, then parsing output to notice errors.
@@ -1170,6 +1176,7 @@ class ADB:
                     for arg in arguments
                 ],
                 stderr=subprocess.STDOUT,
+                quiet=quiet,
             )
         except subprocess.CalledProcessError as e:
             if any(DEVICE_NOT_FOUND.match(line) for line in e.output.split("\n")):
@@ -1253,7 +1260,34 @@ Activity class not found while starting app.
             ) from e
 
     def logcat(self, pid):
-        """Start tailing the adb log for the device."""
+        """Start following the adb log for the device.
+
+        :param pid: The PID whose logs you want to display.
+        :returns: A Popen object for the logcat call
+        """
+        return self.tools.subprocess.Popen(
+            [
+                os.fsdecode(self.tools.android_sdk.adb_path),
+                "-s",
+                self.device,
+                "logcat",
+                "--pid",  # This option is available since API level 24.
+                pid,
+            ]
+            # Filter out some noisy and useless tags.
+            + [f"{tag}:S" for tag in ["EGL_emulation"]],
+            env=self.tools.android_sdk.env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            bufsize=1,
+        )
+
+    def logcat_tail(self, since=None):
+        """Show the tail of the logs for Python-like apps, starting from a
+        given timestamp.
+
+        :param since: The start time from which logs should be displayed
+        """
         try:
             self.tools.subprocess.run(
                 [
@@ -1261,30 +1295,49 @@ Activity class not found while starting app.
                     "-s",
                     self.device,
                     "logcat",
-                    "--pid",  # This option is available since API level 24.
-                    pid,
-                ]
-                # Filter out some noisy and useless tags.
-                + [f"{tag}:S" for tag in ["EGL_emulation"]],
+                    "-t",
+                    since.strftime("%m-%d %H:%M:%S.000000"),
+                    "-s",
+                    # This is a collection of log labels that should catch
+                    # most Python app output.
+                    "MainActivity:*",
+                    "stdio:*",
+                    "python.stdout:*",
+                    "AndroidRuntime:*",
+                ],
                 env=self.tools.android_sdk.env,
                 check=True,
             )
         except subprocess.CalledProcessError as e:
-            # If the user sends CTRL+C:
-            #  - on Windows, adb returns 0xC000013A (STATUS_CONTROL_C_EXIT)
-            #  - on Linux/macOS, adb returns -2.
-            # Exit normally since the user was instructed to use CTRL+C.
-            if e.returncode not in {-2, 0xC000013A}:
-                raise BriefcaseCommandError("Error starting ADB logcat.") from e
+            raise BriefcaseCommandError("Error starting ADB logcat.") from e
 
-    def pidof(self, package):
-        """Return the PID of the given app as a string, or None if it isn't
-        running."""
+    def pidof(self, package, **kwargs):
+        """Obtain the PID of a running app by package name.
+
+        :param package: The package ID for the application (e.g.,
+            ``org.beeware.tutorial``)
+        :returns: The PID of the given app as a string, or None if it isn't
+        running.
+        """
         # The pidof command is available since API level 24. The level 23 emulator image also
         # includes it, but it doesn't work correctly (it returns all processes).
         try:
             # Exit status is unreliable: some devices (e.g. Nexus 4) return 0 even when no
             # process was found.
-            return self.run("shell", "pidof", "-s", package).strip() or None
+            return self.run("shell", "pidof", "-s", package, **kwargs).strip() or None
         except subprocess.CalledProcessError:
             return None
+
+    def pid_exists(self, pid, **kwargs):
+        """Confirm if the PID exists on the emulator.
+
+        :param pid: The PID to check
+        :returns: True if the PID exists, False if it doesn't.
+        """
+        # Look for the existence of /proc/<PID> on the device filesystem.
+        # If that file exists, so does the process.
+        try:
+            self.run("shell", "test", "-e", f"/proc/{pid}", **kwargs)
+            return True
+        except subprocess.CalledProcessError:
+            return False

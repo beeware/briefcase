@@ -31,6 +31,8 @@ info_plist_path="First App.app/Contents/Info.plist"
 
     # Create some libraries that need to be signed.
     lib_path = app_path / "Contents" / "Resources"
+    frameworks_path = app_path / "Contents" / "Frameworks"
+
     for lib in [
         "first_so.so",
         Path("subfolder") / "second_so.so",
@@ -53,8 +55,12 @@ info_plist_path="First App.app/Contents/Info.plist"
         f.write(b"\xCA\xFE\xBA\xBEBinary content here")
 
     # An embedded framework
-    (lib_path / "Extras.framework" / "Resources").mkdir(parents=True, exist_ok=True)
-    with (lib_path / "Extras.framework" / "Resources" / "extras.dylib").open("wb") as f:
+    (frameworks_path / "Extras.framework" / "Resources").mkdir(
+        parents=True, exist_ok=True
+    )
+    with (frameworks_path / "Extras.framework" / "Resources" / "extras.dylib").open(
+        "wb"
+    ) as f:
         f.write(b"\xCA\xFE\xBA\xBEBinary content here")
 
     # Make sure there are some files in the bundle that *don't* need to be signed...

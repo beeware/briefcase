@@ -8,15 +8,29 @@ from abc import ABC
 from collections import defaultdict
 from collections.abc import Mapping
 from pathlib import Path
-from typing import DefaultDict
+from typing import TYPE_CHECKING, DefaultDict
 
 import requests
 from cookiecutter.main import cookiecutter
 
 from briefcase.config import AppConfig
 from briefcase.console import Console, Log
-from briefcase.integrations.download import Download
-from briefcase.integrations.subprocess import Subprocess
+
+if TYPE_CHECKING:
+    # Tools are imported only for type checking
+    # to avoid circular import errors.
+    import git as git_
+
+    from briefcase.integrations.android_sdk import AndroidSDK
+    from briefcase.integrations.docker import Docker, DockerAppContext
+    from briefcase.integrations.download import Download
+    from briefcase.integrations.flatpak import Flatpak
+    from briefcase.integrations.java import JDK
+    from briefcase.integrations.linuxdeploy import LinuxDeploy
+    from briefcase.integrations.rcedit import RCEdit
+    from briefcase.integrations.subprocess import Subprocess
+    from briefcase.integrations.visualstudio import VisualStudio
+    from briefcase.integrations.wix import WiX
 
 
 # TODO: Implement Tool base class
@@ -25,11 +39,29 @@ class Tool(ABC):
 
 
 class ToolCache(Mapping):
+    # Briefcase tools
+    android_sdk: AndroidSDK
+    app_context: Subprocess | DockerAppContext
+    docker: Docker
+    download: Download
+    flatpak: Flatpak
+    git: git_
+    java: JDK
+    linuxdeploy: LinuxDeploy
+    rcedit: RCEdit
+    subprocess: Subprocess
+    visualstudio: VisualStudio
+    wix: WiX
+    xcode: bool
+    xcode_cli: bool
+
+    # Python stdlib tools
     platform = platform
     os = os
     shutil = shutil
     sys = sys
 
+    # Third party tools
     cookiecutter = staticmethod(cookiecutter)
     requests = requests
 
@@ -70,10 +102,6 @@ class ToolCache(Mapping):
                 home_path=self.home_path,
             )
         )
-
-        # Built-in tools without any external dependencies
-        Subprocess.verify(tools=self)
-        Download.verify(tools=self)
 
     def __getitem__(self, app: AppConfig) -> ToolCache:
         return self.app_tools[app]
