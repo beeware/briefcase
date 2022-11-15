@@ -1,7 +1,8 @@
 from briefcase.exceptions import BriefcaseCommandError
+from briefcase.integrations.base import ToolCache
 
 
-def verify_git_is_installed(tools):
+def verify_git_is_installed(tools: ToolCache):
     """Verify if git is installed.
 
     Unfortunately, `import git` triggers a call on the operating system

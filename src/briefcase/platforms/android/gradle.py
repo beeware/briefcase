@@ -1,3 +1,4 @@
+import datetime
 import re
 import subprocess
 import time
@@ -229,22 +230,55 @@ class GradleRunCommand(GradleMixin, RunCommand):
 
         # To start the app, we launch `org.beeware.android.MainActivity`.
         with self.input.wait_bar("Launching app..."):
+            # Any log after this point must be associated with the new instance
+            start_time = datetime.datetime.now()
             adb.start_app(package, "org.beeware.android.MainActivity")
             pid = None
-            while not pid:
-                pid = adb.pidof(package)
-                if not pid:
-                    time.sleep(0.5)
+            attempts = 0
+            delay = 0.01
 
-        try:
-            self.logger.info(
-                "Following device log output (type CTRL-C to stop log)...",
-                prefix=app.app_name,
-            )
-            self.logger.info("=" * 75)
-            adb.logcat(pid)
-        except KeyboardInterrupt:
-            pass  # catch CTRL-C to exit normally
+            # Try to get the PID for 5 seconds.
+            fail_time = start_time + datetime.timedelta(seconds=5)
+            while not pid and datetime.datetime.now() < fail_time:
+                # Try to get the PID; run in quiet mode because we may
+                # need to do this a lot in the next 5 seconds.
+                pid = adb.pidof(package, quiet=True)
+                if not pid:
+                    time.sleep(delay)
+                attempts += 1
+
+        if pid:
+            try:
+                self.logger.info(
+                    "Following device log output (type CTRL-C to stop log)...",
+                    prefix=app.app_name,
+                )
+                self.logger.info("=" * 75)
+                log_popen = adb.logcat(pid=pid)
+
+                self.tools.subprocess.stream_output(
+                    "log stream",
+                    log_popen,
+                    # Check for the PID in quiet mode so logs aren't corrupted.
+                    stop_func=lambda: not adb.pid_exists(pid=pid, quiet=True),
+                )
+
+            except KeyboardInterrupt:
+                pass  # catch CTRL-C to exit normally
+            finally:
+                self.tools.subprocess.cleanup("log stream", log_popen)
+
+        else:
+            self.logger.error("Unable to find PID for app", prefix=app.app_name)
+            self.logger.error("Logs for launch attempt follow...")
+
+            # Show the log from the start time of the app
+            self.logger.error("=" * 75)
+
+            # Pad by a few seconds because the android emulator's clock and the
+            # local system clock may not be perfectly aligned.
+            adb.logcat_tail(since=start_time - datetime.timedelta(seconds=10))
+            raise BriefcaseCommandError(f"Problem starting app {app.app_name!r}")
 
 
 class GradlePackageCommand(GradleMixin, PackageCommand):

@@ -26,6 +26,8 @@ from briefcase.exceptions import (
     NetworkFailure,
 )
 from briefcase.integrations.base import ToolCache
+from briefcase.integrations.download import Download
+from briefcase.integrations.subprocess import Subprocess
 
 
 class InvalidTemplateRepository(BriefcaseCommandError):
@@ -145,6 +147,10 @@ class BaseCommand(ABC):
             console=console,
             base_path=self.data_path / "tools",
         )
+
+        # Immediately add tools that must be always available
+        Subprocess.verify(tools=self.tools)
+        Download.verify(tools=self.tools)
 
         self.global_config = None
         self._path_index = {}

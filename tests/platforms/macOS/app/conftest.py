@@ -9,6 +9,8 @@ def first_app_with_binaries(first_app_config, tmp_path):
     # Create some libraries that need to be signed.
     app_path = tmp_path / "base_path" / "macOS" / "app" / "First App" / "First App.app"
     lib_path = app_path / "Contents" / "Resources"
+    frameworks_path = app_path / "Contents" / "Frameworks"
+
     for lib in [
         "first_so.so",
         Path("subfolder") / "second_so.so",
@@ -31,8 +33,12 @@ def first_app_with_binaries(first_app_config, tmp_path):
         f.write(b"\xCA\xFE\xBA\xBEBinary content here")
 
     # An embedded framework
-    (lib_path / "Extras.framework" / "Resources").mkdir(parents=True, exist_ok=True)
-    with (lib_path / "Extras.framework" / "Resources" / "extras.dylib").open("wb") as f:
+    (frameworks_path / "Extras.framework" / "Resources").mkdir(
+        parents=True, exist_ok=True
+    )
+    with (frameworks_path / "Extras.framework" / "Resources" / "extras.dylib").open(
+        "wb"
+    ) as f:
         f.write(b"\xCA\xFE\xBA\xBEBinary content here")
 
     # Make sure there are some files in the bundle that *don't* need to be signed...

@@ -9,6 +9,8 @@ import pytest
 from briefcase.config import AppConfig
 from briefcase.console import Log
 from briefcase.integrations.base import ToolCache
+from briefcase.integrations.download import Download
+from briefcase.integrations.subprocess import Subprocess
 from tests.utils import DummyConsole
 
 
@@ -33,6 +35,10 @@ def mock_tools(tmp_path) -> ToolCache:
     # Create base directories
     mock_tools.base_path.mkdir(parents=True)
     mock_tools.home_path.mkdir(parents=True)
+
+    # Make Download and Subprocess always available
+    Download.verify(tools=mock_tools)
+    Subprocess.verify(tools=mock_tools)
 
     return mock_tools
 

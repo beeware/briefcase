@@ -8,13 +8,14 @@ from briefcase.exceptions import (
     MissingToolError,
     NonManagedToolError,
 )
+from briefcase.integrations.base import Tool, ToolCache
 
 
-class JDK:
+class JDK(Tool):
     name = "java"
     full_name = "Java JDK"
 
-    def __init__(self, tools, java_home):
+    def __init__(self, tools: ToolCache, java_home: Path):
         self.tools = tools
 
         # As of April 10 2020, 8u242-b08 is the current AdoptOpenJDK
@@ -43,7 +44,7 @@ class JDK:
         )
 
     @classmethod
-    def verify(cls, tools, install=True):
+    def verify(cls, tools: ToolCache, install=True):
         """Verify that a Java 8 JDK exists.
 
         If ``JAVA_HOME`` is set, try that version. If it is a JRE, or its *not*

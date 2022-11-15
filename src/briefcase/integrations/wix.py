@@ -7,15 +7,16 @@ from briefcase.exceptions import (
     MissingToolError,
     NonManagedToolError,
 )
+from briefcase.integrations.base import Tool, ToolCache
 
 WIX_DOWNLOAD_URL = "https://github.com/wixtoolset/wix3/releases/download/wix3112rtm/wix311-binaries.zip"
 
 
-class WiX:
+class WiX(Tool):
     name = "wix"
     full_name = "WiX"
 
-    def __init__(self, tools, wix_home=None, bin_install=False):
+    def __init__(self, tools: ToolCache, wix_home: Path = None, bin_install=False):
         """Create a wrapper around a WiX install.
 
         :param tools: ToolCache of available tools.
@@ -55,7 +56,7 @@ class WiX:
             return self.wix_home / "bin" / "candle.exe"
 
     @classmethod
-    def verify(cls, tools, install=True):
+    def verify(cls, tools: ToolCache, install=True):
         """Verify that there is a WiX install available.
 
         If the WIX environment variable is set, that location will be checked

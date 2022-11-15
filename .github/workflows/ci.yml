@@ -67,9 +67,15 @@ jobs:
     needs: [pre-commit, towncrier, package]
     strategy:
       matrix:
-        platform: ['macos', 'ubuntu', 'windows']
-        python-version: ['3.8', '3.9', '3.10', '3.11']
+        platform: ["macos", "ubuntu", "windows"]
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12-dev"]
+        include:
+          - experimental: false
+
+          - python-version: "3.12-dev"
+            experimental: true
     runs-on: ${{ matrix.platform }}-latest
+    continue-on-error: ${{ matrix.experimental }}
     steps:
     - uses: actions/checkout@v3.1.0
       with:

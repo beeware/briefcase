@@ -1,9 +1,13 @@
 import subprocess
 
 from briefcase.exceptions import BriefcaseCommandError
+from briefcase.integrations.base import Tool, ToolCache
 
 
-class Flatpak:
+class Flatpak(Tool):
+    name = "flatpak"
+    full_name = "Flatpak"
+
     DEFAULT_REPO_ALIAS = "flathub"
     DEFAULT_REPO_URL = "https://flathub.org/repo/flathub.flatpakrepo"
 
@@ -11,11 +15,11 @@ class Flatpak:
     DEFAULT_RUNTIME_VERSION = "21.08"
     DEFAULT_SDK = "org.freedesktop.Sdk"
 
-    def __init__(self, tools):
+    def __init__(self, tools: ToolCache):
         self.tools = tools
 
     @classmethod
-    def verify(cls, tools):
+    def verify(cls, tools: ToolCache):
         """Verify that the Flatpak toolchain is available.
 
         :param tools: ToolCache of available tools
@@ -239,22 +243,22 @@ flatpak run {bundle}.{app_name}
             raise BriefcaseCommandError(f"Error while building app {app_name}.") from e
 
     def run(self, bundle, app_name):
-        """Run a Flatpak.
+        """Run a Flatpak in a way that allows for log streaming.
 
         :param bundle: The bundle identifier for the app being built.
         :param app_name: The app name.
+        :returns: A Popen object for the running app.
         """
-        try:
-            self.tools.subprocess.run(
-                [
-                    "flatpak",
-                    "run",
-                    f"{bundle}.{app_name}",
-                ],
-                check=True,
-            )
-        except subprocess.CalledProcessError as e:
-            raise BriefcaseCommandError(f"Unable to start app {app_name}.") from e
+        return self.tools.subprocess.Popen(
+            [
+                "flatpak",
+                "run",
+                f"{bundle}.{app_name}",
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            bufsize=1,
+        )
 
     def bundle(self, repo_url, bundle, app_name, version, build_path, output_path):
         """Bundle a Flatpak for distribution.
