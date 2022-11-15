@@ -40,12 +40,25 @@ def tools_for_module(tool_module_name: str) -> set:
 
 def test_toolcache_typing():
     """Tool typing for ToolCache is correct."""
+    # Modules in ``briefcase.integrations`` that do not contain tools.
+    nontool_modules = {"base"}
     # Tools that are intentionally not annotated in ToolCache.
     tools_unannotated = {"cookiecutter"}
     # Tool names to exclude from the dynamic annotation checks; they are manually checked.
     tool_names_skip_dynamic_check = {"app_context", "git", "xcode", "xcode_cli"}
     # Tool classes to exclude from dynamic annotation checks.
     tool_klasses_skip_dynamic_checks = {"DockerAppContext", "NativeAppContext"}
+
+    # Ensure all modules containing Tools are exported in ``briefcase.integrations``.
+    tool_modules = {
+        module
+        for module, _ in inspect.getmembers(
+            sys.modules["briefcase.integrations"],
+            inspect.ismodule,
+        )
+    }
+    tool_modules = tool_modules - nontool_modules
+    assert sorted(tool_modules) == sorted(briefcase.integrations.__all__)
 
     # Ensure defined Tool modules/classes are annotated in ToolCache.
     for tool_module_name in briefcase.integrations.__all__:
