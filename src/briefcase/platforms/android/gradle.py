@@ -31,8 +31,30 @@ def safe_formal_name(name):
     return re.sub(r"\s+", " ", re.sub(r'[!/\\:<>"\?\*\|]', "", name)).strip()
 
 
-def android_log_filter(line):
-    return line
+ANDROID_LOG_PREFIX_REGEX = re.compile(
+    r"\d{2}-\d{2} (?P<timestamp>\d{2}:\d{2}:\d{2}.\d{3})\s+\d+\s+\d+ [A-Z] (?P<component>.*?): (?P<content>.*)"
+)
+
+
+def android_log_clean_filter(line):
+    """Filter an ADB log log to extract the Python-generated message content.
+
+    Any system or stub messages are ignored; all logging prefixes are stripped.
+    Python code is identified as coming from the ``python.stdout``
+
+    :param line: The raw line from the system log
+    :returns: A tuple, containing (a) the log line, stripped of any system
+        logging context, and (b) a boolean indicating if the message should be
+        included for analysis purposes (i.e., it's Python content, not a system
+        message).
+    """
+    match = ANDROID_LOG_PREFIX_REGEX.match(line)
+    if match:
+        groups = match.groupdict()
+        include = groups["component"] == "python.stdout"
+        return groups["content"], include
+
+    return line, False
 
 
 class GradleMixin:
@@ -303,7 +325,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
                 app,
                 popen=log_popen,
                 test_mode=test_mode,
-                clean_filter=android_log_filter,
+                clean_filter=android_log_clean_filter,
                 clean_output=False,
                 # Check for the PID in quiet mode so logs aren't corrupted.
                 stop_func=lambda: not adb.pid_exists(pid=pid, quiet=True),

@@ -16,7 +16,10 @@ from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.android_sdk import ADB, AndroidSDK
 from briefcase.integrations.java import JDK
 from briefcase.integrations.subprocess import Subprocess
-from briefcase.platforms.android.gradle import GradleRunCommand, android_log_filter
+from briefcase.platforms.android.gradle import (
+    GradleRunCommand,
+    android_log_clean_filter,
+)
 
 
 @pytest.fixture
@@ -145,7 +148,7 @@ def test_run_existing_device(run_command, first_app_config):
         first_app_config,
         popen=log_popen,
         test_mode=False,
-        clean_filter=android_log_filter,
+        clean_filter=android_log_clean_filter,
         clean_output=False,
         stop_func=mock.ANY,
         log_stream=True,
@@ -183,7 +186,7 @@ def test_run_slow_start(run_command, first_app_config, monkeypatch):
         first_app_config,
         popen=log_popen,
         test_mode=False,
-        clean_filter=android_log_filter,
+        clean_filter=android_log_clean_filter,
         clean_output=False,
         stop_func=mock.ANY,
         log_stream=True,
@@ -287,7 +290,7 @@ def test_run_created_emulator(run_command, first_app_config):
         first_app_config,
         popen=log_popen,
         test_mode=False,
-        clean_filter=android_log_filter,
+        clean_filter=android_log_clean_filter,
         clean_output=False,
         stop_func=mock.ANY,
         log_stream=True,
@@ -346,7 +349,7 @@ def test_run_idle_device(run_command, first_app_config):
         first_app_config,
         popen=log_popen,
         test_mode=False,
-        clean_filter=android_log_filter,
+        clean_filter=android_log_clean_filter,
         clean_output=False,
         stop_func=mock.ANY,
         log_stream=True,
@@ -440,7 +443,7 @@ def test_run_test_mode(run_command, first_app_config):
         first_app_config,
         popen=log_popen,
         test_mode=True,
-        clean_filter=android_log_filter,
+        clean_filter=android_log_clean_filter,
         clean_output=False,
         stop_func=mock.ANY,
         log_stream=True,
