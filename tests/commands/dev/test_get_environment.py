@@ -31,7 +31,8 @@ def test_pythonpath_with_two_sources_and_tests_in_windows(dev_command, third_app
     third_app.test_sources = ["tests", "path/to/other"]
     env = dev_command.get_environment(third_app, test_mode=False)
     assert (
-        env[PYTHONPATH] == f"{Path.cwd() / 'src'};{Path.cwd()};{Path.cwd() / 'path/to'}"
+        env[PYTHONPATH]
+        == f"{Path.cwd() / 'src'};{Path.cwd()};{Path.cwd() / 'path' / 'to'}"
     )
 
 
@@ -47,5 +48,6 @@ def test_pythonpath_with_two_sources_and_tests_in_linux(dev_command, third_app):
     """Test get environment with two sources and test sources in linux."""
     env = dev_command.get_environment(third_app, test_mode=True)
     assert (
-        env[PYTHONPATH] == f"{Path.cwd() / 'src'}:{Path.cwd()}:{Path.cwd() / 'path/to'}"
+        env[PYTHONPATH]
+        == f"{Path.cwd() / 'src'}:{Path.cwd()}:{Path.cwd() / 'path' / 'to'}"
     )
