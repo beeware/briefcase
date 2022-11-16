@@ -584,3 +584,127 @@ def test_app_requirements_paths_windows(
         tmp_path,
         requirement,
     )
+
+
+def test_app_packages_test_requires(
+    create_command,
+    myapp,
+    app_packages_path,
+    app_packages_path_index,
+):
+    """If an app has test requirements, they're not included unless we are in
+    test mode."""
+    myapp.requires = ["first", "second==1.2.3", "third>=3.2.1"]
+    myapp.test_requires = ["pytest", "pytest-tldr"]
+
+    create_command.install_app_dependencies(myapp, test_mode=False)
+
+    # A request was made to install dependencies
+    create_command.tools[myapp].app_context.run.assert_called_with(
+        [
+            sys.executable,
+            "-u",
+            "-m",
+            "pip",
+            "install",
+            "--upgrade",
+            "--no-user",
+            f"--target={app_packages_path}",
+            "first",
+            "second==1.2.3",
+            "third>=3.2.1",
+        ],
+        check=True,
+        env={
+            "PYTHONPATH": str(
+                create_command.bundle_path(myapp)
+                / "path"
+                / "to"
+                / "support"
+                / "platform-site"
+            )
+        },
+    )
+
+
+def test_app_packages_test_requires_test_mode(
+    create_command,
+    myapp,
+    app_packages_path,
+    app_packages_path_index,
+):
+    """If an app has test requirements and we're in test mode, they are
+    installed."""
+    myapp.requires = ["first", "second==1.2.3", "third>=3.2.1"]
+    myapp.test_requires = ["pytest", "pytest-tldr"]
+
+    create_command.install_app_dependencies(myapp, test_mode=True)
+
+    # A request was made to install dependencies
+    create_command.tools[myapp].app_context.run.assert_called_with(
+        [
+            sys.executable,
+            "-u",
+            "-m",
+            "pip",
+            "install",
+            "--upgrade",
+            "--no-user",
+            f"--target={app_packages_path}",
+            "first",
+            "second==1.2.3",
+            "third>=3.2.1",
+            "pytest",
+            "pytest-tldr",
+        ],
+        check=True,
+        env={
+            "PYTHONPATH": str(
+                create_command.bundle_path(myapp)
+                / "path"
+                / "to"
+                / "support"
+                / "platform-site"
+            )
+        },
+    )
+
+
+def test_app_packages_only_test_requires_test_mode(
+    create_command,
+    myapp,
+    app_packages_path,
+    app_packages_path_index,
+):
+    """If an app only has test requirements and we're in test mode, they are
+    installed."""
+    myapp.requires = None
+    myapp.test_requires = ["pytest", "pytest-tldr"]
+
+    create_command.install_app_dependencies(myapp, test_mode=True)
+
+    # A request was made to install dependencies
+    create_command.tools[myapp].app_context.run.assert_called_with(
+        [
+            sys.executable,
+            "-u",
+            "-m",
+            "pip",
+            "install",
+            "--upgrade",
+            "--no-user",
+            f"--target={app_packages_path}",
+            "pytest",
+            "pytest-tldr",
+        ],
+        check=True,
+        env={
+            "PYTHONPATH": str(
+                create_command.bundle_path(myapp)
+                / "path"
+                / "to"
+                / "support"
+                / "platform-site"
+            )
+        },
+    )

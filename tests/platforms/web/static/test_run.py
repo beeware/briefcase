@@ -414,3 +414,19 @@ def test_cache_headers(monkeypatch, tmp_path):
         b"Pragma: no-cache\r\n",
         b"Expires: 0\r\n",
     ]
+
+
+def test_test_mode(run_command, first_app_built):
+    """Test mode raises an error (at least for now)."""
+    # Run the app
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Briefcase can't run web apps in test mode.",
+    ):
+        run_command.run_app(
+            first_app_built,
+            test_mode=True,
+            host="localhost",
+            port=8080,
+            open_browser=True,
+        )

@@ -406,3 +406,208 @@ Author-email: 钱华林@中科院.中国
 Summary: A Møøse once bit my sister...
 """
         )
+
+
+def test_test_sources(
+    create_command,
+    myapp,
+    tmp_path,
+    app_path,
+    app_requirements_path_index,
+):
+    """If an app defines test code, but we're not in test mode, it isn't
+    copied."""
+    # Create the mock sources
+    # src /
+    #   first /
+    #     demo.py
+    #   second /
+    #     shallow.py
+    # tests /
+    #   first.py
+    #   deep /
+    #     test_case.py
+    # othertests/
+    #   tests_more.py
+    #   special /
+    #     test_weird.py
+    create_file(
+        tmp_path / "project" / "src" / "first" / "demo.py",
+        "print('hello first')\n",
+    )
+    create_file(
+        tmp_path / "project" / "src" / "second" / "shallow.py",
+        "print('hello shallow second')\n",
+    )
+    create_file(
+        tmp_path / "project" / "tests" / "first.py",
+        "print('hello first test suite')\n",
+    )
+    create_file(
+        tmp_path / "project" / "tests" / "deep" / "test_case.py",
+        "print('hello test case')\n",
+    )
+    create_file(
+        tmp_path / "project" / "othertests" / "test_more.py",
+        "print('hello more tests')\n",
+    )
+    create_file(
+        tmp_path / "project" / "othertests" / "special" / "test_weird.py",
+        "print('hello weird tests')\n",
+    )
+
+    # Set the app definition, and install sources
+    myapp.sources = ["src/first", "src/second"]
+    myapp.test_sources = ["tests", "othertests"]
+
+    create_command.install_app_code(myapp, test_mode=False)
+
+    # App sources exist.
+    assert (app_path / "first").exists()
+    assert (app_path / "first" / "demo.py").exists()
+
+    assert (app_path / "second").exists()
+    assert (app_path / "second" / "shallow.py").exists()
+
+    # Test sources do not exist
+    assert not (app_path / "tests").exists()
+    assert not (app_path / "othertests").exists()
+
+    # Metadata has been created
+    assert_dist_info(app_path)
+
+
+def test_test_sources_test_mode(
+    create_command,
+    myapp,
+    tmp_path,
+    app_path,
+    app_requirements_path_index,
+):
+    """If an app defines test code, and we're in test mode, test sources are
+    copied."""
+    # Create the mock sources
+    # src /
+    #   first /
+    #     demo.py
+    #   second /
+    #     shallow.py
+    # tests /
+    #   first.py
+    #   deep /
+    #     test_case.py
+    # othertests/
+    #   tests_more.py
+    #   special /
+    #     test_weird.py
+    create_file(
+        tmp_path / "project" / "src" / "first" / "demo.py",
+        "print('hello first')\n",
+    )
+    create_file(
+        tmp_path / "project" / "src" / "second" / "shallow.py",
+        "print('hello shallow second')\n",
+    )
+    create_file(
+        tmp_path / "project" / "tests" / "first.py",
+        "print('hello first test suite')\n",
+    )
+    create_file(
+        tmp_path / "project" / "tests" / "deep" / "test_case.py",
+        "print('hello test case')\n",
+    )
+    create_file(
+        tmp_path / "project" / "othertests" / "test_more.py",
+        "print('hello more tests')\n",
+    )
+    create_file(
+        tmp_path / "project" / "othertests" / "special" / "test_weird.py",
+        "print('hello weird tests')\n",
+    )
+
+    # Set the app definition, and install sources
+    myapp.sources = ["src/first", "src/second"]
+    myapp.test_sources = ["tests", "othertests"]
+
+    create_command.install_app_code(myapp, test_mode=True)
+
+    # App sources exist.
+    assert (app_path / "first").exists()
+    assert (app_path / "first" / "demo.py").exists()
+
+    assert (app_path / "second").exists()
+    assert (app_path / "second" / "shallow.py").exists()
+
+    # Test sources exist
+    assert (app_path / "tests" / "first.py").exists()
+    assert (app_path / "tests" / "deep" / "test_case.py").exists()
+
+    assert (app_path / "othertests" / "test_more.py").exists()
+    assert (app_path / "othertests" / "special" / "test_weird.py").exists()
+
+    # Metadata has been created
+    assert_dist_info(app_path)
+
+
+def test_only_test_sources_test_mode(
+    create_command,
+    myapp,
+    tmp_path,
+    app_path,
+    app_requirements_path_index,
+):
+    """If an app only defines test code, and we're in test mode, test sources
+    are copied."""
+    # Create the mock sources
+    # tests /
+    #   first.py
+    #   deep /
+    #     test_case.py
+    # othertests/
+    #   tests_more.py
+    #   special /
+    #     test_weird.py
+    create_file(
+        tmp_path / "project" / "src" / "first" / "demo.py",
+        "print('hello first')\n",
+    )
+    create_file(
+        tmp_path / "project" / "src" / "second" / "shallow.py",
+        "print('hello shallow second')\n",
+    )
+    create_file(
+        tmp_path / "project" / "tests" / "first.py",
+        "print('hello first test suite')\n",
+    )
+    create_file(
+        tmp_path / "project" / "tests" / "deep" / "test_case.py",
+        "print('hello test case')\n",
+    )
+    create_file(
+        tmp_path / "project" / "othertests" / "test_more.py",
+        "print('hello more tests')\n",
+    )
+    create_file(
+        tmp_path / "project" / "othertests" / "special" / "test_weird.py",
+        "print('hello weird tests')\n",
+    )
+
+    # Set the app definition, and install sources
+    myapp.sources = None
+    myapp.test_sources = ["tests", "othertests"]
+
+    create_command.install_app_code(myapp, test_mode=True)
+
+    # App sources do not exist.
+    assert not (app_path / "first").exists()
+    assert not (app_path / "second").exists()
+
+    # Test sources exist
+    assert (app_path / "tests" / "first.py").exists()
+    assert (app_path / "tests" / "deep" / "test_case.py").exists()
+
+    assert (app_path / "othertests" / "test_more.py").exists()
+    assert (app_path / "othertests" / "special" / "test_weird.py").exists()
+
+    # Metadata has been created
+    assert_dist_info(app_path)

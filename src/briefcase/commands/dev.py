@@ -71,7 +71,7 @@ class DevCommand(BaseCommand):
         if app.test_requires:
             requires.extend(app.test_requires)
 
-        if app.requires:
+        if requires:
             with self.input.wait_bar("Installing dev dependencies..."):
                 try:
                     self.tools.subprocess.run(
@@ -136,7 +136,7 @@ class DevCommand(BaseCommand):
                     f"Unable to start application {exec_module!r}"
                 ) from e
 
-    def get_environment(self, app, test_mode: bool = False):
+    def get_environment(self, app, test_mode: bool):
         # Create a shell environment where PYTHONPATH points to the source
         # directories described by the app config.
         return {
