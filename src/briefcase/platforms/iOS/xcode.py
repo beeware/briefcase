@@ -17,8 +17,8 @@ from briefcase.config import BaseConfig
 from briefcase.console import InputDisabled, select_option
 from briefcase.exceptions import (
     BriefcaseCommandError,
+    BriefcaseTestSuiteFailure,
     InvalidDeviceError,
-    TestSuiteFailure,
 )
 from briefcase.integrations.xcode import DeviceState, get_device_state, get_simulators
 from briefcase.platforms.iOS import iOSMixin
@@ -519,7 +519,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                         )
                     else:
                         self.logger.error("Test suite failed!", prefix=app.app_name)
-                        raise TestSuiteFailure()
+                        raise BriefcaseTestSuiteFailure()
 
         except KeyboardInterrupt:
             pass  # catch CTRL-C to exit normally

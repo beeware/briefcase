@@ -130,6 +130,6 @@ class CommandOutputParseError(BriefcaseCommandError):
         super().__init__(msg=f"Unable to parse command output: {parse_error}")
 
 
-class TestSuiteFailure(BriefcaseError):
+class BriefcaseTestSuiteFailure(BriefcaseError):
     def __init__(self):
         super().__init__(error_code=1000, skip_logfile=True)

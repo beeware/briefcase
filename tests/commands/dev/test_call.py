@@ -267,3 +267,53 @@ def test_no_run(dev_command, first_app_uninstalled):
         # Only update dependencies without running the app
         ("dev_dependencies", "first", {}),
     ]
+
+
+def test_run_test(dev_command, first_app):
+    """The test suite can be run in development mode."""
+    # Add a single app
+    dev_command.apps = {
+        "first": first_app,
+    }
+
+    # Configure the test option
+    options = dev_command.parse_options(["--test"])
+
+    # Run the run command
+    dev_command(**options)
+
+    # The right sequence of things will be done
+    assert dev_command.actions == [
+        # Tools are verified
+        ("verify",),
+        # App tools are verified for app
+        ("verify-app-tools", "first"),
+        # Then, it will be started
+        ("run_dev", "first", {"test_mode": True}, dev_command.env),
+    ]
+
+
+def test_run_test_uninstalled(dev_command, first_app_uninstalled):
+    """The test suite can be run in development mode."""
+    # Add a single app
+    dev_command.apps = {
+        "first": first_app_uninstalled,
+    }
+
+    # Configure the test option
+    options = dev_command.parse_options(["--test"])
+
+    # Run the run command
+    dev_command(**options)
+
+    # The right sequence of things will be done
+    assert dev_command.actions == [
+        # Tools are verified
+        ("verify",),
+        # App tools are verified for app
+        ("verify-app-tools", "first"),
+        # Development dependencies will be installed
+        ("dev_dependencies", "first", {}),
+        # Then, it will be started
+        ("run_dev", "first", {"test_mode": True}, dev_command.env),
+    ]

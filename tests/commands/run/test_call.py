@@ -254,13 +254,13 @@ def test_update_non_existent(run_command, first_app_config):
 
 
 def test_test_mode_existing_app(run_command, first_app):
-    """A single existing app can be started in test mode."""
+    """An existing app can be started in test mode."""
     # Add a single app
     run_command.apps = {
         "first": first_app,
     }
 
-    # Configure no command line options
+    # Configure the test option
     options = run_command.parse_options(["--test"])
 
     # Run the run command
@@ -278,5 +278,34 @@ def test_test_mode_existing_app(run_command, first_app):
             "run",
             "first",
             {"build_state": "first", "update_state": "first", "test_mode": True},
+        ),
+    ]
+
+
+def test_test_mode_non_existent(run_command, first_app_config):
+    """Requesting a test of a non-existent app causes a create."""
+    # Add a single app, using the 'config only' fixture
+    run_command.apps = {
+        "first": first_app_config,
+    }
+
+    # Configure a test option
+    options = run_command.parse_options(["--test"])
+
+    # Run the run command
+    run_command(**options)
+
+    # The right sequence of things will be done
+    assert run_command.actions == [
+        # Tools are verified
+        ("verify",),
+        # App doesn't exist, so it will be created and built
+        ("create", "first", {"test_mode": True}),
+        ("build", "first", {"create_state": "first", "test_mode": True}),
+        # Then, it will be started
+        (
+            "run",
+            "first",
+            {"create_state": "first", "build_state": "first", "test_mode": True},
         ),
     ]

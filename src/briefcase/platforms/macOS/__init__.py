@@ -10,7 +10,7 @@ from zipfile import ZipFile
 from briefcase.commands.run import LogFilter
 from briefcase.config import BaseConfig
 from briefcase.console import select_option
-from briefcase.exceptions import BriefcaseCommandError, TestSuiteFailure
+from briefcase.exceptions import BriefcaseCommandError, BriefcaseTestSuiteFailure
 from briefcase.integrations.subprocess import get_process_id_by_command, is_process_dead
 from briefcase.integrations.xcode import (
     get_identities,
@@ -186,7 +186,7 @@ class macOSRunMixin:
                             )
                         else:
                             self.logger.error("Test suite failed!", prefix=app.app_name)
-                            raise TestSuiteFailure()
+                            raise BriefcaseTestSuiteFailure()
             finally:
                 # Ensure the App also terminates when exiting
                 with suppress(ProcessLookupError):

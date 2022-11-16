@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Optional
 
 from briefcase.config import BaseConfig
-from briefcase.exceptions import BriefcaseCommandError, TestSuiteFailure
+from briefcase.exceptions import BriefcaseCommandError, BriefcaseTestSuiteFailure
 
 from .base import BaseCommand
 from .create import DependencyInstallError, write_dist_info
@@ -92,13 +92,17 @@ class DevCommand(BaseCommand):
             self.logger.info("No application dependencies.")
 
     def run_dev_app(
-        self, app: BaseConfig, env: dict, test_mode: bool = False, **options
+        self,
+        app: BaseConfig,
+        env: dict,
+        test_mode: bool,
+        **options,
     ):
         """Run the app in the dev environment.
 
         :param app: The config object for the app
         :param env: environment dictionary for sub command
-        :param test_mode: Run the test suite, rather than the app? (default: False)
+        :param test_mode: Run the test suite, rather than the app?
         """
         try:
             if test_mode:
@@ -126,7 +130,7 @@ class DevCommand(BaseCommand):
             )
         except subprocess.CalledProcessError as e:
             if test_mode:
-                raise TestSuiteFailure()
+                raise BriefcaseTestSuiteFailure()
             else:
                 raise BriefcaseCommandError(
                     f"Unable to start application {exec_module!r}"
