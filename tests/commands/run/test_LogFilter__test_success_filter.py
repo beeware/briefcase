@@ -42,6 +42,13 @@ from briefcase.commands.run import LogFilter
             "",
             "OK (skipped=10, expected failures=10)",
         ],
+        # - No tests
+        [
+            "----------------------------------------------------------------------",
+            "Ran 0 tests in 0.000s",
+            "",
+            "OK",
+        ],
         # Pytest
         # - Only passes
         [

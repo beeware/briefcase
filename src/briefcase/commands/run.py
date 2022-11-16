@@ -54,31 +54,31 @@ class LogFilter:
         if self.clean_filter:
             filtered = self.clean_filter(line)
 
-            # If the clean line says the line can be ignored for logging purposes,
-            # return None to avoid logging the line.
+            # If the clean filter says the line can be dumped, return None
             if filtered is None:
                 return None
 
-            # If there's a cleaned line, we can determine if it's Python content.
-            clean_line, is_python = filtered
+            # If there's a cleaned line, we can determine if it should be included in analysis
+            clean_line, included = filtered
         else:
-            # If we don't perform cleaning, we assume all content is potentially Python.
+            # If we don't perform cleaning, we assume all content is potentially
+            # Python, and should be included in analysis
             clean_line = line
             display_line = line
-            is_python = True
+            included = True
 
-        # If we're not using clean output, revert the display line to the raw line.
+        # If we're not using clean output, use the raw line for display.
         if self.clean_output:
             display_line = clean_line
         else:
             display_line = line
 
-        # If the line is Python content, clip the recent history to the most
-        # recent 4 clean lines, then append the new line, and build a single
+        # If the line is Python content, append the new line, then clip the
+        # recent history to the most recent 5 clean lines, and build a single
         # string that is the tail of the recent clean lines.
-        if is_python:
-            self.recent_history = self.recent_history[1:5]
+        if included:
             self.recent_history.append(clean_line)
+            self.recent_history = self.recent_history[-5:]
             tail = "\n".join(self.recent_history)
 
             # Look for the success/failure conditions in the tail

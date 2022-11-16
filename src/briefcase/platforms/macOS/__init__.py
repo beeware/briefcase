@@ -42,9 +42,9 @@ def macOS_log_clean_filter(line):
 
     :param line: The raw line from the system log
     :returns: A tuple, containing (a) the log line, stripped of any system
-        logging context, and (b) a boolean indicating if the message can be
-        identified as being Python content. Returns a single ``None`` if
-        the line should be ignored.
+        logging context, and (b) a boolean indicating if the message should be
+        included for analysis purposes (i.e., it's Python content, not a system
+        message). Returns a single ``None`` if the line should be dumped.
     """
     if any(
         [
