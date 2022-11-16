@@ -16,7 +16,7 @@ from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.android_sdk import ADB, AndroidSDK
 from briefcase.integrations.java import JDK
 from briefcase.integrations.subprocess import Subprocess
-from briefcase.platforms.android.gradle import GradleRunCommand
+from briefcase.platforms.android.gradle import GradleRunCommand, android_log_filter
 
 
 @pytest.fixture
@@ -49,6 +49,8 @@ def run_command(tmp_path, first_app_config, jdk):
     command.tools.requests = mock.MagicMock(spec_set=requests)
     command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
     command.tools.sys = mock.MagicMock(spec_set=sys)
+
+    command._stream_app_logs = mock.MagicMock()
 
     command.base_path.mkdir(parents=True)
     return command
@@ -96,10 +98,10 @@ def test_run_existing_device(run_command, first_app_config):
 
     # To satisfy coverage, the stop function must be invoked at least once
     # when invoking stream_output.
-    def mock_stream_output(label, popen_process, stop_func):
+    def mock_stream_output(app, stop_func, **kwargs):
         stop_func()
 
-    run_command.tools.subprocess.stream_output.side_effect = mock_stream_output
+    run_command._stream_app_logs.side_effect = mock_stream_output
 
     # Set up app config to have a `-` in the `bundle`, to ensure it gets
     # normalized into a `_` via `package_name`.
@@ -139,8 +141,14 @@ def test_run_existing_device(run_command, first_app_config):
     )
     run_command.tools.mock_adb.logcat.assert_called_once_with(pid="777")
 
-    run_command.tools.subprocess.stream_output.assert_called_once_with(
-        "log stream", log_popen, stop_func=mock.ANY
+    run_command._stream_app_logs.assert_called_once_with(
+        first_app_config,
+        popen=log_popen,
+        test_mode=False,
+        clean_filter=android_log_filter,
+        clean_output=False,
+        stop_func=mock.ANY,
+        log_stream=True,
     )
 
 
@@ -171,8 +179,14 @@ def test_run_slow_start(run_command, first_app_config, monkeypatch):
     assert time.sleep.mock_calls == [mock.call(0.01)] * 2
     run_command.tools.mock_adb.logcat.assert_called_once_with(pid="888")
 
-    run_command.tools.subprocess.stream_output.assert_called_once_with(
-        "log stream", log_popen, stop_func=mock.ANY
+    run_command._stream_app_logs.assert_called_once_with(
+        first_app_config,
+        popen=log_popen,
+        test_mode=False,
+        clean_filter=android_log_filter,
+        clean_output=False,
+        stop_func=mock.ANY,
+        log_stream=True,
     )
 
 
@@ -199,7 +213,11 @@ def test_run_crash_at_start(run_command, first_app_config, monkeypatch):
     with pytest.raises(
         BriefcaseCommandError, match=r"Problem starting app 'first-app'"
     ):
-        run_command.run_app(first_app_config, device_or_avd="exampleDevice")
+        run_command.run_app(
+            first_app_config,
+            device_or_avd="exampleDevice",
+            test_mode=False,
+        )
 
     assert (
         run_command.tools.mock_adb.pidof.mock_calls
@@ -265,8 +283,14 @@ def test_run_created_emulator(run_command, first_app_config):
 
     run_command.tools.mock_adb.logcat.assert_called_once_with(pid="777")
 
-    run_command.tools.subprocess.stream_output.assert_called_once_with(
-        "log stream", log_popen, stop_func=mock.ANY
+    run_command._stream_app_logs.assert_called_once_with(
+        first_app_config,
+        popen=log_popen,
+        test_mode=False,
+        clean_filter=android_log_filter,
+        clean_output=False,
+        stop_func=mock.ANY,
+        log_stream=True,
     )
 
 
@@ -318,48 +342,14 @@ def test_run_idle_device(run_command, first_app_config):
 
     run_command.tools.mock_adb.logcat.assert_called_once_with(pid="777")
 
-    run_command.tools.subprocess.stream_output.assert_called_once_with(
-        "log stream", log_popen, stop_func=mock.ANY
-    )
-
-
-def test_run_ctrl_c(run_command, first_app_config, capsys):
-    """When CTRL-C is sent during logcat, Briefcase exits normally."""
-    # Set up device selection to return a running physical device.
-    run_command.tools.android_sdk.select_target_device = mock.MagicMock(
-        return_value=("exampleDevice", "ExampleDevice", None)
-    )
-
-    # Set up the log streamer to return a known stream
-    log_popen = mock.MagicMock()
-    run_command.tools.mock_adb.logcat.return_value = log_popen
-
-    # Mock the effect of CTRL-C being hit while streaming
-    run_command.tools.subprocess.stream_output.side_effect = KeyboardInterrupt
-
-    # Invoke run_app (and KeyboardInterrupt does not surface)
-    run_command.run_app(
+    run_command._stream_app_logs.assert_called_once_with(
         first_app_config,
-        device_or_avd="exampleDevice",
+        popen=log_popen,
         test_mode=False,
-    )
-
-    # logcat is called and raised KeyboardInterrupt
-    run_command.tools.mock_adb.logcat.assert_called_once_with(pid="777")
-
-    run_command.tools.subprocess.stream_output.assert_called_once_with(
-        "log stream", log_popen, stop_func=mock.ANY
-    )
-
-    # An attempt was made to clean up the log stream
-    run_command.tools.subprocess.cleanup.assert_called_once_with(
-        "log stream", log_popen
-    )
-
-    # Shows the try block for KeyboardInterrupt was entered
-    assert capsys.readouterr().out.endswith(
-        "[first-app] Following device log output (type CTRL-C to stop log)...\n"
-        "===========================================================================\n"
+        clean_filter=android_log_filter,
+        clean_output=False,
+        stop_func=mock.ANY,
+        log_stream=True,
     )
 
 
@@ -387,4 +377,71 @@ def test_log_file_extra(run_command, monkeypatch):
             "JAVA_HOME": str(run_command.tools.java.java_home),
         },
         stderr=subprocess.STDOUT,
+    )
+
+
+def test_run_test_mode(run_command, first_app_config):
+    """An app can be run in test mode."""
+    # Set up device selection to return a running physical device.
+    run_command.tools.android_sdk.select_target_device = mock.MagicMock(
+        return_value=("exampleDevice", "ExampleDevice", None)
+    )
+
+    # Set up the log streamer to return a known stream
+    log_popen = mock.MagicMock()
+    run_command.tools.mock_adb.logcat.return_value = log_popen
+
+    # To satisfy coverage, the stop function must be invoked at least once
+    # when invoking stream_output.
+    def mock_stream_output(app, stop_func, **kwargs):
+        stop_func()
+
+    run_command._stream_app_logs.side_effect = mock_stream_output
+
+    # Set up app config to have a `-` in the `bundle`, to ensure it gets
+    # normalized into a `_` via `package_name`.
+    first_app_config.bundle = "com.ex-ample"
+
+    # Invoke run_app
+    run_command.run_app(
+        first_app_config,
+        device_or_avd="exampleDevice",
+        test_mode=True,
+    )
+
+    # select_target_device was invoked with a specific device
+    run_command.tools.android_sdk.select_target_device.assert_called_once_with(
+        "exampleDevice"
+    )
+
+    # The ADB wrapper is created
+    run_command.tools.android_sdk.adb.assert_called_once_with(device="exampleDevice")
+
+    # The adb wrapper is invoked with the expected arguments
+    run_command.tools.mock_adb.install_apk.assert_called_once_with(
+        run_command.binary_path(first_app_config)
+    )
+    run_command.tools.mock_adb.force_stop_app.assert_called_once_with(
+        f"{first_app_config.package_name}.{first_app_config.module_name}",
+    )
+
+    run_command.tools.mock_adb.start_app.assert_called_once_with(
+        f"{first_app_config.package_name}.{first_app_config.module_name}",
+        "org.beeware.android.MainActivity",
+    )
+
+    run_command.tools.mock_adb.pidof.assert_called_once_with(
+        f"{first_app_config.package_name}.{first_app_config.module_name}",
+        quiet=True,
+    )
+    run_command.tools.mock_adb.logcat.assert_called_once_with(pid="777")
+
+    run_command._stream_app_logs.assert_called_once_with(
+        first_app_config,
+        popen=log_popen,
+        test_mode=True,
+        clean_filter=android_log_filter,
+        clean_output=False,
+        stop_func=mock.ANY,
+        log_stream=True,
     )

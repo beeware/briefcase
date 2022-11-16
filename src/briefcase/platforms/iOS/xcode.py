@@ -479,11 +479,11 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
             # Stream the app logs,
             self._stream_app_logs(
                 app,
-                popen_label="Simulator log stream",
                 popen=simulator_log_popen,
                 test_mode=test_mode,
                 clean_filter=macOS_log_clean_filter,
                 clean_output=True,
+                log_stream=True,
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(

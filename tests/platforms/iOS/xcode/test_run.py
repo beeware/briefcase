@@ -159,11 +159,11 @@ def test_run_app_simulator_booted(run_command, first_app_config, tmp_path):
     # Log stream monitoring was started
     run_command._stream_app_logs.assert_called_with(
         first_app_config,
-        popen_label="Simulator log stream",
         popen=log_stream_process,
         test_mode=False,
         clean_filter=macOS_log_clean_filter,
         clean_output=True,
+        log_stream=True,
     )
 
 
@@ -270,11 +270,11 @@ def test_run_app_simulator_shut_down(run_command, first_app_config, tmp_path):
     # Log stream monitoring was started
     run_command._stream_app_logs.assert_called_with(
         first_app_config,
-        popen_label="Simulator log stream",
         popen=log_stream_process,
         test_mode=False,
         clean_filter=macOS_log_clean_filter,
         clean_output=True,
+        log_stream=True,
     )
 
 
@@ -394,11 +394,11 @@ def test_run_app_simulator_shutting_down(run_command, first_app_config, tmp_path
     # Log stream monitoring was started
     run_command._stream_app_logs.assert_called_with(
         first_app_config,
-        popen_label="Simulator log stream",
         popen=log_stream_process,
         test_mode=False,
         clean_filter=macOS_log_clean_filter,
         clean_output=True,
+        log_stream=True,
     )
 
 
@@ -833,9 +833,9 @@ def test_run_app_test_mode(run_command, first_app_config, tmp_path):
     # Log stream monitoring was started
     run_command._stream_app_logs.assert_called_with(
         first_app_config,
-        popen_label="Simulator log stream",
         popen=log_stream_process,
         test_mode=True,
         clean_filter=macOS_log_clean_filter,
         clean_output=True,
+        log_stream=True,
     )

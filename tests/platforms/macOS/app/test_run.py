@@ -75,12 +75,12 @@ def test_run_app(run_command, first_app_config, tmp_path, monkeypatch):
     # The log stream was started
     run_command._stream_app_logs.assert_called_with(
         first_app_config,
-        popen_label="Log stream",
         popen=log_stream_process,
         test_mode=False,
         clean_filter=macOS_log_clean_filter,
         clean_output=True,
         stop_func=mock.ANY,
+        log_stream=True,
     )
 
     # The app process was killed on exit.
@@ -213,12 +213,12 @@ def test_run_app_test_mode(run_command, first_app_config, tmp_path, monkeypatch)
     # The log stream was started
     run_command._stream_app_logs.assert_called_with(
         first_app_config,
-        popen_label="Log stream",
         popen=log_stream_process,
         test_mode=True,
         clean_filter=macOS_log_clean_filter,
         clean_output=True,
         stop_func=mock.ANY,
+        log_stream=True,
     )
 
     # The app process was killed on exit.

@@ -25,6 +25,8 @@ def run_command(tmp_path):
 
     command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
 
+    command._stream_app_logs = mock.MagicMock()
+
     return command
 
 
@@ -59,9 +61,8 @@ def test_verify_non_linux(run_command):
 
 def test_run_app(run_command, first_app_config, tmp_path):
     """A linux App can be started."""
-    # Set up the log streamer to return a known stream with a good return code
+    # Set up the log streamer to return a known stream
     log_popen = mock.MagicMock()
-    log_popen.returncode = 0
     run_command.tools.subprocess.Popen.return_value = log_popen
 
     # Run the app
@@ -81,9 +82,11 @@ def test_run_app(run_command, first_app_config, tmp_path):
     )
 
     # The streamer was started
-    run_command.tools.subprocess.stream_output.assert_called_once_with(
-        "first-app",
-        log_popen,
+    run_command._stream_app_logs.assert_called_once_with(
+        first_app_config,
+        popen=log_popen,
+        test_mode=False,
+        clean_output=False,
     )
 
 
@@ -108,22 +111,17 @@ def test_run_app_failed(run_command, first_app_config, tmp_path):
     )
 
     # No attempt to stream was made
-    run_command.tools.subprocess.stream_output.assert_not_called()
+    run_command._stream_app_logs.assert_not_called()
 
 
-def test_run_app_error(run_command, first_app_config, tmp_path):
-    """A linux App that returns a nonzero return code raises an error."""
-    # Set up the log streamer to return a known stream with a bad return code
+def test_run_app_test_mode(run_command, first_app_config, tmp_path):
+    """A linux App can be started in test mode."""
+    # Set up the log streamer to return a known stream
     log_popen = mock.MagicMock()
-    log_popen.returncode = 42
     run_command.tools.subprocess.Popen.return_value = log_popen
 
     # Run the app
-    with pytest.raises(
-        BriefcaseCommandError,
-        match=r"Problem running app first-app.",
-    ):
-        run_command.run_app(first_app_config, test_mode=False)
+    run_command.run_app(first_app_config, test_mode=True)
 
     # The process was started
     run_command.tools.subprocess.Popen.assert_called_with(
@@ -136,49 +134,13 @@ def test_run_app_error(run_command, first_app_config, tmp_path):
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         bufsize=1,
+        env={"BRIEFCASE_MAIN_MODULE": "tests.first_app"},
     )
 
     # The streamer was started
-    run_command.tools.subprocess.stream_output.assert_called_once_with(
-        "first-app",
-        log_popen,
-    )
-
-
-def test_run_app_ctrl_c(run_command, first_app_config, tmp_path, capsys):
-    """When CTRL-C is sent while the App is running, Briefcase exits
-    normally."""
-    # Set up the log streamer to return a known stream
-    log_popen = mock.MagicMock()
-    run_command.tools.subprocess.Popen.return_value = log_popen
-
-    # Mock the effect of CTRL-C being hit while streaming
-    run_command.tools.subprocess.stream_output.side_effect = KeyboardInterrupt
-
-    # Invoke run_app (and KeyboardInterrupt does not surface)
-    run_command.run_app(first_app_config, test_mode=False)
-
-    # AppImage is run
-    run_command.tools.subprocess.Popen.assert_called_with(
-        [
-            os.fsdecode(
-                tmp_path / "base_path" / "linux" / "First_App-0.0.1-wonky.AppImage"
-            )
-        ],
-        cwd=tmp_path / "home",
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        bufsize=1,
-    )
-
-    # An attempt was made to stream
-    run_command.tools.subprocess.stream_output.assert_called_once_with(
-        "first-app",
-        log_popen,
-    )
-
-    # Shows the try block for KeyboardInterrupt was entered
-    assert capsys.readouterr().out.endswith(
-        "[first-app] Starting app...\n"
-        "===========================================================================\n"
+    run_command._stream_app_logs.assert_called_once_with(
+        first_app_config,
+        popen=log_popen,
+        test_mode=True,
+        clean_output=False,
     )

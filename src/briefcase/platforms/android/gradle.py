@@ -31,6 +31,10 @@ def safe_formal_name(name):
     return re.sub(r"\s+", " ", re.sub(r'[!/\\:<>"\?\*\|]', "", name)).strip()
 
 
+def android_log_filter(line):
+    return line
+
+
 class GradleMixin:
     output_format = "gradle"
     platform = "android"
@@ -216,12 +220,13 @@ class GradleRunCommand(GradleMixin, RunCommand):
             required=False,
         )
 
-    def run_app(self, app: BaseConfig, device_or_avd=None, **kwargs):
+    def run_app(self, app: BaseConfig, test_mode: bool, device_or_avd=None, **kwargs):
         """Start the application.
 
         :param app: The config object for the app
         :param device_or_avd: The device to target. If ``None``, the user will
             be asked to re-run the command selecting a specific device.
+        :param test_mode: Boolean; Is the app running in test mode?
         """
         device, name, avd = self.tools.android_sdk.select_target_device(device_or_avd)
 
@@ -241,8 +246,13 @@ class GradleRunCommand(GradleMixin, RunCommand):
             self.logger.info(f"Starting emulator {avd}...", prefix=app.app_name)
             device, name = self.tools.android_sdk.start_emulator(avd)
 
+        if test_mode:
+            label = "test suite"
+        else:
+            label = "app"
+
         self.logger.info(
-            f"Starting app on {name} (device ID {device})", prefix=app.app_name
+            f"Starting {label} on {name} (device ID {device})", prefix=app.app_name
         )
 
         # Create an ADB wrapper for the selected device
@@ -262,7 +272,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
             adb.install_apk(self.binary_path(app))
 
         # To start the app, we launch `org.beeware.android.MainActivity`.
-        with self.input.wait_bar("Launching app..."):
+        with self.input.wait_bar(f"Launching {label}..."):
             # Any log after this point must be associated with the new instance
             start_time = datetime.datetime.now()
             adb.start_app(package, "org.beeware.android.MainActivity")
@@ -281,26 +291,24 @@ class GradleRunCommand(GradleMixin, RunCommand):
                 attempts += 1
 
         if pid:
-            try:
-                self.logger.info(
-                    "Following device log output (type CTRL-C to stop log)...",
-                    prefix=app.app_name,
-                )
-                self.logger.info("=" * 75)
-                log_popen = adb.logcat(pid=pid)
+            self.logger.info(
+                "Following device log output (type CTRL-C to stop log)...",
+                prefix=app.app_name,
+            )
+            # Start the app in a way that lets us stream the logs
+            log_popen = adb.logcat(pid=pid)
 
-                self.tools.subprocess.stream_output(
-                    "log stream",
-                    log_popen,
-                    # Check for the PID in quiet mode so logs aren't corrupted.
-                    stop_func=lambda: not adb.pid_exists(pid=pid, quiet=True),
-                )
-
-            except KeyboardInterrupt:
-                pass  # catch CTRL-C to exit normally
-            finally:
-                self.tools.subprocess.cleanup("log stream", log_popen)
-
+            # Stream the app logs.
+            self._stream_app_logs(
+                app,
+                popen=log_popen,
+                test_mode=test_mode,
+                clean_filter=android_log_filter,
+                clean_output=False,
+                # Check for the PID in quiet mode so logs aren't corrupted.
+                stop_func=lambda: not adb.pid_exists(pid=pid, quiet=True),
+                log_stream=True,
+            )
         else:
             self.logger.error("Unable to find PID for app", prefix=app.app_name)
             self.logger.error("Logs for launch attempt follow...")

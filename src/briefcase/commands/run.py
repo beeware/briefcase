@@ -149,12 +149,12 @@ class RunCommand(BaseCommand):
     def _stream_app_logs(
         self,
         app: BaseConfig,
-        popen_label,
         popen,
         test_mode=False,
         clean_filter=None,
         clean_output=False,
         stop_func=lambda: False,
+        log_stream=False,
     ):
         try:
             if test_mode:
@@ -179,11 +179,19 @@ class RunCommand(BaseCommand):
             # Start streaming logs for the app.
             self.logger.info("=" * 75)
             self.tools.subprocess.stream_output(
-                popen_label,
-                popen,
+                label="log stream" if log_stream else app.app_name,
+                popen_process=popen,
                 stop_func=stop_func,
                 filter_func=log_filter,
             )
+
+            # If the process we're monitoring didn't exit cleanly,
+            # and we're monitoring an actual app (not just a log stream),
+            # raise an error.
+            if not log_stream and popen.returncode != 0:
+                raise BriefcaseCommandError(
+                    f"Problem running app {app.app_name} {popen.returncode})."
+                )
 
             # If we're in test mode, and log streaming ends,
             # check for the status of the test suite.

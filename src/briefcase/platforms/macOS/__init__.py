@@ -151,15 +151,15 @@ class macOSRunMixin:
                     f"Unable to find process for app {app.app_name} to start log streaming."
                 )
 
-            # Stream the app logs,
+            # Stream the app logs.
             self._stream_app_logs(
                 app,
-                popen_label="Log stream",
                 popen=log_popen,
                 test_mode=test_mode,
                 clean_filter=macOS_log_clean_filter,
                 clean_output=True,
                 stop_func=lambda: is_process_dead(app_pid),
+                log_stream=True,
             )
         except subprocess.CalledProcessError:
             raise BriefcaseCommandError(f"Unable to start app {app.app_name}.")

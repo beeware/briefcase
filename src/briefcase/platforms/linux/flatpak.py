@@ -210,17 +210,12 @@ class LinuxFlatpakRunCommand(LinuxFlatpakMixin, RunCommand):
             )
 
             # Start streaming logs for the app.
-            self.logger.info("=" * 75)
-            self.tools.subprocess.stream_output(
-                app.app_name,
-                log_popen,
+            self._stream_app_logs(
+                app,
+                popen=log_popen,
+                test_mode=test_mode,
+                clean_output=False,
             )
-
-            # If the process didn't exit cleanly, raise an error.
-            if log_popen.returncode != 0:
-                raise BriefcaseCommandError(f"Problem running app {app.app_name}.")
-        except KeyboardInterrupt:
-            pass  # Catch CTRL-C to exit normally
         except OSError as e:
             raise BriefcaseCommandError(f"Unable to start app {app.app_name}.") from e
 
