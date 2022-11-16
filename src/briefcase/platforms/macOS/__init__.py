@@ -4,9 +4,10 @@ import subprocess
 import time
 from contextlib import suppress
 from pathlib import Path
-from signal import SIGINT, SIGTERM
+from signal import SIGTERM
 from zipfile import ZipFile
 
+from briefcase.commands.run import LogFilter
 from briefcase.config import BaseConfig
 from briefcase.console import select_option
 from briefcase.exceptions import BriefcaseCommandError, TestSuiteFailure
@@ -27,24 +28,46 @@ except ImportError:
 DEFAULT_OUTPUT_FORMAT = "app"
 
 
+MACOS_LOG_PREFIX_REGEX = re.compile(
+    r"\d{4}-\d{2}-\d{2} (?P<timestamp>\d{2}:\d{2}:\d{2}.\d{3}) Df (.*?)\[.*?:.*\]"
+    r"(?P<subsystem>( \(libffi\.dylib\))|( \(_ctypes\.cpython-3\d{1,2}-iphonesimulator.so\)))? (?P<content>.*)"
+)
+
+
+def macOS_log_clean_filter(line):
+    """Filter a macOS system log to extract the Python-generated message
+    content.
+
+    Any system or stub messages are ignored; all logging prefixes are stripped.
+
+    :param line: The raw line from the system log
+    :returns: A tuple, containing (a) the log line, stripped of any system
+        logging context, and (b) a boolean indicating if the message can be
+        identified as being Python content. Returns a single ``None`` if
+        the line should be ignored.
+    """
+    if any(
+        [
+            # Log stream outputs the filter when it starts
+            line.startswith("Filtering the log data using "),
+            # Log stream outputs barely useful column headers on startup
+            line.startswith("Timestamp          "),
+            # iOS reports an ignorable error on startup
+            line.startswith("Error from getpwuid_r:"),
+        ]
+    ):
+        return None
+
+    match = MACOS_LOG_PREFIX_REGEX.match(line)
+    if match:
+        groups = match.groupdict()
+        return groups["content"], bool(groups["subsystem"])
+
+    return line, False
+
+
 class macOSMixin:
     platform = "macOS"
-
-
-class LogFilter:
-    def __init__(self, log_popen):
-        self.log_popen = log_popen
-        self.test_suite_passed = None
-
-    def __call__(self, line):
-        if line.endswith(" >>>>>>>>>> Test Suite Passed <<<<<<<<<<\n"):
-            self.test_suite_passed = True
-            self.log_popen.send_signal(SIGINT)
-        elif line.endswith(" >>>>>>>>>> Test Suite Failed <<<<<<<<<<\n"):
-            self.test_suite_passed = False
-            self.log_popen.send_signal(SIGINT)
-        else:
-            return line
 
 
 class macOSRunMixin:
@@ -103,9 +126,13 @@ class macOSRunMixin:
                             "BRIEFCASE_MAIN_MODULE": f"tests.{app.module_name}",
                         }
                     }
+                    success_filter = LogFilter.test_suite_success(None)
+                    failure_filter = LogFilter.test_suite_failure(None)
                 else:
                     self.logger.info("Starting app...", prefix=app.app_name)
                     kwargs = {}
+                    success_filter = None
+                    failure_filter = None
 
                 self.tools.subprocess.run(
                     [
@@ -130,7 +157,12 @@ class macOSRunMixin:
                     f"Unable to find process for app {app.app_name} to start log streaming."
                 )
 
-            log_filter = LogFilter(log_popen)
+            log_filter = LogFilter(
+                log_popen,
+                clean_filter=macOS_log_clean_filter,
+                success_filter=success_filter,
+                failure_filter=failure_filter,
+            )
             try:
                 # Start streaming logs for the app.
                 self.logger.info("=" * 75)
@@ -145,10 +177,10 @@ class macOSRunMixin:
                 # check for the status of the test suite.
                 if test_mode:
                     self.logger.info("=" * 75)
-                    if log_filter.test_suite_passed:
+                    if log_filter.success:
                         self.logger.info("Test suite passed!", prefix=app.app_name)
                     else:
-                        if log_filter.test_suite_passed is None:
+                        if log_filter.success is None:
                             raise BriefcaseCommandError(
                                 "Test suite didn't report a result."
                             )

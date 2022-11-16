@@ -612,8 +612,8 @@ class Subprocess(Tool):
                 output_line = ensure_str(popen_process.stdout.readline())
                 if output_line:
                     if filter_func:
-                        filtered_output = filter_func(output_line)
-                        if filtered_output:
+                        filtered_output = filter_func(output_line.rstrip("\n"))
+                        if filtered_output is not None:
                             self.tools.logger.info(filtered_output)
                     else:
                         self.tools.logger.info(output_line)

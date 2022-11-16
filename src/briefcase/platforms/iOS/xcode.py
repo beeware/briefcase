@@ -1,7 +1,6 @@
 import plistlib
 import subprocess
 import time
-from signal import SIGINT
 from uuid import UUID
 
 from briefcase.commands import (
@@ -13,6 +12,7 @@ from briefcase.commands import (
     RunCommand,
     UpdateCommand,
 )
+from briefcase.commands.run import LogFilter
 from briefcase.config import BaseConfig
 from briefcase.console import InputDisabled, select_option
 from briefcase.exceptions import (
@@ -22,6 +22,7 @@ from briefcase.exceptions import (
 )
 from briefcase.integrations.xcode import DeviceState, get_device_state, get_simulators
 from briefcase.platforms.iOS import iOSMixin
+from briefcase.platforms.macOS import macOS_log_clean_filter
 
 
 class iOSXcodePassiveMixin(iOSMixin):
@@ -321,22 +322,6 @@ class iOSXcodeBuildCommand(iOSXcodePassiveMixin, BuildCommand):
                 ) from e
 
 
-class LogFilter:
-    def __init__(self, log_popen):
-        self.log_popen = log_popen
-        self.test_suite_passed = None
-
-    def __call__(self, line):
-        if line.endswith(" >>>>>>>>>> Test Suite Passed <<<<<<<<<<\n"):
-            self.test_suite_passed = True
-            self.log_popen.send_signal(SIGINT)
-        elif line.endswith(" >>>>>>>>>> Test Suite Failed <<<<<<<<<<\n"):
-            self.test_suite_passed = False
-            self.log_popen.send_signal(SIGINT)
-        else:
-            return line
-
-
 class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
     description = "Run an iOS Xcode project."
 
@@ -501,7 +486,19 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                 prefix=app.app_name,
             )
 
-            log_filter = LogFilter(simulator_log_popen)
+            if test_mode:
+                success_filter = LogFilter.test_suite_success(None)
+                failure_filter = LogFilter.test_suite_failure(None)
+            else:
+                success_filter = None
+                failure_filter = None
+
+            log_filter = LogFilter(
+                simulator_log_popen,
+                clean_filter=macOS_log_clean_filter,
+                success_filter=success_filter,
+                failure_filter=failure_filter,
+            )
             self.logger.info("=" * 75)
             self.tools.subprocess.stream_output(
                 "log stream",
@@ -513,10 +510,10 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
             # check for the status of the test suite.
             if test_mode:
                 self.logger.info("=" * 75)
-                if log_filter.test_suite_passed:
+                if log_filter.success:
                     self.logger.info("Test suite passed!", prefix=app.app_name)
                 else:
-                    if log_filter.test_suite_passed is None:
+                    if log_filter.success is None:
                         raise BriefcaseCommandError(
                             "Test suite didn't report a result."
                         )
