@@ -86,8 +86,8 @@ from briefcase.commands.run import LogFilter
 )
 def test_default_success_filter(recent_history):
     "The default success filter captures known test suite success output"
-    failure_func = LogFilter.test_suite_failure(None)
-    success_func = LogFilter.test_suite_success(None)
+    failure_func = LogFilter.test_filter(LogFilter.DEFAULT_FAILURE_REGEX)
+    success_func = LogFilter.test_filter(LogFilter.DEFAULT_SUCCESS_REGEX)
 
     tail = "\n".join(recent_history)
     assert success_func(tail)
@@ -116,26 +116,7 @@ def test_default_success_filter(recent_history):
 )
 def test_default_filter_no_match(recent_history):
     "The default success filter *doesn't* catch content that doesn't match the regex"
-    success_func = LogFilter.test_suite_success(None)
+    success_func = LogFilter.test_filter(LogFilter.DEFAULT_SUCCESS_REGEX)
 
     tail = "\n".join(recent_history)
     assert not success_func(tail)
-
-
-def test_custom_success_filter():
-    "The user can specify a custom success filter"
-    success_func = LogFilter.test_suite_success("SUCCESS")
-
-    recent = [
-        "rootdir: /Users/rkm/beeware/briefcase, configfile: pyproject.toml",
-        "plugins: cov-3.0.0",
-        "collecting ... collected 0 items",
-        "",
-        "============================ no tests ran in 0.01s =============================",
-    ]
-
-    assert not success_func("\n".join(recent))
-
-    # Add an extra line that *will* match the filter
-    recent.append("I will now say the magic word, which is SUCCESS, so we pass")
-    assert success_func("\n".join(recent))

@@ -304,8 +304,8 @@ def test_log_filter(
             return line, False
 
     # Define a custom filters that looks for specific multiline output
-    success_filter = LogFilter.test_suite_success(r"^-----\n\nSUCCESS$")
-    failure_filter = LogFilter.test_suite_failure(r"^-----\n\nFAILURE$")
+    success_filter = LogFilter.test_filter(r"^-----\n\nSUCCESS$")
+    failure_filter = LogFilter.test_filter(r"^-----\n\nFAILURE$")
 
     # Set up a log stream
     popen = mock.MagicMock()

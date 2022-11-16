@@ -8,16 +8,22 @@ from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.integrations.xcode import DeviceState
 from briefcase.platforms.iOS.xcode import iOSXcodeRunCommand
+from briefcase.platforms.macOS import macOS_log_clean_filter
 
 
 @pytest.fixture
 def run_command(tmp_path):
-    return iOSXcodeRunCommand(
+    command = iOSXcodeRunCommand(
         logger=Log(),
         console=Console(),
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
     )
+    command.tools.home_path = tmp_path / "home"
+    command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
+    command._stream_app_logs = mock.MagicMock()
+
+    return command
 
 
 def test_device_option(run_command):
@@ -66,7 +72,6 @@ def test_run_app_simulator_booted(run_command, first_app_config, tmp_path):
     # Simulator is already booted
     run_command.get_device_state = mock.MagicMock(return_value=DeviceState.BOOTED)
 
-    run_command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
     log_stream_process = mock.MagicMock(spec_set=subprocess.Popen)
     run_command.tools.subprocess.Popen.return_value = log_stream_process
 
@@ -130,7 +135,7 @@ def test_run_app_simulator_booted(run_command, first_app_config, tmp_path):
             ),
         ]
     )
-    # The log is being tailed and process cleanup is triggered
+    # Start the log stream
     run_command.tools.subprocess.Popen.assert_called_with(
         [
             "xcrun",
@@ -150,11 +155,15 @@ def test_run_app_simulator_booted(run_command, first_app_config, tmp_path):
         stderr=subprocess.STDOUT,
         bufsize=1,
     )
-    run_command.tools.subprocess.stream_output.assert_called_with(
-        "log stream", log_stream_process, filter_func=mock.ANY
-    )
-    run_command.tools.subprocess.cleanup.assert_called_with(
-        "log stream", log_stream_process
+
+    # Log stream monitoring was started
+    run_command._stream_app_logs.assert_called_with(
+        first_app_config,
+        popen_label="Simulator log stream",
+        popen=log_stream_process,
+        test_mode=False,
+        clean_filter=macOS_log_clean_filter,
+        clean_output=True,
     )
 
 
@@ -237,7 +246,7 @@ def test_run_app_simulator_shut_down(run_command, first_app_config, tmp_path):
             ),
         ]
     )
-    # The log is being tailed and process cleanup is triggered
+    # Start the log stream
     run_command.tools.subprocess.Popen.assert_called_with(
         [
             "xcrun",
@@ -257,11 +266,15 @@ def test_run_app_simulator_shut_down(run_command, first_app_config, tmp_path):
         stderr=subprocess.STDOUT,
         bufsize=1,
     )
-    run_command.tools.subprocess.stream_output.assert_called_with(
-        "log stream", log_stream_process, filter_func=mock.ANY
-    )
-    run_command.tools.subprocess.cleanup.assert_called_with(
-        "log stream", log_stream_process
+
+    # Log stream monitoring was started
+    run_command._stream_app_logs.assert_called_with(
+        first_app_config,
+        popen_label="Simulator log stream",
+        popen=log_stream_process,
+        test_mode=False,
+        clean_filter=macOS_log_clean_filter,
+        clean_output=True,
     )
 
 
@@ -357,7 +370,7 @@ def test_run_app_simulator_shutting_down(run_command, first_app_config, tmp_path
             ),
         ]
     )
-    # The log is being tailed and process cleanup is triggered
+    # Start the log stream
     run_command.tools.subprocess.Popen.assert_called_with(
         [
             "xcrun",
@@ -377,11 +390,15 @@ def test_run_app_simulator_shutting_down(run_command, first_app_config, tmp_path
         stderr=subprocess.STDOUT,
         bufsize=1,
     )
-    run_command.tools.subprocess.stream_output.assert_called_with(
-        "log stream", log_stream_process, filter_func=mock.ANY
-    )
-    run_command.tools.subprocess.cleanup.assert_called_with(
-        "log stream", log_stream_process
+
+    # Log stream monitoring was started
+    run_command._stream_app_logs.assert_called_with(
+        first_app_config,
+        popen_label="Simulator log stream",
+        popen=log_stream_process,
+        test_mode=False,
+        clean_filter=macOS_log_clean_filter,
+        clean_output=True,
     )
 
 
@@ -414,10 +431,10 @@ def test_run_app_simulator_boot_failure(run_command, first_app_config):
             ),
         ]
     )
+
     # The log will not be tailed
     run_command.tools.subprocess.Popen.assert_not_called()
-    run_command.tools.subprocess.stream_output.assert_not_called()
-    run_command.tools.subprocess.cleanup.assert_not_called()
+    run_command._stream_app_logs.assert_not_called()
 
 
 def test_run_app_simulator_open_failure(run_command, first_app_config):
@@ -468,8 +485,7 @@ def test_run_app_simulator_open_failure(run_command, first_app_config):
     )
     # The log will not be tailed
     run_command.tools.subprocess.Popen.assert_not_called()
-    run_command.tools.subprocess.stream_output.assert_not_called()
-    run_command.tools.subprocess.cleanup.assert_not_called()
+    run_command._stream_app_logs.assert_not_called()
 
 
 def test_run_app_simulator_uninstall_failure(run_command, first_app_config):
@@ -531,8 +547,7 @@ def test_run_app_simulator_uninstall_failure(run_command, first_app_config):
     )
     # The log will not be tailed
     run_command.tools.subprocess.Popen.assert_not_called()
-    run_command.tools.subprocess.stream_output.assert_not_called()
-    run_command.tools.subprocess.cleanup.assert_not_called()
+    run_command._stream_app_logs.assert_not_called()
 
 
 def test_run_app_simulator_install_failure(run_command, first_app_config, tmp_path):
@@ -613,8 +628,7 @@ def test_run_app_simulator_install_failure(run_command, first_app_config, tmp_pa
     )
     # The log will not be tailed
     run_command.tools.subprocess.Popen.assert_not_called()
-    run_command.tools.subprocess.stream_output.assert_not_called()
-    run_command.tools.subprocess.cleanup.assert_not_called()
+    run_command._stream_app_logs.assert_not_called()
 
 
 def test_run_app_simulator_launch_failure(run_command, first_app_config, tmp_path):
@@ -707,7 +721,8 @@ def test_run_app_simulator_launch_failure(run_command, first_app_config, tmp_pat
             ),
         ]
     )
-    # The log stream process will have been started; but will not be tailed
+
+    # Start the log stream
     run_command.tools.subprocess.Popen.assert_called_with(
         [
             "xcrun",
@@ -727,16 +742,13 @@ def test_run_app_simulator_launch_failure(run_command, first_app_config, tmp_pat
         stderr=subprocess.STDOUT,
         bufsize=1,
     )
-    run_command.tools.subprocess.stream_output.assert_not_called()
 
-    # The log process was cleaned up.
-    run_command.tools.subprocess.cleanup.assert_called_once_with(
-        "log stream", log_stream_process
-    )
+    # Log stream failed, so it won't be monitored
+    run_command._stream_app_logs.assert_not_called()
 
 
-def test_run_app_ctrl_c(run_command, first_app_config, tmp_path, capsys):
-    """When CTRL-C is sent during log streaming, Briefcase exits normally."""
+def test_run_app_test_mode(run_command, first_app_config, tmp_path):
+    """An iOS App can be started in test mode."""
     # A valid target device will be selected.
     run_command.select_target_device = mock.MagicMock(
         return_value=("2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D", "13.2", "iPhone 11")
@@ -745,24 +757,85 @@ def test_run_app_ctrl_c(run_command, first_app_config, tmp_path, capsys):
     # Simulator is already booted
     run_command.get_device_state = mock.MagicMock(return_value=DeviceState.BOOTED)
 
-    run_command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
     log_stream_process = mock.MagicMock(spec_set=subprocess.Popen)
     run_command.tools.subprocess.Popen.return_value = log_stream_process
-    run_command.tools.subprocess.stream_output.side_effect = KeyboardInterrupt
 
-    # Run the app (and KeyboardInterrupt does not surface)
-    run_command.run_app(first_app_config, test_mode=False)
+    # Run the app
+    run_command.run_app(first_app_config, test_mode=True)
 
-    # The log is being tailed and process cleanup is triggered
-    run_command.tools.subprocess.stream_output.assert_called_with(
-        "log stream", log_stream_process, filter_func=mock.ANY
+    # The correct sequence of commands was issued.
+    run_command.tools.subprocess.run.assert_has_calls(
+        [
+            # Simulator doesn't need to be opened.
+            # Uninstall the old app
+            mock.call(
+                [
+                    "xcrun",
+                    "simctl",
+                    "uninstall",
+                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                    "com.example.first-app",
+                ],
+                check=True,
+            ),
+            # Install the new app
+            mock.call(
+                [
+                    "xcrun",
+                    "simctl",
+                    "install",
+                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                    tmp_path
+                    / "base_path"
+                    / "iOS"
+                    / "Xcode"
+                    / "First App"
+                    / "build"
+                    / "Debug-iphonesimulator"
+                    / "First App.app",
+                ],
+                check=True,
+            ),
+            # Launch the new app
+            mock.call(
+                [
+                    "xcrun",
+                    "simctl",
+                    "launch",
+                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                    "com.example.first-app",
+                ],
+                check=True,
+            ),
+        ]
     )
-    run_command.tools.subprocess.cleanup.assert_called_with(
-        "log stream", log_stream_process
+    # Start the log stream
+    run_command.tools.subprocess.Popen.assert_called_with(
+        [
+            "xcrun",
+            "simctl",
+            "spawn",
+            "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+            "log",
+            "stream",
+            "--style",
+            "compact",
+            "--predicate",
+            'senderImagePath ENDSWITH "/First App"'
+            ' OR (processImagePath ENDSWITH "/First App"'
+            ' AND senderImagePath ENDSWITH "-iphonesimulator.so")',
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        bufsize=1,
     )
 
-    # Shows the try block for KeyboardInterrupt was entered
-    assert capsys.readouterr().out.endswith(
-        "[first-app] Following simulator log output (type CTRL-C to stop log)...\n"
-        "===========================================================================\n"
+    # Log stream monitoring was started
+    run_command._stream_app_logs.assert_called_with(
+        first_app_config,
+        popen_label="Simulator log stream",
+        popen=log_stream_process,
+        test_mode=True,
+        clean_filter=macOS_log_clean_filter,
+        clean_output=True,
     )

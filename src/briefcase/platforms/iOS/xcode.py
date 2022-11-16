@@ -12,14 +12,9 @@ from briefcase.commands import (
     RunCommand,
     UpdateCommand,
 )
-from briefcase.commands.run import LogFilter
 from briefcase.config import BaseConfig
 from briefcase.console import InputDisabled, select_option
-from briefcase.exceptions import (
-    BriefcaseCommandError,
-    BriefcaseTestSuiteFailure,
-    InvalidDeviceError,
-)
+from briefcase.exceptions import BriefcaseCommandError, InvalidDeviceError
 from briefcase.integrations.xcode import DeviceState, get_device_state, get_simulators
 from briefcase.platforms.iOS import iOSMixin
 from briefcase.platforms.macOS import macOS_log_clean_filter
@@ -469,16 +464,11 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
 
         try:
             self.logger.info(f"Starting {label}...", prefix=app.app_name)
-            try:
-                with self.input.wait_bar(f"Launching {label}..."):
-                    self.tools.subprocess.run(
-                        ["xcrun", "simctl", "launch", udid, app_identifier],
-                        check=True,
-                    )
-            except subprocess.CalledProcessError as e:
-                raise BriefcaseCommandError(
-                    f"Unable to launch {label} {app.app_name}."
-                ) from e
+            with self.input.wait_bar(f"Launching {label}..."):
+                self.tools.subprocess.run(
+                    ["xcrun", "simctl", "launch", udid, app_identifier],
+                    check=True,
+                )
 
             # Start streaming logs for the app.
             self.logger.info(
@@ -486,45 +476,19 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                 prefix=app.app_name,
             )
 
-            if test_mode:
-                success_filter = LogFilter.test_suite_success(None)
-                failure_filter = LogFilter.test_suite_failure(None)
-            else:
-                success_filter = None
-                failure_filter = None
-
-            log_filter = LogFilter(
-                simulator_log_popen,
+            # Stream the app logs,
+            self._stream_app_logs(
+                app,
+                popen_label="Simulator log stream",
+                popen=simulator_log_popen,
+                test_mode=test_mode,
                 clean_filter=macOS_log_clean_filter,
-                success_filter=success_filter,
-                failure_filter=failure_filter,
+                clean_output=True,
             )
-            self.logger.info("=" * 75)
-            self.tools.subprocess.stream_output(
-                "log stream",
-                simulator_log_popen,
-                filter_func=log_filter,
-            )
-
-            # If we're in test mode, and log streaming ends,
-            # check for the status of the test suite.
-            if test_mode:
-                self.logger.info("=" * 75)
-                if log_filter.success:
-                    self.logger.info("Test suite passed!", prefix=app.app_name)
-                else:
-                    if log_filter.success is None:
-                        raise BriefcaseCommandError(
-                            "Test suite didn't report a result."
-                        )
-                    else:
-                        self.logger.error("Test suite failed!", prefix=app.app_name)
-                        raise BriefcaseTestSuiteFailure()
-
-        except KeyboardInterrupt:
-            pass  # catch CTRL-C to exit normally
-        finally:
-            self.tools.subprocess.cleanup("log stream", simulator_log_popen)
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(
+                f"Unable to launch {label} {app.app_name}."
+            ) from e
 
         # Preserve the device selection as state.
         return {"udid": udid}

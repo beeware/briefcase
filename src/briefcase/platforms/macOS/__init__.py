@@ -7,10 +7,9 @@ from pathlib import Path
 from signal import SIGTERM
 from zipfile import ZipFile
 
-from briefcase.commands.run import LogFilter
 from briefcase.config import BaseConfig
 from briefcase.console import select_option
-from briefcase.exceptions import BriefcaseCommandError, BriefcaseTestSuiteFailure
+from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.subprocess import get_process_id_by_command, is_process_dead
 from briefcase.integrations.xcode import (
     get_identities,
@@ -30,7 +29,7 @@ DEFAULT_OUTPUT_FORMAT = "app"
 
 MACOS_LOG_PREFIX_REGEX = re.compile(
     r"\d{4}-\d{2}-\d{2} (?P<timestamp>\d{2}:\d{2}:\d{2}.\d{3}) Df (.*?)\[.*?:.*\]"
-    r"(?P<subsystem>( \(libffi\.dylib\))|( \(_ctypes\.cpython-3\d{1,2}-iphonesimulator.so\)))? (?P<content>.*)"
+    r"(?P<subsystem>( \(libffi\.dylib\))|( \(_ctypes\.cpython-3\d{1,2}-.*\.so\)))? (?P<content>.*)"
 )
 
 
@@ -115,41 +114,36 @@ class macOSRunMixin:
         # Wait for the log stream start up
         time.sleep(0.25)
 
+        app_pid = None
         try:
-            try:
-                if test_mode:
-                    self.logger.info("Starting test suite...", prefix=app.app_name)
-                    # In test mode, set a BRIEFCASE_MAIN_MODULE environment variable
-                    # to override the module at startup
-                    kwargs = {
-                        "env": {
-                            "BRIEFCASE_MAIN_MODULE": f"tests.{app.module_name}",
-                        }
+            if test_mode:
+                self.logger.info("Starting test suite...", prefix=app.app_name)
+                # In test mode, set a BRIEFCASE_MAIN_MODULE environment variable
+                # to override the module at startup
+                kwargs = {
+                    "env": {
+                        "BRIEFCASE_MAIN_MODULE": f"tests.{app.module_name}",
                     }
-                    success_filter = LogFilter.test_suite_success(None)
-                    failure_filter = LogFilter.test_suite_failure(None)
-                else:
-                    self.logger.info("Starting app...", prefix=app.app_name)
-                    kwargs = {}
-                    success_filter = None
-                    failure_filter = None
+                }
+            else:
+                self.logger.info("Starting app...", prefix=app.app_name)
+                kwargs = {}
 
-                self.tools.subprocess.run(
-                    [
-                        "open",
-                        "-n",  # Force a new app to be launched
-                        os.fsdecode(self.binary_path(app)),
-                    ],
-                    cwd=self.tools.home_path,
-                    check=True,
-                    **kwargs,
-                )
-            except subprocess.CalledProcessError:
-                raise BriefcaseCommandError(f"Unable to start app {app.app_name}.")
+            self.tools.subprocess.run(
+                [
+                    "open",
+                    "-n",  # Force a new app to be launched
+                    os.fsdecode(self.binary_path(app)),
+                ],
+                cwd=self.tools.home_path,
+                check=True,
+                **kwargs,
+            )
 
             # Find the App process ID so log streaming can exit when the app exits
             app_pid = get_process_id_by_command(
-                command=str(self.binary_path(app)), logger=self.logger
+                command=str(self.binary_path(app)),
+                logger=self.logger,
             )
 
             if app_pid is None:
@@ -157,44 +151,23 @@ class macOSRunMixin:
                     f"Unable to find process for app {app.app_name} to start log streaming."
                 )
 
-            log_filter = LogFilter(
-                log_popen,
+            # Stream the app logs,
+            self._stream_app_logs(
+                app,
+                popen_label="Log stream",
+                popen=log_popen,
+                test_mode=test_mode,
                 clean_filter=macOS_log_clean_filter,
-                success_filter=success_filter,
-                failure_filter=failure_filter,
+                clean_output=True,
+                stop_func=lambda: is_process_dead(app_pid),
             )
-            try:
-                # Start streaming logs for the app.
-                self.logger.info("=" * 75)
-                self.tools.subprocess.stream_output(
-                    "log stream",
-                    log_popen,
-                    stop_func=lambda: is_process_dead(app_pid),
-                    filter_func=log_filter,
-                )
-
-                # If we're in test mode, and log streaming ends,
-                # check for the status of the test suite.
-                if test_mode:
-                    self.logger.info("=" * 75)
-                    if log_filter.success:
-                        self.logger.info("Test suite passed!", prefix=app.app_name)
-                    else:
-                        if log_filter.success is None:
-                            raise BriefcaseCommandError(
-                                "Test suite didn't report a result."
-                            )
-                        else:
-                            self.logger.error("Test suite failed!", prefix=app.app_name)
-                            raise BriefcaseTestSuiteFailure()
-            finally:
-                # Ensure the App also terminates when exiting
+        except subprocess.CalledProcessError:
+            raise BriefcaseCommandError(f"Unable to start app {app.app_name}.")
+        finally:
+            # Ensure the App also terminates when exiting
+            if app_pid:
                 with suppress(ProcessLookupError):
                     self.tools.os.kill(app_pid, SIGTERM)
-        except KeyboardInterrupt:
-            pass  # Catch CTRL-C to exit normally
-        finally:
-            self.tools.subprocess.cleanup("log stream", log_popen)
 
 
 def is_mach_o_binary(path):

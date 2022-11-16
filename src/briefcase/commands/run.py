@@ -4,12 +4,26 @@ from abc import abstractmethod
 from typing import Optional
 
 from briefcase.config import BaseConfig
-from briefcase.exceptions import BriefcaseCommandError
+from briefcase.exceptions import BriefcaseCommandError, BriefcaseTestSuiteFailure
 
 from .base import BaseCommand, full_options
 
 
 class LogFilter:
+    DEFAULT_SUCCESS_REGEX = (
+        # Unittest
+        r"(^-{65,}\n)Ran \d+ tests in \d+\.\d{3}s\n\nOK( \(.*\))?"
+        # PyTest
+        r"|(^={10,}( \d+ passed(, \d+ skipped)?)|(no tests ran) in \d+\.\d+s ={10,}$)"
+    )
+
+    DEFAULT_FAILURE_REGEX = (
+        # Unittest
+        r"(^-{65,}\n)Ran \d+ tests in \d+\.\d{3}s\n\nFAILED( \(.*\))?"
+        # Pytest
+        r"|(^={10,} ((\d+ failed(, \d+ passed)?(, \d+ skipped)?)|(\d+ errors?)) in \d+.\d+s ={10,}$)"
+    )
+
     def __init__(
         self,
         log_popen,
@@ -93,44 +107,20 @@ class LogFilter:
         return display_line
 
     @staticmethod
-    def test_suite_success(pattern):
-        """A factory method for producing success filter functions.
+    def test_filter(pattern):
+        """A factory method for producing filter functions.
 
-        :param pattern: The multiline regex pattern that identifies success in a
-            log. If none falls
-        :returns: A log filter function that identifies success, based on the
+        :param pattern: The multiline regex pattern that identifies success in a log.
+        :returns: A log filter function that returns True if the pattern was found
         """
-        DEFAULT_SUCCESS_REGEX = (
-            # Unittest
-            r"(^-{65,}\n)Ran \d+ tests in \d+\.\d{3}s\n\nOK( \(.*\))?"
-            # PyTest
-            r"|(^={10,}( \d+ passed(, \d+ skipped)?)|(no tests ran) in \d+\.\d+s ={10,}$)"
-        )
-        success_regex = re.compile(
-            pattern if pattern else DEFAULT_SUCCESS_REGEX, re.MULTILINE
-        )
+        regex = re.compile(pattern, re.MULTILINE)
 
-        def success_filter(recent):
-            return success_regex.search(recent) is not None
+        def filter_func(recent):
+            return regex.search(recent) is not None
 
-        return success_filter
-
-    @staticmethod
-    def test_suite_failure(pattern):
-        DEFAULT_FAILURE_REGEX = (
-            # Unittest
-            r"(^-{65,}\n)Ran \d+ tests in \d+\.\d{3}s\n\nFAILED( \(.*\))?"
-            # Pytest
-            r"|(^={10,} ((\d+ failed(, \d+ passed)?(, \d+ skipped)?)|(\d+ errors?)) in \d+.\d+s ={10,}$)"
-        )
-        failure_regex = re.compile(
-            pattern if pattern else DEFAULT_FAILURE_REGEX, re.MULTILINE
-        )
-
-        def failure_filter(recent):
-            return failure_regex.search(recent) is not None
-
-        return failure_filter
+        # Annotate the function with the pattern to make it easier to test
+        filter_func.__pattern__ = pattern
+        return filter_func
 
 
 class RunCommand(BaseCommand):
@@ -155,6 +145,61 @@ class RunCommand(BaseCommand):
             action="store_true",
             help="Run the app in test mode",
         )
+
+    def _stream_app_logs(
+        self,
+        app: BaseConfig,
+        popen_label,
+        popen,
+        test_mode=False,
+        clean_filter=None,
+        clean_output=False,
+        stop_func=lambda: False,
+    ):
+        try:
+            if test_mode:
+                success_filter = LogFilter.test_filter(
+                    getattr(app, "test_success_regex", LogFilter.DEFAULT_SUCCESS_REGEX)
+                )
+                failure_filter = LogFilter.test_filter(
+                    getattr(app, "test_failure_regex", LogFilter.DEFAULT_FAILURE_REGEX)
+                )
+            else:
+                success_filter = None
+                failure_filter = None
+
+            log_filter = LogFilter(
+                popen,
+                clean_filter=clean_filter,
+                clean_output=clean_output,
+                success_filter=success_filter,
+                failure_filter=failure_filter,
+            )
+
+            # Start streaming logs for the app.
+            self.logger.info("=" * 75)
+            self.tools.subprocess.stream_output(
+                popen_label,
+                popen,
+                stop_func=stop_func,
+                filter_func=log_filter,
+            )
+
+            # If we're in test mode, and log streaming ends,
+            # check for the status of the test suite.
+            if test_mode:
+                if log_filter.success:
+                    self.logger.info("Test suite passed!", prefix=app.app_name)
+                else:
+                    if log_filter.success is None:
+                        raise BriefcaseCommandError(
+                            "Test suite didn't report a result."
+                        )
+                    else:
+                        self.logger.error("Test suite failed!", prefix=app.app_name)
+                        raise BriefcaseTestSuiteFailure()
+        except KeyboardInterrupt:
+            pass  # Catch CTRL-C to exit normally
 
     @abstractmethod
     def run_app(self, app: BaseConfig, **options):

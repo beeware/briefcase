@@ -103,28 +103,37 @@ from briefcase.commands.run import LogFilter
 )
 def test_default_failure_filter(recent_history):
     "The default failure filter captures known test suite failure output"
-    failure_func = LogFilter.test_suite_failure(None)
-    success_func = LogFilter.test_suite_success(None)
+    failure_func = LogFilter.test_filter(LogFilter.DEFAULT_FAILURE_REGEX)
+    success_func = LogFilter.test_filter(LogFilter.DEFAULT_SUCCESS_REGEX)
 
     tail = "\n".join(recent_history)
     assert not success_func(tail)
     assert failure_func(tail)
 
 
-def test_custom_failure_filter():
-    "The user can specify a custom failure filter"
-    failure_func = LogFilter.test_suite_success("FAILURE")
+@pytest.mark.parametrize(
+    "recent_history",
+    (
+        # Unittest
+        # - FAILED, but without the "ran tests" part
+        [
+            "Some other content",
+            "----------------------------------------------------------------------",
+            "",
+            "FAILED (failures=2)",
+        ],
+        # - FAILED, but without the "end of suite" separator
+        [
+            "Some other content",
+            "Ran 5 tests in 0.000s",
+            "",
+            "FAILED (failures=2)",
+        ],
+    ),
+)
+def test_default_filter_no_match(recent_history):
+    "The default failure filter *doesn't* catch content that doesn't match the regex"
+    failure_func = LogFilter.test_filter(LogFilter.DEFAULT_FAILURE_REGEX)
 
-    recent = [
-        "rootdir: /Users/rkm/beeware/briefcase, configfile: pyproject.toml",
-        "plugins: cov-3.0.0",
-        "collecting ... collected 0 items",
-        "",
-        "============================ no tests ran in 0.01s =============================",
-    ]
-
-    assert not failure_func("\n".join(recent))
-
-    # Add an extra line that *will* match the filter
-    recent.append("I will now say the magic word, which is FAILURE, so we fail")
-    assert failure_func("\n".join(recent))
+    tail = "\n".join(recent_history)
+    assert not failure_func(tail)
