@@ -1,3 +1,4 @@
+import json
 import os
 import re
 import shutil
@@ -128,6 +129,18 @@ class AndroidSDK(Tool):
             "The Android emulator does not currently support "
             f"{self.tools.host_os} {self.tools.host_arch} hardware."
         )
+
+    @property
+    def DEFAULT_DEVICE_TYPE(self):
+        return "pixel"
+
+    @property
+    def DEFAULT_DEVICE_SKIN(self):
+        return "pixel_3a"
+
+    @property
+    def DEFAULT_SYSTEM_IMAGE(self):
+        return f"system-images;android-31;default;{self.emulator_abi}"
 
     @classmethod
     def verify(cls, tools: ToolCache, install=True):
@@ -673,17 +686,38 @@ connection.
 
         Interrogates the system to get the list of available devices.
 
-        If the user has specified a device at the command line, that device
-        will be validated, and then automatically selected.
+        If the user has specified a device at the command line, that device will
+        be validated, and then automatically selected.
 
         :param device_or_avd: The device or AVD to target. Can be a physical
-            device id (a hex string), an emulator id ("emulator-5554"), or
-            an emulator AVD name ("@robotfriend"). If ``None``, the user will
-            be asked to select a device from the list available.
-        :returns: A tuple containing ``(device, name, avd)``. ``avd``
-            will only be provided if an emulator with that AVD is not currently
-            running. If ``device`` is null, a new emulator should be created.
+            device id (a hex string), an emulator id (``emulator-5554``), or an
+            emulator AVD name (``@robotfriend``), or a JSON payload describing
+            the properties of an emulator that will be created (e.g.,
+            ``'{"avd":"beePhone","device_type":"pixel","skin":"pixel_3a","system_image":"system-images;android-31;default;arm64-v8a"}'``)
+            If ``None``, the user will be asked to select a device from the list
+            available.
+        :returns: A tuple containing ``(device, name, avd)``. ``avd`` will only
+            be provided if an emulator with that AVD is not currently running.
+            If ``device`` is null, a new emulator should be created.
         """
+        # If the device_or_avd starts with "{", it's a definition for a new
+        # emulator to be created.
+        if device_or_avd and device_or_avd.startswith("{"):
+            try:
+                emulator_config = json.loads(device_or_avd)
+                emulators = set(self.emulators())
+
+                # If an emulator with this AVD already exists, use it
+                avd = emulator_config["avd"]
+                if avd not in emulators:
+                    self._create_emulator(**emulator_config)
+
+                return None, f"@{avd} (emulator)", avd
+            except json.JSONDecodeError as e:
+                raise BriefcaseCommandError(
+                    f"Unable to create emulator with definition {device_or_avd!r}"
+                ) from e
+
         # Get the list of attached devices (includes running emulators)
         running_devices = self.devices()
 
@@ -833,9 +867,10 @@ In future, you can specify this device by running:
 
         return device, name, avd
 
-    def create_emulator(self):
+    def create_emulator(self, use_defaults=False):
         """Create a new Android emulator.
 
+        :param use_defaults: Should the emulator be created with defaults?
         :returns: The AVD of the newly created emulator.
         """
         # Get the list of existing emulators
@@ -886,14 +921,59 @@ An emulator named '{avd}' already exists.
                 avd_is_invalid = False
 
         # TODO: Provide a list of options for device types with matching skins
-        device_type = "pixel"
-        skin = "pixel_3a"
+        device_type = self.DEFAULT_DEVICE_TYPE
+        skin = self.DEFAULT_DEVICE_SKIN
+
+        # TODO: Provide a list of options for system images.
+        system_image = self.DEFAULT_SYSTEM_IMAGE
+
+        self._create_emulator(
+            avd=avd,
+            device_type=device_type,
+            skin=skin,
+            system_image=system_image,
+        )
+
+        self.tools.logger.info(
+            f"""
+Android emulator '{avd}' created.
+
+In future, you can specify this device by running:
+
+    $ briefcase run android -d @{avd}
+"""
+        )
+
+        return avd
+
+    def _create_emulator(
+        self,
+        avd,
+        device_type=None,
+        skin=None,
+        system_image=None,
+        **kwargs,
+    ):
+        """Internal method that does the actual work of creating the emulator.
+
+        AVD is the only required argument; all other arguments will assume
+        reasonable defaults.
+
+        :param avd: The AVD for the new emulator
+        :param device_type: The device type for the new emulator (e.g., "pixel")
+        :param skin: The skin for the new emulator to use (e.g., "pixel_3a")
+        :param system_image: The system image to use on the new emulator.
+            (e.g., "system-images;android-31;default;arm64-v8a")
+        """
+        if device_type is None:
+            device_type = self.DEFAULT_DEVICE_TYPE
+        if skin is None:
+            skin = self.DEFAULT_DEVICE_SKIN
+        if system_image is None:
+            system_image = self.DEFAULT_SYSTEM_IMAGE
 
         # Ensure the required skin is available.
         self.verify_emulator_skin(skin)
-
-        # TODO: Provide a list of options for system images.
-        system_image = f"system-images;android-31;default;{self.emulator_abi}"
 
         # Ensure the required system image is available.
         self.verify_system_image(system_image)
@@ -935,18 +1015,6 @@ An emulator named '{avd}' already exists.
                     "showDeviceFrame": "yes",
                 },
             )
-
-        self.tools.logger.info(
-            f"""
-Android emulator '{avd}' created.
-
-In future, you can specify this device by running:
-
-    $ briefcase run android -d @{avd}
-"""
-        )
-
-        return avd
 
     def avd_config(self, avd):
         """Obtain the AVD configuration as key-value pairs.
