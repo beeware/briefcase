@@ -21,12 +21,26 @@ from briefcase.commands.run import LogFilter
             "",
             "OK (skipped=1)",
         ],
+        # - All skips
+        [
+            "----------------------------------------------------------------------",
+            "Ran 6 tests in 0.000s",
+            "",
+            "OK (skipped=6)",
+        ],
         # - Pass with expected failure
         [
             "----------------------------------------------------------------------",
             "Ran 6 tests in 0.000s",
             "",
             "OK (expected failures=1)",
+        ],
+        # - All expected failures
+        [
+            "----------------------------------------------------------------------",
+            "Ran 6 tests in 0.000s",
+            "",
+            "OK (expected failures=6)",
         ],
         # - Pass skips and expected failure
         [
@@ -66,6 +80,34 @@ from briefcase.commands.run import LogFilter
             "",
             "========================= 5 passed, 2 skipped in 0.02s =========================",
         ],
+        # - Passes and warning
+        [
+            '    assert color.to_string() == "#0025002a0045"',
+            "",
+            "-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html",
+            "======================== 30 passed, 1 warning in 0.68s =========================",
+        ],
+        # - Passes and warnings
+        [
+            '    assert color.to_string() == "#0025002a0045"',
+            "",
+            "-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html",
+            "======================== 30 passed, 1 warnings in 0.68s ========================",
+        ],
+        # - Passes, skips and warning
+        [
+            '    assert color.to_string() == "#0025002a0045"',
+            "",
+            "-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html",
+            "=================== 30 passed, 5 skipped, 1 warning in 0.68s ===================",
+        ],
+        # - Passes, skips and warnings
+        [
+            '    assert color.to_string() == "#0025002a0045"',
+            "",
+            "-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html",
+            "=================== 30 passed, 5 skipped, 2 warnings in 0.68s ==================",
+        ],
         # - Lots of Passes and skips, in a long running suite
         [
             "tests/foobar/test_other.py::test_pass2 PASSED                             [ 71%]",
@@ -73,6 +115,13 @@ from briefcase.commands.run import LogFilter
             "tests/foobar/test_things.py::test_pass2 PASSED                            [100%]",
             "",
             "======================= 50 passed, 20 skipped in 123.45s =======================",
+        ],
+        # - only skips
+        [
+            "tests/foobar/test_things.py::test_pass SKIPPED (Not needed)              [ 85%]",
+            "tests/foobar/test_things.py::test_fail SKIPPED (Not needed)              [100%]",
+            "",
+            "============================== 7 skipped in 0.01s ==============================",
         ],
         # - No tests
         [

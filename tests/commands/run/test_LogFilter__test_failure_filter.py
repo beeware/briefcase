@@ -28,6 +28,20 @@ from briefcase.commands.run import LogFilter
             "",
             "FAILED (failures=1, expected failures=1)",
         ],
+        # - Failures and expected failures
+        [
+            "----------------------------------------------------------------------",
+            "Ran 6 tests in 0.001s",
+            "",
+            "FAILED (expected failures=1, unexpected successes=1)",
+        ],
+        # - Failures and expected failures
+        [
+            "----------------------------------------------------------------------",
+            "Ran 6 tests in 0.001s",
+            "",
+            "FAILED (failures=1, expected failures=3, unexpected successes=1)",
+        ],
         # - Failures, skips, and expected failures
         [
             "----------------------------------------------------------------------",
@@ -41,6 +55,13 @@ from briefcase.commands.run import LogFilter
             "Ran 7 tests in 0.000s",
             "",
             "FAILED (failures=1, errors=1, skipped=1, expected failures=1)",
+        ],
+        # - Failures, skips, expected failures, and unexpected successes
+        [
+            "----------------------------------------------------------------------",
+            "Ran 6 tests in 0.001s",
+            "",
+            "FAILED (failures=1, skipped=1, expected failures=2, unexpected successes=1)",
         ],
         # Pytest
         # - Only failures
@@ -81,7 +102,7 @@ from briefcase.commands.run import LogFilter
             "FAILED tests/test_base.py::test_fail8 - assert 1 == 2",
             "FAILED tests/test_base.py::test_fail9 - assert 1 == 2",
             "FAILED tests/test_base.py::test_fail10 - assert 1 == 2",
-            "==================== 10 failed, 40 passed, 20 skipped in 124.34s ====================",
+            "================== 10 failed, 40 passed, 20 skipped in 124.34s =================",
         ],
         # - Error collecting test suite
         [

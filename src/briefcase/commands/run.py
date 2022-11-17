@@ -14,7 +14,7 @@ class LogFilter:
         # Unittest
         r"(^-{65,}\n)Ran \d+ tests in \d+\.\d{3}s\n\nOK( \(.*\))?"
         # PyTest
-        r"|(^={10,}( \d+ passed(, \d+ skipped)?)|(no tests ran) in \d+\.\d+s ={10,}$)"
+        r"|(^={10,} (((\d+ passed)?((, )?\d+ skipped)?(, \d+ warnings?)?)|(no tests ran)) in \d+\.\d+s ={10,}$)"
     )
 
     DEFAULT_FAILURE_REGEX = (
