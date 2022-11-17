@@ -185,14 +185,6 @@ class RunCommand(BaseCommand):
                 filter_func=log_filter,
             )
 
-            # If the process we're monitoring didn't exit cleanly,
-            # and we're monitoring an actual app (not just a log stream),
-            # raise an error.
-            if not log_stream and popen.returncode != 0:
-                raise BriefcaseCommandError(
-                    f"Problem running app {app.app_name} {popen.returncode})."
-                )
-
             # If we're in test mode, and log streaming ends,
             # check for the status of the test suite.
             if test_mode:
@@ -206,6 +198,12 @@ class RunCommand(BaseCommand):
                     else:
                         self.logger.error("Test suite failed!", prefix=app.app_name)
                         raise BriefcaseTestSuiteFailure()
+            elif not log_stream:
+                # If we're monitoring an actual app (not just a log stream),
+                # and the app didn't exit cleanly, surface the error to the user.
+                if popen.returncode != 0:
+                    raise BriefcaseCommandError(f"Problem running app {app.app_name}.")
+
         except KeyboardInterrupt:
             pass  # Catch CTRL-C to exit normally
 
