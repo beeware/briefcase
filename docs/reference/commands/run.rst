@@ -47,3 +47,10 @@ Update the application's source code before running. Equivalent to running::
 
     $ briefcase update
     $ briefcase run
+
+``--test``
+----------
+
+Run the test suite in the bundled app environment. Running ``run --test``
+forces an update and rebuild, to ensure that the packaged application
+contains all the test dependencies and code.

@@ -101,15 +101,27 @@ Additional options
 The following options can be provided at the command line when producing
 Android projects
 
-build
------
+run
+---
 
 ``-d <device>`` / ``--device <device>``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The device simulator to target. Can be either a device ID, or a device name.
+The device emulator to target. Can be specified as:
 
-run
----
+* an AVD of an emulator (e.g., ``@beePhone``); or
+* a device ID (a hexadecimal identifier associated with a specific hardware device);
+  or
+* a JSON dictionary specifying the properties of a device that will be created.
+  This dictionary must have, at a mimimum, an AVD::
 
-The device simulator to target. Can be either a device ID, or a device name.
+     $ briefcase run -d '{"avd":"new-device"}'
+
+  You may also specify:
+
+  - ``device_type`` (e.g., ``pixel``) - the type of device to emulate
+  - ``skin`` (e.g., ``pixel_3a``) - the skin to apply to the emulator
+  - ``system_image`` (e.g., ``system-images;android-31;default;arm64-v8a``) - the Android system image to use in the emulator.
+
+  If any of these attributes are *not* specified, they will fall back
+  to reasonable defaults.

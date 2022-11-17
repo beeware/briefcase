@@ -35,3 +35,8 @@ Update application dependencies.
 ``--no-run``
 ------------
 Do not run the application and only install application dependencies.
+
+``--test``
+----------
+
+Run the test suite in the development environment.
