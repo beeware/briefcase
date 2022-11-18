@@ -131,6 +131,30 @@ from briefcase.commands.run import LogFilter
             "",
             "============================ no tests ran in 0.01s =============================",
         ],
+        # Until https://github.com/chaquo/chaquopy/issues/746 is resolved, Android output
+        # will contain extra line breaks because the log is written whenever the buffer is
+        # flushed, not just on newlines. The unittest regex contains extra named groups to
+        # accomodate these discrepancies; those groups can be deleted once the log output
+        # doesn't write on flush.
+        [
+            " ",
+            "----------------------------------------------------------------------",
+            " ",
+            "Ran 6 tests in 0.004s",
+            " ",
+            " ",
+            "OK",
+        ],
+        [
+            " ",
+            "----------------------------------------------------------------------",
+            " ",
+            "Ran 6 tests in 0.004s",
+            " ",
+            " ",
+            "OK",
+            " (skipped=1, expected failures=1)",
+        ],
     ),
 )
 def test_default_success_filter(recent_history):

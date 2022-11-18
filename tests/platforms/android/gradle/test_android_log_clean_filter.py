@@ -36,6 +36,14 @@ from briefcase.platforms.android.gradle import android_log_clean_filter
             "11-16 14:32:58.195  4041  4041 I python.stdout: ",
             ("", True),
         ),
+        (
+            "11-16 14:32:58.195  4041  4041 I python.stderr: test_case (tests.foobar.test_other.TestOtherMethods)",
+            ("test_case (tests.foobar.test_other.TestOtherMethods)", True),
+        ),
+        (
+            "11-16 14:32:58.195  4041  4041 I python.stderr: ",
+            ("", True),
+        ),
         # Unknown content
         (
             "This doesn't match the regex",

@@ -51,7 +51,7 @@ def android_log_clean_filter(line):
     match = ANDROID_LOG_PREFIX_REGEX.match(line)
     if match:
         groups = match.groupdict()
-        include = groups["component"] == "python.stdout"
+        include = groups["component"] in {"python.stdout", "python.stderr"}
         return groups["content"], include
 
     return line, False

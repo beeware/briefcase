@@ -12,14 +12,20 @@ from .base import BaseCommand, full_options
 class LogFilter:
     DEFAULT_SUCCESS_REGEX = (
         # Unittest
-        r"(^-{65,}\n)Ran \d+ tests in \d+\.\d{3}s\n\nOK( \(.*\))?"
+        # The a{123} groups are to support Android logging differences.
+        # when https://github.com/chaquo/chaquopy/issues/746 is resolved,
+        # those groups can be deleted.
+        r"(^-{65,}\n(?P<a1> \n)?Ran \d+ tests in \d+\.\d{3}s\n(?P<a2> )?\n(?P<a3> \n)?OK( \(.*\))?$)"
         # PyTest
         r"|(^={10,} (((\d+ passed)?((, )?\d+ skipped)?(, \d+ warnings?)?)|(no tests ran)) in \d+\.\d+s ={10,}$)"
     )
 
     DEFAULT_FAILURE_REGEX = (
         # Unittest
-        r"(^-{65,}\n)Ran \d+ tests in \d+\.\d{3}s\n\nFAILED( \(.*\))?"
+        # The a{123} groups are to support Android logging differences.
+        # when https://github.com/chaquo/chaquopy/issues/746 is resolved,
+        # those groups can be deleted.
+        r"(^-{65,}\n(?P<a1> \n)?Ran \d+ tests in \d+\.\d{3}s\n(?P<a2> )?\n(?P<a3> \n)?FAILED( \(.*\))?$)"
         # Pytest
         r"|(^={10,} ((\d+ failed(, \d+ passed)?(, \d+ skipped)?)|(\d+ errors?)) in \d+.\d+s ={10,}$)"
     )
@@ -88,11 +94,11 @@ class LogFilter:
             display_line = line
 
         # If the line is Python content, append the new line, then clip the
-        # recent history to the most recent 5 clean lines, and build a single
+        # recent history to the most recent 10 clean lines, and build a single
         # string that is the tail of the recent clean lines.
         if included:
             self.recent_history.append(clean_line)
-            self.recent_history = self.recent_history[-5:]
+            self.recent_history = self.recent_history[-10:]
             tail = "\n".join(self.recent_history)
 
             # Look for the success/failure conditions in the tail
