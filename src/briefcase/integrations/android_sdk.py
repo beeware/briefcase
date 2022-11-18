@@ -717,6 +717,11 @@ connection.
                 raise BriefcaseCommandError(
                     f"Unable to create emulator with definition {device_or_avd!r}"
                 ) from e
+            except KeyError:
+                raise BriefcaseCommandError("No AVD provided for new device.")
+            except TypeError as e:
+                property = str(e).split(" ")[-1]
+                raise BriefcaseCommandError(f"Unknown device property {property}.")
 
         # Get the list of attached devices (includes running emulators)
         running_devices = self.devices()
@@ -952,7 +957,6 @@ In future, you can specify this device by running:
         device_type=None,
         skin=None,
         system_image=None,
-        **kwargs,
     ):
         """Internal method that does the actual work of creating the emulator.
 
