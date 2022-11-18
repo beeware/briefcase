@@ -1054,15 +1054,27 @@ In future, you can specify this device by running:
             for key, value in avd_config.items():
                 f.write(f"{key}={value}\n")
 
-    def start_emulator(self, avd):
+    def start_emulator(self, avd, test_mode=False):
         """Start an existing Android emulator.
 
         Returns when the emulator is booted and ready to accept apps.
 
         :param avd: The AVD of the device.
+        :param test_mode: Should the emulator run in test mode? (Default: False)
         """
         if avd not in set(self.emulators()):
             raise InvalidDeviceError("emulator AVD", avd)
+
+        if test_mode:
+            extra_args = [
+                "-no-window",
+                "-no-snapshot",
+                "-no-audio",
+                "-no-boot-anim",
+                "-wipe-data",
+            ]
+        else:
+            extra_args = []
 
         emulator_popen = self.tools.subprocess.Popen(
             [
@@ -1070,11 +1082,8 @@ In future, you can specify this device by running:
                 f"@{avd}",
                 "-dns-server",
                 "8.8.8.8",
-                "-no-window",
-                "-no-snapshot",
-                "-no-audio",
-                "-no-boot-anim",
-            ],
+            ]
+            + extra_args,
             env=self.env,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
@@ -1417,3 +1426,10 @@ Activity class not found while starting app.
             return True
         except subprocess.CalledProcessError:
             return False
+
+    def kill(self):
+        """Stop the running Android emulator."""
+        try:
+            self.run("emu", "kill")
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError("Error starting ADB logcat.") from e

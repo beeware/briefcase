@@ -154,6 +154,9 @@ def test_run_existing_device(run_command, first_app_config):
         log_stream=True,
     )
 
+    # The emulator was not killed at the end of the test
+    run_command.tools.mock_adb.kill.assert_not_called()
+
 
 def test_run_slow_start(run_command, first_app_config, monkeypatch):
     """If the app is slow to start, multiple calls to pidof will be made."""
@@ -266,7 +269,10 @@ def test_run_created_emulator(run_command, first_app_config):
     run_command.tools.android_sdk.verify_avd.assert_not_called()
 
     # The emulator was started
-    run_command.tools.android_sdk.start_emulator.assert_called_once_with("newDevice")
+    run_command.tools.android_sdk.start_emulator.assert_called_once_with(
+        "newDevice",
+        test_mode=False,
+    )
 
     # The ADB wrapper is created
     run_command.tools.android_sdk.adb.assert_called_once_with(device="emulator-3742")
@@ -325,7 +331,10 @@ def test_run_idle_device(run_command, first_app_config):
     run_command.tools.android_sdk.verify_avd.assert_called_with("idleDevice")
 
     # The emulator was started
-    run_command.tools.android_sdk.start_emulator.assert_called_once_with("idleDevice")
+    run_command.tools.android_sdk.start_emulator.assert_called_once_with(
+        "idleDevice",
+        test_mode=False,
+    )
 
     # The ADB wrapper is created
     run_command.tools.android_sdk.adb.assert_called_once_with(device="emulator-3742")
@@ -448,3 +457,72 @@ def test_run_test_mode(run_command, first_app_config):
         stop_func=mock.ANY,
         log_stream=True,
     )
+
+    # The emulator was killed at the end of the test
+    run_command.tools.mock_adb.kill.assert_called_once_with()
+
+
+def test_run_test_mode_created_emulator(run_command, first_app_config):
+    """The user can choose to run in test mode on a newly created emulator."""
+    # Set up device selection to return a completely new emulator
+    run_command.tools.android_sdk.select_target_device = mock.MagicMock(
+        return_value=(None, None, None)
+    )
+    run_command.tools.android_sdk.create_emulator = mock.MagicMock(
+        return_value="newDevice"
+    )
+    run_command.tools.android_sdk.verify_avd = mock.MagicMock()
+    run_command.tools.android_sdk.start_emulator = mock.MagicMock(
+        return_value=("emulator-3742", "New Device")
+    )
+
+    # Set up the log streamer to return a known stream
+    log_popen = mock.MagicMock()
+    run_command.tools.mock_adb.logcat.return_value = log_popen
+
+    # Invoke run_app
+    run_command.run_app(first_app_config, test_mode=True)
+
+    # A new emulator was created
+    run_command.tools.android_sdk.create_emulator.assert_called_once_with()
+
+    # No attempt was made to verify the AVD (it is pre-verified through
+    # the creation process)
+    run_command.tools.android_sdk.verify_avd.assert_not_called()
+
+    # The emulator was started
+    run_command.tools.android_sdk.start_emulator.assert_called_once_with(
+        "newDevice",
+        test_mode=True,
+    )
+
+    # The ADB wrapper is created
+    run_command.tools.android_sdk.adb.assert_called_once_with(device="emulator-3742")
+
+    # The adb wrapper is invoked with the expected arguments
+    run_command.tools.mock_adb.install_apk.assert_called_once_with(
+        run_command.binary_path(first_app_config)
+    )
+    run_command.tools.mock_adb.force_stop_app.assert_called_once_with(
+        f"{first_app_config.package_name}.{first_app_config.module_name}",
+    )
+
+    run_command.tools.mock_adb.start_app.assert_called_once_with(
+        f"{first_app_config.package_name}.{first_app_config.module_name}",
+        "org.beeware.android.MainActivity",
+    )
+
+    run_command.tools.mock_adb.logcat.assert_called_once_with(pid="777")
+
+    run_command._stream_app_logs.assert_called_once_with(
+        first_app_config,
+        popen=log_popen,
+        test_mode=True,
+        clean_filter=android_log_clean_filter,
+        clean_output=False,
+        stop_func=mock.ANY,
+        log_stream=True,
+    )
+
+    # The emulator was killed at the end of the test
+    run_command.tools.mock_adb.kill.assert_called_once_with()

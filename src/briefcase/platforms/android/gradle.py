@@ -265,8 +265,13 @@ class GradleRunCommand(GradleMixin, RunCommand):
                 # have an image available to create an AVD.
                 self.tools.android_sdk.verify_avd(avd)
 
-            self.logger.info(f"Starting emulator {avd}...", prefix=app.app_name)
-            device, name = self.tools.android_sdk.start_emulator(avd)
+            self.logger.info(
+                f"Starting emulator {avd}{' in test mode' if test_mode else ''}...",
+                prefix=app.app_name,
+            )
+            device, name = self.tools.android_sdk.start_emulator(
+                avd, test_mode=test_mode
+            )
 
         if test_mode:
             label = "test suite"
@@ -320,17 +325,22 @@ class GradleRunCommand(GradleMixin, RunCommand):
             # Start the app in a way that lets us stream the logs
             log_popen = adb.logcat(pid=pid)
 
-            # Stream the app logs.
-            self._stream_app_logs(
-                app,
-                popen=log_popen,
-                test_mode=test_mode,
-                clean_filter=android_log_clean_filter,
-                clean_output=False,
-                # Check for the PID in quiet mode so logs aren't corrupted.
-                stop_func=lambda: not adb.pid_exists(pid=pid, quiet=True),
-                log_stream=True,
-            )
+            try:
+                # Stream the app logs.
+                self._stream_app_logs(
+                    app,
+                    popen=log_popen,
+                    test_mode=test_mode,
+                    clean_filter=android_log_clean_filter,
+                    clean_output=False,
+                    # Check for the PID in quiet mode so logs aren't corrupted.
+                    stop_func=lambda: not adb.pid_exists(pid=pid, quiet=True),
+                    log_stream=True,
+                )
+            finally:
+                if test_mode:
+                    with self.tools.input.wait_bar("Stopping emulator..."):
+                        adb.kill()
         else:
             self.logger.error("Unable to find PID for app", prefix=app.app_name)
             self.logger.error("Logs for launch attempt follow...")
