@@ -121,10 +121,10 @@ from briefcase.commands.run import LogFilter
             "============================== 2 errors in 0.05s ===============================",
         ],
         # Until https://github.com/chaquo/chaquopy/issues/746 is resolved, Android output
-        # will contain extra line breaks because the log is written whenever the buffer is
-        # flushed, not just on newlines. The unittest regex contains extra named groups to
-        # accomodate these discrepancies; those groups can be deleted once the log output
-        # doesn't write on flush.
+        # will contain extra line breaks because it produces a line for each call to `write`,
+        # not just on newlines. The unittest regex contains extra named groups to
+        # accommodate these discrepancies; those groups can be deleted once the Chaquopy
+        # issue is fixed.
         [
             " ",
             "----------------------------------------------------------------------",

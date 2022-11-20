@@ -396,21 +396,15 @@ application defines sources at the global level, application level, *and*
 platform level, the final set of sources will be the *concatenation* of test
 sources from all levels, starting from least to most specific.
 
-``test_success_regex``
-~~~~~~~~~~~~~~~~~~~~~~
+``test_success_regex`` / ``test_failure_regex``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A string defining a multiline regular expression that describes the failure
-output of a test suite. Briefcase uses a regular expression that is able to
-match the output of ``unittest`` or ``pytest``; if you use a different test
-framework, you will need to provide this regular expression.
+Regular expressions that match the success and failure output of the test suite.
+The ``re.MULTILINE`` flag will be used.
 
-``test_success_regex``
-~~~~~~~~~~~~~~~~~~~~~~
-
-A string defining a multiline regular expression that describes the success
-output of a test suite. Briefcase uses a regular expression that is able to
-match the output of ``unittest`` or ``pytest``; if you use a different test
-framework, you will need to provide this regular expression.
+Briefcase defaults to regular expressions that are able to match the output of
+``unittest`` or ``pytest``; if you use a different test framework, you will need
+to customize these settings.
 
 ``url``
 ~~~~~~~

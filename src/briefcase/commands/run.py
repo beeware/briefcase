@@ -12,7 +12,7 @@ from .base import BaseCommand, full_options
 class LogFilter:
     DEFAULT_SUCCESS_REGEX = (
         # Unittest
-        # The a{123} groups are to support Android logging differences.
+        # The ?P<a...> groups are to support Android logging differences.
         # when https://github.com/chaquo/chaquopy/issues/746 is resolved,
         # those groups can be deleted.
         r"(^-{65,}\n(?P<a1> \n)?Ran \d+ tests in \d+\.\d{3}s\n(?P<a2> )?\n(?P<a3> \n)?OK( \(.*\))?$)"
@@ -22,7 +22,7 @@ class LogFilter:
 
     DEFAULT_FAILURE_REGEX = (
         # Unittest
-        # The a{123} groups are to support Android logging differences.
+        # The ?P<a...> groups are to support Android logging differences.
         # when https://github.com/chaquo/chaquopy/issues/746 is resolved,
         # those groups can be deleted.
         r"(^-{65,}\n(?P<a1> \n)?Ran \d+ tests in \d+\.\d{3}s\n(?P<a2> )?\n(?P<a3> \n)?FAILED( \(.*\))?$)"
