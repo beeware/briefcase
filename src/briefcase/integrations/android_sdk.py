@@ -506,7 +506,6 @@ connection.
             image (e.g., ``"system-images;android-31;default;x86_64"``)
         """
         # Look for the directory named as a system image.
-        # If it exists, we already have the system image.
         system_image_parts = system_image.split(";")
 
         if len(system_image_parts) < 4 or system_image_parts[0] != "system-images":
@@ -533,13 +532,15 @@ connection.
             )
 
         # Convert the system image into a path where that system image
-        # would be expected, and see if the location exists.
+        # files would be expected, and see if the `system.img` exists.
         system_image_path = self.root_path
         for part in system_image_parts:
             system_image_path = system_image_path / part
 
-        if system_image_path.exists():
-            # Found the system image.
+        system_image_file = system_image_path / "system.img"
+
+        if system_image_file.exists():
+            # Found the system image file.
             return
 
         # System image not found; download it.
@@ -833,6 +834,102 @@ In future, you can specify this device by running:
 
         return device, name, avd
 
+    def select_system_images(self, images):
+        """Detects available system images for user to use or download.
+
+        Filters list to only include system images that correspond to the
+        minimum of supported Android versions for the current architecture.
+
+        :param images: list of default and previously downloaded system images
+        :type images: str
+        :returns: name of user chosen system image
+        :rtype: str
+        """
+        # Download list of all available system images
+        with self.tools.input.wait_bar("Retrieving list of system images..."):
+            try:
+                download_options = self.tools.subprocess.check_output(
+                    [os.fsdecode(self.sdkmanager_path), "--list"],
+                    env=self.env,
+                    stderr=subprocess.STDOUT,
+                )
+            except subprocess.CalledProcessError as e:
+                raise BriefcaseCommandError("Unable to retrieve system images") from e
+        # Parse names of available system images
+        options = download_options.splitlines()
+        # Remove previous "Obtain non-default system image" option
+        images.pop()
+        # Add any non-default or previously downloaded system image names to list
+        system_images = images
+        for line in options:
+            if re.match(
+                rf"\s\ssystem-images;android-([2-9][6-9]|[3-9][0-9]|\d{3,});default;{self.emulator_abi}",
+                line,
+            ):
+                strip_line = line.strip().split(" ")[0]
+                if (strip_line, strip_line) not in system_images:
+                    system_images.append((strip_line, strip_line))
+        # Show user system image options to choose
+        self.tools.input.prompt()
+        self.tools.input.prompt("Select system image:")
+        self.tools.input.prompt()
+        system_image = select_option(images, input=self.tools.input)
+        return system_image
+
+    def detect_system_images(self):
+        """Detects available system images for user to choose.
+
+        User is presented with a list of system images. The list always
+        includes the Briefcase default system image and the option to download
+        a different system image. List also includes any previously downloaded
+        system images.
+
+        :returns: name of user chosen system image
+        :rtype: str
+        """
+        # Retrieve currently available system images to choose
+        with self.tools.input.wait_bar("Retrieving list of available system images..."):
+            try:
+                download_options = self.tools.subprocess.check_output(
+                    [os.fsdecode(self.sdkmanager_path), "--list_installed"],
+                    env=self.env,
+                    stderr=subprocess.STDOUT,
+                )
+            except subprocess.CalledProcessError as e:
+                raise BriefcaseCommandError("Unable to retrieve system images") from e
+        # Parse names of available system images
+        options = download_options.splitlines()
+        # Check if there are any system images other than the default
+        images = [
+            (
+                f"system-images;android-31;default;{self.emulator_abi}",
+                f"system-images;android-31;default;{self.emulator_abi}",
+            )
+        ]
+        for line in options:
+            if re.match(
+                rf"\s\ssystem-images;android-([2-9][6-9]|[3-9][0-9]|\d{3,});default;{self.emulator_abi}",
+                line,
+            ):
+                strip_line = line.strip().split(" ")[0]
+                if (strip_line, strip_line) not in images:
+                    images.append((strip_line, strip_line))
+        # Append the option to download a non-default system image
+        images.append(
+            (
+                "Obtain non-default system image",
+                "Obtain non-default system image",
+            )
+        )
+        # Show user options to choose
+        self.tools.input.prompt()
+        self.tools.input.prompt("Select system image:\n")
+        self.tools.input.prompt()
+        system_image = select_option(images, input=self.tools.input)
+        if system_image == "Obtain non-default system image":
+            return self.select_system_images(images)
+        return system_image
+
     def create_emulator(self):
         """Create a new Android emulator.
 
@@ -892,8 +989,8 @@ An emulator named '{avd}' already exists.
         # Ensure the required skin is available.
         self.verify_emulator_skin(skin)
 
-        # TODO: Provide a list of options for system images.
-        system_image = f"system-images;android-31;default;{self.emulator_abi}"
+        # Provide a list of system image options.
+        system_image = self.detect_system_images()
 
         # Ensure the required system image is available.
         self.verify_system_image(system_image)

@@ -79,6 +79,9 @@ def test_create_emulator(
         f.write("hw.device.name=pixel\n")
 
     # Create the emulator
+    android_sdk.detect_system_images = MagicMock(
+        return_value=f"system-images;android-31;default;{emulator_abi}"
+    )
     avd = android_sdk.create_emulator()
 
     # The expected device AVD was created.
@@ -134,6 +137,9 @@ def test_create_failure(mock_tools, android_sdk):
     )
 
     # Create the emulator
+    android_sdk.detect_system_images = MagicMock(
+        return_value="system-images;android-31;default;x86_64"
+    )
     with pytest.raises(BriefcaseCommandError):
         android_sdk.create_emulator()
 
@@ -181,6 +187,9 @@ def test_default_name(mock_tools, android_sdk, tmp_path):
         f.write("hw.device.name=pixel\n")
 
     # Create the emulator
+    android_sdk.detect_system_images = MagicMock(
+        return_value="system-images;android-31;default;x86_64"
+    )
     avd = android_sdk.create_emulator()
 
     # The expected device AVD was created.
@@ -212,6 +221,9 @@ def test_default_name_with_collisions(mock_tools, android_sdk, tmp_path):
         f.write("hw.device.name=pixel\n")
 
     # Create the emulator
+    android_sdk.detect_system_images = MagicMock(
+        return_value="system-images;android-31;default;x86_64"
+    )
     avd = android_sdk.create_emulator()
 
     # The expected device AVD was created.
