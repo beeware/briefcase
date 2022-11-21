@@ -15,9 +15,14 @@ class LogFilter:
         # The ?P<a...> groups are to support Android logging differences.
         # when https://github.com/chaquo/chaquopy/issues/746 is resolved,
         # those groups can be deleted.
-        r"(^-{65,}\n(?P<a1> \n)?Ran \d+ tests in \d+\.\d{3}s\n(?P<a2> )?\n(?P<a3> \n)?OK( \(.*\))?$)"
+        r"(^-{65,}\n(?P<a1> \n)?Ran \d+ tests in \d+\.\d{3}s"
+        r"\n(?P<a2> )?\n(?P<a3> \n)?OK( \(.*\))?$)"
         # PyTest
-        r"|(^={10,} (((\d+ passed)?((, )?\d+ skipped)?(, \d+ warnings?)?)|(no tests ran)) in \d+\.\d+s ={10,}$)"
+        r"|"
+        r"(^={10,} ("
+        r"((\d+ passed)?((, )?\d+ skipped)?(, \d+ warnings?)?)"
+        r"|(no tests ran)"
+        r") in \d+\.\d+s ={10,}$)"
     )
 
     DEFAULT_FAILURE_REGEX = (
@@ -25,9 +30,14 @@ class LogFilter:
         # The ?P<a...> groups are to support Android logging differences.
         # when https://github.com/chaquo/chaquopy/issues/746 is resolved,
         # those groups can be deleted.
-        r"(^-{65,}\n(?P<a1> \n)?Ran \d+ tests in \d+\.\d{3}s\n(?P<a2> )?\n(?P<a3> \n)?FAILED( \(.*\))?$)"
+        r"(^-{65,}\n(?P<a1> \n)?Ran \d+ tests in \d+\.\d{3}s"
+        r"\n(?P<a2> )?\n(?P<a3> \n)?FAILED( \(.*\))?$)"
         # Pytest
-        r"|(^={10,} ((\d+ failed(, \d+ passed)?(, \d+ skipped)?)|(\d+ errors?)) in \d+.\d+s ={10,}$)"
+        r"|"
+        r"(^={10,} ("
+        r"(\d+ failed(, \d+ passed)?(, \d+ skipped)?(, \d+ errors?)?)"
+        r"|(\d+ errors?)"
+        r") in \d+.\d+s ={10,}$)"
     )
 
     def __init__(

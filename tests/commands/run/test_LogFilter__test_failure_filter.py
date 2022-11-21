@@ -104,6 +104,55 @@ from briefcase.commands.run import LogFilter
             "FAILED tests/test_base.py::test_fail10 - assert 1 == 2",
             "================== 10 failed, 40 passed, 20 skipped in 124.34s =================",
         ],
+        # Failures and error
+        [
+            "FAILED tests/foobar/test_other.py::test_pass - assert 1 == 2",
+            "FAILED tests/foobar/test_other.py::test_fail - assert 1 == 2",
+            "FAILED tests/foobar/test_things.py::test_fail - assert 1 == 2",
+            "ERROR tests/foobar/test_things.py::test_pass - Exception",
+            "========================== 6 failed, 1 error in 0.04s ==========================",
+        ],
+        # Failures and errors
+        [
+            "FAILED tests/foobar/test_other.py::test_pass - assert 1 == 2",
+            "FAILED tests/foobar/test_other.py::test_fail - assert 1 == 2",
+            "ERROR tests/foobar/test_things.py::test_fail - Exception",
+            "ERROR tests/foobar/test_things.py::test_pass - Exception",
+            "========================== 6 failed, 2 errors in 0.04s ==========================",
+        ],
+        # Failures, passes, skips and error
+        [
+            "tests/test_base.py:9: AssertionError",
+            "=========================== short test summary info ============================",
+            "FAILED tests/test_base.py::test_fail - assert 1 == 2",
+            "ERROR tests/foobar/test_things.py::test_pass - Exception",
+            "=============== 1 failed, 2 passed, 3 skipped, 1 error in 0.05s ================",
+        ],
+        # Failures, skips and error
+        [
+            "FAILED tests/test_base.py::test_pass - assert 1 == 2",
+            "FAILED tests/test_base.py::test_fail - assert 1 == 2",
+            "FAILED tests/foobar/test_things.py::test_fail - assert 1 == 2",
+            "ERROR tests/foobar/test_things.py::test_pass - Exception",
+            "==================== 3 failed, 3 skipped, 1 error in 0.03s =====================",
+        ],
+        # Failures, passes and error
+        [
+            "FAILED tests/test_base.py::test_fail - assert 1 == 2",
+            "FAILED tests/test_base.py::test_skipped - assert 1 == 2",
+            "FAILED tests/foobar/test_things.py::test_fail - assert 1 == 2",
+            "ERROR tests/foobar/test_things.py::test_pass - Exception",
+            "===================== 4 failed, 2 passed, 1 error in 0.04s =====================",
+        ],
+        # Failures, passes, skips and errors
+        [
+            "tests/test_base.py:9: AssertionError",
+            "=========================== short test summary info ============================",
+            "FAILED tests/test_base.py::test_fail - assert 1 == 2",
+            "ERROR tests/foobar/test_things.py::test_fail - Exception",
+            "ERROR tests/foobar/test_things.py::test_pass - Exception",
+            "=============== 1 failed, 2 passed, 3 skipped, 1 errors in 0.05s ================",
+        ],
         # - Error collecting test suite
         [
             "E   NameError: name 'pytest' is not defined",
