@@ -43,28 +43,26 @@ class LogFilter:
     def __init__(
         self,
         log_popen,
-        clean_filter=None,
-        clean_output=True,
-        success_filter=None,
-        failure_filter=None,
+        clean_filter,
+        clean_output,
+        success_filter,
+        failure_filter,
     ):
         """Create a filter for a log stream.
 
         :param log_popen: The Popen object for the stream producing the logs.
-        :param clean_filter: (Optional) A function that will filter a line of
-            logs, returning a "clean" line without any log system preamble.
+        :param clean_filter: A function that will filter a line of logs,
+            returning a "clean" line without any log system preamble.
         :param clean_output: Should the output displayed to the user be the
             "clean" output? (Default: True).
-        :param success_filter: (Optional) A function that will operate on a
-            string containing the last 5 lines of "clean" (i.e., preamble
-            filtered) logs, returning True if a "success" condition has been
-            detected. If the success filter returns True, the log process will
-            be terminated.
-        :param success_filter: (Optional) A function that will operate on a
-            string containing the last 5 lines of "clean" (i.e., preamble
-            filtered) logs, returning True if a "failure" condition has been
-            detected. If the failure filter returns True, the log process will
-            be terminated.
+        :param success_filter: A function that will operate on a string
+            containing the last 10 lines of "clean" (i.e., preamble filtered)
+            logs, returning True if a "success" condition has been detected. If
+            the success filter returns True, the log process will be terminated.
+        :param success_filter: A function that will operate on a string
+            containing the last 10 lines of "clean" (i.e., preamble filtered)
+            logs, returning True if a "failure" condition has been detected. If
+            the failure filter returns True, the log process will be terminated.
         """
         self.log_popen = log_popen
         self.success = None
@@ -134,8 +132,8 @@ class LogFilter:
         def filter_func(recent):
             return regex.search(recent) is not None
 
-        # Annotate the function with the pattern to make it easier to test
-        filter_func.__pattern__ = pattern
+        # Annotate the function with the regex to make it easier to test
+        filter_func.__regex__ = regex
         return filter_func
 
 
@@ -162,6 +160,29 @@ class RunCommand(BaseCommand):
             help="Run the app in test mode",
         )
 
+    def _prepare_log_stream(self, app: BaseConfig, test_mode: bool):
+        """Perform the default setup of a log stream.
+
+        This won't be used by every backend; but it's a sufficiently common
+        default that it's been factored out.
+
+        :param app: The app to be launched
+        :param test_mode: Are we launching in test mode?
+        :returns: A dictionary of additional arguments to pass to the Popen
+        """
+        if test_mode:
+            # In test mode, set a BRIEFCASE_MAIN_MODULE environment variable
+            # to override the module at startup
+            self.logger.info("Starting test_suite...", prefix=app.app_name)
+            return {
+                "env": {
+                    "BRIEFCASE_MAIN_MODULE": app.main_module(test_mode),
+                }
+            }
+        else:
+            self.logger.info("Starting app...", prefix=app.app_name)
+            return {}
+
     def _stream_app_logs(
         self,
         app: BaseConfig,
@@ -172,6 +193,24 @@ class RunCommand(BaseCommand):
         stop_func=lambda: False,
         log_stream=False,
     ):
+        """Stream the application's logs, monitoring for exit conditions.
+
+        Catches and cleans up after any Ctrl-C interrupts.
+
+        :param app: The app to be launched
+        :param popen: The Popen object for the stream we are monitoring
+        :param test_mode: Are we launching in test mode?
+        :param clean_filter: The log cleaning filter to use; see ``LogFilter``
+            for details.
+        :param clean_output: Should the cleaned output be presented to the user?
+        :param stop_func: (Optional) A function that will be invoked to determine
+            if the log stream should be terminated.
+        :param log_stream: Is this a log stream, rather than a literal app stream?
+            On some platforms (especially mobile), we monitor a log stream,
+            rather that the output of the app itself. If this case, the cleanup
+            process is different, as the reported exit status of the popen object
+            is of the log, not the app itself.
+        """
         try:
             if test_mode:
                 success_filter = LogFilter.test_filter(

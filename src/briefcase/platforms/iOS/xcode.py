@@ -271,11 +271,9 @@ class iOSXcodeBuildCommand(iOSXcodePassiveMixin, BuildCommand):
             with self.info_plist_path(app).open("rb") as f:
                 info_plist = plistlib.load(f)
 
-            # If we're in test mode, change the name of the app module.
-            if test_mode:
-                info_plist["MainModule"] = f"tests.{app.module_name}"
-            else:
-                info_plist["MainModule"] = app.module_name
+            # Set the name of the app's main module; this will depend
+            # on whether we're in test mode.
+            info_plist["MainModule"] = app.main_module(test_mode)
 
             # Write the modified plist
             with self.info_plist_path(app).open("wb") as f:

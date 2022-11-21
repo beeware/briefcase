@@ -259,18 +259,8 @@ class LinuxAppImageRunCommand(LinuxAppImagePassiveMixin, RunCommand):
         :param test_mode: Boolean; Is the app running in test mode?
         """
         try:
-            if test_mode:
-                # In test mode, set a BRIEFCASE_MAIN_MODULE environment variable
-                # to override the module at startup
-                self.logger.info("Starting test_suite...", prefix=app.app_name)
-                kwargs = {
-                    "env": {
-                        "BRIEFCASE_MAIN_MODULE": f"tests.{app.module_name}",
-                    }
-                }
-            else:
-                self.logger.info("Starting app...", prefix=app.app_name)
-                kwargs = {}
+            # Set up the log stream
+            kwargs = self._prepare_log_stream(app=app, test_mode=test_mode)
 
             # Start the app in a way that lets us stream the logs
             log_popen = self.tools.subprocess.Popen(

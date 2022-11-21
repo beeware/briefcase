@@ -105,10 +105,7 @@ class DevCommand(BaseCommand):
         :param test_mode: Run the test suite, rather than the app?
         """
         try:
-            if test_mode:
-                exec_module = f"tests.{app.module_name}"
-            else:
-                exec_module = app.module_name
+            main_module = app.main_module(test_mode)
 
             # Invoke the app.
             self.tools.subprocess.run(
@@ -121,7 +118,7 @@ class DevCommand(BaseCommand):
                     (
                         "import runpy, sys;"
                         "sys.path.pop(0);"
-                        f'runpy.run_module("{exec_module}", run_name="__main__", alter_sys=True)'
+                        f'runpy.run_module("{main_module}", run_name="__main__", alter_sys=True)'
                     ),
                 ],
                 env=env,
@@ -133,7 +130,7 @@ class DevCommand(BaseCommand):
                 raise BriefcaseTestSuiteFailure()
             else:
                 raise BriefcaseCommandError(
-                    f"Unable to start application {exec_module!r}"
+                    f"Unable to start application {main_module!r}"
                 ) from e
 
     def get_environment(self, app, test_mode: bool):

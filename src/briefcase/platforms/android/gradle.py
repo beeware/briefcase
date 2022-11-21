@@ -169,11 +169,6 @@ class GradleBuildCommand(GradleMixin, BuildCommand):
     description = "Build an Android debug APK."
 
     def metadata_resource_path(self, app: BaseConfig):
-        """Obtain the path to the application's plist file.
-
-        :param app: The config object for the app
-        :return: The full path of the application's plist file.
-        """
         # If the index file hasn't been loaded for this app, load it.
         try:
             path_index = self._path_index[app]
@@ -184,15 +179,12 @@ class GradleBuildCommand(GradleMixin, BuildCommand):
     def update_app_metadata(self, app: BaseConfig, test_mode: bool):
         with self.input.wait_bar("Setting main module..."):
             with self.metadata_resource_path(app).open("w", encoding="utf-8") as f:
-                if test_mode:
-                    main_module = f"tests.{app.module_name}"
-                else:
-                    main_module = app.module_name
-
+                # Set the name of the app's main module; this will depend
+                # on whether we're in test mode.
                 f.write(
                     f"""\
 <resources>
-    <string name="main_module">{main_module}</string>
+    <string name="main_module">{app.main_module(test_mode)}</string>
 </resources>
 """
                 )

@@ -193,14 +193,14 @@ class LinuxFlatpakRunCommand(LinuxFlatpakMixin, RunCommand):
         :param test_mode: Boolean; Is the app running in test mode?
         """
         try:
+            # Set up the log stream
+            kwargs = self._prepare_log_stream(app=app, test_mode=test_mode)
+
+            # Starting a flatpak has slightly different startup arguments; however,
+            # the rest of the app startup process is the same. Transform the output
+            # of the "default" behavior to be in flatpak format.
             if test_mode:
-                self.logger.info("Starting test suite...", prefix=app.app_name)
-                kwargs = {
-                    "main_module": f"tests.{app.module_name}",
-                }
-            else:
-                self.logger.info("Starting app...", prefix=app.app_name)
-                kwargs = {}
+                kwargs = {"main_module": kwargs["env"]["BRIEFCASE_MAIN_MODULE"]}
 
             # Start the app in a way that lets us stream the logs
             log_popen = self.tools.flatpak.run(

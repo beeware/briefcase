@@ -9,7 +9,13 @@ from briefcase.commands.run import LogFilter
 def test_default_filter():
     "A default logfilter echoes content verbatim"
     popen = mock.MagicMock()
-    log_filter = LogFilter(popen)
+    log_filter = LogFilter(
+        popen,
+        clean_filter=None,
+        clean_output=True,
+        success_filter=None,
+        failure_filter=None,
+    )
 
     for i in range(0, 10):
         line = f"this is line {i}"
@@ -30,7 +36,13 @@ def test_clean_filter():
         return line[5:], True
 
     popen = mock.MagicMock()
-    log_filter = LogFilter(popen, clean_filter=clean_filter)
+    log_filter = LogFilter(
+        popen,
+        clean_filter=clean_filter,
+        clean_output=True,
+        success_filter=None,
+        failure_filter=None,
+    )
 
     for i in range(0, 10):
         line = f"this is line {i}"
@@ -51,7 +63,13 @@ def test_clean_filter_unclean_output():
         return line[5:], True
 
     popen = mock.MagicMock()
-    log_filter = LogFilter(popen, clean_filter=clean_filter, clean_output=False)
+    log_filter = LogFilter(
+        popen,
+        clean_filter=clean_filter,
+        clean_output=False,
+        success_filter=None,
+        failure_filter=None,
+    )
 
     for i in range(0, 10):
         line = f"this is line {i}"

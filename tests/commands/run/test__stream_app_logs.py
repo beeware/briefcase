@@ -80,8 +80,12 @@ def test_test_mode_success(run_command, first_app):
     ]
     assert not filter_func.clean_output
     assert filter_func.clean_filter == clean_filter
-    assert filter_func.success_filter.__pattern__ == LogFilter.DEFAULT_SUCCESS_REGEX
-    assert filter_func.failure_filter.__pattern__ == LogFilter.DEFAULT_FAILURE_REGEX
+    assert (
+        filter_func.success_filter.__regex__.pattern == LogFilter.DEFAULT_SUCCESS_REGEX
+    )
+    assert (
+        filter_func.failure_filter.__regex__.pattern == LogFilter.DEFAULT_FAILURE_REGEX
+    )
 
 
 def test_test_mode_failure(run_command, first_app):
@@ -123,8 +127,12 @@ def test_test_mode_failure(run_command, first_app):
     ]
     assert not filter_func.clean_output
     assert filter_func.clean_filter == clean_filter
-    assert filter_func.success_filter.__pattern__ == LogFilter.DEFAULT_SUCCESS_REGEX
-    assert filter_func.failure_filter.__pattern__ == LogFilter.DEFAULT_FAILURE_REGEX
+    assert (
+        filter_func.success_filter.__regex__.pattern == LogFilter.DEFAULT_SUCCESS_REGEX
+    )
+    assert (
+        filter_func.failure_filter.__regex__.pattern == LogFilter.DEFAULT_FAILURE_REGEX
+    )
 
 
 def test_test_mode_no_result(run_command, first_app):
@@ -170,8 +178,12 @@ def test_test_mode_no_result(run_command, first_app):
     ]
     assert not filter_func.clean_output
     assert filter_func.clean_filter == clean_filter
-    assert filter_func.success_filter.__pattern__ == LogFilter.DEFAULT_SUCCESS_REGEX
-    assert filter_func.failure_filter.__pattern__ == LogFilter.DEFAULT_FAILURE_REGEX
+    assert (
+        filter_func.success_filter.__regex__.pattern == LogFilter.DEFAULT_SUCCESS_REGEX
+    )
+    assert (
+        filter_func.failure_filter.__regex__.pattern == LogFilter.DEFAULT_FAILURE_REGEX
+    )
 
 
 def test_test_mode_custom_filters(run_command, first_app):
@@ -215,8 +227,14 @@ def test_test_mode_custom_filters(run_command, first_app):
     ]
     assert not filter_func.clean_output
     assert filter_func.clean_filter == clean_filter
-    assert filter_func.success_filter.__pattern__ == "THIS IS WHAT SUCCESS LOOKS LIKE"
-    assert filter_func.failure_filter.__pattern__ == "THIS IS WHAT FAILURE LOOKS LIKE"
+    assert (
+        filter_func.success_filter.__regex__.pattern
+        == "THIS IS WHAT SUCCESS LOOKS LIKE"
+    )
+    assert (
+        filter_func.failure_filter.__regex__.pattern
+        == "THIS IS WHAT FAILURE LOOKS LIKE"
+    )
 
 
 def test_run_app_failure(run_command, first_app):

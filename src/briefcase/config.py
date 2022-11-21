@@ -389,7 +389,7 @@ class AppConfig(BaseConfig):
         similar to `module_name`."""
         return self.bundle.replace("-", "_")
 
-    def PYTHONPATH(self, test_mode=False):
+    def PYTHONPATH(self, test_mode):
         """The PYTHONPATH modifications needed to run this app.
 
         :param test_mode: Should test_mode sources be included?
@@ -404,6 +404,19 @@ class AppConfig(BaseConfig):
             if path not in paths:
                 paths.append(path)
         return paths
+
+    def main_module(self, test_mode: bool):
+        """The path to the main module for the app.
+
+        In normal operation, this is ``app.module_name``; however,
+        in test mode, it is prefixed with ``tests.``.
+
+        :param test_mode: Are we running in test mode?
+        """
+        if test_mode:
+            return f"tests.{self.module_name}"
+        else:
+            return self.module_name
 
 
 def merge_config(config, data):

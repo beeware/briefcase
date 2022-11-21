@@ -533,19 +533,11 @@ class CreateCommand(BaseCommand):
 
         try:
             requirements_path = self.app_requirements_path(app)
-            self._write_requirements_file(
-                app,
-                requires=requires,
-                requirements_path=requirements_path,
-            )
+            self._write_requirements_file(app, requires, requirements_path)
         except KeyError:
             try:
                 app_packages_path = self.app_packages_path(app)
-                self._install_app_dependencies(
-                    app,
-                    requires=requires,
-                    app_packages_path=app_packages_path,
-                )
+                self._install_app_dependencies(app, requires, app_packages_path)
             except KeyError as e:
                 raise BriefcaseCommandError(
                     "Application path index file does not define "

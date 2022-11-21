@@ -565,7 +565,10 @@ class Subprocess(Tool):
         :param stop_func: a Callable that returns True when output streaming
             should stop and the popen_process should be terminated.
         :param filter_func: a callable that will be invoked on every line
-            of output that is streamed.
+            of output that is streamed. The function accepts the "raw" line
+            of input (stripped of any trailing newline); it returns the
+            filtered output that should be displayed to the user, or ``None``
+            if the line of input should be ignored by the output stream.
         """
         output_streamer = threading.Thread(
             name=f"{label} output streamer",
@@ -600,7 +603,7 @@ class Subprocess(Tool):
 
         :param popen_process: popen process to stream stdout
         :param filter_func: a callable that will be invoked on every line
-            of output that is streamed.
+            of output that is streamed; see ``stream_output`` for details.
         """
         # ValueError is raised if stdout is unexpectedly closed.
         # This can happen if the user starts spamming CTRL+C, for instance.

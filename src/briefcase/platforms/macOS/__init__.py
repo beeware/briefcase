@@ -116,19 +116,10 @@ class macOSRunMixin:
 
         app_pid = None
         try:
-            if test_mode:
-                self.logger.info("Starting test suite...", prefix=app.app_name)
-                # In test mode, set a BRIEFCASE_MAIN_MODULE environment variable
-                # to override the module at startup
-                kwargs = {
-                    "env": {
-                        "BRIEFCASE_MAIN_MODULE": f"tests.{app.module_name}",
-                    }
-                }
-            else:
-                self.logger.info("Starting app...", prefix=app.app_name)
-                kwargs = {}
+            # Set up the log stream
+            kwargs = self._prepare_log_stream(app=app, test_mode=test_mode)
 
+            # Start the app in a way that lets us stream the logs
             self.tools.subprocess.run(
                 [
                     "open",
