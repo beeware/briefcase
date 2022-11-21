@@ -527,7 +527,7 @@ class CreateCommand(BaseCommand):
         :param app: The config object for the app
         :param test_mode: Should the test dependencies be installed?
         """
-        requires = app.requires if app.requires else []
+        requires = app.requires.copy() if app.requires else []
         if test_mode and app.test_requires:
             requires.extend(app.test_requires)
 
@@ -556,7 +556,7 @@ class CreateCommand(BaseCommand):
             self.tools.shutil.rmtree(app_path)
         self.tools.os.mkdir(app_path)
 
-        sources = app.sources if app.sources else []
+        sources = app.sources.copy() if app.sources else []
         if test_mode and app.test_sources:
             sources.extend(app.test_sources)
 

@@ -70,6 +70,10 @@ def test_bad_path_index(create_command, myapp, bundle_path, app_requirements_pat
     # requirements.txt doesn't exist either
     assert not app_requirements_path.exists()
 
+    # Original app definitions haven't changed
+    assert myapp.requires == ["first", "second", "third"]
+    assert myapp.test_requires is None
+
 
 def test_app_packages_no_requires(
     create_command,
@@ -140,6 +144,10 @@ def test_app_packages_valid_requires(
         },
     )
 
+    # Original app definitions haven't changed
+    assert myapp.requires == ["first", "second==1.2.3", "third>=3.2.1"]
+    assert myapp.test_requires is None
+
 
 def test_app_packages_valid_requires_no_support_package(
     create_command,
@@ -173,6 +181,10 @@ def test_app_packages_valid_requires_no_support_package(
         ],
         check=True,
     )
+
+    # Original app definitions haven't changed
+    assert myapp.requires == ["first", "second==1.2.3", "third>=3.2.1"]
+    assert myapp.test_requires is None
 
 
 def test_app_packages_invalid_requires(
@@ -220,6 +232,10 @@ def test_app_packages_invalid_requires(
             )
         },
     )
+
+    # Original app definitions haven't changed
+    assert myapp.requires == ["does-not-exist"]
+    assert myapp.test_requires is None
 
 
 def test_app_packages_offline(
@@ -269,6 +285,10 @@ def test_app_packages_offline(
             )
         },
     )
+
+    # Original app definitions haven't changed
+    assert myapp.requires == ["first", "second", "third"]
+    assert myapp.test_requires is None
 
 
 def test_app_packages_install_dependencies(
@@ -326,6 +346,10 @@ def test_app_packages_install_dependencies(
     assert (app_packages_path / "second" / "__main__.py").exists()
     assert (app_packages_path / "third").exists()
     assert (app_packages_path / "third" / "__main__.py").exists()
+
+    # Original app definitions haven't changed
+    assert myapp.requires == ["first", "second", "third"]
+    assert myapp.test_requires is None
 
 
 def test_app_packages_replace_existing_dependencies(
@@ -391,6 +415,10 @@ def test_app_packages_replace_existing_dependencies(
     assert not (app_packages_path / "old").exists()
     assert not (app_packages_path / "ancient").exists()
 
+    # Original app definitions haven't changed
+    assert myapp.requires == ["first", "second", "third"]
+    assert myapp.test_requires is None
+
 
 def test_app_requirements_no_requires(
     create_command,
@@ -408,6 +436,10 @@ def test_app_requirements_no_requires(
     assert app_requirements_path.exists()
     with app_requirements_path.open() as f:
         assert f.read() == ""
+
+    # Original app definitions haven't changed
+    assert myapp.requires is None
+    assert myapp.test_requires is None
 
 
 def test_app_requirements_empty_requires(
@@ -428,6 +460,10 @@ def test_app_requirements_empty_requires(
     with app_requirements_path.open() as f:
         assert f.read() == ""
 
+    # Original app definitions haven't changed
+    assert myapp.requires == []
+    assert myapp.test_requires is None
+
 
 def test_app_requirements_requires(
     create_command,
@@ -446,6 +482,10 @@ def test_app_requirements_requires(
     assert app_requirements_path.exists()
     with app_requirements_path.open() as f:
         assert f.read() == "first\nsecond==1.2.3\nthird>=3.2.1\n"
+
+    # Original app definitions haven't changed
+    assert myapp.requires == ["first", "second==1.2.3", "third>=3.2.1"]
+    assert myapp.test_requires is None
 
 
 def _test_app_requirements_paths(
@@ -476,6 +516,10 @@ def _test_app_requirements_paths(
             )
             + "\n"
         )
+
+    # Original app definitions haven't changed
+    assert myapp.requires == ["first", requirement, "third"]
+    assert myapp.test_requires is None
 
 
 @pytest.mark.parametrize(
@@ -626,6 +670,10 @@ def test_app_packages_test_requires(
         },
     )
 
+    # Original app definitions haven't changed
+    assert myapp.requires == ["first", "second==1.2.3", "third>=3.2.1"]
+    assert myapp.test_requires == ["pytest", "pytest-tldr"]
+
 
 def test_app_packages_test_requires_test_mode(
     create_command,
@@ -669,6 +717,10 @@ def test_app_packages_test_requires_test_mode(
         },
     )
 
+    # Original app definitions haven't changed
+    assert myapp.requires == ["first", "second==1.2.3", "third>=3.2.1"]
+    assert myapp.test_requires == ["pytest", "pytest-tldr"]
+
 
 def test_app_packages_only_test_requires_test_mode(
     create_command,
@@ -708,3 +760,7 @@ def test_app_packages_only_test_requires_test_mode(
             )
         },
     )
+
+    # Original app definitions haven't changed
+    assert myapp.requires is None
+    assert myapp.test_requires == ["pytest", "pytest-tldr"]

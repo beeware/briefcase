@@ -156,6 +156,10 @@ def test_source_dir(
     # Metadata has been created
     assert_dist_info(app_path)
 
+    # Original app definitions haven't changed
+    assert myapp.sources == ["src/first", "src/second"]
+    assert myapp.test_sources is None
+
 
 def test_source_file(
     create_command,
@@ -189,6 +193,10 @@ def test_source_file(
 
     # Metadata has been created
     assert_dist_info(app_path)
+
+    # Original app definitions haven't changed
+    assert myapp.sources == ["src/demo.py", "other.py"]
+    assert myapp.test_sources is None
 
 
 def test_no_existing_app_folder(
@@ -251,6 +259,10 @@ def test_no_existing_app_folder(
     # Metadata has been updated.
     assert not (app_path / "my_app-1.2.2.dist-info").exists()
     assert_dist_info(app_path)
+
+    # Original app definitions haven't changed
+    assert myapp.sources == ["src/first/demo.py", "src/second"]
+    assert myapp.test_sources is None
 
 
 def test_replace_sources(
@@ -350,6 +362,10 @@ def test_replace_sources(
     # Metadata has been updated.
     assert not (app_path / "my_app-1.2.2.dist-info").exists()
     assert_dist_info(app_path)
+
+    # Original app definitions haven't changed
+    assert myapp.sources == ["src/first/demo.py", "src/second"]
+    assert myapp.test_sources is None
 
 
 def test_non_latin_metadata(
@@ -476,6 +492,10 @@ def test_test_sources(
     # Metadata has been created
     assert_dist_info(app_path)
 
+    # Original app definitions haven't changed
+    assert myapp.sources == ["src/first", "src/second"]
+    assert myapp.test_sources == ["tests", "othertests"]
+
 
 def test_test_sources_test_mode(
     create_command,
@@ -548,6 +568,10 @@ def test_test_sources_test_mode(
     # Metadata has been created
     assert_dist_info(app_path)
 
+    # Original app definitions haven't changed
+    assert myapp.sources == ["src/first", "src/second"]
+    assert myapp.test_sources == ["tests", "othertests"]
+
 
 def test_only_test_sources_test_mode(
     create_command,
@@ -611,3 +635,7 @@ def test_only_test_sources_test_mode(
 
     # Metadata has been created
     assert_dist_info(app_path)
+
+    # Original app definitions haven't changed
+    assert myapp.sources is None
+    assert myapp.test_sources == ["tests", "othertests"]
