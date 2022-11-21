@@ -270,14 +270,68 @@ def test_test_mode_existing_app(run_command, first_app):
     assert run_command.actions == [
         # Tools are verified
         ("verify",),
-        # App is always updated, with full dependencies
+        # App is built in test mode
+        ("build", "first", {"test_mode": True}),
+        # Run the first app
+        (
+            "run",
+            "first",
+            {"build_state": "first", "test_mode": True},
+        ),
+    ]
+
+
+def test_test_mode_existing_app_without_update(run_command, first_app):
+    """The auto update implied by --test can be overridden."""
+    # Add a single app
+    run_command.apps = {
+        "first": first_app,
+    }
+
+    # Configure the test option
+    options = run_command.parse_options(["--test", "--no-auto-update"])
+
+    # Run the run command
+    run_command(**options)
+
+    # The right sequence of things will be done
+    assert run_command.actions == [
+        # Tools are verified
+        ("verify",),
+        # Run the first app
+        (
+            "run",
+            "first",
+            {"test_mode": True},
+        ),
+    ]
+
+
+def test_test_mode_update_existing_app(run_command, first_app):
+    """An existing app can be updated and started in test mode."""
+    # Add a single app
+    run_command.apps = {
+        "first": first_app,
+    }
+
+    # Configure the test option
+    options = run_command.parse_options(["-u", "--test"])
+
+    # Run the run command
+    run_command(**options)
+
+    # The right sequence of things will be done
+    assert run_command.actions == [
+        # Tools are verified
+        ("verify",),
+        # App is updated, then built in test mode
         ("update", "first", {"test_mode": True}),
         ("build", "first", {"update_state": "first", "test_mode": True}),
         # Run the first app
         (
             "run",
             "first",
-            {"build_state": "first", "update_state": "first", "test_mode": True},
+            {"update_state": "first", "build_state": "first", "test_mode": True},
         ),
     ]
 

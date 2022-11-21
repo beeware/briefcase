@@ -159,6 +159,12 @@ class RunCommand(BaseCommand):
             action="store_true",
             help="Run the app in test mode",
         )
+        parser.add_argument(
+            "--no-auto-update",
+            dest="auto_update",
+            action="store_false",
+            help="Prevent any automated update or build before running.",
+        )
 
     def _prepare_log_stream(self, app: BaseConfig, test_mode: bool):
         """Perform the default setup of a log stream.
@@ -275,6 +281,7 @@ class RunCommand(BaseCommand):
         appname: Optional[str] = None,
         update: Optional[bool] = False,
         test_mode: Optional[bool] = False,
+        auto_update: Optional[bool] = True,
         **options,
     ):
         # Confirm all required tools are available
@@ -305,14 +312,14 @@ class RunCommand(BaseCommand):
                 test_mode=test_mode,
                 **full_options(state, options),
             )
-        elif update or test_mode:
+        elif update:
             state = self.update_command(app, test_mode=test_mode, **options)
             state = self.build_command(
                 app,
                 test_mode=test_mode,
                 **full_options(state, options),
             )
-        elif not binary_file.exists():
+        elif not binary_file.exists() or (test_mode and auto_update):
             state = self.build_command(app, test_mode=test_mode, **options)
         else:
             state = None

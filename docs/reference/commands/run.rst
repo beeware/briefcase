@@ -53,4 +53,12 @@ Update the application's source code before running. Equivalent to running::
 
 Run the test suite in the bundled app environment. Running ``run --test``
 forces an update and rebuild, to ensure that the packaged application
-contains all the test dependencies and code.
+contains all the test dependencies and code. To prevent this update and
+build, use ``-no-auto-update``.
+
+``--no-auto-update``
+--------------------
+
+Prevent the automated update that is performed when specifying by the
+``--test`` option. This option should only be required if you need to
+build your app on one machine, and run it on another.

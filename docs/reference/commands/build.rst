@@ -44,3 +44,10 @@ Update the application's source code before running. Equivalent to running::
 
     $ briefcase update
     $ briefcase build
+
+``--test``
+----------
+
+Build the app in test mode in the bundled app environment. Running ``build
+--test`` forces an update to ensure that the packaged application contains all
+the test dependencies and code.

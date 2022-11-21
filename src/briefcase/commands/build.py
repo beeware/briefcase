@@ -10,7 +10,16 @@ class BuildCommand(BaseCommand):
 
     def add_options(self, parser):
         parser.add_argument(
-            "-u", "--update", action="store_true", help="Update the app before building"
+            "-u",
+            "--update",
+            action="store_true",
+            help="Update the app before building",
+        )
+        parser.add_argument(
+            "--test",
+            dest="test_mode",
+            action="store_true",
+            help="Build the app in test mode",
         )
 
     def build_app(self, app: BaseConfig, **options):
@@ -38,7 +47,7 @@ class BuildCommand(BaseCommand):
         target_file = self.bundle_path(app)
         if not target_file.exists():
             state = self.create_command(app, test_mode=test_mode, **options)
-        elif update:
+        elif update or test_mode:
             state = self.update_command(app, test_mode=test_mode, **options)
         else:
             state = None

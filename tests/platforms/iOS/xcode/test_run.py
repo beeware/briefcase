@@ -35,6 +35,7 @@ def test_device_option(run_command):
         "update": False,
         "test_mode": False,
         "appname": None,
+        "auto_update": True,
     }
 
 
