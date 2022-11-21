@@ -464,8 +464,8 @@ def test_emulator_ctrl_c(mock_tools, android_sdk, capsys):
     )
 
 
-def test_start_emulator_test_mode(mock_tools, android_sdk):
-    """The emulator can be started in test mode."""
+def test_start_emulator_extra_args(mock_tools, android_sdk):
+    """The emulator can be started with extra arguments."""
     devices = {
         "emulator-5554": {
             "name": "generic_x86",
@@ -494,8 +494,10 @@ def test_start_emulator_test_mode(mock_tools, android_sdk):
     emu_popen.poll.return_value = None
     mock_tools.subprocess.Popen.return_value = emu_popen
 
-    # Start the emulator in test mode
-    device, name = android_sdk.start_emulator("idleEmulator", test_mode=True)
+    # Start the emulator with extra arguments
+    device, name = android_sdk.start_emulator(
+        "idleEmulator", ["-no-window", "-no-audio"]
+    )
 
     # The device details are as expected
     assert device == "emulator-5554"
@@ -509,10 +511,7 @@ def test_start_emulator_test_mode(mock_tools, android_sdk):
             "-dns-server",
             "8.8.8.8",
             "-no-window",
-            "-no-snapshot",
             "-no-audio",
-            "-no-boot-anim",
-            "-wipe-data",
         ],
         env=android_sdk.env,
         stdout=subprocess.PIPE,

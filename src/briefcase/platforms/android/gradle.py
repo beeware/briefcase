@@ -233,14 +233,38 @@ class GradleRunCommand(GradleMixin, RunCommand):
             " or an AVD name ('@emulatorName') ",
             required=False,
         )
+        parser.add_argument(
+            "-X",
+            action="append",
+            dest="extra_emulator_args",
+            help="Additional arguments to use when starting the emulator",
+            required=False,
+        )
+        parser.add_argument(
+            "--shutdown-on-exit",
+            dest="shutdown_on_exit",
+            action="store_true",
+            help="Shutdown the emulator on exit.",
+            required=False,
+        )
 
-    def run_app(self, app: BaseConfig, test_mode: bool, device_or_avd=None, **kwargs):
+    def run_app(
+        self,
+        app: BaseConfig,
+        test_mode: bool,
+        device_or_avd=None,
+        extra_emulator_args=None,
+        shutdown_on_exit=False,
+        **kwargs,
+    ):
         """Start the application.
 
         :param app: The config object for the app
+        :param test_mode: Boolean; Is the app running in test mode?
         :param device_or_avd: The device to target. If ``None``, the user will
             be asked to re-run the command selecting a specific device.
-        :param test_mode: Boolean; Is the app running in test mode?
+        :param extra_emulator_args: Any additional arguments to pass to the emulator.
+        :param shutdown_on_exit: Should the emulator be shut down on exit?
         """
         device, name, avd = self.tools.android_sdk.select_target_device(device_or_avd)
 
@@ -257,67 +281,71 @@ class GradleRunCommand(GradleMixin, RunCommand):
                 # have an image available to create an AVD.
                 self.tools.android_sdk.verify_avd(avd)
 
+            if extra_emulator_args:
+                extra = f" (with {' '.join(extra_emulator_args)})"
+            else:
+                extra = ""
             self.logger.info(
-                f"Starting emulator {avd}{' in test mode' if test_mode else ''}...",
+                f"Starting emulator {avd}{extra}...",
                 prefix=app.app_name,
             )
             device, name = self.tools.android_sdk.start_emulator(
-                avd, test_mode=test_mode
+                avd, extra_emulator_args
             )
 
-        if test_mode:
-            label = "test suite"
-        else:
-            label = "app"
+        try:
+            if test_mode:
+                label = "test suite"
+            else:
+                label = "app"
 
-        self.logger.info(
-            f"Starting {label} on {name} (device ID {device})", prefix=app.app_name
-        )
-
-        # Create an ADB wrapper for the selected device
-        adb = self.tools.android_sdk.adb(device=device)
-
-        # Compute Android package name. The Android template uses
-        # `package_name` and `module_name`, so we use those here as well.
-        package = f"{app.package_name}.{app.module_name}"
-
-        # We force-stop the app to ensure the activity launches freshly.
-        self.logger.info("Installing app...", prefix=app.app_name)
-        with self.input.wait_bar("Stopping old versions of the app..."):
-            adb.force_stop_app(package)
-
-        # Install the latest APK file onto the device.
-        with self.input.wait_bar("Installing new app version..."):
-            adb.install_apk(self.binary_path(app))
-
-        # To start the app, we launch `org.beeware.android.MainActivity`.
-        with self.input.wait_bar(f"Launching {label}..."):
-            # Any log after this point must be associated with the new instance
-            start_time = datetime.datetime.now()
-            adb.start_app(package, "org.beeware.android.MainActivity")
-            pid = None
-            attempts = 0
-            delay = 0.01
-
-            # Try to get the PID for 5 seconds.
-            fail_time = start_time + datetime.timedelta(seconds=5)
-            while not pid and datetime.datetime.now() < fail_time:
-                # Try to get the PID; run in quiet mode because we may
-                # need to do this a lot in the next 5 seconds.
-                pid = adb.pidof(package, quiet=True)
-                if not pid:
-                    time.sleep(delay)
-                attempts += 1
-
-        if pid:
             self.logger.info(
-                "Following device log output (type CTRL-C to stop log)...",
-                prefix=app.app_name,
+                f"Starting {label} on {name} (device ID {device})", prefix=app.app_name
             )
-            # Start the app in a way that lets us stream the logs
-            log_popen = adb.logcat(pid=pid)
 
-            try:
+            # Create an ADB wrapper for the selected device
+            adb = self.tools.android_sdk.adb(device=device)
+
+            # Compute Android package name. The Android template uses
+            # `package_name` and `module_name`, so we use those here as well.
+            package = f"{app.package_name}.{app.module_name}"
+
+            # We force-stop the app to ensure the activity launches freshly.
+            self.logger.info("Installing app...", prefix=app.app_name)
+            with self.input.wait_bar("Stopping old versions of the app..."):
+                adb.force_stop_app(package)
+
+            # Install the latest APK file onto the device.
+            with self.input.wait_bar("Installing new app version..."):
+                adb.install_apk(self.binary_path(app))
+
+            # To start the app, we launch `org.beeware.android.MainActivity`.
+            with self.input.wait_bar(f"Launching {label}..."):
+                # Any log after this point must be associated with the new instance
+                start_time = datetime.datetime.now()
+                adb.start_app(package, "org.beeware.android.MainActivity")
+                pid = None
+                attempts = 0
+                delay = 0.01
+
+                # Try to get the PID for 5 seconds.
+                fail_time = start_time + datetime.timedelta(seconds=5)
+                while not pid and datetime.datetime.now() < fail_time:
+                    # Try to get the PID; run in quiet mode because we may
+                    # need to do this a lot in the next 5 seconds.
+                    pid = adb.pidof(package, quiet=True)
+                    if not pid:
+                        time.sleep(delay)
+                    attempts += 1
+
+            if pid:
+                self.logger.info(
+                    "Following device log output (type CTRL-C to stop log)...",
+                    prefix=app.app_name,
+                )
+                # Start the app in a way that lets us stream the logs
+                log_popen = adb.logcat(pid=pid)
+
                 # Stream the app logs.
                 self._stream_app_logs(
                     app,
@@ -329,21 +357,21 @@ class GradleRunCommand(GradleMixin, RunCommand):
                     stop_func=lambda: not adb.pid_exists(pid=pid, quiet=True),
                     log_stream=True,
                 )
-            finally:
-                if test_mode:
-                    with self.tools.input.wait_bar("Stopping emulator..."):
-                        adb.kill()
-        else:
-            self.logger.error("Unable to find PID for app", prefix=app.app_name)
-            self.logger.error("Logs for launch attempt follow...")
+            else:
+                self.logger.error("Unable to find PID for app", prefix=app.app_name)
+                self.logger.error("Logs for launch attempt follow...")
 
-            # Show the log from the start time of the app
-            self.logger.error("=" * 75)
+                # Show the log from the start time of the app
+                self.logger.error("=" * 75)
 
-            # Pad by a few seconds because the android emulator's clock and the
-            # local system clock may not be perfectly aligned.
-            adb.logcat_tail(since=start_time - datetime.timedelta(seconds=10))
-            raise BriefcaseCommandError(f"Problem starting app {app.app_name!r}")
+                # Pad by a few seconds because the android emulator's clock and the
+                # local system clock may not be perfectly aligned.
+                adb.logcat_tail(since=start_time - datetime.timedelta(seconds=10))
+                raise BriefcaseCommandError(f"Problem starting app {app.app_name!r}")
+        finally:
+            if shutdown_on_exit:
+                with self.tools.input.wait_bar("Stopping emulator..."):
+                    adb.kill()
 
 
 class GradlePackageCommand(GradleMixin, PackageCommand):

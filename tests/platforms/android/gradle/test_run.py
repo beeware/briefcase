@@ -85,6 +85,36 @@ def test_device_option(run_command):
         "appname": None,
         "update": False,
         "test_mode": False,
+        "extra_emulator_args": None,
+        "shutdown_on_exit": False,
+    }
+
+
+def test_extra_emulator_args_option(run_command):
+    """The -d option can be parsed."""
+    options = run_command.parse_options(["-X=-no-window", "-X=-no-audio"])
+
+    assert options == {
+        "device_or_avd": None,
+        "appname": None,
+        "update": False,
+        "test_mode": False,
+        "extra_emulator_args": ["-no-window", "-no-audio"],
+        "shutdown_on_exit": False,
+    }
+
+
+def test_shutdown_on_exit_option(run_command):
+    """The -d option can be parsed."""
+    options = run_command.parse_options(["--shutdown-on-exit"])
+
+    assert options == {
+        "device_or_avd": None,
+        "appname": None,
+        "update": False,
+        "test_mode": False,
+        "extra_emulator_args": None,
+        "shutdown_on_exit": True,
     }
 
 
@@ -270,8 +300,7 @@ def test_run_created_emulator(run_command, first_app_config):
 
     # The emulator was started
     run_command.tools.android_sdk.start_emulator.assert_called_once_with(
-        "newDevice",
-        test_mode=False,
+        "newDevice", None
     )
 
     # The ADB wrapper is created
@@ -332,8 +361,7 @@ def test_run_idle_device(run_command, first_app_config):
 
     # The emulator was started
     run_command.tools.android_sdk.start_emulator.assert_called_once_with(
-        "idleDevice",
-        test_mode=False,
+        "idleDevice", None
     )
 
     # The ADB wrapper is created
@@ -419,6 +447,7 @@ def test_run_test_mode(run_command, first_app_config):
         first_app_config,
         device_or_avd="exampleDevice",
         test_mode=True,
+        shutdown_on_exit=True,
     )
 
     # select_target_device was invoked with a specific device
@@ -481,7 +510,12 @@ def test_run_test_mode_created_emulator(run_command, first_app_config):
     run_command.tools.mock_adb.logcat.return_value = log_popen
 
     # Invoke run_app
-    run_command.run_app(first_app_config, test_mode=True)
+    run_command.run_app(
+        first_app_config,
+        test_mode=True,
+        extra_emulator_args=["-no-window", "-no-audio"],
+        shutdown_on_exit=True,
+    )
 
     # A new emulator was created
     run_command.tools.android_sdk.create_emulator.assert_called_once_with()
@@ -493,7 +527,7 @@ def test_run_test_mode_created_emulator(run_command, first_app_config):
     # The emulator was started
     run_command.tools.android_sdk.start_emulator.assert_called_once_with(
         "newDevice",
-        test_mode=True,
+        ["-no-window", "-no-audio"],
     )
 
     # The ADB wrapper is created
