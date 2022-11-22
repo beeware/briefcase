@@ -59,7 +59,7 @@ class LogFilter:
             containing the last 10 lines of "clean" (i.e., preamble filtered)
             logs, returning True if a "success" condition has been detected. If
             the success filter returns True, the log process will be terminated.
-        :param success_filter: A function that will operate on a string
+        :param failure_filter: A function that will operate on a string
             containing the last 10 lines of "clean" (i.e., preamble filtered)
             logs, returning True if a "failure" condition has been detected. If
             the failure filter returns True, the log process will be terminated.
@@ -124,16 +124,17 @@ class LogFilter:
     def test_filter(pattern):
         """A factory method for producing filter functions.
 
-        :param pattern: The multiline regex pattern that identifies success in a log.
-        :returns: A log filter function that returns True if the pattern was found
+        :param pattern: The multiline regex pattern that identifies content of
+            interest in a log (e.g., success/failure conditions)
+        :returns: A log filter function that returns True if the pattern was
+            found
         """
-        regex = re.compile(pattern, re.MULTILINE)
 
         def filter_func(recent):
-            return regex.search(recent) is not None
+            return filter_func.regex.search(recent) is not None
 
-        # Annotate the function with the regex to make it easier to test
-        filter_func.__regex__ = regex
+        # Annotate the function with the regex that will be used in the function.
+        filter_func.regex = re.compile(pattern, re.MULTILINE)
         return filter_func
 
 

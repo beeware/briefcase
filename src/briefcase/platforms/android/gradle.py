@@ -242,7 +242,6 @@ class GradleRunCommand(GradleMixin, RunCommand):
         )
         parser.add_argument(
             "--shutdown-on-exit",
-            dest="shutdown_on_exit",
             action="store_true",
             help="Shutdown the emulator on exit.",
             required=False,
