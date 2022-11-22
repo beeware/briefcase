@@ -130,14 +130,14 @@ def test_create_app_before_start(run_command, first_app_config):
     assert run_command.actions == [
         # Tools are verified
         ("verify",),
-        # App doesn't exist, so it will be created and built
-        ("create", "first", {"test_mode": False}),
-        ("build", "first", {"create_state": "first", "test_mode": False}),
+        # App doesn't exist, so it will be built
+        # (which will transitively create)
+        ("build", "first", {"test_mode": False, "update": False}),
         # Then, it will be started
         (
             "run",
             "first",
-            {"create_state": "first", "build_state": "first", "test_mode": False},
+            {"build_state": "first", "test_mode": False},
         ),
     ]
 
@@ -159,8 +159,8 @@ def test_build_app_before_start(run_command, first_app_uncompiled):
     assert run_command.actions == [
         # Tools are verified
         ("verify",),
-        # A build was requested
-        ("build", "first", {"test_mode": False}),
+        # A build was requested, with no update
+        ("build", "first", {"test_mode": False, "update": False}),
         # Then, it will be started
         ("run", "first", {"build_state": "first", "test_mode": False}),
     ]
@@ -183,14 +183,13 @@ def test_update_app(run_command, first_app):
     assert run_command.actions == [
         # Tools are verified
         ("verify",),
-        # An update was requested
-        ("update", "first", {"test_mode": False}),
-        ("build", "first", {"update_state": "first", "test_mode": False}),
+        # A build with an explicit update was requested
+        ("build", "first", {"test_mode": False, "update": True}),
         # Then, it will be started
         (
             "run",
             "first",
-            {"update_state": "first", "build_state": "first", "test_mode": False},
+            {"build_state": "first", "test_mode": False},
         ),
     ]
 
@@ -212,14 +211,14 @@ def test_update_uncompiled_app(run_command, first_app_uncompiled):
     assert run_command.actions == [
         # Tools are verified
         ("verify",),
-        # An update was requested
-        ("update", "first", {"test_mode": False}),
-        ("build", "first", {"update_state": "first", "test_mode": False}),
+        # An update was requested, so a build with an explicit update
+        # will be performed
+        ("build", "first", {"test_mode": False, "update": True}),
         # Then, it will be started
         (
             "run",
             "first",
-            {"update_state": "first", "build_state": "first", "test_mode": False},
+            {"build_state": "first", "test_mode": False},
         ),
     ]
 
@@ -241,14 +240,14 @@ def test_update_non_existent(run_command, first_app_config):
     assert run_command.actions == [
         # Tools are verified
         ("verify",),
-        # App doesn't exist, so it will be created and built
-        ("create", "first", {"test_mode": False}),
-        ("build", "first", {"create_state": "first", "test_mode": False}),
+        # App doesn't exist, so it will be built, with an
+        # update requested
+        ("build", "first", {"test_mode": False, "update": True}),
         # Then, it will be started
         (
             "run",
             "first",
-            {"create_state": "first", "build_state": "first", "test_mode": False},
+            {"build_state": "first", "test_mode": False},
         ),
     ]
 
@@ -271,7 +270,7 @@ def test_test_mode_existing_app(run_command, first_app):
         # Tools are verified
         ("verify",),
         # App is built in test mode
-        ("build", "first", {"test_mode": True}),
+        ("build", "first", {"test_mode": True, "update": False}),
         # Run the first app
         (
             "run",
@@ -298,7 +297,7 @@ def test_test_mode_existing_app_without_update(run_command, first_app):
     assert run_command.actions == [
         # Tools are verified
         ("verify",),
-        # Run the first app
+        # Run the first app; no build is triggered by test mode
         (
             "run",
             "first",
@@ -324,14 +323,13 @@ def test_test_mode_update_existing_app(run_command, first_app):
     assert run_command.actions == [
         # Tools are verified
         ("verify",),
-        # App is updated, then built in test mode
-        ("update", "first", {"test_mode": True}),
-        ("build", "first", {"update_state": "first", "test_mode": True}),
+        # App will be built; update is explicit
+        ("build", "first", {"test_mode": True, "update": True}),
         # Run the first app
         (
             "run",
             "first",
-            {"update_state": "first", "build_state": "first", "test_mode": True},
+            {"build_state": "first", "test_mode": True},
         ),
     ]
 
@@ -353,13 +351,12 @@ def test_test_mode_non_existent(run_command, first_app_config):
     assert run_command.actions == [
         # Tools are verified
         ("verify",),
-        # App doesn't exist, so it will be created and built
-        ("create", "first", {"test_mode": True}),
-        ("build", "first", {"create_state": "first", "test_mode": True}),
+        # App will be built in test mode, (which will transistively create)
+        ("build", "first", {"test_mode": True, "update": False}),
         # Then, it will be started
         (
             "run",
             "first",
-            {"create_state": "first", "build_state": "first", "test_mode": True},
+            {"build_state": "first", "test_mode": True},
         ),
     ]

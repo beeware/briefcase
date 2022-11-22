@@ -305,22 +305,18 @@ class RunCommand(BaseCommand):
             )
         template_file = self.bundle_path(app)
         binary_file = self.binary_path(app)
-        if not template_file.exists():
-            state = self.create_command(app, test_mode=test_mode, **options)
+        if (
+            (not template_file.exists())  # App hasn't been created
+            or update  # An explicit update has been requested
+            or (not binary_file.exists())  # Binary doesn't exist yet
+            or (test_mode and auto_update)  # Test mode, and update hasn't been disabled
+        ):
             state = self.build_command(
                 app,
+                update=update,
                 test_mode=test_mode,
-                **full_options(state, options),
+                **options,
             )
-        elif update:
-            state = self.update_command(app, test_mode=test_mode, **options)
-            state = self.build_command(
-                app,
-                test_mode=test_mode,
-                **full_options(state, options),
-            )
-        elif not binary_file.exists() or (test_mode and auto_update):
-            state = self.build_command(app, test_mode=test_mode, **options)
         else:
             state = None
 
