@@ -108,6 +108,20 @@ from briefcase.commands.run import LogFilter
             "-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html",
             "=================== 30 passed, 5 skipped, 2 warnings in 0.68s ==================",
         ],
+        # - Passes, xfails, xpass, and warnings
+        [
+            '    assert color.to_string() == "#0025002a0045"',
+            "",
+            "-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html",
+            "============ 30 passed, 5 xfailed, 4 xpassed, 2 warnings in 0.68s ==============",
+        ],
+        # - Pytest with the lot
+        [
+            '    assert color.to_string() == "#0025002a0045"',
+            "",
+            "-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html",
+            "= 3 passed, 5 skipped, 2 deselected, 3 xfailed, 4 xpassed, 2 warnings in 0.68s =",
+        ],
         # - Lots of Passes and skips, in a long running suite
         [
             "tests/foobar/test_other.py::test_pass2 PASSED                             [ 71%]",

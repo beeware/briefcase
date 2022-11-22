@@ -19,10 +19,10 @@ class LogFilter:
         r"\n(?P<a2> )?\n(?P<a3> \n)?OK( \(.*\))?$)"
         # PyTest
         r"|"
-        r"(^={10,} ("
-        r"((\d+ passed)?((, )?\d+ skipped)?(, \d+ warnings?)?)"
+        r"(^={1,} ("
+        r"((, )?\d+ (passed|skipped|deselected|xfailed|xpassed|warnings?))*"
         r"|(no tests ran)"
-        r") in \d+\.\d+s ={10,}$)"
+        r") in \d+\.\d+s ={1,}$)"
     )
 
     DEFAULT_FAILURE_REGEX = (
@@ -34,10 +34,10 @@ class LogFilter:
         r"\n(?P<a2> )?\n(?P<a3> \n)?FAILED( \(.*\))?$)"
         # Pytest
         r"|"
-        r"(^={10,} ("
-        r"(\d+ failed(, \d+ passed)?(, \d+ skipped)?(, \d+ errors?)?)"
-        r"|(\d+ errors?)"
-        r") in \d+.\d+s ={10,}$)"
+        r"(^={1,} ("
+        r"((\d+ failed)((, )?\d+ (passed|skipped|deselected|xfailed|xpassed|warnings?|errors?))*)"
+        r"|(((, )?\d+ (failed|passed|skipped|deselected|xfailed|xpassed|warnings?|errors?))*((, )?\d+ errors?))"
+        r") in \d+.\d+s ={1,}$)"
     )
 
     def __init__(

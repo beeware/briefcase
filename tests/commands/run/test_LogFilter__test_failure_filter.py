@@ -149,9 +149,27 @@ from briefcase.commands.run import LogFilter
             "tests/test_base.py:9: AssertionError",
             "=========================== short test summary info ============================",
             "FAILED tests/test_base.py::test_fail - assert 1 == 2",
+            "FAILED tests/foobar/test_things.py::test_fail - assert 1 == 2",
+            "ERROR tests/foobar/test_things.py::test_pass - Exception",
+            "=============== 2 failed, 2 passed, 3 skipped, 1 error in 0.05s ================",
+        ],
+        # No failures, but an error
+        [
+            "tests/test_base.py:9: AssertionError",
+            "=========================== short test summary info ============================",
+            "FAILED tests/test_base.py::test_fail - assert 1 == 2",
+            "FAILED tests/foobar/test_things.py::test_fail - assert 1 == 2",
+            "ERROR tests/foobar/test_things.py::test_pass - Exception",
+            "=================== 2 passed, 3 skipped, 1 error in 0.05s =====================",
+        ],
+        # No failures, but errors
+        [
+            "tests/test_base.py:9: AssertionError",
+            "=========================== short test summary info ============================",
+            "FAILED tests/test_base.py::test_fail - assert 1 == 2",
             "ERROR tests/foobar/test_things.py::test_fail - Exception",
             "ERROR tests/foobar/test_things.py::test_pass - Exception",
-            "=============== 1 failed, 2 passed, 3 skipped, 1 errors in 0.05s ================",
+            "=================== 2 passed, 3 skipped, 2 errors in 0.05s =====================",
         ],
         # - Error collecting test suite
         [
@@ -168,6 +186,13 @@ from briefcase.commands.run import LogFilter
             "ERROR tests/foobar/test_things.py - NameError: name 'pytest' is not defined",
             "!!!!!!!!!!!!!!!!!!! Interrupted: 2 errors during collection !!!!!!!!!!!!!!!!!!!!",
             "============================== 2 errors in 0.05s ===============================",
+        ],
+        # - Pytest with the lot
+        [
+            '    assert color.to_string() == "#0025002a0045"',
+            "",
+            "-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html",
+            "= 2 failed, 3 passed, 5 skipped, 2 deselected, 3 xfailed, 4 xpassed, 2 warnings, 4 errors in 0.68s =",
         ],
         # Until https://github.com/chaquo/chaquopy/issues/746 is resolved, Android output
         # will contain extra line breaks because it produces a line for each call to `write`,
