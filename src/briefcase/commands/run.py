@@ -92,7 +92,6 @@ class LogFilter:
             # If we don't perform cleaning, we assume all content is potentially
             # Python, and should be included in analysis
             clean_line = line
-            display_line = line
             included = True
 
         # If we're not using clean output, use the raw line for display.
@@ -167,8 +166,8 @@ class RunCommand(BaseCommand):
             help="Prevent any automated update or build before running.",
         )
 
-    def _prepare_log_stream(self, app: BaseConfig, test_mode: bool):
-        """Perform the default setup of a log stream.
+    def _prepare_app_env(self, app: BaseConfig, test_mode: bool):
+        """Prepare the environment for running an app as a log stream.
 
         This won't be used by every backend; but it's a sufficiently common
         default that it's been factored out.

@@ -260,10 +260,10 @@ class LinuxAppImageRunCommand(LinuxAppImagePassiveMixin, RunCommand):
         """
         try:
             # Set up the log stream
-            kwargs = self._prepare_log_stream(app=app, test_mode=test_mode)
+            kwargs = self._prepare_app_env(app=app, test_mode=test_mode)
 
             # Start the app in a way that lets us stream the logs
-            log_popen = self.tools.subprocess.Popen(
+            app_popen = self.tools.subprocess.Popen(
                 [os.fsdecode(self.binary_path(app))],
                 cwd=self.tools.home_path,
                 **kwargs,
@@ -275,7 +275,7 @@ class LinuxAppImageRunCommand(LinuxAppImagePassiveMixin, RunCommand):
             # Start streaming logs for the app.
             self._stream_app_logs(
                 app,
-                popen=log_popen,
+                popen=app_popen,
                 test_mode=test_mode,
                 clean_output=False,
             )

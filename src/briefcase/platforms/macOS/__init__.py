@@ -117,7 +117,7 @@ class macOSRunMixin:
         app_pid = None
         try:
             # Set up the log stream
-            kwargs = self._prepare_log_stream(app=app, test_mode=test_mode)
+            kwargs = self._prepare_app_env(app=app, test_mode=test_mode)
 
             # Start the app in a way that lets us stream the logs
             self.tools.subprocess.run(

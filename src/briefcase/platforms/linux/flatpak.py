@@ -194,7 +194,7 @@ class LinuxFlatpakRunCommand(LinuxFlatpakMixin, RunCommand):
         """
         try:
             # Set up the log stream
-            kwargs = self._prepare_log_stream(app=app, test_mode=test_mode)
+            kwargs = self._prepare_app_env(app=app, test_mode=test_mode)
 
             # Starting a flatpak has slightly different startup arguments; however,
             # the rest of the app startup process is the same. Transform the output

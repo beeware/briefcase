@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Optional
 
 from briefcase.config import BaseConfig
-from briefcase.exceptions import BriefcaseCommandError, BriefcaseTestSuiteFailure
+from briefcase.exceptions import BriefcaseCommandError
 
 from .base import BaseCommand
 from .create import DependencyInstallError, write_dist_info
@@ -126,12 +126,9 @@ class DevCommand(BaseCommand):
                 cwd=self.tools.home_path,
             )
         except subprocess.CalledProcessError as e:
-            if test_mode:
-                raise BriefcaseTestSuiteFailure()
-            else:
-                raise BriefcaseCommandError(
-                    f"Unable to start application {main_module!r}"
-                ) from e
+            raise BriefcaseCommandError(
+                f"Problem running {'test suite' if test_mode else 'application'} {main_module!r}"
+            ) from e
 
     def get_environment(self, app, test_mode: bool):
         # Create a shell environment where PYTHONPATH points to the source

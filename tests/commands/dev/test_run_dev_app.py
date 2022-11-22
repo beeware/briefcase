@@ -3,7 +3,7 @@ from subprocess import CalledProcessError
 
 import pytest
 
-from briefcase.exceptions import BriefcaseCommandError, BriefcaseTestSuiteFailure
+from briefcase.exceptions import BriefcaseCommandError
 
 
 def test_subprocess_running_successfully(dev_command, first_app, tmp_path):
@@ -36,7 +36,8 @@ def test_subprocess_throws_error(dev_command, first_app, tmp_path):
         returncode=2, cmd="cmd"
     )
     with pytest.raises(
-        BriefcaseCommandError, match="Unable to start application 'first'"
+        BriefcaseCommandError,
+        match="Problem running application 'first'",
     ):
         dev_command.run_dev_app(
             first_app,
@@ -90,12 +91,15 @@ def test_subprocess_test_mode_success(dev_command, first_app, tmp_path):
 
 
 def test_subprocess_test_mode_failure(dev_command, first_app, tmp_path):
-    "Failure in test mode raises a TestFailureException"
+    "Failure in test mode raises a BriefcaseCommandError"
     dev_command.tools.subprocess.run.side_effect = CalledProcessError(
         returncode=2, cmd="cmd"
     )
 
-    with pytest.raises(BriefcaseTestSuiteFailure):
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Problem running test suite 'tests.first'",
+    ):
         dev_command.run_dev_app(
             first_app,
             env={"a": 1, "b": 2, "c": 3},
