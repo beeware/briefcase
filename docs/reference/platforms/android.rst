@@ -127,16 +127,16 @@ The device or emulator to target. Can be specified as:
   If any of these attributes are *not* specified, they will fall back
   to reasonable defaults.
 
-``-X=<value>``
-~~~~~~~~~~~~~~
+``--Xemulator=<value>``
+~~~~~~~~~~~~~~~~~~~~~~~
 
 A configuration argument to be passed to the emulator on startup. For example,
 to start the emulator in "headless" mode (i.e., without a display window),
-specify ``-X=-no-window``. See `the Android documentation
+specify ``--Xemulator=-no-window``. See `the Android documentation
 <https://developer.android.com/studio/run/emulator-commandline>`__ for details
 on the full list of options that can be provided.
 
-You may specify multiple ``-X`` arguments; each one specifies a
+You may specify multiple ``--Xemulator`` arguments; each one specifies a
 single argument to pass to the emulator, in the order they are specified.
 
 ``--shutdown-on-exit``

@@ -234,7 +234,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
             required=False,
         )
         parser.add_argument(
-            "-X",
+            "--Xemulator",
             action="append",
             dest="extra_emulator_args",
             help="Additional arguments to use when starting the emulator",

@@ -93,7 +93,9 @@ def test_device_option(run_command):
 
 def test_extra_emulator_args_option(run_command):
     """The -d option can be parsed."""
-    options = run_command.parse_options(["-X=-no-window", "-X=-no-audio"])
+    options = run_command.parse_options(
+        ["--Xemulator=-no-window", "--Xemulator=-no-audio"]
+    )
 
     assert options == {
         "device_or_avd": None,
