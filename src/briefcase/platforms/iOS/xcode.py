@@ -15,6 +15,7 @@ from briefcase.commands import (
 from briefcase.config import BaseConfig
 from briefcase.console import InputDisabled, select_option
 from briefcase.exceptions import BriefcaseCommandError, InvalidDeviceError
+from briefcase.integrations.subprocess import is_process_dead
 from briefcase.integrations.xcode import DeviceState, get_device_state, get_simulators
 from briefcase.platforms.iOS import iOSMixin
 from briefcase.platforms.macOS import macOS_log_clean_filter
@@ -463,10 +464,15 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         try:
             self.logger.info(f"Starting {label}...", prefix=app.app_name)
             with self.input.wait_bar(f"Launching {label}..."):
-                self.tools.subprocess.run(
-                    ["xcrun", "simctl", "launch", udid, app_identifier],
-                    check=True,
+                output = self.tools.subprocess.check_output(
+                    ["xcrun", "simctl", "launch", udid, app_identifier]
                 )
+                try:
+                    app_pid = int(output.split(":")[1].strip())
+                except (IndexError, ValueError) as e:
+                    raise BriefcaseCommandError(
+                        f"Unable to determine PID of {label} {app.app_name}."
+                    ) from e
 
             # Start streaming logs for the app.
             self.logger.info(
@@ -481,6 +487,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                 test_mode=test_mode,
                 clean_filter=macOS_log_clean_filter,
                 clean_output=True,
+                stop_func=lambda: is_process_dead(app_pid),
                 log_stream=True,
             )
         except subprocess.CalledProcessError as e:
