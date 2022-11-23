@@ -52,11 +52,6 @@ class macOSXcodeMixin(macOSMixin):
         else:
             return self.binary_path(app)
 
-    def entitlements_path(self, app):
-        return (
-            self.bundle_path(app) / f"{app.class_name}" / f"{app.app_name}.entitlements"
-        )
-
 
 class macOSXcodeCreateCommand(macOSXcodeMixin, CreateCommand):
     description = "Create and populate a macOS Xcode project."

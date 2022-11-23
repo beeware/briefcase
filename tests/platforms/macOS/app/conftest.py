@@ -18,6 +18,7 @@ def first_app_with_binaries(first_app_config, tmp_path):
 app_packages_path="First App.app/Contents/Resources/app_packages"
 support_path="First App.app/Contents/Resources/support"
 info_plist_path="First App.app/Contents/Info.plist"
+entitlements_path="Entitlements.plist"
 """,
     )
 
@@ -26,6 +27,15 @@ info_plist_path="First App.app/Contents/Info.plist"
         app_path / "Contents" / "Info.plist",
         {
             "MainModule": "first_app",
+        },
+    )
+
+    # Create the entitlements file for the app
+    create_plist_file(
+        tmp_path / "base_path" / "macOS" / "app" / "First App" / "Entitlements.plist",
+        {
+            "com.apple.security.cs.allow-unsigned-executable-memory": True,
+            "com.apple.security.cs.disable-library-validation": True,
         },
     )
 
