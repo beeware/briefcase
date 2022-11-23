@@ -54,9 +54,7 @@ class macOSXcodeMixin(macOSMixin):
 
     def entitlements_path(self, app):
         return (
-            self.bundle_path(app)
-            / f"{app.formal_name}"
-            / f"{app.app_name}.entitlements"
+            self.bundle_path(app) / f"{app.class_name}" / f"{app.app_name}.entitlements"
         )
 
 

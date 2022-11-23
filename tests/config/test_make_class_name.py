@@ -1,5 +1,7 @@
 import pytest
 
+from briefcase.config import make_class_name
+
 
 @pytest.mark.parametrize(
     "formal_name, candidate",
@@ -33,7 +35,7 @@ import pytest
         ("\u2135 World", "\u05d0World"),  # Unicode category Lo
     ],
 )
-def test_make_class_name(new_command, formal_name, candidate):
+def test_make_class_name(formal_name, candidate):
     """A formal name can be converted into a valid class name."""
-    class_name = new_command.make_class_name(formal_name)
+    class_name = make_class_name(formal_name)
     assert class_name == candidate

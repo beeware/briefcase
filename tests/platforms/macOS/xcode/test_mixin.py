@@ -65,7 +65,7 @@ def test_entitlements_path(create_command, first_app_config, tmp_path):
         / "macOS"
         / "Xcode"
         / "First App"
-        / "First App"
+        / "FirstApp"
         / "first-app.entitlements"
     )
 

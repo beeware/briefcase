@@ -264,6 +264,7 @@ class CreateCommand(BaseCommand):
                 # The full Python version string, including minor and dev/a/b/c suffixes (e.g., 3.11.0rc2)
                 "python_version": platform.python_version(),
                 # Transformations of explicit properties into useful forms
+                "class_name": app.class_name,
                 "module_name": app.module_name,
                 "package_name": app.package_name,
                 # Properties that are a function of the execution

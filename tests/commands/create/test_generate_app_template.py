@@ -40,6 +40,7 @@ def full_context():
         "python_version": platform.python_version(),
         # Fields generated from other properties
         "module_name": "my_app",
+        "class_name": "MyApp",
         "package_name": "com.example",
         # Date-based fields added at time of generation
         "year": date.today().strftime("%Y"),
