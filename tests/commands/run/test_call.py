@@ -132,7 +132,7 @@ def test_create_app_before_start(run_command, first_app_config):
         ("verify",),
         # App doesn't exist, so it will be built
         # (which will transitively create)
-        ("build", "first", {"test_mode": False, "update": False}),
+        ("build", "first", {"test_mode": False, "update": None}),
         # Then, it will be started
         (
             "run",
@@ -160,7 +160,7 @@ def test_build_app_before_start(run_command, first_app_uncompiled):
         # Tools are verified
         ("verify",),
         # A build was requested, with no update
-        ("build", "first", {"test_mode": False, "update": False}),
+        ("build", "first", {"test_mode": False, "update": None}),
         # Then, it will be started
         ("run", "first", {"build_state": "first", "test_mode": False}),
     ]
@@ -270,7 +270,7 @@ def test_test_mode_existing_app(run_command, first_app):
         # Tools are verified
         ("verify",),
         # App is built in test mode
-        ("build", "first", {"test_mode": True, "update": False}),
+        ("build", "first", {"test_mode": True, "update": None}),
         # Run the first app
         (
             "run",
@@ -288,7 +288,7 @@ def test_test_mode_existing_app_without_update(run_command, first_app):
     }
 
     # Configure the test option
-    options = run_command.parse_options(["--test", "--no-auto-update"])
+    options = run_command.parse_options(["--test", "--no-update"])
 
     # Run the run command
     run_command(**options)
@@ -352,7 +352,7 @@ def test_test_mode_non_existent(run_command, first_app_config):
         # Tools are verified
         ("verify",),
         # App will be built in test mode, (which will transistively create)
-        ("build", "first", {"test_mode": True, "update": False}),
+        ("build", "first", {"test_mode": True, "update": None}),
         # Then, it will be started
         (
             "run",

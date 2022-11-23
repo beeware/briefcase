@@ -32,29 +32,27 @@ def test_default_options(run_command):
 
     assert options == {
         "appname": None,
-        "update": False,
+        "update": None,
         "test_mode": False,
         "host": "localhost",
         "port": 8080,
         "open_browser": True,
-        "auto_update": True,
     }
 
 
 def test_options(run_command):
     """The extra options can be parsed."""
     options = run_command.parse_options(
-        ["--host", "myhost", "--port", "1234", "--no-browser", "--no-auto-update"]
+        ["--host", "myhost", "--port", "1234", "--no-browser"]
     )
 
     assert options == {
         "appname": None,
-        "update": False,
+        "update": None,
         "test_mode": False,
         "host": "myhost",
         "port": 1234,
         "open_browser": False,
-        "auto_update": False,
     }
 
 

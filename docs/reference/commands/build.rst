@@ -50,4 +50,12 @@ Update the application's source code before running. Equivalent to running::
 
 Build the app in test mode in the bundled app environment. Running ``build
 --test`` forces an update to ensure that the packaged application contains all
-the test dependencies and code.
+the test dependencies and code. To prevent this update and build, use
+``--no-update``.
+
+``--no-update``
+---------------
+
+Prevent the automated update that is performed when specifying by the
+``--test`` option. This option should only be required if you need to
+build your app on one machine, and run it on another.

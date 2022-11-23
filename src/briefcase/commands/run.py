@@ -150,23 +150,29 @@ class RunCommand(BaseCommand):
             dest="appname",
             help="The app to run",
         )
+        # Update is a tri-valued argument; it can be specified as --update
+        # or --no-update, with a default value of None. In the presence of
+        # the default, there is different behavior depending on whether
+        # we are in test mode.
         parser.add_argument(
             "-u",
             "--update",
-            action="store_true",
-            help="Update the app before execution",
+            action="store_const",
+            const=True,
+            help="Update and rebuild the app before execution",
+        )
+        parser.add_argument(
+            "--no-update",
+            dest="update",
+            action="store_const",
+            const=False,
+            help="Prevent any automated update and rebuild before running.",
         )
         parser.add_argument(
             "--test",
             dest="test_mode",
             action="store_true",
             help="Run the app in test mode",
-        )
-        parser.add_argument(
-            "--no-auto-update",
-            dest="auto_update",
-            action="store_false",
-            help="Prevent any automated update or build before running.",
         )
 
     def _prepare_app_env(self, app: BaseConfig, test_mode: bool):
@@ -282,9 +288,8 @@ class RunCommand(BaseCommand):
     def __call__(
         self,
         appname: Optional[str] = None,
-        update: Optional[bool] = False,
+        update: Optional[bool] = None,
         test_mode: Optional[bool] = False,
-        auto_update: Optional[bool] = True,
         **options,
     ):
         # Confirm all required tools are available
@@ -312,7 +317,9 @@ class RunCommand(BaseCommand):
             (not template_file.exists())  # App hasn't been created
             or update  # An explicit update has been requested
             or (not binary_file.exists())  # Binary doesn't exist yet
-            or (test_mode and auto_update)  # Test mode, and update hasn't been disabled
+            or (
+                test_mode and update is None
+            )  # Test mode, and update hasn't been disabled
         ):
             state = self.build_command(
                 app,

@@ -51,12 +51,12 @@ Update the application's source code before running. Equivalent to running::
 ``--test``
 ----------
 
-Run the test suite in the bundled app environment. Running ``run --test``
-forces an update and rebuild, to ensure that the packaged application
-contains all the test dependencies and code. To prevent this update and
-build, use ``-no-auto-update``.
+Run the test suite in the bundled app environment. Running ``run --test`` forces
+an update and rebuild, to ensure that the packaged application contains all the
+test dependencies and code. To prevent this update and build, use
+``--no-update``.
 
-``--no-auto-update``
+``--no-update``
 --------------------
 
 Prevent the automated update that is performed when specifying by the

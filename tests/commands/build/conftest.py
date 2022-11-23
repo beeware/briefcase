@@ -42,6 +42,9 @@ class DummyBuildCommand(BuildCommand):
 
     def build_app(self, app, **kwargs):
         self.actions.append(("build", app.app_name, kwargs.copy()))
+        # Remove arguments consumed by the underlying call to build_app()
+        kwargs.pop("update", None)
+        kwargs.pop("test_mode", None)
         return full_options({"build_state": app.app_name}, kwargs)
 
     # These commands override the default behavior, simply tracking that

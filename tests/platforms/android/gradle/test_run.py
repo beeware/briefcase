@@ -83,9 +83,8 @@ def test_device_option(run_command):
     assert options == {
         "device_or_avd": "myphone",
         "appname": None,
-        "update": False,
+        "update": None,
         "test_mode": False,
-        "auto_update": True,
         "extra_emulator_args": None,
         "shutdown_on_exit": False,
     }
@@ -100,9 +99,8 @@ def test_extra_emulator_args_option(run_command):
     assert options == {
         "device_or_avd": None,
         "appname": None,
-        "update": False,
+        "update": None,
         "test_mode": False,
-        "auto_update": True,
         "extra_emulator_args": ["-no-window", "-no-audio"],
         "shutdown_on_exit": False,
     }
@@ -115,9 +113,8 @@ def test_shutdown_on_exit_option(run_command):
     assert options == {
         "device_or_avd": None,
         "appname": None,
-        "update": False,
+        "update": None,
         "test_mode": False,
-        "auto_update": True,
         "extra_emulator_args": None,
         "shutdown_on_exit": True,
     }
