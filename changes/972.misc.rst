@@ -1,0 +1,1 @@
+The list of modules in ``briefcase.integrations.__all__`` is now verified against existing modules in ``briefcase.integrations``.

@@ -99,7 +99,7 @@ Additional options
 ==================
 
 The following options can be provided at the command line when producing
-Android projects
+Android projects:
 
 run
 ---
@@ -147,3 +147,16 @@ especially useful if you are running in headless mode, as the emulator will
 continue to run in the background, but there will be no visual manifestation
 that it is running. It may also be useful as a cleanup mechanism when running
 in a CI configuration.
+
+Application configuration
+=========================
+
+The following options can be added to the
+``tool.briefcase.app.<appname>.android`` section of your ``pyproject.toml``
+file:
+
+``build_gradle_extra_content``
+------------------------------
+
+A string providing additional Gradle settings to use when building your app.
+This will be added verbatim to the end of your ``app/build.gradle`` file.
