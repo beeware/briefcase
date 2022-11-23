@@ -63,6 +63,13 @@ from briefcase.commands.run import LogFilter
             "",
             "FAILED (failures=1, skipped=1, expected failures=2, unexpected successes=1)",
         ],
+        # - Failures in negative time (?!)
+        [
+            "----------------------------------------------------------------------",
+            "Ran 6 tests in -12.345s",
+            "",
+            "FAILED (failures=2)",
+        ],
         # Pytest
         # - Only failures
         [
@@ -193,6 +200,14 @@ from briefcase.commands.run import LogFilter
             "",
             "-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html",
             "= 2 failed, 3 passed, 5 skipped, 2 deselected, 3 xfailed, 4 xpassed, 2 warnings, 4 errors in 0.68s =",
+        ],
+        # - Failures in negative time
+        [
+            "FAILED tests/foobar/test_other.py::test_fail1 - assert 1 == 2",
+            "FAILED tests/foobar/test_other.py::test_fail2 - assert 1 == 2",
+            "FAILED tests/foobar/test_things.py::test_fail1 - assert 1 == 2",
+            "FAILED tests/foobar/test_things.py::test_fail2 - assert 1 == 2",
+            "============================= 6 failed in -12.345s =============================",
         ],
         # Until https://github.com/chaquo/chaquopy/issues/746 is resolved, Android output
         # will contain extra line breaks because it produces a line for each call to `write`,

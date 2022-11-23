@@ -63,6 +63,13 @@ from briefcase.commands.run import LogFilter
             "",
             "OK",
         ],
+        # - Success in negative time
+        [
+            "----------------------------------------------------------------------",
+            "Ran 5 tests in -12.345s",
+            "",
+            "OK",
+        ],
         # Pytest
         # - Only passes
         [
@@ -144,6 +151,14 @@ from briefcase.commands.run import LogFilter
             "collecting ... collected 0 items",
             "",
             "============================ no tests ran in 0.01s =============================",
+        ],
+        # - Passes in negative time
+        [
+            "tests/foobar/test_other.py::test_pass2 PASSED                             [ 71%]",
+            "tests/foobar/test_things.py::test_pass1 PASSED                            [ 85%]",
+            "tests/foobar/test_things.py::test_pass2 PASSED                            [100%]",
+            "",
+            "============================= 7 passed in 12.345s ==============================",
         ],
         # Until https://github.com/chaquo/chaquopy/issues/746 is resolved, Android output
         # will contain extra line breaks because the log is written whenever the buffer is
