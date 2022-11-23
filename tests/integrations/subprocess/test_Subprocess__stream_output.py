@@ -217,3 +217,24 @@ def test_filter_func_line_ends(mock_sub, streaming_process, capsys):
     # fmt: on
 
     mock_sub.cleanup.assert_called_once_with("testing", streaming_process)
+
+
+def test_filter_func_stop_iteration(mock_sub, streaming_process, capsys):
+    """A filter can indicate that logging should stop."""
+    # Define a filter function that converts "output" into "filtered",
+    # and terminates logging when a blank line is seen.
+    def filter_func(line):
+        if line == "":
+            raise StopIteration()
+        return line.replace("output", "filtered")
+
+    mock_sub.stream_output("testing", streaming_process, filter_func=filter_func)
+
+    # fmt: off
+    # Output has been transformed, but is truncated when the empty line was received.
+    assert capsys.readouterr().out == (
+        "filtered line 1\n"
+    )
+    # fmt: on
+
+    mock_sub.cleanup.assert_called_once_with("testing", streaming_process)

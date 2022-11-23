@@ -608,7 +608,9 @@ class Subprocess(Tool):
         # ValueError is raised if stdout is unexpectedly closed.
         # This can happen if the user starts spamming CTRL+C, for instance.
         # Silently exit to avoid Python printing the exception to the console.
-        with suppress(ValueError):
+        # StopIteration can be raised by a filter function to indicate that
+        # there's no need to stream any more.
+        with suppress(ValueError, StopIteration):
             while True:
                 # readline should always return at least a newline (ie \n)
                 # UNLESS the underlying process is exiting/gone; then "" is returned

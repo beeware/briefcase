@@ -1,5 +1,4 @@
 import re
-import signal
 from abc import abstractmethod
 from typing import Optional
 
@@ -58,11 +57,13 @@ class LogFilter:
         :param success_filter: A function that will operate on a string
             containing the last 10 lines of "clean" (i.e., preamble filtered)
             logs, returning True if a "success" condition has been detected. If
-            the success filter returns True, the log process will be terminated.
+            the success filter returns True, a success condition will be
+            recorded, and the log streamer will be told to stop streaming.
         :param failure_filter: A function that will operate on a string
             containing the last 10 lines of "clean" (i.e., preamble filtered)
             logs, returning True if a "failure" condition has been detected. If
-            the failure filter returns True, the log process will be terminated.
+            the failure filter returns True, a success condition will be
+            recorded, and the log streamer will be told to stop streaming.
         """
         self.log_popen = log_popen
         self.success = None
@@ -78,6 +79,10 @@ class LogFilter:
 
         :param line: A single line of raw system log content, including the newline.
         """
+        # If we've recorded a success condition, we can stop streaming.
+        if self.success is not None:
+            raise StopIteration()
+
         # Compute the clean line
         if self.clean_filter:
             filtered = self.clean_filter(line)
@@ -111,10 +116,8 @@ class LogFilter:
             # Look for the success/failure conditions in the tail
             if self.failure_filter and self.failure_filter(tail):
                 self.success = False
-                self.log_popen.send_signal(signal.SIGINT)
             elif self.success_filter and self.success_filter(tail):
                 self.success = True
-                self.log_popen.send_signal(signal.SIGINT)
 
         # Return the display line
         return display_line

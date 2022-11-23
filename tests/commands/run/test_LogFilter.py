@@ -1,4 +1,3 @@
-import signal
 from unittest import mock
 
 import pytest
@@ -127,15 +126,15 @@ def test_clean_filter_unclean_output():
         ),
         # Without cleaning, success criteria won't be found
         (
-            ["1: line 1", "2: line 2", "3: -----", "4: ", "5: SUCCESS"],
-            ["1: line 1", "2: line 2", "3: -----", "4: ", "5: SUCCESS"],
+            ["1: line 1", "2: line 2", "3: -----", "4: ", "5: SUCCESS", "post"],
+            ["1: line 1", "2: line 2", "3: -----", "4: ", "5: SUCCESS", "post"],
             False,  # don't use content filter
             False,  # don't use clean output
             None,  # no test termination due to line prefixes
         ),
         # If test output is clean without filtering, success can be determined
         (
-            ["line 1", "line 2", "-----", "", "SUCCESS"],
+            ["line 1", "line 2", "-----", "", "SUCCESS", "post"],
             ["line 1", "line 2", "-----", "", "SUCCESS"],
             False,  # don't use content filter
             False,  # don't use clean output
@@ -144,7 +143,7 @@ def test_clean_filter_unclean_output():
         # Success criteria can be found without altering output
         # Line prefixes are all even to ensure they aren't ignored
         (
-            ["2: line 1", "4: line 2", "6: -----", "8: ", "10: SUCCESS"],
+            ["2: line 1", "4: line 2", "6: -----", "8: ", "10: SUCCESS", "post"],
             ["2: line 1", "4: line 2", "6: -----", "8: ", "10: SUCCESS"],
             True,  # use content filter
             False,  # don't use clean output
@@ -153,7 +152,7 @@ def test_clean_filter_unclean_output():
         # Success criteria won't consider ignored content
         # Dumped content won't be considered
         (
-            ["2: line 1", "4: -----", "DUMP: garbage", "6: ", "8: SUCCESS"],
+            ["2: line 1", "4: -----", "DUMP: garbage", "6: ", "8: SUCCESS", "post"],
             ["2: line 1", "4: -----", "6: ", "8: SUCCESS"],
             True,  # use content filter
             False,  # don't use clean output
@@ -162,7 +161,7 @@ def test_clean_filter_unclean_output():
         # Success criteria won't consider ignored content
         # Line 5 will be ignored, but not dumped
         (
-            ["2: line 1", "4: -----", "5: Ignore this", "6: ", "8: SUCCESS"],
+            ["2: line 1", "4: -----", "5: Ignore this", "6: ", "8: SUCCESS", "post"],
             ["2: line 1", "4: -----", "5: Ignore this", "6: ", "8: SUCCESS"],
             True,  # use content filter
             False,  # don't use clean output
@@ -171,7 +170,7 @@ def test_clean_filter_unclean_output():
         # Success criteria can be found with cleaned output
         # Line prefixes are all even to ensure they aren't ignored; output is clean
         (
-            ["2: line 1", "4: line 2", "6: -----", "8: ", "10: SUCCESS"],
+            ["2: line 1", "4: line 2", "6: -----", "8: ", "10: SUCCESS", "post"],
             ["line 1", "line 2", "-----", "", "SUCCESS"],
             True,  # use content filter
             True,  # use clean output
@@ -180,7 +179,7 @@ def test_clean_filter_unclean_output():
         # Success criteria won't consider ignored content
         # Dumped content won't be considered; output is clean
         (
-            ["2: line 1", "4: -----", "DUMP: garbage", "6: ", "8: SUCCESS"],
+            ["2: line 1", "4: -----", "DUMP: garbage", "6: ", "8: SUCCESS", "post"],
             ["line 1", "-----", "", "SUCCESS"],
             True,  # use content filter
             True,  # use clean output
@@ -189,7 +188,7 @@ def test_clean_filter_unclean_output():
         # Success criteria won't consider ignored content
         # Line 5 will be ignored, but not dumped; output is clean
         (
-            ["2: line 1", "4: -----", "5: Ignore this", "6: ", "8: SUCCESS"],
+            ["2: line 1", "4: -----", "5: Ignore this", "6: ", "8: SUCCESS", "post"],
             ["line 1", "-----", "Ignore this", "", "SUCCESS"],
             True,  # use content filter
             True,  # use clean output
@@ -198,31 +197,31 @@ def test_clean_filter_unclean_output():
         # Success criteria won't be found if it occurs on ignored lines
         # Line 5 is the right pattern, but it will be marked as ignored by the cleaner
         (
-            ["2: line 1", "4: line 2", "5: -----", "6: ", "8: SUCCESS"],
-            ["2: line 1", "4: line 2", "5: -----", "6: ", "8: SUCCESS"],
+            ["2: line 1", "4: line 2", "5: -----", "6: ", "8: SUCCESS", "post"],
+            ["2: line 1", "4: line 2", "5: -----", "6: ", "8: SUCCESS", "post"],
             True,  # use content filter
             False,  # don't use clean output
             None,  # no test termination due to line 5 not matching
         ),
         # Without cleaning, failure criteria won't be found
         (
-            ["1: line 1", "2: line 2", "3: -----", "4: ", "5: SUCCESS"],
-            ["1: line 1", "2: line 2", "3: -----", "4: ", "5: SUCCESS"],
+            ["1: line 1", "2: line 2", "3: -----", "4: ", "5: SUCCESS", "post"],
+            ["1: line 1", "2: line 2", "3: -----", "4: ", "5: SUCCESS", "post"],
             False,  # don't use content filter
             False,  # don't use clean output
             None,  # no test termination
         ),
         # Without cleaning, failure criteria won't be found
         (
-            ["1: line 1", "2: line 2", "3: -----", "4: ", "5: FAILURE"],
-            ["1: line 1", "2: line 2", "3: -----", "4: ", "5: FAILURE"],
+            ["1: line 1", "2: line 2", "3: -----", "4: ", "5: FAILURE", "post"],
+            ["1: line 1", "2: line 2", "3: -----", "4: ", "5: FAILURE", "post"],
             False,  # don't use content filter
             False,  # don't use clean output
             None,  # no test termination due to line prefixes
         ),
         # If test output is clean without filtering, failure can be determined
         (
-            ["line 1", "line 2", "-----", "", "FAILURE"],
+            ["line 1", "line 2", "-----", "", "FAILURE", "post"],
             ["line 1", "line 2", "-----", "", "FAILURE"],
             False,  # don't use content filter
             False,  # don't use clean output
@@ -231,7 +230,7 @@ def test_clean_filter_unclean_output():
         # failure criteria can be found without altering output
         # Line prefixes are all even to ensure they aren't ignored
         (
-            ["2: line 1", "4: line 2", "6: -----", "8: ", "10: FAILURE"],
+            ["2: line 1", "4: line 2", "6: -----", "8: ", "10: FAILURE", "post"],
             ["2: line 1", "4: line 2", "6: -----", "8: ", "10: FAILURE"],
             True,  # use content filter
             False,  # don't use clean output
@@ -240,7 +239,7 @@ def test_clean_filter_unclean_output():
         # failure criteria won't consider ignored content
         # Dumped content won't be considered
         (
-            ["2: line 1", "4: -----", "DUMP: garbage", "6: ", "8: FAILURE"],
+            ["2: line 1", "4: -----", "DUMP: garbage", "6: ", "8: FAILURE", "post"],
             ["2: line 1", "4: -----", "6: ", "8: FAILURE"],
             True,  # use content filter
             False,  # don't use clean output
@@ -249,7 +248,7 @@ def test_clean_filter_unclean_output():
         # failure criteria won't consider ignored content
         # Line 5 will be ignored, but not dumped
         (
-            ["2: line 1", "4: -----", "5: Ignore this", "6: ", "8: FAILURE"],
+            ["2: line 1", "4: -----", "5: Ignore this", "6: ", "8: FAILURE", "post"],
             ["2: line 1", "4: -----", "5: Ignore this", "6: ", "8: FAILURE"],
             True,  # use content filter
             False,  # don't use clean output
@@ -258,7 +257,7 @@ def test_clean_filter_unclean_output():
         # failure criteria can be found with cleaned output
         # Line prefixes are all even to ensure they aren't ignored; output is clean
         (
-            ["2: line 1", "4: line 2", "6: -----", "8: ", "10: FAILURE"],
+            ["2: line 1", "4: line 2", "6: -----", "8: ", "10: FAILURE", "post"],
             ["line 1", "line 2", "-----", "", "FAILURE"],
             True,  # use content filter
             True,  # use clean output
@@ -267,7 +266,7 @@ def test_clean_filter_unclean_output():
         # failure criteria won't consider ignored content
         # Dumped content won't be considered; output is clean
         (
-            ["2: line 1", "4: -----", "DUMP: garbage", "6: ", "8: FAILURE"],
+            ["2: line 1", "4: -----", "DUMP: garbage", "6: ", "8: FAILURE", "post"],
             ["line 1", "-----", "", "FAILURE"],
             True,  # use content filter
             True,  # use clean output
@@ -276,7 +275,7 @@ def test_clean_filter_unclean_output():
         # failure criteria won't consider ignored content
         # Line 5 will be ignored, but not dumped; output is clean
         (
-            ["2: line 1", "4: -----", "5: Ignore this", "6: ", "8: FAILURE"],
+            ["2: line 1", "4: -----", "5: Ignore this", "6: ", "8: FAILURE", "post"],
             ["line 1", "-----", "Ignore this", "", "FAILURE"],
             True,  # use content filter
             True,  # use clean output
@@ -284,8 +283,8 @@ def test_clean_filter_unclean_output():
         ),
         # Without cleaning, failure criteria won't be found
         (
-            ["1: line 1", "2: line 2", "3: -----", "4: ", "5: FAILURE"],
-            ["1: line 1", "2: line 2", "3: -----", "4: ", "5: FAILURE"],
+            ["1: line 1", "2: line 2", "3: -----", "4: ", "5: FAILURE", "post"],
+            ["1: line 1", "2: line 2", "3: -----", "4: ", "5: FAILURE", "post"],
             False,  # don't use content filter
             False,  # don't use clean output
             None,  # no test termination
@@ -293,8 +292,8 @@ def test_clean_filter_unclean_output():
         # Failure criteria won't be found if it occurs on ignored lines
         # Line 5 is the right pattern, but it will be marked as ignored by the cleaner
         (
-            ["2: line 1", "4: line 2", "5: -----", "6: ", "8: FAILURE"],
-            ["2: line 1", "4: line 2", "5: -----", "6: ", "8: FAILURE"],
+            ["2: line 1", "4: line 2", "5: -----", "6: ", "8: FAILURE", "post"],
+            ["2: line 1", "4: line 2", "5: -----", "6: ", "8: FAILURE", "post"],
             True,  # use content filter
             False,  # don't use clean output
             None,  # no test termination due to line 5 not matching
@@ -338,9 +337,12 @@ def test_log_filter(
     # Pipe the raw output through the log filter, and capture the output
     output = []
     for line in raw:
-        filtered = log_filter(line)
-        if filtered is not None:
-            output.append(filtered)
+        try:
+            filtered = log_filter(line)
+            if filtered is not None:
+                output.append(filtered)
+        except StopIteration:
+            break
 
     # Actual output is as expected
     assert output == expected_output
@@ -348,8 +350,6 @@ def test_log_filter(
     if expected_success is None:
         # No success/failure condition was set, and no signal was sent
         assert log_filter.success is None
-        popen.send_signal.assert_not_called()
     else:
         # The success/failure condition was detected, and the signal was sent
         assert log_filter.success == expected_success
-        popen.send_signal.assert_called_once_with(signal.SIGINT)
