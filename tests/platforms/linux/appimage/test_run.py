@@ -94,7 +94,7 @@ def test_run_app_failed(run_command, first_app_config, tmp_path):
     """If there's a problem starting the app, an exception is raised."""
     run_command.tools.subprocess.Popen.side_effect = OSError
 
-    with pytest.raises(BriefcaseCommandError):
+    with pytest.raises(OSError):
         run_command.run_app(first_app_config, test_mode=False)
 
     # The run command was still invoked

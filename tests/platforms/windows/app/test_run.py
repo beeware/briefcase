@@ -5,7 +5,6 @@ from unittest import mock
 import pytest
 
 from briefcase.console import Console, Log
-from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.windows.app import WindowsAppRunCommand
 
@@ -68,7 +67,7 @@ def test_run_app_failed(run_command, first_app_config, tmp_path):
 
     run_command.tools.subprocess.Popen.side_effect = OSError
 
-    with pytest.raises(BriefcaseCommandError, match=r"Unable to start app first-app."):
+    with pytest.raises(OSError):
         run_command.run_app(first_app_config, test_mode=False)
 
     # Popen was still invoked, though

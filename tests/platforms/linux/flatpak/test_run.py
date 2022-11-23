@@ -3,7 +3,6 @@ from unittest import mock
 import pytest
 
 from briefcase.console import Console, Log
-from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.flatpak import Flatpak
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.linux.flatpak import LinuxFlatpakRunCommand
@@ -53,7 +52,7 @@ def test_run_app_failed(run_command, first_app_config, tmp_path):
     """If there's a problem starting the app, an exception is raised."""
     run_command.tools.flatpak.run.side_effect = OSError
 
-    with pytest.raises(BriefcaseCommandError):
+    with pytest.raises(OSError):
         run_command.run_app(first_app_config, test_mode=False)
 
     # The run command was still invoked

@@ -80,29 +80,26 @@ class WindowsRunCommand(RunCommand):
         :param app: The config object for the app
         :param test_mode: Boolean; Is the app running in test mode?
         """
-        try:
-            # Set up the log stream
-            kwargs = self._prepare_app_env(app=app, test_mode=test_mode)
+        # Set up the log stream
+        kwargs = self._prepare_app_env(app=app, test_mode=test_mode)
 
-            # Start the app in a way that lets us stream the logs
-            log_popen = self.tools.subprocess.Popen(
-                [os.fsdecode(self.binary_path(app))],
-                cwd=self.tools.home_path,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                bufsize=1,
-                **kwargs,
-            )
+        # Start the app in a way that lets us stream the logs
+        log_popen = self.tools.subprocess.Popen(
+            [os.fsdecode(self.binary_path(app))],
+            cwd=self.tools.home_path,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            bufsize=1,
+            **kwargs,
+        )
 
-            # Start streaming logs for the app.
-            self._stream_app_logs(
-                app,
-                popen=log_popen,
-                test_mode=test_mode,
-                clean_output=False,
-            )
-        except OSError as e:
-            raise BriefcaseCommandError(f"Unable to start app {app.app_name}.") from e
+        # Start streaming logs for the app.
+        self._stream_app_logs(
+            app,
+            popen=log_popen,
+            test_mode=test_mode,
+            clean_output=False,
+        )
 
 
 class WindowsPackageCommand(PackageCommand):
