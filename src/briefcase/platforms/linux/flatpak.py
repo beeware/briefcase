@@ -202,7 +202,7 @@ class LinuxFlatpakRunCommand(LinuxFlatpakMixin, RunCommand):
             kwargs = {"main_module": kwargs["env"]["BRIEFCASE_MAIN_MODULE"]}
 
         # Start the app in a way that lets us stream the logs
-        log_popen = self.tools.flatpak.run(
+        app_popen = self.tools.flatpak.run(
             bundle=app.bundle,
             app_name=app.app_name,
             **kwargs,
@@ -211,7 +211,7 @@ class LinuxFlatpakRunCommand(LinuxFlatpakMixin, RunCommand):
         # Start streaming logs for the app.
         self._stream_app_logs(
             app,
-            popen=log_popen,
+            popen=app_popen,
             test_mode=test_mode,
             clean_output=False,
         )
