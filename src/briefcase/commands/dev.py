@@ -108,6 +108,7 @@ class DevCommand(BaseCommand):
             main_module = app.main_module(test_mode)
 
             # Invoke the app.
+            self.logger.info("=" * 75)
             self.tools.subprocess.run(
                 [
                     sys.executable,
