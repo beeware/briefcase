@@ -545,7 +545,13 @@ class Subprocess(Tool):
             [str(arg) for arg in args], **self.final_kwargs(**kwargs)
         )
 
-    def stream_output(self, label, popen_process, stop_func=lambda: False):
+    def stream_output(
+        self,
+        label,
+        popen_process,
+        stop_func=lambda: False,
+        filter_func=None,
+    ):
         """Stream the output of a Popen process until the process exits. If the
         user sends CTRL+C, the process will be terminated.
 
@@ -558,11 +564,16 @@ class Subprocess(Tool):
         :param popen_process: a running Popen process with output to print
         :param stop_func: a Callable that returns True when output streaming
             should stop and the popen_process should be terminated.
+        :param filter_func: a callable that will be invoked on every line
+            of output that is streamed. The function accepts the "raw" line
+            of input (stripped of any trailing newline); it returns the
+            filtered output that should be displayed to the user, or ``None``
+            if the line of input should be ignored by the output stream.
         """
         output_streamer = threading.Thread(
             name=f"{label} output streamer",
             target=self._stream_output_thread,
-            args=(popen_process,),
+            args=(popen_process, filter_func),
             daemon=True,
         )
         try:
@@ -587,21 +598,30 @@ class Subprocess(Tool):
                     "Log stream hasn't terminated; log output may be corrupted."
                 )
 
-    def _stream_output_thread(self, popen_process):
+    def _stream_output_thread(self, popen_process, filter_func):
         """Stream output for a Popen process in a Thread.
 
         :param popen_process: popen process to stream stdout
+        :param filter_func: a callable that will be invoked on every line
+            of output that is streamed; see ``stream_output`` for details.
         """
         # ValueError is raised if stdout is unexpectedly closed.
         # This can happen if the user starts spamming CTRL+C, for instance.
         # Silently exit to avoid Python printing the exception to the console.
-        with suppress(ValueError):
+        # StopIteration can be raised by a filter function to indicate that
+        # there's no need to stream any more.
+        with suppress(ValueError, StopIteration):
             while True:
                 # readline should always return at least a newline (ie \n)
                 # UNLESS the underlying process is exiting/gone; then "" is returned
                 output_line = ensure_str(popen_process.stdout.readline())
                 if output_line:
-                    self.tools.logger.info(output_line)
+                    if filter_func:
+                        filtered_output = filter_func(output_line.rstrip("\n"))
+                        if filtered_output is not None:
+                            self.tools.logger.info(filtered_output)
+                    else:
+                        self.tools.logger.info(output_line)
                 else:
                     return
 

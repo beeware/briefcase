@@ -481,6 +481,8 @@ def test_update_package_one_app(package_command, first_app):
                 "adhoc_sign": False,
                 "identity": None,
                 "sign_app": True,
+                "update_dependencies": True,
+                "update_resources": True,
             },
         ),
         (
@@ -537,6 +539,8 @@ def test_update_package_two_app(package_command, first_app, second_app):
                 "adhoc_sign": False,
                 "identity": None,
                 "sign_app": True,
+                "update_dependencies": True,
+                "update_resources": True,
             },
         ),
         (
@@ -572,6 +576,8 @@ def test_update_package_two_app(package_command, first_app, second_app):
                 "adhoc_sign": False,
                 "identity": None,
                 "sign_app": True,
+                "update_dependencies": True,
+                "update_resources": True,
                 # state of previous calls have been preserved.
                 "update_state": "first",
                 "build_state": "first",

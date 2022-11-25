@@ -74,4 +74,5 @@ def third_app(tmp_path):
         version="0.0.2",
         description="The third simple app",
         sources=["src/third", "src/common", "other"],
+        test_sources=["tests", "path/to/other"],
     )

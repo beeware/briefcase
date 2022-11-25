@@ -128,3 +128,8 @@ class CorruptToolError(BriefcaseCommandError):
 class CommandOutputParseError(BriefcaseCommandError):
     def __init__(self, parse_error):
         super().__init__(msg=f"Unable to parse command output: {parse_error}")
+
+
+class BriefcaseTestSuiteFailure(BriefcaseError):
+    def __init__(self):
+        super().__init__(error_code=1000, skip_logfile=True)

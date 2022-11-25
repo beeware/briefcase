@@ -63,3 +63,50 @@ def test_no_dependencies(dev_command, first_app):
     dev_command.install_dev_dependencies(app=first_app)
 
     dev_command.tools.subprocess.run.assert_not_called()
+
+
+def test_install_dependencies_test_mode(dev_command, first_app):
+    """If an app has test dependencies, they are also installed."""
+    first_app.requires = ["package-one", "package_two", "packagethree"]
+    first_app.test_requires = ["test-one", "test_two"]
+
+    dev_command.install_dev_dependencies(app=first_app)
+
+    dev_command.tools.subprocess.run.assert_called_once_with(
+        [
+            sys.executable,
+            "-u",
+            "-m",
+            "pip",
+            "install",
+            "--upgrade",
+            "package-one",
+            "package_two",
+            "packagethree",
+            "test-one",
+            "test_two",
+        ],
+        check=True,
+    )
+
+
+def test_only_test_dependencies(dev_command, first_app):
+    """If an app only has test dependencies, they're installed correctly."""
+    first_app.requires = None
+    first_app.test_requires = ["test-one", "test_two"]
+
+    dev_command.install_dev_dependencies(app=first_app)
+
+    dev_command.tools.subprocess.run.assert_called_once_with(
+        [
+            sys.executable,
+            "-u",
+            "-m",
+            "pip",
+            "install",
+            "--upgrade",
+            "test-one",
+            "test_two",
+        ],
+        check=True,
+    )

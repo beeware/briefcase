@@ -27,15 +27,54 @@ except ImportError:
 DEFAULT_OUTPUT_FORMAT = "app"
 
 
+MACOS_LOG_PREFIX_REGEX = re.compile(
+    r"\d{4}-\d{2}-\d{2} (?P<timestamp>\d{2}:\d{2}:\d{2}.\d{3}) Df (.*?)\[.*?:.*\]"
+    r"(?P<subsystem>( \(libffi\.dylib\))|( \(_ctypes\.cpython-3\d{1,2}-.*\.so\)))? (?P<content>.*)"
+)
+
+
+def macOS_log_clean_filter(line):
+    """Filter a macOS system log to extract the Python-generated message
+    content.
+
+    Any system or stub messages are ignored; all logging prefixes are stripped.
+
+    :param line: The raw line from the system log
+    :returns: A tuple, containing (a) the log line, stripped of any system
+        logging context, and (b) a boolean indicating if the message should be
+        included for analysis purposes (i.e., it's Python content, not a system
+        message). Returns a single ``None`` if the line should be dumped.
+    """
+    if any(
+        [
+            # Log stream outputs the filter when it starts
+            line.startswith("Filtering the log data using "),
+            # Log stream outputs barely useful column headers on startup
+            line.startswith("Timestamp          "),
+            # iOS reports an ignorable error on startup
+            line.startswith("Error from getpwuid_r:"),
+        ]
+    ):
+        return None
+
+    match = MACOS_LOG_PREFIX_REGEX.match(line)
+    if match:
+        groups = match.groupdict()
+        return groups["content"], bool(groups["subsystem"])
+
+    return line, False
+
+
 class macOSMixin:
     platform = "macOS"
 
 
 class macOSRunMixin:
-    def run_app(self, app: BaseConfig, **kwargs):
+    def run_app(self, app: BaseConfig, test_mode: bool, **kwargs):
         """Start the application.
 
         :param app: The config object for the app
+        :param test_mode: Boolean; Is the app running in test mode?
         """
         # Start log stream for the app.
         # Streaming the system log is... a mess. The system log contains a
@@ -75,24 +114,27 @@ class macOSRunMixin:
         # Wait for the log stream start up
         time.sleep(0.25)
 
+        app_pid = None
         try:
-            self.logger.info("Starting app...", prefix=app.app_name)
-            try:
-                self.tools.subprocess.run(
-                    [
-                        "open",
-                        "-n",  # Force a new app to be launched
-                        os.fsdecode(self.binary_path(app)),
-                    ],
-                    cwd=self.tools.home_path,
-                    check=True,
-                )
-            except subprocess.CalledProcessError:
-                raise BriefcaseCommandError(f"Unable to start app {app.app_name}.")
+            # Set up the log stream
+            kwargs = self._prepare_app_env(app=app, test_mode=test_mode)
+
+            # Start the app in a way that lets us stream the logs
+            self.tools.subprocess.run(
+                [
+                    "open",
+                    "-n",  # Force a new app to be launched
+                    os.fsdecode(self.binary_path(app)),
+                ],
+                cwd=self.tools.home_path,
+                check=True,
+                **kwargs,
+            )
 
             # Find the App process ID so log streaming can exit when the app exits
             app_pid = get_process_id_by_command(
-                command=str(self.binary_path(app)), logger=self.logger
+                command=str(self.binary_path(app)),
+                logger=self.logger,
             )
 
             if app_pid is None:
@@ -100,20 +142,23 @@ class macOSRunMixin:
                     f"Unable to find process for app {app.app_name} to start log streaming."
                 )
 
-            try:
-                # Start streaming logs for the app.
-                self.logger.info("=" * 75)
-                self.tools.subprocess.stream_output(
-                    "log stream", log_popen, stop_func=lambda: is_process_dead(app_pid)
-                )
-            finally:
-                # Ensure the App also terminates when exiting
+            # Stream the app logs.
+            self._stream_app_logs(
+                app,
+                popen=log_popen,
+                test_mode=test_mode,
+                clean_filter=macOS_log_clean_filter,
+                clean_output=True,
+                stop_func=lambda: is_process_dead(app_pid),
+                log_stream=True,
+            )
+        except subprocess.CalledProcessError:
+            raise BriefcaseCommandError(f"Unable to start app {app.app_name}.")
+        finally:
+            # Ensure the App also terminates when exiting
+            if app_pid:
                 with suppress(ProcessLookupError):
                     self.tools.os.kill(app_pid, SIGTERM)
-        except KeyboardInterrupt:
-            pass  # Catch CTRL-C to exit normally
-        finally:
-            self.tools.subprocess.cleanup("log stream", log_popen)
 
 
 def is_mach_o_binary(path):
@@ -147,6 +192,14 @@ class macOSSigningMixin:
         # External service APIs.
         # These are abstracted to enable testing without patching.
         self.get_identities = get_identities
+
+    def entitlements_path(self, app: BaseConfig):
+        # If the index file hasn't been loaded for this app, load it.
+        try:
+            path_index = self._path_index[app]
+        except KeyError:
+            path_index = self._load_path_index(app)
+        return self.bundle_path(app) / path_index["entitlements_path"]
 
     def select_identity(self, identity=None):
         """Get the codesigning identity to use.

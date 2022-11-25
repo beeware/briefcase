@@ -52,13 +52,6 @@ class macOSXcodeMixin(macOSMixin):
         else:
             return self.binary_path(app)
 
-    def entitlements_path(self, app):
-        return (
-            self.bundle_path(app)
-            / f"{app.formal_name}"
-            / f"{app.app_name}.entitlements"
-        )
-
 
 class macOSXcodeCreateCommand(macOSXcodeMixin, CreateCommand):
     description = "Create and populate a macOS Xcode project."
@@ -80,7 +73,6 @@ class macOSXcodeBuildCommand(macOSXcodeMixin, BuildCommand):
 
         :param app: The application to build
         """
-
         self.logger.info("Building XCode project...", prefix=app.app_name)
         with self.input.wait_bar("Building..."):
             try:

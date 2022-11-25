@@ -13,6 +13,27 @@ be installed, but will not actually install the app. For example, on Windows,
 the versions of code and dependencies that will be installed, but *won't* run
 the installer to produce Start Menu items, registry records, etc.
 
+Test mode
+---------
+
+The ``run`` command can also be used to execute your app's test suite, in the
+packaged environment (e.g., on the iOS simulator, or from within a Linux
+Flatpak). When running in test mode (using the ``--test`` option), a different
+entry point will be used for the app: if your app is contained in a Python
+module named ``myapp``, test mode will attempt to launch ``tests.myapp``. Your
+app is responsible for providing the logic to discover and start the test suite.
+
+The code for your test suite can specified using the ``test_sources`` setting;
+test-specific requirements can be specified with ``test_requires``. Test sources
+and requirements will only be included in your app when running in test mode.
+
+Briefcase will monitor the log output of the test suite, looking for the output
+corresponding to test suite completion. Briefcase has built-in support for
+`pytest <https://pytest.org>`__ and `unittest
+<https://docs.python.org/3/library/unittest.html>`__ test suites; support for
+other test frameworks can be added using the ``test_success_regex`` and
+``test_failure_regex`` settings.
+
 Usage
 =====
 
@@ -47,3 +68,18 @@ Update the application's source code before running. Equivalent to running::
 
     $ briefcase update
     $ briefcase run
+
+``--test``
+----------
+
+Run the test suite in the bundled app environment. Running ``run --test`` forces
+an update and rebuild, to ensure that the packaged application contains all the
+test dependencies and code. To prevent this update and build, use
+``--no-update``.
+
+``--no-update``
+--------------------
+
+Prevent the automated update that is performed when specifying by the
+``--test`` option. This option should only be required if you need to
+build your app on one machine, and run it on another.

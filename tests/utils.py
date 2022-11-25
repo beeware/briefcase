@@ -1,5 +1,6 @@
 import io
 import os
+import plistlib
 import tarfile
 import zipfile
 
@@ -41,6 +42,23 @@ def create_file(filepath, content, mode="w", chmod=None):
         os.chmod(filepath, chmod)
 
     return filepath
+
+
+def create_plist_file(plistpath, content):
+    """A test utility to create a plist file with known content.
+
+    Ensures that the directory for the file exists, and writes an XML plist with
+    specific content.
+
+    :param plistpath: The path for the plist file to create.
+    :param content: A dictionary of content that plistlib can use to create the plist file.
+    :returns: The path to the file that was created.
+    """
+    plistpath.parent.mkdir(parents=True, exist_ok=True)
+    with plistpath.open("wb") as f:
+        plistlib.dump(content, f)
+
+    return plistpath
 
 
 def create_zip_file(zippath, content):

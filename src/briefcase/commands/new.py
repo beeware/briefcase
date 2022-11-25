@@ -7,7 +7,11 @@ from urllib.parse import urlparse
 from packaging.version import Version
 
 import briefcase
-from briefcase.config import is_valid_app_name, is_valid_bundle_identifier
+from briefcase.config import (
+    is_valid_app_name,
+    is_valid_bundle_identifier,
+    make_class_name,
+)
 from briefcase.integrations import git
 
 from .base import BaseCommand, BriefcaseCommandError, TemplateUnsupportedVersion
@@ -86,49 +90,6 @@ class NewCommand(BaseCommand):
             dest="template",
             help="The cookiecutter template to use for the new project",
         )
-
-    def make_class_name(self, formal_name):
-        """Construct a valid class name from a formal name.
-
-        :param formal_name: The formal name
-        :returns: The app's class name
-        """
-        # Identifiers (including class names) can be unicode.
-        # https://docs.python.org/3/reference/lexical_analysis.html#identifiers
-        xid_start = {
-            "Lu",  # uppercase letters
-            "Ll",  # lowercase letters
-            "Lt",  # titlecase letters
-            "Lm",  # modifier letters
-            "Lo",  # other letters
-            "Nl",  # letter numbers
-        }
-        xid_continue = xid_start.union(
-            {
-                "Mn",  # nonspacing marks
-                "Mc",  # spacing combining marks
-                "Nd",  # decimal number
-                "Pc",  # connector punctuations
-            }
-        )
-
-        # Normalize to NFKC form, then remove any character that isn't
-        # in the allowed categories, or is the underscore character
-        class_name = "".join(
-            ch
-            for ch in unicodedata.normalize("NFKC", formal_name)
-            if unicodedata.category(ch) in xid_continue or ch in {"_"}
-        )
-
-        # If the first character isn't in the 'start' character set,
-        # and it isn't already an underscore, prepend an underscore.
-        if (
-            unicodedata.category(class_name[0]) not in xid_start
-            and class_name[0] != "_"
-        ):
-            class_name = f"_{class_name}"
-
-        return class_name
 
     def make_app_name(self, formal_name):
         """Construct a candidate app name from a formal name.
@@ -343,7 +304,7 @@ used as you type it.""",
         )
 
         # The class name can be completely derived from the formal name.
-        class_name = self.make_class_name(formal_name)
+        class_name = make_class_name(formal_name)
 
         default_app_name = self.make_app_name(formal_name)
         app_name = self.input_text(

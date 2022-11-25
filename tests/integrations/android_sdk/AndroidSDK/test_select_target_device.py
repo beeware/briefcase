@@ -295,3 +295,103 @@ def test_input_disabled_one_device(mock_tools, android_sdk):
 
     # No input was requested
     assert mock_tools.input.prompts == []
+
+
+def test_explicit_new_device(android_sdk):
+    """If the user provides a device configuration, that configuration is
+    created."""
+    android_sdk._create_emulator = MagicMock()
+
+    # Select a target device by providing a device config
+    device, name, avd = android_sdk.select_target_device('{"avd":"myDevice"}')
+
+    # A request was made to create the emulator using the internal method.
+    android_sdk._create_emulator.assert_called_once_with(avd="myDevice")
+
+    assert device is None
+    assert name == "@myDevice (emulator)"
+    assert avd == "myDevice"
+
+
+def test_explicit_new_device_existing(android_sdk):
+    """If the user provides a device configuration, that configuration is
+    created."""
+    android_sdk._create_emulator = MagicMock()
+
+    # Select a target device by providing a device config
+    device, name, avd = android_sdk.select_target_device('{"avd":"idleEmulator"}')
+
+    # The emulator already exists, so it won't be created.
+    android_sdk._create_emulator.assert_not_called()
+
+    assert device is None
+    assert name == "@idleEmulator (emulator)"
+    assert avd == "idleEmulator"
+
+
+def test_explicit_new_device_full_spec(android_sdk):
+    """If the user provides a device configuration, that configuration is
+    created."""
+    android_sdk._create_emulator = MagicMock()
+
+    # Select a target device by providing a device config
+    device, name, avd = android_sdk.select_target_device(
+        '{"avd":"myDevice","device_type":"pixel","skin":"pixel_6",'
+        '"system_image":"system-images;android-21;default;arm64-v8a"}'
+    )
+
+    # A request was made to create the emulator using the internal method.
+    android_sdk._create_emulator.assert_called_once_with(
+        avd="myDevice",
+        device_type="pixel",
+        skin="pixel_6",
+        system_image="system-images;android-21;default;arm64-v8a",
+    )
+
+    assert device is None
+    assert name == "@myDevice (emulator)"
+    assert avd == "myDevice"
+
+
+def test_explicit_new_device_bad_spec(android_sdk):
+    """If the user provides a bad device configuration, an error is raised."""
+    android_sdk._create_emulator = MagicMock()
+
+    # Select a target device by providing a device config
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Unable to create emulator with definition '{NOT A JSON SNIPPET}'",
+    ):
+        android_sdk.select_target_device("{NOT A JSON SNIPPET}")
+
+
+def test_explicit_new_device_incomplete_spec(android_sdk):
+    """If the user provides a device configuration but doesn't provide an AVD,
+    an error is raised."""
+    android_sdk._create_emulator = MagicMock()
+
+    # Select a target device by providing a device config
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"No AVD provided for new device",
+    ):
+        android_sdk.select_target_device('{"device_type":"pixel","skin":"pixel_3a"}')
+
+
+def test_explicit_new_device_unknown_spec(android_sdk):
+    """If the user provides a device configuration with an unknown argument, an
+    error is raised."""
+
+    def mock_create_emulator(avd, device_type=None, skin=None, system_image=None):
+        pass
+
+    android_sdk._create_emulator = MagicMock(side_effect=mock_create_emulator)
+
+    # Select a target device by providing a device config
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Unknown device property 'color'",
+    ):
+        android_sdk.select_target_device(
+            '{"avd":"myPhone","device_type":"pixel","color":"blue"}'
+        )

@@ -68,7 +68,7 @@ def test_install_app_dependencies_in_docker(first_app_config, tmp_path):
         python_version="3.X",
     )
 
-    command.install_app_dependencies(first_app_config)
+    command.install_app_dependencies(first_app_config, test_mode=False)
 
     # pip was invoked inside docker.
     command.tools.subprocess.run.assert_called_with(
@@ -120,7 +120,7 @@ def test_install_app_dependencies_no_docker(first_app_config, tmp_path):
     command.verify_tools()
     command.verify_app_tools(first_app_config)
 
-    command.install_app_dependencies(first_app_config)
+    command.install_app_dependencies(first_app_config, test_mode=False)
 
     # Docker is not verified.
     assert not hasattr(command.tools, "docker")

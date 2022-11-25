@@ -26,6 +26,8 @@ def full_context():
         "version": "1.2.3",
         "description": "This is a simple app",
         "sources": ["src/my_app"],
+        "test_sources": None,
+        "test_requires": None,
         "url": "https://example.com",
         "author": "First Last",
         "author_email": "first@example.com",
@@ -38,6 +40,7 @@ def full_context():
         "python_version": platform.python_version(),
         # Fields generated from other properties
         "module_name": "my_app",
+        "class_name": "MyApp",
         "package_name": "com.example",
         # Date-based fields added at time of generation
         "year": date.today().strftime("%Y"),

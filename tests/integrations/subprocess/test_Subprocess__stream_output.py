@@ -153,3 +153,88 @@ def test_stdout_closes_unexpectedly(mock_sub, streaming_process, monkeypatch, ca
     mock_sub.stream_output("testing", streaming_process)
 
     assert capsys.readouterr().out == "output line 1\n"
+
+
+def test_filter_func(mock_sub, streaming_process, capsys):
+    """A filter can be added to modify an output stream."""
+    # Define a filter function that converts "output" into "filtered"
+    def filter_func(line):
+        return line.replace("output", "filtered")
+
+    mock_sub.stream_output("testing", streaming_process, filter_func=filter_func)
+
+    # fmt: off
+    # Output has been transformed
+    assert capsys.readouterr().out == (
+        "filtered line 1\n"
+        "\n"
+        "filtered line 3\n"
+    )
+    # fmt: on
+
+    mock_sub.cleanup.assert_called_once_with("testing", streaming_process)
+
+
+def test_filter_func_reject(mock_sub, streaming_process, capsys):
+    """A filter that rejects lines can be added to modify an output stream."""
+    # Define a filter function that ignores blank lines
+    def filter_func(line):
+        if len(line) == 0:
+            return None
+        return line
+
+    mock_sub.stream_output("testing", streaming_process, filter_func=filter_func)
+
+    # fmt: off
+    # Output has been transformed
+    assert capsys.readouterr().out == (
+        "output line 1\n"
+        "output line 3\n"
+    )
+    # fmt: on
+
+    mock_sub.cleanup.assert_called_once_with("testing", streaming_process)
+
+
+def test_filter_func_line_ends(mock_sub, streaming_process, capsys):
+    """Filter functions are not provided the newline."""
+    # Define a filter function that redacts lines that end with 1
+    # The newline is *not* included.
+    def filter_func(line):
+        if line.endswith("line 1"):
+            return line.replace("line 1", "**REDACTED**")
+        return line
+
+    mock_sub.stream_output("testing", streaming_process, filter_func=filter_func)
+
+    # fmt: off
+    # Output has been transformed; newline exists in output
+    assert capsys.readouterr().out == (
+        "output **REDACTED**\n"
+        "\n"
+        "output line 3\n"
+    )
+    # fmt: on
+
+    mock_sub.cleanup.assert_called_once_with("testing", streaming_process)
+
+
+def test_filter_func_stop_iteration(mock_sub, streaming_process, capsys):
+    """A filter can indicate that logging should stop."""
+    # Define a filter function that converts "output" into "filtered",
+    # and terminates logging when a blank line is seen.
+    def filter_func(line):
+        if line == "":
+            raise StopIteration()
+        return line.replace("output", "filtered")
+
+    mock_sub.stream_output("testing", streaming_process, filter_func=filter_func)
+
+    # fmt: off
+    # Output has been transformed, but is truncated when the empty line was received.
+    assert capsys.readouterr().out == (
+        "filtered line 1\n"
+    )
+    # fmt: on
+
+    mock_sub.cleanup.assert_called_once_with("testing", streaming_process)

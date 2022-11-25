@@ -9,7 +9,7 @@ from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.macOS.xcode import macOSXcodeBuildCommand
 
 
-def test_build_app(first_app_config, tmp_path):
+def test_build_app(first_app_generated, tmp_path):
     """An macOS App can be built."""
     command = macOSXcodeBuildCommand(
         logger=Log(),
@@ -19,7 +19,7 @@ def test_build_app(first_app_config, tmp_path):
     )
 
     command.tools.subprocess = MagicMock(spec_set=Subprocess)
-    command.build_app(first_app_config)
+    command.build_app(first_app_generated, test_mode=False)
 
     command.tools.subprocess.run.assert_called_with(
         [
@@ -40,7 +40,7 @@ def test_build_app(first_app_config, tmp_path):
     )
 
 
-def test_build_app_failed(first_app_config, tmp_path):
+def test_build_app_failed(first_app_generated, tmp_path):
     """If xcodebuild fails, an error is raised."""
     command = macOSXcodeBuildCommand(
         logger=Log(),
@@ -57,7 +57,7 @@ def test_build_app_failed(first_app_config, tmp_path):
     )
 
     with pytest.raises(BriefcaseCommandError):
-        command.build_app(first_app_config)
+        command.build_app(first_app_generated, test_mode=False)
 
     command.tools.subprocess.run.assert_called_with(
         [

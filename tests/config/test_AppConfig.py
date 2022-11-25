@@ -23,6 +23,7 @@ def test_minimal_AppConfig():
 
     # Derived properties have been set.
     assert config.formal_name == "myapp"
+    assert config.class_name == "myapp"
     assert config.document_types == {}
 
     # There is no icon or splash of any kind
@@ -30,7 +31,9 @@ def test_minimal_AppConfig():
     assert config.splash is None
 
     # The PYTHONPATH is derived correctly
-    assert config.PYTHONPATH == ["src", "somewhere/else", ""]
+    assert config.PYTHONPATH(False) == ["src", "somewhere/else", ""]
+    # The test mode PYTHONPATH is the same
+    assert config.PYTHONPATH(True) == ["src", "somewhere/else", ""]
 
     # The object has a meaningful REPL
     assert repr(config) == "<org.beeware.myapp v1.2.3 AppConfig>"
@@ -40,7 +43,7 @@ def test_extra_attrs():
     """A config can contain attributes in addition to those required."""
     config = AppConfig(
         app_name="myapp",
-        formal_name="My App",
+        formal_name="My App!",
         version="1.2.3",
         bundle="org.beeware",
         description="A simple app",
@@ -66,7 +69,8 @@ def test_extra_attrs():
     assert config.requires == ["first", "second", "third"]
 
     # Properties that are derived by default have been set explicitly
-    assert config.formal_name == "My App"
+    assert config.formal_name == "My App!"
+    assert config.class_name == "MyApp"
     assert config.document_types == {
         "document": {
             "extension": "doc",

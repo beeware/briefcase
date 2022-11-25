@@ -119,11 +119,11 @@ class TrackingCreateCommand(DummyCreateCommand):
     def install_app_support_package(self, app):
         self.actions.append(("support", app))
 
-    def install_app_dependencies(self, app):
-        self.actions.append(("dependencies", app))
+    def install_app_dependencies(self, app, test_mode):
+        self.actions.append(("dependencies", app, test_mode))
 
-    def install_app_code(self, app):
-        self.actions.append(("code", app))
+    def install_app_code(self, app, test_mode):
+        self.actions.append(("code", app, test_mode))
 
     def install_app_resources(self, app):
         self.actions.append(("resources", app))

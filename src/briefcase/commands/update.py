@@ -28,6 +28,7 @@ class UpdateCommand(CreateCommand):
         app: BaseConfig,
         update_dependencies=False,
         update_resources=False,
+        test_mode=False,
         **options,
     ):
         """Update an existing application bundle.
@@ -35,6 +36,7 @@ class UpdateCommand(CreateCommand):
         :param app: The config object for the app
         :param update_dependencies: Should dependencies be updated? (default: False)
         :param update_resources: Should extra resources be updated? (default: False)
+        :param test_mode: Should the app be updated in test mode? (default: False)
         """
 
         bundle_path = self.bundle_path(app)
@@ -46,14 +48,14 @@ class UpdateCommand(CreateCommand):
 
         self.verify_app_tools(app)
 
-        if update_dependencies:
+        if update_dependencies or test_mode:
             self.logger.info("Updating dependencies...", prefix=app.app_name)
-            self.install_app_dependencies(app=app)
+            self.install_app_dependencies(app=app, test_mode=test_mode)
 
         self.logger.info("Updating application code...", prefix=app.app_name)
-        self.install_app_code(app=app)
+        self.install_app_code(app=app, test_mode=test_mode)
 
-        if update_resources:
+        if update_resources or test_mode:
             self.logger.info(
                 "Updating extra application resources...", prefix=app.app_name
             )

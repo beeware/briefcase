@@ -462,3 +462,73 @@ def test_emulator_ctrl_c(mock_tools, android_sdk, capsys):
     assert (
         "Is the Android emulator not starting up properly?" in capsys.readouterr().out
     )
+
+
+def test_start_emulator_extra_args(mock_tools, android_sdk):
+    """The emulator can be started with extra arguments."""
+    devices = {
+        "emulator-5554": {
+            "name": "generic_x86",
+            "authorized": True,
+        },
+    }
+
+    android_sdk.devices = MagicMock(
+        side_effect=[
+            devices,
+        ]
+    )
+
+    # There will be 2 calls on adb.run (1 call to avd_name, then
+    # 1 call to getprop)
+    android_sdk.mock_run.side_effect = [
+        # emu avd_name
+        "idleEmulator\nOK",  # running emulator
+        # shell getprop sys.boot_completed
+        "1\n",
+    ]
+
+    # poll() on the process continues to return None, indicating no problem.
+    emu_popen = MagicMock(spec=subprocess.Popen)
+    emu_popen.args = [android_sdk.emulator_path, "@idleEmulator"]
+    emu_popen.poll.return_value = None
+    mock_tools.subprocess.Popen.return_value = emu_popen
+
+    # Start the emulator with extra arguments
+    device, name = android_sdk.start_emulator(
+        "idleEmulator", ["-no-window", "-no-audio"]
+    )
+
+    # The device details are as expected
+    assert device == "emulator-5554"
+    assert name == "@idleEmulator (running emulator)"
+
+    # The process was started with the headless test options.
+    mock_tools.subprocess.Popen.assert_called_with(
+        [
+            os.fsdecode(android_sdk.emulator_path),
+            "@idleEmulator",
+            "-dns-server",
+            "8.8.8.8",
+            "-no-window",
+            "-no-audio",
+        ],
+        env=android_sdk.env,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        bufsize=1,
+        start_new_session=True,
+    )
+
+    # There were 2 calls to run
+    android_sdk.mock_run.assert_has_calls(
+        [
+            # 1 call to get avd name
+            call("emu", "avd", "name"),
+            # 1 calls to get boot property
+            call("shell", "getprop", "sys.boot_completed"),
+        ]
+    )
+
+    # Took no naps, as everything was ready when we found it.
+    assert android_sdk.sleep.call_count == 0

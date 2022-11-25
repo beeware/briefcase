@@ -30,10 +30,10 @@ def test_update(update_command, first_app, second_app):
     assert update_command.actions == [
         ("verify",),
         # Update the first app
-        ("code", update_command.apps["first"]),
+        ("code", update_command.apps["first"], False),
         ("cleanup", update_command.apps["first"]),
         # Update the second app
-        ("code", update_command.apps["second"]),
+        ("code", update_command.apps["second"], False),
         ("cleanup", update_command.apps["second"]),
     ]
 
@@ -50,7 +50,7 @@ def test_update_single(update_command, first_app, second_app):
     assert update_command.actions == [
         ("verify",),
         # update the first app
-        ("code", update_command.apps["first"]),
+        ("code", update_command.apps["first"], False),
         ("cleanup", update_command.apps["first"]),
     ]
 
@@ -66,12 +66,12 @@ def test_update_with_dependencies(update_command, first_app, second_app):
     assert update_command.actions == [
         ("verify",),
         # Update the first app
-        ("dependencies", update_command.apps["first"]),
-        ("code", update_command.apps["first"]),
+        ("dependencies", update_command.apps["first"], False),
+        ("code", update_command.apps["first"], False),
         ("cleanup", update_command.apps["first"]),
         # Update the second app
-        ("dependencies", update_command.apps["second"]),
-        ("code", update_command.apps["second"]),
+        ("dependencies", update_command.apps["second"], False),
+        ("code", update_command.apps["second"], False),
         ("cleanup", update_command.apps["second"]),
     ]
 
@@ -87,11 +87,11 @@ def test_update_with_resources(update_command, first_app, second_app):
     assert update_command.actions == [
         ("verify",),
         # Update the first app
-        ("code", update_command.apps["first"]),
+        ("code", update_command.apps["first"], False),
         ("resources", update_command.apps["first"]),
         ("cleanup", update_command.apps["first"]),
         # Update the second app
-        ("code", update_command.apps["second"]),
+        ("code", update_command.apps["second"], False),
         ("resources", update_command.apps["second"]),
         ("cleanup", update_command.apps["second"]),
     ]

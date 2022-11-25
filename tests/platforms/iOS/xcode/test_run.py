@@ -8,23 +8,41 @@ from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.integrations.xcode import DeviceState
 from briefcase.platforms.iOS.xcode import iOSXcodeRunCommand
+from briefcase.platforms.macOS import macOS_log_clean_filter
 
 
 @pytest.fixture
 def run_command(tmp_path):
-    return iOSXcodeRunCommand(
+    command = iOSXcodeRunCommand(
         logger=Log(),
         console=Console(),
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
     )
+    command.tools.home_path = tmp_path / "home"
+    command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
+    command._stream_app_logs = mock.MagicMock()
+
+    # To satisfy coverage, the stop function must be invoked
+    # at least once when streaming app logs.
+    def mock_stream_app_logs(app, stop_func, **kwargs):
+        stop_func()
+
+    command._stream_app_logs.side_effect = mock_stream_app_logs
+
+    return command
 
 
 def test_device_option(run_command):
     """The -d option can be parsed."""
     options = run_command.parse_options(["-d", "myphone"])
 
-    assert options == {"udid": "myphone", "update": False, "appname": None}
+    assert options == {
+        "udid": "myphone",
+        "update": None,
+        "test_mode": False,
+        "appname": None,
+    }
 
 
 def test_run_multiple_devices_input_disabled(run_command, first_app_config):
@@ -48,7 +66,7 @@ def test_run_multiple_devices_input_disabled(run_command, first_app_config):
         BriefcaseCommandError,
         match=r"Input has been disabled; can't select a device to target.",
     ):
-        run_command.run_app(first_app_config)
+        run_command.run_app(first_app_config, test_mode=False)
 
 
 def test_run_app_simulator_booted(run_command, first_app_config, tmp_path):
@@ -61,12 +79,17 @@ def test_run_app_simulator_booted(run_command, first_app_config, tmp_path):
     # Simulator is already booted
     run_command.get_device_state = mock.MagicMock(return_value=DeviceState.BOOTED)
 
-    run_command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
+    # Mock a process ID for the app
+    run_command.tools.subprocess.check_output.return_value = (
+        "com.example.first-app: 1234\n"
+    )
+
+    # Mock the log stream
     log_stream_process = mock.MagicMock(spec_set=subprocess.Popen)
     run_command.tools.subprocess.Popen.return_value = log_stream_process
 
     # Run the app
-    run_command.run_app(first_app_config)
+    run_command.run_app(first_app_config, test_mode=False)
 
     # The correct sequence of commands was issued.
     run_command.tools.subprocess.run.assert_has_calls(
@@ -112,21 +135,21 @@ def test_run_app_simulator_booted(run_command, first_app_config, tmp_path):
                 ],
                 check=True,
             ),
-            # Launch the new app
-            mock.call(
-                [
-                    "xcrun",
-                    "simctl",
-                    "launch",
-                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
-                    "com.example.first-app",
-                ],
-                check=True,
-            ),
         ]
     )
-    # The log is being tailed and process cleanup is triggered
-    run_command.tools.subprocess.Popen.assert_called_with(
+    # Launch the new app
+    run_command.tools.subprocess.check_output.assert_called_once_with(
+        [
+            "xcrun",
+            "simctl",
+            "launch",
+            "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+            "com.example.first-app",
+        ],
+    )
+
+    # Start the log stream
+    run_command.tools.subprocess.Popen.assert_called_once_with(
         [
             "xcrun",
             "simctl",
@@ -145,11 +168,16 @@ def test_run_app_simulator_booted(run_command, first_app_config, tmp_path):
         stderr=subprocess.STDOUT,
         bufsize=1,
     )
-    run_command.tools.subprocess.stream_output.assert_called_with(
-        "log stream", log_stream_process
-    )
-    run_command.tools.subprocess.cleanup.assert_called_with(
-        "log stream", log_stream_process
+
+    # Log stream monitoring was started
+    run_command._stream_app_logs.assert_called_with(
+        first_app_config,
+        popen=log_stream_process,
+        test_mode=False,
+        clean_filter=macOS_log_clean_filter,
+        clean_output=True,
+        stop_func=mock.ANY,
+        log_stream=True,
     )
 
 
@@ -164,11 +192,18 @@ def test_run_app_simulator_shut_down(run_command, first_app_config, tmp_path):
     run_command.get_device_state = mock.MagicMock(return_value=DeviceState.SHUTDOWN)
 
     run_command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
+
+    # Mock a process ID for the app
+    run_command.tools.subprocess.check_output.return_value = (
+        "com.example.first-app: 1234\n"
+    )
+
+    # Mock the log stream
     log_stream_process = mock.MagicMock(spec_set=subprocess.Popen)
     run_command.tools.subprocess.Popen.return_value = log_stream_process
 
     # Run the app
-    run_command.run_app(first_app_config)
+    run_command.run_app(first_app_config, test_mode=False)
 
     # The correct sequence of commands was issued.
     run_command.tools.subprocess.run.assert_has_calls(
@@ -219,21 +254,22 @@ def test_run_app_simulator_shut_down(run_command, first_app_config, tmp_path):
                 ],
                 check=True,
             ),
-            # Launch the new app
-            mock.call(
-                [
-                    "xcrun",
-                    "simctl",
-                    "launch",
-                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
-                    "com.example.first-app",
-                ],
-                check=True,
-            ),
         ]
     )
-    # The log is being tailed and process cleanup is triggered
-    run_command.tools.subprocess.Popen.assert_called_with(
+
+    # Launch the new app
+    run_command.tools.subprocess.check_output.assert_called_once_with(
+        [
+            "xcrun",
+            "simctl",
+            "launch",
+            "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+            "com.example.first-app",
+        ],
+    )
+
+    # Start the log stream
+    run_command.tools.subprocess.Popen.assert_called_once_with(
         [
             "xcrun",
             "simctl",
@@ -252,11 +288,16 @@ def test_run_app_simulator_shut_down(run_command, first_app_config, tmp_path):
         stderr=subprocess.STDOUT,
         bufsize=1,
     )
-    run_command.tools.subprocess.stream_output.assert_called_with(
-        "log stream", log_stream_process
-    )
-    run_command.tools.subprocess.cleanup.assert_called_with(
-        "log stream", log_stream_process
+
+    # Log stream monitoring was started
+    run_command._stream_app_logs.assert_called_with(
+        first_app_config,
+        popen=log_stream_process,
+        test_mode=False,
+        clean_filter=macOS_log_clean_filter,
+        clean_output=True,
+        stop_func=mock.ANY,
+        log_stream=True,
     )
 
 
@@ -281,11 +322,18 @@ def test_run_app_simulator_shutting_down(run_command, first_app_config, tmp_path
 
     run_command.sleep = mock.MagicMock()
     run_command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
+
+    # Mock a process ID for the app
+    run_command.tools.subprocess.check_output.return_value = (
+        "com.example.first-app: 1234\n"
+    )
+
+    # Mock the log stream
     log_stream_process = mock.MagicMock(spec_set=subprocess.Popen)
     run_command.tools.subprocess.Popen.return_value = log_stream_process
 
     # Run the app
-    run_command.run_app(first_app_config)
+    run_command.run_app(first_app_config, test_mode=False)
 
     # We should have slept 4 times
     assert run_command.sleep.call_count == 4
@@ -339,21 +387,22 @@ def test_run_app_simulator_shutting_down(run_command, first_app_config, tmp_path
                 ],
                 check=True,
             ),
-            # Launch the new app
-            mock.call(
-                [
-                    "xcrun",
-                    "simctl",
-                    "launch",
-                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
-                    "com.example.first-app",
-                ],
-                check=True,
-            ),
         ]
     )
-    # The log is being tailed and process cleanup is triggered
-    run_command.tools.subprocess.Popen.assert_called_with(
+
+    # Launch the new app
+    run_command.tools.subprocess.check_output.assert_called_once_with(
+        [
+            "xcrun",
+            "simctl",
+            "launch",
+            "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+            "com.example.first-app",
+        ],
+    )
+
+    # Start the log stream
+    run_command.tools.subprocess.Popen.assert_called_once_with(
         [
             "xcrun",
             "simctl",
@@ -372,11 +421,16 @@ def test_run_app_simulator_shutting_down(run_command, first_app_config, tmp_path
         stderr=subprocess.STDOUT,
         bufsize=1,
     )
-    run_command.tools.subprocess.stream_output.assert_called_with(
-        "log stream", log_stream_process
-    )
-    run_command.tools.subprocess.cleanup.assert_called_with(
-        "log stream", log_stream_process
+
+    # Log stream monitoring was started
+    run_command._stream_app_logs.assert_called_with(
+        first_app_config,
+        popen=log_stream_process,
+        test_mode=False,
+        clean_filter=macOS_log_clean_filter,
+        clean_output=True,
+        stop_func=mock.ANY,
+        log_stream=True,
     )
 
 
@@ -397,7 +451,7 @@ def test_run_app_simulator_boot_failure(run_command, first_app_config):
 
     # Run the app
     with pytest.raises(BriefcaseCommandError):
-        run_command.run_app(first_app_config)
+        run_command.run_app(first_app_config, test_mode=False)
 
     # The correct sequence of commands was issued.
     run_command.tools.subprocess.run.assert_has_calls(
@@ -409,10 +463,10 @@ def test_run_app_simulator_boot_failure(run_command, first_app_config):
             ),
         ]
     )
+
     # The log will not be tailed
     run_command.tools.subprocess.Popen.assert_not_called()
-    run_command.tools.subprocess.stream_output.assert_not_called()
-    run_command.tools.subprocess.cleanup.assert_not_called()
+    run_command._stream_app_logs.assert_not_called()
 
 
 def test_run_app_simulator_open_failure(run_command, first_app_config):
@@ -437,7 +491,7 @@ def test_run_app_simulator_open_failure(run_command, first_app_config):
 
     # Run the app
     with pytest.raises(BriefcaseCommandError):
-        run_command.run_app(first_app_config)
+        run_command.run_app(first_app_config, test_mode=False)
 
     # The correct sequence of commands was issued.
     run_command.tools.subprocess.run.assert_has_calls(
@@ -463,8 +517,7 @@ def test_run_app_simulator_open_failure(run_command, first_app_config):
     )
     # The log will not be tailed
     run_command.tools.subprocess.Popen.assert_not_called()
-    run_command.tools.subprocess.stream_output.assert_not_called()
-    run_command.tools.subprocess.cleanup.assert_not_called()
+    run_command._stream_app_logs.assert_not_called()
 
 
 def test_run_app_simulator_uninstall_failure(run_command, first_app_config):
@@ -489,7 +542,7 @@ def test_run_app_simulator_uninstall_failure(run_command, first_app_config):
 
     # Run the app
     with pytest.raises(BriefcaseCommandError):
-        run_command.run_app(first_app_config)
+        run_command.run_app(first_app_config, test_mode=False)
 
     # The correct sequence of commands was issued.
     run_command.tools.subprocess.run.assert_has_calls(
@@ -526,8 +579,7 @@ def test_run_app_simulator_uninstall_failure(run_command, first_app_config):
     )
     # The log will not be tailed
     run_command.tools.subprocess.Popen.assert_not_called()
-    run_command.tools.subprocess.stream_output.assert_not_called()
-    run_command.tools.subprocess.cleanup.assert_not_called()
+    run_command._stream_app_logs.assert_not_called()
 
 
 def test_run_app_simulator_install_failure(run_command, first_app_config, tmp_path):
@@ -553,7 +605,7 @@ def test_run_app_simulator_install_failure(run_command, first_app_config, tmp_pa
 
     # Run the app
     with pytest.raises(BriefcaseCommandError):
-        run_command.run_app(first_app_config)
+        run_command.run_app(first_app_config, test_mode=False)
 
     # The correct sequence of commands was issued.
     run_command.tools.subprocess.run.assert_has_calls(
@@ -608,8 +660,7 @@ def test_run_app_simulator_install_failure(run_command, first_app_config, tmp_pa
     )
     # The log will not be tailed
     run_command.tools.subprocess.Popen.assert_not_called()
-    run_command.tools.subprocess.stream_output.assert_not_called()
-    run_command.tools.subprocess.cleanup.assert_not_called()
+    run_command._stream_app_logs.assert_not_called()
 
 
 def test_run_app_simulator_launch_failure(run_command, first_app_config, tmp_path):
@@ -622,23 +673,29 @@ def test_run_app_simulator_launch_failure(run_command, first_app_config, tmp_pat
     # Simulator is shut down
     run_command.get_device_state = mock.MagicMock(return_value=DeviceState.SHUTDOWN)
 
-    # Call to boot and open simulator, uninstall and install succeed, but launch fails.
+    # Call to boot and open simulator, uninstall and install succeed.
     run_command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
     run_command.tools.subprocess.run.side_effect = [
         0,
         0,
         0,
         0,
+    ]
+
+    # Mock a process ID for the app
+    run_command.tools.subprocess.check_output.side_effect = (
         subprocess.CalledProcessError(
             cmd=["xcrun", "simctl", "launch", "..."], returncode=1
-        ),
-    ]
+        )
+    )
+
+    # Mock the log stream
     log_stream_process = mock.MagicMock()
     run_command.tools.subprocess.Popen.return_value = log_stream_process
 
     # Run the app
     with pytest.raises(BriefcaseCommandError):
-        run_command.run_app(first_app_config)
+        run_command.run_app(first_app_config, test_mode=False)
 
     # The correct sequence of commands was issued.
     run_command.tools.subprocess.run.assert_has_calls(
@@ -689,21 +746,22 @@ def test_run_app_simulator_launch_failure(run_command, first_app_config, tmp_pat
                 ],
                 check=True,
             ),
-            # Launch the new app
-            mock.call(
-                [
-                    "xcrun",
-                    "simctl",
-                    "launch",
-                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
-                    "com.example.first-app",
-                ],
-                check=True,
-            ),
         ]
     )
-    # The log stream process will have been started; but will not be tailed
-    run_command.tools.subprocess.Popen.assert_called_with(
+
+    # Launch the new app
+    run_command.tools.subprocess.check_output.assert_called_once_with(
+        [
+            "xcrun",
+            "simctl",
+            "launch",
+            "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+            "com.example.first-app",
+        ],
+    )
+
+    # Start the log stream
+    run_command.tools.subprocess.Popen.assert_called_once_with(
         [
             "xcrun",
             "simctl",
@@ -722,16 +780,252 @@ def test_run_app_simulator_launch_failure(run_command, first_app_config, tmp_pat
         stderr=subprocess.STDOUT,
         bufsize=1,
     )
-    run_command.tools.subprocess.stream_output.assert_not_called()
 
-    # The log process was cleaned up.
-    run_command.tools.subprocess.cleanup.assert_called_once_with(
-        "log stream", log_stream_process
+    # Log stream failed, so it won't be monitored
+    run_command._stream_app_logs.assert_not_called()
+
+
+def test_run_app_simulator_no_pid(run_command, first_app_config, tmp_path):
+    """If the app fails to provide a meaningful PID on launch, raise an
+    error."""
+    # A valid target device will be selected.
+    run_command.select_target_device = mock.MagicMock(
+        return_value=("2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D", "13.2", "iPhone 11")
     )
 
+    # Simulator is shut down
+    run_command.get_device_state = mock.MagicMock(return_value=DeviceState.SHUTDOWN)
 
-def test_run_app_ctrl_c(run_command, first_app_config, tmp_path, capsys):
-    """When CTRL-C is sent during log streaming, Briefcase exits normally."""
+    # Call to boot and open simulator, uninstall and install succeed.
+    run_command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
+    run_command.tools.subprocess.run.side_effect = [
+        0,
+        0,
+        0,
+        0,
+    ]
+
+    # Mock a bad return value for the PID
+    run_command.tools.subprocess.check_output.return_value = "No PID returned"
+
+    # Mock the log stream
+    log_stream_process = mock.MagicMock()
+    run_command.tools.subprocess.Popen.return_value = log_stream_process
+
+    # Run the app
+    with pytest.raises(BriefcaseCommandError):
+        run_command.run_app(first_app_config, test_mode=False)
+
+    # The correct sequence of commands was issued.
+    run_command.tools.subprocess.run.assert_has_calls(
+        [
+            # Boot the device
+            mock.call(
+                ["xcrun", "simctl", "boot", "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D"],
+                check=True,
+            ),
+            # Open the simulator
+            mock.call(
+                [
+                    "open",
+                    "-a",
+                    "Simulator",
+                    "--args",
+                    "-CurrentDeviceUDID",
+                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                ],
+                check=True,
+            ),
+            # Uninstall the old app
+            mock.call(
+                [
+                    "xcrun",
+                    "simctl",
+                    "uninstall",
+                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                    "com.example.first-app",
+                ],
+                check=True,
+            ),
+            # Install the new app
+            mock.call(
+                [
+                    "xcrun",
+                    "simctl",
+                    "install",
+                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                    tmp_path
+                    / "base_path"
+                    / "iOS"
+                    / "Xcode"
+                    / "First App"
+                    / "build"
+                    / "Debug-iphonesimulator"
+                    / "First App.app",
+                ],
+                check=True,
+            ),
+        ]
+    )
+
+    # Launch the new app
+    run_command.tools.subprocess.check_output.assert_called_once_with(
+        [
+            "xcrun",
+            "simctl",
+            "launch",
+            "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+            "com.example.first-app",
+        ],
+    )
+
+    # Start the log stream
+    run_command.tools.subprocess.Popen.assert_called_once_with(
+        [
+            "xcrun",
+            "simctl",
+            "spawn",
+            "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+            "log",
+            "stream",
+            "--style",
+            "compact",
+            "--predicate",
+            'senderImagePath ENDSWITH "/First App"'
+            ' OR (processImagePath ENDSWITH "/First App"'
+            ' AND senderImagePath ENDSWITH "-iphonesimulator.so")',
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        bufsize=1,
+    )
+
+    # PID detection failed, so it won't be monitored
+    run_command._stream_app_logs.assert_not_called()
+
+
+def test_run_app_simulator_non_integer_pid(run_command, first_app_config, tmp_path):
+    """If the PID returned isn't an integer, raise an error."""
+    # A valid target device will be selected.
+    run_command.select_target_device = mock.MagicMock(
+        return_value=("2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D", "13.2", "iPhone 11")
+    )
+
+    # Simulator is shut down
+    run_command.get_device_state = mock.MagicMock(return_value=DeviceState.SHUTDOWN)
+
+    # Call to boot and open simulator, uninstall and install succeed.
+    run_command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
+    run_command.tools.subprocess.run.side_effect = [
+        0,
+        0,
+        0,
+        0,
+    ]
+
+    # Mock a bad process ID for the app
+    run_command.tools.subprocess.check_output.return_value = (
+        "com.example.first-app: NOT A PID\n"
+    )
+
+    # Mock the log stream
+    log_stream_process = mock.MagicMock()
+    run_command.tools.subprocess.Popen.return_value = log_stream_process
+
+    # Run the app
+    with pytest.raises(BriefcaseCommandError):
+        run_command.run_app(first_app_config, test_mode=False)
+
+    # The correct sequence of commands was issued.
+    run_command.tools.subprocess.run.assert_has_calls(
+        [
+            # Boot the device
+            mock.call(
+                ["xcrun", "simctl", "boot", "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D"],
+                check=True,
+            ),
+            # Open the simulator
+            mock.call(
+                [
+                    "open",
+                    "-a",
+                    "Simulator",
+                    "--args",
+                    "-CurrentDeviceUDID",
+                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                ],
+                check=True,
+            ),
+            # Uninstall the old app
+            mock.call(
+                [
+                    "xcrun",
+                    "simctl",
+                    "uninstall",
+                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                    "com.example.first-app",
+                ],
+                check=True,
+            ),
+            # Install the new app
+            mock.call(
+                [
+                    "xcrun",
+                    "simctl",
+                    "install",
+                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                    tmp_path
+                    / "base_path"
+                    / "iOS"
+                    / "Xcode"
+                    / "First App"
+                    / "build"
+                    / "Debug-iphonesimulator"
+                    / "First App.app",
+                ],
+                check=True,
+            ),
+        ]
+    )
+
+    # Launch the new app
+    run_command.tools.subprocess.check_output.assert_called_once_with(
+        [
+            "xcrun",
+            "simctl",
+            "launch",
+            "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+            "com.example.first-app",
+        ],
+    )
+
+    # Start the log stream
+    run_command.tools.subprocess.Popen.assert_called_once_with(
+        [
+            "xcrun",
+            "simctl",
+            "spawn",
+            "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+            "log",
+            "stream",
+            "--style",
+            "compact",
+            "--predicate",
+            'senderImagePath ENDSWITH "/First App"'
+            ' OR (processImagePath ENDSWITH "/First App"'
+            ' AND senderImagePath ENDSWITH "-iphonesimulator.so")',
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        bufsize=1,
+    )
+
+    # PID detection failed, so it won't be called
+    run_command._stream_app_logs.assert_not_called()
+
+
+def test_run_app_test_mode(run_command, first_app_config, tmp_path):
+    """An iOS App can be started in test mode."""
     # A valid target device will be selected.
     run_command.select_target_device = mock.MagicMock(
         return_value=("2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D", "13.2", "iPhone 11")
@@ -740,24 +1034,93 @@ def test_run_app_ctrl_c(run_command, first_app_config, tmp_path, capsys):
     # Simulator is already booted
     run_command.get_device_state = mock.MagicMock(return_value=DeviceState.BOOTED)
 
-    run_command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
+    # Mock a process ID for the app
+    run_command.tools.subprocess.check_output.return_value = (
+        "com.example.first-app: 1234\n"
+    )
+
+    # Mock the log stream
     log_stream_process = mock.MagicMock(spec_set=subprocess.Popen)
     run_command.tools.subprocess.Popen.return_value = log_stream_process
-    run_command.tools.subprocess.stream_output.side_effect = KeyboardInterrupt
 
-    # Run the app (and KeyboardInterrupt does not surface)
-    run_command.run_app(first_app_config)
+    # Run the app
+    run_command.run_app(first_app_config, test_mode=True)
 
-    # The log is being tailed and process cleanup is triggered
-    run_command.tools.subprocess.stream_output.assert_called_with(
-        "log stream", log_stream_process
+    # The correct sequence of commands was issued.
+    run_command.tools.subprocess.run.assert_has_calls(
+        [
+            # Simulator doesn't need to be opened.
+            # Uninstall the old app
+            mock.call(
+                [
+                    "xcrun",
+                    "simctl",
+                    "uninstall",
+                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                    "com.example.first-app",
+                ],
+                check=True,
+            ),
+            # Install the new app
+            mock.call(
+                [
+                    "xcrun",
+                    "simctl",
+                    "install",
+                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                    tmp_path
+                    / "base_path"
+                    / "iOS"
+                    / "Xcode"
+                    / "First App"
+                    / "build"
+                    / "Debug-iphonesimulator"
+                    / "First App.app",
+                ],
+                check=True,
+            ),
+        ]
     )
-    run_command.tools.subprocess.cleanup.assert_called_with(
-        "log stream", log_stream_process
+
+    # Launch the new app
+    run_command.tools.subprocess.check_output.assert_called_once_with(
+        [
+            "xcrun",
+            "simctl",
+            "launch",
+            "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+            "com.example.first-app",
+        ],
     )
 
-    # Shows the try block for KeyboardInterrupt was entered
-    assert capsys.readouterr().out.endswith(
-        "[first-app] Following simulator log output (type CTRL-C to stop log)...\n"
-        "===========================================================================\n"
+    # Start the log stream
+    run_command.tools.subprocess.Popen.assert_called_once_with(
+        [
+            "xcrun",
+            "simctl",
+            "spawn",
+            "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+            "log",
+            "stream",
+            "--style",
+            "compact",
+            "--predicate",
+            'senderImagePath ENDSWITH "/First App"'
+            ' OR (processImagePath ENDSWITH "/First App"'
+            ' AND senderImagePath ENDSWITH "-iphonesimulator.so")',
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        bufsize=1,
+    )
+
+    # Log stream monitoring was started
+    run_command._stream_app_logs.assert_called_with(
+        first_app_config,
+        popen=log_stream_process,
+        test_mode=True,
+        clean_filter=macOS_log_clean_filter,
+        clean_output=True,
+        stop_func=mock.ANY,
+        log_stream=True,
     )

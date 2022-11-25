@@ -53,13 +53,25 @@ class DevCommand(BaseCommand):
             default=True,
             help="Do not run the app, just install dependencies.",
         )
+        parser.add_argument(
+            "--test",
+            dest="test_mode",
+            action="store_true",
+            help="Run the app in test mode",
+        )
 
     def install_dev_dependencies(self, app: BaseConfig, **options):
-        """Install the dependencies for the app devly.
+        """Install the dependencies for the app dev.
+
+        This will always include test dependencies, if specified.
 
         :param app: The config object for the app
         """
-        if app.requires:
+        requires = app.requires if app.requires else []
+        if app.test_requires:
+            requires.extend(app.test_requires)
+
+        if requires:
             with self.input.wait_bar("Installing dev dependencies..."):
                 try:
                     self.tools.subprocess.run(
@@ -71,7 +83,7 @@ class DevCommand(BaseCommand):
                             "install",
                             "--upgrade",
                         ]
-                        + app.requires,
+                        + requires,
                         check=True,
                     )
                 except subprocess.CalledProcessError as e:
@@ -79,14 +91,24 @@ class DevCommand(BaseCommand):
         else:
             self.logger.info("No application dependencies.")
 
-    def run_dev_app(self, app: BaseConfig, env: dict, **options):
+    def run_dev_app(
+        self,
+        app: BaseConfig,
+        env: dict,
+        test_mode: bool,
+        **options,
+    ):
         """Run the app in the dev environment.
 
         :param app: The config object for the app
         :param env: environment dictionary for sub command
+        :param test_mode: Run the test suite, rather than the app?
         """
         try:
+            main_module = app.main_module(test_mode)
+
             # Invoke the app.
+            self.logger.info("=" * 75)
             self.tools.subprocess.run(
                 [
                     sys.executable,
@@ -97,7 +119,7 @@ class DevCommand(BaseCommand):
                     (
                         "import runpy, sys;"
                         "sys.path.pop(0);"
-                        f'runpy.run_module("{app.module_name}", run_name="__main__", alter_sys=True)'
+                        f'runpy.run_module("{main_module}", run_name="__main__", alter_sys=True)'
                     ),
                 ],
                 env=env,
@@ -106,15 +128,15 @@ class DevCommand(BaseCommand):
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(
-                f"Unable to start application '{app.app_name}'"
+                f"Problem running {'test suite' if test_mode else 'application'} {main_module!r}"
             ) from e
 
-    def get_environment(self, app):
+    def get_environment(self, app, test_mode: bool):
         # Create a shell environment where PYTHONPATH points to the source
         # directories described by the app config.
         return {
             "PYTHONPATH": os.pathsep.join(
-                os.fsdecode(Path.cwd() / path) for path in app.PYTHONPATH
+                os.fsdecode(Path.cwd() / path) for path in app.PYTHONPATH(test_mode)
             )
         }
 
@@ -123,6 +145,7 @@ class DevCommand(BaseCommand):
         appname: Optional[str] = None,
         update_dependencies: Optional[bool] = False,
         run_app: Optional[bool] = True,
+        test_mode: Optional[bool] = False,
         **options,
     ):
         # Confirm all required tools are available
@@ -164,6 +187,11 @@ class DevCommand(BaseCommand):
             write_dist_info(app, dist_info_path)
 
         if run_app:
-            self.logger.info("Starting in dev mode...", prefix=app.app_name)
-            env = self.get_environment(app)
-            return self.run_dev_app(app, env, **options)
+            if test_mode:
+                self.logger.info(
+                    "Running test suite in dev environment...", prefix=app.app_name
+                )
+            else:
+                self.logger.info("Starting in dev mode...", prefix=app.app_name)
+            env = self.get_environment(app, test_mode=test_mode)
+            return self.run_dev_app(app, env, test_mode=test_mode, **options)

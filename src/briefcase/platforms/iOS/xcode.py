@@ -1,3 +1,4 @@
+import plistlib
 import subprocess
 import time
 from uuid import UUID
@@ -14,8 +15,10 @@ from briefcase.commands import (
 from briefcase.config import BaseConfig
 from briefcase.console import InputDisabled, select_option
 from briefcase.exceptions import BriefcaseCommandError, InvalidDeviceError
+from briefcase.integrations.subprocess import is_process_dead
 from briefcase.integrations.xcode import DeviceState, get_device_state, get_simulators
 from briefcase.platforms.iOS import iOSMixin
+from briefcase.platforms.macOS import macOS_log_clean_filter
 
 
 class iOSXcodePassiveMixin(iOSMixin):
@@ -250,11 +253,42 @@ class iOSXcodeOpenCommand(iOSXcodePassiveMixin, OpenCommand):
 class iOSXcodeBuildCommand(iOSXcodePassiveMixin, BuildCommand):
     description = "Build an iOS Xcode project."
 
-    def build_app(self, app: BaseConfig, **kwargs):
+    def info_plist_path(self, app: BaseConfig):
+        """Obtain the path to the application's plist file.
+
+        :param app: The config object for the app
+        :return: The full path of the application's plist file.
+        """
+        # If the index file hasn't been loaded for this app, load it.
+        try:
+            path_index = self._path_index[app]
+        except KeyError:
+            path_index = self._load_path_index(app)
+        return self.bundle_path(app) / path_index["info_plist_path"]
+
+    def update_app_metadata(self, app: BaseConfig, test_mode: bool):
+        with self.input.wait_bar("Setting main module..."):
+            # Load the original plist
+            with self.info_plist_path(app).open("rb") as f:
+                info_plist = plistlib.load(f)
+
+            # Set the name of the app's main module; this will depend
+            # on whether we're in test mode.
+            info_plist["MainModule"] = app.main_module(test_mode)
+
+            # Write the modified plist
+            with self.info_plist_path(app).open("wb") as f:
+                plistlib.dump(info_plist, f)
+
+    def build_app(self, app: BaseConfig, test_mode: bool = False, **kwargs):
         """Build the Xcode project for the application.
 
         :param app: The application to build
+        :param test_mode: Should the app be updated in test mode? (default: False)
         """
+        self.logger.info("Updating app metadata...", prefix=app.app_name)
+        self.update_app_metadata(app=app, test_mode=test_mode)
+
         self.logger.info("Building XCode project...", prefix=app.app_name)
         with self.input.wait_bar("Building..."):
             try:
@@ -293,10 +327,11 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         self.get_device_state = get_device_state
         self.sleep = time.sleep
 
-    def run_app(self, app: BaseConfig, udid=None, **kwargs):
+    def run_app(self, app: BaseConfig, test_mode: bool, udid=None, **kwargs):
         """Start the application.
 
         :param app: The config object for the app
+        :param test_mode: Boolean; Is the app running in test mode?
         :param udid: The device UDID to target. If ``None``, the user will
             be asked to select a device at runtime.
         """
@@ -307,8 +342,13 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                 "Input has been disabled; can't select a device to target."
             ) from e
 
+        if test_mode:
+            label = "test suite"
+        else:
+            label = "app"
+
         self.logger.info(
-            f"Starting app on an {device} running iOS {iOS_version} (device UDID {udid})",
+            f"Starting {label} on an {device} running iOS {iOS_version} (device UDID {udid})",
             prefix=app.app_name,
         )
 
@@ -336,23 +376,32 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                     f"Unable to boot {device} simulator running {iOS_version}"
                 ) from e
 
-        # We now know the simulator is *running*, so we can open it.
-        try:
-            with self.input.wait_bar("Opening simulator..."):
-                self.tools.subprocess.run(
-                    ["open", "-a", "Simulator", "--args", "-CurrentDeviceUDID", udid],
-                    check=True,
-                )
-        except subprocess.CalledProcessError as e:
-            raise BriefcaseCommandError(
-                f"Unable to open {device} simulator running {iOS_version}"
-            ) from e
+        if not test_mode:
+            # We now know the simulator is *running*, so we can open it.
+            # We don't need to open the simulator to run the test suite.
+            try:
+                with self.input.wait_bar("Opening simulator..."):
+                    self.tools.subprocess.run(
+                        [
+                            "open",
+                            "-a",
+                            "Simulator",
+                            "--args",
+                            "-CurrentDeviceUDID",
+                            udid,
+                        ],
+                        check=True,
+                    )
+            except subprocess.CalledProcessError as e:
+                raise BriefcaseCommandError(
+                    f"Unable to open {device} simulator running {iOS_version}"
+                ) from e
 
         # Try to uninstall the app first. If the app hasn't been installed
         # before, this will still succeed.
+        self.logger.info(f"Installing {label}...", prefix=app.app_name)
         app_identifier = ".".join([app.bundle, app.app_name])
         try:
-            self.logger.info("Installing app...", prefix=app.app_name)
             with self.input.wait_bar("Uninstalling any existing app version..."):
                 self.tools.subprocess.run(
                     ["xcrun", "simctl", "uninstall", udid, app_identifier],
@@ -365,7 +414,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
 
         # Install the app.
         try:
-            with self.input.wait_bar("Installing new app version..."):
+            with self.input.wait_bar(f"Installing new {label} version..."):
                 self.tools.subprocess.run(
                     ["xcrun", "simctl", "install", udid, self.binary_path(app)],
                     check=True,
@@ -413,29 +462,38 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         self.sleep(0.25)
 
         try:
-            self.logger.info("Starting app...", prefix=app.app_name)
-            try:
-                with self.input.wait_bar("Launching app..."):
-                    self.tools.subprocess.run(
-                        ["xcrun", "simctl", "launch", udid, app_identifier],
-                        check=True,
-                    )
-            except subprocess.CalledProcessError as e:
-                raise BriefcaseCommandError(
-                    f"Unable to launch app {app.app_name}."
-                ) from e
+            self.logger.info(f"Starting {label}...", prefix=app.app_name)
+            with self.input.wait_bar(f"Launching {label}..."):
+                output = self.tools.subprocess.check_output(
+                    ["xcrun", "simctl", "launch", udid, app_identifier]
+                )
+                try:
+                    app_pid = int(output.split(":")[1].strip())
+                except (IndexError, ValueError) as e:
+                    raise BriefcaseCommandError(
+                        f"Unable to determine PID of {label} {app.app_name}."
+                    ) from e
 
             # Start streaming logs for the app.
             self.logger.info(
                 "Following simulator log output (type CTRL-C to stop log)...",
                 prefix=app.app_name,
             )
-            self.logger.info("=" * 75)
-            self.tools.subprocess.stream_output("log stream", simulator_log_popen)
-        except KeyboardInterrupt:
-            pass  # catch CTRL-C to exit normally
-        finally:
-            self.tools.subprocess.cleanup("log stream", simulator_log_popen)
+
+            # Stream the app logs,
+            self._stream_app_logs(
+                app,
+                popen=simulator_log_popen,
+                test_mode=test_mode,
+                clean_filter=macOS_log_clean_filter,
+                clean_output=True,
+                stop_func=lambda: is_process_dead(app_pid),
+                log_stream=True,
+            )
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(
+                f"Unable to launch {label} {app.app_name}."
+            ) from e
 
         # Preserve the device selection as state.
         return {"udid": udid}

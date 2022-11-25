@@ -4,7 +4,7 @@ from pathlib import Path
 
 from briefcase.cmdline import parse_cmdline
 from briefcase.console import Console, Log
-from briefcase.exceptions import BriefcaseError, HelpText
+from briefcase.exceptions import BriefcaseError, BriefcaseTestSuiteFailure, HelpText
 
 
 def main():
@@ -22,6 +22,10 @@ def main():
     except HelpText as e:
         logger.info()
         logger.info(str(e))
+        result = e.error_code
+    except BriefcaseTestSuiteFailure as e:
+        # Test suite status is logged when the test is executed.
+        # Set the return code, but don't log anything else.
         result = e.error_code
     except BriefcaseError as e:
         logger.error()

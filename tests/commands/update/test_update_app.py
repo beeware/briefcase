@@ -4,7 +4,7 @@ def test_update_app(update_command, first_app):
 
     # The right sequence of things will be done
     assert update_command.actions == [
-        ("code", update_command.apps["first"]),
+        ("code", update_command.apps["first"], False),
         ("cleanup", update_command.apps["first"]),
     ]
 
@@ -39,8 +39,8 @@ def test_update_app_with_dependencies(update_command, first_app):
 
     # The right sequence of things will be done
     assert update_command.actions == [
-        ("dependencies", update_command.apps["first"]),
-        ("code", update_command.apps["first"]),
+        ("dependencies", update_command.apps["first"], False),
+        ("code", update_command.apps["first"], False),
         ("cleanup", update_command.apps["first"]),
     ]
 
@@ -62,7 +62,7 @@ def test_update_app_with_resources(update_command, first_app):
 
     # The right sequence of things will be done
     assert update_command.actions == [
-        ("code", update_command.apps["first"]),
+        ("code", update_command.apps["first"], False),
         ("resources", update_command.apps["first"]),
         ("cleanup", update_command.apps["first"]),
     ]

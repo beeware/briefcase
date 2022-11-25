@@ -5,7 +5,9 @@ import pytest
 
 from briefcase.__main__ import main
 from briefcase.commands.create import CreateCommand
+from briefcase.commands.run import RunCommand
 from briefcase.console import Log
+from briefcase.exceptions import BriefcaseTestSuiteFailure
 
 from .utils import create_file
 
@@ -158,3 +160,24 @@ def test_interrupted_command_with_log(monkeypatch, pyproject_toml, tmp_path, cap
 
     # A log file was written
     assert len(list(tmp_path.glob(f"{Log.LOG_DIR}/briefcase.*.create.log"))) == 1
+
+
+def test_test_failure(monkeypatch, pyproject_toml, tmp_path, capsys):
+    """A test suite failure can be reported."""
+    monkeypatch.setattr(sys, "argv", ["briefcase", "run", "--test"])
+
+    # Monkeypatch a keyboard interrupt into the run command
+    def run_call(self, **kwargs):
+        raise BriefcaseTestSuiteFailure()
+
+    monkeypatch.setattr(RunCommand, "__call__", run_call)
+
+    # Failed test suite returns 1000
+    assert main() == 1000
+
+    # The code generating the test failure is responsible for output
+    output = capsys.readouterr().out
+    assert output == ""
+
+    # Log files are not created for BriefcaseTestSuiteFailures
+    assert len(list(tmp_path.glob(f"{Log.LOG_DIR}/briefcase.*.create.log"))) == 0

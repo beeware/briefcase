@@ -1,6 +1,7 @@
 import copy
 import keyword
 import re
+import unicodedata
 from types import SimpleNamespace
 
 try:
@@ -185,6 +186,48 @@ def is_valid_app_name(app_name):
     return not is_reserved_keyword(app_name) and is_valid_pep508_name(app_name)
 
 
+def make_class_name(formal_name):
+    """Construct a valid class name from a formal name.
+
+    :param formal_name: The formal name
+    :returns: The app's class name
+    """
+    # Identifiers (including class names) can be unicode.
+    # https://docs.python.org/3/reference/lexical_analysis.html#identifiers
+    xid_start = {
+        "Lu",  # uppercase letters
+        "Ll",  # lowercase letters
+        "Lt",  # titlecase letters
+        "Lm",  # modifier letters
+        "Lo",  # other letters
+        "Nl",  # letter numbers
+    }
+    xid_continue = xid_start.union(
+        {
+            "Mn",  # nonspacing marks
+            "Mc",  # spacing combining marks
+            "Nd",  # decimal number
+            "Pc",  # connector punctuations
+        }
+    )
+
+    # Normalize to NFKC form, then remove any character that isn't
+    # in the allowed categories, or is the underscore character;
+    # Capitalize the resulting word.
+    class_name = "".join(
+        ch
+        for ch in unicodedata.normalize("NFKC", formal_name)
+        if unicodedata.category(ch) in xid_continue or ch in {"_"}
+    )
+
+    # If the first character isn't in the 'start' character set,
+    # and it isn't already an underscore, prepend an underscore.
+    if unicodedata.category(class_name[0]) not in xid_start and class_name[0] != "_":
+        class_name = f"_{class_name}"
+
+    return class_name
+
+
 VALID_BUNDLE_RE = re.compile(r"[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$")
 
 
@@ -304,6 +347,8 @@ class AppConfig(BaseConfig):
         document_type=None,
         template=None,
         template_branch=None,
+        test_sources=None,
+        test_requires=None,
         supported=True,
         **kwargs,
     ):
@@ -324,6 +369,8 @@ class AppConfig(BaseConfig):
         self.document_types = {} if document_type is None else document_type
         self.template = template
         self.template_branch = template_branch
+        self.test_sources = test_sources
+        self.test_requires = test_requires
         self.supported = supported
 
         if not is_valid_app_name(self.app_name):
@@ -379,21 +426,48 @@ class AppConfig(BaseConfig):
         return self.app_name.replace("-", "_")
 
     @property
+    def class_name(self):
+        """The class name for the app.
+
+        This is derived from the formal name for the app.
+        """
+        return make_class_name(self.formal_name)
+
+    @property
     def package_name(self):
         """The bundle name of the app, with `-` replaced with `_` to create
         something that can be used a namespace identifier on Python or Java,
         similar to `module_name`."""
         return self.bundle.replace("-", "_")
 
-    @property
-    def PYTHONPATH(self):
-        """The PYTHONPATH modifications needed to run this app."""
+    def PYTHONPATH(self, test_mode):
+        """The PYTHONPATH modifications needed to run this app.
+
+        :param test_mode: Should test_mode sources be included?
+        """
         paths = []
-        for source in self.sources:
+        sources = self.sources
+        if test_mode and self.test_sources:
+            sources.extend(self.test_sources)
+
+        for source in sources:
             path = "/".join(source.rsplit("/", 1)[:-1])
             if path not in paths:
                 paths.append(path)
         return paths
+
+    def main_module(self, test_mode: bool):
+        """The path to the main module for the app.
+
+        In normal operation, this is ``app.module_name``; however,
+        in test mode, it is prefixed with ``tests.``.
+
+        :param test_mode: Are we running in test mode?
+        """
+        if test_mode:
+            return f"tests.{self.module_name}"
+        else:
+            return self.module_name
 
 
 def merge_config(config, data):
@@ -403,7 +477,7 @@ def merge_config(config, data):
         is modified in-situ.
     :param data: The new configuration data to merge into the configuration.
     """
-    for option in ["requires", "sources"]:
+    for option in ["requires", "sources", "test_requires", "test_sources"]:
         value = data.pop(option, [])
 
         if value:

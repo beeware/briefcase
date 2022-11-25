@@ -5,13 +5,15 @@ import os
 import subprocess
 from unittest import mock
 
+import pytest
+
 from briefcase.console import Console, Log
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.windows.visualstudio import WindowsVisualStudioRunCommand
 
 
-def test_run_app(first_app_config, tmp_path):
-    """A windows Visual Studio project app can be started."""
+@pytest.fixture
+def run_command(tmp_path):
     command = WindowsVisualStudioRunCommand(
         logger=Log(),
         console=Console(),
@@ -21,16 +23,23 @@ def test_run_app(first_app_config, tmp_path):
     command.tools.home_path = tmp_path / "home"
     command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
 
+    command._stream_app_logs = mock.MagicMock()
+
+    return command
+
+
+def test_run_app(run_command, first_app_config, tmp_path):
+    """A windows Visual Studio project app can be started."""
+
     # Set up the log streamer to return a known stream with a good returncode
     log_popen = mock.MagicMock()
-    log_popen.returncode = 0
-    command.tools.subprocess.Popen.return_value = log_popen
+    run_command.tools.subprocess.Popen.return_value = log_popen
 
     # Run the app
-    command.run_app(first_app_config)
+    run_command.run_app(first_app_config, test_mode=False)
 
     # Popen was called
-    command.tools.subprocess.Popen.assert_called_with(
+    run_command.tools.subprocess.Popen.assert_called_with(
         [
             os.fsdecode(
                 tmp_path
@@ -50,7 +59,9 @@ def test_run_app(first_app_config, tmp_path):
     )
 
     # The streamer was started
-    command.tools.subprocess.stream_output.assert_called_once_with(
-        "first-app",
-        log_popen,
+    run_command._stream_app_logs.assert_called_once_with(
+        first_app_config,
+        popen=log_popen,
+        test_mode=False,
+        clean_output=False,
     )

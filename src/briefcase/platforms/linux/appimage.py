@@ -252,36 +252,32 @@ class LinuxAppImageRunCommand(LinuxAppImagePassiveMixin, RunCommand):
         if self.tools.host_os != "Linux":
             raise BriefcaseCommandError("AppImages can only be executed on Linux.")
 
-    def run_app(self, app: AppConfig, **kwargs):
+    def run_app(self, app: AppConfig, test_mode: bool, **kwargs):
         """Start the application.
 
         :param app: The config object for the app
+        :param test_mode: Boolean; Is the app running in test mode?
         """
-        self.logger.info("Starting app...", prefix=app.app_name)
-        try:
-            # Start the app in a way that lets us stream the logs
-            log_popen = self.tools.subprocess.Popen(
-                [os.fsdecode(self.binary_path(app))],
-                cwd=self.tools.home_path,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                bufsize=1,
-            )
+        # Set up the log stream
+        kwargs = self._prepare_app_env(app=app, test_mode=test_mode)
 
-            # Start streaming logs for the app.
-            self.logger.info("=" * 75)
-            self.tools.subprocess.stream_output(
-                app.app_name,
-                log_popen,
-            )
+        # Start the app in a way that lets us stream the logs
+        app_popen = self.tools.subprocess.Popen(
+            [os.fsdecode(self.binary_path(app))],
+            cwd=self.tools.home_path,
+            **kwargs,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            bufsize=1,
+        )
 
-            # If the process didn't exit cleanly, raise an error.
-            if log_popen.returncode != 0:
-                raise BriefcaseCommandError(f"Problem running app {app.app_name}.")
-        except KeyboardInterrupt:
-            pass  # Catch CTRL-C to exit normally
-        except OSError as e:
-            raise BriefcaseCommandError(f"Unable to start app {app.app_name}.") from e
+        # Start streaming logs for the app.
+        self._stream_app_logs(
+            app,
+            popen=app_popen,
+            test_mode=test_mode,
+            clean_output=False,
+        )
 
 
 class LinuxAppImagePackageCommand(LinuxAppImageMixin, PackageCommand):

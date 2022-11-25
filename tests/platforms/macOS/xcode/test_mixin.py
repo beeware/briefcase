@@ -55,21 +55,6 @@ def test_distribution_path_dmg(create_command, first_app_config, tmp_path):
     assert distribution_path == tmp_path / "base_path" / "macOS" / "First App-0.0.1.dmg"
 
 
-def test_entitlements_path(create_command, first_app_config, tmp_path):
-    entitlements_path = create_command.entitlements_path(first_app_config)
-
-    assert (
-        entitlements_path
-        == tmp_path
-        / "base_path"
-        / "macOS"
-        / "Xcode"
-        / "First App"
-        / "First App"
-        / "first-app.entitlements"
-    )
-
-
 @pytest.mark.skipif(sys.platform == "darwin", reason="non-macOS specific test")
 def test_verify_non_macOS(create_command):
     "If you're not on macOS, you can't verify tools."

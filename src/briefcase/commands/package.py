@@ -24,7 +24,11 @@ class PackageCommand(BaseCommand):
         # Default implementation; nothing to do.
 
     def _package_app(
-        self, app: BaseConfig, update: bool, packaging_format: str, **options
+        self,
+        app: BaseConfig,
+        update: bool,
+        packaging_format: str,
+        **options,
     ):
         """Internal method to invoke packaging on a single app. Ensures the app
         exists, and has been updated (if requested) before attempting to issue
@@ -41,7 +45,15 @@ class PackageCommand(BaseCommand):
             state = self.create_command(app, **options)
             state = self.build_command(app, **full_options(state, options))
         elif update:
-            state = self.update_command(app, **options)
+            # If we're updating for packaging, update everything.
+            # This ensures everything in the packaged artefact is up to date,
+            # and is in a production state
+            state = self.update_command(
+                app,
+                update_resources=True,
+                update_dependencies=True,
+                **options,
+            )
             state = self.build_command(app, **full_options(state, options))
         elif not binary_file.exists():
             state = self.build_command(app, **options)

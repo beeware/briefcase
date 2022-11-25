@@ -186,33 +186,35 @@ class LinuxFlatpakBuildCommand(LinuxFlatpakMixin, BuildCommand):
 class LinuxFlatpakRunCommand(LinuxFlatpakMixin, RunCommand):
     description = "Run a Linux Flatpak."
 
-    def run_app(self, app: AppConfig, **kwargs):
+    def run_app(self, app: AppConfig, test_mode: bool, **kwargs):
         """Start the application.
 
         :param app: The config object for the app
+        :param test_mode: Boolean; Is the app running in test mode?
         """
-        self.logger.info("Starting app...", prefix=app.app_name)
-        try:
-            # Start the app in a way that lets us stream the logs
-            log_popen = self.tools.flatpak.run(
-                bundle=app.bundle,
-                app_name=app.app_name,
-            )
+        # Set up the log stream
+        kwargs = self._prepare_app_env(app=app, test_mode=test_mode)
 
-            # Start streaming logs for the app.
-            self.logger.info("=" * 75)
-            self.tools.subprocess.stream_output(
-                app.app_name,
-                log_popen,
-            )
+        # Starting a flatpak has slightly different startup arguments; however,
+        # the rest of the app startup process is the same. Transform the output
+        # of the "default" behavior to be in flatpak format.
+        if test_mode:
+            kwargs = {"main_module": kwargs["env"]["BRIEFCASE_MAIN_MODULE"]}
 
-            # If the process didn't exit cleanly, raise an error.
-            if log_popen.returncode != 0:
-                raise BriefcaseCommandError(f"Problem running app {app.app_name}.")
-        except KeyboardInterrupt:
-            pass  # Catch CTRL-C to exit normally
-        except OSError as e:
-            raise BriefcaseCommandError(f"Unable to start app {app.app_name}.") from e
+        # Start the app in a way that lets us stream the logs
+        app_popen = self.tools.flatpak.run(
+            bundle=app.bundle,
+            app_name=app.app_name,
+            **kwargs,
+        )
+
+        # Start streaming logs for the app.
+        self._stream_app_logs(
+            app,
+            popen=app_popen,
+            test_mode=test_mode,
+            clean_output=False,
+        )
 
 
 class LinuxFlatpakPackageCommand(LinuxFlatpakMixin, PackageCommand):
