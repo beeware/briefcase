@@ -85,7 +85,7 @@ class DummyPackageCommand(PackageCommand):
         self.actions.append(("update", app.app_name, kwargs.copy()))
         # Remove arguments consumed by the underlying call to update_app()
         kwargs.pop("test_mode", None)
-        kwargs.pop("update_dependencies", None)
+        kwargs.pop("update_requirements", None)
         kwargs.pop("update_resources", None)
         return full_options({"update_state": app.app_name}, kwargs)
 

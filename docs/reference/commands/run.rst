@@ -10,7 +10,7 @@ command will start that executable. If the output is an installer, ``run`` will
 attempt to replicate as much as possible of the runtime environment that would
 be installed, but will not actually install the app. For example, on Windows,
 ``run`` will use the interpreter that will be included in the installer, and
-the versions of code and dependencies that will be installed, but *won't* run
+the versions of code and requirements that will be installed, but *won't* run
 the installer to produce Start Menu items, registry records, etc.
 
 Test mode
@@ -74,7 +74,7 @@ Update the application's source code before running. Equivalent to running::
 
 Run the test suite in the bundled app environment. Running ``run --test`` forces
 an update and rebuild, to ensure that the packaged application contains all the
-test dependencies and code. To prevent this update and build, use
+test requirements and code. To prevent this update and build, use
 ``--no-update``.
 
 ``--no-update``

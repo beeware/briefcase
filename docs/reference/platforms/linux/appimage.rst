@@ -244,8 +244,8 @@ fail with an error::
      note: This error originates from a subprocess, and is likely not a problem with pip.
      >>> Return code: 1
 
-     Unable to install dependencies. This may be because one of your
-     dependencies is invalid, or because pip was unable to connect
+     Unable to install requirements. This may be because one of your
+     requirements is invalid, or because pip was unable to connect
      to the PyPI server.
 
 You must add a separate ``--no-binary`` option for every binary library you want

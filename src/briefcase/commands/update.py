@@ -11,13 +11,12 @@ class UpdateCommand(CreateCommand):
 
     def add_options(self, parser):
         parser.add_argument(
-            "-d",
-            "--update-dependencies",
+            "-r",
+            "--update-requirements",
             action="store_true",
-            help="Update dependencies for app",
+            help="Update requirements for the app",
         )
         parser.add_argument(
-            "-r",
             "--update-resources",
             action="store_true",
             help="Update app resources (icons, splash screens, etc)",
@@ -26,7 +25,7 @@ class UpdateCommand(CreateCommand):
     def update_app(
         self,
         app: BaseConfig,
-        update_dependencies=False,
+        update_requirements=False,
         update_resources=False,
         test_mode=False,
         **options,
@@ -34,7 +33,7 @@ class UpdateCommand(CreateCommand):
         """Update an existing application bundle.
 
         :param app: The config object for the app
-        :param update_dependencies: Should dependencies be updated? (default: False)
+        :param update_requirements: Should requirements be updated? (default: False)
         :param update_resources: Should extra resources be updated? (default: False)
         :param test_mode: Should the app be updated in test mode? (default: False)
         """
@@ -48,12 +47,12 @@ class UpdateCommand(CreateCommand):
 
         self.verify_app_tools(app)
 
-        if update_dependencies or test_mode:
-            self.logger.info("Updating dependencies...", prefix=app.app_name)
-            self.install_app_dependencies(app=app, test_mode=test_mode)
-
         self.logger.info("Updating application code...", prefix=app.app_name)
         self.install_app_code(app=app, test_mode=test_mode)
+
+        if update_requirements or test_mode:
+            self.logger.info("Updating requirements...", prefix=app.app_name)
+            self.install_app_requirements(app=app, test_mode=test_mode)
 
         if update_resources or test_mode:
             self.logger.info(
@@ -69,7 +68,7 @@ class UpdateCommand(CreateCommand):
     def __call__(
         self,
         app: Optional[BaseConfig] = None,
-        update_dependencies: bool = False,
+        update_requirements: bool = False,
         update_resources: bool = False,
         **options,
     ):
@@ -79,7 +78,7 @@ class UpdateCommand(CreateCommand):
         if app:
             state = self.update_app(
                 app,
-                update_dependencies=update_dependencies,
+                update_requirements=update_requirements,
                 update_resources=update_resources,
                 **options,
             )
@@ -88,7 +87,7 @@ class UpdateCommand(CreateCommand):
             for app_name, app in sorted(self.apps.items()):
                 state = self.update_app(
                     app,
-                    update_dependencies=update_dependencies,
+                    update_requirements=update_requirements,
                     update_resources=update_resources,
                     **full_options(state, options),
                 )

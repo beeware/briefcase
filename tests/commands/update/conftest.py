@@ -37,10 +37,10 @@ class DummyUpdateCommand(UpdateCommand):
 
     # Override all the body methods of a UpdateCommand
     # with versions that we can use to track actions performed.
-    def install_app_dependencies(self, app, test_mode):
-        self.actions.append(("dependencies", app, test_mode))
-        with (self.bundle_path(app) / "dependencies").open("w") as f:
-            f.write("app dependencies")
+    def install_app_requirements(self, app, test_mode):
+        self.actions.append(("requirements", app, test_mode))
+        with (self.bundle_path(app) / "requirements").open("w") as f:
+            f.write("app requirements")
 
     def install_app_code(self, app, test_mode):
         self.actions.append(("code", app, test_mode))

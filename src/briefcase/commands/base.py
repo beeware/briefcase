@@ -52,7 +52,7 @@ class UnsupportedPlatform(BriefcaseCommandError):
         super().__init__(
             f"""\
 App cannot be deployed on {platform}. This is probably because one or more
-dependencies (e.g., the GUI library) doesn't support {platform}.
+requirements (e.g., the GUI library) doesn't support {platform}.
 """
         )
 
@@ -452,10 +452,10 @@ a custom location for Briefcase's tools.
         return self.bundle_path(app) / path_index["app_requirements_path"]
 
     def app_packages_path(self, app: BaseConfig):
-        """Obtain the path into which dependencies should be installed.
+        """Obtain the path into which requirements should be installed.
 
         :param app: The config object for the app
-        :return: The full path where application dependencies should be installed.
+        :return: The full path where application requirements should be installed.
         """
         # If the index file hasn't been loaded for this app, load it.
         try:

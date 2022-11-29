@@ -143,7 +143,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                     f"Unable to build wheel for app {app.app_name!r}"
                 ) from e
 
-        with self.input.wait_bar("Installing wheels for dependencies..."):
+        with self.input.wait_bar("Installing wheels for requirements..."):
             try:
                 self.tools.subprocess.run(
                     [
@@ -161,7 +161,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 )
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
-                    f"Unable to install dependencies for app {app.app_name!r}"
+                    f"Unable to install requirements for app {app.app_name!r}"
                 ) from e
 
         with self.input.wait_bar("Writing Pyscript configuration file..."):

@@ -30,16 +30,16 @@ def test_create(tracking_create_command):
         ("generate", tracking_create_command.apps["first"]),
         ("support", tracking_create_command.apps["first"]),
         ("verify-app-tools", tracking_create_command.apps["first"]),
-        ("dependencies", tracking_create_command.apps["first"], False),
         ("code", tracking_create_command.apps["first"], False),
+        ("requirements", tracking_create_command.apps["first"], False),
         ("resources", tracking_create_command.apps["first"]),
         ("cleanup", tracking_create_command.apps["first"]),
         # Create the second app
         ("generate", tracking_create_command.apps["second"]),
         ("support", tracking_create_command.apps["second"]),
         ("verify-app-tools", tracking_create_command.apps["second"]),
-        ("dependencies", tracking_create_command.apps["second"], False),
         ("code", tracking_create_command.apps["second"], False),
+        ("requirements", tracking_create_command.apps["second"], False),
         ("resources", tracking_create_command.apps["second"]),
         ("cleanup", tracking_create_command.apps["second"]),
     ]
@@ -61,8 +61,8 @@ def test_create_single(tracking_create_command):
         ("generate", tracking_create_command.apps["first"]),
         ("support", tracking_create_command.apps["first"]),
         ("verify-app-tools", tracking_create_command.apps["first"]),
-        ("dependencies", tracking_create_command.apps["first"], False),
         ("code", tracking_create_command.apps["first"], False),
+        ("requirements", tracking_create_command.apps["first"], False),
         ("resources", tracking_create_command.apps["first"]),
         ("cleanup", tracking_create_command.apps["first"]),
     ]

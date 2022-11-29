@@ -22,7 +22,7 @@ To build an installer for a specific output format::
 
     $ briefcase package <platform> <output format>
 
-.. admonition:: Packaging tool dependencies
+.. admonition:: Packaging tool requirements
 
     Building installers for some platforms depends on the build tools for the
     platform you're targetting being available on the platform you're using.

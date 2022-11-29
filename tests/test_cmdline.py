@@ -131,7 +131,7 @@ def test_dev_command(monkeypatch, logger, console):
     assert cmd.input is console
     assert options == {
         "appname": None,
-        "update_dependencies": False,
+        "update_requirements": False,
         "run_app": True,
         "test_mode": False,
     }

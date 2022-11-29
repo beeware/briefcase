@@ -55,10 +55,10 @@ def test_update_single(update_command, first_app, second_app):
     ]
 
 
-def test_update_with_dependencies(update_command, first_app, second_app):
-    """The update command can be called, requesting a dependencies update."""
-    # Configure no command line options
-    options = update_command.parse_options(["-d"])
+def test_update_with_requirements(update_command, first_app, second_app):
+    """The update command can be called, requesting a requirements update."""
+    # Configure a requirements update
+    options = update_command.parse_options(["-r"])
 
     update_command(**options)
 
@@ -66,12 +66,12 @@ def test_update_with_dependencies(update_command, first_app, second_app):
     assert update_command.actions == [
         ("verify",),
         # Update the first app
-        ("dependencies", update_command.apps["first"], False),
         ("code", update_command.apps["first"], False),
+        ("requirements", update_command.apps["first"], False),
         ("cleanup", update_command.apps["first"]),
         # Update the second app
-        ("dependencies", update_command.apps["second"], False),
         ("code", update_command.apps["second"], False),
+        ("requirements", update_command.apps["second"], False),
         ("cleanup", update_command.apps["second"]),
     ]
 
@@ -79,7 +79,7 @@ def test_update_with_dependencies(update_command, first_app, second_app):
 def test_update_with_resources(update_command, first_app, second_app):
     """The update command can be called, requesting a resources update."""
     # Configure no command line options
-    options = update_command.parse_options(["-r"])
+    options = update_command.parse_options(["--update-resources"])
 
     update_command(**options)
 

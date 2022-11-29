@@ -16,8 +16,8 @@ def test_create_app(tracking_create_command):
         ("generate", tracking_create_command.apps["first"]),
         ("support", tracking_create_command.apps["first"]),
         ("verify-app-tools", tracking_create_command.apps["first"]),
-        ("dependencies", tracking_create_command.apps["first"], False),
         ("code", tracking_create_command.apps["first"], False),
+        ("requirements", tracking_create_command.apps["first"], False),
         ("resources", tracking_create_command.apps["first"]),
         ("cleanup", tracking_create_command.apps["first"]),
     ]
@@ -49,8 +49,8 @@ def test_create_existing_app_overwrite(tracking_create_command):
         ("generate", tracking_create_command.apps["first"]),
         ("support", tracking_create_command.apps["first"]),
         ("verify-app-tools", tracking_create_command.apps["first"]),
-        ("dependencies", tracking_create_command.apps["first"], False),
         ("code", tracking_create_command.apps["first"], False),
+        ("requirements", tracking_create_command.apps["first"], False),
         ("resources", tracking_create_command.apps["first"]),
         ("cleanup", tracking_create_command.apps["first"]),
     ]

@@ -24,7 +24,7 @@ To build the application for a specific output format::
 
     $ briefcase build <platform> <output format>
 
-.. admonition:: Build tool dependencies
+.. admonition:: Build tool requirements
 
     Building for some platforms depends on the build tools for the platform
     you're targetting being available on the platform you're using. For
@@ -50,7 +50,7 @@ Update the application's source code before running. Equivalent to running::
 
 Build the app in test mode in the bundled app environment. Running ``build
 --test`` forces an update to ensure that the packaged application contains all
-the test dependencies and code. To prevent this update and build, use
+the test requirements and code. To prevent this update and build, use
 ``--no-update``.
 
 ``--no-update``

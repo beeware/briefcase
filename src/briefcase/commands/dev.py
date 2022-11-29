@@ -8,7 +8,7 @@ from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError
 
 from .base import BaseCommand
-from .create import DependencyInstallError, write_dist_info
+from .create import RequirementsInstallError, write_dist_info
 
 
 class DevCommand(BaseCommand):
@@ -41,17 +41,17 @@ class DevCommand(BaseCommand):
     def add_options(self, parser):
         parser.add_argument("-a", "--app", dest="appname", help="The app to run")
         parser.add_argument(
-            "-d",
-            "--update-dependencies",
+            "-r",
+            "--update-requirements",
             action="store_true",
-            help="Update dependencies for app",
+            help="Update requirements for app",
         )
         parser.add_argument(
             "--no-run",
             dest="run_app",
             action="store_false",
             default=True,
-            help="Do not run the app, just install dependencies.",
+            help="Do not run the app, just install requirements.",
         )
         parser.add_argument(
             "--test",
@@ -60,10 +60,10 @@ class DevCommand(BaseCommand):
             help="Run the app in test mode",
         )
 
-    def install_dev_dependencies(self, app: BaseConfig, **options):
-        """Install the dependencies for the app dev.
+    def install_dev_requirements(self, app: BaseConfig, **options):
+        """Install the requirements for the app dev.
 
-        This will always include test dependencies, if specified.
+        This will always include test requirements, if specified.
 
         :param app: The config object for the app
         """
@@ -72,7 +72,7 @@ class DevCommand(BaseCommand):
             requires.extend(app.test_requires)
 
         if requires:
-            with self.input.wait_bar("Installing dev dependencies..."):
+            with self.input.wait_bar("Installing dev requirements..."):
                 try:
                     self.tools.subprocess.run(
                         [
@@ -87,9 +87,9 @@ class DevCommand(BaseCommand):
                         check=True,
                     )
                 except subprocess.CalledProcessError as e:
-                    raise DependencyInstallError() from e
+                    raise RequirementsInstallError() from e
         else:
-            self.logger.info("No application dependencies.")
+            self.logger.info("No application requirements.")
 
     def run_dev_app(
         self,
@@ -143,7 +143,7 @@ class DevCommand(BaseCommand):
     def __call__(
         self,
         appname: Optional[str] = None,
-        update_dependencies: Optional[bool] = False,
+        update_requirements: Optional[bool] = False,
         run_app: Optional[bool] = True,
         test_mode: Optional[bool] = False,
         **options,
@@ -172,18 +172,18 @@ class DevCommand(BaseCommand):
         self.verify_app_tools(app)
 
         # Look for the existence of a dist-info file.
-        # If one exists, assume that the dependencies have already been
+        # If one exists, assume that the requirements have already been
         # installed. If a dependency update has been manually requested,
         # do it regardless.
         dist_info_path = (
             self.app_module_path(app).parent / f"{app.module_name}.dist-info"
         )
         if not run_app:
-            # If we are not running the app, it means we should update dependencies.
-            update_dependencies = True
-        if update_dependencies or not dist_info_path.exists():
-            self.logger.info("Installing dependencies...", prefix=app.app_name)
-            self.install_dev_dependencies(app, **options)
+            # If we are not running the app, it means we should update requirements.
+            update_requirements = True
+        if update_requirements or not dist_info_path.exists():
+            self.logger.info("Installing requirements...", prefix=app.app_name)
+            self.install_dev_requirements(app, **options)
             write_dist_info(app, dist_info_path)
 
         if run_app:
