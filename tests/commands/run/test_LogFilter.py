@@ -3,6 +3,7 @@ from unittest import mock
 import pytest
 
 from briefcase.commands.run import LogFilter
+from briefcase.integrations.subprocess import StopStreaming
 
 
 def test_default_filter():
@@ -20,7 +21,7 @@ def test_default_filter():
         line = f"this is line {i}"
 
         # Every line is returned verbatim
-        assert line == log_filter(line)
+        assert [line] == list(log_filter(line))
 
     # no signals were sent, and no test status was triggered
     popen.send_signal.assert_not_called()
@@ -47,7 +48,7 @@ def test_clean_filter():
         line = f"this is line {i}"
 
         # The line has the preamble stripped
-        assert line[5:] == log_filter(line)
+        assert [line[5:]] == list(log_filter(line))
 
     # no signals were sent, and no test status was triggered
     popen.send_signal.assert_not_called()
@@ -74,7 +75,7 @@ def test_clean_filter_unclean_output():
         line = f"this is line {i}"
 
         # Every line is returned verbatim
-        assert line == log_filter(line)
+        assert [line] == list(log_filter(line))
 
     # no signals were sent, and no test status was triggered
     popen.send_signal.assert_not_called()
@@ -336,20 +337,23 @@ def test_log_filter(
 
     # Pipe the raw output through the log filter, and capture the output
     output = []
+    terminated = False
     for line in raw:
         try:
-            filtered = log_filter(line)
-            if filtered is not None:
-                output.append(filtered)
-        except StopIteration:
+            for line in log_filter(line):
+                output.append(line)
+        except StopStreaming:
+            terminated = True
             break
 
     # Actual output is as expected
     assert output == expected_output
 
     if expected_success is None:
-        # No success/failure condition was set, and no signal was sent
+        # No success/failure condition was set; no termination condition was processed
         assert log_filter.success is None
+        assert not terminated
     else:
-        # The success/failure condition was detected, and the signal was sent
+        # The success/failure condition was detected, and the termination condition was processed
         assert log_filter.success == expected_success
+        assert terminated
