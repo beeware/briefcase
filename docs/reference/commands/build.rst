@@ -40,9 +40,25 @@ The following options can be provided at the command line.
 ``-u`` / ``--update``
 ---------------------
 
-Update the application's source code before running. Equivalent to running::
+Update the application's source code before building. Equivalent to running::
 
     $ briefcase update
+    $ briefcase build
+
+``-r`` / ``--update-requirements``
+----------------------------------
+
+Update application requirements before building. Equivalent to running::
+
+    $ briefcase update -r
+    $ briefcase build
+
+``--update-resources``
+----------------------
+
+Update application resources (e.g., icons and splash screens) before building. Equivalent to running::
+
+    $ briefcase update --update-resources
     $ briefcase build
 
 ``--test``
@@ -50,12 +66,24 @@ Update the application's source code before running. Equivalent to running::
 
 Build the app in test mode in the bundled app environment. Running ``build
 --test`` forces an update to ensure that the packaged application contains all
-the test requirements and code. To prevent this update and build, use
-``--no-update``.
+the test code, requirements and resources. To prevent this update and build, use
+the ``--no-update``, ``--no-update-requirements`` and ``--no-update-resources``
+options.
 
 ``--no-update``
 ---------------
 
-Prevent the automated update that is performed when specifying by the
-``--test`` option. This option should only be required if you need to
-build your app on one machine, and run it on another.
+Prevent the automated update of app code that is performed when specifying by
+the ``--test`` option.
+
+``--no-update-requirements``
+----------------------------
+
+Prevent the automated update of app requirements that is performed when
+specifying by the ``--test`` option.
+
+``--no-update-resources``
+-------------------------
+
+Prevent the automated update of app resources that is performed when specifying
+by the ``--test`` option.
