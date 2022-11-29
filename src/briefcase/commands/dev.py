@@ -44,7 +44,7 @@ class DevCommand(BaseCommand):
             "-r",
             "--update-requirements",
             action="store_true",
-            help="Update requirements for app",
+            help="Update requirements for the app",
         )
         parser.add_argument(
             "--no-run",

@@ -27,6 +27,44 @@ class BuildCommand(BaseCommand):
             const=False,
             help="Prevent any automated update before building.",
         )
+
+        # update-requirements is a tri-valued argument; it can be specified as
+        # --update-requirements or --no-update-requirements, with a default
+        # value of None. In the presence of the default, there is different
+        # behavior depending on whether we are in test mode.
+        parser.add_argument(
+            "-r",
+            "--update-requirements",
+            action="store_const",
+            const=True,
+            help="Update requirements for the app before building",
+        )
+        parser.add_argument(
+            "--no-update-requirements",
+            dest="update_requirements",
+            action="store_const",
+            const=False,
+            help="Prevent any automated update of requirements before building.",
+        )
+
+        # update-resources is a tri-valued argument; it can be specified as
+        # --update-resources or --no-update-resources, with a default value of
+        # None. In the presence of the default, there is different behavior
+        # depending on whether we are in test mode.
+        parser.add_argument(
+            "--update-resources",
+            action="store_const",
+            const=True,
+            help="Update app resources (icons, splash screens, etc) before building",
+        )
+        parser.add_argument(
+            "--no-update-resources",
+            dest="update_resources",
+            action="store_const",
+            const=False,
+            help="Prevent any automated update of resources before building.",
+        )
+
         parser.add_argument(
             "--test",
             dest="test_mode",
@@ -45,6 +83,8 @@ class BuildCommand(BaseCommand):
         self,
         app: BaseConfig,
         update: Optional[bool],
+        update_requirements: Optional[bool],
+        update_resources: Optional[bool],
         test_mode: bool,
         **options,
     ):
@@ -52,15 +92,38 @@ class BuildCommand(BaseCommand):
         exists, and has been updated (if requested) before attempting to issue
         the actual build command.
 
-        :param app: The application to build?
-        :param update: Should the application be updated first?
+        :param app: The application to build
+        :param update: Should the application be updated before building?
+        :param update_requirements: Should the application requirements be
+            updated before building?
+        :param update_resources: Should the application resources be updated
+            before building?
         :param test_mode: Is the app being build in test mode?
         """
         target_file = self.bundle_path(app)
         if not target_file.exists():
             state = self.create_command(app, test_mode=test_mode, **options)
-        elif update or (test_mode and update is None):
-            state = self.update_command(app, test_mode=test_mode, **options)
+        elif (
+            update  # An explicit update has been requested
+            or update_requirements  # An explicit update of requirements has been requested
+            or update_resources  # An explicit update of resources has been requested
+            or (
+                test_mode
+                and (
+                    update is None
+                    or update_requirements is None
+                    or update_resources is None
+                )
+            )  # Test mode, but updates have not been completely disabled
+        ):
+            state = self.update_command(
+                app,
+                update=update,
+                update_requirements=update_requirements,
+                update_resources=update_resources,
+                test_mode=test_mode,
+                **options,
+            )
         else:
             state = None
 
@@ -79,6 +142,8 @@ class BuildCommand(BaseCommand):
         self,
         app: Optional[BaseConfig] = None,
         update: Optional[bool] = None,
+        update_requirements: Optional[bool] = None,
+        update_resources: Optional[bool] = None,
         test_mode: bool = False,
         **options,
     ):
@@ -86,13 +151,22 @@ class BuildCommand(BaseCommand):
         self.verify_tools()
 
         if app:
-            state = self._build_app(app, update=update, test_mode=test_mode, **options)
+            state = self._build_app(
+                app,
+                update=update,
+                update_requirements=update_requirements,
+                update_resources=update_resources,
+                test_mode=test_mode,
+                **options,
+            )
         else:
             state = None
             for app_name, app in sorted(self.apps.items()):
                 state = self._build_app(
                     app,
                     update=update,
+                    update_requirements=update_requirements,
+                    update_resources=update_resources,
                     test_mode=test_mode,
                     **full_options(state, options),
                 )

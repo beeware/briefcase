@@ -25,6 +25,7 @@ class UpdateCommand(CreateCommand):
     def update_app(
         self,
         app: BaseConfig,
+        update=True,
         update_requirements=False,
         update_resources=False,
         test_mode=False,
@@ -33,6 +34,7 @@ class UpdateCommand(CreateCommand):
         """Update an existing application bundle.
 
         :param app: The config object for the app
+        :param update: Should the app be updated? (default: True)
         :param update_requirements: Should requirements be updated? (default: False)
         :param update_resources: Should extra resources be updated? (default: False)
         :param test_mode: Should the app be updated in test mode? (default: False)
@@ -47,14 +49,15 @@ class UpdateCommand(CreateCommand):
 
         self.verify_app_tools(app)
 
-        self.logger.info("Updating application code...", prefix=app.app_name)
-        self.install_app_code(app=app, test_mode=test_mode)
+        if update or (test_mode and update is None):
+            self.logger.info("Updating application code...", prefix=app.app_name)
+            self.install_app_code(app=app, test_mode=test_mode)
 
-        if update_requirements or test_mode:
+        if update_requirements or (test_mode and update_requirements is None):
             self.logger.info("Updating requirements...", prefix=app.app_name)
             self.install_app_requirements(app=app, test_mode=test_mode)
 
-        if update_resources or test_mode:
+        if update_resources or (test_mode and update_resources is None):
             self.logger.info(
                 "Updating extra application resources...", prefix=app.app_name
             )
@@ -68,6 +71,7 @@ class UpdateCommand(CreateCommand):
     def __call__(
         self,
         app: Optional[BaseConfig] = None,
+        update: bool = True,
         update_requirements: bool = False,
         update_resources: bool = False,
         **options,
@@ -78,6 +82,7 @@ class UpdateCommand(CreateCommand):
         if app:
             state = self.update_app(
                 app,
+                update=update,
                 update_requirements=update_requirements,
                 update_resources=update_resources,
                 **options,
@@ -87,6 +92,7 @@ class UpdateCommand(CreateCommand):
             for app_name, app in sorted(self.apps.items()):
                 state = self.update_app(
                     app,
+                    update=update,
                     update_requirements=update_requirements,
                     update_resources=update_resources,
                     **full_options(state, options),

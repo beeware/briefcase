@@ -132,7 +132,16 @@ def test_create_app_before_start(run_command, first_app_config):
         ("verify",),
         # App doesn't exist, so it will be built
         # (which will transitively create)
-        ("build", "first", {"test_mode": False, "update": None}),
+        (
+            "build",
+            "first",
+            {
+                "test_mode": False,
+                "update": None,
+                "update_requirements": None,
+                "update_resources": None,
+            },
+        ),
         # Then, it will be started
         (
             "run",
@@ -160,7 +169,16 @@ def test_build_app_before_start(run_command, first_app_uncompiled):
         # Tools are verified
         ("verify",),
         # A build was requested, with no update
-        ("build", "first", {"test_mode": False, "update": None}),
+        (
+            "build",
+            "first",
+            {
+                "test_mode": False,
+                "update": None,
+                "update_requirements": None,
+                "update_resources": None,
+            },
+        ),
         # Then, it will be started
         ("run", "first", {"build_state": "first", "test_mode": False}),
     ]
@@ -184,7 +202,91 @@ def test_update_app(run_command, first_app):
         # Tools are verified
         ("verify",),
         # A build with an explicit update was requested
-        ("build", "first", {"test_mode": False, "update": True}),
+        (
+            "build",
+            "first",
+            {
+                "test_mode": False,
+                "update": True,
+                "update_requirements": None,
+                "update_resources": None,
+            },
+        ),
+        # Then, it will be started
+        (
+            "run",
+            "first",
+            {"build_state": "first", "test_mode": False},
+        ),
+    ]
+
+
+def test_update_app_requirements(run_command, first_app):
+    """The run command can request that the app requirements are updated
+    first."""
+    # Add a single app
+    run_command.apps = {
+        "first": first_app,
+    }
+
+    # Configure an update option
+    options = run_command.parse_options(["-r"])
+
+    # Run the run command
+    run_command(**options)
+
+    # The right sequence of things will be done
+    assert run_command.actions == [
+        # Tools are verified
+        ("verify",),
+        # A build with an explicit update was requested
+        (
+            "build",
+            "first",
+            {
+                "test_mode": False,
+                "update": None,
+                "update_requirements": True,
+                "update_resources": None,
+            },
+        ),
+        # Then, it will be started
+        (
+            "run",
+            "first",
+            {"build_state": "first", "test_mode": False},
+        ),
+    ]
+
+
+def test_update_app_resources(run_command, first_app):
+    """The run command can request that the app resources are updated first."""
+    # Add a single app
+    run_command.apps = {
+        "first": first_app,
+    }
+
+    # Configure an update option
+    options = run_command.parse_options(["--update-resources"])
+
+    # Run the run command
+    run_command(**options)
+
+    # The right sequence of things will be done
+    assert run_command.actions == [
+        # Tools are verified
+        ("verify",),
+        # A build with an explicit update was requested
+        (
+            "build",
+            "first",
+            {
+                "test_mode": False,
+                "update": None,
+                "update_requirements": None,
+                "update_resources": True,
+            },
+        ),
         # Then, it will be started
         (
             "run",
@@ -213,7 +315,16 @@ def test_update_uncompiled_app(run_command, first_app_uncompiled):
         ("verify",),
         # An update was requested, so a build with an explicit update
         # will be performed
-        ("build", "first", {"test_mode": False, "update": True}),
+        (
+            "build",
+            "first",
+            {
+                "test_mode": False,
+                "update": True,
+                "update_requirements": None,
+                "update_resources": None,
+            },
+        ),
         # Then, it will be started
         (
             "run",
@@ -242,7 +353,16 @@ def test_update_non_existent(run_command, first_app_config):
         ("verify",),
         # App doesn't exist, so it will be built, with an
         # update requested
-        ("build", "first", {"test_mode": False, "update": True}),
+        (
+            "build",
+            "first",
+            {
+                "test_mode": False,
+                "update": True,
+                "update_requirements": None,
+                "update_resources": None,
+            },
+        ),
         # Then, it will be started
         (
             "run",
@@ -270,7 +390,16 @@ def test_test_mode_existing_app(run_command, first_app):
         # Tools are verified
         ("verify",),
         # App is built in test mode
-        ("build", "first", {"test_mode": True, "update": None}),
+        (
+            "build",
+            "first",
+            {
+                "test_mode": True,
+                "update": None,
+                "update_requirements": None,
+                "update_resources": None,
+            },
+        ),
         # Run the first app
         (
             "run",
@@ -280,8 +409,8 @@ def test_test_mode_existing_app(run_command, first_app):
     ]
 
 
-def test_test_mode_existing_app_without_update(run_command, first_app):
-    """The auto update implied by --test can be overridden."""
+def test_test_mode_existing_app_no_update(run_command, first_app):
+    """The auto app update implied by --test can be overridden."""
     # Add a single app
     run_command.apps = {
         "first": first_app,
@@ -297,7 +426,126 @@ def test_test_mode_existing_app_without_update(run_command, first_app):
     assert run_command.actions == [
         # Tools are verified
         ("verify",),
-        # Run the first app; no build is triggered by test mode
+        # App will be built; update is disabled, but requirements and resources are implied
+        (
+            "build",
+            "first",
+            {
+                "test_mode": True,
+                "update": False,
+                "update_requirements": None,
+                "update_resources": None,
+            },
+        ),
+        # Run the first app
+        (
+            "run",
+            "first",
+            {"build_state": "first", "test_mode": True},
+        ),
+    ]
+
+
+def test_test_mode_existing_app_no_update_requirements(run_command, first_app):
+    """The auto update of requirements implied by --test can be overridden."""
+    # Add a single app
+    run_command.apps = {
+        "first": first_app,
+    }
+
+    # Configure the test option
+    options = run_command.parse_options(["--test", "--no-update-requirements"])
+
+    # Run the run command
+    run_command(**options)
+
+    # The right sequence of things will be done
+    assert run_command.actions == [
+        # Tools are verified
+        ("verify",),
+        # App will be built; requirements update is disabled, but app and resources are implied
+        (
+            "build",
+            "first",
+            {
+                "test_mode": True,
+                "update": None,
+                "update_requirements": False,
+                "update_resources": None,
+            },
+        ),
+        # Run the first app
+        (
+            "run",
+            "first",
+            {"build_state": "first", "test_mode": True},
+        ),
+    ]
+
+
+def test_test_mode_existing_app_no_update_resources(run_command, first_app):
+    """The auto update of resources implied by --test can be overridden."""
+    # Add a single app
+    run_command.apps = {
+        "first": first_app,
+    }
+
+    # Configure the test option
+    options = run_command.parse_options(["--test", "--no-update-resources"])
+
+    # Run the run command
+    run_command(**options)
+
+    # The right sequence of things will be done
+    assert run_command.actions == [
+        # Tools are verified
+        ("verify",),
+        # App will be built; resource update is disabled, but update and requirements are implied
+        (
+            "build",
+            "first",
+            {
+                "test_mode": True,
+                "update": None,
+                "update_requirements": None,
+                "update_resources": False,
+            },
+        ),
+        # Run the first app
+        (
+            "run",
+            "first",
+            {"build_state": "first", "test_mode": True},
+        ),
+    ]
+
+
+def test_test_mode_existing_app_updates_disabled(run_command, first_app):
+    """If all auto updates implied by --test are overridden, no build is
+    performed."""
+    # Add a single app
+    run_command.apps = {
+        "first": first_app,
+    }
+
+    # Configure the test option
+    options = run_command.parse_options(
+        [
+            "--test",
+            "--no-update",
+            "--no-update-requirements",
+            "--no-update-resources",
+        ]
+    )
+
+    # Run the run command
+    run_command(**options)
+
+    # The right sequence of things will be done
+    assert run_command.actions == [
+        # Tools are verified
+        ("verify",),
+        # Run the first app; all updates are disabled, so no build is performed
         (
             "run",
             "first",
@@ -324,7 +572,16 @@ def test_test_mode_update_existing_app(run_command, first_app):
         # Tools are verified
         ("verify",),
         # App will be built; update is explicit
-        ("build", "first", {"test_mode": True, "update": True}),
+        (
+            "build",
+            "first",
+            {
+                "test_mode": True,
+                "update": True,
+                "update_requirements": None,
+                "update_resources": None,
+            },
+        ),
         # Run the first app
         (
             "run",
@@ -352,7 +609,16 @@ def test_test_mode_non_existent(run_command, first_app_config):
         # Tools are verified
         ("verify",),
         # App will be built in test mode, (which will transistively create)
-        ("build", "first", {"test_mode": True, "update": None}),
+        (
+            "build",
+            "first",
+            {
+                "test_mode": True,
+                "update": None,
+                "update_requirements": None,
+                "update_resources": None,
+            },
+        ),
         # Then, it will be started
         (
             "run",

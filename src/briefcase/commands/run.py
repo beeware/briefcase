@@ -159,15 +159,53 @@ class RunCommand(BaseCommand):
             "--update",
             action="store_const",
             const=True,
-            help="Update and rebuild the app before execution",
+            help="Update and rebuild the app before running",
         )
         parser.add_argument(
             "--no-update",
             dest="update",
             action="store_const",
             const=False,
-            help="Prevent any automated update and rebuild before running.",
+            help="Prevent any automated update of requirements before running.",
         )
+
+        # update-requirements is a tri-valued argument; it can be specified as
+        # --update-requirements or --no-update-requirements, with a default
+        # value of None. In the presence of the default, there is different
+        # behavior depending on whether we are in test mode.
+        parser.add_argument(
+            "-r",
+            "--update-requirements",
+            action="store_const",
+            const=True,
+            help="Update requirements for the app before running",
+        )
+        parser.add_argument(
+            "--no-update-requirements",
+            dest="update_requirements",
+            action="store_const",
+            const=False,
+            help="Prevent any automated update of requirements before running.",
+        )
+
+        # update-resources is a tri-valued argument; it can be specified as
+        # --update-resources or --no-update-resources, with a default value of
+        # None. In the presence of the default, there is different behavior
+        # depending on whether we are in test mode.
+        parser.add_argument(
+            "--update-resources",
+            action="store_const",
+            const=True,
+            help="Update app resources (icons, splash screens, etc) before running",
+        )
+        parser.add_argument(
+            "--no-update-resources",
+            dest="update_resources",
+            action="store_const",
+            const=False,
+            help="Prevent any automated update of resources before running.",
+        )
+
         parser.add_argument(
             "--test",
             dest="test_mode",
@@ -289,6 +327,8 @@ class RunCommand(BaseCommand):
         self,
         appname: Optional[str] = None,
         update: Optional[bool] = None,
+        update_requirements: Optional[bool] = None,
+        update_resources: Optional[bool] = None,
         test_mode: Optional[bool] = False,
         **options,
     ):
@@ -316,14 +356,23 @@ class RunCommand(BaseCommand):
         if (
             (not template_file.exists())  # App hasn't been created
             or update  # An explicit update has been requested
+            or update_requirements  # An explicit update of requirements has been requested
+            or update_resources  # An explicit update of resources has been requested
             or (not binary_file.exists())  # Binary doesn't exist yet
             or (
-                test_mode and update is None
-            )  # Test mode, and update hasn't been disabled
+                test_mode
+                and (
+                    update is None
+                    or update_requirements is None
+                    or update_resources is None
+                )
+            )  # Test mode, but updates have not been completely disabled
         ):
             state = self.build_command(
                 app,
                 update=update,
+                update_requirements=update_requirements,
+                update_resources=update_resources,
                 test_mode=test_mode,
                 **options,
             )

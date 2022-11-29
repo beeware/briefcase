@@ -40,6 +40,8 @@ def test_device_option(run_command):
     assert options == {
         "udid": "myphone",
         "update": None,
+        "update_requirements": None,
+        "update_resources": None,
         "test_mode": False,
         "appname": None,
     }
