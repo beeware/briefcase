@@ -22,22 +22,29 @@ class UpdateCommand(CreateCommand):
             help="Update app resources (icons, splash screens, etc)",
         )
 
+        parser.add_argument(
+            "--test",
+            dest="test_mode",
+            action="store_true",
+            help="Update the app in test mode",
+        )
+
     def update_app(
         self,
         app: BaseConfig,
-        update=True,
-        update_requirements=False,
-        update_resources=False,
-        test_mode=False,
+        update: Optional[bool],
+        update_requirements: Optional[bool],
+        update_resources: Optional[bool],
+        test_mode: Optional[bool],
         **options,
     ):
         """Update an existing application bundle.
 
         :param app: The config object for the app
-        :param update: Should the app be updated? (default: True)
-        :param update_requirements: Should requirements be updated? (default: False)
-        :param update_resources: Should extra resources be updated? (default: False)
-        :param test_mode: Should the app be updated in test mode? (default: False)
+        :param update: Should the app be updated?
+        :param update_requirements: Should requirements be updated?
+        :param update_resources: Should extra resources be updated?
+        :param test_mode: Should the app be updated in test mode?
         """
 
         bundle_path = self.bundle_path(app)
@@ -74,6 +81,7 @@ class UpdateCommand(CreateCommand):
         update: bool = True,
         update_requirements: bool = False,
         update_resources: bool = False,
+        test_mode: bool = False,
         **options,
     ):
         # Confirm all required tools are available
@@ -85,6 +93,7 @@ class UpdateCommand(CreateCommand):
                 update=update,
                 update_requirements=update_requirements,
                 update_resources=update_resources,
+                test_mode=test_mode,
                 **options,
             )
         else:
@@ -95,6 +104,7 @@ class UpdateCommand(CreateCommand):
                     update=update,
                     update_requirements=update_requirements,
                     update_resources=update_resources,
+                    test_mode=test_mode,
                     **full_options(state, options),
                 )
 
