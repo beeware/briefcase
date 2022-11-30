@@ -10,24 +10,13 @@ class UpdateCommand(CreateCommand):
     command = "update"
 
     def add_options(self, parser):
-        parser.add_argument(
-            "-r",
-            "--update-requirements",
-            action="store_true",
-            help="Update requirements for the app",
+        self._add_update_options(
+            parser,
+            context_label=" before building",
+            update=False,
+            disable_updates=False,
         )
-        parser.add_argument(
-            "--update-resources",
-            action="store_true",
-            help="Update app resources (icons, splash screens, etc)",
-        )
-
-        parser.add_argument(
-            "--test",
-            dest="test_mode",
-            action="store_true",
-            help="Update the app in test mode",
-        )
+        self._add_test_options(parser, context_label="Update")
 
     def update_app(
         self,

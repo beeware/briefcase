@@ -9,68 +9,8 @@ class BuildCommand(BaseCommand):
     command = "build"
 
     def add_options(self, parser):
-        # Update is a tri-valued argument; it can be specified as --update
-        # or --no-update, with a default value of None. In the presence of
-        # the default, there is different behavior depending on whether
-        # we are in test mode.
-        parser.add_argument(
-            "-u",
-            "--update",
-            action="store_const",
-            const=True,
-            help="Update the app before building",
-        )
-        parser.add_argument(
-            "--no-update",
-            dest="update",
-            action="store_const",
-            const=False,
-            help="Prevent any automated update before building.",
-        )
-
-        # update-requirements is a tri-valued argument; it can be specified as
-        # --update-requirements or --no-update-requirements, with a default
-        # value of None. In the presence of the default, there is different
-        # behavior depending on whether we are in test mode.
-        parser.add_argument(
-            "-r",
-            "--update-requirements",
-            action="store_const",
-            const=True,
-            help="Update requirements for the app before building",
-        )
-        parser.add_argument(
-            "--no-update-requirements",
-            dest="update_requirements",
-            action="store_const",
-            const=False,
-            help="Prevent any automated update of requirements before building.",
-        )
-
-        # update-resources is a tri-valued argument; it can be specified as
-        # --update-resources or --no-update-resources, with a default value of
-        # None. In the presence of the default, there is different behavior
-        # depending on whether we are in test mode.
-        parser.add_argument(
-            "--update-resources",
-            action="store_const",
-            const=True,
-            help="Update app resources (icons, splash screens, etc) before building",
-        )
-        parser.add_argument(
-            "--no-update-resources",
-            dest="update_resources",
-            action="store_const",
-            const=False,
-            help="Prevent any automated update of resources before building.",
-        )
-
-        parser.add_argument(
-            "--test",
-            dest="test_mode",
-            action="store_true",
-            help="Build the app in test mode",
-        )
+        self._add_update_options(parser, context_label=" before building")
+        self._add_test_options(parser, context_label="Build")
 
     def build_app(self, app: BaseConfig, **options):
         """Build an application.

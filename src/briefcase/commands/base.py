@@ -578,14 +578,104 @@ a custom location for Briefcase's tools.
             help=(
                 "Don't ask for user input. If any action would be destructive, "
                 "an error will be raised; otherwise, default answers will be "
-                "assumed."
+                "assumed"
             ),
         )
         parser.add_argument(
             "--log",
             action="store_true",
             dest="save_log",
-            help="Save a detailed log to file. By default, this log file is only created for critical errors.",
+            help="Save a detailed log to file. By default, this log file is only created for critical errors",
+        )
+
+    def _add_update_options(
+        self,
+        parser,
+        context_label,
+        update=True,
+        disable_updates=True,
+    ):
+        """Internal utility method for adding common update options.
+
+        :param parser: The parser to which options should be added.
+        :param context_label: Label text that will be added to the end of the
+            help text to describe when the update will be applied (e.g., "before
+            building")
+        :param update: Should the base 'update code' option be exposed?
+        :param disable_updates: Should the update-disabling options be exposed?
+        """
+        # Update is a tri-valued argument; it can be specified as --update
+        # or --no-update, with a default value of None. In the presence of
+        # the default, there is different behavior depending on whether
+        # we are in test mode.
+        if update:
+            parser.add_argument(
+                "-u",
+                "--update",
+                action="store_const",
+                const=True,
+                help=f"Update the app{context_label}",
+            )
+            if disable_updates:
+                parser.add_argument(
+                    "--no-update",
+                    dest="update",
+                    action="store_const",
+                    const=False,
+                    help=f"Prevent any automated update{context_label}",
+                )
+
+        # update-requirements is a tri-valued argument; it can be specified as
+        # --update-requirements or --no-update-requirements, with a default
+        # value of None. In the presence of the default, there is different
+        # behavior depending on whether we are in test mode.
+        parser.add_argument(
+            "-r",
+            "--update-requirements",
+            action="store_const",
+            const=True,
+            help=f"Update requirements for the app{context_label}",
+        )
+        if disable_updates:
+            parser.add_argument(
+                "--no-update-requirements",
+                dest="update_requirements",
+                action="store_const",
+                const=False,
+                help=f"Prevent any automated update of requirements{context_label}",
+            )
+
+        # update-resources is a tri-valued argument; it can be specified as
+        # --update-resources or --no-update-resources, with a default value of
+        # None. In the presence of the default, there is different behavior
+        # depending on whether we are in test mode.
+        parser.add_argument(
+            "--update-resources",
+            action="store_const",
+            const=True,
+            help=f"Update app resources (icons, splash screens, etc){context_label}",
+        )
+        if disable_updates:
+            parser.add_argument(
+                "--no-update-resources",
+                dest="update_resources",
+                action="store_const",
+                const=False,
+                help=f"Prevent any automated update of resources{context_label}",
+            )
+
+    def _add_test_options(self, parser, context_label):
+        """Internal utility method for adding common test-related options.
+
+        :param parser: The parser to which options should be added.
+        :param context_label: Label text for commands; the capitalized action being
+            performed (e.g., "Build", "Run",...)
+        """
+        parser.add_argument(
+            "--test",
+            dest="test_mode",
+            action="store_true",
+            help=f"{context_label} the app in test mode",
         )
 
     def add_options(self, parser):
