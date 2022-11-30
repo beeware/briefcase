@@ -30,7 +30,7 @@ def test_support_package_url(tmp_path):
 @pytest.mark.skipif(
     sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
 )
-def test_install_app_dependencies_in_docker(first_app_config, tmp_path):
+def test_install_app_requirements_in_docker(first_app_config, tmp_path):
     """If Docker is in use, a docker context is used to invoke pip."""
     first_app_config.requires = ["foo==1.2.3", "bar>=4.5"]
 
@@ -68,7 +68,7 @@ def test_install_app_dependencies_in_docker(first_app_config, tmp_path):
         python_version="3.X",
     )
 
-    command.install_app_dependencies(first_app_config, test_mode=False)
+    command.install_app_requirements(first_app_config, test_mode=False)
 
     # pip was invoked inside docker.
     command.tools.subprocess.run.assert_called_with(
@@ -99,7 +99,7 @@ def test_install_app_dependencies_in_docker(first_app_config, tmp_path):
 @pytest.mark.skipif(
     sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
 )
-def test_install_app_dependencies_no_docker(first_app_config, tmp_path):
+def test_install_app_requirements_no_docker(first_app_config, tmp_path):
     """If docker is *not* in use, calls are made on raw subprocess."""
     first_app_config.requires = ["foo==1.2.3", "bar>=4.5"]
 
@@ -120,7 +120,7 @@ def test_install_app_dependencies_no_docker(first_app_config, tmp_path):
     command.verify_tools()
     command.verify_app_tools(first_app_config)
 
-    command.install_app_dependencies(first_app_config, test_mode=False)
+    command.install_app_requirements(first_app_config, test_mode=False)
 
     # Docker is not verified.
     assert not hasattr(command.tools, "docker")

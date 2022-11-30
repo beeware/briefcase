@@ -201,7 +201,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
 
                 # Find all the .so files in app and app_packages,
                 # so they can be passed in to linuxdeploy to have their
-                # dependencies added to the AppImage. Looks for any .so file
+                # requirements added to the AppImage. Looks for any .so file
                 # in the application, and make sure it is marked for deployment.
                 so_folders = {
                     so_file.parent for so_file in self.appdir_path(app).glob("**/*.so")

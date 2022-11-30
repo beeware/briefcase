@@ -3,14 +3,14 @@ from subprocess import CalledProcessError
 
 import pytest
 
-from briefcase.commands.create import DependencyInstallError
+from briefcase.commands.create import RequirementsInstallError
 
 
-def test_install_dependencies_no_error(dev_command, first_app):
-    """Ensure run is executed properly to install dependencies."""
+def test_install_requirements_no_error(dev_command, first_app):
+    """Ensure run is executed properly to install requirements."""
     first_app.requires = ["package-one", "package_two", "packagethree"]
 
-    dev_command.install_dev_dependencies(app=first_app)
+    dev_command.install_dev_requirements(app=first_app)
 
     dev_command.tools.subprocess.run.assert_called_once_with(
         [
@@ -28,16 +28,20 @@ def test_install_dependencies_no_error(dev_command, first_app):
     )
 
 
-def test_install_dependencies_error(dev_command, first_app):
-    """Ensure DependencyInstallError exception is raised for install errors."""
+def test_install_requirements_error(dev_command, first_app):
+    """Ensure RequirementsInstallError exception is raised for install
+    errors."""
     first_app.requires = ["package-one", "package_two", "packagethree"]
 
     dev_command.tools.subprocess.run.side_effect = CalledProcessError(
         returncode=-1, cmd="pip"
     )
 
-    with pytest.raises(DependencyInstallError, match="Unable to install dependencies."):
-        dev_command.install_dev_dependencies(app=first_app)
+    with pytest.raises(
+        RequirementsInstallError,
+        match="Unable to install requirements.",
+    ):
+        dev_command.install_dev_requirements(app=first_app)
 
     dev_command.tools.subprocess.run.assert_called_once_with(
         [
@@ -55,22 +59,22 @@ def test_install_dependencies_error(dev_command, first_app):
     )
 
 
-def test_no_dependencies(dev_command, first_app):
+def test_no_requirements(dev_command, first_app):
     """Ensure dependency installation is not attempted when nothing to
     install."""
     first_app.requires = []
 
-    dev_command.install_dev_dependencies(app=first_app)
+    dev_command.install_dev_requirements(app=first_app)
 
     dev_command.tools.subprocess.run.assert_not_called()
 
 
-def test_install_dependencies_test_mode(dev_command, first_app):
-    """If an app has test dependencies, they are also installed."""
+def test_install_requirements_test_mode(dev_command, first_app):
+    """If an app has test requirements, they are also installed."""
     first_app.requires = ["package-one", "package_two", "packagethree"]
     first_app.test_requires = ["test-one", "test_two"]
 
-    dev_command.install_dev_dependencies(app=first_app)
+    dev_command.install_dev_requirements(app=first_app)
 
     dev_command.tools.subprocess.run.assert_called_once_with(
         [
@@ -90,12 +94,12 @@ def test_install_dependencies_test_mode(dev_command, first_app):
     )
 
 
-def test_only_test_dependencies(dev_command, first_app):
-    """If an app only has test dependencies, they're installed correctly."""
+def test_only_test_requirements(dev_command, first_app):
+    """If an app only has test requirements, they're installed correctly."""
     first_app.requires = None
     first_app.test_requires = ["test-one", "test_two"]
 
-    dev_command.install_dev_dependencies(app=first_app)
+    dev_command.install_dev_requirements(app=first_app)
 
     dev_command.tools.subprocess.run.assert_called_once_with(
         [

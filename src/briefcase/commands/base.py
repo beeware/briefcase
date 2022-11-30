@@ -52,7 +52,7 @@ class UnsupportedPlatform(BriefcaseCommandError):
         super().__init__(
             f"""\
 App cannot be deployed on {platform}. This is probably because one or more
-dependencies (e.g., the GUI library) doesn't support {platform}.
+requirements (e.g., the GUI library) doesn't support {platform}.
 """
         )
 
@@ -452,10 +452,10 @@ a custom location for Briefcase's tools.
         return self.bundle_path(app) / path_index["app_requirements_path"]
 
     def app_packages_path(self, app: BaseConfig):
-        """Obtain the path into which dependencies should be installed.
+        """Obtain the path into which requirements should be installed.
 
         :param app: The config object for the app
-        :return: The full path where application dependencies should be installed.
+        :return: The full path where application requirements should be installed.
         """
         # If the index file hasn't been loaded for this app, load it.
         try:
@@ -578,14 +578,70 @@ a custom location for Briefcase's tools.
             help=(
                 "Don't ask for user input. If any action would be destructive, "
                 "an error will be raised; otherwise, default answers will be "
-                "assumed."
+                "assumed"
             ),
         )
         parser.add_argument(
             "--log",
             action="store_true",
             dest="save_log",
-            help="Save a detailed log to file. By default, this log file is only created for critical errors.",
+            help="Save a detailed log to file. By default, this log file is only created for critical errors",
+        )
+
+    def _add_update_options(
+        self,
+        parser,
+        context_label="",
+        update=True,
+    ):
+        """Internal utility method for adding common update options.
+
+        :param parser: The parser to which options should be added.
+        :param context_label: Label text that will be added to the end of the
+            help text to describe when the update will be applied (e.g., "before
+            building")
+        :param update: Should the --update and --no-update options be exposed?
+        """
+        if update:
+            parser.add_argument(
+                "-u",
+                "--update",
+                action="store_true",
+                help=f"Update the app{context_label}",
+            )
+
+        parser.add_argument(
+            "-r",
+            "--update-requirements",
+            action="store_true",
+            help=f"Update requirements for the app{context_label}",
+        )
+
+        parser.add_argument(
+            "--update-resources",
+            action="store_true",
+            help=f"Update app resources (icons, splash screens, etc){context_label}",
+        )
+
+        if update:
+            parser.add_argument(
+                "--no-update",
+                action="store_true",
+                help=f"Prevent any automated update{context_label}",
+            )
+
+    def _add_test_options(self, parser, context_label):
+        """Internal utility method for adding common test-related options.
+
+        :param parser: The parser to which options should be added.
+        :param context_label: Label text for commands; the capitalized action being
+            performed (e.g., "Build", "Run",...)
+        """
+        parser.add_argument(
+            "--test",
+            dest="test_mode",
+            action="store_true",
+            help=f"{context_label} the app in test mode",
         )
 
     def add_options(self, parser):

@@ -10,33 +10,26 @@ class UpdateCommand(CreateCommand):
     command = "update"
 
     def add_options(self, parser):
-        parser.add_argument(
-            "-d",
-            "--update-dependencies",
-            action="store_true",
-            help="Update dependencies for app",
+        self._add_update_options(
+            parser,
+            update=False,
         )
-        parser.add_argument(
-            "-r",
-            "--update-resources",
-            action="store_true",
-            help="Update app resources (icons, splash screens, etc)",
-        )
+        self._add_test_options(parser, context_label="Update")
 
     def update_app(
         self,
         app: BaseConfig,
-        update_dependencies=False,
-        update_resources=False,
-        test_mode=False,
+        update_requirements: bool,
+        update_resources: bool,
+        test_mode: bool,
         **options,
     ):
         """Update an existing application bundle.
 
         :param app: The config object for the app
-        :param update_dependencies: Should dependencies be updated? (default: False)
-        :param update_resources: Should extra resources be updated? (default: False)
-        :param test_mode: Should the app be updated in test mode? (default: False)
+        :param update_requirements: Should requirements be updated?
+        :param update_resources: Should extra resources be updated?
+        :param test_mode: Should the app be updated in test mode?
         """
 
         bundle_path = self.bundle_path(app)
@@ -48,17 +41,15 @@ class UpdateCommand(CreateCommand):
 
         self.verify_app_tools(app)
 
-        if update_dependencies or test_mode:
-            self.logger.info("Updating dependencies...", prefix=app.app_name)
-            self.install_app_dependencies(app=app, test_mode=test_mode)
-
         self.logger.info("Updating application code...", prefix=app.app_name)
         self.install_app_code(app=app, test_mode=test_mode)
 
-        if update_resources or test_mode:
-            self.logger.info(
-                "Updating extra application resources...", prefix=app.app_name
-            )
+        if update_requirements:
+            self.logger.info("Updating requirements...", prefix=app.app_name)
+            self.install_app_requirements(app=app, test_mode=test_mode)
+
+        if update_resources:
+            self.logger.info("Updating application resources...", prefix=app.app_name)
             self.install_app_resources(app=app)
 
         self.logger.info("Removing unneeded app content...", prefix=app.app_name)
@@ -69,8 +60,9 @@ class UpdateCommand(CreateCommand):
     def __call__(
         self,
         app: Optional[BaseConfig] = None,
-        update_dependencies: bool = False,
+        update_requirements: bool = False,
         update_resources: bool = False,
+        test_mode: bool = False,
         **options,
     ):
         # Confirm all required tools are available
@@ -79,8 +71,9 @@ class UpdateCommand(CreateCommand):
         if app:
             state = self.update_app(
                 app,
-                update_dependencies=update_dependencies,
+                update_requirements=update_requirements,
                 update_resources=update_resources,
+                test_mode=test_mode,
                 **options,
             )
         else:
@@ -88,8 +81,9 @@ class UpdateCommand(CreateCommand):
             for app_name, app in sorted(self.apps.items()):
                 state = self.update_app(
                     app,
-                    update_dependencies=update_dependencies,
+                    update_requirements=update_requirements,
                     update_resources=update_resources,
+                    test_mode=test_mode,
                     **full_options(state, options),
                 )
 

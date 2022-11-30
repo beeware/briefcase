@@ -217,8 +217,8 @@ def test_build_app_missing_wheel_dir(build_command, first_app_generated, tmp_pat
     assert (bundle_path / "www" / "static" / "css" / "briefcase.css").exists()
 
 
-def test_build_app_no_dependencies(build_command, first_app_generated, tmp_path):
-    "An app with no dependencies can be built"
+def test_build_app_no_requirements(build_command, first_app_generated, tmp_path):
+    "An app with no requirements can be built"
     bundle_path = tmp_path / "base_path" / "web" / "static" / "First App"
 
     # Invoking build will create wheels as a side effect.
@@ -330,7 +330,7 @@ def test_app_package_fail(build_command, first_app_generated, tmp_path):
     )
 
     # Mock the side effect of a successful package build, but failure
-    # downloading dependencies
+    # downloading requirements
     build_command.tools.subprocess.run.side_effect = [
         subprocess.CalledProcessError(cmd=["wheel"], returncode=1),
     ]
@@ -381,7 +381,7 @@ def test_dependency_fail(build_command, first_app_generated, tmp_path):
     )
 
     # Mock the side effect of a successful package build, but failure
-    # downloading dependencies
+    # downloading requirements
     build_command.tools.subprocess.run.side_effect = [
         None,
         subprocess.CalledProcessError(cmd=["pip", "wheel"], returncode=1),
@@ -390,7 +390,7 @@ def test_dependency_fail(build_command, first_app_generated, tmp_path):
     # Build the web app.
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Unable to install dependencies for app 'first-app'",
+        match=r"Unable to install requirements for app 'first-app'",
     ):
         build_command.build_app(first_app_generated)
 

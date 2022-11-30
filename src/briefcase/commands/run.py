@@ -150,30 +150,9 @@ class RunCommand(BaseCommand):
             dest="appname",
             help="The app to run",
         )
-        # Update is a tri-valued argument; it can be specified as --update
-        # or --no-update, with a default value of None. In the presence of
-        # the default, there is different behavior depending on whether
-        # we are in test mode.
-        parser.add_argument(
-            "-u",
-            "--update",
-            action="store_const",
-            const=True,
-            help="Update and rebuild the app before execution",
-        )
-        parser.add_argument(
-            "--no-update",
-            dest="update",
-            action="store_const",
-            const=False,
-            help="Prevent any automated update and rebuild before running.",
-        )
-        parser.add_argument(
-            "--test",
-            dest="test_mode",
-            action="store_true",
-            help="Run the app in test mode",
-        )
+
+        self._add_update_options(parser, context_label=" before running")
+        self._add_test_options(parser, context_label="Run")
 
     def _prepare_app_env(self, app: BaseConfig, test_mode: bool):
         """Prepare the environment for running an app as a log stream.
@@ -288,8 +267,11 @@ class RunCommand(BaseCommand):
     def __call__(
         self,
         appname: Optional[str] = None,
-        update: Optional[bool] = None,
-        test_mode: Optional[bool] = False,
+        update: bool = False,
+        update_requirements: bool = False,
+        update_resources: bool = False,
+        no_update: bool = False,
+        test_mode: bool = False,
         **options,
     ):
         # Confirm all required tools are available
@@ -316,14 +298,19 @@ class RunCommand(BaseCommand):
         if (
             (not template_file.exists())  # App hasn't been created
             or update  # An explicit update has been requested
+            or update_requirements  # An explicit update of requirements has been requested
+            or update_resources  # An explicit update of resources has been requested
             or (not binary_file.exists())  # Binary doesn't exist yet
             or (
-                test_mode and update is None
-            )  # Test mode, and update hasn't been disabled
+                test_mode and not no_update
+            )  # Test mode, but updates have not been disabled
         ):
             state = self.build_command(
                 app,
                 update=update,
+                update_requirements=update_requirements,
+                update_resources=update_resources,
+                no_update=no_update,
                 test_mode=test_mode,
                 **options,
             )

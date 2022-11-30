@@ -47,12 +47,12 @@ is not yet supported on {self.platform}. You will need to:
         )
 
 
-class DependencyInstallError(BriefcaseCommandError):
+class RequirementsInstallError(BriefcaseCommandError):
     def __init__(self):
         super().__init__(
             """\
-Unable to install dependencies. This may be because one of your
-dependencies is invalid, or because pip was unable to connect
+Unable to install requirements. This may be because one of your
+requirements is invalid, or because pip was unable to connect
 to the PyPI server.
 """
         )
@@ -419,7 +419,7 @@ class CreateCommand(BaseCommand):
         requires: List[str],
         requirements_path: Path,
     ):
-        """Configure application dependencies by writing a requirements.txt
+        """Configure application requirements by writing a requirements.txt
         file.
 
         :param app: The app configuration
@@ -456,27 +456,27 @@ class CreateCommand(BaseCommand):
         """
         return []
 
-    def _install_app_dependencies(
+    def _install_app_requirements(
         self,
         app: BaseConfig,
         requires: List[str],
         app_packages_path: Path,
     ):
-        """Install dependencies for the app with pip.
+        """Install requirements for the app with pip.
 
         :param app: The app configuration
         :param requires: The list of requirements to install
         :param app_packages_path: The full path of the app_packages folder into which
-            dependencies should be installed.
+            requirements should be installed.
         """
         # Clear existing dependency directory
         if app_packages_path.is_dir():
             self.tools.shutil.rmtree(app_packages_path)
             self.tools.os.mkdir(app_packages_path)
 
-        # Install dependencies
+        # Install requirements
         if requires:
-            with self.input.wait_bar("Installing app dependencies..."):
+            with self.input.wait_bar("Installing app requirements..."):
                 # If there is a support package provided, add the cross-platform
                 # folder of the support package to the PYTHONPATH. This allows
                 # a support package to specify a sitecustomize.py that will make
@@ -507,17 +507,17 @@ class CreateCommand(BaseCommand):
                         **pip_kwargs,
                     )
                 except subprocess.CalledProcessError as e:
-                    raise DependencyInstallError() from e
+                    raise RequirementsInstallError() from e
         else:
-            self.logger.info("No application dependencies.")
+            self.logger.info("No application requirements.")
 
-    def install_app_dependencies(self, app: BaseConfig, test_mode: bool):
-        """Handle dependencies for the app.
+    def install_app_requirements(self, app: BaseConfig, test_mode: bool):
+        """Handle requirements for the app.
 
         This will result in either (in preferential order):
          * a requirements.txt file being written at a location specified by
            ``app_requirements_path`` in the template path index
-         * dependencies being installed with pip into the location specified
+         * requirements being installed with pip into the location specified
            by the ``app_packages_path`` in the template path index.
 
         If ``test_mode`` is True, the test requirements will also be installed.
@@ -526,7 +526,7 @@ class CreateCommand(BaseCommand):
         an error is raised.
 
         :param app: The config object for the app
-        :param test_mode: Should the test dependencies be installed?
+        :param test_mode: Should the test requirements be installed?
         """
         requires = app.requires.copy() if app.requires else []
         if test_mode and app.test_requires:
@@ -538,7 +538,7 @@ class CreateCommand(BaseCommand):
         except KeyError:
             try:
                 app_packages_path = self.app_packages_path(app)
-                self._install_app_dependencies(app, requires, app_packages_path)
+                self._install_app_requirements(app, requires, app_packages_path)
             except KeyError as e:
                 raise BriefcaseCommandError(
                     "Application path index file does not define "
@@ -779,11 +779,11 @@ class CreateCommand(BaseCommand):
         # are in place since the app tools may be dependent on them.
         self.verify_app_tools(app)
 
-        self.logger.info("Installing dependencies...", prefix=app.app_name)
-        self.install_app_dependencies(app=app, test_mode=test_mode)
-
         self.logger.info("Installing application code...", prefix=app.app_name)
         self.install_app_code(app=app, test_mode=test_mode)
+
+        self.logger.info("Installing requirements...", prefix=app.app_name)
+        self.install_app_requirements(app=app, test_mode=test_mode)
 
         self.logger.info("Installing application resources...", prefix=app.app_name)
         self.install_app_resources(app=app)

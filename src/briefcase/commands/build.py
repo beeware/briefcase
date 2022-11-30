@@ -1,6 +1,7 @@
 from typing import Optional
 
 from briefcase.config import BaseConfig
+from briefcase.exceptions import BriefcaseCommandError
 
 from .base import BaseCommand, full_options
 
@@ -9,30 +10,8 @@ class BuildCommand(BaseCommand):
     command = "build"
 
     def add_options(self, parser):
-        # Update is a tri-valued argument; it can be specified as --update
-        # or --no-update, with a default value of None. In the presence of
-        # the default, there is different behavior depending on whether
-        # we are in test mode.
-        parser.add_argument(
-            "-u",
-            "--update",
-            action="store_const",
-            const=True,
-            help="Update the app before building",
-        )
-        parser.add_argument(
-            "--no-update",
-            dest="update",
-            action="store_const",
-            const=False,
-            help="Prevent any automated update before building.",
-        )
-        parser.add_argument(
-            "--test",
-            dest="test_mode",
-            action="store_true",
-            help="Build the app in test mode",
-        )
+        self._add_update_options(parser, context_label=" before building")
+        self._add_test_options(parser, context_label="Build")
 
     def build_app(self, app: BaseConfig, **options):
         """Build an application.
@@ -44,7 +23,10 @@ class BuildCommand(BaseCommand):
     def _build_app(
         self,
         app: BaseConfig,
-        update: Optional[bool],
+        update: bool,
+        update_requirements: bool,
+        update_resources: bool,
+        no_update: bool,
         test_mode: bool,
         **options,
     ):
@@ -52,15 +34,33 @@ class BuildCommand(BaseCommand):
         exists, and has been updated (if requested) before attempting to issue
         the actual build command.
 
-        :param app: The application to build?
-        :param update: Should the application be updated first?
+        :param app: The application to build
+        :param update: Should the application be updated before building?
+        :param update_requirements: Should the application requirements be
+            updated before building?
+        :param update_resources: Should the application resources be updated
+            before building?
+        :param no_update: Should automated updates be disabled?
         :param test_mode: Is the app being build in test mode?
         """
         target_file = self.bundle_path(app)
         if not target_file.exists():
             state = self.create_command(app, test_mode=test_mode, **options)
-        elif update or (test_mode and update is None):
-            state = self.update_command(app, test_mode=test_mode, **options)
+        elif (
+            update  # An explicit update has been requested
+            or update_requirements  # An explicit update of requirements has been requested
+            or update_resources  # An explicit update of resources has been requested
+            or (
+                test_mode and not no_update
+            )  # Test mode, but updates have not been disabled
+        ):
+            state = self.update_command(
+                app,
+                update_requirements=update_requirements,
+                update_resources=update_resources,
+                test_mode=test_mode,
+                **options,
+            )
         else:
             state = None
 
@@ -78,21 +78,51 @@ class BuildCommand(BaseCommand):
     def __call__(
         self,
         app: Optional[BaseConfig] = None,
-        update: Optional[bool] = None,
+        update: bool = False,
+        update_requirements: bool = False,
+        update_resources: bool = False,
+        no_update: bool = False,
         test_mode: bool = False,
         **options,
     ):
+        # Has the user requested an invalid set of options?
+        # This can't be done with argparse, because it isn't a simple mutually exclusive group.
+        if no_update:
+            if update:
+                raise BriefcaseCommandError(
+                    "Cannot specify both --update and --no-update"
+                )
+            if update_requirements:
+                raise BriefcaseCommandError(
+                    "Cannot specify both --update-requirements and --no-update"
+                )
+            if update_resources:
+                raise BriefcaseCommandError(
+                    "Cannot specify both --update-resources and --no-update"
+                )
+
         # Confirm all required tools are available
         self.verify_tools()
 
         if app:
-            state = self._build_app(app, update=update, test_mode=test_mode, **options)
+            state = self._build_app(
+                app,
+                update=update,
+                update_requirements=update_requirements,
+                update_resources=update_resources,
+                no_update=no_update,
+                test_mode=test_mode,
+                **options,
+            )
         else:
             state = None
             for app_name, app in sorted(self.apps.items()):
                 state = self._build_app(
                     app,
                     update=update,
+                    update_requirements=update_requirements,
+                    update_resources=update_resources,
+                    no_update=no_update,
                     test_mode=test_mode,
                     **full_options(state, options),
                 )

@@ -54,7 +54,7 @@ def test_no_code(
 
     create_command.install_app_code(myapp, test_mode=False)
 
-    # No request was made to install dependencies
+    # No request was made to install requirements
     create_command.tools.shutil.rmtree.assert_called_once_with(app_path)
     create_command.tools.os.mkdir.assert_called_once_with(app_path)
     create_command.tools.shutil.copytree.assert_not_called()
@@ -80,7 +80,7 @@ def test_empty_code(
 
     create_command.install_app_code(myapp, test_mode=False)
 
-    # No request was made to install dependencies
+    # No request was made to install requirements
     create_command.tools.shutil.rmtree.assert_called_once_with(app_path)
     create_command.tools.os.mkdir.assert_called_once_with(app_path)
     create_command.tools.shutil.copytree.assert_not_called()
@@ -390,7 +390,7 @@ def test_non_latin_metadata(
 
     create_command.install_app_code(myapp, test_mode=False)
 
-    # No request was made to install dependencies
+    # No request was made to install requirements
     create_command.tools.shutil.rmtree.assert_called_once_with(app_path)
     create_command.tools.os.mkdir.assert_called_once_with(app_path)
     create_command.tools.shutil.copytree.assert_not_called()

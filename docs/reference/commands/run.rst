@@ -10,7 +10,7 @@ command will start that executable. If the output is an installer, ``run`` will
 attempt to replicate as much as possible of the runtime environment that would
 be installed, but will not actually install the app. For example, on Windows,
 ``run`` will use the interpreter that will be included in the installer, and
-the versions of code and dependencies that will be installed, but *won't* run
+the versions of code and requirements that will be installed, but *won't* run
 the installer to produce Start Menu items, registry records, etc.
 
 Test mode
@@ -67,19 +67,38 @@ name specified should be the machine-readable package name for the app.
 Update the application's source code before running. Equivalent to running::
 
     $ briefcase update
+    $ briefcase build
+    $ briefcase run
+
+``-r`` / ``--update-requirements``
+----------------------------------
+
+Update application requirements before running. Equivalent to running::
+
+    $ briefcase update -r
+    $ briefcase build
+    $ briefcase run
+
+``--update-resources``
+----------------------
+
+Update application resources (e.g., icons and splash screens) before running.
+Equivalent to running::
+
+    $ briefcase update --update-resources
+    $ briefcase build
     $ briefcase run
 
 ``--test``
 ----------
 
-Run the test suite in the bundled app environment. Running ``run --test`` forces
-an update and rebuild, to ensure that the packaged application contains all the
-test dependencies and code. To prevent this update and build, use
-``--no-update``.
+Run the app in test mode in the bundled app environment. Running ``run --test``
+will also cause an update and build to ensure that the packaged application
+contains the most recent test code. To prevent this update and build, use the
+``--no-update`` option.
 
 ``--no-update``
---------------------
+---------------
 
-Prevent the automated update that is performed when specifying by the
-``--test`` option. This option should only be required if you need to
-build your app on one machine, and run it on another.
+Prevent the automated update and build of app code that is performed when
+specifying by the ``--test`` option.

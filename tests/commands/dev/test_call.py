@@ -32,8 +32,8 @@ class DummyDevCommand(DevCommand):
         super().verify_app_tools(app=app)
         self.actions.append(("verify-app-tools", app.app_name))
 
-    def install_dev_dependencies(self, app, **kwargs):
-        self.actions.append(("dev_dependencies", app.app_name, kwargs))
+    def install_dev_requirements(self, app, **kwargs):
+        self.actions.append(("dev_requirements", app.app_name, kwargs))
 
     def get_environment(self, app, test_mode):
         return self.env
@@ -166,15 +166,15 @@ def test_bad_app_reference(dev_command, first_app, second_app):
     ]
 
 
-def test_update_dependencies(dev_command, first_app):
+def test_update_requirements(dev_command, first_app):
     """The dev command can request that the app is updated first."""
     # Add a single app
     dev_command.apps = {
         "first": first_app,
     }
 
-    # Configure no command line options
-    options = dev_command.parse_options(["-d"])
+    # Configure a requirements update
+    options = dev_command.parse_options(["-r"])
 
     # Run the run command
     dev_command(**options)
@@ -186,7 +186,7 @@ def test_update_dependencies(dev_command, first_app):
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # An update was requested
-        ("dev_dependencies", "first", {}),
+        ("dev_requirements", "first", {}),
         # Then, it will be started
         ("run_dev", "first", {"test_mode": False}, dev_command.env),
     ]
@@ -212,22 +212,22 @@ def test_run_uninstalled(dev_command, first_app_uninstalled):
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # The app will be installed
-        ("dev_dependencies", "first", {}),
+        ("dev_requirements", "first", {}),
         # Then, it will be started
         ("run_dev", "first", {"test_mode": False}, dev_command.env),
     ]
 
 
 def test_update_uninstalled(dev_command, first_app_uninstalled):
-    """A request to update dependencies is redundant if the app hasn't been
+    """A request to update requirements is redundant if the app hasn't been
     installed."""
     # Add a single app
     dev_command.apps = {
         "first": first_app_uninstalled,
     }
 
-    # Configure no command line options
-    options = dev_command.parse_options(["-d"])
+    # Configure a requirements update
+    options = dev_command.parse_options(["-r"])
 
     # Run the run command
     dev_command(**options)
@@ -239,20 +239,20 @@ def test_update_uninstalled(dev_command, first_app_uninstalled):
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # An update was requested
-        ("dev_dependencies", "first", {}),
+        ("dev_requirements", "first", {}),
         # Then, it will be started
         ("run_dev", "first", {"test_mode": False}, dev_command.env),
     ]
 
 
 def test_no_run(dev_command, first_app_uninstalled):
-    """Install dependencies without running the app."""
+    """Install requirements without running the app."""
     # Add a single app
     dev_command.apps = {
         "first": first_app_uninstalled,
     }
 
-    # Configure no command line options
+    # Configure an update without run
     options = dev_command.parse_options(["--no-run"])
 
     # Run the run command
@@ -264,8 +264,8 @@ def test_no_run(dev_command, first_app_uninstalled):
         ("verify",),
         # App tools are verified for app
         ("verify-app-tools", "first"),
-        # Only update dependencies without running the app
-        ("dev_dependencies", "first", {}),
+        # Only update requirements without running the app
+        ("dev_requirements", "first", {}),
     ]
 
 
@@ -312,8 +312,8 @@ def test_run_test_uninstalled(dev_command, first_app_uninstalled):
         ("verify",),
         # App tools are verified for app
         ("verify-app-tools", "first"),
-        # Development dependencies will be installed
-        ("dev_dependencies", "first", {}),
+        # Development requirements will be installed
+        ("dev_requirements", "first", {}),
         # Then, it will be started
         ("run_dev", "first", {"test_mode": True}, dev_command.env),
     ]
