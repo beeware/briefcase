@@ -12,9 +12,7 @@ class UpdateCommand(CreateCommand):
     def add_options(self, parser):
         self._add_update_options(
             parser,
-            context_label=" before building",
             update=False,
-            no_update=False,
         )
         self._add_test_options(parser, context_label="Update")
 

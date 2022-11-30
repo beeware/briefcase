@@ -591,9 +591,8 @@ a custom location for Briefcase's tools.
     def _add_update_options(
         self,
         parser,
-        context_label,
+        context_label="",
         update=True,
-        no_update=True,
     ):
         """Internal utility method for adding common update options.
 
@@ -601,8 +600,7 @@ a custom location for Briefcase's tools.
         :param context_label: Label text that will be added to the end of the
             help text to describe when the update will be applied (e.g., "before
             building")
-        :param update: Should the base 'update code' option be exposed?
-        :param no_update: Should the no-update option be exposed?
+        :param update: Should the --update and --no-update options be exposed?
         """
         if update:
             parser.add_argument(
@@ -625,7 +623,7 @@ a custom location for Briefcase's tools.
             help=f"Update app resources (icons, splash screens, etc){context_label}",
         )
 
-        if no_update:
+        if update:
             parser.add_argument(
                 "--no-update",
                 action="store_true",
