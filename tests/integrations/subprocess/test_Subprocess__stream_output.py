@@ -288,3 +288,25 @@ def test_filter_func_output_and_stop_iteration(mock_sub, streaming_process, caps
     # fmt: on
 
     mock_sub.cleanup.assert_called_once_with("testing", streaming_process)
+
+
+def test_filter_func_line_unexpected_error(mock_sub, streaming_process, capsys):
+    """If a filter function fails, the error is caught and logged."""
+    # Define a filter function that redacts lines that end with 1
+    # The newline is *not* included.
+    def filter_func(line):
+        if not line:
+            raise RuntimeError("Like something totally went wrong")
+        yield line
+
+    mock_sub.stream_output("testing", streaming_process, filter_func=filter_func)
+
+    # fmt: off
+    # Exception
+    assert capsys.readouterr().out == (
+        "output line 1\n"
+        "Error while streaming output: RuntimeError: Like something totally went wrong\n"
+    )
+    # fmt: on
+
+    mock_sub.cleanup.assert_called_once_with("testing", streaming_process)
