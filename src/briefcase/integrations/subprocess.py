@@ -637,7 +637,7 @@ class Subprocess(Tool):
             self.tools.logger.error(
                 f"Error while streaming output: {e.__class__.__name__}: {e}"
             )
-            self.tools.logger.capture_stacktrace()
+            self.tools.logger.capture_stacktrace("Output thread")
 
     def cleanup(self, label, popen_process):
         """Clean up after a Popen process, gracefully terminating if possible;
