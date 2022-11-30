@@ -46,6 +46,7 @@ class DummyBuildCommand(BuildCommand):
         kwargs.pop("update", None)
         kwargs.pop("update_requirements", None)
         kwargs.pop("update_resources", None)
+        kwargs.pop("no_update", None)
         kwargs.pop("test_mode", None)
         return full_options({"build_state": app.app_name}, kwargs)
 
@@ -61,7 +62,6 @@ class DummyBuildCommand(BuildCommand):
     def update_command(self, app, **kwargs):
         self.actions.append(("update", app.app_name, kwargs.copy()))
         # Remove arguments consumed by the underlying call to update_app()
-        kwargs.pop("update", None)
         kwargs.pop("update_requirements", None)
         kwargs.pop("update_resources", None)
         kwargs.pop("test_mode", None)

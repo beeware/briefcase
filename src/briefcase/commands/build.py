@@ -1,6 +1,7 @@
 from typing import Optional
 
 from briefcase.config import BaseConfig
+from briefcase.exceptions import BriefcaseCommandError
 
 from .base import BaseCommand, full_options
 
@@ -22,9 +23,10 @@ class BuildCommand(BaseCommand):
     def _build_app(
         self,
         app: BaseConfig,
-        update: Optional[bool],
-        update_requirements: Optional[bool],
-        update_resources: Optional[bool],
+        update: bool,
+        update_requirements: bool,
+        update_resources: bool,
+        no_update: bool,
         test_mode: bool,
         **options,
     ):
@@ -38,6 +40,7 @@ class BuildCommand(BaseCommand):
             updated before building?
         :param update_resources: Should the application resources be updated
             before building?
+        :param no_update: Should automated updates be disabled?
         :param test_mode: Is the app being build in test mode?
         """
         target_file = self.bundle_path(app)
@@ -48,17 +51,11 @@ class BuildCommand(BaseCommand):
             or update_requirements  # An explicit update of requirements has been requested
             or update_resources  # An explicit update of resources has been requested
             or (
-                test_mode
-                and (
-                    update is None
-                    or update_requirements is None
-                    or update_resources is None
-                )
-            )  # Test mode, but updates have not been completely disabled
+                test_mode and not no_update
+            )  # Test mode, but updates have not been disabled
         ):
             state = self.update_command(
                 app,
-                update=update,
                 update_requirements=update_requirements,
                 update_resources=update_resources,
                 test_mode=test_mode,
@@ -81,12 +78,29 @@ class BuildCommand(BaseCommand):
     def __call__(
         self,
         app: Optional[BaseConfig] = None,
-        update: Optional[bool] = None,
-        update_requirements: Optional[bool] = None,
-        update_resources: Optional[bool] = None,
+        update: bool = False,
+        update_requirements: bool = False,
+        update_resources: bool = False,
+        no_update: bool = False,
         test_mode: bool = False,
         **options,
     ):
+        # Has the user requested an invalid set of options?
+        # This can't be done with argparse, because it isn't a simple mutually exclusive group.
+        if no_update:
+            if update:
+                raise BriefcaseCommandError(
+                    "Cannot specify both --update and --no-update"
+                )
+            if update_requirements:
+                raise BriefcaseCommandError(
+                    "Cannot specify both --update-requirements and --no-update"
+                )
+            if update_resources:
+                raise BriefcaseCommandError(
+                    "Cannot specify both --update-resources and --no-update"
+                )
+
         # Confirm all required tools are available
         self.verify_tools()
 
@@ -96,6 +110,7 @@ class BuildCommand(BaseCommand):
                 update=update,
                 update_requirements=update_requirements,
                 update_resources=update_resources,
+                no_update=no_update,
                 test_mode=test_mode,
                 **options,
             )
@@ -107,6 +122,7 @@ class BuildCommand(BaseCommand):
                     update=update,
                     update_requirements=update_requirements,
                     update_resources=update_resources,
+                    no_update=no_update,
                     test_mode=test_mode,
                     **full_options(state, options),
                 )

@@ -1,3 +1,8 @@
+import pytest
+
+from briefcase.exceptions import BriefcaseCommandError
+
+
 def test_specific_app(build_command, first_app, second_app):
     """If a specific app is requested, build it."""
     # Add two apps
@@ -140,9 +145,8 @@ def test_update_app(build_command, first_app, second_app):
             "first",
             {
                 "test_mode": False,
-                "update": True,
-                "update_requirements": None,
-                "update_resources": None,
+                "update_requirements": False,
+                "update_resources": False,
             },
         ),
         # App tools are verified for first app
@@ -156,9 +160,8 @@ def test_update_app(build_command, first_app, second_app):
                 "update_state": "first",
                 "build_state": "first",
                 "test_mode": False,
-                "update": True,
-                "update_requirements": None,
-                "update_resources": None,
+                "update_requirements": False,
+                "update_resources": False,
             },
         ),
         # App tools are verified for second app
@@ -195,9 +198,8 @@ def test_update_app_requirements(build_command, first_app, second_app):
             "first",
             {
                 "test_mode": False,
-                "update": None,
                 "update_requirements": True,
-                "update_resources": None,
+                "update_resources": False,
             },
         ),
         # App tools are verified for first app
@@ -211,9 +213,8 @@ def test_update_app_requirements(build_command, first_app, second_app):
                 "update_state": "first",
                 "build_state": "first",
                 "test_mode": False,
-                "update": None,
                 "update_requirements": True,
-                "update_resources": None,
+                "update_resources": False,
             },
         ),
         # App tools are verified for second app
@@ -250,8 +251,7 @@ def test_update_app_resources(build_command, first_app, second_app):
             "first",
             {
                 "test_mode": False,
-                "update": None,
-                "update_requirements": None,
+                "update_requirements": False,
                 "update_resources": True,
             },
         ),
@@ -266,8 +266,7 @@ def test_update_app_resources(build_command, first_app, second_app):
                 "update_state": "first",
                 "build_state": "first",
                 "test_mode": False,
-                "update": None,
-                "update_requirements": None,
+                "update_requirements": False,
                 "update_resources": True,
             },
         ),
@@ -312,9 +311,8 @@ def test_update_non_existent(build_command, first_app_config, second_app):
                 "create_state": "first",
                 "build_state": "first",
                 "test_mode": False,
-                "update": True,
-                "update_requirements": None,
-                "update_resources": None,
+                "update_requirements": False,
+                "update_resources": False,
             },
         ),
         # App tools are verified for second app
@@ -356,9 +354,8 @@ def test_update_unbuilt(build_command, first_app_unbuilt, second_app):
             "first",
             {
                 "test_mode": False,
-                "update": True,
-                "update_requirements": None,
-                "update_resources": None,
+                "update_requirements": False,
+                "update_resources": False,
             },
         ),
         # App tools are verified for first app
@@ -372,9 +369,8 @@ def test_update_unbuilt(build_command, first_app_unbuilt, second_app):
                 "update_state": "first",
                 "build_state": "first",
                 "test_mode": False,
-                "update": True,
-                "update_requirements": None,
-                "update_resources": None,
+                "update_requirements": False,
+                "update_resources": False,
             },
         ),
         # App tools are verified for second app
@@ -411,9 +407,8 @@ def test_build_test(build_command, first_app, second_app):
             "first",
             {
                 "test_mode": True,
-                "update": None,
-                "update_requirements": None,
-                "update_resources": None,
+                "update_requirements": False,
+                "update_resources": False,
             },
         ),
         # App tools are verified for first app
@@ -427,9 +422,8 @@ def test_build_test(build_command, first_app, second_app):
                 "update_state": "first",
                 "build_state": "first",
                 "test_mode": True,
-                "update": None,
-                "update_requirements": None,
-                "update_resources": None,
+                "update_requirements": False,
+                "update_resources": False,
             },
         ),
         # App tools are verified for second app
@@ -461,184 +455,11 @@ def test_build_test_no_update(build_command, first_app, second_app):
     assert build_command.actions == [
         # Tools are verified
         ("verify",),
-        # Update then build the first app
-        (
-            "update",
-            "first",
-            {
-                "test_mode": True,
-                "update": False,
-                "update_requirements": None,
-                "update_resources": None,
-            },
-        ),
-        # App tools are verified for first app
-        ("verify-app-tools", "first"),
-        ("build", "first", {"update_state": "first", "test_mode": True}),
-        # Update then build the second app
-        (
-            "update",
-            "second",
-            {
-                "update_state": "first",
-                "build_state": "first",
-                "test_mode": True,
-                "update": False,
-                "update_requirements": None,
-                "update_resources": None,
-            },
-        ),
-        # App tools are verified for second app
-        ("verify-app-tools", "second"),
-        (
-            "build",
-            "second",
-            {"update_state": "second", "build_state": "first", "test_mode": True},
-        ),
-    ]
-
-
-def test_build_test_no_update_dependences(build_command, first_app, second_app):
-    """If the user builds a test app without app dependency updates, app code
-    and resources are still updated before build."""
-    # Add two apps
-    build_command.apps = {
-        "first": first_app,
-        "second": second_app,
-    }
-
-    # Configure command line options
-    options = build_command.parse_options(["--test", "--no-update-requirements"])
-
-    # Run the build command
-    build_command(**options)
-
-    # The right sequence of things will be done
-    assert build_command.actions == [
-        # Tools are verified
-        ("verify",),
-        # Update then build the first app
-        (
-            "update",
-            "first",
-            {
-                "test_mode": True,
-                "update": None,
-                "update_requirements": False,
-                "update_resources": None,
-            },
-        ),
-        # App tools are verified for first app
-        ("verify-app-tools", "first"),
-        ("build", "first", {"update_state": "first", "test_mode": True}),
-        # Update then build the second app
-        (
-            "update",
-            "second",
-            {
-                "update_state": "first",
-                "build_state": "first",
-                "test_mode": True,
-                "update": None,
-                "update_requirements": False,
-                "update_resources": None,
-            },
-        ),
-        # App tools are verified for second app
-        ("verify-app-tools", "second"),
-        (
-            "build",
-            "second",
-            {"update_state": "second", "build_state": "first", "test_mode": True},
-        ),
-    ]
-
-
-def test_build_test_no_update_resources(build_command, first_app, second_app):
-    """If the user builds a test app without app resource updates, app code and
-    dependencies are still updated before build."""
-    # Add two apps
-    build_command.apps = {
-        "first": first_app,
-        "second": second_app,
-    }
-
-    # Configure command line options
-    options = build_command.parse_options(["--test", "--no-update-resources"])
-
-    # Run the build command
-    build_command(**options)
-
-    # The right sequence of things will be done
-    assert build_command.actions == [
-        # Tools are verified
-        ("verify",),
-        # Update then build the first app
-        (
-            "update",
-            "first",
-            {
-                "test_mode": True,
-                "update": None,
-                "update_requirements": None,
-                "update_resources": False,
-            },
-        ),
-        # App tools are verified for first app
-        ("verify-app-tools", "first"),
-        ("build", "first", {"update_state": "first", "test_mode": True}),
-        # Update then build the second app
-        (
-            "update",
-            "second",
-            {
-                "update_state": "first",
-                "build_state": "first",
-                "test_mode": True,
-                "update": None,
-                "update_requirements": None,
-                "update_resources": False,
-            },
-        ),
-        # App tools are verified for second app
-        ("verify-app-tools", "second"),
-        (
-            "build",
-            "second",
-            {"update_state": "second", "build_state": "first", "test_mode": True},
-        ),
-    ]
-
-
-def test_build_test_only(build_command, first_app, second_app):
-    """If the user builds a test app without any updates, the app is just
-    built."""
-    # Add two apps
-    build_command.apps = {
-        "first": first_app,
-        "second": second_app,
-    }
-
-    # Configure command line options
-    options = build_command.parse_options(
-        [
-            "--test",
-            "--no-update",
-            "--no-update-requirements",
-            "--no-update-resources",
-        ]
-    )
-
-    # Run the build command
-    build_command(**options)
-
-    # The right sequence of things will be done
-    assert build_command.actions == [
-        # Tools are verified
-        ("verify",),
+        # No update of the first app
         # App tools are verified for first app
         ("verify-app-tools", "first"),
         ("build", "first", {"test_mode": True}),
+        # No update of the second app
         # App tools are verified for second app
         ("verify-app-tools", "second"),
         (
@@ -647,6 +468,174 @@ def test_build_test_only(build_command, first_app, second_app):
             {"build_state": "first", "test_mode": True},
         ),
     ]
+
+
+def test_build_test_update_dependences(build_command, first_app, second_app):
+    """If the user builds a test app with app dependency updates, app code and
+    resources are updated before build."""
+    # Add two apps
+    build_command.apps = {
+        "first": first_app,
+        "second": second_app,
+    }
+
+    # Configure command line options
+    options = build_command.parse_options(["--test", "-r"])
+
+    # Run the build command
+    build_command(**options)
+
+    # The right sequence of things will be done
+    assert build_command.actions == [
+        # Tools are verified
+        ("verify",),
+        # Update then build the first app
+        (
+            "update",
+            "first",
+            {
+                "test_mode": True,
+                "update_requirements": True,
+                "update_resources": False,
+            },
+        ),
+        # App tools are verified for first app
+        ("verify-app-tools", "first"),
+        ("build", "first", {"update_state": "first", "test_mode": True}),
+        # Update then build the second app
+        (
+            "update",
+            "second",
+            {
+                "update_state": "first",
+                "build_state": "first",
+                "test_mode": True,
+                "update_requirements": True,
+                "update_resources": False,
+            },
+        ),
+        # App tools are verified for second app
+        ("verify-app-tools", "second"),
+        (
+            "build",
+            "second",
+            {"update_state": "second", "build_state": "first", "test_mode": True},
+        ),
+    ]
+
+
+def test_build_test_update_resources(build_command, first_app, second_app):
+    """If the user builds a test app with app resource updates, app code and
+    resources are updated before build."""
+    # Add two apps
+    build_command.apps = {
+        "first": first_app,
+        "second": second_app,
+    }
+
+    # Configure command line options
+    options = build_command.parse_options(["--test", "--update-resources"])
+
+    # Run the build command
+    build_command(**options)
+
+    # The right sequence of things will be done
+    assert build_command.actions == [
+        # Tools are verified
+        ("verify",),
+        # Update then build the first app
+        (
+            "update",
+            "first",
+            {
+                "test_mode": True,
+                "update_requirements": False,
+                "update_resources": True,
+            },
+        ),
+        # App tools are verified for first app
+        ("verify-app-tools", "first"),
+        ("build", "first", {"update_state": "first", "test_mode": True}),
+        # Update then build the second app
+        (
+            "update",
+            "second",
+            {
+                "update_state": "first",
+                "build_state": "first",
+                "test_mode": True,
+                "update_requirements": False,
+                "update_resources": True,
+            },
+        ),
+        # App tools are verified for second app
+        ("verify-app-tools", "second"),
+        (
+            "build",
+            "second",
+            {"update_state": "second", "build_state": "first", "test_mode": True},
+        ),
+    ]
+
+
+def test_build_invalid_update(build_command, first_app, second_app):
+    """If the user requests a build with update and no-update, an error is
+    raised."""
+    # Add two apps
+    build_command.apps = {
+        "first": first_app,
+        "second": second_app,
+    }
+
+    # Configure command line options
+    options = build_command.parse_options(["-u", "--no-update"])
+
+    # Run the build command
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Cannot specify both --update and --no-update",
+    ):
+        build_command(**options)
+
+
+def test_build_invalid_update_requirements(build_command, first_app, second_app):
+    """If the user requests a build with update-requirements and no-update, an
+    error is raised."""
+    # Add two apps
+    build_command.apps = {
+        "first": first_app,
+        "second": second_app,
+    }
+
+    # Configure command line options
+    options = build_command.parse_options(["-r", "--no-update"])
+
+    # Run the build command
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Cannot specify both --update-requirements and --no-update",
+    ):
+        build_command(**options)
+
+
+def test_build_invalid_update_resources(build_command, first_app, second_app):
+    """If the user requests a build with update-resources and no-update, an
+    error is raised."""
+    # Add two apps
+    build_command.apps = {
+        "first": first_app,
+        "second": second_app,
+    }
+
+    # Configure command line options
+    options = build_command.parse_options(["--update-resources", "--no-update"])
+
+    # Run the build command
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Cannot specify both --update-resources and --no-update",
+    ):
+        build_command(**options)
 
 
 def test_test_app_non_existent(build_command, first_app_config, second_app):
@@ -680,9 +669,8 @@ def test_test_app_non_existent(build_command, first_app_config, second_app):
                 "create_state": "first",
                 "build_state": "first",
                 "test_mode": True,
-                "update": True,
-                "update_requirements": None,
-                "update_resources": None,
+                "update_requirements": False,
+                "update_resources": False,
             },
         ),
         # App tools are verified for second app
@@ -725,9 +713,8 @@ def test_test_app_unbuilt(build_command, first_app_unbuilt, second_app):
             "first",
             {
                 "test_mode": True,
-                "update": True,
-                "update_requirements": None,
-                "update_resources": None,
+                "update_requirements": False,
+                "update_resources": False,
             },
         ),
         # App tools are verified for first app
@@ -745,9 +732,8 @@ def test_test_app_unbuilt(build_command, first_app_unbuilt, second_app):
                 "update_state": "first",
                 "build_state": "first",
                 "test_mode": True,
-                "update": True,
-                "update_requirements": None,
-                "update_resources": None,
+                "update_requirements": False,
+                "update_resources": False,
             },
         ),
         # App tools are verified for second app

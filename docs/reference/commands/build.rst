@@ -65,25 +65,16 @@ Update application resources (e.g., icons and splash screens) before building. E
 ----------
 
 Build the app in test mode in the bundled app environment. Running ``build
---test`` forces an update to ensure that the packaged application contains all
-the test code, requirements and resources. To prevent this update and build, use
-the ``--no-update``, ``--no-update-requirements`` and ``--no-update-resources``
-options.
+--test`` will also cause an update to ensure that the packaged application
+contains the current test code. To prevent this update, use the ``--no-update``
+option.
+
+If you have previously run the app in "normal" mode, you may need to pass ``-r``
+/ ``--update-requirements`` the first time you build in test mode to ensure that
+your testing requirements are present in the test app.
 
 ``--no-update``
 ---------------
 
 Prevent the automated update of app code that is performed when specifying by
 the ``--test`` option.
-
-``--no-update-requirements``
-----------------------------
-
-Prevent the automated update of app requirements that is performed when
-specifying by the ``--test`` option.
-
-``--no-update-resources``
--------------------------
-
-Prevent the automated update of app resources that is performed when specifying
-by the ``--test`` option.

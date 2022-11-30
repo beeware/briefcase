@@ -593,7 +593,7 @@ a custom location for Briefcase's tools.
         parser,
         context_label,
         update=True,
-        disable_updates=True,
+        no_update=True,
     ):
         """Internal utility method for adding common update options.
 
@@ -602,66 +602,34 @@ a custom location for Briefcase's tools.
             help text to describe when the update will be applied (e.g., "before
             building")
         :param update: Should the base 'update code' option be exposed?
-        :param disable_updates: Should the update-disabling options be exposed?
+        :param no_update: Should the no-update option be exposed?
         """
-        # Update is a tri-valued argument; it can be specified as --update
-        # or --no-update, with a default value of None. In the presence of
-        # the default, there is different behavior depending on whether
-        # we are in test mode.
         if update:
             parser.add_argument(
                 "-u",
                 "--update",
-                action="store_const",
-                const=True,
+                action="store_true",
                 help=f"Update the app{context_label}",
             )
-            if disable_updates:
-                parser.add_argument(
-                    "--no-update",
-                    dest="update",
-                    action="store_const",
-                    const=False,
-                    help=f"Prevent any automated update{context_label}",
-                )
 
-        # update-requirements is a tri-valued argument; it can be specified as
-        # --update-requirements or --no-update-requirements, with a default
-        # value of None. In the presence of the default, there is different
-        # behavior depending on whether we are in test mode.
         parser.add_argument(
             "-r",
             "--update-requirements",
-            action="store_const",
-            const=True,
+            action="store_true",
             help=f"Update requirements for the app{context_label}",
         )
-        if disable_updates:
-            parser.add_argument(
-                "--no-update-requirements",
-                dest="update_requirements",
-                action="store_const",
-                const=False,
-                help=f"Prevent any automated update of requirements{context_label}",
-            )
 
-        # update-resources is a tri-valued argument; it can be specified as
-        # --update-resources or --no-update-resources, with a default value of
-        # None. In the presence of the default, there is different behavior
-        # depending on whether we are in test mode.
         parser.add_argument(
             "--update-resources",
-            action="store_const",
-            const=True,
+            action="store_true",
             help=f"Update app resources (icons, splash screens, etc){context_label}",
         )
-        if disable_updates:
+
+        if no_update:
             parser.add_argument(
-                "--no-update-resources",
-                dest="update_resources",
-                action="store_const",
-                const=False,
-                help=f"Prevent any automated update of resources{context_label}",
+                "--no-update",
+                action="store_true",
+                help=f"Prevent any automated update{context_label}",
             )
 
     def _add_test_options(self, parser, context_label):

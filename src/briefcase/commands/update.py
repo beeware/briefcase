@@ -14,23 +14,21 @@ class UpdateCommand(CreateCommand):
             parser,
             context_label=" before building",
             update=False,
-            disable_updates=False,
+            no_update=False,
         )
         self._add_test_options(parser, context_label="Update")
 
     def update_app(
         self,
         app: BaseConfig,
-        update: Optional[bool],
-        update_requirements: Optional[bool],
-        update_resources: Optional[bool],
-        test_mode: Optional[bool],
+        update_requirements: bool,
+        update_resources: bool,
+        test_mode: bool,
         **options,
     ):
         """Update an existing application bundle.
 
         :param app: The config object for the app
-        :param update: Should the app be updated?
         :param update_requirements: Should requirements be updated?
         :param update_resources: Should extra resources be updated?
         :param test_mode: Should the app be updated in test mode?
@@ -45,18 +43,15 @@ class UpdateCommand(CreateCommand):
 
         self.verify_app_tools(app)
 
-        if update or (test_mode and update is None):
-            self.logger.info("Updating application code...", prefix=app.app_name)
-            self.install_app_code(app=app, test_mode=test_mode)
+        self.logger.info("Updating application code...", prefix=app.app_name)
+        self.install_app_code(app=app, test_mode=test_mode)
 
-        if update_requirements or (test_mode and update_requirements is None):
+        if update_requirements:
             self.logger.info("Updating requirements...", prefix=app.app_name)
             self.install_app_requirements(app=app, test_mode=test_mode)
 
-        if update_resources or (test_mode and update_resources is None):
-            self.logger.info(
-                "Updating extra application resources...", prefix=app.app_name
-            )
+        if update_resources:
+            self.logger.info("Updating application resources...", prefix=app.app_name)
             self.install_app_resources(app=app)
 
         self.logger.info("Removing unneeded app content...", prefix=app.app_name)
@@ -67,7 +62,6 @@ class UpdateCommand(CreateCommand):
     def __call__(
         self,
         app: Optional[BaseConfig] = None,
-        update: bool = True,
         update_requirements: bool = False,
         update_resources: bool = False,
         test_mode: bool = False,
@@ -79,7 +73,6 @@ class UpdateCommand(CreateCommand):
         if app:
             state = self.update_app(
                 app,
-                update=update,
                 update_requirements=update_requirements,
                 update_resources=update_resources,
                 test_mode=test_mode,
@@ -90,7 +83,6 @@ class UpdateCommand(CreateCommand):
             for app_name, app in sorted(self.apps.items()):
                 state = self.update_app(
                     app,
-                    update=update,
                     update_requirements=update_requirements,
                     update_resources=update_resources,
                     test_mode=test_mode,

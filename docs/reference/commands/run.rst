@@ -93,25 +93,12 @@ Equivalent to running::
 ----------
 
 Run the app in test mode in the bundled app environment. Running ``run --test``
-forces an update to ensure that the packaged application contains all the test
-code, requirements and resources. To prevent this update and build, use the
-``--no-update``, ``--no-update-requirements`` and ``--no-update-resources``
-options.
+will also cause update and build to ensure that the packaged application
+contains the most recent test code. To prevent this update and build, use the
+``--no-update``.
 
 ``--no-update``
 ---------------
 
-Prevent the automated update of app code that is performed when specifying by
-the ``--test`` option.
-
-``--no-update-requirements``
-----------------------------
-
-Prevent the automated update of app requirements that is performed when
+Prevent the automated update and build of app code that is performed when
 specifying by the ``--test`` option.
-
-``--no-update-resources``
--------------------------
-
-Prevent the automated update of app resources that is performed when specifying
-by the ``--test`` option.

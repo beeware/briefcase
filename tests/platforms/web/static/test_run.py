@@ -32,9 +32,10 @@ def test_default_options(run_command):
 
     assert options == {
         "appname": None,
-        "update": None,
-        "update_requirements": None,
-        "update_resources": None,
+        "update": False,
+        "update_requirements": False,
+        "update_resources": False,
+        "no_update": False,
         "test_mode": False,
         "host": "localhost",
         "port": 8080,
@@ -50,9 +51,10 @@ def test_options(run_command):
 
     assert options == {
         "appname": None,
-        "update": None,
-        "update_requirements": None,
-        "update_resources": None,
+        "update": False,
+        "update_requirements": False,
+        "update_resources": False,
+        "no_update": False,
         "test_mode": False,
         "host": "myhost",
         "port": 1234,

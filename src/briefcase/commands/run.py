@@ -267,10 +267,11 @@ class RunCommand(BaseCommand):
     def __call__(
         self,
         appname: Optional[str] = None,
-        update: Optional[bool] = None,
-        update_requirements: Optional[bool] = None,
-        update_resources: Optional[bool] = None,
-        test_mode: Optional[bool] = False,
+        update: bool = False,
+        update_requirements: bool = False,
+        update_resources: bool = False,
+        no_update: bool = False,
+        test_mode: bool = False,
         **options,
     ):
         # Confirm all required tools are available
@@ -301,19 +302,15 @@ class RunCommand(BaseCommand):
             or update_resources  # An explicit update of resources has been requested
             or (not binary_file.exists())  # Binary doesn't exist yet
             or (
-                test_mode
-                and (
-                    update is None
-                    or update_requirements is None
-                    or update_resources is None
-                )
-            )  # Test mode, but updates have not been completely disabled
+                test_mode and not no_update
+            )  # Test mode, but updates have not been disabled
         ):
             state = self.build_command(
                 app,
                 update=update,
                 update_requirements=update_requirements,
                 update_resources=update_resources,
+                no_update=no_update,
                 test_mode=test_mode,
                 **options,
             )
