@@ -93,9 +93,9 @@ Equivalent to running::
 ----------
 
 Run the app in test mode in the bundled app environment. Running ``run --test``
-will also cause update and build to ensure that the packaged application
+will also cause an update and build to ensure that the packaged application
 contains the most recent test code. To prevent this update and build, use the
-``--no-update``.
+``--no-update`` option.
 
 ``--no-update``
 ---------------
