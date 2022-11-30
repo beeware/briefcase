@@ -21,7 +21,7 @@ class LogFilter:
         r"(^=+ ("
         r"((, )?\d+ (passed|skipped|deselected|xfailed|xpassed|warnings?))*"
         r"|(no tests ran)"
-        r") in -?\d+\.\d+s =+$)"
+        r") in -?\d+\.\d+s.* =+$)"
     )
 
     DEFAULT_FAILURE_REGEX = (
@@ -36,7 +36,7 @@ class LogFilter:
         r"(^=+ ("
         r"(\d+ failed((, )?\d+ (passed|skipped|deselected|xfailed|xpassed|warnings?|errors?))*)"
         r"|((\d+ (failed|passed|skipped|deselected|xfailed|xpassed|warnings?)(, )?)*\d+ errors?)"
-        r") in -?\d+.\d+s =+$)"
+        r") in -?\d+.\d+s.* =+$)"
     )
 
     def __init__(

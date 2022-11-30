@@ -160,6 +160,11 @@ from briefcase.commands.run import LogFilter
             "",
             "============================= 7 passed in 12.345s ==============================",
         ],
+        # - Passes with content after the time.
+        [
+            "tests/test_thirdparty.py::test_pandas PASSED                              [100%]",
+            "=================== 24 passed, 5 skipped in 89.65s (0:01:29) ===================",
+        ],
         # Until https://github.com/chaquo/chaquopy/issues/746 is resolved, Android output
         # will contain extra line breaks because the log is written whenever the buffer is
         # flushed, not just on newlines. The unittest regex contains extra named groups to
