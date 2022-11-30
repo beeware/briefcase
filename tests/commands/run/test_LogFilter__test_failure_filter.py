@@ -209,6 +209,11 @@ from briefcase.commands.run import LogFilter
             "FAILED tests/foobar/test_things.py::test_fail2 - assert 1 == 2",
             "============================= 6 failed in -12.345s =============================",
         ],
+        # - Failures with content after the time.
+        [
+            "tests/test_thirdparty.py::test_pandas PASSED                              [100%]",
+            "==================== 24 failed, 5 passed in 89.65s (0:01:29) ===================",
+        ],
         # Until https://github.com/chaquo/chaquopy/issues/746 is resolved, Android output
         # will contain extra line breaks because it produces a line for each call to `write`,
         # not just on newlines. The unittest regex contains extra named groups to
