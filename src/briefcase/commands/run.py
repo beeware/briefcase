@@ -4,6 +4,7 @@ from typing import Optional
 
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError, BriefcaseTestSuiteFailure
+from briefcase.integrations.subprocess import StopStreaming
 
 from .base import BaseCommand, full_options
 
@@ -79,17 +80,13 @@ class LogFilter:
 
         :param line: A single line of raw system log content, including the newline.
         """
-        # If we've recorded a success condition, we can stop streaming.
-        if self.success is not None:
-            raise StopIteration()
-
         # Compute the clean line
         if self.clean_filter:
             filtered = self.clean_filter(line)
 
-            # If the clean filter says the line can be dumped, return None
+            # If the clean filter says the line can be dumped, return without yielding
             if filtered is None:
-                return None
+                return
 
             # If there's a cleaned line, we can determine if it should be included in analysis
             clean_line, included = filtered
@@ -116,11 +113,14 @@ class LogFilter:
             # Look for the success/failure conditions in the tail
             if self.failure_filter and self.failure_filter(tail):
                 self.success = False
+                yield display_line
+                raise StopStreaming()
             elif self.success_filter and self.success_filter(tail):
                 self.success = True
-
+                yield display_line
+                raise StopStreaming()
         # Return the display line
-        return display_line
+        yield display_line
 
     @staticmethod
     def test_filter(pattern):

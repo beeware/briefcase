@@ -33,7 +33,9 @@ def test_capture_stacktrace():
     except ZeroDivisionError:
         logger.capture_stacktrace()
 
-    assert isinstance(logger.stacktrace, Trace)
+    assert len(logger.stacktraces) == 1
+    assert logger.stacktraces[0][0] == "Main thread"
+    assert isinstance(logger.stacktraces[0][1], Trace)
     assert logger.skip_log is False
 
 
@@ -48,7 +50,9 @@ def test_capture_stacktrace_for_briefcaseerror(skip_logfile):
     except BriefcaseError:
         logger.capture_stacktrace()
 
-    assert isinstance(logger.stacktrace, Trace)
+    assert len(logger.stacktraces) == 1
+    assert logger.stacktraces[0][0] == "Main thread"
+    assert isinstance(logger.stacktraces[0][1], Trace)
     assert logger.skip_log is skip_logfile
 
 
@@ -61,6 +65,9 @@ def test_save_log_to_file_do_not_log():
     logger.save_log = False
     logger.save_log_to_file(command=command)
     command.input.wait_bar.assert_not_called()
+
+    # There were no stack traces captured
+    assert len(logger.stacktraces) == 0
 
 
 def test_save_log_to_file_no_exception(tmp_path, now):
@@ -141,12 +148,45 @@ def test_save_log_to_file_with_exception(tmp_path, now):
 
     log_filepath = tmp_path / logger.LOG_DIR / "briefcase.2022_06_25-16_12_29.dev.log"
 
-    log_filepath.exists()
+    assert log_filepath.exists()
     with open(log_filepath, encoding="utf-8") as log:
         log_contents = log.read()
 
+    assert len(logger.stacktraces) == 1
     assert log_contents.startswith("Date/Time:       2022-06-25 16:12:29")
     assert TRACEBACK_HEADER in log_contents
+    assert log_contents.splitlines()[-1].startswith("ZeroDivisionError")
+
+
+def test_save_log_to_file_with_multiple_exceptions(tmp_path, now):
+    """Log file contains exception stacktrace when more than one is
+    captured."""
+    command = MagicMock()
+    command.base_path = Path(tmp_path)
+    command.command = "dev"
+    command.tools.os.environ = {}
+
+    logger = Log()
+    logger.save_log = True
+    for i in range(1, 5):
+        try:
+            1 / 0
+        except ZeroDivisionError:
+            logger.capture_stacktrace(f"Thread {i}")
+
+    logger.save_log_to_file(command=command)
+
+    log_filepath = tmp_path / logger.LOG_DIR / "briefcase.2022_06_25-16_12_29.dev.log"
+
+    assert log_filepath.exists()
+    with open(log_filepath, encoding="utf-8") as log:
+        log_contents = log.read()
+
+    assert len(logger.stacktraces) == 4
+    assert log_contents.startswith("Date/Time:       2022-06-25 16:12:29")
+    assert TRACEBACK_HEADER in log_contents
+    for i in range(1, 5):
+        assert f"\nThread {i} traceback:\n" in log_contents
     assert log_contents.splitlines()[-1].startswith("ZeroDivisionError")
 
 

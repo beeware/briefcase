@@ -159,7 +159,7 @@ def test_filter_func(mock_sub, streaming_process, capsys):
     """A filter can be added to modify an output stream."""
     # Define a filter function that converts "output" into "filtered"
     def filter_func(line):
-        return line.replace("output", "filtered")
+        yield line.replace("output", "filtered")
 
     mock_sub.stream_output("testing", streaming_process, filter_func=filter_func)
 
@@ -180,8 +180,8 @@ def test_filter_func_reject(mock_sub, streaming_process, capsys):
     # Define a filter function that ignores blank lines
     def filter_func(line):
         if len(line) == 0:
-            return None
-        return line
+            return
+        yield line
 
     mock_sub.stream_output("testing", streaming_process, filter_func=filter_func)
 
@@ -202,8 +202,9 @@ def test_filter_func_line_ends(mock_sub, streaming_process, capsys):
     # The newline is *not* included.
     def filter_func(line):
         if line.endswith("line 1"):
-            return line.replace("line 1", "**REDACTED**")
-        return line
+            yield line.replace("line 1", "**REDACTED**")
+        else:
+            yield line
 
     mock_sub.stream_output("testing", streaming_process, filter_func=filter_func)
 
@@ -219,14 +220,38 @@ def test_filter_func_line_ends(mock_sub, streaming_process, capsys):
     mock_sub.cleanup.assert_called_once_with("testing", streaming_process)
 
 
+def test_filter_func_line_multiple_output(mock_sub, streaming_process, capsys):
+    """Filter functions can generate multiple lines from a single input."""
+    # Define a filter function that adds an extra line of content when the
+    # lines that end with 1
+    def filter_func(line):
+        yield line
+        if line.endswith("line 1"):
+            yield "Extra content!"
+
+    mock_sub.stream_output("testing", streaming_process, filter_func=filter_func)
+
+    # fmt: off
+    # Output has been transformed; newline exists in output
+    assert capsys.readouterr().out == (
+        "output line 1\n"
+        "Extra content!\n"
+        "\n"
+        "output line 3\n"
+    )
+    # fmt: on
+
+    mock_sub.cleanup.assert_called_once_with("testing", streaming_process)
+
+
 def test_filter_func_stop_iteration(mock_sub, streaming_process, capsys):
     """A filter can indicate that logging should stop."""
     # Define a filter function that converts "output" into "filtered",
-    # and terminates logging when a blank line is seen.
+    # and terminates streaming when a blank line is seen.
     def filter_func(line):
         if line == "":
-            raise StopIteration()
-        return line.replace("output", "filtered")
+            raise subprocess.StopStreaming()
+        yield line.replace("output", "filtered")
 
     mock_sub.stream_output("testing", streaming_process, filter_func=filter_func)
 
@@ -234,6 +259,53 @@ def test_filter_func_stop_iteration(mock_sub, streaming_process, capsys):
     # Output has been transformed, but is truncated when the empty line was received.
     assert capsys.readouterr().out == (
         "filtered line 1\n"
+    )
+    # fmt: on
+
+    mock_sub.cleanup.assert_called_once_with("testing", streaming_process)
+
+
+def test_filter_func_output_and_stop_iteration(mock_sub, streaming_process, capsys):
+    """A filter can indicate that logging should stop, and also output
+    content."""
+    # Define a filter function that converts "output" into "filtered",
+    # and terminates streaming when a blank line is seen; but outputs
+    # one more line before terminating.
+    def filter_func(line):
+        if line == "":
+            yield "This should be the last line"
+            raise subprocess.StopStreaming()
+        yield line.replace("output", "filtered")
+
+    mock_sub.stream_output("testing", streaming_process, filter_func=filter_func)
+
+    # fmt: off
+    # Output has been transformed, but is truncated when the empty line was received.
+    assert capsys.readouterr().out == (
+        "filtered line 1\n"
+        "This should be the last line\n"
+    )
+    # fmt: on
+
+    mock_sub.cleanup.assert_called_once_with("testing", streaming_process)
+
+
+def test_filter_func_line_unexpected_error(mock_sub, streaming_process, capsys):
+    """If a filter function fails, the error is caught and logged."""
+    # Define a filter function that redacts lines that end with 1
+    # The newline is *not* included.
+    def filter_func(line):
+        if not line:
+            raise RuntimeError("Like something totally went wrong")
+        yield line
+
+    mock_sub.stream_output("testing", streaming_process, filter_func=filter_func)
+
+    # fmt: off
+    # Exception
+    assert capsys.readouterr().out == (
+        "output line 1\n"
+        "Error while streaming output: RuntimeError: Like something totally went wrong\n"
     )
     # fmt: on
 

@@ -6,7 +6,6 @@ import subprocess
 import sys
 import threading
 import time
-from contextlib import suppress
 from functools import wraps
 from pathlib import Path
 
@@ -20,6 +19,10 @@ from briefcase.integrations.base import Tool, ToolCache
 
 class ParseError(Exception):
     """Raised by parser functions to signal parsing was unsuccessful."""
+
+
+class StopStreaming(Exception):
+    """Raised by streaming filters to terminate the stream."""
 
 
 def ensure_str(text):
@@ -566,9 +569,9 @@ class Subprocess(Tool):
             should stop and the popen_process should be terminated.
         :param filter_func: a callable that will be invoked on every line
             of output that is streamed. The function accepts the "raw" line
-            of input (stripped of any trailing newline); it returns the
-            filtered output that should be displayed to the user, or ``None``
-            if the line of input should be ignored by the output stream.
+            of input (stripped of any trailing newline); it returns a generator
+            that yields the filtered output that should be displayed to the user.
+            Can raise StopStreaming to terminate the output stream.
         """
         output_streamer = threading.Thread(
             name=f"{label} output streamer",
@@ -605,25 +608,36 @@ class Subprocess(Tool):
         :param filter_func: a callable that will be invoked on every line
             of output that is streamed; see ``stream_output`` for details.
         """
-        # ValueError is raised if stdout is unexpectedly closed.
-        # This can happen if the user starts spamming CTRL+C, for instance.
-        # Silently exit to avoid Python printing the exception to the console.
-        # StopIteration can be raised by a filter function to indicate that
-        # there's no need to stream any more.
-        with suppress(ValueError, StopIteration):
+        try:
             while True:
-                # readline should always return at least a newline (ie \n)
-                # UNLESS the underlying process is exiting/gone; then "" is returned
-                output_line = ensure_str(popen_process.stdout.readline())
+                try:
+                    output_line = ensure_str(popen_process.stdout.readline())
+                except ValueError:
+                    # ValueError is raised if stdout is unexpectedly closed. This can
+                    # happen if the user starts spamming CTRL+C, for instance. Silently
+                    # exit to avoid Python printing the exception to the console.
+                    return
+
+                # readline should always return at least a newline (ie \n) UNLESS
+                # the underlying process is exiting/gone; then "" is returned.
                 if output_line:
                     if filter_func:
-                        filtered_output = filter_func(output_line.rstrip("\n"))
-                        if filtered_output is not None:
-                            self.tools.logger.info(filtered_output)
+                        try:
+                            for filtered_output in filter_func(
+                                output_line.rstrip("\n")
+                            ):
+                                self.tools.logger.info(filtered_output)
+                        except StopStreaming:
+                            return
                     else:
                         self.tools.logger.info(output_line)
                 else:
                     return
+        except Exception as e:
+            self.tools.logger.error(
+                f"Error while streaming output: {e.__class__.__name__}: {e}"
+            )
+            self.tools.logger.capture_stacktrace("Output thread")
 
     def cleanup(self, label, popen_process):
         """Clean up after a Popen process, gracefully terminating if possible;

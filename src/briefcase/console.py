@@ -132,8 +132,9 @@ class Log:
         self.save_log = False
         # flag set by exceptions to skip writing the log; save_log takes precedence.
         self.skip_log = False
-        # Rich stacktrace of exception for logging to file
-        self.stacktrace = None
+        # Rich stacktraces of exceptions for logging to file.
+        # A list of tuples containing a label for the thread context, and the Trace object
+        self.stacktraces = []
         # functions to run for additional logging if creating a logfile
         self.log_file_extras = []
 
@@ -204,14 +205,19 @@ class Log:
         """Log message at error level; always included in output."""
         self._log(prefix=prefix, message=message, markup=markup, style="bold red")
 
-    def capture_stacktrace(self):
-        """Preserve Rich stacktrace from exception while in except block."""
+    def capture_stacktrace(self, label="Main thread"):
+        """Preserve Rich stacktrace from exception while in except block.
+
+        :param label: An identifying label for the thread that has raised the
+            stacktrace. Defaults to the main thread.
+        """
         exc_info = sys.exc_info()
         try:
             self.skip_log = exc_info[1].skip_logfile
         except AttributeError:
             pass
-        self.stacktrace = Traceback.extract(*exc_info, show_locals=True)
+
+        self.stacktraces.append((label, Traceback.extract(*exc_info, show_locals=True)))
 
     def add_log_file_extra(self, func):
         """Register a function to be called in the event that a log file is
@@ -227,7 +233,9 @@ class Log:
         # A log file is always written if a Command ran and `--log` was provided.
         # If `--log` was not provided, then the log is written when an exception
         # occurred and the exception was not explicitly configured to skip the log.
-        if not (command and (self.save_log or (self.stacktrace and not self.skip_log))):
+        if not (
+            command and (self.save_log or (self.stacktraces and not self.skip_log))
+        ):
             return
 
         with command.input.wait_bar("Saving log...", transient=True):
@@ -249,17 +257,19 @@ class Log:
     def _build_log(self, command):
         """Accumulate all information to include in the log file."""
         # add the exception stacktrace to end of log if one was captured
-        if self.stacktrace:
+        if self.stacktraces:
             # using print.log.print() instead of print.to_log() to avoid
             # timestamp and code location inclusion for the stacktrace box.
-            self.print.log.print(
-                Traceback(
-                    trace=self.stacktrace,
-                    width=self.print.LOG_FILE_WIDTH,
-                    show_locals=True,
-                ),
-                new_line_start=True,
-            )
+            for thread, stacktrace in self.stacktraces:
+                self.print.log.print(
+                    f"{thread} traceback:",
+                    Traceback(
+                        trace=stacktrace,
+                        width=self.print.LOG_FILE_WIDTH,
+                        show_locals=True,
+                    ),
+                    new_line_start=True,
+                )
 
         if self.log_file_extras:
             with command.input.wait_bar(
