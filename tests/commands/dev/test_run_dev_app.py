@@ -18,6 +18,8 @@ def test_subprocess_running_successfully(dev_command, first_app, tmp_path):
             "-u",
             "-X",
             "dev",
+            "-X",
+            "utf8",
             "-c",
             (
                 "import runpy, sys;"
@@ -51,6 +53,8 @@ def test_subprocess_throws_error(dev_command, first_app, tmp_path):
             "-u",
             "-X",
             "dev",
+            "-X",
+            "utf8",
             "-c",
             (
                 "import runpy, sys;"
@@ -77,6 +81,8 @@ def test_subprocess_test_mode_success(dev_command, first_app, tmp_path):
             "-u",
             "-X",
             "dev",
+            "-X",
+            "utf8",
             "-c",
             (
                 "import runpy, sys;"
@@ -112,6 +118,8 @@ def test_subprocess_test_mode_failure(dev_command, first_app, tmp_path):
             "-u",
             "-X",
             "dev",
+            "-X",
+            "utf8",
             "-c",
             (
                 "import runpy, sys;"
