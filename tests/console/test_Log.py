@@ -148,7 +148,7 @@ def test_save_log_to_file_with_exception(tmp_path, now):
 
     log_filepath = tmp_path / logger.LOG_DIR / "briefcase.2022_06_25-16_12_29.dev.log"
 
-    log_filepath.exists()
+    assert log_filepath.exists()
     with open(log_filepath, encoding="utf-8") as log:
         log_contents = log.read()
 
@@ -178,7 +178,7 @@ def test_save_log_to_file_with_multiple_exceptions(tmp_path, now):
 
     log_filepath = tmp_path / logger.LOG_DIR / "briefcase.2022_06_25-16_12_29.dev.log"
 
-    log_filepath.exists()
+    assert log_filepath.exists()
     with open(log_filepath, encoding="utf-8") as log:
         log_contents = log.read()
 
