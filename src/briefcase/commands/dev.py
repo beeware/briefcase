@@ -115,6 +115,8 @@ class DevCommand(BaseCommand):
                     "-u",
                     "-X",
                     "dev",
+                    "-X",
+                    "utf8",
                     "-c",
                     (
                         "import runpy, sys;"
