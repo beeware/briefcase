@@ -136,11 +136,19 @@ class DevCommand(BaseCommand):
     def get_environment(self, app, test_mode: bool):
         # Create a shell environment where PYTHONPATH points to the source
         # directories described by the app config.
-        return {
+        env = {
             "PYTHONPATH": os.pathsep.join(
                 os.fsdecode(Path.cwd() / path) for path in app.PYTHONPATH(test_mode)
             )
         }
+
+        # On Windows, we need to disable the debug allocator because it
+        # conflicts with Python.net. See
+        # https://github.com/pythonnet/pythonnet/issues/1977 for details.
+        if self.platform == "windows":
+            env["PYTHONMALLOC"] = "default"
+
+        return env
 
     def __call__(
         self,
