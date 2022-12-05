@@ -187,8 +187,8 @@ def test_variant_with_no_requested_size(create_command, tmp_path, capsys):
 def test_variant_without_variant_source_and_no_requested_size(
     create_command, tmp_path, capsys
 ):
-    """If the template specifies a variant with no size, but app doesn't have
-    variants, a message is reported."""
+    """If the template specifies a variant with no size, but app doesn't define
+    variants, the default construction is used."""
     create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
 
     # Create the source image
@@ -208,7 +208,7 @@ def test_variant_without_variant_source_and_no_requested_size(
     )
 
     # The right message was written to output
-    expected = "Unable to find round variant for sample image; using default\n"
+    expected = "Unable to find input/original-round.png for round sample image; using default\n"
     assert capsys.readouterr().out == expected
 
     # No file was installed.
@@ -238,7 +238,7 @@ def test_unknown_variant_with_no_requested_size(create_command, tmp_path, capsys
     )
 
     # The right message was written to output
-    expected = "Unable to find unknown variant for sample image; using default\n"
+    expected = "Unknown variant 'unknown' for sample image; using default\n"
     assert capsys.readouterr().out == expected
 
     # No file was installed.
@@ -303,7 +303,38 @@ def test_variant_with_size_without_variants(create_command, tmp_path, capsys):
     )
 
     # The right message was written to output
-    expected = "Unable to find 3742px round variant for sample image; using default\n"
+    expected = "Unable to find input/original-round-3742.png for 3742px round sample image; using default\n"
+    assert capsys.readouterr().out == expected
+
+    # No file was installed.
+    create_command.tools.shutil.copy.assert_not_called()
+
+
+def test_unknown_variant_with_size(create_command, tmp_path, capsys):
+    """If the app specifies an unknown variant with a size, but no variants are
+    specified, a message is output."""
+    create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
+
+    # Create the source image
+    source_file = tmp_path / "project" / "input" / "original-3742.png"
+    source_file.parent.mkdir(parents=True, exist_ok=True)
+    with source_file.open("w") as f:
+        f.write("image")
+
+    # Try to install the image
+    out_path = tmp_path / "output.png"
+    create_command.install_image(
+        "sample image",
+        source={
+            "round": "input/original",
+        },
+        variant="unknown",
+        size="3742",
+        target=out_path,
+    )
+
+    # The right message was written to output
+    expected = "Unknown variant 'unknown' for 3742px sample image; using default\n"
     assert capsys.readouterr().out == expected
 
     # No file was installed.
