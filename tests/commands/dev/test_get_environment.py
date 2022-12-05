@@ -7,6 +7,7 @@ PYTHONPATH = "PYTHONPATH"
 PYTHONMALLOC = "PYTHONMALLOC"
 
 
+@pytest.mark.skipif(sys.platform != "win32", reason="Relevant only for windows")
 def test_pythonpath_with_one_source_in_windows(dev_command, first_app):
     """Test get environment with one source."""
     env = dev_command.get_environment(first_app, test_mode=False)
@@ -14,6 +15,7 @@ def test_pythonpath_with_one_source_in_windows(dev_command, first_app):
     assert env[PYTHONMALLOC] == "default"
 
 
+@pytest.mark.skipif(sys.platform != "win32", reason="Relevant only for windows")
 def test_pythonpath_with_one_source_test_mode_in_windows(dev_command, first_app):
     """Test get environment with one source, no tests sources, in test mode."""
     env = dev_command.get_environment(first_app, test_mode=True)
