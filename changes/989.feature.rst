@@ -1,0 +1,1 @@
+Resources that require variants will now use the variant name as part of the filename by default.

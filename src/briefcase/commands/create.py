@@ -607,11 +607,13 @@ class CreateCommand(BaseCommand):
                     full_role = role
                 else:
                     try:
-                        source_filename = f"{source[variant]}{target.suffix}"
                         full_role = f"{variant} {role}"
-                    except (TypeError, KeyError):
+                        source_filename = f"{source[variant]}{target.suffix}"
+                    except TypeError:
+                        source_filename = f"{source}-{variant}{target.suffix}"
+                    except KeyError:
                         self.logger.info(
-                            f"Unable to find {variant} variant for {role}; using default"
+                            f"Unknown variant {variant!r} for {role}; using default"
                         )
                         return
             else:
@@ -631,11 +633,13 @@ class CreateCommand(BaseCommand):
                         full_role = f"{size}px {role}"
                 else:
                     try:
-                        source_filename = f"{source[variant]}-{size}{target.suffix}"
                         full_role = f"{size}px {variant} {role}"
-                    except (TypeError, KeyError):
+                        source_filename = f"{source[variant]}-{size}{target.suffix}"
+                    except TypeError:
+                        source_filename = f"{source}-{variant}-{size}{target.suffix}"
+                    except KeyError:
                         self.logger.info(
-                            f"Unable to find {size}px {variant} variant for {role}; using default"
+                            f"Unknown variant {variant!r} for {size}px {role}; using default"
                         )
                         return
 
