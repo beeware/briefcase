@@ -315,7 +315,7 @@ class DockerAppContext(Tool):
 
         return arg
 
-    def _dockerize_args(self, args, env=None):
+    def _dockerize_args(self, args, interactive=False, mounts=None, env=None):
         """Convert arguments and environment into a Docker-compatible form.
         Convert an argument and environment specification into a form that can
         be used as arguments to invoke Docker. This involves:
@@ -330,17 +330,30 @@ class DockerAppContext(Tool):
         :returns: A list of arguments that can be used to invoke the command
             inside a docker container.
         """
+        docker_args = ["docker", "run", "--rm"]
+
+        # Add "-it" if in interactive mode
+        if interactive:
+            docker_args.append("-it")
+
+        # Add default volume mounts for the app folder, plus the Briefcase data
+        # path.
+        #
         # The :z suffix on volume mounts allows SELinux to modify the host
         # mount; it is ignored on non-SELinux platforms.
-        docker_args = [
-            "docker",
-            "run",
-            "--volume",
-            f"{self.host_platform_path}:/app:z",
-            "--volume",
-            f"{self.host_data_path}:{self.docker_data_path}:z",
-            "--rm",
-        ]
+        docker_args.extend(
+            [
+                "--volume",
+                f"{self.host_platform_path}:/app:z",
+                "--volume",
+                f"{self.host_data_path}:{self.docker_data_path}:z",
+            ]
+        )
+
+        # Add any extra volume mounts
+        if mounts:
+            for source, target in mounts:
+                docker_args.extend(["--volume", f"{source}:{target}:z"])
 
         # If any environment variables have been defined, pass them in
         # as --env arguments to Docker.
@@ -356,24 +369,32 @@ class DockerAppContext(Tool):
 
         return docker_args
 
-    def run(self, args, env=None, **kwargs):
+    def run(self, args, env=None, interactive=False, mounts=None, **kwargs):
         """Run a process inside a Docker container."""
         # Any exceptions from running the process are *not* caught.
         # This ensures that "docker.run()" behaves as closely to
         # "subprocess.run()" as possible.
         self.tools.logger.info("Entering Docker context...", prefix=self.app.app_name)
+        if interactive:
+            kwargs["stream_output"] = False
+
         self.tools.subprocess.run(
-            self._dockerize_args(args, env=env),
+            self._dockerize_args(
+                args,
+                interactive=interactive,
+                mounts=mounts,
+                env=env,
+            ),
             **kwargs,
         )
         self.tools.logger.info("Leaving Docker context", prefix=self.app.app_name)
 
-    def check_output(self, args, env=None, **kwargs):
+    def check_output(self, args, env=None, mounts=None, **kwargs):
         """Run a process inside a Docker container, capturing output."""
         # Any exceptions from running the process are *not* caught.
         # This ensures that "docker.check_output()" behaves as closely to
         # "subprocess.check_output()" as possible.
         return self.tools.subprocess.check_output(
-            self._dockerize_args(args, env=env),
+            self._dockerize_args(args, mounts=mounts, env=env),
             **kwargs,
         )
