@@ -1,5 +1,7 @@
 import os
 import subprocess
+from pathlib import Path
+from typing import List
 
 from briefcase.commands import (
     BuildCommand,
@@ -10,6 +12,7 @@ from briefcase.commands import (
     RunCommand,
     UpdateCommand,
 )
+from briefcase.commands.create import _is_local_requirement
 from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.docker import Docker, DockerAppContext
@@ -62,7 +65,7 @@ class LinuxAppImagePassiveMixin(LinuxMixin):
         self.use_docker = command.use_docker
 
 
-class LinuxAppImageMixin(LinuxAppImagePassiveMixin):
+class LinuxAppImageMostlyPassiveMixin(LinuxAppImagePassiveMixin):
     def docker_image_tag(self, app):
         """The Docker image tag for an app."""
         return (
@@ -70,8 +73,7 @@ class LinuxAppImageMixin(LinuxAppImagePassiveMixin):
         )
 
     def verify_tools(self):
-        """Verify that Docker is available; and if it isn't that we're on
-        Linux."""
+        """If we're using docker, verify that it is available."""
         super().verify_tools()
         if self.use_docker:
             if self.tools.host_os == "Windows":
@@ -80,10 +82,6 @@ class LinuxAppImageMixin(LinuxAppImagePassiveMixin):
                 )
             else:
                 Docker.verify(tools=self.tools)
-        elif self.tools.host_os != "Linux":
-            raise BriefcaseCommandError(
-                "Linux AppImages can only be generated on Linux without Docker."
-            )
 
     def verify_app_tools(self, app: AppConfig):
         """Verify App environment is prepared and available.
@@ -110,6 +108,39 @@ class LinuxAppImageMixin(LinuxAppImagePassiveMixin):
         # Establish Docker as app context before letting super set subprocess
         super().verify_app_tools(app)
 
+    def _requirements_mounts(self, app: AppConfig):
+        """Generate the list of Docker volume mounts needed to support local
+        requirements.
+
+        This list of mounts will include *all* possible requirements (i.e.,
+        `requires` *and* `test_requires`)
+
+        :param app: The app for which requirement mounts are needed
+        :returns: A list of (source, target) pairs; source is a fully resolved
+            local filesystem path; target is a path on the Docker filesystem.
+        """
+        requires = app.requires.copy() if app.requires else []
+        if app.test_requires:
+            requires.extend(app.test_requires)
+
+        mounts = []
+        for requirement in requires:
+            if _is_local_requirement(requirement):
+                source = Path(requirement).resolve()
+                mounts.append((str(source), f"/requirements/{source.name}"))
+
+        return mounts
+
+
+class LinuxAppImageMixin(LinuxAppImageMostlyPassiveMixin):
+    def verify_tools(self):
+        """If we're *not* using Docker, verify that we're actually on Linux."""
+        super().verify_tools()
+        if not self.use_docker and self.tools.host_os != "Linux":
+            raise BriefcaseCommandError(
+                "Linux AppImages can only be generated on Linux without Docker."
+            )
+
 
 class LinuxAppImageCreateCommand(LinuxAppImageMixin, CreateCommand):
     description = "Create and populate a Linux AppImage."
@@ -126,13 +157,73 @@ class LinuxAppImageCreateCommand(LinuxAppImageMixin, CreateCommand):
             + self.support_package_filename(support_revision)
         )
 
+    def _pip_requires(self, requires: List[str]):
+        """Convert the requirements list to an AppImage compatible format.
+
+        If running in no-docker mode, this returns the requirements as specified
+        by the user.
+
+        If running in Docker mode, any local file requirements are converted into
+        a reference in the /requirements mount folder.
+
+        :param requires: The user-specified list of app requirements
+        :returns: The final list of requirement arguments to pass to pip
+        """
+        original = super()._pip_requires(requires)
+        if not self.use_docker:
+            return original
+
+        final = []
+        for requirement in original:
+            if _is_local_requirement(requirement):
+                source = Path(requirement).resolve()
+                final.append(f"/requirements/{source.name}")
+            else:
+                # Use the requirement as-specified
+                final.append(requirement)
+
+        return final
+
+    def _pip_kwargs(self, app: AppConfig):
+        """Generate the kwargs to pass when invoking pip.
+
+        Adds any mounts needed to support local file requirements.
+
+        :param app: The app configuration
+        :returns: The kwargs to pass to the pip call
+        """
+        kwargs = super()._pip_kwargs(app)
+
+        if self.use_docker:
+            mounts = self._requirements_mounts(app)
+            if mounts:
+                kwargs["mounts"] = mounts
+
+        return kwargs
+
 
 class LinuxAppImageUpdateCommand(LinuxAppImageCreateCommand, UpdateCommand):
     description = "Update an existing Linux AppImage."
 
 
-class LinuxAppImageOpenCommand(LinuxAppImagePassiveMixin, OpenCommand):
+class LinuxAppImageOpenCommand(LinuxAppImageMostlyPassiveMixin, OpenCommand):
     description = "Open the folder containing an existing Linux AppImage project."
+
+    def _open_app(self, app: AppConfig):
+        # If we're using Docker, open an interactive shell in the container
+        if self.use_docker:
+            kwargs = {}
+            mounts = self._requirements_mounts(app)
+            if mounts:
+                kwargs["mounts"] = mounts
+
+            self.tools[app].app_context.run(
+                ["/bin/bash"],
+                interactive=True,
+                **kwargs,
+            )
+        else:
+            super()._open_app(app)
 
 
 class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):

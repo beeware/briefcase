@@ -14,6 +14,8 @@ def first_app_config():
         version="0.0.1",
         description="The first simple app \\ demonstration",
         sources=["src/first_app"],
+        requires=["foo==1.2.3", "bar>=4.5"],
+        test_requires=["pytest"],
     )
 
 
