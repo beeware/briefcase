@@ -1,0 +1,1 @@
+``briefcase open linux appimage`` now starts a shell session in the Docker context, rather than opening the project folder.

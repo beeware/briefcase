@@ -62,4 +62,7 @@ def mock_docker_app_context(tmp_path, my_app, mock_tools) -> DockerAppContext:
         python_version="3.X",
     )
 
+    # Reset the mock so that the prepare call doesn't appear in test results.
+    mock_docker_app_context.tools.subprocess._subprocess.Popen.reset_mock()
+
     return mock_docker_app_context

@@ -10,15 +10,51 @@ def test_simple_call(mock_docker_app_context, tmp_path, capsys):
     """A simple call will be invoked."""
     assert mock_docker_app_context.check_output(["hello", "world"]) == "goodbye\n"
 
-    mock_docker_app_context.tools.subprocess._subprocess.check_output.assert_called_with(
+    mock_docker_app_context.tools.subprocess._subprocess.check_output.assert_called_once_with(
         [
             "docker",
             "run",
+            "--rm",
             "--volume",
             f"{tmp_path / 'platform'}:/app:z",
             "--volume",
             f"{tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z",
+            "briefcase/com.example.myapp:py3.X",
+            "hello",
+            "world",
+        ],
+        text=True,
+        encoding=ANY,
+    )
+    assert capsys.readouterr().out == ""
+
+
+def test_extra_mounts(mock_docker_app_context, tmp_path, capsys):
+    """A call can request additional mounts."""
+    assert (
+        mock_docker_app_context.check_output(
+            ["hello", "world"],
+            mounts=[
+                ("/path/to/first", "/container/first"),
+                ("/path/to/second", "/container/second"),
+            ],
+        )
+        == "goodbye\n"
+    )
+
+    mock_docker_app_context.tools.subprocess._subprocess.check_output.assert_called_once_with(
+        [
+            "docker",
+            "run",
             "--rm",
+            "--volume",
+            f"{tmp_path / 'platform'}:/app:z",
+            "--volume",
+            f"{tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z",
+            "--volume",
+            "/path/to/first:/container/first:z",
+            "--volume",
+            "/path/to/second:/container/second:z",
             "briefcase/com.example.myapp:py3.X",
             "hello",
             "world",
@@ -42,15 +78,15 @@ def test_call_with_arg_and_env(mock_docker_app_context, tmp_path, capsys):
     )
     assert output == "goodbye\n"
 
-    mock_docker_app_context.tools.subprocess._subprocess.check_output.assert_called_with(
+    mock_docker_app_context.tools.subprocess._subprocess.check_output.assert_called_once_with(
         [
             "docker",
             "run",
+            "--rm",
             "--volume",
             f"{tmp_path / 'platform'}:/app:z",
             "--volume",
             f"{tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z",
-            "--rm",
             "--env",
             "MAGIC=True",
             "--env",
@@ -82,15 +118,15 @@ def test_call_with_path_arg_and_env(mock_docker_app_context, tmp_path, capsys):
     )
     assert output == "goodbye\n"
 
-    mock_docker_app_context.tools.subprocess._subprocess.check_output.assert_called_with(
+    mock_docker_app_context.tools.subprocess._subprocess.check_output.assert_called_once_with(
         [
             "docker",
             "run",
+            "--rm",
             "--volume",
             f"{tmp_path / 'platform'}:/app:z",
             "--volume",
             f"{tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z",
-            "--rm",
             "--env",
             "MAGIC=True",
             "--env",
@@ -115,15 +151,15 @@ def test_simple_verbose_call(mock_docker_app_context, tmp_path, capsys):
 
     assert mock_docker_app_context.check_output(["hello", "world"]) == "goodbye\n"
 
-    mock_docker_app_context.tools.subprocess._subprocess.check_output.assert_called_with(
+    mock_docker_app_context.tools.subprocess._subprocess.check_output.assert_called_once_with(
         [
             "docker",
             "run",
+            "--rm",
             "--volume",
             f"{tmp_path / 'platform'}:/app:z",
             "--volume",
             f"{tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z",
-            "--rm",
             "briefcase/com.example.myapp:py3.X",
             "hello",
             "world",
@@ -135,9 +171,9 @@ def test_simple_verbose_call(mock_docker_app_context, tmp_path, capsys):
         "\n"
         ">>> Running Command:\n"
         ">>>     docker run "
+        "--rm "
         f"--volume {tmp_path / 'platform'}:/app:z "
         f"--volume {tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z "
-        "--rm "
         "briefcase/com.example.myapp:py3.X "
         "hello world\n"
         ">>> Working Directory:\n"

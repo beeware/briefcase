@@ -54,9 +54,9 @@ class DummyOpenCommand(OpenCommand):
         super().verify_app_tools(app=app)
         self.actions.append(("verify-app-tools", app.app_name))
 
-    def open_project(self, project_path):
-        super().open_project(project_path)
-        self.actions.append(("open", project_path))
+    def _open_app(self, app):
+        super()._open_app(app)
+        self.actions.append(("open", app.app_name))
 
     # These commands override the default behavior, simply tracking that
     # they were invoked, rather than instantiating a Create command.

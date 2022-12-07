@@ -427,10 +427,6 @@ class CreateCommand(BaseCommand):
         :param requirements_path: The full path to a requirements.txt file that
             will be written.
         """
-        # Windows allows both / and \ as a path separator in requirements.
-        separators = [os.sep]
-        if os.altsep:
-            separators.append(os.altsep)
 
         with self.input.wait_bar("Writing requirements file..."):
             with requirements_path.open("w", encoding="utf-8") as f:
@@ -439,13 +435,20 @@ class CreateCommand(BaseCommand):
                         # If the requirement is a local path, convert it to
                         # absolute, because Flatpak moves the requirements file
                         # to a different place before using it.
-                        if any(sep in requirement for sep in separators) and (
-                            not _has_url(requirement)
-                        ):
+                        if _is_local_requirement(requirement):
                             # We use os.path.abspath() rather than Path.resolve()
                             # because we *don't* want Path's symlink resolving behavior.
                             requirement = os.path.abspath(self.base_path / requirement)
                         f.write(f"{requirement}\n")
+
+    def _pip_requires(self, requires: List[str]):
+        """Convert the list of requirements to be passed to pip into its final
+        form.
+
+        :param requires: The user-specified list of app requirements
+        :returns: The final list of requirement arguments to pass to pip
+        """
+        return requires
 
     def _extra_pip_args(self, app: BaseConfig):
         """Any additional arguments that must be passed to pip when installing
@@ -455,6 +458,26 @@ class CreateCommand(BaseCommand):
         :returns: A list of additional arguments
         """
         return []
+
+    def _pip_kwargs(self, app: BaseConfig):
+        """Generate the kwargs to pass when invoking pip.
+
+        :param app: The app configuration
+        :returns: The kwargs to pass to the pip call
+        """
+        # If there is a support package provided, add the cross-platform
+        # folder of the support package to the PYTHONPATH. This allows
+        # a support package to specify a sitecustomize.py that will make
+        # pip behave as if it was being run on the target platform.
+        pip_kwargs = {}
+        try:
+            pip_kwargs["env"] = {
+                "PYTHONPATH": str(self.support_path(app) / "platform-site"),
+            }
+        except KeyError:
+            pass
+
+        return pip_kwargs
 
     def _install_app_requirements(
         self,
@@ -477,18 +500,6 @@ class CreateCommand(BaseCommand):
         # Install requirements
         if requires:
             with self.input.wait_bar("Installing app requirements..."):
-                # If there is a support package provided, add the cross-platform
-                # folder of the support package to the PYTHONPATH. This allows
-                # a support package to specify a sitecustomize.py that will make
-                # pip behave as if it was being run on the target platform.
-                pip_kwargs = {}
-                try:
-                    pip_kwargs["env"] = {
-                        "PYTHONPATH": str(self.support_path(app) / "platform-site"),
-                    }
-                except KeyError:
-                    pass
-
                 try:
                     self.tools[app].app_context.run(
                         [
@@ -502,9 +513,9 @@ class CreateCommand(BaseCommand):
                             f"--target={app_packages_path}",
                         ]
                         + self._extra_pip_args(app)
-                        + requires,
+                        + self._pip_requires(requires),
                         check=True,
-                        **pip_kwargs,
+                        **self._pip_kwargs(app),
                     )
                 except subprocess.CalledProcessError as e:
                     raise RequirementsInstallError() from e
@@ -828,9 +839,15 @@ class CreateCommand(BaseCommand):
         return state
 
 
-# Detects any of the URL schemes supported by pip
-# (https://pip.pypa.io/en/stable/topics/vcs-support/).
 def _has_url(requirement):
+    """Determine if the requirement is defined as a URL.
+
+    Detects any of the URL schemes supported by pip
+    (https://pip.pypa.io/en/stable/topics/vcs-support/).
+
+    :param requirement: The requirement to check
+    :returns: True if the requirement is a URL supported by pip.
+    """
     return any(
         f"{scheme}:" in requirement
         for scheme in (
@@ -841,3 +858,17 @@ def _has_url(requirement):
             + ["bzr+http", "bzr+https", "bzr+ssh", "bzr+sftp", "bzr+ftp", "bzr+lp"]
         )
     )
+
+
+def _is_local_requirement(requirement):
+    """Determine if the requirement is a local file path.
+
+    :param requirement: The requirement to check
+    :returns: True if the requirement is a local file path
+    """
+    # Windows allows both / and \ as a path separator in requirements.
+    separators = [os.sep]
+    if os.altsep:
+        separators.append(os.altsep)
+
+    return any(sep in requirement for sep in separators) and (not _has_url(requirement))
