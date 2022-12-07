@@ -1,8 +1,13 @@
+import sys
+
 import pytest
 
 from briefcase.platforms.linux.appimage import LinuxAppImageMostlyPassiveMixin
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
+)
 @pytest.mark.parametrize(
     "requires, test_requires, mounts",
     [
@@ -21,7 +26,12 @@ from briefcase.platforms.linux.appimage import LinuxAppImageMostlyPassiveMixin
         # Local requirements in the mix
         # Requirements, but not test requirements
         (
-            ["first", "/path/to/local1", "/path/to/local2", "second"],
+            [
+                "first",
+                "/path/to/local1",
+                "/path/to/local2",
+                "second",
+            ],
             None,
             [
                 ("/path/to/local1", "/requirements/local1"),
@@ -44,7 +54,12 @@ from briefcase.platforms.linux.appimage import LinuxAppImageMostlyPassiveMixin
         ),
         # Requirements, and test requirements
         (
-            ["first", "/path/to/local1", "/path/to/local2", "second"],
+            [
+                "first",
+                "/path/to/local1",
+                "/path/to/local2",
+                "second",
+            ],
             [
                 "test_first",
                 "/path/to/test_local1",
