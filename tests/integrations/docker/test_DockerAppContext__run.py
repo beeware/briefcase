@@ -203,6 +203,9 @@ def test_call_with_path_arg_and_env(mock_docker_app_context, tmp_path, capsys):
     )
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
+)
 def test_interactive_with_path_arg_and_env_and_mounts(
     mock_docker_app_context, tmp_path, capsys
 ):
