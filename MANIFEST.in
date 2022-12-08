@@ -1,13 +1,11 @@
 include CONTRIBUTING.md
 include README.rst
 include AUTHORS
-include LICENSE.txt
-include requirements*.txt
+include LICENSE
 include docs/spelling_wordlist
 include tests/integrations/xcode/simctl/README
 include pyproject.toml
 include tox.ini
-include .coveragerc
 include .git-blame-ignore-revs
 include .pre-commit-config.yaml
 include .readthedocs.yaml
