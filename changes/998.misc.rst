@@ -1,0 +1,1 @@
+Test suites can now define an independent criterion to match for test suite exit.
