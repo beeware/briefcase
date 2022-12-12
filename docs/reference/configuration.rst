@@ -406,6 +406,18 @@ Briefcase defaults to regular expressions that are able to match the output of
 ``unittest`` or ``pytest``; if you use a different test framework, you will need
 to customize these settings.
 
+``test_exit_regex``
+~~~~~~~~~~~~~~~~~~~
+
+A regular expression that will be used to determine when the test suite has
+finished. The ``re.MULTILINE`` flag will be used.
+
+This option is only required if there is test suite content generated *after* the
+success/failure criteria has been output that you wish to preserve in the log
+(e.g., a coverage report). If ``test_exit_regex`` is *not* specified, Briefcase
+will assume that the test suite has completed as soon as a success or failure
+pattern has matched.
+
 ``url``
 ~~~~~~~
 
