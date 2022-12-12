@@ -15,6 +15,7 @@ def test_default_filter():
         clean_output=True,
         success_filter=None,
         failure_filter=None,
+        exit_filter=None,
     )
 
     for i in range(0, 10):
@@ -42,6 +43,7 @@ def test_clean_filter():
         clean_output=True,
         success_filter=None,
         failure_filter=None,
+        exit_filter=None,
     )
 
     for i in range(0, 10):
@@ -69,6 +71,7 @@ def test_clean_filter_unclean_output():
         clean_output=False,
         success_filter=None,
         failure_filter=None,
+        exit_filter=None,
     )
 
     for i in range(0, 10):
@@ -299,6 +302,24 @@ def test_clean_filter_unclean_output():
             False,  # don't use clean output
             None,  # no test termination due to line 5 not matching
         ),
+        # Success criteria after failure criteria is ignored because the initial
+        # failure is an implicit exit
+        (
+            ["line 1", "line 2", "-----", "", "FAILURE", "-----", "", "SUCCESS"],
+            ["line 1", "line 2", "-----", "", "FAILURE"],
+            False,  # use content filter
+            False,  # use clean output
+            False,  # Test failure
+        ),
+        # Failure criteria after success criteria is ignored because the initial
+        # success is an implicit exit
+        (
+            ["line 1", "line 2", "-----", "", "SUCCESS", "-----", "", "FAILURE"],
+            ["line 1", "line 2", "-----", "", "SUCCESS"],
+            False,  # use content filter
+            False,  # use clean output
+            True,  # Test success
+        ),
     ],
 )
 def test_log_filter(
@@ -333,6 +354,7 @@ def test_log_filter(
         clean_output=clean_output,
         success_filter=success_filter,
         failure_filter=failure_filter,
+        exit_filter=None,
     )
 
     # Pipe the raw output through the log filter, and capture the output
@@ -357,3 +379,107 @@ def test_log_filter(
         # The success/failure condition was detected, and the termination condition was processed
         assert log_filter.success == expected_success
         assert terminated
+
+
+@pytest.mark.parametrize(
+    "raw, expected_output, expected_success, expected_termination",
+    [
+        # No success, failure or exit
+        (
+            ["line 1", "line 2", "line 3", "line 4", "line 5"],
+            ["line 1", "line 2", "line 3", "line 4", "line 5"],
+            None,
+            False,
+        ),
+        # Success, but no exit
+        (
+            ["line 1", "SUCCESS", "line 5"],
+            ["line 1", "SUCCESS", "line 5"],
+            True,
+            False,
+        ),
+        # Failure, but no exit
+        (
+            ["line 1", "FAILURE", "line 5"],
+            ["line 1", "FAILURE", "line 5"],
+            False,
+            False,
+        ),
+        # No result, with exit
+        (
+            ["line 1", "line 2", "line 3", "EXIT", "post"],
+            ["line 1", "line 2", "line 3", "EXIT"],
+            None,
+            True,
+        ),
+        # Success, with exit
+        (
+            ["line 1", "SUCCESS", "line 5", "EXIT", "post"],
+            ["line 1", "SUCCESS", "line 5", "EXIT"],
+            True,
+            True,
+        ),
+        # Failure, with exit
+        (
+            ["line 1", "FAILURE", "line 5", "EXIT", "post"],
+            ["line 1", "FAILURE", "line 5", "EXIT"],
+            False,
+            True,
+        ),
+        # Failure then success (but no exit) records as a failure
+        (
+            ["line 1", "FAILURE", "line 3", "SUCCESS", "line 5"],
+            ["line 1", "FAILURE", "line 3", "SUCCESS", "line 5"],
+            False,
+            False,
+        ),
+        # Success then failure (but no exit) records as a success
+        (
+            ["line 1", "SUCCESS", "line 3", "FAILURE", "line 5"],
+            ["line 1", "SUCCESS", "line 3", "FAILURE", "line 5"],
+            True,
+            False,
+        ),
+    ],
+)
+def test_exit_filter(raw, expected_output, expected_success, expected_termination):
+    "An exit filter"
+
+    # Define custom filters that looks for specific output
+    success_filter = LogFilter.test_filter(r"\nSUCCESS$")
+    failure_filter = LogFilter.test_filter(r"\nFAILURE$")
+    exit_filter = LogFilter.test_filter(r"\nEXIT$")
+
+    # Set up a log stream
+    popen = mock.MagicMock()
+    log_filter = LogFilter(
+        popen,
+        clean_filter=None,
+        clean_output=True,
+        success_filter=success_filter,
+        failure_filter=failure_filter,
+        exit_filter=exit_filter,
+    )
+
+    # Pipe the raw output through the log filter, and capture the output
+    output = []
+    terminated = False
+    for line in raw:
+        try:
+            for line in log_filter(line):
+                output.append(line)
+        except StopStreaming:
+            terminated = True
+            break
+
+    # Actual output is as expected
+    assert output == expected_output
+
+    if expected_success is None:
+        # No success/failure condition was set; no termination condition was processed
+        assert log_filter.success is None
+    else:
+        # The success/failure condition was detected, and the termination condition was processed
+        assert log_filter.success == expected_success
+
+    assert terminated == expected_termination

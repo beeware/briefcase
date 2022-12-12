@@ -47,6 +47,7 @@ class LogFilter:
         clean_output,
         success_filter,
         failure_filter,
+        exit_filter,
     ):
         """Create a filter for a log stream.
 
@@ -59,12 +60,18 @@ class LogFilter:
             containing the last 10 lines of "clean" (i.e., preamble filtered)
             logs, returning True if a "success" condition has been detected. If
             the success filter returns True, a success condition will be
-            recorded, and the log streamer will be told to stop streaming.
+            recorded; if no independent exit filter is provided, the log
+            streamer will be told to stop streaming.
         :param failure_filter: A function that will operate on a string
             containing the last 10 lines of "clean" (i.e., preamble filtered)
             logs, returning True if a "failure" condition has been detected. If
             the failure filter returns True, a success condition will be
-            recorded, and the log streamer will be told to stop streaming.
+            recorded; if no independent exit filter is provied, the log streamer
+            will be told to stop streaming.
+        :param exit_filter: A function that will operate on a string containing
+            the last 10 lines uf "clean" (i.e., preamble filtered) logs,
+            returning True if the log stream should terminate. If not provided,
+            success/failure filters will be considered to be an exit condition.
         """
         self.log_popen = log_popen
         self.success = None
@@ -74,6 +81,7 @@ class LogFilter:
         self.recent_history = []
         self.success_filter = success_filter
         self.failure_filter = failure_filter
+        self.exit_filter = exit_filter
 
     def __call__(self, line):
         """Filter a single line of a log.
@@ -110,15 +118,24 @@ class LogFilter:
             self.recent_history = self.recent_history[-10:]
             tail = "\n".join(self.recent_history)
 
-            # Look for the success/failure conditions in the tail
-            if self.failure_filter and self.failure_filter(tail):
-                self.success = False
+            # Look for the exit condition in the tail.
+            if self.exit_filter and self.exit_filter(tail):
                 yield display_line
                 raise StopStreaming()
-            elif self.success_filter and self.success_filter(tail):
-                self.success = True
-                yield display_line
-                raise StopStreaming()
+            elif self.success is None:
+                # If we haven't already found a failure/success condition,
+                # look for the failure/success conditions in the tail
+                if self.failure_filter and self.failure_filter(tail):
+                    self.success = False
+                    if not self.exit_filter:
+                        yield display_line
+                        raise StopStreaming()
+                elif self.success_filter and self.success_filter(tail):
+                    self.success = True
+                    if not self.exit_filter:
+                        yield display_line
+                        raise StopStreaming()
+
         # Return the display line
         yield display_line
 
@@ -213,9 +230,15 @@ class RunCommand(BaseCommand):
                 failure_filter = LogFilter.test_filter(
                     getattr(app, "test_failure_regex", LogFilter.DEFAULT_FAILURE_REGEX)
                 )
+
+                try:
+                    exit_filter = LogFilter.test_filter(app.test_exit_regex)
+                except AttributeError:
+                    exit_filter = None
             else:
                 success_filter = None
                 failure_filter = None
+                exit_filter = None
 
             log_filter = LogFilter(
                 popen,
@@ -223,6 +246,7 @@ class RunCommand(BaseCommand):
                 clean_output=clean_output,
                 success_filter=success_filter,
                 failure_filter=failure_filter,
+                exit_filter=exit_filter,
             )
 
             # Start streaming logs for the app.
