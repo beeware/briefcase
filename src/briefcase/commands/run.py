@@ -10,43 +10,14 @@ from .base import BaseCommand, full_options
 
 
 class LogFilter:
-    DEFAULT_SUCCESS_REGEX = (
-        # Unittest
-        # The ?P<a...> groups are to support Android logging differences.
-        # when https://github.com/chaquo/chaquopy/issues/746 is resolved,
-        # those groups can be deleted.
-        r"(^-{65,}\n(?P<a1> \n)?Ran \d+ tests in -?\d+\.\d{3}s"
-        r"\n(?P<a2> )?\n(?P<a3> \n)?OK( \(.*\))?$)"
-        # PyTest
-        r"|"
-        r"(^=+ ("
-        r"((, )?\d+ (passed|skipped|deselected|xfailed|xpassed|warnings?))*"
-        r"|(no tests ran)"
-        r") in -?\d+\.\d+s.* =+$)"
-    )
-
-    DEFAULT_FAILURE_REGEX = (
-        # Unittest
-        # The ?P<a...> groups are to support Android logging differences.
-        # when https://github.com/chaquo/chaquopy/issues/746 is resolved,
-        # those groups can be deleted.
-        r"(^-{65,}\n(?P<a1> \n)?Ran \d+ tests in -?\d+\.\d{3}s"
-        r"\n(?P<a2> )?\n(?P<a3> \n)?FAILED( \(.*\))?$)"
-        # Pytest
-        r"|"
-        r"(^=+ ("
-        r"(\d+ failed((, )?\d+ (passed|skipped|deselected|xfailed|xpassed|warnings?|errors?))*)"
-        r"|((\d+ (failed|passed|skipped|deselected|xfailed|xpassed|warnings?)(, )?)*\d+ errors?)"
-        r") in -?\d+.\d+s.* =+$)"
-    )
+    DEFAULT_EXIT_REGEX = r"^>>>>>>>>>> EXIT (?P<returncode>.*) <<<<<<<<<<$"
 
     def __init__(
         self,
         log_popen,
         clean_filter,
         clean_output,
-        success_filter,
-        failure_filter,
+        exit_filter,
     ):
         """Create a filter for a log stream.
 
@@ -55,25 +26,19 @@ class LogFilter:
             returning a "clean" line without any log system preamble.
         :param clean_output: Should the output displayed to the user be the
             "clean" output? (Default: True).
-        :param success_filter: A function that will operate on a string
-            containing the last 10 lines of "clean" (i.e., preamble filtered)
-            logs, returning True if a "success" condition has been detected. If
-            the success filter returns True, a success condition will be
-            recorded, and the log streamer will be told to stop streaming.
-        :param failure_filter: A function that will operate on a string
-            containing the last 10 lines of "clean" (i.e., preamble filtered)
-            logs, returning True if a "failure" condition has been detected. If
-            the failure filter returns True, a success condition will be
-            recorded, and the log streamer will be told to stop streaming.
+        :param exit_filter: A function that will operate on a string containing
+            the last 10 lines of "clean" (i.e., preamble filtered) logs,
+            returning the integer exit status of the process if an exit
+            condition has been detected, or None if the log stream should
+            continue.
         """
         self.log_popen = log_popen
-        self.success = None
+        self.returncode = None
         self.clean_filter = clean_filter
         self.clean_output = clean_output
 
         self.recent_history = []
-        self.success_filter = success_filter
-        self.failure_filter = failure_filter
+        self.exit_filter = exit_filter
 
     def __call__(self, line):
         """Filter a single line of a log.
@@ -110,15 +75,12 @@ class LogFilter:
             self.recent_history = self.recent_history[-10:]
             tail = "\n".join(self.recent_history)
 
-            # Look for the success/failure conditions in the tail
-            if self.failure_filter and self.failure_filter(tail):
-                self.success = False
-                yield display_line
-                raise StopStreaming()
-            elif self.success_filter and self.success_filter(tail):
-                self.success = True
-                yield display_line
-                raise StopStreaming()
+            # Look for the exit condition in the tail
+            if self.exit_filter:
+                self.returncode = self.exit_filter(tail)
+                if self.returncode is not None:
+                    raise StopStreaming()
+
         # Return the display line
         yield display_line
 
@@ -133,7 +95,17 @@ class LogFilter:
         """
 
         def filter_func(recent):
-            return filter_func.regex.search(recent) is not None
+            match = filter_func.regex.search(recent)
+            if match:
+                try:
+                    return int(match.groupdict()["returncode"])
+                except KeyError:
+                    # No returncode group in regex
+                    return -998
+                except ValueError:
+                    # Non-integer return code content
+                    return -999
+            return None
 
         # Annotate the function with the regex that will be used in the function.
         filter_func.regex = re.compile(pattern, re.MULTILINE)
@@ -206,23 +178,15 @@ class RunCommand(BaseCommand):
             is of the log, not the app itself.
         """
         try:
-            if test_mode:
-                success_filter = LogFilter.test_filter(
-                    getattr(app, "test_success_regex", LogFilter.DEFAULT_SUCCESS_REGEX)
-                )
-                failure_filter = LogFilter.test_filter(
-                    getattr(app, "test_failure_regex", LogFilter.DEFAULT_FAILURE_REGEX)
-                )
-            else:
-                success_filter = None
-                failure_filter = None
+            exit_filter = LogFilter.test_filter(
+                getattr(app, "exit_regex", LogFilter.DEFAULT_EXIT_REGEX)
+            )
 
             log_filter = LogFilter(
                 popen,
                 clean_filter=clean_filter,
                 clean_output=clean_output,
-                success_filter=success_filter,
-                failure_filter=failure_filter,
+                exit_filter=exit_filter,
             )
 
             # Start streaming logs for the app.
@@ -237,10 +201,10 @@ class RunCommand(BaseCommand):
             # If we're in test mode, and log streaming ends,
             # check for the status of the test suite.
             if test_mode:
-                if log_filter.success:
+                if log_filter.returncode == 0:
                     self.logger.info("Test suite passed!", prefix=app.app_name)
                 else:
-                    if log_filter.success is None:
+                    if log_filter.returncode is None:
                         raise BriefcaseCommandError(
                             "Test suite didn't report a result."
                         )

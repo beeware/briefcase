@@ -38,8 +38,7 @@ def test_run_app(run_command, first_app):
     ]
     assert not filter_func.clean_output
     assert filter_func.clean_filter == clean_filter
-    assert filter_func.success_filter is None
-    assert filter_func.failure_filter is None
+    assert filter_func.exit_filter.regex.pattern == LogFilter.DEFAULT_EXIT_REGEX
 
 
 def test_test_mode_success(run_command, first_app):
@@ -52,7 +51,7 @@ def test_test_mode_success(run_command, first_app):
 
     # Mock effect of streaming the app resulting in a test suite success
     def mock_stream_output(label, popen_process, filter_func, **kwargs):
-        filter_func.success = True
+        filter_func.returncode = 0
 
     run_command.tools.subprocess.stream_output.side_effect = mock_stream_output
 
@@ -80,8 +79,7 @@ def test_test_mode_success(run_command, first_app):
     ]
     assert not filter_func.clean_output
     assert filter_func.clean_filter == clean_filter
-    assert filter_func.success_filter.regex.pattern == LogFilter.DEFAULT_SUCCESS_REGEX
-    assert filter_func.failure_filter.regex.pattern == LogFilter.DEFAULT_FAILURE_REGEX
+    assert filter_func.exit_filter.regex.pattern == LogFilter.DEFAULT_EXIT_REGEX
 
 
 def test_test_mode_failure(run_command, first_app):
@@ -94,7 +92,7 @@ def test_test_mode_failure(run_command, first_app):
 
     # Mock effect of streaming the app resulting in a test suite success
     def mock_stream_output(label, popen_process, filter_func, **kwargs):
-        filter_func.success = False
+        filter_func.returncode = 1
 
     run_command.tools.subprocess.stream_output.side_effect = mock_stream_output
 
@@ -123,8 +121,7 @@ def test_test_mode_failure(run_command, first_app):
     ]
     assert not filter_func.clean_output
     assert filter_func.clean_filter == clean_filter
-    assert filter_func.success_filter.regex.pattern == LogFilter.DEFAULT_SUCCESS_REGEX
-    assert filter_func.failure_filter.regex.pattern == LogFilter.DEFAULT_FAILURE_REGEX
+    assert filter_func.exit_filter.regex.pattern == LogFilter.DEFAULT_EXIT_REGEX
 
 
 def test_test_mode_no_result(run_command, first_app):
@@ -170,8 +167,7 @@ def test_test_mode_no_result(run_command, first_app):
     ]
     assert not filter_func.clean_output
     assert filter_func.clean_filter == clean_filter
-    assert filter_func.success_filter.regex.pattern == LogFilter.DEFAULT_SUCCESS_REGEX
-    assert filter_func.failure_filter.regex.pattern == LogFilter.DEFAULT_FAILURE_REGEX
+    assert filter_func.exit_filter.regex.pattern == LogFilter.DEFAULT_EXIT_REGEX
 
 
 def test_test_mode_custom_filters(run_command, first_app):
@@ -184,12 +180,11 @@ def test_test_mode_custom_filters(run_command, first_app):
 
     # Mock effect of streaming the app resulting in a test suite success
     def mock_stream_output(label, popen_process, filter_func, **kwargs):
-        filter_func.success = True
+        filter_func.returncode = 0
 
     run_command.tools.subprocess.stream_output.side_effect = mock_stream_output
 
-    first_app.test_success_regex = "THIS IS WHAT SUCCESS LOOKS LIKE"
-    first_app.test_failure_regex = "THIS IS WHAT FAILURE LOOKS LIKE"
+    first_app.exit_regex = "THIS IS WHAT SUCCESS LOOKS LIKE"
 
     # Stream the app logs
     run_command._stream_app_logs(
@@ -215,8 +210,7 @@ def test_test_mode_custom_filters(run_command, first_app):
     ]
     assert not filter_func.clean_output
     assert filter_func.clean_filter == clean_filter
-    assert filter_func.success_filter.regex.pattern == "THIS IS WHAT SUCCESS LOOKS LIKE"
-    assert filter_func.failure_filter.regex.pattern == "THIS IS WHAT FAILURE LOOKS LIKE"
+    assert filter_func.exit_filter.regex.pattern == "THIS IS WHAT SUCCESS LOOKS LIKE"
 
 
 def test_run_app_failure(run_command, first_app):
@@ -255,8 +249,7 @@ def test_run_app_failure(run_command, first_app):
     ]
     assert not filter_func.clean_output
     assert filter_func.clean_filter == clean_filter
-    assert filter_func.success_filter is None
-    assert filter_func.failure_filter is None
+    assert filter_func.exit_filter.regex.pattern == LogFilter.DEFAULT_EXIT_REGEX
 
 
 def test_run_app_log_stream_failure(run_command, first_app):
@@ -292,8 +285,7 @@ def test_run_app_log_stream_failure(run_command, first_app):
     ]
     assert not filter_func.clean_output
     assert filter_func.clean_filter == clean_filter
-    assert filter_func.success_filter is None
-    assert filter_func.failure_filter is None
+    assert filter_func.exit_filter.regex.pattern == LogFilter.DEFAULT_EXIT_REGEX
 
 
 def test_run_app_ctrl_c(run_command, first_app):
@@ -331,5 +323,4 @@ def test_run_app_ctrl_c(run_command, first_app):
     ]
     assert not filter_func.clean_output
     assert filter_func.clean_filter == clean_filter
-    assert filter_func.success_filter is None
-    assert filter_func.failure_filter is None
+    assert filter_func.exit_filter.regex.pattern == LogFilter.DEFAULT_EXIT_REGEX
