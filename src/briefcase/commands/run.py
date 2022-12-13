@@ -112,42 +112,9 @@ class LogFilter:
         return filter_func
 
 
-class RunCommand(BaseCommand):
-    command = "run"
-
-    def add_options(self, parser):
-        parser.add_argument(
-            "-a",
-            "--app",
-            dest="appname",
-            help="The app to run",
-        )
-
-        self._add_update_options(parser, context_label=" before running")
-        self._add_test_options(parser, context_label="Run")
-
-    def _prepare_app_env(self, app: BaseConfig, test_mode: bool):
-        """Prepare the environment for running an app as a log stream.
-
-        This won't be used by every backend; but it's a sufficiently common
-        default that it's been factored out.
-
-        :param app: The app to be launched
-        :param test_mode: Are we launching in test mode?
-        :returns: A dictionary of additional arguments to pass to the Popen
-        """
-        if test_mode:
-            # In test mode, set a BRIEFCASE_MAIN_MODULE environment variable
-            # to override the module at startup
-            self.logger.info("Starting test_suite...", prefix=app.app_name)
-            return {
-                "env": {
-                    "BRIEFCASE_MAIN_MODULE": app.main_module(test_mode),
-                }
-            }
-        else:
-            self.logger.info("Starting app...", prefix=app.app_name)
-            return {}
+class RunAppMixin:
+    """A mixin that captures the logic of starting an app and streaming the app
+    logs."""
 
     def _stream_app_logs(
         self,
@@ -224,6 +191,44 @@ class RunCommand(BaseCommand):
 
         except KeyboardInterrupt:
             pass  # Catch CTRL-C to exit normally
+
+
+class RunCommand(RunAppMixin, BaseCommand):
+    command = "run"
+
+    def add_options(self, parser):
+        parser.add_argument(
+            "-a",
+            "--app",
+            dest="appname",
+            help="The app to run",
+        )
+
+        self._add_update_options(parser, context_label=" before running")
+        self._add_test_options(parser, context_label="Run")
+
+    def _prepare_app_env(self, app: BaseConfig, test_mode: bool):
+        """Prepare the environment for running an app as a log stream.
+
+        This won't be used by every backend; but it's a sufficiently common
+        default that it's been factored out.
+
+        :param app: The app to be launched
+        :param test_mode: Are we launching in test mode?
+        :returns: A dictionary of additional arguments to pass to the Popen
+        """
+        if test_mode:
+            # In test mode, set a BRIEFCASE_MAIN_MODULE environment variable
+            # to override the module at startup
+            self.logger.info("Starting test_suite...", prefix=app.app_name)
+            return {
+                "env": {
+                    "BRIEFCASE_MAIN_MODULE": app.main_module(test_mode),
+                }
+            }
+        else:
+            self.logger.info("Starting app...", prefix=app.app_name)
+            return {}
 
     @abstractmethod
     def run_app(self, app: BaseConfig, **options):
