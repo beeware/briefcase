@@ -211,7 +211,12 @@ class RunCommand(BaseCommand):
                     else:
                         self.logger.error("Test suite failed!", prefix=app.app_name)
                         raise BriefcaseTestSuiteFailure()
-            elif not log_stream:
+            elif log_stream:
+                # If we're monitoring a log stream, and the log stream reported a
+                # non-zero exit code, surface that error to the user.
+                if log_filter.returncode is not None and log_filter.returncode != 0:
+                    raise BriefcaseCommandError(f"Problem running app {app.app_name}.")
+            else:
                 # If we're monitoring an actual app (not just a log stream),
                 # and the app didn't exit cleanly, surface the error to the user.
                 if popen.returncode != 0:
