@@ -7,6 +7,7 @@ from .base import BaseCommand, full_options
 
 class OpenCommand(BaseCommand):
     command = "open"
+    description = "Open an App for manual introspection"
 
     def _open_app(self, app: BaseConfig):
         if self.tools.host_os == "Windows":

@@ -1,0 +1,1 @@
+The Briefcase help text now includes available output formats for the platform.

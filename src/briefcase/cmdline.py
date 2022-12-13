@@ -1,8 +1,20 @@
 import argparse
 import sys
+from argparse import RawDescriptionHelpFormatter
 
 from briefcase import __version__
-from briefcase.commands import DevCommand, NewCommand, UpgradeCommand
+from briefcase.commands import (
+    BuildCommand,
+    CreateCommand,
+    DevCommand,
+    NewCommand,
+    OpenCommand,
+    PackageCommand,
+    PublishCommand,
+    RunCommand,
+    UpdateCommand,
+    UpgradeCommand,
+)
 from briefcase.platforms import get_output_formats, get_platforms
 
 from .exceptions import (
@@ -12,6 +24,19 @@ from .exceptions import (
     UnsupportedCommandError,
 )
 
+COMMANDS = [
+    NewCommand,
+    DevCommand,
+    UpgradeCommand,
+    CreateCommand,
+    UpdateCommand,
+    OpenCommand,
+    BuildCommand,
+    RunCommand,
+    PackageCommand,
+    PublishCommand,
+]
+
 
 def parse_cmdline(args):
     """Parses the command line to determine the Command and its arguments.
@@ -19,15 +44,32 @@ def parse_cmdline(args):
     :param args: the arguments provided at the command line
     :return: Command and command-specific arguments
     """
+    platforms = get_platforms()
+
+    max_cmd_name_len = max(len(cmd.command) for cmd in COMMANDS)
+    cmd_helptext = "\n".join(
+        f"  {cmd.command}{' ' * (max_cmd_name_len - len(cmd.command) + 2)}{cmd.description}"
+        for cmd in COMMANDS
+    )
+
     parser = argparse.ArgumentParser(
         prog="briefcase",
-        description="Package Python code for distribution.",
-        usage="briefcase [-h] <command> [<platform>] [<format>] ...",
-        epilog=(
-            "Each command, platform and format has additional options. "
-            "Use the -h option on a specific command for more details."
+        description=(
+            "Briefcase is a tool for converting a Python project into a standalone native\n"
+            "application for distribution.\n"
+            "\n"
+            "Commands:\n"
+            f"{cmd_helptext}\n"
+            "\n"
+            "Platforms:\n"
+            f"  {', '.join([p.title() if p.islower() else p for p in platforms])}\n"
+            "\n"
+            "Each command, platform, and format has additional options. Use the -h option on\n"
+            "a specific command for more details."
         ),
+        usage="briefcase [-h] <command> [<platform>] [<format>] ...",
         add_help=False,
+        formatter_class=lambda prog: RawDescriptionHelpFormatter(prog, width=80),
     )
     parser.add_argument(
         "-f",
@@ -45,26 +87,11 @@ def parse_cmdline(args):
     # usage string so that the instructions displayed are correct
     parser.add_argument(
         "command",
-        choices=[
-            "new",
-            "dev",
-            "upgrade",
-            "create",
-            "update",
-            "open",
-            "build",
-            "run",
-            "package",
-            "publish",
-        ],
+        choices=list(cmd.command for cmd in COMMANDS),
         metavar="command",
         nargs="?",
-        help="the command to execute (one of: %(choices)s)",
+        help=argparse.SUPPRESS,
     )
-
-    # <platform> *is* optional, with the default value based on the platform
-    # that you're on.
-    platforms = get_platforms()
 
     # To make the UX a little forgiving, we normalize *any* case to the case
     # actually used to register the platform. This function maps the lower-case

@@ -142,6 +142,7 @@ class LogFilter:
 
 class RunCommand(BaseCommand):
     command = "run"
+    description = "Run a fully built App"
 
     def add_options(self, parser):
         parser.add_argument(

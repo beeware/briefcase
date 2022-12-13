@@ -8,6 +8,7 @@ from .base import BaseCommand, full_options
 
 class BuildCommand(BaseCommand):
     command = "build"
+    description = "Build an App for a target platform"
 
     def add_options(self, parser):
         self._add_update_options(parser, context_label=" before building")

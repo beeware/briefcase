@@ -5,11 +5,14 @@ import os
 import platform
 import subprocess
 from abc import ABC, abstractmethod
+from argparse import RawDescriptionHelpFormatter
 from pathlib import Path
 
 from cookiecutter import exceptions as cookiecutter_exceptions
 from cookiecutter.repository import is_repo_url
 from platformdirs import PlatformDirs
+
+from briefcase.platforms import get_output_formats, get_platforms
 
 try:
     import tomllib
@@ -526,13 +529,32 @@ a custom location for Briefcase's tools.
         pass
 
     def parse_options(self, extra):
+        default_format = getattr(
+            get_platforms().get(self.platform, None), "DEFAULT_OUTPUT_FORMAT", None
+        )
+        if default_format is not None and self.command not in {"new", "upgrade"}:
+            formats = list(get_output_formats(self.platform).keys())
+            try:
+                formats[formats.index(default_format)] = f"{default_format} (default)"
+            except ValueError:
+                formats[
+                    formats.index(default_format.capitalize())
+                ] = f"{default_format} (default)"
+            formats_helptext = (
+                f"Supported formats:\n"
+                f"  {', '.join(f.capitalize() if f.islower() else f for f in formats)}\n"
+            )
+        else:
+            formats_helptext = ""
+
         parser = argparse.ArgumentParser(
             prog=self.cmd_line.format(
                 command=self.command,
                 platform=self.platform,
                 output_format=self.output_format,
             ),
-            description=self.description,
+            description=(f"{self.description}\n\n{formats_helptext}"),
+            formatter_class=lambda prog: RawDescriptionHelpFormatter(prog, width=80),
         )
 
         self.add_default_options(parser)

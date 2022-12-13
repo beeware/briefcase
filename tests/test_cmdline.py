@@ -43,9 +43,10 @@ def test_empty():
     assert excinfo.value.msg.startswith(
         "usage: briefcase [-h] <command> [<platform>] [<format>] ...\n"
         "\n"
-        "Package Python code for distribution.\n"
+        "Briefcase is a tool for converting a Python project into a standalone native\n"
+        "application for distribution.\n"
         "\n"
-        "positional arguments:\n"
+        "Commands:\n"
     )
 
 
@@ -57,9 +58,10 @@ def test_help_only():
     assert excinfo.value.msg.startswith(
         "usage: briefcase [-h] <command> [<platform>] [<format>] ...\n"
         "\n"
-        "Package Python code for distribution.\n"
+        "Briefcase is a tool for converting a Python project into a standalone native\n"
+        "application for distribution.\n"
         "\n"
-        "positional arguments:\n"
+        "Commands:\n"
     )
 
 
@@ -83,9 +85,10 @@ def test_show_output_formats_only():
     assert excinfo.value.msg.startswith(
         "usage: briefcase [-h] <command> [<platform>] [<format>] ...\n"
         "\n"
-        "Package Python code for distribution.\n"
+        "Briefcase is a tool for converting a Python project into a standalone native\n"
+        "application for distribution.\n"
         "\n"
-        "positional arguments:\n"
+        "Commands:\n"
     )
 
 
