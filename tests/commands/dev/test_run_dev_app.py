@@ -1,18 +1,20 @@
+import subprocess
 import sys
-from subprocess import CalledProcessError
-
-import pytest
-
-from briefcase.exceptions import BriefcaseCommandError
+from unittest import mock
 
 
-def test_subprocess_running_successfully(dev_command, first_app, tmp_path):
+def test_dev_run(dev_command, first_app, tmp_path):
+    "The app can be run in dev mode"
+    dev_command._stream_app_logs = mock.MagicMock()
+    app_popen = mock.MagicMock()
+    dev_command.tools.subprocess.Popen.return_value = app_popen
+
     dev_command.run_dev_app(
         first_app,
         env={"a": 1, "b": 2, "c": 3},
         test_mode=False,
     )
-    dev_command.tools.subprocess.run.assert_called_once_with(
+    dev_command.tools.subprocess.Popen.assert_called_once_with(
         [
             sys.executable,
             "-u",
@@ -29,53 +31,30 @@ def test_subprocess_running_successfully(dev_command, first_app, tmp_path):
         ],
         env={"a": 1, "b": 2, "c": 3},
         cwd=dev_command.tools.home_path,
-        check=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        bufsize=1,
+    )
+    dev_command._stream_app_logs.assert_called_once_with(
+        first_app,
+        popen=app_popen,
+        test_mode=False,
+        clean_output=False,
     )
 
 
-def test_subprocess_throws_error(dev_command, first_app, tmp_path):
-    dev_command.tools.subprocess.run.side_effect = CalledProcessError(
-        returncode=2, cmd="cmd"
-    )
-    with pytest.raises(
-        BriefcaseCommandError,
-        match="Problem running application 'first'",
-    ):
-        dev_command.run_dev_app(
-            first_app,
-            env={"a": 1, "b": 2, "c": 3},
-            test_mode=False,
-        )
-
-    dev_command.tools.subprocess.run.assert_called_once_with(
-        [
-            sys.executable,
-            "-u",
-            "-X",
-            "dev",
-            "-X",
-            "utf8",
-            "-c",
-            (
-                "import runpy, sys;"
-                "sys.path.pop(0);"
-                'runpy.run_module("first", run_name="__main__", alter_sys=True)'
-            ),
-        ],
-        env={"a": 1, "b": 2, "c": 3},
-        cwd=dev_command.tools.home_path,
-        check=True,
-    )
-
-
-def test_subprocess_test_mode_success(dev_command, first_app, tmp_path):
+def test_dev_test_mode(dev_command, first_app, tmp_path):
     "The test suite can be run in development mode"
+    dev_command._stream_app_logs = mock.MagicMock()
+    app_popen = mock.MagicMock()
+    dev_command.tools.subprocess.Popen.return_value = app_popen
+
     dev_command.run_dev_app(
         first_app,
         env={"a": 1, "b": 2, "c": 3},
         test_mode=True,
     )
-    dev_command.tools.subprocess.run.assert_called_once_with(
+    dev_command.tools.subprocess.Popen.assert_called_once_with(
         [
             sys.executable,
             "-u",
@@ -92,42 +71,13 @@ def test_subprocess_test_mode_success(dev_command, first_app, tmp_path):
         ],
         env={"a": 1, "b": 2, "c": 3},
         cwd=dev_command.tools.home_path,
-        check=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        bufsize=1,
     )
-
-
-def test_subprocess_test_mode_failure(dev_command, first_app, tmp_path):
-    "Failure in test mode raises a BriefcaseCommandError"
-    dev_command.tools.subprocess.run.side_effect = CalledProcessError(
-        returncode=2, cmd="cmd"
-    )
-
-    with pytest.raises(
-        BriefcaseCommandError,
-        match=r"Problem running test suite 'tests.first'",
-    ):
-        dev_command.run_dev_app(
-            first_app,
-            env={"a": 1, "b": 2, "c": 3},
-            test_mode=True,
-        )
-
-    dev_command.tools.subprocess.run.assert_called_once_with(
-        [
-            sys.executable,
-            "-u",
-            "-X",
-            "dev",
-            "-X",
-            "utf8",
-            "-c",
-            (
-                "import runpy, sys;"
-                "sys.path.pop(0);"
-                'runpy.run_module("tests.first", run_name="__main__", alter_sys=True)'
-            ),
-        ],
-        env={"a": 1, "b": 2, "c": 3},
-        cwd=dev_command.tools.home_path,
-        check=True,
+    dev_command._stream_app_logs.assert_called_once_with(
+        first_app,
+        popen=app_popen,
+        test_mode=True,
+        clean_output=False,
     )

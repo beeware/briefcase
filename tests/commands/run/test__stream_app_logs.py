@@ -11,6 +11,44 @@ def test_run_app(run_command, first_app):
     popen = mock.MagicMock()
     popen.returncode = 0
     clean_filter = mock.MagicMock()
+
+    # Invoke the stop func as part of streaming. This is to satisfy coverage.
+    def mock_stream(label, popen_process, stop_func, filter_func):
+        stop_func()
+
+    run_command.tools.subprocess.stream_output = mock.MagicMock(side_effect=mock_stream)
+
+    # Stream the app logs
+    run_command._stream_app_logs(
+        first_app,
+        popen=popen,
+        test_mode=False,
+        clean_filter=clean_filter,
+        clean_output=False,
+    )
+
+    # The log was streamed
+    run_command.tools.subprocess.stream_output.assert_called_once_with(
+        label="first",
+        popen_process=popen,
+        filter_func=mock.ANY,
+        stop_func=mock.ANY,
+    )
+
+    # The filter function has the properties we'd expect
+    filter_func = run_command.tools.subprocess.stream_output.mock_calls[0].kwargs[
+        "filter_func"
+    ]
+    assert not filter_func.clean_output
+    assert filter_func.clean_filter == clean_filter
+    assert filter_func.exit_filter.regex.pattern == LogFilter.DEFAULT_EXIT_REGEX
+
+
+def test_run_app_custom_stop_func(run_command, first_app):
+    """An app with a custom stop function can have it's logs streamed."""
+    popen = mock.MagicMock()
+    popen.returncode = 0
+    clean_filter = mock.MagicMock()
     stop_func = mock.MagicMock()
     run_command.tools.subprocess.stream_output = mock.MagicMock()
 
@@ -38,8 +76,7 @@ def test_run_app(run_command, first_app):
     ]
     assert not filter_func.clean_output
     assert filter_func.clean_filter == clean_filter
-    assert filter_func.success_filter is None
-    assert filter_func.failure_filter is None
+    assert filter_func.exit_filter.regex.pattern == LogFilter.DEFAULT_EXIT_REGEX
 
 
 def test_test_mode_success(run_command, first_app):
@@ -52,7 +89,7 @@ def test_test_mode_success(run_command, first_app):
 
     # Mock effect of streaming the app resulting in a test suite success
     def mock_stream_output(label, popen_process, filter_func, **kwargs):
-        filter_func.success = True
+        filter_func.returncode = 0
 
     run_command.tools.subprocess.stream_output.side_effect = mock_stream_output
 
@@ -80,8 +117,7 @@ def test_test_mode_success(run_command, first_app):
     ]
     assert not filter_func.clean_output
     assert filter_func.clean_filter == clean_filter
-    assert filter_func.success_filter.regex.pattern == LogFilter.DEFAULT_SUCCESS_REGEX
-    assert filter_func.failure_filter.regex.pattern == LogFilter.DEFAULT_FAILURE_REGEX
+    assert filter_func.exit_filter.regex.pattern == LogFilter.DEFAULT_EXIT_REGEX
 
 
 def test_test_mode_failure(run_command, first_app):
@@ -94,7 +130,7 @@ def test_test_mode_failure(run_command, first_app):
 
     # Mock effect of streaming the app resulting in a test suite success
     def mock_stream_output(label, popen_process, filter_func, **kwargs):
-        filter_func.success = False
+        filter_func.returncode = 1
 
     run_command.tools.subprocess.stream_output.side_effect = mock_stream_output
 
@@ -123,8 +159,7 @@ def test_test_mode_failure(run_command, first_app):
     ]
     assert not filter_func.clean_output
     assert filter_func.clean_filter == clean_filter
-    assert filter_func.success_filter.regex.pattern == LogFilter.DEFAULT_SUCCESS_REGEX
-    assert filter_func.failure_filter.regex.pattern == LogFilter.DEFAULT_FAILURE_REGEX
+    assert filter_func.exit_filter.regex.pattern == LogFilter.DEFAULT_EXIT_REGEX
 
 
 def test_test_mode_no_result(run_command, first_app):
@@ -170,8 +205,7 @@ def test_test_mode_no_result(run_command, first_app):
     ]
     assert not filter_func.clean_output
     assert filter_func.clean_filter == clean_filter
-    assert filter_func.success_filter.regex.pattern == LogFilter.DEFAULT_SUCCESS_REGEX
-    assert filter_func.failure_filter.regex.pattern == LogFilter.DEFAULT_FAILURE_REGEX
+    assert filter_func.exit_filter.regex.pattern == LogFilter.DEFAULT_EXIT_REGEX
 
 
 def test_test_mode_custom_filters(run_command, first_app):
@@ -184,12 +218,11 @@ def test_test_mode_custom_filters(run_command, first_app):
 
     # Mock effect of streaming the app resulting in a test suite success
     def mock_stream_output(label, popen_process, filter_func, **kwargs):
-        filter_func.success = True
+        filter_func.returncode = 0
 
     run_command.tools.subprocess.stream_output.side_effect = mock_stream_output
 
-    first_app.test_success_regex = "THIS IS WHAT SUCCESS LOOKS LIKE"
-    first_app.test_failure_regex = "THIS IS WHAT FAILURE LOOKS LIKE"
+    first_app.exit_regex = "THIS IS WHAT SUCCESS LOOKS LIKE"
 
     # Stream the app logs
     run_command._stream_app_logs(
@@ -215,8 +248,7 @@ def test_test_mode_custom_filters(run_command, first_app):
     ]
     assert not filter_func.clean_output
     assert filter_func.clean_filter == clean_filter
-    assert filter_func.success_filter.regex.pattern == "THIS IS WHAT SUCCESS LOOKS LIKE"
-    assert filter_func.failure_filter.regex.pattern == "THIS IS WHAT FAILURE LOOKS LIKE"
+    assert filter_func.exit_filter.regex.pattern == "THIS IS WHAT SUCCESS LOOKS LIKE"
 
 
 def test_run_app_failure(run_command, first_app):
@@ -255,12 +287,12 @@ def test_run_app_failure(run_command, first_app):
     ]
     assert not filter_func.clean_output
     assert filter_func.clean_filter == clean_filter
-    assert filter_func.success_filter is None
-    assert filter_func.failure_filter is None
+    assert filter_func.exit_filter.regex.pattern == LogFilter.DEFAULT_EXIT_REGEX
 
 
-def test_run_app_log_stream_failure(run_command, first_app):
-    """If a log stream returns an error code, it is ignored."""
+def test_run_app_log_stream_stream_failure(run_command, first_app):
+    """If a log stream returns an error code, the log filter requires it is
+    ignored."""
     popen = mock.MagicMock()
     popen.returncode = 1
     clean_filter = mock.MagicMock()
@@ -292,8 +324,138 @@ def test_run_app_log_stream_failure(run_command, first_app):
     ]
     assert not filter_func.clean_output
     assert filter_func.clean_filter == clean_filter
-    assert filter_func.success_filter is None
-    assert filter_func.failure_filter is None
+    assert filter_func.exit_filter.regex.pattern == LogFilter.DEFAULT_EXIT_REGEX
+
+
+def test_run_app_log_stream_success(run_command, first_app):
+    """If a log streamed app returns successfully, no problem is surfaced."""
+    popen = mock.MagicMock()
+    popen.returncode = 0
+    clean_filter = mock.MagicMock()
+    stop_func = mock.MagicMock()
+    run_command.tools.subprocess.stream_output = mock.MagicMock()
+
+    # Mock effect of streaming the app and returning successfully
+    def mock_stream_output(label, popen_process, filter_func, **kwargs):
+        filter_func.returncode = 0
+
+    run_command.tools.subprocess.stream_output.side_effect = mock_stream_output
+
+    # Stream the app logs returns success
+    run_command._stream_app_logs(
+        first_app,
+        popen=popen,
+        test_mode=False,
+        clean_filter=clean_filter,
+        clean_output=False,
+        stop_func=stop_func,
+        log_stream=True,
+    )
+
+    # The log was streamed
+    run_command.tools.subprocess.stream_output.assert_called_once_with(
+        label="log stream",
+        popen_process=popen,
+        filter_func=mock.ANY,
+        stop_func=stop_func,
+    )
+
+    # The filter function has the properties we'd expect
+    filter_func = run_command.tools.subprocess.stream_output.mock_calls[0].kwargs[
+        "filter_func"
+    ]
+    assert not filter_func.clean_output
+    assert filter_func.clean_filter == clean_filter
+    assert filter_func.exit_filter.regex.pattern == LogFilter.DEFAULT_EXIT_REGEX
+
+
+def test_run_app_log_stream_failure(run_command, first_app):
+    """If a log streamed app exits with a failure code, the error is
+    surfaced."""
+    popen = mock.MagicMock()
+    popen.returncode = 0
+    clean_filter = mock.MagicMock()
+    stop_func = mock.MagicMock()
+    run_command.tools.subprocess.stream_output = mock.MagicMock()
+
+    # Mock effect of streaming the app resulting in a test suite success
+    def mock_stream_output(label, popen_process, filter_func, **kwargs):
+        filter_func.returncode = 1
+
+    run_command.tools.subprocess.stream_output.side_effect = mock_stream_output
+
+    # Streaming the app logs causes a test suite failure
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Problem running app first.",
+    ):
+        run_command._stream_app_logs(
+            first_app,
+            popen=popen,
+            test_mode=False,
+            clean_filter=clean_filter,
+            clean_output=False,
+            stop_func=stop_func,
+            log_stream=True,
+        )
+
+    # The log was streamed
+    run_command.tools.subprocess.stream_output.assert_called_once_with(
+        label="log stream",
+        popen_process=popen,
+        filter_func=mock.ANY,
+        stop_func=stop_func,
+    )
+
+    # The filter function has the properties we'd expect
+    filter_func = run_command.tools.subprocess.stream_output.mock_calls[0].kwargs[
+        "filter_func"
+    ]
+    assert not filter_func.clean_output
+    assert filter_func.clean_filter == clean_filter
+    assert filter_func.exit_filter.regex.pattern == LogFilter.DEFAULT_EXIT_REGEX
+
+
+def test_run_app_log_stream_no_result(run_command, first_app):
+    """If a log streamed app returns no result, no problem is surfaced."""
+    popen = mock.MagicMock()
+    popen.returncode = 0
+    clean_filter = mock.MagicMock()
+    stop_func = mock.MagicMock()
+    run_command.tools.subprocess.stream_output = mock.MagicMock()
+
+    # Mock effect of streaming the app but not finding a test result.
+    def mock_stream_output(label, popen_process, filter_func, **kwargs):
+        filter_func.returncode = None
+
+    run_command.tools.subprocess.stream_output.side_effect = mock_stream_output
+
+    # Streaming the app logs doesn't raise an error
+    run_command._stream_app_logs(
+        first_app,
+        popen=popen,
+        test_mode=False,
+        clean_filter=clean_filter,
+        clean_output=False,
+        stop_func=stop_func,
+        log_stream=True,
+    )
+
+    # The log was streamed
+    run_command.tools.subprocess.stream_output.assert_called_once_with(
+        label="log stream",
+        popen_process=popen,
+        filter_func=mock.ANY,
+        stop_func=stop_func,
+    )
+
+    # The filter function has the properties we'd expect
+    filter_func = run_command.tools.subprocess.stream_output.mock_calls[0].kwargs[
+        "filter_func"
+    ]
+    assert not filter_func.clean_output
+    assert filter_func.clean_filter == clean_filter
+    assert filter_func.exit_filter.regex.pattern == LogFilter.DEFAULT_EXIT_REGEX
 
 
 def test_run_app_ctrl_c(run_command, first_app):
@@ -331,5 +493,4 @@ def test_run_app_ctrl_c(run_command, first_app):
     ]
     assert not filter_func.clean_output
     assert filter_func.clean_filter == clean_filter
-    assert filter_func.success_filter is None
-    assert filter_func.failure_filter is None
+    assert filter_func.exit_filter.regex.pattern == LogFilter.DEFAULT_EXIT_REGEX

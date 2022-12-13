@@ -1,0 +1,1 @@
+A single end-of-app sentinel is now used to report process exit status.

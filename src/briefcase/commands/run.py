@@ -10,43 +10,14 @@ from .base import BaseCommand, full_options
 
 
 class LogFilter:
-    DEFAULT_SUCCESS_REGEX = (
-        # Unittest
-        # The ?P<a...> groups are to support Android logging differences.
-        # when https://github.com/chaquo/chaquopy/issues/746 is resolved,
-        # those groups can be deleted.
-        r"(^-{65,}\n(?P<a1> \n)?Ran \d+ tests in -?\d+\.\d{3}s"
-        r"\n(?P<a2> )?\n(?P<a3> \n)?OK( \(.*\))?$)"
-        # PyTest
-        r"|"
-        r"(^=+ ("
-        r"((, )?\d+ (passed|skipped|deselected|xfailed|xpassed|warnings?))*"
-        r"|(no tests ran)"
-        r") in -?\d+\.\d+s.* =+$)"
-    )
-
-    DEFAULT_FAILURE_REGEX = (
-        # Unittest
-        # The ?P<a...> groups are to support Android logging differences.
-        # when https://github.com/chaquo/chaquopy/issues/746 is resolved,
-        # those groups can be deleted.
-        r"(^-{65,}\n(?P<a1> \n)?Ran \d+ tests in -?\d+\.\d{3}s"
-        r"\n(?P<a2> )?\n(?P<a3> \n)?FAILED( \(.*\))?$)"
-        # Pytest
-        r"|"
-        r"(^=+ ("
-        r"(\d+ failed((, )?\d+ (passed|skipped|deselected|xfailed|xpassed|warnings?|errors?))*)"
-        r"|((\d+ (failed|passed|skipped|deselected|xfailed|xpassed|warnings?)(, )?)*\d+ errors?)"
-        r") in -?\d+.\d+s.* =+$)"
-    )
+    DEFAULT_EXIT_REGEX = r"^>>>>>>>>>> EXIT (?P<returncode>.*) <<<<<<<<<<$"
 
     def __init__(
         self,
         log_popen,
         clean_filter,
         clean_output,
-        success_filter,
-        failure_filter,
+        exit_filter,
     ):
         """Create a filter for a log stream.
 
@@ -55,25 +26,19 @@ class LogFilter:
             returning a "clean" line without any log system preamble.
         :param clean_output: Should the output displayed to the user be the
             "clean" output? (Default: True).
-        :param success_filter: A function that will operate on a string
-            containing the last 10 lines of "clean" (i.e., preamble filtered)
-            logs, returning True if a "success" condition has been detected. If
-            the success filter returns True, a success condition will be
-            recorded, and the log streamer will be told to stop streaming.
-        :param failure_filter: A function that will operate on a string
-            containing the last 10 lines of "clean" (i.e., preamble filtered)
-            logs, returning True if a "failure" condition has been detected. If
-            the failure filter returns True, a success condition will be
-            recorded, and the log streamer will be told to stop streaming.
+        :param exit_filter: A function that will operate on a string containing
+            the last 10 lines of "clean" (i.e., preamble filtered) logs,
+            returning the integer exit status of the process if an exit
+            condition has been detected, or None if the log stream should
+            continue.
         """
         self.log_popen = log_popen
-        self.success = None
+        self.returncode = None
         self.clean_filter = clean_filter
         self.clean_output = clean_output
 
         self.recent_history = []
-        self.success_filter = success_filter
-        self.failure_filter = failure_filter
+        self.exit_filter = exit_filter
 
     def __call__(self, line):
         """Filter a single line of a log.
@@ -110,15 +75,12 @@ class LogFilter:
             self.recent_history = self.recent_history[-10:]
             tail = "\n".join(self.recent_history)
 
-            # Look for the success/failure conditions in the tail
-            if self.failure_filter and self.failure_filter(tail):
-                self.success = False
-                yield display_line
-                raise StopStreaming()
-            elif self.success_filter and self.success_filter(tail):
-                self.success = True
-                yield display_line
-                raise StopStreaming()
+            # Look for the exit condition in the tail
+            if self.exit_filter:
+                self.returncode = self.exit_filter(tail)
+                if self.returncode is not None:
+                    raise StopStreaming()
+
         # Return the display line
         yield display_line
 
@@ -133,14 +95,105 @@ class LogFilter:
         """
 
         def filter_func(recent):
-            return filter_func.regex.search(recent) is not None
+            match = filter_func.regex.search(recent)
+            if match:
+                try:
+                    return int(match.groupdict()["returncode"])
+                except KeyError:
+                    # No returncode group in regex
+                    return -998
+                except ValueError:
+                    # Non-integer return code content
+                    return -999
+            return None
 
         # Annotate the function with the regex that will be used in the function.
         filter_func.regex = re.compile(pattern, re.MULTILINE)
         return filter_func
 
 
-class RunCommand(BaseCommand):
+class RunAppMixin:
+    """A mixin that captures the logic of starting an app and streaming the app
+    logs."""
+
+    def _stream_app_logs(
+        self,
+        app: BaseConfig,
+        popen,
+        test_mode=False,
+        clean_filter=None,
+        clean_output=False,
+        stop_func=lambda: False,
+        log_stream=False,
+    ):
+        """Stream the application's logs, monitoring for exit conditions.
+
+        Catches and cleans up after any Ctrl-C interrupts.
+
+        :param app: The app to be launched
+        :param popen: The Popen object for the stream we are monitoring
+        :param test_mode: Are we launching in test mode?
+        :param clean_filter: The log cleaning filter to use; see ``LogFilter``
+            for details.
+        :param clean_output: Should the cleaned output be presented to the user?
+        :param stop_func: (Optional) A function that will be invoked to determine
+            if the log stream should be terminated.
+        :param log_stream: Is this a log stream, rather than a literal app stream?
+            On some platforms (especially mobile), we monitor a log stream,
+            rather that the output of the app itself. If this case, the cleanup
+            process is different, as the reported exit status of the popen object
+            is of the log, not the app itself.
+        """
+        try:
+            exit_filter = LogFilter.test_filter(
+                getattr(app, "exit_regex", LogFilter.DEFAULT_EXIT_REGEX)
+            )
+
+            log_filter = LogFilter(
+                popen,
+                clean_filter=clean_filter,
+                clean_output=clean_output,
+                exit_filter=exit_filter,
+            )
+
+            # Start streaming logs for the app.
+            self.logger.info("=" * 75)
+            self.tools.subprocess.stream_output(
+                label="log stream" if log_stream else app.app_name,
+                popen_process=popen,
+                stop_func=stop_func,
+                filter_func=log_filter,
+            )
+
+            # If we're in test mode, and log streaming ends,
+            # check for the status of the test suite.
+            if test_mode:
+                if log_filter.returncode == 0:
+                    self.logger.info("Test suite passed!", prefix=app.app_name)
+                else:
+                    if log_filter.returncode is None:
+                        raise BriefcaseCommandError(
+                            "Test suite didn't report a result."
+                        )
+                    else:
+                        self.logger.error("Test suite failed!", prefix=app.app_name)
+                        raise BriefcaseTestSuiteFailure()
+            elif log_stream:
+                # If we're monitoring a log stream, and the log stream reported a
+                # non-zero exit code, surface that error to the user.
+                if log_filter.returncode is not None and log_filter.returncode != 0:
+                    raise BriefcaseCommandError(f"Problem running app {app.app_name}.")
+            else:
+                # If we're monitoring an actual app (not just a log stream),
+                # and the app didn't exit cleanly, surface the error to the user.
+                if popen.returncode != 0:
+                    raise BriefcaseCommandError(f"Problem running app {app.app_name}.")
+
+        except KeyboardInterrupt:
+            pass  # Catch CTRL-C to exit normally
+
+
+class RunCommand(RunAppMixin, BaseCommand):
     command = "run"
 
     def add_options(self, parser):
@@ -176,85 +229,6 @@ class RunCommand(BaseCommand):
         else:
             self.logger.info("Starting app...", prefix=app.app_name)
             return {}
-
-    def _stream_app_logs(
-        self,
-        app: BaseConfig,
-        popen,
-        test_mode=False,
-        clean_filter=None,
-        clean_output=False,
-        stop_func=lambda: False,
-        log_stream=False,
-    ):
-        """Stream the application's logs, monitoring for exit conditions.
-
-        Catches and cleans up after any Ctrl-C interrupts.
-
-        :param app: The app to be launched
-        :param popen: The Popen object for the stream we are monitoring
-        :param test_mode: Are we launching in test mode?
-        :param clean_filter: The log cleaning filter to use; see ``LogFilter``
-            for details.
-        :param clean_output: Should the cleaned output be presented to the user?
-        :param stop_func: (Optional) A function that will be invoked to determine
-            if the log stream should be terminated.
-        :param log_stream: Is this a log stream, rather than a literal app stream?
-            On some platforms (especially mobile), we monitor a log stream,
-            rather that the output of the app itself. If this case, the cleanup
-            process is different, as the reported exit status of the popen object
-            is of the log, not the app itself.
-        """
-        try:
-            if test_mode:
-                success_filter = LogFilter.test_filter(
-                    getattr(app, "test_success_regex", LogFilter.DEFAULT_SUCCESS_REGEX)
-                )
-                failure_filter = LogFilter.test_filter(
-                    getattr(app, "test_failure_regex", LogFilter.DEFAULT_FAILURE_REGEX)
-                )
-            else:
-                success_filter = None
-                failure_filter = None
-
-            log_filter = LogFilter(
-                popen,
-                clean_filter=clean_filter,
-                clean_output=clean_output,
-                success_filter=success_filter,
-                failure_filter=failure_filter,
-            )
-
-            # Start streaming logs for the app.
-            self.logger.info("=" * 75)
-            self.tools.subprocess.stream_output(
-                label="log stream" if log_stream else app.app_name,
-                popen_process=popen,
-                stop_func=stop_func,
-                filter_func=log_filter,
-            )
-
-            # If we're in test mode, and log streaming ends,
-            # check for the status of the test suite.
-            if test_mode:
-                if log_filter.success:
-                    self.logger.info("Test suite passed!", prefix=app.app_name)
-                else:
-                    if log_filter.success is None:
-                        raise BriefcaseCommandError(
-                            "Test suite didn't report a result."
-                        )
-                    else:
-                        self.logger.error("Test suite failed!", prefix=app.app_name)
-                        raise BriefcaseTestSuiteFailure()
-            elif not log_stream:
-                # If we're monitoring an actual app (not just a log stream),
-                # and the app didn't exit cleanly, surface the error to the user.
-                if popen.returncode != 0:
-                    raise BriefcaseCommandError(f"Problem running app {app.app_name}.")
-
-        except KeyboardInterrupt:
-            pass  # Catch CTRL-C to exit normally
 
     @abstractmethod
     def run_app(self, app: BaseConfig, **options):
