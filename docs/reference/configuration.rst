@@ -224,6 +224,21 @@ on an app with a formal name of "My App" would remove:
 3. Any ``.exe`` file in ``path`` or its subdirectories.
 4. The file ``My App/content/extra.doc``.
 
+``exit_regex``
+~~~~~~~~~~~~~~
+
+A regular expression that will be executed against the console output generated
+by an application. If/when the regular expression find match, the application
+will be terminated; the line matching the regular expression will *not* be
+output to the console. Used by Briefcase to monitor test suites; however, the
+filter will also be honored on normal ``run`` invocations.
+
+The regular expression should capture a single group named "returncode",
+capturing the integer exit status that should be reported for the process. The
+default value for this regular expression is ``^>>>>>>>>>> EXIT
+(?P<returncode>.*) <<<<<<<<<<$`` The regex will be compiled with the
+``re.MULTILINE`` flag enabled.
+
 ``formal_name``
 ~~~~~~~~~~~~~~~
 
@@ -395,16 +410,6 @@ As with ``sources``, ``test_sources`` is a *cumulative* setting. If an
 application defines sources at the global level, application level, *and*
 platform level, the final set of sources will be the *concatenation* of test
 sources from all levels, starting from least to most specific.
-
-``test_success_regex`` / ``test_failure_regex``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Regular expressions that match the success and failure output of the test suite.
-The ``re.MULTILINE`` flag will be used.
-
-Briefcase defaults to regular expressions that are able to match the output of
-``unittest`` or ``pytest``; if you use a different test framework, you will need
-to customize these settings.
 
 ``url``
 ~~~~~~~
