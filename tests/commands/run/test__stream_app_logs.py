@@ -11,6 +11,44 @@ def test_run_app(run_command, first_app):
     popen = mock.MagicMock()
     popen.returncode = 0
     clean_filter = mock.MagicMock()
+
+    # Invoke the stop func as part of streaming. This is to satisfy coverage.
+    def mock_stream(label, popen_process, stop_func, filter_func):
+        stop_func()
+
+    run_command.tools.subprocess.stream_output = mock.MagicMock(side_effect=mock_stream)
+
+    # Stream the app logs
+    run_command._stream_app_logs(
+        first_app,
+        popen=popen,
+        test_mode=False,
+        clean_filter=clean_filter,
+        clean_output=False,
+    )
+
+    # The log was streamed
+    run_command.tools.subprocess.stream_output.assert_called_once_with(
+        label="first",
+        popen_process=popen,
+        filter_func=mock.ANY,
+        stop_func=mock.ANY,
+    )
+
+    # The filter function has the properties we'd expect
+    filter_func = run_command.tools.subprocess.stream_output.mock_calls[0].kwargs[
+        "filter_func"
+    ]
+    assert not filter_func.clean_output
+    assert filter_func.clean_filter == clean_filter
+    assert filter_func.exit_filter.regex.pattern == LogFilter.DEFAULT_EXIT_REGEX
+
+
+def test_run_app_custom_stop_func(run_command, first_app):
+    """An app with a custom stop function can have it's logs streamed."""
+    popen = mock.MagicMock()
+    popen.returncode = 0
+    clean_filter = mock.MagicMock()
     stop_func = mock.MagicMock()
     run_command.tools.subprocess.stream_output = mock.MagicMock()
 
