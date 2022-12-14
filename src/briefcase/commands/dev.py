@@ -15,7 +15,7 @@ class DevCommand(BaseCommand):
     cmd_line = "briefcase dev"
     command = "dev"
     output_format = None
-    description = "Run a briefcase project in the dev environment"
+    description = "Run a Briefcase project in the dev environment"
 
     @property
     def platform(self):
