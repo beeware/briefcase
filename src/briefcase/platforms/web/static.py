@@ -171,6 +171,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                     "description": app.description,
                     "version": app.version,
                     "splashscreen": {"autoclose": True},
+                    "terminal": False,
                     # Ensure that we're using Unix path separators, as the content
                     # will be parsed by pyscript in the browser.
                     "packages": [
