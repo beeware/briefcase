@@ -69,6 +69,10 @@ class JDK(Tool):
         java_home = tools.os.environ.get("JAVA_HOME", "")
         install_message = None
 
+        if tools.host_arch == "arm64" and tools.host_os == "Darwin":
+            # Java 8 is not available for MacOS on ARM64, so we will require Rosetta.
+            cls.verify_rosetta(tools)
+
         # macOS has a helpful system utility to determine JAVA_HOME. Try it.
         if not java_home and tools.host_os == "Darwin":
             try:
@@ -284,3 +288,24 @@ Delete {jdk_zip_path} and run briefcase again.
 
         self.uninstall()
         self.install()
+
+    @classmethod
+    def verify_rosetta(cls, tools):
+        try:
+            tools.subprocess.check_output(
+                ["arch", "-x86_64", "true"], stderr=subprocess.STDOUT
+            )
+        except subprocess.CalledProcessError:
+            tools.logger.info(
+                """\
+This command requires Rosetta, but it does not appear to be installed. Briefcase will
+attempt to install it now.
+"""
+            )
+            try:
+                tools.subprocess.run(
+                    ["softwareupdate", "--install-rosetta", "--agree-to-license"],
+                    check=True,
+                )
+            except subprocess.CalledProcessError as e:
+                raise BriefcaseCommandError("Failed to install Rosetta") from e
