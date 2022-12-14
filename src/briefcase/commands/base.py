@@ -3,7 +3,9 @@ import importlib
 import inspect
 import os
 import platform
+import shutil
 import subprocess
+import textwrap
 from abc import ABC, abstractmethod
 from argparse import RawDescriptionHelpFormatter
 from pathlib import Path
@@ -547,14 +549,19 @@ a custom location for Briefcase's tools.
         else:
             formats_helptext = ""
 
+        width = min(shutil.get_terminal_size().columns, 80) - 2
         parser = argparse.ArgumentParser(
             prog=self.cmd_line.format(
                 command=self.command,
                 platform=self.platform,
                 output_format=self.output_format,
             ),
-            description=(f"{self.description}\n\n{formats_helptext}"),
-            formatter_class=lambda prog: RawDescriptionHelpFormatter(prog, width=80),
+            description=(
+                f"{textwrap.fill(self.description, width=width)}\n"
+                "\n"
+                f"{formats_helptext}"
+            ),
+            formatter_class=lambda prog: RawDescriptionHelpFormatter(prog, width=width),
         )
 
         self.add_default_options(parser)

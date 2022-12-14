@@ -1,5 +1,7 @@
 import argparse
+import shutil
 import sys
+import textwrap
 from argparse import RawDescriptionHelpFormatter
 
 from briefcase import __version__
@@ -40,31 +42,44 @@ def parse_cmdline(args):
     :return: Command and command-specific arguments
     """
     platforms = get_platforms()
+    width = min(shutil.get_terminal_size().columns, 80) - 2
+
+    briefcase_description = textwrap.fill(
+        "Briefcase is a tool for converting a Python project "
+        "into a standalone native application for distribution.",
+        width=width,
+    )
 
     description_max_pad_len = max(len(cmd.command) for cmd in COMMANDS) + 2
-    cmd_helptext = "\n".join(
+    command_description_list = "\n".join(
         f"  {cmd.command}{' ' * (description_max_pad_len - len(cmd.command))}{cmd.description}"
         for cmd in COMMANDS
+    )
+
+    platform_list = ", ".join([p.title() if p.islower() else p for p in platforms])
+
+    additional_instruction = textwrap.fill(
+        "Each command, platform, and format has additional options. "
+        "Use the -h option on a specific command for more details.",
+        width=width,
     )
 
     parser = argparse.ArgumentParser(
         prog="briefcase",
         description=(
-            "Briefcase is a tool for converting a Python project into a standalone native\n"
-            "application for distribution.\n"
+            f"{briefcase_description}\n"
             "\n"
             "Commands:\n"
-            f"{cmd_helptext}\n"
+            f"{command_description_list}\n"
             "\n"
             "Platforms:\n"
-            f"  {', '.join([p.title() if p.islower() else p for p in platforms])}\n"
+            f"  {platform_list}\n"
             "\n"
-            "Each command, platform, and format has additional options. Use the -h option on\n"
-            "a specific command for more details."
+            f"{additional_instruction}"
         ),
         usage="briefcase [-h] <command> [<platform>] [<format>] ...",
         add_help=False,
-        formatter_class=lambda prog: RawDescriptionHelpFormatter(prog, width=80),
+        formatter_class=lambda prog: RawDescriptionHelpFormatter(prog, width=width),
     )
     parser.add_argument("-V", "--version", action="version", version=__version__)
 
