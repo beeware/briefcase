@@ -27,14 +27,14 @@ from .exceptions import (
 COMMANDS = [
     NewCommand,
     DevCommand,
-    UpgradeCommand,
     CreateCommand,
-    UpdateCommand,
     OpenCommand,
     BuildCommand,
+    UpdateCommand,
     RunCommand,
     PackageCommand,
     PublishCommand,
+    UpgradeCommand,
 ]
 
 
@@ -46,9 +46,9 @@ def parse_cmdline(args):
     """
     platforms = get_platforms()
 
-    max_cmd_name_len = max(len(cmd.command) for cmd in COMMANDS)
+    description_max_pad_len = max(len(cmd.command) for cmd in COMMANDS) + 2
     cmd_helptext = "\n".join(
-        f"  {cmd.command}{' ' * (max_cmd_name_len - len(cmd.command) + 2)}{cmd.description}"
+        f"  {cmd.command}{' ' * (description_max_pad_len - len(cmd.command))}{cmd.description}"
         for cmd in COMMANDS
     )
 
