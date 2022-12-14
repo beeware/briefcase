@@ -116,7 +116,8 @@ def test_build_app(build_command, first_app_generated, tmp_path):
             "name": "First App",
             "description": "The first simple app \\ demonstration",
             "version": "0.0.1",
-            "autoclose_loader": True,
+            "splashscreen": {"autoclose": True},
+            "terminal": False,
             "packages": [
                 "/static/wheels/dependency-1.2.3-py3-none-any.whl",
                 "/static/wheels/first_app-1.2.3-py3-none-any.whl",
@@ -288,7 +289,8 @@ def test_build_app_no_requirements(build_command, first_app_generated, tmp_path)
             "name": "First App",
             "description": "The first simple app \\ demonstration",
             "version": "0.0.1",
-            "autoclose_loader": True,
+            "splashscreen": {"autoclose": True},
+            "terminal": False,
             "packages": [
                 "/static/wheels/first_app-1.2.3-py3-none-any.whl",
             ],
