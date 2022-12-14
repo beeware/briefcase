@@ -549,7 +549,7 @@ a custom location for Briefcase's tools.
         else:
             formats_helptext = ""
 
-        width = min(shutil.get_terminal_size().columns, 80) - 2
+        width = max(min(shutil.get_terminal_size().columns, 80) - 2, 20)
         parser = argparse.ArgumentParser(
             prog=self.cmd_line.format(
                 command=self.command,

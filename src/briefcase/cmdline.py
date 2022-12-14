@@ -42,7 +42,7 @@ def parse_cmdline(args):
     :return: Command and command-specific arguments
     """
     platforms = get_platforms()
-    width = min(shutil.get_terminal_size().columns, 80) - 2
+    width = max(min(shutil.get_terminal_size().columns, 80) - 2, 20)
 
     briefcase_description = textwrap.fill(
         "Briefcase is a tool for converting a Python project "
