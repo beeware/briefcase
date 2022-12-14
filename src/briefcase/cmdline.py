@@ -17,12 +17,7 @@ from briefcase.commands import (
 )
 from briefcase.platforms import get_output_formats, get_platforms
 
-from .exceptions import (
-    InvalidFormatError,
-    NoCommandError,
-    ShowOutputFormats,
-    UnsupportedCommandError,
-)
+from .exceptions import InvalidFormatError, NoCommandError, UnsupportedCommandError
 
 COMMANDS = [
     NewCommand,
@@ -70,13 +65,6 @@ def parse_cmdline(args):
         usage="briefcase [-h] <command> [<platform>] [<format>] ...",
         add_help=False,
         formatter_class=lambda prog: RawDescriptionHelpFormatter(prog, width=80),
-    )
-    parser.add_argument(
-        "-f",
-        "--formats",
-        action="store_true",
-        dest="show_output_formats",
-        help="show the available output formats and exit (specify a platform for more details).",
     )
     parser.add_argument("-V", "--version", action="version", version=__version__)
 
@@ -150,21 +138,14 @@ def parse_cmdline(args):
         # Import the platform module
         platform_module = platforms[options.platform]
 
-        output_formats = get_output_formats(options.platform)
-        # If the user requested a list of available output formats, output them.
-        if options.show_output_formats:
-            raise ShowOutputFormats(
-                platform=options.platform,
-                default=platform_module.DEFAULT_OUTPUT_FORMAT,
-                choices=list(output_formats.keys()),
-            )
-
         # If the output format wasn't explicitly specified, check to see
         # Otherwise, extract and use the default output_format for the platform.
         if options.output_format is None:
             output_format = platform_module.DEFAULT_OUTPUT_FORMAT
         else:
             output_format = options.output_format
+
+        output_formats = get_output_formats(options.platform)
 
         # Normalise casing of output_format to be more forgiving.
         output_format = {n.lower(): n for n in output_formats}.get(
