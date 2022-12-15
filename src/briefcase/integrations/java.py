@@ -70,7 +70,7 @@ class JDK(Tool):
         install_message = None
 
         if tools.host_arch == "arm64" and tools.host_os == "Darwin":
-            # Java 8 is not available for MacOS on ARM64, so we will require Rosetta.
+            # Java 8 is not available for macOS on ARM64, so we will require Rosetta.
             cls.verify_rosetta(tools)
 
         # macOS has a helpful system utility to determine JAVA_HOME. Try it.

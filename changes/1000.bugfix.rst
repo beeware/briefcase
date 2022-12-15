@@ -1,1 +1,1 @@
-On MacOS, Rosetta is now installed automatically if needed.
+On macOS, Rosetta is now installed automatically if needed.
