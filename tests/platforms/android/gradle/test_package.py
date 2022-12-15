@@ -69,6 +69,7 @@ def test_execute_gradle(package_command, first_app_config, host_os, gradlew_name
     # `ANDROID_SDK_ROOT`, which we expect to be overwritten.
     package_command.tools.os.environ = {"ANDROID_SDK_ROOT": "somewhere", "key": "value"}
     package_command.package_app(first_app_config)
+    package_command.tools.android_sdk.verify_emulator.assert_called_once_with()
     package_command.tools.subprocess.run.assert_called_once_with(
         [
             package_command.bundle_path(first_app_config) / gradlew_name,
