@@ -1,0 +1,1 @@
+A github label configuration file was moved to a common repository.
