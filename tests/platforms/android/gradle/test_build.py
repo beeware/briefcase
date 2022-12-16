@@ -48,6 +48,7 @@ def test_build_app(
     # `ANDROID_SDK_ROOT`, which we expect to be overwritten.
     build_command.tools.os.environ = {"ANDROID_SDK_ROOT": "somewhere", "key": "value"}
     build_command.build_app(first_app_generated, test_mode=False)
+    build_command.tools.android_sdk.verify_emulator.assert_called_once_with()
     build_command.tools.subprocess.run.assert_called_once_with(
         [
             build_command.bundle_path(first_app_generated) / gradlew_name,
@@ -103,6 +104,7 @@ def test_build_app_test_mode(
     # `ANDROID_SDK_ROOT`, which we expect to be overwritten.
     build_command.tools.os.environ = {"ANDROID_SDK_ROOT": "somewhere", "key": "value"}
     build_command.build_app(first_app_generated, test_mode=True)
+    build_command.tools.android_sdk.verify_emulator.assert_called_once_with()
     build_command.tools.subprocess.run.assert_called_once_with(
         [
             build_command.bundle_path(first_app_generated) / gradlew_name,
