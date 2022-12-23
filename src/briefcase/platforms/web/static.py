@@ -53,7 +53,7 @@ class StaticWebUpdateCommand(StaticWebCreateCommand, UpdateCommand):
 
 
 class StaticWebOpenCommand(StaticWebMixin, OpenCommand):
-    description = "Open an existing static web project."
+    description = "Open the folder containing an existing static web project."
 
 
 class StaticWebBuildCommand(StaticWebMixin, BuildCommand):

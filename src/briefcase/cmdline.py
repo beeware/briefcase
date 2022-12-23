@@ -56,7 +56,7 @@ def parse_cmdline(args):
         for cmd in COMMANDS
     )
 
-    platform_list = ", ".join([p.title() if p.islower() else p for p in platforms])
+    platform_list = ", ".join(sorted(platforms, key=str.lower))
 
     additional_instruction = textwrap.fill(
         "Each command, platform, and format has additional options. "

@@ -7,7 +7,7 @@ from .base import BaseCommand, full_options
 
 class PackageCommand(BaseCommand):
     command = "package"
-    description = "Package an app for distribution"
+    description = "Package an app for distribution."
 
     @property
     def packaging_formats(self):

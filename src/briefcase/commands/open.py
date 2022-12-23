@@ -7,7 +7,7 @@ from .base import BaseCommand, full_options
 
 class OpenCommand(BaseCommand):
     command = "open"
-    description = "Open an app in the build tool for the target platform"
+    description = "Open an app in the build tool for the target platform."
 
     def _open_app(self, app: BaseConfig):
         if self.tools.host_os == "Windows":

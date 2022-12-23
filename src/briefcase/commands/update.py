@@ -8,7 +8,7 @@ from .create import CreateCommand
 
 class UpdateCommand(CreateCommand):
     command = "update"
-    description = "Update the source, dependencies, and resources for an app"
+    description = "Update the source, dependencies, and resources for an app."
 
     def add_options(self, parser):
         self._add_update_options(

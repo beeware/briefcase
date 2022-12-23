@@ -335,7 +335,7 @@ def test_command_unknown_format(monkeypatch, logger, console):
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, "platform", "darwin")
 
-    expected_exc_regex = r"Invalid format 'foobar'; \(choose from: Xcode, app\)"
+    expected_exc_regex = r"Invalid format 'foobar'; \(choose from: app, Xcode\)"
     with pytest.raises(InvalidFormatError, match=expected_exc_regex):
         do_cmdline_parse("create macOS foobar".split(), logger, console)
 

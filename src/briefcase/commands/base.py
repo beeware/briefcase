@@ -531,23 +531,31 @@ a custom location for Briefcase's tools.
         pass
 
     def parse_options(self, extra):
+        """Parse the command line arguments for the Command.
+
+        After the initial ArgumentParser runs to choose the Command for the
+        selected platform and format, a new ArgumentParser is created here to
+        parse the remaining command line arguments specific to the Command.
+        Additionally, the default options for disabling input, log verbosity,
+        and log saving are parsed out and saved to the Command.
+
+        :param extra: the remaining command line arguments after the initial
+            ArgumentParser runs over the command line.
+        :return: dictionary of parsed arguments for Command
+        """
         default_format = getattr(
-            get_platforms().get(self.platform, None), "DEFAULT_OUTPUT_FORMAT", None
+            get_platforms().get(self.platform), "DEFAULT_OUTPUT_FORMAT", None
         )
-        if default_format is not None and self.command not in {"new", "upgrade"}:
+        # only show supported formats for Commands that support formats
+        if default_format is not None and self.command not in {"new", "dev", "upgrade"}:
             formats = list(get_output_formats(self.platform).keys())
-            try:
-                formats[formats.index(default_format)] = f"{default_format} (default)"
-            except ValueError:
-                formats[
-                    formats.index(default_format.capitalize())
-                ] = f"{default_format} (default)"
-            formats_helptext = (
-                f"Supported formats:\n"
-                f"  {', '.join(f.capitalize() if f.islower() else f for f in formats)}\n"
+            formats[formats.index(default_format)] = f"{default_format} (default)"
+            supported_formats_helptext = (
+                "\nSupported formats:\n"
+                f"  {', '.join(sorted(formats, key=str.lower))}"
             )
         else:
-            formats_helptext = ""
+            supported_formats_helptext = ""
 
         width = max(min(shutil.get_terminal_size().columns, 80) - 2, 20)
         parser = argparse.ArgumentParser(
@@ -558,8 +566,7 @@ a custom location for Briefcase's tools.
             ),
             description=(
                 f"{textwrap.fill(self.description, width=width)}\n"
-                "\n"
-                f"{formats_helptext}"
+                f"{supported_formats_helptext}"
             ),
             formatter_class=lambda prog: RawDescriptionHelpFormatter(prog, width=width),
         )

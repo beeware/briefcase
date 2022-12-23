@@ -1,7 +1,7 @@
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.xcode import verify_xcode_install
 
-DEFAULT_OUTPUT_FORMAT = "xcode"
+DEFAULT_OUTPUT_FORMAT = "Xcode"
 
 
 class iOSMixin:

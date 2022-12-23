@@ -64,7 +64,7 @@ class NewCommand(BaseCommand):
     command = "new"
     platform = "all"
     output_format = None
-    description = "Create a new Briefcase project"
+    description = "Create a new Briefcase project."
 
     def bundle_path(self, app):
         """A placeholder; New command doesn't have a bundle path."""

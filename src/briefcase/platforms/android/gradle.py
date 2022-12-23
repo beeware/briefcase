@@ -162,7 +162,7 @@ class GradleUpdateCommand(GradleCreateCommand, UpdateCommand):
 
 
 class GradleOpenCommand(GradleMixin, OpenCommand):
-    description = "Open the folder for an Android Gradle project."
+    description = "Open the folder for an existing Android Gradle project."
 
 
 class GradleBuildCommand(GradleMixin, BuildCommand):

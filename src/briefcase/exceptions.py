@@ -34,7 +34,7 @@ class InvalidFormatError(BriefcaseError):
         self.choices = choices
 
     def __str__(self):
-        choices = ", ".join(sorted(self.choices))
+        choices = ", ".join(sorted(self.choices, key=str.lower))
         return f"Invalid format '{self.requested}'; (choose from: {choices})"
 
 
