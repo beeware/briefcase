@@ -94,11 +94,11 @@ class WindowsAppRunCommand(WindowsAppMixin, WindowsRunCommand):
 
 
 class WindowsAppPackageCommand(WindowsAppMixin, WindowsPackageCommand):
-    description = "Package a Windows App as an MSI."
+    description = "Package a Windows app as an MSI."
 
 
 class WindowsAppPublishCommand(WindowsAppMixin, PublishCommand):
-    description = "Publish a Windows App."
+    description = "Publish a Windows app."
 
 
 # Declare the briefcase command bindings

@@ -41,7 +41,7 @@ class macOSAppUpdateCommand(macOSAppCreateCommand, UpdateCommand):
 
 
 class macOSAppOpenCommand(macOSAppMixin, OpenCommand):
-    description = "Open the app bundle folder for a macOS app."
+    description = "Open the app bundle folder for an existing macOS app."
 
 
 class macOSAppBuildCommand(macOSAppMixin, macOSSigningMixin, BuildCommand):

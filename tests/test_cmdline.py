@@ -9,7 +9,6 @@ from briefcase.console import Console, Log
 from briefcase.exceptions import (
     InvalidFormatError,
     NoCommandError,
-    ShowOutputFormats,
     UnsupportedCommandError,
 )
 from briefcase.platforms.linux.appimage import LinuxAppImageCreateCommand
@@ -43,9 +42,10 @@ def test_empty():
     assert excinfo.value.msg.startswith(
         "usage: briefcase [-h] <command> [<platform>] [<format>] ...\n"
         "\n"
-        "Package Python code for distribution.\n"
+        "Briefcase is a tool for converting a Python project into a standalone native\n"
+        "application for distribution.\n"
         "\n"
-        "positional arguments:\n"
+        "Commands:\n"
     )
 
 
@@ -57,9 +57,10 @@ def test_help_only():
     assert excinfo.value.msg.startswith(
         "usage: briefcase [-h] <command> [<platform>] [<format>] ...\n"
         "\n"
-        "Package Python code for distribution.\n"
+        "Briefcase is a tool for converting a Python project into a standalone native\n"
+        "application for distribution.\n"
         "\n"
-        "positional arguments:\n"
+        "Commands:\n"
     )
 
 
@@ -73,20 +74,6 @@ def test_version_only(capsys):
     # Version is displayed.
     output = capsys.readouterr().out
     assert output == f"{__version__}\n"
-
-
-def test_show_output_formats_only():
-    """``briefcase -f`` returns basic usage as a command is needed."""
-    with pytest.raises(NoCommandError, match=r"usage: briefcase") as excinfo:
-        cmdline.parse_cmdline("-f".split())
-
-    assert excinfo.value.msg.startswith(
-        "usage: briefcase [-h] <command> [<platform>] [<format>] ...\n"
-        "\n"
-        "Package Python code for distribution.\n"
-        "\n"
-        "positional arguments:\n"
-    )
 
 
 def test_unknown_command():
@@ -256,20 +243,6 @@ def test_bare_command_version(capsys, logger, console):
     assert output == f"{__version__}\n"
 
 
-def test_bare_command_show_formats(monkeypatch, logger, console):
-    """``briefcase create -f`` returns an error indicating a platform is
-    needed."""
-    # Pretend we're on macOS, regardless of where the tests run.
-    monkeypatch.setattr(sys, "platform", "darwin")
-
-    with pytest.raises(ShowOutputFormats) as excinfo:
-        do_cmdline_parse("create -f".split(), logger, console)
-
-    assert excinfo.value.platform == "macOS"
-    assert excinfo.value.default == "app"
-    assert set(excinfo.value.choices) == {"Xcode", "app"}
-
-
 def test_command_unknown_platform(monkeypatch, logger, console):
     """``briefcase create foobar`` raises an unknown platform error."""
     # Pretend we're on macOS, regardless of where the tests run.
@@ -340,19 +313,6 @@ def test_command_explicit_platform_help(monkeypatch, capsys, logger, console):
     )
 
 
-def test_command_explicit_platform_show_formats(monkeypatch, logger, console):
-    """``briefcase create macOS -f`` shows formats for the platform."""
-    # Pretend we're on macOS, regardless of where the tests run.
-    monkeypatch.setattr(sys, "platform", "darwin")
-
-    with pytest.raises(ShowOutputFormats) as excinfo:
-        do_cmdline_parse("create macOS -f".split(), logger, console)
-
-    assert excinfo.value.platform == "macOS"
-    assert excinfo.value.default == "app"
-    assert set(excinfo.value.choices) == {"Xcode", "app"}
-
-
 def test_command_explicit_format(monkeypatch, logger, console):
     """``briefcase create macOS app`` returns the macOS create app command."""
     # Pretend we're on macOS, regardless of where the tests run.
@@ -375,7 +335,7 @@ def test_command_unknown_format(monkeypatch, logger, console):
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, "platform", "darwin")
 
-    expected_exc_regex = r"Invalid format 'foobar'; \(choose from: Xcode, app\)"
+    expected_exc_regex = r"Invalid format 'foobar'; \(choose from: app, Xcode\)"
     with pytest.raises(InvalidFormatError, match=expected_exc_regex):
         do_cmdline_parse("create macOS foobar".split(), logger, console)
 
@@ -417,19 +377,6 @@ def test_command_explicit_format_help(monkeypatch, capsys, logger, console):
         "\n"
         "Create and populate a macOS app.\n"
     )
-
-
-def test_command_explicit_format_show_formats(monkeypatch, logger, console):
-    """``briefcase create macOS app -f`` shows formats for the platform."""
-    # Pretend we're on macOS, regardless of where the tests run.
-    monkeypatch.setattr(sys, "platform", "darwin")
-
-    with pytest.raises(ShowOutputFormats) as excinfo:
-        do_cmdline_parse("create macOS app -f".split(), logger, console)
-
-    assert excinfo.value.platform == "macOS"
-    assert excinfo.value.default == "app"
-    assert set(excinfo.value.choices) == {"Xcode", "app"}
 
 
 def test_command_disable_input(monkeypatch, logger, console):

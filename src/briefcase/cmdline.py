@@ -1,16 +1,38 @@
 import argparse
+import shutil
 import sys
+import textwrap
+from argparse import RawDescriptionHelpFormatter
 
 from briefcase import __version__
-from briefcase.commands import DevCommand, NewCommand, UpgradeCommand
+from briefcase.commands import (
+    BuildCommand,
+    CreateCommand,
+    DevCommand,
+    NewCommand,
+    OpenCommand,
+    PackageCommand,
+    PublishCommand,
+    RunCommand,
+    UpdateCommand,
+    UpgradeCommand,
+)
 from briefcase.platforms import get_output_formats, get_platforms
 
-from .exceptions import (
-    InvalidFormatError,
-    NoCommandError,
-    ShowOutputFormats,
-    UnsupportedCommandError,
-)
+from .exceptions import InvalidFormatError, NoCommandError, UnsupportedCommandError
+
+COMMANDS = [
+    NewCommand,
+    DevCommand,
+    CreateCommand,
+    OpenCommand,
+    BuildCommand,
+    UpdateCommand,
+    RunCommand,
+    PackageCommand,
+    PublishCommand,
+    UpgradeCommand,
+]
 
 
 def parse_cmdline(args):
@@ -19,22 +41,45 @@ def parse_cmdline(args):
     :param args: the arguments provided at the command line
     :return: Command and command-specific arguments
     """
+    platforms = get_platforms()
+    width = max(min(shutil.get_terminal_size().columns, 80) - 2, 20)
+
+    briefcase_description = textwrap.fill(
+        "Briefcase is a tool for converting a Python project "
+        "into a standalone native application for distribution.",
+        width=width,
+    )
+
+    description_max_pad_len = max(len(cmd.command) for cmd in COMMANDS) + 2
+    command_description_list = "\n".join(
+        f"  {cmd.command}{' ' * (description_max_pad_len - len(cmd.command))}{cmd.description}"
+        for cmd in COMMANDS
+    )
+
+    platform_list = ", ".join(sorted(platforms, key=str.lower))
+
+    additional_instruction = textwrap.fill(
+        "Each command, platform, and format has additional options. "
+        "Use the -h option on a specific command for more details.",
+        width=width,
+    )
+
     parser = argparse.ArgumentParser(
         prog="briefcase",
-        description="Package Python code for distribution.",
-        usage="briefcase [-h] <command> [<platform>] [<format>] ...",
-        epilog=(
-            "Each command, platform and format has additional options. "
-            "Use the -h option on a specific command for more details."
+        description=(
+            f"{briefcase_description}\n"
+            "\n"
+            "Commands:\n"
+            f"{command_description_list}\n"
+            "\n"
+            "Platforms:\n"
+            f"  {platform_list}\n"
+            "\n"
+            f"{additional_instruction}"
         ),
+        usage="briefcase [-h] <command> [<platform>] [<format>] ...",
         add_help=False,
-    )
-    parser.add_argument(
-        "-f",
-        "--formats",
-        action="store_true",
-        dest="show_output_formats",
-        help="show the available output formats and exit (specify a platform for more details).",
+        formatter_class=lambda prog: RawDescriptionHelpFormatter(prog, width=width),
     )
     parser.add_argument("-V", "--version", action="version", version=__version__)
 
@@ -45,26 +90,11 @@ def parse_cmdline(args):
     # usage string so that the instructions displayed are correct
     parser.add_argument(
         "command",
-        choices=[
-            "new",
-            "dev",
-            "upgrade",
-            "create",
-            "update",
-            "open",
-            "build",
-            "run",
-            "package",
-            "publish",
-        ],
+        choices=list(cmd.command for cmd in COMMANDS),
         metavar="command",
         nargs="?",
-        help="the command to execute (one of: %(choices)s)",
+        help=argparse.SUPPRESS,
     )
-
-    # <platform> *is* optional, with the default value based on the platform
-    # that you're on.
-    platforms = get_platforms()
 
     # To make the UX a little forgiving, we normalize *any* case to the case
     # actually used to register the platform. This function maps the lower-case
@@ -123,21 +153,14 @@ def parse_cmdline(args):
         # Import the platform module
         platform_module = platforms[options.platform]
 
-        output_formats = get_output_formats(options.platform)
-        # If the user requested a list of available output formats, output them.
-        if options.show_output_formats:
-            raise ShowOutputFormats(
-                platform=options.platform,
-                default=platform_module.DEFAULT_OUTPUT_FORMAT,
-                choices=list(output_formats.keys()),
-            )
-
         # If the output format wasn't explicitly specified, check to see
         # Otherwise, extract and use the default output_format for the platform.
         if options.output_format is None:
             output_format = platform_module.DEFAULT_OUTPUT_FORMAT
         else:
             output_format = options.output_format
+
+        output_formats = get_output_formats(options.platform)
 
         # Normalise casing of output_format to be more forgiving.
         output_format = {n.lower(): n for n in output_formats}.get(

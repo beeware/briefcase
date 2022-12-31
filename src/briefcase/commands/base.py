@@ -3,13 +3,18 @@ import importlib
 import inspect
 import os
 import platform
+import shutil
 import subprocess
+import textwrap
 from abc import ABC, abstractmethod
+from argparse import RawDescriptionHelpFormatter
 from pathlib import Path
 
 from cookiecutter import exceptions as cookiecutter_exceptions
 from cookiecutter.repository import is_repo_url
 from platformdirs import PlatformDirs
+
+from briefcase.platforms import get_output_formats, get_platforms
 
 try:
     import tomllib
@@ -526,13 +531,44 @@ a custom location for Briefcase's tools.
         pass
 
     def parse_options(self, extra):
+        """Parse the command line arguments for the Command.
+
+        After the initial ArgumentParser runs to choose the Command for the
+        selected platform and format, a new ArgumentParser is created here to
+        parse the remaining command line arguments specific to the Command.
+        Additionally, the default options for disabling input, log verbosity,
+        and log saving are parsed out and saved to the Command.
+
+        :param extra: the remaining command line arguments after the initial
+            ArgumentParser runs over the command line.
+        :return: dictionary of parsed arguments for Command
+        """
+        default_format = getattr(
+            get_platforms().get(self.platform), "DEFAULT_OUTPUT_FORMAT", None
+        )
+        # only show supported formats for Commands that support formats
+        if default_format is not None and self.command not in {"new", "dev", "upgrade"}:
+            formats = list(get_output_formats(self.platform).keys())
+            formats[formats.index(default_format)] = f"{default_format} (default)"
+            supported_formats_helptext = (
+                "\nSupported formats:\n"
+                f"  {', '.join(sorted(formats, key=str.lower))}"
+            )
+        else:
+            supported_formats_helptext = ""
+
+        width = max(min(shutil.get_terminal_size().columns, 80) - 2, 20)
         parser = argparse.ArgumentParser(
             prog=self.cmd_line.format(
                 command=self.command,
                 platform=self.platform,
                 output_format=self.output_format,
             ),
-            description=self.description,
+            description=(
+                f"{textwrap.fill(self.description, width=width)}\n"
+                f"{supported_formats_helptext}"
+            ),
+            formatter_class=lambda prog: RawDescriptionHelpFormatter(prog, width=width),
         )
 
         self.add_default_options(parser)

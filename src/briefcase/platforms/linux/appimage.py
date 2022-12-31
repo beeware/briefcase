@@ -207,7 +207,9 @@ class LinuxAppImageUpdateCommand(LinuxAppImageCreateCommand, UpdateCommand):
 
 
 class LinuxAppImageOpenCommand(LinuxAppImageMostlyPassiveMixin, OpenCommand):
-    description = "Open the folder containing an existing Linux AppImage project."
+    description = (
+        "Open a shell in a Docker container for an existing Linux AppImage project."
+    )
 
     def _open_app(self, app: AppConfig):
         # If we're using Docker, open an interactive shell in the container

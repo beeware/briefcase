@@ -195,6 +195,7 @@ class RunAppMixin:
 
 class RunCommand(RunAppMixin, BaseCommand):
     command = "run"
+    description = "Run an app."
 
     def add_options(self, parser):
         parser.add_argument(

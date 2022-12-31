@@ -27,17 +27,6 @@ class NoCommandError(HelpText):
         return self.msg
 
 
-class ShowOutputFormats(InfoHelpText):
-    def __init__(self, platform, default, choices):
-        super().__init__(
-            f"Available formats for {platform}: {', '.join(sorted(choices))}\n"
-            f"Default format: {default}"
-        )
-        self.platform = platform
-        self.default = default
-        self.choices = choices
-
-
 class InvalidFormatError(BriefcaseError):
     def __init__(self, requested, choices):
         super().__init__(error_code=-21, skip_logfile=True)
@@ -45,7 +34,7 @@ class InvalidFormatError(BriefcaseError):
         self.choices = choices
 
     def __str__(self):
-        choices = ", ".join(sorted(self.choices))
+        choices = ", ".join(sorted(self.choices, key=str.lower))
         return f"Invalid format '{self.requested}'; (choose from: {choices})"
 
 

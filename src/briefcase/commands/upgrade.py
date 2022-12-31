@@ -15,7 +15,7 @@ class UpgradeCommand(BaseCommand):
     cmd_line = "briefcase upgrade"
     command = "upgrade"
     output_format = None
-    description = "Upgrade briefcase-managed tools"
+    description = "Upgrade Briefcase-managed tools."
 
     def __init__(self, *args, **options):
         super().__init__(*args, **options)
