@@ -178,7 +178,7 @@ jobs:
     runs-on: ${{ matrix.platform }}
     steps:
     - name: Cache Briefcase tools
-      uses: actions/cache@v3.2.1
+      uses: actions/cache@v3.2.2
       with:
         key: briefcase-${{ matrix.platform }}
         path: |
