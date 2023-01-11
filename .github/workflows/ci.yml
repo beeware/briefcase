@@ -45,7 +45,7 @@ jobs:
       run: |
         # We don't actually want to install briefcase;
         # we just want the dev extras so we have a known version of tox
-        pip install -e .[dev]
+        python -m pip install -e .[dev]
     - name: Run towncrier check
       run: tox -e towncrier-check
 
@@ -63,7 +63,7 @@ jobs:
       run: |
         # We don't actually want to install briefcase;
         # we just want the dev extras so we have a known version of tox
-        pip install -e .[dev]
+        python -m pip install -e .[dev]
     - name: Build wheels
       run: tox -e package
     - uses: actions/upload-artifact@v3
@@ -102,10 +102,10 @@ jobs:
     - name: Install dev dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install --upgrade setuptools
+        python -m pip install --upgrade setuptools
         # We don't actually want to install briefcase; we just want the dev
         # extras so we have a known version of tox and coverage.
-        pip install $(ls dist/briefcase-*.whl)[dev]
+        python -m pip install $(ls dist/briefcase-*.whl)[dev]
     - name: Test
       run: |
         tox -e py --installpkg dist/briefcase-*.whl
@@ -136,10 +136,10 @@ jobs:
     - name: Install dev dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install --upgrade setuptools
+        python -m pip install --upgrade setuptools
         # We don't actually want to install briefcase;
         # we just want the test extras so that we have a known version of coverage
-        pip install -e .[test]
+        python -m pip install -e .[test]
     - name: Retrieve coverage data
       uses: actions/download-artifact@v3
       with:
@@ -211,7 +211,7 @@ jobs:
         name: packages
         path: dist
     - name: Install packages
-      run: pip install dist/briefcase-*.whl
+      run: python -m pip install dist/briefcase-*.whl
     - name: Create App
       run: |
         cd tests/apps
