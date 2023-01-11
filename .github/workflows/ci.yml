@@ -41,8 +41,13 @@ jobs:
     - uses: actions/setup-python@v4.4.0
       with:
         python-version: ${{ env.python_version }}
-    - run: pip install tox~=4.0
-    - run: tox -e towncrier-check
+    - name: Install dev dependencies
+      run: |
+        # We don't actually want to install briefcase;
+        # we just want the dev extras so we have a known version of tox
+        python -m pip install -e .[dev]
+    - name: Run towncrier check
+      run: tox -e towncrier-check
 
   package:
     runs-on: ubuntu-latest
@@ -54,8 +59,13 @@ jobs:
     - uses: actions/setup-python@v4.4.0
       with:
         python-version: ${{ env.python_version }}
-    - run: pip install tox~=4.0
-    - run: tox -e package
+    - name: Install dev dependencies
+      run: |
+        # We don't actually want to install briefcase;
+        # we just want the dev extras so we have a known version of tox
+        python -m pip install -e .[dev]
+    - name: Build wheels
+      run: tox -e package
     - uses: actions/upload-artifact@v3
       with:
         name: packages
@@ -89,14 +99,16 @@ jobs:
       with:
         name: packages
         path: dist
-    - name: Install dependencies
+    - name: Install dev dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install --upgrade setuptools
-        pip install setuptools_scm[toml]~=7.0 tox~=4.0 coverage[toml]~=7.0
+        python -m pip install --upgrade setuptools
+        # We don't actually want to install briefcase; we just want the dev
+        # extras so we have a known version of tox and coverage.
+        python -m pip install $(ls dist/briefcase-*.whl)[dev]
     - name: Test
       run: |
-        tox -e py --installpkg dist/*.whl
+        tox -e py --installpkg dist/briefcase-*.whl
     - name: Store coverage data
       uses: actions/upload-artifact@v3
       with:
@@ -121,11 +133,13 @@ jobs:
       with:
         # Use latest, so it understands all syntax.
         python-version: "3.10"
-    - name: Install dependencies
+    - name: Install dev dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install --upgrade setuptools
-        pip install coverage[toml]~=7.0
+        python -m pip install --upgrade setuptools
+        # We don't actually want to install briefcase;
+        # we just want the dev extras so that we have a known version of coverage
+        python -m pip install -e .[dev]
     - name: Retrieve coverage data
       uses: actions/download-artifact@v3
       with:
@@ -197,7 +211,7 @@ jobs:
         name: packages
         path: dist
     - name: Install packages
-      run: pip install dist/*.whl
+      run: python -m pip install dist/briefcase-*.whl
     - name: Create App
       run: |
         cd tests/apps
