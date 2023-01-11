@@ -138,8 +138,8 @@ jobs:
         python -m pip install --upgrade pip
         python -m pip install --upgrade setuptools
         # We don't actually want to install briefcase;
-        # we just want the test extras so that we have a known version of coverage
-        python -m pip install -e .[test]
+        # we just want the dev extras so that we have a known version of coverage
+        python -m pip install -e .[dev]
     - name: Retrieve coverage data
       uses: actions/download-artifact@v3
       with:
