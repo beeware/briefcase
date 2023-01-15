@@ -204,6 +204,7 @@ jobs:
     - name: Install system dependencies
       if: matrix.platform == 'ubuntu-22.04'
       run: |
+        sudo apt-get update -y
         sudo apt-get install -y flatpak flatpak-builder
     - name: Get packages
       uses: actions/download-artifact@v3
