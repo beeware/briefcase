@@ -18,10 +18,10 @@ Briefcase
    :alt: Maturity
 
 .. image:: https://img.shields.io/pypi/l/briefcase.svg
-   :target: https://github.com/beeware/briefcase/blob/master/LICENSE
+   :target: https://github.com/beeware/briefcase/blob/main/LICENSE
    :alt: BSD License
 
-.. image:: https://github.com/beeware/briefcase/workflows/CI/badge.svg?branch=master
+.. image:: https://github.com/beeware/briefcase/workflows/CI/badge.svg?branch=main
    :target: https://github.com/beeware/briefcase/actions
    :alt: Build Status
 
