@@ -1,0 +1,1 @@
+Updated setuptools-scm[toml] from 7.0.5 to 7.1.0.
