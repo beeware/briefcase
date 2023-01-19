@@ -9,15 +9,6 @@ class HelpText(BriefcaseError):
     an error."""
 
 
-class InfoHelpText(HelpText):
-    def __init__(self, msg):
-        super().__init__(error_code=0, skip_logfile=True)
-        self.msg = msg
-
-    def __str__(self):
-        return self.msg
-
-
 class NoCommandError(HelpText):
     def __init__(self, msg):
         super().__init__(error_code=-10, skip_logfile=True)

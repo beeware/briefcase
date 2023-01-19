@@ -16,7 +16,6 @@ def main():
         Command, extra_cmdline = parse_cmdline(sys.argv[1:])
         command = Command(logger=logger, console=console)
         options = command.parse_options(extra=extra_cmdline)
-        command.check_obsolete_data_dir()
         command.parse_config(Path.cwd() / "pyproject.toml")
         command(**options)
     except HelpText as e:
