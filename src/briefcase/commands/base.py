@@ -27,7 +27,6 @@ from briefcase.console import Console, Log
 from briefcase.exceptions import (
     BriefcaseCommandError,
     BriefcaseConfigError,
-    InfoHelpText,
     NetworkFailure,
 )
 from briefcase.integrations.base import ToolCache
@@ -167,86 +166,6 @@ class BaseCommand(ABC):
     @property
     def input(self):
         return self.tools.input
-
-    def check_obsolete_data_dir(self):
-        """Inform user if obsolete data directory exists.
-
-        TODO: Remove this check after 1 JAN 2023 since most users will have transitioned by then
-
-        Previous versions used the ~/.briefcase directory to store
-        downloads, tools, etc. This check lets users know the old
-        directory still exists and their options to migrate or clean up.
-        """
-        dot_briefcase_path = self.tools.home_path / ".briefcase"
-
-        # If there's no .briefcase path, no need to check for migration.
-        if not dot_briefcase_path.exists():
-            return
-
-        # If the data path is user-provided, don't check for migration.
-        if "BRIEFCASE_HOME" in os.environ:
-            return
-
-        if self.data_path.exists():
-            self.logger.warning(
-                f"""\
-Briefcase is no longer using the data directory:
-
-    {dot_briefcase_path}
-
-This directory can be safely deleted.
-"""
-            )
-        else:
-            self.logger.warning(
-                f"""\
-*************************************************************************
-** NOTICE: Briefcase is changing its data directory                   **
-*************************************************************************
-
-    Briefcase is moving its data directory from:
-
-        {dot_briefcase_path}
-
-    to:
-
-        {self.data_path}
-
-    If you continue, Briefcase will re-download the tools and data it
-    uses to build and package applications.
-
-    To avoid potentially large downloads and long installations, you
-    can manually move the old data directory to the new location.
-
-    If you continue and allow Briefcase to re-download its tools, the
-    old data directory can be safely deleted.
-
-*************************************************************************
-"""
-            )
-            self.input.prompt()
-            if not self.input.boolean_input(
-                "Do you want to re-download the Briefcase support tools",
-                # Default to continuing for non-interactive runs
-                default=not self.input.enabled,
-            ):
-                raise InfoHelpText(
-                    f"""\
-Move the Briefcase data directory from:
-
-    {dot_briefcase_path}
-
-to:
-
-    {self.data_path}
-
-or delete the old data directory, and re-run Briefcase.
-
-"""
-                )
-
-            # Create data directory to prevent full notice showing again.
-            self.data_path.mkdir(parents=True, exist_ok=True)
 
     def validate_data_path(self, data_path):
         """Validate provided data path or determine OS-specific path.
