@@ -197,7 +197,9 @@ class BaseCommand(ABC):
                     appauthor="BeeWare",
                 ).user_cache_path
 
-        if " " in os.fsdecode(data_path):
+        data_path = os.fsdecode(data_path)
+
+        if " " in data_path:
             raise BriefcaseCommandError(
                 f"""
 The location Briefcase will use to store tools and support files:
@@ -212,6 +214,37 @@ a custom location for Briefcase's tools.
 
 """
             )
+
+        if not os.path.exists(data_path):
+            try:
+                # The Windows Store version of Python can redirect filesystem
+                # interactions within %LOCALAPPDATA% to a sandboxed location.
+                # To bypass this, the Briefcase cache directory creation is
+                # performed via ``cmd.exe`` in a different process. Once this
+                # directory exists in the "real" %LOCALAPPDATA%, Windows will
+                # allow normal interactions without attempting to sandbox them.
+                if platform.system() == "Windows":
+                    subprocess.run(
+                        ["mkdir", data_path],
+                        shell=True,
+                        check=True,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                    )
+                else:
+                    os.makedirs(data_path, exist_ok=True)
+            except (subprocess.CalledProcessError, OSError):
+                raise BriefcaseCommandError(
+                    f"""
+Failed to create the Briefcase directory to store tools and support files:
+
+    {data_path}
+
+You can set the environment variable BRIEFCASE_HOME to specify
+a custom location for Briefcase's tools.
+
+"""
+                )
 
         return Path(data_path)
 
