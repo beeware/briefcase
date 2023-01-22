@@ -34,7 +34,7 @@ def test_run_windows_batch_script(mock_sub, batch_script):
 def test_check_output_windows_batch_script(mock_sub, batch_script):
     """Console control is released for a Windows batch script in
     check_output."""
-    # Console control is only released on Windows
+    # Console control is only released on Windows for batch scripts
     mock_sub.tools.host_os = "Windows"
 
     with mock_sub.tools.input.wait_bar("Testing..."):
@@ -42,6 +42,30 @@ def test_check_output_windows_batch_script(mock_sub, batch_script):
 
     mock_sub._subprocess.check_output.assert_called_with(
         [batch_script, "World"],
+        text=True,
+        encoding=ANY,
+    )
+    mock_sub.tools.input.release_console_control.assert_called_once()
+
+
+@pytest.mark.parametrize("sub_kwargs", [{"stream_output": True}, {}])
+def test_run_stream_output_true(mock_sub, sub_kwargs):
+    """Console control is not released when stream_output=True or is
+    unspecified."""
+    with mock_sub.tools.input.wait_bar("Testing..."):
+        mock_sub.run(["Hello", "World"], **sub_kwargs)
+
+    mock_sub._run_and_stream_output.assert_called_with(["Hello", "World"])
+    mock_sub.tools.input.release_console_control.assert_not_called()
+
+
+def test_run_stream_output_false(mock_sub):
+    """Console control is released when stream_output=False."""
+    with mock_sub.tools.input.wait_bar("Testing..."):
+        mock_sub.run(["Hello", "World"], stream_output=False)
+
+    mock_sub._subprocess.run.assert_called_with(
+        ["Hello", "World"],
         text=True,
         encoding=ANY,
     )

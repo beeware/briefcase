@@ -1,0 +1,1 @@
+To prevent console corruption, dynamic console elements, such as the Wait Bar, are temporarily removed when output streaming is disabled for a command.

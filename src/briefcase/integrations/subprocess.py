@@ -124,7 +124,10 @@ def ensure_console_is_safe(sub_method):
         # such as the Wait Bar can hide this message from the user.
         if sub.tools.host_os == "Windows":
             executable = str(args[0]).strip() if args else ""
-            remove_dynamic_elements = executable.lower().endswith(".bat")
+            remove_dynamic_elements |= executable.lower().endswith(".bat")
+
+        # Release control for commands that cannot be streamed.
+        remove_dynamic_elements |= kwargs.get("stream_output") is False
 
         # Run subprocess command with or without console control
         if remove_dynamic_elements:
@@ -375,14 +378,11 @@ class Subprocess(Tool):
         :param kwargs: keyword args for subprocess.run()
         :return: `CompletedProcess` for invoked process
         """
-        # If `stream_output` or dynamic screen content (e.g. the Wait Bar) is
-        # active and output is not redirected, use run with output streaming.
-        is_output_redirected = kwargs.get("capture_output") or (
-            kwargs.get("stdout") and kwargs.get("stderr")
-        )
-        if stream_output or (
-            self.tools.input.is_console_controlled and not is_output_redirected
-        ):
+
+        # Stream the output unless the caller explicitly disables it. When a
+        # caller sets stream_output=False, then ensure_console_is_safe() will
+        # disable any dynamic console elements while the command runs.
+        if stream_output:
             return self._run_and_stream_output(args, **kwargs)
 
         # Otherwise, invoke run() normally.
