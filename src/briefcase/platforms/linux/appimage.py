@@ -165,9 +165,8 @@ class LinuxAppImageCreateCommand(LinuxAppImageMixin, CreateCommand):
             self.tools.shutil.rmtree(local_requirements_path)
         self.tools.os.mkdir(local_requirements_path)
 
-        # Get the original version of the pip requirements (i.e., before
-        # AppImage modifications have been applied)
-        for requirement in super()._pip_requires(app, requires):
+        # Iterate over every requirements, looking for local references
+        for requirement in requires:
             if _is_local_requirement(requirement):
                 # Build an sdist for the local requirement
                 with self.input.wait_bar(f"Building sdist for {requirement}..."):
