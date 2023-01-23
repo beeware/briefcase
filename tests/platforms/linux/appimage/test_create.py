@@ -250,7 +250,12 @@ def test_install_app_requirements_with_locals(first_app_config, tmp_path):
             "build",
             "--sdist",
             "--outdir",
-            tmp_path / "base_path" / "linux" / "appimage" / "First App" / "_local",
+            tmp_path
+            / "base_path"
+            / "linux"
+            / "appimage"
+            / "First App"
+            / "_requirements",
             "/path/to/local",
         ]
     )
@@ -276,7 +281,7 @@ def test_install_app_requirements_with_locals(first_app_config, tmp_path):
             "--target=/app/appimage/First App/path/to/app_packages",
             "foo==1.2.3",
             "bar>=4.5",
-            "/app/appimage/First App/_local/local_package-1.2.3.tar.gz",
+            "/app/appimage/First App/_requirements/local_package-1.2.3.tar.gz",
         ],
         check=True,
     )
@@ -290,7 +295,7 @@ def test_install_app_requirements_with_locals(first_app_config, tmp_path):
         / "linux"
         / "appimage"
         / "First App"
-        / "_local"
+        / "_requirements"
         / "local_package-1.2.3.tar.gz"
     ]
 
@@ -371,7 +376,12 @@ def test_install_app_requirements_with_bad_local(first_app_config, tmp_path):
             "build",
             "--sdist",
             "--outdir",
-            tmp_path / "base_path" / "linux" / "appimage" / "First App" / "_local",
+            tmp_path
+            / "base_path"
+            / "linux"
+            / "appimage"
+            / "First App"
+            / "_requirements",
             "/path/to/local",
         ]
     )

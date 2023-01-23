@@ -35,7 +35,7 @@ class LinuxAppImagePassiveMixin(LinuxMixin):
         return self.bundle_path(app)
 
     def local_requirements_path(self, app):
-        return self.bundle_path(app) / "_local"
+        return self.bundle_path(app) / "_requirements"
 
     def binary_path(self, app):
         binary_name = app.formal_name.replace(" ", "_")
