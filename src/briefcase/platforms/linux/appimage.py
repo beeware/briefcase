@@ -170,18 +170,22 @@ class LinuxAppImageCreateCommand(LinuxAppImageMixin, CreateCommand):
             if _is_local_requirement(requirement):
                 # Build an sdist for the local requirement
                 with self.input.wait_bar(f"Building sdist for {requirement}..."):
-                    self.tools.subprocess.check_output(
-                        [
-                            sys.executable,
-                            "-m",
-                            "build",
-                            "--sdist",
-                            "--outdir",
-                            local_requirements_path,
-                            requirement,
-                        ],
-                    )
-
+                    try:
+                        self.tools.subprocess.check_output(
+                            [
+                                sys.executable,
+                                "-m",
+                                "build",
+                                "--sdist",
+                                "--outdir",
+                                local_requirements_path,
+                                requirement,
+                            ],
+                        )
+                    except subprocess.CalledProcessError as e:
+                        raise BriefcaseCommandError(
+                            f"Unable to build sdist for {requirement}"
+                        ) from e
         # Continue with the default app requirement handling.
         return super()._install_app_requirements(
             app,

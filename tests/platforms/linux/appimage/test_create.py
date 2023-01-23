@@ -1,8 +1,10 @@
+import subprocess
 import sys
 from unittest.mock import MagicMock
 
 import pytest
 
+from briefcase.commands.base import BriefcaseCommandError
 from briefcase.console import Console, Log
 from briefcase.integrations.docker import DockerAppContext
 from briefcase.integrations.subprocess import Subprocess
@@ -73,11 +75,14 @@ def test_install_app_requirements_in_docker(first_app_config, tmp_path):
     #
     command.project_path(first_app_config).mkdir(parents=True, exist_ok=True)
 
+    # Reset the subprocess.run mock, removing the Docker setup call
+    command.tools.subprocess.run.reset_mock()
+
     # Install requirements
     command.install_app_requirements(first_app_config, test_mode=False)
 
     # pip was invoked inside docker.
-    command.tools.subprocess.run.assert_called_with(
+    command.tools.subprocess.run.assert_called_once_with(
         [
             "docker",
             "run",
@@ -144,7 +149,7 @@ def test_install_app_requirements_no_docker(first_app_config, tmp_path):
     assert command.tools[first_app_config].app_context is command.tools.subprocess
 
     # pip was invoked natively
-    command.tools[first_app_config].app_context.run.assert_called_with(
+    command.tools[first_app_config].app_context.run.assert_called_once_with(
         [
             sys.executable,
             "-u",
@@ -231,6 +236,9 @@ def test_install_app_requirements_with_locals(first_app_config, tmp_path):
         ],
     )
 
+    # Reset the subprocess.run mock, removing the Docker setup call
+    command.tools.subprocess.run.reset_mock()
+
     # Install requirements
     command.install_app_requirements(first_app_config, test_mode=False)
 
@@ -248,7 +256,7 @@ def test_install_app_requirements_with_locals(first_app_config, tmp_path):
     )
 
     # pip was invoked inside docker.
-    command.tools.subprocess.run.assert_called_with(
+    command.tools.subprocess.run.assert_called_once_with(
         [
             "docker",
             "run",
@@ -285,3 +293,92 @@ def test_install_app_requirements_with_locals(first_app_config, tmp_path):
         / "_local"
         / "local_package-1.2.3.tar.gz"
     ]
+
+
+@pytest.mark.skipif(
+    sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
+)
+def test_install_app_requirements_with_bad_local(first_app_config, tmp_path):
+    """If the app has local requirement that can't be built, an error is
+    raised."""
+    # Add a local requirement
+    first_app_config.requires.append("/path/to/local")
+
+    command = LinuxAppImageCreateCommand(
+        logger=Log(),
+        console=Console(),
+        base_path=tmp_path / "base_path",
+        data_path=tmp_path / "briefcase",
+    )
+    command.use_docker = True
+
+    # Mock the existence of Docker.
+    command.tools.subprocess = MagicMock(spec_set=Subprocess)
+
+    command._path_index = {
+        first_app_config: {"app_packages_path": "path/to/app_packages"}
+    }
+
+    # Provide Docker app context
+    command.tools[first_app_config].app_context = DockerAppContext(
+        tools=command.tools,
+        app=first_app_config,
+    )
+    command.tools[first_app_config].app_context.prepare(
+        image_tag="briefcase/com.example.first-app:py3.X",
+        dockerfile_path=tmp_path
+        / "base_path"
+        / "linux"
+        / "appimage"
+        / "First App"
+        / "Dockerfile",
+        app_base_path=tmp_path / "base_path",
+        host_platform_path=tmp_path / "base_path" / "linux",
+        host_data_path=tmp_path / "briefcase",
+        python_version="3.X",
+    )
+
+    # Mock the building an sdist raising an error
+    command.tools.subprocess.check_output.side_effect = subprocess.CalledProcessError(
+        cmd=["python", "-m", "build", "..."], returncode=1
+    )
+
+    # Mock the existence of a stale sdist
+    create_tgz_file(
+        command.local_requirements_path(first_app_config)
+        / "other_package-0.1.2.tar.gz",
+        content=[
+            ("setup.py", "Python config"),
+            ("other.py", "Python source"),
+        ],
+    )
+
+    # Reset the subprocess.run mock, removing the Docker setup call
+    command.tools.subprocess.run.reset_mock()
+
+    # Install requirements
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Unable to build sdist for /path/to/local",
+    ):
+        command.install_app_requirements(first_app_config, test_mode=False)
+
+    # An attempt to build the sdist was made
+    command.tools.subprocess.check_output.assert_called_once_with(
+        [
+            sys.executable,
+            "-m",
+            "build",
+            "--sdist",
+            "--outdir",
+            tmp_path / "base_path" / "linux" / "appimage" / "First App" / "_local",
+            "/path/to/local",
+        ]
+    )
+
+    # pip was *not* invoked inside docker.
+    command.tools.subprocess.run.assert_not_called()
+
+    # The local requirements path exists, and is empty. It has been purged, but not refilled.
+    assert command.local_requirements_path(first_app_config).exists()
+    assert len(list(command.local_requirements_path(first_app_config).iterdir())) == 0
