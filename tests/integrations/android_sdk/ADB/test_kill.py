@@ -25,7 +25,6 @@ def test_kill(mock_tools):
             "emu",
             "kill",
         ],
-        stderr=subprocess.STDOUT,
         quiet=False,
     )
 

@@ -23,7 +23,8 @@ def xcode(default_xcode_install_path):
 def test_not_installed(tmp_path, mock_tools):
     """If No Xcode is installed, raise an error."""
     mock_tools.subprocess.check_output.side_effect = subprocess.CalledProcessError(
-        cmd=["xcode-select", "-p"], returncode=2
+        cmd=["xcode-select", "-p"],
+        returncode=2,
     )
 
     # Test a location where Xcode *won't* be installed
@@ -32,12 +33,7 @@ def test_not_installed(tmp_path, mock_tools):
 
     # subprocess was invoked as expected
     mock_tools.subprocess.check_output.assert_has_calls(
-        [
-            mock.call(
-                ["xcode-select", "-p"],
-                stderr=subprocess.STDOUT,
-            ),
-        ],
+        [mock.call(["xcode-select", "-p"])],
         any_order=False,
     )
 
@@ -58,14 +54,8 @@ def test_custom_install_location(default_xcode_install_path, tmp_path, mock_tool
     # subprocess was invoked as expected
     mock_tools.subprocess.check_output.assert_has_calls(
         [
-            mock.call(
-                ["xcode-select", "-p"],
-                stderr=subprocess.STDOUT,
-            ),
-            mock.call(
-                ["xcodebuild", "-version"],
-                stderr=subprocess.STDOUT,
-            ),
+            mock.call(["xcode-select", "-p"]),
+            mock.call(["xcodebuild", "-version"]),
         ],
         any_order=False,
     )
@@ -93,14 +83,8 @@ def test_command_line_tools_only(default_xcode_install_path, mock_tools):
     # subprocess was invoked as expected
     mock_tools.subprocess.check_output.assert_has_calls(
         [
-            mock.call(
-                ["xcode-select", "-p"],
-                stderr=subprocess.STDOUT,
-            ),
-            mock.call(
-                ["xcodebuild", "-version"],
-                stderr=subprocess.STDOUT,
-            ),
+            mock.call(["xcode-select", "-p"]),
+            mock.call(["xcodebuild", "-version"]),
         ],
         any_order=False,
     )
@@ -133,14 +117,8 @@ def test_installed_but_command_line_tools_selected(
     # subprocess was invoked as expected
     mock_tools.subprocess.check_output.assert_has_calls(
         [
-            mock.call(
-                ["xcode-select", "-p"],
-                stderr=subprocess.STDOUT,
-            ),
-            mock.call(
-                ["xcodebuild", "-version"],
-                stderr=subprocess.STDOUT,
-            ),
+            mock.call(["xcode-select", "-p"]),
+            mock.call(["xcodebuild", "-version"]),
         ],
         any_order=False,
     )
@@ -177,14 +155,8 @@ def test_custom_install_with_command_line_tools(
     # subprocess was invoked as expected
     mock_tools.subprocess.check_output.assert_has_calls(
         [
-            mock.call(
-                ["xcode-select", "-p"],
-                stderr=subprocess.STDOUT,
-            ),
-            mock.call(
-                ["xcodebuild", "-version"],
-                stderr=subprocess.STDOUT,
-            ),
+            mock.call(["xcode-select", "-p"]),
+            mock.call(["xcodebuild", "-version"]),
         ],
         any_order=False,
     )
@@ -209,14 +181,8 @@ def test_installed_but_corrupted(xcode, mock_tools):
     # subprocess was invoked as expected
     mock_tools.subprocess.check_output.assert_has_calls(
         [
-            mock.call(
-                ["xcode-select", "-p"],
-                stderr=subprocess.STDOUT,
-            ),
-            mock.call(
-                ["xcodebuild", "-version"],
-                stderr=subprocess.STDOUT,
-            ),
+            mock.call(["xcode-select", "-p"]),
+            mock.call(["xcodebuild", "-version"]),
         ],
         any_order=False,
     )
@@ -236,14 +202,8 @@ def test_installed_no_minimum_version(xcode, mock_tools):
     # subprocess was invoked as expected
     mock_tools.subprocess.check_output.assert_has_calls(
         [
-            mock.call(
-                ["xcode-select", "-p"],
-                stderr=subprocess.STDOUT,
-            ),
-            mock.call(
-                ["xcodebuild", "-version"],
-                stderr=subprocess.STDOUT,
-            ),
+            mock.call(["xcode-select", "-p"]),
+            mock.call(["xcodebuild", "-version"]),
         ],
         any_order=False,
     )
@@ -270,14 +230,8 @@ def test_installed_extra_output(capsys, xcode, mock_tools):
     # subprocess was invoked as expected
     mock_tools.subprocess.check_output.assert_has_calls(
         [
-            mock.call(
-                ["xcode-select", "-p"],
-                stderr=subprocess.STDOUT,
-            ),
-            mock.call(
-                ["xcodebuild", "-version"],
-                stderr=subprocess.STDOUT,
-            ),
+            mock.call(["xcode-select", "-p"]),
+            mock.call(["xcodebuild", "-version"]),
         ],
         any_order=False,
     )
@@ -347,14 +301,8 @@ def test_installed_with_minimum_version_success(
     # assert xcode-select and xcodebuild were invoked
     mock_tools.subprocess.check_output.assert_has_calls(
         [
-            mock.call(
-                ["xcode-select", "-p"],
-                stderr=subprocess.STDOUT,
-            ),
-            mock.call(
-                ["xcodebuild", "-version"],
-                stderr=subprocess.STDOUT,
-            ),
+            mock.call(["xcode-select", "-p"]),
+            mock.call(["xcodebuild", "-version"]),
         ],
         any_order=False,
     )
@@ -398,14 +346,8 @@ def test_installed_with_minimum_version_failure(
     # subprocess was invoked as expected
     mock_tools.subprocess.check_output.assert_has_calls(
         [
-            mock.call(
-                ["xcode-select", "-p"],
-                stderr=subprocess.STDOUT,
-            ),
-            mock.call(
-                ["xcodebuild", "-version"],
-                stderr=subprocess.STDOUT,
-            ),
+            mock.call(["xcode-select", "-p"]),
+            mock.call(["xcodebuild", "-version"]),
         ],
         any_order=False,
     )
@@ -428,14 +370,8 @@ def test_unexpected_version_output(capsys, xcode, mock_tools):
     # subprocess was invoked as expected
     mock_tools.subprocess.check_output.assert_has_calls(
         [
-            mock.call(
-                ["xcode-select", "-p"],
-                stderr=subprocess.STDOUT,
-            ),
-            mock.call(
-                ["xcodebuild", "-version"],
-                stderr=subprocess.STDOUT,
-            ),
+            mock.call(["xcode-select", "-p"]),
+            mock.call(["xcodebuild", "-version"]),
         ],
         any_order=False,
     )

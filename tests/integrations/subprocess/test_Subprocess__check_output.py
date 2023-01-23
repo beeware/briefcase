@@ -1,4 +1,5 @@
 import os
+import subprocess
 from pathlib import Path
 from subprocess import CalledProcessError
 from unittest.mock import ANY
@@ -19,6 +20,7 @@ def test_call(mock_sub, capsys, platform):
         ["hello", "world"],
         text=True,
         encoding=ANY,
+        stderr=subprocess.STDOUT,
     )
     assert capsys.readouterr().out == ""
 
@@ -32,6 +34,7 @@ def test_call_with_arg(mock_sub, capsys):
         ["hello", "world"],
         universal_newlines=True,
         encoding=ANY,
+        stderr=subprocess.STDOUT,
     )
     assert capsys.readouterr().out == ""
 
@@ -46,6 +49,7 @@ def test_call_with_path_arg(mock_sub, capsys, tmp_path):
         cwd=os.fsdecode(tmp_path / "cwd"),
         text=True,
         encoding=ANY,
+        stderr=subprocess.STDOUT,
     )
     assert capsys.readouterr().out == ""
 
@@ -86,6 +90,7 @@ def test_call_with_start_new_session(
             ["hello", "world"],
             text=True,
             encoding=ANY,
+            stderr=subprocess.STDOUT,
             **check_output_kwargs,
         )
         assert capsys.readouterr().out == ""
@@ -95,6 +100,7 @@ def test_call_with_start_new_session(
             start_new_session=start_new_session,
             text=True,
             encoding=ANY,
+            stderr=subprocess.STDOUT,
             **check_output_kwargs,
         )
         assert capsys.readouterr().out == ""
@@ -124,7 +130,9 @@ def test_call_windows_with_start_new_session_and_creationflags(
         AssertionError, match="Subprocess called with creationflags set"
     ):
         mock_sub.check_output(
-            ["hello", "world"], start_new_session=True, creationflags=creationflags
+            ["hello", "world"],
+            start_new_session=True,
+            creationflags=creationflags,
         )
 
 
@@ -138,6 +146,7 @@ def test_debug_call(mock_sub, capsys):
         ["hello", "world"],
         text=True,
         encoding=ANY,
+        stderr=subprocess.STDOUT,
     )
 
     expected_output = (
@@ -171,6 +180,7 @@ def test_debug_call_with_env(mock_sub, capsys, tmp_path):
         cwd=os.fsdecode(tmp_path / "cwd"),
         text=True,
         encoding=ANY,
+        stderr=subprocess.STDOUT,
     )
 
     expected_output = (
@@ -212,10 +222,44 @@ def test_debug_call_with_quiet(mock_sub, capsys, tmp_path):
         cwd=os.fsdecode(tmp_path / "cwd"),
         text=True,
         encoding=ANY,
+        stderr=subprocess.STDOUT,
     )
 
     # No output
     assert capsys.readouterr().out == ""
+
+
+def test_debug_call_with_stderr(mock_sub, capsys, tmp_path):
+    """If stderr is specified, it is not defaulted to stdout."""
+    mock_sub.tools.logger.verbosity = 2
+
+    mock_sub.check_output(
+        ["hello", "world"],
+        cwd=tmp_path / "cwd",
+        stderr=subprocess.DEVNULL,
+    )
+
+    mock_sub._subprocess.check_output.assert_called_with(
+        ["hello", "world"],
+        cwd=os.fsdecode(tmp_path / "cwd"),
+        text=True,
+        encoding=ANY,
+        stderr=subprocess.DEVNULL,
+    )
+
+    expected_output = (
+        "\n"
+        ">>> Running Command:\n"
+        ">>>     hello world\n"
+        ">>> Working Directory:\n"
+        f">>>     {tmp_path / 'cwd'}\n"
+        ">>> Command Output:\n"
+        ">>>     some output line 1\n"
+        ">>>     more output line 2\n"
+        ">>> Return code: 0\n"
+    )
+
+    assert capsys.readouterr().out == expected_output
 
 
 def test_calledprocesserror_exception_logging(mock_sub, capsys):
@@ -315,5 +359,4 @@ def test_text_eq_true_default_overriding(mock_sub, in_kwargs, kwargs):
     """if text or universal_newlines is explicitly provided, those should
     override text=true default."""
 
-    mock_sub.check_output(["hello", "world"], **in_kwargs)
-    mock_sub._subprocess.check_output.assert_called_with(["hello", "world"], **kwargs)
+    mock_sub.check_output(["hello", "world"], stderr=subprocess.STDOUT, **in_kwargs)

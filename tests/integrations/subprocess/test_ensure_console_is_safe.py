@@ -44,6 +44,7 @@ def test_check_output_windows_batch_script(mock_sub, batch_script):
         [batch_script, "World"],
         text=True,
         encoding=ANY,
+        stderr=subprocess.STDOUT,
     )
     mock_sub.tools.input.release_console_control.assert_called_once()
 
@@ -92,6 +93,7 @@ def test_negative_condition_not_controlled(mock_sub, cmdline, kwargs):
         **kwargs,
         text=True,
         encoding=ANY,
+        stderr=subprocess.STDOUT,
     )
 
     mock_sub.tools.input.release_console_control.assert_not_called()
@@ -118,5 +120,6 @@ def test_negative_condition_controlled(mock_sub, cmdline, kwargs):
         **kwargs,
         text=True,
         encoding=ANY,
+        stderr=subprocess.STDOUT,
     )
     mock_sub.tools.input.release_console_control.assert_not_called()

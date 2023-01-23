@@ -14,7 +14,6 @@ def test_list_packages(mock_tools, android_sdk):
     mock_tools.subprocess.check_output.assert_called_once_with(
         [os.fsdecode(android_sdk.sdkmanager_path), "--list_installed"],
         env=android_sdk.env,
-        stderr=subprocess.STDOUT,
     )
 
 
@@ -29,5 +28,4 @@ def test_list_packages_failure(mock_tools, android_sdk):
     mock_tools.subprocess.check_output.assert_called_once_with(
         [os.fsdecode(android_sdk.sdkmanager_path), "--list_installed"],
         env=android_sdk.env,
-        stderr=subprocess.STDOUT,
     )

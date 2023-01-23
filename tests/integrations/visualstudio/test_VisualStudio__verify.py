@@ -83,7 +83,7 @@ def test_msbuild_on_path(mock_tools):
 
     # Verification calls are as expected
     mock_tools.subprocess.check_output.assert_has_calls(
-        [call(["MSBuild.exe", "--version"], stderr=subprocess.STDOUT)],
+        [call(["MSBuild.exe", "--version"])],
         any_order=False,
     )
 
@@ -106,7 +106,7 @@ def test_msbuild_on_path_corrupt(mock_tools):
 
     # Verification calls are as expected
     mock_tools.subprocess.check_output.assert_has_calls(
-        [call(["MSBuild.exe", "--version"], stderr=subprocess.STDOUT)],
+        [call(["MSBuild.exe", "--version"])],
         any_order=False,
     )
 
@@ -133,8 +133,8 @@ def test_msbuild_envvar(mock_tools, custom_msbuild_path):
     # Verification calls are as expected
     mock_tools.subprocess.check_output.assert_has_calls(
         [
-            call(["MSBuild.exe", "--version"], stderr=subprocess.STDOUT),
-            call([custom_msbuild_path, "--version"], stderr=subprocess.STDOUT),
+            call(["MSBuild.exe", "--version"]),
+            call([custom_msbuild_path, "--version"]),
         ],
         any_order=False,
     )
@@ -159,7 +159,7 @@ def test_msbuild_envvar_doesnt_exist(mock_tools, tmp_path):
     # Verification calls are as expected
     mock_tools.subprocess.check_output.assert_has_calls(
         [
-            call(["MSBuild.exe", "--version"], stderr=subprocess.STDOUT),
+            call(["MSBuild.exe", "--version"]),
         ],
         any_order=False,
     )
@@ -187,8 +187,8 @@ def test_msbuild_envvar_bad_executable(mock_tools, custom_msbuild_path):
     # Verification calls are as expected
     mock_tools.subprocess.check_output.assert_has_calls(
         [
-            call(["MSBuild.exe", "--version"], stderr=subprocess.STDOUT),
-            call([custom_msbuild_path, "--version"], stderr=subprocess.STDOUT),
+            call(["MSBuild.exe", "--version"]),
+            call([custom_msbuild_path, "--version"]),
         ],
         any_order=False,
     )
@@ -209,7 +209,7 @@ def test_vswhere_does_not_exist(mock_tools):
     # Verification calls are as expected
     mock_tools.subprocess.check_output.assert_has_calls(
         [
-            call(["MSBuild.exe", "--version"], stderr=subprocess.STDOUT),
+            call(["MSBuild.exe", "--version"]),
         ],
         any_order=False,
     )
@@ -233,7 +233,7 @@ def test_vswhere_bad_executable(mock_tools, vswhere_path):
     # Verification calls are as expected
     mock_tools.subprocess.check_output.assert_has_calls(
         [
-            call(["MSBuild.exe", "--version"], stderr=subprocess.STDOUT),
+            call(["MSBuild.exe", "--version"]),
             call(
                 [vswhere_path, "-latest", "-prerelease", "-format", "json"],
                 stderr=subprocess.STDOUT,
@@ -262,7 +262,7 @@ def test_vswhere_bad_content(mock_tools, vswhere_path):
     # Verification calls are as expected
     mock_tools.subprocess.check_output.assert_has_calls(
         [
-            call(["MSBuild.exe", "--version"], stderr=subprocess.STDOUT),
+            call(["MSBuild.exe", "--version"]),
             call(
                 [vswhere_path, "-latest", "-prerelease", "-format", "json"],
                 stderr=subprocess.STDOUT,
@@ -291,7 +291,7 @@ def test_vswhere_non_list_content(mock_tools, vswhere_path):
     # Verification calls are as expected
     mock_tools.subprocess.check_output.assert_has_calls(
         [
-            call(["MSBuild.exe", "--version"], stderr=subprocess.STDOUT),
+            call(["MSBuild.exe", "--version"]),
             call(
                 [vswhere_path, "-latest", "-prerelease", "-format", "json"],
                 stderr=subprocess.STDOUT,
@@ -320,7 +320,7 @@ def test_vswhere_empty_list_content(mock_tools, vswhere_path):
     # Verification calls are as expected
     mock_tools.subprocess.check_output.assert_has_calls(
         [
-            call(["MSBuild.exe", "--version"], stderr=subprocess.STDOUT),
+            call(["MSBuild.exe", "--version"]),
             call(
                 [vswhere_path, "-latest", "-prerelease", "-format", "json"],
                 stderr=subprocess.STDOUT,
@@ -357,7 +357,7 @@ def test_vswhere_msbuild_not_installed(mock_tools, tmp_path, vswhere_path):
     # Verification calls are as expected
     mock_tools.subprocess.check_output.assert_has_calls(
         [
-            call(["MSBuild.exe", "--version"], stderr=subprocess.STDOUT),
+            call(["MSBuild.exe", "--version"]),
             call(
                 [vswhere_path, "-latest", "-prerelease", "-format", "json"],
                 stderr=subprocess.STDOUT,
@@ -403,12 +403,12 @@ def test_vswhere_msbuild_bad_executable(
     # Verification calls are as expected
     mock_tools.subprocess.check_output.assert_has_calls(
         [
-            call(["MSBuild.exe", "--version"], stderr=subprocess.STDOUT),
+            call(["MSBuild.exe", "--version"]),
             call(
                 [vswhere_path, "-latest", "-prerelease", "-format", "json"],
                 stderr=subprocess.STDOUT,
             ),
-            call([msbuild_path, "--version"], stderr=subprocess.STDOUT),
+            call([msbuild_path, "--version"]),
         ],
         any_order=False,
     )
@@ -441,12 +441,12 @@ def test_vswhere_install(mock_tools, tmp_path, vswhere_path, msbuild_path):
     # Verification calls are as expected
     mock_tools.subprocess.check_output.assert_has_calls(
         [
-            call(["MSBuild.exe", "--version"], stderr=subprocess.STDOUT),
+            call(["MSBuild.exe", "--version"]),
             call(
                 [vswhere_path, "-latest", "-prerelease", "-format", "json"],
                 stderr=subprocess.STDOUT,
             ),
-            call([msbuild_path, "--version"], stderr=subprocess.STDOUT),
+            call([msbuild_path, "--version"]),
         ],
         any_order=False,
     )

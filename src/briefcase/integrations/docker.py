@@ -125,10 +125,7 @@ installation, and try again.
         # Verify Docker version is compatible.
         try:
             # Try to get the version of docker that is installed.
-            output = tools.subprocess.check_output(
-                ["docker", "--version"],
-                stderr=subprocess.STDOUT,
-            ).strip("\n")
+            output = tools.subprocess.check_output(["docker", "--version"]).strip("\n")
 
             # Do a simple check that the docker that was invoked
             # actually looks like the real deal, and is a version that
@@ -162,10 +159,7 @@ installation, and try again.
             # Invoke a docker command to check if the daemon is running,
             # and the user has sufficient permissions.
             # We don't care about the output, just that it succeeds.
-            tools.subprocess.check_output(
-                ["docker", "info"],
-                stderr=subprocess.STDOUT,
-            )
+            tools.subprocess.check_output(["docker", "info"])
         except subprocess.CalledProcessError as e:
             failure_output = e.output
             if "permission denied while trying to connect" in failure_output:

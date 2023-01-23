@@ -10,10 +10,11 @@ import pytest
 from briefcase.exceptions import BriefcaseCommandError, MissingToolError, NetworkFailure
 from briefcase.integrations.java import JDK
 
-CALL_JAVA_HOME = mock.call(["/usr/libexec/java_home"], stderr=subprocess.STDOUT)
-CALL_ROSETTA_CHECK = mock.call(["arch", "-x86_64", "true"], stderr=subprocess.STDOUT)
+CALL_JAVA_HOME = mock.call(["/usr/libexec/java_home"])
+CALL_ROSETTA_CHECK = mock.call(["arch", "-x86_64", "true"])
 CALL_ROSETTA_INSTALL = mock.call(
-    ["softwareupdate", "--install-rosetta", "--agree-to-license"], check=True
+    ["softwareupdate", "--install-rosetta", "--agree-to-license"],
+    check=True,
 )
 
 
@@ -50,10 +51,7 @@ def test_macos_tool_java_home(mock_tools, capsys):
     assert mock_tools.subprocess.check_output.mock_calls == [
         CALL_JAVA_HOME,
         # Second is a call to verify a valid Java version
-        mock.call(
-            [os.fsdecode(Path("/path/to/java/bin/javac")), "-version"],
-            stderr=subprocess.STDOUT,
-        ),
+        mock.call([os.fsdecode(Path("/path/to/java/bin/javac")), "-version"]),
     ]
 
     # No console output
@@ -115,7 +113,6 @@ def test_macos_provided_overrides_tool_java_home(mock_tools, capsys):
     # A single call to check output
     mock_tools.subprocess.check_output.assert_called_once_with(
         [os.fsdecode(Path("/path/to/java/bin/javac")), "-version"],
-        stderr=subprocess.STDOUT,
     ),
 
     # No console output
@@ -144,7 +141,6 @@ def test_valid_provided_java_home(mock_tools, capsys):
     # A single call to check output
     mock_tools.subprocess.check_output.assert_called_once_with(
         [os.fsdecode(Path("/path/to/java/bin/javac")), "-version"],
-        stderr=subprocess.STDOUT,
     ),
 
     # No console output
@@ -188,7 +184,6 @@ def test_invalid_jdk_version(mock_tools, host_os, java_home, tmp_path, capsys):
     # A single call was made to check javac
     mock_tools.subprocess.check_output.assert_called_once_with(
         [os.fsdecode(Path("/path/to/java/bin/javac")), "-version"],
-        stderr=subprocess.STDOUT,
     )
 
     # No console output (because Briefcase JDK exists)
@@ -232,7 +227,6 @@ def test_no_javac(mock_tools, host_os, java_home, tmp_path, capsys):
     # A single call was made to check javac
     mock_tools.subprocess.check_output.assert_called_once_with(
         [os.fsdecode(Path("/path/to/nowhere/bin/javac")), "-version"],
-        stderr=subprocess.STDOUT,
     ),
 
     # No console output (because Briefcase JDK exists)
@@ -277,7 +271,6 @@ def test_javac_error(mock_tools, host_os, java_home, tmp_path, capsys):
     # A single call was made to check javac
     mock_tools.subprocess.check_output.assert_called_once_with(
         [os.fsdecode(Path("/path/to/nowhere/bin/javac")), "-version"],
-        stderr=subprocess.STDOUT,
     ),
 
     # No console output (because Briefcase JDK exists)
@@ -320,7 +313,6 @@ def test_unparseable_javac_version(mock_tools, host_os, java_home, tmp_path, cap
     # A single call was made to check javac
     mock_tools.subprocess.check_output.assert_called_once_with(
         [os.fsdecode(Path("/path/to/nowhere/bin/javac")), "-version"],
-        stderr=subprocess.STDOUT,
     ),
 
     # No console output (because Briefcase JDK exists)

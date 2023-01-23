@@ -1,7 +1,6 @@
 import datetime
 import os
 import platform
-import subprocess
 import sys
 import time
 from os.path import normpath
@@ -427,7 +426,6 @@ def test_log_file_extra(run_command, monkeypatch):
             "ANDROID_SDK_ROOT": str(run_command.tools.android_sdk.root_path),
             "JAVA_HOME": str(run_command.tools.java.java_home),
         },
-        stderr=subprocess.STDOUT,
     )
 
 

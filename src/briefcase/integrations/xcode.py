@@ -85,10 +85,7 @@ def ensure_command_line_tools_are_installed(tools: ToolCache):
     #
     # Any other status code is a problem.
     try:
-        tools.subprocess.check_output(
-            ["xcode-select", "--install"],
-            stderr=subprocess.STDOUT,
-        )
+        tools.subprocess.check_output(["xcode-select", "--install"])
         raise BriefcaseCommandError(
             """\
 Xcode command line developer tools are not installed.
@@ -148,10 +145,7 @@ def ensure_xcode_is_installed(
     #  * The path to the currently active Xcode install; or
     #  * error code 2 - No Xcode installation
     try:
-        tools.subprocess.check_output(
-            ["xcode-select", "-p"],
-            stderr=subprocess.STDOUT,
-        )
+        tools.subprocess.check_output(["xcode-select", "-p"])
     except subprocess.CalledProcessError as e:
         raise BriefcaseCommandError(
             """\
@@ -173,10 +167,7 @@ you can re-run Briefcase.
         #   xcode-select: error: tool 'xcodebuild' requires Xcode, but active
         #   developer directory '/Library/Developer/CommandLineTools' is a
         #   command line tools instance
-        output = tools.subprocess.check_output(
-            ["xcodebuild", "-version"],
-            stderr=subprocess.STDOUT,
-        )
+        output = tools.subprocess.check_output(["xcodebuild", "-version"])
 
         if min_version is not None:
             # Look for a line in the output that reads "Xcode X.Y.Z"
@@ -285,10 +276,7 @@ def confirm_xcode_license_accepted(tools: ToolCache):
     # tools return a status code of 69 (nice...) if the license has not been
     # accepted. In this case, we can prompt the user to accept the license.
     try:
-        tools.subprocess.check_output(
-            ["/usr/bin/clang", "--version"],
-            stderr=subprocess.STDOUT,
-        )
+        tools.subprocess.check_output(["/usr/bin/clang", "--version"])
     except subprocess.CalledProcessError as e:
         if e.returncode == 69:
             tools.logger.info(
