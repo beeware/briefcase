@@ -14,14 +14,14 @@ def test_not_installed(mock_tools):
     # xcode-select was invoked
     mock_tools.subprocess.check_output.assert_called_once_with(
         ["xcode-select", "--install"],
-        stderr=subprocess.STDOUT,
     )
 
 
 def test_installed(capsys, mock_tools):
     """If cmdline dev tools *are* installed, check passes without comment."""
     mock_tools.subprocess.check_output.side_effect = subprocess.CalledProcessError(
-        cmd=["xcode-select", "--install"], returncode=1
+        cmd=["xcode-select", "--install"],
+        returncode=1,
     )
 
     # Check passes without an error...
@@ -30,7 +30,6 @@ def test_installed(capsys, mock_tools):
     # ... xcode-select was invoked
     mock_tools.subprocess.check_output.assert_called_once_with(
         ["xcode-select", "--install"],
-        stderr=subprocess.STDOUT,
     )
 
     # ...and the user is none the wiser
@@ -41,7 +40,8 @@ def test_installed(capsys, mock_tools):
 def test_unsure_if_installed(capsys, mock_tools):
     """If xcode-select returns something odd, mention it but don't break."""
     mock_tools.subprocess.check_output.side_effect = subprocess.CalledProcessError(
-        cmd=["xcode-select", "--install"], returncode=69
+        cmd=["xcode-select", "--install"],
+        returncode=69,
     )
 
     # Check passes without an error...
@@ -49,8 +49,7 @@ def test_unsure_if_installed(capsys, mock_tools):
 
     # ... xcode-select was invoked
     mock_tools.subprocess.check_output.assert_called_once_with(
-        ["xcode-select", "--install"],
-        stderr=subprocess.STDOUT,
+        ["xcode-select", "--install"]
     )
 
     # ...but stdout contains a warning

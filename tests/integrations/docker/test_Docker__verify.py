@@ -53,14 +53,8 @@ def test_docker_exists(mock_tools, valid_docker_version, capsys):
 
     mock_tools.subprocess.check_output.assert_has_calls(
         [
-            call(
-                ["docker", "--version"],
-                stderr=subprocess.STDOUT,
-            ),
-            call(
-                ["docker", "info"],
-                stderr=subprocess.STDOUT,
-            ),
+            call(["docker", "--version"]),
+            call(["docker", "info"]),
         ]
     )
 
@@ -80,10 +74,7 @@ def test_docker_doesnt_exist(mock_tools):
         Docker.verify(mock_tools)
 
     # But docker was invoked
-    mock_tools.subprocess.check_output.assert_called_with(
-        ["docker", "--version"],
-        stderr=subprocess.STDOUT,
-    )
+    mock_tools.subprocess.check_output.assert_called_with(["docker", "--version"])
 
 
 def test_docker_failure(mock_tools, capsys):
@@ -106,14 +97,8 @@ def test_docker_failure(mock_tools, capsys):
 
     mock_tools.subprocess.check_output.assert_has_calls(
         [
-            call(
-                ["docker", "--version"],
-                stderr=subprocess.STDOUT,
-            ),
-            call(
-                ["docker", "info"],
-                stderr=subprocess.STDOUT,
-            ),
+            call(["docker", "--version"]),
+            call(["docker", "info"]),
         ]
     )
 
@@ -150,14 +135,8 @@ def test_docker_unknown_version(mock_tools, capsys):
 
     mock_tools.subprocess.check_output.assert_has_calls(
         [
-            call(
-                ["docker", "--version"],
-                stderr=subprocess.STDOUT,
-            ),
-            call(
-                ["docker", "info"],
-                stderr=subprocess.STDOUT,
-            ),
+            call(["docker", "--version"]),
+            call(["docker", "info"]),
         ]
     )
 

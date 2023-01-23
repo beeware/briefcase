@@ -30,7 +30,6 @@ def test_simple_command(mock_tools, tmp_path):
             "example",
             "command",
         ],
-        stderr=subprocess.STDOUT,
         quiet=False,
     )
 
@@ -56,7 +55,6 @@ def test_quiet_command(mock_tools, tmp_path):
             "example",
             "command",
         ],
-        stderr=subprocess.STDOUT,
         quiet=True,
     )
 
@@ -107,6 +105,5 @@ def test_error_handling(mock_tools, tmp_path, name, exception):
             "example",
             "command",
         ],
-        stderr=subprocess.STDOUT,
         quiet=False,
     )

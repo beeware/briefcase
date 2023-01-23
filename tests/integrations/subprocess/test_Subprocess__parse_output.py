@@ -1,3 +1,4 @@
+import subprocess
 from unittest.mock import ANY
 
 import pytest
@@ -35,6 +36,7 @@ def test_call(mock_sub, capsys):
         ["hello", "world"],
         text=True,
         encoding=ANY,
+        stderr=subprocess.STDOUT,
     )
     assert capsys.readouterr().out == ""
 
@@ -53,6 +55,7 @@ def test_call_with_arg(mock_sub, capsys):
         extra_arg="asdf",
         text=True,
         encoding=ANY,
+        stderr=subprocess.STDOUT,
     )
     assert capsys.readouterr().out == ""
 
@@ -68,6 +71,7 @@ def test_call_with_parser_success(mock_sub, capsys):
         ["hello", "world"],
         text=True,
         encoding=ANY,
+        stderr=subprocess.STDOUT,
     )
     assert output == "more output line 2"
 
@@ -85,6 +89,7 @@ def test_call_with_parser_error(mock_sub, capsys):
         ["hello", "world"],
         text=True,
         encoding=ANY,
+        stderr=subprocess.STDOUT,
     )
     expected_output = (
         "\n"
@@ -114,4 +119,6 @@ def test_text_eq_true_default_overriding(mock_sub, in_kwargs, kwargs):
     override text=true default."""
 
     mock_sub.parse_output(splitlines_parser, ["hello", "world"], **in_kwargs)
-    mock_sub._subprocess.check_output.assert_called_with(["hello", "world"], **kwargs)
+    mock_sub._subprocess.check_output.assert_called_with(
+        ["hello", "world"], stderr=subprocess.STDOUT, **kwargs
+    )

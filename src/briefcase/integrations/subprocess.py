@@ -464,6 +464,8 @@ class Subprocess(Tool):
            environment.
          - The `text` argument is defaulted to True so all output
            is returned as strings instead of bytes.
+         - The `stderr` argument is defaulted to `stdout` so _all_ output is
+           returned and `stderr` isn't unexpectedly printed to the console.
 
         :param quiet: Should the invocation of this command be silent, and
             *not* appear in the logs? This should almost always be False;
@@ -472,6 +474,9 @@ class Subprocess(Tool):
             be turned off so that log output isn't corrupted by thousands of
             polling calls.
         """
+        # if stderr isn't explicitly redirected, then send it to stdout.
+        kwargs.setdefault("stderr", subprocess.STDOUT)
+
         if not quiet:
             self._log_command(args)
             self._log_cwd(kwargs.get("cwd"))
