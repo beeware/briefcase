@@ -442,10 +442,11 @@ class CreateCommand(BaseCommand):
                             requirement = os.path.abspath(self.base_path / requirement)
                         f.write(f"{requirement}\n")
 
-    def _pip_requires(self, requires: List[str]):
+    def _pip_requires(self, app: BaseConfig, requires: List[str]):
         """Convert the list of requirements to be passed to pip into its final
         form.
 
+        :param app: The app configuration
         :param requires: The user-specified list of app requirements
         :returns: The final list of requirement arguments to pass to pip
         """
@@ -514,7 +515,7 @@ class CreateCommand(BaseCommand):
                             f"--target={app_packages_path}",
                         ]
                         + self._extra_pip_args(app)
-                        + self._pip_requires(requires),
+                        + self._pip_requires(app, requires),
                         check=True,
                         **self._pip_kwargs(app),
                     )
