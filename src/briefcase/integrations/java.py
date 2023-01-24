@@ -80,7 +80,6 @@ class JDK(Tool):
                 # raises an error.
                 java_home = tools.subprocess.check_output(
                     ["/usr/libexec/java_home"],
-                    stderr=subprocess.STDOUT,
                 ).strip("\n")
             except subprocess.CalledProcessError:
                 # No java on this machine.
@@ -95,7 +94,6 @@ class JDK(Tool):
                         os.fsdecode(Path(java_home) / "bin" / "javac"),
                         "-version",
                     ],
-                    stderr=subprocess.STDOUT,
                 )
                 # This should be a string of the form "javac 1.8.0_144\n"
                 version_str = output.strip("\n").split(" ")[1]
@@ -292,14 +290,12 @@ Delete {jdk_zip_path} and run briefcase again.
     @classmethod
     def verify_rosetta(cls, tools):
         try:
-            tools.subprocess.check_output(
-                ["arch", "-x86_64", "true"], stderr=subprocess.STDOUT
-            )
+            tools.subprocess.check_output(["arch", "-x86_64", "true"])
         except subprocess.CalledProcessError:
             tools.logger.info(
                 """\
-This command requires Rosetta, but it does not appear to be installed. Briefcase will
-attempt to install it now.
+This command requires Rosetta, but it does not appear to be installed.
+Briefcase will attempt to install it now.
 """
             )
             try:

@@ -1,4 +1,5 @@
 import os
+import subprocess
 import sys
 from pathlib import Path
 from unittest.mock import ANY
@@ -25,6 +26,7 @@ def test_simple_call(mock_docker_app_context, tmp_path, capsys):
         ],
         text=True,
         encoding=ANY,
+        stderr=subprocess.STDOUT,
     )
     assert capsys.readouterr().out == ""
 
@@ -61,6 +63,7 @@ def test_extra_mounts(mock_docker_app_context, tmp_path, capsys):
         ],
         text=True,
         encoding=ANY,
+        stderr=subprocess.STDOUT,
     )
     assert capsys.readouterr().out == ""
 
@@ -97,6 +100,7 @@ def test_call_with_arg_and_env(mock_docker_app_context, tmp_path, capsys):
         ],
         universal_newlines=True,
         encoding=ANY,
+        stderr=subprocess.STDOUT,
     )
     assert capsys.readouterr().out == ""
 
@@ -138,6 +142,7 @@ def test_call_with_path_arg_and_env(mock_docker_app_context, tmp_path, capsys):
         cwd=os.fsdecode(tmp_path / "cwd"),
         text=True,
         encoding=ANY,
+        stderr=subprocess.STDOUT,
     )
     assert capsys.readouterr().out == ""
 
@@ -166,6 +171,7 @@ def test_simple_verbose_call(mock_docker_app_context, tmp_path, capsys):
         ],
         text=True,
         encoding=ANY,
+        stderr=subprocess.STDOUT,
     )
     assert capsys.readouterr().out == (
         "\n"

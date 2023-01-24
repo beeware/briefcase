@@ -103,7 +103,6 @@ def test_create_emulator(
             "slab",
         ],
         env=android_sdk.env,
-        stderr=subprocess.STDOUT,
     )
 
     # Emulator configuration file has been appended.
@@ -178,7 +177,6 @@ def test_create_emulator_with_defaults(
             "pixel",
         ],
         env=android_sdk.env,
-        stderr=subprocess.STDOUT,
     )
 
     # Emulator configuration file has been appended.
@@ -226,7 +224,6 @@ def test_create_failure(mock_tools, android_sdk):
             "pixel",
         ],
         env=android_sdk.env,
-        stderr=subprocess.STDOUT,
     )
 
 

@@ -59,10 +59,7 @@ class VisualStudio(Tool):
 
         # Try running MSBuild, assuming it is on the PATH.
         try:
-            tools.subprocess.check_output(
-                ["MSBuild.exe", "--version"],
-                stderr=subprocess.STDOUT,
-            )
+            tools.subprocess.check_output(["MSBuild.exe", "--version"])
 
             # Create an explicit VisualStudio, with no install metadata
             visualstudio = VisualStudio(tools, msbuild_path=Path("MSBuild.exe"))
@@ -176,10 +173,7 @@ Then restart Briefcase.
 
             # Try to invoke MSBuild at the established location
             try:
-                tools.subprocess.check_output(
-                    [msbuild_path, "--version"],
-                    stderr=subprocess.STDOUT,
-                )
+                tools.subprocess.check_output([msbuild_path, "--version"])
             except subprocess.CalledProcessError:
                 raise BriefcaseCommandError(
                     "MSBuild appears to exist, but Briefcase can't start it."

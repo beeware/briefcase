@@ -345,7 +345,6 @@ its output for errors.
             self.tools.subprocess.check_output(
                 [os.fsdecode(self.sdkmanager_path), "--list_installed"],
                 env=self.env,
-                stderr=subprocess.STDOUT,
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(
@@ -622,8 +621,7 @@ connection.
             # Capture `stderr` so that if the process exits with failure, the
             # stderr data is in `e.output`.
             output = self.tools.subprocess.check_output(
-                [os.fsdecode(self.emulator_path), "-list-avds"],
-                stderr=subprocess.STDOUT,
+                [os.fsdecode(self.emulator_path), "-list-avds"]
             ).strip()
 
             # AVD names are returned one per line.
@@ -639,8 +637,7 @@ connection.
             # Capture `stderr` so that if the process exits with failure, the
             # stderr data is in `e.output`.
             output = self.tools.subprocess.check_output(
-                [os.fsdecode(self.adb_path), "devices", "-l"],
-                stderr=subprocess.STDOUT,
+                [os.fsdecode(self.adb_path), "devices", "-l"]
             ).strip()
 
             # Process the output of `adb devices -l`.
@@ -1000,7 +997,6 @@ In future, you can specify this device by running:
                         device_type,
                     ],
                     env=self.env,
-                    stderr=subprocess.STDOUT,
                 )
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError("Unable to create Android emulator") from e
@@ -1253,7 +1249,6 @@ class ADB:
                     (os.fsdecode(arg) if isinstance(arg, Path) else arg)
                     for arg in arguments
                 ],
-                stderr=subprocess.STDOUT,
                 quiet=quiet,
             )
         except subprocess.CalledProcessError as e:
