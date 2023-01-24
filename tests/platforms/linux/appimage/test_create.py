@@ -135,10 +135,10 @@ def other_package(create_command, first_app_config):
     )
 
 
-def test_support_package_url(create_command):
+def test_support_package_url(no_docker_create_command):
     "The URL of the support package is predictable"
     assert (
-        create_command.support_package_url(52)
+        no_docker_create_command.support_package_url(52)
         == f"https://briefcase-support.s3.amazonaws.com/python/3.{sys.version_info.minor}/linux/wonky/"
         f"Python-3.{sys.version_info.minor}-linux-wonky-support.b52.tar.gz"
     )
