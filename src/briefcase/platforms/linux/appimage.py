@@ -168,24 +168,35 @@ class LinuxAppImageCreateCommand(LinuxAppImageMixin, CreateCommand):
         # Iterate over every requirements, looking for local references
         for requirement in requires:
             if _is_local_requirement(requirement):
-                # Build an sdist for the local requirement
-                with self.input.wait_bar(f"Building sdist for {requirement}..."):
+                if Path(requirement).is_dir():
+                    # Requirement is a filesystem reference
+                    # Build an sdist for the local requirement
+                    with self.input.wait_bar(f"Building sdist for {requirement}..."):
+                        try:
+                            self.tools.subprocess.check_output(
+                                [
+                                    sys.executable,
+                                    "-m",
+                                    "build",
+                                    "--sdist",
+                                    "--outdir",
+                                    local_requirements_path,
+                                    requirement,
+                                ],
+                            )
+                        except subprocess.CalledProcessError as e:
+                            raise BriefcaseCommandError(
+                                f"Unable to build sdist for {requirement}"
+                            ) from e
+                else:
                     try:
-                        self.tools.subprocess.check_output(
-                            [
-                                sys.executable,
-                                "-m",
-                                "build",
-                                "--sdist",
-                                "--outdir",
-                                local_requirements_path,
-                                requirement,
-                            ],
-                        )
-                    except subprocess.CalledProcessError as e:
+                        # Requirement is an existing sdist or wheel file.
+                        self.tools.shutil.copy(requirement, local_requirements_path)
+                    except FileNotFoundError as e:
                         raise BriefcaseCommandError(
-                            f"Unable to build sdist for {requirement}"
+                            f"Unable to find local requirement {requirement}"
                         ) from e
+
         # Continue with the default app requirement handling.
         return super()._install_app_requirements(
             app,
@@ -210,8 +221,9 @@ class LinuxAppImageCreateCommand(LinuxAppImageMixin, CreateCommand):
             if not _is_local_requirement(requirement)
         ]
 
-        # Add in the sdist versions of any local packages
-        for filename in self.local_requirements_path(app).iterdir():
+        # Add in the sdist versions of any local packages.
+        # The sort is needed to ensure testing consistency
+        for filename in sorted(self.local_requirements_path(app).iterdir()):
             final.append(filename)
 
         return final
