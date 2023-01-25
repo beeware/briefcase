@@ -2,6 +2,7 @@ import datetime
 import re
 import subprocess
 import time
+from pathlib import Path
 
 from briefcase.commands import (
     BuildCommand,
@@ -175,6 +176,11 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
         return {
             "version_code": version_code,
             "safe_formal_name": safe_formal_name(app.formal_name),
+            # Extract test packages, to enable features like test discovery and assertion
+            # rewriting.
+            "extract_packages": ", ".join(
+                f'"{Path(path).name}"' for path in (app.test_sources or [])
+            ),
         }
 
 

@@ -58,9 +58,38 @@ def test_version_code(create_command, first_app_config, version, build, version_
     first_app_config.version = version
     if build:
         first_app_config.build = build
-    assert create_command.output_format_template_context(first_app_config) == {
-        "version_code": version_code,
-        "safe_formal_name": "First App",
-    }
+    context = create_command.output_format_template_context(first_app_config)
+    assert context["version_code"] == version_code
+    assert context["safe_formal_name"] == "First App"
+
     # Version code must be less than a 32-bit signed integer MAXINT.
     assert int(version_code) < 2147483647
+
+
+extract_packages_params = [
+    ([], ""),
+    (["one"], '"one"'),
+    (["one/two"], '"two"'),
+    (["one/two/three"], '"three"'),
+    (["one", "two"], '"one", "two"'),
+    (["one", "two", "three"], '"one", "two", "three"'),
+    (["one/two", "three/four"], '"two", "four"'),
+    (["/leading"], '"leading"'),
+    (["//leading"], '"leading"'),
+    (["/leading/two"], '"two"'),
+    (["trailing/"], '"trailing"'),
+    (["trailing//"], '"trailing"'),
+    (["trailing/two/"], '"two"'),
+]
+if sys.platform == "win32":
+    extract_packages_params += [
+        ([path.replace("/", "\\") for path in test_sources], expected)
+        for test_sources, expected in extract_packages_params
+    ]
+
+
+@pytest.mark.parametrize("test_sources, expected", extract_packages_params)
+def test_extract_packages(create_command, first_app_config, test_sources, expected):
+    first_app_config.test_sources = test_sources
+    context = create_command.output_format_template_context(first_app_config)
+    assert context["extract_packages"] == expected
