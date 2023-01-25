@@ -1,4 +1,3 @@
-import os
 import sys
 
 import pytest
@@ -82,7 +81,7 @@ extract_packages_params = [
     (["trailing//"], '"trailing"'),
     (["trailing/two/"], '"two"'),
 ]
-if os.name == "nt":
+if sys.platform == "win32":
     extract_packages_params += [
         ([path.replace("/", "\\") for path in test_sources], expected)
         for test_sources, expected in extract_packages_params
