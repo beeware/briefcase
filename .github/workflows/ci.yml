@@ -75,7 +75,7 @@ jobs:
   unit-tests:
     name: Unit tests
     needs: [pre-commit, towncrier, package]
-    runs-on: ${{ fromJSON('{"winstore":"windows"}')[matrix.platform] || matrix.platform }}-latest
+    runs-on: ${{ matrix.platform }}-latest
     continue-on-error: ${{ matrix.experimental }}
     strategy:
       matrix:
@@ -86,23 +86,23 @@ jobs:
         - python-version: "3.12-dev"
           experimental: true
         # Run tests against the latest Windows Store Python
-        - platform: "winstore"
-          python-version: "3.11"
+        - platform: "windows"
+          python-version: "winstore"
           experimental: false
     steps:
     - uses: actions/checkout@v3.3.0
       with:
         fetch-depth: 0
     - name: Set up Python
-      if: matrix.platform != 'winstore'
+      if: matrix.python-version != 'winstore'
       uses: actions/setup-python@v4.5.0
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install Windows Store Python
-      if: matrix.platform == 'winstore'
+      if: matrix.python-version == 'winstore'
       uses: beeware/.github/.github/actions/install-win-store-python@main
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: 3.11
     - name: Get packages
       uses: actions/download-artifact@v3
       with:
@@ -132,7 +132,7 @@ jobs:
   coverage:
     name: Combine & check coverage.
     runs-on: ubuntu-latest
-    needs: unit-tests
+    needs: [unit-tests]
     steps:
     - uses: actions/checkout@v3.3.0
       with:
@@ -168,7 +168,7 @@ jobs:
 
   verify-apps:
     name: Build apps
-    needs: unit-tests
+    needs: [unit-tests]
     runs-on: ${{ matrix.platform }}
     strategy:
       matrix:
