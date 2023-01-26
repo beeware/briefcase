@@ -1,0 +1,1 @@
+When using the Windows Store version of Python, Briefcase now ensures the cache directory is created in %LOCALAPPDATA% instead of the sandboxed location enforced for Windows Store apps.

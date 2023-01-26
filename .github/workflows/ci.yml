@@ -7,7 +7,7 @@ on:
   workflow_call:
 
 env:
-  python_version: '3.9'
+  python_version: "3.9"
 
 defaults:
   run:
@@ -75,25 +75,34 @@ jobs:
   unit-tests:
     name: Unit tests
     needs: [pre-commit, towncrier, package]
+    runs-on: ${{ matrix.platform }}-latest
+    continue-on-error: ${{ matrix.experimental }}
     strategy:
       matrix:
         platform: ["macos", "ubuntu", "windows"]
         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12-dev"]
         include:
-          - experimental: false
-
-          - python-version: "3.12-dev"
-            experimental: true
-    runs-on: ${{ matrix.platform }}-latest
-    continue-on-error: ${{ matrix.experimental }}
+        - experimental: false
+        - python-version: "3.12-dev"
+          experimental: true
+        # Run tests against the latest Windows Store Python
+        - platform: "windows"
+          python-version: "winstore"
+          experimental: false
     steps:
     - uses: actions/checkout@v3.3.0
       with:
         fetch-depth: 0
     - name: Set up Python
+      if: matrix.python-version != 'winstore'
       uses: actions/setup-python@v4.5.0
       with:
         python-version: ${{ matrix.python-version }}
+    - name: Install Windows Store Python
+      if: matrix.python-version == 'winstore'
+      uses: beeware/.github/.github/actions/install-win-store-python@main
+      with:
+        python-version: 3.11
     - name: Get packages
       uses: actions/download-artifact@v3
       with:
@@ -123,8 +132,7 @@ jobs:
   coverage:
     name: Combine & check coverage.
     runs-on: ubuntu-latest
-    needs:
-    - unit-tests
+    needs: [unit-tests]
     steps:
     - uses: actions/checkout@v3.3.0
       with:
@@ -132,7 +140,7 @@ jobs:
     - uses: actions/setup-python@v4.5.0
       with:
         # Use latest, so it understands all syntax.
-        python-version: "3.10"
+        python-version: '3.x'
     - name: Install dev dependencies
       run: |
         python -m pip install --upgrade pip
@@ -160,7 +168,8 @@ jobs:
 
   verify-apps:
     name: Build apps
-    needs: unit-tests
+    needs: [unit-tests]
+    runs-on: ${{ matrix.platform }}
     strategy:
       matrix:
         os_name: ['macOS', 'windows', 'linux']
@@ -183,7 +192,6 @@ jobs:
           pip-cache-dir: ~/.cache/pip
           # cache action cannot cache docker images (actions/cache#31)
           # docker-cache-dir: /var/lib/docker
-    runs-on: ${{ matrix.platform }}
     steps:
     - name: Cache Briefcase tools
       uses: actions/cache@v3.2.3
