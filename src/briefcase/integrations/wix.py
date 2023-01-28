@@ -72,11 +72,6 @@ class WiX(Tool):
         if hasattr(tools, "wix"):
             return tools.wix
 
-        if tools.host_os != "Windows":
-            raise BriefcaseCommandError(
-                "A Windows MSI installer can only be created on Windows."
-            )
-
         # Look for the WIX environment variable
         wix_env = tools.os.environ.get("WIX")
         if wix_env:

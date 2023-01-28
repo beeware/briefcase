@@ -1,5 +1,21 @@
+import pytest
+
 from briefcase.console import Console, Log
+from briefcase.exceptions import BriefcaseCommandError
 from briefcase.platforms.macOS.app import macOSAppCreateCommand
+
+
+@pytest.mark.parametrize("host_os", ["Linux", "Windows"])
+def test_unsupported_host_os(host_os):
+    """Error raised for an unsupported OS."""
+    command = macOSAppCreateCommand(logger=Log(), console=Console())
+    command.tools.host_os = host_os
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match="Building and / or code signing a DMG requires running on macOS.",
+    ):
+        command()
 
 
 def test_binary_path(first_app_config, tmp_path):

@@ -8,13 +8,15 @@ from briefcase.commands import (
     UpdateCommand,
 )
 from briefcase.config import AppConfig
-from briefcase.exceptions import BriefcaseCommandError, BriefcaseConfigError
+from briefcase.exceptions import BriefcaseConfigError
 from briefcase.integrations.flatpak import Flatpak
 from briefcase.platforms.linux import LinuxMixin
 
 
 class LinuxFlatpakMixin(LinuxMixin):
     output_format = "flatpak"
+    supported_host_os = {"Linux"}
+    supported_host_os_reason = "Flatpaks can only be built on Linux."
 
     def binary_path(self, app):
         # Flatpak doesn't really produce an identifiable "binary" as part of its
@@ -36,8 +38,6 @@ class LinuxFlatpakMixin(LinuxMixin):
     def verify_tools(self):
         """Verify that we're on Linux."""
         super().verify_tools()
-        if self.tools.host_os != "Linux":
-            raise BriefcaseCommandError("Flatpaks can only be generated on Linux.")
         Flatpak.verify(tools=self.tools)
 
     def flatpak_runtime_repo(self, app):

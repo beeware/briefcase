@@ -102,13 +102,13 @@ def test_verify_non_linux_no_docker(tmp_path):
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
     )
-    command.tools.host_os = "WeirdOS"
+    command.tools.host_os = "Darwin"
     command.use_docker = False
 
     # Verify the Docker tool
     with pytest.raises(
         BriefcaseCommandError,
-        match="Linux AppImages can only be generated on Linux without Docker",
+        match="AppImages can only be built on Linux or in Docker on macOS.",
     ):
         command.verify_tools()
 
@@ -159,7 +159,7 @@ def test_verify_non_linux_docker(tmp_path, first_app_config):
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
     )
-    command.tools.host_os = "WeirdOS"
+    command.tools.host_os = "Darwin"
     command.use_docker = True
 
     # Mock Docker tool verification

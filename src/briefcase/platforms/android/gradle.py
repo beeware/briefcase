@@ -38,7 +38,7 @@ ANDROID_LOG_PREFIX_REGEX = re.compile(
 
 
 def android_log_clean_filter(line):
-    """Filter an ADB log log to extract the Python-generated message content.
+    """Filter an ADB log to extract the Python-generated message content.
 
     Any system or stub messages are ignored; all logging prefixes are stripped.
     Python code is identified as coming from the ``python.stdout``

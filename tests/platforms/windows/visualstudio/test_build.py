@@ -1,3 +1,4 @@
+import platform
 import subprocess
 from pathlib import Path
 from unittest import mock
@@ -27,6 +28,7 @@ def build_command(tmp_path):
     return command
 
 
+@pytest.mark.skipif(platform.system() != "Windows", reason="Windows specific tests")
 def test_verify(build_command):
     """Verifying on Windows creates a VisualStudio wrapper."""
 

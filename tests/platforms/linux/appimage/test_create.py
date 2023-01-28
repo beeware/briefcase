@@ -135,8 +135,22 @@ def other_package(create_command, first_app_config):
     )
 
 
+@pytest.mark.parametrize("host_os", ["Darwin", "Windows"])
+def test_unsupported_host_os(host_os, tmp_path):
+    """Error raised for an unsupported OS."""
+    command = LinuxAppImageCreateCommand(logger=Log(), console=Console())
+    command.tools.host_os = host_os
+    command.use_docker = False
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match="AppImages can only be built on Linux or in Docker on macOS.",
+    ):
+        command()
+
+
 def test_support_package_url(no_docker_create_command):
-    "The URL of the support package is predictable"
+    """The URL of the support package is predictable."""
     assert (
         no_docker_create_command.support_package_url(52)
         == f"https://briefcase-support.s3.amazonaws.com/python/3.{sys.version_info.minor}/linux/wonky/"

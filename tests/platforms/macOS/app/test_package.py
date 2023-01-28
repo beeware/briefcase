@@ -798,6 +798,6 @@ def test_verify_non_macOS(package_command):
 
     with pytest.raises(
         BriefcaseCommandError,
-        match="Code signing and / or building a DMG requires running on macOS.",
+        match="Building and / or code signing a DMG requires running on macOS.",
     ):
         package_command.verify_tools()

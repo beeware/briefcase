@@ -1,6 +1,6 @@
 import pytest
 
-from briefcase.commands.base import UnsupportedPlatform
+from briefcase.commands.create import UnsupportedPlatform
 from briefcase.config import AppConfig
 
 

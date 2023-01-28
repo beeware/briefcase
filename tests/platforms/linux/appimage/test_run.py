@@ -10,6 +10,19 @@ from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.linux.appimage import LinuxAppImageRunCommand
 
 
+@pytest.mark.parametrize("host_os", ["Darwin"])
+def test_unsupported_host_os(host_os):
+    """Error raised for an unsupported OS."""
+    command = LinuxAppImageRunCommand(logger=Log(), console=Console())
+    command.tools.host_os = host_os
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match="AppImages can only be executed on Linux.",
+    ):
+        command()
+
+
 @pytest.fixture
 def run_command(tmp_path):
     command = LinuxAppImageRunCommand(
@@ -54,7 +67,8 @@ def test_verify_non_linux(run_command):
     )
 
     with pytest.raises(
-        BriefcaseCommandError, match="AppImages can only be executed on Linux"
+        BriefcaseCommandError,
+        match="AppImages can only be executed on Linux.",
     ):
         run_command.verify_tools()
 

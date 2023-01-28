@@ -14,7 +14,8 @@ def test_no_git(tracking_create_command, monkeypatch):
 
     # The command will fail tool verification.
     with pytest.raises(
-        BriefcaseCommandError, match=r"Briefcase requires git, but it is not installed"
+        BriefcaseCommandError,
+        match=r"Briefcase requires git, but it is not installed",
     ):
         tracking_create_command()
 

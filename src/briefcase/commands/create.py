@@ -16,12 +16,18 @@ from briefcase.exceptions import BriefcaseCommandError, MissingNetworkResourceEr
 from briefcase.integrations import git
 from briefcase.integrations.subprocess import NativeAppContext
 
-from .base import (
-    BaseCommand,
-    TemplateUnsupportedVersion,
-    UnsupportedPlatform,
-    full_options,
-)
+from .base import BaseCommand, TemplateUnsupportedVersion, full_options
+
+
+class UnsupportedPlatform(BriefcaseCommandError):
+    def __init__(self, platform):
+        self.platform = platform
+        super().__init__(
+            f"""\
+App cannot be deployed on {platform}. This is probably because one or more
+requirements (e.g., the GUI library) doesn't support {platform}.
+"""
+        )
 
 
 class InvalidSupportPackage(BriefcaseCommandError):

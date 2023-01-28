@@ -3,7 +3,20 @@ import sys
 import pytest
 
 from briefcase.console import Console, Log
+from briefcase.exceptions import BriefcaseCommandError
 from briefcase.platforms.windows.app import WindowsAppCreateCommand
+
+
+@pytest.mark.parametrize("host_os", ["Darwin", "Linux"])
+def test_unsupported_host_os(host_os):
+    """Error raised for an unsupported OS."""
+    command = WindowsAppCreateCommand(logger=Log(), console=Console())
+    command.tools.host_os = host_os
+
+    with pytest.raises(
+        BriefcaseCommandError, match="Building a MSI requires running on Windows."
+    ):
+        command()
 
 
 @pytest.mark.parametrize(

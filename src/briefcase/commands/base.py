@@ -50,17 +50,6 @@ class TemplateUnsupportedVersion(BriefcaseCommandError):
         )
 
 
-class UnsupportedPlatform(BriefcaseCommandError):
-    def __init__(self, platform):
-        self.platform = platform
-        super().__init__(
-            f"""\
-App cannot be deployed on {platform}. This is probably because one or more
-requirements (e.g., the GUI library) doesn't support {platform}.
-"""
-        )
-
-
 def create_config(klass, config, msg):
     try:
         return klass(**config)
@@ -114,6 +103,8 @@ def full_options(state, options):
 
 class BaseCommand(ABC):
     cmd_line = "briefcase {command} {platform} {output_format}"
+    supported_host_os = {"Darwin", "Linux", "Windows"}
+    supported_host_os_reason = f"This command is not supported on {platform.system()}."
     GLOBAL_CONFIG_CLASS = GlobalConfig
     APP_CONFIG_CLASS = AppConfig
 
@@ -471,12 +462,13 @@ a custom location for Briefcase's tools.
         )
 
     def verify_tools(self):
-        """Verify that the tools needed to run this command exist.
+        """Verify tools for the command exist and are supported on this OS.
 
         Raises MissingToolException if a required system tool is
         missing.
         """
-        pass
+        if self.tools.host_os not in self.supported_host_os:
+            raise BriefcaseCommandError(self.supported_host_os_reason)
 
     def verify_app_tools(self, app: BaseConfig):
         """Verify that tools needed to run the command for this app exist."""

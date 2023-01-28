@@ -34,6 +34,7 @@ class DummyCreateCommand(CreateCommand):
     Create command."""
 
     platform = "tester"
+    supported_host_os = {"c64"}
     output_format = "dummy"
     description = "Dummy create command"
 
@@ -48,8 +49,7 @@ class DummyCreateCommand(CreateCommand):
 
         self.tools.home_path = home_path
 
-        # If a test sets this property, the tool verification step will
-        # fail.
+        # If a test sets this property, the tool verification step will fail.
         self._missing_tool = None
 
         # Mock the external services

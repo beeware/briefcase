@@ -1,3 +1,4 @@
+import platform
 from subprocess import CalledProcessError
 from unittest import mock
 
@@ -29,6 +30,7 @@ def test_package_formats(package_command):
     assert package_command.default_packaging_format == "msi"
 
 
+@pytest.mark.skipif(platform.system() != "Windows", reason="Windows specific tests")
 def test_verify(package_command):
     """Verifying on Windows creates a WiX wrapper."""
 

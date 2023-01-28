@@ -27,6 +27,10 @@ class LinuxAppImagePassiveMixin(LinuxMixin):
     # docker exists. It is used by commands that are "passive" from the
     # perspective of the build system, like open and run.
     output_format = "appimage"
+    supported_host_os = {"Darwin", "Linux"}
+    supported_host_os_reason = (
+        "AppImages can only be built on Linux or in Docker on macOS."
+    )
 
     def appdir_path(self, app):
         return self.bundle_path(app) / f"{app.formal_name}.AppDir"
@@ -82,12 +86,7 @@ class LinuxAppImageMostlyPassiveMixin(LinuxAppImagePassiveMixin):
         """If we're using docker, verify that it is available."""
         super().verify_tools()
         if self.use_docker:
-            if self.tools.host_os == "Windows":
-                raise BriefcaseCommandError(
-                    "Linux AppImages cannot be generated on Windows."
-                )
-            else:
-                Docker.verify(tools=self.tools)
+            Docker.verify(tools=self.tools)
 
     def verify_app_tools(self, app: AppConfig):
         """Verify App environment is prepared and available.
@@ -120,9 +119,7 @@ class LinuxAppImageMixin(LinuxAppImageMostlyPassiveMixin):
         """If we're *not* using Docker, verify that we're actually on Linux."""
         super().verify_tools()
         if not self.use_docker and self.tools.host_os != "Linux":
-            raise BriefcaseCommandError(
-                "Linux AppImages can only be generated on Linux without Docker."
-            )
+            raise BriefcaseCommandError(self.supported_host_os_reason)
 
 
 class LinuxAppImageCreateCommand(LinuxAppImageMixin, CreateCommand):
@@ -356,12 +353,12 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
 
 class LinuxAppImageRunCommand(LinuxAppImagePassiveMixin, RunCommand):
     description = "Run a Linux AppImage."
+    supported_host_os = {"Linux"}
+    supported_host_os_reason = "AppImages can only be executed on Linux."
 
     def verify_tools(self):
         """Verify that we're on Linux."""
         super().verify_tools()
-        if self.tools.host_os != "Linux":
-            raise BriefcaseCommandError("AppImages can only be executed on Linux.")
 
     def run_app(self, app: AppConfig, test_mode: bool, **kwargs):
         """Start the application.

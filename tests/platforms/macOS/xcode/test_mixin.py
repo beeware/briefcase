@@ -7,6 +7,19 @@ from briefcase.exceptions import BriefcaseCommandError
 from briefcase.platforms.macOS.xcode import macOSXcodeCreateCommand
 
 
+@pytest.mark.parametrize("host_os", ["Linux", "Windows"])
+def test_unsupported_host_os(host_os):
+    """Error raised for an unsupported OS."""
+    command = macOSXcodeCreateCommand(logger=Log(), console=Console())
+    command.tools.host_os = host_os
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match="macOS applications require the Xcode command line tools, which are only available on macOS.",
+    ):
+        command()
+
+
 @pytest.fixture
 def create_command(tmp_path):
     return macOSXcodeCreateCommand(
