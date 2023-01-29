@@ -1,0 +1,1 @@
+Updated pre-commit from 2.21.0 to 3.0.1.
