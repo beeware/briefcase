@@ -137,6 +137,21 @@ class Log:
         self.stacktraces = []
         # functions to run for additional logging if creating a logfile
         self.log_file_extras = []
+        # The current context for the log
+        self._context = ""
+
+    @contextmanager
+    def context(self, context):
+        self.info()
+        self.info(f"Entering {context} context...")
+        self.info("-" * 80)
+        old_context = self._context
+        self._context = f"{context}| "
+        yield
+        self._context = old_context
+        self.info("-" * 80)
+        self.info(f"Leaving {context} context.")
+        self.info()
 
     def _log(
         self,
@@ -176,7 +191,7 @@ class Log:
                 markup = True
             for line in message.splitlines():
                 self.print(
-                    f"{preface}{prefix}{line}",
+                    f"{self._context}{preface}{prefix}{line}",
                     show=show,
                     markup=markup,
                     style=style,

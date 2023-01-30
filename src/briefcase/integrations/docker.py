@@ -273,7 +273,7 @@ class DockerAppContext(Tool):
                         "--build-arg",
                         f"PY_VERSION={self.python_version}",
                         "--build-arg",
-                        f"SYSTEM_REQUIRES={' '.join(getattr(self.app, 'system_requires', ''))}",
+                        f"SYSTEM_REQUIRES=build-essential {' '.join(getattr(self.app, 'system_requires', ''))}",
                         "--build-arg",
                         f"HOST_UID={self.tools.os.getuid()}",
                         "--build-arg",
@@ -309,7 +309,7 @@ class DockerAppContext(Tool):
 
         return arg
 
-    def _dockerize_args(self, args, interactive=False, mounts=None, env=None):
+    def _dockerize_args(self, args, interactive=False, mounts=None, env=None, cwd=None):
         """Convert arguments and environment into a Docker-compatible form. Convert an
         argument and environment specification into a form that can be used as arguments
         to invoke Docker. This involves:
@@ -321,6 +321,7 @@ class DockerAppContext(Tool):
 
         :param args: The arguments for the command to be invoked
         :param env: The environment specification for the command to be executed
+        :param cwd: The working directory for the command to be executed
         :returns: A list of arguments that can be used to invoke the command
             inside a docker container.
         """
@@ -355,6 +356,10 @@ class DockerAppContext(Tool):
             for key, value in env.items():
                 docker_args.extend(["--env", f"{key}={self._dockerize_path(value)}"])
 
+        # If a working directory has been specified, pass it
+        if cwd:
+            docker_args.extend(["--workdir", self._dockerize_path(os.fsdecode(cwd))])
+
         # ... then the image name to create the temporary container with
         docker_args.append(self.image_tag)
 
@@ -363,32 +368,32 @@ class DockerAppContext(Tool):
 
         return docker_args
 
-    def run(self, args, env=None, interactive=False, mounts=None, **kwargs):
+    def run(self, args, env=None, cwd=None, interactive=False, mounts=None, **kwargs):
         """Run a process inside a Docker container."""
         # Any exceptions from running the process are *not* caught.
         # This ensures that "docker.run()" behaves as closely to
         # "subprocess.run()" as possible.
-        self.tools.logger.info("Entering Docker context...", prefix=self.app.app_name)
-        if interactive:
-            kwargs["stream_output"] = False
+        with self.tools.logger.context("Docker"):
+            if interactive:
+                kwargs["stream_output"] = False
 
-        self.tools.subprocess.run(
-            self._dockerize_args(
-                args,
-                interactive=interactive,
-                mounts=mounts,
-                env=env,
-            ),
-            **kwargs,
-        )
-        self.tools.logger.info("Leaving Docker context", prefix=self.app.app_name)
+            self.tools.subprocess.run(
+                self._dockerize_args(
+                    args,
+                    interactive=interactive,
+                    mounts=mounts,
+                    env=env,
+                    cwd=cwd,
+                ),
+                **kwargs,
+            )
 
-    def check_output(self, args, env=None, mounts=None, **kwargs):
+    def check_output(self, args, env=None, cwd=None, mounts=None, **kwargs):
         """Run a process inside a Docker container, capturing output."""
         # Any exceptions from running the process are *not* caught.
         # This ensures that "docker.check_output()" behaves as closely to
         # "subprocess.check_output()" as possible.
         return self.tools.subprocess.check_output(
-            self._dockerize_args(args, mounts=mounts, env=env),
+            self._dockerize_args(args, mounts=mounts, env=env, cwd=cwd),
             **kwargs,
         )
