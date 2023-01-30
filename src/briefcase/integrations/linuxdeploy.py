@@ -30,16 +30,19 @@ class LinuxDeployBase:
     def file_name(self):
         """The name of the executable file for the tool/plugin, excluding the
         path."""
+        ...
 
     @property
     @abstractmethod
     def download_url(self):
         """The URL where the tool/plugin can be downloaded."""
+        ...
 
     @property
     @abstractmethod
     def file_path(self):
         """The folder on the local filesystem that contains the file_name."""
+        ...
 
     def exists(self):
         return (self.file_path / self.file_name).exists()

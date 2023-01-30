@@ -1,0 +1,1 @@
+Every function and method in Briefcase ``src`` and ``tests`` now contains a body.
