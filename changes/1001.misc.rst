@@ -1,1 +1,0 @@
-The packaging of sdist and wheel artefacts was simplified.

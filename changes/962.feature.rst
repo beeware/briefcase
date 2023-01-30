@@ -1,1 +1,0 @@
-Briefcase apps can now provide a test suite. ``briefcase run`` and ``briefcase dev`` both provide a ``--test`` option to start the test suite.

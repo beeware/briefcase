@@ -1,1 +1,0 @@
-The handling of AppImage local file references introduced in #992 was modified to use locally built sdists, rather than filesystem mounts.

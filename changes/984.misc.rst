@@ -1,1 +1,0 @@
-Made pytest regexes accept content after the time

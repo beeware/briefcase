@@ -1,1 +1,0 @@
-Console output of Windows apps is now captured in the Briefcase log.

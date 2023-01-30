@@ -1,1 +1,0 @@
-For commands invoked with ``Subprocess.check_output()``, any output sent to ``stderr`` is now coalesced with ``stdout`` by default.

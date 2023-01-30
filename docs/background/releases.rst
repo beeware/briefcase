@@ -4,6 +4,104 @@ Release History
 
 .. towncrier release notes start
 
+0.3.12 (2023-01-30)
+===================
+
+Features
+--------
+
+* Briefcase is more resilient to file download failures by discarding partially
+  downloaded files. (`#753 <https://github.com/beeware/briefcase/issues/753>`__)
+* All warnings from the App and its dependencies are now shown when running
+  ``briefcase dev`` by invoking Python in `development mode
+  <https://docs.python.org/3/library/devmode.html>`_. (`#806
+  <https://github.com/beeware/briefcase/issues/806>`__)
+* The Dockerfile used to build AppImages can now include user-provided container
+  setup instructions. (`#886
+  <https://github.com/beeware/briefcase/issues/886>`__)
+* It is no longer necessary to specify a device when building an iOS project.
+  (`#953 <https://github.com/beeware/briefcase/issues/953>`__)
+* Briefcase apps can now provide a test suite. ``briefcase run`` and ``briefcase
+  dev`` both provide a ``--test`` option to start the test suite. (`#962
+  <https://github.com/beeware/briefcase/issues/962>`__)
+* Initial support for Python 3.12 was added. (`#965
+  <https://github.com/beeware/briefcase/issues/965>`__)
+* Frameworks contained added to a macOS app bundle are now automatically code
+  signed. (`#971 <https://github.com/beeware/briefcase/issues/971>`__)
+* The ``build.gradle`` file used to build Android apps can now include arbitrary
+  additional settings. (`#973
+  <https://github.com/beeware/briefcase/issues/973>`__)
+* The run and build commands now have full control over the update of app
+  requirements resources. (`#983
+  <https://github.com/beeware/briefcase/issues/983>`__)
+* Resources that require variants will now use the variant name as part of the
+  filename by default. (`#989
+  <https://github.com/beeware/briefcase/issues/989>`__)
+* ``briefcase open linux appimage`` now starts a shell session in the Docker
+  context, rather than opening the project folder. (`#991
+  <https://github.com/beeware/briefcase/issues/991>`__)
+* Web project configuration has been updated to reflect recent changes to
+  PyScript. (`#1004 <https://github.com/beeware/briefcase/issues/1004>`__)
+
+Bugfixes
+--------
+
+* Console output of Windows apps is now captured in the Briefcase log. (`#787
+  <https://github.com/beeware/briefcase/issues/787>`__)
+* Android emulators configured with ``_no_skin`` will no longer generate a
+  warning. (`#882 <https://github.com/beeware/briefcase/issues/882>`__)
+* Briefcase now exits normally when CTRL-C is sent while tailing logs for the
+  App when using ``briefcase run``. (`#904
+  <https://github.com/beeware/briefcase/issues/904>`__)
+* Backslashes and double quotes are now safe to be used for formal name and
+  description (`#905 <https://github.com/beeware/briefcase/issues/905>`__)
+* The console output for Windows batch scripts in now captured in the Briefcase
+  log. (`#917 <https://github.com/beeware/briefcase/issues/917>`__)
+* When using the Windows Store version of Python, Briefcase now ensures the
+  cache directory is created in ``%LOCALAPPDATA%`` instead of the sandboxed
+  location enforced for Windows Store apps. (`#922
+  <https://github.com/beeware/briefcase/issues/922>`__)
+* An Android application that successfully starts, but fails quickly, no longer
+  stalls the launch process. (`#936
+  <https://github.com/beeware/briefcase/issues/936>`__)
+* The required Visual Studio Code components are now included in verification
+  errors for Visual Studio Apps. (`#939
+  <https://github.com/beeware/briefcase/issues/939>`__)
+* It is now possible to specify app configurations for macOS Xcode and Windows
+  VisualStudio projects. Previously, these sections of configuration files would
+  be ignored due to a case discrepancy. (`#952
+  <https://github.com/beeware/briefcase/issues/952>`__)
+* Development mode now starts apps in PEP540 UTF-8 mode, for consistency with
+  the stub apps. (`#985 <https://github.com/beeware/briefcase/issues/985>`__)
+* Local file references in requirements no longer break AppImage builds. (`#992
+  <https://github.com/beeware/briefcase/issues/992>`__)
+* On macOS, Rosetta is now installed automatically if needed. (`#1000
+  <https://github.com/beeware/briefcase/issues/1000>`__)
+* The way dependency versions are specified has been modified to make Briefcase
+  as accomodating as possible with end-user environments, but as stable as
+  possible for development environments. (`#1041
+  <https://github.com/beeware/briefcase/issues/1041>`__)
+* To prevent console corruption, dynamic console elements (such as the Wait Bar)
+  are temporarily removed when output streaming is disabled for a command.
+  (`#1055 <https://github.com/beeware/briefcase/issues/1055>`__)
+
+
+Improved Documentation
+----------------------
+
+* Release history now contains links to GitHub issues. (`#1022 <https://github.com/beeware/briefcase/issues/1022>`__)
+
+
+Misc
+----
+
+* #906, #907, #918, #923, #924, #925, #926, #929, #931, #951, #959, #960, #964,
+  #967, #969, #972, #981, #984, #987, #994, #995, #996, #997, #1001, #1002,
+  #1003, #1012, #1013, #1020, #1021, #1023, #1028, #1038, #1042, #1043, #1044,
+  #1045, #1046, #1047, #1048, #1049, #1051, #1052, #1057, #1059, #1061, #1068,
+  #1069, #1071
+
+
 0.3.11 (2022-10-14)
 ===================
 

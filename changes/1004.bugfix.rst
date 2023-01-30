@@ -1,1 +1,0 @@
-Web project configuration has been updated to reflect recent changes to PyScript.
