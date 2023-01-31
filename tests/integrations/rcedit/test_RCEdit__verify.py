@@ -74,8 +74,7 @@ def test_verify_does_not_exist(mock_tools, tmp_path):
 
 
 def test_verify_rcedit_download_failure(mock_tools, tmp_path):
-    """If RCEdit doesn't exist, but a download failure occurs, an error is
-    raised."""
+    """If RCEdit doesn't exist, but a download failure occurs, an error is raised."""
     mock_tools.download.file.side_effect = NetworkFailure("mock")
 
     with pytest.raises(NetworkFailure, match="Unable to mock"):

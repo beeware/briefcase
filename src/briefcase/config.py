@@ -259,8 +259,7 @@ PEP440_CANONICAL_VERSION_PATTERN_RE = re.compile(
 
 
 def is_pep440_canonical_version(version):
-    """Determine if the string describes a valid PEP440 canonical version
-    specifier.
+    """Determine if the string describes a valid PEP440 canonical version specifier.
 
     This implementation comes directly from PEP440 itself.
 
@@ -435,9 +434,9 @@ class AppConfig(BaseConfig):
 
     @property
     def package_name(self):
-        """The bundle name of the app, with `-` replaced with `_` to create
-        something that can be used a namespace identifier on Python or Java,
-        similar to `module_name`."""
+        """The bundle name of the app, with `-` replaced with `_` to create something
+        that can be used a namespace identifier on Python or Java, similar to
+        `module_name`."""
         return self.bundle.replace("-", "_")
 
     def PYTHONPATH(self, test_mode):

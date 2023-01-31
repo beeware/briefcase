@@ -63,8 +63,7 @@ def test_short_circuit(mock_tools):
 
 
 def test_succeeds_immediately_in_happy_path(mock_tools, tmp_path):
-    """If verify is invoked on a path containing an Android SDK, it does
-    nothing."""
+    """If verify is invoked on a path containing an Android SDK, it does nothing."""
     # If `sdkmanager` exists and has the right permissions, and
     # `android-sdk-license` exists, verify() should
     # succeed, create no subprocesses, make no requests, and return a
@@ -298,8 +297,7 @@ def test_download_sdk_legacy_install(mock_tools, tmp_path):
 
 
 def test_no_install(mock_tools, tmp_path):
-    """If an SDK is not available, and install is not requested, an error is
-    raised."""
+    """If an SDK is not available, and install is not requested, an error is raised."""
 
     # Call `verify()`
     with pytest.raises(MissingToolError):
@@ -313,8 +311,8 @@ def test_no_install(mock_tools, tmp_path):
     reason="executable permission doesn't make sense on Windows",
 )
 def test_download_sdk_if_sdkmanager_not_executable(mock_tools, tmp_path):
-    """An SDK will be downloaded and unpacked if `tools/bin/sdkmanager` exists
-    but does not have its permissions set properly."""
+    """An SDK will be downloaded and unpacked if `tools/bin/sdkmanager` exists but does
+    not have its permissions set properly."""
     android_sdk_root_path = tmp_path / "tools" / "android_sdk"
     cmdline_tools_base_path = android_sdk_root_path / "cmdline-tools"
 

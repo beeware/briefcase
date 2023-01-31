@@ -90,8 +90,7 @@ def test_icon_target(create_command, tmp_path):
 
 
 def test_icon_variant_target(create_command, tmp_path):
-    """If the template defines an icon target with variants, they will be
-    installed."""
+    """If the template defines an icon target with variants, they will be installed."""
     myapp = AppConfig(
         app_name="my-app",
         formal_name="My App",
@@ -234,8 +233,7 @@ def test_splash_target(create_command, tmp_path):
 
 
 def test_splash_variant_target(create_command, tmp_path):
-    """If the template defines a splash target with variants, they will be
-    installed."""
+    """If the template defines a splash target with variants, they will be installed."""
     myapp = AppConfig(
         app_name="my-app",
         formal_name="My App",
@@ -316,8 +314,7 @@ def test_splash_variant_target(create_command, tmp_path):
 
 
 def test_doctype_icon_target(create_command, tmp_path):
-    """If the template defines document types, their icons will be
-    installed."""
+    """If the template defines document types, their icons will be installed."""
     myapp = AppConfig(
         app_name="my-app",
         formal_name="My App",

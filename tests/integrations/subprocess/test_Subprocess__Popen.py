@@ -74,8 +74,7 @@ def test_call_with_start_new_session(
     start_new_session,
     popen_kwargs,
 ):
-    """start_new_session is passed thru on Linux and macOS but converted for
-    Windows."""
+    """start_new_session is passed thru on Linux and macOS but converted for Windows."""
 
     mock_sub.tools.host_os = platform
     mock_sub.Popen(["hello", "world"], start_new_session=start_new_session)
@@ -113,8 +112,8 @@ def test_call_windows_with_start_new_session_and_creationflags(
     creationflags,
     final_creationflags,
 ):
-    """creationflags used to simulate start_new_session=True should be merged
-    with any existing flags."""
+    """creationflags used to simulate start_new_session=True should be merged with any
+    existing flags."""
 
     mock_sub.tools.host_os = "Windows"
 
@@ -189,8 +188,8 @@ def test_debug_call_with_env(mock_sub, capsys, tmp_path):
     ],
 )
 def test_text_eq_true_default_overriding(mock_sub, in_kwargs, kwargs):
-    """if text or universal_newlines is explicitly provided, those should
-    override text=true default."""
+    """if text or universal_newlines is explicitly provided, those should override
+    text=true default."""
 
     mock_sub.Popen(["hello", "world"], **in_kwargs)
     mock_sub._subprocess.Popen.assert_called_with(["hello", "world"], **kwargs)

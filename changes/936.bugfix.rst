@@ -1,1 +1,0 @@
-An Android application that successfully starts, but fails quickly, no longer stalls the launch process.

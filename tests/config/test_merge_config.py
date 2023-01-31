@@ -2,8 +2,7 @@ from briefcase.config import merge_config
 
 
 def test_merge_no_options_no_data():
-    """If there are no initial options or new additional options, nothing
-    changes."""
+    """If there are no initial options or new additional options, nothing changes."""
     config = {"other": 1234}
 
     merge_config(config, {})
@@ -27,8 +26,7 @@ def test_merge_no_data():
 
 
 def test_merge_no_option():
-    """If there are no existing options, the new option become the entire
-    value."""
+    """If there are no existing options, the new option become the entire value."""
     config = {"other": 1234}
 
     merge_config(config, {"requires": ["third", "fourth"]})

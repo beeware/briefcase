@@ -1,1 +1,0 @@
-The console output for Windows batch scripts in now captured in the Briefcase log.

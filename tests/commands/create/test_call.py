@@ -51,8 +51,7 @@ def test_create(tracking_create_command):
 
 
 def test_create_single(tracking_create_command):
-    """The create command can be called to create a single app from the
-    config."""
+    """The create command can be called to create a single app from the config."""
     tracking_create_command(app=tracking_create_command.apps["first"])
 
     # The right sequence of things will be done

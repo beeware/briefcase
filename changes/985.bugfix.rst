@@ -1,1 +1,0 @@
-Development mode now starts apps in PEP540 UTF-8 mode, for consistency with the stub apps.

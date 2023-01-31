@@ -15,10 +15,9 @@ from .conftest import DummyCommand
 def test_path_is_realpath(tmp_path):
     """Briefcase's data path matches its realpath.
 
-    For the Windows Store Python, filesystem interaction with
-    `%LOCALAPPDATA%` can be redirected to a sandboxed location. However,
-    `os.path.realpath()` will reveal such a redirection. This test
-    ensures that Briefcase bypasses the sandboxing.
+    For the Windows Store Python, filesystem interaction with `%LOCALAPPDATA%` can be
+    redirected to a sandboxed location. However, `os.path.realpath()` will reveal such a
+    redirection. This test ensures that Briefcase bypasses the sandboxing.
     """
     data_path = Path(os.environ["LOCALAPPDATA"]) / "realpathbase"
     try:
@@ -59,8 +58,8 @@ def test_space_in_path(tmp_path):
 
 
 def test_empty_custom_path(monkeypatch, tmp_path):
-    """If the environment-specified BRIEFCASE_HOME is defined, but empty, an
-    error is raised."""
+    """If the environment-specified BRIEFCASE_HOME is defined, but empty, an error is
+    raised."""
     monkeypatch.setenv("BRIEFCASE_HOME", "")
 
     with pytest.raises(
@@ -71,8 +70,7 @@ def test_empty_custom_path(monkeypatch, tmp_path):
 
 
 def test_custom_path_does_not_exist(monkeypatch, tmp_path):
-    """If the environment-specified BRIEFCASE_HOME doesn't exist, an error is
-    raised."""
+    """If the environment-specified BRIEFCASE_HOME doesn't exist, an error is raised."""
     monkeypatch.setenv("BRIEFCASE_HOME", str(tmp_path / "custom"))
 
     with pytest.raises(

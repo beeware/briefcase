@@ -115,8 +115,7 @@ def test_open_no_docker_linux(open_command, first_app_config, tmp_path):
 
 @pytest.mark.skipif(sys.platform != "darwin", reason="macOS specific test")
 def test_open_no_docker_macOS(open_command, first_app_config, tmp_path):
-    """On macOS, Open runs `open` on the project folder if we specify --no-
-    docker."""
+    """On macOS, Open runs `open` on the project folder if we specify --no- docker."""
     # Create the desktop file that would be in the project folder.
     create_file(
         open_command.project_path(first_app_config)

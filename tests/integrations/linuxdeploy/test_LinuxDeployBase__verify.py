@@ -63,8 +63,7 @@ def test_verify_exists(mock_tools, tmp_path):
 
 
 def test_verify_does_not_exist_dont_install(mock_tools):
-    """If the tool/plugin doesn't exist, and install=False, it is *not*
-    downloaded."""
+    """If the tool/plugin doesn't exist, and install=False, it is *not* downloaded."""
     # True to create a linuxdeploy wrapper by verification.
     # This will fail because it doesn't exist, but installation was disabled.
     with pytest.raises(MissingToolError):
@@ -109,8 +108,8 @@ def test_verify_does_not_exist(mock_tools, tmp_path):
 
 
 def test_verify_does_not_exist_non_appimage(mock_tools, tmp_path):
-    """If a non-Appimage tool/plugin doesn't exist, it is downloaded, but not
-    elf-patched."""
+    """If a non-Appimage tool/plugin doesn't exist, it is downloaded, but not elf-
+    patched."""
     tool_path = tmp_path / "tools" / "somewhere" / "linuxdeploy-dummy.sh"
 
     # Mock a successful download
@@ -137,8 +136,8 @@ def test_verify_does_not_exist_non_appimage(mock_tools, tmp_path):
 
 
 def test_verify_linuxdeploy_download_failure(mock_tools, tmp_path):
-    """If a tool/plugin doesn't exist, and a download failure occurs, an error
-    is raised."""
+    """If a tool/plugin doesn't exist, and a download failure occurs, an error is
+    raised."""
     mock_tools.download.file.side_effect = NetworkFailure("mock")
 
     with pytest.raises(NetworkFailure, match="Unable to mock"):

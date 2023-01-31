@@ -408,8 +408,7 @@ def test_build_appimage_in_docker(build_command, first_app, tmp_path, monkeypatc
     sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
 )
 def test_build_appimage_with_plugins_in_docker(build_command, first_app, tmp_path):
-    """A Linux app can be packaged as an AppImage with plugins in a Docker
-    container."""
+    """A Linux app can be packaged as an AppImage with plugins in a Docker container."""
     # Mock the existence of some plugins
     gtk_plugin_path = (
         tmp_path

@@ -158,8 +158,8 @@ def test_valid_provided_java_home(mock_tools, capsys):
     ],
 )
 def test_invalid_jdk_version(mock_tools, host_os, java_home, tmp_path, capsys):
-    """If the JDK pointed to by JAVA_HOME isn't a Java 8 JDK, the briefcase JDK
-    is used."""
+    """If the JDK pointed to by JAVA_HOME isn't a Java 8 JDK, the briefcase JDK is
+    used."""
     # Mock os
     mock_tools.host_os = host_os
 
@@ -201,8 +201,8 @@ def test_invalid_jdk_version(mock_tools, host_os, java_home, tmp_path, capsys):
     ],
 )
 def test_no_javac(mock_tools, host_os, java_home, tmp_path, capsys):
-    """If the JAVA_HOME doesn't point to a location with a bin/javac, the
-    briefcase JDK is used."""
+    """If the JAVA_HOME doesn't point to a location with a bin/javac, the briefcase JDK
+    is used."""
     # Mock os
     mock_tools.host_os = host_os
 
@@ -396,8 +396,7 @@ def test_successful_jdk_download(
 
 
 def test_not_installed(mock_tools, tmp_path):
-    """If the JDK isn't installed, and install isn't requested, an error is
-    raised."""
+    """If the JDK isn't installed, and install isn't requested, an error is raised."""
     # Mock host OS
     mock_tools.host_os = "Linux"
 
@@ -480,8 +479,7 @@ def test_rosetta_host_os(mock_tools, tmp_path):
 
 
 def test_rosetta_host_arch(mock_tools, tmp_path):
-    """On an architecture other than ARM64, the Rosetta check does not
-    occur."""
+    """On an architecture other than ARM64, the Rosetta check does not occur."""
     mock_tools.host_os = "Darwin"
     mock_tools.host_arch = "x86_64"
 

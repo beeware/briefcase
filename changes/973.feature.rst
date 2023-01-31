@@ -1,1 +1,0 @@
-The build.gradle file used to build Android apps can now include arbitrary additional settings.

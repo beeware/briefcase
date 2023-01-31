@@ -32,8 +32,8 @@ class Download(Tool):
         return tools.download
 
     def file(self, url, download_path, role=None):
-        """Download a given URL, caching it. If it has already been downloaded,
-        return the value that has been cached.
+        """Download a given URL, caching it. If it has already been downloaded, return
+        the value that has been cached.
 
         This is a utility method used to obtain assets used by the installation
         process. The cached filename will be the filename portion of the URL,

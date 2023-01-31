@@ -1,1 +1,0 @@
-Users will no longer be warned that the obsolete Briefcase data directory still exists after it was transitioned to an OS-native filesystem location.

@@ -1,1 +1,0 @@
-Local file references in requirements no longer break AppImage builds.

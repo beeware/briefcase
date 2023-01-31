@@ -310,9 +310,9 @@ class DockerAppContext(Tool):
         return arg
 
     def _dockerize_args(self, args, interactive=False, mounts=None, env=None):
-        """Convert arguments and environment into a Docker-compatible form.
-        Convert an argument and environment specification into a form that can
-        be used as arguments to invoke Docker. This involves:
+        """Convert arguments and environment into a Docker-compatible form. Convert an
+        argument and environment specification into a form that can be used as arguments
+        to invoke Docker. This involves:
 
          * Configuring the Docker invocation to reference the
            appropriate container image, and clean up afterwards

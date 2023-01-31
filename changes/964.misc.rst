@@ -1,1 +1,0 @@
-The ``ToolCache`` and its tools are now typed to better support IDE hints and auto-completion.

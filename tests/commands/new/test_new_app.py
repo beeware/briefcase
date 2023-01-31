@@ -139,8 +139,8 @@ def test_new_app_missing_template(monkeypatch, new_command, tmp_path):
     ("37.42.7.dev0+gad61a29.d20220919", "37.42.7.dev73+gad61a29.d20220919"),
 )
 def test_new_app_dev(monkeypatch, new_command, tmp_path, briefcase_version):
-    """In a dev version, template will fall back to the 'main' branch if a
-    versioned template doesn't exist."""
+    """In a dev version, template will fall back to the 'main' branch if a versioned
+    template doesn't exist."""
     monkeypatch.setattr(briefcase, "__version__", briefcase_version)
     new_command.build_app_context = mock.MagicMock(
         return_value={
@@ -315,8 +315,8 @@ def test_new_app_with_invalid_template(monkeypatch, new_command, tmp_path):
 
 
 def test_new_app_with_invalid_template_branch(monkeypatch, new_command, tmp_path):
-    """If the custom template doesn't have a branch for the version, an error
-    is raised."""
+    """If the custom template doesn't have a branch for the version, an error is
+    raised."""
     monkeypatch.setattr(briefcase, "__version__", "37.42.7")
 
     new_command.build_app_context = mock.MagicMock(

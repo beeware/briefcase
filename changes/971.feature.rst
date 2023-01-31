@@ -1,1 +1,0 @@
-Frameworks contained added to a macOS app bundle are now automatically code signed.

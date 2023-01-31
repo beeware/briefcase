@@ -1,1 +1,0 @@
-It is now possible to specify app configurations for macOS Xcode and Windows VisualStudio projects. Previously, these sections of configuration files would be ignored due to a case discrepancy.

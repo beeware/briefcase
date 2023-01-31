@@ -1,1 +1,0 @@
-Use ``python -m pip`` to invoke ``pip`` in CI to avoid errors from ``pip.exe``.

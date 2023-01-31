@@ -1,1 +1,0 @@
-Briefcase is more resilient to file download failures by discarding partially downloaded files.

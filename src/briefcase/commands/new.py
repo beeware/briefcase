@@ -79,8 +79,8 @@ class NewCommand(BaseCommand):
         raise NotImplementedError()
 
     def parse_config(self, filename):
-        """There is no configuration when starting a new project; this
-        implementation overrides the base so that no config is parsed."""
+        """There is no configuration when starting a new project; this implementation
+        overrides the base so that no config is parsed."""
         pass
 
     def add_options(self, parser):
@@ -165,8 +165,8 @@ class NewCommand(BaseCommand):
         return ".".join(bundle.split(".")[::-1])
 
     def make_author_email(self, author, bundle):
-        """Construct a candidate email address from the authors name and the
-        bundle identifier.
+        """Construct a candidate email address from the authors name and the bundle
+        identifier.
 
         The candidate is based on the assumption that the author's name is in
         "first/last" format, or it a corporate name; the "first" part is split
@@ -430,8 +430,8 @@ What GUI toolkit do you want to use for this project?""",
         }
 
     def new_app(self, template: Optional[str] = None, **options):
-        """Ask questions to generate a new application, and generate a stub
-        project from the briefcase-template."""
+        """Ask questions to generate a new application, and generate a stub project from
+        the briefcase-template."""
         if template is None:
             template = "https://github.com/beeware/briefcase-template"
 
@@ -497,8 +497,7 @@ Application '{context['formal_name']}' has been generated. To run your applicati
     def verify_tools(self):
         """Verify that the tools needed to run this command exist.
 
-        Raises MissingToolException if a required system tool is
-        missing.
+        Raises MissingToolException if a required system tool is missing.
         """
         super().verify_tools()
         git.verify_git_is_installed(tools=self.tools)

@@ -1,1 +1,0 @@
-Android emulators configured with `_no_skin` will no longer generate a warning.

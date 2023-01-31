@@ -1,1 +1,0 @@
-Backslashes and double quotes are now safe to be used for Formal Name and Description

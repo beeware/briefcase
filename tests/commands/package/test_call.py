@@ -115,8 +115,7 @@ def test_no_args_package_two_app(package_command, first_app, second_app):
 
 
 def test_no_sign_package_one_app(package_command, first_app):
-    """If there is one app, and a --no-sign argument,package doesn't sign the
-    app."""
+    """If there is one app, and a --no-sign argument,package doesn't sign the app."""
     # Add a single app
     package_command.apps = {
         "first": first_app,
@@ -149,8 +148,8 @@ def test_no_sign_package_one_app(package_command, first_app):
 
 
 def test_identity_arg_package_one_app(package_command, first_app):
-    """If there is one app,and an --identity argument, package signs the app
-    with the specified identity."""
+    """If there is one app,and an --identity argument, package signs the app with the
+    specified identity."""
     # Add a single app
     package_command.apps = {
         "first": first_app,
@@ -183,8 +182,8 @@ def test_identity_arg_package_one_app(package_command, first_app):
 
 
 def test_adhoc_sign_package_one_app(package_command, first_app):
-    """If there is one app,and an --adhoc argument, package signs the app using
-    adhoc option."""
+    """If there is one app,and an --adhoc argument, package signs the app using adhoc
+    option."""
     # Add a single app
     package_command.apps = {
         "first": first_app,
@@ -217,8 +216,8 @@ def test_adhoc_sign_package_one_app(package_command, first_app):
 
 
 def test_no_sign_args_package_two_app(package_command, first_app, second_app):
-    """If there are multiple apps, and a --no-sign argument,package doesn't
-    sign all the app."""
+    """If there are multiple apps, and a --no-sign argument,package doesn't sign all the
+    app."""
     # Add a single app
     package_command.apps = {
         "first": first_app,
@@ -267,8 +266,8 @@ def test_no_sign_args_package_two_app(package_command, first_app, second_app):
 
 
 def test_adhoc_sign_args_package_two_app(package_command, first_app, second_app):
-    """If there are multiple apps,and an --adhoc argument, package signs all
-    apps using adhoc option."""
+    """If there are multiple apps,and an --adhoc argument, package signs all apps using
+    adhoc option."""
 
     package_command.apps = {
         # Add the first app
@@ -319,8 +318,8 @@ def test_adhoc_sign_args_package_two_app(package_command, first_app, second_app)
 
 
 def test_identity_sign_args_package_two_app(package_command, first_app, second_app):
-    """If there are multiple app,and an --identity argument, package signs all
-    the apps with the specified identity."""
+    """If there are multiple app,and an --identity argument, package signs all the apps
+    with the specified identity."""
     # Add a single app
     package_command.apps = {
         "first": first_app,

@@ -77,8 +77,7 @@ def test_incompatible_abi(mock_tools, android_sdk, capsys):
 
 
 def test_existing_system_image(mock_tools, android_sdk):
-    """If the system image already exists, don't attempt to download it
-    again."""
+    """If the system image already exists, don't attempt to download it again."""
     # Mock the host arch
     mock_tools.host_arch = "x86_64"
 
@@ -115,8 +114,7 @@ def test_new_system_image(mock_tools, android_sdk):
 
 
 def test_problem_downloading_system_image(mock_tools, android_sdk):
-    """If there is a failure downloading the system image, an error is
-    raised."""
+    """If there is a failure downloading the system image, an error is raised."""
     # Mock the host arch
     mock_tools.host_arch = "x86_64"
 

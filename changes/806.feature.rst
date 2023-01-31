@@ -1,1 +1,0 @@
-All warnings from the App and its dependencies are now shown when running ``briefcase dev`` by invoking Python in `development mode <https://docs.python.org/3/library/devmode.html>`_.

@@ -1,1 +1,0 @@
-Briefcase versions containing ``dev0`` are now considered development versions for fetching templates.

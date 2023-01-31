@@ -1,1 +1,0 @@
-The list of packages that need to be manually extracted was added to the Android Gradle template context.
