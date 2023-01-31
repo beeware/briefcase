@@ -354,11 +354,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
 class LinuxAppImageRunCommand(LinuxAppImagePassiveMixin, RunCommand):
     description = "Run a Linux AppImage."
     supported_host_os = {"Linux"}
-    supported_host_os_reason = "AppImages can only be executed on Linux."
-
-    def verify_tools(self):
-        """Verify that we're on Linux."""
-        super().verify_tools()
+    supported_host_os_reason = "Linux AppImages can only be executed on Linux."
 
     def run_app(self, app: AppConfig, test_mode: bool, **kwargs):
         """Start the application.
