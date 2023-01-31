@@ -27,27 +27,13 @@ from briefcase.console import Console, Log
 from briefcase.exceptions import (
     BriefcaseCommandError,
     BriefcaseConfigError,
+    InvalidTemplateRepository,
     NetworkFailure,
+    TemplateUnsupportedVersion,
 )
 from briefcase.integrations.base import ToolCache
 from briefcase.integrations.download import Download
 from briefcase.integrations.subprocess import Subprocess
-
-
-class InvalidTemplateRepository(BriefcaseCommandError):
-    def __init__(self, template):
-        self.template = template
-        super().__init__(
-            f"Unable to clone application template; is the template path {template!r} correct?"
-        )
-
-
-class TemplateUnsupportedVersion(BriefcaseCommandError):
-    def __init__(self, briefcase_version):
-        self.briefcase_version = briefcase_version
-        super().__init__(
-            f"Could not find a template branch for Briefcase {briefcase_version}."
-        )
 
 
 def create_config(klass, config, msg):

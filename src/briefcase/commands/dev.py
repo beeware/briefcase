@@ -6,10 +6,10 @@ from typing import Optional
 
 from briefcase.commands.run import RunAppMixin
 from briefcase.config import BaseConfig
-from briefcase.exceptions import BriefcaseCommandError
+from briefcase.exceptions import BriefcaseCommandError, RequirementsInstallError
 
 from .base import BaseCommand
-from .create import RequirementsInstallError, write_dist_info
+from .create import write_dist_info
 
 
 class DevCommand(RunAppMixin, BaseCommand):

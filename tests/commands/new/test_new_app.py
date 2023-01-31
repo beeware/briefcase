@@ -7,12 +7,12 @@ from cookiecutter.main import cookiecutter
 
 import briefcase
 from briefcase.commands import NewCommand
-from briefcase.commands.base import (
+from briefcase.console import Console, Log
+from briefcase.exceptions import (
+    BriefcaseCommandError,
     InvalidTemplateRepository,
     TemplateUnsupportedVersion,
 )
-from briefcase.console import Console, Log
-from briefcase.exceptions import BriefcaseCommandError
 
 
 @pytest.fixture

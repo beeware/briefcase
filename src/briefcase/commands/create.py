@@ -12,62 +12,20 @@ from packaging.version import Version
 
 import briefcase
 from briefcase.config import BaseConfig
-from briefcase.exceptions import BriefcaseCommandError, MissingNetworkResourceError
+from briefcase.exceptions import (
+    BriefcaseCommandError,
+    InvalidSupportPackage,
+    MissingAppSources,
+    MissingNetworkResourceError,
+    MissingSupportPackage,
+    RequirementsInstallError,
+    TemplateUnsupportedVersion,
+    UnsupportedPlatform,
+)
 from briefcase.integrations import git
 from briefcase.integrations.subprocess import NativeAppContext
 
-from .base import BaseCommand, TemplateUnsupportedVersion, full_options
-
-
-class UnsupportedPlatform(BriefcaseCommandError):
-    def __init__(self, platform):
-        self.platform = platform
-        super().__init__(
-            f"""\
-App cannot be deployed on {platform}. This is probably because one or more
-requirements (e.g., the GUI library) doesn't support {platform}.
-"""
-        )
-
-
-class InvalidSupportPackage(BriefcaseCommandError):
-    def __init__(self, filename):
-        self.filename = filename
-        super().__init__(f"Unable to unpack support package {filename!r}")
-
-
-class MissingSupportPackage(BriefcaseCommandError):
-    def __init__(self, python_version_tag, platform, host_arch):
-        self.python_version_tag = python_version_tag
-        self.platform = platform
-        self.host_arch = host_arch
-        super().__init__(
-            f"""\
-Unable to download {self.platform} support package for Python {self.python_version_tag} on {self.host_arch}.
-
-This is likely because either Python {self.python_version_tag} and/or {self.host_arch}
-is not yet supported on {self.platform}. You will need to:
-    * Use an older version of Python; or
-    * Compile your own custom support package.
-"""
-        )
-
-
-class RequirementsInstallError(BriefcaseCommandError):
-    def __init__(self):
-        super().__init__(
-            """\
-Unable to install requirements. This may be because one of your
-requirements is invalid, or because pip was unable to connect
-to the PyPI server.
-"""
-        )
-
-
-class MissingAppSources(BriefcaseCommandError):
-    def __init__(self, src):
-        self.src = src
-        super().__init__(f"Application source {src!r} does not exist.")
+from .base import BaseCommand, full_options
 
 
 def cookiecutter_cache_path(template):

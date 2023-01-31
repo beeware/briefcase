@@ -5,8 +5,7 @@ class BriefcaseError(Exception):
 
 
 class HelpText(BriefcaseError):
-    """Exceptions that contain help text and shouldn't be displayed to users as an
-    error."""
+    """Exceptions that contain help text and shouldn't be displayed as an error."""
 
 
 class NoCommandError(HelpText):
@@ -92,11 +91,96 @@ class NonManagedToolError(BriefcaseCommandError):
         super().__init__(msg=f"{tool!r} is using an install that is user managed.")
 
 
+class TemplateUnsupportedVersion(BriefcaseCommandError):
+    def __init__(self, briefcase_version):
+        self.briefcase_version = briefcase_version
+        super().__init__(
+            f"Could not find a template branch for Briefcase {briefcase_version}."
+        )
+
+
+class InvalidTemplateRepository(BriefcaseCommandError):
+    def __init__(self, template):
+        self.template = template
+        super().__init__(
+            f"Unable to clone application template; is the template path {template!r} correct?"
+        )
+
+
+class UnsupportedPlatform(BriefcaseCommandError):
+    def __init__(self, platform):
+        self.platform = platform
+        super().__init__(
+            f"""\
+App cannot be deployed on {platform}. This is probably because one or more
+requirements (e.g., the GUI library) doesn't support {platform}.
+"""
+        )
+
+
+class InvalidSupportPackage(BriefcaseCommandError):
+    def __init__(self, filename):
+        self.filename = filename
+        super().__init__(f"Unable to unpack support package {filename!r}")
+
+
+class MissingSupportPackage(BriefcaseCommandError):
+    def __init__(self, python_version_tag, platform, host_arch):
+        self.python_version_tag = python_version_tag
+        self.platform = platform
+        self.host_arch = host_arch
+        super().__init__(
+            f"""\
+Unable to download {self.platform} support package for Python {self.python_version_tag} on {self.host_arch}.
+
+This is likely because either Python {self.python_version_tag} and/or {self.host_arch}
+is not yet supported on {self.platform}. You will need to:
+    * Use an older version of Python; or
+    * Compile your own custom support package.
+"""
+        )
+
+
+class RequirementsInstallError(BriefcaseCommandError):
+    def __init__(self):
+        super().__init__(
+            """\
+Unable to install requirements. This may be because one of your
+requirements is invalid, or because pip was unable to connect
+to the PyPI server.
+"""
+        )
+
+
+class MissingAppSources(BriefcaseCommandError):
+    def __init__(self, src):
+        self.src = src
+        super().__init__(f"Application source {src!r} does not exist.")
+
+
 class InvalidDeviceError(BriefcaseCommandError):
     def __init__(self, id_type, device):
         self.id_type = id_type
         self.device = device
         super().__init__(msg=f"Invalid device {id_type} '{device}'")
+
+
+class AndroidDeviceNotAuthorized(BriefcaseCommandError):
+    def __init__(self, device):
+        self.device = device
+        super().__init__(
+            f"""
+The device you have selected ({device}) has not had developer options and
+USB debugging enabled. These must be enabled before a device can be used  as a
+target for deployment. For details on how to enable Developer Options, visit:
+
+    https://developer.android.com/studio/debug/dev-options#enable
+
+Once you have enabled these options on your device, you will be able to select
+this device as a deployment target.
+
+"""
+        )
 
 
 class CorruptToolError(BriefcaseCommandError):

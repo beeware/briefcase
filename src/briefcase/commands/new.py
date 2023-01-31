@@ -12,9 +12,10 @@ from briefcase.config import (
     is_valid_bundle_identifier,
     make_class_name,
 )
+from briefcase.exceptions import TemplateUnsupportedVersion
 from briefcase.integrations import git
 
-from .base import BaseCommand, BriefcaseCommandError, TemplateUnsupportedVersion
+from .base import BaseCommand, BriefcaseCommandError
 
 
 def titlecase(s):
