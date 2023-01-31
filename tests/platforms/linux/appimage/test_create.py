@@ -136,8 +136,12 @@ def other_package(create_command, first_app_config):
 
 
 @pytest.mark.parametrize("host_os", ["Windows", "WeirdOS"])
-def test_unsupported_host_os_with_docker(create_command, host_os, tmp_path):
+def test_unsupported_host_os_with_docker(no_docker_create_command, host_os, tmp_path):
     """Error raised for an unsupported OS when using Docker."""
+    # start with "no_docker_create_command" to avoid the initialization of a
+    # docker env when the underlying OS may not support it during the test.
+    create_command = no_docker_create_command
+    create_command.use_docker = True
     create_command.tools.host_os = host_os
 
     with pytest.raises(
