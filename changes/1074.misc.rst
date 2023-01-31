@@ -1,1 +1,1 @@
-Every function and method in Briefcase ``src`` and ``tests`` now contains a body.
+The ``docformatter`` hook for ``pre-commit`` was removed in favor of docstring formatting by ``black``.
