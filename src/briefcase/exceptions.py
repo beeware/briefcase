@@ -51,6 +51,15 @@ class BriefcaseConfigError(BriefcaseError):
         return f"Briefcase configuration error: {self.msg}"
 
 
+class UnsupportedHostError(BriefcaseError):
+    def __init__(self, reason):
+        super().__init__(error_code=110, skip_logfile=True)
+        self.msg = reason
+
+    def __str__(self):
+        return self.msg
+
+
 class BriefcaseCommandError(BriefcaseError):
     def __init__(self, msg):
         super().__init__(error_code=200)
@@ -77,11 +86,6 @@ class BadNetworkResourceError(BriefcaseCommandError):
         self.url = url
         self.status_code = status_code
         super().__init__(msg=f"Unable to download {url} (status code {status_code})")
-
-
-class UnsupportedHostError(BriefcaseCommandError):
-    def __init__(self, reason):
-        super().__init__(msg=reason)
 
 
 class MissingToolError(BriefcaseCommandError):
