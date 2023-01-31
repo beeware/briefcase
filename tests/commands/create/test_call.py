@@ -26,7 +26,10 @@ def test_create(tracking_create_command):
 
     # The right sequence of things will be done
     assert tracking_create_command.actions == [
-        ("verify",),
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
         # Create the first app
         ("generate", tracking_create_command.apps["first"]),
         ("support", tracking_create_command.apps["first"]),
@@ -56,7 +59,10 @@ def test_create_single(tracking_create_command):
 
     # The right sequence of things will be done
     assert tracking_create_command.actions == [
-        ("verify",),
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
         # Create the first app
         ("generate", tracking_create_command.apps["first"]),
         ("support", tracking_create_command.apps["first"]),

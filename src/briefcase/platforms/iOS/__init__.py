@@ -1,4 +1,3 @@
-from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.xcode import verify_xcode_install
 
 DEFAULT_OUTPUT_FORMAT = "Xcode"
@@ -12,11 +11,6 @@ class iOSMixin:
     )
 
     def verify_tools(self):
-        # since Xcode must be verified first, explicitly check host OS here
-        # instead of letting super().verify_tools() verify the OS.
-        if self.tools.host_os not in self.supported_host_os:
-            raise BriefcaseCommandError(self.supported_host_os_reason)
-
         # Require XCode 10.0.0. There's no particular reason for this
         # specific version, other than it's a nice round number that's
         # not *that* old at time of writing.

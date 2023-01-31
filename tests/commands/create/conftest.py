@@ -98,9 +98,13 @@ class TrackingCreateCommand(DummyCreateCommand):
 
         self.actions = []
 
+    def verify_host(self):
+        super().verify_host()
+        self.actions.append(("verify-host",))
+
     def verify_tools(self):
         super().verify_tools()
-        self.actions.append(("verify",))
+        self.actions.append(("verify-tools",))
 
     def verify_app_tools(self, app):
         super().verify_app_tools(app=app)

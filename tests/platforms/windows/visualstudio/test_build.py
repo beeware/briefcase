@@ -36,7 +36,7 @@ def test_verify(build_command):
 
     build_command.verify_tools()
 
-    # No error, and an SDK wrapper is created
+    # No error and an SDK wrapper is created
     assert isinstance(build_command.tools.visualstudio, VisualStudio)
 
 

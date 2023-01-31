@@ -42,7 +42,7 @@ def test_creates_platforms_folder(mock_tools, android_sdk):
     # Create `emulator` within `root_path`.
     create_emulator(android_sdk.root_path)
 
-    # Verify the emulator. This should create the missing platforms folder.
+    # Verify the emulator. This should create the missing "platforms" folder.
     android_sdk.verify_emulator()
 
     # Platforms folder now exists

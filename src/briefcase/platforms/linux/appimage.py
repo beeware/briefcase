@@ -15,7 +15,7 @@ from briefcase.commands import (
 )
 from briefcase.commands.create import _is_local_requirement
 from briefcase.config import AppConfig
-from briefcase.exceptions import BriefcaseCommandError
+from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
 from briefcase.integrations.docker import Docker, DockerAppContext
 from briefcase.integrations.linuxdeploy import LinuxDeploy
 from briefcase.integrations.subprocess import NativeAppContext
@@ -115,11 +115,11 @@ class LinuxAppImageMostlyPassiveMixin(LinuxAppImagePassiveMixin):
 
 
 class LinuxAppImageMixin(LinuxAppImageMostlyPassiveMixin):
-    def verify_tools(self):
+    def verify_host(self):
         """If we're *not* using Docker, verify that we're actually on Linux."""
-        super().verify_tools()
+        super().verify_host()
         if not self.use_docker and self.tools.host_os != "Linux":
-            raise BriefcaseCommandError(self.supported_host_os_reason)
+            raise UnsupportedHostError(self.supported_host_os_reason)
 
 
 class LinuxAppImageCreateCommand(LinuxAppImageMixin, CreateCommand):

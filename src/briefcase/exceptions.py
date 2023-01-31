@@ -79,6 +79,11 @@ class BadNetworkResourceError(BriefcaseCommandError):
         super().__init__(msg=f"Unable to download {url} (status code {status_code})")
 
 
+class UnsupportedHostError(BriefcaseCommandError):
+    def __init__(self, reason):
+        super().__init__(msg=reason)
+
+
 class MissingToolError(BriefcaseCommandError):
     def __init__(self, tool):
         self.tool = tool

@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from briefcase.console import Console, Log
-from briefcase.exceptions import BriefcaseCommandError, BriefcaseConfigError
+from briefcase.exceptions import BriefcaseConfigError
 from briefcase.integrations.flatpak import Flatpak
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.linux.flatpak import LinuxFlatpakCreateCommand
@@ -125,16 +125,3 @@ def test_verify_linux(create_command, tmp_path):
 
     # No error and an SDK wrapper is created
     assert isinstance(create_command.tools.flatpak, Flatpak)
-
-
-def test_verify_non_linux(create_command, tmp_path):
-    """Verifying on non-Linux raises an error."""
-    create_command.tools.host_os = "WeirdOS"
-    create_command.tools.subprocess = MagicMock(spec_set=Subprocess)
-
-    # Verify the tools
-    with pytest.raises(
-        BriefcaseCommandError,
-        match="Flatpaks can only be built on Linux.",
-    ):
-        create_command.verify_tools()

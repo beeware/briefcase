@@ -27,7 +27,7 @@ def test_default_packaging_format(package_command):
 
 
 def test_package_app(package_command, first_app_built, tmp_path):
-    "An app can be packaged for distribution"
+    """An app can be packaged for distribution."""
 
     package_command.package_app(first_app_built, "zip")
 

@@ -31,9 +31,13 @@ class DummyUpdateCommand(UpdateCommand):
     def distribution_path(self, app, packaging_format):
         return self.platform_path / f"{app.app_name}.dummy.{packaging_format}"
 
+    def verify_host(self):
+        super().verify_host()
+        self.actions.append(("verify-host",))
+
     def verify_tools(self):
         super().verify_tools()
-        self.actions.append(("verify",))
+        self.actions.append(("verify-tools",))
 
     # Override all the body methods of a UpdateCommand
     # with versions that we can use to track actions performed.

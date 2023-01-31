@@ -30,6 +30,7 @@ from briefcase.exceptions import (
     InvalidTemplateRepository,
     NetworkFailure,
     TemplateUnsupportedVersion,
+    UnsupportedHostError,
 )
 from briefcase.integrations.base import ToolCache
 from briefcase.integrations.download import Download
@@ -442,13 +443,17 @@ a custom location for Briefcase's tools.
             f"{self.tools.sys.version_info.major}.{self.tools.sys.version_info.minor}"
         )
 
+    def verify_host(self):
+        """Verify the host OS is supported by the Command."""
+        if self.tools.host_os not in self.supported_host_os:
+            raise UnsupportedHostError(self.supported_host_os_reason)
+
     def verify_tools(self):
-        """Verify tools for the command exist and are supported on this OS.
+        """Verify that the tools needed to run this Command exist.
 
         Raises MissingToolException if a required system tool is missing.
         """
-        if self.tools.host_os not in self.supported_host_os:
-            raise BriefcaseCommandError(self.supported_host_os_reason)
+        pass
 
     def verify_app_tools(self, app: BaseConfig):
         """Verify that tools needed to run the command for this app exist."""

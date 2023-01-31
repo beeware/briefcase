@@ -395,5 +395,5 @@ def test_abort_if_directory_exists(monkeypatch, new_command, tmp_path):
     new_command.build_app_context.assert_called_once_with()
     # Template won't be updated or unrolled
     # Cookiecutter was *not* invoked
-    new_command.update_cookiecutter_cache.call_count == 0
+    assert new_command.update_cookiecutter_cache.call_count == 0
     assert new_command.tools.cookiecutter.call_count == 0

@@ -4,7 +4,6 @@ from unittest.mock import MagicMock
 import pytest
 
 from briefcase.console import Console, Log
-from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.docker import Docker, DockerAppContext
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.linux.appimage import (
@@ -74,20 +73,6 @@ def test_verify_linux_no_docker(create_command, tmp_path, first_app_config):
     assert not hasattr(create_command.tools, "docker")
 
 
-@pytest.mark.parametrize("host_os", ["Darwin", "WeirdOS"])
-def test_verify_non_linux_no_docker(create_command, tmp_path, host_os):
-    """If Docker is disabled on non-Linux, an error is raised."""
-    create_command.tools.host_os = host_os
-    create_command.use_docker = False
-
-    # Verify the Docker tool
-    with pytest.raises(
-        BriefcaseCommandError,
-        match="Linux AppImages can only be built on Linux or on macOS using Docker.",
-    ):
-        create_command.verify_tools()
-
-
 def test_verify_linux_docker(create_command, tmp_path, first_app_config, monkeypatch):
     """If Docker is enabled on Linux, the Docker alias is set."""
     create_command.tools.host_os = "Linux"
@@ -150,16 +135,6 @@ def test_verify_non_linux_docker(create_command, tmp_path, first_app_config):
         host_data_path=tmp_path / "briefcase",
         python_version=f"3.{sys.version_info.minor}",
     )
-
-
-def test_verify_windows_docker(create_command, tmp_path):
-    """Docker cannot currently be used on Windows due to path issues."""
-    create_command.tools.host_os = "Windows"
-    create_command.use_docker = True
-
-    # Verify the tools
-    with pytest.raises(BriefcaseCommandError):
-        create_command.verify_tools()
 
 
 def test_clone_options(tmp_path):

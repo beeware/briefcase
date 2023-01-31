@@ -367,7 +367,7 @@ def test_run_autoselect_port(monkeypatch, run_command, first_app_built):
 
 
 def test_served_paths(monkeypatch, tmp_path):
-    "URLs are converted into paths in the project www folder"
+    """URLs are converted into paths in the project www folder."""
     # Mock server creation
     mock_server_init = mock.MagicMock(return_value=None)
     monkeypatch.setattr(SimpleHTTPRequestHandler, "__init__", mock_server_init)
@@ -390,7 +390,7 @@ def test_served_paths(monkeypatch, tmp_path):
 
 
 def test_cache_headers(monkeypatch, tmp_path):
-    "Server sets no-cache headers"
+    """Server sets no-cache headers."""
     # Mock server creation
     mock_server_init = mock.MagicMock(return_value=None)
     monkeypatch.setattr(SimpleHTTPRequestHandler, "__init__", mock_server_init)
@@ -414,7 +414,7 @@ def test_cache_headers(monkeypatch, tmp_path):
     # end_headers was invoked on the base class...
     mock_end_headers.assert_called_once_with()
 
-    # ..but the custom handler added cache control headers.
+    # ...but the custom handler added cache control headers.
     assert handler._headers_buffer == [
         b"Cache-Control: no-cache, no-store, must-revalidate\r\n",
         b"Pragma: no-cache\r\n",

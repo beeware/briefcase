@@ -110,7 +110,8 @@ class PackageCommand(BaseCommand):
     def __call__(
         self, app: Optional[BaseConfig] = None, update: bool = False, **options
     ):
-        # Confirm all required tools are available
+        # Confirm host compatibility and all required tools are available
+        self.verify_host()
         self.verify_tools()
 
         if app:

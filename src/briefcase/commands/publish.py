@@ -54,7 +54,8 @@ class PublishCommand(BaseCommand):
         return state
 
     def __call__(self, channel=None, **options):
-        # Confirm all required tools are available
+        # Confirm host compatibility and all required tools are available
+        self.verify_host()
         self.verify_tools()
 
         # Check the apps have been built first.

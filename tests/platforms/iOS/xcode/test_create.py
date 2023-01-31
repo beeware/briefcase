@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from briefcase.console import Console, Log
-from briefcase.exceptions import BriefcaseCommandError
+from briefcase.exceptions import UnsupportedHostError
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.iOS.xcode import iOSXcodeCreateCommand
 
@@ -19,13 +19,13 @@ def create_command(tmp_path):
     )
 
 
-@pytest.mark.parametrize("host_os", ["Linux", "Windows"])
+@pytest.mark.parametrize("host_os", ["Linux", "Windows", "WeirdOS"])
 def test_unsupported_host_os(create_command, host_os):
     """Error raised for an unsupported OS."""
     create_command.tools.host_os = host_os
 
     with pytest.raises(
-        BriefcaseCommandError,
+        UnsupportedHostError,
         match="iOS applications require Xcode, which is only available on macOS.",
     ):
         create_command()

@@ -71,7 +71,7 @@ def test_create_emulator(
     with avd_config_path.open("w") as f:
         f.write("hw.device.name=pixel\n")
 
-    # Mock the internal emulator creation methdo
+    # Mock the internal emulator creation method
     android_sdk._create_emulator = MagicMock()
 
     # Create the emulator
@@ -97,7 +97,7 @@ def test_default_name(mock_tools, android_sdk, tmp_path):
     # User provides no input; default name will be used
     mock_tools.input.return_value = ""
 
-    # Mock the internal emulator creation methdo
+    # Mock the internal emulator creation method
     android_sdk._create_emulator = MagicMock()
 
     # Create the emulator
@@ -123,7 +123,7 @@ def test_default_name_with_collisions(mock_tools, android_sdk, tmp_path):
     # User provides no input; default name will be used
     mock_tools.input.return_value = ""
 
-    # Mock the internal emulator creation methdo
+    # Mock the internal emulator creation method
     android_sdk._create_emulator = MagicMock()
 
     # Create the emulator
