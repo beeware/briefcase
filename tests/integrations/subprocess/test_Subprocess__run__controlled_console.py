@@ -87,8 +87,7 @@ def test_debug_call(mock_sub, capsys):
 
 
 def test_debug_call_with_env(mock_sub, capsys, tmp_path):
-    """If verbosity is turned up, injected env vars are included in debug
-    output."""
+    """If verbosity is turned up, injected env vars are included in debug output."""
     mock_sub.tools.logger.verbosity = 2
 
     env = {"NewVar": "NewVarValue"}
@@ -144,8 +143,8 @@ def test_debug_call_with_env(mock_sub, capsys, tmp_path):
     ],
 )
 def test_text_eq_true_default_overriding(mock_sub, in_kwargs, kwargs):
-    """if text or universal_newlines is explicitly provided, those should
-    override text=true default."""
+    """if text or universal_newlines is explicitly provided, those should override
+    text=true default."""
     with mock_sub.tools.input.wait_bar():
         mock_sub.run(["hello", "world"], **in_kwargs)
 
@@ -219,8 +218,7 @@ def test_stderr_dev_null(mock_sub, streaming_process, capsys):
 
 
 def test_calledprocesserror(mock_sub, streaming_process, capsys):
-    """CalledProcessError is raised with check=True and non-zero return
-    value."""
+    """CalledProcessError is raised with check=True and non-zero return value."""
     stderr_output = "stderr output\nline 2"
     streaming_process.stderr.read.return_value = stderr_output
 

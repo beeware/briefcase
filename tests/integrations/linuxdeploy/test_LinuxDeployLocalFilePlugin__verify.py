@@ -37,8 +37,8 @@ def test_bad_path(mock_tools, tmp_path):
 
 
 def test_non_plugin(mock_tools, tmp_path):
-    """If the plugin file path exists, but the filename doesn't match the
-    pattern of a linuxdeploy plugin, an error is raised."""
+    """If the plugin file path exists, but the filename doesn't match the pattern of a
+    linuxdeploy plugin, an error is raised."""
     plugin_path = tmp_path / "path" / "to" / "not-a-plugin.exe"
     create_mock_appimage(plugin_path)
 

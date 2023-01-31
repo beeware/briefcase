@@ -57,8 +57,8 @@ def test_download_failure(mock_tools, tmp_path):
 
 
 def test_invalid_plugin_name(mock_tools, tmp_path):
-    """If the URL filename doesn't match the pattern of a linuxdeploy plugin,
-    an error is raised."""
+    """If the URL filename doesn't match the pattern of a linuxdeploy plugin, an error
+    is raised."""
 
     with pytest.raises(BriefcaseCommandError):
         LinuxDeployURLPlugin.verify(

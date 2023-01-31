@@ -147,8 +147,8 @@ def test_no_icon(create_command, myapp):
 
 
 def test_single_icon(create_command, myapp):
-    """If the icon target is specified as a single string, the icon list has
-    one unsized entry."""
+    """If the icon target is specified as a single string, the icon list has one unsized
+    entry."""
     bundle_path = create_command.bundle_path(myapp)
     bundle_path.mkdir(parents=True)
     with (bundle_path / "briefcase.toml").open("wb") as f:
@@ -229,8 +229,8 @@ def test_no_splash(create_command, myapp):
 
 
 def test_single_splash(create_command, myapp):
-    """If the splash target is specified as a single string, the splash list
-    has one unsized entry."""
+    """If the splash target is specified as a single string, the splash list has one
+    unsized entry."""
     bundle_path = create_command.bundle_path(myapp)
     bundle_path.mkdir(parents=True)
     with (bundle_path / "briefcase.toml").open("wb") as f:
@@ -268,8 +268,8 @@ def test_multiple_splash(create_command, myapp):
 
 
 def test_no_document_types(create_command, myapp):
-    """If no document type targets are specified, the document_type_icons list
-    is empty."""
+    """If no document type targets are specified, the document_type_icons list is
+    empty."""
     bundle_path = create_command.bundle_path(myapp)
     bundle_path.mkdir(parents=True)
     with (bundle_path / "briefcase.toml").open("wb") as f:
@@ -284,8 +284,8 @@ def test_no_document_types(create_command, myapp):
 
 
 def test_document_type_single_icon(create_command, myapp):
-    """If a doctype icon target is specified as a single string, the
-    document_type_icons list has one unsized entry."""
+    """If a doctype icon target is specified as a single string, the document_type_icons
+    list has one unsized entry."""
     bundle_path = create_command.bundle_path(myapp)
     bundle_path.mkdir(parents=True)
     with (bundle_path / "briefcase.toml").open("wb") as f:
@@ -311,8 +311,8 @@ def test_document_type_single_icon(create_command, myapp):
 
 
 def test_document_type_multiple_icons(create_command, myapp):
-    """If there are multiple document_type_icons targets, they're all in the
-    target list."""
+    """If there are multiple document_type_icons targets, they're all in the target
+    list."""
     bundle_path = create_command.bundle_path(myapp)
     bundle_path.mkdir(parents=True)
     with (bundle_path / "briefcase.toml").open("wb") as f:

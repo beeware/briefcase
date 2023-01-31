@@ -8,8 +8,7 @@ from briefcase.integrations.android_sdk import ADB
 
 
 def test_force_stop_app(mock_tools, capsys):
-    """Invoking `force_stop_app()` calls `run()` with the appropriate
-    parameters."""
+    """Invoking `force_stop_app()` calls `run()` with the appropriate parameters."""
     # Mock out the run command on an adb instance
     adb = ADB(mock_tools, "exampleDevice")
     adb.run = MagicMock(return_value="example normal adb output")

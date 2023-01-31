@@ -96,8 +96,7 @@ def test_build_app_test_mode(
     gradlew_name,
     tmp_path,
 ):
-    """The app can be built in test mode, invoking gradle and rewriting app
-    metadata."""
+    """The app can be built in test mode, invoking gradle and rewriting app metadata."""
     # Mock out `host_os` so we can validate which name is used for gradlew.
     build_command.tools.host_os = host_os
     # Create mock environment with `key`, which we expect to be preserved, and
@@ -142,8 +141,8 @@ def test_build_app_test_mode(
 
 
 def test_print_gradle_errors(build_command, first_app_generated):
-    """Validate that build_app() will convert stderr/stdout from the process
-    into exception text."""
+    """Validate that build_app() will convert stderr/stdout from the process into
+    exception text."""
     # Create a mock subprocess that crashes, printing text partly in non-ASCII.
     build_command.tools.subprocess.run.side_effect = CalledProcessError(
         returncode=1,

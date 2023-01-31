@@ -65,8 +65,7 @@ class MissingAppSources(BriefcaseCommandError):
 
 
 def cookiecutter_cache_path(template):
-    """Determine the cookiecutter template cache directory given a template
-    URL.
+    """Determine the cookiecutter template cache directory given a template URL.
 
     This will return a valid path, regardless of whether `template`
 
@@ -168,8 +167,7 @@ class CreateCommand(BaseCommand):
         return icon_targets
 
     def splash_image_targets(self, app: BaseConfig):
-        """Obtain the dictionary of splash image targets that the template
-        requires.
+        """Obtain the dictionary of splash image targets that the template requires.
 
         :param app: The config object for the app
         :return: A dictionary of splash images that the template supports. The keys
@@ -196,8 +194,8 @@ class CreateCommand(BaseCommand):
         return splash_targets
 
     def document_type_icon_targets(self, app: BaseConfig):
-        """Obtain the dictionary of document type icon targets that the
-        template requires.
+        """Obtain the dictionary of document type icon targets that the template
+        requires.
 
         :param app: The config object for the app
         :return: A dictionary of document types, with the values being dictionaries
@@ -420,8 +418,7 @@ class CreateCommand(BaseCommand):
         requires: List[str],
         requirements_path: Path,
     ):
-        """Configure application requirements by writing a requirements.txt
-        file.
+        """Configure application requirements by writing a requirements.txt file.
 
         :param app: The app configuration
         :param requires: The full list of requirements
@@ -443,8 +440,7 @@ class CreateCommand(BaseCommand):
                         f.write(f"{requirement}\n")
 
     def _pip_requires(self, app: BaseConfig, requires: List[str]):
-        """Convert the list of requirements to be passed to pip into its final
-        form.
+        """Convert the list of requirements to be passed to pip into its final form.
 
         :param app: The app configuration
         :param requires: The user-specified list of app requirements
@@ -453,8 +449,7 @@ class CreateCommand(BaseCommand):
         return requires
 
     def _extra_pip_args(self, app: BaseConfig):
-        """Any additional arguments that must be passed to pip when installing
-        packages.
+        """Any additional arguments that must be passed to pip when installing packages.
 
         :param app: The app configuration
         :returns: A list of additional arguments
@@ -599,8 +594,8 @@ class CreateCommand(BaseCommand):
         )
 
     def install_image(self, role, variant, size, source, target):
-        """Install an icon/image of the requested size at a target location,
-        using the source images defined by the app config.
+        """Install an icon/image of the requested size at a target location, using the
+        source images defined by the app config.
 
         :param role: A string describing the role the of the image.
         :param variant: The image variant. A variant of ``None`` means the image
@@ -671,8 +666,8 @@ class CreateCommand(BaseCommand):
                 )
 
     def install_app_resources(self, app: BaseConfig):
-        """Install the application resources (such as icons and splash screens)
-        into the bundle.
+        """Install the application resources (such as icons and splash screens) into the
+        bundle.
 
         :param app: The config object for the app
         """
@@ -816,8 +811,7 @@ class CreateCommand(BaseCommand):
     def verify_tools(self):
         """Verify that the tools needed to run this command exist.
 
-        Raises MissingToolException if a required system tool is
-        missing.
+        Raises MissingToolException if a required system tool is missing.
         """
         super().verify_tools()
         git.verify_git_is_installed(tools=self.tools)

@@ -89,8 +89,7 @@ def test_msbuild_on_path(mock_tools):
 
 
 def test_msbuild_on_path_corrupt(mock_tools):
-    """If MSBuild is on the path, but it cannot be invoked, an error is
-    raised."""
+    """If MSBuild is on the path, but it cannot be invoked, an error is raised."""
     # MSBuild is on the path, but raises an error when invoked
     mock_tools.subprocess.check_output.side_effect = subprocess.CalledProcessError(
         returncode=1,
@@ -141,8 +140,8 @@ def test_msbuild_envvar(mock_tools, custom_msbuild_path):
 
 
 def test_msbuild_envvar_doesnt_exist(mock_tools, tmp_path):
-    """If MSBUILD is set in the environment, but it points to a non-existent
-    file, an error is raised."""
+    """If MSBUILD is set in the environment, but it points to a non-existent file, an
+    error is raised."""
     # Point at an MSBuild that does not exist
     mock_tools.os.environ["MSBUILD"] = tmp_path / "custom" / "MSBuild.exe"
 
@@ -166,8 +165,8 @@ def test_msbuild_envvar_doesnt_exist(mock_tools, tmp_path):
 
 
 def test_msbuild_envvar_bad_executable(mock_tools, custom_msbuild_path):
-    """If MSBUILD is set in the environment, but it can't be invoked, an error
-    is raised."""
+    """If MSBUILD is set in the environment, but it can't be invoked, an error is
+    raised."""
     # Point at the dummy MSBuild executable
     mock_tools.os.environ["MSBUILD"] = custom_msbuild_path
 
@@ -244,8 +243,7 @@ def test_vswhere_bad_executable(mock_tools, vswhere_path):
 
 
 def test_vswhere_bad_content(mock_tools, vswhere_path):
-    """If VSWhere can be executed, but returns garbage content, an error is
-    raised."""
+    """If VSWhere can be executed, but returns garbage content, an error is raised."""
     # MSBuild is not on the path, and vswhere returns non-JSON content
     mock_tools.subprocess.check_output.side_effect = [
         FileNotFoundError,  # MSBuild not on path
@@ -273,8 +271,8 @@ def test_vswhere_bad_content(mock_tools, vswhere_path):
 
 
 def test_vswhere_non_list_content(mock_tools, vswhere_path):
-    """If VSWhere can be executed, but the outermost content isn't a list, an
-    error is raised."""
+    """If VSWhere can be executed, but the outermost content isn't a list, an error is
+    raised."""
     # MSBuild is not on the path, and vswhere returns JSON content, but not in the format expected
     mock_tools.subprocess.check_output.side_effect = [
         FileNotFoundError,  # MSBuild not on path
@@ -302,8 +300,8 @@ def test_vswhere_non_list_content(mock_tools, vswhere_path):
 
 
 def test_vswhere_empty_list_content(mock_tools, vswhere_path):
-    """If VSWhere can be executed, but the outermost content is an empty list,
-    an error is raised."""
+    """If VSWhere can be executed, but the outermost content is an empty list, an error
+    is raised."""
     # MSBuild is not on the path, and vswhere returns JSON content, but not in the format expected
     mock_tools.subprocess.check_output.side_effect = [
         FileNotFoundError,  # MSBuild not on path
@@ -331,8 +329,8 @@ def test_vswhere_empty_list_content(mock_tools, vswhere_path):
 
 
 def test_vswhere_msbuild_not_installed(mock_tools, tmp_path, vswhere_path):
-    """If VSWhere can be executed, but it doesn't point at an MSBuild
-    executable, an error is raised."""
+    """If VSWhere can be executed, but it doesn't point at an MSBuild executable, an
+    error is raised."""
     # MSBuild is not on the path; vswhere a valid location, but there's no MSBuild there.
     mock_tools.subprocess.check_output.side_effect = [
         FileNotFoundError,  # MSBuild not on path
@@ -373,8 +371,8 @@ def test_vswhere_msbuild_bad_executable(
     vswhere_path,
     msbuild_path,
 ):
-    """If VSWhere points at an MSBuild executable, but that exe can't be
-    started, an error is raised."""
+    """If VSWhere points at an MSBuild executable, but that exe can't be started, an
+    error is raised."""
     # MSBuild is not on the path; vswhere a valid location, but MSBuild fails.
     mock_tools.subprocess.check_output.side_effect = [
         FileNotFoundError,  # MSBuild not on path
@@ -415,8 +413,7 @@ def test_vswhere_msbuild_bad_executable(
 
 
 def test_vswhere_install(mock_tools, tmp_path, vswhere_path, msbuild_path):
-    """If VSWhere points at a valid MSBuild executable, that executable is
-    used."""
+    """If VSWhere points at a valid MSBuild executable, that executable is used."""
     # MSBuild is not on the path; vswhere a valid location, and MSBuild succeeds.
     mock_tools.subprocess.check_output.side_effect = [
         FileNotFoundError,  # MSBuild not on path

@@ -116,8 +116,7 @@ def test_create_existing_app_no_overwrite_default(tracking_create_command):
 
 
 def test_create_existing_app_input_disabled(tracking_create_command):
-    """If input is disabled, fallback to default without get input from
-    user."""
+    """If input is disabled, fallback to default without get input from user."""
     # Answer '' (i.e., just press return) when asked
     tracking_create_command.input.enabled = False
 
@@ -142,8 +141,8 @@ def test_create_existing_app_input_disabled(tracking_create_command):
 
 
 def test_create_app_not_supported(tracking_create_command):
-    """If the supported attribute is false, the command will terminate with an
-    error message."""
+    """If the supported attribute is false, the command will terminate with an error
+    message."""
 
     with pytest.raises(UnsupportedPlatform):
         tracking_create_command.create_app(

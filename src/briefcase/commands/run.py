@@ -113,8 +113,7 @@ class LogFilter:
 
 
 class RunAppMixin:
-    """A mixin that captures the logic of starting an app and streaming the app
-    logs."""
+    """A mixin that captures the logic of starting an app and streaming the app logs."""
 
     def _stream_app_logs(
         self,

@@ -20,8 +20,7 @@ def create_emulator(root_path):
 
 
 def test_succeeds_immediately_if_emulator_installed(mock_tools, android_sdk):
-    """`verify_emulator()` exits early if the emulator exists in its
-    root_path."""
+    """`verify_emulator()` exits early if the emulator exists in its root_path."""
     # Create `emulator` within `root_path`.
     create_emulator(android_sdk.root_path)
 
@@ -74,8 +73,7 @@ def test_installs_android_emulator(mock_tools, android_sdk):
 
 
 def test_partial_android_emulator_install(mock_tools, android_sdk):
-    """If the Android emulator is only partially installed, it's not
-    detected."""
+    """If the Android emulator is only partially installed, it's not detected."""
     # Create the emulator *directory*, but not the actual binary.
     (android_sdk.root_path / "emulator").mkdir(parents=True)
 
@@ -97,8 +95,8 @@ def test_partial_android_emulator_install(mock_tools, android_sdk):
 
 
 def test_install_problems_are_reported(mock_tools, android_sdk):
-    """If the sdkmanager fails to properly install the Android emulator, an
-    exception is raised."""
+    """If the sdkmanager fails to properly install the Android emulator, an exception is
+    raised."""
     # Configure `subprocess` module to crash as though it were a sad sdkmanager.
     mock_tools.subprocess.run.side_effect = subprocess.CalledProcessError(
         returncode=1,

@@ -12,8 +12,7 @@ def linuxdeploy_plugin(mock_tools):
 
 
 def test_file_path(mock_tools, linuxdeploy_plugin):
-    """Custom URL plugins are in the linuxdeploy plugins folder, behind a
-    hash."""
+    """Custom URL plugins are in the linuxdeploy plugins folder, behind a hash."""
     assert (
         linuxdeploy_plugin.file_path
         == mock_tools.base_path

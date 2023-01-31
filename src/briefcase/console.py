@@ -220,11 +220,10 @@ class Log:
         self.stacktraces.append((label, Traceback.extract(*exc_info, show_locals=True)))
 
     def add_log_file_extra(self, func):
-        """Register a function to be called in the event that a log file is
-        written.
+        """Register a function to be called in the event that a log file is written.
 
-        This can be used to provide additional debugging information
-        which is too expensive to gather pre-emptively.
+        This can be used to provide additional debugging information which is too
+        expensive to gather pre-emptively.
         """
         self.log_file_extras.append(func)
 
@@ -413,12 +412,11 @@ class Console:
     def release_console_control(self):
         """Context manager to remove console elements such as the Wait Bar.
 
-        This is useful to temporarily release control of the console
-        when, e.g., a process is interrupted or a user needs to be
-        prompted. For instance, when batch scripts are interrupted by
-        CTRL+C in cmd.exe, the user may be prompted to abort the script;
-        so, the console cannot be controlled while such scripts run or
-        the prompt may be hidden from the user.
+        This is useful to temporarily release control of the console when, e.g., a
+        process is interrupted or a user needs to be prompted. For instance, when batch
+        scripts are interrupted by CTRL+C in cmd.exe, the user may be prompted to abort
+        the script; so, the console cannot be controlled while such scripts run or the
+        prompt may be hidden from the user.
         """
         # Preserve current console state
         is_output_controlled = self.is_console_controlled

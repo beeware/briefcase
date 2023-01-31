@@ -424,8 +424,7 @@ def test_emulator_fail_to_boot(mock_tools, android_sdk):
 
 
 def test_emulator_ctrl_c(mock_tools, android_sdk, capsys):
-    """If emulator startup is interrupted by the user, an error is
-    displayed."""
+    """If emulator startup is interrupted by the user, an error is displayed."""
     # Short circuit device loop by returning no devices
     android_sdk.devices = MagicMock(side_effect=[{}, {}])
 

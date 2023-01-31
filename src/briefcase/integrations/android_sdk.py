@@ -52,8 +52,8 @@ class AndroidSDK(Tool):
 
     @property
     def cmdline_tools_url(self):
-        """The Android SDK Command-Line Tools URL appropriate to the current
-        operating system."""
+        """The Android SDK Command-Line Tools URL appropriate to the current operating
+        system."""
         platform_name = self.tools.host_os.lower()
         if self.tools.host_os.lower() == "darwin":
             platform_name = "mac"
@@ -239,8 +239,7 @@ class AndroidSDK(Tool):
     def exists(self):
         """Confirm that the SDK actually exists.
 
-        Look for the sdkmanager; and, if necessary, confirm that it is
-        executable.
+        Look for the sdkmanager; and, if necessary, confirm that it is executable.
         """
         return self.sdkmanager_path.exists() and (
             self.tools.host_os == "Windows"
@@ -404,8 +403,7 @@ connection.
             )
 
     def verify_emulator(self):
-        """Verify that Android emulator has been installed, and is in a
-        runnable state.
+        """Verify that Android emulator has been installed, and is in a runnable state.
 
         Raises an error if the emulator can't be installed.
         """
@@ -1220,9 +1218,8 @@ class ADB:
             ) from e
 
     def run(self, *arguments, quiet=False):
-        """Run a command on a device using Android debug bridge, `adb`. The
-        device name is mandatory to ensure clarity in the case of multiple
-        attached devices.
+        """Run a command on a device using Android debug bridge, `adb`. The device name
+        is mandatory to ensure clarity in the case of multiple attached devices.
 
         :param arguments: List of strings to pass to `adb` as arguments.
         :param quiet: Should the invocation of this command be silent, and
@@ -1356,8 +1353,8 @@ Activity class not found while starting app.
         )
 
     def logcat_tail(self, since=None):
-        """Show the tail of the logs for Python-like apps, starting from a
-        given timestamp.
+        """Show the tail of the logs for Python-like apps, starting from a given
+        timestamp.
 
         :param since: The start time from which logs should be displayed
         """

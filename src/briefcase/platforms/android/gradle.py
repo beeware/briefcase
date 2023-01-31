@@ -139,8 +139,8 @@ class GradleMixin:
         )
 
     def verify_tools(self):
-        """Verify that the Android APK tools in `briefcase` will operate on
-        this system, downloading tools as needed."""
+        """Verify that the Android APK tools in `briefcase` will operate on this system,
+        downloading tools as needed."""
         super().verify_tools()
         AndroidSDK.verify(tools=self.tools)
         if not self.is_clone:

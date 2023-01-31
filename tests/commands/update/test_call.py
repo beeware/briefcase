@@ -39,8 +39,7 @@ def test_update(update_command, first_app, second_app):
 
 
 def test_update_single(update_command, first_app, second_app):
-    """The update command can be called to update a single app from the
-    config."""
+    """The update command can be called to update a single app from the config."""
     # Configure no command line options
     options = update_command.parse_options([])
 

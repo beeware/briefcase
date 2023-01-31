@@ -10,8 +10,8 @@ from briefcase.console import Printer
 
 
 def pytest_sessionfinish(session, exitstatus):
-    """When pytest is wrapping up, close the /dev/null file handle for the
-    logfile Rich Console to avoid spurious ResourceWarning errors."""
+    """When pytest is wrapping up, close the /dev/null file handle for the logfile Rich
+    Console to avoid spurious ResourceWarning errors."""
     Printer.dev_null.close()
 
 

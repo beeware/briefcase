@@ -30,8 +30,8 @@ def default_create_command(tmp_path):
 
 
 class DummyCreateCommand(CreateCommand):
-    """A dummy create command that stubs out all the required interfaces of the
-    Create command."""
+    """A dummy create command that stubs out all the required interfaces of the Create
+    command."""
 
     platform = "tester"
     output_format = "dummy"

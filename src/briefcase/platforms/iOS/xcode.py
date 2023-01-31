@@ -229,8 +229,7 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
     description = "Create and populate a iOS Xcode project."
 
     def _extra_pip_args(self, app: BaseConfig):
-        """Any additional arguments that must be passed to pip when installing
-        packages.
+        """Any additional arguments that must be passed to pip when installing packages.
 
         :param app: The app configuration
         :returns: A list of additional arguments

@@ -79,8 +79,7 @@ def test_call_with_start_new_session(
     start_new_session,
     check_output_kwargs,
 ):
-    """start_new_session is passed thru on Linux and macOS but converted for
-    Windows."""
+    """start_new_session is passed thru on Linux and macOS but converted for Windows."""
 
     mock_sub.tools.host_os = platform
     mock_sub.check_output(["hello", "world"], start_new_session=start_new_session)
@@ -120,8 +119,8 @@ def test_call_windows_with_start_new_session_and_creationflags(
     creationflags,
     final_creationflags,
 ):
-    """creationflags used to simulate start_new_session=True should be merged
-    with any existing flags."""
+    """creationflags used to simulate start_new_session=True should be merged with any
+    existing flags."""
 
     mock_sub.tools.host_os = "Windows"
 
@@ -201,8 +200,7 @@ def test_debug_call_with_env(mock_sub, capsys, tmp_path):
 
 
 def test_debug_call_with_quiet(mock_sub, capsys, tmp_path):
-    """If quiet mode is on, calls aren't logged, even if verbosity is turned
-    up."""
+    """If quiet mode is on, calls aren't logged, even if verbosity is turned up."""
     mock_sub.tools.logger.verbosity = 2
 
     env = {"NewVar": "NewVarValue"}
@@ -315,8 +313,7 @@ def test_calledprocesserror_exception_quiet(mock_sub, capsys):
 
 
 def test_calledprocesserror_exception_logging_no_cmd_output(mock_sub, capsys):
-    """If command errors, and there is no command output, errors are still
-    printed."""
+    """If command errors, and there is no command output, errors are still printed."""
     mock_sub.tools.logger.verbosity = 2
 
     called_process_error = CalledProcessError(
@@ -356,7 +353,7 @@ def test_calledprocesserror_exception_logging_no_cmd_output(mock_sub, capsys):
     ],
 )
 def test_text_eq_true_default_overriding(mock_sub, in_kwargs, kwargs):
-    """if text or universal_newlines is explicitly provided, those should
-    override text=true default."""
+    """if text or universal_newlines is explicitly provided, those should override
+    text=true default."""
 
     mock_sub.check_output(["hello", "world"], stderr=subprocess.STDOUT, **in_kwargs)

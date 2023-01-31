@@ -10,8 +10,7 @@ from briefcase.integrations.android_sdk import ADB
 
 
 def test_logcat_tail(mock_tools):
-    """Invoking `logcat_tail()` calls `run()` with the appropriate
-    parameters."""
+    """Invoking `logcat_tail()` calls `run()` with the appropriate parameters."""
     # Mock out the run command on an adb instance
     adb = ADB(mock_tools, "exampleDevice")
 

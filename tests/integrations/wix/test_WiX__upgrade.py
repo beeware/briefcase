@@ -13,8 +13,7 @@ from briefcase.integrations.wix import WIX_DOWNLOAD_URL, WiX
 
 
 def test_non_managed_install(mock_tools, tmp_path, capsys):
-    """If the WiX install points to a non-managed install, no upgrade is
-    attempted."""
+    """If the WiX install points to a non-managed install, no upgrade is attempted."""
 
     # Make the installation point to somewhere else.
     wix = WiX(mock_tools, wix_home=tmp_path / "other-WiX")
@@ -40,8 +39,7 @@ def test_non_existing_wix_install(mock_tools, tmp_path):
 
 
 def test_existing_wix_install(mock_tools, tmp_path):
-    """If there's an existing managed WiX install, it is deleted and
-    redownloaded."""
+    """If there's an existing managed WiX install, it is deleted and redownloaded."""
     # Create a mock of a previously installed WiX version.
     wix_path = tmp_path / "tools" / "wix"
     wix_path.mkdir(parents=True)

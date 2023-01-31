@@ -426,8 +426,7 @@ def test_package_bare_app(package_command, first_app_with_binaries, tmp_path):
 
 
 def test_package_bare_app_no_sign(package_command, first_app_with_binaries):
-    """A macOS App can be packaged without building dmg, and without
-    signing."""
+    """A macOS App can be packaged without building dmg, and without signing."""
     # Select a code signing identity
     package_command.select_identity.return_value = (
         "CAFEBEEF",
@@ -458,8 +457,7 @@ def test_package_bare_app_no_sign(package_command, first_app_with_binaries):
 
 
 def test_package_bare_app_no_notarization(package_command, first_app_with_binaries):
-    """A macOS App can be packaged without building dmg, and without
-    notarization."""
+    """A macOS App can be packaged without building dmg, and without notarization."""
     # Select a code signing identity
     package_command.select_identity.return_value = (
         "CAFEBEEF",
@@ -539,8 +537,8 @@ def test_dmg_with_missing_installer_icon(
     tmp_path,
     capsys,
 ):
-    """If an installer icon is specified, but the specific file is missing,
-    there is a warning."""
+    """If an installer icon is specified, but the specific file is missing, there is a
+    warning."""
     # Specify an installer icon, but don't create the matching file.
     first_app_with_binaries.installer_icon = "pretty"
 
@@ -636,8 +634,8 @@ def test_dmg_with_missing_app_installer_icon(
     tmp_path,
     capsys,
 ):
-    """If an app icon is specified, but the specific file is missing, there is
-    a warning."""
+    """If an app icon is specified, but the specific file is missing, there is a
+    warning."""
     # Specify an app icon, but don't create the matching file.
     first_app_with_binaries.icon = "pretty_app"
 
@@ -733,8 +731,8 @@ def test_dmg_with_missing_installer_background(
     tmp_path,
     capsys,
 ):
-    """If an installer image is specified, but the specific file is missing,
-    there is a warning."""
+    """If an installer image is specified, but the specific file is missing, there is a
+    warning."""
     # Specify an installer background, but don't create the matching file.
     first_app_with_binaries.installer_background = "pretty_background"
 

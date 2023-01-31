@@ -18,11 +18,6 @@ repos:
     hooks:
       - id: pyupgrade
         args: [--py38-plus]
-  - repo: https://github.com/myint/docformatter
-    rev: v1.5.1
-    hooks:
-    - id: docformatter
-      args: [--in-place]
   - repo: https://github.com/psf/black
     rev: 22.12.0
     hooks:

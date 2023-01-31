@@ -109,8 +109,8 @@ def test_docker_failure(mock_tools, capsys):
 
 
 def test_docker_bad_version(mock_tools, capsys):
-    """If docker exists but the version string doesn't make sense, the Docker
-    wrapper is returned with a warning."""
+    """If docker exists but the version string doesn't make sense, the Docker wrapper is
+    returned with a warning."""
     # Mock a bad return value of `docker --version`
     mock_tools.subprocess.check_output.return_value = "Docker version 17.2\n"
 
@@ -122,8 +122,8 @@ def test_docker_bad_version(mock_tools, capsys):
 
 
 def test_docker_unknown_version(mock_tools, capsys):
-    """If docker exists but the version string doesn't make sense, the Docker
-    wrapper is returned with a warning."""
+    """If docker exists but the version string doesn't make sense, the Docker wrapper is
+    returned with a warning."""
     # Mock a bad return value of `docker --version`
     mock_tools.subprocess.check_output.return_value = "ceci nest pas un Docker\n"
 
