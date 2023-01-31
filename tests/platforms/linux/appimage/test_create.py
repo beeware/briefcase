@@ -144,7 +144,7 @@ def test_unsupported_host_os(host_os, tmp_path):
 
     with pytest.raises(
         BriefcaseCommandError,
-        match="AppImages can only be built on Linux or in Docker on macOS.",
+        match="Linux AppImages can only be built on Linux or on macOS using Docker.",
     ):
         command()
 

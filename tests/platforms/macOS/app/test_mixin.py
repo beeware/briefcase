@@ -5,58 +5,48 @@ from briefcase.exceptions import BriefcaseCommandError
 from briefcase.platforms.macOS.app import macOSAppCreateCommand
 
 
+@pytest.fixture
+def create_command(tmp_path):
+    return macOSAppCreateCommand(
+        logger=Log(),
+        console=Console(),
+        base_path=tmp_path / "base_path",
+        data_path=tmp_path / "briefcase",
+    )
+
+
 @pytest.mark.parametrize("host_os", ["Linux", "Windows"])
-def test_unsupported_host_os(host_os):
+def test_unsupported_host_os(create_command, host_os):
     """Error raised for an unsupported OS."""
-    command = macOSAppCreateCommand(logger=Log(), console=Console())
-    command.tools.host_os = host_os
+    create_command.tools.host_os = host_os
 
     with pytest.raises(
         BriefcaseCommandError,
         match="Building and / or code signing a DMG requires running on macOS.",
     ):
-        command()
+        create_command()
 
 
-def test_binary_path(first_app_config, tmp_path):
-    command = macOSAppCreateCommand(
-        logger=Log(),
-        console=Console(),
-        base_path=tmp_path / "base_path",
-        data_path=tmp_path / "briefcase",
+def test_binary_path(create_command, first_app_config, tmp_path):
+    binary_path = create_command.binary_path(first_app_config)
+
+    expected_path = (
+        tmp_path / "base_path" / "macOS" / "app" / "First App" / "First App.app"
     )
-    binary_path = command.binary_path(first_app_config)
+    assert binary_path == expected_path
 
-    assert (
-        binary_path
-        == tmp_path / "base_path" / "macOS" / "app" / "First App" / "First App.app"
+
+def test_distribution_path_app(create_command, first_app_config, tmp_path):
+    distribution_path = create_command.distribution_path(first_app_config, "app")
+
+    expected_path = (
+        tmp_path / "base_path" / "macOS" / "app" / "First App" / "First App.app"
     )
+    assert distribution_path == expected_path
 
 
-def test_distribution_path_app(first_app_config, tmp_path):
-    command = macOSAppCreateCommand(
-        logger=Log(),
-        console=Console(),
-        base_path=tmp_path / "base_path",
-        data_path=tmp_path / "briefcase",
-    )
+def test_distribution_path_dmg(create_command, first_app_config, tmp_path):
+    distribution_path = create_command.distribution_path(first_app_config, "dmg")
 
-    distribution_path = command.distribution_path(first_app_config, "app")
-
-    assert (
-        distribution_path
-        == tmp_path / "base_path" / "macOS" / "app" / "First App" / "First App.app"
-    )
-
-
-def test_distribution_path_dmg(first_app_config, tmp_path):
-    command = macOSAppCreateCommand(
-        logger=Log(),
-        console=Console(),
-        base_path=tmp_path / "base_path",
-        data_path=tmp_path / "briefcase",
-    )
-
-    distribution_path = command.distribution_path(first_app_config, "dmg")
-
-    assert distribution_path == tmp_path / "base_path" / "macOS" / "First App-0.0.1.dmg"
+    expected_path = tmp_path / "base_path" / "macOS" / "First App-0.0.1.dmg"
+    assert distribution_path == expected_path

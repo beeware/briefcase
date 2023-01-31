@@ -30,7 +30,8 @@ def open_command(tmp_path, first_app_config):
 
 
 @pytest.mark.skipif(
-    sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
+    sys.platform == "win32",
+    reason="Windows paths aren't converted in Docker context",
 )
 def test_open_docker(open_command, first_app_config, tmp_path):
     """Open starts a docker session by default."""

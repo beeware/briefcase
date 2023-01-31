@@ -13,16 +13,20 @@ from briefcase.platforms.linux.appimage import (
 )
 
 
-def test_binary_path(first_app_config, tmp_path):
-    command = LinuxAppImageCreateCommand(
+@pytest.fixture
+def create_command(tmp_path):
+    return LinuxAppImageCreateCommand(
         logger=Log(),
         console=Console(),
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
     )
+
+
+def test_binary_path(create_command, first_app_config, tmp_path):
     # Force the architecture to x86_64 for test purposes.
-    command.tools.host_arch = "x86_64"
-    binary_path = command.binary_path(first_app_config)
+    create_command.tools.host_arch = "x86_64"
+    binary_path = create_command.binary_path(first_app_config)
 
     assert (
         binary_path
@@ -30,16 +34,10 @@ def test_binary_path(first_app_config, tmp_path):
     )
 
 
-def test_distribution_path(first_app_config, tmp_path):
-    command = LinuxAppImageCreateCommand(
-        logger=Log(),
-        console=Console(),
-        base_path=tmp_path / "base_path",
-        data_path=tmp_path / "briefcase",
-    )
+def test_distribution_path(create_command, first_app_config, tmp_path):
     # Force the architecture to x86_64 for test purposes.
-    command.tools.host_arch = "x86_64"
-    distribution_path = command.distribution_path(first_app_config, "appimage")
+    create_command.tools.host_arch = "x86_64"
+    distribution_path = create_command.distribution_path(first_app_config, "appimage")
 
     assert (
         distribution_path
@@ -47,95 +45,66 @@ def test_distribution_path(first_app_config, tmp_path):
     )
 
 
-def test_docker_image_tag(first_app_config, tmp_path):
-    command = LinuxAppImageCreateCommand(
-        logger=Log(),
-        console=Console(),
-        base_path=tmp_path / "base_path",
-        data_path=tmp_path / "briefcase",
-    )
-
-    image_tag = command.docker_image_tag(first_app_config)
+def test_docker_image_tag(create_command, first_app_config, tmp_path):
+    image_tag = create_command.docker_image_tag(first_app_config)
 
     assert image_tag == f"briefcase/com.example.first-app:py3.{sys.version_info.minor}"
 
 
-def test_docker_image_tag_uppercase_name(uppercase_app_config, tmp_path):
-    command = LinuxAppImageCreateCommand(
-        logger=Log(),
-        console=Console(),
-        base_path=tmp_path / "base_path",
-        data_path=tmp_path / "briefcase",
-    )
-
-    image_tag = command.docker_image_tag(uppercase_app_config)
+def test_docker_image_tag_uppercase_name(
+    create_command, uppercase_app_config, tmp_path
+):
+    image_tag = create_command.docker_image_tag(uppercase_app_config)
 
     assert image_tag == f"briefcase/com.example.first-app:py3.{sys.version_info.minor}"
 
 
-def test_verify_linux_no_docker(tmp_path, first_app_config):
+def test_verify_linux_no_docker(create_command, tmp_path, first_app_config):
     """If Docker is disabled on Linux, the app_context is Subprocess."""
-    command = LinuxAppImageCreateCommand(
-        logger=Log(),
-        console=Console(),
-        base_path=tmp_path / "base_path",
-        data_path=tmp_path / "briefcase",
-    )
-    command.tools.host_os = "Linux"
-    command.use_docker = False
+    create_command.tools.host_os = "Linux"
+    create_command.use_docker = False
 
     # Verify the tools
-    command.verify_tools()
-    command.verify_app_tools(app=first_app_config)
+    create_command.verify_tools()
+    create_command.verify_app_tools(app=first_app_config)
 
     # No error and Subprocess is used.
-    assert isinstance(command.tools[first_app_config].app_context, Subprocess)
+    assert isinstance(create_command.tools[first_app_config].app_context, Subprocess)
     # Docker is not verified.
-    assert not hasattr(command.tools, "docker")
+    assert not hasattr(create_command.tools, "docker")
 
 
-def test_verify_non_linux_no_docker(tmp_path):
+@pytest.mark.parametrize("host_os", ["Darwin", "WeirdOS"])
+def test_verify_non_linux_no_docker(create_command, tmp_path, host_os):
     """If Docker is disabled on non-Linux, an error is raised."""
-    command = LinuxAppImageCreateCommand(
-        logger=Log(),
-        console=Console(),
-        base_path=tmp_path / "base_path",
-        data_path=tmp_path / "briefcase",
-    )
-    command.tools.host_os = "Darwin"
-    command.use_docker = False
+    create_command.tools.host_os = host_os
+    create_command.use_docker = False
 
     # Verify the Docker tool
     with pytest.raises(
         BriefcaseCommandError,
-        match="AppImages can only be built on Linux or in Docker on macOS.",
+        match="Linux AppImages can only be built on Linux or on macOS using Docker.",
     ):
-        command.verify_tools()
+        create_command.verify_tools()
 
 
-def test_verify_linux_docker(tmp_path, first_app_config, monkeypatch):
+def test_verify_linux_docker(create_command, tmp_path, first_app_config, monkeypatch):
     """If Docker is enabled on Linux, the Docker alias is set."""
-    command = LinuxAppImageCreateCommand(
-        logger=Log(),
-        console=Console(),
-        base_path=tmp_path / "base_path",
-        data_path=tmp_path / "briefcase",
-    )
-    command.tools.host_os = "Linux"
-    command.use_docker = True
+    create_command.tools.host_os = "Linux"
+    create_command.use_docker = True
 
     # Mock Docker tool verification
     Docker.verify = MagicMock()
     DockerAppContext.verify = MagicMock()
 
     # Verify the tools
-    command.verify_tools()
-    command.verify_app_tools(app=first_app_config)
+    create_command.verify_tools()
+    create_command.verify_app_tools(app=first_app_config)
 
     # Docker and Docker app context are verified
-    Docker.verify.assert_called_with(tools=command.tools)
+    Docker.verify.assert_called_with(tools=create_command.tools)
     DockerAppContext.verify.assert_called_with(
-        tools=command.tools,
+        tools=create_command.tools,
         app=first_app_config,
         image_tag=f"briefcase/com.example.first-app:py3.{sys.version_info.minor}",
         dockerfile_path=tmp_path
@@ -151,29 +120,23 @@ def test_verify_linux_docker(tmp_path, first_app_config, monkeypatch):
     )
 
 
-def test_verify_non_linux_docker(tmp_path, first_app_config):
+def test_verify_non_linux_docker(create_command, tmp_path, first_app_config):
     """If Docker is enabled on non-Linux, the Docker alias is set."""
-    command = LinuxAppImageCreateCommand(
-        logger=Log(),
-        console=Console(),
-        base_path=tmp_path / "base_path",
-        data_path=tmp_path / "briefcase",
-    )
-    command.tools.host_os = "Darwin"
-    command.use_docker = True
+    create_command.tools.host_os = "Darwin"
+    create_command.use_docker = True
 
     # Mock Docker tool verification
     Docker.verify = MagicMock()
     DockerAppContext.verify = MagicMock()
 
     # Verify the tools
-    command.verify_tools()
-    command.verify_app_tools(app=first_app_config)
+    create_command.verify_tools()
+    create_command.verify_app_tools(app=first_app_config)
 
     # Docker and Docker app context are verified
-    Docker.verify.assert_called_with(tools=command.tools)
+    Docker.verify.assert_called_with(tools=create_command.tools)
     DockerAppContext.verify.assert_called_with(
-        tools=command.tools,
+        tools=create_command.tools,
         app=first_app_config,
         image_tag=f"briefcase/com.example.first-app:py3.{sys.version_info.minor}",
         dockerfile_path=tmp_path
@@ -189,20 +152,14 @@ def test_verify_non_linux_docker(tmp_path, first_app_config):
     )
 
 
-def test_verify_windows_docker(tmp_path):
+def test_verify_windows_docker(create_command, tmp_path):
     """Docker cannot currently be used on Windows due to path issues."""
-    command = LinuxAppImageCreateCommand(
-        logger=Log(),
-        console=Console(),
-        base_path=tmp_path / "base_path",
-        data_path=tmp_path / "briefcase",
-    )
-    command.tools.host_os = "Windows"
-    command.use_docker = True
+    create_command.tools.host_os = "Windows"
+    create_command.use_docker = True
 
     # Verify the tools
     with pytest.raises(BriefcaseCommandError):
-        command.verify_tools()
+        create_command.verify_tools()
 
 
 def test_clone_options(tmp_path):
