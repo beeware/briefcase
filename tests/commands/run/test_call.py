@@ -92,8 +92,8 @@ def test_with_arg_two_apps(run_command, first_app, second_app):
 
 
 def test_bad_app_reference(run_command, first_app, second_app):
-    """If the command line argument refers to an app that doesn't exist, raise
-    an error."""
+    """If the command line argument refers to an app that doesn't exist, raise an
+    error."""
     # Add two apps
     run_command.apps = {
         "first": first_app,
@@ -225,8 +225,7 @@ def test_update_app(run_command, first_app):
 
 
 def test_update_app_requirements(run_command, first_app):
-    """The run command can request that the app requirements are updated
-    first."""
+    """The run command can request that the app requirements are updated first."""
     # Add a single app
     run_command.apps = {
         "first": first_app,

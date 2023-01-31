@@ -5,8 +5,8 @@ class BriefcaseError(Exception):
 
 
 class HelpText(BriefcaseError):
-    """Exceptions that contain help text and shouldn't be displayed to users as
-    an error."""
+    """Exceptions that contain help text and shouldn't be displayed to users as an
+    error."""
 
 
 class NoCommandError(HelpText):

@@ -144,8 +144,8 @@ def test_with_arg_two_apps(dev_command, first_app, second_app):
 
 
 def test_bad_app_reference(dev_command, first_app, second_app):
-    """If the command line argument refers to an app that doesn't exist, raise
-    an error."""
+    """If the command line argument refers to an app that doesn't exist, raise an
+    error."""
     # Add two apps
     dev_command.apps = {
         "first": first_app,

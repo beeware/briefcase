@@ -22,8 +22,7 @@ def test_select_option():
 
 
 def test_select_option_list():
-    """If select_option is given a list of tuples, they're presented as
-    provided."""
+    """If select_option is given a list of tuples, they're presented as provided."""
     # Return '3' when prompted
     console = DummyConsole("3")
 

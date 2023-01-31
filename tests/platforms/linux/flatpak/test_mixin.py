@@ -82,8 +82,7 @@ def test_custom_runtime_repo(first_app_config, tmp_path):
 
 
 def test_custom_runtime_repo_no_alias(first_app_config, tmp_path):
-    """If a custom runtime repo URL is specified, an alias must be specified as
-    well."""
+    """If a custom runtime repo URL is specified, an alias must be specified as well."""
     first_app_config.flatpak_runtime_repo_url = "https://example.com/flatpak/runtime"
 
     command = LinuxFlatpakCreateCommand(
@@ -134,8 +133,7 @@ def test_custom_runtime(first_app_config, tmp_path):
 
 
 def test_custom_runtime_runtime_only(first_app_config, tmp_path):
-    """If the user only defines a runtime, accessing the SDK raises an
-    error."""
+    """If the user only defines a runtime, accessing the SDK raises an error."""
     first_app_config.flatpak_runtime = "org.beeware.Platform"
     first_app_config.flatpak_runtime_version = "37.42"
 
@@ -154,8 +152,7 @@ def test_custom_runtime_runtime_only(first_app_config, tmp_path):
 
 
 def test_custom_runtime_sdk_only(first_app_config, tmp_path):
-    """If the user only defines an SDK, accessing the runtime raises an
-    error."""
+    """If the user only defines an SDK, accessing the runtime raises an error."""
     first_app_config.flatpak_runtime_version = "37.42"
     first_app_config.flatpak_sdk = "org.beeware.SDK"
 

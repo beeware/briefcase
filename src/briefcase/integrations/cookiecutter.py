@@ -4,8 +4,8 @@ from jinja2.ext import Extension
 
 
 class PythonVersionExtension(Extension):
-    """Jinja2 extension to convert a full Python version string (3.11.0rc1)
-    into useful values."""
+    """Jinja2 extension to convert a full Python version string (3.11.0rc1) into useful
+    values."""
 
     def __init__(self, environment):
         """Initialize the extension with the given environment."""

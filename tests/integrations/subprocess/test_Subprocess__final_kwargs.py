@@ -92,6 +92,5 @@ def test_non_str_cwd_provided(mock_sub):
     ],
 )
 def test_text_conversion(mock_sub, in_kwargs, final_kwargs):
-    """Text/universal_newlines is correctly inserted/overridden, with
-    encoding."""
+    """Text/universal_newlines is correctly inserted/overridden, with encoding."""
     assert mock_sub.final_kwargs(**in_kwargs) == final_kwargs

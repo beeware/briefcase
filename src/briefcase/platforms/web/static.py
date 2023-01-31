@@ -83,8 +83,8 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 f.write(line)
 
     def _process_wheel(self, wheelfile, css_file):
-        """Process a wheel, extracting any content that needs to be compiled
-        into the final project.
+        """Process a wheel, extracting any content that needs to be compiled into the
+        final project.
 
         :param wheelfile: The path to the wheel file to be processed.
         :param css_file: A file handle, opened for write/append, to which
@@ -202,8 +202,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
 
 
 class HTTPHandler(SimpleHTTPRequestHandler):
-    """Convert any HTTP request into a path request on the static content
-    folder."""
+    """Convert any HTTP request into a path request on the static content folder."""
 
     def translate_path(self, path):
         return str(self.server.base_path / path[1:])

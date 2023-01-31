@@ -159,8 +159,8 @@ def test_call_with_arg_and_env(mock_docker_app_context, tmp_path, capsys):
     sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
 )
 def test_call_with_path_arg_and_env(mock_docker_app_context, tmp_path, capsys):
-    """Path-based arguments and environment are converted to strings and passed
-    in as-is."""
+    """Path-based arguments and environment are converted to strings and passed in as-
+    is."""
 
     mock_docker_app_context.run(
         ["hello", tmp_path / "location"],

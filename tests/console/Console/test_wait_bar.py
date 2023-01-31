@@ -29,8 +29,7 @@ def test_wait_bar_done_message_nested(console, capsys):
     ),
 )
 def test_wait_bar_transient(console, message, transient, output, capsys):
-    """Output is present or absent based on presence of message and transient
-    value."""
+    """Output is present or absent based on presence of message and transient value."""
     with console.wait_bar(message, transient=transient):
         pass
 
@@ -59,8 +58,7 @@ def test_wait_bar_transient_nested(
     output,
     capsys,
 ):
-    """Output is present or absent based on presence of message and transient
-    value."""
+    """Output is present or absent based on presence of message and transient value."""
     with console.wait_bar(message_one, transient=transient):
         with console.wait_bar(message_two, transient=transient):
             pass
@@ -78,8 +76,8 @@ def test_wait_bar_transient_nested(
     ),
 )
 def test_wait_bar_keyboard_interrupt(console, message, transient, output, capsys):
-    """If the wait bar is interrupted, output is present or absent based on
-    presence of message and transient value."""
+    """If the wait bar is interrupted, output is present or absent based on presence of
+    message and transient value."""
     with pytest.raises(KeyboardInterrupt):
         with console.wait_bar(message, transient=transient):
             raise KeyboardInterrupt
@@ -109,8 +107,8 @@ def test_wait_bar_keyboard_interrupt_nested(
     output,
     capsys,
 ):
-    """If the wait bar is interrupted, output is present or absent based on
-    presence of message and transient value."""
+    """If the wait bar is interrupted, output is present or absent based on presence of
+    message and transient value."""
     with pytest.raises(KeyboardInterrupt):
         with console.wait_bar(message_one, transient=transient):
             with console.wait_bar(message_two, transient=transient):

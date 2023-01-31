@@ -83,8 +83,8 @@ def test_non_existent(publish_command, first_app_config, second_app):
 
 
 def test_unbuilt(publish_command, first_app_unbuilt, second_app):
-    """Requesting a publish of an app that has been created, but not built,
-    raises an error."""
+    """Requesting a publish of an app that has been created, but not built, raises an
+    error."""
     # Add two apps; use the "config only" version of the first app.
     publish_command.apps = {
         "first": first_app_unbuilt,

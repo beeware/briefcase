@@ -46,8 +46,8 @@ def test_explicit_new_repo_template(base_command, mock_git):
 
 
 def test_explicit_invalid_repo_template(base_command, mock_git):
-    """If a previously known URL template is cached, but isn't a git
-    repository, it is used as-is."""
+    """If a previously known URL template is cached, but isn't a git repository, it is
+    used as-is."""
     base_command.tools.git = mock_git
 
     # Return an error from updating the template
@@ -112,8 +112,8 @@ def test_explicit_cached_repo_template(base_command, mock_git):
 
 
 def test_offline_repo_template(base_command, mock_git):
-    """If the user is offline the first time a repo template is requested, an
-    error is raised."""
+    """If the user is offline the first time a repo template is requested, an error is
+    raised."""
     base_command.tools.git = mock_git
 
     mock_repo = mock.MagicMock()
@@ -155,8 +155,7 @@ def test_offline_repo_template(base_command, mock_git):
 
 
 def test_cached_missing_branch_template(base_command, mock_git):
-    """If the cached repo doesn't have the requested branch, an error is
-    raised."""
+    """If the cached repo doesn't have the requested branch, an error is raised."""
     base_command.tools.git = mock_git
 
     mock_repo = mock.MagicMock()

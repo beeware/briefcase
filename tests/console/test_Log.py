@@ -159,8 +159,7 @@ def test_save_log_to_file_with_exception(tmp_path, now):
 
 
 def test_save_log_to_file_with_multiple_exceptions(tmp_path, now):
-    """Log file contains exception stacktrace when more than one is
-    captured."""
+    """Log file contains exception stacktrace when more than one is captured."""
     command = MagicMock()
     command.base_path = Path(tmp_path)
     command.command = "dev"

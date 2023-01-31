@@ -49,8 +49,7 @@ def test_device_option(run_command):
 
 
 def test_run_multiple_devices_input_disabled(run_command, first_app_config):
-    """If input is disabled, but there are multiple devices, an error is
-    raised."""
+    """If input is disabled, but there are multiple devices, an error is raised."""
     # Multiple devices are available
     run_command.get_simulators = mock.MagicMock(
         return_value={
@@ -789,8 +788,7 @@ def test_run_app_simulator_launch_failure(run_command, first_app_config, tmp_pat
 
 
 def test_run_app_simulator_no_pid(run_command, first_app_config, tmp_path):
-    """If the app fails to provide a meaningful PID on launch, raise an
-    error."""
+    """If the app fails to provide a meaningful PID on launch, raise an error."""
     # A valid target device will be selected.
     run_command.select_target_device = mock.MagicMock(
         return_value=("2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D", "13.2", "iPhone 11")

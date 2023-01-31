@@ -34,8 +34,7 @@ MACOS_LOG_PREFIX_REGEX = re.compile(
 
 
 def macOS_log_clean_filter(line):
-    """Filter a macOS system log to extract the Python-generated message
-    content.
+    """Filter a macOS system log to extract the Python-generated message content.
 
     Any system or stub messages are ignored; all logging prefixes are stripped.
 

@@ -98,8 +98,8 @@ def test_stop_func(mock_sub, streaming_process, stop_func_ret_val, capsys):
 
 
 def test_stuck_streamer(mock_sub, streaming_process, monkeypatch, capsys):
-    """Following a KeyboardInterrupt, output streaming returns even if the
-    output streamer becomes stuck."""
+    """Following a KeyboardInterrupt, output streaming returns even if the output
+    streamer becomes stuck."""
 
     # Mock time.time() to return times that monotonically increase by 1s
     # every time it is invoked. This allows us to simulate the progress of
@@ -266,8 +266,7 @@ def test_filter_func_stop_iteration(mock_sub, streaming_process, capsys):
 
 
 def test_filter_func_output_and_stop_iteration(mock_sub, streaming_process, capsys):
-    """A filter can indicate that logging should stop, and also output
-    content."""
+    """A filter can indicate that logging should stop, and also output content."""
     # Define a filter function that converts "output" into "filtered",
     # and terminates streaming when a blank line is seen; but outputs
     # one more line before terminating.

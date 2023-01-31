@@ -50,8 +50,8 @@ def sign_call(
     runtime=True,
     deep=False,
 ):
-    """A test utility method to quickly construct a subprocess call to invoke
-    codesign on a file."""
+    """A test utility method to quickly construct a subprocess call to invoke codesign
+    on a file."""
     args = [
         "codesign",
         os.fsdecode(filepath),
@@ -329,8 +329,8 @@ def test_sign_file_deep_sign_failure(dummy_command, tmp_path, capsys):
 
 
 def test_sign_file_unsupported_format(dummy_command, tmp_path, capsys):
-    """If codesign reports an unsupported format, the signing attempt is
-    ignored with a warning."""
+    """If codesign reports an unsupported format, the signing attempt is ignored with a
+    warning."""
     # FIXME: I'm not sure how to manufacture this in practice.
     dummy_command.tools.subprocess.run.side_effect = mock_codesign(
         "unsupported format for signature"
@@ -359,8 +359,8 @@ def test_sign_file_unsupported_format(dummy_command, tmp_path, capsys):
 
 
 def test_sign_file_unknown_bundle_format(dummy_command, tmp_path, capsys):
-    """If a folder happens to have a .framework extension, the signing attempt
-    is ignored with a warning."""
+    """If a folder happens to have a .framework extension, the signing attempt is
+    ignored with a warning."""
     # Raise an error caused by an unknown bundle format during codesign
     dummy_command.tools.subprocess.run.side_effect = mock_codesign(
         "bundle format unrecognized, invalid, or unsuitable"

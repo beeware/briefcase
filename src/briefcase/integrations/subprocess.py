@@ -60,8 +60,8 @@ def get_process_id_by_command(
     command: str = "",
     logger: Log = None,
 ):
-    """Find a Process ID (PID) a by its command. If multiple processes are
-    found, then the most recently created process ID is returned.
+    """Find a Process ID (PID) a by its command. If multiple processes are found, then
+    the most recently created process ID is returned.
 
     :param command_list: list of a command's fully qualified path and its arguments.
     :param command: a partial or complete fully-qualified filepath to a command.
@@ -97,16 +97,16 @@ def get_process_id_by_command(
 
 
 def ensure_console_is_safe(sub_method):
-    """Decorator for Subprocess methods to conditionally remove dynamic console
-    elements such as the Wait Bar prior to running the subprocess command.
+    """Decorator for Subprocess methods to conditionally remove dynamic console elements
+    such as the Wait Bar prior to running the subprocess command.
 
     :param sub_method: wrapped Subprocess method
     """
 
     @wraps(sub_method)
     def inner(sub, args, **kwargs):
-        """Evaluate whether conditions are met to remove any dynamic elements
-        in the console before returning control to Subprocess.
+        """Evaluate whether conditions are met to remove any dynamic elements in the
+        console before returning control to Subprocess.
 
         :param sub: Subprocess object
         :param args: list of implicit strings that will be run as subprocess command
@@ -154,8 +154,8 @@ class NativeAppContext(Tool):
 
 
 class Subprocess(Tool):
-    """A wrapper around subprocess that can be used as a logging point for
-    commands that are executed."""
+    """A wrapper around subprocess that can be used as a logging point for commands that
+    are executed."""
 
     name = "subprocess"
     full_name = "Subprocess"
@@ -165,8 +165,7 @@ class Subprocess(Tool):
         self._subprocess = subprocess
 
     def prepare(self):
-        """Perform any environment preparation required to execute
-        processes."""
+        """Perform any environment preparation required to execute processes."""
         # This is a no-op; the native subprocess environment is ready-to-use.
         pass
 
@@ -498,8 +497,8 @@ class Subprocess(Tool):
         return cmd_output
 
     def parse_output(self, output_parser, args, **kwargs):
-        """A wrapper for check_output() where the command output is processed
-        through the supplied parser function.
+        """A wrapper for check_output() where the command output is processed through
+        the supplied parser function.
 
         If the parser fails, CommandOutputParseError is raised.
         The parsing function should take one string argument and should
@@ -560,8 +559,8 @@ class Subprocess(Tool):
         stop_func=lambda: False,
         filter_func=None,
     ):
-        """Stream the output of a Popen process until the process exits. If the
-        user sends CTRL+C, the process will be terminated.
+        """Stream the output of a Popen process until the process exits. If the user
+        sends CTRL+C, the process will be terminated.
 
         This is useful for starting a process via Popen such as tailing a
         log file, then initiating a non-blocking process that populates that
@@ -645,8 +644,8 @@ class Subprocess(Tool):
             self.tools.logger.capture_stacktrace("Output thread")
 
     def cleanup(self, label, popen_process):
-        """Clean up after a Popen process, gracefully terminating if possible;
-        forcibly if not.
+        """Clean up after a Popen process, gracefully terminating if possible; forcibly
+        if not.
 
         :param label: A description of the content being streamed; used for
             to provide context in logging messages.

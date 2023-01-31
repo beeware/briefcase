@@ -32,8 +32,8 @@ def test_question_sequence(new_command):
 
 
 def test_question_sequence_with_nondefault_gui(new_command):
-    """Questions are asked, a context is constructed, but the GUI option is
-    formatted to extract the GUI name."""
+    """Questions are asked, a context is constructed, but the GUI option is formatted to
+    extract the GUI name."""
 
     # Prime answers for all the questions.
     new_command.input.values = [

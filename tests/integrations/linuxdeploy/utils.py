@@ -42,8 +42,7 @@ def create_mock_appimage(appimage_path: Path, mock_appimage_kind: str = "origina
 
 
 def side_effect_create_mock_appimage(appimage_path):
-    """A test fixture side effect that creates an AppImage at the specified
-    path."""
+    """A test fixture side effect that creates an AppImage at the specified path."""
 
     def _side_effect(*args, **kwargs):
         create_mock_appimage(appimage_path=appimage_path)
@@ -53,8 +52,7 @@ def side_effect_create_mock_appimage(appimage_path):
 
 
 def side_effect_create_mock_tool(tool_path):
-    """A test fixture side effect that creates an sh file at the specified
-    path."""
+    """A test fixture side effect that creates an sh file at the specified path."""
 
     def _side_effect(*args, **kwargs):
         tool_path.parent.mkdir(parents=True)

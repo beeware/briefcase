@@ -31,9 +31,9 @@ class BuildCommand(BaseCommand):
         test_mode: bool,
         **options,
     ):
-        """Internal method to invoke a build on a single app. Ensures the app
-        exists, and has been updated (if requested) before attempting to issue
-        the actual build command.
+        """Internal method to invoke a build on a single app. Ensures the app exists,
+        and has been updated (if requested) before attempting to issue the actual build
+        command.
 
         :param app: The application to build
         :param update: Should the application be updated before building?

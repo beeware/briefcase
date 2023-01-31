@@ -19,8 +19,7 @@ def mock_tools(mock_tools) -> ToolCache:
 
 
 def simctl_result(name):
-    """Load a simctl result file from the sample directory, and return the
-    content."""
+    """Load a simctl result file from the sample directory, and return the content."""
     filename = Path(__file__).parent / "simctl" / f"{name}.json"
     with filename.open() as f:
         return f.read()

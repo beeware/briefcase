@@ -175,8 +175,8 @@ def test_installed(mock_tools):
     ],
 )
 def test_installed_unknown_flatpak_version(mock_tools, flatpak_version, capsys):
-    """If flatpak is installed, but the version can't be determined, a warning
-    is raised, but flatpak is verified."""
+    """If flatpak is installed, but the version can't be determined, a warning is
+    raised, but flatpak is verified."""
     mock_tools.subprocess.check_output.side_effect = [
         flatpak_version,
         "flatpak-builder 1.2.2",
@@ -209,8 +209,8 @@ def test_installed_unknown_flatpak_version(mock_tools, flatpak_version, capsys):
     ],
 )
 def test_installed_unknown_builder_version(mock_tools, builder_version, capsys):
-    """If flatpak-builder is installed, but the version can't be determined, a
-    warning is raised, but flatpak is verified."""
+    """If flatpak-builder is installed, but the version can't be determined, a warning
+    is raised, but flatpak is verified."""
     mock_tools.subprocess.check_output.side_effect = [
         "Flatpak 1.12.7",
         builder_version,
