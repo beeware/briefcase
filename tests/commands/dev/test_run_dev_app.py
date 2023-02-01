@@ -4,7 +4,7 @@ from unittest import mock
 
 
 def test_dev_run(dev_command, first_app, tmp_path):
-    "The app can be run in dev mode"
+    """The app can be run in dev mode."""
     dev_command._stream_app_logs = mock.MagicMock()
     app_popen = mock.MagicMock()
     dev_command.tools.subprocess.Popen.return_value = app_popen
@@ -44,7 +44,7 @@ def test_dev_run(dev_command, first_app, tmp_path):
 
 
 def test_dev_test_mode(dev_command, first_app, tmp_path):
-    "The test suite can be run in development mode"
+    """The test suite can be run in development mode."""
     dev_command._stream_app_logs = mock.MagicMock()
     app_popen = mock.MagicMock()
     dev_command.tools.subprocess.Popen.return_value = app_popen

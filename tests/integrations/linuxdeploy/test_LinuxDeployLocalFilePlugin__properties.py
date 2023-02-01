@@ -31,4 +31,4 @@ def test_download_url(linuxdeploy_plugin):
     """Local file plugins don't have a download URL."""
     # Local file plugins don't have download URL.
     with pytest.raises(RuntimeError):
-        linuxdeploy_plugin.download_url
+        _ = linuxdeploy_plugin.download_url

@@ -64,10 +64,9 @@ def test_short_circuit(mock_tools):
 
 def test_succeeds_immediately_in_happy_path(mock_tools, tmp_path):
     """If verify is invoked on a path containing an Android SDK, it does nothing."""
-    # If `sdkmanager` exists and has the right permissions, and
-    # `android-sdk-license` exists, verify() should
-    # succeed, create no subprocesses, make no requests, and return a
-    # SDK wrapper.
+    # If `sdkmanager` exists and has the right permissions, and `android-sdk-license`
+    # exists, verify() should succeed, create no subprocesses, make no requests, and
+    # return an SDK wrapper.
 
     # On Windows, this requires `sdkmanager.bat`; on non-Windows, it requires
     # `sdkmanager`.

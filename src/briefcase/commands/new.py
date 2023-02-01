@@ -12,9 +12,10 @@ from briefcase.config import (
     is_valid_bundle_identifier,
     make_class_name,
 )
+from briefcase.exceptions import BriefcaseCommandError, TemplateUnsupportedVersion
 from briefcase.integrations import git
 
-from .base import BaseCommand, BriefcaseCommandError, TemplateUnsupportedVersion
+from .base import BaseCommand
 
 
 def titlecase(s):
@@ -503,7 +504,8 @@ Application '{context['formal_name']}' has been generated. To run your applicati
         git.verify_git_is_installed(tools=self.tools)
 
     def __call__(self, template: Optional[str] = None, **options):
-        # Confirm all required tools are available
+        # Confirm host compatibility and all required tools are available
+        self.verify_host()
         self.verify_tools()
 
         return self.new_app(template=template, **options)

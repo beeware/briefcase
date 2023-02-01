@@ -84,7 +84,7 @@ def test_extra_attrs():
 
     # An attribute that wasn't provided raises an error
     with pytest.raises(AttributeError):
-        config.unknown
+        _ = config.unknown
 
 
 @pytest.mark.parametrize(

@@ -185,7 +185,7 @@ def test_invalid_explicit_device_name(dummy_command):
 
 
 def test_explicit_name_invalid_version(dummy_command):
-    """If the user nominates an device name but an invalid version, an error is
+    """If the user nominates a device name but an invalid version, an error is
     raised."""
     # get_simulators will some options.
     dummy_command.get_simulators.return_value = {

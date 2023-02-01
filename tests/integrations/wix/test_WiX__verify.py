@@ -17,16 +17,6 @@ def test_short_circuit(mock_tools):
     assert tool == mock_tools.wix
 
 
-def test_non_windows_host(mock_tools):
-    """If the host OS isn't Windows, the validator fails."""
-
-    # Set the host OS to something not Windows
-    mock_tools.host_os = "Other OS"
-
-    with pytest.raises(BriefcaseCommandError, match="can only be created on Windows"):
-        WiX.verify(mock_tools)
-
-
 def test_valid_wix_envvar(mock_tools, tmp_path):
     """If the WiX envvar points to a valid WiX install, the validator succeeds."""
     # Mock the environment for a WiX install

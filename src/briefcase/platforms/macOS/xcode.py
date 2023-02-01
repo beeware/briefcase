@@ -17,13 +17,12 @@ from briefcase.platforms.macOS import macOSMixin, macOSPackageMixin, macOSRunMix
 
 class macOSXcodeMixin(macOSMixin):
     output_format = "Xcode"
+    supported_host_os_reason = (
+        "macOS applications require the Xcode command line "
+        "tools, which are only available on macOS."
+    )
 
     def verify_tools(self):
-        if self.tools.host_os != "Darwin":
-            raise BriefcaseCommandError(
-                "macOS applications require the Xcode command line tools, "
-                "which are only available on macOS."
-            )
         # Require XCode 10.0.0. There's no particular reason for this
         # specific version, other than it's a nice round number that's
         # not *that* old at time of writing.

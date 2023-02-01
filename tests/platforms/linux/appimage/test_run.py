@@ -5,7 +5,7 @@ from unittest import mock
 import pytest
 
 from briefcase.console import Console, Log
-from briefcase.exceptions import BriefcaseCommandError
+from briefcase.exceptions import UnsupportedHostError
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.linux.appimage import LinuxAppImageRunCommand
 
@@ -30,33 +30,16 @@ def run_command(tmp_path):
     return command
 
 
-def test_verify_linux(run_command):
-    """A linux App can be started on linux."""
-    run_command.use_docker = True
-    run_command.tools.host_os = "Linux"
-
-    # Mock the existence of Docker.
-    run_command.tools.subprocess.check_output.return_value = (
-        "Docker version 19.03.8, build afacb8b\n"
-    )
-
-    run_command.verify_tools()
-
-
-def test_verify_non_linux(run_command):
-    """A linux App cannot be started on linux, even if Docker is enabled."""
-    run_command.use_docker = True
-    run_command.tools.host_os = "WierdOS"
-
-    # Mock the existence of Docker.
-    run_command.tools.subprocess.check_output.return_value = (
-        "Docker version 19.03.8, build afacb8b\n"
-    )
+@pytest.mark.parametrize("host_os", ["Darwin", "Windows", "WeirdOS"])
+def test_unsupported_host_os(run_command, host_os):
+    """Error raised for an unsupported OS."""
+    run_command.tools.host_os = host_os
 
     with pytest.raises(
-        BriefcaseCommandError, match="AppImages can only be executed on Linux"
+        UnsupportedHostError,
+        match="Linux AppImages can only be executed on Linux.",
     ):
-        run_command.verify_tools()
+        run_command()
 
 
 def test_run_app(run_command, first_app_config, tmp_path):

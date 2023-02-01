@@ -12,6 +12,8 @@ DEFAULT_OUTPUT_FORMAT = "app"
 
 class WindowsMixin:
     platform = "windows"
+    supported_host_os = {"Windows"}
+    supported_host_os_reason = "Windows applications can only be built on Windows."
 
     def binary_path(self, app):
         return self.bundle_path(app) / self.packaging_root / f"{app.formal_name}.exe"
