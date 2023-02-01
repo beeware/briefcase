@@ -29,7 +29,7 @@ class LinuxAppImagePassiveMixin(LinuxMixin):
     output_format = "appimage"
     supported_host_os = {"Darwin", "Linux"}
     supported_host_os_reason = (
-        "Linux AppImages can only be built on Linux or on macOS using Docker."
+        "Linux AppImages can only be built on Linux, or on macOS using Docker."
     )
 
     def appdir_path(self, app):

@@ -6,7 +6,11 @@ from unittest import mock
 import pytest
 
 from briefcase.console import Console, Log
-from briefcase.exceptions import BriefcaseCommandError, BriefcaseError, NetworkFailure
+from briefcase.exceptions import (
+    BriefcaseCommandError,
+    NetworkFailure,
+    UnsupportedHostError,
+)
 from briefcase.integrations.docker import DockerAppContext
 from briefcase.integrations.linuxdeploy import LinuxDeploy
 from briefcase.platforms.linux.appimage import LinuxAppImageBuildCommand
@@ -95,7 +99,7 @@ def test_verify_tools_wrong_platform(build_command):
     build_command.tools.download.file = mock.MagicMock()
 
     # Try to invoke the build
-    with pytest.raises(BriefcaseError):
+    with pytest.raises(UnsupportedHostError):
         build_command()
 
     # The download was not attempted

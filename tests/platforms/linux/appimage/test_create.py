@@ -146,7 +146,7 @@ def test_unsupported_host_os_with_docker(no_docker_create_command, host_os, tmp_
 
     with pytest.raises(
         UnsupportedHostError,
-        match="Linux AppImages can only be built on Linux or on macOS using Docker.",
+        match="Linux AppImages can only be built on Linux, or on macOS using Docker.",
     ):
         create_command()
 
@@ -162,7 +162,7 @@ def test_unsupported_host_os_without_docker(
 
     with pytest.raises(
         UnsupportedHostError,
-        match="Linux AppImages can only be built on Linux or on macOS using Docker.",
+        match="Linux AppImages can only be built on Linux, or on macOS using Docker.",
     ):
         no_docker_create_command()
 

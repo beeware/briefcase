@@ -174,24 +174,6 @@ class InvalidDeviceError(BriefcaseCommandError):
         super().__init__(msg=f"Invalid device {id_type} '{device}'")
 
 
-class AndroidDeviceNotAuthorized(BriefcaseCommandError):
-    def __init__(self, device):
-        self.device = device
-        super().__init__(
-            f"""
-The device you have selected ({device}) has not had developer options and
-USB debugging enabled. These must be enabled before a device can be used  as a
-target for deployment. For details on how to enable Developer Options, visit:
-
-    https://developer.android.com/studio/debug/dev-options#enable
-
-Once you have enabled these options on your device, you will be able to select
-this device as a deployment target.
-
-"""
-        )
-
-
 class CorruptToolError(BriefcaseCommandError):
     def __init__(self, tool):
         self.tool = tool
