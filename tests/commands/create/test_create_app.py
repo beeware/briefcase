@@ -1,7 +1,7 @@
 import pytest
 
-from briefcase.commands.base import UnsupportedPlatform
 from briefcase.config import AppConfig
+from briefcase.exceptions import UnsupportedPlatform
 
 
 def test_create_app(tracking_create_command):

@@ -102,7 +102,8 @@ class BuildCommand(BaseCommand):
                     "Cannot specify both --update-resources and --no-update"
                 )
 
-        # Confirm all required tools are available
+        # Confirm host compatibility and all required tools are available
+        self.verify_host()
         self.verify_tools()
 
         if app:

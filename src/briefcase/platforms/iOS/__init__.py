@@ -1,4 +1,3 @@
-from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.xcode import verify_xcode_install
 
 DEFAULT_OUTPUT_FORMAT = "Xcode"
@@ -6,12 +5,12 @@ DEFAULT_OUTPUT_FORMAT = "Xcode"
 
 class iOSMixin:
     platform = "iOS"
+    supported_host_os = {"Darwin"}
+    supported_host_os_reason = (
+        "iOS applications require Xcode, which is only available on macOS."
+    )
 
     def verify_tools(self):
-        if self.tools.host_os != "Darwin":
-            raise BriefcaseCommandError(
-                "iOS applications require Xcode, which is only available on macOS."
-            )
         # Require XCode 10.0.0. There's no particular reason for this
         # specific version, other than it's a nice round number that's
         # not *that* old at time of writing.

@@ -5,7 +5,7 @@ from unittest import mock
 import pytest
 
 import briefcase
-from briefcase.commands.create import MissingAppSources
+from briefcase.exceptions import MissingAppSources
 
 from ...utils import create_file
 

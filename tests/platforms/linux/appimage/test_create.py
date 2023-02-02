@@ -6,8 +6,8 @@ from unittest.mock import MagicMock, call
 
 import pytest
 
-from briefcase.commands.base import BriefcaseCommandError
 from briefcase.console import Console, Log
+from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
 from briefcase.integrations.docker import DockerAppContext
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.linux.appimage import LinuxAppImageCreateCommand
@@ -135,13 +135,47 @@ def other_package(create_command, first_app_config):
     )
 
 
+@pytest.mark.parametrize("host_os", ["Windows", "WeirdOS"])
+def test_unsupported_host_os_with_docker(no_docker_create_command, host_os, tmp_path):
+    """Error raised for an unsupported OS when using Docker."""
+    # start with "no_docker_create_command" to avoid the initialization of a
+    # docker env when the underlying OS may not support it during the test.
+    create_command = no_docker_create_command
+    create_command.use_docker = True
+    create_command.tools.host_os = host_os
+
+    with pytest.raises(
+        UnsupportedHostError,
+        match="Linux AppImages can only be built on Linux, or on macOS using Docker.",
+    ):
+        create_command()
+
+
+@pytest.mark.parametrize("host_os", ["Darwin", "Windows", "WeirdOS"])
+def test_unsupported_host_os_without_docker(
+    no_docker_create_command,
+    host_os,
+    tmp_path,
+):
+    """Error raised for an unsupported OS when not using Docker."""
+    no_docker_create_command.tools.host_os = host_os
+
+    with pytest.raises(
+        UnsupportedHostError,
+        match="Linux AppImages can only be built on Linux, or on macOS using Docker.",
+    ):
+        no_docker_create_command()
+
+
 def test_support_package_url(no_docker_create_command):
-    "The URL of the support package is predictable"
-    assert (
-        no_docker_create_command.support_package_url(52)
-        == f"https://briefcase-support.s3.amazonaws.com/python/3.{sys.version_info.minor}/linux/wonky/"
-        f"Python-3.{sys.version_info.minor}-linux-wonky-support.b52.tar.gz"
+    """The URL of the support package is predictable."""
+    revision = 52
+    expected_url = (
+        f"https://briefcase-support.s3.amazonaws.com/python"
+        f"/3.{sys.version_info.minor}/linux/wonky"
+        f"/Python-3.{sys.version_info.minor}-linux-wonky-support.b{revision}.tar.gz"
     )
+    assert no_docker_create_command.support_package_url(revision) == expected_url
 
 
 @pytest.mark.skipif(

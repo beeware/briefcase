@@ -1,3 +1,4 @@
+import platform
 import subprocess
 from pathlib import Path
 from unittest import mock
@@ -24,6 +25,7 @@ def build_command(tmp_path):
     return command
 
 
+@pytest.mark.skipif(platform.system() != "Windows", reason="Windows specific tests")
 def test_verify(build_command):
     """Verifying on Windows creates an RCEdit wrapper."""
 
@@ -31,7 +33,7 @@ def test_verify(build_command):
 
     build_command.verify_tools()
 
-    # No error, and an SDK wrapper is created
+    # No error and an SDK wrapper is created
     assert isinstance(build_command.tools.rcedit, RCEdit)
 
 

@@ -6,8 +6,7 @@ from unittest import mock
 import pytest
 import tomli_w
 
-from briefcase.commands.create import RequirementsInstallError
-from briefcase.exceptions import BriefcaseCommandError
+from briefcase.exceptions import BriefcaseCommandError, RequirementsInstallError
 from briefcase.integrations.subprocess import Subprocess
 
 

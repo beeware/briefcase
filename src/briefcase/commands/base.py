@@ -27,38 +27,14 @@ from briefcase.console import Console, Log
 from briefcase.exceptions import (
     BriefcaseCommandError,
     BriefcaseConfigError,
+    InvalidTemplateRepository,
     NetworkFailure,
+    TemplateUnsupportedVersion,
+    UnsupportedHostError,
 )
 from briefcase.integrations.base import ToolCache
 from briefcase.integrations.download import Download
 from briefcase.integrations.subprocess import Subprocess
-
-
-class InvalidTemplateRepository(BriefcaseCommandError):
-    def __init__(self, template):
-        self.template = template
-        super().__init__(
-            f"Unable to clone application template; is the template path {template!r} correct?"
-        )
-
-
-class TemplateUnsupportedVersion(BriefcaseCommandError):
-    def __init__(self, briefcase_version):
-        self.briefcase_version = briefcase_version
-        super().__init__(
-            f"Could not find a template branch for Briefcase {briefcase_version}."
-        )
-
-
-class UnsupportedPlatform(BriefcaseCommandError):
-    def __init__(self, platform):
-        self.platform = platform
-        super().__init__(
-            f"""\
-App cannot be deployed on {platform}. This is probably because one or more
-requirements (e.g., the GUI library) doesn't support {platform}.
-"""
-        )
 
 
 def create_config(klass, config, msg):
@@ -113,6 +89,8 @@ def full_options(state, options):
 
 class BaseCommand(ABC):
     cmd_line = "briefcase {command} {platform} {output_format}"
+    supported_host_os = {"Darwin", "Linux", "Windows"}
+    supported_host_os_reason = f"This command is not supported on {platform.system()}."
     GLOBAL_CONFIG_CLASS = GlobalConfig
     APP_CONFIG_CLASS = AppConfig
 
@@ -465,8 +443,13 @@ a custom location for Briefcase's tools.
             f"{self.tools.sys.version_info.major}.{self.tools.sys.version_info.minor}"
         )
 
+    def verify_host(self):
+        """Verify the host OS is supported by the Command."""
+        if self.tools.host_os not in self.supported_host_os:
+            raise UnsupportedHostError(self.supported_host_os_reason)
+
     def verify_tools(self):
-        """Verify that the tools needed to run this command exist.
+        """Verify that the tools needed to run this Command exist.
 
         Raises MissingToolException if a required system tool is missing.
         """

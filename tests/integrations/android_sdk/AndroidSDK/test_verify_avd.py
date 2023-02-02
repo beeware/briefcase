@@ -165,7 +165,7 @@ def test_unrecognized_emulator_skin(android_sdk, capsys):
 
 
 def test_no_skin_emulator_skin(android_sdk, capsys):
-    """If the AVD config contains an emulator skin set to _no_skin continiue without
+    """If the AVD config contains an emulator skin set to _no_skin continue without
     validation."""
     # Mock an AVD configuration that contains a skin.name and skin.path
     # in an unexpected location

@@ -3,7 +3,8 @@ from unittest import mock
 import pytest
 from git import exc as git_exceptions
 
-from briefcase.commands.base import TemplateUnsupportedVersion, cookiecutter_cache_path
+from briefcase.commands.base import cookiecutter_cache_path
+from briefcase.exceptions import TemplateUnsupportedVersion
 
 
 def test_non_url(base_command, mock_git):

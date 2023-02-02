@@ -137,11 +137,11 @@ def test_bad_emulator_abi(mock_tools, android_sdk, host_os, host_arch):
         BriefcaseCommandError,
         match=rf"The Android emulator does not currently support {host_os} {host_arch} hardware.",
     ):
-        android_sdk.emulator_abi
+        _ = android_sdk.emulator_abi
 
 
 def test_adb_for_device(mock_tools, android_sdk):
-    "An ADB instance can be bound to a device."
+    """An ADB instance can be bound to a device."""
     adb = android_sdk.adb("some-device")
 
     assert adb.tools == mock_tools

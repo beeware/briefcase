@@ -10,11 +10,11 @@ from cookiecutter import exceptions as cookiecutter_exceptions
 from git import exc as git_exceptions
 
 import briefcase
-from briefcase.commands.base import (
+from briefcase.exceptions import (
     InvalidTemplateRepository,
+    NetworkFailure,
     TemplateUnsupportedVersion,
 )
-from briefcase.exceptions import NetworkFailure
 
 
 @pytest.fixture

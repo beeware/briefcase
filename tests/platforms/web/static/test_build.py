@@ -33,7 +33,7 @@ def build_command(tmp_path):
 
 
 def test_build_app(build_command, first_app_generated, tmp_path):
-    "An app can be built"
+    """An app can be built."""
     bundle_path = tmp_path / "base_path" / "web" / "static" / "First App"
 
     # Invoking build will create wheels as a side effect.
@@ -164,7 +164,7 @@ def test_build_app(build_command, first_app_generated, tmp_path):
 
 
 def test_build_app_missing_wheel_dir(build_command, first_app_generated, tmp_path):
-    "If the template is corrupted, the wheels folder is still created."
+    """If the template is corrupted, the wheels folder is still created."""
     bundle_path = tmp_path / "base_path" / "web" / "static" / "First App"
 
     # Remove the wheels folder
@@ -219,7 +219,7 @@ def test_build_app_missing_wheel_dir(build_command, first_app_generated, tmp_pat
 
 
 def test_build_app_no_requirements(build_command, first_app_generated, tmp_path):
-    "An app with no requirements can be built"
+    """An app with no requirements can be built."""
     bundle_path = tmp_path / "base_path" / "web" / "static" / "First App"
 
     # Invoking build will create wheels as a side effect.
@@ -323,7 +323,7 @@ def test_build_app_no_requirements(build_command, first_app_generated, tmp_path)
 
 
 def test_app_package_fail(build_command, first_app_generated, tmp_path):
-    "If the app can't be packaged as a wheel,an error is raised."
+    """If the app can't be packaged as a wheel,an error is raised."""
     bundle_path = tmp_path / "base_path" / "web" / "static" / "First App"
 
     # Mock the side effect of invoking shutil
@@ -374,7 +374,7 @@ def test_app_package_fail(build_command, first_app_generated, tmp_path):
 
 
 def test_dependency_fail(build_command, first_app_generated, tmp_path):
-    "If dependnecies can't be downloaded, an error is raised."
+    """If dependencies can't be downloaded, an error is raised."""
     bundle_path = tmp_path / "base_path" / "web" / "static" / "First App"
 
     # Mock the side effect of invoking shutil
