@@ -366,7 +366,6 @@ class StaticWebPackageCommand(StaticWebMixin, PackageCommand):
             with ZipFile(
                 self.distribution_path(app, packaging_format=packaging_format), "w"
             ) as archive:
-
                 for filename in self.project_path(app).glob("**/*"):
                     self.logger.info(
                         f"Adding {filename.relative_to(self.project_path(app))}"
