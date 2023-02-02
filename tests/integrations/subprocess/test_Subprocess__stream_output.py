@@ -157,6 +157,7 @@ def test_stdout_closes_unexpectedly(mock_sub, streaming_process, monkeypatch, ca
 
 def test_filter_func(mock_sub, streaming_process, capsys):
     """A filter can be added to modify an output stream."""
+
     # Define a filter function that converts "output" into "filtered"
     def filter_func(line):
         yield line.replace("output", "filtered")
@@ -177,6 +178,7 @@ def test_filter_func(mock_sub, streaming_process, capsys):
 
 def test_filter_func_reject(mock_sub, streaming_process, capsys):
     """A filter that rejects lines can be added to modify an output stream."""
+
     # Define a filter function that ignores blank lines
     def filter_func(line):
         if len(line) == 0:
@@ -198,6 +200,7 @@ def test_filter_func_reject(mock_sub, streaming_process, capsys):
 
 def test_filter_func_line_ends(mock_sub, streaming_process, capsys):
     """Filter functions are not provided the newline."""
+
     # Define a filter function that redacts lines that end with 1
     # The newline is *not* included.
     def filter_func(line):
@@ -222,6 +225,7 @@ def test_filter_func_line_ends(mock_sub, streaming_process, capsys):
 
 def test_filter_func_line_multiple_output(mock_sub, streaming_process, capsys):
     """Filter functions can generate multiple lines from a single input."""
+
     # Define a filter function that adds an extra line of content when the
     # lines that end with 1
     def filter_func(line):
@@ -246,6 +250,7 @@ def test_filter_func_line_multiple_output(mock_sub, streaming_process, capsys):
 
 def test_filter_func_stop_iteration(mock_sub, streaming_process, capsys):
     """A filter can indicate that logging should stop."""
+
     # Define a filter function that converts "output" into "filtered",
     # and terminates streaming when a blank line is seen.
     def filter_func(line):
@@ -267,6 +272,7 @@ def test_filter_func_stop_iteration(mock_sub, streaming_process, capsys):
 
 def test_filter_func_output_and_stop_iteration(mock_sub, streaming_process, capsys):
     """A filter can indicate that logging should stop, and also output content."""
+
     # Define a filter function that converts "output" into "filtered",
     # and terminates streaming when a blank line is seen; but outputs
     # one more line before terminating.
@@ -291,6 +297,7 @@ def test_filter_func_output_and_stop_iteration(mock_sub, streaming_process, caps
 
 def test_filter_func_line_unexpected_error(mock_sub, streaming_process, capsys):
     """If a filter function fails, the error is caught and logged."""
+
     # Define a filter function that redacts lines that end with 1
     # The newline is *not* included.
     def filter_func(line):

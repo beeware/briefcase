@@ -28,6 +28,7 @@ def test_default_filter():
 
 def test_clean_filter():
     """A cleaning filter can be used to strip content."""
+
     # Define a cleaning filter that strips the first 5 characters,
     # and identifies all content as Python
     def clean_filter(line):
@@ -54,6 +55,7 @@ def test_clean_filter():
 def test_clean_filter_unclean_output():
     """A cleaning filter can be used to strip content, but doesn't have to alter
     output."""
+
     # Define a cleaning filter that strips the first 5 characters,
     # and identifies all content as Python
     def clean_filter(line):
@@ -209,6 +211,7 @@ def test_log_filter(
     returncode,
 ):
     """The log filter behaves as expected."""
+
     # Define a clean filter that removes an index at the start of the line, only
     # analyses content with an even prefix, and dumps content that starts "DUMP:"
     def clean_filter(line):
