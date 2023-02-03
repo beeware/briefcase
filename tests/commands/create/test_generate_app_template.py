@@ -10,11 +10,11 @@ from cookiecutter import exceptions as cookiecutter_exceptions
 from git import exc as git_exceptions
 
 import briefcase
-from briefcase.commands.base import (
+from briefcase.exceptions import (
     InvalidTemplateRepository,
+    NetworkFailure,
     TemplateUnsupportedVersion,
 )
-from briefcase.exceptions import NetworkFailure
 
 
 @pytest.fixture
@@ -70,8 +70,8 @@ def test_default_template(
     briefcase_version,
     expected_branch,
 ):
-    """Absent of other information, the briefcase version (without suffixes) is
-    used as the template branch."""
+    """Absent of other information, the briefcase version (without suffixes) is used as
+    the template branch."""
     # Set the Briefcase version
     monkeypatch.setattr(briefcase, "__version__", briefcase_version)
 
@@ -103,8 +103,8 @@ def test_default_template_dev(
     full_context,
     briefcase_version,
 ):
-    """In a dev version, template will fall back to the 'main' branch if a
-    versioned template doesn't exist."""
+    """In a dev version, template will fall back to the 'main' branch if a versioned
+    template doesn't exist."""
     # Set the Briefcase version
     monkeypatch.setattr(briefcase, "__version__", briefcase_version)
 
@@ -191,8 +191,8 @@ def test_default_template_dev_explicit_invalid_branch(
     full_context,
     briefcase_version,
 ):
-    """In a dev version, if an explicit (but invalid) branch is provided, the
-    fallback to the 'main' branch will not occur."""
+    """In a dev version, if an explicit (but invalid) branch is provided, the fallback
+    to the 'main' branch will not occur."""
     # Set the Briefcase version to a dev version
     monkeypatch.setattr(briefcase, "__version__", briefcase_version)
 
@@ -361,8 +361,8 @@ def test_explicit_local_template_and_branch(
     myapp,
     full_context,
 ):
-    """If a local template path and branch is specified in the app config, it
-    is used."""
+    """If a local template path and branch is specified in the app config, it is
+    used."""
     # Set the Briefcase version
     monkeypatch.setattr(briefcase, "__version__", "37.42.7")
 
@@ -387,8 +387,8 @@ def test_explicit_local_template_and_branch(
 
 
 def test_offline_repo_template(monkeypatch, create_command, myapp, full_context):
-    """If the user is offline the first time a repo template is requested, an
-    error is raised."""
+    """If the user is offline the first time a repo template is requested, an error is
+    raised."""
     # Set the Briefcase version
     monkeypatch.setattr(briefcase, "__version__", "37.42.7")
 
@@ -451,8 +451,8 @@ def test_invalid_repo_template(monkeypatch, create_command, myapp, full_context)
 
 
 def test_missing_branch_template(monkeypatch, create_command, myapp, full_context):
-    """If the repo at the provided template URL doesn't have a branch for this
-    Briefcase version, an error is raised."""
+    """If the repo at the provided template URL doesn't have a branch for this Briefcase
+    version, an error is raised."""
     # Set the Briefcase version
     monkeypatch.setattr(briefcase, "__version__", "37.42.7")
 
@@ -524,8 +524,8 @@ def test_cached_template_offline(
     full_context,
     capsys,
 ):
-    """If the user is offline, a cached template won't be updated, but will
-    still work."""
+    """If the user is offline, a cached template won't be updated, but will still
+    work."""
     # Set the Briefcase version
     monkeypatch.setattr(briefcase, "__version__", "37.42.7")
 
@@ -571,8 +571,8 @@ def test_cached_missing_branch_template(
     myapp,
     full_context,
 ):
-    """If the cached repo doesn't have a branch for this Briefcase version, an
-    error is raised."""
+    """If the cached repo doesn't have a branch for this Briefcase version, an error is
+    raised."""
     # Set the Briefcase version
     monkeypatch.setattr(briefcase, "__version__", "37.42.7")
 

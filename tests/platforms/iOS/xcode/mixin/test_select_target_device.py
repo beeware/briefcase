@@ -118,8 +118,7 @@ def test_explicit_device_name_should_find_highest_version_no_os(dummy_command):
 
 
 def test_explicit_device_name_and_version(dummy_command):
-    """If there are multiple options on multiple devices, two user inputs are
-    needed."""
+    """If there are multiple options on multiple devices, two user inputs are needed."""
     # get_simulators will return multiple options on 2 iOS versions.
     dummy_command.get_simulators.return_value = {
         "iOS 10.3": {
@@ -186,7 +185,7 @@ def test_invalid_explicit_device_name(dummy_command):
 
 
 def test_explicit_name_invalid_version(dummy_command):
-    """If the user nominates an device name but an invalid version, an error is
+    """If the user nominates a device name but an invalid version, an error is
     raised."""
     # get_simulators will some options.
     dummy_command.get_simulators.return_value = {
@@ -204,8 +203,8 @@ def test_explicit_name_invalid_version(dummy_command):
 
 
 def test_invalid_explicit_device_name_valid_version(dummy_command):
-    """If the user nominates an invalid device name but a valid version, an
-    error is raised."""
+    """If the user nominates an invalid device name but a valid version, an error is
+    raised."""
     # get_simulators will some options.
     dummy_command.get_simulators.return_value = {
         "iOS 13.2": {
@@ -222,8 +221,7 @@ def test_invalid_explicit_device_name_valid_version(dummy_command):
 
 
 def test_implied_device(dummy_command):
-    """If there's only one device, no input is required; the device is
-    returned."""
+    """If there's only one device, no input is required; the device is returned."""
     # get_simulators will return one option.
     dummy_command.get_simulators.return_value = {
         "iOS 13.2": {
@@ -266,8 +264,8 @@ def test_implied_os(dummy_command):
 
 
 def test_multiple_os_implied_device(dummy_command):
-    """If there are multiple OS options, but only one device on the chosen OS,
-    device is implied."""
+    """If there are multiple OS options, but only one device on the chosen OS, device is
+    implied."""
     # get_simulators will return multiple options on 1 iOS version.
     dummy_command.get_simulators.return_value = {
         "iOS 10.3": {
@@ -295,8 +293,7 @@ def test_multiple_os_implied_device(dummy_command):
 
 
 def test_os_and_device_options(dummy_command):
-    """If there are multiple options on multiple devices, two user inputs are
-    needed."""
+    """If there are multiple options on multiple devices, two user inputs are needed."""
     # get_simulators will return multiple options on 2 iOS versions.
     dummy_command.get_simulators.return_value = {
         "iOS 10.3": {

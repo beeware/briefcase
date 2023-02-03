@@ -14,7 +14,8 @@ def test_no_git(tracking_create_command, monkeypatch):
 
     # The command will fail tool verification.
     with pytest.raises(
-        BriefcaseCommandError, match=r"Briefcase requires git, but it is not installed"
+        BriefcaseCommandError,
+        match=r"Briefcase requires git, but it is not installed",
     ):
         tracking_create_command()
 
@@ -25,7 +26,10 @@ def test_create(tracking_create_command):
 
     # The right sequence of things will be done
     assert tracking_create_command.actions == [
-        ("verify",),
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
         # Create the first app
         ("generate", tracking_create_command.apps["first"]),
         ("support", tracking_create_command.apps["first"]),
@@ -50,13 +54,15 @@ def test_create(tracking_create_command):
 
 
 def test_create_single(tracking_create_command):
-    """The create command can be called to create a single app from the
-    config."""
+    """The create command can be called to create a single app from the config."""
     tracking_create_command(app=tracking_create_command.apps["first"])
 
     # The right sequence of things will be done
     assert tracking_create_command.actions == [
-        ("verify",),
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
         # Create the first app
         ("generate", tracking_create_command.apps["first"]),
         ("support", tracking_create_command.apps["first"]),

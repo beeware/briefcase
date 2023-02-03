@@ -4,8 +4,7 @@ from briefcase.exceptions import BriefcaseCommandError
 
 
 def test_unvalidated_input(new_command):
-    """If the user enters text and there's no validation, the text is
-    returned."""
+    """If the user enters text and there's no validation, the text is returned."""
     new_command.input.values = ["hello"]
 
     value = new_command.input_text(
@@ -17,8 +16,8 @@ def test_unvalidated_input(new_command):
 
 
 def test_validated_input(new_command):
-    """If the user enters text and there's validation, the user is prompted
-    until valid text is entered."""
+    """If the user enters text and there's validation, the user is prompted until valid
+    text is entered."""
     new_command.input.values = ["bad", "hello"]
 
     def validator(text):
@@ -40,8 +39,7 @@ def test_validated_input(new_command):
 
 
 def test_input_with_default(new_command):
-    """If the user enters text and there's no validation, the text is
-    returned."""
+    """If the user enters text and there's no validation, the text is returned."""
     new_command.input.values = [""]
 
     value = new_command.input_text(

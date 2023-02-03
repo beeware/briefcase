@@ -16,8 +16,8 @@ class DeviceState(enum.Enum):
 
 
 def verify_xcode_install(tools: ToolCache, min_version: tuple = None):
-    """Verify that Xcode and the command line developer tools are installed and
-    ready for use.
+    """Verify that Xcode and the command line developer tools are installed and ready
+    for use.
 
     We need Xcode, *and* the Xcode Command Line Tools. A completely clean
     machine will have neither Xcode *nor* the Command Line Tools. However,
@@ -45,8 +45,7 @@ def verify_xcode_install(tools: ToolCache, min_version: tuple = None):
 
 
 def verify_command_line_tools_install(tools: ToolCache):
-    """Verify that command line developer tools are installed and ready for
-    use.
+    """Verify that command line developer tools are installed and ready for use.
 
     A completely clean machine will have neither Xcode *nor* the Command Line
     Tools. However, it's possible to install Xcode and *not* install the command
@@ -128,8 +127,8 @@ def ensure_xcode_is_installed(
     min_version: tuple = None,
     xcode_location="/Applications/Xcode.app",
 ):
-    """Determine if Xcode is installed; and if so, that it meets minimum
-    version requirements.
+    """Determine if Xcode is installed; and if so, that it meets minimum version
+    requirements.
 
     Raises an exception if XCode isn't installed, or if the version of Xcode
     that is installed doesn't meet the minimum requirement.

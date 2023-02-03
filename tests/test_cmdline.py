@@ -212,8 +212,7 @@ def test_bare_command(monkeypatch, logger, console):
 
 @pytest.mark.skipif(sys.platform != "linux", reason="requires Linux")
 def test_linux_default(logger, console):
-    """``briefcase create`` returns the linux create appimage command on
-    Linux."""
+    """``briefcase create`` returns the linux create appimage command on Linux."""
 
     cmd, options = do_cmdline_parse("create".split(), logger, console)
 
@@ -229,8 +228,7 @@ def test_linux_default(logger, console):
 
 @pytest.mark.skipif(sys.platform != "darwin", reason="requires macOS")
 def test_macOS_default(logger, console):
-    """``briefcase create`` returns the linux create appimage command on
-    Linux."""
+    """``briefcase create`` returns the linux create appimage command on Linux."""
 
     cmd, options = do_cmdline_parse("create".split(), logger, console)
 
@@ -246,8 +244,7 @@ def test_macOS_default(logger, console):
 
 @pytest.mark.skipif(sys.platform != "win32", reason="requires Windows")
 def test_windows_default(logger, console):
-    """``briefcase create`` returns the Windows create app command on
-    Windows."""
+    """``briefcase create`` returns the Windows create app command on Windows."""
 
     cmd, options = do_cmdline_parse("create".split(), logger, console)
 
@@ -343,8 +340,7 @@ def test_command_explicit_platform_case_handling(monkeypatch, logger, console):
 
 
 def test_command_explicit_platform_help(monkeypatch, capsys, logger, console):
-    """``briefcase create macOS -h`` returns the macOS create app command
-    help."""
+    """``briefcase create macOS -h`` returns the macOS create app command help."""
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, "platform", "darwin")
 
@@ -390,8 +386,8 @@ def test_command_unknown_format(monkeypatch, logger, console):
 
 
 def test_command_explicit_unsupported_format(monkeypatch, logger, console):
-    """``briefcase create macOS homebrew`` raises an error because the format
-    isn't supported (yet)"""
+    """``briefcase create macOS homebrew`` raises an error because the format isn't
+    supported (yet)"""
     # Mock the output formats to include a "homebrew" backend with no commands.
     monkeypatch.setattr(
         cmdline,

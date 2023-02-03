@@ -131,8 +131,8 @@ def test_notarize_unknown_format(package_command, tmp_path):
 
 
 def test_notarize_dmg_unknown_credentials(package_command, first_app_dmg):
-    """When notarizing a DMG, if credentials haven't been stored, the user will
-    be prompted to store them."""
+    """When notarizing a DMG, if credentials haven't been stored, the user will be
+    prompted to store them."""
     # Set up subprocess to fail on the first notarization attempt
     package_command.tools.subprocess.run.side_effect = [
         subprocess.CalledProcessError(
@@ -209,8 +209,8 @@ def test_credential_storage_failure_app(
     first_app_with_binaries,
     tmp_path,
 ):
-    """When submitting an app, if credentials haven't been stored, and storage
-    fails, an error is raised."""
+    """When submitting an app, if credentials haven't been stored, and storage fails, an
+    error is raised."""
     app_path = tmp_path / "base_path" / "macOS" / "app" / "First App" / "First App.app"
     archive_path = (
         tmp_path / "base_path" / "macOS" / "app" / "First App" / "archive.zip"
@@ -275,8 +275,7 @@ def test_credential_storage_failure_app(
 
 
 def test_credential_storage_failure_dmg(package_command, first_app_dmg):
-    """If credentials haven't been stored, and storage fails, an error is
-    raised."""
+    """If credentials haven't been stored, and storage fails, an error is raised."""
     # Set up subprocess to fail on the first notarization attempt,
     # then fail on the storage of credentials
     package_command.tools.subprocess.run.side_effect = [
@@ -335,8 +334,8 @@ def test_credential_storage_failure_dmg(package_command, first_app_dmg):
 def test_credential_storage_disabled_input_app(
     package_command, first_app_with_binaries, tmp_path
 ):
-    """When packaging an app, if credentials haven't been stored, and input is
-    disabled, an error is raised."""
+    """When packaging an app, if credentials haven't been stored, and input is disabled,
+    an error is raised."""
     app_path = tmp_path / "base_path" / "macOS" / "app" / "First App" / "First App.app"
     archive_path = (
         tmp_path / "base_path" / "macOS" / "app" / "First App" / "archive.zip"
@@ -386,8 +385,8 @@ def test_credential_storage_disabled_input_app(
 
 
 def test_credential_storage_disabled_input_dmg(package_command, first_app_dmg):
-    """When packaging a DMG, if credentials haven't been stored, and input is
-    disabled, an error is raised."""
+    """When packaging a DMG, if credentials haven't been stored, and input is disabled,
+    an error is raised."""
     # Set up subprocess to fail on the first notarization attempt.
     package_command.tools.subprocess.run.side_effect = [
         subprocess.CalledProcessError(
@@ -429,8 +428,7 @@ def test_credential_storage_disabled_input_dmg(package_command, first_app_dmg):
 
 
 def test_notarize_unknown_credentials_after_storage(package_command, first_app_dmg):
-    """If we get a credential failure after an attempt to store, an error is
-    raised."""
+    """If we get a credential failure after an attempt to store, an error is raised."""
     # Set up subprocess to fail on the second notarization attempt
     package_command.tools.subprocess.run.side_effect = [
         subprocess.CalledProcessError(
@@ -505,8 +503,8 @@ def test_app_notarization_failure_with_credentials(
     first_app_with_binaries,
     tmp_path,
 ):
-    """If the notarization process for an app fails for a reason other than
-    credentials, an error is raised."""
+    """If the notarization process for an app fails for a reason other than credentials,
+    an error is raised."""
     app_path = tmp_path / "base_path" / "macOS" / "app" / "First App" / "First App.app"
     archive_path = (
         tmp_path / "base_path" / "macOS" / "app" / "First App" / "archive.zip"
@@ -555,8 +553,8 @@ def test_app_notarization_failure_with_credentials(
 
 
 def test_dmg_notarization_failure_with_credentials(package_command, first_app_dmg):
-    """If the notarization process for a DMG fails for a reason other than
-    credentials, an error is raised."""
+    """If the notarization process for a DMG fails for a reason other than credentials,
+    an error is raised."""
     # Set up subprocess to fail on the first notarization attempt
     # for a reason other than credentials
     package_command.tools.subprocess.run.side_effect = [

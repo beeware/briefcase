@@ -6,7 +6,11 @@ from unittest import mock
 import pytest
 
 from briefcase.console import Console, Log
-from briefcase.exceptions import BriefcaseCommandError, NetworkFailure
+from briefcase.exceptions import (
+    BriefcaseCommandError,
+    NetworkFailure,
+    UnsupportedHostError,
+)
 from briefcase.integrations.docker import DockerAppContext
 from briefcase.integrations.linuxdeploy import LinuxDeploy
 from briefcase.platforms.linux.appimage import LinuxAppImageBuildCommand
@@ -95,7 +99,7 @@ def test_verify_tools_wrong_platform(build_command):
     build_command.tools.download.file = mock.MagicMock()
 
     # Try to invoke the build
-    with pytest.raises(BriefcaseCommandError):
+    with pytest.raises(UnsupportedHostError):
         build_command()
 
     # The download was not attempted
@@ -408,8 +412,7 @@ def test_build_appimage_in_docker(build_command, first_app, tmp_path, monkeypatc
     sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
 )
 def test_build_appimage_with_plugins_in_docker(build_command, first_app, tmp_path):
-    """A Linux app can be packaged as an AppImage with plugins in a Docker
-    container."""
+    """A Linux app can be packaged as an AppImage with plugins in a Docker container."""
     # Mock the existence of some plugins
     gtk_plugin_path = (
         tmp_path

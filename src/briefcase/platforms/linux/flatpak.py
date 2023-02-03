@@ -10,13 +10,15 @@ from briefcase.commands import (
     UpdateCommand,
 )
 from briefcase.config import AppConfig
-from briefcase.exceptions import BriefcaseCommandError, BriefcaseConfigError
+from briefcase.exceptions import BriefcaseConfigError
 from briefcase.integrations.flatpak import Flatpak
 from briefcase.platforms.linux import LinuxMixin
 
 
 class LinuxFlatpakMixin(LinuxMixin):
     output_format = "flatpak"
+    supported_host_os = {"Linux"}
+    supported_host_os_reason = "Flatpaks can only be built on Linux."
 
     def binary_path(self, app):
         # Flatpak doesn't really produce an identifiable "binary" as part of its
@@ -38,8 +40,6 @@ class LinuxFlatpakMixin(LinuxMixin):
     def verify_tools(self):
         """Verify that we're on Linux."""
         super().verify_tools()
-        if self.tools.host_os != "Linux":
-            raise BriefcaseCommandError("Flatpaks can only be generated on Linux.")
         Flatpak.verify(tools=self.tools)
 
     def flatpak_runtime_repo(self, app):
@@ -98,8 +98,8 @@ class LinuxFlatpakCreateCommand(LinuxFlatpakMixin, CreateCommand):
     def support_package_url(self, support_revision):
         """The URL of the support package to use for apps of this type.
 
-        Flatpak uses the original CPython sources, and compiles them in
-        the flatpak sandbox.
+        Flatpak uses the original CPython sources, and compiles them in the flatpak
+        sandbox.
         """
         base_version = ".".join(str(m) for m in self.tools.sys.version_info[:3])
         full_version = self.tools.platform.python_version()
@@ -127,8 +127,8 @@ class LinuxFlatpakCreateCommand(LinuxFlatpakMixin, CreateCommand):
     def install_app_support_package(self, app: AppConfig):
         """Install the support package.
 
-        Flatpak doesn't unpack the support package; it copies the
-        tarball as-is into the source tree.
+        Flatpak doesn't unpack the support package; it copies the tarball as-is into the
+        source tree.
         """
         support_file_path = self._download_support_package(app)
         with self.input.wait_bar("Installing support file..."):

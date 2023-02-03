@@ -5,7 +5,7 @@ from briefcase.integrations.xcode import verify_xcode_install
 
 
 def test_verify_xcode_install(mock_tools):
-    "Xcode can be verified"
+    """Xcode can be verified."""
     mock_tools.subprocess.check_output.side_effect = [
         "/Applications/Xcode/app/Contents/Developer",  # xcode-select -p
         "Xcode 14.0.1",  # xcodebuild -version
@@ -21,7 +21,7 @@ def test_verify_xcode_install(mock_tools):
 
 
 def test_reverify_xcode_install(mock_tools):
-    "A second call to verify is a no-op"
+    """A second call to verify is a no-op."""
 
     xcode = mock.MagicMock()
     mock_tools.xcode = xcode

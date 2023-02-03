@@ -17,8 +17,8 @@ def test_missing_avd_config(android_sdk):
 
 
 def test_minimal_config(android_sdk, capsys):
-    """If the AVD config doesn't contain any interesting keys, raise a warning,
-    but continue."""
+    """If the AVD config doesn't contain any interesting keys, raise a warning, but
+    continue."""
     # Mock an AVD configuration that doesn't contain an image.sysdir.1,
     # skin.name or skin.path key.
     android_sdk.avd_config = mock.MagicMock(
@@ -53,8 +53,8 @@ def test_minimal_config(android_sdk, capsys):
 
 
 def test_valid_system_image(android_sdk):
-    """If the AVD config contains an image.sysdir.1 key, it is used to create a
-    system image name."""
+    """If the AVD config contains an image.sysdir.1 key, it is used to create a system
+    image name."""
     # Mock an AVD configuration that contains an image.sysdir.1 key
     android_sdk.avd_config = mock.MagicMock(
         return_value={
@@ -92,8 +92,7 @@ def test_valid_system_image(android_sdk):
 
 
 def test_valid_emulator_skin(android_sdk):
-    """If the AVD config contains a known emulator skin type, it is
-    verified."""
+    """If the AVD config contains a known emulator skin type, it is verified."""
     # Mock an AVD configuration that contains skin.name and skin.path keys
     android_sdk.avd_config = mock.MagicMock(
         return_value={
@@ -127,8 +126,8 @@ def test_valid_emulator_skin(android_sdk):
 
 
 def test_unrecognized_emulator_skin(android_sdk, capsys):
-    """If the AVD config contains an emulator skin in an unusual location,
-    raise a warning, but continue."""
+    """If the AVD config contains an emulator skin in an unusual location, raise a
+    warning, but continue."""
     # Mock an AVD configuration that contains a skin.name and skin.path
     # in an unexpected location
     android_sdk.avd_config = mock.MagicMock(
@@ -166,8 +165,8 @@ def test_unrecognized_emulator_skin(android_sdk, capsys):
 
 
 def test_no_skin_emulator_skin(android_sdk, capsys):
-    """If the AVD config contains an emulator skin set to _no_skin continiue
-    without validation."""
+    """If the AVD config contains an emulator skin set to _no_skin continue without
+    validation."""
     # Mock an AVD configuration that contains a skin.name and skin.path
     # in an unexpected location
     android_sdk.avd_config = mock.MagicMock(

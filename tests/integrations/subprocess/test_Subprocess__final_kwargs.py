@@ -1,4 +1,5 @@
 import platform
+from pathlib import Path
 
 import pytest
 
@@ -47,10 +48,22 @@ def test_env_overrides(mock_sub):
 
 def test_cwd_provided(mock_sub):
     """If a cwd is provided, it is reflected in the environment."""
+    cwd_override = "/my/current/path"
+    assert mock_sub.final_kwargs(cwd=cwd_override) == {
+        "text": True,
+        "encoding": CONSOLE_ENCODING,
+        "cwd": cwd_override,
+    }
 
 
 def test_non_str_cwd_provided(mock_sub):
     """If the cwd isn't a string, it's converted to string."""
+    cwd_override = Path("/my/current/path")
+    assert mock_sub.final_kwargs(cwd=cwd_override) == {
+        "text": True,
+        "encoding": CONSOLE_ENCODING,
+        "cwd": str(cwd_override),
+    }
 
 
 @pytest.mark.parametrize(
@@ -79,6 +92,5 @@ def test_non_str_cwd_provided(mock_sub):
     ],
 )
 def test_text_conversion(mock_sub, in_kwargs, final_kwargs):
-    """Text/universal_newlines is correctly inserted/overridden, with
-    encoding."""
+    """Text/universal_newlines is correctly inserted/overridden, with encoding."""
     assert mock_sub.final_kwargs(**in_kwargs) == final_kwargs

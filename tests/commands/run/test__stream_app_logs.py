@@ -7,7 +7,7 @@ from briefcase.exceptions import BriefcaseCommandError, BriefcaseTestSuiteFailur
 
 
 def test_run_app(run_command, first_app):
-    """An app can have it's logs streamed."""
+    """An app can have its logs streamed."""
     popen = mock.MagicMock()
     popen.returncode = 0
     clean_filter = mock.MagicMock()
@@ -45,7 +45,7 @@ def test_run_app(run_command, first_app):
 
 
 def test_run_app_custom_stop_func(run_command, first_app):
-    """An app with a custom stop function can have it's logs streamed."""
+    """An app with a custom stop function can have its logs streamed."""
     popen = mock.MagicMock()
     popen.returncode = 0
     clean_filter = mock.MagicMock()
@@ -163,8 +163,7 @@ def test_test_mode_failure(run_command, first_app):
 
 
 def test_test_mode_no_result(run_command, first_app):
-    """An app can be streamed in test mode, but with no test result being
-    found."""
+    """An app can be streamed in test mode, but with no test result being found."""
     popen = mock.MagicMock()
     popen.returncode = 0
     clean_filter = mock.MagicMock()
@@ -291,8 +290,7 @@ def test_run_app_failure(run_command, first_app):
 
 
 def test_run_app_log_stream_stream_failure(run_command, first_app):
-    """If a log stream returns an error code, the log filter requires it is
-    ignored."""
+    """If a log stream returns an error code, the log filter requires it is ignored."""
     popen = mock.MagicMock()
     popen.returncode = 1
     clean_filter = mock.MagicMock()
@@ -370,8 +368,7 @@ def test_run_app_log_stream_success(run_command, first_app):
 
 
 def test_run_app_log_stream_failure(run_command, first_app):
-    """If a log streamed app exits with a failure code, the error is
-    surfaced."""
+    """If a log streamed app exits with a failure code, the error is surfaced."""
     popen = mock.MagicMock()
     popen.returncode = 0
     clean_filter = mock.MagicMock()
@@ -459,7 +456,7 @@ def test_run_app_log_stream_no_result(run_command, first_app):
 
 
 def test_run_app_ctrl_c(run_command, first_app):
-    """An app can have it's logs streamed, but be interrupted."""
+    """An app can have its logs streamed, but be interrupted."""
     popen = mock.MagicMock()
     popen.returncode = 0
     clean_filter = mock.MagicMock()

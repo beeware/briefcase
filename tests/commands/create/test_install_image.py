@@ -71,8 +71,7 @@ def test_no_requested_size(create_command, tmp_path, capsys):
 
 
 def test_no_requested_size_invalid_path(create_command, tmp_path, capsys):
-    """If the app specifies a no-size image that doesn't exist, an error is
-    raised."""
+    """If the app specifies a no-size image that doesn't exist, an error is raised."""
     create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
     create_command.tools.shutil.copy.side_effect = FileNotFoundError
 
@@ -95,8 +94,7 @@ def test_no_requested_size_invalid_path(create_command, tmp_path, capsys):
 
 
 def test_requested_size(create_command, tmp_path, capsys):
-    """If the app specifies a sized image, an annotated image filename is
-    used."""
+    """If the app specifies a sized image, an annotated image filename is used."""
     create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
 
     # Create the source image
@@ -127,8 +125,7 @@ def test_requested_size(create_command, tmp_path, capsys):
 
 
 def test_requested_size_invalid_path(create_command, tmp_path, capsys):
-    """If the app specifies a sized image that doesn't exist, an error is
-    raised."""
+    """If the app specifies a sized image that doesn't exist, an error is raised."""
     create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
     create_command.tools.shutil.copy.side_effect = FileNotFoundError
 
@@ -151,8 +148,7 @@ def test_requested_size_invalid_path(create_command, tmp_path, capsys):
 
 
 def test_variant_with_no_requested_size(create_command, tmp_path, capsys):
-    """If the app specifies a variant with no size, the variant is used
-    unsized."""
+    """If the app specifies a variant with no size, the variant is used unsized."""
     create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
 
     # Create the source image
@@ -246,8 +242,7 @@ def test_unknown_variant_with_no_requested_size(create_command, tmp_path, capsys
 
 
 def test_variant_with_size(create_command, tmp_path, capsys):
-    """If the app specifies a variant with a size, the sized variant is
-    used."""
+    """If the app specifies a variant with a size, the sized variant is used."""
     create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
 
     # Create the source image
@@ -282,8 +277,8 @@ def test_variant_with_size(create_command, tmp_path, capsys):
 
 
 def test_variant_with_size_without_variants(create_command, tmp_path, capsys):
-    """If the app specifies a variant with a size, but no variants are
-    specified, a message is output."""
+    """If the app specifies a variant with a size, but no variants are specified, a
+    message is output."""
     create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
 
     # Create the source image

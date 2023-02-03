@@ -1,0 +1,1 @@
+The ``docformatter`` hook for ``pre-commit`` was removed in favor of docstring formatting by ``black``.

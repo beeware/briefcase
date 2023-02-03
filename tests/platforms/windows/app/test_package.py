@@ -1,3 +1,4 @@
+import platform
 from subprocess import CalledProcessError
 from unittest import mock
 
@@ -24,11 +25,12 @@ def package_command(tmp_path):
 
 
 def test_package_formats(package_command):
-    "Packaging formats are as expected"
+    """Packaging formats are as expected."""
     assert package_command.packaging_formats == ["msi"]
     assert package_command.default_packaging_format == "msi"
 
 
+@pytest.mark.skipif(platform.system() != "Windows", reason="Windows specific tests")
 def test_verify(package_command):
     """Verifying on Windows creates a WiX wrapper."""
 
@@ -36,7 +38,7 @@ def test_verify(package_command):
 
     package_command.verify_tools()
 
-    # No error, and an SDK wrapper is created
+    # No error and an SDK wrapper is created
     assert isinstance(package_command.tools.wix, WiX)
 
 

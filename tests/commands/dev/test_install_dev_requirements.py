@@ -3,7 +3,7 @@ from subprocess import CalledProcessError
 
 import pytest
 
-from briefcase.commands.create import RequirementsInstallError
+from briefcase.exceptions import RequirementsInstallError
 
 
 def test_install_requirements_no_error(dev_command, first_app):
@@ -29,8 +29,7 @@ def test_install_requirements_no_error(dev_command, first_app):
 
 
 def test_install_requirements_error(dev_command, first_app):
-    """Ensure RequirementsInstallError exception is raised for install
-    errors."""
+    """Ensure RequirementsInstallError exception is raised for install errors."""
     first_app.requires = ["package-one", "package_two", "packagethree"]
 
     dev_command.tools.subprocess.run.side_effect = CalledProcessError(
@@ -60,8 +59,7 @@ def test_install_requirements_error(dev_command, first_app):
 
 
 def test_no_requirements(dev_command, first_app):
-    """Ensure dependency installation is not attempted when nothing to
-    install."""
+    """Ensure dependency installation is not attempted when nothing to install."""
     first_app.requires = []
 
     dev_command.install_dev_requirements(app=first_app)

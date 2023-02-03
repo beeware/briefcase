@@ -30,7 +30,8 @@ def open_command(tmp_path, first_app_config):
 
 
 @pytest.mark.skipif(
-    sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
+    sys.platform == "win32",
+    reason="Windows paths aren't converted in Docker context",
 )
 def test_open_docker(open_command, first_app_config, tmp_path):
     """Open starts a docker session by default."""
@@ -115,8 +116,7 @@ def test_open_no_docker_linux(open_command, first_app_config, tmp_path):
 
 @pytest.mark.skipif(sys.platform != "darwin", reason="macOS specific test")
 def test_open_no_docker_macOS(open_command, first_app_config, tmp_path):
-    """On macOS, Open runs `open` on the project folder if we specify --no-
-    docker."""
+    """On macOS, Open runs `open` on the project folder if we specify --no- docker."""
     # Create the desktop file that would be in the project folder.
     create_file(
         open_command.project_path(first_app_config)

@@ -30,7 +30,7 @@ def package_command(tmp_path):
 
 
 def test_package_formats(package_command):
-    "Packaging formats are as expected"
+    """Packaging formats are as expected."""
     assert package_command.packaging_formats == ["app", "dmg"]
     assert package_command.default_packaging_format == "dmg"
 
@@ -426,8 +426,7 @@ def test_package_bare_app(package_command, first_app_with_binaries, tmp_path):
 
 
 def test_package_bare_app_no_sign(package_command, first_app_with_binaries):
-    """A macOS App can be packaged without building dmg, and without
-    signing."""
+    """A macOS App can be packaged without building dmg, and without signing."""
     # Select a code signing identity
     package_command.select_identity.return_value = (
         "CAFEBEEF",
@@ -458,8 +457,7 @@ def test_package_bare_app_no_sign(package_command, first_app_with_binaries):
 
 
 def test_package_bare_app_no_notarization(package_command, first_app_with_binaries):
-    """A macOS App can be packaged without building dmg, and without
-    notarization."""
+    """A macOS App can be packaged without building dmg, and without notarization."""
     # Select a code signing identity
     package_command.select_identity.return_value = (
         "CAFEBEEF",
@@ -539,8 +537,8 @@ def test_dmg_with_missing_installer_icon(
     tmp_path,
     capsys,
 ):
-    """If an installer icon is specified, but the specific file is missing,
-    there is a warning."""
+    """If an installer icon is specified, but the specific file is missing, there is a
+    warning."""
     # Specify an installer icon, but don't create the matching file.
     first_app_with_binaries.installer_icon = "pretty"
 
@@ -636,8 +634,8 @@ def test_dmg_with_missing_app_installer_icon(
     tmp_path,
     capsys,
 ):
-    """If an app icon is specified, but the specific file is missing, there is
-    a warning."""
+    """If an app icon is specified, but the specific file is missing, there is a
+    warning."""
     # Specify an app icon, but don't create the matching file.
     first_app_with_binaries.icon = "pretty_app"
 
@@ -733,8 +731,8 @@ def test_dmg_with_missing_installer_background(
     tmp_path,
     capsys,
 ):
-    """If an installer image is specified, but the specific file is missing,
-    there is a warning."""
+    """If an installer image is specified, but the specific file is missing, there is a
+    warning."""
     # Specify an installer background, but don't create the matching file.
     first_app_with_binaries.installer_background = "pretty_background"
 
@@ -780,7 +778,7 @@ def test_dmg_with_missing_installer_background(
 
 @pytest.mark.skipif(sys.platform != "darwin", reason="macOS specific test")
 def test_verify(package_command):
-    "If you're on macOS, you can verify tools."
+    """If you're on macOS, you can verify tools."""
     # Mock the existence of the command line tools
     package_command.tools.subprocess.check_output.side_effect = [
         subprocess.CalledProcessError(cmd=["xcode-select", "--install"], returncode=1),
@@ -790,14 +788,3 @@ def test_verify(package_command):
     package_command.verify_tools()
 
     assert package_command.tools.xcode_cli is not None
-
-
-@pytest.mark.skipif(sys.platform == "darwin", reason="non-macOS specific test")
-def test_verify_non_macOS(package_command):
-    "If you're not on macOS, you can't verify tools."
-
-    with pytest.raises(
-        BriefcaseCommandError,
-        match="Code signing and / or building a DMG requires running on macOS.",
-    ):
-        package_command.verify_tools()

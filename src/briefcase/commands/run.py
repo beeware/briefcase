@@ -113,8 +113,7 @@ class LogFilter:
 
 
 class RunAppMixin:
-    """A mixin that captures the logic of starting an app and streaming the app
-    logs."""
+    """A mixin that captures the logic of starting an app and streaming the app logs."""
 
     allows_passthrough = True
 
@@ -252,7 +251,8 @@ class RunCommand(RunAppMixin, BaseCommand):
         passthrough: Optional[List[str]] = None,
         **options,
     ):
-        # Confirm all required tools are available
+        # Confirm host compatibility and all required tools are available
+        self.verify_host()
         self.verify_tools()
 
         # Which app should we run? If there's only one defined

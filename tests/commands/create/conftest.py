@@ -30,10 +30,11 @@ def default_create_command(tmp_path):
 
 
 class DummyCreateCommand(CreateCommand):
-    """A dummy create command that stubs out all the required interfaces of the
-    Create command."""
+    """A dummy create command that stubs out all the required interfaces of the Create
+    command."""
 
     platform = "tester"
+    supported_host_os = {"c64"}
     output_format = "dummy"
     description = "Dummy create command"
 
@@ -48,8 +49,7 @@ class DummyCreateCommand(CreateCommand):
 
         self.tools.home_path = home_path
 
-        # If a test sets this property, the tool verification step will
-        # fail.
+        # If a test sets this property, the tool verification step will fail.
         self._missing_tool = None
 
         # Mock the external services
@@ -98,9 +98,13 @@ class TrackingCreateCommand(DummyCreateCommand):
 
         self.actions = []
 
+    def verify_host(self):
+        super().verify_host()
+        self.actions.append(("verify-host",))
+
     def verify_tools(self):
         super().verify_tools()
-        self.actions.append(("verify",))
+        self.actions.append(("verify-tools",))
 
     def verify_app_tools(self, app):
         super().verify_app_tools(app=app)

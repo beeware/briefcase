@@ -66,7 +66,8 @@ class UpdateCommand(CreateCommand):
         test_mode: bool = False,
         **options,
     ):
-        # Confirm all required tools are available
+        # Confirm host compatibility and all required tools are available
+        self.verify_host()
         self.verify_tools()
 
         if app:

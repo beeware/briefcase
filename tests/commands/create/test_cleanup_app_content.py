@@ -103,8 +103,7 @@ def test_file_glob_cleanup(create_command, myapp_unrolled, support_path):
 
 
 def test_deep_glob_cleanup(create_command, myapp_unrolled, support_path):
-    """A glob that matches all directories will be added to the cleanup
-    list."""
+    """A glob that matches all directories will be added to the cleanup list."""
     myapp_unrolled.cleanup_paths = ["path/to/support/**/b_file.*"]
 
     # Cleanup app content
@@ -120,8 +119,7 @@ def test_deep_glob_cleanup(create_command, myapp_unrolled, support_path):
 
 
 def test_template_glob_cleanup(create_command, myapp_unrolled, support_path):
-    """A glob of files specified in the template will be added to the cleanup
-    list."""
+    """A glob of files specified in the template will be added to the cleanup list."""
     # Define a cleanup_paths in the template *and* on the app
     create_command._path_index = {
         myapp_unrolled: {
@@ -142,8 +140,7 @@ def test_template_glob_cleanup(create_command, myapp_unrolled, support_path):
 
 
 def test_non_existent_cleanup(create_command, myapp_unrolled, support_path):
-    """Referencing a specific file that doesn't exist doesn't cause a
-    problem."""
+    """Referencing a specific file that doesn't exist doesn't cause a problem."""
     myapp_unrolled.cleanup_paths = [
         # This file exists
         "path/to/support/dir1/a_file1.txt",

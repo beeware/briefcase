@@ -5,7 +5,7 @@ from unittest import mock
 import pytest
 
 import briefcase
-from briefcase.commands.create import MissingAppSources
+from briefcase.exceptions import MissingAppSources
 
 from ...utils import create_file
 
@@ -44,8 +44,8 @@ def test_no_code(
     app_path,
     app_requirements_path_index,
 ):
-    """If an app has no code (?!), install_app_code is mostly a no-op; but
-    distinfo is created."""
+    """If an app has no code (?!), install_app_code is mostly a no-op; but distinfo is
+    created."""
     # Mock shutil so we can track usage.
     create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
     create_command.tools.os = mock.MagicMock(spec_set=os)
@@ -70,8 +70,8 @@ def test_empty_code(
     app_path,
     app_requirements_path_index,
 ):
-    """If an app has an empty sources list (?!), install_app_code is mostly a
-    no-op; but distinfo is created."""
+    """If an app has an empty sources list (?!), install_app_code is mostly a no-op; but
+    distinfo is created."""
     # Mock shutil so we can track usage.
     create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
     create_command.tools.os = mock.MagicMock(spec_set=os)
@@ -115,8 +115,7 @@ def test_source_dir(
     app_path,
     app_requirements_path_index,
 ):
-    """If an app defines directories of sources, the whole directory is
-    copied."""
+    """If an app defines directories of sources, the whole directory is copied."""
     # Create the mock sources
     # src /
     #   first /
@@ -374,8 +373,8 @@ def test_non_latin_metadata(
     app_path,
     app_requirements_path_index,
 ):
-    """If the app metadata contains non-Latin-1 characters, the METADATA file
-    is written correctly (Briefcase#767)"""
+    """If the app metadata contains non-Latin-1 characters, the METADATA file is written
+    correctly (Briefcase#767)"""
     myapp.formal_name = "My büggy app"
     myapp.author = "José Weiß-Müller"
     myapp.author_email = "钱华林@中科院.中国"
@@ -431,8 +430,7 @@ def test_test_sources(
     app_path,
     app_requirements_path_index,
 ):
-    """If an app defines test code, but we're not in test mode, it isn't
-    copied."""
+    """If an app defines test code, but we're not in test mode, it isn't copied."""
     # Create the mock sources
     # src /
     #   first /
@@ -504,8 +502,7 @@ def test_test_sources_test_mode(
     app_path,
     app_requirements_path_index,
 ):
-    """If an app defines test code, and we're in test mode, test sources are
-    copied."""
+    """If an app defines test code, and we're in test mode, test sources are copied."""
     # Create the mock sources
     # src /
     #   first /
@@ -580,8 +577,8 @@ def test_only_test_sources_test_mode(
     app_path,
     app_requirements_path_index,
 ):
-    """If an app only defines test code, and we're in test mode, test sources
-    are copied."""
+    """If an app only defines test code, and we're in test mode, test sources are
+    copied."""
     # Create the mock sources
     # tests /
     #   first.py

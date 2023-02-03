@@ -6,8 +6,7 @@ from unittest import mock
 import pytest
 import tomli_w
 
-from briefcase.commands.create import RequirementsInstallError
-from briefcase.exceptions import BriefcaseCommandError
+from briefcase.exceptions import BriefcaseCommandError, RequirementsInstallError
 from briefcase.integrations.subprocess import Subprocess
 
 
@@ -19,8 +18,7 @@ def create_command(create_command, myapp):
 
 
 def create_installation_artefacts(app_packages_path, packages):
-    """Utility method for generating a function that will mock installation
-    artefacts.
+    """Utility method for generating a function that will mock installation artefacts.
 
     Creates a function that when invoked, creates a dummy ``__init__.py``
     and ``__main__.py`` for each package named in ``packages``.
@@ -42,8 +40,8 @@ def create_installation_artefacts(app_packages_path, packages):
 
 
 def test_bad_path_index(create_command, myapp, bundle_path, app_requirements_path):
-    """If the app's path index doesn't declare a destination for requirements,
-    an error is raised."""
+    """If the app's path index doesn't declare a destination for requirements, an error
+    is raised."""
     # Write a briefcase.toml that is missing app_packages_path and app_requirements_path
     with (bundle_path / "briefcase.toml").open("wb") as f:
         index = {
@@ -96,8 +94,7 @@ def test_app_packages_empty_requires(
     app_packages_path,
     app_packages_path_index,
 ):
-    """If an app has an empty requirements list, install_app_requirements is a
-    no-op."""
+    """If an app has an empty requirements list, install_app_requirements is a no-op."""
     myapp.requires = []
 
     create_command.install_app_requirements(myapp, test_mode=False)
@@ -155,8 +152,8 @@ def test_app_packages_valid_requires_no_support_package(
     app_packages_path,
     app_packages_path_index,
 ):
-    """If the template doesn't specify a support package, the cross-platform
-    site isn't specified."""
+    """If the template doesn't specify a support package, the cross-platform site isn't
+    specified."""
     myapp.requires = ["first", "second==1.2.3", "third>=3.2.1"]
 
     # Override the cache of paths to specify an app packages path, but no support package path
@@ -358,8 +355,7 @@ def test_app_packages_replace_existing_requirements(
     app_packages_path,
     app_packages_path_index,
 ):
-    """If the app has already had requirements installed, they are removed
-    first."""
+    """If the app has already had requirements installed, they are removed first."""
     # Create some existing requirements
     create_installation_artefacts(app_packages_path, ["old", "ancient"])()
 
@@ -496,8 +492,7 @@ def _test_app_requirements_paths(
     tmp_path,
     requirement,
 ):
-    """A utility method that can be used to test expansion of a specific
-    requirement."""
+    """A utility method that can be used to test expansion of a specific requirement."""
     if isinstance(requirement, tuple):
         requirement, converted = requirement
     else:
@@ -636,8 +631,8 @@ def test_app_packages_test_requires(
     app_packages_path,
     app_packages_path_index,
 ):
-    """If an app has test requirements, they're not included unless we are in
-    test mode."""
+    """If an app has test requirements, they're not included unless we are in test
+    mode."""
     myapp.requires = ["first", "second==1.2.3", "third>=3.2.1"]
     myapp.test_requires = ["pytest", "pytest-tldr"]
 
@@ -681,8 +676,7 @@ def test_app_packages_test_requires_test_mode(
     app_packages_path,
     app_packages_path_index,
 ):
-    """If an app has test requirements and we're in test mode, they are
-    installed."""
+    """If an app has test requirements and we're in test mode, they are installed."""
     myapp.requires = ["first", "second==1.2.3", "third>=3.2.1"]
     myapp.test_requires = ["pytest", "pytest-tldr"]
 

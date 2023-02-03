@@ -24,9 +24,13 @@ class DummyDevCommand(DevCommand):
         self.actions = []
         self.env = dict(a=1, b=2, c=3)
 
+    def verify_host(self):
+        super().verify_host()
+        self.actions.append(("verify-host",))
+
     def verify_tools(self):
         super().verify_tools()
-        self.actions.append(("verify",))
+        self.actions.append(("verify-tools",))
 
     def verify_app_tools(self, app):
         super().verify_app_tools(app=app)
@@ -63,8 +67,10 @@ def test_no_args_one_app(dev_command, first_app):
 
     # The right sequence of things will be done
     assert dev_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Run the first app devly
@@ -89,8 +95,10 @@ def test_no_args_two_apps(dev_command, first_app, second_app):
 
     # No apps will be launched
     assert dev_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
     ]
 
 
@@ -109,8 +117,10 @@ def test_with_arg_one_app(dev_command, first_app):
 
     # The right sequence of things will be done
     assert dev_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Run the first app devly
@@ -134,8 +144,10 @@ def test_with_arg_two_apps(dev_command, first_app, second_app):
 
     # The right sequence of things will be done
     assert dev_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # App tools are verified for app
         ("verify-app-tools", "second"),
         # Run the second app devly
@@ -144,8 +156,8 @@ def test_with_arg_two_apps(dev_command, first_app, second_app):
 
 
 def test_bad_app_reference(dev_command, first_app, second_app):
-    """If the command line argument refers to an app that doesn't exist, raise
-    an error."""
+    """If the command line argument refers to an app that doesn't exist, raise an
+    error."""
     # Add two apps
     dev_command.apps = {
         "first": first_app,
@@ -161,8 +173,10 @@ def test_bad_app_reference(dev_command, first_app, second_app):
 
     # No apps will be launched
     assert dev_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
     ]
 
 
@@ -181,8 +195,10 @@ def test_update_requirements(dev_command, first_app):
 
     # The right sequence of things will be done
     assert dev_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # An update was requested
@@ -207,8 +223,10 @@ def test_run_uninstalled(dev_command, first_app_uninstalled):
 
     # The right sequence of things will be done
     assert dev_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # The app will be installed
@@ -234,8 +252,10 @@ def test_update_uninstalled(dev_command, first_app_uninstalled):
 
     # The right sequence of things will be done
     assert dev_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # An update was requested
@@ -260,8 +280,10 @@ def test_no_run(dev_command, first_app_uninstalled):
 
     # The right sequence of things will be done
     assert dev_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Only update requirements without running the app
@@ -284,8 +306,10 @@ def test_run_test(dev_command, first_app):
 
     # The right sequence of things will be done
     assert dev_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Then, it will be started
@@ -308,8 +332,10 @@ def test_run_test_uninstalled(dev_command, first_app_uninstalled):
 
     # The right sequence of things will be done
     assert dev_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Development requirements will be installed

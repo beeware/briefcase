@@ -7,12 +7,12 @@ from cookiecutter.main import cookiecutter
 
 import briefcase
 from briefcase.commands import NewCommand
-from briefcase.commands.base import (
+from briefcase.console import Console, Log
+from briefcase.exceptions import (
+    BriefcaseCommandError,
     InvalidTemplateRepository,
     TemplateUnsupportedVersion,
 )
-from briefcase.console import Console, Log
-from briefcase.exceptions import BriefcaseCommandError
 
 
 @pytest.fixture
@@ -139,8 +139,8 @@ def test_new_app_missing_template(monkeypatch, new_command, tmp_path):
     ("37.42.7.dev0+gad61a29.d20220919", "37.42.7.dev73+gad61a29.d20220919"),
 )
 def test_new_app_dev(monkeypatch, new_command, tmp_path, briefcase_version):
-    """In a dev version, template will fall back to the 'main' branch if a
-    versioned template doesn't exist."""
+    """In a dev version, template will fall back to the 'main' branch if a versioned
+    template doesn't exist."""
     monkeypatch.setattr(briefcase, "__version__", briefcase_version)
     new_command.build_app_context = mock.MagicMock(
         return_value={
@@ -315,8 +315,8 @@ def test_new_app_with_invalid_template(monkeypatch, new_command, tmp_path):
 
 
 def test_new_app_with_invalid_template_branch(monkeypatch, new_command, tmp_path):
-    """If the custom template doesn't have a branch for the version, an error
-    is raised."""
+    """If the custom template doesn't have a branch for the version, an error is
+    raised."""
     monkeypatch.setattr(briefcase, "__version__", "37.42.7")
 
     new_command.build_app_context = mock.MagicMock(
@@ -395,5 +395,5 @@ def test_abort_if_directory_exists(monkeypatch, new_command, tmp_path):
     new_command.build_app_context.assert_called_once_with()
     # Template won't be updated or unrolled
     # Cookiecutter was *not* invoked
-    new_command.update_cookiecutter_cache.call_count == 0
+    assert new_command.update_cookiecutter_cache.call_count == 0
     assert new_command.tools.cookiecutter.call_count == 0

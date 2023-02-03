@@ -22,8 +22,7 @@ def test_license_accepted(capsys, mock_tools):
 
 
 def test_unknown_error(capsys, mock_tools):
-    """If an unexpected problem occurred accepting the license, warn the
-    user."""
+    """If an unexpected problem occurred accepting the license, warn the user."""
     mock_tools.subprocess.check_output.side_effect = subprocess.CalledProcessError(
         cmd=["/usr/bin/clang", "--version"],
         returncode=1,

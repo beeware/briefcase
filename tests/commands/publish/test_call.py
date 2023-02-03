@@ -19,8 +19,10 @@ def test_publish(publish_command, first_app, second_app):
 
     # The right sequence of things will be done
     assert publish_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
         # Publish the first app to s3
@@ -48,8 +50,10 @@ def test_publish_alternative_channel(publish_command, first_app, second_app):
 
     # The right sequence of things will be done
     assert publish_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
         # Publish the first app to the alternative channel
@@ -78,13 +82,16 @@ def test_non_existent(publish_command, first_app_config, second_app):
 
     # Only verification will be performed
     assert publish_command.actions == [
-        ("verify",),
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
     ]
 
 
 def test_unbuilt(publish_command, first_app_unbuilt, second_app):
-    """Requesting a publish of an app that has been created, but not built,
-    raises an error."""
+    """Requesting a publish of an app that has been created, but not built, raises an
+    error."""
     # Add two apps; use the "config only" version of the first app.
     publish_command.apps = {
         "first": first_app_unbuilt,
@@ -100,5 +107,8 @@ def test_unbuilt(publish_command, first_app_unbuilt, second_app):
 
     # Only verification will be performed
     assert publish_command.actions == [
-        ("verify",),
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
     ]

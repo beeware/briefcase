@@ -15,7 +15,7 @@ from briefcase.commands import (
 )
 from briefcase.commands.create import _is_local_requirement
 from briefcase.config import AppConfig
-from briefcase.exceptions import BriefcaseCommandError
+from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
 from briefcase.integrations.docker import Docker, DockerAppContext
 from briefcase.integrations.linuxdeploy import LinuxDeploy
 from briefcase.integrations.subprocess import NativeAppContext
@@ -27,6 +27,10 @@ class LinuxAppImagePassiveMixin(LinuxMixin):
     # docker exists. It is used by commands that are "passive" from the
     # perspective of the build system, like open and run.
     output_format = "appimage"
+    supported_host_os = {"Darwin", "Linux"}
+    supported_host_os_reason = (
+        "Linux AppImages can only be built on Linux, or on macOS using Docker."
+    )
 
     def appdir_path(self, app):
         return self.bundle_path(app) / f"{app.formal_name}.AppDir"
@@ -82,12 +86,7 @@ class LinuxAppImageMostlyPassiveMixin(LinuxAppImagePassiveMixin):
         """If we're using docker, verify that it is available."""
         super().verify_tools()
         if self.use_docker:
-            if self.tools.host_os == "Windows":
-                raise BriefcaseCommandError(
-                    "Linux AppImages cannot be generated on Windows."
-                )
-            else:
-                Docker.verify(tools=self.tools)
+            Docker.verify(tools=self.tools)
 
     def verify_app_tools(self, app: AppConfig):
         """Verify App environment is prepared and available.
@@ -116,13 +115,11 @@ class LinuxAppImageMostlyPassiveMixin(LinuxAppImagePassiveMixin):
 
 
 class LinuxAppImageMixin(LinuxAppImageMostlyPassiveMixin):
-    def verify_tools(self):
+    def verify_host(self):
         """If we're *not* using Docker, verify that we're actually on Linux."""
-        super().verify_tools()
+        super().verify_host()
         if not self.use_docker and self.tools.host_os != "Linux":
-            raise BriefcaseCommandError(
-                "Linux AppImages can only be generated on Linux without Docker."
-            )
+            raise UnsupportedHostError(self.supported_host_os_reason)
 
 
 class LinuxAppImageCreateCommand(LinuxAppImageMixin, CreateCommand):
@@ -356,12 +353,8 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
 
 class LinuxAppImageRunCommand(LinuxAppImagePassiveMixin, RunCommand):
     description = "Run a Linux AppImage."
-
-    def verify_tools(self):
-        """Verify that we're on Linux."""
-        super().verify_tools()
-        if self.tools.host_os != "Linux":
-            raise BriefcaseCommandError("AppImages can only be executed on Linux.")
+    supported_host_os = {"Linux"}
+    supported_host_os_reason = "Linux AppImages can only be executed on Linux."
 
     def run_app(
         self,

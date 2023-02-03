@@ -29,8 +29,8 @@ def test_cmdline_tools_url(mock_tools, android_sdk, host_os, name):
     [("Windows", "sdkmanager.bat"), ("NonWindows", "sdkmanager")],
 )
 def test_sdkmanager_path(mock_tools, android_sdk, host_os, sdkmanager_name):
-    """Validate that if the user is on Windows, we run `sdkmanager.bat`,
-    otherwise, `sdkmanager`."""
+    """Validate that if the user is on Windows, we run `sdkmanager.bat`, otherwise,
+    `sdkmanager`."""
     # Mock out `host_os` so we can test Windows when not on Windows.
     mock_tools.host_os = host_os
 
@@ -44,8 +44,7 @@ def test_sdkmanager_path(mock_tools, android_sdk, host_os, sdkmanager_name):
     [("Windows", "adb.exe"), ("NonWindows", "adb")],
 )
 def test_adb_path(mock_tools, android_sdk, host_os, adb_name):
-    """Validate that if the user is on Windows, we run `adb.bat`, otherwise,
-    `adb`."""
+    """Validate that if the user is on Windows, we run `adb.bat`, otherwise, `adb`."""
     # Mock out `host_os` so we can test Windows when not on Windows.
     mock_tools.host_os = host_os
 
@@ -57,8 +56,8 @@ def test_adb_path(mock_tools, android_sdk, host_os, adb_name):
     [("Windows", "avdmanager.bat"), ("NonWindows", "avdmanager")],
 )
 def test_avdmanager_path(mock_tools, android_sdk, host_os, avdmanager_name):
-    """Validate that if the user is on Windows, we run `avdmanager.bat`,
-    otherwise, `avdmanager`."""
+    """Validate that if the user is on Windows, we run `avdmanager.bat`, otherwise,
+    `avdmanager`."""
     # Mock out `host_os` so we can test Windows when not on Windows.
     mock_tools.host_os = host_os
 
@@ -72,8 +71,8 @@ def test_avdmanager_path(mock_tools, android_sdk, host_os, avdmanager_name):
     [("Windows", "emulator.exe"), ("NonWindows", "emulator")],
 )
 def test_emulator_path(mock_tools, android_sdk, host_os, emulator_name):
-    """Validate that if the user is on Windows, we run `emulator.bat`,
-    otherwise, `emulator`."""
+    """Validate that if the user is on Windows, we run `emulator.bat`, otherwise,
+    `emulator`."""
     # Mock out `host_os` so we can test Windows when not on Windows.
     mock_tools.host_os = host_os
 
@@ -129,8 +128,7 @@ def test_emulator_abi(mock_tools, android_sdk, host_os, host_arch, emulator_abi)
     ],
 )
 def test_bad_emulator_abi(mock_tools, android_sdk, host_os, host_arch):
-    """If the host OS/architecture isn't supported by Android, an error is
-    raised."""
+    """If the host OS/architecture isn't supported by Android, an error is raised."""
     # Mock the hardware and operating system
     mock_tools.host_os = host_os
     mock_tools.host_arch = host_arch
@@ -139,11 +137,11 @@ def test_bad_emulator_abi(mock_tools, android_sdk, host_os, host_arch):
         BriefcaseCommandError,
         match=rf"The Android emulator does not currently support {host_os} {host_arch} hardware.",
     ):
-        android_sdk.emulator_abi
+        _ = android_sdk.emulator_abi
 
 
 def test_adb_for_device(mock_tools, android_sdk):
-    "An ADB instance can be bound to a device."
+    """An ADB instance can be bound to a device."""
     adb = android_sdk.adb("some-device")
 
     assert adb.tools == mock_tools

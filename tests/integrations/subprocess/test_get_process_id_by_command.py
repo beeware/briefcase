@@ -119,8 +119,7 @@ def test_get_process_id_by_command_w_command(
 
 
 def test_get_process_id_no_logging(monkeypatch, capsys):
-    """If no logger is provided, warnings about ambiguous matches aren't
-    printed."""
+    """If no logger is provided, warnings about ambiguous matches aren't printed."""
     monkeypatch.setattr(
         "psutil.process_iter",
         lambda attrs: process_list_two_procs_same_cmd,

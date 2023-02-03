@@ -15,8 +15,7 @@ def test_invalid_toml():
 
 
 def test_no_briefcase_section():
-    """If the config file doesn't contain a briefcase tool section, raise an
-    error."""
+    """If the config file doesn't contain a briefcase tool section, raise an error."""
     config_file = BytesIO(
         b"""
         [tool.section]
@@ -30,8 +29,7 @@ def test_no_briefcase_section():
 
 
 def test_no_apps():
-    """If the config file doesn't contain at least one briefcase app, raise an
-    error."""
+    """If the config file doesn't contain at least one briefcase app, raise an error."""
     config_file = BytesIO(
         b"""
         [tool.briefcase]
@@ -45,8 +43,7 @@ def test_no_apps():
 
 
 def test_single_minimal_app():
-    """A single app can be defined, but can exist without any app
-    attributes."""
+    """A single app can be defined, but can exist without any app attributes."""
     config_file = BytesIO(
         b"""
         [tool.briefcase]
@@ -69,8 +66,7 @@ def test_single_minimal_app():
 
 
 def test_multiple_minimal_apps():
-    """The configuration can contain multiple apps without an explicit tool
-    header."""
+    """The configuration can contain multiple apps without an explicit tool header."""
     config_file = BytesIO(
         b"""
         [tool.briefcase.app.first]
@@ -219,8 +215,7 @@ def test_platform_override_ordering():
 
 
 def test_format_override():
-    """An app can define format settings that override base and platform
-    settings."""
+    """An app can define format settings that override base and platform settings."""
     config_file = BytesIO(
         b"""
         [tool.briefcase]

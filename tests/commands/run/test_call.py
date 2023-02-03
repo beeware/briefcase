@@ -18,8 +18,10 @@ def test_no_args_one_app(run_command, first_app):
 
     # The right sequence of things will be done
     assert run_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # Run the first app
         ("run", "first", {"test_mode": False, "passthrough": []}),
     ]
@@ -41,8 +43,10 @@ def test_no_args_one_app_with_passthrough(run_command, first_app):
 
     # The right sequence of things will be done
     assert run_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # Run the first app
         ("run", "first", {"test_mode": False, "passthrough": ["foo", "--bar"]}),
     ]
@@ -65,7 +69,10 @@ def test_no_args_two_apps(run_command, first_app, second_app):
 
     # Only verification actions will be performed
     assert run_command.actions == [
-        ("verify",),
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
     ]
 
 
@@ -84,8 +91,10 @@ def test_with_arg_one_app(run_command, first_app):
 
     # The right sequence of things will be done
     assert run_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # Run the first app
         ("run", "first", {"test_mode": False, "passthrough": []}),
     ]
@@ -107,16 +116,18 @@ def test_with_arg_two_apps(run_command, first_app, second_app):
 
     # The right sequence of things will be done
     assert run_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # Run the second app
         ("run", "second", {"test_mode": False, "passthrough": []}),
     ]
 
 
 def test_bad_app_reference(run_command, first_app, second_app):
-    """If the command line argument refers to an app that doesn't exist, raise
-    an error."""
+    """If the command line argument refers to an app that doesn't exist, raise an
+    error."""
     # Add two apps
     run_command.apps = {
         "first": first_app,
@@ -132,7 +143,10 @@ def test_bad_app_reference(run_command, first_app, second_app):
 
     # Only verification actions will be performed
     assert run_command.actions == [
-        ("verify",),
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
     ]
 
 
@@ -151,8 +165,10 @@ def test_create_app_before_start(run_command, first_app_config):
 
     # The right sequence of things will be done
     assert run_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # App doesn't exist, so it will be built
         # (which will transitively create)
         (
@@ -190,8 +206,10 @@ def test_build_app_before_start(run_command, first_app_uncompiled):
 
     # The right sequence of things will be done
     assert run_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # A build was requested, with no update
         (
             "build",
@@ -228,8 +246,10 @@ def test_update_app(run_command, first_app):
 
     # The right sequence of things will be done
     assert run_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # A build with an explicit update was requested
         (
             "build",
@@ -252,8 +272,7 @@ def test_update_app(run_command, first_app):
 
 
 def test_update_app_requirements(run_command, first_app):
-    """The run command can request that the app requirements are updated
-    first."""
+    """The run command can request that the app requirements are updated first."""
     # Add a single app
     run_command.apps = {
         "first": first_app,
@@ -267,8 +286,10 @@ def test_update_app_requirements(run_command, first_app):
 
     # The right sequence of things will be done
     assert run_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # A build with an explicit update was requested
         (
             "build",
@@ -305,8 +326,10 @@ def test_update_app_resources(run_command, first_app):
 
     # The right sequence of things will be done
     assert run_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # A build with an explicit update was requested
         (
             "build",
@@ -343,8 +366,10 @@ def test_update_uncompiled_app(run_command, first_app_uncompiled):
 
     # The right sequence of things will be done
     assert run_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # An update was requested, so a build with an explicit update
         # will be performed
         (
@@ -382,8 +407,10 @@ def test_update_non_existent(run_command, first_app_config):
 
     # The right sequence of things will be done
     assert run_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # App doesn't exist, so it will be built, with an
         # update requested
         (
@@ -421,8 +448,10 @@ def test_test_mode_existing_app(run_command, first_app):
 
     # The right sequence of things will be done
     assert run_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # App is built in test mode
         (
             "build",
@@ -459,8 +488,10 @@ def test_test_mode_existing_app_with_passthrough(run_command, first_app):
 
     # The right sequence of things will be done
     assert run_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # App is built in test mode
         (
             "build",
@@ -501,8 +532,10 @@ def test_test_mode_existing_app_no_update(run_command, first_app):
 
     # The right sequence of things will be done
     assert run_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # App will not be built; update is disabled
         # Run the first app
         (
@@ -528,8 +561,10 @@ def test_test_mode_existing_app_update_requirements(run_command, first_app):
 
     # The right sequence of things will be done
     assert run_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # App will be built with a requirements update
         (
             "build",
@@ -566,8 +601,10 @@ def test_test_mode_existing_app_update_resources(run_command, first_app):
 
     # The right sequence of things will be done
     assert run_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # App will be built with a resource update
         (
             "build",
@@ -604,8 +641,10 @@ def test_test_mode_update_existing_app(run_command, first_app):
 
     # The right sequence of things will be done
     assert run_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # App will be built; update is explicit
         (
             "build",
@@ -642,9 +681,11 @@ def test_test_mode_non_existent(run_command, first_app_config):
 
     # The right sequence of things will be done
     assert run_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
-        # App will be built in test mode, (which will transistively create)
+        ("verify-tools",),
+        # App will be built in test mode, (which will transitively create)
         (
             "build",
             "first",

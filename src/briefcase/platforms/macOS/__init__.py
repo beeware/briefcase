@@ -35,8 +35,7 @@ MACOS_LOG_PREFIX_REGEX = re.compile(
 
 
 def macOS_log_clean_filter(line):
-    """Filter a macOS system log to extract the Python-generated message
-    content.
+    """Filter a macOS system log to extract the Python-generated message content.
 
     Any system or stub messages are ignored; all logging prefixes are stripped.
 
@@ -68,6 +67,10 @@ def macOS_log_clean_filter(line):
 
 class macOSMixin:
     platform = "macOS"
+    supported_host_os = {"Darwin"}
+    supported_host_os_reason = (
+        "Building and / or code signing a DMG requires running on macOS."
+    )
 
 
 class macOSRunMixin:
@@ -391,11 +394,6 @@ class macOSPackageMixin(macOSSigningMixin):
         )
 
     def verify_tools(self):
-        if self.tools.host_os != "Darwin":
-            raise BriefcaseCommandError(
-                "Code signing and / or building a DMG requires running on macOS."
-            )
-
         # Require the XCode command line tools.
         verify_command_line_tools_install(self.tools)
 

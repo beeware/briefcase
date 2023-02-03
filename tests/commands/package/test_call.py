@@ -13,8 +13,10 @@ def test_no_args_package_one_app(package_command, first_app):
 
     # The right sequence of things will be done
     assert package_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Package the first app
@@ -47,8 +49,10 @@ def test_package_one_explicit_app(package_command, first_app, second_app):
 
     # The right sequence of things will be done
     assert package_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Package the first app
@@ -81,8 +85,10 @@ def test_no_args_package_two_app(package_command, first_app, second_app):
 
     # The right sequence of things will be done
     assert package_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
         # Package the first app
@@ -115,8 +121,7 @@ def test_no_args_package_two_app(package_command, first_app, second_app):
 
 
 def test_no_sign_package_one_app(package_command, first_app):
-    """If there is one app, and a --no-sign argument,package doesn't sign the
-    app."""
+    """If there is one app, and a --no-sign argument,package doesn't sign the app."""
     # Add a single app
     package_command.apps = {
         "first": first_app,
@@ -130,8 +135,10 @@ def test_no_sign_package_one_app(package_command, first_app):
 
     # The right sequence of things will be done
     assert package_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Package the first app
@@ -149,8 +156,8 @@ def test_no_sign_package_one_app(package_command, first_app):
 
 
 def test_identity_arg_package_one_app(package_command, first_app):
-    """If there is one app,and an --identity argument, package signs the app
-    with the specified identity."""
+    """If there is one app,and an --identity argument, package signs the app with the
+    specified identity."""
     # Add a single app
     package_command.apps = {
         "first": first_app,
@@ -164,8 +171,10 @@ def test_identity_arg_package_one_app(package_command, first_app):
 
     # The right sequence of things will be done
     assert package_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Package the first app
@@ -183,8 +192,8 @@ def test_identity_arg_package_one_app(package_command, first_app):
 
 
 def test_adhoc_sign_package_one_app(package_command, first_app):
-    """If there is one app,and an --adhoc argument, package signs the app using
-    adhoc option."""
+    """If there is one app,and an --adhoc argument, package signs the app using adhoc
+    option."""
     # Add a single app
     package_command.apps = {
         "first": first_app,
@@ -198,8 +207,10 @@ def test_adhoc_sign_package_one_app(package_command, first_app):
 
     # The right sequence of things will be done
     assert package_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Package the first app
@@ -217,8 +228,8 @@ def test_adhoc_sign_package_one_app(package_command, first_app):
 
 
 def test_no_sign_args_package_two_app(package_command, first_app, second_app):
-    """If there are multiple apps, and a --no-sign argument,package doesn't
-    sign all the app."""
+    """If there are multiple apps, and a --no-sign argument,package doesn't sign all the
+    app."""
     # Add a single app
     package_command.apps = {
         "first": first_app,
@@ -233,8 +244,10 @@ def test_no_sign_args_package_two_app(package_command, first_app, second_app):
 
     # The right sequence of things will be done
     assert package_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
         # Package the first app
@@ -267,8 +280,8 @@ def test_no_sign_args_package_two_app(package_command, first_app, second_app):
 
 
 def test_adhoc_sign_args_package_two_app(package_command, first_app, second_app):
-    """If there are multiple apps,and an --adhoc argument, package signs all
-    apps using adhoc option."""
+    """If there are multiple apps,and an --adhoc argument, package signs all apps using
+    adhoc option."""
 
     package_command.apps = {
         # Add the first app
@@ -285,8 +298,10 @@ def test_adhoc_sign_args_package_two_app(package_command, first_app, second_app)
 
     # The right sequence of things will be done
     assert package_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
         # Package the first app
@@ -319,8 +334,8 @@ def test_adhoc_sign_args_package_two_app(package_command, first_app, second_app)
 
 
 def test_identity_sign_args_package_two_app(package_command, first_app, second_app):
-    """If there are multiple app,and an --identity argument, package signs all
-    the apps with the specified identity."""
+    """If there are multiple app,and an --identity argument, package signs all the apps
+    with the specified identity."""
     # Add a single app
     package_command.apps = {
         "first": first_app,
@@ -335,8 +350,10 @@ def test_identity_sign_args_package_two_app(package_command, first_app, second_a
 
     # The right sequence of things will be done
     assert package_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
         # Package the first app
@@ -383,8 +400,10 @@ def test_package_alternate_format(package_command, first_app):
 
     # The right sequence of things will be done
     assert package_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Package the first app
@@ -416,8 +435,10 @@ def test_create_before_package(package_command, first_app_config):
 
     # The right sequence of things will be done
     assert package_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # Create and then build the first app
         (
             "create",
@@ -471,8 +492,10 @@ def test_update_package_one_app(package_command, first_app):
 
     # The right sequence of things will be done
     assert package_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # Update (and then build) the first app
         (
             "update",
@@ -529,8 +552,10 @@ def test_update_package_two_app(package_command, first_app, second_app):
 
     # The right sequence of things will be done
     assert package_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # Update (and then build) the first app
         (
             "update",
@@ -618,13 +643,13 @@ def test_update_package_two_app(package_command, first_app, second_app):
 
 
 def test_build_before_package(package_command, first_app_unbuilt):
-    """If the an app hasn't been built, it is built before packaging."""
+    """If an app hasn't been built, it is built before packaging."""
     # Add a single app
     package_command.apps = {
         "first": first_app_unbuilt,
     }
 
-    # Configure no commmand line options
+    # Configure no command line options
     options = package_command.parse_options([])
 
     # Run the run command
@@ -632,8 +657,10 @@ def test_build_before_package(package_command, first_app_unbuilt):
 
     # The right sequence of things will be done
     assert package_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # Build the first app
         (
             "build",

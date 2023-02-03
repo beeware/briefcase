@@ -28,18 +28,20 @@ class LinuxDeployBase:
     @property
     @abstractmethod
     def file_name(self):
-        """The name of the executable file for the tool/plugin, excluding the
-        path."""
+        """The name of the executable file for the tool/plugin, excluding the path."""
+        ...
 
     @property
     @abstractmethod
     def download_url(self):
         """The URL where the tool/plugin can be downloaded."""
+        ...
 
     @property
     @abstractmethod
     def file_path(self):
         """The folder on the local filesystem that contains the file_name."""
+        ...
 
     def exists(self):
         return (self.file_path / self.file_name).exists()
@@ -57,9 +59,9 @@ class LinuxDeployBase:
     def prepare_executable(self):
         """Update linuxdeploy and its plugins to allow execution.
 
-        All files must be made executable to run or for linuxdeploy to
-        use them as plugins while building the AppImage. ELF files need
-        special "magic" bytes zeroed to run properly in Docker.
+        All files must be made executable to run or for linuxdeploy to use them as
+        plugins while building the AppImage. ELF files need special "magic" bytes zeroed
+        to run properly in Docker.
         """
         with self.tools.input.wait_bar(f"Installing {self.file_name}..."):
             self.tools.os.chmod(self.file_path / self.file_name, 0o755)
@@ -115,15 +117,15 @@ class LinuxDeployBase:
     def is_elf_file(self):
         """Returns True if the file is an ELF object file.
 
-        The header for an ELF object file always starts with 0x7F454C46;
-        this is 0x7fELF if you interpret the last three bytes as ASCII.
+        The header for an ELF object file always starts with 0x7F454C46; this is 0x7fELF
+        if you interpret the last three bytes as ASCII.
         """
         with (self.file_path / self.file_name).open("r+b") as file:
             return file.read(len(ELF_HEADER_IDENT)) == ELF_HEADER_IDENT
 
     def patch_elf_header(self):
-        """Patch the ELF header of the AppImage to ensure it can successfully
-        run in all contexts.
+        """Patch the ELF header of the AppImage to ensure it can successfully run in all
+        contexts.
 
         This patch is necessary on Linux hosts that use AppImageLauncher.
         AppImages use a modified ELF binary header starting at offset 0x08

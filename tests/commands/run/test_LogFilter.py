@@ -7,7 +7,7 @@ from briefcase.integrations.subprocess import StopStreaming
 
 
 def test_default_filter():
-    "A default logfilter echoes content verbatim"
+    """A default logfilter echoes content verbatim."""
     popen = mock.MagicMock()
     log_filter = LogFilter(
         popen,
@@ -27,7 +27,8 @@ def test_default_filter():
 
 
 def test_clean_filter():
-    "A cleaning filter can be used to strip content"
+    """A cleaning filter can be used to strip content."""
+
     # Define a cleaning filter that strips the first 5 characters,
     # and identifies all content as Python
     def clean_filter(line):
@@ -52,7 +53,9 @@ def test_clean_filter():
 
 
 def test_clean_filter_unclean_output():
-    "A cleaning filter can be used to strip content, but doesn't have to alter output"
+    """A cleaning filter can be used to strip content, but doesn't have to alter
+    output."""
+
     # Define a cleaning filter that strips the first 5 characters,
     # and identifies all content as Python
     def clean_filter(line):
@@ -207,7 +210,8 @@ def test_log_filter(
     clean_output,
     returncode,
 ):
-    "The log filter behaves as expected"
+    """The log filter behaves as expected."""
+
     # Define a clean filter that removes an index at the start of the line, only
     # analyses content with an even prefix, and dumps content that starts "DUMP:"
     def clean_filter(line):
@@ -235,9 +239,9 @@ def test_log_filter(
     # Pipe the raw output through the log filter, and capture the output
     output = []
     terminated = False
-    for line in raw:
+    for raw_line in raw:
         try:
-            for line in log_filter(line):
+            for line in log_filter(raw_line):
                 output.append(line)
         except StopStreaming:
             terminated = True

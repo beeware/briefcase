@@ -39,9 +39,8 @@ class PublishCommand(BaseCommand):
         )  # pragma: no cover
 
     def _publish_app(self, app: BaseConfig, channel: str, **options):
-        """Internal method to publish a single app. Ensures the app exists, and
-        has been packaged before attempting to issue the actual publish
-        command.
+        """Internal method to publish a single app. Ensures the app exists, and has been
+        packaged before attempting to issue the actual publish command.
 
         :param app: The application to publish
         :param channel: The publication channel to use
@@ -55,7 +54,8 @@ class PublishCommand(BaseCommand):
         return state
 
     def __call__(self, channel=None, **options):
-        # Confirm all required tools are available
+        # Confirm host compatibility and all required tools are available
+        self.verify_host()
         self.verify_tools()
 
         # Check the apps have been built first.

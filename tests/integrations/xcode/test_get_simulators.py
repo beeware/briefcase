@@ -30,8 +30,7 @@ def simulator(tmp_path):
 
 
 def simctl_result(name):
-    """Load a simctl result file from the sample directory, and return the
-    content."""
+    """Load a simctl result file from the sample directory, and return the content."""
     filename = Path(__file__).parent / "simctl" / f"{name}.json"
     with filename.open(encoding="utf-8") as f:
         return f.read()
@@ -141,8 +140,7 @@ def test_watchOS_runtime(mock_tools, simulator):
 
 
 def test_multiple_iOS_runtime(mock_tools, simulator):
-    """If multiple iOS versions are installed, this will be reflected in
-    results."""
+    """If multiple iOS versions are installed, this will be reflected in results."""
     mock_tools.subprocess.check_output.return_value = simctl_result(
         "multiple-iOS-versions"
     )

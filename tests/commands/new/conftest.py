@@ -22,9 +22,13 @@ class DummyNewCommand(NewCommand):
         self.actions = []
         self.tools.input = DummyConsole()
 
+    def verify_host(self):
+        super().verify_host()
+        self.actions.append(("verify-host",))
+
     def verify_tools(self):
         super().verify_tools()
-        self.actions.append(("verify",))
+        self.actions.append(("verify-tools",))
 
     def new_app(self, **kwargs):
         self.actions.append(("new", kwargs))

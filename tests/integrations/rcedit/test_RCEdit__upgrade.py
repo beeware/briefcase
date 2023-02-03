@@ -43,8 +43,7 @@ def test_upgrade_does_not_exist(mock_tools, rcedit, tmp_path):
 
 
 def test_upgrade_rcedit_download_failure(mock_tools, rcedit, tmp_path):
-    """If rcedit doesn't exist, but a download failure occurs, an error is
-    raised."""
+    """If rcedit doesn't exist, but a download failure occurs, an error is raised."""
     # Mock the existence of an install
     rcedit_path = tmp_path / "tools" / "rcedit-x64.exe"
     rcedit_path.touch()

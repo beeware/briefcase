@@ -28,7 +28,10 @@ def test_update(update_command, first_app, second_app):
 
     # The right sequence of things will be done
     assert update_command.actions == [
-        ("verify",),
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
         # Update the first app
         ("code", update_command.apps["first"], False),
         ("cleanup", update_command.apps["first"]),
@@ -39,8 +42,7 @@ def test_update(update_command, first_app, second_app):
 
 
 def test_update_single(update_command, first_app, second_app):
-    """The update command can be called to update a single app from the
-    config."""
+    """The update command can be called to update a single app from the config."""
     # Configure no command line options
     options = update_command.parse_options([])
 
@@ -48,7 +50,10 @@ def test_update_single(update_command, first_app, second_app):
 
     # The right sequence of things will be done
     assert update_command.actions == [
-        ("verify",),
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
         # update the first app
         ("code", update_command.apps["first"], False),
         ("cleanup", update_command.apps["first"]),
@@ -64,7 +69,10 @@ def test_update_with_requirements(update_command, first_app, second_app):
 
     # The right sequence of things will be done
     assert update_command.actions == [
-        ("verify",),
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
         # Update the first app
         ("code", update_command.apps["first"], False),
         ("requirements", update_command.apps["first"], False),
@@ -85,7 +93,10 @@ def test_update_with_resources(update_command, first_app, second_app):
 
     # The right sequence of things will be done
     assert update_command.actions == [
-        ("verify",),
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
         # Update the first app
         ("code", update_command.apps["first"], False),
         ("resources", update_command.apps["first"]),

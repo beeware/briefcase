@@ -61,8 +61,8 @@ def test_distribution_path(package_command, first_app_config, tmp_path):
 )
 def test_execute_gradle(package_command, first_app_config, host_os, gradlew_name):
     """Validate that package_app() will launch `gradlew bundleRelease` with the
-    appropriate environment & cwd, and that it will use `gradlew.bat` on
-    Windows but `gradlew` elsewhere."""
+    appropriate environment & cwd, and that it will use `gradlew.bat` on Windows but
+    `gradlew` elsewhere."""
     # Mock out `host_os` so we can validate which name is used for gradlew.
     package_command.tools.host_os = host_os
     # Create mock environment with `key`, which we expect to be preserved, and
@@ -84,8 +84,8 @@ def test_execute_gradle(package_command, first_app_config, host_os, gradlew_name
 
 
 def test_print_gradle_errors(package_command, first_app_config):
-    """Validate that package_app() will convert stderr/stdout from the process
-    into exception text."""
+    """Validate that package_app() will convert stderr/stdout from the process into
+    exception text."""
     # Create a mock subprocess that crashes, printing text partly in non-ASCII.
     package_command.tools.subprocess.run.side_effect = CalledProcessError(
         returncode=1,

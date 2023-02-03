@@ -5,8 +5,12 @@ from unittest import mock
 import pytest
 from requests import exceptions as requests_exceptions
 
-from briefcase.commands.create import InvalidSupportPackage, MissingSupportPackage
-from briefcase.exceptions import MissingNetworkResourceError, NetworkFailure
+from briefcase.exceptions import (
+    InvalidSupportPackage,
+    MissingNetworkResourceError,
+    MissingSupportPackage,
+    NetworkFailure,
+)
 
 from ...utils import (
     create_zip_file,
@@ -66,8 +70,7 @@ def test_install_pinned_app_support_package(
     support_path,
     app_requirements_path_index,
 ):
-    """A pinned support package can be downloaded and unpacked where it is
-    needed."""
+    """A pinned support package can be downloaded and unpacked where it is needed."""
     # Pin the support revision
     myapp.support_revision = "42"
 
@@ -156,8 +159,8 @@ def test_install_custom_app_support_package_file_with_revision(
     app_requirements_path_index,
     capsys,
 ):
-    """If a custom support package file also specifies a revision, the revision
-    is ignored with a warning."""
+    """If a custom support package file also specifies a revision, the revision is
+    ignored with a warning."""
     # Provide an app-specific override of the package URL
     myapp.support_package = os.fsdecode(tmp_path / "custom" / "support.zip")
     myapp.support_revision = "42"
@@ -202,8 +205,7 @@ def test_support_package_url_with_invalid_custom_support_packge_url(
     myapp,
     app_requirements_path_index,
 ):
-    """Invalid URL for a custom support package raises
-    MissingNetworkResourceError."""
+    """Invalid URL for a custom support package raises MissingNetworkResourceError."""
 
     # Provide an custom support URL
     url = "https://example.com/custom/support.zip"
@@ -316,8 +318,8 @@ def test_install_custom_app_support_package_url_with_revision(
     app_requirements_path_index,
     capsys,
 ):
-    """If a custom support package URL also specifies a revision, the revision
-    is ignored with a warning."""
+    """If a custom support package URL also specifies a revision, the revision is
+    ignored with a warning."""
     # Provide an app-specific override of the package URL and revision
     myapp.support_package = "https://example.com/custom/custom-support.zip"
     myapp.support_revision = "42"
@@ -461,8 +463,7 @@ def test_missing_support_package(
     support_path,
     app_requirements_path_index,
 ):
-    """If the path provided for the support package is bad, an error is
-    raised."""
+    """If the path provided for the support package is bad, an error is raised."""
     # Set a custom support package that doesn't exist
     myapp.support_package = "/path/does/not/exist.zip"
 
@@ -472,16 +473,16 @@ def test_missing_support_package(
 
 
 def test_no_support_path(create_command, myapp, no_support_path_index):
-    """If support_path is not listed in briefcase.toml, a support package will
-    not be downloaded."""
+    """If support_path is not listed in briefcase.toml, a support package will not be
+    downloaded."""
     create_command.tools.download.file = mock.MagicMock()
     create_command.install_app_support_package(myapp)
     create_command.tools.download.file.assert_not_called()
 
 
 def test_no_support_revision(create_command, myapp, no_support_revision_index):
-    """If support_revision is not listed in briefcase.toml, a support package
-    will not be downloaded."""
+    """If support_revision is not listed in briefcase.toml, a support package will not
+    be downloaded."""
     create_command.tools.download.file = mock.MagicMock()
 
     # An error is raised when attempting to install the support package

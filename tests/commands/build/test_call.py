@@ -19,8 +19,10 @@ def test_specific_app(build_command, first_app, second_app):
 
     # The right sequence of things will be done
     assert build_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Build the first app; no state
@@ -44,8 +46,10 @@ def test_multiple_apps(build_command, first_app, second_app):
 
     # The right sequence of things will be done
     assert build_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
         # Build the first app; no state
@@ -73,8 +77,10 @@ def test_non_existent(build_command, first_app_config, second_app):
 
     # The right sequence of things will be done
     assert build_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # First App doesn't exist, so it will be created, then built
         ("create", "first", {"test_mode": False}),
         # App tools are verified for first app
@@ -92,8 +98,8 @@ def test_non_existent(build_command, first_app_config, second_app):
 
 
 def test_unbuilt(build_command, first_app_unbuilt, second_app):
-    """Requesting a build of an app that has been created, but not build, just
-    causes a build."""
+    """Requesting a build of an app that has been created, but not build, just causes a
+    build."""
     # Add two apps; use the "unbuilt" version of the first app.
     build_command.apps = {
         "first": first_app_unbuilt,
@@ -108,8 +114,10 @@ def test_unbuilt(build_command, first_app_unbuilt, second_app):
 
     # The right sequence of things will be done
     assert build_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
         # First App exists, but hasn't been built; it will be built.
@@ -137,8 +145,10 @@ def test_update_app(build_command, first_app, second_app):
 
     # The right sequence of things will be done
     assert build_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # Update then build the first app
         (
             "update",
@@ -190,8 +200,10 @@ def test_update_app_requirements(build_command, first_app, second_app):
 
     # The right sequence of things will be done
     assert build_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # Update then build the first app
         (
             "update",
@@ -243,8 +255,10 @@ def test_update_app_resources(build_command, first_app, second_app):
 
     # The right sequence of things will be done
     assert build_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # Update then build the first app
         (
             "update",
@@ -296,8 +310,10 @@ def test_update_non_existent(build_command, first_app_config, second_app):
 
     # The right sequence of things will be done
     assert build_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # First App doesn't exist, so it will be created, then built
         ("create", "first", {"test_mode": False}),
         # App tools are verified for first app
@@ -331,7 +347,7 @@ def test_update_non_existent(build_command, first_app_config, second_app):
 
 
 def test_update_unbuilt(build_command, first_app_unbuilt, second_app):
-    """Requesting an update of an upbuilt app causes an update before build."""
+    """Requesting an update of an unbuilt app causes an update before build."""
     # Add two apps; use the "unbuilt" version of the first app.
     build_command.apps = {
         "first": first_app_unbuilt,
@@ -346,8 +362,10 @@ def test_update_unbuilt(build_command, first_app_unbuilt, second_app):
 
     # The right sequence of things will be done
     assert build_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # First App exists, but hasn't been built; it will be updated then built.
         (
             "update",
@@ -399,8 +417,10 @@ def test_build_test(build_command, first_app, second_app):
 
     # The right sequence of things will be done
     assert build_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # Update then build the first app
         (
             "update",
@@ -437,8 +457,8 @@ def test_build_test(build_command, first_app, second_app):
 
 
 def test_build_test_no_update(build_command, first_app, second_app):
-    """If the user builds a test app without app updates, requirements and
-    resources are still updated before build."""
+    """If the user builds a test app without app updates, requirements and resources are
+    still updated before build."""
     # Add two apps
     build_command.apps = {
         "first": first_app,
@@ -453,8 +473,10 @@ def test_build_test_no_update(build_command, first_app, second_app):
 
     # The right sequence of things will be done
     assert build_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # No update of the first app
         # App tools are verified for first app
         ("verify-app-tools", "first"),
@@ -470,9 +492,9 @@ def test_build_test_no_update(build_command, first_app, second_app):
     ]
 
 
-def test_build_test_update_dependences(build_command, first_app, second_app):
-    """If the user builds a test app with app dependency updates, app code and
-    resources are updated before build."""
+def test_build_test_update_dependencies(build_command, first_app, second_app):
+    """If the user builds a test app with app dependency updates, app code and resources
+    are updated before build."""
     # Add two apps
     build_command.apps = {
         "first": first_app,
@@ -487,8 +509,10 @@ def test_build_test_update_dependences(build_command, first_app, second_app):
 
     # The right sequence of things will be done
     assert build_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # Update then build the first app
         (
             "update",
@@ -525,8 +549,8 @@ def test_build_test_update_dependences(build_command, first_app, second_app):
 
 
 def test_build_test_update_resources(build_command, first_app, second_app):
-    """If the user builds a test app with app resource updates, app code and
-    resources are updated before build."""
+    """If the user builds a test app with app resource updates, app code and resources
+    are updated before build."""
     # Add two apps
     build_command.apps = {
         "first": first_app,
@@ -541,8 +565,10 @@ def test_build_test_update_resources(build_command, first_app, second_app):
 
     # The right sequence of things will be done
     assert build_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # Update then build the first app
         (
             "update",
@@ -579,8 +605,7 @@ def test_build_test_update_resources(build_command, first_app, second_app):
 
 
 def test_build_invalid_update(build_command, first_app, second_app):
-    """If the user requests a build with update and no-update, an error is
-    raised."""
+    """If the user requests a build with update and no-update, an error is raised."""
     # Add two apps
     build_command.apps = {
         "first": first_app,
@@ -599,8 +624,8 @@ def test_build_invalid_update(build_command, first_app, second_app):
 
 
 def test_build_invalid_update_requirements(build_command, first_app, second_app):
-    """If the user requests a build with update-requirements and no-update, an
-    error is raised."""
+    """If the user requests a build with update-requirements and no-update, an error is
+    raised."""
     # Add two apps
     build_command.apps = {
         "first": first_app,
@@ -619,8 +644,8 @@ def test_build_invalid_update_requirements(build_command, first_app, second_app)
 
 
 def test_build_invalid_update_resources(build_command, first_app, second_app):
-    """If the user requests a build with update-resources and no-update, an
-    error is raised."""
+    """If the user requests a build with update-resources and no-update, an error is
+    raised."""
     # Add two apps
     build_command.apps = {
         "first": first_app,
@@ -639,7 +664,7 @@ def test_build_invalid_update_resources(build_command, first_app, second_app):
 
 
 def test_test_app_non_existent(build_command, first_app_config, second_app):
-    """Requesting an test build of a non-existent app causes a create."""
+    """Requesting a test build of a non-existent app causes a create."""
     # Add two apps; use the "config only" version of the first app.
     build_command.apps = {
         "first": first_app_config,
@@ -654,8 +679,10 @@ def test_test_app_non_existent(build_command, first_app_config, second_app):
 
     # The right sequence of things will be done
     assert build_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # First App doesn't exist, so it will be created, then built
         ("create", "first", {"test_mode": True}),
         # App tools are verified for first app
@@ -689,8 +716,8 @@ def test_test_app_non_existent(build_command, first_app_config, second_app):
 
 
 def test_test_app_unbuilt(build_command, first_app_unbuilt, second_app):
-    """Requesting a test build with update of an upbuilt app causes an update
-    before build."""
+    """Requesting a test build with update of an unbuilt app causes an update before
+    build."""
     # Add two apps; use the "unbuilt" version of the first app.
     build_command.apps = {
         "first": first_app_unbuilt,
@@ -705,8 +732,10 @@ def test_test_app_unbuilt(build_command, first_app_unbuilt, second_app):
 
     # The right sequence of things will be done
     assert build_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
         # Tools are verified
-        ("verify",),
+        ("verify-tools",),
         # First App exists, but hasn't been built; it will be updated then built.
         (
             "update",
