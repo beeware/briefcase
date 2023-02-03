@@ -3,6 +3,7 @@ import re
 import subprocess
 import time
 from pathlib import Path
+from typing import List
 
 from briefcase.commands import (
     BuildCommand,
@@ -268,6 +269,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
         self,
         app: BaseConfig,
         test_mode: bool,
+        passthrough: List[str],
         device_or_avd=None,
         extra_emulator_args=None,
         shutdown_on_exit=False,
@@ -277,6 +279,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
 
         :param app: The config object for the app
         :param test_mode: Boolean; Is the app running in test mode?
+        :param passthrough: The list of arguments to pass to the app
         :param device_or_avd: The device to target. If ``None``, the user will
             be asked to re-run the command selecting a specific device.
         :param extra_emulator_args: Any additional arguments to pass to the emulator.
@@ -318,6 +321,10 @@ class GradleRunCommand(GradleMixin, RunCommand):
             self.logger.info(
                 f"Starting {label} on {name} (device ID {device})", prefix=app.app_name
             )
+
+            # At least for now, there's no easy way to pass arguments to an Android app
+            if passthrough:
+                self.logger.warning(f"Ignoring passthrough arguments: {passthrough}")
 
             # Create an ADB wrapper for the selected device
             adb = self.tools.android_sdk.adb(device=device)

@@ -121,6 +121,55 @@ def test_dev_command(monkeypatch, logger, console):
         "update_requirements": False,
         "run_app": True,
         "test_mode": False,
+        "passthrough": [],
+    }
+
+
+def test_dev_command_only_passthrough(monkeypatch, logger, console):
+    """``briefcase dev`` with only passthrough args returns the Dev command."""
+    # Pretend we're on macOS, regardless of where the tests run.
+    monkeypatch.setattr(sys, "platform", "darwin")
+
+    cmd, options = do_cmdline_parse("dev -- -y --no maybe".split(), logger, console)
+
+    assert isinstance(cmd, DevCommand)
+    assert cmd.platform == "macOS"
+    assert cmd.output_format is None
+    assert cmd.input.enabled
+    assert cmd.logger.verbosity == 1
+    assert cmd.logger is logger
+    assert cmd.input is console
+    assert options == {
+        "appname": None,
+        "update_requirements": False,
+        "run_app": True,
+        "test_mode": False,
+        "passthrough": ["-y", "--no", "maybe"],
+    }
+
+
+def test_dev_command_passthrough(monkeypatch, logger, console):
+    """``briefcase dev`` with passthrough args returns the Dev command."""
+    # Pretend we're on macOS, regardless of where the tests run.
+    monkeypatch.setattr(sys, "platform", "darwin")
+
+    cmd, options = do_cmdline_parse(
+        "dev --test -- -y --no maybe".split(), logger, console
+    )
+
+    assert isinstance(cmd, DevCommand)
+    assert cmd.platform == "macOS"
+    assert cmd.output_format is None
+    assert cmd.input.enabled
+    assert cmd.logger.verbosity == 1
+    assert cmd.logger is logger
+    assert cmd.input is console
+    assert options == {
+        "appname": None,
+        "update_requirements": False,
+        "run_app": True,
+        "test_mode": True,
+        "passthrough": ["-y", "--no", "maybe"],
     }
 
 

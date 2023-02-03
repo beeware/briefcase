@@ -108,6 +108,14 @@ def parse_cmdline(args):
     # (with no value if unspecified).
     options, extra = parser.parse_known_args(args)
 
+    # parse_known_args() strips `--` if it is the first unknown argument.
+    # Put it back in so that passthrough handling is consistent.
+    try:
+        if args[1] == "--":
+            extra.insert(0, "--")
+    except IndexError:
+        pass
+
     # If no command has been provided, display top-level help.
     if options.command is None:
         raise NoCommandError(parser.format_help())

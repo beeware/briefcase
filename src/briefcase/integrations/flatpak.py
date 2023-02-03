@@ -242,11 +242,12 @@ flatpak run {bundle}.{app_name}
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(f"Error while building app {app_name}.") from e
 
-    def run(self, bundle, app_name, main_module=None):
+    def run(self, bundle, app_name, args=None, main_module=None):
         """Run a Flatpak in a way that allows for log streaming.
 
         :param bundle: The bundle identifier for the app being built.
         :param app_name: The app name.
+        :param args: (Optional) The list of arguments to pass to the app
         :param main_module: (Optional) The main module to run. Only required if you
             want to override the default main module for the app.
         :returns: A Popen object for the running app.
@@ -267,7 +268,8 @@ flatpak run {bundle}.{app_name}
                 "flatpak",
                 "run",
                 f"{bundle}.{app_name}",
-            ],
+            ]
+            + ([] if args is None else args),
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             bufsize=1,

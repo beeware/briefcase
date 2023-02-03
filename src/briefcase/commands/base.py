@@ -116,6 +116,7 @@ class BaseCommand(ABC):
     cmd_line = "briefcase {command} {platform} {output_format}"
     GLOBAL_CONFIG_CLASS = GlobalConfig
     APP_CONFIG_CLASS = AppConfig
+    allows_passthrough = False
 
     def __init__(
         self,
@@ -526,10 +527,35 @@ a custom location for Briefcase's tools.
         self.add_default_options(parser)
         self.add_options(parser)
 
+        # If the command allows passthrough arguments, add the option,
+        # then process the argument list to strip out the passthrough args.
+        if self.allows_passthrough:
+            parser.add_argument(
+                "--",
+                dest="passthrough",
+                metavar="passthrough arguments",
+                required=False,
+                help="Arguments to pass to the app",
+            )
+
+            # If "--" is present in the argument list, strip off any
+            # arguments after that one, and store them for separate handling.
+            if "--" in extra:
+                pos = extra.index("--")
+                args, passthrough = extra[:pos], extra[pos + 1 :]
+            else:
+                passthrough = []
+                args = extra
+        else:
+            args = extra
+
         # Parse the full set of command line options from the content
         # remaining after the basic command/platform/output format
         # has been extracted.
-        options = vars(parser.parse_args(extra))
+        options = vars(parser.parse_args(args))
+
+        if self.allows_passthrough:
+            options["passthrough"] = passthrough
 
         # Extract the base default options onto the command
         self.input.enabled = options.pop("input_enabled")

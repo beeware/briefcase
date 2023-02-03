@@ -1,6 +1,7 @@
 import plistlib
 import subprocess
 import time
+from typing import List
 from uuid import UUID
 
 from briefcase.commands import (
@@ -327,11 +328,19 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         self.get_device_state = get_device_state
         self.sleep = time.sleep
 
-    def run_app(self, app: BaseConfig, test_mode: bool, udid=None, **kwargs):
+    def run_app(
+        self,
+        app: BaseConfig,
+        test_mode: bool,
+        passthrough: List[str],
+        udid=None,
+        **kwargs,
+    ):
         """Start the application.
 
         :param app: The config object for the app
         :param test_mode: Boolean; Is the app running in test mode?
+        :param passthrough: The list of arguments to pass to the app
         :param udid: The device UDID to target. If ``None``, the user will
             be asked to select a device at runtime.
         """
@@ -351,6 +360,10 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
             f"Starting {label} on an {device} running iOS {iOS_version} (device UDID {udid})",
             prefix=app.app_name,
         )
+
+        # At least for now, there's no easy way to pass arguments to a running iOS app
+        if passthrough:
+            self.logger.warning(f"Ignoring passthrough arguments: {passthrough}")
 
         # The simulator needs to be booted before being started.
         # If it's shut down, we can boot it again; but if it's currently
