@@ -76,8 +76,8 @@ Application configuration
 =========================
 
 The following options can be added to the
-``tool.briefcase.app.<appname>.linux`` section of your ``pyproject.toml``
-file.
+``tool.briefcase.app.<appname>.linux.appimage`` section of your
+``pyproject.toml`` file.
 
 ``system_requires``
 ~~~~~~~~~~~~~~~~~~~

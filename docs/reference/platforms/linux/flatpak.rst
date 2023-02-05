@@ -60,8 +60,8 @@ Application configuration
 =========================
 
 The following options can be added to the
-``tool.briefcase.app.<appname>.linux`` section of your ``pyproject.toml``
-file.
+``tool.briefcase.app.<appname>.linux.flatpak`` section of your
+``pyproject.toml`` file.
 
 ``flatpak_runtime_repo_alias``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
