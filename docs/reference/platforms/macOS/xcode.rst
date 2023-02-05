@@ -18,13 +18,13 @@ Icon format
 macOS Xcode projects use ``.png`` format icons. An application must provide icons of
 the following sizes:
 
-  * 16px
-  * 32px
-  * 64px
-  * 128px
-  * 256px
-  * 512px
-  * 1024px
+* 16px
+* 32px
+* 64px
+* 128px
+* 256px
+* 512px
+* 1024px
 
 Splash Image format
 ===================

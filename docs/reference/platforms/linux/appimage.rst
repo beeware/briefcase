@@ -49,12 +49,12 @@ Icon format
 AppImages uses ``.png`` format icons. An application must provide icons in
 the following sizes:
 
-  * 16px
-  * 32px
-  * 64px
-  * 128px
-  * 256px
-  * 512px
+* 16px
+* 32px
+* 64px
+* 128px
+* 256px
+* 512px
 
 Splash Image format
 ===================

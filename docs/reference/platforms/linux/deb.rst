@@ -38,12 +38,12 @@ Icon format
 Deb packages uses ``.png`` format icons. An application must provide icons in
 the following sizes:
 
-  * 16px
-  * 32px
-  * 64px
-  * 128px
-  * 256px
-  * 512px
+* 16px
+* 32px
+* 64px
+* 128px
+* 256px
+* 512px
 
 Splash Image format
 ===================
@@ -79,12 +79,13 @@ you choose, you should be consistent; no normalization of codename and version
 is performed, so ``ubuntu:jammy`` and ``ubuntu:22.04`` will be identified as
 different versions (even though they the same version).
 
-You can specify any identifier you want, provided the following conditions are met:
+You can specify any identifier you want, provided the following conditions are
+met:
 
-1. It is a Debian-based distribution.
+1. It is a Debian-based distribution;
 2. The distribution is still supported by the vendor. If the distribution is
-   EOL, ``apt update`` will fail due to expired certificates.
-2. The system Python is Python 3.8 or later.
+   EOL, ``apt update`` will fail due to expired certificates;
+3. The system Python is Python 3.8 or later.
 
 Specifying ``--target`` is mutually exclusive with ``--no-docker``.
 
@@ -107,7 +108,7 @@ vendor-specific definitions will override the generic ``deb`` level definitions.
 A list of operating system packages that must be installed for the ``.deb``
 build to succeed. If a Docker build is requested, this list will be passed to
 the Docker context when building the container for the app build. These entries
-should be ``apt`` packages. For example,
+should be ``apt`` packages. For example::
 
     system_requires = ["libgirepository1.0-dev", "libcairo2-dev"]
 

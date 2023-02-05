@@ -10,21 +10,21 @@ Icon format
 Android projects use ``.png`` format icons, in round and square variants. An
 application must provide the icons in the following sizes, for 2 variants:
 
-  * ``round``:
+* ``round``:
 
-    * 48px
-    * 72px
-    * 96px
-    * 144px
-    * 192px
+  * 48px
+  * 72px
+  * 96px
+  * 144px
+  * 192px
 
-  * ``square``:
+* ``square``:
 
-    * 48px
-    * 72px
-    * 96px
-    * 144px
-    * 192px
+  * 48px
+  * 72px
+  * 96px
+  * 144px
+  * 192px
 
 Splash Image format
 ===================
@@ -34,27 +34,27 @@ should be a square image with a transparent background. It must be specified
 in a range of sizes and variants, to suit different possible device sizes
 and device display densities:
 
-  * ``normal`` (typical phones; up to 480 density-independent pixels):
+* ``normal`` (typical phones; up to 480 density-independent pixels):
 
-    * 320px
-    * 480px (hdpi)
-    * 640px (xhdpi)
-    * 1280px (xxxhdpi)
+  * 320px
+  * 480px (hdpi)
+  * 640px (xhdpi)
+  * 1280px (xxxhdpi)
 
-  * ``large`` (large format phones, or phone-tablet "phablet" hybrids; up to
-    720 density-indpendent pixels):
+* ``large`` (large format phones, or phone-tablet "phablet" hybrids; up to
+  720 density-indpendent pixels):
 
-    * 480px
-    * 720px (hdpi)
-    * 960px (xhdpi)
-    * 1920px (xxxhdpi)
+  * 480px
+  * 720px (hdpi)
+  * 960px (xhdpi)
+  * 1920px (xxxhdpi)
 
-  * ``xlarge`` (tablets; larger than 720 density-independent pixels)
+* ``xlarge`` (tablets; larger than 720 density-independent pixels)
 
-    * 720px
-    * 1080px (hdpi)
-    * 1440px (xhdpi)
-    * 2880px (xxxhdpi)
+  * 720px
+  * 1080px (hdpi)
+  * 1440px (xhdpi)
+  * 2880px (xxxhdpi)
 
 Consult `the Android documentation
 <https://developer.android.com/training/multiscreen/screensizes>`__
