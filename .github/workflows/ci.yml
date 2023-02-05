@@ -194,7 +194,7 @@ jobs:
           # docker-cache-dir: /var/lib/docker
     steps:
     - name: Cache Briefcase tools
-      uses: actions/cache@v3.2.3
+      uses: actions/cache@v3.2.4
       with:
         key: briefcase-${{ matrix.platform }}
         path: |
