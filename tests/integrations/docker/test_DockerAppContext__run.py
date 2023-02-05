@@ -33,9 +33,11 @@ def test_simple_call(mock_docker_app_context, tmp_path, capsys):
     )
     assert capsys.readouterr().out == (
         "\n"
-        "[myapp] Entering Docker context...\n"
+        "Entering Docker context...\n"
+        "--------------------------------------------------------------------------------\n"
+        "--------------------------------------------------------------------------------\n"
+        "Leaving Docker context.\n"
         "\n"
-        "[myapp] Leaving Docker context\n"
     )
 
 
@@ -63,9 +65,11 @@ def test_interactive(mock_docker_app_context, tmp_path, capsys):
     )
     assert capsys.readouterr().out == (
         "\n"
-        "[myapp] Entering Docker context...\n"
+        "Entering Docker context...\n"
+        "--------------------------------------------------------------------------------\n"
+        "--------------------------------------------------------------------------------\n"
+        "Leaving Docker context.\n"
         "\n"
-        "[myapp] Leaving Docker context\n"
     )
 
 
@@ -105,9 +109,11 @@ def test_extra_mounts(mock_docker_app_context, tmp_path, capsys):
     )
     assert capsys.readouterr().out == (
         "\n"
-        "[myapp] Entering Docker context...\n"
+        "Entering Docker context...\n"
+        "--------------------------------------------------------------------------------\n"
+        "--------------------------------------------------------------------------------\n"
+        "Leaving Docker context.\n"
         "\n"
-        "[myapp] Leaving Docker context\n"
     )
 
 
@@ -149,9 +155,11 @@ def test_call_with_arg_and_env(mock_docker_app_context, tmp_path, capsys):
     )
     assert capsys.readouterr().out == (
         "\n"
-        "[myapp] Entering Docker context...\n"
+        "Entering Docker context...\n"
+        "--------------------------------------------------------------------------------\n"
+        "--------------------------------------------------------------------------------\n"
+        "Leaving Docker context.\n"
         "\n"
-        "[myapp] Leaving Docker context\n"
     )
 
 
@@ -184,11 +192,12 @@ def test_call_with_path_arg_and_env(mock_docker_app_context, tmp_path, capsys):
             "MAGIC=True",
             "--env",
             "PATH=/somewhere/safe:/home/brutus/.cache/briefcase/tools:/app/location",
+            "--workdir",
+            f"{tmp_path / 'cwd'}",
             "briefcase/com.example.myapp:py3.X",
             "hello",
             os.fsdecode(tmp_path / "location"),
         ],
-        cwd=os.fsdecode(tmp_path / "cwd"),
         text=True,
         encoding=ANY,
         bufsize=1,
@@ -197,9 +206,11 @@ def test_call_with_path_arg_and_env(mock_docker_app_context, tmp_path, capsys):
     )
     assert capsys.readouterr().out == (
         "\n"
-        "[myapp] Entering Docker context...\n"
+        "Entering Docker context...\n"
+        "--------------------------------------------------------------------------------\n"
+        "--------------------------------------------------------------------------------\n"
+        "Leaving Docker context.\n"
         "\n"
-        "[myapp] Leaving Docker context\n"
     )
 
 
@@ -243,19 +254,22 @@ def test_interactive_with_path_arg_and_env_and_mounts(
             "MAGIC=True",
             "--env",
             "PATH=/somewhere/safe:/home/brutus/.cache/briefcase/tools:/app/location",
+            "--workdir",
+            f"{tmp_path / 'cwd'}",
             "briefcase/com.example.myapp:py3.X",
             "hello",
             os.fsdecode(tmp_path / "location"),
         ],
-        cwd=os.fsdecode(tmp_path / "cwd"),
         text=True,
         encoding=ANY,
     )
     assert capsys.readouterr().out == (
         "\n"
-        "[myapp] Entering Docker context...\n"
+        "Entering Docker context...\n"
+        "--------------------------------------------------------------------------------\n"
+        "--------------------------------------------------------------------------------\n"
+        "Leaving Docker context.\n"
         "\n"
-        "[myapp] Leaving Docker context\n"
     )
 
 
@@ -289,18 +303,20 @@ def test_simple_verbose_call(mock_docker_app_context, tmp_path, capsys):
     )
     assert capsys.readouterr().out == (
         "\n"
-        "[myapp] Entering Docker context...\n"
+        "Entering Docker context...\n"
+        "--------------------------------------------------------------------------------\n"
         "\n"
-        ">>> Running Command:\n"
-        ">>>     docker run "
+        "Docker| >>> Running Command:\n"
+        "Docker| >>>     docker run "
         "--rm "
         f"--volume {tmp_path / 'platform'}:/app:z "
         f"--volume {tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z "
         "briefcase/com.example.myapp:py3.X "
         "hello world\n"
-        ">>> Working Directory:\n"
-        f">>>     {Path.cwd()}\n"
-        ">>> Return code: 0\n"
+        "Docker| >>> Working Directory:\n"
+        f"Docker| >>>     {Path.cwd()}\n"
+        "Docker| >>> Return code: 0\n"
+        "--------------------------------------------------------------------------------\n"
+        "Leaving Docker context.\n"
         "\n"
-        "[myapp] Leaving Docker context\n"
     )

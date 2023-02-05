@@ -58,7 +58,7 @@ def test_success(mock_tools, first_app_config, verify_kwargs):
             "--build-arg",
             "PY_VERSION=py3.X",
             "--build-arg",
-            "SYSTEM_REQUIRES=",
+            "SYSTEM_REQUIRES=build-essential ",
             "--build-arg",
             "HOST_UID=37",
             "--build-arg",
