@@ -87,6 +87,15 @@ def full_options(state, options):
     return full
 
 
+def split_passthrough(args):
+    try:
+        pos = args.index("--")
+    except ValueError:
+        return args, []
+    else:
+        return args[:pos], args[pos + 1 :]
+
+
 class BaseCommand(ABC):
     cmd_line = "briefcase {command} {platform} {output_format}"
     supported_host_os = {"Darwin", "Linux", "Windows"}
@@ -504,25 +513,17 @@ a custom location for Briefcase's tools.
         self.add_default_options(parser)
         self.add_options(parser)
 
-        # If the command allows passthrough arguments, add the option,
+        # If the command allows passthrough arguments, add an option for the help,
         # then process the argument list to strip out the passthrough args.
         if self.allows_passthrough:
             parser.add_argument(
                 "--",
                 dest="passthrough",
-                metavar="passthrough arguments",
+                metavar="ARGS ...",
                 required=False,
                 help="Arguments to pass to the app",
             )
-
-            # If "--" is present in the argument list, strip off any
-            # arguments after that one, and store them for separate handling.
-            if "--" in extra:
-                pos = extra.index("--")
-                args, passthrough = extra[:pos], extra[pos + 1 :]
-            else:
-                passthrough = []
-                args = extra
+            args, passthrough = split_passthrough(extra)
         else:
             args = extra
 

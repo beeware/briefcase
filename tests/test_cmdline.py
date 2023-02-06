@@ -1,3 +1,4 @@
+import shlex
 import sys
 from unittest import mock
 
@@ -12,7 +13,11 @@ from briefcase.exceptions import (
     UnsupportedCommandError,
 )
 from briefcase.platforms.linux.appimage import LinuxAppImageCreateCommand
-from briefcase.platforms.macOS.app import macOSAppCreateCommand, macOSAppPublishCommand
+from briefcase.platforms.macOS.app import (
+    macOSAppCreateCommand,
+    macOSAppPublishCommand,
+    macOSAppRunCommand,
+)
 from briefcase.platforms.windows.app import WindowsAppCreateCommand
 
 
@@ -102,12 +107,44 @@ def test_new_command(logger, console):
     assert options == {"template": None}
 
 
-def test_dev_command(monkeypatch, logger, console):
+# Common tests for dev and run commands.
+def dev_run_parameters(command):
+    return [
+        (f"{command} {args}", expected)
+        for args, expected in [
+            ("", {}),
+            ("-r", {"update_requirements": True}),
+            ("--update-requirements", {"update_requirements": True}),
+            ("--test", {"test_mode": True}),
+            ("--test -r", {"test_mode": True, "update_requirements": True}),
+            ("--", {}),
+            ("-- ''", {"passthrough": [""]}),
+            ("-- --test", {"passthrough": ["--test"]}),
+            ("--test -- --test", {"test_mode": True, "passthrough": ["--test"]}),
+            ("--test -- -r", {"test_mode": True, "passthrough": ["-r"]}),
+            ("-r -- --test", {"update_requirements": True, "passthrough": ["--test"]}),
+            ("-- -y --no maybe", {"passthrough": ["-y", "--no", "maybe"]}),
+            (
+                "--test -- -y --no maybe",
+                {"test_mode": True, "passthrough": ["-y", "--no", "maybe"]},
+            ),
+        ]
+    ]
+
+
+@pytest.mark.parametrize(
+    "cmdline, expected_options",
+    dev_run_parameters("dev")
+    + [
+        ("dev --no-run", {"run_app": False}),
+    ],
+)
+def test_dev_command(monkeypatch, logger, console, cmdline, expected_options):
     """``briefcase dev`` returns the Dev command."""
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, "platform", "darwin")
 
-    cmd, options = do_cmdline_parse("dev".split(), logger, console)
+    cmd, options = do_cmdline_parse(shlex.split(cmdline), logger, console)
 
     assert isinstance(cmd, DevCommand)
     assert cmd.platform == "macOS"
@@ -122,54 +159,43 @@ def test_dev_command(monkeypatch, logger, console):
         "run_app": True,
         "test_mode": False,
         "passthrough": [],
+        **expected_options,
     }
 
 
-def test_dev_command_only_passthrough(monkeypatch, logger, console):
-    """``briefcase dev`` with only passthrough args returns the Dev command."""
+@pytest.mark.parametrize(
+    "cmdline, expected_options",
+    dev_run_parameters("run")
+    + [
+        ("run -u", {"update": True}),
+        ("run --update", {"update": True}),
+        ("run --update-resources", {"update_resources": True}),
+        ("run --no-update", {"no_update": True}),
+    ],
+)
+def test_run_command(monkeypatch, logger, console, cmdline, expected_options):
+    """``briefcase run`` returns the Run command for the correct platform."""
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, "platform", "darwin")
 
-    cmd, options = do_cmdline_parse("dev -- -y --no maybe".split(), logger, console)
+    cmd, options = do_cmdline_parse(shlex.split(cmdline), logger, console)
 
-    assert isinstance(cmd, DevCommand)
+    assert isinstance(cmd, macOSAppRunCommand)
     assert cmd.platform == "macOS"
-    assert cmd.output_format is None
+    assert cmd.output_format == "app"
     assert cmd.input.enabled
     assert cmd.logger.verbosity == 1
     assert cmd.logger is logger
     assert cmd.input is console
     assert options == {
         "appname": None,
+        "update": False,
         "update_requirements": False,
-        "run_app": True,
+        "update_resources": False,
+        "no_update": False,
         "test_mode": False,
-        "passthrough": ["-y", "--no", "maybe"],
-    }
-
-
-def test_dev_command_passthrough(monkeypatch, logger, console):
-    """``briefcase dev`` with passthrough args returns the Dev command."""
-    # Pretend we're on macOS, regardless of where the tests run.
-    monkeypatch.setattr(sys, "platform", "darwin")
-
-    cmd, options = do_cmdline_parse(
-        "dev --test -- -y --no maybe".split(), logger, console
-    )
-
-    assert isinstance(cmd, DevCommand)
-    assert cmd.platform == "macOS"
-    assert cmd.output_format is None
-    assert cmd.input.enabled
-    assert cmd.logger.verbosity == 1
-    assert cmd.logger is logger
-    assert cmd.input is console
-    assert options == {
-        "appname": None,
-        "update_requirements": False,
-        "run_app": True,
-        "test_mode": True,
-        "passthrough": ["-y", "--no", "maybe"],
+        "passthrough": [],
+        **expected_options,
     }
 
 
