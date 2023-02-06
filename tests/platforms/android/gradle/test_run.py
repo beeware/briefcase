@@ -180,6 +180,7 @@ def test_run_existing_device(run_command, first_app_config):
     run_command.tools.mock_adb.start_app.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
         "org.beeware.android.MainActivity",
+        [],
     )
 
     run_command.tools.mock_adb.pidof.assert_called_once_with(
@@ -224,7 +225,7 @@ def test_run_with_passthrough(run_command, first_app_config):
     # normalized into a `_` via `package_name`.
     first_app_config.bundle = "com.ex-ample"
 
-    # Invoke run_app with args; args will be ignored
+    # Invoke run_app with args.
     run_command.run_app(
         first_app_config,
         device_or_avd="exampleDevice",
@@ -251,6 +252,7 @@ def test_run_with_passthrough(run_command, first_app_config):
     run_command.tools.mock_adb.start_app.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
         "org.beeware.android.MainActivity",
+        ["foo", "--bar"],
     )
 
     run_command.tools.mock_adb.pidof.assert_called_once_with(
@@ -404,6 +406,7 @@ def test_run_created_emulator(run_command, first_app_config):
     run_command.tools.mock_adb.start_app.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
         "org.beeware.android.MainActivity",
+        [],
     )
 
     run_command.tools.mock_adb.logcat.assert_called_once_with(pid="777")
@@ -465,6 +468,7 @@ def test_run_idle_device(run_command, first_app_config):
     run_command.tools.mock_adb.start_app.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
         "org.beeware.android.MainActivity",
+        [],
     )
 
     run_command.tools.mock_adb.logcat.assert_called_once_with(pid="777")
@@ -556,6 +560,7 @@ def test_run_test_mode(run_command, first_app_config):
     run_command.tools.mock_adb.start_app.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
         "org.beeware.android.MainActivity",
+        [],
     )
 
     run_command.tools.mock_adb.pidof.assert_called_once_with(
@@ -600,7 +605,7 @@ def test_run_test_mode_with_passthrough(run_command, first_app_config):
     # normalized into a `_` via `package_name`.
     first_app_config.bundle = "com.ex-ample"
 
-    # Invoke run_app in test mode with args; args will be ignored
+    # Invoke run_app in test mode with args.
     run_command.run_app(
         first_app_config,
         device_or_avd="exampleDevice",
@@ -628,6 +633,7 @@ def test_run_test_mode_with_passthrough(run_command, first_app_config):
     run_command.tools.mock_adb.start_app.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
         "org.beeware.android.MainActivity",
+        ["foo", "--bar"],
     )
 
     run_command.tools.mock_adb.pidof.assert_called_once_with(
@@ -704,6 +710,7 @@ def test_run_test_mode_created_emulator(run_command, first_app_config):
     run_command.tools.mock_adb.start_app.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
         "org.beeware.android.MainActivity",
+        [],
     )
 
     run_command.tools.mock_adb.logcat.assert_called_once_with(pid="777")

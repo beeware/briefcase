@@ -322,10 +322,6 @@ class GradleRunCommand(GradleMixin, RunCommand):
                 f"Starting {label} on {name} (device ID {device})", prefix=app.app_name
             )
 
-            # At least for now, there's no easy way to pass arguments to an Android app
-            if passthrough:
-                self.logger.warning(f"Ignoring passthrough arguments: {passthrough}")
-
             # Create an ADB wrapper for the selected device
             adb = self.tools.android_sdk.adb(device=device)
 
@@ -346,7 +342,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
             with self.input.wait_bar(f"Launching {label}..."):
                 # Any log after this point must be associated with the new instance
                 start_time = datetime.datetime.now()
-                adb.start_app(package, "org.beeware.android.MainActivity")
+                adb.start_app(package, "org.beeware.android.MainActivity", passthrough)
                 pid = None
                 attempts = 0
                 delay = 0.01

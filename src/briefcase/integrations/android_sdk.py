@@ -1,6 +1,7 @@
 import json
 import os
 import re
+import shlex
 import shutil
 import subprocess
 import time
@@ -1284,11 +1285,12 @@ class ADB:
                 f"Unable to force stop app {package} on {self.device}"
             ) from e
 
-    def start_app(self, package, activity):
+    def start_app(self, package, activity, passthrough):
         """Start an app, specified as a package name & activity name.
 
         :param package: The name of the Android package, e.g., com.username.myapp.
         :param activity: The activity of the APK to start.
+        :param passthrough: Arguments to pass to the app.
 
         Returns `None` on success; raises an exception on failure.
 
@@ -1297,19 +1299,26 @@ class ADB:
         for "package" and "launchable-activity" in the output.
         """
         try:
-            # `adb shell am start` always exits with status zero. We look for error
-            # messages in the output.
+            # `am start` also accepts string array extras, but we pass the arguments as a
+            # single JSON string, because JSON deals with edge cases like whitespace and
+            # escaping in a reliable and well-documented way.
             output = self.run(
                 "shell",
                 "am",
                 "start",
+                "-n",
                 f"{package}/{activity}",
                 "-a",
                 "android.intent.action.MAIN",
                 "-c",
                 "android.intent.category.LAUNCHER",
+                "--es",
+                "org.beeware.ARGV",
+                shlex.quote(json.dumps(passthrough)),  # Protect from Android's shell
             )
 
+            # `adb shell am start` always exits with status zero. We look for error
+            # messages in the output.
             if any(
                 line.startswith("Error: Activity class ")
                 and line.endswith("does not exist.")
