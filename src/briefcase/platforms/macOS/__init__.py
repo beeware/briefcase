@@ -137,7 +137,7 @@ class macOSRunMixin:
                     "-n",  # Force a new app to be launched
                     os.fsdecode(self.binary_path(app)),
                 ]
-                + passthrough,
+                + ((["--args"] + passthrough) if passthrough else []),
                 cwd=self.tools.home_path,
                 check=True,
                 **kwargs,

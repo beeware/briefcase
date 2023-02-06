@@ -126,7 +126,7 @@ def test_run_app_with_passthrough(run_command, first_app_config, tmp_path, monke
         bufsize=1,
     )
     run_command.tools.subprocess.run.assert_called_with(
-        ["open", "-n", os.fsdecode(bin_path), "foo", "--bar"],
+        ["open", "-n", os.fsdecode(bin_path), "--args", "foo", "--bar"],
         cwd=tmp_path / "home",
         check=True,
     )
@@ -241,7 +241,7 @@ def test_run_app_test_mode_with_passthrough(
         bufsize=1,
     )
     run_command.tools.subprocess.run.assert_called_with(
-        ["open", "-n", os.fsdecode(bin_path), "foo", "--bar"],
+        ["open", "-n", os.fsdecode(bin_path), "--args", "foo", "--bar"],
         cwd=tmp_path / "home",
         check=True,
         env={"BRIEFCASE_MAIN_MODULE": "tests.first_app"},
