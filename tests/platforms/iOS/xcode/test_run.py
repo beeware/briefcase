@@ -264,6 +264,8 @@ def test_run_app_with_passthrough(run_command, first_app_config, tmp_path):
             "launch",
             "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
             "com.example.first-app",
+            "foo",
+            "--bar",
         ],
     )
 
@@ -1315,6 +1317,8 @@ def test_run_app_test_mode_with_passthrough(run_command, first_app_config, tmp_p
             "launch",
             "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
             "com.example.first-app",
+            "foo",
+            "--bar",
         ],
     )
 

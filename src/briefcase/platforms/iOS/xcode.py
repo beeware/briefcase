@@ -360,10 +360,6 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
             prefix=app.app_name,
         )
 
-        # At least for now, there's no easy way to pass arguments to a running iOS app
-        if passthrough:
-            self.logger.warning(f"Ignoring passthrough arguments: {passthrough}")
-
         # The simulator needs to be booted before being started.
         # If it's shut down, we can boot it again; but if it's currently
         # shutting down, we need to wait for it to shut down before restarting.
@@ -477,7 +473,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
             self.logger.info(f"Starting {label}...", prefix=app.app_name)
             with self.input.wait_bar(f"Launching {label}..."):
                 output = self.tools.subprocess.check_output(
-                    ["xcrun", "simctl", "launch", udid, app_identifier]
+                    ["xcrun", "simctl", "launch", udid, app_identifier] + passthrough
                 )
                 try:
                     app_pid = int(output.split(":")[1].strip())
