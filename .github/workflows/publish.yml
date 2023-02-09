@@ -14,6 +14,7 @@ jobs:
           file: ${{ github.event.repository.name }}.*
           regex: true
           target: dist/
+
       - name: Publish release to production PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
