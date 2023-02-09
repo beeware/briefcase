@@ -179,7 +179,9 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
             # Extract test packages, to enable features like test discovery and assertion
             # rewriting.
             "extract_packages": ", ".join(
-                f'"{Path(path).name}"' for path in (app.test_sources or [])
+                f'"{name}"'
+                for path in (app.test_sources or [])
+                if (name := Path(path).name)
             ),
         }
 
