@@ -10,6 +10,7 @@ from . import (
     rcedit,
     subprocess,
     visualstudio,
+    windows_sdk,
     wix,
     xcode,
 )
@@ -26,6 +27,7 @@ __all__ = [
     "rcedit",
     "subprocess",
     "visualstudio",
+    "windows_sdk",
     "wix",
     "xcode",
 ]

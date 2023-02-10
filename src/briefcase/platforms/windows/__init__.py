@@ -7,6 +7,7 @@ from pathlib import Path
 
 from briefcase.commands import CreateCommand, PackageCommand, RunCommand
 from briefcase.config import AppConfig, parsed_version
+from briefcase.console import InputDisabled, select_option
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.windows_sdk import WindowsSDK
 from briefcase.integrations.wix import WiX
@@ -148,13 +149,16 @@ class WindowsPackageCommand(PackageCommand):
             default="sha256",
         )
 
-        store = self.tools.input.text_input(
-            "Certificate is stored in the Current User's or Local Machine's certificate stores: [Current User]: ",
-            default="Current User",
+        self.input.prompt(
+            "Is the certificate located in the Current User or Local Machine certificate store?"
         )
-        options["cert_store_location"] = (
-            "Local Machine" if store[0].upper() == "L" else "Current User"
-        )
+        try:
+            options["cert_store_location"] = select_option(
+                options={store: store for store in ["Current User", "Local Machine"]},
+                input=self.input,
+            )
+        except InputDisabled:
+            options["cert_store_location"] = "Current User"
 
         options["cert_store"] = self.tools.input.text_input(
             "Name of the certificate store containing the certificate [My]: ",
@@ -196,8 +200,6 @@ class WindowsPackageCommand(PackageCommand):
             options["timestamp_url"],
             "/td",
             options["timestamp_digest"],
-            # TODO:PR: remove debug
-            "/debug",
         ]
 
         if options["cert_store_location"] == "Local Machine":
@@ -211,7 +213,7 @@ class WindowsPackageCommand(PackageCommand):
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(f"Unable to sign {filepath}") from e
 
-    def package_app(self, app: AppConfig, sign_app, identity, **kwargs):
+    def package_app(self, app: AppConfig, sign_app=True, identity=None, **kwargs):
         """Package an application.
 
         :param app: The application to package

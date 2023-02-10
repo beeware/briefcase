@@ -2,14 +2,15 @@ from importlib.util import find_spec
 from pathlib import Path
 from typing import Generator, Tuple
 
-from briefcase.exceptions import MissingToolError
+from briefcase.exceptions import BriefcaseCommandError, MissingToolError
+from briefcase.integrations.base import Tool
 
 # winreg can only be imported on Windows
 if find_spec("winreg"):
     import winreg
 
 
-class WindowsSDK:
+class WindowsSDK(Tool):
     name = "windows_sdk"
     full_name = "Windows SDK"
 
@@ -59,14 +60,21 @@ class WindowsSDK:
         if environ_sdk := tools.os.environ.get("WindowsSdkDir"):
             if environ_sdk_version := tools.os.environ.get("WindowsSDKVersion"):
                 yield environ_sdk, environ_sdk_version
-                # TODO:PR: consider raising here if user's SDK is rejected
+                raise BriefcaseCommandError(
+                    f"""\
+The 'WindowsSdkDir' and 'WindowsSDKVersion' environment variables do not point
+to a valid install of the Windows SDK v10:
+
+    WindowsSdkDir:     {environ_sdk}
+    WindowsSDKVersion: {environ_sdk_version}
+"""
+                )
 
         seen_sdk_dirs = set()
         for hkey in [winreg.HKEY_LOCAL_MACHINE, winreg.HKEY_CURRENT_USER]:
             for access_right in access_right_precedence:
                 try:
                     with winreg.OpenKeyEx(hkey, sdk_key, access=access_right) as key:
-
                         sdk_dir, key_type = winreg.QueryValueEx(key, install_dir_subkey)
                         if key_type != winreg.REG_SZ or not sdk_dir:
                             continue
@@ -110,7 +118,6 @@ class WindowsSDK:
 
         windows_sdk = None
         for sdk_dir, sdk_version in cls._windows_sdks(tools):
-
             # The code signing tool `signtool.exe` must exist
             if not (sdk_dir / "bin" / sdk_version / "x64" / "signtool.exe").is_file():
                 continue
