@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import subprocess
 from pathlib import Path
 
@@ -21,19 +23,19 @@ class VisualStudio(Tool):
         self,
         tools: ToolCache,
         msbuild_path: Path,
-        install_metadata: dict = None,
+        install_metadata: dict[str, str] = None,
     ):
         self.tools = tools
         self._msbuild_path = msbuild_path
         self._install_metadata = install_metadata
 
     @property
-    def msbuild_path(self):
+    def msbuild_path(self) -> Path:
         """The path to the MSBuild executable."""
         return self._msbuild_path
 
     @property
-    def install_metadata(self):
+    def install_metadata(self) -> dict[str, str] | None:
         """Metadata about the Visual Studio install.
 
         Will be ``None`` if MSBuild the path to MSBuild has been provided
@@ -44,7 +46,7 @@ class VisualStudio(Tool):
         return self._install_metadata
 
     @classmethod
-    def verify(cls, tools: ToolCache):
+    def verify(cls, tools: ToolCache) -> VisualStudio:
         """Verify that Visual Studio is available.
 
         :param tools: ToolCache of available tools
@@ -188,7 +190,3 @@ Then restart Briefcase.
 
         tools.visualstudio = visualstudio
         return visualstudio
-
-    @property
-    def managed_install(self):
-        return False

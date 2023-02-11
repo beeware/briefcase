@@ -4,7 +4,7 @@ import os
 import platform
 import shutil
 import sys
-from abc import ABC
+from abc import ABC, abstractmethod
 from collections import defaultdict
 from collections.abc import Mapping
 from pathlib import Path
@@ -15,6 +15,7 @@ from cookiecutter.main import cookiecutter
 
 from briefcase.config import AppConfig
 from briefcase.console import Console, Log
+from briefcase.exceptions import MissingToolError, NonManagedToolError
 
 if TYPE_CHECKING:
     # Tools are imported only for type checking
@@ -32,11 +33,62 @@ if TYPE_CHECKING:
     from briefcase.integrations.visualstudio import VisualStudio
     from briefcase.integrations.windows_sdk import WindowsSDK
     from briefcase.integrations.wix import WiX
+    from briefcase.integrations.xcode import Xcode, XcodeCliTools
 
 
-# TODO: Implement Tool base class
 class Tool(ABC):
-    """Tool Base."""  # pragma: no cover
+    """Tool Base."""
+
+    name: str
+    full_name: str
+
+    def __init__(self, tools: ToolCache):
+        self.tools = tools
+
+    @classmethod
+    @abstractmethod
+    def verify(cls, tools: ToolCache):
+        """Confirm the tool is available and usable on the host platform."""
+        ...
+
+    def exists(self) -> bool:
+        """Is the tool currently installed?"""
+        raise NotImplementedError(
+            f"Missing implementation for Tool {self.__class__.__name__!r}"
+        )
+
+    @property
+    def managed_install(self) -> bool:
+        """Is Briefcase managing the installation of this tool?"""
+        return False
+
+    def install(self, *a, **kw):
+        """Install the tool as managed by Briefcase."""
+        if self.managed_install:
+            raise NotImplementedError(
+                f"Missing implementation for Tool {self.__class__.__name__!r}"
+            )
+        else:
+            raise NonManagedToolError(self.full_name)
+
+    def uninstall(self, *a, **kw):
+        """Uninstall the tool."""
+        if self.managed_install:
+            raise NotImplementedError(
+                f"Missing implementation for Tool {self.__class__.__name__!r}"
+            )
+        else:
+            raise NonManagedToolError(self.full_name)
+
+    def upgrade(self, *a, **kw):
+        """Upgrade a managed tool."""
+        if self.managed_install:
+            if not self.exists():
+                raise MissingToolError(self.full_name)
+            self.uninstall()
+            self.install()
+        else:
+            raise NonManagedToolError(self.full_name)
 
 
 class ToolCache(Mapping):
@@ -57,8 +109,8 @@ class ToolCache(Mapping):
     visualstudio: VisualStudio
     windows_sdk: WindowsSDK
     wix: WiX
-    xcode: bool
-    xcode_cli: bool
+    xcode: Xcode
+    xcode_cli: XcodeCliTools
 
     # Python stdlib tools
     platform = platform

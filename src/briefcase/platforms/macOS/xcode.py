@@ -11,7 +11,7 @@ from briefcase.commands import (
 )
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.integrations.xcode import verify_xcode_install
+from briefcase.integrations.xcode import Xcode
 from briefcase.platforms.macOS import macOSMixin, macOSPackageMixin, macOSRunMixin
 
 
@@ -26,7 +26,7 @@ class macOSXcodeMixin(macOSMixin):
         # Require XCode 10.0.0. There's no particular reason for this
         # specific version, other than it's a nice round number that's
         # not *that* old at time of writing.
-        verify_xcode_install(self.tools, min_version=(10, 0, 0))
+        Xcode.verify(self.tools, min_version=(10, 0, 0))
 
         # Verify superclass tools *after* xcode. This ensures we get the
         # git check *after* the xcode check.

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import subprocess
 import sys
@@ -108,11 +110,8 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
         "Linux": "https://docs.docker.com/engine/install/#server",
     }
 
-    def __init__(self, tools: ToolCache):
-        self.tools = tools
-
     @classmethod
-    def verify(cls, tools: ToolCache):
+    def verify(cls, tools: ToolCache) -> Docker:
         """Verify Docker is installed and operational."""
         # short circuit since already verified and available
         if hasattr(tools, "docker"):
@@ -237,6 +236,9 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
 
 
 class DockerAppContext(Tool):
+    name = "docker"
+    full_name = "Docker"
+
     def __init__(self, tools: ToolCache, app: AppConfig):
         self.tools = tools
         self.app = app
@@ -263,7 +265,7 @@ class DockerAppContext(Tool):
         host_bundle_path: Path,
         host_data_path: Path,
         python_version: str,
-    ):
+    ) -> DockerAppContext:
         """Verify that docker is available as an app-bound tool.
 
         Creates or updates the Docker image for the app to run
@@ -347,7 +349,7 @@ class DockerAppContext(Tool):
                         f"Error building Docker container image for {self.app.app_name}."
                     ) from e
 
-    def _dockerize_path(self, arg: str):
+    def _dockerize_path(self, arg: str) -> str:
         """Relocate any local path into the equivalent location on the docker
         filesystem.
 
@@ -366,7 +368,14 @@ class DockerAppContext(Tool):
 
         return arg
 
-    def _dockerize_args(self, args, interactive=False, mounts=None, env=None, cwd=None):
+    def _dockerize_args(
+        self,
+        args: list[str],
+        interactive: bool = False,
+        mounts: dict[str | Path, str | Path] = None,
+        env: dict[str, str] = None,
+        cwd: Path = None,
+    ) -> list[str]:
         """Convert arguments and environment into a Docker-compatible form. Convert an
         argument and environment specification into a form that can be used as arguments
         to invoke Docker. This involves:
@@ -425,7 +434,15 @@ class DockerAppContext(Tool):
 
         return docker_args
 
-    def run(self, args, env=None, cwd=None, interactive=False, mounts=None, **kwargs):
+    def run(
+        self,
+        args: list[str],
+        env: dict[str, str] = None,
+        cwd: Path = None,
+        interactive: bool = False,
+        mounts: dict[str | Path, str | Path] = None,
+        **kwargs,
+    ):
         """Run a process inside a Docker container."""
         # Any exceptions from running the process are *not* caught.
         # This ensures that "docker.run()" behaves as closely to
@@ -445,7 +462,14 @@ class DockerAppContext(Tool):
                 **kwargs,
             )
 
-    def check_output(self, args, env=None, cwd=None, mounts=None, **kwargs):
+    def check_output(
+        self,
+        args: list[str],
+        env: dict[str, str] = None,
+        cwd: Path = None,
+        mounts: dict[str | Path, str | Path] = None,
+        **kwargs,
+    ):
         """Run a process inside a Docker container, capturing output."""
         # Any exceptions from running the process are *not* caught.
         # This ensures that "docker.check_output()" behaves as closely to

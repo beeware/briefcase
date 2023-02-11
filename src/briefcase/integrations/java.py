@@ -1,13 +1,11 @@
+from __future__ import annotations
+
 import os
 import shutil
 import subprocess
 from pathlib import Path
 
-from briefcase.exceptions import (
-    BriefcaseCommandError,
-    MissingToolError,
-    NonManagedToolError,
-)
+from briefcase.exceptions import BriefcaseCommandError, MissingToolError
 from briefcase.integrations.base import Tool, ToolCache
 
 
@@ -26,7 +24,7 @@ class JDK(Tool):
         self.java_home = java_home
 
     @property
-    def adoptOpenJDK_download_url(self):
+    def adoptOpenJDK_download_url(self) -> str:
         platform = {
             "Darwin": "mac",
             "Windows": "windows",
@@ -44,7 +42,7 @@ class JDK(Tool):
         )
 
     @classmethod
-    def verify(cls, tools: ToolCache, install=True):
+    def verify(cls, tools: ToolCache, install: bool = True) -> JDK:
         """Verify that a Java 8 JDK exists.
 
         If ``JAVA_HOME`` is set, try that version. If it is a JRE, or its *not*
@@ -222,11 +220,11 @@ class JDK(Tool):
         tools.java = java
         return java
 
-    def exists(self):
+    def exists(self) -> bool:
         return (self.java_home / "bin").exists()
 
     @property
-    def managed_install(self):
+    def managed_install(self) -> bool:
         try:
             # Determine if java_home is relative to the briefcase data directory.
             # If java_home isn't inside this directory, this will raise a ValueError,
@@ -276,16 +274,6 @@ Delete {jdk_zip_path} and run briefcase again.
                 self.tools.shutil.rmtree(self.java_home.parent.parent)
             else:
                 self.tools.shutil.rmtree(self.java_home)
-
-    def upgrade(self):
-        """Upgrade an existing JDK install."""
-        if not self.managed_install:
-            raise NonManagedToolError("Java")
-        if not self.exists():
-            raise MissingToolError("Java")
-
-        self.uninstall()
-        self.install()
 
     @classmethod
     def verify_rosetta(cls, tools):

@@ -1,6 +1,6 @@
 import pytest
 
-from briefcase.commands.create import git
+from briefcase.commands.create import Git
 from briefcase.exceptions import BriefcaseCommandError
 
 
@@ -10,7 +10,7 @@ def test_no_git(new_command, monkeypatch):
     def monkeypatch_verify_git(*a, **kw):
         raise BriefcaseCommandError("Briefcase requires git, but it is not installed")
 
-    monkeypatch.setattr(git, "verify_git_is_installed", monkeypatch_verify_git)
+    monkeypatch.setattr(Git, "verify", monkeypatch_verify_git)
 
     # The command will fail tool verification.
     with pytest.raises(

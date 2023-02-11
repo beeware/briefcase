@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 import operator
 import os
@@ -8,6 +10,8 @@ import threading
 import time
 from functools import wraps
 from pathlib import Path
+from subprocess import CompletedProcess
+from typing import Any, Callable, Generator
 
 import psutil
 
@@ -21,12 +25,12 @@ class StopStreaming(Exception):
     """Raised by streaming filters to terminate the stream."""
 
 
-def ensure_str(text):
+def ensure_str(text: str | bytes) -> str:
     """Returns input text as a string."""
     return text.decode() if isinstance(text, bytes) else str(text)
 
 
-def json_parser(json_output):
+def json_parser(json_output: str) -> Any:
     """Wrapper to parse command output as JSON via parse_output.
 
     :param json_output: command output to parse as JSON
@@ -37,7 +41,7 @@ def json_parser(json_output):
         raise ParseError(f"Failed to parse output as JSON: {e}") from e
 
 
-def is_process_dead(pid: int):
+def is_process_dead(pid: int) -> bool:
     """Returns True if a PID is not assigned to a process.
 
     Checking if a PID exists is only a semi-safe proxy to determine
@@ -55,7 +59,7 @@ def get_process_id_by_command(
     command_list: list = None,
     command: str = "",
     logger: Log = None,
-):
+) -> int | None:
     """Find a Process ID (PID) a by its command. If multiple processes are found, then
     the most recently created process ID is returned.
 
@@ -139,7 +143,7 @@ class NativeAppContext(Tool):
     """A wrapper around subprocess for use as an app-bound tool."""
 
     @classmethod
-    def verify(cls, tools: ToolCache, app: AppConfig):
+    def verify(cls, tools: ToolCache, app: AppConfig) -> Subprocess:
         """Make subprocess available as app-bound tool."""
         # short circuit since already verified and available
         if hasattr(tools[app], "app_context"):
@@ -165,7 +169,7 @@ class Subprocess(Tool):
         # This is a no-op; the native subprocess environment is ready-to-use.
         pass
 
-    def full_env(self, overrides):
+    def full_env(self, overrides: dict[str, str]) -> dict[str, str]:
         """Generate the full environment in which the command will run.
 
         :param overrides: The environment passed to the subprocess call;
@@ -176,7 +180,7 @@ class Subprocess(Tool):
             env.update(overrides)
         return env
 
-    def final_kwargs(self, **kwargs):
+    def final_kwargs(self, **kwargs) -> dict[str, str]:
         """Convert subprocess keyword arguments into their final form.
 
         This involves:
@@ -265,7 +269,7 @@ class Subprocess(Tool):
         return kwargs
 
     @classmethod
-    def verify(cls, tools: ToolCache):
+    def verify(cls, tools: ToolCache) -> Subprocess:
         """Make subprocess available in tool cache."""
         # short circuit since already verified and available
         if hasattr(tools, "subprocess"):
@@ -275,7 +279,7 @@ class Subprocess(Tool):
         return tools.subprocess
 
     @ensure_console_is_safe
-    def run(self, args, stream_output=True, **kwargs):
+    def run(self, args: list, stream_output: bool = True, **kwargs) -> CompletedProcess:
         """A wrapper for subprocess.run().
 
         This method implements the behavior of subprocess.run() with some
@@ -407,7 +411,12 @@ class Subprocess(Tool):
 
         return command_result
 
-    def _run_and_stream_output(self, args, check=False, **kwargs):
+    def _run_and_stream_output(
+        self,
+        args: list,
+        check: bool = False,
+        **kwargs,
+    ) -> CompletedProcess:
         """Simulate subprocess.run() while streaming output to the console.
 
         This is useful when dynamic screen content is active or output should
@@ -460,7 +469,7 @@ class Subprocess(Tool):
         return subprocess.CompletedProcess(args, return_code, stderr=stderr)
 
     @ensure_console_is_safe
-    def check_output(self, args, quiet=False, **kwargs):
+    def check_output(self, args: list, quiet: bool = False, **kwargs) -> str:
         """A wrapper for subprocess.check_output()
 
         The behavior of this method is identical to
@@ -503,7 +512,12 @@ class Subprocess(Tool):
             self._log_return_code(0)
         return cmd_output
 
-    def parse_output(self, output_parser, args, **kwargs):
+    def parse_output(
+        self,
+        output_parser: Callable[[str], Any],
+        args: list,
+        **kwargs,
+    ) -> Any:
         """A wrapper for check_output() where the command output is processed through
         the supplied parser function.
 
@@ -540,7 +554,7 @@ class Subprocess(Tool):
                 self.tools.logger.error(f"    {line}")
             raise CommandOutputParseError(error_reason) from e
 
-    def Popen(self, args, **kwargs):
+    def Popen(self, args: list, **kwargs) -> subprocess.Popen:
         """A wrapper for subprocess.Popen()
 
         The behavior of this method is identical to
@@ -561,10 +575,10 @@ class Subprocess(Tool):
 
     def stream_output(
         self,
-        label,
-        popen_process,
-        stop_func=lambda: False,
-        filter_func=None,
+        label: str,
+        popen_process: subprocess.Popen,
+        stop_func: Callable[[], bool] = lambda: False,
+        filter_func: Callable[[str], Generator[str, None, None]] = None,
     ):
         """Stream the output of a Popen process until the process exits. If the user
         sends CTRL+C, the process will be terminated.
@@ -612,7 +626,11 @@ class Subprocess(Tool):
                     "Log stream hasn't terminated; log output may be corrupted."
                 )
 
-    def _stream_output_thread(self, popen_process, filter_func):
+    def _stream_output_thread(
+        self,
+        popen_process: subprocess.Popen,
+        filter_func: Callable[[str], Generator[str, None, None]],
+    ):
         """Stream output for a Popen process in a Thread.
 
         :param popen_process: popen process to stream stdout
@@ -655,7 +673,7 @@ class Subprocess(Tool):
             )
             self.tools.logger.capture_stacktrace("Output thread")
 
-    def cleanup(self, label, popen_process):
+    def cleanup(self, label: str, popen_process: subprocess.Popen):
         """Clean up after a Popen process, gracefully terminating if possible; forcibly
         if not.
 
@@ -670,7 +688,7 @@ class Subprocess(Tool):
             self.tools.logger.warning(f"Forcibly killing {label}...")
             popen_process.kill()
 
-    def _log_command(self, args):
+    def _log_command(self, args: list):
         """Log the entire console command being executed."""
         self.tools.logger.debug()
         self.tools.logger.debug("Running Command:")
@@ -678,13 +696,13 @@ class Subprocess(Tool):
             f"    {' '.join(shlex.quote(str(arg)) for arg in args)}"
         )
 
-    def _log_cwd(self, cwd):
+    def _log_cwd(self, cwd: str | Path):
         """Log the working directory for the  command being executed."""
         effective_cwd = Path.cwd() if cwd is None else cwd
         self.tools.logger.debug("Working Directory:")
         self.tools.logger.debug(f"    {effective_cwd}")
 
-    def _log_environment(self, overrides):
+    def _log_environment(self, overrides: dict[str, str]):
         """Log the environment variables overrides prior to command execution.
 
         :param overrides: The explicit environment passed to the subprocess call;
@@ -695,7 +713,7 @@ class Subprocess(Tool):
             for env_var, value in overrides.items():
                 self.tools.logger.debug(f"    {env_var}={value}")
 
-    def _log_output(self, output, stderr=None):
+    def _log_output(self, output: str, stderr: str = None):
         """Log the output of the executed command."""
         if output:
             self.tools.logger.debug("Command Output:")
@@ -707,6 +725,6 @@ class Subprocess(Tool):
             for line in ensure_str(stderr).splitlines():
                 self.tools.logger.debug(f"    {line}")
 
-    def _log_return_code(self, return_code):
+    def _log_return_code(self, return_code: int | str):
         """Log the output value of the executed command."""
         self.tools.logger.debug(f"Return code: {return_code}")

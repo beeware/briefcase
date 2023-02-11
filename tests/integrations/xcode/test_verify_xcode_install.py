@@ -1,7 +1,7 @@
 from subprocess import CalledProcessError
 from unittest import mock
 
-from briefcase.integrations.xcode import verify_xcode_install
+from briefcase.integrations.xcode import Xcode
 
 
 def test_verify_xcode_install(mock_tools):
@@ -13,7 +13,7 @@ def test_verify_xcode_install(mock_tools):
         "clang 37.42",  # clang --version
     ]
 
-    verify_xcode_install(mock_tools)
+    Xcode.verify(mock_tools)
 
     # Both Xcode and the command line tools are verified
     assert mock_tools.xcode is not None
@@ -29,7 +29,7 @@ def test_reverify_xcode_install(mock_tools):
     xcode_cli = mock.MagicMock()
     mock_tools.xcode_cli = xcode_cli
 
-    verify_xcode_install(mock_tools)
+    Xcode.verify(mock_tools)
 
     # Both Xcode and the command line tools are verified
     assert mock_tools.xcode == xcode

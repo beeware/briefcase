@@ -1,12 +1,10 @@
+from __future__ import annotations
+
 import os
 import shutil
 from pathlib import Path
 
-from briefcase.exceptions import (
-    BriefcaseCommandError,
-    MissingToolError,
-    NonManagedToolError,
-)
+from briefcase.exceptions import BriefcaseCommandError, MissingToolError
 from briefcase.integrations.base import Tool, ToolCache
 
 WIX_DOWNLOAD_URL = "https://github.com/wixtoolset/wix3/releases/download/wix3112rtm/wix311-binaries.zip"
@@ -16,7 +14,12 @@ class WiX(Tool):
     name = "wix"
     full_name = "WiX"
 
-    def __init__(self, tools: ToolCache, wix_home: Path = None, bin_install=False):
+    def __init__(
+        self,
+        tools: ToolCache,
+        wix_home: Path = None,
+        bin_install: bool = False,
+    ):
         """Create a wrapper around a WiX install.
 
         :param tools: ToolCache of available tools.
@@ -35,28 +38,28 @@ class WiX(Tool):
         self.bin_install = bin_install
 
     @property
-    def heat_exe(self):
+    def heat_exe(self) -> Path:
         if self.bin_install:
             return self.wix_home / "heat.exe"
         else:
             return self.wix_home / "bin" / "heat.exe"
 
     @property
-    def light_exe(self):
+    def light_exe(self) -> Path:
         if self.bin_install:
             return self.wix_home / "light.exe"
         else:
             return self.wix_home / "bin" / "light.exe"
 
     @property
-    def candle_exe(self):
+    def candle_exe(self) -> Path:
         if self.bin_install:
             return self.wix_home / "candle.exe"
         else:
             return self.wix_home / "bin" / "candle.exe"
 
     @classmethod
-    def verify(cls, tools: ToolCache, install=True):
+    def verify(cls, tools: ToolCache, install: bool = True) -> WiX:
         """Verify that there is a WiX install available.
 
         If the WIX environment variable is set, that location will be checked
@@ -107,7 +110,7 @@ does not point to an install of the WiX Toolset.
         tools.wix = wix
         return wix
 
-    def exists(self):
+    def exists(self) -> bool:
         return (
             self.heat_exe.is_file()
             and self.light_exe.is_file()
@@ -115,7 +118,7 @@ does not point to an install of the WiX Toolset.
         )
 
     @property
-    def managed_install(self):
+    def managed_install(self) -> bool:
         try:
             # Determine if wix_home is relative to the briefcase data directory.
             # If wix_home isn't inside this directory, this will raise a ValueError,
@@ -157,13 +160,3 @@ Delete {wix_zip_path} and run briefcase again.
         """Uninstall WiX."""
         with self.tools.input.wait_bar("Removing old WiX install..."):
             self.tools.shutil.rmtree(self.wix_home)
-
-    def upgrade(self):
-        """Upgrade an existing WiX install."""
-        if not self.managed_install:
-            raise NonManagedToolError("WiX")
-        if not self.exists():
-            raise MissingToolError("WiX")
-
-        self.uninstall()
-        self.install()

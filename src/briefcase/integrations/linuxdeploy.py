@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 import hashlib
 import shlex
 from abc import abstractmethod
 from pathlib import Path
+from typing import TypeVar
 from urllib.parse import urlparse
 
 from briefcase.exceptions import (
@@ -11,39 +14,42 @@ from briefcase.exceptions import (
 )
 from briefcase.integrations.base import Tool, ToolCache
 
+LinuxDeployT = TypeVar("LinuxDeployT", bound="LinuxDeployBase")
+
 ELF_HEADER_IDENT = bytes.fromhex("7F454C46")
 ELF_PATCH_OFFSET = 0x08
 ELF_PATCH_ORIGINAL_BYTES = bytes.fromhex("414902")
 ELF_PATCH_PATCHED_BYTES = bytes.fromhex("000000")
 
 
-class LinuxDeployBase:
+class LinuxDeployBase(Tool):
     name: str
     full_name: str
     install_msg: str
 
-    def __init__(self, tools: ToolCache, **kwargs):
-        self.tools = tools
-
     @property
     @abstractmethod
-    def file_name(self):
+    def file_name(self) -> str:
         """The name of the executable file for the tool/plugin, excluding the path."""
         ...
 
     @property
     @abstractmethod
-    def download_url(self):
+    def download_url(self) -> str:
         """The URL where the tool/plugin can be downloaded."""
         ...
 
     @property
     @abstractmethod
-    def file_path(self):
+    def file_path(self) -> Path:
         """The folder on the local filesystem that contains the file_name."""
         ...
 
-    def exists(self):
+    @property
+    def managed_install(self) -> bool:
+        return True
+
+    def exists(self) -> bool:
         return (self.file_path / self.file_name).exists()
 
     def install(self):
@@ -69,7 +75,12 @@ class LinuxDeployBase:
                 self.patch_elf_header()
 
     @classmethod
-    def verify(cls, tools: ToolCache, install=True, **kwargs):
+    def verify(
+        cls: type[LinuxDeployT],
+        tools: ToolCache,
+        install: bool = True,
+        **kwargs,
+    ) -> LinuxDeployT:
         """Verify that linuxdeploy tool or plugin is available.
 
         :param tools: ToolCache of available tools
@@ -106,15 +117,7 @@ class LinuxDeployBase:
         with self.tools.input.wait_bar(f"Removing old {self.full_name} install..."):
             (self.file_path / self.file_name).unlink()
 
-    def upgrade(self):
-        """Upgrade an existing linuxdeploy install."""
-        if not self.exists():
-            raise MissingToolError(self.name)
-
-        self.uninstall()
-        self.install()
-
-    def is_elf_file(self):
+    def is_elf_file(self) -> bool:
         """Returns True if the file is an ELF object file.
 
         The header for an ELF object file always starts with 0x7F454C46; this is 0x7fELF
@@ -177,11 +180,11 @@ class LinuxDeployPluginBase(LinuxDeployBase):
             raise BriefcaseCommandError(f"{self.file_name} is not a linuxdeploy plugin")
 
     @property
-    def plugin_id(self):
+    def plugin_id(self) -> str:
         return self.file_name.split(".")[0].split("-")[2]
 
     @property
-    def file_path(self):
+    def file_path(self) -> Path:
         return self.tools.base_path / "linuxdeploy_plugins" / self.plugin_id
 
 
@@ -189,11 +192,11 @@ class LinuxDeployGtkPlugin(LinuxDeployPluginBase):
     full_name = "linuxdeploy GTK plugin"
 
     @property
-    def file_name(self):
+    def file_name(self) -> str:
         return "linuxdeploy-plugin-gtk.sh"
 
     @property
-    def download_url(self):
+    def download_url(self) -> str:
         return (
             "https://raw.githubusercontent.com/linuxdeploy/linuxdeploy-plugin-gtk/"
             f"master/{self.file_name}"
@@ -204,11 +207,11 @@ class LinuxDeployQtPlugin(LinuxDeployPluginBase):
     full_name = "linuxdeploy Qt plugin"
 
     @property
-    def file_name(self):
+    def file_name(self) -> str:
         return f"linuxdeploy-plugin-qt-{self.tools.host_arch}.AppImage"
 
     @property
-    def download_url(self):
+    def download_url(self) -> str:
         return (
             "https://github.com/linuxdeploy/linuxdeploy-plugin-qt/"
             f"releases/download/continuous/{self.file_name}"
@@ -228,11 +231,11 @@ class LinuxDeployLocalFilePlugin(LinuxDeployPluginBase):
         super().__init__(tools)
 
     @property
-    def file_name(self):
+    def file_name(self) -> str:
         return self._file_name
 
     @property
-    def file_path(self):
+    def file_path(self) -> Path:
         return self._file_path
 
     @property
@@ -280,11 +283,11 @@ class LinuxDeployURLPlugin(LinuxDeployPluginBase):
         super().__init__(tools)
 
     @property
-    def file_name(self):
+    def file_name(self) -> str:
         return self._file_name
 
     @property
-    def file_path(self):
+    def file_path(self) -> Path:
         return (
             self.tools.base_path
             / "linuxdeploy_plugins"
@@ -293,43 +296,47 @@ class LinuxDeployURLPlugin(LinuxDeployPluginBase):
         )
 
     @property
-    def download_url(self):
+    def download_url(self) -> str:
         return self._download_url
 
 
-class LinuxDeploy(LinuxDeployBase, Tool):
+class LinuxDeploy(LinuxDeployBase):
     name = "linuxdeploy"
     full_name = "linuxdeploy"
     install_msg = "linuxdeploy was not found; downloading and installing..."
 
     @property
-    def managed_install(self):
+    def managed_install(self) -> bool:
         return True
 
     @property
-    def file_path(self):
+    def file_path(self) -> Path:
         return self.tools.base_path
 
     @property
-    def file_name(self):
+    def file_name(self) -> str:
         return f"linuxdeploy-{self.tools.host_arch}.AppImage"
 
     @property
-    def download_url(self):
+    def download_url(self) -> str:
         return (
             "https://github.com/linuxdeploy/linuxdeploy/"
             f"releases/download/continuous/{self.file_name}"
         )
 
     @property
-    def plugins(self):
+    def plugins(self) -> dict[str, type[LinuxDeployPluginBase]]:
         """The known linuxdeploy plugins."""
         return {
             "gtk": LinuxDeployGtkPlugin,
             "qt": LinuxDeployQtPlugin,
         }
 
-    def verify_plugins(self, plugin_definitions, bundle_path):
+    def verify_plugins(
+        self,
+        plugin_definitions: list[str],
+        bundle_path: Path,
+    ) -> dict[str, type[LinuxDeployPluginBase]]:
         """Verify that all the declared plugin dependencies are available.
 
         Each plugin definition is a string, and can be:

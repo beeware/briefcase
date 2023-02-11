@@ -13,7 +13,7 @@ from briefcase.config import (
     make_class_name,
 )
 from briefcase.exceptions import BriefcaseCommandError, TemplateUnsupportedVersion
-from briefcase.integrations import git
+from briefcase.integrations.git import Git
 
 from .base import BaseCommand
 
@@ -514,7 +514,7 @@ Application '{context['formal_name']}' has been generated. To run your applicati
         Raises MissingToolException if a required system tool is missing.
         """
         super().verify_tools()
-        git.verify_git_is_installed(tools=self.tools)
+        Git.verify(tools=self.tools)
 
     def __call__(
         self,

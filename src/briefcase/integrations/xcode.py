@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 import enum
 import re
 import subprocess
 from pathlib import Path
 
 from briefcase.exceptions import BriefcaseCommandError, CommandOutputParseError
-from briefcase.integrations.base import ToolCache
+from briefcase.integrations.base import Tool, ToolCache
 from briefcase.integrations.subprocess import json_parser
 
 
@@ -15,53 +17,69 @@ class DeviceState(enum.Enum):
     UNKNOWN = 99
 
 
-def verify_xcode_install(tools: ToolCache, min_version: tuple = None):
-    """Verify that Xcode and the command line developer tools are installed and ready
-    for use.
+class Xcode(Tool):
+    name = "xcode"
+    full_name = "Xcode"
 
-    We need Xcode, *and* the Xcode Command Line Tools. A completely clean
-    machine will have neither Xcode *nor* the Command Line Tools. However,
-    it's possible to install Xcode and *not* install the command line tools,
-    and vice versa.
+    @classmethod
+    def verify(
+        cls,
+        tools: ToolCache,
+        min_version: tuple[int, int, int] = None,
+    ) -> Xcode:
+        """Verify that Xcode and the command line developer tools are installed and ready
+        for use.
 
-    We also need to ensure that an adequate version of Xcode is available.
+        We need Xcode, *and* the Xcode Command Line Tools. A completely clean
+        machine will have neither Xcode *nor* the Command Line Tools. However,
+        it's possible to install Xcode and *not* install the command line tools,
+        and vice versa.
 
-    Then, there is a license that needs to be accepted.
+        We also need to ensure that an adequate version of Xcode is available.
 
-    Lastly, we ensure that the iOS simulator is installed.
+        Then, there is a license that needs to be accepted.
 
-    :param tools: ToolCache of available tools
-    :param min_version: The minimum allowed version of Xcode, specified as a
-        tuple of integers (e.g., (11, 2, 1)). Default: ``None``, meaning there
-        is no minimum version.
-    """
-    # short circuit since already verified and available
-    if hasattr(tools, "xcode"):
-        return
+        Lastly, we ensure that the iOS simulator is installed.
 
-    ensure_xcode_is_installed(tools, min_version=min_version)
-    verify_command_line_tools_install(tools)
-    tools.xcode = True
+        :param tools: ToolCache of available tools
+        :param min_version: The minimum allowed version of Xcode, specified as a
+            tuple of integers (e.g., (11, 2, 1)). Default: ``None``, meaning there
+            is no minimum version.
+        """
+        # short circuit since already verified and available
+        if hasattr(tools, "xcode"):
+            return tools.xcode
+
+        ensure_xcode_is_installed(tools, min_version=min_version)
+        XcodeCliTools.verify(tools=tools)
+        tools.xcode = Xcode(tools=tools)
+        return tools.xcode
 
 
-def verify_command_line_tools_install(tools: ToolCache):
-    """Verify that command line developer tools are installed and ready for use.
+class XcodeCliTools(Tool):
+    name = "xcode_cli"
+    full_name = "Xcode Command Line Tools"
 
-    A completely clean machine will have neither Xcode *nor* the Command Line
-    Tools. However, it's possible to install Xcode and *not* install the command
-    line tools, and vice versa.
+    @classmethod
+    def verify(cls, tools: ToolCache) -> XcodeCliTools:
+        """Verify that command line developer tools are installed and ready for use.
 
-    Lastly, there is a license that needs to be accepted.
+        A completely clean machine will have neither Xcode *nor* the Command Line
+        Tools. However, it's possible to install Xcode and *not* install the command
+        line tools, and vice versa.
 
-    :param tools: ToolCache of available tools
-    """
-    # short circuit since already verified and available
-    if hasattr(tools, "xcode_cli"):
-        return
+        Lastly, there is a license that needs to be accepted.
 
-    ensure_command_line_tools_are_installed(tools)
-    confirm_xcode_license_accepted(tools)
-    tools.xcode_cli = True
+        :param tools: ToolCache of available tools
+        """
+        # short circuit since already verified and available
+        if hasattr(tools, "xcode_cli"):
+            return tools.xcode_cli
+
+        ensure_command_line_tools_are_installed(tools)
+        confirm_xcode_license_accepted(tools)
+        tools.xcode_cli = XcodeCliTools(tools=tools)
+        return tools.xcode_cli
 
 
 def ensure_command_line_tools_are_installed(tools: ToolCache):
@@ -122,13 +140,14 @@ to continue, and re-run Briefcase once that installation is complete.
 def ensure_xcode_is_installed(
     tools: ToolCache,
     min_version: tuple = None,
-    xcode_location="/Applications/Xcode.app",
+    xcode_location: str = "/Applications/Xcode.app",
 ):
     """Determine if Xcode is installed; and if so, that it meets minimum version
     requirements.
 
     Raises an exception if XCode isn't installed, or if the version of Xcode
     that is installed doesn't meet the minimum requirement.
+
 
     :param tools: ToolCache of available tools
     :param min_version: The minimum allowed version of Xcode, specified as a
@@ -365,7 +384,7 @@ You need to accept the Xcode license before Briefcase can package your app.
 def get_simulators(
     tools: ToolCache,
     os_name: str,
-    simulator_location="/Library/Developer/PrivateFrameworks/CoreSimulator.framework/",
+    simulator_location: str = "/Library/Developer/PrivateFrameworks/CoreSimulator.framework/",
 ):
     """Obtain the simulators available on this machine.
 

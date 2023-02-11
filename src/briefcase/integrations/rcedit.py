@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from pathlib import Path
+
 from briefcase.exceptions import MissingToolError
 from briefcase.integrations.base import Tool, ToolCache
 
@@ -6,21 +10,18 @@ class RCEdit(Tool):
     name = "rcedit"
     full_name = "RCEdit"
 
-    def __init__(self, tools: ToolCache):
-        self.tools = tools
-
     @property
-    def download_url(self):
+    def download_url(self) -> str:
         return (
             "https://github.com/electron/rcedit/releases/download/v1.1.1/rcedit-x64.exe"
         )
 
     @property
-    def rcedit_path(self):
+    def rcedit_path(self) -> Path:
         return self.tools.base_path / "rcedit-x64.exe"
 
     @classmethod
-    def verify(cls, tools: ToolCache, install=True):
+    def verify(cls, tools: ToolCache, install: bool = True) -> RCEdit:
         """Verify that rcedit is available.
 
         :param tools: ToolCache of available tools
@@ -47,11 +48,11 @@ class RCEdit(Tool):
         tools.rcedit = rcedit
         return rcedit
 
-    def exists(self):
+    def exists(self) -> bool:
         return self.rcedit_path.exists()
 
     @property
-    def managed_install(self):
+    def managed_install(self) -> bool:
         return True
 
     def install(self):
@@ -66,11 +67,3 @@ class RCEdit(Tool):
         """Uninstall RCEdit."""
         with self.tools.input.wait_bar("Removing old RCEdit install..."):
             self.rcedit_path.unlink()
-
-    def upgrade(self):
-        """Upgrade an existing RCEdit install."""
-        if not self.exists():
-            raise MissingToolError("RCEdit")
-
-        self.uninstall()
-        self.install()

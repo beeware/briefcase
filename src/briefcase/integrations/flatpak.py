@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 import subprocess
+from pathlib import Path
 
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.base import Tool, ToolCache
@@ -15,11 +18,8 @@ class Flatpak(Tool):
     DEFAULT_RUNTIME_VERSION = "21.08"
     DEFAULT_SDK = "org.freedesktop.Sdk"
 
-    def __init__(self, tools: ToolCache):
-        self.tools = tools
-
     @classmethod
-    def verify(cls, tools: ToolCache):
+    def verify(cls, tools: ToolCache) -> Flatpak:
         """Verify that the Flatpak toolchain is available.
 
         :param tools: ToolCache of available tools
@@ -141,7 +141,7 @@ You must install both flatpak and flatpak-builder.
         tools.flatpak = flatpak
         return flatpak
 
-    def verify_repo(self, repo_alias, url):
+    def verify_repo(self, repo_alias: str, url: str):
         """Verify that the Flatpak repository has been registered.
 
         :param repo_alias: The alias to use when registering the repo.
@@ -164,7 +164,13 @@ You must install both flatpak and flatpak-builder.
                 f"Unable to add Flatpak repo {url} with alias {repo_alias}."
             ) from e
 
-    def verify_runtime(self, repo_alias, runtime, runtime_version, sdk):
+    def verify_runtime(
+        self,
+        repo_alias: str,
+        runtime: str,
+        runtime_version: str,
+        sdk: str,
+    ):
         """Verify that a specific Flatpak runtime and SDK are available.
 
         :param repo_alias: The alias of the repo where the runtime and SDK are
@@ -194,7 +200,7 @@ You must install both flatpak and flatpak-builder.
                 f"and SDK {sdk}/{self.tools.host_arch}/{runtime_version} from repo {repo_alias}."
             ) from e
 
-    def build(self, bundle_identifier, app_name, path):
+    def build(self, bundle_identifier: str, app_name: str, path: Path):
         """Build a Flatpak manifest.
 
         On success, the app is installed into the user's local Flatpak install,
@@ -242,7 +248,13 @@ flatpak run {bundle_identifier}
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(f"Error while building app {app_name}.") from e
 
-    def run(self, bundle_identifier, app_name, args=None, main_module=None):
+    def run(
+        self,
+        bundle_identifier: str,
+        app_name: str,
+        args: list[str] = None,
+        main_module: str = None,
+    ) -> subprocess.Popen[str]:
         """Run a Flatpak in a way that allows for log streaming.
 
         :param bundle_identifier: The bundle identifier for the app being built.
@@ -277,7 +289,13 @@ flatpak run {bundle_identifier}
         )
 
     def bundle(
-        self, repo_url, bundle_identifier, app_name, version, build_path, output_path
+        self,
+        repo_url: str,
+        bundle_identifier: str,
+        app_name: str,
+        version: str,
+        build_path: Path,
+        output_path: Path,
     ):
         """Bundle a Flatpak for distribution.
 

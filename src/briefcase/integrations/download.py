@@ -2,9 +2,11 @@ import os
 import tempfile
 from contextlib import suppress
 from email.message import Message
+from pathlib import Path
 from urllib.parse import urlparse
 
 import requests.exceptions as requests_exceptions
+from requests import Response
 
 from briefcase.exceptions import (
     BadNetworkResourceError,
@@ -18,9 +20,6 @@ class Download(Tool):
     name = "download"
     full_name = "Download"
 
-    def __init__(self, tools: ToolCache):
-        self.tools = tools
-
     @classmethod
     def verify(cls, tools: ToolCache):
         """Make downloader available in tool cache."""
@@ -31,7 +30,7 @@ class Download(Tool):
         tools.download = Download(tools=tools)
         return tools.download
 
-    def file(self, url, download_path, role=None):
+    def file(self, url: str, download_path: Path, role: str = None):
         """Download a given URL, caching it. If it has already been downloaded, return
         the value that has been cached.
 
@@ -92,7 +91,7 @@ class Download(Tool):
 
         return filename
 
-    def _fetch_and_write_content(self, response, filename):
+    def _fetch_and_write_content(self, response: Response, filename: Path):
         """Write the content from the requests Response to file.
 
         The data is initially written in to a temporary file in the Briefcase
@@ -128,7 +127,7 @@ class Download(Tool):
             self.tools.shutil.move(temp_file.name, filename)
             # Temporary files are created with only read/write permissions for the
             # file's owner (i.e. 600); to match the behavior of file creation using
-            # ``open(..., w)``, the downloaded file's permissions are updated for
+            # ``open(..., "w")``, the downloaded file's permissions are updated for
             # the group and world to have read/write permissions as well. Finally,
             # (as with ``open()``) the system's umask is respected. The current
             # umask is only available as the return value to updating the umask...
