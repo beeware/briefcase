@@ -83,7 +83,12 @@ be obtained by running ``briefcase -h``, and inspecting the help for the
 --------------------------------------------------------------
 
 Configuration options that are specific to a particular output format. For
-example, ``macOS`` applications can be generated in ``app`` or ``dmg`` format.
+example, macOS applications can be generated in ``app`` or ``dmg`` format.
+
+This section can contain additional layers. for example, an app targeting Linux
+``deb`` backend can define a ``tool.briefcase.app.<app
+name>.linux.deb.ubuntu.jammy`` section to provide configurations specific to
+Ubuntu 22.04 "Jammy" deployments.
 
 Project configuration
 =====================
@@ -277,6 +282,14 @@ A path, relative to the directory where the ``pyproject.toml`` file is located,
 to an image to use as the background for the installer. As with ``splash``, the
 path should *exclude* the extension, and a platform-appropriate extension will
 be appended when the application is built.
+
+``long_description``
+~~~~~~~~~~~~~~~~~~~~
+
+A longer description of the purpose of the application. This description can be
+multiple paragraphs, if necessary. It is recommended that the long description
+is *not* a copy of the ``description``, or include the ``description`` as the
+first line of the ``long_description``.
 
 ``requires``
 ~~~~~~~~~~~~

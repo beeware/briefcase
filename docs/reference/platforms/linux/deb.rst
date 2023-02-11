@@ -50,6 +50,20 @@ Splash Image format
 
 Deb packages do not support splash screens or installer images.
 
+Additional files
+================
+
+The ``.deb`` template includes a ``LICENSE`` and ``CHANGELOG`` file, with stub
+content. When the application is generated from template, Briefcase will look in
+the project root folder (i.e., the folder that contains your ``pyproject.toml``)
+for files with the same name. If these files are found, they will be copied into
+your ``.deb`` project. You should ensure these files are complete and correct
+before publishing your app.
+
+The ``.deb`` template also includes an initial draft manfile for your app. This
+manfile will be populated with the ``description`` and ``long_description`` of
+your app. You may wish to add more details on app usage.
+
 Additional options
 ==================
 
@@ -91,6 +105,11 @@ Specifying ``--target`` is mutually exclusive with ``--no-docker``.
 
 Application configuration
 =========================
+
+To generate a ``.deb`` package, an application *must* define a
+``long_description``. This ``long_description`` *must not* be a copy of the
+short ``description``; nor can the first line of the ``long_description`` match
+the ``description``.
 
 The following options can be added to the
 ``tool.briefcase.app.<appname>.linux.deb`` section of your ``pyproject.toml``
@@ -147,6 +166,16 @@ version of libwebkit2gtk.
 
 Any problems with installing or running your .deb package likely indicate an
 issue with your ``system_runtime_requires`` definition.
+
+``system_section``
+~~~~~~~~~~~~~~~~~~
+
+When an application is published as a ``.deb`` file, Debian requires that you
+specify a "section", describing a classification of the application area. The
+template will provide a default section of ``utils``; if you want to override
+that default, you can specify a value for ``system_section``. For details on the
+allowed values for ``system_section``, refer to the `Debian Policy Manual
+<https://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-section>`__.
 
 ``dockerfile_extra_content``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~

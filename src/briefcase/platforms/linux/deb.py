@@ -1,4 +1,7 @@
+import gzip
+import itertools
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -61,7 +64,7 @@ class LinuxDebPassiveMixin(LinuxMixin):
         return self.bundle_path(app) / "_requirements"
 
     def binary_path(self, app):
-        return self.package_path(app) / "usr" / "local" / "bin" / app.app_name
+        return self.package_path(app) / "usr" / "bin" / app.app_name
 
     def distribution_path(self, app, packaging_format):
         return self.platform_path / (
@@ -97,7 +100,25 @@ class LinuxDebPassiveMixin(LinuxMixin):
                     "Docker builds must specify a target distribtion (e.g., `--target ubuntu:jammy`)"
                 )
 
+            # Check that the Docker base image is available. This will pull the
+            # image if it isn't already present locally. We do this by running a
+            # no-op command (echo) through Docker on the base image; if it
+            # succeeds, the image exists locally.
+            try:
+                with self.input.wait_bar(
+                    f"Checking Docker target image {self.target_image}..."
+                ):
+                    self.tools.subprocess.check_output(
+                        ["docker", "run", "--rm", self.target_image, "echo"]
+                    )
+            except subprocess.CalledProcessError:
+                raise BriefcaseCommandError(
+                    "Unable to obtain the Docker base image {self.target_image}. "
+                    "Confirm that Docker is installed, and the image name is correct."
+                )
+
             self.target_vendor, self.target_codename = self.target_image.split(":")
+
         else:
             if self.target_image:
                 raise BriefcaseCommandError(
@@ -200,12 +221,19 @@ class LinuxDebMostlyPassiveMixin(LinuxDebPassiveMixin):
             # incompatibilities.
             if verify_python:
                 output = self.tools[app].app_context.check_output(
-                    [f"python{app.python_version_tag}", "--version"]
+                    [
+                        f"python{app.python_version_tag}",
+                        "-c",
+                        (
+                            "import sys; "
+                            "print(f'{sys.version_info.major}.{sys.version_info.minor}')"
+                        ),
+                    ]
                 )
+                target_python_tag = output.split("\n")[0]
                 target_python_version = tuple(
-                    int(v) for v in output.split(" ")[1].split(".")[:2]
+                    int(v) for v in target_python_tag.split(".")
                 )
-                target_python_tag = ".".join(str(v) for v in target_python_version)
 
                 if target_python_version < (3, 8):
                     raise BriefcaseCommandError(
@@ -265,6 +293,49 @@ class LinuxDebCreateCommand(LinuxDebMixin, CreateCommand):
         self.finalize_app_config(app)
         return super().create_app(app, **kwargs)
 
+    def target_glibc_version(self):
+        """Determine the glibc version.
+
+        If running in Docker, this is done by interrogating libc.so.6; outside
+        docker, we can use os.confstr().
+        """
+        if self.use_docker:
+            try:
+                output = self.tools.subprocess.check_output(
+                    [
+                        "docker",
+                        "run",
+                        "--rm",
+                        self.target_image,
+                        "/lib/x86_64-linux-gnu/libc.so.6",
+                    ]
+                )
+            except subprocess.CalledProcessError:
+                raise BriefcaseCommandError(
+                    "Unable to determine glibc dependency version."
+                )
+
+            # Running libc.so.6 will give you output of the form:
+            #
+            # GNU C Library (Ubuntu GLIBC 2.31-0ubuntu9.9) stable release version 2.31.
+            # Copyright (C) 2020 Free Software Foundation, Inc.
+            # ...
+            #
+            # Note that the exact text will vary version to version; but the
+            # "GLIBC 2.31-" part appears to be constant. From that first line,
+            # we can parse the "2.31" that is the libc version.
+            match = re.search(r" GLIBC (\d\.\d+)-", output)
+            if match:
+                target_glibc = match[1]
+            else:
+                raise BriefcaseCommandError(
+                    "Unable to parse glibc dependency version from version string."
+                )
+        else:
+            target_glibc = self.tools.os.confstr("CS_GNU_LIBC_VERSION").split()[1]
+
+        return target_glibc
+
     def output_format_template_context(self, app: AppConfig):
         context = super().output_format_template_context(app)
 
@@ -278,9 +349,26 @@ class LinuxDebCreateCommand(LinuxDebMixin, CreateCommand):
 
         # Add runtime package dependencies. App config has been finalized,
         # so this will be the target-specific definition, if one exists.
+        # libc6 is added because lintian complains without it, even though
+        # its a dependency of the thing we *do* care about - python.
         context["system_runtime_requires"] = ", ".join(
-            [f"python{app.python_version_tag}"]
+            [
+                f"libc6 (>={self.target_glibc_version()})",
+                f"python{app.python_version_tag}",
+            ]
             + getattr(app, "system_runtime_requires", [])
+        )
+
+        # The long description *must* exist.
+        if app.long_description is None:
+            raise BriefcaseCommandError(
+                "pyproject.toml does not define `long_description`. "
+                "Debian packaging guidelines require a long description."
+            )
+
+        # The long description can't contain newlines
+        context["long_description"] = "\n".join(
+            line for line in app.long_description.split("\n") if line.strip() != ""
         )
 
         return context
@@ -373,6 +461,42 @@ class LinuxDebCreateCommand(LinuxDebMixin, CreateCommand):
 
         return final
 
+    def install_app_resources(self, app: AppConfig):
+        """Install the application resources (such as icons and splash screens) into the
+        bundle.
+
+        :param app: The config object for the app
+        """
+        super().install_app_resources(app)
+
+        with self.input.wait_bar("Installing copyright file..."):
+            source_license_file = self.base_path / "LICENSE"
+            license_file = self.bundle_path(app) / "LICENSE"
+            if source_license_file.exists():
+                self.tools.shutil.copy(source_license_file, license_file)
+            else:
+                self.logger.warning(
+                    "Project does not contain a LICENSE file. "
+                    "Debian packaging guidelines require a LICENSE file. "
+                    f"A dummy {license_file.relative_to(self.base_path)} "
+                    "file has been created. You should ensure this file is "
+                    "complete and correct before continuing."
+                )
+
+        with self.input.wait_bar("Installing changelog..."):
+            source_changelog_file = self.base_path / "CHANGELOG"
+            changelog_file = self.bundle_path(app) / "CHANGELOG"
+            if source_changelog_file.exists():
+                self.tools.shutil.copy(source_changelog_file, changelog_file)
+            else:
+                self.logger.warning(
+                    "Project does not contain a CHANGELOG file. "
+                    "Debian packaging guidelines require a CHANGELOG file. "
+                    f"A dummy {changelog_file.relative_to(self.base_path)} "
+                    "file has been created. You should ensure this file is "
+                    "complete and correct before continuing."
+                )
+
 
 class LinuxDebUpdateCommand(LinuxDebCreateCommand, UpdateCommand):
     description = "Update an existing .deb project."
@@ -397,8 +521,10 @@ class LinuxDebBuildCommand(LinuxDebMixin, BuildCommand):
 
         :param app: The application to build
         """
-        self.logger.info("Building bootstrap binary...", prefix=app.app_name)
-        with self.input.wait_bar("Building..."):
+        self.logger.info("Building application...", prefix=app.app_name)
+
+        self.logger.info("Build bootstrap binary...")
+        with self.input.wait_bar("Building bootstrap binary..."):
             try:
                 # Build the bootstrap binary.
                 self.tools[app].app_context.run(
@@ -415,6 +541,77 @@ class LinuxDebBuildCommand(LinuxDebMixin, BuildCommand):
                 raise BriefcaseCommandError(
                     f"Error while building app {app.app_name}."
                 ) from e
+
+        # Make the folder for docs
+        doc_folder = self.package_path(app) / "usr" / "share" / "doc" / app.app_name
+        doc_folder.mkdir(parents=True, exist_ok=True)
+
+        with self.input.wait_bar("Installing license..."):
+            license_file = self.bundle_path(app) / "LICENSE"
+            if license_file.exists():
+                self.tools.shutil.copy(license_file, doc_folder / "copyright")
+            else:
+                raise BriefcaseCommandError("LICENSE file is missing")
+
+        with self.input.wait_bar("Installing changelog..."):
+            changelog = self.bundle_path(app) / "CHANGELOG"
+            if changelog.exists():
+                with changelog.open() as infile:
+                    outfile = gzip.GzipFile(
+                        doc_folder / "changelog.gz", mode="w", mtime=0
+                    )
+                    outfile.write(infile.read().encode())
+                    outfile.close()
+            else:
+                raise BriefcaseCommandError("CHANGELOG file is missing")
+
+        # Make a folder for manpages
+        man_folder = self.package_path(app) / "usr" / "share" / "man" / "man1"
+        man_folder.mkdir(parents=True, exist_ok=True)
+
+        with self.input.wait_bar("Installing man page..."):
+            manpage_source = self.bundle_path(app) / f"{app.app_name}.1"
+            if manpage_source.exists():
+                with manpage_source.open() as infile:
+                    outfile = gzip.GzipFile(
+                        man_folder / f"{app.app_name}.1.gz", mode="w", mtime=0
+                    )
+                    outfile.write(infile.read().encode())
+                    outfile.close()
+            else:
+                raise BriefcaseCommandError(
+                    f"manpage source file `{manpage_source.relative_to(self.base_path)}` is missing"
+                )
+
+        self.logger.info("Update file permissions...")
+        with self.input.wait_bar("Updating file permissions..."):
+            for path in self.package_path(app).glob("**/*"):
+                # File permissions like 775 and 664 (where the group and user
+                # permissions are the same), cause Debian heartburn. So, if the
+                # user and group permissions are the same, change the group
+                # permission to the world permission.
+                perms = os.stat(path).st_mode & 0o777
+                user_perms = perms & 0o700
+                group_perms = perms & 0o070
+                if user_perms == (group_perms << 3):
+                    world_perms = perms & 0o007
+                    new_perms = user_perms | (world_perms << 3) | world_perms
+                    self.logger.info(
+                        "Updating file permissions on "
+                        f"{path.relative_to(self.package_path(app))} "
+                        f"from {oct(perms)[2:]} to {oct(new_perms)[2:]}"
+                    )
+                    path.chmod(new_perms)
+
+        self.logger.info("Strip binary artefacts...")
+        with self.input.wait_bar("Stripping binary artefacts..."):
+            for path in itertools.chain(
+                self.package_path(app).glob("**/*.so"), [self.binary_path(app)]
+            ):
+                self.logger.info(
+                    f"Stripping {path.relative_to(self.package_path(app))}"
+                )
+                self.tools.subprocess.check_output(["strip", path])
 
 
 class LinuxDebRunCommand(LinuxDebPassiveMixin, RunCommand):
