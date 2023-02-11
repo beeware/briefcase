@@ -121,6 +121,33 @@ you can specify a value in a
 ``tool.briefcase.app.<appname>.linux.deb.<vendor>.<codename>`` section. Any
 vendor-specific definitions will override the generic ``deb`` level definitions.
 
+``python_source``
+~~~~~~~~~~~~~~~~~
+
+Describes how the packaged app will obtain a version of Python that will be used
+at runtime. This can be one of the following values:
+
+* ``"system"`` - Use the System Python. This produces a ``.deb`` package that is
+  smaller, and better integrated with a "default" Debian system; however, it
+  means that the version of Python used to run Briefcase *can* be different from
+  the version that is used at runtime. Briefcase will check for this discrepancy,
+  and warn you if it exists, but it will *not* prevent an app from building.
+
+* ``"deadsnakes"`` - Use a Deadsnakes version of Python. This produces a
+  packaged app that that will always match the version of Python that was used
+  to run Briefcase; however, it places an additional burden on users installing
+  the app, as they must manually ensure that they have the deadsnakes PPA in
+  their system's configuration. This can be done by running::
+
+    sudo apt-get update
+    sudo apt-get install --no-install-recommends software-properties-common
+    sudo apt-add-repository ppa:deadsnakes/ppa
+
+  If this option is selected, and you are building inside Docker, Briefcase will
+  ensure that the Docker environment has the deadsnakes PPA available.
+
+By default, Briefcase uses ``system``.
+
 ``system_requires``
 ~~~~~~~~~~~~~~~~~~~
 
