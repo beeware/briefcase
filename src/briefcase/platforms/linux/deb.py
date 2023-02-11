@@ -23,6 +23,10 @@ from briefcase.integrations.docker import Docker, DockerAppContext
 from briefcase.integrations.subprocess import NativeAppContext
 from briefcase.platforms.linux import LinuxMixin
 
+# Some constants defining known Python sources
+SYSTEM = "system"
+DEADSNAKES = "deadsnakes"
+
 
 class LinuxDebPassiveMixin(LinuxMixin):
     # The Passive mixin honors the Docker options, but doesn't try to verify
@@ -173,13 +177,31 @@ class LinuxDebMostlyPassiveMixin(LinuxDebPassiveMixin):
         except (AttributeError, KeyError):
             pass
 
-        # Explicitly use the system Python version, and use a set the Python
-        # version to a generic tag.
-        app.python_version_tag = "3"
+        # Determine the python source, and set the Python version tag
+        # as appropriate.
+        try:
+            if app.python_source not in {SYSTEM, DEADSNAKES}:
+                raise BriefcaseCommandError(
+                    f"Unknown python source {app.python_source!r}; "
+                    f"should be one of {SYSTEM!r}, {DEADSNAKES!r}"
+                )
+        except AttributeError:
+            # python_source not defined; fall back to system.
+            app.python_source = SYSTEM
+
+        if app.python_source == SYSTEM:
+            app.python_version_tag = "3"
+        else:
+            app.python_version_tag = self.python_version_tag
 
     def docker_image_tag(self, app):
         """The Docker image tag for an app."""
-        return f"briefcase/{app.bundle}.{app.app_name.lower()}:{self.target_vendor}-{self.target_codename}"
+        if app.python_source == SYSTEM:
+            tag = ""
+        elif app.python_source == DEADSNAKES:
+            tag = f"-deadsnakes-py{app.python_version_tag}"
+
+        return f"briefcase/{app.bundle}.{app.app_name.lower()}:{self.target_vendor}-{self.target_codename}-{tag}"
 
     def verify_tools(self):
         """If we're using Docker, verify that it is available."""
@@ -256,6 +278,12 @@ class LinuxDebMostlyPassiveMixin(LinuxDebPassiveMixin):
 
     Ensure you have tested for Python version compatibility before
     releasing this app.
+
+    Alternatively, you can change your `python_source` definition in
+    `pyproject.toml` to `deadsnakes`. See the deb backend documentation
+    for details:
+
+    https://briefcase.readthedocs.io/en/stable/reference/platforms/linux/deb.html#python_source
 
 *************************************************************************
 """

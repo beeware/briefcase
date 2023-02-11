@@ -144,12 +144,12 @@ class Log:
     def context(self, context):
         self.info()
         self.info(f"Entering {context} context...")
-        self.info("-" * 80)
         old_context = self._context
         self._context = f"{context}| "
+        self.info("-" * (72 - len(context)))
         yield
+        self.info("-" * (72 - len(context)))
         self._context = old_context
-        self.info("-" * 80)
         self.info(f"Leaving {context} context.")
         self.info()
 
@@ -176,9 +176,9 @@ class Log:
         :param style: Rich style to apply to everything printed for message.
         """
         if not message:
-            # When a message is not provided, do not output anything;
+            # When a message is not provided, only output the context;
             # This type of call is just clearing some vertical space.
-            self.print(show=show)
+            self.print(self._context, show=show)
         else:
             if prefix:
                 # insert vertical space before for all messages with a prefix

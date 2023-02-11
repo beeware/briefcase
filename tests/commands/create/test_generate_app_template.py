@@ -25,6 +25,7 @@ def full_context():
         "bundle": "com.example",
         "version": "1.2.3",
         "description": "This is a simple app",
+        "long_description": None,
         "sources": ["src/my_app"],
         "test_sources": None,
         "test_requires": None,
