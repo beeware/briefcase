@@ -714,21 +714,18 @@ class CreateCommand(BaseCommand):
         # corrupting any app bundele signatures.
         paths_to_remove.append("**/__pycache__")
 
-        if paths_to_remove:
-            with self.input.wait_bar("Removing unneeded app bundle content..."):
-                for glob in paths_to_remove:
-                    # Expand each glob into a full list of files that actually exist
-                    # on the file system.
-                    for path in self.bundle_path(app).glob(glob):
-                        relative_path = path.relative_to(self.bundle_path(app))
-                        if path.is_dir():
-                            self.logger.info(f"Removing directory {relative_path}")
-                            self.tools.shutil.rmtree(path)
-                        else:
-                            self.logger.info(f"Removing {relative_path}")
-                            path.unlink()
-        else:
-            self.logger.info("No app content clean up required.")
+        with self.input.wait_bar("Removing unneeded app bundle content..."):
+            for glob in paths_to_remove:
+                # Expand each glob into a full list of files that actually exist
+                # on the file system.
+                for path in self.bundle_path(app).glob(glob):
+                    relative_path = path.relative_to(self.bundle_path(app))
+                    if path.is_dir():
+                        self.logger.info(f"Removing directory {relative_path}")
+                        self.tools.shutil.rmtree(path)
+                    else:
+                        self.logger.info(f"Removing {relative_path}")
+                        path.unlink()
 
     def create_app(self, app: BaseConfig, test_mode: bool = False, **options):
         """Create an application bundle.
