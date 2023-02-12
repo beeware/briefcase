@@ -16,9 +16,9 @@ sphinx:
   builder: html
   configuration: docs/conf.py
 
-# If using Sphinx, optionally build your docs in additional formats such as PDF
-# formats:
-#    - pdf
+# Build docs as PDF (other options are epub and htmlzip)
+formats:
+   - pdf
 
 # Optionally declare the Python requirements required to build your docs
 python:
