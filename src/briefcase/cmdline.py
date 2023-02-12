@@ -17,6 +17,7 @@ from briefcase.commands import (
     UpdateCommand,
     UpgradeCommand,
 )
+from briefcase.commands.base import split_passthrough
 from briefcase.platforms import get_output_formats, get_platforms
 
 from .exceptions import InvalidFormatError, NoCommandError, UnsupportedCommandError
@@ -102,11 +103,19 @@ def parse_cmdline(args):
     def normalize(name):
         return {n.lower(): n for n in platforms.keys()}.get(name.lower(), name)
 
+    # argparse handles `--` specially, so make the passthrough args bypass the parser.
+    def parse_known_args(args):
+        args, passthough = split_passthrough(args)
+        options, extra = parser.parse_known_args(args)
+        if passthough:
+            extra += ["--"] + passthough
+        return options, extra
+
     # Use parse_known_args to ensure any extra arguments can be ignored,
     # and parsed as part of subcommand handling. This will capture the
     # command, platform (filling a default if unspecified) and format
     # (with no value if unspecified).
-    options, extra = parser.parse_known_args(args)
+    options, extra = parse_known_args(args)
 
     # If no command has been provided, display top-level help.
     if options.command is None:
@@ -148,7 +157,7 @@ def parse_cmdline(args):
 
         # Re-parse the arguments, now that we know it is a command that makes use
         # of platform/output_format.
-        options, extra = parser.parse_known_args(args)
+        options, extra = parse_known_args(args)
 
         # Import the platform module
         platform_module = platforms[options.platform]

@@ -4,6 +4,7 @@ import sys
 import webbrowser
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from typing import List
 from zipfile import ZipFile
 
 import tomli_w
@@ -253,6 +254,7 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
         self,
         app: AppConfig,
         test_mode: bool,
+        passthrough: List[str],
         host,
         port,
         open_browser,
@@ -262,6 +264,7 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
 
         :param app: The config object for the app
         :param test_mode: Boolean; Is the app running in test mode?
+        :param passthrough: The list of arguments to pass to the app
         :param host: The host on which to run the server
         :param port: The port on which to run the server
         :param open_browser: Should a browser be opened on the newly started
@@ -271,6 +274,10 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
             raise BriefcaseCommandError("Briefcase can't run web apps in test mode.")
 
         self.logger.info("Starting web server...", prefix=app.app_name)
+
+        # At least for now, there's no easy way to pass arguments to a web app.
+        if passthrough:
+            self.logger.warning(f"Ignoring passthrough arguments: {passthrough}")
 
         httpd = None
         try:

@@ -1,6 +1,7 @@
 import plistlib
 import subprocess
 import time
+from typing import List
 from uuid import UUID
 
 from briefcase.commands import (
@@ -326,11 +327,19 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         self.get_device_state = get_device_state
         self.sleep = time.sleep
 
-    def run_app(self, app: BaseConfig, test_mode: bool, udid=None, **kwargs):
+    def run_app(
+        self,
+        app: BaseConfig,
+        test_mode: bool,
+        passthrough: List[str],
+        udid=None,
+        **kwargs,
+    ):
         """Start the application.
 
         :param app: The config object for the app
         :param test_mode: Boolean; Is the app running in test mode?
+        :param passthrough: The list of arguments to pass to the app
         :param udid: The device UDID to target. If ``None``, the user will
             be asked to select a device at runtime.
         """
@@ -464,7 +473,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
             self.logger.info(f"Starting {label}...", prefix=app.app_name)
             with self.input.wait_bar(f"Launching {label}..."):
                 output = self.tools.subprocess.check_output(
-                    ["xcrun", "simctl", "launch", udid, app_identifier]
+                    ["xcrun", "simctl", "launch", udid, app_identifier] + passthrough
                 )
                 try:
                     app_pid = int(output.split(":")[1].strip())
