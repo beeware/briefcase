@@ -112,6 +112,6 @@ For example::
 
     briefcase run -- --wiggle --test
 
-will run the app normal mode, passing the ``--wiggle`` and ``--test`` flags to
+will run the app in normal mode, passing the ``--wiggle`` and ``--test`` flags to
 the app's command line. The app will *not* run in *Briefcase's* test mode; the
 ``--test`` flag will be left for your own app to interpret.
