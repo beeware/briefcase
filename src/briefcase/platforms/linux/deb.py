@@ -121,33 +121,32 @@ class LinuxDebPassiveMixin(LinuxMixin):
         """
         if self.use_docker:
             try:
+                # Ubuntu Focal
                 output = self.tools.docker.check_output(
-                    [
-                        app.target_image,
-                        "/lib/x86_64-linux-gnu/libc.so.6",
-                    ]
+                    app.target_image, ["ldd", "--version"]
                 )
+                # ldd --version will give you output of the form:
+                #
+                #     ldd (Ubuntu GLIBC 2.31-0ubuntu9.9) 2.31
+                #     Copyright (C) 2020 Free Software Foundation, Inc.
+                #     ...
+                #
+                # Note that the exact text will vary version to version; but the
+                # "GLIBC 2.31-" part appears to be constant. From that first line,
+                # we can parse the "2.31" that is the libc version.
+                match = re.search(r" GLIBC (\d\.\d+)-", output)
+
+                if match:
+                    target_glibc = match[1]
+                else:
+                    raise BriefcaseCommandError(
+                        "Unable to parse glibc dependency version from version string."
+                    )
             except subprocess.CalledProcessError:
                 raise BriefcaseCommandError(
                     "Unable to determine glibc dependency version."
                 )
 
-            # Running libc.so.6 will give you output of the form:
-            #
-            # GNU C Library (Ubuntu GLIBC 2.31-0ubuntu9.9) stable release version 2.31.
-            # Copyright (C) 2020 Free Software Foundation, Inc.
-            # ...
-            #
-            # Note that the exact text will vary version to version; but the
-            # "GLIBC 2.31-" part appears to be constant. From that first line,
-            # we can parse the "2.31" that is the libc version.
-            match = re.search(r" GLIBC (\d\.\d+)-", output)
-            if match:
-                target_glibc = match[1]
-            else:
-                raise BriefcaseCommandError(
-                    "Unable to parse glibc dependency version from version string."
-                )
         else:
             target_glibc = self.tools.os.confstr("CS_GNU_LIBC_VERSION").split()[1]
 
