@@ -114,11 +114,8 @@ class LinuxDebPassiveMixin(LinuxMixin):
         """
         if self.use_docker:
             try:
-                output = self.tools.subprocess.check_output(
+                output = self.tools.docker.check_output(
                     [
-                        "docker",
-                        "run",
-                        "--rm",
                         app.target_image,
                         "/lib/x86_64-linux-gnu/libc.so.6",
                     ]
@@ -168,24 +165,15 @@ class LinuxDebPassiveMixin(LinuxMixin):
                 raise BriefcaseCommandError(
                     "Docker builds must specify a target distribtion (e.g., `--target ubuntu:jammy`)"
                 )
+
+            # Preserve the target image on the command line as the app's target
             app.target_image = self.target_image
 
-            # Check that the Docker base image is available. This will pull the
-            # image if it isn't already present locally. We do this by running a
-            # no-op command (echo) through Docker on the base image; if it
-            # succeeds, the image exists locally.
-            try:
-                with self.input.wait_bar(
-                    f"Checking Docker target image {app.target_image}..."
-                ):
-                    self.tools.subprocess.check_output(
-                        ["docker", "run", "--rm", app.target_image, "echo"]
-                    )
-            except subprocess.CalledProcessError:
-                raise BriefcaseCommandError(
-                    "Unable to obtain the Docker base image {app.target_image}. "
-                    "Confirm that Docker is installed, and the image name is correct."
-                )
+            # Ensure that the Docker base image is available.
+            with self.input.wait_bar(
+                f"Checking Docker target image {app.target_image}..."
+            ):
+                self.tools.docker.prepare(app.target_image)
 
             app.target_vendor, app.target_codename = app.target_image.split(":")
 
@@ -263,22 +251,20 @@ class LinuxDebMostlyPassiveMixin(LinuxDebPassiveMixin):
             Docker.verify(tools=self.tools)
 
     def verify_python(self, app):
-        """Verify that the version of Python in the Docker container is
+        """Verify that the version of Python being used by the app is
         compatible with the version being used to run this.
 
         Will raise an exception if the Python version is fundamentally
-        incompatible (i.e., if Briefcase doesn't support it); any other
-        version discrepancy will log a warning, but continue.
+        incompatible (i.e., if Briefcase doesn't support it); any other version
+        discrepancy will log a warning, but continue.
+
+        There's no need to invoke this unless you're using Docker. However,
+        it won't *fail* in a no-docker config; it's just nonsensical to call.
 
         Requires that the app tools have been verified.
 
         :param app: The application being built
         """
-        if not self.use_docker:
-            # If we're not in Docker, the version of Python is the same as the
-            # system, by definition.
-            return
-
         output = self.tools[app].app_context.check_output(
             [
                 f"python{app.python_version_tag}",

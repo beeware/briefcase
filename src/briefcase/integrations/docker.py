@@ -177,6 +177,46 @@ installation, and try again.
         tools.docker = Docker(tools=tools)
         return tools.docker
 
+    def check_output(self, image_tag, args):
+        """Run a process inside a Docker container, capturing output.
+
+        This is a bare Docker invocation; it's really only useful for running
+        simple commands on an image, ensuring that the container is destroyed
+        afterwards. In most cases, you'll want to use an app context, rather
+        than this.
+
+        :param image_tag: The Docker image to run
+        :param args: The list of arguments to pass to the Docker instance.
+        """
+        # Any exceptions from running the process are *not* caught.
+        # This ensures that "docker.check_output()" behaves as closely to
+        # "subprocess.check_output()" as possible.
+        return self.tools.subprocess.check_output(
+            [
+                "docker",
+                "run",
+                "--rm",
+                image_tag,
+            ]
+            + args,
+        )
+
+    def prepare(self, image_tag):
+        """Ensure that the given image exists, and is cached locally.
+
+        This is acheived by trying to run a no-op command (echo) on
+        the image; if it succeeds, the image exists locally.
+
+        :param image_tag: The Docker image to prepare
+        """
+        try:
+            self.check_output(image_tag, ["echo"])
+        except subprocess.CalledProcessError:
+            raise BriefcaseCommandError(
+                f"Unable to obtain the Docker base image {image_tag}. "
+                "Is the image name correct?"
+            )
+
 
 class DockerAppContext(Tool):
     def __init__(self, tools: ToolCache, app: AppConfig):
