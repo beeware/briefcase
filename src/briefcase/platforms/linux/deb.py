@@ -45,6 +45,12 @@ class LinuxDebPassiveMixin(LinuxMixin):
             "x86_64": "amd64",
         }.get(self.tools.host_arch, self.tools.host_arch)
 
+    def python_source_tag(self, app):
+        if app.python_source == SYSTEM:
+            return "system"
+        elif app.python_source == DEADSNAKES:
+            return f"deadsnakes-py{app.python_version_tag}"
+
     def bundle_path(self, app):
         # The bundle path is different as there won't be a single "deb" build;
         # there is one per build target.
@@ -52,6 +58,7 @@ class LinuxDebPassiveMixin(LinuxMixin):
             self.platform_path
             / app.target_vendor
             / app.target_codename
+            / self.python_source_tag(app)
             / app.formal_name
         )
 
@@ -237,12 +244,10 @@ class LinuxDebMostlyPassiveMixin(LinuxDebPassiveMixin):
 
     def docker_image_tag(self, app):
         """The Docker image tag for an app."""
-        if app.python_source == SYSTEM:
-            tag = ""
-        elif app.python_source == DEADSNAKES:
-            tag = f"-deadsnakes-py{app.python_version_tag}"
-
-        return f"briefcase/{app.bundle}.{app.app_name.lower()}:{app.target_vendor}-{app.target_codename}-{tag}"
+        return (
+            f"briefcase/{app.bundle}.{app.app_name.lower()}"
+            f":{app.target_vendor}-{app.target_codename}-{self.python_source_tag(app)}"
+        )
 
     def verify_tools(self):
         """If we're using Docker, verify that it is available."""
