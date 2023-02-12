@@ -117,6 +117,9 @@ def test_extra_mounts(mock_docker_app_context, tmp_path, capsys):
     )
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
+)
 def test_cwd(mock_docker_app_context, tmp_path, capsys):
     """A subprocess call can use a working directory relative to the project folder."""
 
