@@ -399,11 +399,6 @@ class LinuxDebCreateCommand(LinuxDebMixin, CreateCommand):
                 "Debian packaging guidelines require a long description."
             )
 
-        # The long description can't contain newlines
-        context["long_description"] = "\n".join(
-            line for line in app.long_description.split("\n") if line.strip() != ""
-        )
-
         return context
 
     def _install_app_requirements(
