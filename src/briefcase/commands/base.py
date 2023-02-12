@@ -9,6 +9,7 @@ import textwrap
 from abc import ABC, abstractmethod
 from argparse import RawDescriptionHelpFormatter
 from pathlib import Path
+from typing import Optional
 
 from cookiecutter import exceptions as cookiecutter_exceptions
 from cookiecutter.repository import is_repo_url
@@ -454,6 +455,51 @@ a custom location for Briefcase's tools.
         Raises MissingToolException if a required system tool is missing.
         """
         pass
+
+    def finalize_app_config(self, app: BaseConfig):
+        """Finalize the application config.
+
+        Some app configurations (notably, Linux system packages like .deb) have
+        configurations that are deeper than other platforms, because they need
+        to include components that are dependent on command-line arguments. They
+        may also require the existence of system tools to complete
+        configuration.
+
+        The final app configuration merges those "deep" properties into the app
+        configuration, and performs any other app-speceific platform
+        configuration and verification that is required as a result of
+        command-line arguments.
+
+        :param app: The app configuration to finalize.
+        """
+        pass
+
+    def finalize(self, app: Optional[BaseConfig] = None):
+        """Finalize Briefcase configuration.
+
+        This will:
+
+        1. Ensure that the host has been verified
+        2. Ensure that the platform tools have been verfied
+        3. Ensure that app configurations have been finalized.
+
+        App finalization will only occur once per invocation.
+
+        :param app: If provided, the specific app configuration
+            to finalize. By default, all apps will be finalized.
+        """
+        self.verify_host()
+        self.verify_tools()
+
+        if app is None:
+            for app in self.apps.values():
+                if hasattr(app, "__draft__"):
+                    self.finalize_app_config(app)
+                    delattr(app, "__draft__")
+        else:
+            if hasattr(app, "__draft__"):
+                self.finalize_app_config(app)
+                delattr(app, "__draft__")
 
     def verify_app_tools(self, app: BaseConfig):
         """Verify that tools needed to run the command for this app exist."""

@@ -50,8 +50,8 @@ class LinuxDebPassiveMixin(LinuxMixin):
         # there is one per build target.
         return (
             self.platform_path
-            / self.target_vendor
-            / self.target_codename
+            / app.target_vendor
+            / app.target_codename
             / app.formal_name
         )
 
@@ -73,7 +73,7 @@ class LinuxDebPassiveMixin(LinuxMixin):
     def distribution_path(self, app, packaging_format):
         return self.platform_path / (
             f"{app.app_name}_{app.version}-{getattr(app, 'revision', 1)}"
-            f"~{self.target_vendor}-{self.target_codename}_{self.deb_arch}.deb"
+            f"~{app.target_vendor}-{app.target_codename}_{self.deb_arch}.deb"
         )
 
     def add_options(self, parser):
@@ -93,235 +93,20 @@ class LinuxDebPassiveMixin(LinuxMixin):
         )
 
     def parse_options(self, extra):
-        """Extract the use_docker option."""
+        """Extract the use_docker and target_image options."""
         options = super().parse_options(extra)
         self.use_docker = options.pop("use_docker")
         self.target_image = options.pop("target")
 
-        if self.use_docker:
-            if self.target_image is None:
-                raise BriefcaseCommandError(
-                    "Docker builds must specify a target distribtion (e.g., `--target ubuntu:jammy`)"
-                )
-
-            # Check that the Docker base image is available. This will pull the
-            # image if it isn't already present locally. We do this by running a
-            # no-op command (echo) through Docker on the base image; if it
-            # succeeds, the image exists locally.
-            try:
-                with self.input.wait_bar(
-                    f"Checking Docker target image {self.target_image}..."
-                ):
-                    self.tools.subprocess.check_output(
-                        ["docker", "run", "--rm", self.target_image, "echo"]
-                    )
-            except subprocess.CalledProcessError:
-                raise BriefcaseCommandError(
-                    "Unable to obtain the Docker base image {self.target_image}. "
-                    "Confirm that Docker is installed, and the image name is correct."
-                )
-
-            self.target_vendor, self.target_codename = self.target_image.split(":")
-
-        else:
-            if self.target_image:
-                raise BriefcaseCommandError(
-                    "Non-Docker builds cannot target a specific distribution."
-                )
-
-            self.target_vendor = (
-                self.tools.subprocess.check_output(["lsb_release", "-i", "-s"])
-                .strip()
-                .lower()
-            )
-            self.target_codename = (
-                self.tools.subprocess.check_output(["lsb_release", "-c", "-s"])
-                .strip()
-                .lower()
-            )
-            self.target_image = f"{self.target_vendor}:{self.target_codename}"
-
         return options
 
     def clone_options(self, command):
-        """Clone the use_docker option."""
+        """Clone the use_docker and target_image options."""
         super().clone_options(command)
         self.use_docker = command.use_docker
-
         self.target_image = command.target_image
-        self.target_vendor = command.target_vendor
-        self.target_codename = command.target_codename
 
-
-class LinuxDebMostlyPassiveMixin(LinuxDebPassiveMixin):
-    # The Mostly Passive mixin verifies that Docker exists and can be run, but
-    # doesn't require that we're actually in a Linux environment.
-    def finalize_app_config(self, app: AppConfig):
-        """Finalize app configuration.
-
-        Linux .deb app configurations are deeper than other platforms, because
-        they need to include components that are dependent on the target vendor
-        and codename. Those properties are extracted from command-line options.
-
-        The final app configuration merges the target-specific configuration
-        into the generic "linux.deb" app configuration, as well as setting the
-        Python version.
-
-        :param app: The app configuration to finalize.
-        """
-        # Merge target-specific configuration items into the app config
-        try:
-            target_config = getattr(app, self.target_vendor)[self.target_codename]
-            for key, value in target_config.items():
-                setattr(app, key, value)
-        except (AttributeError, KeyError):
-            pass
-
-        # Determine the python source, and set the Python version tag
-        # as appropriate.
-        try:
-            if app.python_source not in {SYSTEM, DEADSNAKES}:
-                raise BriefcaseCommandError(
-                    f"Unknown python source {app.python_source!r}; "
-                    f"should be one of {SYSTEM!r}, {DEADSNAKES!r}"
-                )
-        except AttributeError:
-            # python_source not defined; fall back to system.
-            app.python_source = SYSTEM
-
-        if app.python_source == SYSTEM:
-            app.python_version_tag = "3"
-        else:
-            app.python_version_tag = self.python_version_tag
-
-    def docker_image_tag(self, app):
-        """The Docker image tag for an app."""
-        if app.python_source == SYSTEM:
-            tag = ""
-        elif app.python_source == DEADSNAKES:
-            tag = f"-deadsnakes-py{app.python_version_tag}"
-
-        return f"briefcase/{app.bundle}.{app.app_name.lower()}:{self.target_vendor}-{self.target_codename}-{tag}"
-
-    def verify_tools(self):
-        """If we're using Docker, verify that it is available."""
-        super().verify_tools()
-        if self.use_docker:
-            Docker.verify(tools=self.tools)
-
-    def verify_app_tools(self, app: AppConfig):
-        """Verify App environment is prepared and available.
-
-        When Docker is used, create or update a Docker image for the App.
-        Without Docker, the host machine will be used as the App environment.
-
-        :param app: The application being built
-        """
-        # Ensure that the app configuration has been finalized
-        self.finalize_app_config(app)
-
-        if self.use_docker:
-            # Verifying the DockerAppContext is idempotent; but we have some
-            # additional logic that we only want to run the first time through.
-            # Check (and store) the pre-verify app tool state.
-            verify_python = not hasattr(self.tools[app], "app_context")
-
-            DockerAppContext.verify(
-                tools=self.tools,
-                app=app,
-                image_tag=self.docker_image_tag(app),
-                dockerfile_path=self.bundle_path(app) / "Dockerfile",
-                app_base_path=self.base_path,
-                host_platform_path=self.platform_path,
-                host_data_path=self.data_path,
-                python_version=app.python_version_tag,
-            )
-
-            # Check the system Python on the target system to see if it is
-            # compatible with Briefcase. If it's compatible, but not the
-            # same as the host system python, warn the user about potential
-            # incompatibilities.
-            if verify_python:
-                output = self.tools[app].app_context.check_output(
-                    [
-                        f"python{app.python_version_tag}",
-                        "-c",
-                        (
-                            "import sys; "
-                            "print(f'{sys.version_info.major}.{sys.version_info.minor}')"
-                        ),
-                    ]
-                )
-                target_python_tag = output.split("\n")[0]
-                target_python_version = tuple(
-                    int(v) for v in target_python_tag.split(".")
-                )
-
-                if target_python_version < (3, 8):
-                    raise BriefcaseCommandError(
-                        f"The system python3 version provided by {self.target_image} "
-                        f"is {target_python_tag}; Briefcase requires a "
-                        "minimum Python3 version of 3.8."
-                    )
-                elif target_python_version != (
-                    self.tools.sys.version_info.major,
-                    self.tools.sys.version_info.minor,
-                ):
-                    self.logger.warning(
-                        f"""
-*************************************************************************
-** WARNING: Python version mismatch!                                   **
-*************************************************************************
-
-    The system python3 provided by {self.target_image} is {target_python_tag}.
-    This is not the same as your local system ({self.python_version_tag}).
-
-    Ensure you have tested for Python version compatibility before
-    releasing this app.
-
-    Alternatively, you can change your `python_source` definition in
-    `pyproject.toml` to `deadsnakes`. See the deb backend documentation
-    for details:
-
-    https://briefcase.readthedocs.io/en/stable/reference/platforms/linux/deb.html#python_source
-
-*************************************************************************
-"""
-                    )
-        else:
-            NativeAppContext.verify(tools=self.tools, app=app)
-
-        # Establish Docker as app context before letting super set subprocess
-        super().verify_app_tools(app)
-
-
-class LinuxDebMixin(LinuxDebMostlyPassiveMixin):
-    def verify_host(self):
-        """If we're *not* using Docker, verify that we're actually on a Debian-based Linux."""
-        super().verify_host()
-        if not self.use_docker:
-            if self.tools.host_os != "Linux":
-                raise UnsupportedHostError(self.supported_host_os_reason)
-
-            # Debian-based distributions all have an /etc/debian_version
-            if not Path("/etc/debian_version").exists():
-                raise BriefcaseCommandError(
-                    "Cannot build .deb packages on a Linux distribution that isn't Debian-based."
-                )
-
-
-class LinuxDebCreateCommand(LinuxDebMixin, CreateCommand):
-    description = "Create and populate a .deb project."
-
-    def create_app(self, app: AppConfig, **kwargs):
-        # The app template is rolled out before the app context is verified
-        # (because the template contains the Dockerfile that builds the app
-        # context); so we need to do an explicit config finalization
-        # to make sure we know about system python preferences etc.
-        self.finalize_app_config(app)
-        return super().create_app(app, **kwargs)
-
-    def target_glibc_version(self):
+    def target_glibc_version(self, app):
         """Determine the glibc version.
 
         If running in Docker, this is done by interrogating libc.so.6; outside
@@ -334,7 +119,7 @@ class LinuxDebCreateCommand(LinuxDebMixin, CreateCommand):
                         "docker",
                         "run",
                         "--rm",
-                        self.target_image,
+                        app.target_image,
                         "/lib/x86_64-linux-gnu/libc.so.6",
                     ]
                 )
@@ -364,6 +149,236 @@ class LinuxDebCreateCommand(LinuxDebMixin, CreateCommand):
 
         return target_glibc
 
+    def finalize_app_config(self, app: AppConfig):
+        """Finalize app configuration.
+
+        Linux .deb app configurations are deeper than other platforms, because
+        they need to include components that are dependent on the target vendor
+        and codename. Those properties are extracted from command-line options.
+
+        The final app configuration merges the target-specific configuration
+        into the generic "linux.deb" app configuration, as well as setting the
+        Python version.
+
+        :param app: The app configuration to finalize.
+        """
+        self.logger.info("Finalizing application configuration...", prefix=app.app_name)
+        if self.use_docker:
+            if self.target_image is None:
+                raise BriefcaseCommandError(
+                    "Docker builds must specify a target distribtion (e.g., `--target ubuntu:jammy`)"
+                )
+            app.target_image = self.target_image
+
+            # Check that the Docker base image is available. This will pull the
+            # image if it isn't already present locally. We do this by running a
+            # no-op command (echo) through Docker on the base image; if it
+            # succeeds, the image exists locally.
+            try:
+                with self.input.wait_bar(
+                    f"Checking Docker target image {app.target_image}..."
+                ):
+                    self.tools.subprocess.check_output(
+                        ["docker", "run", "--rm", app.target_image, "echo"]
+                    )
+            except subprocess.CalledProcessError:
+                raise BriefcaseCommandError(
+                    "Unable to obtain the Docker base image {app.target_image}. "
+                    "Confirm that Docker is installed, and the image name is correct."
+                )
+
+            app.target_vendor, app.target_codename = app.target_image.split(":")
+
+        else:
+            if self.target_image:
+                raise BriefcaseCommandError(
+                    "Non-Docker builds cannot target a specific distribution."
+                )
+
+            app.target_vendor = (
+                self.tools.subprocess.check_output(["lsb_release", "-i", "-s"])
+                .strip()
+                .lower()
+            )
+            app.target_codename = (
+                self.tools.subprocess.check_output(["lsb_release", "-c", "-s"])
+                .strip()
+                .lower()
+            )
+
+            self.logger.info(f"Targeting {app.target_vendor}:{app.target_codename}")
+            app.target_image = f"{app.target_vendor}:{app.target_codename}"
+
+        # Merge target-specific configuration items into the app config
+        try:
+            target_config = getattr(app, app.target_vendor)[app.target_codename]
+            for key, value in target_config.items():
+                setattr(app, key, value)
+        except (AttributeError, KeyError):
+            pass
+
+        with self.input.wait_bar("Determinining glibc version..."):
+            app.glibc_version = self.target_glibc_version(app)
+        self.logger.info(f"Targeting glibc {app.glibc_version}")
+
+        # Determine the python source, and set the Python version tag as
+        # appropriate. System Python uses a generic "3"; others use the specific
+        # Python version that has been used to invoke Briefcase.
+        try:
+            if app.python_source not in {SYSTEM, DEADSNAKES}:
+                raise BriefcaseCommandError(
+                    f"Unknown python source {app.python_source!r}; "
+                    f"should be one of {SYSTEM!r}, {DEADSNAKES!r}"
+                )
+        except AttributeError:
+            # python_source not defined; fall back to system.
+            app.python_source = SYSTEM
+
+        if app.python_source == SYSTEM:
+            app.python_version_tag = "3"
+        else:
+            app.python_version_tag = self.python_version_tag
+        self.logger.info(
+            f"Targeting {app.python_source.title()} Python{app.python_version_tag}"
+        )
+
+
+class LinuxDebMostlyPassiveMixin(LinuxDebPassiveMixin):
+    # The Mostly Passive mixin verifies that Docker exists and can be run, but
+    # doesn't require that we're actually in a Linux environment.
+
+    def docker_image_tag(self, app):
+        """The Docker image tag for an app."""
+        if app.python_source == SYSTEM:
+            tag = ""
+        elif app.python_source == DEADSNAKES:
+            tag = f"-deadsnakes-py{app.python_version_tag}"
+
+        return f"briefcase/{app.bundle}.{app.app_name.lower()}:{app.target_vendor}-{app.target_codename}-{tag}"
+
+    def verify_tools(self):
+        """If we're using Docker, verify that it is available."""
+        super().verify_tools()
+        if self.use_docker:
+            Docker.verify(tools=self.tools)
+
+    def verify_python(self, app):
+        """Verify that the version of Python in the Docker container is
+        compatible with the version being used to run this.
+
+        Will raise an exception if the Python version is fundamentally
+        incompatible (i.e., if Briefcase doesn't support it); any other
+        version discrepancy will log a warning, but continue.
+
+        Requires that the app tools have been verified.
+
+        :param app: The application being built
+        """
+        if not self.use_docker:
+            # If we're not in Docker, the version of Python is the same as the
+            # system, by definition.
+            return
+
+        output = self.tools[app].app_context.check_output(
+            [
+                f"python{app.python_version_tag}",
+                "-c",
+                (
+                    "import sys; "
+                    "print(f'{sys.version_info.major}.{sys.version_info.minor}')"
+                ),
+            ]
+        )
+        target_python_tag = output.split("\n")[0]
+        target_python_version = tuple(int(v) for v in target_python_tag.split("."))
+
+        if target_python_version < (3, 8):
+            raise BriefcaseCommandError(
+                f"The system python3 version provided by {app.target_image} "
+                f"is {target_python_tag}; Briefcase requires a "
+                "minimum Python3 version of 3.8."
+            )
+        elif target_python_version != (
+            self.tools.sys.version_info.major,
+            self.tools.sys.version_info.minor,
+        ):
+            self.logger.warning(
+                f"""
+*************************************************************************
+** WARNING: Python version mismatch!                                   **
+*************************************************************************
+
+    The system python3 provided by {app.target_image} is {target_python_tag}.
+    This is not the same as your local system ({self.python_version_tag}).
+
+    Ensure you have tested for Python version compatibility before
+    releasing this app.
+
+    Alternatively, you can change your `python_source` definition in
+    `pyproject.toml` to `deadsnakes` to ensure that the Python used by
+    the app at runtime is the same as your current Python environment.
+    See the deb backend documentation for details:
+
+    https://briefcase.readthedocs.io/en/stable/reference/platforms/linux/deb.html#python_source
+
+*************************************************************************
+"""
+            )
+
+    def verify_app_tools(self, app: AppConfig):
+        """Verify App environment is prepared and available.
+
+        When Docker is used, create or update a Docker image for the App.
+        Without Docker, the host machine will be used as the App environment.
+
+        :param app: The application being built
+        """
+        if self.use_docker:
+            # Verifying the DockerAppContext is idempotent; but we have some
+            # additional logic that we only want to run the first time through.
+            # Check (and store) the pre-verify app tool state.
+            verify_python = not hasattr(self.tools[app], "app_context")
+
+            DockerAppContext.verify(
+                tools=self.tools,
+                app=app,
+                image_tag=self.docker_image_tag(app),
+                dockerfile_path=self.bundle_path(app) / "Dockerfile",
+                app_base_path=self.base_path,
+                host_platform_path=self.platform_path,
+                host_data_path=self.data_path,
+                python_version=app.python_version_tag,
+            )
+
+            # Check the system Python on the target system to see if it is
+            # compatible with Briefcase.
+            if verify_python:
+                self.verify_python(app)
+        else:
+            NativeAppContext.verify(tools=self.tools, app=app)
+
+        # Establish Docker as app context before letting super set subprocess
+        super().verify_app_tools(app)
+
+
+class LinuxDebMixin(LinuxDebMostlyPassiveMixin):
+    def verify_host(self):
+        """If we're *not* using Docker, verify that we're actually on a Debian-based Linux."""
+        super().verify_host()
+        if not self.use_docker:
+            if self.tools.host_os != "Linux":
+                raise UnsupportedHostError(self.supported_host_os_reason)
+
+            # Debian-based distributions all have an /etc/debian_version
+            if not Path("/etc/debian_version").exists():
+                raise BriefcaseCommandError(
+                    "Cannot build .deb packages on a Linux distribution that isn't Debian-based."
+                )
+
+
+class LinuxDebCreateCommand(LinuxDebMixin, CreateCommand):
+    description = "Create and populate a .deb project."
+
     def output_format_template_context(self, app: AppConfig):
         context = super().output_format_template_context(app)
 
@@ -373,7 +388,7 @@ class LinuxDebCreateCommand(LinuxDebMixin, CreateCommand):
         context["python_version"] = app.python_version_tag
 
         # Add the docker base image
-        context["docker_base_image"] = self.target_image
+        context["docker_base_image"] = app.target_image
 
         # Add runtime package dependencies. App config has been finalized,
         # so this will be the target-specific definition, if one exists.
@@ -381,7 +396,7 @@ class LinuxDebCreateCommand(LinuxDebMixin, CreateCommand):
         # its a dependency of the thing we *do* care about - python.
         context["system_runtime_requires"] = ", ".join(
             [
-                f"libc6 (>={self.target_glibc_version()})",
+                f"libc6 (>={app.glibc_version})",
                 f"python{app.python_version_tag}",
             ]
             + getattr(app, "system_runtime_requires", [])
@@ -504,11 +519,20 @@ class LinuxDebCreateCommand(LinuxDebMixin, CreateCommand):
                 self.tools.shutil.copy(source_license_file, license_file)
             else:
                 self.logger.warning(
-                    "Project does not contain a LICENSE file. "
-                    "Debian packaging guidelines require a LICENSE file. "
-                    f"A dummy {license_file.relative_to(self.base_path)} "
-                    "file has been created. You should ensure this file is "
-                    "complete and correct before continuing."
+                    f"""
+*************************************************************************
+** WARNING: No LICENSE file!                                           **
+*************************************************************************
+
+    Your project does not contain a LICENSE file.
+
+    Debian packaging guidelines require that packages provide a
+    copyright statement. A dummy LICENSE file ({license_file.relative_to(self.base_path)})
+    has been created. You should ensure this file is complete and
+    correct before continuing.
+
+*************************************************************************
+"""
                 )
 
         with self.input.wait_bar("Installing changelog..."):
@@ -518,11 +542,20 @@ class LinuxDebCreateCommand(LinuxDebMixin, CreateCommand):
                 self.tools.shutil.copy(source_changelog_file, changelog_file)
             else:
                 self.logger.warning(
-                    "Project does not contain a CHANGELOG file. "
-                    "Debian packaging guidelines require a CHANGELOG file. "
-                    f"A dummy {changelog_file.relative_to(self.base_path)} "
-                    "file has been created. You should ensure this file is "
-                    "complete and correct before continuing."
+                    f"""
+*************************************************************************
+** WARNING: No CHANGELOG file!                                         **
+*************************************************************************
+
+    Your project does not contain a CHANGELOG file.
+
+    Debian packaging guidelines require that packages provide a
+    change log. A dummy CHANGELOG file ({changelog_file.relative_to(self.base_path)})
+    has been created. You should ensure this file is complete and
+    correct before continuing.
+
+*************************************************************************
+"""
                 )
 
 

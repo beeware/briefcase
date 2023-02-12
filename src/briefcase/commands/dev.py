@@ -161,10 +161,6 @@ class DevCommand(RunAppMixin, BaseCommand):
         test_mode: Optional[bool] = False,
         **options,
     ):
-        # Confirm host compatibility and all required tools are available
-        self.verify_host()
-        self.verify_tools()
-
         # Which app should we run? If there's only one defined
         # in pyproject.toml, then we can use it as a default;
         # otherwise look for a -a/--app option.
@@ -182,6 +178,9 @@ class DevCommand(RunAppMixin, BaseCommand):
             raise BriefcaseCommandError(
                 "Project specifies more than one application; use --app to specify which one to start."
             )
+        # Confirm host compatibility, that all required tools are available,
+        # and that the app configuration is finalized.
+        self.finalize(app)
 
         self.verify_app_tools(app)
 

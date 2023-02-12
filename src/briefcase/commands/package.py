@@ -110,9 +110,9 @@ class PackageCommand(BaseCommand):
     def __call__(
         self, app: Optional[BaseConfig] = None, update: bool = False, **options
     ):
-        # Confirm host compatibility and all required tools are available
-        self.verify_host()
-        self.verify_tools()
+        # Confirm host compatibility, that all required tools are available,
+        # and that the app configuration is finalized.
+        self.finalize(app)
 
         if app:
             state = self._package_app(app, update=update, **options)

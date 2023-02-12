@@ -13,13 +13,13 @@ def test_create_app(tracking_create_command):
 
     # The right sequence of things will be done
     assert tracking_create_command.actions == [
-        ("generate", tracking_create_command.apps["first"]),
-        ("support", tracking_create_command.apps["first"]),
-        ("verify-app-tools", tracking_create_command.apps["first"]),
-        ("code", tracking_create_command.apps["first"], False),
-        ("requirements", tracking_create_command.apps["first"], False),
-        ("resources", tracking_create_command.apps["first"]),
-        ("cleanup", tracking_create_command.apps["first"]),
+        ("generate", "first"),
+        ("support", "first"),
+        ("verify-app-tools", "first"),
+        ("code", "first", False),
+        ("requirements", "first", False),
+        ("resources", "first"),
+        ("cleanup", "first"),
     ]
 
     # New app content has been created
@@ -46,13 +46,13 @@ def test_create_existing_app_overwrite(tracking_create_command):
 
     # The right sequence of things will be done
     assert tracking_create_command.actions == [
-        ("generate", tracking_create_command.apps["first"]),
-        ("support", tracking_create_command.apps["first"]),
-        ("verify-app-tools", tracking_create_command.apps["first"]),
-        ("code", tracking_create_command.apps["first"], False),
-        ("requirements", tracking_create_command.apps["first"], False),
-        ("resources", tracking_create_command.apps["first"]),
-        ("cleanup", tracking_create_command.apps["first"]),
+        ("generate", "first"),
+        ("support", "first"),
+        ("verify-app-tools", "first"),
+        ("code", "first", False),
+        ("requirements", "first", False),
+        ("resources", "first"),
+        ("cleanup", "first"),
     ]
 
     # Original content has been deleted

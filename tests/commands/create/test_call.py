@@ -30,22 +30,25 @@ def test_create(tracking_create_command):
         ("verify-host",),
         # Tools are verified
         ("verify-tools",),
+        # App configs have been finalized
+        ("finalize-app-config", "first"),
+        ("finalize-app-config", "second"),
         # Create the first app
-        ("generate", tracking_create_command.apps["first"]),
-        ("support", tracking_create_command.apps["first"]),
-        ("verify-app-tools", tracking_create_command.apps["first"]),
-        ("code", tracking_create_command.apps["first"], False),
-        ("requirements", tracking_create_command.apps["first"], False),
-        ("resources", tracking_create_command.apps["first"]),
-        ("cleanup", tracking_create_command.apps["first"]),
+        ("generate", "first"),
+        ("support", "first"),
+        ("verify-app-tools", "first"),
+        ("code", "first", False),
+        ("requirements", "first", False),
+        ("resources", "first"),
+        ("cleanup", "first"),
         # Create the second app
-        ("generate", tracking_create_command.apps["second"]),
-        ("support", tracking_create_command.apps["second"]),
-        ("verify-app-tools", tracking_create_command.apps["second"]),
-        ("code", tracking_create_command.apps["second"], False),
-        ("requirements", tracking_create_command.apps["second"], False),
-        ("resources", tracking_create_command.apps["second"]),
-        ("cleanup", tracking_create_command.apps["second"]),
+        ("generate", "second"),
+        ("support", "second"),
+        ("verify-app-tools", "second"),
+        ("code", "second", False),
+        ("requirements", "second", False),
+        ("resources", "second"),
+        ("cleanup", "second"),
     ]
 
     # New app content has been created
@@ -63,14 +66,16 @@ def test_create_single(tracking_create_command):
         ("verify-host",),
         # Tools are verified
         ("verify-tools",),
+        # App config has been finalized
+        ("finalize-app-config", "first"),
         # Create the first app
-        ("generate", tracking_create_command.apps["first"]),
-        ("support", tracking_create_command.apps["first"]),
-        ("verify-app-tools", tracking_create_command.apps["first"]),
-        ("code", tracking_create_command.apps["first"], False),
-        ("requirements", tracking_create_command.apps["first"], False),
-        ("resources", tracking_create_command.apps["first"]),
-        ("cleanup", tracking_create_command.apps["first"]),
+        ("generate", "first"),
+        ("support", "first"),
+        ("verify-app-tools", "first"),
+        ("code", "first", False),
+        ("requirements", "first", False),
+        ("resources", "first"),
+        ("cleanup", "first"),
     ]
 
     # New app content has been created

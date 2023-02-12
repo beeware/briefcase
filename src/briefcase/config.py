@@ -354,6 +354,9 @@ class AppConfig(BaseConfig):
     ):
         super().__init__(**kwargs)
 
+        # All app configs are created in unfinalized draft form.
+        self.__draft__ = True
+
         self.app_name = app_name
         self.version = version
         self.bundle = bundle
