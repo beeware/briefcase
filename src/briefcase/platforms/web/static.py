@@ -275,7 +275,7 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
 
         self.logger.info("Starting web server...", prefix=app.app_name)
 
-        # At least for now, there's no easy way to pass arguments to an Android app
+        # At least for now, there's no easy way to pass arguments to a web app.
         if passthrough:
             self.logger.warning(f"Ignoring passthrough arguments: {passthrough}")
 

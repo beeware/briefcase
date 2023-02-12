@@ -185,7 +185,7 @@ def test_run_app_simulator_booted(run_command, first_app_config, tmp_path):
 
 
 def test_run_app_with_passthrough(run_command, first_app_config, tmp_path):
-    """An iOS App can be started with passthrough args (which are ignored)."""
+    """An iOS App can be started with passthrough args."""
     # A valid target device will be selected.
     run_command.select_target_device = mock.MagicMock(
         return_value=("2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D", "13.2", "iPhone 11")
@@ -203,7 +203,7 @@ def test_run_app_with_passthrough(run_command, first_app_config, tmp_path):
     log_stream_process = mock.MagicMock(spec_set=subprocess.Popen)
     run_command.tools.subprocess.Popen.return_value = log_stream_process
 
-    # Run the app with passthrough args; they will be ignored
+    # Run the app with passthrough args.
     run_command.run_app(
         first_app_config,
         test_mode=False,
@@ -1247,8 +1247,7 @@ def test_run_app_test_mode(run_command, first_app_config, tmp_path):
 
 
 def test_run_app_test_mode_with_passthrough(run_command, first_app_config, tmp_path):
-    """An iOS App can be started in test mode with passthrough args (args will
-    be ignored)."""
+    """An iOS App can be started in test mode with passthrough args."""
     # A valid target device will be selected.
     run_command.select_target_device = mock.MagicMock(
         return_value=("2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D", "13.2", "iPhone 11")
@@ -1266,7 +1265,7 @@ def test_run_app_test_mode_with_passthrough(run_command, first_app_config, tmp_p
     log_stream_process = mock.MagicMock(spec_set=subprocess.Popen)
     run_command.tools.subprocess.Popen.return_value = log_stream_process
 
-    # Run the app with args; args will be ignored
+    # Run the app with args.
     run_command.run_app(
         first_app_config,
         test_mode=True,
