@@ -98,11 +98,12 @@ extract_packages_params = [
 extract_packages_params += [
     (
         ["//leading"],
-        ""
-        if sys.platform == "win32" and sys.version_info >= (3, 11, 2)
-        else '"leading"',
+        "" if sys.platform == "win32" and sys.version_info >= (3, 12) else '"leading"',
     ),
-    (["//leading/two"], "" if sys.platform == "win32" else '"two"'),
+    (
+        ["//leading/two"],
+        "" if sys.platform == "win32" else '"two"',
+    ),
     (["//leading/two/three"], '"three"'),
     (["//leading/two/three/four"], '"four"'),
 ]
