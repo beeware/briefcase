@@ -5,6 +5,7 @@ import time
 from contextlib import suppress
 from pathlib import Path
 from signal import SIGTERM
+from typing import List
 from zipfile import ZipFile
 
 from briefcase.config import BaseConfig
@@ -73,11 +74,18 @@ class macOSMixin:
 
 
 class macOSRunMixin:
-    def run_app(self, app: BaseConfig, test_mode: bool, **kwargs):
+    def run_app(
+        self,
+        app: BaseConfig,
+        test_mode: bool,
+        passthrough: List[str],
+        **kwargs,
+    ):
         """Start the application.
 
         :param app: The config object for the app
         :param test_mode: Boolean; Is the app running in test mode?
+        :param passthrough: The list of arguments to pass to the app
         """
         # Start log stream for the app.
         # Streaming the system log is... a mess. The system log contains a
@@ -128,7 +136,8 @@ class macOSRunMixin:
                     "open",
                     "-n",  # Force a new app to be launched
                     os.fsdecode(self.binary_path(app)),
-                ],
+                ]
+                + ((["--args"] + passthrough) if passthrough else []),
                 cwd=self.tools.home_path,
                 check=True,
                 **kwargs,

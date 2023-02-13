@@ -1,3 +1,5 @@
+from typing import List
+
 from briefcase.commands import (
     BuildCommand,
     CreateCommand,
@@ -186,11 +188,18 @@ class LinuxFlatpakBuildCommand(LinuxFlatpakMixin, BuildCommand):
 class LinuxFlatpakRunCommand(LinuxFlatpakMixin, RunCommand):
     description = "Run a Linux Flatpak."
 
-    def run_app(self, app: AppConfig, test_mode: bool, **kwargs):
+    def run_app(
+        self,
+        app: AppConfig,
+        test_mode: bool,
+        passthrough: List[str],
+        **kwargs,
+    ):
         """Start the application.
 
         :param app: The config object for the app
         :param test_mode: Boolean; Is the app running in test mode?
+        :param passthrough: The list of arguments to pass to the app
         """
         # Set up the log stream
         kwargs = self._prepare_app_env(app=app, test_mode=test_mode)
@@ -205,6 +214,7 @@ class LinuxFlatpakRunCommand(LinuxFlatpakMixin, RunCommand):
         app_popen = self.tools.flatpak.run(
             bundle=app.bundle,
             app_name=app.app_name,
+            args=passthrough,
             **kwargs,
         )
 

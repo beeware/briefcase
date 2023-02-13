@@ -1,3 +1,5 @@
+import json
+import shlex
 from subprocess import CalledProcessError
 from unittest.mock import MagicMock
 
@@ -7,25 +9,46 @@ from briefcase.exceptions import BriefcaseCommandError, InvalidDeviceError
 from briefcase.integrations.android_sdk import ADB
 
 
-def test_start_app_launches_app(mock_tools, capsys):
+@pytest.mark.parametrize(
+    "passthrough",
+    [
+        [],
+        [""],
+        ['"'],
+        ["\\"],
+        ["one"],
+        ["one two"],
+        ["one\ntwo"],
+        ["one,two"],
+        ["one", "two"],
+        ["one", "two", "three"],
+    ],
+)
+def test_start_app_launches_app(mock_tools, capsys, passthrough):
     """Invoking `start_app()` calls `run()` with the appropriate parameters."""
     # Mock out the run command on an adb instance
     adb = ADB(mock_tools, "exampleDevice")
     adb.run = MagicMock(return_value="example normal adb output")
 
     # Invoke start_app
-    adb.start_app("com.example.sample.package", "com.example.sample.activity")
+    adb.start_app(
+        "com.example.sample.package", "com.example.sample.activity", passthrough
+    )
 
     # Validate call parameters.
     adb.run.assert_called_once_with(
         "shell",
         "am",
         "start",
+        "-n",
         "com.example.sample.package/com.example.sample.activity",
         "-a",
         "android.intent.action.MAIN",
         "-c",
         "android.intent.category.LAUNCHER",
+        "--es",
+        "org.beeware.ARGV",
+        shlex.quote(json.dumps(passthrough)),
     )
 
     # Validate that the normal output of the command was not printed (since there
@@ -49,7 +72,7 @@ MainActivity} does not exist.
     )
 
     with pytest.raises(BriefcaseCommandError) as exc_info:
-        adb.start_app("com.example.sample.package", "com.example.sample.activity")
+        adb.start_app("com.example.sample.package", "com.example.sample.activity", [])
 
     assert "Activity class not found" in str(exc_info.value)
 
@@ -62,7 +85,7 @@ def test_invalid_device(mock_tools):
     adb.run = MagicMock(side_effect=InvalidDeviceError("device", "exampleDevice"))
 
     with pytest.raises(InvalidDeviceError):
-        adb.start_app("com.example.sample.package", "com.example.sample.activity")
+        adb.start_app("com.example.sample.package", "com.example.sample.activity", [])
 
 
 def test_unable_to_start(mock_tools):
@@ -74,4 +97,4 @@ def test_unable_to_start(mock_tools):
         BriefcaseCommandError,
         match=r"Unable to start com.example.sample.package/com.example.sample.activity on exampleDevice",
     ):
-        adb.start_app("com.example.sample.package", "com.example.sample.activity")
+        adb.start_app("com.example.sample.package", "com.example.sample.activity", [])

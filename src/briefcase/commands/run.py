@@ -1,6 +1,6 @@
 import re
 from abc import abstractmethod
-from typing import Optional
+from typing import List, Optional
 
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError, BriefcaseTestSuiteFailure
@@ -114,6 +114,8 @@ class LogFilter:
 
 class RunAppMixin:
     """A mixin that captures the logic of starting an app and streaming the app logs."""
+
+    allows_passthrough = True
 
     def _stream_app_logs(
         self,
@@ -246,6 +248,7 @@ class RunCommand(RunAppMixin, BaseCommand):
         update_resources: bool = False,
         no_update: bool = False,
         test_mode: bool = False,
+        passthrough: Optional[List[str]] = None,
         **options,
     ):
         # Which app should we run? If there's only one defined
@@ -295,6 +298,11 @@ class RunCommand(RunAppMixin, BaseCommand):
 
         self.verify_app_tools(app)
 
-        state = self.run_app(app, test_mode=test_mode, **full_options(state, options))
+        state = self.run_app(
+            app,
+            test_mode=test_mode,
+            passthrough=[] if passthrough is None else passthrough,
+            **full_options(state, options),
+        )
 
         return state

@@ -2,7 +2,7 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
 
 from briefcase.commands.run import RunAppMixin
 from briefcase.config import BaseConfig
@@ -97,6 +97,7 @@ class DevCommand(RunAppMixin, BaseCommand):
         app: BaseConfig,
         env: dict,
         test_mode: bool,
+        passthrough: List[str],
         **options,
     ):
         """Run the app in the dev environment.
@@ -104,6 +105,7 @@ class DevCommand(RunAppMixin, BaseCommand):
         :param app: The config object for the app
         :param env: environment dictionary for sub command
         :param test_mode: Run the test suite, rather than the app?
+        :param passthrough: A list of arguments to pass to the app
         """
         main_module = app.main_module(test_mode)
         app_popen = self.tools.subprocess.Popen(
@@ -118,6 +120,7 @@ class DevCommand(RunAppMixin, BaseCommand):
                 (
                     "import runpy, sys;"
                     "sys.path.pop(0);"
+                    f"sys.argv.extend({passthrough!r});"
                     f'runpy.run_module("{main_module}", run_name="__main__", alter_sys=True)'
                 ),
             ],
@@ -159,6 +162,7 @@ class DevCommand(RunAppMixin, BaseCommand):
         update_requirements: Optional[bool] = False,
         run_app: Optional[bool] = True,
         test_mode: Optional[bool] = False,
+        passthrough: Optional[List[str]] = None,
         **options,
     ):
         # Which app should we run? If there's only one defined
@@ -207,4 +211,10 @@ class DevCommand(RunAppMixin, BaseCommand):
             else:
                 self.logger.info("Starting in dev mode...", prefix=app.app_name)
             env = self.get_environment(app, test_mode=test_mode)
-            return self.run_dev_app(app, env, test_mode=test_mode, **options)
+            return self.run_dev_app(
+                app,
+                env,
+                test_mode=test_mode,
+                passthrough=[] if passthrough is None else passthrough,
+                **options,
+            )

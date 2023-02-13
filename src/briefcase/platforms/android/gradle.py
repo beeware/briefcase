@@ -3,6 +3,7 @@ import re
 import subprocess
 import time
 from pathlib import Path
+from typing import List
 
 from briefcase.commands import (
     BuildCommand,
@@ -179,7 +180,9 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
             # Extract test packages, to enable features like test discovery and assertion
             # rewriting.
             "extract_packages": ", ".join(
-                f'"{Path(path).name}"' for path in (app.test_sources or [])
+                f'"{name}"'
+                for path in (app.test_sources or [])
+                if (name := Path(path).name)
             ),
         }
 
@@ -268,6 +271,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
         self,
         app: BaseConfig,
         test_mode: bool,
+        passthrough: List[str],
         device_or_avd=None,
         extra_emulator_args=None,
         shutdown_on_exit=False,
@@ -277,6 +281,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
 
         :param app: The config object for the app
         :param test_mode: Boolean; Is the app running in test mode?
+        :param passthrough: The list of arguments to pass to the app
         :param device_or_avd: The device to target. If ``None``, the user will
             be asked to re-run the command selecting a specific device.
         :param extra_emulator_args: Any additional arguments to pass to the emulator.
@@ -339,7 +344,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
             with self.input.wait_bar(f"Launching {label}..."):
                 # Any log after this point must be associated with the new instance
                 start_time = datetime.datetime.now()
-                adb.start_app(package, "org.beeware.android.MainActivity")
+                adb.start_app(package, "org.beeware.android.MainActivity", passthrough)
                 pid = None
                 attempts = 0
                 delay = 0.01

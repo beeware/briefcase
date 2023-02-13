@@ -46,7 +46,7 @@ def test_run_app(run_command, first_app_config, tmp_path, monkeypatch):
         "briefcase.platforms.macOS.get_process_id_by_command", lambda *a, **kw: 100
     )
 
-    run_command.run_app(first_app_config, test_mode=False)
+    run_command.run_app(first_app_config, test_mode=False, passthrough=[])
 
     # Calls were made to start the app and to start a log stream.
     bin_path = run_command.binary_path(first_app_config)
@@ -87,6 +87,63 @@ def test_run_app(run_command, first_app_config, tmp_path, monkeypatch):
     run_command.tools.os.kill.assert_called_with(100, SIGTERM)
 
 
+def test_run_app_with_passthrough(run_command, first_app_config, tmp_path, monkeypatch):
+    """A macOS app can be started with args."""
+    # Mock a popen object that represents the log stream
+    log_stream_process = mock.MagicMock(spec_set=subprocess.Popen)
+    run_command.tools.subprocess.Popen.return_value = log_stream_process
+
+    # Monkeypatch the tools get the process ID
+    monkeypatch.setattr(
+        "briefcase.platforms.macOS.get_process_id_by_command", lambda *a, **kw: 100
+    )
+
+    # Run the app with args
+    run_command.run_app(
+        first_app_config,
+        test_mode=False,
+        passthrough=["foo", "--bar"],
+    )
+
+    # Calls were made to start the app and to start a log stream.
+    bin_path = run_command.binary_path(first_app_config)
+    sender = bin_path / "Contents" / "MacOS" / "First App"
+    run_command.tools.subprocess.Popen.assert_called_with(
+        [
+            "log",
+            "stream",
+            "--style",
+            "compact",
+            "--predicate",
+            f'senderImagePath=="{sender}"'
+            f' OR (processImagePath=="{sender}"'
+            ' AND senderImagePath=="/usr/lib/libffi.dylib")',
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        bufsize=1,
+    )
+    run_command.tools.subprocess.run.assert_called_with(
+        ["open", "-n", os.fsdecode(bin_path), "--args", "foo", "--bar"],
+        cwd=tmp_path / "home",
+        check=True,
+    )
+
+    # The log stream was started
+    run_command._stream_app_logs.assert_called_with(
+        first_app_config,
+        popen=log_stream_process,
+        test_mode=False,
+        clean_filter=macOS_log_clean_filter,
+        clean_output=True,
+        stop_func=mock.ANY,
+        log_stream=True,
+    )
+
+    # The app process was killed on exit.
+    run_command.tools.os.kill.assert_called_with(100, SIGTERM)
+
+
 def test_run_app_failed(run_command, first_app_config, tmp_path):
     """If there's a problem started the app, an exception is raised."""
     # Mock a failure opening the app
@@ -96,7 +153,7 @@ def test_run_app_failed(run_command, first_app_config, tmp_path):
     )
 
     with pytest.raises(BriefcaseCommandError):
-        run_command.run_app(first_app_config, test_mode=False)
+        run_command.run_app(first_app_config, test_mode=False, passthrough=[])
 
     # Calls were made to start the app and to start a log stream.
     bin_path = run_command.binary_path(first_app_config)
@@ -138,7 +195,7 @@ def test_run_app_find_pid_failed(
     )
 
     with pytest.raises(BriefcaseCommandError) as exc_info:
-        run_command.run_app(first_app_config, test_mode=False)
+        run_command.run_app(first_app_config, test_mode=False, passthrough=[])
 
     # Calls were made to start the app and to start a log stream.
     bin_path = run_command.binary_path(first_app_config)
@@ -183,7 +240,7 @@ def test_run_app_test_mode(run_command, first_app_config, tmp_path, monkeypatch)
         "briefcase.platforms.macOS.get_process_id_by_command", lambda *a, **kw: 100
     )
 
-    run_command.run_app(first_app_config, test_mode=True)
+    run_command.run_app(first_app_config, test_mode=True, passthrough=[])
 
     # Calls were made to start the app and to start a log stream.
     bin_path = run_command.binary_path(first_app_config)

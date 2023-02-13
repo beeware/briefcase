@@ -56,6 +56,7 @@ class DummyRunCommand(RunCommand):
         kwargs.pop("update_resources", None)
         kwargs.pop("no_update", None)
         kwargs.pop("test_mode", None)
+        kwargs.pop("passthrough", None)
         return full_options({"run_state": app.app_name}, kwargs)
 
     # These commands override the default behavior, simply tracking that

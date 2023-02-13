@@ -74,7 +74,7 @@ def test_no_args_one_app(dev_command, first_app):
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Run the first app devly
-        ("run_dev", "first", {"test_mode": False}, dev_command.env),
+        ("run_dev", "first", {"test_mode": False, "passthrough": []}, dev_command.env),
     ]
 
 
@@ -119,7 +119,7 @@ def test_with_arg_one_app(dev_command, first_app):
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Run the first app devly
-        ("run_dev", "first", {"test_mode": False}, dev_command.env),
+        ("run_dev", "first", {"test_mode": False, "passthrough": []}, dev_command.env),
     ]
 
 
@@ -146,7 +146,7 @@ def test_with_arg_two_apps(dev_command, first_app, second_app):
         # App tools are verified for app
         ("verify-app-tools", "second"),
         # Run the second app devly
-        ("run_dev", "second", {"test_mode": False}, dev_command.env),
+        ("run_dev", "second", {"test_mode": False, "passthrough": []}, dev_command.env),
     ]
 
 
@@ -194,7 +194,7 @@ def test_update_requirements(dev_command, first_app):
         # An update was requested
         ("dev_requirements", "first", {}),
         # Then, it will be started
-        ("run_dev", "first", {"test_mode": False}, dev_command.env),
+        ("run_dev", "first", {"test_mode": False, "passthrough": []}, dev_command.env),
     ]
 
 
@@ -222,7 +222,7 @@ def test_run_uninstalled(dev_command, first_app_uninstalled):
         # The app will be installed
         ("dev_requirements", "first", {}),
         # Then, it will be started
-        ("run_dev", "first", {"test_mode": False}, dev_command.env),
+        ("run_dev", "first", {"test_mode": False, "passthrough": []}, dev_command.env),
     ]
 
 
@@ -251,7 +251,7 @@ def test_update_uninstalled(dev_command, first_app_uninstalled):
         # An update was requested
         ("dev_requirements", "first", {}),
         # Then, it will be started
-        ("run_dev", "first", {"test_mode": False}, dev_command.env),
+        ("run_dev", "first", {"test_mode": False, "passthrough": []}, dev_command.env),
     ]
 
 
@@ -303,7 +303,7 @@ def test_run_test(dev_command, first_app):
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Then, it will be started
-        ("run_dev", "first", {"test_mode": True}, dev_command.env),
+        ("run_dev", "first", {"test_mode": True, "passthrough": []}, dev_command.env),
     ]
 
 
@@ -331,5 +331,5 @@ def test_run_test_uninstalled(dev_command, first_app_uninstalled):
         # Development requirements will be installed
         ("dev_requirements", "first", {}),
         # Then, it will be started
-        ("run_dev", "first", {"test_mode": True}, dev_command.env),
+        ("run_dev", "first", {"test_mode": True, "passthrough": []}, dev_command.env),
     ]

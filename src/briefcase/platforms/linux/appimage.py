@@ -356,18 +356,25 @@ class LinuxAppImageRunCommand(LinuxAppImagePassiveMixin, RunCommand):
     supported_host_os = {"Linux"}
     supported_host_os_reason = "Linux AppImages can only be executed on Linux."
 
-    def run_app(self, app: AppConfig, test_mode: bool, **kwargs):
+    def run_app(
+        self,
+        app: AppConfig,
+        test_mode: bool,
+        passthrough: List[str],
+        **kwargs,
+    ):
         """Start the application.
 
         :param app: The config object for the app
         :param test_mode: Boolean; Is the app running in test mode?
+        :param passthrough: The list of arguments to pass to the app
         """
         # Set up the log stream
         kwargs = self._prepare_app_env(app=app, test_mode=test_mode)
 
         # Start the app in a way that lets us stream the logs
         app_popen = self.tools.subprocess.Popen(
-            [os.fsdecode(self.binary_path(app))],
+            [os.fsdecode(self.binary_path(app))] + passthrough,
             cwd=self.tools.home_path,
             **kwargs,
             stdout=subprocess.PIPE,

@@ -102,3 +102,16 @@ contains the most recent test code. To prevent this update and build, use the
 
 Prevent the automated update and build of app code that is performed when
 specifying by the ``--test`` option.
+
+Passthrough arguments
+---------------------
+
+If you want to pass any arguments to your app's command line, you can specify them
+using the ``--`` marker to separate Briefcase's arguments from your app's arguments.
+For example::
+
+    briefcase run -- --wiggle --test
+
+will run the app in normal mode, passing the ``--wiggle`` and ``--test`` flags to
+the app's command line. The app will *not* run in *Briefcase's* test mode; the
+``--test`` flag will be left for your own app to interpret.

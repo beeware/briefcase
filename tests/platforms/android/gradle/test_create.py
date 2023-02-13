@@ -78,19 +78,36 @@ def test_version_code(create_command, first_app_config, version, build, version_
 
 extract_packages_params = [
     ([], ""),
+    ([""], ""),
     (["one"], '"one"'),
     (["one/two"], '"two"'),
+    (["one//two"], '"two"'),
     (["one/two/three"], '"three"'),
     (["one", "two"], '"one", "two"'),
     (["one", "two", "three"], '"one", "two", "three"'),
     (["one/two", "three/four"], '"two", "four"'),
     (["/leading"], '"leading"'),
-    (["//leading"], '"leading"'),
     (["/leading/two"], '"two"'),
+    (["/leading/two/three"], '"three"'),
     (["trailing/"], '"trailing"'),
     (["trailing//"], '"trailing"'),
     (["trailing/two/"], '"two"'),
 ]
+
+# Handle differences in UNC path parsing (https://github.com/python/cpython/pull/100351).
+extract_packages_params += [
+    (
+        ["//leading"],
+        "" if sys.platform == "win32" and sys.version_info >= (3, 12) else '"leading"',
+    ),
+    (
+        ["//leading/two"],
+        "" if sys.platform == "win32" else '"two"',
+    ),
+    (["//leading/two/three"], '"three"'),
+    (["//leading/two/three/four"], '"four"'),
+]
+
 if sys.platform == "win32":
     extract_packages_params += [
         ([path.replace("/", "\\") for path in test_sources], expected)
