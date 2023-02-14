@@ -1,0 +1,1 @@
+The command to store notarization credentials no longer causes Briefcase to hang.
