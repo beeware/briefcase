@@ -243,7 +243,10 @@ class macOSSigningMixin:
                     ) from e
 
         if len(identities) == 0:
-            raise BriefcaseCommandError("No code signing identities are available.")
+            raise BriefcaseCommandError(
+                "No code signing identities are available: see "
+                "https://briefcase.readthedocs.io/en/stable/how-to/code-signing/macOS.html"
+            )
         elif len(identities) == 1:
             identity, identity_name = list(identities.items())[0]
         else:
@@ -497,6 +500,7 @@ password:
                                 profile,
                             ],
                             check=True,
+                            stream_output=False,  # Command reads from stdin.
                         )
                     except subprocess.CalledProcessError as e:
                         raise BriefcaseCommandError(
