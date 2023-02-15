@@ -2,12 +2,11 @@ import os
 import re
 import subprocess
 import uuid
-from typing import List
 from pathlib import Path
+from typing import List
 
 from briefcase.commands import CreateCommand, PackageCommand, RunCommand
 from briefcase.config import AppConfig, parsed_version
-from briefcase.console import InputDisabled, select_option
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.windows_sdk import WindowsSDK
 from briefcase.integrations.wix import WiX
@@ -83,7 +82,7 @@ class WindowsCreateCommand(CreateCommand):
 class WindowsRunCommand(RunCommand):
     def run_app(
         self,
-        app: BaseConfig,
+        app: AppConfig,
         test_mode: bool,
         passthrough: List[str],
         **kwargs,
@@ -117,6 +116,10 @@ class WindowsRunCommand(RunCommand):
 
 
 class WindowsPackageCommand(PackageCommand):
+    def __init__(self, *a, **kw):
+        super().__init__(*a, **kw)
+        self._windows_sdk_needed = False
+
     @property
     def packaging_formats(self):
         return ["msi"]
@@ -128,82 +131,92 @@ class WindowsPackageCommand(PackageCommand):
     def verify_tools(self):
         super().verify_tools()
         WiX.verify(self.tools)
-        WindowsSDK.verify(self.tools)
+        if self._windows_sdk_needed:
+            WindowsSDK.verify(self.tools)
 
-    def get_signing_options(self, identity):
-        """Gather configuration for App codesigning.
-
-        :param identity: SHA-1 certificate thumbprint
-        :return: dictionary of codesigning options
-        """
-        options = {}
-
-        if not re.match(r"^[0-9a-f]{40}$", identity, flags=re.IGNORECASE):
-            raise BriefcaseCommandError(
-                f"Codesigning identify {identity!r} should be a certificate SHA-1 thumbprint."
-            )
-        options["cert_thumbprint"] = identity
-
-        options["file_digest"] = self.tools.input.text_input(
-            "Hashing algorithm for the signatures [sha256]: ",
+    def add_options(self, parser):
+        super().add_options(parser)
+        parser.add_argument(
+            "--file-digest",
+            help="File digest algorithm to use for creating file signatures; defaults to sha256.",
             default="sha256",
+            required=False,
         )
-
-        self.input.prompt(
-            "Is the certificate located in the Current User or Local Machine certificate store?"
+        parser.add_argument(
+            "--cert-store-location",
+            help="Location of stores containing the certificate; defaults to Current User.",
+            choices=["Current User", "Local Machine"],
+            default="Current User",
+            required=False,
         )
-        try:
-            options["cert_store_location"] = select_option(
-                options={store: store for store in ["Current User", "Local Machine"]},
-                input=self.input,
-            )
-        except InputDisabled:
-            options["cert_store_location"] = "Current User"
-
-        options["cert_store"] = self.tools.input.text_input(
-            "Name of the certificate store containing the certificate [My]: ",
+        parser.add_argument(
+            "--cert-store",
+            help="Store containing the certificate; defaults to the Personal store.",
             default="My",
+            required=False,
+        )
+        parser.add_argument(
+            "--timestamp-url",
+            help=(
+                "URL for the Timestamp Authority server to timestamp "
+                "the codesigning; defaults to timestamp.digicert.com."
+            ),
+            default="http://timestamp.digicert.com",
+            required=False,
+        )
+        parser.add_argument(
+            "--timestamp-digest",
+            help="Digest algorithm to request for the timestamp server signature; defaults to sha256.",
+            default="sha256",
+            required=False,
         )
 
-        options["timestamp_url"] = self.tools.input.text_input(
-            "Timestamp authority server for the signatures [http://timestamp.digicert.com]: ",
-            default="http://timestamp.digicert.com",
-        )
-        options["timestamp_digest"] = self.tools.input.text_input(
-            "Hashing algorithm to request for the timestamp server signature [sha256]: ",
-            default="sha256",
-        )
+    def parse_options(self, extra):
+        """Verify signing identity is valid and Windows SDK tool is required."""
+        options = super().parse_options(extra=extra)
+
+        if identity := options.get("identity"):
+            self._windows_sdk_needed = True
+            if not re.fullmatch(r"^[0-9a-f]{40}$", identity, flags=re.IGNORECASE):
+                raise BriefcaseCommandError(
+                    f"Codesigning identify {identity!r} must be a certificate SHA-1 thumbprint."
+                )
 
         return options
 
-    def sign_file(self, app: AppConfig, filepath: Path, options: dict):
-        """Sign a file.
-
-        :param app: Application being signed
-        :param filepath: Filepath for file to sign
-        :param options: Options for signtool signing
-        """
+    def sign_file(
+        self,
+        app: AppConfig,
+        filepath: Path,
+        identity: str,
+        file_digest: str,
+        cert_store_location: str,
+        cert_store: str,
+        timestamp_url: str,
+        timestamp_digest: str,
+    ):
+        """Sign a file."""
         sign_command = [
             self.tools.windows_sdk.signtool_exe,
             "sign",
-            "/s",
-            options["cert_store"],
-            "/sha1",
-            options["cert_thumbprint"],
-            "/fd",
-            options["file_digest"],
-            "/d",
+            "-s",
+            cert_store,
+            "-sha1",
+            identity,
+            "-fd",
+            file_digest,
+            "-d",
             app.description,
-            "/du",
+            "-du",
             app.url,
-            "/tr",
-            options["timestamp_url"],
-            "/td",
-            options["timestamp_digest"],
+            "-tr",
+            timestamp_url,
+            "-td",
+            timestamp_digest,
         ]
 
-        if options["cert_store_location"] == "Local Machine":
-            sign_command.append("/sm")
+        if cert_store_location == "Local Machine":
+            sign_command.append("-sm")
 
         # Filepath to sign must come last
         sign_command.append(os.fsdecode(filepath))
@@ -213,27 +226,49 @@ class WindowsPackageCommand(PackageCommand):
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(f"Unable to sign {filepath}") from e
 
-    def package_app(self, app: AppConfig, sign_app=True, identity=None, **kwargs):
+    def package_app(
+        self,
+        app: AppConfig,
+        sign_app: bool = True,
+        identity: str = None,
+        file_digest: str = None,
+        cert_store_location: str = None,
+        cert_store: str = None,
+        timestamp_url: str = None,
+        timestamp_digest: str = None,
+        **kwargs,
+    ):
         """Package an application.
+
+        Code signing parameters are ignored if ``sign_app=False``. If a code signing
+        identity is not provided, then ``sign_app=False`` will be enforced.
 
         :param app: The application to package
         :param sign_app: Should the application be signed? Default: ``True``
-        :param identity: The code signing identity to use. This can be either
-            the SHA-1 thumbprint for the cert, or filepath to the cert.
-            Ignored if ``sign_app`` is ``False``.
+        :param identity: SHA-1 thumbprint of the certificate to use for code signing.
+        :param file_digest: File hashing algorithm for code signing.
+        :param cert_store_location: Current User or Local Machine for whether the cert
+            is stored for the user or the machine.
+        :param cert_store: Certificate store within Current User or Local Machine to
+            search for the certificate within.
+        :param timestamp_url: Timestamp authority server to use in code signing.
+        :param timestamp_digest: Hashing algorithm to request from the timestamp server.
         """
 
         if sign_app and not identity:
             sign_app = False
 
         if sign_app:
-            self.logger.info("Signing App Binary", prefix=app.app_name)
-            sign_options = self.get_signing_options(identity=identity)
-            self.sign_file(
-                app=app,
-                filepath=self.binary_path(app),
-                options=sign_options,
+            self.logger.info("Signing App...", prefix=app.app_name)
+            sign_options = dict(
+                identity=identity,
+                file_digest=file_digest,
+                cert_store_location=cert_store_location,
+                cert_store=cert_store,
+                timestamp_url=timestamp_url,
+                timestamp_digest=timestamp_digest,
             )
+            self.sign_file(app=app, filepath=self.binary_path(app), **sign_options)
 
         self.logger.info("Building MSI...", prefix=app.app_name)
         try:
@@ -315,9 +350,9 @@ class WindowsPackageCommand(PackageCommand):
             raise BriefcaseCommandError(f"Unable to link app {app.app_name}.") from e
 
         if sign_app:
-            self.logger.info("Signing MSI", prefix=app.app_name)
+            self.logger.info("Signing MSI...", prefix=app.app_name)
             self.sign_file(
                 app=app,
                 filepath=self.distribution_path(app, packaging_format="msi"),
-                options=sign_options,
+                **sign_options,
             )

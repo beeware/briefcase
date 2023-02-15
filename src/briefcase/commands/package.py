@@ -64,7 +64,9 @@ class PackageCommand(BaseCommand):
         self.verify_app_tools(app)
 
         state = self.package_app(
-            app, packaging_format=packaging_format, **full_options(state, options)
+            app,
+            packaging_format=packaging_format,
+            **full_options(state, options),
         )
 
         filename = self.distribution_path(
@@ -75,7 +77,10 @@ class PackageCommand(BaseCommand):
 
     def add_options(self, parser):
         parser.add_argument(
-            "-u", "--update", action="store_true", help="Update the app before building"
+            "-u",
+            "--update",
+            action="store_true",
+            help="Update the app before building.",
         )
         parser.add_argument(
             "-p",
