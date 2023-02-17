@@ -104,7 +104,7 @@ def test_new_command(logger, console):
     assert cmd.logger.verbosity == 1
     assert cmd.logger is logger
     assert cmd.input is console
-    assert options == {"template": None}
+    assert options == {"template": None, "template_branch": None}
 
 
 # Common tests for dev and run commands.
