@@ -1,0 +1,1 @@
+Added `--template-branch` option to the `new` command for selecting a branch.
