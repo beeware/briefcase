@@ -70,18 +70,6 @@ Additional options
 The following options can be provided at the command line when producing
 Deb packages.
 
-``--no-docker``
-~~~~~~~~~~~~~~~
-
-Use native execution, rather than using Docker to start a container.
-To use this option, you must:
-
-1. Be on a Debian-based platform; and
-2. Have the ``dpkg-dev`` tools installed.
-
-Using this option, you can only build a ``.deb`` package for your host system.
-Specifying ``--no-docker`` is mutually exclusive with ``--target``.
-
 ``--target``
 ~~~~~~~~~~~~
 
@@ -100,8 +88,6 @@ met:
 2. The distribution is still supported by the vendor. If the distribution is
    EOL, ``apt update`` will fail due to expired certificates;
 3. The system Python is Python 3.8 or later.
-
-Specifying ``--target`` is mutually exclusive with ``--no-docker``.
 
 Application configuration
 =========================
@@ -133,18 +119,22 @@ at runtime. This can be one of the following values:
   the version that is used at runtime. Briefcase will check for this discrepancy,
   and warn you if it exists, but it will *not* prevent an app from building.
 
-* ``"deadsnakes"`` - Use a Deadsnakes version of Python. This produces a
-  packaged app that that will always match the version of Python that was used
-  to run Briefcase; however, it places an additional burden on users installing
-  the app, as they must manually ensure that they have the deadsnakes PPA in
-  their system's configuration. This can be done by running::
+* ``"deadsnakes"`` - Use a `Deadsnakes <https://github.com/deadsnakes>`__
+  version of Python. Deadsnakes is a project that packages all currently
+  supported Python versions for all currently supported Ubuntu versions, and
+  distributes those packages as a personal package archive (PPA). This allows
+  you to produce a packaged app that that will always match the version of
+  Python that was used to run Briefcase. However, it will only work on Ubuntu;
+  and it places an additional burden on users installing the app, as they must
+  manually ensure that they have the Deadsnakes PPA in their system's
+  configuration. This can be done by running::
 
     sudo apt-get update
     sudo apt-get install --no-install-recommends software-properties-common
     sudo apt-add-repository ppa:deadsnakes/ppa
 
   If this option is selected, and you are building inside Docker, Briefcase will
-  ensure that the Docker environment has the deadsnakes PPA available.
+  ensure that the Docker environment has the Deadsnakes PPA available.
 
 By default, Briefcase uses ``system``.
 

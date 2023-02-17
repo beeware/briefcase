@@ -86,13 +86,6 @@ class LinuxDebPassiveMixin(LinuxMixin):
     def add_options(self, parser):
         super().add_options(parser)
         parser.add_argument(
-            "--no-docker",
-            dest="use_docker",
-            action="store_false",
-            help="Don't use Docker to build the package",
-            required=False,
-        )
-        parser.add_argument(
             "--target",
             dest="target",
             help="Debian-based distribution to target for the build (e.g., `ubuntu:jammy`)",
@@ -102,8 +95,9 @@ class LinuxDebPassiveMixin(LinuxMixin):
     def parse_options(self, extra):
         """Extract the use_docker and target_image options."""
         options = super().parse_options(extra)
-        self.use_docker = options.pop("use_docker")
         self.target_image = options.pop("target")
+        # If a target image is specified, we *must* be using docker.
+        self.use_docker = self.target_image is not None
 
         return options
 
@@ -121,7 +115,6 @@ class LinuxDebPassiveMixin(LinuxMixin):
         """
         if self.use_docker:
             try:
-                # Ubuntu Focal
                 output = self.tools.docker.check_output(
                     app.target_image, ["ldd", "--version"]
                 )
@@ -166,12 +159,7 @@ class LinuxDebPassiveMixin(LinuxMixin):
         :param app: The app configuration to finalize.
         """
         self.logger.info("Finalizing application configuration...", prefix=app.app_name)
-        if self.use_docker:
-            if self.target_image is None:
-                raise BriefcaseCommandError(
-                    "Docker builds must specify a target distribtion (e.g., `--target ubuntu:jammy`)"
-                )
-
+        if self.target_image:
             # Preserve the target image on the command line as the app's target
             app.target_image = self.target_image
 
@@ -184,11 +172,6 @@ class LinuxDebPassiveMixin(LinuxMixin):
             app.target_vendor, app.target_codename = app.target_image.split(":")
 
         else:
-            if self.target_image:
-                raise BriefcaseCommandError(
-                    "Non-Docker builds cannot target a specific distribution."
-                )
-
             app.target_vendor = (
                 self.tools.subprocess.check_output(["lsb_release", "-i", "-s"])
                 .strip()
@@ -219,7 +202,12 @@ class LinuxDebPassiveMixin(LinuxMixin):
         # appropriate. System Python uses a generic "3"; others use the specific
         # Python version that has been used to invoke Briefcase.
         try:
-            if app.python_source not in {SYSTEM, DEADSNAKES}:
+            if app.python_source == DEADSNAKES:
+                if app.target_vendor != "ubuntu":
+                    raise BriefcaseCommandError(
+                        "Deadsnakes can only be used to build Ubuntu packages."
+                    )
+            elif app.python_source != SYSTEM:
                 raise BriefcaseCommandError(
                     f"Unknown python source {app.python_source!r}; "
                     f"should be one of {SYSTEM!r}, {DEADSNAKES!r}"
@@ -652,7 +640,9 @@ class LinuxDebBuildCommand(LinuxDebMixin, BuildCommand):
         self.logger.info("Strip binary artefacts...")
         with self.input.wait_bar("Stripping binary artefacts..."):
             for path in itertools.chain(
-                self.package_path(app).glob("**/*.so"), [self.binary_path(app)]
+                self.package_path(app).glob("**/*.so"),
+                self.package_path(app).glob("**/*.so.1.0"),
+                [self.binary_path(app)],
             ):
                 self.logger.info(
                     f"Stripping {path.relative_to(self.package_path(app))}"
