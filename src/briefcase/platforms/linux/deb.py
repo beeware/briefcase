@@ -3,25 +3,26 @@ import itertools
 import os
 import re
 import subprocess
-import sys
 from pathlib import Path
 from typing import List
 
 from briefcase.commands import (
     BuildCommand,
     CreateCommand,
-    OpenCommand,
     PackageCommand,
     PublishCommand,
     RunCommand,
     UpdateCommand,
 )
-from briefcase.commands.create import _is_local_requirement
 from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
 from briefcase.integrations.docker import Docker, DockerAppContext
 from briefcase.integrations.subprocess import NativeAppContext
-from briefcase.platforms.linux import LinuxMixin
+from briefcase.platforms.linux import (
+    DockerOpenCommand,
+    LinuxMixin,
+    LocalRequirementsMixin,
+)
 
 # Some constants defining known Python sources
 SYSTEM = "system"
@@ -39,6 +40,13 @@ class LinuxDebPassiveMixin(LinuxMixin):
     )
 
     @property
+    def use_docker(self):
+        # Deb doesn't have a literal "--use-docker" option, but `use_docker` is a
+        # useful flag for shared logic purposes, so evaluate what "use docker"
+        # means in terms of target_image.
+        return bool(self.target_image)
+
+    @property
     def deb_arch(self):
         # Linux/Debian uses different architecture identifiers for some platforms
         return {
@@ -46,10 +54,10 @@ class LinuxDebPassiveMixin(LinuxMixin):
         }.get(self.tools.host_arch, self.tools.host_arch)
 
     def python_source_tag(self, app):
-        if app.python_source == SYSTEM:
-            return "system"
-        elif app.python_source == DEADSNAKES:
+        if app.python_source == DEADSNAKES:
             return f"deadsnakes-py{app.python_version_tag}"
+        else:
+            return "system"
 
     def bundle_path(self, app):
         # The bundle path is different as there won't be a single "deb" build;
@@ -71,9 +79,6 @@ class LinuxDebPassiveMixin(LinuxMixin):
     def package_name(self, app):
         return f"{app.app_name}_{app.version}-{getattr(app, 'revision', 1)}_{self.deb_arch}"
 
-    def local_requirements_path(self, app):
-        return self.bundle_path(app) / "_requirements"
-
     def binary_path(self, app):
         return self.package_path(app) / "usr" / "bin" / app.app_name
 
@@ -93,18 +98,15 @@ class LinuxDebPassiveMixin(LinuxMixin):
         )
 
     def parse_options(self, extra):
-        """Extract the use_docker and target_image options."""
+        """Extract the target_image option."""
         options = super().parse_options(extra)
         self.target_image = options.pop("target")
-        # If a target image is specified, we *must* be using docker.
-        self.use_docker = self.target_image is not None
 
         return options
 
     def clone_options(self, command):
-        """Clone the use_docker and target_image options."""
+        """Clone the target_image option."""
         super().clone_options(command)
-        self.use_docker = command.use_docker
         self.target_image = command.target_image
 
     def target_glibc_version(self, app):
@@ -159,7 +161,7 @@ class LinuxDebPassiveMixin(LinuxMixin):
         :param app: The app configuration to finalize.
         """
         self.logger.info("Finalizing application configuration...", prefix=app.app_name)
-        if self.target_image:
+        if self.use_docker:
             # Preserve the target image on the command line as the app's target
             app.target_image = self.target_image
 
@@ -210,7 +212,7 @@ class LinuxDebPassiveMixin(LinuxMixin):
             elif app.python_source != SYSTEM:
                 raise BriefcaseCommandError(
                     f"Unknown python source {app.python_source!r}; "
-                    f"should be one of {SYSTEM!r}, {DEADSNAKES!r}"
+                    f"should be one of {SYSTEM!r}, {DEADSNAKES!r}."
                 )
         except AttributeError:
             # python_source not defined; fall back to system.
@@ -268,7 +270,7 @@ class LinuxDebMostlyPassiveMixin(LinuxDebPassiveMixin):
             ]
         )
         target_python_tag = output.split("\n")[0]
-        target_python_version = tuple(int(v) for v in target_python_tag.split("."))
+        target_python_version = tuple(int(v) for v in target_python_tag.split("."))[:2]
 
         if target_python_version < (3, 8):
             raise BriefcaseCommandError(
@@ -354,7 +356,7 @@ class LinuxDebMixin(LinuxDebMostlyPassiveMixin):
                 )
 
 
-class LinuxDebCreateCommand(LinuxDebMixin, CreateCommand):
+class LinuxDebCreateCommand(LinuxDebMixin, LocalRequirementsMixin, CreateCommand):
     description = "Create and populate a .deb project."
 
     def output_format_template_context(self, app: AppConfig):
@@ -383,99 +385,11 @@ class LinuxDebCreateCommand(LinuxDebMixin, CreateCommand):
         # The long description *must* exist.
         if app.long_description is None:
             raise BriefcaseCommandError(
-                "pyproject.toml does not define `long_description`. "
+                "App configuration does not define `long_description`. "
                 "Debian packaging guidelines require a long description."
             )
 
         return context
-
-    def _install_app_requirements(
-        self,
-        app: AppConfig,
-        requires: List[str],
-        app_packages_path: Path,
-    ):
-        """Install requirements for the app with pip.
-
-        This method pre-compiles any requirement defined using a local path
-        reference into an sdist tarball. This will be used when installing under
-        Docker, as local file references can't be accessed in the Docker
-        container.
-
-        :param app: The app configuration
-        :param requires: The list of requirements to install
-        :param app_packages_path: The full path of the app_packages folder into
-            which requirements should be installed.
-        """
-        # If we're re-building requirements, purge any pre-existing local
-        # requirements.
-        local_requirements_path = self.local_requirements_path(app)
-        if local_requirements_path.exists():
-            self.tools.shutil.rmtree(local_requirements_path)
-        self.tools.os.mkdir(local_requirements_path)
-
-        # Iterate over every requirements, looking for local references
-        for requirement in requires:
-            if _is_local_requirement(requirement):
-                if Path(requirement).is_dir():
-                    # Requirement is a filesystem reference
-                    # Build an sdist for the local requirement
-                    with self.input.wait_bar(f"Building sdist for {requirement}..."):
-                        try:
-                            self.tools.subprocess.check_output(
-                                [
-                                    sys.executable,
-                                    "-m",
-                                    "build",
-                                    "--sdist",
-                                    "--outdir",
-                                    local_requirements_path,
-                                    requirement,
-                                ],
-                            )
-                        except subprocess.CalledProcessError as e:
-                            raise BriefcaseCommandError(
-                                f"Unable to build sdist for {requirement}"
-                            ) from e
-                else:
-                    try:
-                        # Requirement is an existing sdist or wheel file.
-                        self.tools.shutil.copy(requirement, local_requirements_path)
-                    except FileNotFoundError as e:
-                        raise BriefcaseCommandError(
-                            f"Unable to find local requirement {requirement}"
-                        ) from e
-
-        # Continue with the default app requirement handling.
-        return super()._install_app_requirements(
-            app,
-            requires=requires,
-            app_packages_path=app_packages_path,
-        )
-
-    def _pip_requires(self, app: AppConfig, requires: List[str]):
-        """Convert the requirements list to an .deb project compatible format.
-
-        Any local file requirements are converted into a reference to the file
-        generated by _install_app_requirements().
-
-        :param app: The app configuration
-        :param requires: The user-specified list of app requirements
-        :returns: The final list of requirement arguments to pass to pip
-        """
-        # Copy all the requirements that are non-local
-        final = [
-            requirement
-            for requirement in super()._pip_requires(app, requires)
-            if not _is_local_requirement(requirement)
-        ]
-
-        # Add in any local packages.
-        # The sort is needed to ensure testing consistency
-        for filename in sorted(self.local_requirements_path(app).iterdir()):
-            final.append(filename)
-
-        return final
 
     def install_app_resources(self, app: AppConfig):
         """Install the application resources (such as icons and splash screens) into the
@@ -501,8 +415,8 @@ class LinuxDebCreateCommand(LinuxDebMixin, CreateCommand):
 
     Debian packaging guidelines require that packages provide a
     copyright statement. A dummy LICENSE file ({license_file.relative_to(self.base_path)})
-    has been created. You should ensure this file is complete and
-    correct before continuing.
+    has been created by the app template. You should ensure this file
+    is complete and correct before continuing.
 
 *************************************************************************
 """
@@ -524,8 +438,8 @@ class LinuxDebCreateCommand(LinuxDebMixin, CreateCommand):
 
     Debian packaging guidelines require that packages provide a
     change log. A dummy CHANGELOG file ({changelog_file.relative_to(self.base_path)})
-    has been created. You should ensure this file is complete and
-    correct before continuing.
+    has been created by the app template. You should ensure this file
+    is complete and correct before continuing.
 
 *************************************************************************
 """
@@ -536,15 +450,8 @@ class LinuxDebUpdateCommand(LinuxDebCreateCommand, UpdateCommand):
     description = "Update an existing .deb project."
 
 
-class LinuxDebOpenCommand(LinuxDebMostlyPassiveMixin, OpenCommand):
+class LinuxDebOpenCommand(LinuxDebMostlyPassiveMixin, DockerOpenCommand):
     description = "Open a shell in a Docker container for an existing .deb project."
-
-    def _open_app(self, app: AppConfig):
-        # If we're using Docker, open an interactive shell in the container
-        if self.use_docker:
-            self.tools[app].app_context.run(["/bin/bash"], interactive=True)
-        else:
-            super()._open_app(app)
 
 
 class LinuxDebBuildCommand(LinuxDebMixin, BuildCommand):
@@ -573,7 +480,7 @@ class LinuxDebBuildCommand(LinuxDebMixin, BuildCommand):
                 )
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
-                    f"Error while building app {app.app_name}."
+                    f"Error building bootstrap binary for {app.app_name}."
                 ) from e
 
         # Make the folder for docs
@@ -585,7 +492,7 @@ class LinuxDebBuildCommand(LinuxDebMixin, BuildCommand):
             if license_file.exists():
                 self.tools.shutil.copy(license_file, doc_folder / "copyright")
             else:
-                raise BriefcaseCommandError("LICENSE file is missing")
+                raise BriefcaseCommandError("LICENSE source file is missing")
 
         with self.input.wait_bar("Installing changelog..."):
             changelog = self.bundle_path(app) / "CHANGELOG"
@@ -597,7 +504,7 @@ class LinuxDebBuildCommand(LinuxDebMixin, BuildCommand):
                     outfile.write(infile.read().encode())
                     outfile.close()
             else:
-                raise BriefcaseCommandError("CHANGELOG file is missing")
+                raise BriefcaseCommandError("CHANGELOG source file is missing")
 
         # Make a folder for manpages
         man_folder = self.package_path(app) / "usr" / "share" / "man" / "man1"
@@ -614,7 +521,7 @@ class LinuxDebBuildCommand(LinuxDebMixin, BuildCommand):
                     outfile.close()
             else:
                 raise BriefcaseCommandError(
-                    f"manpage source file `{manpage_source.relative_to(self.base_path)}` is missing"
+                    f"manpage source file `{app.app_name}.1` is missing"
                 )
 
         self.logger.info("Update file permissions...")
@@ -624,7 +531,7 @@ class LinuxDebBuildCommand(LinuxDebMixin, BuildCommand):
                 # permissions are the same), cause Debian heartburn. So, if the
                 # user and group permissions are the same, change the group
                 # permission to the world permission.
-                perms = os.stat(path).st_mode & 0o777
+                perms = self.tools.os.stat(path).st_mode & 0o777
                 user_perms = perms & 0o700
                 group_perms = perms & 0o070
                 if user_perms == (group_perms << 3):
@@ -655,18 +562,21 @@ class LinuxDebRunCommand(LinuxDebPassiveMixin, RunCommand):
     supported_host_os = {"Linux"}
     supported_host_os_reason = "Linux .deb projects can only be executed on Linux."
 
-    def run_app(self, app: AppConfig, test_mode: bool, **kwargs):
+    def run_app(
+        self, app: AppConfig, test_mode: bool, passthrough: List[str], **kwargs
+    ):
         """Start the application.
 
         :param app: The config object for the app
         :param test_mode: Boolean; Is the app running in test mode?
+        :param passthrough: The list of arguments to pass to the app
         """
         # Set up the log stream
         kwargs = self._prepare_app_env(app=app, test_mode=test_mode)
 
         # Start the app in a way that lets us stream the logs
         app_popen = self.tools.subprocess.Popen(
-            [os.fsdecode(self.binary_path(app))],
+            [os.fsdecode(self.binary_path(app))] + passthrough,
             cwd=self.tools.home_path,
             **kwargs,
             stdout=subprocess.PIPE,
@@ -712,12 +622,12 @@ class LinuxDebPackageCommand(LinuxDebMixin, PackageCommand):
 
                 # Move the deb file to it's final location
                 self.tools.shutil.move(
-                    f"{self.bundle_path(app) / self.package_name(app)}.deb",
+                    self.bundle_path(app) / f"{self.package_name(app)}.deb",
                     self.distribution_path(app, packaging_format="deb"),
                 )
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
-                    f"Error while building app {app.app_name}."
+                    f"Error while building .deb package for app {app.app_name}."
                 ) from e
 
 

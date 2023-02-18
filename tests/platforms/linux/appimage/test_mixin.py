@@ -22,6 +22,14 @@ def create_command(tmp_path):
     )
 
 
+def test_project_path(create_command, first_app_config, tmp_path):
+    # Force the architecture to x86_64 for test purposes.
+    create_command.tools.host_arch = "x86_64"
+    project_path = create_command.project_path(first_app_config)
+
+    assert project_path == tmp_path / "base_path" / "linux" / "appimage" / "First App"
+
+
 def test_binary_path(create_command, first_app_config, tmp_path):
     # Force the architecture to x86_64 for test purposes.
     create_command.tools.host_arch = "x86_64"
