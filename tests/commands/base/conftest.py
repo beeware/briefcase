@@ -31,9 +31,6 @@ class DummyCommand(BaseCommand):
     def binary_path(self, app):
         raise NotImplementedError()
 
-    def distribution_path(self, app, packaging_format):
-        raise NotImplementedError()
-
     def verify_host(self):
         super().verify_host()
         self.actions.append(("verify-host",))
@@ -128,9 +125,6 @@ class OtherDummyCommand(BaseCommand):
         super().__init__(*args, **kwargs)
 
     def binary_path(self, app):
-        raise NotImplementedError()
-
-    def distribution_path(self, app, packaging_format):
         raise NotImplementedError()
 
 

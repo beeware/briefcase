@@ -29,9 +29,6 @@ class DummyRunCommand(RunCommand):
     def binary_path(self, app):
         return self.platform_path / app.app_name / f"{app.app_name}.bin"
 
-    def distribution_path(self, app, packaging_format):
-        return self.platform_path / f"{app.app_name}.dummy.{packaging_format}"
-
     def verify_host(self):
         super().verify_host()
         self.actions.append(("verify-host",))

@@ -562,7 +562,6 @@ password:
         notarize_app=None,
         identity=None,
         adhoc_sign=False,
-        packaging_format="dmg",
         **kwargs,
     ):
         """Package an app bundle.
@@ -577,7 +576,6 @@ password:
             If unspecified, the user will be prompted for a code signing
             identity. Ignored if ``sign_app`` is ``False``.
         :param adhoc_sign: If ``True``, code will be signed with adhoc identity of "-"
-        :param packaging_format: The packaging format to use. Default is ``dmg``.
         """
         if sign_app:
             if adhoc_sign:
@@ -612,7 +610,7 @@ password:
                     "Can't notarize an app that hasn't been signed"
                 )
 
-        if packaging_format == "app":
+        if app.packaging_format == "app":
             if notarize_app:
                 self.logger.info(
                     f"Notarizing app using team ID {team_id}...",
@@ -620,7 +618,7 @@ password:
                 )
                 self.notarize(self.binary_path(app), team_id=team_id)
 
-        if packaging_format == "dmg":
+        if app.packaging_format == "dmg":
             self.logger.info("Building DMG...", prefix=app.app_name)
 
             dmg_settings = {
@@ -670,7 +668,7 @@ password:
                 # No installer background image provided
                 pass
 
-            dmg_path = self.distribution_path(app, packaging_format=packaging_format)
+            dmg_path = self.distribution_path(app)
             self.dmgbuild.build_dmg(
                 filename=os.fsdecode(dmg_path),
                 volume_name=f"{app.formal_name} {app.version}",

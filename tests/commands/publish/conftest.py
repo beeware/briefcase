@@ -29,8 +29,8 @@ class DummyPublishCommand(PublishCommand):
     def binary_path(self, app):
         return self.platform_path / f"{app.app_name}.dummy.bin"
 
-    def distribution_path(self, app, packaging_format):
-        return self.platform_path / f"{app.app_name}.dummy.{packaging_format}"
+    def distribution_path(self, app):
+        return self.platform_path / f"{app.app_name}.dummy.{app.packaging_format}"
 
     def verify_host(self):
         super().verify_host()

@@ -1,14 +1,14 @@
 import pytest
 
 from briefcase.console import Console, Log
-from briefcase.platforms.linux.deb import LinuxDebCreateCommand
+from briefcase.platforms.linux.system import LinuxSystemCreateCommand
 
 from ....utils import create_file
 
 
 @pytest.fixture
 def create_command(tmp_path):
-    return LinuxDebCreateCommand(
+    return LinuxSystemCreateCommand(
         logger=Log(),
         console=Console(),
         base_path=tmp_path / "base_path",
@@ -22,24 +22,18 @@ def first_app(first_app_config, tmp_path):
     # Specify a system python app for a dummy vendor
     first_app_config.target_vendor = "somevendor"
     first_app_config.target_codename = "surprising"
-    first_app_config.python_source = "system"
+    first_app_config.target_vendor_base = "basevendor"
 
     # Make it look like the template has been generated
     bundle_dir = (
-        tmp_path
-        / "base_path"
-        / "linux"
-        / "somevendor"
-        / "surprising"
-        / "system"
-        / "First App"
+        tmp_path / "base_path" / "linux" / "somevendor" / "surprising" / "First App"
     )
 
     create_file(bundle_dir / "LICENSE", "First App License")
     create_file(bundle_dir / "CHANGELOG", "First App Changelog")
     create_file(bundle_dir / "first-app.1", "First App manpage")
 
-    lib_dir = bundle_dir / "first-app_0.0.1-1_wonky" / "usr" / "lib" / "first-app"
+    lib_dir = bundle_dir / "package" / "usr" / "lib" / "first-app"
     (lib_dir / "app").mkdir(parents=True, exist_ok=True)
     (lib_dir / "app_packages" / "firstlib").mkdir(parents=True, exist_ok=True)
     (lib_dir / "app_packages" / "secondlib").mkdir(parents=True, exist_ok=True)

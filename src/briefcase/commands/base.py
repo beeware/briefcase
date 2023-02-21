@@ -313,21 +313,6 @@ a custom location for Briefcase's tools.
         """
         ...
 
-    @abstractmethod
-    def distribution_path(self, app, packaging_format):
-        """The path to the distributable artefact for the app in the given packaging
-        format.
-
-        This is the single file that should be uploaded for distribution.
-        This may be the binary (if the binary is a self-contained executable);
-        however, if the output format produces an installer, it will be the
-        path to the installer.
-
-        :param app: The app config
-        :param packaging_format: The format of the redistributable artefact.
-        """
-        ...
-
     def _load_path_index(self, app: BaseConfig):
         """Load the path index from the index file provided by the app template.
 

@@ -4,7 +4,7 @@ from briefcase.integrations.docker import Docker, DockerAppContext
 from briefcase.integrations.subprocess import Subprocess
 
 
-def test_linux_no_docker(create_command, tmp_path, first_app_config):
+def test_linux_no_docker(monkeypatch, create_command, first_app_config):
     """If Docker is disabled on Linux, the app_context is Subprocess."""
     create_command.tools.host_os = "Linux"
     create_command.target_image = None
@@ -12,7 +12,10 @@ def test_linux_no_docker(create_command, tmp_path, first_app_config):
     # Force a dummy vendor:codename for test purposes.
     first_app_config.target_vendor = "somevendor"
     first_app_config.target_codename = "surprising"
-    first_app_config.python_source = "system"
+    first_app_config.target_vendor_base = "basevendor"
+
+    # Mock the existence of a valid non-docker system Python
+    create_command.verify_system_python = MagicMock()
 
     # Verify the tools
     create_command.verify_tools()
@@ -22,6 +25,15 @@ def test_linux_no_docker(create_command, tmp_path, first_app_config):
     assert isinstance(create_command.tools[first_app_config].app_context, Subprocess)
     # Docker is not verified.
     assert not hasattr(create_command.tools, "docker")
+    # System python is verified
+    create_command.verify_system_python.assert_called_once_with()
+
+    # Reset the mock, then invoke verify_app_tools a second time.
+    create_command.verify_system_python.reset_mock()
+    create_command.verify_app_tools(app=first_app_config)
+
+    # Python will *not* be verified a second time.
+    create_command.verify_system_python.assert_not_called()
 
 
 def test_linux_docker(create_command, tmp_path, first_app_config, monkeypatch):
@@ -32,7 +44,7 @@ def test_linux_docker(create_command, tmp_path, first_app_config, monkeypatch):
     # Force a dummy vendor:codename for test purposes.
     first_app_config.target_vendor = "somevendor"
     first_app_config.target_codename = "surprising"
-    first_app_config.python_source = "system"
+    first_app_config.target_vendor_base = "basevendor"
     first_app_config.python_version_tag = "3"
 
     # Mock Docker tool verification
@@ -49,13 +61,12 @@ def test_linux_docker(create_command, tmp_path, first_app_config, monkeypatch):
     DockerAppContext.verify.assert_called_with(
         tools=create_command.tools,
         app=first_app_config,
-        image_tag="briefcase/com.example.first-app:somevendor-surprising-system",
+        image_tag="briefcase/com.example.first-app:somevendor-surprising",
         dockerfile_path=tmp_path
         / "base_path"
         / "linux"
         / "somevendor"
         / "surprising"
-        / "system"
         / "First App"
         / "Dockerfile",
         app_base_path=tmp_path / "base_path",
@@ -83,7 +94,7 @@ def test_non_linux_docker(create_command, tmp_path, first_app_config):
     # Force a dummy vendor:codename for test purposes.
     first_app_config.target_vendor = "somevendor"
     first_app_config.target_codename = "surprising"
-    first_app_config.python_source = "system"
+    first_app_config.target_vendor_base = "basevendor"
     first_app_config.python_version_tag = "3"
 
     # Mock Docker tool verification
@@ -100,13 +111,12 @@ def test_non_linux_docker(create_command, tmp_path, first_app_config):
     DockerAppContext.verify.assert_called_with(
         tools=create_command.tools,
         app=first_app_config,
-        image_tag="briefcase/com.example.first-app:somevendor-surprising-system",
+        image_tag="briefcase/com.example.first-app:somevendor-surprising",
         dockerfile_path=tmp_path
         / "base_path"
         / "linux"
         / "somevendor"
         / "surprising"
-        / "system"
         / "First App"
         / "Dockerfile",
         app_base_path=tmp_path / "base_path",

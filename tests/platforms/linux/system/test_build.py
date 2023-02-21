@@ -8,12 +8,12 @@ import pytest
 
 from briefcase.console import Console, Log
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.platforms.linux.deb import LinuxDebBuildCommand
+from briefcase.platforms.linux.system import LinuxSystemBuildCommand
 
 
 @pytest.fixture
 def build_command(tmp_path, first_app):
-    command = LinuxDebBuildCommand(
+    command = LinuxSystemBuildCommand(
         logger=Log(),
         console=Console(),
         base_path=tmp_path / "base_path",
@@ -40,13 +40,7 @@ def test_build_app(build_command, first_app, tmp_path):
 
     # The bootstrap binary was compiled
     bundle_path = (
-        tmp_path
-        / "base_path"
-        / "linux"
-        / "somevendor"
-        / "surprising"
-        / "system"
-        / "First App"
+        tmp_path / "base_path" / "linux" / "somevendor" / "surprising" / "First App"
     )
     build_command.tools[first_app].app_context.run.assert_called_with(
         ["make", "-C", "bootstrap", "install"],
@@ -55,9 +49,7 @@ def test_build_app(build_command, first_app, tmp_path):
     )
 
     # The license file has been installed
-    doc_path = (
-        bundle_path / "first-app_0.0.1-1_wonky" / "usr" / "share" / "doc" / "first-app"
-    )
+    doc_path = bundle_path / "package" / "usr" / "share" / "doc" / "first-app"
     assert (doc_path / "copyright").exists()
     with (doc_path / "copyright").open() as f:
         assert f.read() == "First App License"
@@ -68,15 +60,13 @@ def test_build_app(build_command, first_app, tmp_path):
         assert f.read().decode() == "First App Changelog"
 
     # The manpage has been installed
-    man_path = (
-        bundle_path / "first-app_0.0.1-1_wonky" / "usr" / "share" / "man" / "man1"
-    )
+    man_path = bundle_path / "package" / "usr" / "share" / "man" / "man1"
     assert (man_path / "first-app.1.gz").exists()
     with gzip.open(man_path / "first-app.1.gz") as f:
         assert f.read().decode() == "First App manpage"
 
     # Problematic permissions have been updated
-    lib_dir = bundle_path / "first-app_0.0.1-1_wonky" / "usr" / "lib" / "first-app"
+    lib_dir = bundle_path / "package" / "usr" / "lib" / "first-app"
     # 775 -> 775
     assert os.stat(lib_dir / "app" / "support.so").st_mode & 0o777 == 0o755
     # 664 -> 644
@@ -95,7 +85,7 @@ def test_build_app(build_command, first_app, tmp_path):
         mock.call(
             [
                 "strip",
-                bundle_path / "first-app_0.0.1-1_wonky" / "usr" / "bin" / "first-app",
+                bundle_path / "package" / "usr" / "bin" / "first-app",
             ]
         ),
     ]
@@ -118,13 +108,7 @@ def test_build_bootstrap_failed(build_command, first_app, tmp_path):
 
     # An attempt to do the compile occurred.
     bundle_path = (
-        tmp_path
-        / "base_path"
-        / "linux"
-        / "somevendor"
-        / "surprising"
-        / "system"
-        / "First App"
+        tmp_path / "base_path" / "linux" / "somevendor" / "surprising" / "First App"
     )
     build_command.tools[first_app].app_context.run.assert_called_with(
         ["make", "-C", "bootstrap", "install"],
@@ -136,13 +120,7 @@ def test_build_bootstrap_failed(build_command, first_app, tmp_path):
 def test_missing_license(build_command, first_app, tmp_path):
     """If the license source file is missing, an error is raised."""
     bundle_path = (
-        tmp_path
-        / "base_path"
-        / "linux"
-        / "somevendor"
-        / "surprising"
-        / "system"
-        / "First App"
+        tmp_path / "base_path" / "linux" / "somevendor" / "surprising" / "First App"
     )
 
     # Delete the license source
@@ -166,13 +144,7 @@ def test_missing_license(build_command, first_app, tmp_path):
 def test_missing_changelog(build_command, first_app, tmp_path):
     """If the changelog source file is missing, an error is raised."""
     bundle_path = (
-        tmp_path
-        / "base_path"
-        / "linux"
-        / "somevendor"
-        / "surprising"
-        / "system"
-        / "First App"
+        tmp_path / "base_path" / "linux" / "somevendor" / "surprising" / "First App"
     )
 
     # Delete the changelog source
@@ -193,9 +165,7 @@ def test_missing_changelog(build_command, first_app, tmp_path):
     )
 
     # The license file has been installed
-    doc_path = (
-        bundle_path / "first-app_0.0.1-1_wonky" / "usr" / "share" / "doc" / "first-app"
-    )
+    doc_path = bundle_path / "package" / "usr" / "share" / "doc" / "first-app"
     assert (doc_path / "copyright").exists()
     with (doc_path / "copyright").open() as f:
         assert f.read() == "First App License"
@@ -204,13 +174,7 @@ def test_missing_changelog(build_command, first_app, tmp_path):
 def test_missing_manpage(build_command, first_app, tmp_path):
     """If the manpage source file is missing, an error is raised."""
     bundle_path = (
-        tmp_path
-        / "base_path"
-        / "linux"
-        / "somevendor"
-        / "surprising"
-        / "system"
-        / "First App"
+        tmp_path / "base_path" / "linux" / "somevendor" / "surprising" / "First App"
     )
 
     # Delete the manpage source
@@ -231,9 +195,7 @@ def test_missing_manpage(build_command, first_app, tmp_path):
     )
 
     # The license file has been installed
-    doc_path = (
-        bundle_path / "first-app_0.0.1-1_wonky" / "usr" / "share" / "doc" / "first-app"
-    )
+    doc_path = bundle_path / "package" / "usr" / "share" / "doc" / "first-app"
     assert (doc_path / "copyright").exists()
     with (doc_path / "copyright").open() as f:
         assert f.read() == "First App License"

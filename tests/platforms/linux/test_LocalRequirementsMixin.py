@@ -24,9 +24,6 @@ class DummyCreateCommand(LocalRequirementsMixin, CreateCommand):
     def binary_path(self, app):
         return self.platform_path / f"{app.app_name}.bin"
 
-    def distribution_path(self, app, packaging_format):
-        return self.platform_path / f"{app.app_name}.dist"
-
 
 @pytest.fixture
 def no_docker_create_command(first_app_config, tmp_path):

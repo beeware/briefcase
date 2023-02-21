@@ -44,7 +44,7 @@ class iOSXcodePassiveMixin(iOSMixin):
             / f"{app.formal_name}.app"
         )
 
-    def distribution_path(self, app, packaging_format):
+    def distribution_path(self, app):
         return self.binary_path(app)
 
 

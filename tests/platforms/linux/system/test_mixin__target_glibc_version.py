@@ -6,7 +6,32 @@ import pytest
 from briefcase.exceptions import BriefcaseCommandError
 
 
-def test_target_glibc_version_docker(create_command, first_app_config):
+@pytest.mark.parametrize(
+    "ldd_output, version",
+    [
+        # ubuntu:focal
+        (
+            [
+                "ldd (Ubuntu GLIBC 2.31-0ubuntu9.9) 2.31",
+                "Copyright (C) 2020 Free Software Foundation, Inc.",
+                "...",
+            ],
+            "2.31",
+        ),
+        # fedora:37
+        (
+            [
+                "ldd (GNU libc) 2.36",
+                "Copyright (C) 2020 Free Software Foundation, Inc.",
+                "...",
+            ],
+            "2.36",
+        ),
+    ],
+)
+def test_target_glibc_version_docker(
+    create_command, first_app_config, ldd_output, version
+):
     "Test that the glibc version in a docker container can be determined"
     # Mock an app being built on docker
     create_command.target_image = "somevendor:surprising"
@@ -14,16 +39,10 @@ def test_target_glibc_version_docker(create_command, first_app_config):
 
     # Mock a verified Docker, and the output of ldd.
     create_command.tools.docker = MagicMock()
-    create_command.tools.docker.check_output.return_value = "\n".join(
-        [
-            "ldd (Ubuntu GLIBC 2.31-0ubuntu9.9) 2.31",
-            "Copyright (C) 2020 Free Software Foundation, Inc.",
-            "...",
-        ]
-    )
+    create_command.tools.docker.check_output.return_value = "\n".join(ldd_output)
 
     # The glibc version was returned
-    assert create_command.target_glibc_version(first_app_config) == "2.31"
+    assert create_command.target_glibc_version(first_app_config) == version
 
     # Docker was consulted for the glibc version
     create_command.tools.docker.check_output.assert_called_once_with(

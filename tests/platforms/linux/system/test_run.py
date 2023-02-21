@@ -7,12 +7,12 @@ import pytest
 from briefcase.console import Console, Log
 from briefcase.exceptions import UnsupportedHostError
 from briefcase.integrations.subprocess import Subprocess
-from briefcase.platforms.linux.deb import LinuxDebRunCommand
+from briefcase.platforms.linux.system import LinuxSystemRunCommand
 
 
 @pytest.fixture
 def run_command(tmp_path):
-    command = LinuxDebRunCommand(
+    command = LinuxSystemRunCommand(
         logger=Log(),
         console=Console(),
         base_path=tmp_path / "base_path",
@@ -39,13 +39,13 @@ def test_unsupported_host_os(run_command, host_os):
 
     with pytest.raises(
         UnsupportedHostError,
-        match="Linux .deb projects can only be executed on Linux.",
+        match="Linux system projects can only be executed on Linux.",
     ):
         run_command()
 
 
 def test_run_app(run_command, first_app, tmp_path):
-    """A deb bootstrap binary can be started."""
+    """A bootstrap binary can be started."""
 
     # Set up the log streamer to return a known stream
     log_popen = mock.MagicMock()
@@ -63,9 +63,8 @@ def test_run_app(run_command, first_app, tmp_path):
                 / "linux"
                 / "somevendor"
                 / "surprising"
-                / "system"
                 / "First App"
-                / "first-app_0.0.1-1_wonky"
+                / "package"
                 / "usr"
                 / "bin"
                 / "first-app"
@@ -109,9 +108,8 @@ def test_run_app_with_passthrough(run_command, first_app, tmp_path):
                 / "linux"
                 / "somevendor"
                 / "surprising"
-                / "system"
                 / "First App"
-                / "first-app_0.0.1-1_wonky"
+                / "package"
                 / "usr"
                 / "bin"
                 / "first-app"
@@ -151,9 +149,8 @@ def test_run_app_failed(run_command, first_app, tmp_path):
                 / "linux"
                 / "somevendor"
                 / "surprising"
-                / "system"
                 / "First App"
-                / "first-app_0.0.1-1_wonky"
+                / "package"
                 / "usr"
                 / "bin"
                 / "first-app"
@@ -188,9 +185,8 @@ def test_run_app_test_mode(run_command, first_app, tmp_path):
                 / "linux"
                 / "somevendor"
                 / "surprising"
-                / "system"
                 / "First App"
-                / "first-app_0.0.1-1_wonky"
+                / "package"
                 / "usr"
                 / "bin"
                 / "first-app"
@@ -235,9 +231,8 @@ def test_run_app_test_mode_with_args(run_command, first_app, tmp_path):
                 / "linux"
                 / "somevendor"
                 / "surprising"
-                / "system"
                 / "First App"
-                / "first-app_0.0.1-1_wonky"
+                / "package"
                 / "usr"
                 / "bin"
                 / "first-app"

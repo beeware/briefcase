@@ -38,7 +38,7 @@ def test_distribution_path(create_command, first_app_config, tmp_path):
     """The distribution path is a flatpak bundle."""
     # Force the architecture to something odd for test purposes.
     create_command.tools.host_arch = "gothic"
-    distribution_path = create_command.distribution_path(first_app_config, "flatpak")
+    distribution_path = create_command.distribution_path(first_app_config)
 
     expected_path = tmp_path / "base_path" / "linux" / "First_App-0.0.1-gothic.flatpak"
     assert distribution_path == expected_path

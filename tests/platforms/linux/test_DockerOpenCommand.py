@@ -23,9 +23,6 @@ class DummyOpenCommand(DockerOpenCommand):
     def binary_path(self, app):
         return self.platform_path / f"{app.app_name}.bin"
 
-    def distribution_path(self, app, packaging_format):
-        return self.platform_path / f"{app.app_name}.dist"
-
 
 @pytest.fixture
 def open_command(tmp_path, first_app_config):

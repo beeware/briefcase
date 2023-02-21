@@ -40,7 +40,7 @@ def test_default_packaging_format(package_command):
 
 def test_distribution_path(package_command, first_app_config, tmp_path):
     assert (
-        package_command.distribution_path(first_app_config, packaging_format="any")
+        package_command.distribution_path(first_app_config)
         == tmp_path
         / "base_path"
         / "android"

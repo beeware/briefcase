@@ -19,45 +19,38 @@ from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
 from briefcase.integrations.docker import Docker, DockerAppContext
 from briefcase.integrations.subprocess import NativeAppContext
 from briefcase.platforms.linux import (
+    ARCH,
+    DEBIAN,
+    REDHAT,
     DockerOpenCommand,
     LinuxMixin,
     LocalRequirementsMixin,
 )
 
-# Some constants defining known Python sources
-SYSTEM = "system"
-DEADSNAKES = "deadsnakes"
 
-
-class LinuxDebPassiveMixin(LinuxMixin):
+class LinuxSystemPassiveMixin(LinuxMixin):
     # The Passive mixin honors the Docker options, but doesn't try to verify
     # Docker exists. It is used by commands that are "passive" from the
     # perspective of the build system (e.g., Run).
-    output_format = "deb"
+    output_format = "system"
     supported_host_os = {"Darwin", "Linux"}
     supported_host_os_reason = (
-        "Linux .deb projects can only be built on Linux, or on macOS using Docker."
+        "Linux system projects can only be built on Linux, or on macOS using Docker."
     )
 
     @property
     def use_docker(self):
-        # Deb doesn't have a literal "--use-docker" option, but `use_docker` is a
-        # useful flag for shared logic purposes, so evaluate what "use docker"
-        # means in terms of target_image.
+        # The system backend doesn't have a literal "--use-docker" option, but
+        # `use_docker` is a useful flag for shared logic purposes, so evaluate
+        # what "use docker" means in terms of target_image.
         return bool(self.target_image)
 
     @property
-    def deb_arch(self):
-        # Linux/Debian uses different architecture identifiers for some platforms
+    def linux_arch(self):
+        # Linux uses different architecture identifiers for some platforms
         return {
             "x86_64": "amd64",
         }.get(self.tools.host_arch, self.tools.host_arch)
-
-    def python_source_tag(self, app):
-        if app.python_source == DEADSNAKES:
-            return f"deadsnakes-py{app.python_version_tag}"
-        else:
-            return "system"
 
     def bundle_path(self, app):
         # The bundle path is different as there won't be a single "deb" build;
@@ -66,34 +59,33 @@ class LinuxDebPassiveMixin(LinuxMixin):
             self.platform_path
             / app.target_vendor
             / app.target_codename
-            / self.python_source_tag(app)
             / app.formal_name
         )
 
     def project_path(self, app):
         return self.bundle_path(app)
 
-    def package_path(self, app):
-        return self.project_path(app) / self.package_name(app)
-
-    def package_name(self, app):
-        return f"{app.app_name}_{app.version}-{getattr(app, 'revision', 1)}_{self.deb_arch}"
-
     def binary_path(self, app):
-        return self.package_path(app) / "usr" / "bin" / app.app_name
+        return self.bundle_path(app) / "package" / "usr" / "bin" / app.app_name
 
-    def distribution_path(self, app, packaging_format):
-        return self.platform_path / (
-            f"{app.app_name}_{app.version}-{getattr(app, 'revision', 1)}"
-            f"~{app.target_vendor}-{app.target_codename}_{self.deb_arch}.deb"
-        )
+    def distribution_path(self, app):
+        if app.packaging_format == "deb":
+            return self.platform_path / (
+                f"{app.app_name}_{app.version}-{getattr(app, 'revision', 1)}"
+                f"~{app.target_vendor}-{app.target_codename}_{self.linux_arch}.deb"
+            )
+        else:
+            raise BriefcaseCommandError(
+                "Briefcase doesn't currently know how to build system packages in "
+                f"{app.packaging_format.upper()} format."
+            )
 
     def add_options(self, parser):
         super().add_options(parser)
         parser.add_argument(
             "--target",
             dest="target",
-            help="Debian-based distribution to target for the build (e.g., `ubuntu:jammy`)",
+            help="Docker base image tag for the distribution to target for the build (e.g., `ubuntu:jammy`)",
             required=False,
         )
 
@@ -120,19 +112,23 @@ class LinuxDebPassiveMixin(LinuxMixin):
                 output = self.tools.docker.check_output(
                     app.target_image, ["ldd", "--version"]
                 )
-                # ldd --version will give you output of the form:
+                # On Debian/Ubuntu, ldd --version will give you output of the form:
                 #
                 #     ldd (Ubuntu GLIBC 2.31-0ubuntu9.9) 2.31
                 #     Copyright (C) 2020 Free Software Foundation, Inc.
                 #     ...
                 #
-                # Note that the exact text will vary version to version; but the
-                # "GLIBC 2.31-" part appears to be constant. From that first line,
-                # we can parse the "2.31" that is the libc version.
-                match = re.search(r" GLIBC (\d\.\d+)-", output)
-
+                # Other platforms produce output of the form:
+                #
+                #     ldd (GNU libc) 2.36
+                #     Copyright (C) 2020 Free Software Foundation, Inc.
+                #     ...
+                #
+                # Note that the exact text will vary version to version.
+                # Look for the "2.NN" pattern.
+                match = re.search(r"\d\.\d+", output)
                 if match:
-                    target_glibc = match[1]
+                    target_glibc = match.group(0)
                 else:
                     raise BriefcaseCommandError(
                         "Unable to parse glibc dependency version from version string."
@@ -173,70 +169,68 @@ class LinuxDebPassiveMixin(LinuxMixin):
 
             app.target_vendor, app.target_codename = app.target_image.split(":")
 
+            # Manjaro uses `manjarolinux/base` as the image; RHEL uses
+            # `redhat/ubi8`; so we can use anything before the / as the vendor.
+            app.target_vendor = app.target_vendor.split("/")[0]
         else:
-            app.target_vendor = (
-                self.tools.subprocess.check_output(["lsb_release", "-i", "-s"])
-                .strip()
-                .lower()
-            )
-            app.target_codename = (
-                self.tools.subprocess.check_output(["lsb_release", "-c", "-s"])
-                .strip()
-                .lower()
-            )
+            app.target_vendor, app.target_codename = self.host_distribution()
 
             self.logger.info(f"Targeting {app.target_vendor}:{app.target_codename}")
             app.target_image = f"{app.target_vendor}:{app.target_codename}"
 
-        # Merge target-specific configuration items into the app config
+        # Determine the vendor base.
+        app.target_vendor_base = self.vendor_base(app.target_vendor)
+
+        # Merge target-specific configuration items into the app config This
+        # means:
+        # * merging app.linux.debian into app, overwriting anything global
+        # * merging app.linux.ubuntu into app, overwriting anything vendor-base
+        #   specific
+        # * merging app.linux.ubuntu.focal into app, overwriting anything vendor
+        #   specific
+        # The vendor base config (e.g., redhat). The vendor base might not
+        # be known, so fall back to an empty vendor config.
+        if app.target_vendor_base:
+            vendor_base_config = getattr(app, app.target_vendor_base, {})
+        else:
+            vendor_base_config = {}
+        vendor_config = getattr(app, app.target_vendor, {})
         try:
-            target_config = getattr(app, app.target_vendor)[app.target_codename]
-            for key, value in target_config.items():
+            codename_config = vendor_config[app.target_codename]
+        except KeyError:
+            codename_config = {}
+
+        # Copy all the specific configurations to the app config
+        for config in [
+            vendor_base_config,
+            vendor_config,
+            codename_config,
+        ]:
+            for key, value in config.items():
                 setattr(app, key, value)
-        except (AttributeError, KeyError):
-            pass
 
         with self.input.wait_bar("Determinining glibc version..."):
             app.glibc_version = self.target_glibc_version(app)
         self.logger.info(f"Targeting glibc {app.glibc_version}")
 
-        # Determine the python source, and set the Python version tag as
-        # appropriate. System Python uses a generic "3"; others use the specific
-        # Python version that has been used to invoke Briefcase.
-        try:
-            if app.python_source == DEADSNAKES:
-                if app.target_vendor != "ubuntu":
-                    raise BriefcaseCommandError(
-                        "Deadsnakes can only be used to build Ubuntu packages."
-                    )
-            elif app.python_source != SYSTEM:
-                raise BriefcaseCommandError(
-                    f"Unknown python source {app.python_source!r}; "
-                    f"should be one of {SYSTEM!r}, {DEADSNAKES!r}."
-                )
-        except AttributeError:
-            # python_source not defined; fall back to system.
-            app.python_source = SYSTEM
-
-        if app.python_source == SYSTEM:
+        if self.use_docker:
+            # If we're running in Docker, we can't know the Python3 version
+            # before rolling out the template; so we fall back to "3"
             app.python_version_tag = "3"
         else:
+            # Use the version of Python that run
             app.python_version_tag = self.python_version_tag
-        self.logger.info(
-            f"Targeting {app.python_source.title()} Python{app.python_version_tag}"
-        )
+
+        self.logger.info(f"Targeting Python{app.python_version_tag}")
 
 
-class LinuxDebMostlyPassiveMixin(LinuxDebPassiveMixin):
+class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
     # The Mostly Passive mixin verifies that Docker exists and can be run, but
     # doesn't require that we're actually in a Linux environment.
 
     def docker_image_tag(self, app):
         """The Docker image tag for an app."""
-        return (
-            f"briefcase/{app.bundle}.{app.app_name.lower()}"
-            f":{app.target_vendor}-{app.target_codename}-{self.python_source_tag(app)}"
-        )
+        return f"briefcase/{app.bundle}.{app.app_name.lower()}:{app.target_vendor}-{app.target_codename}"
 
     def verify_tools(self):
         """If we're using Docker, verify that it is available."""
@@ -245,15 +239,12 @@ class LinuxDebMostlyPassiveMixin(LinuxDebPassiveMixin):
             Docker.verify(tools=self.tools)
 
     def verify_python(self, app):
-        """Verify that the version of Python being used by the app is
-        compatible with the version being used to run this.
+        """Verify that the version of Python being used to build the app in Docker
+        is compatible with the version being used to run Briefcase.
 
         Will raise an exception if the Python version is fundamentally
         incompatible (i.e., if Briefcase doesn't support it); any other version
         discrepancy will log a warning, but continue.
-
-        There's no need to invoke this unless you're using Docker. However,
-        it won't *fail* in a no-docker config; it's just nonsensical to call.
 
         Requires that the app tools have been verified.
 
@@ -294,15 +285,31 @@ class LinuxDebMostlyPassiveMixin(LinuxDebPassiveMixin):
     Ensure you have tested for Python version compatibility before
     releasing this app.
 
-    Alternatively, you can change your `python_source` definition in
-    `pyproject.toml` to `deadsnakes` to ensure that the Python used by
-    the app at runtime is the same as your current Python environment.
-    See the deb backend documentation for details:
-
-    https://briefcase.readthedocs.io/en/stable/reference/platforms/linux/deb.html#python_source
-
 *************************************************************************
 """
+            )
+
+    def verify_system_python(self):
+        """Verify that the Python being used to run Briefcase is the
+        default system python.
+
+        Will raise an exception if the system Python isn't an obvious
+        Python3, or the Briefcase Python isn't the same version as the
+        system Python.
+
+        Requires that the app tools have been verified.
+
+        :param app: The application being built
+        """
+        system_python_bin = Path("/usr/bin/python3").resolve()
+        system_version = system_python_bin.name.split(".")
+        if system_version[0] != "python3" or len(system_version) == 1:
+            raise BriefcaseCommandError("Can't determine the system python version")
+
+        if system_version[1] != str(self.tools.sys.version_info.minor):
+            raise BriefcaseCommandError(
+                f"The version of Python being used to run Briefcase ({self.python_version_tag}) "
+                f"is not the system python3 (3.{system_version[1]})."
             )
 
     def verify_app_tools(self, app: AppConfig):
@@ -313,12 +320,12 @@ class LinuxDebMostlyPassiveMixin(LinuxDebPassiveMixin):
 
         :param app: The application being built
         """
-        if self.use_docker:
-            # Verifying the DockerAppContext is idempotent; but we have some
-            # additional logic that we only want to run the first time through.
-            # Check (and store) the pre-verify app tool state.
-            verify_python = not hasattr(self.tools[app], "app_context")
+        # Verifying the App context is idempotent; but we have some
+        # additional logic that we only want to run the first time through.
+        # Check (and store) the pre-verify app tool state.
+        verify_python = not hasattr(self.tools[app], "app_context")
 
+        if self.use_docker:
             DockerAppContext.verify(
                 tools=self.tools,
                 app=app,
@@ -337,27 +344,26 @@ class LinuxDebMostlyPassiveMixin(LinuxDebPassiveMixin):
         else:
             NativeAppContext.verify(tools=self.tools, app=app)
 
+            # Check the system Python on the target system to see if it is
+            # compatible with Briefcase.
+            if verify_python:
+                self.verify_system_python()
+
         # Establish Docker as app context before letting super set subprocess
         super().verify_app_tools(app)
 
 
-class LinuxDebMixin(LinuxDebMostlyPassiveMixin):
+class LinuxSystemMixin(LinuxSystemMostlyPassiveMixin):
     def verify_host(self):
-        """If we're *not* using Docker, verify that we're actually on a Debian-based Linux."""
+        """If we're *not* using Docker, verify that we're actually on Linux."""
         super().verify_host()
         if not self.use_docker:
             if self.tools.host_os != "Linux":
                 raise UnsupportedHostError(self.supported_host_os_reason)
 
-            # Debian-based distributions all have an /etc/debian_version
-            if not Path("/etc/debian_version").exists():
-                raise BriefcaseCommandError(
-                    "Cannot build .deb packages on a Linux distribution that isn't Debian-based."
-                )
 
-
-class LinuxDebCreateCommand(LinuxDebMixin, LocalRequirementsMixin, CreateCommand):
-    description = "Create and populate a .deb project."
+class LinuxSystemCreateCommand(LinuxSystemMixin, LocalRequirementsMixin, CreateCommand):
+    description = "Create and populate a Linux system project."
 
     def output_format_template_context(self, app: AppConfig):
         context = super().output_format_template_context(app)
@@ -370,24 +376,8 @@ class LinuxDebCreateCommand(LinuxDebMixin, LocalRequirementsMixin, CreateCommand
         # Add the docker base image
         context["docker_base_image"] = app.target_image
 
-        # Add runtime package dependencies. App config has been finalized,
-        # so this will be the target-specific definition, if one exists.
-        # libc6 is added because lintian complains without it, even though
-        # its a dependency of the thing we *do* care about - python.
-        context["system_runtime_requires"] = ", ".join(
-            [
-                f"libc6 (>={app.glibc_version})",
-                f"python{app.python_version_tag}",
-            ]
-            + getattr(app, "system_runtime_requires", [])
-        )
-
-        # The long description *must* exist.
-        if app.long_description is None:
-            raise BriefcaseCommandError(
-                "App configuration does not define `long_description`. "
-                "Debian packaging guidelines require a long description."
-            )
+        # Add the vendor base
+        context["vendor_base"] = app.target_vendor_base
 
         return context
 
@@ -413,7 +403,7 @@ class LinuxDebCreateCommand(LinuxDebMixin, LocalRequirementsMixin, CreateCommand
 
     Your project does not contain a LICENSE file.
 
-    Debian packaging guidelines require that packages provide a
+    Linux app packaging guidelines require that packages provide a
     copyright statement. A dummy LICENSE file ({license_file.relative_to(self.base_path)})
     has been created by the app template. You should ensure this file
     is complete and correct before continuing.
@@ -436,7 +426,7 @@ class LinuxDebCreateCommand(LinuxDebMixin, LocalRequirementsMixin, CreateCommand
 
     Your project does not contain a CHANGELOG file.
 
-    Debian packaging guidelines require that packages provide a
+    Linux app packaging guidelines require that packages provide a
     change log. A dummy CHANGELOG file ({changelog_file.relative_to(self.base_path)})
     has been created by the app template. You should ensure this file
     is complete and correct before continuing.
@@ -446,16 +436,18 @@ class LinuxDebCreateCommand(LinuxDebMixin, LocalRequirementsMixin, CreateCommand
                 )
 
 
-class LinuxDebUpdateCommand(LinuxDebCreateCommand, UpdateCommand):
-    description = "Update an existing .deb project."
+class LinuxSystemUpdateCommand(LinuxSystemCreateCommand, UpdateCommand):
+    description = "Update an existing Linux system project."
 
 
-class LinuxDebOpenCommand(LinuxDebMostlyPassiveMixin, DockerOpenCommand):
-    description = "Open a shell in a Docker container for an existing .deb project."
+class LinuxSystemOpenCommand(LinuxSystemMostlyPassiveMixin, DockerOpenCommand):
+    description = (
+        "Open a shell in a Docker container for an existing Linux system project."
+    )
 
 
-class LinuxDebBuildCommand(LinuxDebMixin, BuildCommand):
-    description = "Build a .deb project."
+class LinuxSystemBuildCommand(LinuxSystemMixin, BuildCommand):
+    description = "Build a Linux system project."
 
     def build_app(self, app: AppConfig, **kwargs):
         """Build an application.
@@ -484,7 +476,9 @@ class LinuxDebBuildCommand(LinuxDebMixin, BuildCommand):
                 ) from e
 
         # Make the folder for docs
-        doc_folder = self.package_path(app) / "usr" / "share" / "doc" / app.app_name
+        doc_folder = (
+            self.bundle_path(app) / "package" / "usr" / "share" / "doc" / app.app_name
+        )
         doc_folder.mkdir(parents=True, exist_ok=True)
 
         with self.input.wait_bar("Installing license..."):
@@ -507,7 +501,9 @@ class LinuxDebBuildCommand(LinuxDebMixin, BuildCommand):
                 raise BriefcaseCommandError("CHANGELOG source file is missing")
 
         # Make a folder for manpages
-        man_folder = self.package_path(app) / "usr" / "share" / "man" / "man1"
+        man_folder = (
+            self.bundle_path(app) / "package" / "usr" / "share" / "man" / "man1"
+        )
         man_folder.mkdir(parents=True, exist_ok=True)
 
         with self.input.wait_bar("Installing man page..."):
@@ -526,7 +522,7 @@ class LinuxDebBuildCommand(LinuxDebMixin, BuildCommand):
 
         self.logger.info("Update file permissions...")
         with self.input.wait_bar("Updating file permissions..."):
-            for path in self.package_path(app).glob("**/*"):
+            for path in self.bundle_path(app).glob("**/*"):
                 # File permissions like 775 and 664 (where the group and user
                 # permissions are the same), cause Debian heartburn. So, if the
                 # user and group permissions are the same, change the group
@@ -539,7 +535,7 @@ class LinuxDebBuildCommand(LinuxDebMixin, BuildCommand):
                     new_perms = user_perms | (world_perms << 3) | world_perms
                     self.logger.info(
                         "Updating file permissions on "
-                        f"{path.relative_to(self.package_path(app))} "
+                        f"{path.relative_to(self.bundle_path(app))} "
                         f"from {oct(perms)[2:]} to {oct(new_perms)[2:]}"
                     )
                     path.chmod(new_perms)
@@ -547,20 +543,18 @@ class LinuxDebBuildCommand(LinuxDebMixin, BuildCommand):
         self.logger.info("Strip binary artefacts...")
         with self.input.wait_bar("Stripping binary artefacts..."):
             for path in itertools.chain(
-                self.package_path(app).glob("**/*.so"),
-                self.package_path(app).glob("**/*.so.1.0"),
+                self.bundle_path(app).glob("**/*.so"),
+                self.bundle_path(app).glob("**/*.so.1.0"),
                 [self.binary_path(app)],
             ):
-                self.logger.info(
-                    f"Stripping {path.relative_to(self.package_path(app))}"
-                )
+                self.logger.info(f"Stripping {path.relative_to(self.bundle_path(app))}")
                 self.tools.subprocess.check_output(["strip", path])
 
 
-class LinuxDebRunCommand(LinuxDebPassiveMixin, RunCommand):
-    description = "Run a .deb project."
+class LinuxSystemRunCommand(LinuxSystemPassiveMixin, RunCommand):
+    description = "Run a Linux system project."
     supported_host_os = {"Linux"}
-    supported_host_os_reason = "Linux .deb projects can only be executed on Linux."
+    supported_host_os_reason = "Linux system projects can only be executed on Linux."
 
     def run_app(
         self, app: AppConfig, test_mode: bool, passthrough: List[str], **kwargs
@@ -593,53 +587,142 @@ class LinuxDebRunCommand(LinuxDebPassiveMixin, RunCommand):
         )
 
 
-class LinuxDebPackageCommand(LinuxDebMixin, PackageCommand):
-    description = "Package a .deb project."
+def debian_multiline_description(description):
+    """Genereate a Debian multiline description string.
 
-    def verify_tools(self):
-        super().verify_tools()
+    The long description in a Debian control file must
+    *not* contain any blank lines, and each line must start with a single space.
+    Convert a long description into Debian format.
+
+    :param description: A multi-line long description string.
+    :returns: A string in Debian's multiline format
+    """
+    return "\n ".join(line for line in description.split("\n") if line.strip() != "")
+
+
+class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
+    description = "Package a Linux system project."
+
+    @property
+    def packaging_formats(self):
+        return ["deb", "rpm", "pkg", "system"]
+
+    def _verify_deb_tools(self):
+        """Verify that the local environment contains the debian packaging tools."""
+        if not Path("/usr/bin/dpkg-deb").exists():
+            raise BriefcaseCommandError(
+                "Can't find the dpkg tools. Try running `sudo apt install dpkg-dev`."
+            )
+
+    def verify_app_tools(self, app):
+        super().verify_app_tools(app)
+        # If "system" packaging format was selected, determine what that means.
+        if app.packaging_format == "system":
+            app.packaging_format = {
+                DEBIAN: "deb",
+                REDHAT: "rpm",
+                ARCH: "pkg",
+            }.get(app.target_vendor_base, None)
+
+        if app.packaging_format is None:
+            raise BriefcaseCommandError(
+                "Briefcase doesn't know the system packaging format for "
+                f"{app.target_vendor}. You may be able to build a package "
+                "by manually specifying a format with -p/--packaging-format"
+            )
+
         if not self.use_docker:
-            if not Path("/usr/bin/dpkg-deb").exists():
-                raise BriefcaseCommandError(
-                    "Can't find the dpkg tools. Try running `sudo apt install dpkg-dev`."
-                )
+            # Check for the format-specific packaging tools.
+            if app.packaging_format == "deb":
+                self._verify_deb_tools()
 
     def package_app(self, app: AppConfig, **kwargs):
+        if app.packaging_format == "deb":
+            self._package_deb(app, **kwargs)
+        else:
+            raise BriefcaseCommandError(
+                "Briefcase doesn't currently know how to build system packages in "
+                f"{app.packaging_format.upper()} format."
+            )
+
+    def _package_deb(self, app: AppConfig, **kwargs):
         self.logger.info("Building .deb package...", prefix=app.app_name)
-        with self.input.wait_bar("Building..."):
+
+        package_path = self.bundle_path(app) / "package"
+
+        # The long description *must* exist.
+        if app.long_description is None:
+            raise BriefcaseCommandError(
+                "App configuration does not define `long_description`. "
+                "Debian projects require a long description."
+            )
+
+        # Write the Debian metadata control file.
+        with self.input.wait_bar("Write Debian package control file..."):
+            if (package_path / "DEBIAN").exists():
+                self.tools.shutil.rmtree(package_path / "DEBIAN")
+
+            (package_path / "DEBIAN").mkdir()
+
+            # Add runtime package dependencies. App config has been finalized,
+            # so this will be the target-specific definition, if one exists.
+            # libc6 is added because lintian complains without it, even though
+            # its a dependency of the thing we *do* care about - python.
+            system_runtime_requires = ", ".join(
+                [
+                    f"libc6 (>={app.glibc_version})",
+                    f"python{app.python_version_tag}",
+                ]
+                + getattr(app, "system_runtime_requires", [])
+            )
+
+            with (package_path / "DEBIAN" / "control").open("w", encoding="utf-8") as f:
+                f.write(
+                    "\n".join(
+                        [
+                            f"Package: { app.app_name }",
+                            f"Version: { app.version }",
+                            f"Architecture: { self.linux_arch }",
+                            f"Maintainer: { app.author } <{ app.author_email }>",
+                            f"Homepage: { app.url }",
+                            f"Description: { app.description }",
+                            f" { debian_multiline_description(app.long_description) }",
+                            f"Depends: { system_runtime_requires }",
+                            f"Section: { getattr(app, 'system_section', 'utils') }",
+                            "Priority: optional\n",
+                        ]
+                    )
+                )
+
+        with self.input.wait_bar("Building Debian package..."):
             try:
-                # Build the bootstrap binary.
+                # Build the dpkg.
                 self.tools[app].app_context.run(
-                    [
-                        "dpkg-deb",
-                        "--build",
-                        "--root-owner-group",
-                        self.package_name(app),
-                    ],
+                    ["dpkg-deb", "--build", "--root-owner-group", "package"],
                     check=True,
                     cwd=self.bundle_path(app),
                 )
-
-                # Move the deb file to it's final location
-                self.tools.shutil.move(
-                    self.bundle_path(app) / f"{self.package_name(app)}.deb",
-                    self.distribution_path(app, packaging_format="deb"),
-                )
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
-                    f"Error while building .deb package for app {app.app_name}."
+                    f"Error while building .deb package for {app.app_name}."
                 ) from e
 
+            # Move the deb file to it's final location
+            self.tools.shutil.move(
+                self.bundle_path(app) / "package.deb",
+                self.distribution_path(app),
+            )
 
-class LinuxDebPublishCommand(LinuxDebMixin, PublishCommand):
-    description = "Publish a .deb project."
+
+class LinuxSystemPublishCommand(LinuxSystemMixin, PublishCommand):
+    description = "Publish a Linux system project."
 
 
 # Declare the briefcase command bindings
-create = LinuxDebCreateCommand  # noqa
-update = LinuxDebUpdateCommand  # noqa
-open = LinuxDebOpenCommand  # noqa
-build = LinuxDebBuildCommand  # noqa
-run = LinuxDebRunCommand  # noqa
-package = LinuxDebPackageCommand  # noqa
-publish = LinuxDebPublishCommand  # noqa
+create = LinuxSystemCreateCommand  # noqa
+update = LinuxSystemUpdateCommand  # noqa
+open = LinuxSystemOpenCommand  # noqa
+build = LinuxSystemBuildCommand  # noqa
+run = LinuxSystemRunCommand  # noqa
+package = LinuxSystemPackageCommand  # noqa
+publish = LinuxSystemPublishCommand  # noqa

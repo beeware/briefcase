@@ -30,7 +30,7 @@ class LinuxFlatpakMixin(LinuxMixin):
     def project_path(self, app):
         return self.bundle_path(app)
 
-    def distribution_path(self, app, packaging_format):
+    def distribution_path(self, app):
         binary_name = app.formal_name.replace(" ", "_")
         return (
             self.platform_path
@@ -244,7 +244,7 @@ class LinuxFlatpakPackageCommand(LinuxFlatpakMixin, PackageCommand):
                 app_name=app.app_name,
                 version=app.version,
                 build_path=self.bundle_path(app),
-                output_path=self.distribution_path(app, "flatpak"),
+                output_path=self.distribution_path(app),
             )
 
 

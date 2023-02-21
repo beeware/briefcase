@@ -1,3 +1,4 @@
+from abc import abstractmethod
 from typing import Optional
 
 from briefcase.config import BaseConfig
@@ -16,6 +17,19 @@ class PackageCommand(BaseCommand):
     @property
     def default_packaging_format(self):
         return self.output_format
+
+    @abstractmethod
+    def distribution_path(self, app):
+        """The path to the distributable artefact for the app.
+
+        This is the single file that should be uploaded for distribution.
+        This may be the binary (if the binary is a self-contained executable);
+        however, if the output format produces an installer, it will be the
+        path to the installer.
+
+        :param app: The app config
+        """
+        ...
 
     def package_app(self, app: BaseConfig, **options):
         """Package an application.
@@ -61,15 +75,14 @@ class PackageCommand(BaseCommand):
         else:
             state = None
 
+        # Annotate the app with the selected packaging format
+        app.packaging_format = packaging_format
+
         self.verify_app_tools(app)
 
-        state = self.package_app(
-            app, packaging_format=packaging_format, **full_options(state, options)
-        )
+        state = self.package_app(app, **full_options(state, options))
 
-        filename = self.distribution_path(
-            app, packaging_format=packaging_format
-        ).relative_to(self.base_path)
+        filename = self.distribution_path(app).relative_to(self.base_path)
         self.logger.info(f"Packaged {filename}", prefix=app.app_name)
         return state
 

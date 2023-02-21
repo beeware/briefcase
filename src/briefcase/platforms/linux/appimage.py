@@ -45,7 +45,7 @@ class LinuxAppImagePassiveMixin(LinuxMixin):
             / f"{binary_name}-{app.version}-{self.tools.host_arch}.AppImage"
         )
 
-    def distribution_path(self, app, packaging_format):
+    def distribution_path(self, app):
         return self.binary_path(app)
 
     def add_options(self, parser):

@@ -44,7 +44,7 @@ def test_binary_path(create_command, first_app_config, tmp_path):
 def test_distribution_path(create_command, first_app_config, tmp_path):
     # Force the architecture to x86_64 for test purposes.
     create_command.tools.host_arch = "x86_64"
-    distribution_path = create_command.distribution_path(first_app_config, "appimage")
+    distribution_path = create_command.distribution_path(first_app_config)
 
     assert (
         distribution_path

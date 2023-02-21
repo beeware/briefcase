@@ -103,7 +103,7 @@ class GradleMixin:
             / "app-debug.apk"
         )
 
-    def distribution_path(self, app, packaging_format):
+    def distribution_path(self, app):
         return (
             self.bundle_path(app)
             / "app"

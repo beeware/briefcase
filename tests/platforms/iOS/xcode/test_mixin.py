@@ -30,10 +30,7 @@ def test_binary_path(create_command, first_app_config, tmp_path):
 
 
 def test_distribution_path(create_command, first_app_config, tmp_path):
-    distribution_path = create_command.distribution_path(
-        first_app_config,
-        packaging_format="any",
-    )
+    distribution_path = create_command.distribution_path(first_app_config)
 
     assert distribution_path == (
         tmp_path

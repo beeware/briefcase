@@ -1,9 +1,6 @@
-from unittest.mock import Mock
-
 import pytest
 
-from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
-from briefcase.platforms.linux import deb
+from briefcase.exceptions import UnsupportedHostError
 
 from ....utils import create_file
 
@@ -34,7 +31,7 @@ def test_unsupported_host_os_with_docker(create_command, host_os, tmp_path):
 
     with pytest.raises(
         UnsupportedHostError,
-        match="Linux .deb projects can only be built on Linux, or on macOS using Docker.",
+        match="Linux system projects can only be built on Linux, or on macOS using Docker.",
     ):
         create_command()
 
@@ -47,7 +44,7 @@ def test_unsupported_host_os_without_docker(create_command, host_os, tmp_path):
 
     with pytest.raises(
         UnsupportedHostError,
-        match="Linux .deb projects can only be built on Linux, or on macOS using Docker.",
+        match="Linux system projects can only be built on Linux, or on macOS using Docker.",
     ):
         create_command()
 
@@ -61,61 +58,13 @@ def test_supported_host_os_docker(create_command):
     create_command.verify_host()
 
 
-def test_supported_host_os_debian(create_command, monkeypatch):
-    """If we're on a Linux, and not using Docker, a check is made for Debian-properties"""
+def test_supported_host_os_without_docker(create_command):
+    """If not using Docker on a supported host, no error is raised"""
     create_command.target_image = None
     create_command.tools.host_os = "Linux"
-
-    # Mock the existence of the debian_version file.
-    debian_version = Mock()
-    Path = Mock(return_value=debian_version)
-    debian_version.exists.return_value = True
-    monkeypatch.setattr(deb, "Path", Path)
 
     # Verify the host
     create_command.verify_host()
-
-    # The right path was checked
-    Path.assert_called_once_with("/etc/debian_version")
-
-
-def test_supported_host_os_not_debian(create_command, monkeypatch):
-    """If we're on a Linux, and not using Docker, and we're *not* on a Debian-alike, raise an error"""
-    create_command.target_image = None
-    create_command.tools.host_os = "Linux"
-
-    # Mock the existence of the debian_version file.
-    debian_version = Mock()
-    Path = Mock(return_value=debian_version)
-    debian_version.exists.return_value = False
-    monkeypatch.setattr(deb, "Path", Path)
-
-    # Verify the host
-    with pytest.raises(
-        BriefcaseCommandError,
-        match=r"Cannot build \.deb packages on a Linux distribution that isn't Debian-based\.",
-    ):
-        create_command.verify_host()
-
-    # The right path was checked
-    Path.assert_called_once_with("/etc/debian_version")
-
-
-def test_output_format_template_context_no_long_description(
-    create_command, first_app_config
-):
-    "If there's no long description, an error is raised."
-    # Add some properties defined in config finalization
-    first_app_config.python_version_tag = "3.X"
-    first_app_config.target_image = "somevendor:surprising"
-    first_app_config.glibc_version = "2.42"
-
-    with pytest.raises(
-        BriefcaseCommandError,
-        match=r"App configuration does not define `long_description`\. "
-        r"Debian packaging guidelines require a long description\.",
-    ):
-        create_command.output_format_template_context(first_app_config)
 
 
 def test_output_format_template_context(create_command, first_app_config):
@@ -123,6 +72,7 @@ def test_output_format_template_context(create_command, first_app_config):
     # Add some properties defined in config finalization
     first_app_config.python_version_tag = "3.X"
     first_app_config.target_image = "somevendor:surprising"
+    first_app_config.target_vendor_base = "basevendor"
     first_app_config.glibc_version = "2.42"
 
     # Add a long description
@@ -134,33 +84,7 @@ def test_output_format_template_context(create_command, first_app_config):
     # Deb-specific context
     assert context["python_version"] == "3.X"
     assert context["docker_base_image"] == "somevendor:surprising"
-    assert context["system_runtime_requires"] == "libc6 (>=2.42), python3.X"
-
-
-def test_output_format_template_context_extra_runtime_requires(
-    create_command, first_app_config
-):
-    "If the app defines extra runtime requirements, they're included"
-    # Add some properties defined in config finalization
-    first_app_config.python_version_tag = "3.X"
-    first_app_config.target_image = "somevendor:surprising"
-    first_app_config.glibc_version = "2.42"
-    # Add extra runtime requirements
-    first_app_config.system_runtime_requires = ["first", "second (>=1.23)"]
-
-    # Add a long description
-    first_app_config.long_description = "This is a long\ndescription."
-
-    # Generate the context
-    context = create_command.output_format_template_context(first_app_config)
-
-    # Deb-specific context
-    assert context["python_version"] == "3.X"
-    assert context["docker_base_image"] == "somevendor:surprising"
-    assert (
-        context["system_runtime_requires"]
-        == "libc6 (>=2.42), python3.X, first, second (>=1.23)"
-    )
+    assert context["vendor_base"] == "basevendor"
 
 
 def test_install_extra_resources(create_command, first_app_config, capsys, tmp_path):
@@ -168,7 +92,6 @@ def test_install_extra_resources(create_command, first_app_config, capsys, tmp_p
     # Specify a system python app for a dummy vendor
     first_app_config.target_vendor = "somevendor"
     first_app_config.target_codename = "surprising"
-    first_app_config.python_source = "system"
 
     # Create an empty path index
     create_command._path_index = {first_app_config: {}}
@@ -191,7 +114,6 @@ def test_install_extra_resources(create_command, first_app_config, capsys, tmp_p
         / "linux"
         / "somevendor"
         / "surprising"
-        / "system"
         / "First App"
         / "LICENSE"
     ).exists()
@@ -201,7 +123,6 @@ def test_install_extra_resources(create_command, first_app_config, capsys, tmp_p
         / "linux"
         / "somevendor"
         / "surprising"
-        / "system"
         / "First App"
         / "CHANGELOG"
     ).exists()
@@ -219,7 +140,6 @@ def test_install_extra_resources_missing_license(
     # Specify a system python app for a dummy vendor
     first_app_config.target_vendor = "somevendor"
     first_app_config.target_codename = "surprising"
-    first_app_config.python_source = "system"
 
     # Create an empty path index
     create_command._path_index = {first_app_config: {}}
@@ -240,7 +160,6 @@ def test_install_extra_resources_missing_license(
         / "linux"
         / "somevendor"
         / "surprising"
-        / "system"
         / "First App"
         / "LICENSE"
     ).exists()
@@ -250,7 +169,6 @@ def test_install_extra_resources_missing_license(
         / "linux"
         / "somevendor"
         / "surprising"
-        / "system"
         / "First App"
         / "CHANGELOG"
     ).exists()
@@ -268,7 +186,6 @@ def test_install_extra_resources_missing_changelog(
     # Specify a system python app for a dummy vendor
     first_app_config.target_vendor = "somevendor"
     first_app_config.target_codename = "surprising"
-    first_app_config.python_source = "system"
 
     # Create an empty path index
     create_command._path_index = {first_app_config: {}}
@@ -289,7 +206,6 @@ def test_install_extra_resources_missing_changelog(
         / "linux"
         / "somevendor"
         / "surprising"
-        / "system"
         / "First App"
         / "LICENSE"
     ).exists()
@@ -299,7 +215,6 @@ def test_install_extra_resources_missing_changelog(
         / "linux"
         / "somevendor"
         / "surprising"
-        / "system"
         / "First App"
         / "CHANGELOG"
     ).exists()

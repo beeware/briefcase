@@ -26,13 +26,15 @@ def test_no_args_package_one_app(package_command, first_app):
             "package",
             "first",
             {
-                "packaging_format": "pkg",
                 "adhoc_sign": False,
                 "identity": None,
                 "sign_app": True,
             },
         ),
     ]
+
+    # Package format has been annotated onto the app
+    assert first_app.packaging_format == "pkg"
 
 
 def test_package_one_explicit_app(package_command, first_app, second_app):
@@ -64,13 +66,15 @@ def test_package_one_explicit_app(package_command, first_app, second_app):
             "package",
             "first",
             {
-                "packaging_format": "pkg",
                 "adhoc_sign": False,
                 "identity": None,
                 "sign_app": True,
             },
         ),
     ]
+
+    # Package format has been annotated onto the app
+    assert first_app.packaging_format == "pkg"
 
 
 def test_no_args_package_two_app(package_command, first_app, second_app):
@@ -103,7 +107,6 @@ def test_no_args_package_two_app(package_command, first_app, second_app):
             "package",
             "first",
             {
-                "packaging_format": "pkg",
                 "adhoc_sign": False,
                 "identity": None,
                 "sign_app": True,
@@ -116,7 +119,6 @@ def test_no_args_package_two_app(package_command, first_app, second_app):
             "package",
             "second",
             {
-                "packaging_format": "pkg",
                 "adhoc_sign": False,
                 "identity": None,
                 "sign_app": True,
@@ -125,6 +127,10 @@ def test_no_args_package_two_app(package_command, first_app, second_app):
             },
         ),
     ]
+
+    # Package format has been annotated onto the apps
+    assert first_app.packaging_format == "pkg"
+    assert second_app.packaging_format == "pkg"
 
 
 def test_no_sign_package_one_app(package_command, first_app):
@@ -155,13 +161,15 @@ def test_no_sign_package_one_app(package_command, first_app):
             "package",
             "first",
             {
-                "packaging_format": "pkg",
                 "adhoc_sign": False,
                 "identity": None,
                 "sign_app": False,
             },
         ),
     ]
+
+    # Package format has been annotated onto the app
+    assert first_app.packaging_format == "pkg"
 
 
 def test_identity_arg_package_one_app(package_command, first_app):
@@ -193,13 +201,15 @@ def test_identity_arg_package_one_app(package_command, first_app):
             "package",
             "first",
             {
-                "packaging_format": "pkg",
                 "adhoc_sign": False,
                 "identity": "test",
                 "sign_app": True,
             },
         ),
     ]
+
+    # Package format has been annotated onto the app
+    assert first_app.packaging_format == "pkg"
 
 
 def test_adhoc_sign_package_one_app(package_command, first_app):
@@ -231,13 +241,15 @@ def test_adhoc_sign_package_one_app(package_command, first_app):
             "package",
             "first",
             {
-                "packaging_format": "pkg",
                 "adhoc_sign": True,
                 "identity": None,
                 "sign_app": True,
             },
         ),
     ]
+
+    # Package format has been annotated onto the app
+    assert first_app.packaging_format == "pkg"
 
 
 def test_no_sign_args_package_two_app(package_command, first_app, second_app):
@@ -271,7 +283,6 @@ def test_no_sign_args_package_two_app(package_command, first_app, second_app):
             "package",
             "first",
             {
-                "packaging_format": "pkg",
                 "adhoc_sign": False,
                 "identity": None,
                 "sign_app": False,
@@ -284,7 +295,6 @@ def test_no_sign_args_package_two_app(package_command, first_app, second_app):
             "package",
             "second",
             {
-                "packaging_format": "pkg",
                 "adhoc_sign": False,
                 "identity": None,
                 "sign_app": False,
@@ -293,6 +303,10 @@ def test_no_sign_args_package_two_app(package_command, first_app, second_app):
             },
         ),
     ]
+
+    # Package format has been annotated onto the apps
+    assert first_app.packaging_format == "pkg"
+    assert second_app.packaging_format == "pkg"
 
 
 def test_adhoc_sign_args_package_two_app(package_command, first_app, second_app):
@@ -328,7 +342,6 @@ def test_adhoc_sign_args_package_two_app(package_command, first_app, second_app)
             "package",
             "first",
             {
-                "packaging_format": "pkg",
                 "adhoc_sign": True,
                 "identity": None,
                 "sign_app": True,
@@ -341,7 +354,6 @@ def test_adhoc_sign_args_package_two_app(package_command, first_app, second_app)
             "package",
             "second",
             {
-                "packaging_format": "pkg",
                 "adhoc_sign": True,
                 "identity": None,
                 "sign_app": True,
@@ -350,6 +362,10 @@ def test_adhoc_sign_args_package_two_app(package_command, first_app, second_app)
             },
         ),
     ]
+
+    # Package format has been annotated onto the apps
+    assert first_app.packaging_format == "pkg"
+    assert second_app.packaging_format == "pkg"
 
 
 def test_identity_sign_args_package_two_app(package_command, first_app, second_app):
@@ -383,7 +399,6 @@ def test_identity_sign_args_package_two_app(package_command, first_app, second_a
             "package",
             "first",
             {
-                "packaging_format": "pkg",
                 "adhoc_sign": False,
                 "identity": "test",
                 "sign_app": True,
@@ -396,7 +411,6 @@ def test_identity_sign_args_package_two_app(package_command, first_app, second_a
             "package",
             "second",
             {
-                "packaging_format": "pkg",
                 "adhoc_sign": False,
                 "identity": "test",
                 "sign_app": True,
@@ -405,6 +419,10 @@ def test_identity_sign_args_package_two_app(package_command, first_app, second_a
             },
         ),
     ]
+
+    # Package format has been annotated onto the apps
+    assert first_app.packaging_format == "pkg"
+    assert second_app.packaging_format == "pkg"
 
 
 def test_package_alternate_format(package_command, first_app):
@@ -435,13 +453,15 @@ def test_package_alternate_format(package_command, first_app):
             "package",
             "first",
             {
-                "packaging_format": "box",
                 "adhoc_sign": False,
                 "identity": None,
                 "sign_app": True,
             },
         ),
     ]
+
+    # Package format has been annotated onto the app
+    assert first_app.packaging_format == "box"
 
 
 def test_create_before_package(package_command, first_app_config):
@@ -492,7 +512,6 @@ def test_create_before_package(package_command, first_app_config):
             "package",
             "first",
             {
-                "packaging_format": "pkg",
                 "adhoc_sign": False,
                 "identity": None,
                 "sign_app": True,
@@ -501,6 +520,9 @@ def test_create_before_package(package_command, first_app_config):
             },
         ),
     ]
+
+    # Package format has been annotated onto the app
+    assert first_app_config.packaging_format == "pkg"
 
 
 def test_update_package_one_app(package_command, first_app):
@@ -553,7 +575,6 @@ def test_update_package_one_app(package_command, first_app):
             "package",
             "first",
             {
-                "packaging_format": "pkg",
                 "adhoc_sign": False,
                 "identity": None,
                 "sign_app": True,
@@ -562,6 +583,9 @@ def test_update_package_one_app(package_command, first_app):
             },
         ),
     ]
+
+    # Package format has been annotated onto the app
+    assert first_app.packaging_format == "pkg"
 
 
 def test_update_package_two_app(package_command, first_app, second_app):
@@ -616,7 +640,6 @@ def test_update_package_two_app(package_command, first_app, second_app):
             "package",
             "first",
             {
-                "packaging_format": "pkg",
                 "adhoc_sign": False,
                 "identity": None,
                 "sign_app": True,
@@ -660,7 +683,6 @@ def test_update_package_two_app(package_command, first_app, second_app):
             "package",
             "second",
             {
-                "packaging_format": "pkg",
                 "adhoc_sign": False,
                 "identity": None,
                 "sign_app": True,
@@ -671,6 +693,9 @@ def test_update_package_two_app(package_command, first_app, second_app):
             },
         ),
     ]
+    # Package format has been annotated onto the apps
+    assert first_app.packaging_format == "pkg"
+    assert second_app.packaging_format == "pkg"
 
 
 def test_build_before_package(package_command, first_app_unbuilt):
@@ -711,7 +736,6 @@ def test_build_before_package(package_command, first_app_unbuilt):
             "package",
             "first",
             {
-                "packaging_format": "pkg",
                 "adhoc_sign": False,
                 "identity": None,
                 "sign_app": True,
@@ -719,3 +743,6 @@ def test_build_before_package(package_command, first_app_unbuilt):
             },
         ),
     ]
+
+    # Package format has been annotated onto the app
+    assert first_app_unbuilt.packaging_format == "pkg"

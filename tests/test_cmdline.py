@@ -12,7 +12,7 @@ from briefcase.exceptions import (
     NoCommandError,
     UnsupportedCommandError,
 )
-from briefcase.platforms.linux.appimage import LinuxAppImageCreateCommand
+from briefcase.platforms.linux.system import LinuxSystemCreateCommand
 from briefcase.platforms.macOS.app import (
     macOSAppCreateCommand,
     macOSAppPublishCommand,
@@ -238,13 +238,13 @@ def test_bare_command(monkeypatch, logger, console):
 
 @pytest.mark.skipif(sys.platform != "linux", reason="requires Linux")
 def test_linux_default(logger, console):
-    """``briefcase create`` returns the linux create appimage command on Linux."""
+    """``briefcase create`` returns the linux create system command on Linux."""
 
     cmd, options = do_cmdline_parse("create".split(), logger, console)
 
-    assert isinstance(cmd, LinuxAppImageCreateCommand)
+    assert isinstance(cmd, LinuxSystemCreateCommand)
     assert cmd.platform == "linux"
-    assert cmd.output_format == "appimage"
+    assert cmd.output_format == "system"
     assert cmd.input.enabled
     assert cmd.logger.verbosity == 1
     assert cmd.logger is logger
@@ -254,7 +254,7 @@ def test_linux_default(logger, console):
 
 @pytest.mark.skipif(sys.platform != "darwin", reason="requires macOS")
 def test_macOS_default(logger, console):
-    """``briefcase create`` returns the linux create appimage command on Linux."""
+    """``briefcase create`` returns the macOS create command on Linux."""
 
     cmd, options = do_cmdline_parse("create".split(), logger, console)
 
@@ -337,9 +337,9 @@ def test_command_explicit_platform(monkeypatch, logger, console):
 
     cmd, options = do_cmdline_parse("create linux".split(), logger, console)
 
-    assert isinstance(cmd, LinuxAppImageCreateCommand)
+    assert isinstance(cmd, LinuxSystemCreateCommand)
     assert cmd.platform == "linux"
-    assert cmd.output_format == "appimage"
+    assert cmd.output_format == "system"
     assert cmd.input.enabled
     assert cmd.logger.verbosity == 1
     assert cmd.logger is logger

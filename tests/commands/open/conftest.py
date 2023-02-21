@@ -41,11 +41,6 @@ class DummyOpenCommand(OpenCommand):
     def project_path(self, app):
         return self.bundle_path(app) / f"{app.formal_name}.project"
 
-    def distribution_path(self, app, packaging_format):
-        raise NotImplementedError(
-            "Required by interface contract, but should not be used"
-        )
-
     def verify_host(self):
         super().verify_host()
         self.actions.append(("verify-host",))

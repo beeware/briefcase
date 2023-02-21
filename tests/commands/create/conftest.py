@@ -20,9 +20,6 @@ class DefaultCreateCommand(CreateCommand):
     def binary_path(self, app):
         return NotImplementedError()
 
-    def distribution_path(self, app, packaging_format):
-        return NotImplementedError()
-
 
 @pytest.fixture
 def default_create_command(tmp_path):
@@ -73,9 +70,6 @@ class DummyCreateCommand(CreateCommand):
 
     def binary_path(self, app):
         return self.platform_path / f"{app.app_name}.binary"
-
-    def distribution_path(self, app, packaging_format):
-        return self.platform_path / f"{app.app_name}.dummy.{packaging_format}"
 
     # Hard code the python version to make testing easier.
     @property

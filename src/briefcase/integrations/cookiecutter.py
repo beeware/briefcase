@@ -65,24 +65,3 @@ class TOMLEscape(Extension):
             return obj.replace('"', '"').replace("\\", "\\\\")
 
         environment.filters["escape_toml"] = escape_toml
-
-
-class StringExtension(Extension):
-    """Jinja2 extension to do various string manipulations."""
-
-    def __init__(self, environment):
-        """Initialize the extension with the given environment."""
-        super().__init__(environment)
-
-        def first_line(obj):
-            """Return only the first line of a string."""
-            return obj.split("\n")[0]
-
-        def multiline_description(obj):
-            """Return a multiline-string where empty lines have been removed,
-            and lines after the first line have been indented by 1 space.
-            """
-            return "\n ".join(line for line in obj.split("\n") if line.strip() != "")
-
-        environment.filters["first_line"] = first_line
-        environment.filters["multiline_description"] = multiline_description
