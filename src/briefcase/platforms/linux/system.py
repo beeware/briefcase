@@ -1,5 +1,4 @@
 import gzip
-import itertools
 import os
 import re
 import subprocess
@@ -540,15 +539,8 @@ class LinuxSystemBuildCommand(LinuxSystemMixin, BuildCommand):
                     )
                     path.chmod(new_perms)
 
-        self.logger.info("Strip binary artefacts...")
-        with self.input.wait_bar("Stripping binary artefacts..."):
-            for path in itertools.chain(
-                self.bundle_path(app).glob("**/*.so"),
-                self.bundle_path(app).glob("**/*.so.1.0"),
-                [self.binary_path(app)],
-            ):
-                self.logger.info(f"Stripping {path.relative_to(self.bundle_path(app))}")
-                self.tools.subprocess.check_output(["strip", path])
+        with self.input.wait_bar("Stripping binary..."):
+            self.tools.subprocess.check_output(["strip", self.binary_path(app)])
 
 
 class LinuxSystemRunCommand(LinuxSystemPassiveMixin, RunCommand):

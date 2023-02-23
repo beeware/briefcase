@@ -75,20 +75,13 @@ def test_build_app(build_command, first_app, tmp_path):
         == 0o644
     )
 
-    # Strip has been invoked on all binaries
-    assert build_command.tools.subprocess.check_output.mock_calls == [
-        mock.call(["strip", lib_dir / "app" / "support.so"]),
-        mock.call(["strip", lib_dir / "app_packages" / "firstlib" / "first.so"]),
-        mock.call(["strip", lib_dir / "app_packages" / "secondlib" / "second_a.so"]),
-        mock.call(["strip", lib_dir / "app_packages" / "secondlib" / "second_b.so"]),
-        mock.call(["strip", lib_dir / "app_packages" / "firstlib" / "first.so.1.0"]),
-        mock.call(
-            [
-                "strip",
-                bundle_path / "package" / "usr" / "bin" / "first-app",
-            ]
-        ),
-    ]
+    # Strip has been invoked on the binary
+    build_command.tools.subprocess.check_output.assert_called_once_with(
+        [
+            "strip",
+            bundle_path / "package" / "usr" / "bin" / "first-app",
+        ]
+    )
 
 
 def test_build_bootstrap_failed(build_command, first_app, tmp_path):
