@@ -9,6 +9,8 @@ from briefcase.platforms.linux import LinuxMixin
         # Debian derivatives
         ("debian", "debian"),
         ("ubuntu", "debian"),
+        ("linuxmint", "debian"),
+        ("pop", "debian"),
         # Redhat derivatives
         ("redhat", "redhat"),
         ("fedora", "redhat"),

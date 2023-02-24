@@ -137,7 +137,7 @@ class LinuxMixin:
         :returns: The base vendor type; None if no vendor type can be identified.
         """
         # Derive the base vendor type for the specific vendor being targetted.
-        if vendor in {"debian", "ubuntu"}:
+        if vendor in {"debian", "ubuntu", "linuxmint", "pop"}:
             base = DEBIAN
         elif vendor in {"redhat", "fedora", "centos", "almalinux"}:
             base = REDHAT
