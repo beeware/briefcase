@@ -21,7 +21,7 @@ class Download(Tool):
     full_name = "Download"
 
     @classmethod
-    def verify(cls, tools: ToolCache):
+    def verify(cls, tools: ToolCache, **kwargs):
         """Make downloader available in tool cache."""
         # short circuit since already verified and available
         if hasattr(tools, "download"):

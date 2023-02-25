@@ -42,7 +42,7 @@ class JDK(Tool):
         )
 
     @classmethod
-    def verify(cls, tools: ToolCache, install: bool = True) -> JDK:
+    def verify(cls, tools: ToolCache, install: bool = True, **kwargs) -> JDK:
         """Verify that a Java 8 JDK exists.
 
         If ``JAVA_HOME`` is set, try that version. If it is a JRE, or its *not*

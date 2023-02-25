@@ -26,6 +26,7 @@ class Xcode(Tool):
         cls,
         tools: ToolCache,
         min_version: tuple[int, int, int] = None,
+        **kwargs,
     ) -> Xcode:
         """Verify that Xcode and the command line developer tools are installed and ready
         for use.
@@ -61,7 +62,7 @@ class XcodeCliTools(Tool):
     full_name = "Xcode Command Line Tools"
 
     @classmethod
-    def verify(cls, tools: ToolCache) -> XcodeCliTools:
+    def verify(cls, tools: ToolCache, **kwargs) -> XcodeCliTools:
         """Verify that command line developer tools are installed and ready for use.
 
         A completely clean machine will have neither Xcode *nor* the Command Line

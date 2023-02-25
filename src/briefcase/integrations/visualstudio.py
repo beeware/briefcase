@@ -46,7 +46,7 @@ class VisualStudio(Tool):
         return self._install_metadata
 
     @classmethod
-    def verify(cls, tools: ToolCache) -> VisualStudio:
+    def verify(cls, tools: ToolCache, **kwargs) -> VisualStudio:
         """Verify that Visual Studio is available.
 
         :param tools: ToolCache of available tools
@@ -96,13 +96,15 @@ or unset the environment variable; then re-run Briefcase.
 
             except KeyError:
                 # No %MSBUILD% environment variable. Look for vswhere.exe
-                vswhere_path = (
-                    Path(tools.os.environ["ProgramFiles(x86)"])
-                    / "Microsoft Visual Studio"
-                    / "Installer"
-                    / "vswhere.exe"
-                )
-                if not vswhere_path.exists():
+                vswhere_path = None
+                if program_files := tools.os.environ.get("ProgramFiles(x86)"):
+                    vswhere_path = (
+                        Path(program_files)
+                        / "Microsoft Visual Studio"
+                        / "Installer"
+                        / "vswhere.exe"
+                    )
+                if vswhere_path is None or not vswhere_path.exists():
                     raise BriefcaseCommandError(
                         f"""\
 Visual Studio does not appear to be installed. Visual Studio 2022 Community

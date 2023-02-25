@@ -143,7 +143,7 @@ class NativeAppContext(Tool):
     """A wrapper around subprocess for use as an app-bound tool."""
 
     @classmethod
-    def verify(cls, tools: ToolCache, app: AppConfig) -> Subprocess:
+    def verify(cls, tools: ToolCache, app: AppConfig, **kwargs) -> Subprocess:
         """Make subprocess available as app-bound tool."""
         # short circuit since already verified and available
         if hasattr(tools[app], "app_context"):

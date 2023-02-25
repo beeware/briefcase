@@ -136,7 +136,7 @@ def test_verify_tools_download_failure(build_command):
     build_command.tools.download.file.assert_called_with(
         url="https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-wonky.AppImage",
         download_path=build_command.tools.base_path,
-        role="linuxdeploy",
+        role="LinuxDeploy",
     )
 
     # But it failed, so the file won't be made executable...

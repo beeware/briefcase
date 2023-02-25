@@ -111,7 +111,7 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
     }
 
     @classmethod
-    def verify(cls, tools: ToolCache) -> Docker:
+    def verify(cls, tools: ToolCache, **kwargs) -> Docker:
         """Verify Docker is installed and operational."""
         # short circuit since already verified and available
         if hasattr(tools, "docker"):
@@ -236,7 +236,7 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
 
 
 class DockerAppContext(Tool):
-    name = "docker"
+    name = "dockerappcontext"
     full_name = "Docker"
 
     def __init__(self, tools: ToolCache, app: AppConfig):
@@ -265,6 +265,7 @@ class DockerAppContext(Tool):
         host_bundle_path: Path,
         host_data_path: Path,
         python_version: str,
+        **kwargs,
     ) -> DockerAppContext:
         """Verify that docker is available as an app-bound tool.
 

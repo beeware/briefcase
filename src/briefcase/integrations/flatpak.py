@@ -19,7 +19,7 @@ class Flatpak(Tool):
     DEFAULT_SDK = "org.freedesktop.Sdk"
 
     @classmethod
-    def verify(cls, tools: ToolCache) -> Flatpak:
+    def verify(cls, tools: ToolCache, **kwargs) -> Flatpak:
         """Verify that the Flatpak toolchain is available.
 
         :param tools: ToolCache of available tools

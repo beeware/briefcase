@@ -13,7 +13,7 @@ from cookiecutter.main import cookiecutter
 
 import briefcase.integrations
 from briefcase.console import Console, Log
-from briefcase.integrations.base import Tool, ToolCache
+from briefcase.integrations.base import Tool, ToolCache, tool_registry
 
 
 @pytest.fixture
@@ -25,18 +25,35 @@ def simple_tools(tmp_path):
     )
 
 
-def tools_for_module(tool_module_name: str) -> set:
-    """Return names of classes that subclass Tool in a module in
-    ``briefcase.integrations``, e.g. "android_sdk"."""
+def tools_for_module(tool_module_name: str) -> dict:
+    """Return classes that subclass Tool in a module in
+    ``briefcase.integrations``, e.g. {"android_sdk": AndroidSDK}."""
     return {
-        klass_name
-        for klass_name, _ in inspect.getmembers(
+        klass_name: klass
+        for klass_name, klass in inspect.getmembers(
             sys.modules[f"briefcase.integrations.{tool_module_name}"],
             lambda klass: (
                 inspect.isclass(klass) and issubclass(klass, Tool) and klass is not Tool
             ),
         )
     }
+
+
+def test_tool_registry(simple_tools):
+    """The Tool Registry must contain all defined Tools."""
+    all_defined_tools = {
+        tool
+        for toolset in map(tools_for_module, briefcase.integrations.__all__)
+        for tool in toolset.values()
+    }
+
+    from pprint import pprint
+
+    pprint(all_defined_tools)
+    pprint(set(tool_registry.values()))
+
+    # test uses subset since registry will contain dummy testing tools
+    assert all_defined_tools.issubset(tool_registry.values())
 
 
 def test_toolcache_typing():
@@ -78,7 +95,7 @@ def test_toolcache_typing():
     for tool_module_name in briefcase.integrations.__all__:
         if tool_module_name not in tools_unannotated:
             assert tool_module_name in ToolCache.__annotations__.keys()
-        for tool_name in tools_for_module(tool_module_name):
+        for tool_name in tools_for_module(tool_module_name).keys():
             if tool_name not in tool_klasses_skip_dynamic_checks:
                 assert tool_name in ToolCache.__annotations__.values()
 
@@ -86,7 +103,7 @@ def test_toolcache_typing():
     for tool_name, tool_klass_name in ToolCache.__annotations__.items():
         if tool_name not in tool_names_skip_dynamic_check:
             assert tool_name in briefcase.integrations.__all__
-            assert tool_klass_name in tools_for_module(tool_name)
+            assert tool_klass_name in tools_for_module(tool_name).keys()
             tool_klass = getattr(
                 importlib.import_module(f"briefcase.integrations.{tool_name}"),
                 tool_klass_name,
@@ -100,9 +117,6 @@ def test_toolcache_typing():
     ]
     app_context_annotated = ToolCache.__annotations__["app_context"].split(" | ")
     assert sorted(app_context_klasses) == sorted(app_context_annotated)
-
-    # assert ToolCache.__annotations__["xcode"] == "bool"
-    # assert ToolCache.__annotations__["xcode_cli"] == "bool"
 
     assert ToolCache.__annotations__["git"] == "git_"
 

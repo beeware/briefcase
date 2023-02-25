@@ -18,12 +18,13 @@ class DummyUpgradeCommand(UpgradeCommand):
     output_format = "Dummy"
     description = "Dummy update command"
 
-    def __init__(self, *args, sdks, **kwargs):
+    def __init__(self, *args, **kwargs):
         kwargs.setdefault("logger", Log())
         kwargs.setdefault("console", Console())
         super().__init__(*args, **kwargs)
 
-        self.sdks = sdks
+    def bundle_path(self, app):
+        return self.platform_path / f"{app.app_name}.dummy"
 
     def binary_path(self, app):
         return self.bundle_path(app) / f"{app.app_name}.bin"
@@ -114,12 +115,4 @@ def NonInstalledSDK():
 
 @pytest.fixture
 def upgrade_command(tmp_path, ManagedSDK1, ManagedSDK2, NonManagedSDK, NonInstalledSDK):
-    return DummyUpgradeCommand(
-        base_path=tmp_path,
-        sdks=[
-            ManagedSDK1,
-            NonManagedSDK,
-            NonInstalledSDK,
-            ManagedSDK2,
-        ],
-    )
+    return DummyUpgradeCommand(base_path=tmp_path)

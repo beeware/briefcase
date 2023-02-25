@@ -36,18 +36,29 @@ if TYPE_CHECKING:
     from briefcase.integrations.xcode import Xcode, XcodeCliTools
 
 
+# Registry of all defined Tools
+tool_registry: dict[str, type[Tool]] = dict()
+
+
 class Tool(ABC):
     """Tool Base."""
 
     name: str
     full_name: str
 
-    def __init__(self, tools: ToolCache):
+    def __init__(self, tools: ToolCache, **kwargs):
         self.tools = tools
+
+    def __init_subclass__(tool, **kwargs):
+        """Register each tool at definition."""
+        try:
+            tool_registry[tool.name] = tool
+        except AttributeError:
+            tool_registry[tool.__name__] = tool
 
     @classmethod
     @abstractmethod
-    def verify(cls, tools: ToolCache):
+    def verify(cls, tools: ToolCache, **kwargs):
         """Confirm the tool is available and usable on the host platform."""
         ...
 
@@ -80,7 +91,7 @@ class Tool(ABC):
         else:
             raise NonManagedToolError(self.full_name)
 
-    def upgrade(self, *a, **kw):
+    def upgrade(self):
         """Upgrade a managed tool."""
         if self.managed_install:
             if not self.exists():

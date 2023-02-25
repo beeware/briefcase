@@ -21,7 +21,7 @@ class RCEdit(Tool):
         return self.tools.base_path / "rcedit-x64.exe"
 
     @classmethod
-    def verify(cls, tools: ToolCache, install: bool = True) -> RCEdit:
+    def verify(cls, tools: ToolCache, install: bool = True, **kwargs) -> RCEdit:
         """Verify that rcedit is available.
 
         :param tools: ToolCache of available tools

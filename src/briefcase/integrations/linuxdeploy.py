@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import shlex
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import TypeVar
 from urllib.parse import urlparse
@@ -22,7 +22,7 @@ ELF_PATCH_ORIGINAL_BYTES = bytes.fromhex("414902")
 ELF_PATCH_PATCHED_BYTES = bytes.fromhex("000000")
 
 
-class LinuxDeployBase(Tool):
+class LinuxDeployBase(Tool, ABC):
     name: str
     full_name: str
     install_msg: str
@@ -90,6 +90,9 @@ class LinuxDeployBase(Tool):
         :returns: A valid tool wrapper. If the tool/plugin is not
             available, and was not installed, raises MissingToolError.
         """
+        if cls is LinuxDeployBase:
+            raise BriefcaseCommandError(f"{cls.__name__} cannot be used as a Tool.")
+
         is_plugin = issubclass(cls, LinuxDeployPluginBase)
 
         # short circuit since already verified and available
@@ -189,7 +192,8 @@ class LinuxDeployPluginBase(LinuxDeployBase):
 
 
 class LinuxDeployGtkPlugin(LinuxDeployPluginBase):
-    full_name = "linuxdeploy GTK plugin"
+    name = "linuxdeploygtkplugin"
+    full_name = "LinuxDeploy GTK plugin"
 
     @property
     def file_name(self) -> str:
@@ -204,7 +208,8 @@ class LinuxDeployGtkPlugin(LinuxDeployPluginBase):
 
 
 class LinuxDeployQtPlugin(LinuxDeployPluginBase):
-    full_name = "linuxdeploy Qt plugin"
+    name = "linuxdeployqtplugin"
+    full_name = "LinuxDeploy Qt plugin"
 
     @property
     def file_name(self) -> str:
@@ -219,10 +224,11 @@ class LinuxDeployQtPlugin(LinuxDeployPluginBase):
 
 
 class LinuxDeployLocalFilePlugin(LinuxDeployPluginBase):
+    name = "linuxdeploy_user_file_plugin"
     full_name = "user-provided linuxdeploy plugin from local file"
     install_msg = "Copying user-provided plugin into project"
 
-    def __init__(self, tools, plugin_path, bundle_path):
+    def __init__(self, tools, plugin_path, bundle_path, **kwargs):
         self._file_name = plugin_path.name
         self.local_path = plugin_path.parent
         self._file_path = bundle_path
@@ -261,9 +267,10 @@ class LinuxDeployLocalFilePlugin(LinuxDeployPluginBase):
 
 
 class LinuxDeployURLPlugin(LinuxDeployPluginBase):
+    name = "linuxdeploy_user_url_plugin"
     full_name = "user-provided linuxdeploy plugin from URL"
 
-    def __init__(self, tools, url):
+    def __init__(self, tools, url, **kwargs):
         self._download_url = url
 
         url_parts = urlparse(url)
@@ -302,7 +309,7 @@ class LinuxDeployURLPlugin(LinuxDeployPluginBase):
 
 class LinuxDeploy(LinuxDeployBase):
     name = "linuxdeploy"
-    full_name = "linuxdeploy"
+    full_name = "LinuxDeploy"
     install_msg = "linuxdeploy was not found; downloading and installing..."
 
     @property
@@ -353,10 +360,8 @@ class LinuxDeploy(LinuxDeployBase):
         `FOO` in the environment. The definition will be split the same way as
         shell arguments, so spaces should be escaped.
 
-        :param plugin_definitions: A list of strings defining the required
-            plugins.
-        :param bundle_path: The location of the app bundle that requires the
-            plugins.
+        :param plugin_definitions: A list of strings defining the required plugins.
+        :param bundle_path: The location of the app bundle that requires the plugins.
         :returns: A dictionary of plugin ID->instantiated plugin instances.
         """
         plugins = {}

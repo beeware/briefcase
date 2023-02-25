@@ -59,7 +59,7 @@ class WiX(Tool):
             return self.wix_home / "bin" / "candle.exe"
 
     @classmethod
-    def verify(cls, tools: ToolCache, install: bool = True) -> WiX:
+    def verify(cls, tools: ToolCache, install: bool = True, **kwargs) -> WiX:
         """Verify that there is a WiX install available.
 
         If the WIX environment variable is set, that location will be checked

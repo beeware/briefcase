@@ -147,7 +147,7 @@ class AndroidSDK(Tool):
         return f"system-images;android-31;default;{self.emulator_abi}"
 
     @classmethod
-    def verify(cls, tools: ToolCache, install=True) -> AndroidSDK:
+    def verify(cls, tools: ToolCache, install: bool = True, **kwargs) -> AndroidSDK:
         """Verify an Android SDK is available.
 
         If the ANDROID_SDK_ROOT environment variable is set, that location will

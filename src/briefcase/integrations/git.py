@@ -5,6 +5,9 @@ from briefcase.integrations.base import Tool, ToolCache
 
 
 class Git(Tool):
+    name = "git"
+    full_name = "Git"
+
     @classmethod
     def verify(cls, tools: ToolCache):
         """Verify if git is installed.

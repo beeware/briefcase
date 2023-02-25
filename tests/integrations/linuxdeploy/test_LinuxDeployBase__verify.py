@@ -1,6 +1,6 @@
 import pytest
 
-from briefcase.exceptions import MissingToolError, NetworkFailure
+from briefcase.exceptions import BriefcaseCommandError, MissingToolError, NetworkFailure
 from briefcase.integrations.linuxdeploy import LinuxDeployBase
 from tests.integrations.linuxdeploy.utils import (
     side_effect_create_mock_appimage,
@@ -32,13 +32,12 @@ class LinuxDeployDummy(LinuxDeployBase):
 
 
 def test_short_circuit(mock_tools):
-    """Tool is not created if already cached."""
-    mock_tools.linuxdeploy = "tool"
-
-    tool = LinuxDeployBase.verify(mock_tools)
-
-    assert tool == "tool"
-    assert tool == mock_tools.linuxdeploy
+    """LinuxDeployBase Tool cannot be instantiated."""
+    with pytest.raises(
+        BriefcaseCommandError,
+        match="LinuxDeployBase cannot be used as a Tool.",
+    ):
+        _ = LinuxDeployBase.verify(mock_tools)
 
 
 def test_verify_exists(mock_tools, tmp_path):
