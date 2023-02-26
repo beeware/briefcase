@@ -63,9 +63,10 @@ def test_binary_path(run_command, first_app_config, tmp_path):
         run_command.binary_path(first_app_config)
         == tmp_path
         / "base_path"
+        / "build"
+        / "first-app_0.0.1"
         / "android"
         / "gradle"
-        / "First App"
         / "app"
         / "build"
         / "outputs"

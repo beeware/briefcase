@@ -74,7 +74,12 @@ def test_build_app(build_command, first_app_config, tmp_path):
                     "icon.ico",
                 ],
                 check=True,
-                cwd=tmp_path / "base_path" / "windows" / "app" / "First App",
+                cwd=tmp_path
+                / "base_path"
+                / "build"
+                / "first-app_0.0.1"
+                / "windows"
+                / "app",
             ),
         ]
     )

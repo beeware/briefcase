@@ -1,4 +1,7 @@
-def test_no_args_package_one_app(package_command, first_app):
+from ...utils import create_file
+
+
+def test_no_args_package_one_app(package_command, first_app, tmp_path):
     """If there is one app, package that app by default."""
     # Add a single app
     package_command.apps = {
@@ -24,7 +27,6 @@ def test_no_args_package_one_app(package_command, first_app):
             "package",
             "first",
             {
-                "packaging_format": "pkg",
                 "adhoc_sign": False,
                 "identity": None,
                 "sign_app": True,
@@ -32,8 +34,14 @@ def test_no_args_package_one_app(package_command, first_app):
         ),
     ]
 
+    # Packaging format has been annotated on the app
+    assert first_app.packaging_format == "pkg"
 
-def test_package_one_explicit_app(package_command, first_app, second_app):
+    # The dist folder has been created.
+    assert tmp_path / "project" / "dist"
+
+
+def test_package_one_explicit_app(package_command, first_app, second_app, tmp_path):
     """If one app is named explicitly, package that app."""
     # Add a single app
     package_command.apps = {
@@ -60,7 +68,6 @@ def test_package_one_explicit_app(package_command, first_app, second_app):
             "package",
             "first",
             {
-                "packaging_format": "pkg",
                 "adhoc_sign": False,
                 "identity": None,
                 "sign_app": True,
@@ -68,8 +75,15 @@ def test_package_one_explicit_app(package_command, first_app, second_app):
         ),
     ]
 
+    # Packaging format has been annotated on the first app, not the second.
+    assert first_app.packaging_format == "pkg"
+    assert not hasattr(second_app, "packaging_format")
 
-def test_no_args_package_two_app(package_command, first_app, second_app):
+    # The dist folder has been created.
+    assert tmp_path / "project" / "dist"
+
+
+def test_no_args_package_two_app(package_command, first_app, second_app, tmp_path):
     """If there are multiple apps, publish all of them."""
     # Add two apps
     package_command.apps = {
@@ -96,7 +110,6 @@ def test_no_args_package_two_app(package_command, first_app, second_app):
             "package",
             "first",
             {
-                "packaging_format": "pkg",
                 "adhoc_sign": False,
                 "identity": None,
                 "sign_app": True,
@@ -109,7 +122,6 @@ def test_no_args_package_two_app(package_command, first_app, second_app):
             "package",
             "second",
             {
-                "packaging_format": "pkg",
                 "adhoc_sign": False,
                 "identity": None,
                 "sign_app": True,
@@ -119,8 +131,15 @@ def test_no_args_package_two_app(package_command, first_app, second_app):
         ),
     ]
 
+    # Packaging format has been annotated on both apps
+    assert first_app.packaging_format == "pkg"
+    assert second_app.packaging_format == "pkg"
 
-def test_no_sign_package_one_app(package_command, first_app):
+    # The dist folder has been created.
+    assert tmp_path / "project" / "dist"
+
+
+def test_no_sign_package_one_app(package_command, first_app, tmp_path):
     """If there is one app, and a --no-sign argument,package doesn't sign the app."""
     # Add a single app
     package_command.apps = {
@@ -146,7 +165,6 @@ def test_no_sign_package_one_app(package_command, first_app):
             "package",
             "first",
             {
-                "packaging_format": "pkg",
                 "adhoc_sign": False,
                 "identity": None,
                 "sign_app": False,
@@ -154,8 +172,14 @@ def test_no_sign_package_one_app(package_command, first_app):
         ),
     ]
 
+    # Packaging format has been annotated on the app
+    assert first_app.packaging_format == "pkg"
 
-def test_identity_arg_package_one_app(package_command, first_app):
+    # The dist folder has been created.
+    assert tmp_path / "project" / "dist"
+
+
+def test_identity_arg_package_one_app(package_command, first_app, tmp_path):
     """If there is one app,and an --identity argument, package signs the app with the
     specified identity."""
     # Add a single app
@@ -182,7 +206,6 @@ def test_identity_arg_package_one_app(package_command, first_app):
             "package",
             "first",
             {
-                "packaging_format": "pkg",
                 "adhoc_sign": False,
                 "identity": "test",
                 "sign_app": True,
@@ -190,8 +213,14 @@ def test_identity_arg_package_one_app(package_command, first_app):
         ),
     ]
 
+    # Packaging format has been annotated on the app
+    assert first_app.packaging_format == "pkg"
 
-def test_adhoc_sign_package_one_app(package_command, first_app):
+    # The dist folder has been created.
+    assert tmp_path / "project" / "dist"
+
+
+def test_adhoc_sign_package_one_app(package_command, first_app, tmp_path):
     """If there is one app,and an --adhoc argument, package signs the app using adhoc
     option."""
     # Add a single app
@@ -218,7 +247,6 @@ def test_adhoc_sign_package_one_app(package_command, first_app):
             "package",
             "first",
             {
-                "packaging_format": "pkg",
                 "adhoc_sign": True,
                 "identity": None,
                 "sign_app": True,
@@ -226,8 +254,14 @@ def test_adhoc_sign_package_one_app(package_command, first_app):
         ),
     ]
 
+    # Packaging format has been annotated on the app
+    assert first_app.packaging_format == "pkg"
 
-def test_no_sign_args_package_two_app(package_command, first_app, second_app):
+    # The dist folder has been created.
+    assert tmp_path / "project" / "dist"
+
+
+def test_no_sign_args_package_two_app(package_command, first_app, second_app, tmp_path):
     """If there are multiple apps, and a --no-sign argument,package doesn't sign all the
     app."""
     # Add a single app
@@ -255,7 +289,6 @@ def test_no_sign_args_package_two_app(package_command, first_app, second_app):
             "package",
             "first",
             {
-                "packaging_format": "pkg",
                 "adhoc_sign": False,
                 "identity": None,
                 "sign_app": False,
@@ -268,7 +301,6 @@ def test_no_sign_args_package_two_app(package_command, first_app, second_app):
             "package",
             "second",
             {
-                "packaging_format": "pkg",
                 "adhoc_sign": False,
                 "identity": None,
                 "sign_app": False,
@@ -278,8 +310,17 @@ def test_no_sign_args_package_two_app(package_command, first_app, second_app):
         ),
     ]
 
+    # Packaging format has been annotated on both apps
+    assert first_app.packaging_format == "pkg"
+    assert second_app.packaging_format == "pkg"
 
-def test_adhoc_sign_args_package_two_app(package_command, first_app, second_app):
+    # The dist folder has been created.
+    assert tmp_path / "project" / "dist"
+
+
+def test_adhoc_sign_args_package_two_app(
+    package_command, first_app, second_app, tmp_path
+):
     """If there are multiple apps,and an --adhoc argument, package signs all apps using
     adhoc option."""
 
@@ -309,7 +350,6 @@ def test_adhoc_sign_args_package_two_app(package_command, first_app, second_app)
             "package",
             "first",
             {
-                "packaging_format": "pkg",
                 "adhoc_sign": True,
                 "identity": None,
                 "sign_app": True,
@@ -322,7 +362,6 @@ def test_adhoc_sign_args_package_two_app(package_command, first_app, second_app)
             "package",
             "second",
             {
-                "packaging_format": "pkg",
                 "adhoc_sign": True,
                 "identity": None,
                 "sign_app": True,
@@ -332,8 +371,17 @@ def test_adhoc_sign_args_package_two_app(package_command, first_app, second_app)
         ),
     ]
 
+    # Packaging format has been annotated on both apps
+    assert first_app.packaging_format == "pkg"
+    assert second_app.packaging_format == "pkg"
 
-def test_identity_sign_args_package_two_app(package_command, first_app, second_app):
+    # The dist folder has been created.
+    assert tmp_path / "project" / "dist"
+
+
+def test_identity_sign_args_package_two_app(
+    package_command, first_app, second_app, tmp_path
+):
     """If there are multiple app,and an --identity argument, package signs all the apps
     with the specified identity."""
     # Add a single app
@@ -361,7 +409,6 @@ def test_identity_sign_args_package_two_app(package_command, first_app, second_a
             "package",
             "first",
             {
-                "packaging_format": "pkg",
                 "adhoc_sign": False,
                 "identity": "test",
                 "sign_app": True,
@@ -374,7 +421,6 @@ def test_identity_sign_args_package_two_app(package_command, first_app, second_a
             "package",
             "second",
             {
-                "packaging_format": "pkg",
                 "adhoc_sign": False,
                 "identity": "test",
                 "sign_app": True,
@@ -384,8 +430,15 @@ def test_identity_sign_args_package_two_app(package_command, first_app, second_a
         ),
     ]
 
+    # Packaging format has been annotated on both apps
+    assert first_app.packaging_format == "pkg"
+    assert second_app.packaging_format == "pkg"
 
-def test_package_alternate_format(package_command, first_app):
+    # The dist folder has been created.
+    assert tmp_path / "project" / "dist"
+
+
+def test_package_alternate_format(package_command, first_app, tmp_path):
     """An app can be packaged in an alternate format."""
     # Add a single app
     package_command.apps = {
@@ -411,7 +464,6 @@ def test_package_alternate_format(package_command, first_app):
             "package",
             "first",
             {
-                "packaging_format": "box",
                 "adhoc_sign": False,
                 "identity": None,
                 "sign_app": True,
@@ -419,8 +471,14 @@ def test_package_alternate_format(package_command, first_app):
         ),
     ]
 
+    # Packaging format has been annotated on the app
+    assert first_app.packaging_format == "box"
 
-def test_create_before_package(package_command, first_app_config):
+    # The dist folder has been created.
+    assert tmp_path / "project" / "dist"
+
+
+def test_create_before_package(package_command, first_app_config, tmp_path):
     """If the app hasn't been created, package creates the app first."""
     # Add a single app
     package_command.apps = {
@@ -466,7 +524,6 @@ def test_create_before_package(package_command, first_app_config):
             "package",
             "first",
             {
-                "packaging_format": "pkg",
                 "adhoc_sign": False,
                 "identity": None,
                 "sign_app": True,
@@ -476,8 +533,14 @@ def test_create_before_package(package_command, first_app_config):
         ),
     ]
 
+    # Packaging format has been annotated on the app
+    assert first_app_config.packaging_format == "pkg"
 
-def test_update_package_one_app(package_command, first_app):
+    # The dist folder has been created.
+    assert tmp_path / "project" / "dist"
+
+
+def test_update_package_one_app(package_command, first_app, tmp_path):
     """If there is one app, and a -u argument, package updates the app."""
     # Add a single app
     package_command.apps = {
@@ -525,7 +588,6 @@ def test_update_package_one_app(package_command, first_app):
             "package",
             "first",
             {
-                "packaging_format": "pkg",
                 "adhoc_sign": False,
                 "identity": None,
                 "sign_app": True,
@@ -535,8 +597,14 @@ def test_update_package_one_app(package_command, first_app):
         ),
     ]
 
+    # Packaging format has been annotated on the app
+    assert first_app.packaging_format == "pkg"
 
-def test_update_package_two_app(package_command, first_app, second_app):
+    # The dist folder has been created.
+    assert tmp_path / "project" / "dist"
+
+
+def test_update_package_two_app(package_command, first_app, second_app, tmp_path):
     """If there are multiple apps, update and publish all of them."""
     # Add two apps
     package_command.apps = {
@@ -585,7 +653,6 @@ def test_update_package_two_app(package_command, first_app, second_app):
             "package",
             "first",
             {
-                "packaging_format": "pkg",
                 "adhoc_sign": False,
                 "identity": None,
                 "sign_app": True,
@@ -629,7 +696,6 @@ def test_update_package_two_app(package_command, first_app, second_app):
             "package",
             "second",
             {
-                "packaging_format": "pkg",
                 "adhoc_sign": False,
                 "identity": None,
                 "sign_app": True,
@@ -641,8 +707,15 @@ def test_update_package_two_app(package_command, first_app, second_app):
         ),
     ]
 
+    # Packaging format has been annotated on both apps
+    assert first_app.packaging_format == "pkg"
+    assert second_app.packaging_format == "pkg"
 
-def test_build_before_package(package_command, first_app_unbuilt):
+    # The dist folder has been created.
+    assert tmp_path / "project" / "dist"
+
+
+def test_build_before_package(package_command, first_app_unbuilt, tmp_path):
     """If an app hasn't been built, it is built before packaging."""
     # Add a single app
     package_command.apps = {
@@ -678,7 +751,6 @@ def test_build_before_package(package_command, first_app_unbuilt):
             "package",
             "first",
             {
-                "packaging_format": "pkg",
                 "adhoc_sign": False,
                 "identity": None,
                 "sign_app": True,
@@ -686,3 +758,59 @@ def test_build_before_package(package_command, first_app_unbuilt):
             },
         ),
     ]
+
+    # Packaging format has been annotated on the app
+    assert first_app_unbuilt.packaging_format == "pkg"
+
+    # The dist folder has been created.
+    assert tmp_path / "project" / "dist"
+
+
+def test_already_packaged(package_command, first_app, tmp_path):
+    """If the app has been previously packaged, the old version is deleted."""
+    # Add a single app
+    package_command.apps = {
+        "first": first_app,
+    }
+
+    # Mock a historical package artefact.
+    artefact_path = tmp_path / "project" / "dist" / "first-0.0.1.pkg"
+    create_file(artefact_path, "Packaged app")
+
+    # Configure no command line options
+    options = package_command.parse_options([])
+
+    # Run the run command
+    package_command(**options)
+
+    # The right sequence of things will be done
+    assert package_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
+        # App tools are verified for app
+        ("verify-app-tools", "first"),
+        # Package the first app
+        (
+            "package",
+            "first",
+            {
+                "adhoc_sign": False,
+                "identity": None,
+                "sign_app": True,
+            },
+        ),
+    ]
+
+    # Packaging format has been annotated on the app
+    assert first_app.packaging_format == "pkg"
+
+    # The dist folder still exists
+    assert tmp_path / "project" / "dist"
+
+    # But the artefact has been deleted.
+    # NOTE: This is a testing quirk - beacuse we're mocking the
+    # package_app() call, no new artefact is created; the absence
+    # of this file shows that the old one has been deleted.
+    assert not artefact_path.exists()

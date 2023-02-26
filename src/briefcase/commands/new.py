@@ -75,10 +75,6 @@ class NewCommand(BaseCommand):
         """A placeholder; New command doesn't have a binary path."""
         raise NotImplementedError()
 
-    def distribution_path(self, app, packaging_format):
-        """A placeholder; New command doesn't have a distribution path."""
-        raise NotImplementedError()
-
     def parse_config(self, filename):
         """There is no configuration when starting a new project; this implementation
         overrides the base so that no config is parsed."""

@@ -2,6 +2,7 @@ import os
 import subprocess
 from unittest import mock
 from unittest.mock import MagicMock
+from zipfile import ZipFile
 
 import pytest
 
@@ -38,9 +39,23 @@ def first_app_dmg(tmp_path):
 
 def test_notarize_app(package_command, first_app_with_binaries, tmp_path):
     """An app can be notarized."""
-    app_path = tmp_path / "base_path" / "macOS" / "app" / "First App" / "First App.app"
+    app_path = (
+        tmp_path
+        / "base_path"
+        / "build"
+        / "first-app_0.0.1"
+        / "macOS"
+        / "app"
+        / "First App.app"
+    )
     archive_path = (
-        tmp_path / "base_path" / "macOS" / "app" / "First App" / "archive.zip"
+        tmp_path
+        / "base_path"
+        / "build"
+        / "first-app_0.0.1"
+        / "macOS"
+        / "app"
+        / "archive.zip"
     )
     package_command.notarize(app_path, team_id="DEADBEEF")
 
@@ -49,6 +64,32 @@ def test_notarize_app(package_command, first_app_with_binaries, tmp_path):
     # verify that it *would* have been deleted.
     assert archive_path.exists()
     package_command.tools.os.unlink.assert_called_with(archive_path)
+    # The archive contains the app as the only top level element.
+    with ZipFile(archive_path) as archive:
+        assert sorted(archive.namelist()) == [
+            "First App.app/",
+            "First App.app/Contents/",
+            "First App.app/Contents/Frameworks/",
+            "First App.app/Contents/Frameworks/Extras.framework/",
+            "First App.app/Contents/Frameworks/Extras.framework/Resources/",
+            "First App.app/Contents/Frameworks/Extras.framework/Resources/extras.dylib",
+            "First App.app/Contents/Info.plist",
+            "First App.app/Contents/Resources/",
+            "First App.app/Contents/Resources/Extras.app/",
+            "First App.app/Contents/Resources/Extras.app/Contents/",
+            "First App.app/Contents/Resources/Extras.app/Contents/MacOS/",
+            "First App.app/Contents/Resources/Extras.app/Contents/MacOS/Extras",
+            "First App.app/Contents/Resources/first.other",
+            "First App.app/Contents/Resources/first_dylib.dylib",
+            "First App.app/Contents/Resources/first_so.so",
+            "First App.app/Contents/Resources/other_binary",
+            "First App.app/Contents/Resources/second.other",
+            "First App.app/Contents/Resources/special.binary",
+            "First App.app/Contents/Resources/subfolder/",
+            "First App.app/Contents/Resources/subfolder/second_dylib.dylib",
+            "First App.app/Contents/Resources/subfolder/second_so.so",
+            "First App.app/Contents/Resources/unknown.binary",
+        ]
 
     # The calls to notarize were made
     package_command.tools.subprocess.run.assert_has_calls(
@@ -211,9 +252,23 @@ def test_credential_storage_failure_app(
 ):
     """When submitting an app, if credentials haven't been stored, and storage fails, an
     error is raised."""
-    app_path = tmp_path / "base_path" / "macOS" / "app" / "First App" / "First App.app"
+    app_path = (
+        tmp_path
+        / "base_path"
+        / "build"
+        / "first-app_0.0.1"
+        / "macOS"
+        / "app"
+        / "First App.app"
+    )
     archive_path = (
-        tmp_path / "base_path" / "macOS" / "app" / "First App" / "archive.zip"
+        tmp_path
+        / "base_path"
+        / "build"
+        / "first-app_0.0.1"
+        / "macOS"
+        / "app"
+        / "archive.zip"
     )
 
     # Set up subprocess to fail on the first notarization attempt,
@@ -336,9 +391,23 @@ def test_credential_storage_disabled_input_app(
 ):
     """When packaging an app, if credentials haven't been stored, and input is disabled,
     an error is raised."""
-    app_path = tmp_path / "base_path" / "macOS" / "app" / "First App" / "First App.app"
+    app_path = (
+        tmp_path
+        / "base_path"
+        / "build"
+        / "first-app_0.0.1"
+        / "macOS"
+        / "app"
+        / "First App.app"
+    )
     archive_path = (
-        tmp_path / "base_path" / "macOS" / "app" / "First App" / "archive.zip"
+        tmp_path
+        / "base_path"
+        / "build"
+        / "first-app_0.0.1"
+        / "macOS"
+        / "app"
+        / "archive.zip"
     )
 
     # Set up subprocess to fail on the first notarization attempt.
@@ -505,9 +574,23 @@ def test_app_notarization_failure_with_credentials(
 ):
     """If the notarization process for an app fails for a reason other than credentials,
     an error is raised."""
-    app_path = tmp_path / "base_path" / "macOS" / "app" / "First App" / "First App.app"
+    app_path = (
+        tmp_path
+        / "base_path"
+        / "build"
+        / "first-app_0.0.1"
+        / "macOS"
+        / "app"
+        / "First App.app"
+    )
     archive_path = (
-        tmp_path / "base_path" / "macOS" / "app" / "First App" / "archive.zip"
+        tmp_path
+        / "base_path"
+        / "build"
+        / "first-app_0.0.1"
+        / "macOS"
+        / "app"
+        / "archive.zip"
     )
 
     # Set up subprocess to fail on the first notarization attempt
@@ -522,7 +605,7 @@ def test_app_notarization_failure_with_credentials(
     # The notarization call will fail with an error
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Unable to submit macOS[/\\]app[/\\]First App[/\\]First App.app for notarization.",
+        match=r"Unable to submit build[/\\]first-app_0.0.1[/\\]macOS[/\\]app[/\\]First App.app for notarization.",
     ):
         package_command.notarize(app_path, team_id="DEADBEEF")
 

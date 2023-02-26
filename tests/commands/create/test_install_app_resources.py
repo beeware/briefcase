@@ -65,8 +65,10 @@ def test_icon_target(create_command, tmp_path):
                 size="10",
                 target=tmp_path
                 / "project"
+                / "build"
+                / "my-app_1.2.3"
                 / "tester"
-                / "my-app.bundle"
+                / "dummy"
                 / "path"
                 / "to"
                 / "icon-10.png",
@@ -78,8 +80,10 @@ def test_icon_target(create_command, tmp_path):
                 size="20",
                 target=tmp_path
                 / "project"
+                / "build"
+                / "my-app_1.2.3"
                 / "tester"
-                / "my-app.bundle"
+                / "dummy"
                 / "path"
                 / "to"
                 / "icon-20.png",
@@ -133,8 +137,10 @@ def test_icon_variant_target(create_command, tmp_path):
                 size="round",  # This is expected for unsized variants
                 target=tmp_path
                 / "project"
+                / "build"
+                / "my-app_1.2.3"
                 / "tester"
-                / "my-app.bundle"
+                / "dummy"
                 / "path"
                 / "to"
                 / "round.png",
@@ -146,8 +152,10 @@ def test_icon_variant_target(create_command, tmp_path):
                 size="10",
                 target=tmp_path
                 / "project"
+                / "build"
+                / "my-app_1.2.3"
                 / "tester"
-                / "my-app.bundle"
+                / "dummy"
                 / "path"
                 / "to"
                 / "square-10.png",
@@ -159,8 +167,10 @@ def test_icon_variant_target(create_command, tmp_path):
                 size="20",
                 target=tmp_path
                 / "project"
+                / "build"
+                / "my-app_1.2.3"
                 / "tester"
-                / "my-app.bundle"
+                / "dummy"
                 / "path"
                 / "to"
                 / "square-20.png",
@@ -208,8 +218,10 @@ def test_splash_target(create_command, tmp_path):
                 size="10x20",
                 target=tmp_path
                 / "project"
+                / "build"
+                / "my-app_1.2.3"
                 / "tester"
-                / "my-app.bundle"
+                / "dummy"
                 / "path"
                 / "to"
                 / "splash-10x20.png",
@@ -221,8 +233,10 @@ def test_splash_target(create_command, tmp_path):
                 size="20x30",
                 target=tmp_path
                 / "project"
+                / "build"
+                / "my-app_1.2.3"
                 / "tester"
-                / "my-app.bundle"
+                / "dummy"
                 / "path"
                 / "to"
                 / "splash-20x30.png",
@@ -276,8 +290,10 @@ def test_splash_variant_target(create_command, tmp_path):
                 size="portrait",  # This is expected for unsized variants
                 target=tmp_path
                 / "project"
+                / "build"
+                / "my-app_1.2.3"
                 / "tester"
-                / "my-app.bundle"
+                / "dummy"
                 / "path"
                 / "to"
                 / "portrait.png",
@@ -289,8 +305,10 @@ def test_splash_variant_target(create_command, tmp_path):
                 size="10x20",
                 target=tmp_path
                 / "project"
+                / "build"
+                / "my-app_1.2.3"
                 / "tester"
-                / "my-app.bundle"
+                / "dummy"
                 / "path"
                 / "to"
                 / "landscape-10x20.png",
@@ -302,8 +320,10 @@ def test_splash_variant_target(create_command, tmp_path):
                 size="20x30",
                 target=tmp_path
                 / "project"
+                / "build"
+                / "my-app_1.2.3"
                 / "tester"
-                / "my-app.bundle"
+                / "dummy"
                 / "path"
                 / "to"
                 / "landscape-20x30.png",
@@ -361,8 +381,10 @@ def test_doctype_icon_target(create_command, tmp_path):
                 size=None,
                 target=tmp_path
                 / "project"
+                / "build"
+                / "my-app_1.2.3"
                 / "tester"
-                / "my-app.bundle"
+                / "dummy"
                 / "path"
                 / "to"
                 / "mydoc-icon.png",
@@ -374,8 +396,10 @@ def test_doctype_icon_target(create_command, tmp_path):
                 size="10",
                 target=tmp_path
                 / "project"
+                / "build"
+                / "my-app_1.2.3"
                 / "tester"
-                / "my-app.bundle"
+                / "dummy"
                 / "path"
                 / "to"
                 / "other-icon-10.png",
@@ -387,8 +411,10 @@ def test_doctype_icon_target(create_command, tmp_path):
                 size="20",
                 target=tmp_path
                 / "project"
+                / "build"
+                / "my-app_1.2.3"
                 / "tester"
-                / "my-app.bundle"
+                / "dummy"
                 / "path"
                 / "to"
                 / "other-icon-20.png",

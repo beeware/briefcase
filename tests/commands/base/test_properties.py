@@ -4,7 +4,10 @@ from .conftest import DummyCommand
 def test_bundle_path(base_command, my_app, tmp_path):
     bundle_path = base_command.bundle_path(my_app)
 
-    assert bundle_path == tmp_path / "tester" / "dumdum" / "My App"
+    assert (
+        bundle_path
+        == tmp_path / "project" / "build" / "my-app_1.2.3" / "tester" / "dumdum"
+    )
 
 
 def test_create_command(base_command):

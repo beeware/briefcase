@@ -41,11 +41,6 @@ class DummyOpenCommand(OpenCommand):
     def project_path(self, app):
         return self.bundle_path(app) / f"{app.formal_name}.project"
 
-    def distribution_path(self, app, packaging_format):
-        raise NotImplementedError(
-            "Required by interface contract, but should not be used"
-        )
-
     def verify_host(self):
         super().verify_host()
         self.actions.append(("verify-host",))
@@ -73,7 +68,7 @@ class DummyOpenCommand(OpenCommand):
 @pytest.fixture
 def open_command(tmp_path):
     return DummyOpenCommand(
-        base_path=tmp_path,
+        base_path=tmp_path / "project",
         apps={
             "first": AppConfig(
                 app_name="first",
@@ -96,7 +91,15 @@ def open_command(tmp_path):
 @pytest.fixture
 def first_app(tmp_path):
     """Populate skeleton app content for the first app."""
-    project_file = tmp_path / "tester" / "dummy" / "first" / "first.project"
+    project_file = (
+        tmp_path
+        / "project"
+        / "build"
+        / "first_0.0.1"
+        / "tester"
+        / "dummy"
+        / "first.project"
+    )
     create_file(project_file, "first project")
     return project_file
 
@@ -104,6 +107,14 @@ def first_app(tmp_path):
 @pytest.fixture
 def second_app(tmp_path):
     """Populate skeleton app content for the second app."""
-    project_file = tmp_path / "tester" / "dummy" / "second" / "second.project"
+    project_file = (
+        tmp_path
+        / "project"
+        / "build"
+        / "second_0.0.2"
+        / "tester"
+        / "dummy"
+        / "second.project"
+    )
     create_file(project_file, "second project")
     return project_file

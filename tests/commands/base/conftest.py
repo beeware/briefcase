@@ -29,13 +29,10 @@ class DummyCommand(BaseCommand):
     def binary_path(self, app):
         raise NotImplementedError()
 
-    def distribution_path(self, app, packaging_format):
-        raise NotImplementedError()
-
 
 @pytest.fixture
 def base_command(tmp_path):
-    command = DummyCommand(base_path=tmp_path)
+    command = DummyCommand(base_path=tmp_path / "project")
     command.parse_options(["-r", "default"])
     return command
 
@@ -114,9 +111,6 @@ class OtherDummyCommand(BaseCommand):
         super().__init__(*args, **kwargs)
 
     def binary_path(self, app):
-        raise NotImplementedError()
-
-    def distribution_path(self, app, packaging_format):
         raise NotImplementedError()
 
 

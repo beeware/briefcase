@@ -44,8 +44,10 @@ class iOSXcodePassiveMixin(iOSMixin):
             / f"{app.formal_name}.app"
         )
 
-    def distribution_path(self, app, packaging_format):
-        return self.binary_path(app)
+    def distribution_path(self, app):
+        raise BriefcaseCommandError(
+            "Can't generate distribution artefacts for iOS apps."
+        )
 
 
 class iOSXcodeMixin(iOSXcodePassiveMixin):

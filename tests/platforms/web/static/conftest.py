@@ -6,7 +6,9 @@ from ....utils import create_file, create_wheel
 @pytest.fixture
 def first_app_generated(first_app_config, tmp_path):
     # Create the briefcase.toml file
-    bundle_path = tmp_path / "base_path" / "web" / "static" / "First App"
+    bundle_path = (
+        tmp_path / "base_path" / "build" / "first-app_0.0.1" / "web" / "static"
+    )
     create_file(
         bundle_path / "briefcase.toml",
         """
@@ -39,7 +41,9 @@ app_requirements_path="requirements.txt"
 
 @pytest.fixture
 def first_app_built(first_app_generated, tmp_path):
-    bundle_path = tmp_path / "base_path" / "web" / "static" / "First App"
+    bundle_path = (
+        tmp_path / "base_path" / "build" / "first-app_0.0.1" / "web" / "static"
+    )
 
     # Create pyscript.toml
     create_file(

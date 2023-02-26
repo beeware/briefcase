@@ -5,6 +5,8 @@ from briefcase.commands.base import full_options
 from briefcase.config import AppConfig
 from briefcase.console import Console, Log
 
+from ...utils import create_file
+
 
 class DummyRunCommand(RunCommand):
     """A dummy run command that doesn't actually do anything.
@@ -23,14 +25,8 @@ class DummyRunCommand(RunCommand):
 
         self.actions = []
 
-    def bundle_path(self, app):
-        return self.platform_path / app.app_name
-
     def binary_path(self, app):
-        return self.platform_path / app.app_name / f"{app.app_name}.bin"
-
-    def distribution_path(self, app, packaging_format):
-        return self.platform_path / f"{app.app_name}.dummy.{packaging_format}"
+        return self.bundle_path(app) / f"{app.app_name}.bin"
 
     def verify_host(self):
         super().verify_host()
@@ -81,7 +77,7 @@ class DummyRunCommand(RunCommand):
 
 @pytest.fixture
 def run_command(tmp_path):
-    return DummyRunCommand(base_path=tmp_path)
+    return DummyRunCommand(base_path=tmp_path / "project")
 
 
 @pytest.fixture
@@ -96,24 +92,40 @@ def first_app_config():
 
 
 @pytest.fixture
-def first_app_uncompiled(first_app_config, tmp_path):
+def first_app_unbuild(first_app_config, tmp_path):
     # The same fixture as first_app_config,
     # but ensures that the bundle for the app exists
-    (tmp_path / "tester" / "first").mkdir(parents=True, exist_ok=True)
-    with (tmp_path / "tester" / "first" / "first.dummy").open("w") as f:
-        f.write("first.dummy")
+    create_file(
+        tmp_path
+        / "project"
+        / "build"
+        / "tester"
+        / "first_0.0.1"
+        / "tester"
+        / "dummy"
+        / "first.bundle",
+        "first.bundle",
+    )
 
     return first_app_config
 
 
 @pytest.fixture
-def first_app(first_app_uncompiled, tmp_path):
-    # The same fixture as first_app_uncompiled,
+def first_app(first_app_unbuild, tmp_path):
+    # The same fixture as first_app_unbuild,
     # but ensures that the binary for the app exists
-    with (tmp_path / "tester" / "first" / "first.bin").open("w") as f:
-        f.write("first.bin")
+    create_file(
+        tmp_path
+        / "project"
+        / "build"
+        / "first_0.0.1"
+        / "tester"
+        / "dummy"
+        / "first.bin",
+        "first.bin",
+    )
 
-    return first_app_uncompiled
+    return first_app_unbuild
 
 
 @pytest.fixture
@@ -131,9 +143,16 @@ def second_app_config():
 def second_app_uncompiled(second_app_config, tmp_path):
     # The same fixture as second_app_config,
     # but ensures that the bundle for the app exists
-    (tmp_path / "tester" / "second").mkdir(parents=True, exist_ok=True)
-    with (tmp_path / "tester" / "second" / "second.dummy").open("w") as f:
-        f.write("second.dummy")
+    create_file(
+        tmp_path
+        / "project"
+        / "build"
+        / "second_0.0.2"
+        / "tester"
+        / "dummy"
+        / "second.bundle",
+        "second.bundle",
+    )
 
     return second_app_config
 
@@ -142,8 +161,15 @@ def second_app_uncompiled(second_app_config, tmp_path):
 def second_app(second_app_uncompiled, tmp_path):
     # The same fixture as second_app_uncompiled,
     # but ensures that the binary for the app exists
-    (tmp_path / "tester").mkdir(parents=True, exist_ok=True)
-    with (tmp_path / "tester" / "second" / "second.bin").open("w") as f:
-        f.write("second.bin")
+    create_file(
+        tmp_path
+        / "project"
+        / "build"
+        / "second_0.0.2"
+        / "tester"
+        / "dummy"
+        / "second.bin",
+        "second.bin",
+    )
 
     return second_app_uncompiled

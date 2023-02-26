@@ -29,11 +29,11 @@ def test_default_packaging_format(package_command):
 def test_package_app(package_command, first_app_built, tmp_path):
     """An app can be packaged for distribution."""
 
-    package_command.package_app(first_app_built, "zip")
+    package_command.package_app(first_app_built)
 
     # The packaged archive exists, and contains all the www files,
     # but without the www prefix.
-    archive_file = tmp_path / "base_path" / "web" / "First App-0.0.1.zip"
+    archive_file = tmp_path / "base_path" / "dist" / "First App-0.0.1.web.zip"
     assert archive_file.exists()
     with ZipFile(archive_file) as archive:
         assert sorted(archive.namelist()) == [

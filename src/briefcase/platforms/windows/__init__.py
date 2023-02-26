@@ -19,8 +19,8 @@ class WindowsMixin:
     def binary_path(self, app):
         return self.bundle_path(app) / self.packaging_root / f"{app.formal_name}.exe"
 
-    def distribution_path(self, app, packaging_format):
-        return self.platform_path / f"{app.formal_name}-{app.version}.msi"
+    def distribution_path(self, app):
+        return self.dist_path / f"{app.formal_name}-{app.version}.msi"
 
 
 class WindowsCreateCommand(CreateCommand):
@@ -200,7 +200,7 @@ class WindowsPackageCommand(PackageCommand):
                         "-loc",
                         "unicode.wxl",
                         "-o",
-                        self.distribution_path(app, packaging_format="msi"),
+                        self.distribution_path(app),
                         f"{app.app_name}.wixobj",
                         f"{app.app_name}-manifest.wixobj",
                     ],

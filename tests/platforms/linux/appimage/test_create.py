@@ -63,12 +63,18 @@ def create_command(no_docker_create_command, first_app_config, tmp_path):
         image_tag="briefcase/com.example.first-app:py3.X",
         dockerfile_path=tmp_path
         / "base_path"
+        / "build"
+        / "first-app_0.0.1"
         / "linux"
         / "appimage"
-        / "First App"
         / "Dockerfile",
         app_base_path=tmp_path / "base_path",
-        host_platform_path=tmp_path / "base_path" / "linux",
+        host_bundle_path=tmp_path
+        / "base_path"
+        / "build"
+        / "first-app_0.0.1"
+        / "linux"
+        / "appimage",
         host_data_path=tmp_path / "briefcase",
         python_version="3.X",
     )
@@ -194,7 +200,7 @@ def test_install_app_requirements_in_docker(create_command, first_app_config, tm
             "run",
             "--rm",
             "--volume",
-            f"{tmp_path / 'base_path' / 'linux'}:/app:z",
+            f"{tmp_path / 'base_path' / 'build' / 'first-app_0.0.1' / 'linux' / 'appimage'}:/app:z",
             "--volume",
             f"{tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z",
             "briefcase/com.example.first-app:py3.X",
@@ -205,7 +211,7 @@ def test_install_app_requirements_in_docker(create_command, first_app_config, tm
             "install",
             "--upgrade",
             "--no-user",
-            "--target=/app/appimage/First App/path/to/app_packages",
+            "--target=/app/path/to/app_packages",
             "foo==1.2.3",
             "bar>=4.5",
         ],
@@ -258,7 +264,7 @@ def test_install_app_requirements_no_docker(
             "install",
             "--upgrade",
             "--no-user",
-            f"--target={tmp_path}/base_path/linux/appimage/First App/path/to/app_packages",
+            f"--target={tmp_path}/base_path/build/first-app_0.0.1/linux/appimage/path/to/app_packages",
             "foo==1.2.3",
             "bar>=4.5",
         ],
@@ -318,9 +324,10 @@ def test_install_app_requirements_with_locals(
             "--outdir",
             tmp_path
             / "base_path"
+            / "build"
+            / "first-app_0.0.1"
             / "linux"
             / "appimage"
-            / "First App"
             / "_requirements",
             str(tmp_path / "local" / "first"),
         ]
@@ -332,18 +339,20 @@ def test_install_app_requirements_with_locals(
             str(tmp_path / "local" / "second-2.3.4.tar.gz"),
             tmp_path
             / "base_path"
+            / "build"
+            / "first-app_0.0.1"
             / "linux"
             / "appimage"
-            / "First App"
             / "_requirements",
         ),
         call(
             str(tmp_path / "local" / "third-3.4.5-py3-none-any.whl"),
             tmp_path
             / "base_path"
+            / "build"
+            / "first-app_0.0.1"
             / "linux"
             / "appimage"
-            / "First App"
             / "_requirements",
         ),
     ]
@@ -355,7 +364,7 @@ def test_install_app_requirements_with_locals(
             "run",
             "--rm",
             "--volume",
-            f"{tmp_path / 'base_path' / 'linux'}:/app:z",
+            f"{tmp_path / 'base_path' / 'build' / 'first-app_0.0.1' / 'linux' / 'appimage'}:/app:z",
             "--volume",
             f"{tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z",
             "briefcase/com.example.first-app:py3.X",
@@ -366,12 +375,12 @@ def test_install_app_requirements_with_locals(
             "install",
             "--upgrade",
             "--no-user",
-            "--target=/app/appimage/First App/path/to/app_packages",
+            "--target=/app/path/to/app_packages",
             "foo==1.2.3",
             "bar>=4.5",
-            "/app/appimage/First App/_requirements/first-1.2.3.tar.gz",
-            "/app/appimage/First App/_requirements/second-2.3.4.tar.gz",
-            "/app/appimage/First App/_requirements/third-3.4.5-py3-none-any.whl",
+            "/app/_requirements/first-1.2.3.tar.gz",
+            "/app/_requirements/second-2.3.4.tar.gz",
+            "/app/_requirements/third-3.4.5-py3-none-any.whl",
         ],
         check=True,
     )
@@ -426,9 +435,10 @@ def test_install_app_requirements_with_bad_local(
             "--outdir",
             tmp_path
             / "base_path"
+            / "build"
+            / "first-app_0.0.1"
             / "linux"
             / "appimage"
-            / "First App"
             / "_requirements",
             str(tmp_path / "local" / "first"),
         ]
@@ -498,7 +508,13 @@ def test_install_app_requirements_with_bad_local_file(
     # An attempt was made to copy the package
     create_command.tools.shutil.copy.assert_called_once_with(
         str(tmp_path / "local" / "missing-2.3.4.tar.gz"),
-        tmp_path / "base_path" / "linux" / "appimage" / "First App" / "_requirements",
+        tmp_path
+        / "base_path"
+        / "build"
+        / "first-app_0.0.1"
+        / "linux"
+        / "appimage"
+        / "_requirements",
     )
 
     # No attempt was made to build the sdist

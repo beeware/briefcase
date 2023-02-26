@@ -20,7 +20,7 @@ def test_no_git(tracking_create_command, monkeypatch):
         tracking_create_command()
 
 
-def test_create(tracking_create_command):
+def test_create(tracking_create_command, tmp_path):
     """The create command can be called."""
     tracking_create_command()
 
@@ -49,11 +49,15 @@ def test_create(tracking_create_command):
     ]
 
     # New app content has been created
-    assert (tracking_create_command.platform_path / "first.bundle" / "new").exists()
-    assert (tracking_create_command.platform_path / "second.bundle" / "new").exists()
+    assert (
+        tmp_path / "project" / "build" / "first_0.0.1" / "tester" / "dummy" / "new"
+    ).exists()
+    assert (
+        tmp_path / "project" / "build" / "second_0.0.2" / "tester" / "dummy" / "new"
+    ).exists()
 
 
-def test_create_single(tracking_create_command):
+def test_create_single(tracking_create_command, tmp_path):
     """The create command can be called to create a single app from the config."""
     tracking_create_command(app=tracking_create_command.apps["first"])
 
@@ -74,7 +78,9 @@ def test_create_single(tracking_create_command):
     ]
 
     # New app content has been created
-    assert (tracking_create_command.platform_path / "first.bundle" / "new").exists()
+    assert (
+        tmp_path / "project" / "build" / "first_0.0.1" / "tester" / "dummy" / "new"
+    ).exists()
     assert not (
-        tracking_create_command.platform_path / "second.bundle" / "new"
+        tmp_path / "project" / "build" / "second_0.0.2" / "tester" / "dummy" / "new"
     ).exists()

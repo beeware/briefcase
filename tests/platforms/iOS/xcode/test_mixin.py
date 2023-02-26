@@ -1,6 +1,7 @@
 import pytest
 
 from briefcase.console import Console, Log
+from briefcase.exceptions import BriefcaseCommandError
 from briefcase.platforms.iOS.xcode import iOSXcodeCreateCommand
 
 
@@ -20,9 +21,10 @@ def test_binary_path(create_command, first_app_config, tmp_path):
     assert binary_path == (
         tmp_path
         / "base_path"
+        / "build"
+        / "first-app_0.0.1"
         / "iOS"
         / "Xcode"
-        / "First App"
         / "build"
         / "Debug-iphonesimulator"
         / "First App.app"
@@ -30,18 +32,8 @@ def test_binary_path(create_command, first_app_config, tmp_path):
 
 
 def test_distribution_path(create_command, first_app_config, tmp_path):
-    distribution_path = create_command.distribution_path(
-        first_app_config,
-        packaging_format="any",
-    )
-
-    assert distribution_path == (
-        tmp_path
-        / "base_path"
-        / "iOS"
-        / "Xcode"
-        / "First App"
-        / "build"
-        / "Debug-iphonesimulator"
-        / "First App.app"
-    )
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Can't generate distribution artefacts for iOS apps.",
+    ):
+        create_command.distribution_path(first_app_config)
