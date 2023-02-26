@@ -23,7 +23,7 @@ def test_prepare(mock_tools):
     mock_tools.docker.prepare("ubuntu:jammy")
 
     mock_tools.subprocess.check_output.assert_called_once_with(
-        ["docker", "run", "--rm", "ubuntu:jammy", "echo"]
+        ["docker", "run", "--rm", "--pull=always", "ubuntu:jammy", "echo"]
     )
 
 
@@ -44,5 +44,5 @@ def test_prepare_bad_image(mock_tools):
 
     # The subprocess call was made.
     mock_tools.subprocess.check_output.assert_called_once_with(
-        ["docker", "run", "--rm", "ubuntu:does-not-exist", "echo"]
+        ["docker", "run", "--rm", "--pull=always", "ubuntu:does-not-exist", "echo"]
     )

@@ -109,7 +109,8 @@ class LinuxSystemPassiveMixin(LinuxMixin):
         if self.use_docker:
             try:
                 output = self.tools.docker.check_output(
-                    app.target_image, ["ldd", "--version"]
+                    ["ldd", "--version"],
+                    image_tag=app.target_image,
                 )
                 # On Debian/Ubuntu, ldd --version will give you output of the form:
                 #

@@ -46,7 +46,8 @@ def test_target_glibc_version_docker(
 
     # Docker was consulted for the glibc version
     create_command.tools.docker.check_output.assert_called_once_with(
-        "somevendor:surprising", ["ldd", "--version"]
+        ["ldd", "--version"],
+        image_tag="somevendor:surprising",
     )
 
 
@@ -70,7 +71,8 @@ def test_target_glibc_version_docker_no_ldd(create_command, first_app_config):
 
     # Docker was consulted for the glibc version
     create_command.tools.docker.check_output.assert_called_once_with(
-        "somevendor:surprising", ["ldd", "--version"]
+        ["ldd", "--version"],
+        image_tag="somevendor:surprising",
     )
 
 
@@ -95,7 +97,8 @@ def test_target_glibc_version_docker_bad_ldd_output(create_command, first_app_co
 
     # Docker was consulted for the glibc version
     create_command.tools.docker.check_output.assert_called_once_with(
-        "somevendor:surprising", ["ldd", "--version"]
+        ["ldd", "--version"],
+        image_tag="somevendor:surprising",
     )
 
 
