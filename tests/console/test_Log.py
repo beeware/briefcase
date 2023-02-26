@@ -270,10 +270,12 @@ def test_log_with_context(tmp_path, capsys):
     logger.info("this is info output")
     with logger.context("Deep"):
         logger.info("this is deep context")
+        logger.info("prefixed deep context", prefix="prefix")
         logger.info()
         logger.debug("this is deep debug")
         with logger.context("Really Deep"):
             logger.info("this is really deep context")
+            logger.info("prefixed really deep context", prefix="prefix2")
             logger.info()
             logger.debug("this is really deep debug")
         logger.info("Pop back to deep")
@@ -287,11 +289,15 @@ def test_log_with_context(tmp_path, capsys):
             "Deep| --------------------------------------------------------------------",
             "Deep| this is deep context",
             "Deep| ",
+            "Deep| [prefix] prefixed deep context",
+            "Deep| ",
             "Deep| >>> this is deep debug",
             "Deep| ",
             "Deep| Entering Really Deep context...",
             "Really Deep| -------------------------------------------------------------",
             "Really Deep| this is really deep context",
+            "Really Deep| ",
+            "Really Deep| [prefix2] prefixed really deep context",
             "Really Deep| ",
             "Really Deep| >>> this is really deep debug",
             "Really Deep| -------------------------------------------------------------",
@@ -302,6 +308,38 @@ def test_log_with_context(tmp_path, capsys):
             "Leaving Deep context.",
             "",
             "Pop back to normal",
+            "",
+        ]
+    )
+
+
+def test_log_error_with_context_(tmp_path, capsys):
+    """If an exception is raised in a logging context, the context is cleared."""
+    command = MagicMock()
+    command.base_path = Path(tmp_path)
+
+    logger = Log(verbosity=2)
+    logger.save_log = False
+
+    logger.info("this is info output")
+    try:
+        with logger.context("Deep"):
+            logger.info("this is deep context")
+            raise ValueError()
+    except ValueError:
+        logger.info("this is cleanup")
+
+    assert capsys.readouterr().out == "\n".join(
+        [
+            "this is info output",
+            "",
+            "Entering Deep context...",
+            "Deep| --------------------------------------------------------------------",
+            "Deep| this is deep context",
+            "Deep| --------------------------------------------------------------------",
+            "Leaving Deep context.",
+            "",
+            "this is cleanup",
             "",
         ]
     )
