@@ -461,7 +461,7 @@ a custom location for Briefcase's tools.
         configuration.
 
         The final app configuration merges those "deep" properties into the app
-        configuration, and performs any other app-speceific platform
+        configuration, and performs any other app-specific platform
         configuration and verification that is required as a result of
         command-line arguments.
 
@@ -475,7 +475,7 @@ a custom location for Briefcase's tools.
         This will:
 
         1. Ensure that the host has been verified
-        2. Ensure that the platform tools have been verfied
+        2. Ensure that the platform tools have been verified
         3. Ensure that app configurations have been finalized.
 
         App finalization will only occur once per invocation.

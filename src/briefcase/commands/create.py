@@ -709,9 +709,9 @@ class CreateCommand(BaseCommand):
             pass
 
         # Remove __pycache__ folders. These folders might contain stale PYC
-        # artefcats, or encode file paths that reflect the original source
+        # artefacts, or encode file paths that reflect the original source
         # location. The stub binaries all disable PYC generation, to avoid
-        # corrupting any app bundele signatures.
+        # corrupting any app bundle signatures.
         paths_to_remove.append("**/__pycache__")
 
         with self.input.wait_bar("Removing unneeded app bundle content..."):

@@ -6,7 +6,7 @@ All modern Linux distributions have a native format for distributing packages
 that are integrated into their overall operating system:
 
 * `.deb`, used by Debian, Ubuntu, Mint (and others)
-* `.rpm`, used by Redhat, Fedora, CentOS, AlmaLinux (and others)
+* `.rpm`, used by Red Hat, Fedora, CentOS, AlmaLinux (and others)
 * `.pkg.tar.zst`, used by Arch Linux and Manjaro Linux
 
 The Briefcase ``system`` backend provides a way to build your app in these
