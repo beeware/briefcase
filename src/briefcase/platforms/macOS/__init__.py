@@ -634,7 +634,7 @@ password:
                     base_dir=self.binary_path(app).name,
                 )
 
-        elif app.packaging_format == "dmg":
+        else:  # Default packaging format is DMG
             self.logger.info("Building DMG...", prefix=app.app_name)
 
             dmg_settings = {
