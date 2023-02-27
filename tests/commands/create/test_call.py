@@ -50,10 +50,10 @@ def test_create(tracking_create_command, tmp_path):
 
     # New app content has been created
     assert (
-        tmp_path / "project" / "build" / "first_0.0.1" / "tester" / "dummy" / "new"
+        tmp_path / "base_path" / "build" / "first_0.0.1" / "tester" / "dummy" / "new"
     ).exists()
     assert (
-        tmp_path / "project" / "build" / "second_0.0.2" / "tester" / "dummy" / "new"
+        tmp_path / "base_path" / "build" / "second_0.0.2" / "tester" / "dummy" / "new"
     ).exists()
 
 
@@ -79,8 +79,8 @@ def test_create_single(tracking_create_command, tmp_path):
 
     # New app content has been created
     assert (
-        tmp_path / "project" / "build" / "first_0.0.1" / "tester" / "dummy" / "new"
+        tmp_path / "base_path" / "build" / "first_0.0.1" / "tester" / "dummy" / "new"
     ).exists()
     assert not (
-        tmp_path / "project" / "build" / "second_0.0.2" / "tester" / "dummy" / "new"
+        tmp_path / "base_path" / "build" / "second_0.0.2" / "tester" / "dummy" / "new"
     ).exists()

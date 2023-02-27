@@ -68,7 +68,7 @@ class DummyOpenCommand(OpenCommand):
 @pytest.fixture
 def open_command(tmp_path):
     return DummyOpenCommand(
-        base_path=tmp_path / "project",
+        base_path=tmp_path / "base_path",
         apps={
             "first": AppConfig(
                 app_name="first",
@@ -93,7 +93,7 @@ def first_app(tmp_path):
     """Populate skeleton app content for the first app."""
     project_file = (
         tmp_path
-        / "project"
+        / "base_path"
         / "build"
         / "first_0.0.1"
         / "tester"
@@ -109,7 +109,7 @@ def second_app(tmp_path):
     """Populate skeleton app content for the second app."""
     project_file = (
         tmp_path
-        / "project"
+        / "base_path"
         / "build"
         / "second_0.0.2"
         / "tester"

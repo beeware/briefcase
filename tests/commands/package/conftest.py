@@ -105,8 +105,8 @@ class DummyPackageCommand(PackageCommand):
 
 @pytest.fixture
 def package_command(tmp_path):
-    (tmp_path / "project").mkdir()
-    return DummyPackageCommand(base_path=tmp_path / "project")
+    (tmp_path / "base_path").mkdir()
+    return DummyPackageCommand(base_path=tmp_path / "base_path")
 
 
 @pytest.fixture
@@ -126,7 +126,7 @@ def first_app_unbuilt(first_app_config, tmp_path):
     # but ensures that the bundle for the app exists
     create_file(
         tmp_path
-        / "project"
+        / "base_path"
         / "build"
         / "first_0.0.1"
         / "tester"
@@ -144,7 +144,7 @@ def first_app(first_app_unbuilt, tmp_path):
     # but ensures that the binary for the app exists
     create_file(
         tmp_path
-        / "project"
+        / "base_path"
         / "build"
         / "first_0.0.1"
         / "tester"
@@ -173,7 +173,7 @@ def second_app_uncompiled(second_app_config, tmp_path):
     # but ensures that the bundle for the app exists
     create_file(
         tmp_path
-        / "project"
+        / "base_path"
         / "build"
         / "second_0.0.2"
         / "tester"
@@ -191,7 +191,7 @@ def second_app(second_app_uncompiled, tmp_path):
     # but ensures that the binary for the app exists
     create_file(
         tmp_path
-        / "project"
+        / "base_path"
         / "build"
         / "second_0.0.2"
         / "tester"

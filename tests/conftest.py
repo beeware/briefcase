@@ -66,7 +66,7 @@ def first_app_unbuilt(first_app_config, tmp_path):
     # but ensures that the bundle for the app exists
     create_file(
         tmp_path
-        / "project"
+        / "base_path"
         / "build"
         / "first_0.0.1"
         / "tester"
@@ -84,7 +84,7 @@ def first_app(first_app_unbuilt, tmp_path):
     # but ensures that the binary for the app exists
     create_file(
         tmp_path
-        / "project"
+        / "base_path"
         / "build"
         / "first_0.0.1"
         / "tester"

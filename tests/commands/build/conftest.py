@@ -70,7 +70,7 @@ class DummyBuildCommand(BuildCommand):
 
 @pytest.fixture
 def build_command(tmp_path):
-    return DummyBuildCommand(base_path=tmp_path / "project")
+    return DummyBuildCommand(base_path=tmp_path / "base_path")
 
 
 @pytest.fixture
@@ -90,7 +90,7 @@ def second_app(second_app_config, tmp_path):
     # but ensures that the binary for the app exists
     create_file(
         tmp_path
-        / "project"
+        / "base_path"
         / "build"
         / "second_0.0.2"
         / "tester"
@@ -100,7 +100,7 @@ def second_app(second_app_config, tmp_path):
     )
     create_file(
         tmp_path
-        / "project"
+        / "base_path"
         / "build"
         / "second_0.0.2"
         / "tester"

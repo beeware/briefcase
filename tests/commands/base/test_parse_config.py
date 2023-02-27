@@ -16,7 +16,7 @@ def test_incomplete_global_config(base_command):
     """If the global configuration is missing a required argument, an error is
     raised."""
     # Provide a configuration that is missing `bundle`, a required attribute
-    filename = base_command.base_path / "project" / "pyproject.toml"
+    filename = base_command.base_path / "pyproject.toml"
     create_file(
         filename,
         """
@@ -38,7 +38,7 @@ def test_incomplete_global_config(base_command):
 def test_incomplete_config(base_command):
     """If the configuration is missing a required argument, an error is raised."""
     # Provide a configuration that is missing `bundle`, a required attribute
-    filename = base_command.base_path / "project" / "pyproject.toml"
+    filename = base_command.base_path / "pyproject.toml"
     create_file(
         filename,
         """
@@ -61,7 +61,7 @@ def test_incomplete_config(base_command):
 
 def test_parse_config(base_command):
     """A well-formed configuration file can be augmented by the command line."""
-    filename = base_command.base_path / "project" / "pyproject.toml"
+    filename = base_command.base_path / "pyproject.toml"
     create_file(
         filename,
         """
@@ -117,7 +117,7 @@ def test_parse_config(base_command):
 
 def test_parse_config_custom_config_classes_missing_global_arg(other_command):
     """A command that defines custom config classes can enforce global arguments."""
-    filename = other_command.base_path / "project" / "pyproject.toml"
+    filename = other_command.base_path / "base_path" / "pyproject.toml"
     create_file(
         filename,
         """
@@ -145,7 +145,7 @@ def test_parse_config_custom_config_classes_missing_global_arg(other_command):
 
 def test_parse_config_custom_config_classes_missing_app_arg(other_command):
     """A command that defines custom config classes can enforce app arguments."""
-    filename = other_command.base_path / "project" / "pyproject.toml"
+    filename = other_command.base_path / "base_path" / "pyproject.toml"
     create_file(
         filename,
         """
@@ -169,7 +169,7 @@ def test_parse_config_custom_config_classes_missing_app_arg(other_command):
 
 def test_parse_config_custom_config_classes(other_command):
     """A well-formed configuration file can be augmented by the command line."""
-    filename = other_command.base_path / "project" / "pyproject.toml"
+    filename = other_command.base_path / "base_path" / "pyproject.toml"
     create_file(
         filename,
         """

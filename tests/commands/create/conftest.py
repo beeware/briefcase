@@ -132,7 +132,7 @@ class TrackingCreateCommand(DummyCreateCommand):
 @pytest.fixture
 def create_command(tmp_path, mock_git):
     return DummyCreateCommand(
-        base_path=tmp_path / "project",
+        base_path=tmp_path / "base_path",
         data_path=tmp_path / "data",
         git=mock_git,
         home_path=tmp_path / "home",
@@ -143,7 +143,7 @@ def create_command(tmp_path, mock_git):
 def tracking_create_command(tmp_path, mock_git):
     return TrackingCreateCommand(
         git=mock_git,
-        base_path=tmp_path / "project",
+        base_path=tmp_path / "base_path",
         apps={
             "first": AppConfig(
                 app_name="first",
@@ -185,7 +185,7 @@ def bundle_path(myapp, tmp_path):
     # exist, and the briefcase index file has been created.
     bundle_path = (
         tmp_path
-        / "project"
+        / "base_path"
         / "build"
         / f"{myapp.app_name}_{myapp.version}"
         / "tester"

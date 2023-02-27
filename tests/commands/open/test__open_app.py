@@ -12,7 +12,7 @@ def test_open_macOS(open_command, tmp_path):
         [
             "open",
             tmp_path
-            / "project"
+            / "base_path"
             / "build"
             / "first_0.0.1"
             / "tester"
@@ -31,7 +31,7 @@ def test_open_linux(open_command, tmp_path):
         [
             "xdg-open",
             tmp_path
-            / "project"
+            / "base_path"
             / "build"
             / "first_0.0.1"
             / "tester"
@@ -48,7 +48,7 @@ def test_open_windows(open_command, tmp_path):
 
     open_command.tools.os.startfile.assert_called_once_with(
         tmp_path
-        / "project"
+        / "base_path"
         / "build"
         / "first_0.0.1"
         / "tester"

@@ -6,7 +6,7 @@ def test_bundle_path(base_command, my_app, tmp_path):
 
     assert (
         bundle_path
-        == tmp_path / "project" / "build" / "my-app_1.2.3" / "tester" / "dumdum"
+        == tmp_path / "base_path" / "build" / "my-app_1.2.3" / "tester" / "dumdum"
     )
 
 

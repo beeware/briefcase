@@ -89,7 +89,7 @@ def test_default_template(
         no_input=True,
         checkout=expected_branch,
         output_dir=os.fsdecode(
-            tmp_path / "project" / "build" / "my-app_1.2.3" / "tester"
+            tmp_path / "base_path" / "build" / "my-app_1.2.3" / "tester"
         ),
         extra_context=full_context,
     )
@@ -134,7 +134,7 @@ def test_default_template_dev(
             no_input=True,
             checkout="v37.42.7",
             output_dir=os.fsdecode(
-                tmp_path / "project" / "build" / "my-app_1.2.3" / "tester"
+                tmp_path / "base_path" / "build" / "my-app_1.2.3" / "tester"
             ),
             extra_context=full_context,
         ),
@@ -143,7 +143,7 @@ def test_default_template_dev(
             no_input=True,
             checkout="main",
             output_dir=os.fsdecode(
-                tmp_path / "project" / "build" / "my-app_1.2.3" / "tester"
+                tmp_path / "base_path" / "build" / "my-app_1.2.3" / "tester"
             ),
             extra_context=full_context,
         ),
@@ -184,7 +184,7 @@ def test_default_template_dev_explicit_branch(
             no_input=True,
             checkout=branch,
             output_dir=os.fsdecode(
-                tmp_path / "project" / "build" / "my-app_1.2.3" / "tester"
+                tmp_path / "base_path" / "build" / "my-app_1.2.3" / "tester"
             ),
             extra_context=full_context,
         ),
@@ -232,7 +232,7 @@ def test_default_template_dev_explicit_invalid_branch(
             no_input=True,
             checkout=branch,
             output_dir=os.fsdecode(
-                tmp_path / "project" / "build" / "my-app_1.2.3" / "tester"
+                tmp_path / "base_path" / "build" / "my-app_1.2.3" / "tester"
             ),
             extra_context=full_context,
         ),
@@ -261,7 +261,7 @@ def test_explicit_branch(monkeypatch, create_command, myapp, full_context, tmp_p
         no_input=True,
         checkout=branch,
         output_dir=os.fsdecode(
-            tmp_path / "project" / "build" / "my-app_1.2.3" / "tester"
+            tmp_path / "base_path" / "build" / "my-app_1.2.3" / "tester"
         ),
         extra_context=full_context,
     )
@@ -288,7 +288,7 @@ def test_platform_exists(monkeypatch, create_command, myapp, full_context, tmp_p
         no_input=True,
         checkout="v37.42.7",
         output_dir=os.fsdecode(
-            tmp_path / "project" / "build" / "my-app_1.2.3" / "tester"
+            tmp_path / "base_path" / "build" / "my-app_1.2.3" / "tester"
         ),
         extra_context=full_context,
     )
@@ -316,7 +316,7 @@ def test_explicit_repo_template(
         no_input=True,
         checkout="v37.42.7",
         output_dir=os.fsdecode(
-            tmp_path / "project" / "build" / "my-app_1.2.3" / "tester"
+            tmp_path / "base_path" / "build" / "my-app_1.2.3" / "tester"
         ),
         extra_context=full_context,
     )
@@ -351,7 +351,7 @@ def test_explicit_repo_template_and_branch(
         no_input=True,
         checkout=branch,
         output_dir=os.fsdecode(
-            tmp_path / "project" / "build" / "my-app_1.2.3" / "tester"
+            tmp_path / "base_path" / "build" / "my-app_1.2.3" / "tester"
         ),
         extra_context=full_context,
     )
@@ -375,7 +375,7 @@ def test_explicit_local_template(
         no_input=True,
         checkout="v37.42.7",
         output_dir=os.fsdecode(
-            tmp_path / "project" / "build" / "my-app_1.2.3" / "tester"
+            tmp_path / "base_path" / "build" / "my-app_1.2.3" / "tester"
         ),
         extra_context=full_context,
     )
@@ -409,7 +409,7 @@ def test_explicit_local_template_and_branch(
         no_input=True,
         checkout=branch,
         output_dir=os.fsdecode(
-            tmp_path / "project" / "build" / "my-app_1.2.3" / "tester"
+            tmp_path / "base_path" / "build" / "my-app_1.2.3" / "tester"
         ),
         extra_context=full_context,
     )
@@ -450,7 +450,7 @@ def test_offline_repo_template(
         no_input=True,
         checkout="v37.42.7",
         output_dir=os.fsdecode(
-            tmp_path / "project" / "build" / "my-app_1.2.3" / "tester"
+            tmp_path / "base_path" / "build" / "my-app_1.2.3" / "tester"
         ),
         extra_context=full_context,
     )
@@ -484,7 +484,7 @@ def test_invalid_repo_template(
         no_input=True,
         checkout="v37.42.7",
         output_dir=os.fsdecode(
-            tmp_path / "project" / "build" / "my-app_1.2.3" / "tester"
+            tmp_path / "base_path" / "build" / "my-app_1.2.3" / "tester"
         ),
         extra_context=full_context,
     )
@@ -520,7 +520,7 @@ def test_missing_branch_template(
         no_input=True,
         checkout="v37.42.7",
         output_dir=os.fsdecode(
-            tmp_path / "project" / "build" / "my-app_1.2.3" / "tester"
+            tmp_path / "base_path" / "build" / "my-app_1.2.3" / "tester"
         ),
         extra_context=full_context,
     )
@@ -557,7 +557,7 @@ def test_cached_template(monkeypatch, create_command, myapp, full_context, tmp_p
         no_input=True,
         checkout="v37.42.7",
         output_dir=os.fsdecode(
-            tmp_path / "project" / "build" / "my-app_1.2.3" / "tester"
+            tmp_path / "base_path" / "build" / "my-app_1.2.3" / "tester"
         ),
         extra_context=full_context,
     )
@@ -608,7 +608,7 @@ def test_cached_template_offline(
         no_input=True,
         checkout="v37.42.7",
         output_dir=os.fsdecode(
-            tmp_path / "project" / "build" / "my-app_1.2.3" / "tester"
+            tmp_path / "base_path" / "build" / "my-app_1.2.3" / "tester"
         ),
         extra_context=full_context,
     )

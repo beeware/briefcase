@@ -64,7 +64,7 @@ def test_icon_target(create_command, tmp_path):
                 variant=None,
                 size="10",
                 target=tmp_path
-                / "project"
+                / "base_path"
                 / "build"
                 / "my-app_1.2.3"
                 / "tester"
@@ -79,7 +79,7 @@ def test_icon_target(create_command, tmp_path):
                 variant=None,
                 size="20",
                 target=tmp_path
-                / "project"
+                / "base_path"
                 / "build"
                 / "my-app_1.2.3"
                 / "tester"
@@ -136,7 +136,7 @@ def test_icon_variant_target(create_command, tmp_path):
                 variant=None,
                 size="round",  # This is expected for unsized variants
                 target=tmp_path
-                / "project"
+                / "base_path"
                 / "build"
                 / "my-app_1.2.3"
                 / "tester"
@@ -151,7 +151,7 @@ def test_icon_variant_target(create_command, tmp_path):
                 variant="square",
                 size="10",
                 target=tmp_path
-                / "project"
+                / "base_path"
                 / "build"
                 / "my-app_1.2.3"
                 / "tester"
@@ -166,7 +166,7 @@ def test_icon_variant_target(create_command, tmp_path):
                 variant="square",
                 size="20",
                 target=tmp_path
-                / "project"
+                / "base_path"
                 / "build"
                 / "my-app_1.2.3"
                 / "tester"
@@ -217,7 +217,7 @@ def test_splash_target(create_command, tmp_path):
                 variant=None,
                 size="10x20",
                 target=tmp_path
-                / "project"
+                / "base_path"
                 / "build"
                 / "my-app_1.2.3"
                 / "tester"
@@ -232,7 +232,7 @@ def test_splash_target(create_command, tmp_path):
                 variant=None,
                 size="20x30",
                 target=tmp_path
-                / "project"
+                / "base_path"
                 / "build"
                 / "my-app_1.2.3"
                 / "tester"
@@ -289,7 +289,7 @@ def test_splash_variant_target(create_command, tmp_path):
                 variant=None,
                 size="portrait",  # This is expected for unsized variants
                 target=tmp_path
-                / "project"
+                / "base_path"
                 / "build"
                 / "my-app_1.2.3"
                 / "tester"
@@ -304,7 +304,7 @@ def test_splash_variant_target(create_command, tmp_path):
                 variant="landscape",
                 size="10x20",
                 target=tmp_path
-                / "project"
+                / "base_path"
                 / "build"
                 / "my-app_1.2.3"
                 / "tester"
@@ -319,7 +319,7 @@ def test_splash_variant_target(create_command, tmp_path):
                 variant="landscape",
                 size="20x30",
                 target=tmp_path
-                / "project"
+                / "base_path"
                 / "build"
                 / "my-app_1.2.3"
                 / "tester"
@@ -380,7 +380,7 @@ def test_doctype_icon_target(create_command, tmp_path):
                 variant=None,
                 size=None,
                 target=tmp_path
-                / "project"
+                / "base_path"
                 / "build"
                 / "my-app_1.2.3"
                 / "tester"
@@ -395,7 +395,7 @@ def test_doctype_icon_target(create_command, tmp_path):
                 variant=None,
                 size="10",
                 target=tmp_path
-                / "project"
+                / "base_path"
                 / "build"
                 / "my-app_1.2.3"
                 / "tester"
@@ -410,7 +410,7 @@ def test_doctype_icon_target(create_command, tmp_path):
                 variant=None,
                 size="20",
                 target=tmp_path
-                / "project"
+                / "base_path"
                 / "build"
                 / "my-app_1.2.3"
                 / "tester"
