@@ -190,11 +190,11 @@ class Log:
         if not message:
             # When a message is not provided, only output the context;
             # This type of call is just clearing some vertical space.
-            self.print(escape(self._context), show=show)
+            self.print(self._context, show=show)
         else:
             if prefix:
                 # insert vertical space before for all messages with a prefix
-                self.print(escape(self._context), show=show)
+                self.print(self._context, show=show)
                 if not markup:
                     preface, prefix, message = (
                         escape(text) for text in (preface, prefix, message)
@@ -203,7 +203,7 @@ class Log:
                 markup = True
             for line in message.splitlines():
                 self.print(
-                    f"{escape(self._context)}{preface}{prefix}{line}",
+                    f"{self._context}{preface}{prefix}{line}",
                     show=show,
                     markup=markup,
                     style=style,
