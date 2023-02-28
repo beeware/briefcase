@@ -41,7 +41,7 @@ class LinuxMixin:
         # * Manjaro is an Arch derivative, and puts identifying content in
         #   `/etc/arch-release`
         # * Redhat-derived distros all provide `/etc/redhat-release`
-        # * Fedora also provies `/etc/fedora-release`, which contains the
+        # * Fedora also provides `/etc/fedora-release`, which contains the
         #   version number
         # * Almalinux also provides `/etc/almalinux-release`, which contains the
         #   version number
@@ -136,7 +136,7 @@ class LinuxMixin:
         :param vendor: The vendor of the distribution
         :returns: The base vendor type; None if no vendor type can be identified.
         """
-        # Derive the base vendor type for the specific vendor being targetted.
+        # Derive the base vendor type for the specific vendor being targeted.
         if vendor in {"debian", "ubuntu", "linuxmint", "pop"}:
             base = DEBIAN
         elif vendor in {"redhat", "fedora", "centos", "almalinux"}:

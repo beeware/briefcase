@@ -209,7 +209,7 @@ class LinuxSystemPassiveMixin(LinuxMixin):
             for key, value in config.items():
                 setattr(app, key, value)
 
-        with self.input.wait_bar("Determinining glibc version..."):
+        with self.input.wait_bar("Determining glibc version..."):
             app.glibc_version = self.target_glibc_version(app)
         self.logger.info(f"Targeting glibc {app.glibc_version}")
 
@@ -581,7 +581,7 @@ class LinuxSystemRunCommand(LinuxSystemPassiveMixin, RunCommand):
 
 
 def debian_multiline_description(description):
-    """Genereate a Debian multiline description string.
+    """Generate a Debian multiline description string.
 
     The long description in a Debian control file must
     *not* contain any blank lines, and each line must start with a single space.
@@ -660,7 +660,7 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
             # Add runtime package dependencies. App config has been finalized,
             # so this will be the target-specific definition, if one exists.
             # libc6 is added because lintian complains without it, even though
-            # its a dependency of the thing we *do* care about - python.
+            # it's a dependency of the thing we *do* care about - python.
             system_runtime_requires = ", ".join(
                 [
                     f"libc6 (>={app.glibc_version})",
@@ -700,7 +700,7 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
                     f"Error while building .deb package for {app.app_name}."
                 ) from e
 
-            # Move the deb file to it's final location
+            # Move the deb file to its final location
             self.tools.shutil.move(
                 self.bundle_path(app) / "package.deb",
                 self.distribution_path(app),
