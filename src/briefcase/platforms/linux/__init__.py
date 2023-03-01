@@ -251,8 +251,10 @@ class DockerOpenCommand(OpenCommand):
     # verification that Docker is available, and verify the app context.
 
     def _open_app(self, app: AppConfig):
-        # If we're using Docker, open an interactive shell in the container
+        # If we're using Docker, open an interactive shell in the container.
+        # Rely on the default CMD statement in the image's Dockerfile to
+        # define a default shell.
         if self.use_docker:
-            self.tools[app].app_context.run(["/bin/bash"], interactive=True)
+            self.tools[app].app_context.run([], interactive=True)
         else:
             super()._open_app(app)
