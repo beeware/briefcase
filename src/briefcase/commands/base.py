@@ -15,7 +15,10 @@ from cookiecutter import exceptions as cookiecutter_exceptions
 from cookiecutter.repository import is_repo_url
 from platformdirs import PlatformDirs
 
-from briefcase.platforms import get_output_formats, get_platforms
+try:
+    import importlib_metadata
+except ImportError:
+    import importlib.metadata as importlib_metadata
 
 try:
     import tomllib
@@ -36,6 +39,7 @@ from briefcase.exceptions import (
 from briefcase.integrations.base import ToolCache
 from briefcase.integrations.download import Download
 from briefcase.integrations.subprocess import Subprocess
+from briefcase.platforms import get_output_formats, get_platforms
 
 
 def create_config(klass, config, msg):
@@ -427,6 +431,21 @@ a custom location for Briefcase's tools.
             )
 
         return path
+
+    @property
+    def briefcase_required_python_version(self):
+        """The major.minor of the minimum Python version required by Briefcase itself.
+
+        This is extracted from packaging metadata.
+        """
+        # Native format is ">=3.8"
+        return tuple(
+            int(v)
+            for v in importlib_metadata.metadata("briefcase")["Requires-Python"]
+            .split("=")[1]
+            .strip()
+            .split(".")
+        )
 
     @property
     def python_version_tag(self):

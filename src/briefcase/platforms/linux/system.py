@@ -262,11 +262,14 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
         target_python_tag = output.split("\n")[0]
         target_python_version = tuple(int(v) for v in target_python_tag.split("."))[:2]
 
-        if target_python_version < (3, 8):
+        if target_python_version < self.briefcase_required_python_version:
+            briefcase_min_version = ".".join(
+                str(v) for v in self.briefcase_required_python_version
+            )
             raise BriefcaseCommandError(
                 f"The system python3 version provided by {app.target_image} "
                 f"is {target_python_tag}; Briefcase requires a "
-                "minimum Python3 version of 3.8."
+                f"minimum Python3 version of {briefcase_min_version}."
             )
         elif target_python_version != (
             self.tools.sys.version_info.major,
