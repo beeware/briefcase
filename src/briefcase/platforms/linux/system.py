@@ -126,8 +126,7 @@ class LinuxSystemPassiveMixin(LinuxMixin):
                 #
                 # Note that the exact text will vary version to version.
                 # Look for the "2.NN" pattern.
-                match = re.search(r"\d\.\d+", output)
-                if match:
+                if match := re.search(r"\d\.\d+", output):
                     target_glibc = match.group(0)
                 else:
                     raise BriefcaseCommandError(
