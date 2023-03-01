@@ -300,8 +300,6 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
         system Python.
 
         Requires that the app tools have been verified.
-
-        :param app: The application being built
         """
         system_python_bin = Path("/usr/bin/python3").resolve()
         system_version = system_python_bin.name.split(".")
@@ -495,9 +493,9 @@ class LinuxSystemBuildCommand(LinuxSystemMixin, BuildCommand):
             if changelog.exists():
                 with changelog.open() as infile:
                     outfile = gzip.GzipFile(
-                        doc_folder / "changelog.gz", mode="w", mtime=0
+                        doc_folder / "changelog.gz", mode="wb", mtime=0
                     )
-                    outfile.write(infile.read().encode())
+                    outfile.write(infile.read().encode("utf-8"))
                     outfile.close()
             else:
                 raise BriefcaseCommandError("CHANGELOG source file is missing")
@@ -513,9 +511,9 @@ class LinuxSystemBuildCommand(LinuxSystemMixin, BuildCommand):
             if manpage_source.exists():
                 with manpage_source.open() as infile:
                     outfile = gzip.GzipFile(
-                        man_folder / f"{app.app_name}.1.gz", mode="w", mtime=0
+                        man_folder / f"{app.app_name}.1.gz", mode="wb", mtime=0
                     )
-                    outfile.write(infile.read().encode())
+                    outfile.write(infile.read().encode("utf-8"))
                     outfile.close()
             else:
                 raise BriefcaseCommandError(
