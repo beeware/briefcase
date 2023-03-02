@@ -533,20 +533,21 @@ class LinuxSystemBuildCommand(LinuxSystemMixin, BuildCommand):
         self.logger.info("Update file permissions...")
         with self.input.wait_bar("Updating file permissions..."):
             for path in self.package_path(app).glob("**/*"):
+                old_perms = self.tools.os.stat(path).st_mode & 0o777
+                user_perms = old_perms & 0o700
+                world_perms = old_perms & 0o007
+
                 # File permissions like 775 and 664 (where the group and user
-                # permissions are the same), cause Debian heartburn. So, if the
-                # user and group permissions are the same, change the group
-                # permission to the world permission.
-                perms = self.tools.os.stat(path).st_mode & 0o777
-                user_perms = perms & 0o700
-                group_perms = perms & 0o070
-                if user_perms == (group_perms << 3):
-                    world_perms = perms & 0o007
-                    new_perms = user_perms | (world_perms << 3) | world_perms
+                # permissions are the same), cause Debian heartburn. So, make
+                # sure the group and world permissions are the same
+                new_perms = user_perms | (world_perms << 3) | world_perms
+
+                # If there's been any change in permissions, apply them
+                if new_perms != old_perms:
                     self.logger.info(
                         "Updating file permissions on "
                         f"{path.relative_to(self.bundle_path(app))} "
-                        f"from {oct(perms)[2:]} to {oct(new_perms)[2:]}"
+                        f"from {oct(old_perms)[2:]} to {oct(new_perms)[2:]}"
                     )
                     path.chmod(new_perms)
 
