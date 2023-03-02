@@ -67,7 +67,7 @@ def test_linux_docker(create_command, tmp_path, first_app_config, monkeypatch):
         / "linux"
         / "somevendor"
         / "surprising"
-        / "First App"
+        / "first-app"
         / "Dockerfile",
         app_base_path=tmp_path / "base_path",
         host_platform_path=tmp_path / "base_path" / "linux",
@@ -117,7 +117,7 @@ def test_non_linux_docker(create_command, tmp_path, first_app_config):
         / "linux"
         / "somevendor"
         / "surprising"
-        / "First App"
+        / "first-app"
         / "Dockerfile",
         app_base_path=tmp_path / "base_path",
         host_platform_path=tmp_path / "base_path" / "linux",

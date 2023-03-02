@@ -124,15 +124,17 @@ def test_verify_docker(monkeypatch, package_command, first_app_deb):
 def test_deb_package(package_command, first_app_deb, tmp_path):
     """A deb app can be packaged."""
     bundle_path = (
-        tmp_path / "base_path" / "linux" / "somevendor" / "surprising" / "First App"
+        tmp_path / "base_path" / "linux" / "somevendor" / "surprising" / "first-app"
     )
 
     # Package the app
     package_command.package_app(first_app_deb)
 
     # The control file is written
-    assert (bundle_path / "package" / "DEBIAN" / "control").exists()
-    with (bundle_path / "package" / "DEBIAN" / "control").open(encoding="utf-8") as f:
+    assert (bundle_path / "first-app-0.0.1" / "DEBIAN" / "control").exists()
+    with (bundle_path / "first-app-0.0.1" / "DEBIAN" / "control").open(
+        encoding="utf-8"
+    ) as f:
         assert (
             f.read()
             == "\n".join(
@@ -160,7 +162,7 @@ def test_deb_package(package_command, first_app_deb, tmp_path):
             "dpkg-deb",
             "--build",
             "--root-owner-group",
-            "package",
+            "first-app-0.0.1",
         ],
         check=True,
         cwd=bundle_path,
@@ -168,7 +170,7 @@ def test_deb_package(package_command, first_app_deb, tmp_path):
 
     # The deb was moved into the final location
     package_command.tools.shutil.move.assert_called_once_with(
-        bundle_path / "package.deb",
+        bundle_path / "first-app-0.0.1.deb",
         tmp_path
         / "base_path"
         / "linux"
@@ -179,18 +181,22 @@ def test_deb_package(package_command, first_app_deb, tmp_path):
 def test_deb_re_package(package_command, first_app_deb, tmp_path):
     """A deb app that has previously been packaged can be re-packaged."""
     bundle_path = (
-        tmp_path / "base_path" / "linux" / "somevendor" / "surprising" / "First App"
+        tmp_path / "base_path" / "linux" / "somevendor" / "surprising" / "first-app"
     )
 
     # Create an old control file that will be overwritten.
-    create_file(bundle_path / "package" / "DEBIAN" / "control", "Old control content")
+    create_file(
+        bundle_path / "first-app-0.0.1" / "DEBIAN" / "control", "Old control content"
+    )
 
     # Package the app
     package_command.package_app(first_app_deb)
 
     # The control file is re-written
-    assert (bundle_path / "package" / "DEBIAN" / "control").exists()
-    with (bundle_path / "package" / "DEBIAN" / "control").open(encoding="utf-8") as f:
+    assert (bundle_path / "first-app-0.0.1" / "DEBIAN" / "control").exists()
+    with (bundle_path / "first-app-0.0.1" / "DEBIAN" / "control").open(
+        encoding="utf-8"
+    ) as f:
         assert (
             f.read()
             == "\n".join(
@@ -218,7 +224,7 @@ def test_deb_re_package(package_command, first_app_deb, tmp_path):
             "dpkg-deb",
             "--build",
             "--root-owner-group",
-            "package",
+            "first-app-0.0.1",
         ],
         check=True,
         cwd=bundle_path,
@@ -226,7 +232,7 @@ def test_deb_re_package(package_command, first_app_deb, tmp_path):
 
     # The deb was moved into the final location
     package_command.tools.shutil.move.assert_called_once_with(
-        bundle_path / "package.deb",
+        bundle_path / "first-app-0.0.1.deb",
         tmp_path
         / "base_path"
         / "linux"
@@ -237,7 +243,7 @@ def test_deb_re_package(package_command, first_app_deb, tmp_path):
 def test_deb_package_no_long_description(package_command, first_app_deb, tmp_path):
     """A deb app can be packaged."""
     bundle_path = (
-        tmp_path / "base_path" / "linux" / "somevendor" / "surprising" / "First App"
+        tmp_path / "base_path" / "linux" / "somevendor" / "surprising" / "first-app"
     )
 
     # Delete the long description
@@ -251,7 +257,7 @@ def test_deb_package_no_long_description(package_command, first_app_deb, tmp_pat
         package_command.package_app(first_app_deb)
 
     # The control file won't be written
-    assert not (bundle_path / "package" / "DEBIAN" / "control").exists()
+    assert not (bundle_path / "first-app-0.0.1" / "DEBIAN" / "control").exists()
 
 
 @pytest.mark.parametrize(
@@ -272,7 +278,7 @@ def test_multiline_long_description(input, output):
 def test_deb_package_extra_requirements(package_command, first_app_deb, tmp_path):
     """A deb app can be packaged with extra runtime requirements."""
     bundle_path = (
-        tmp_path / "base_path" / "linux" / "somevendor" / "surprising" / "First App"
+        tmp_path / "base_path" / "linux" / "somevendor" / "surprising" / "first-app"
     )
 
     first_app_deb.system_runtime_requires = ["first", "second (>=1.2.3)"]
@@ -281,8 +287,10 @@ def test_deb_package_extra_requirements(package_command, first_app_deb, tmp_path
     package_command.package_app(first_app_deb)
 
     # The control file is written
-    assert (bundle_path / "package" / "DEBIAN" / "control").exists()
-    with (bundle_path / "package" / "DEBIAN" / "control").open(encoding="utf-8") as f:
+    assert (bundle_path / "first-app-0.0.1" / "DEBIAN" / "control").exists()
+    with (bundle_path / "first-app-0.0.1" / "DEBIAN" / "control").open(
+        encoding="utf-8"
+    ) as f:
         assert (
             f.read()
             == "\n".join(
@@ -310,7 +318,7 @@ def test_deb_package_extra_requirements(package_command, first_app_deb, tmp_path
             "dpkg-deb",
             "--build",
             "--root-owner-group",
-            "package",
+            "first-app-0.0.1",
         ],
         check=True,
         cwd=bundle_path,
@@ -318,7 +326,7 @@ def test_deb_package_extra_requirements(package_command, first_app_deb, tmp_path
 
     # The deb was moved into the final location
     package_command.tools.shutil.move.assert_called_once_with(
-        bundle_path / "package.deb",
+        bundle_path / "first-app-0.0.1.deb",
         tmp_path
         / "base_path"
         / "linux"
@@ -329,7 +337,7 @@ def test_deb_package_extra_requirements(package_command, first_app_deb, tmp_path
 def test_deb_package_failure(package_command, first_app_deb, tmp_path):
     """If an packaging doesn't succeed, an error is raised."""
     bundle_path = (
-        tmp_path / "base_path" / "linux" / "somevendor" / "surprising" / "First App"
+        tmp_path / "base_path" / "linux" / "somevendor" / "surprising" / "first-app"
     )
 
     # Mock a packaging failure
@@ -346,8 +354,10 @@ def test_deb_package_failure(package_command, first_app_deb, tmp_path):
         package_command.package_app(first_app_deb)
 
     # The control file is written
-    assert (bundle_path / "package" / "DEBIAN" / "control").exists()
-    with (bundle_path / "package" / "DEBIAN" / "control").open(encoding="utf-8") as f:
+    assert (bundle_path / "first-app-0.0.1" / "DEBIAN" / "control").exists()
+    with (bundle_path / "first-app-0.0.1" / "DEBIAN" / "control").open(
+        encoding="utf-8"
+    ) as f:
         assert (
             f.read()
             == "\n".join(
@@ -376,7 +386,7 @@ def test_deb_package_failure(package_command, first_app_deb, tmp_path):
             "dpkg-deb",
             "--build",
             "--root-owner-group",
-            "package",
+            "first-app-0.0.1",
         ],
         check=True,
         cwd=bundle_path,

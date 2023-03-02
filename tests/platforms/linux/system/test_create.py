@@ -114,7 +114,7 @@ def test_install_extra_resources(create_command, first_app_config, capsys, tmp_p
         / "linux"
         / "somevendor"
         / "surprising"
-        / "First App"
+        / "first-app"
         / "LICENSE"
     ).exists()
     assert (
@@ -123,7 +123,7 @@ def test_install_extra_resources(create_command, first_app_config, capsys, tmp_p
         / "linux"
         / "somevendor"
         / "surprising"
-        / "First App"
+        / "first-app"
         / "CHANGELOG"
     ).exists()
 
@@ -160,7 +160,7 @@ def test_install_extra_resources_missing_license(
         / "linux"
         / "somevendor"
         / "surprising"
-        / "First App"
+        / "first-app"
         / "LICENSE"
     ).exists()
     assert (
@@ -169,7 +169,7 @@ def test_install_extra_resources_missing_license(
         / "linux"
         / "somevendor"
         / "surprising"
-        / "First App"
+        / "first-app"
         / "CHANGELOG"
     ).exists()
 
@@ -206,7 +206,7 @@ def test_install_extra_resources_missing_changelog(
         / "linux"
         / "somevendor"
         / "surprising"
-        / "First App"
+        / "first-app"
         / "LICENSE"
     ).exists()
     assert not (
@@ -215,7 +215,7 @@ def test_install_extra_resources_missing_changelog(
         / "linux"
         / "somevendor"
         / "surprising"
-        / "First App"
+        / "first-app"
         / "CHANGELOG"
     ).exists()
 

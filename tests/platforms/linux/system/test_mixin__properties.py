@@ -37,7 +37,7 @@ def test_bundle_path(
 
     assert (
         create_command.bundle_path(first_app_config)
-        == tmp_path / "base_path" / "linux" / vendor / codename / "First App"
+        == tmp_path / "base_path" / "linux" / vendor / codename / "first-app"
     )
 
 
@@ -57,8 +57,8 @@ def test_binary_path(create_command, first_app_config, tmp_path):
         / "linux"
         / "somevendor"
         / "surprising"
-        / "First App"
-        / "package"
+        / "first-app"
+        / "first-app-0.0.1"
         / "usr"
         / "bin"
         / "first-app"

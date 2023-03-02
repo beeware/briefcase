@@ -52,20 +52,20 @@ class LinuxSystemPassiveMixin(LinuxMixin):
         }.get(self.tools.host_arch, self.tools.host_arch)
 
     def bundle_path(self, app):
-        # The bundle path is different as there won't be a single "deb" build;
-        # there is one per build target.
+        # Override the bundle path to use the app name, rather than formal name
+        # This is because Red Hat doesn't like spaces in paths.
         return (
-            self.platform_path
-            / app.target_vendor
-            / app.target_codename
-            / app.formal_name
+            self.platform_path / app.target_vendor / app.target_codename / app.app_name
         )
 
     def project_path(self, app):
         return self.bundle_path(app)
 
+    def package_path(self, app):
+        return self.bundle_path(app) / f"{app.app_name}-{app.version}"
+
     def binary_path(self, app):
-        return self.bundle_path(app) / "package" / "usr" / "bin" / app.app_name
+        return self.package_path(app) / "usr" / "bin" / app.app_name
 
     def distribution_path(self, app):
         if app.packaging_format == "deb":
@@ -477,7 +477,12 @@ class LinuxSystemBuildCommand(LinuxSystemMixin, BuildCommand):
 
         # Make the folder for docs
         doc_folder = (
-            self.bundle_path(app) / "package" / "usr" / "share" / "doc" / app.app_name
+            self.bundle_path(app)
+            / f"{app.app_name}-{app.version}"
+            / "usr"
+            / "share"
+            / "doc"
+            / app.app_name
         )
         doc_folder.mkdir(parents=True, exist_ok=True)
 
@@ -502,7 +507,12 @@ class LinuxSystemBuildCommand(LinuxSystemMixin, BuildCommand):
 
         # Make a folder for manpages
         man_folder = (
-            self.bundle_path(app) / "package" / "usr" / "share" / "man" / "man1"
+            self.bundle_path(app)
+            / f"{app.app_name}-{app.version}"
+            / "usr"
+            / "share"
+            / "man"
+            / "man1"
         )
         man_folder.mkdir(parents=True, exist_ok=True)
 
@@ -522,7 +532,7 @@ class LinuxSystemBuildCommand(LinuxSystemMixin, BuildCommand):
 
         self.logger.info("Update file permissions...")
         with self.input.wait_bar("Updating file permissions..."):
-            for path in self.bundle_path(app).glob("**/*"):
+            for path in self.package_path(app).glob("**/*"):
                 # File permissions like 775 and 664 (where the group and user
                 # permissions are the same), cause Debian heartburn. So, if the
                 # user and group permissions are the same, change the group
@@ -641,8 +651,6 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
     def _package_deb(self, app: AppConfig, **kwargs):
         self.logger.info("Building .deb package...", prefix=app.app_name)
 
-        package_path = self.bundle_path(app) / "package"
-
         # The long description *must* exist.
         if app.long_description is None:
             raise BriefcaseCommandError(
@@ -652,10 +660,10 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
 
         # Write the Debian metadata control file.
         with self.input.wait_bar("Write Debian package control file..."):
-            if (package_path / "DEBIAN").exists():
-                self.tools.shutil.rmtree(package_path / "DEBIAN")
+            if (self.package_path(app) / "DEBIAN").exists():
+                self.tools.shutil.rmtree(self.package_path(app) / "DEBIAN")
 
-            (package_path / "DEBIAN").mkdir()
+            (self.package_path(app) / "DEBIAN").mkdir()
 
             # Add runtime package dependencies. App config has been finalized,
             # so this will be the target-specific definition, if one exists.
@@ -669,7 +677,9 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
                 + getattr(app, "system_runtime_requires", [])
             )
 
-            with (package_path / "DEBIAN" / "control").open("w", encoding="utf-8") as f:
+            with (self.package_path(app) / "DEBIAN" / "control").open(
+                "w", encoding="utf-8"
+            ) as f:
                 f.write(
                     "\n".join(
                         [
@@ -691,7 +701,12 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
             try:
                 # Build the dpkg.
                 self.tools[app].app_context.run(
-                    ["dpkg-deb", "--build", "--root-owner-group", "package"],
+                    [
+                        "dpkg-deb",
+                        "--build",
+                        "--root-owner-group",
+                        f"{app.app_name}-{app.version}",
+                    ],
                     check=True,
                     cwd=self.bundle_path(app),
                 )
@@ -702,7 +717,7 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
 
             # Move the deb file to its final location
             self.tools.shutil.move(
-                self.bundle_path(app) / "package.deb",
+                self.bundle_path(app) / f"{app.app_name}-{app.version}.deb",
                 self.distribution_path(app),
             )
 
