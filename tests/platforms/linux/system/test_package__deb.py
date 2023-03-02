@@ -241,7 +241,7 @@ def test_deb_re_package(package_command, first_app_deb, tmp_path):
 
 
 def test_deb_package_no_long_description(package_command, first_app_deb, tmp_path):
-    """A deb app can be packaged."""
+    """A deb app without a long description raises an error."""
     bundle_path = (
         tmp_path / "base_path" / "linux" / "somevendor" / "surprising" / "first-app"
     )
@@ -276,12 +276,15 @@ def test_multiline_long_description(input, output):
 
 
 def test_deb_package_extra_requirements(package_command, first_app_deb, tmp_path):
-    """A deb app can be packaged with extra runtime requirements."""
+    """A deb app can be packaged with extra runtime requirements and configuration options."""
     bundle_path = (
         tmp_path / "base_path" / "linux" / "somevendor" / "surprising" / "first-app"
     )
 
+    # Add system requirements and other optional settings.
     first_app_deb.system_runtime_requires = ["first", "second (>=1.2.3)"]
+    first_app_deb.revision = 42
+    first_app_deb.system_section = "Funny stuff"
 
     # Package the app
     package_command.package_app(first_app_deb)
@@ -304,7 +307,7 @@ def test_deb_package_extra_requirements(package_command, first_app_deb, tmp_path
                     " Long description",
                     " for the app",
                     "Depends: libc6 (>=2.99), python3, first, second (>=1.2.3)",
-                    "Section: utils",
+                    "Section: Funny stuff",
                     "Priority: optional",
                 ]
             )
@@ -330,7 +333,7 @@ def test_deb_package_extra_requirements(package_command, first_app_deb, tmp_path
         tmp_path
         / "base_path"
         / "linux"
-        / "first-app_0.0.1-1~somevendor-surprising_wonky.deb",
+        / "first-app_0.0.1-42~somevendor-surprising_wonky.deb",
     )
 
 

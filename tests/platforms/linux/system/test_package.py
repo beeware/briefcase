@@ -26,8 +26,9 @@ def package_command(monkeypatch, first_app, tmp_path):
     # Mock the detection of system python.
     command.verify_system_python = mock.MagicMock()
 
-    # Mock the debian packaging tools.
+    # Mock the packaging tools.
     command._verify_deb_tools = mock.MagicMock()
+    command._verify_rpm_tools = mock.MagicMock()
 
     return command
 
@@ -35,6 +36,46 @@ def package_command(monkeypatch, first_app, tmp_path):
 def test_formats(package_command):
     "The supported packaging formats are as expected."
     assert package_command.packaging_formats == ["deb", "rpm", "pkg", "system"]
+
+
+@pytest.mark.parametrize(
+    "format, vendor, codename, revision, filename",
+    [
+        ["rpm", "redhat", "9", None, "first-app-0.0.1-1.el9.wonky.rpm"],
+        ["rpm", "redhat", "9", 5, "first-app-0.0.1-5.el9.wonky.rpm"],
+        ["rpm", "fedora", "37", None, "first-app-0.0.1-1.fc37.wonky.rpm"],
+        [
+            "deb",
+            "debian",
+            "bullseye",
+            None,
+            "first-app_0.0.1-1~debian-bullseye_wonky.deb",
+        ],
+        ["deb", "debian", "bullseye", 5, "first-app_0.0.1-5~debian-bullseye_wonky.deb"],
+        ["deb", "ubuntu", "jammy", None, "first-app_0.0.1-1~ubuntu-jammy_wonky.deb"],
+        [
+            "deb",
+            "linuxmint",
+            "vera",
+            None,
+            "first-app_0.0.1-1~linuxmint-vera_wonky.deb",
+        ],
+    ],
+)
+def test_distribution_path(
+    package_command, first_app, format, vendor, codename, revision, filename, tmp_path
+):
+    first_app.packaging_format = format
+    first_app.target_vendor = vendor
+    first_app.target_codename = codename
+
+    if revision:
+        first_app.revision = revision
+
+    assert (
+        package_command.distribution_path(first_app)
+        == tmp_path / "base_path" / "linux" / filename
+    )
 
 
 @pytest.mark.parametrize(
@@ -93,6 +134,21 @@ def test_package_deb_app(package_command, first_app):
 
     # Assert the right backend was called.
     package_command._package_deb.assert_called_once_with(first_app)
+
+
+def test_package_rpm_app(package_command, first_app):
+    """A Red Hat app can be packaged"""
+    # Set the packaging format
+    first_app.packaging_format = "rpm"
+
+    # Mock the actual packaging call
+    package_command._package_rpm = mock.MagicMock()
+
+    # Package the app
+    package_command.package_app(first_app)
+
+    # Assert the right backend was called.
+    package_command._package_rpm.assert_called_once_with(first_app)
 
 
 def test_package_unknown_format(package_command, first_app):

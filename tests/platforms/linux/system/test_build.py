@@ -95,7 +95,8 @@ def test_build_bootstrap_failed(build_command, first_app, tmp_path):
 
     # Build the app; it will fail
     with pytest.raises(
-        BriefcaseCommandError, match=r"Error building bootstrap binary for first-app."
+        BriefcaseCommandError,
+        match=r"Error building bootstrap binary for first-app.",
     ):
         build_command.build_app(first_app)
 
@@ -117,12 +118,12 @@ def test_missing_license(build_command, first_app, tmp_path):
     )
 
     # Delete the license source
-    (bundle_path / "LICENSE").unlink()
+    (tmp_path / "base_path" / "LICENSE").unlink()
 
     # Build the app; it will fail
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"LICENSE source file is missing",
+        match=r"Your project does not contain a LICENSE file.",
     ):
         build_command.build_app(first_app)
 
@@ -141,12 +142,12 @@ def test_missing_changelog(build_command, first_app, tmp_path):
     )
 
     # Delete the changelog source
-    (bundle_path / "CHANGELOG").unlink()
+    (tmp_path / "base_path" / "CHANGELOG").unlink()
 
     # Build the app; it will fail
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"CHANGELOG source file is missing",
+        match=r"Your project does not contain a CHANGELOG file.",
     ):
         build_command.build_app(first_app)
 
@@ -176,7 +177,7 @@ def test_missing_manpage(build_command, first_app, tmp_path):
     # Build the app; it will fail
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"manpage source file `first-app\.1` is missing",
+        match=r"Template does not provide a manpage source file `first-app\.1`",
     ):
         build_command.build_app(first_app)
 

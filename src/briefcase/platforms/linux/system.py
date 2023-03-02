@@ -59,25 +59,36 @@ class LinuxSystemPassiveMixin(LinuxMixin):
         )
 
     def project_path(self, app):
-        return self.bundle_path(app)
-
-    def package_path(self, app):
         return self.bundle_path(app) / f"{app.app_name}-{app.version}"
 
     def binary_path(self, app):
-        return self.package_path(app) / "usr" / "bin" / app.app_name
+        return self.project_path(app) / "usr" / "bin" / app.app_name
 
-    def distribution_path(self, app):
+    def rpm_tag(self, app):
+        if app.target_vendor == "fedora":
+            return f"fc{app.target_codename}"
+        else:
+            return f"el{app.target_codename}"
+
+    def distribution_filename(self, app):
         if app.packaging_format == "deb":
-            return self.platform_path / (
+            return (
                 f"{app.app_name}_{app.version}-{getattr(app, 'revision', 1)}"
                 f"~{app.target_vendor}-{app.target_codename}_{self.linux_arch}.deb"
+            )
+        elif app.packaging_format == "rpm":
+            return (
+                f"{app.app_name}-{app.version}-{getattr(app, 'revision', 1)}"
+                f".{self.rpm_tag(app)}.{self.tools.host_arch}.rpm"
             )
         else:
             raise BriefcaseCommandError(
                 "Briefcase doesn't currently know how to build system packages in "
                 f"{app.packaging_format.upper()} format."
             )
+
+    def distribution_path(self, app):
+        return self.platform_path / self.distribution_filename(app)
 
     def add_options(self, parser):
         super().add_options(parser)
@@ -381,60 +392,6 @@ class LinuxSystemCreateCommand(LinuxSystemMixin, LocalRequirementsMixin, CreateC
 
         return context
 
-    def install_app_resources(self, app: AppConfig):
-        """Install the application resources (such as icons and splash screens) into the
-        bundle.
-
-        :param app: The config object for the app
-        """
-        super().install_app_resources(app)
-
-        with self.input.wait_bar("Installing copyright file..."):
-            source_license_file = self.base_path / "LICENSE"
-            license_file = self.bundle_path(app) / "LICENSE"
-            if source_license_file.exists():
-                self.tools.shutil.copy(source_license_file, license_file)
-            else:
-                self.logger.warning(
-                    f"""
-*************************************************************************
-** WARNING: No LICENSE file!                                           **
-*************************************************************************
-
-    Your project does not contain a LICENSE file.
-
-    Linux app packaging guidelines require that packages provide a
-    copyright statement. A dummy LICENSE file ({license_file.relative_to(self.base_path)})
-    has been created by the app template. You should ensure this file
-    is complete and correct before continuing.
-
-*************************************************************************
-"""
-                )
-
-        with self.input.wait_bar("Installing changelog..."):
-            source_changelog_file = self.base_path / "CHANGELOG"
-            changelog_file = self.bundle_path(app) / "CHANGELOG"
-            if source_changelog_file.exists():
-                self.tools.shutil.copy(source_changelog_file, changelog_file)
-            else:
-                self.logger.warning(
-                    f"""
-*************************************************************************
-** WARNING: No CHANGELOG file!                                         **
-*************************************************************************
-
-    Your project does not contain a CHANGELOG file.
-
-    Linux app packaging guidelines require that packages provide a
-    change log. A dummy CHANGELOG file ({changelog_file.relative_to(self.base_path)})
-    has been created by the app template. You should ensure this file
-    is complete and correct before continuing.
-
-*************************************************************************
-"""
-                )
-
 
 class LinuxSystemUpdateCommand(LinuxSystemCreateCommand, UpdateCommand):
     description = "Update an existing Linux system project."
@@ -487,14 +444,21 @@ class LinuxSystemBuildCommand(LinuxSystemMixin, BuildCommand):
         doc_folder.mkdir(parents=True, exist_ok=True)
 
         with self.input.wait_bar("Installing license..."):
-            license_file = self.bundle_path(app) / "LICENSE"
+            license_file = self.base_path / "LICENSE"
             if license_file.exists():
                 self.tools.shutil.copy(license_file, doc_folder / "copyright")
             else:
-                raise BriefcaseCommandError("LICENSE source file is missing")
+                raise BriefcaseCommandError(
+                    """\
+Your project does not contain a LICENSE file.
+
+Create a file named `LICENSE` in the same directory as your `pyproject.toml`
+with your app's licensing terms.
+"""
+                )
 
         with self.input.wait_bar("Installing changelog..."):
-            changelog = self.bundle_path(app) / "CHANGELOG"
+            changelog = self.base_path / "CHANGELOG"
             if changelog.exists():
                 with changelog.open() as infile:
                     outfile = gzip.GzipFile(
@@ -503,7 +467,14 @@ class LinuxSystemBuildCommand(LinuxSystemMixin, BuildCommand):
                     outfile.write(infile.read().encode("utf-8"))
                     outfile.close()
             else:
-                raise BriefcaseCommandError("CHANGELOG source file is missing")
+                raise BriefcaseCommandError(
+                    """\
+Your project does not contain a CHANGELOG file.
+
+Create a file named `CHANGELOG` in the same directory as your `pyproject.toml`
+with details about the release.
+"""
+                )
 
         # Make a folder for manpages
         man_folder = (
@@ -527,12 +498,12 @@ class LinuxSystemBuildCommand(LinuxSystemMixin, BuildCommand):
                     outfile.close()
             else:
                 raise BriefcaseCommandError(
-                    f"manpage source file `{app.app_name}.1` is missing"
+                    f"Template does not provide a manpage source file `{app.app_name}.1`"
                 )
 
         self.logger.info("Update file permissions...")
         with self.input.wait_bar("Updating file permissions..."):
-            for path in self.package_path(app).glob("**/*"):
+            for path in self.project_path(app).glob("**/*"):
                 old_perms = self.tools.os.stat(path).st_mode & 0o777
                 user_perms = old_perms & 0o700
                 world_perms = old_perms & 0o007
@@ -618,6 +589,13 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
                 "Can't find the dpkg tools. Try running `sudo apt install dpkg-dev`."
             )
 
+    def _verify_rpm_tools(self):
+        """Verify that the local environment contains the redhat packaging tools."""
+        if not Path("/usr/bin/rpmbuild").exists():
+            raise BriefcaseCommandError(
+                "Can't find the rpm-build tools. Try running `sudo dnf install rpm-build`."
+            )
+
     def verify_app_tools(self, app):
         super().verify_app_tools(app)
         # If "system" packaging format was selected, determine what that means.
@@ -639,10 +617,14 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
             # Check for the format-specific packaging tools.
             if app.packaging_format == "deb":
                 self._verify_deb_tools()
+            elif app.packaging_format == "rpm":
+                self._verify_rpm_tools()
 
     def package_app(self, app: AppConfig, **kwargs):
         if app.packaging_format == "deb":
             self._package_deb(app, **kwargs)
+        elif app.packaging_format == "rpm":
+            self._package_rpm(app, **kwargs)
         else:
             raise BriefcaseCommandError(
                 "Briefcase doesn't currently know how to build system packages in "
@@ -661,10 +643,10 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
 
         # Write the Debian metadata control file.
         with self.input.wait_bar("Write Debian package control file..."):
-            if (self.package_path(app) / "DEBIAN").exists():
-                self.tools.shutil.rmtree(self.package_path(app) / "DEBIAN")
+            if (self.project_path(app) / "DEBIAN").exists():
+                self.tools.shutil.rmtree(self.project_path(app) / "DEBIAN")
 
-            (self.package_path(app) / "DEBIAN").mkdir()
+            (self.project_path(app) / "DEBIAN").mkdir()
 
             # Add runtime package dependencies. App config has been finalized,
             # so this will be the target-specific definition, if one exists.
@@ -678,7 +660,7 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
                 + getattr(app, "system_runtime_requires", [])
             )
 
-            with (self.package_path(app) / "DEBIAN" / "control").open(
+            with (self.project_path(app) / "DEBIAN" / "control").open(
                 "w", encoding="utf-8"
             ) as f:
                 f.write(
@@ -721,6 +703,151 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
                 self.bundle_path(app) / f"{app.app_name}-{app.version}.deb",
                 self.distribution_path(app),
             )
+
+    def _package_rpm(self, app: AppConfig, **kwargs):
+        self.logger.info("Building .rpm package...", prefix=app.app_name)
+
+        # The long description *must* exist.
+        if app.long_description is None:
+            raise BriefcaseCommandError(
+                "App configuration does not define `long_description`. "
+                "Red Hat projects require a long description."
+            )
+
+        # Generate the rpmbuild layout
+        rpmbuild_path = self.bundle_path(app) / "rpmbuild"
+        with self.input.wait_bar("Generating rpmbuild layout..."):
+            if rpmbuild_path.exists():
+                self.tools.shutil.rmtree(rpmbuild_path)
+
+            (rpmbuild_path / "BUILD").mkdir(parents=True)
+            (rpmbuild_path / "BUILDROOT").mkdir(parents=True)
+            (rpmbuild_path / "RPMS").mkdir(parents=True)
+            (rpmbuild_path / "SOURCES").mkdir(parents=True)
+            (rpmbuild_path / "SRPMS").mkdir(parents=True)
+            (rpmbuild_path / "SPECS").mkdir(parents=True)
+
+        # Add runtime package dependencies. App config has been finalized,
+        # so this will be the target-specific definition, if one exists.
+        system_runtime_requires = [
+            f"python{app.python_version_tag}",
+        ] + getattr(app, "system_runtime_requires", [])
+
+        # Write the spec file
+        with self.input.wait_bar("Write RPM spec file..."):
+            with (rpmbuild_path / "SPECS" / f"{app.app_name}.spec").open(
+                "w", encoding="utf-8"
+            ) as f:
+                f.write(
+                    "\n".join(
+                        [
+                            # By default, rpmbuild thinks all .py files are executable,
+                            # and if a .py doesn't have a shebang line, it will
+                            # tell you that it will remove the executable bit -
+                            # even if the executable bit isn't set.
+                            # We disable the processor that does this.
+                            "%undefine __brp_mangle_shebangs",
+                            # Base package metadata
+                            f"Name:           {app.app_name}",
+                            f"Version:        {app.version}",
+                            f"Release:        {getattr(app, 'revision', 1)}%{{?dist}}",
+                            f"Summary:        {app.description}",
+                            "",
+                            f"License:        {getattr(app, 'license', 'Unknown')}",
+                            f"URL:            {app.url}",
+                            "Source0:        %{name}-%{version}.tar.gz",
+                            "",
+                        ]
+                        + [
+                            f"Requires:       {requirement}"
+                            for requirement in system_runtime_requires
+                        ]
+                        + [
+                            "",
+                            f"ExclusiveArch:  {self.tools.host_arch}",
+                            "",
+                            "%description",
+                            app.long_description,
+                            "",
+                            "%global debug_package %{nil}",
+                            "",
+                            "%prep",
+                            "%autosetup",
+                            "",
+                            "%build",
+                            "",
+                            "%install",
+                            "cp -r usr %{buildroot}/usr",
+                        ]
+                    )
+                )
+
+                f.write("\n\n%files\n")
+                # Build the file manifest. Include any file that is found; also include
+                # any directory that includes an app_name component, as those paths
+                # will need to be cleaned up afterwards. Files that *aren't*
+                # in <app_name> (sub)directories (e.g., /usr/bin/<app_name> or
+                # /usr/share/man/man1/<app_name>.1.gz) will be included, but paths
+                # *not* cleaned up, as they're part of more general system structures.
+                for filename in sorted(self.project_path(app).glob("**/*")):
+                    path = filename.relative_to(self.project_path(app))
+
+                    if filename.is_dir():
+                        if app.app_name in path.parts:
+                            f.write(f"%dir /{path}\n")
+                    else:
+                        f.write(f"/{path}\n")
+
+                # Add the changelog content to the bottom of the spec file.
+                f.write("\n%changelog\n")
+                changelog_source = self.base_path / "CHANGELOG"
+                if not changelog_source.exists():
+                    raise BriefcaseCommandError(
+                        """\
+Your project does not contain a CHANGELOG file.
+
+Create a file named `CHANGELOG` in the same directory as your `pyproject.toml`
+with details about the release.
+"""
+                    )
+                with changelog_source.open(encoding="utf-8") as c:
+                    f.write(c.read())
+
+        with self.input.wait_bar("Building source archive..."):
+            self.tools.shutil.make_archive(
+                rpmbuild_path / "SOURCES" / f"{app.app_name}-{app.version}",
+                format="gztar",
+                root_dir=self.bundle_path(app),
+                base_dir=f"{app.app_name}-{app.version}",
+            )
+
+        with self.input.wait_bar("Building RPM package..."):
+            try:
+                # Build the dpkg.
+                self.tools[app].app_context.run(
+                    [
+                        "rpmbuild",
+                        "-bb",
+                        "--define",
+                        f"_topdir {self.bundle_path(app) / 'rpmbuild'}",
+                        f"./rpmbuild/SPECS/{app.app_name}.spec",
+                    ],
+                    check=True,
+                    cwd=self.bundle_path(app),
+                )
+            except subprocess.CalledProcessError as e:
+                raise BriefcaseCommandError(
+                    f"Error while building .rpm package for {app.app_name}."
+                ) from e
+
+        # Move the rpm file to it's final location
+        self.tools.shutil.move(
+            rpmbuild_path
+            / "RPMS"
+            / self.tools.host_arch
+            / self.distribution_filename(app),
+            self.distribution_path(app),
+        )
 
 
 class LinuxSystemPublishCommand(LinuxSystemMixin, PublishCommand):

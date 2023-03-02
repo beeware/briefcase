@@ -24,13 +24,15 @@ def first_app(first_app_config, tmp_path):
     first_app_config.target_codename = "surprising"
     first_app_config.target_vendor_base = "basevendor"
 
+    # Some project-level files.
+    create_file(tmp_path / "base_path" / "LICENSE", "First App License")
+    create_file(tmp_path / "base_path" / "CHANGELOG", "First App Changelog")
+
     # Make it look like the template has been generated
     bundle_dir = (
         tmp_path / "base_path" / "linux" / "somevendor" / "surprising" / "first-app"
     )
 
-    create_file(bundle_dir / "LICENSE", "First App License")
-    create_file(bundle_dir / "CHANGELOG", "First App Changelog")
     create_file(bundle_dir / "first-app.1", "First App manpage")
 
     lib_dir = bundle_dir / "first-app-0.0.1" / "usr" / "lib" / "first-app"
