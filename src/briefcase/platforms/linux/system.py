@@ -185,11 +185,18 @@ class LinuxSystemPassiveMixin(LinuxMixin):
             )
             freedesktop_info = parse_freedesktop_os_release(output)
         else:
-            if sys.version_info >= (3, 10):
-                freedesktop_info = self.tools.platform.freedesktop_os_release()
-            else:
-                with Path("/etc/os-release").open(encoding="utf-8") as f:
-                    freedesktop_info = parse_freedesktop_os_release(f.read())
+            try:
+                if sys.version_info >= (3, 10):
+                    freedesktop_info = self.tools.platform.freedesktop_os_release()
+                else:
+                    with Path("/etc/os-release").open(encoding="utf-8") as f:
+                        freedesktop_info = parse_freedesktop_os_release(f.read())
+
+            except FileNotFoundError:
+                raise BriefcaseCommandError(
+                    "Could not find the /etc/os-release file. "
+                    "Is this a FreeDesktop-compliant Linux distribution?"
+                )
 
         # Process the FreeDesktop content to give the vendor, codename and vendor base.
         (

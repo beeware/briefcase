@@ -2,6 +2,9 @@ import sys
 from pathlib import Path
 from unittest.mock import MagicMock
 
+import pytest
+
+from briefcase.exceptions import BriefcaseCommandError
 from briefcase.platforms.linux import parse_freedesktop_os_release, system
 
 from ....utils import create_file
@@ -75,6 +78,34 @@ def test_nodocker(monkeypatch, create_command, first_app_config, tmp_path):
 
     # For tests of other properties merged in finalization, see
     # test_properties
+
+
+def test_nodocker_non_freedesktop(
+    monkeypatch, create_command, first_app_config, tmp_path
+):
+    "If the system isn't FreeDesktop compliant raise an error"
+    # Build the app without docker
+    create_command.target_image = None
+    create_command.target_glibc_version = MagicMock(return_value="2.42")
+
+    if sys.version_info >= (3, 10):
+        # For Python3.10+, mock platform.freedesktop_os_release
+        create_command.tools.platform.freedesktop_os_release = MagicMock(
+            side_effect=FileNotFoundError
+        )
+    else:
+        # For Pre Python3.10, mock the /etc/release file
+        # but don't create the file - raise a FileNotFound.
+        monkeypatch.setattr(
+            system, "Path", MagicMock(return_value=Path(tmp_path / "os-release"))
+        )
+
+    # Finalize the app config
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Could not find the /etc/os-release file. Is this a FreeDesktop-compliant Linux distribution\?",
+    ):
+        create_command.finalize_app_config(first_app_config)
 
 
 def test_properties(create_command, first_app_config):
