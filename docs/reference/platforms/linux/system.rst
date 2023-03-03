@@ -120,11 +120,6 @@ The following Linux vendors are known to work as Docker targets:
 Application configuration
 =========================
 
-To generate a Linux system package, an application *must* define a
-``long_description``. This ``long_description`` *must not* be a copy of the
-short ``description``; nor can the first line of the ``long_description`` match
-the ``description``.
-
 The following options can be added to the
 ``tool.briefcase.app.<appname>.linux.system`` section of your ``pyproject.toml``
 file; if defined in this section, the values will apply for *all* Linux
