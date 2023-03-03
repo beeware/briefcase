@@ -2,6 +2,7 @@ import gzip
 import os
 import re
 import subprocess
+import sys
 from pathlib import Path
 from typing import List
 
@@ -20,10 +21,11 @@ from briefcase.integrations.subprocess import NativeAppContext
 from briefcase.platforms.linux import (
     ARCH,
     DEBIAN,
-    REDHAT,
+    RHEL,
     DockerOpenCommand,
     LinuxMixin,
     LocalRequirementsMixin,
+    parse_freedesktop_os_release,
 )
 
 
@@ -177,19 +179,33 @@ class LinuxSystemPassiveMixin(LinuxMixin):
             ):
                 self.tools.docker.prepare(app.target_image)
 
-            app.target_vendor, app.target_codename = app.target_image.split(":")
-
-            # Manjaro uses `manjarolinux/base` as the image; RHEL uses
-            # `redhat/ubi8`; so we can use anything before the / as the vendor.
-            app.target_vendor = app.target_vendor.split("/")[0]
+            output = self.tools.docker.check_output(
+                ["cat", "/etc/os-release"],
+                image_tag=app.target_image,
+            )
+            freedesktop_info = parse_freedesktop_os_release(output)
         else:
-            app.target_vendor, app.target_codename = self.host_distribution()
+            if sys.version_info >= (3, 10):
+                freedesktop_info = self.tools.platform.freedesktop_os_release()
+            else:
+                with Path("/etc/os-release").open(encoding="utf-8") as f:
+                    freedesktop_info = parse_freedesktop_os_release(f.read())
 
-            self.logger.info(f"Targeting {app.target_vendor}:{app.target_codename}")
+        # Process the FreeDesktop content to give the vendor, codename and vendor base.
+        (
+            app.target_vendor,
+            app.target_codename,
+            app.target_vendor_base,
+        ) = self.vendor_details(freedesktop_info)
+
+        self.logger.info(
+            f"Targeting {app.target_vendor}:{app.target_codename} (Vendor base {app.target_vendor_base})"
+        )
+
+        # Non-docker builds need an app representation of the target image
+        # for templating purposes.
+        if not self.use_docker:
             app.target_image = f"{app.target_vendor}:{app.target_codename}"
-
-        # Determine the vendor base.
-        app.target_vendor_base = self.vendor_base(app.target_vendor)
 
         # Merge target-specific configuration items into the app config This
         # means:
@@ -602,7 +618,7 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
         if app.packaging_format == "system":
             app.packaging_format = {
                 DEBIAN: "deb",
-                REDHAT: "rpm",
+                RHEL: "rpm",
                 ARCH: "pkg",
             }.get(app.target_vendor_base, None)
 

@@ -129,8 +129,8 @@ If you need to override these settings for a specific target vendor, or for a
 specific distribution version, you can provide increasingly specific sections for
 vendor and version information. Each distribution is identified by:
 
-* Vendor base (e.g., ``debian``, ``redhat``, ``archlinux``)
-* Vendor (e.g, ``debian``, ``ubuntu``, ``redhat``, ``fedora``). The vendor
+* Vendor base (e.g., ``debian``, ``rhel``, ``arch``)
+* Vendor (e.g, ``debian``, ``ubuntu``, ``rhel``, ``fedora``). The vendor
   identifier *may* be the same as the vendor base (e.g, in the case of Debian or
   Redhat)
 * Codename (e.g., a version number, or ``jammy``).

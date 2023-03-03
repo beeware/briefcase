@@ -1,4 +1,10 @@
+import sys
+from pathlib import Path
 from unittest.mock import MagicMock
+
+from briefcase.platforms.linux import parse_freedesktop_os_release, system
+
+from ....utils import create_file
 
 
 def test_docker(create_command, first_app_config):
@@ -7,6 +13,15 @@ def test_docker(create_command, first_app_config):
     create_command.target_image = "somevendor:surprising"
     create_command.tools.docker = MagicMock()
     create_command.target_glibc_version = MagicMock(return_value="2.42")
+
+    # Mock a minimal response from checking /etc/os-release
+    create_command.tools.docker.check_output.return_value = "\n".join(
+        [
+            "ID=somevendor",
+            "VERSION_CODENAME=surprising",
+            "ID_LIKE=debian",
+        ]
+    )
 
     # Finalize the app config
     create_command.finalize_app_config(first_app_config)
@@ -18,33 +33,45 @@ def test_docker(create_command, first_app_config):
     assert first_app_config.target_image == "somevendor:surprising"
     assert first_app_config.target_vendor == "somevendor"
     assert first_app_config.target_codename == "surprising"
+    assert first_app_config.target_vendor_base == "debian"
 
     # For tests of other properties merged in finalization, see
     # test_properties
 
 
-def test_nodocker(create_command, first_app_config):
+def test_nodocker(monkeypatch, create_command, first_app_config, tmp_path):
     "An app can be finalized without docker"
     # Build the app without docker
     create_command.target_image = None
     create_command.target_glibc_version = MagicMock(return_value="2.42")
-    create_command.host_distribution = MagicMock(
-        return_value=("somevendor", "surprising")
+
+    os_release = "\n".join(
+        [
+            "ID=somevendor",
+            "VERSION_CODENAME=surprising",
+            "ID_LIKE=debian",
+        ]
     )
-    create_command.vendor_base = MagicMock(return_value="basevendor")
-    create_command.target_glibc_version = MagicMock(return_value="2.42")
+    if sys.version_info >= (3, 10):
+        # For Python3.10+, mock platform.freedesktop_os_release
+        create_command.tools.platform.freedesktop_os_release = MagicMock(
+            return_value=parse_freedesktop_os_release(os_release)
+        )
+    else:
+        # For Pre Python3.10, mock the /etc/release file
+        create_file(tmp_path / "os-release", os_release)
+        monkeypatch.setattr(
+            system, "Path", MagicMock(return_value=Path(tmp_path / "os-release"))
+        )
 
     # Finalize the app config
     create_command.finalize_app_config(first_app_config)
-
-    # host distribution was determined
-    create_command.host_distribution.assert_called_once()
-    create_command.vendor_base.assert_called_once_with("somevendor")
 
     # The app's image, vendor and codename have been constructed from the target image
     assert first_app_config.target_image == "somevendor:surprising"
     assert first_app_config.target_vendor == "somevendor"
     assert first_app_config.target_codename == "surprising"
+    assert first_app_config.target_vendor_base == "debian"
 
     # For tests of other properties merged in finalization, see
     # test_properties
@@ -57,8 +84,14 @@ def test_properties(create_command, first_app_config):
     create_command.tools.docker = MagicMock()
     create_command.target_glibc_version = MagicMock(return_value="2.42")
 
-    # Mock the base vendor calculation
-    create_command.vendor_base = MagicMock(return_value="basevendor")
+    # Mock a minimal response from checking /etc/os-release
+    create_command.tools.docker.check_output.return_value = "\n".join(
+        [
+            "ID=somevendor",
+            "VERSION_CODENAME=surprising",
+            "ID_LIKE=debian",
+        ]
+    )
 
     # Augment the app config with some extra attributes
     first_app_config.surprise_0 = "AAAA"
@@ -66,7 +99,7 @@ def test_properties(create_command, first_app_config):
     first_app_config.surprise_2 = "CCCC"
     first_app_config.surprise_3 = "DDDD"
 
-    first_app_config.basevendor = {
+    first_app_config.debian = {
         "surprise_1": "1111",
         "surprise_2": "1112",
         "surprise_3": "1113",
@@ -127,8 +160,13 @@ def test_properties_unknown_basevendor(create_command, first_app_config):
     create_command.tools.docker = MagicMock()
     create_command.target_glibc_version = MagicMock(return_value="2.42")
 
-    # Mock the base vendor calculation
-    create_command.vendor_base = MagicMock(return_value=None)
+    # Mock a minimal response from checking /etc/os-release
+    create_command.tools.docker.check_output.return_value = "\n".join(
+        [
+            "ID=somevendor",
+            "VERSION_CODENAME=surprising",
+        ]
+    )
 
     # Augment the app config with some extra attributes
     first_app_config.surprise_0 = "AAAA"
@@ -183,8 +221,14 @@ def test_properties_no_basevendor_config(create_command, first_app_config):
     create_command.tools.docker = MagicMock()
     create_command.target_glibc_version = MagicMock(return_value="2.42")
 
-    # Mock the base vendor calculation
-    create_command.vendor_base = MagicMock(return_value="basevendor")
+    # Mock a minimal response from checking /etc/os-release
+    create_command.tools.docker.check_output.return_value = "\n".join(
+        [
+            "ID=somevendor",
+            "VERSION_CODENAME=surprising",
+            "ID_LIKE=debian",
+        ]
+    )
 
     # Augment the app config with some extra attributes
     first_app_config.surprise_0 = "AAAA"
@@ -239,8 +283,14 @@ def test_properties_no_vendor(create_command, first_app_config):
     create_command.tools.docker = MagicMock()
     create_command.target_glibc_version = MagicMock(return_value="2.42")
 
-    # Mock the base vendor calculation
-    create_command.vendor_base = MagicMock(return_value="basevendor")
+    # Mock a minimal response from checking /etc/os-release
+    create_command.tools.docker.check_output.return_value = "\n".join(
+        [
+            "ID=somevendor",
+            "VERSION_CODENAME=surprising",
+            "ID_LIKE=debian",
+        ]
+    )
 
     # Augment the app config with some extra attributes
     first_app_config.surprise_0 = "AAAA"
@@ -248,7 +298,7 @@ def test_properties_no_vendor(create_command, first_app_config):
     first_app_config.surprise_2 = "CCCC"
     first_app_config.surprise_3 = "DDDD"
 
-    first_app_config.basevendor = {
+    first_app_config.debian = {
         "surprise_1": "1111",
         "surprise_2": "1112",
         "surprise_3": "1113",
@@ -285,8 +335,14 @@ def test_properties_no_version(create_command, first_app_config):
     create_command.tools.docker = MagicMock()
     create_command.target_glibc_version = MagicMock(return_value="2.42")
 
-    # Mock the base vendor calculation
-    create_command.vendor_base = MagicMock(return_value="basevendor")
+    # Mock a minimal response from checking /etc/os-release
+    create_command.tools.docker.check_output.return_value = "\n".join(
+        [
+            "ID=somevendor",
+            "VERSION_CODENAME=surprising",
+            "ID_LIKE=debian",
+        ]
+    )
 
     # Augment the app config with some extra attributes
     first_app_config.surprise_0 = "AAAA"
@@ -294,7 +350,7 @@ def test_properties_no_version(create_command, first_app_config):
     first_app_config.surprise_2 = "CCCC"
     first_app_config.surprise_3 = "DDDD"
 
-    first_app_config.basevendor = {
+    first_app_config.debian = {
         "surprise_1": "1111",
         "surprise_2": "1112",
         "surprise_3": "1113",

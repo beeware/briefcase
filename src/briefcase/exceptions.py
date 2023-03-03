@@ -188,3 +188,7 @@ class CommandOutputParseError(BriefcaseCommandError):
 class BriefcaseTestSuiteFailure(BriefcaseError):
     def __init__(self):
         super().__init__(error_code=1000, skip_logfile=True)
+
+
+class ParseError(Exception):
+    """Raised by parser functions to signal parsing was unsuccessful."""

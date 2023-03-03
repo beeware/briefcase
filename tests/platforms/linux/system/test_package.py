@@ -41,8 +41,8 @@ def test_formats(package_command):
 @pytest.mark.parametrize(
     "format, vendor, codename, revision, filename",
     [
-        ["rpm", "redhat", "9", None, "first-app-0.0.1-1.el9.wonky.rpm"],
-        ["rpm", "redhat", "9", 5, "first-app-0.0.1-5.el9.wonky.rpm"],
+        ["rpm", "rhel", "9", None, "first-app-0.0.1-1.el9.wonky.rpm"],
+        ["rpm", "rhel", "9", 5, "first-app-0.0.1-5.el9.wonky.rpm"],
         ["rpm", "fedora", "37", None, "first-app-0.0.1-1.fc37.wonky.rpm"],
         [
             "deb",
@@ -83,12 +83,12 @@ def test_distribution_path(
     [
         # System packaging maps to known formats
         ("debian", "system", "deb"),
-        ("redhat", "system", "rpm"),
-        ("archlinux", "system", "pkg"),
+        ("rhel", "system", "rpm"),
+        ("arch", "system", "pkg"),
         # Explicit output format is preserved
         ("debian", "deb", "deb"),
         ("redhat", "rpm", "rpm"),
-        ("archlinux", "pkg", "pkg"),
+        ("arch", "pkg", "pkg"),
         # This is technically posssible, but probably ill-advised
         ("debian", "rpm", "rpm"),
         # Unknown base vendor, but explicit packaging format

@@ -6,146 +6,76 @@ from typing import List
 from briefcase.commands.create import _is_local_requirement
 from briefcase.commands.open import OpenCommand
 from briefcase.config import AppConfig
-from briefcase.exceptions import BriefcaseCommandError
+from briefcase.exceptions import BriefcaseCommandError, ParseError
 
 DEFAULT_OUTPUT_FORMAT = "system"
 
 DEBIAN = "debian"
-REDHAT = "redhat"
-ARCH = "archlinux"
+RHEL = "rhel"
+ARCH = "arch"
+
+
+def parse_freedesktop_os_release(content):
+    """Parse the content of an /etc/os-release file.
+
+    :param content: The text content of the /etc/os-release file.
+    :returns: A dictionary of key-value pairse, in the same format returned by
+        `platform.freedsktop_os_release()`.
+    """
+    try:
+        return {
+            parts[0].strip(): parts[1].strip().strip('"').strip()
+            for parts in [
+                line.strip().split("=", 1) for line in content.split("\n") if line
+            ]
+        }
+    except (AttributeError, IndexError) as e:
+        raise ParseError(
+            f"Failed to parse output of FreeDesktop os-release file: {e}"
+        ) from e
 
 
 class LinuxMixin:
     platform = "linux"
 
-    def _release_details(self, filename):
-        """Read an /etc/X-release file.
+    def vendor_details(self, freedesktop_info):
+        """Normalize the identify of the target Linux vendor, version, and base.
 
-        :param filename: The name of a file in the `/etc` folder
-        :returns: The string content of the release file, or None if the file
-            does not exist.
+        :param freedesktop_info: The parsed content of the FreeDesktop
+            /etc/os-release file. This is the same format returned by
+            `platform.freedsktop_os_release()`.
+        :returns: A tuple of (vendor, version, vendor_base).
         """
-        path = Path("/etc") / filename
-        if path.exists():
-            with path.open(encoding="utf-8") as f:
-                return f.read()
-        return None
-
-    def host_distribution(self):
-        """Identify the local Linux distribution and version.
-
-        :returns: A tuple of (vendor, version).
-        """
-        # Try to identify the local Linux system
-        # * Arch provides `/etc/arch-release`.
-        # * Manjaro is an Arch derivative, and puts identifying content in
-        #   `/etc/arch-release`
-        # * Redhat-derived distros all provide `/etc/redhat-release`
-        # * Fedora also provides `/etc/fedora-release`, which contains the
-        #   version number
-        # * Almalinux also provides `/etc/almalinux-release`, which contains the
-        #   version number
-        # * Debian-based distros use `lsb_release`; this *may* be present on
-        #   other distros, but usage of code names is wierd (e.g., Fedora 34 has
-        #   a code name "thirtyfour", but the docker image isn't tagged with
-        #   that code name)
-        if redhat_details := self._release_details("redhat-release"):
-            if fedora_details := self._release_details("fedora-release"):
-                # Parse "34" from "Fedora release 34 (thirtyfour)"
-                vendor = "fedora"
-                try:
-                    version = fedora_details.split(" ")[2]
-                except IndexError:
-                    raise BriefcaseCommandError(
-                        "Unable to parse Fedora release from /etc/fedora-release."
-                    )
-            elif centos_details := self._release_details("centos-release"):
-                # Parse "8" from "CentOS Linux release 8.4.2105"
-                vendor = "centos"
-                try:
-                    version = centos_details.split(" ")[3].split(".")[0]
-                except IndexError:
-                    raise BriefcaseCommandError(
-                        "Unable to parse Centos release from /etc/centos-release."
-                    )
-            elif almalinux_details := self._release_details("almalinux-release"):
-                # Parse "8" from "AlmaLinux release 8.7 (Stone Smilodon)"
-                vendor = "almalinux"
-                try:
-                    version = almalinux_details.split(" ")[2].split(".")[0]
-                except IndexError:
-                    raise BriefcaseCommandError(
-                        "Unable to parse AlmaLinux release "
-                        "from /etc/almalinux-release content."
-                    )
-            else:
-                # Parse "8" from "Red Hat Enterprise Linux release 8.7 (Ootpa)"
-                vendor = "redhat"
-                try:
-                    version = redhat_details.split(" ")[5].split(".")[0]
-                except IndexError:
-                    raise BriefcaseCommandError(
-                        "Unable to parse Red Hat Enterprise Linux release "
-                        "from /etc/redhat-release content."
-                    )
-
-        elif (arch_details := self._release_details("arch-release")) is not None:
-            if arch_details.startswith("Manjaro"):
-                # Manjaro puts "Manjaro Linux" in /etc/arch-release
-                vendor = "manjarolinux"
-            elif not arch_details:
-                # Arch is identified by *not* having anything in the
-                # /etc/arch-release file
-                vendor = "archlinux"
-            else:
-                raise BriefcaseCommandError(
-                    "Unable to identify the specific arch-based Linux distribution "
-                    "from /etc/arch-release content."
-                )
-
-            # Arch derivatives don't really have the concept of versions;
-            # use "latest" as the codename.
-            version = "latest"
-
-        else:
+        vendor = freedesktop_info["ID"]
+        try:
+            codename = freedesktop_info["VERSION_CODENAME"]
+            if not codename:
+                # Fedora *has* a VERSION_CODENAME key, but it is empty.
+                # Treat it as missing.
+                raise KeyError("VERSION_CODENAME")
+        except KeyError:
             try:
-                vendor = (
-                    self.tools.subprocess.check_output(["lsb_release", "-i", "-s"])
-                    .strip()
-                    .lower()
-                )
-                version = (
-                    self.tools.subprocess.check_output(["lsb_release", "-c", "-s"])
-                    .strip()
-                    .lower()
-                )
-            except subprocess.CalledProcessError:
-                raise BriefcaseCommandError(
-                    "Unable to identify the vendor of your Linux system using `lsb_release`."
-                )
+                # Arch uses a specific constant in VERSION_ID
+                if freedesktop_info["VERSION_ID"] == "TEMPLATE_VERSION_ID":
+                    codename = "rolling"
+                else:
+                    codename = freedesktop_info["VERSION_ID"].split(".")[0]
+            except KeyError:
+                # Manjaro doesn't have a VERSION_ID key
+                codename = "rolling"
 
-        return vendor, version
-
-    def vendor_base(self, vendor):
-        """Determine the base vendor type for the identified vendor.
-
-        This is used to determine the package type used by the system.
-        For example, Ubuntu has a base vendor of Debian; Fedora has a
-        base vendor of Redhat.
-
-        :param vendor: The vendor of the distribution
-        :returns: The base vendor type; None if no vendor type can be identified.
-        """
-        # Derive the base vendor type for the specific vendor being targeted.
-        if vendor in {"debian", "ubuntu", "linuxmint", "pop"}:
-            base = DEBIAN
-        elif vendor in {"redhat", "fedora", "centos", "almalinux"}:
-            base = REDHAT
-        elif vendor in {"archlinux", "manjarolinux"}:
-            base = ARCH
+        # Process the vendor_base from the vendor.
+        id_like = freedesktop_info.get("ID_LIKE", "").split()
+        if vendor == DEBIAN or DEBIAN in id_like or "ubuntu" in id_like:
+            vendor_base = DEBIAN
+        elif vendor == RHEL or vendor == "fedora" or RHEL in id_like:
+            vendor_base = RHEL
+        elif vendor == ARCH or ARCH in id_like:
+            vendor_base = ARCH
         else:
-            base = None
-        return base
+            vendor_base = None
+
+        return vendor, codename, vendor_base
 
 
 class LocalRequirementsMixin:
