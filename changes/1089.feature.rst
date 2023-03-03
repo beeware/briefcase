@@ -1,0 +1,1 @@
+Users can now define custom content to include in their ``pyscript.toml`` configuration file for web deployments.
