@@ -2,7 +2,6 @@ import gzip
 import os
 import re
 import subprocess
-import sys
 from pathlib import Path
 from typing import List
 
@@ -186,11 +185,12 @@ class LinuxSystemPassiveMixin(LinuxMixin):
             freedesktop_info = parse_freedesktop_os_release(output)
         else:
             try:
-                if sys.version_info >= (3, 10):
-                    freedesktop_info = self.tools.platform.freedesktop_os_release()
-                else:
-                    with self.tools.ETC_OS_RELEASE.open(encoding="utf-8") as f:
-                        freedesktop_info = parse_freedesktop_os_release(f.read())
+                # FIXME: Once Python 3.10 is our minimum supported version, this next
+                # block can be replaced with:
+                # freedesktop_info = self.tools.platform.freedesktop_os_release()
+                # See #
+                with self.tools.ETC_OS_RELEASE.open(encoding="utf-8") as f:
+                    freedesktop_info = parse_freedesktop_os_release(f.read())
 
             except FileNotFoundError:
                 raise BriefcaseCommandError(
