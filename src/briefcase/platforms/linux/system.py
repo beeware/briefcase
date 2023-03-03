@@ -189,7 +189,7 @@ class LinuxSystemPassiveMixin(LinuxMixin):
                 if sys.version_info >= (3, 10):
                     freedesktop_info = self.tools.platform.freedesktop_os_release()
                 else:
-                    with Path("/etc/os-release").open(encoding="utf-8") as f:
+                    with self.tools.ETC_OS_RELEASE.open(encoding="utf-8") as f:
                         freedesktop_info = parse_freedesktop_os_release(f.read())
 
             except FileNotFoundError:

@@ -1,11 +1,10 @@
 import sys
-from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
 
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.platforms.linux import parse_freedesktop_os_release, system
+from briefcase.platforms.linux import parse_freedesktop_os_release
 
 from ....utils import create_file
 
@@ -42,7 +41,7 @@ def test_docker(create_command, first_app_config):
     # test_properties
 
 
-def test_nodocker(monkeypatch, create_command, first_app_config, tmp_path):
+def test_nodocker(create_command, first_app_config, tmp_path):
     "An app can be finalized without docker"
     # Build the app without docker
     create_command.target_image = None
@@ -63,9 +62,7 @@ def test_nodocker(monkeypatch, create_command, first_app_config, tmp_path):
     else:
         # For Pre Python3.10, mock the /etc/release file
         create_file(tmp_path / "os-release", os_release)
-        monkeypatch.setattr(
-            system, "Path", MagicMock(return_value=Path(tmp_path / "os-release"))
-        )
+        create_command.tools.ETC_OS_RELEASE = tmp_path / "os-release"
 
     # Finalize the app config
     create_command.finalize_app_config(first_app_config)
@@ -80,9 +77,7 @@ def test_nodocker(monkeypatch, create_command, first_app_config, tmp_path):
     # test_properties
 
 
-def test_nodocker_non_freedesktop(
-    monkeypatch, create_command, first_app_config, tmp_path
-):
+def test_nodocker_non_freedesktop(create_command, first_app_config, tmp_path):
     "If the system isn't FreeDesktop compliant raise an error"
     # Build the app without docker
     create_command.target_image = None
@@ -95,10 +90,8 @@ def test_nodocker_non_freedesktop(
         )
     else:
         # For Pre Python3.10, mock the /etc/release file
-        # but don't create the file - raise a FileNotFound.
-        monkeypatch.setattr(
-            system, "Path", MagicMock(return_value=Path(tmp_path / "os-release"))
-        )
+        # but don't create the file
+        create_command.tools.ETC_OS_RELEASE = tmp_path / "os-release"
 
     # Finalize the app config
     with pytest.raises(
