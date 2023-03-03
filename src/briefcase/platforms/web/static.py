@@ -7,6 +7,11 @@ from pathlib import Path
 from typing import List
 from zipfile import ZipFile
 
+try:
+    import tomllib
+except ModuleNotFoundError:
+    import tomli as tomllib
+
 import tomli_w
 
 from briefcase.commands import (
@@ -19,7 +24,7 @@ from briefcase.commands import (
     UpdateCommand,
 )
 from briefcase.config import AppConfig
-from briefcase.exceptions import BriefcaseCommandError
+from briefcase.exceptions import BriefcaseCommandError, BriefcaseConfigError
 
 
 class StaticWebMixin:
@@ -180,6 +185,19 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                         for wheel in sorted(self.wheel_path(app).glob("*.whl"))
                     ],
                 }
+                # Parse any additional pyscript.toml content, and merge it into
+                # the overall content
+                try:
+                    extra = tomllib.loads(app.extra_pyscript_toml_content)
+                    config.update(extra)
+                except tomllib.TOMLDecodeError as e:
+                    raise BriefcaseConfigError(
+                        f"Extra pyscript.toml content isn't valid TOML: {e}"
+                    ) from e
+                except AttributeError:
+                    pass
+
+                # Write the final configuration.
                 tomli_w.dump(config, f)
 
         self.logger.info("Compile static web content from wheels")

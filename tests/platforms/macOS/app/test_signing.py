@@ -190,7 +190,10 @@ def test_no_identities(dummy_command):
 
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"No code signing identities are available.",
+        match=(
+            r"No code signing identities are available: see "
+            r"https://briefcase.readthedocs.io/en/stable/how-to/code-signing/macOS.html"
+        ),
     ):
         dummy_command.select_identity()
 

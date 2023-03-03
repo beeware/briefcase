@@ -368,6 +368,51 @@ def test_new_app_with_invalid_template_branch(monkeypatch, new_command, tmp_path
     )
 
 
+def test_new_app_with_branch(monkeypatch, new_command, tmp_path):
+    """A specific branch can be requested."""
+    monkeypatch.setattr(briefcase, "__version__", "37.42.7")
+
+    new_command.build_app_context = mock.MagicMock(
+        return_value={
+            "formal_name": "My Application",
+            "class_name": "MyApplication",
+            "app_name": "myapplication",
+        }
+    )
+    new_command.update_cookiecutter_cache = mock.MagicMock(
+        return_value="https://example.com/other.git"
+    )
+    new_command.tools.cookiecutter = mock.MagicMock(spec_set=cookiecutter)
+
+    # Create a new app, with a specific template branch.
+    new_command.new_app(template_branch="experimental")
+
+    # App context is constructed
+    new_command.build_app_context.assert_called_once_with()
+    # Template is updated
+    new_command.update_cookiecutter_cache.assert_called_once_with(
+        template="https://github.com/beeware/briefcase-template",
+        branch="experimental",
+    )
+    # Cookiecutter is invoked
+    new_command.tools.cookiecutter.assert_called_once_with(
+        "https://example.com/other.git",
+        no_input=True,
+        output_dir=os.fsdecode(tmp_path),
+        checkout="experimental",
+        extra_context={
+            "formal_name": "My Application",
+            "class_name": "MyApplication",
+            "app_name": "myapplication",
+            # The expected app context
+            # should now also contain the
+            # template and branch
+            "template": "https://github.com/beeware/briefcase-template",
+            "branch": "experimental",
+        },
+    )
+
+
 def test_abort_if_directory_exists(monkeypatch, new_command, tmp_path):
     """If the application name directory exists, the create aborts."""
     monkeypatch.setattr(briefcase, "__version__", "37.42.7")
