@@ -2,6 +2,7 @@ import gzip
 import os
 import re
 import subprocess
+import sys
 from pathlib import Path
 from typing import List
 
@@ -185,11 +186,23 @@ class LinuxSystemPassiveMixin(LinuxMixin):
             freedesktop_info = parse_freedesktop_os_release(output)
         else:
             try:
-                # FIXME: Once Python 3.10 is our minimum supported version, this next
-                # block can be replaced with:
-                # freedesktop_info = self.tools.platform.freedesktop_os_release()
-                with self.tools.ETC_OS_RELEASE.open(encoding="utf-8") as f:
+                if sys.version_info < (3, 10):
+                    # This reproduces the Python 3.10
+                    # platform.freedesktop_os_release() function. Yes, this
+                    # should use a context manager, rather than raw file
+                    # open/close operations. If you can get the context manager
+                    # form of this to pass coverage, you get a shiny penny. For
+                    # some reason, coverage genreated on Py3.9, but reported on
+                    # Py3.10+, finds a missing branch from the `with` statement
+                    # to the first line after the `except FileNotFound` below.
+                    # Since this is (a) a very simple file I/O sequence, and
+                    # (b) will be removed once we're at a Python3.10 minimum,
+                    # I can live with the Old Skool I/O calls.
+                    f = self.tools.ETC_OS_RELEASE.open(encoding="utf-8")
                     freedesktop_info = parse_freedesktop_os_release(f.read())
+                    f.close()
+                else:
+                    freedesktop_info = self.tools.platform.freedesktop_os_release()
 
             except FileNotFoundError:
                 raise BriefcaseCommandError(

@@ -1,8 +1,10 @@
+import sys
 from unittest.mock import MagicMock
 
 import pytest
 
 from briefcase.exceptions import BriefcaseCommandError
+from briefcase.platforms.linux import parse_freedesktop_os_release
 
 from ....utils import create_file
 
@@ -52,10 +54,15 @@ def test_nodocker(create_command, first_app_config, tmp_path):
             "ID_LIKE=debian",
         ]
     )
-
-    # Mock the /etc/release file
-    create_file(tmp_path / "os-release", os_release)
-    create_command.tools.ETC_OS_RELEASE = tmp_path / "os-release"
+    if sys.version_info >= (3, 10):
+        # mock platform.freedesktop_os_release()
+        create_command.tools.platform.freedesktop_os_release = MagicMock(
+            return_value=parse_freedesktop_os_release(os_release)
+        )
+    else:
+        # For Pre Python3.10, mock the /etc/release file
+        create_file(tmp_path / "os-release", os_release)
+        create_command.tools.ETC_OS_RELEASE = tmp_path / "os-release"
 
     # Finalize the app config
     create_command.finalize_app_config(first_app_config)
@@ -76,8 +83,15 @@ def test_nodocker_non_freedesktop(create_command, first_app_config, tmp_path):
     create_command.target_image = None
     create_command.target_glibc_version = MagicMock(return_value="2.42")
 
-    # Mock the /etc/release file, but don't create the file
-    create_command.tools.ETC_OS_RELEASE = tmp_path / "os-release"
+    if sys.version_info >= (3, 10):
+        # mock platform.freedesktop_os_release()
+        create_command.tools.platform.freedesktop_os_release = MagicMock(
+            side_effect=FileNotFoundError
+        )
+    else:
+        # For Pre Python3.10, mock the /etc/release file
+        # but don't create the file
+        create_command.tools.ETC_OS_RELEASE = tmp_path / "os-release"
 
     # Finalize the app config
     with pytest.raises(
