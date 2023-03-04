@@ -25,6 +25,7 @@ def package_command(monkeypatch, first_app, tmp_path):
 
     # Mock the detection of system python.
     command.verify_system_python = mock.MagicMock()
+    command.verify_system_packages = mock.MagicMock()
 
     # Mock the packaging tools.
     command._verify_deb_tools = mock.MagicMock()

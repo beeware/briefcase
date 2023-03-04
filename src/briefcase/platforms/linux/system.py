@@ -351,6 +351,86 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
                 f"is not the system python3 (3.{system_version[1]})."
             )
 
+    def _system_requirement_tools(self, app: AppConfig):
+        """Utility method returning the packages and tools needed to verify
+        system requirements.
+
+        :param app: The app being built.
+        :returns: A triple containing (0) The list of package names that must
+            be installed at a bare minimum; (1) the arguments for the command
+            used to verify the existence of a package on a system, and (2)
+            the command used to install packages. All three values are `None`
+            if the system cannot be identified.
+        """
+        if app.target_vendor_base == DEBIAN:
+            base_system_packages = [
+                "python3-dev",
+                "python3-venv",
+                "python3-pip",
+                "build-essential",
+            ]
+            system_verify = ["dpkg", "-s"]
+            system_installer = "apt"
+        elif app.target_vendor_base == RHEL:
+            base_system_packages = ["python3-devel", "python3-pip"]
+            system_verify = ["rpm", "-q"]
+            system_installer = "dnf"
+        else:
+            base_system_packages = None
+            system_verify = None
+            system_installer = None
+
+        return base_system_packages, system_verify, system_installer
+
+    def verify_system_packages(self, app: AppConfig):
+        """Verify that the required system packages are installed.
+
+        :param app: The app being built.
+        """
+        (
+            base_system_packages,
+            system_verify,
+            system_installer,
+        ) = self._system_requirement_tools(app)
+
+        if system_installer is None:
+            self.logger.warning(
+                """
+*************************************************************************
+** WARNING: Can't verify system packages                               **
+*************************************************************************
+
+    Briefcase doesn't know how to verify the installation of system
+    packages on your Linux distribution. If you have any problems
+    building this app, ensure that the packages listed in the app's
+    `system_requires` setting have been installed.
+
+*************************************************************************
+"""
+            )
+            return
+
+        # Run a check for each packages listed in the app's system_requires,
+        # plus the baseline system packages that are required.
+        missing = []
+        for package in base_system_packages + getattr(app, "system_requires", []):
+            try:
+                self.tools.subprocess.check_output(system_verify + [package])
+            except subprocess.CalledProcessError:
+                missing.append(package)
+
+        # If any required packages are missing, raise an error.
+        if missing:
+            raise BriefcaseCommandError(
+                f"""\
+Unable to build {app.app_name} due to missing system dependencies. Run:
+
+    sudo {system_installer} install {' '.join(missing)}
+
+to install the missing dependencies, and re-run Briefcase.
+"""
+            )
+
     def verify_app_tools(self, app: AppConfig):
         """Verify App environment is prepared and available.
 
@@ -384,9 +464,11 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
             NativeAppContext.verify(tools=self.tools, app=app)
 
             # Check the system Python on the target system to see if it is
-            # compatible with Briefcase.
+            # compatible with Briefcase, and that the required system packages
+            # are installed.
             if verify_python:
                 self.verify_system_python()
+                self.verify_system_packages(app)
 
         # Establish Docker as app context before letting super set subprocess
         super().verify_app_tools(app)
