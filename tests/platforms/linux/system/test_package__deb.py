@@ -44,7 +44,7 @@ def package_command(first_app, tmp_path):
 @pytest.fixture
 def first_app_deb(first_app):
     # Mock a debian app
-    first_app.python_version_tag = "3"
+    first_app.python_version_tag = "3.10"
     first_app.target_vendor_base = "debian"
     first_app.packaging_format = "deb"
     first_app.glibc_version = "2.99"
@@ -147,7 +147,7 @@ def test_deb_package(package_command, first_app_deb, tmp_path):
                     "Description: The first simple app \\ demonstration",
                     " Long description",
                     " for the app",
-                    "Depends: libc6 (>=2.99), python3",
+                    "Depends: libc6 (>=2.99), libpython3.10",
                     "Section: utils",
                     "Priority: optional",
                 ]
@@ -209,7 +209,7 @@ def test_deb_re_package(package_command, first_app_deb, tmp_path):
                     "Description: The first simple app \\ demonstration",
                     " Long description",
                     " for the app",
-                    "Depends: libc6 (>=2.99), python3",
+                    "Depends: libc6 (>=2.99), libpython3.10",
                     "Section: utils",
                     "Priority: optional",
                 ]
@@ -306,7 +306,7 @@ def test_deb_package_extra_requirements(package_command, first_app_deb, tmp_path
                     "Description: The first simple app \\ demonstration",
                     " Long description",
                     " for the app",
-                    "Depends: libc6 (>=2.99), python3, first, second (>=1.2.3)",
+                    "Depends: libc6 (>=2.99), libpython3.10, first, second (>=1.2.3)",
                     "Section: Funny stuff",
                     "Priority: optional",
                 ]
@@ -373,7 +373,7 @@ def test_deb_package_failure(package_command, first_app_deb, tmp_path):
                     "Description: The first simple app \\ demonstration",
                     " Long description",
                     " for the app",
-                    "Depends: libc6 (>=2.99), python3",
+                    "Depends: libc6 (>=2.99), libpython3.10",
                     "Section: utils",
                     "Priority: optional",
                 ]

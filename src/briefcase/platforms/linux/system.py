@@ -188,7 +188,6 @@ class LinuxSystemPassiveMixin(LinuxMixin):
                 # FIXME: Once Python 3.10 is our minimum supported version, this next
                 # block can be replaced with:
                 # freedesktop_info = self.tools.platform.freedesktop_os_release()
-                # See #
                 with self.tools.ETC_OS_RELEASE.open(encoding="utf-8") as f:
                     freedesktop_info = parse_freedesktop_os_release(f.read())
 
@@ -248,10 +247,13 @@ class LinuxSystemPassiveMixin(LinuxMixin):
 
         if self.use_docker:
             # If we're running in Docker, we can't know the Python3 version
-            # before rolling out the template; so we fall back to "3"
+            # before rolling out the template; so we fall back to "3". Later,
+            # once we have a container in which we can run Python, this will be
+            # updated to the actual Python version as part of the
+            # `verify_python` app check.
             app.python_version_tag = "3"
         else:
-            # Use the version of Python that run
+            # Use the version of Python that was used to run Briefcase.
             app.python_version_tag = self.python_version_tag
 
         self.logger.info(f"Targeting Python{app.python_version_tag}")
@@ -272,14 +274,17 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
             Docker.verify(tools=self.tools)
 
     def verify_python(self, app):
-        """Verify that the version of Python being used to build the app in Docker
-        is compatible with the version being used to run Briefcase.
+        """Verify that the version of Python being used to build the app in
+        Docker is compatible with the version being used to run Briefcase.
 
         Will raise an exception if the Python version is fundamentally
         incompatible (i.e., if Briefcase doesn't support it); any other version
         discrepancy will log a warning, but continue.
 
         Requires that the app tools have been verified.
+
+        As a side effect of verifying Python, the `python_version_tag` will be
+        updated to reflect the *actual* python version, not just a generic "3".
 
         :param app: The application being built
         """
@@ -293,8 +298,9 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
                 ),
             ]
         )
-        target_python_tag = output.split("\n")[0]
-        target_python_version = tuple(int(v) for v in target_python_tag.split("."))[:2]
+        # Update the python version tag with the *actual* python version.
+        app.python_version_tag = output.split("\n")[0]
+        target_python_version = tuple(int(v) for v in app.python_version_tag.split("."))
 
         if target_python_version < self.briefcase_required_python_version:
             briefcase_min_version = ".".join(
@@ -302,7 +308,7 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
             )
             raise BriefcaseCommandError(
                 f"The system python3 version provided by {app.target_image} "
-                f"is {target_python_tag}; Briefcase requires a "
+                f"is {app.python_version_tag}; Briefcase requires a "
                 f"minimum Python3 version of {briefcase_min_version}."
             )
         elif target_python_version != (
@@ -315,7 +321,7 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
 ** WARNING: Python version mismatch!                                   **
 *************************************************************************
 
-    The system python3 provided by {app.target_image} is {target_python_tag}.
+    The system python3 provided by {app.target_image} is {app.python_version_tag}.
     This is not the same as your local system ({self.python_version_tag}).
 
     Ensure you have tested for Python version compatibility before
@@ -329,9 +335,8 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
         """Verify that the Python being used to run Briefcase is the
         default system python.
 
-        Will raise an exception if the system Python isn't an obvious
-        Python3, or the Briefcase Python isn't the same version as the
-        system Python.
+        Will raise an exception if the system Python isn't an obvious Python3,
+        or the Briefcase Python isn't the same version as the system Python.
 
         Requires that the app tools have been verified.
         """
@@ -678,7 +683,7 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
             system_runtime_requires = ", ".join(
                 [
                     f"libc6 (>={app.glibc_version})",
-                    f"python{app.python_version_tag}",
+                    f"libpython{app.python_version_tag}",
                 ]
                 + getattr(app, "system_runtime_requires", [])
             )
@@ -753,7 +758,7 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
         # Add runtime package dependencies. App config has been finalized,
         # so this will be the target-specific definition, if one exists.
         system_runtime_requires = [
-            f"python{app.python_version_tag}",
+            "python3",
         ] + getattr(app, "system_runtime_requires", [])
 
         # Write the spec file

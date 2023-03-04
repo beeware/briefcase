@@ -19,7 +19,7 @@ def test_match(create_command, first_app_config, capsys):
 
     # Mock a return value from Docker that matches the system Python
     create_command.tools[first_app_config].app_context.check_output = MagicMock(
-        return_value=f"3.{sys.version_info.minor}.99\n"
+        return_value=f"3.{sys.version_info.minor}\n"
     )
 
     # Verify python for the app
@@ -42,6 +42,9 @@ def test_match(create_command, first_app_config, capsys):
     # Warning message was not recorded
     assert "WARNING: Python version mismatch!" not in capsys.readouterr().out
 
+    # The python version has been updated
+    assert first_app_config.python_version_tag == f"3.{sys.version_info.minor}"
+
 
 def test_mismatch(create_command, first_app_config, capsys):
     """If the system python doesn't match the target python, a warning is raised"""
@@ -55,7 +58,7 @@ def test_mismatch(create_command, first_app_config, capsys):
 
     # Mock a return value from Docker that matches the system Python
     create_command.tools[first_app_config].app_context.check_output = MagicMock(
-        return_value="3.42.99\n"
+        return_value="3.42\n"
     )
 
     # Verify python for the app
@@ -77,6 +80,9 @@ def test_mismatch(create_command, first_app_config, capsys):
 
     # Warning message was recorded
     assert "WARNING: Python version mismatch!" in capsys.readouterr().out
+
+    # The python version has been updated
+    assert first_app_config.python_version_tag == "3.42"
 
 
 def test_target_too_old(create_command, first_app_config):
