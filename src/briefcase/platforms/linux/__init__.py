@@ -1,3 +1,5 @@
+import ast
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -18,21 +20,37 @@ ARCH = "arch"
 def parse_freedesktop_os_release(content):
     """Parse the content of an /etc/os-release file.
 
+    Implementation adapted from Example 5 of
+    https://www.freedesktop.org/software/systemd/man/os-release.html
+
     :param content: The text content of the /etc/os-release file.
     :returns: A dictionary of key-value pairs, in the same format returned by
         `platform.freedesktop_os_release()`.
     """
-    try:
-        return {
-            parts[0].strip(): parts[1].strip().strip('"').strip()
-            for parts in [
-                line.strip().split("=", 1) for line in content.split("\n") if line
-            ]
-        }
-    except (AttributeError, IndexError) as e:
-        raise ParseError(
-            f"Failed to parse output of FreeDesktop os-release file: {e}"
-        ) from e
+    values = {}
+    for line_number, line in enumerate(content.split("\n"), start=1):
+        line = line.rstrip()
+        if not line or line.startswith("#"):
+            continue
+        m = re.match(r"([A-Z][A-Z_0-9]+)=(.*)", line)
+        if m:
+            name, val = m.groups()
+            if val and val[0] in "\"'":
+                try:
+                    val = ast.literal_eval(val)
+                except SyntaxError as e:
+                    raise ParseError(
+                        "Failed to parse output of FreeDesktop os-release file; "
+                        f"Line {line_number}: {e}"
+                    )
+            values[name] = val
+        else:
+            raise ParseError(
+                "Failed to parse output of FreeDesktop os-release file; "
+                f"Line {line_number}: {line!r}"
+            )
+
+    return values
 
 
 class LinuxMixin:
