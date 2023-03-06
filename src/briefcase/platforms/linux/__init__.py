@@ -19,8 +19,8 @@ def parse_freedesktop_os_release(content):
     """Parse the content of an /etc/os-release file.
 
     :param content: The text content of the /etc/os-release file.
-    :returns: A dictionary of key-value pairse, in the same format returned by
-        `platform.freedsktop_os_release()`.
+    :returns: A dictionary of key-value pairs, in the same format returned by
+        `platform.freedesktop_os_release()`.
     """
     try:
         return {
@@ -39,11 +39,11 @@ class LinuxMixin:
     platform = "linux"
 
     def vendor_details(self, freedesktop_info):
-        """Normalize the identify of the target Linux vendor, version, and base.
+        """Normalize the identity of the target Linux vendor, version, and base.
 
         :param freedesktop_info: The parsed content of the FreeDesktop
             /etc/os-release file. This is the same format returned by
-            `platform.freedsktop_os_release()`.
+            `platform.freedesktop_os_release()`.
         :returns: A tuple of (vendor, version, vendor_base).
         """
         vendor = freedesktop_info["ID"]

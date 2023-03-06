@@ -192,7 +192,7 @@ class LinuxSystemPassiveMixin(LinuxMixin):
                     # should use a context manager, rather than raw file
                     # open/close operations. If you can get the context manager
                     # form of this to pass coverage, you get a shiny penny. For
-                    # some reason, coverage genreated on Py3.9, but reported on
+                    # some reason, coverage generated on Py3.9, but reported on
                     # Py3.10+, finds a missing branch from the `with` statement
                     # to the first line after the `except FileNotFound` below.
                     # Since this is (a) a very simple file I/O sequence, and
@@ -963,7 +963,7 @@ with details about the release.
                     f"Error while building .rpm package for {app.app_name}."
                 ) from e
 
-        # Move the rpm file to it's final location
+        # Move the rpm file to its final location
         self.tools.shutil.move(
             rpmbuild_path
             / "RPMS"
