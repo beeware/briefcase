@@ -35,8 +35,6 @@ def test_deb_requirements(build_command, first_app_config):
     # The packages were verified
     assert build_command.tools.subprocess.check_output.mock_calls == [
         call(["dpkg", "-s", "python3-dev"]),
-        call(["dpkg", "-s", "python3-venv"]),
-        call(["dpkg", "-s", "python3-pip"]),
         call(["dpkg", "-s", "build-essential"]),
     ]
 
@@ -49,7 +47,6 @@ def test_rpm_requirements(build_command, first_app_config):
 
     assert build_command.tools.subprocess.check_output.mock_calls == [
         call(["rpm", "-q", "python3-devel"]),
-        call(["rpm", "-q", "python3-pip"]),
     ]
 
 

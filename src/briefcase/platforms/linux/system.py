@@ -376,16 +376,11 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
             if the system cannot be identified.
         """
         if app.target_vendor_base == DEBIAN:
-            base_system_packages = [
-                "python3-dev",
-                "python3-venv",
-                "python3-pip",
-                "build-essential",
-            ]
+            base_system_packages = ["python3-dev", "build-essential"]
             system_verify = ["dpkg", "-s"]
             system_installer = "apt"
         elif app.target_vendor_base == RHEL:
-            base_system_packages = ["python3-devel", "python3-pip"]
+            base_system_packages = ["python3-devel"]
             system_verify = ["rpm", "-q"]
             system_installer = "dnf"
         else:
