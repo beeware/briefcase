@@ -23,10 +23,8 @@ system package formats.
     In addition, Briefcase cannot reliably identify *every* Linux vendor. If
     your Linux distribution isn't being identified (or isn't being identified
     correctly), please `open a ticket
-    <https://github.com/beeware/briefcase/issues>`__ with details of how that
-    system can be uniquely identified. This usually means the output of
-    ``lsb_release``, or an identifying file in ``/etc`` (e.g.,
-    ``/etc/debian-release``).
+    <https://github.com/beeware/briefcase/issues>`__ with the contents of your
+    ``/etc/os-release`` file.
 
 The packaged app includes a stub binary, so that the app will appear in process
 lists using your app's name. It also includes a FreeDesktop registration so the
