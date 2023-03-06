@@ -92,6 +92,40 @@ CENTOS_MANTISBT_PROJECT="CentOS-8"
 CENTOS_MANTISBT_PROJECT_VERSION="8"
 """,
     #######################################################
+    # OpenSuSE Leap 15.4
+    #######################################################
+    "opensuse/leap:15.4": """\
+NAME="openSUSE Leap"
+VERSION="15.4"
+ID="opensuse-leap"
+ID_LIKE="suse opensuse"
+VERSION_ID="15.4"
+PRETTY_NAME="openSUSE Leap 15.4"
+ANSI_COLOR="0;32"
+CPE_NAME="cpe:/o:opensuse:leap:15.4"
+BUG_REPORT_URL="https://bugs.opensuse.org"
+HOME_URL="https://www.opensuse.org/"
+DOCUMENTATION_URL="https://en.opensuse.org/Portal:Leap"
+LOGO="distributor-logo-Leap"
+""",
+    #######################################################
+    # OpenSuse Tumbleweed (20230304)
+    #######################################################
+    "opensuse/tumbleweed:latest": """\
+NAME="openSUSE Tumbleweed"
+# VERSION="20230304"
+ID="opensuse-tumbleweed"
+ID_LIKE="opensuse suse"
+VERSION_ID="20230304"
+PRETTY_NAME="openSUSE Tumbleweed"
+ANSI_COLOR="0;32"
+CPE_NAME="cpe:/o:opensuse:tumbleweed:20230304"
+BUG_REPORT_URL="https://bugs.opensuse.org"
+HOME_URL="https://www.opensuse.org/"
+DOCUMENTATION_URL="https://en.opensuse.org/Portal:Tumbleweed"
+LOGO="distributor-logo-Tumbleweed"
+""",
+    #######################################################
     # Debian 11
     #######################################################
     "debian:11": """\
