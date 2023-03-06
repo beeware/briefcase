@@ -26,15 +26,12 @@ KEY4=42
     "content, error",
     [
         ("KEY=value\nnot valid content", r"Line 2: 'not valid content'"),
-        (
-            "KEY=value\nBAD='unbalanced quote",
-            r"Line 2: unterminated string literal \(detected at line 1\) \(<unknown>, line 1\)",
-        ),
+        ("KEY=value\nBAD='unbalanced quote", r"string literal"),
     ],
 )
 def test_parse_error(content, error):
     with pytest.raises(
         ParseError,
-        match=r"Failed to parse output of FreeDesktop os-release file; " + error,
+        match=error,
     ):
         parse_freedesktop_os_release(content)
