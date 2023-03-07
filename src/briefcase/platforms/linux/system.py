@@ -51,6 +51,8 @@ class LinuxSystemPassiveMixin(LinuxMixin):
         # Linux uses different architecture identifiers for some platforms
         return {
             "x86_64": "amd64",
+            "aarch64": "arm64",
+            "armv6l": "armhf",
         }.get(self.tools.host_arch, self.tools.host_arch)
 
     def bundle_path(self, app):

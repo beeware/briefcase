@@ -9,6 +9,8 @@ from briefcase.platforms.linux.system import LinuxSystemBuildCommand
     "host_arch, linux_arch",
     [
         ("x86_64", "amd64"),
+        ("aarch64", "arm64"),
+        ("armv6l", "armhf"),
     ],
 )
 def test_linux_arch(create_command, host_arch, linux_arch):
