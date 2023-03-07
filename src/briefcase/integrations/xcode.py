@@ -87,13 +87,10 @@ def ensure_command_line_tools_are_installed(tools: ToolCache):
         tools.subprocess.check_output(["xcode-select", "--install"])
         raise BriefcaseCommandError(
             """\
-Xcode command line developer tools are not installed.
+The command line developer tools are not installed.
 
-You should be shown a dialog prompting you to install Xcode and the
-command line tools. Select "Install" to install the command line developer
-tools.
-
-Re-run Briefcase once that installation is complete.
+You should be shown a dialog prompting you to install them. Select "Install"
+to continue, and re-run Briefcase once that installation is complete.
 """
         )
     except subprocess.CalledProcessError as e:
@@ -227,21 +224,19 @@ you can re-run Briefcase.
                 preamble = """\
 Xcode appears to be installed, but the active developer directory is the Xcode
 command line tools. To make Xcode the active developer directory, run:
+
+    $ sudo xcode-select --switch /Applications/Xcode.app
 """
             else:
                 preamble = """\
 You have the Xcode command line tools installed; however, Briefcase requires
-a full Xcode install. Xcode can be downloaded from the macOS App Store.
-
-Once you have installed Xcode, you can make it the active developer directory
-by running:
+a full Xcode install. Xcode can be downloaded from the macOS App Store at
+<https://apps.apple.com/au/app/xcode/id497799835?mt=12>.
 """
 
             raise BriefcaseCommandError(
                 preamble
                 + """
-    $ sudo xcode-select --switch /Applications/Xcode.app
-
 Or, to use a version of Xcode installed in a non-default location:
 
     $ sudo xcode-select --switch /path/to/Xcode.app
@@ -284,14 +279,12 @@ Use of Xcode and the iOS developer tools are covered by a license that must be
 accepted before you can use those tools.
 
 You can accept these licenses by starting Xcode and clicking "Accept"; or, you
-can run:
+can run this command and accept the license when prompted:
 
     $ sudo xcodebuild -license
 
-at the command line and accepting the license there.
-
-Briefcase will try the command line version of this command now. You will need
-to enter your password (Briefcase will not store this password anywhere).
+Briefcase will try to run this command now. You will need to enter your
+password (Briefcase will not store this password anywhere).
 """
             )
             try:
