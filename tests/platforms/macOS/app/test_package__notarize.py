@@ -211,6 +211,7 @@ def test_notarize_dmg_unknown_credentials(package_command, first_app_dmg):
                     "briefcase-macOS-DEADBEEF",
                 ],
                 check=True,
+                stream_output=False,
             ),
             # Submit for notarization a second time
             mock.call(
@@ -312,6 +313,7 @@ def test_credential_storage_failure_app(
                     "briefcase-macOS-DEADBEEF",
                 ],
                 check=True,
+                stream_output=False,
             ),
         ]
     )
@@ -369,6 +371,7 @@ def test_credential_storage_failure_dmg(package_command, first_app_dmg):
                     "briefcase-macOS-DEADBEEF",
                 ],
                 check=True,
+                stream_output=False,
             ),
         ]
     )
@@ -531,6 +534,7 @@ def test_notarize_unknown_credentials_after_storage(package_command, first_app_d
                     "briefcase-macOS-DEADBEEF",
                 ],
                 check=True,
+                stream_output=False,
             ),
             # Submit for notarization a second time
             mock.call(

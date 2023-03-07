@@ -182,5 +182,5 @@ certificate.
 Next steps
 ----------
 
-Now it's time to start using the Developer ID Application Certificate to sign,
-notarize, and distribute your application!
+Now you can use the certificate to sign and notarize your application with the
+:doc:`briefcase package </reference/commands/package>` command.

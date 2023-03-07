@@ -11,7 +11,7 @@ except ModuleNotFoundError:
 import pytest
 
 from briefcase.console import Console, Log
-from briefcase.exceptions import BriefcaseCommandError
+from briefcase.exceptions import BriefcaseCommandError, BriefcaseConfigError
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.web.static import StaticWebBuildCommand
 
@@ -161,6 +161,73 @@ def test_build_app(build_command, first_app_generated, tmp_path):
             )
             + "\n"
         )
+
+
+def test_build_app_custom_pyscript_toml(build_command, first_app_generated, tmp_path):
+    """An app with extra pyscript.toml content can be written."""
+    bundle_path = tmp_path / "base_path" / "build" / "first-app" / "web" / "static"
+
+    first_app_generated.extra_pyscript_toml_content = (
+        "\n".join(
+            [
+                # A custom top level key
+                'something = "custom"',
+                # A key overwriting something in the main namespace
+                'packages = ["something-custom"]',
+                # A table overwriting an existing value
+                "[splashscreen]",
+                "wiggle = false",
+                # A custom array of tables
+                "[[runtimes]]",
+                'src = "https://example.com/pyodide.js"',
+            ]
+        )
+        + "\n"
+    )
+
+    # Mock the side effect of invoking shutil
+    build_command.tools.shutil.rmtree.side_effect = lambda *args: shutil.rmtree(
+        bundle_path / "www" / "static" / "wheels"
+    )
+
+    # Build the web app.
+    build_command.build_app(first_app_generated)
+
+    # Pyscript.toml has been written
+    with (bundle_path / "www" / "pyscript.toml").open("rb") as f:
+        assert tomllib.load(f) == {
+            "name": "First App",
+            "description": "The first simple app \\ demonstration",
+            "version": "0.0.1",
+            "something": "custom",
+            "splashscreen": {"wiggle": False},
+            "terminal": False,
+            "packages": ["something-custom"],
+            "runtimes": [
+                {"src": "https://example.com/pyodide.js"},
+            ],
+        }
+
+
+def test_build_app_invalid_custom_pyscript_toml(
+    build_command, first_app_generated, tmp_path
+):
+    """An app with invalid extra pyscript.toml content raises an error."""
+    bundle_path = tmp_path / "base_path" / "build" / "first-app" / "web" / "static"
+
+    first_app_generated.extra_pyscript_toml_content = "This isn't toml"
+
+    # Mock the side effect of invoking shutil
+    build_command.tools.shutil.rmtree.side_effect = lambda *args: shutil.rmtree(
+        bundle_path / "www" / "static" / "wheels"
+    )
+
+    # Building the web app raises an error
+    with pytest.raises(
+        BriefcaseConfigError,
+        match=r"Briefcase configuration error: Extra pyscript.toml content isn't valid TOML: Expected",
+    ):
+        build_command.build_app(first_app_generated)
 
 
 def test_build_app_missing_wheel_dir(build_command, first_app_generated, tmp_path):
