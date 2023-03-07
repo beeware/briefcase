@@ -213,7 +213,7 @@ installation, and try again.
         """
         try:
             self.tools.subprocess.check_output(
-                ["docker", "run", "--rm", "--pull=always", image_tag, "echo"]
+                ["docker", "run", "--rm", image_tag, "echo"]
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(
