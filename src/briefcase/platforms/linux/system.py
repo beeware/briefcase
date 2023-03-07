@@ -381,7 +381,12 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
             system_verify = ["dpkg", "-s"]
             system_installer = "apt"
         elif app.target_vendor_base == RHEL:
-            base_system_packages = ["python3-devel"]
+            base_system_packages = [
+                "python3-devel",
+                "gcc",
+                "make",
+                "pkgconf-pkg-config",
+            ]
             system_verify = ["rpm", "-q"]
             system_installer = "dnf"
         else:

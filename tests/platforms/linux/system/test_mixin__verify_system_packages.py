@@ -47,6 +47,9 @@ def test_rpm_requirements(build_command, first_app_config):
 
     assert build_command.tools.subprocess.check_output.mock_calls == [
         call(["rpm", "-q", "python3-devel"]),
+        call(["rpm", "-q", "gcc"]),
+        call(["rpm", "-q", "make"]),
+        call(["rpm", "-q", "pkgconf-pkg-config"]),
     ]
 
 
