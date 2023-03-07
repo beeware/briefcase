@@ -93,7 +93,7 @@ def test_install_support_package(create_command, first_app_config, tmp_path):
         tmp_path
         / "base_path"
         / "build"
-        / "first-app_0.0.1"
+        / "first-app"
         / "linux"
         / "flatpak"
         / "Python-3.X.Y.tgz",

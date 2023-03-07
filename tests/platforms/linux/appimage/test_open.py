@@ -49,7 +49,7 @@ def test_open_docker(open_command, first_app_config, tmp_path):
         dockerfile_path=tmp_path
         / "base_path"
         / "build"
-        / "first-app_0.0.1"
+        / "first-app"
         / "linux"
         / "appimage"
         / "Dockerfile",
@@ -57,7 +57,7 @@ def test_open_docker(open_command, first_app_config, tmp_path):
         host_bundle_path=tmp_path
         / "base_path"
         / "build"
-        / "first-app_0.0.1"
+        / "first-app"
         / "linux"
         / "appimage",
         host_data_path=tmp_path / "briefcase",
@@ -85,7 +85,7 @@ def test_open_docker(open_command, first_app_config, tmp_path):
             "--rm",
             "-it",
             "--volume",
-            f"{tmp_path / 'base_path' / 'build' / 'first-app_0.0.1' / 'linux' / 'appimage'}:/app:z",
+            f"{tmp_path / 'base_path' / 'build' / 'first-app' / 'linux' / 'appimage'}:/app:z",
             "--volume",
             f"{open_command.data_path}:/home/brutus/.cache/briefcase:z",
             f"briefcase/com.example.first-app:py3.{sys.version_info.minor}",
@@ -115,7 +115,7 @@ def test_open_no_docker_linux(open_command, first_app_config, tmp_path):
     open_command.tools.subprocess.Popen.assert_called_once_with(
         [
             "xdg-open",
-            tmp_path / "base_path" / "build" / "first-app_0.0.1" / "linux" / "appimage",
+            tmp_path / "base_path" / "build" / "first-app" / "linux" / "appimage",
         ]
     )
 
@@ -139,6 +139,6 @@ def test_open_no_docker_macOS(open_command, first_app_config, tmp_path):
     open_command.tools.subprocess.Popen.assert_called_once_with(
         [
             "open",
-            tmp_path / "base_path" / "build" / "first-app_0.0.1" / "linux" / "appimage",
+            tmp_path / "base_path" / "build" / "first-app" / "linux" / "appimage",
         ]
     )

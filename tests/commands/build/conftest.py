@@ -14,8 +14,9 @@ class DummyBuildCommand(BuildCommand):
     It only serves to track which actions would be performed.
     """
 
-    platform = "tester"
-    output_format = "dummy"
+    # Platform and format contain upper case to test case normalization
+    platform = "Tester"
+    output_format = "Dummy"
     description = "Dummy build command"
 
     def __init__(self, *args, **kwargs):
@@ -92,20 +93,14 @@ def second_app(second_app_config, tmp_path):
         tmp_path
         / "base_path"
         / "build"
-        / "second_0.0.2"
+        / "second"
         / "tester"
         / "dummy"
         / "second.bundle",
         "second.bundle",
     )
     create_file(
-        tmp_path
-        / "base_path"
-        / "build"
-        / "second_0.0.2"
-        / "tester"
-        / "dummy"
-        / "second.bin",
+        tmp_path / "base_path" / "build" / "second" / "tester" / "dummy" / "second.bin",
         "second.bin",
     )
 

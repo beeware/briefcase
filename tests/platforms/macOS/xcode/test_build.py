@@ -31,9 +31,9 @@ def test_build_app(build_command, first_app_generated, tmp_path):
             tmp_path
             / "base_path"
             / "build"
-            / "first-app_0.0.1"
-            / "macOS"
-            / "Xcode"
+            / "first-app"
+            / "macos"
+            / "xcode"
             / "First App.xcodeproj",
             "-quiet",
             "-configuration",
@@ -63,9 +63,9 @@ def test_build_app_failed(build_command, first_app_generated, tmp_path):
             tmp_path
             / "base_path"
             / "build"
-            / "first-app_0.0.1"
-            / "macOS"
-            / "Xcode"
+            / "first-app"
+            / "macos"
+            / "xcode"
             / "First App.xcodeproj",
             "-quiet",
             "-configuration",

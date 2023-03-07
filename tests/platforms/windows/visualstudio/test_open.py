@@ -36,8 +36,8 @@ def test_open(open_command, first_app_config, tmp_path):
         tmp_path
         / "base_path"
         / "build"
-        / "first-app_0.0.1"
+        / "first-app"
         / "windows"
-        / "VisualStudio"
+        / "visualstudio"
         / "First App.sln"
     )

@@ -24,7 +24,7 @@ def test_create_app(tracking_create_command, tmp_path):
 
     # New app content has been created
     assert (
-        tmp_path / "base_path" / "build" / "first_0.0.1" / "tester" / "dummy" / "new"
+        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "new"
     ).exists()
 
 
@@ -34,7 +34,7 @@ def test_create_existing_app_overwrite(tracking_create_command, tmp_path):
     tracking_create_command.input.values = ["y"]
 
     # Generate an app in the location.
-    bundle_path = tmp_path / "base_path" / "build" / "first_0.0.1" / "tester" / "dummy"
+    bundle_path = tmp_path / "base_path" / "build" / "first" / "tester" / "dummy"
     bundle_path.mkdir(parents=True)
     with (bundle_path / "original").open("w") as f:
         f.write("original template!")
@@ -69,7 +69,7 @@ def test_create_existing_app_no_overwrite(tracking_create_command, tmp_path):
     # Answer no when asked
     tracking_create_command.input.values = ["n"]
 
-    bundle_path = tmp_path / "base_path" / "build" / "first_0.0.1" / "tester" / "dummy"
+    bundle_path = tmp_path / "base_path" / "build" / "first" / "tester" / "dummy"
     bundle_path.mkdir(parents=True)
     with (bundle_path / "original").open("w") as f:
         f.write("original template!")
@@ -95,7 +95,7 @@ def test_create_existing_app_no_overwrite_default(tracking_create_command, tmp_p
     # Answer '' (i.e., just press return) when asked
     tracking_create_command.input.values = [""]
 
-    bundle_path = tmp_path / "base_path" / "build" / "first_0.0.1" / "tester" / "dummy"
+    bundle_path = tmp_path / "base_path" / "build" / "first" / "tester" / "dummy"
     bundle_path.mkdir(parents=True)
     with (bundle_path / "original").open("w") as f:
         f.write("original template!")
@@ -122,7 +122,7 @@ def test_create_existing_app_input_disabled(tracking_create_command, tmp_path):
     # Answer '' (i.e., just press return) when asked
     tracking_create_command.input.enabled = False
 
-    bundle_path = tmp_path / "base_path" / "build" / "first_0.0.1" / "tester" / "dummy"
+    bundle_path = tmp_path / "base_path" / "build" / "first" / "tester" / "dummy"
     bundle_path.mkdir(parents=True)
     with (bundle_path / "original").open("w") as f:
         f.write("original template!")

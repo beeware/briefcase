@@ -41,7 +41,7 @@ def test_run_app(run_command, first_app_config, tmp_path):
                 tmp_path
                 / "base_path"
                 / "build"
-                / "first-app_0.0.1"
+                / "first-app"
                 / "windows"
                 / "app"
                 / "src"
@@ -83,7 +83,7 @@ def test_run_app_with_passthrough(run_command, first_app_config, tmp_path):
                 tmp_path
                 / "base_path"
                 / "build"
-                / "first-app_0.0.1"
+                / "first-app"
                 / "windows"
                 / "app"
                 / "src"
@@ -122,7 +122,7 @@ def test_run_app_failed(run_command, first_app_config, tmp_path):
                 tmp_path
                 / "base_path"
                 / "build"
-                / "first-app_0.0.1"
+                / "first-app"
                 / "windows"
                 / "app"
                 / "src"
@@ -155,7 +155,7 @@ def test_run_app_test_mode(run_command, first_app_config, tmp_path):
                 tmp_path
                 / "base_path"
                 / "build"
-                / "first-app_0.0.1"
+                / "first-app"
                 / "windows"
                 / "app"
                 / "src"
@@ -198,7 +198,7 @@ def test_run_app_test_mode_with_passthrough(run_command, first_app_config, tmp_p
                 tmp_path
                 / "base_path"
                 / "build"
-                / "first-app_0.0.1"
+                / "first-app"
                 / "windows"
                 / "app"
                 / "src"

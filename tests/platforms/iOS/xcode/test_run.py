@@ -130,9 +130,9 @@ def test_run_app_simulator_booted(run_command, first_app_config, tmp_path):
                     tmp_path
                     / "base_path"
                     / "build"
-                    / "first-app_0.0.1"
-                    / "iOS"
-                    / "Xcode"
+                    / "first-app"
+                    / "ios"
+                    / "xcode"
                     / "build"
                     / "Debug-iphonesimulator"
                     / "First App.app",
@@ -247,9 +247,9 @@ def test_run_app_with_passthrough(run_command, first_app_config, tmp_path):
                     tmp_path
                     / "base_path"
                     / "build"
-                    / "first-app_0.0.1"
-                    / "iOS"
-                    / "Xcode"
+                    / "first-app"
+                    / "ios"
+                    / "xcode"
                     / "build"
                     / "Debug-iphonesimulator"
                     / "First App.app",
@@ -369,9 +369,9 @@ def test_run_app_simulator_shut_down(run_command, first_app_config, tmp_path):
                     tmp_path
                     / "base_path"
                     / "build"
-                    / "first-app_0.0.1"
-                    / "iOS"
-                    / "Xcode"
+                    / "first-app"
+                    / "ios"
+                    / "xcode"
                     / "build"
                     / "Debug-iphonesimulator"
                     / "First App.app",
@@ -503,9 +503,9 @@ def test_run_app_simulator_shutting_down(run_command, first_app_config, tmp_path
                     tmp_path
                     / "base_path"
                     / "build"
-                    / "first-app_0.0.1"
-                    / "iOS"
-                    / "Xcode"
+                    / "first-app"
+                    / "ios"
+                    / "xcode"
                     / "build"
                     / "Debug-iphonesimulator"
                     / "First App.app",
@@ -773,9 +773,9 @@ def test_run_app_simulator_install_failure(run_command, first_app_config, tmp_pa
                     tmp_path
                     / "base_path"
                     / "build"
-                    / "first-app_0.0.1"
-                    / "iOS"
-                    / "Xcode"
+                    / "first-app"
+                    / "ios"
+                    / "xcode"
                     / "build"
                     / "Debug-iphonesimulator"
                     / "First App.app",
@@ -864,9 +864,9 @@ def test_run_app_simulator_launch_failure(run_command, first_app_config, tmp_pat
                     tmp_path
                     / "base_path"
                     / "build"
-                    / "first-app_0.0.1"
-                    / "iOS"
-                    / "Xcode"
+                    / "first-app"
+                    / "ios"
+                    / "xcode"
                     / "build"
                     / "Debug-iphonesimulator"
                     / "First App.app",
@@ -983,9 +983,9 @@ def test_run_app_simulator_no_pid(run_command, first_app_config, tmp_path):
                     tmp_path
                     / "base_path"
                     / "build"
-                    / "first-app_0.0.1"
-                    / "iOS"
-                    / "Xcode"
+                    / "first-app"
+                    / "ios"
+                    / "xcode"
                     / "build"
                     / "Debug-iphonesimulator"
                     / "First App.app",
@@ -1104,9 +1104,9 @@ def test_run_app_simulator_non_integer_pid(run_command, first_app_config, tmp_pa
                     tmp_path
                     / "base_path"
                     / "build"
-                    / "first-app_0.0.1"
-                    / "iOS"
-                    / "Xcode"
+                    / "first-app"
+                    / "ios"
+                    / "xcode"
                     / "build"
                     / "Debug-iphonesimulator"
                     / "First App.app",
@@ -1199,9 +1199,9 @@ def test_run_app_test_mode(run_command, first_app_config, tmp_path):
                     tmp_path
                     / "base_path"
                     / "build"
-                    / "first-app_0.0.1"
-                    / "iOS"
-                    / "Xcode"
+                    / "first-app"
+                    / "ios"
+                    / "xcode"
                     / "build"
                     / "Debug-iphonesimulator"
                     / "First App.app",
@@ -1306,9 +1306,9 @@ def test_run_app_test_mode_with_passthrough(run_command, first_app_config, tmp_p
                     tmp_path
                     / "base_path"
                     / "build"
-                    / "first-app_0.0.1"
-                    / "iOS"
-                    / "Xcode"
+                    / "first-app"
+                    / "ios"
+                    / "xcode"
                     / "build"
                     / "Debug-iphonesimulator"
                     / "First App.app",

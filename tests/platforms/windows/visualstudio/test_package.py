@@ -58,9 +58,9 @@ def test_package_msi(package_command, first_app_config, tmp_path):
                 cwd=tmp_path
                 / "base_path"
                 / "build"
-                / "first-app_0.0.1"
+                / "first-app"
                 / "windows"
-                / "VisualStudio",
+                / "visualstudio",
             ),
             # Compile MSI
             mock.call(
@@ -81,9 +81,9 @@ def test_package_msi(package_command, first_app_config, tmp_path):
                 cwd=tmp_path
                 / "base_path"
                 / "build"
-                / "first-app_0.0.1"
+                / "first-app"
                 / "windows"
-                / "VisualStudio",
+                / "visualstudio",
             ),
             # Link MSI
             mock.call(
@@ -105,9 +105,9 @@ def test_package_msi(package_command, first_app_config, tmp_path):
                 cwd=tmp_path
                 / "base_path"
                 / "build"
-                / "first-app_0.0.1"
+                / "first-app"
                 / "windows"
-                / "VisualStudio",
+                / "visualstudio",
             ),
         ]
     )

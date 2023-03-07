@@ -34,9 +34,9 @@ def test_binary_path(create_command, first_app_config, tmp_path):
         tmp_path
         / "base_path"
         / "build"
-        / "first-app_0.0.1"
-        / "macOS"
-        / "Xcode"
+        / "first-app"
+        / "macos"
+        / "xcode"
         / "build"
         / "Release"
         / "First App.app"

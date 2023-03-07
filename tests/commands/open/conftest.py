@@ -18,8 +18,9 @@ class DummyOpenCommand(OpenCommand):
     It only serves to track which actions would be performed.
     """
 
-    platform = "tester"
-    output_format = "dummy"
+    # Platform and format contain upper case to test case normalization
+    platform = "Tester"
+    output_format = "Dummy"
     description = "Dummy Open command"
 
     def __init__(self, *args, apps, **kwargs):
@@ -95,7 +96,7 @@ def first_app(tmp_path):
         tmp_path
         / "base_path"
         / "build"
-        / "first_0.0.1"
+        / "first"
         / "tester"
         / "dummy"
         / "first.project"
@@ -111,7 +112,7 @@ def second_app(tmp_path):
         tmp_path
         / "base_path"
         / "build"
-        / "second_0.0.2"
+        / "second"
         / "tester"
         / "dummy"
         / "second.project"

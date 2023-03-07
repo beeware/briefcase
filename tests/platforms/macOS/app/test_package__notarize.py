@@ -29,7 +29,7 @@ def package_command(tmp_path):
 
 @pytest.fixture
 def first_app_dmg(tmp_path):
-    dmg_path = tmp_path / "base_path" / "macOS" / "First App.dmg"
+    dmg_path = tmp_path / "base_path" / "dist" / "First App.dmg"
     dmg_path.parent.mkdir(parents=True)
     with dmg_path.open("w") as f:
         f.write("DMG content here")
@@ -43,19 +43,13 @@ def test_notarize_app(package_command, first_app_with_binaries, tmp_path):
         tmp_path
         / "base_path"
         / "build"
-        / "first-app_0.0.1"
-        / "macOS"
+        / "first-app"
+        / "macos"
         / "app"
         / "First App.app"
     )
     archive_path = (
-        tmp_path
-        / "base_path"
-        / "build"
-        / "first-app_0.0.1"
-        / "macOS"
-        / "app"
-        / "archive.zip"
+        tmp_path / "base_path" / "build" / "first-app" / "macos" / "app" / "archive.zip"
     )
     package_command.notarize(app_path, team_id="DEADBEEF")
 
@@ -161,7 +155,7 @@ def test_notarize_dmg(package_command, first_app_dmg):
 
 def test_notarize_unknown_format(package_command, tmp_path):
     """Attempting to notarize a file of unknown format raises an error."""
-    pkg_path = tmp_path / "base_path" / "macOS" / "First App.pkg"
+    pkg_path = tmp_path / "base_path" / "dist" / "First App.pkg"
 
     # The notarization call will fail with an error
     with pytest.raises(
@@ -256,19 +250,13 @@ def test_credential_storage_failure_app(
         tmp_path
         / "base_path"
         / "build"
-        / "first-app_0.0.1"
-        / "macOS"
+        / "first-app"
+        / "macos"
         / "app"
         / "First App.app"
     )
     archive_path = (
-        tmp_path
-        / "base_path"
-        / "build"
-        / "first-app_0.0.1"
-        / "macOS"
-        / "app"
-        / "archive.zip"
+        tmp_path / "base_path" / "build" / "first-app" / "macos" / "app" / "archive.zip"
     )
 
     # Set up subprocess to fail on the first notarization attempt,
@@ -395,19 +383,13 @@ def test_credential_storage_disabled_input_app(
         tmp_path
         / "base_path"
         / "build"
-        / "first-app_0.0.1"
-        / "macOS"
+        / "first-app"
+        / "macos"
         / "app"
         / "First App.app"
     )
     archive_path = (
-        tmp_path
-        / "base_path"
-        / "build"
-        / "first-app_0.0.1"
-        / "macOS"
-        / "app"
-        / "archive.zip"
+        tmp_path / "base_path" / "build" / "first-app" / "macos" / "app" / "archive.zip"
     )
 
     # Set up subprocess to fail on the first notarization attempt.
@@ -515,7 +497,7 @@ def test_notarize_unknown_credentials_after_storage(package_command, first_app_d
     # The notarization call will fail with an error
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Unable to submit macOS[/\\]First App.dmg for notarization.",
+        match=r"Unable to submit dist[/\\]First App.dmg for notarization.",
     ):
         package_command.notarize(first_app_dmg, team_id="DEADBEEF")
 
@@ -578,19 +560,13 @@ def test_app_notarization_failure_with_credentials(
         tmp_path
         / "base_path"
         / "build"
-        / "first-app_0.0.1"
-        / "macOS"
+        / "first-app"
+        / "macos"
         / "app"
         / "First App.app"
     )
     archive_path = (
-        tmp_path
-        / "base_path"
-        / "build"
-        / "first-app_0.0.1"
-        / "macOS"
-        / "app"
-        / "archive.zip"
+        tmp_path / "base_path" / "build" / "first-app" / "macos" / "app" / "archive.zip"
     )
 
     # Set up subprocess to fail on the first notarization attempt
@@ -605,7 +581,7 @@ def test_app_notarization_failure_with_credentials(
     # The notarization call will fail with an error
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Unable to submit build[/\\]first-app_0.0.1[/\\]macOS[/\\]app[/\\]First App.app for notarization.",
+        match=r"Unable to submit build[/\\]first-app[/\\]macos[/\\]app[/\\]First App.app for notarization.",
     ):
         package_command.notarize(app_path, team_id="DEADBEEF")
 
@@ -650,7 +626,7 @@ def test_dmg_notarization_failure_with_credentials(package_command, first_app_dm
     # The notarization call will fail with an error
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Unable to submit macOS[/\\]First App.dmg for notarization.",
+        match=r"Unable to submit dist[/\\]First App.dmg for notarization.",
     ):
         package_command.notarize(first_app_dmg, team_id="DEADBEEF")
 
@@ -690,7 +666,7 @@ def test_stapling_failure(package_command, first_app_dmg):
 
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Unable to staple notarization onto macOS[/\\]First App.dmg",
+        match=r"Unable to staple notarization onto dist[/\\]First App.dmg",
     ):
         package_command.notarize(first_app_dmg, team_id="DEADBEEF")
 

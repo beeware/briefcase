@@ -10,9 +10,9 @@ def first_app_generated(first_app_config, tmp_path):
         tmp_path
         / "base_path"
         / "build"
-        / "first-app_0.0.1"
-        / "iOS"
-        / "Xcode"
+        / "first-app"
+        / "ios"
+        / "xcode"
         / "briefcase.toml",
         """
 [paths]
@@ -23,13 +23,7 @@ info_plist_path="Info.plist"
     )
 
     create_plist_file(
-        tmp_path
-        / "base_path"
-        / "build"
-        / "first-app_0.0.1"
-        / "iOS"
-        / "Xcode"
-        / "Info.plist",
+        tmp_path / "base_path" / "build" / "first-app" / "ios" / "xcode" / "Info.plist",
         {
             "MainModule": "first_app",
         },

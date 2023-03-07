@@ -67,7 +67,7 @@ def test_build_app(
         tmp_path
         / "base_path"
         / "build"
-        / "first-app_0.0.1"
+        / "first-app"
         / "android"
         / "gradle"
         / "res"
@@ -123,7 +123,7 @@ def test_build_app_test_mode(
         tmp_path
         / "base_path"
         / "build"
-        / "first-app_0.0.1"
+        / "first-app"
         / "android"
         / "gradle"
         / "res"

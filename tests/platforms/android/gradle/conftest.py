@@ -10,7 +10,7 @@ def first_app_generated(first_app_config, tmp_path):
         tmp_path
         / "base_path"
         / "build"
-        / "first-app_0.0.1"
+        / "first-app"
         / "android"
         / "gradle"
         / "briefcase.toml",
@@ -26,7 +26,7 @@ metadata_resource_path="res/briefcase.xml"
         tmp_path
         / "base_path"
         / "build"
-        / "first-app_0.0.1"
+        / "first-app"
         / "android"
         / "gradle"
         / "res"

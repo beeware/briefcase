@@ -67,8 +67,8 @@ def sign_call(
                     tmp_path
                     / "base_path"
                     / "build"
-                    / "first-app_0.0.1"
-                    / "macOS"
+                    / "first-app"
+                    / "macos"
                     / "app"
                     / "Entitlements.plist"
                 ),
@@ -248,8 +248,8 @@ def test_sign_file_entitlements(dummy_command, tmp_path):
         entitlements=tmp_path
         / "base_path"
         / "build"
-        / "first-app_0.0.1"
-        / "macOS"
+        / "first-app"
+        / "macos"
         / "app"
         / "Entitlements.plist",
     )
@@ -433,8 +433,8 @@ def test_sign_app(dummy_command, first_app_with_binaries, tmp_path):
         tmp_path
         / "base_path"
         / "build"
-        / "first-app_0.0.1"
-        / "macOS"
+        / "first-app"
+        / "macos"
         / "app"
         / "First App.app"
     )

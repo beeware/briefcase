@@ -14,7 +14,7 @@ def test_open_macOS(open_command, tmp_path):
             tmp_path
             / "base_path"
             / "build"
-            / "first_0.0.1"
+            / "first"
             / "tester"
             / "dummy"
             / "first.project",
@@ -33,7 +33,7 @@ def test_open_linux(open_command, tmp_path):
             tmp_path
             / "base_path"
             / "build"
-            / "first_0.0.1"
+            / "first"
             / "tester"
             / "dummy"
             / "first.project",
@@ -50,7 +50,7 @@ def test_open_windows(open_command, tmp_path):
         tmp_path
         / "base_path"
         / "build"
-        / "first_0.0.1"
+        / "first"
         / "tester"
         / "dummy"
         / "first.project"

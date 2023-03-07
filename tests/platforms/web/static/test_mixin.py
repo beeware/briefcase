@@ -18,7 +18,7 @@ def test_project_path(create_command, first_app_config, tmp_path):
     project_path = create_command.project_path(first_app_config)
 
     assert project_path == (
-        tmp_path / "base_path" / "build" / "first-app_0.0.1" / "web" / "static" / "www"
+        tmp_path / "base_path" / "build" / "first-app" / "web" / "static" / "www"
     )
 
 
@@ -29,7 +29,7 @@ def test_binary_path(create_command, first_app_config, tmp_path):
         tmp_path
         / "base_path"
         / "build"
-        / "first-app_0.0.1"
+        / "first-app"
         / "web"
         / "static"
         / "www"
@@ -44,7 +44,7 @@ def test_wheel_path(create_command, first_app_config, tmp_path):
         tmp_path
         / "base_path"
         / "build"
-        / "first-app_0.0.1"
+        / "first-app"
         / "web"
         / "static"
         / "www"

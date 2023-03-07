@@ -13,8 +13,9 @@ class DummyUpgradeCommand(UpgradeCommand):
     It only serves to track which actions would be performed.
     """
 
-    platform = "tester"
-    output_format = "dummy"
+    # Platform and format contain upper case to test case normalization
+    platform = "Tester"
+    output_format = "Dummy"
     description = "Dummy update command"
 
     def __init__(self, *args, sdks, **kwargs):

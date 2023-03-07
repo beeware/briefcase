@@ -5,7 +5,7 @@ def test_template_url(create_command):
     """The template URL is a simple construction of the platform and format."""
     assert (
         create_command.app_template_url
-        == "https://github.com/beeware/briefcase-tester-dummy-template.git"
+        == "https://github.com/beeware/briefcase-Tester-Dummy-template.git"
     )
 
 
@@ -127,7 +127,7 @@ def test_cleanup_paths(create_command, myapp):
 
 def test_support_package_url(create_command):
     # Retrieve the property, retrieving the support package URL.
-    url = "https://briefcase-support.s3.amazonaws.com/python/3.X/tester/Python-3.X-tester-support.b52.tar.gz"
+    url = "https://briefcase-support.s3.amazonaws.com/python/3.X/Tester/Python-3.X-Tester-support.b52.tar.gz"
     assert create_command.support_package_url(52) == url
 
 

@@ -14,8 +14,9 @@ class DummyRunCommand(RunCommand):
     It only serves to track which actions would be performed.
     """
 
-    platform = "tester"
-    output_format = "dummy"
+    # Platform and format contain upper case to test case normalization
+    platform = "Tester"
+    output_format = "Dummy"
     description = "Dummy run command"
 
     def __init__(self, *args, **kwargs):
@@ -100,7 +101,7 @@ def first_app_unbuild(first_app_config, tmp_path):
         / "base_path"
         / "build"
         / "tester"
-        / "first_0.0.1"
+        / "first"
         / "tester"
         / "dummy"
         / "first.bundle",
@@ -115,13 +116,7 @@ def first_app(first_app_unbuild, tmp_path):
     # The same fixture as first_app_unbuild,
     # but ensures that the binary for the app exists
     create_file(
-        tmp_path
-        / "base_path"
-        / "build"
-        / "first_0.0.1"
-        / "tester"
-        / "dummy"
-        / "first.bin",
+        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "first.bin",
         "first.bin",
     )
 
@@ -147,7 +142,7 @@ def second_app_uncompiled(second_app_config, tmp_path):
         tmp_path
         / "base_path"
         / "build"
-        / "second_0.0.2"
+        / "second"
         / "tester"
         / "dummy"
         / "second.bundle",
@@ -162,13 +157,7 @@ def second_app(second_app_uncompiled, tmp_path):
     # The same fixture as second_app_uncompiled,
     # but ensures that the binary for the app exists
     create_file(
-        tmp_path
-        / "base_path"
-        / "build"
-        / "second_0.0.2"
-        / "tester"
-        / "dummy"
-        / "second.bin",
+        tmp_path / "base_path" / "build" / "second" / "tester" / "dummy" / "second.bin",
         "second.bin",
     )
 

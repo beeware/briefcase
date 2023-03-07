@@ -34,9 +34,7 @@ def build_command(tmp_path):
 
 def test_build_app(build_command, first_app_generated, tmp_path):
     """An app can be built."""
-    bundle_path = (
-        tmp_path / "base_path" / "build" / "first-app_0.0.1" / "web" / "static"
-    )
+    bundle_path = tmp_path / "base_path" / "build" / "first-app" / "web" / "static"
 
     # Invoking build will create wheels as a side effect.
     def mock_run(*args, **kwargs):
@@ -167,9 +165,7 @@ def test_build_app(build_command, first_app_generated, tmp_path):
 
 def test_build_app_missing_wheel_dir(build_command, first_app_generated, tmp_path):
     """If the template is corrupted, the wheels folder is still created."""
-    bundle_path = (
-        tmp_path / "base_path" / "build" / "first-app_0.0.1" / "web" / "static"
-    )
+    bundle_path = tmp_path / "base_path" / "build" / "first-app" / "web" / "static"
 
     # Remove the wheels folder
     shutil.rmtree(bundle_path / "www" / "static" / "wheels")
@@ -224,9 +220,7 @@ def test_build_app_missing_wheel_dir(build_command, first_app_generated, tmp_pat
 
 def test_build_app_no_requirements(build_command, first_app_generated, tmp_path):
     """An app with no requirements can be built."""
-    bundle_path = (
-        tmp_path / "base_path" / "build" / "first-app_0.0.1" / "web" / "static"
-    )
+    bundle_path = tmp_path / "base_path" / "build" / "first-app" / "web" / "static"
 
     # Invoking build will create wheels as a side effect.
     def mock_run(*args, **kwargs):
@@ -330,9 +324,7 @@ def test_build_app_no_requirements(build_command, first_app_generated, tmp_path)
 
 def test_app_package_fail(build_command, first_app_generated, tmp_path):
     """If the app can't be packaged as a wheel,an error is raised."""
-    bundle_path = (
-        tmp_path / "base_path" / "build" / "first-app_0.0.1" / "web" / "static"
-    )
+    bundle_path = tmp_path / "base_path" / "build" / "first-app" / "web" / "static"
 
     # Mock the side effect of invoking shutil
     build_command.tools.shutil.rmtree.side_effect = lambda *args: shutil.rmtree(
@@ -383,9 +375,7 @@ def test_app_package_fail(build_command, first_app_generated, tmp_path):
 
 def test_dependency_fail(build_command, first_app_generated, tmp_path):
     """If dependencies can't be downloaded, an error is raised."""
-    bundle_path = (
-        tmp_path / "base_path" / "build" / "first-app_0.0.1" / "web" / "static"
-    )
+    bundle_path = tmp_path / "base_path" / "build" / "first-app" / "web" / "static"
 
     # Mock the side effect of invoking shutil
     build_command.tools.shutil.rmtree.side_effect = lambda *args: shutil.rmtree(

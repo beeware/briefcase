@@ -64,7 +64,7 @@ def create_command(no_docker_create_command, first_app_config, tmp_path):
         dockerfile_path=tmp_path
         / "base_path"
         / "build"
-        / "first-app_0.0.1"
+        / "first-app"
         / "linux"
         / "appimage"
         / "Dockerfile",
@@ -72,7 +72,7 @@ def create_command(no_docker_create_command, first_app_config, tmp_path):
         host_bundle_path=tmp_path
         / "base_path"
         / "build"
-        / "first-app_0.0.1"
+        / "first-app"
         / "linux"
         / "appimage",
         host_data_path=tmp_path / "briefcase",
@@ -200,7 +200,7 @@ def test_install_app_requirements_in_docker(create_command, first_app_config, tm
             "run",
             "--rm",
             "--volume",
-            f"{tmp_path / 'base_path' / 'build' / 'first-app_0.0.1' / 'linux' / 'appimage'}:/app:z",
+            f"{tmp_path / 'base_path' / 'build' / 'first-app' / 'linux' / 'appimage'}:/app:z",
             "--volume",
             f"{tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z",
             "briefcase/com.example.first-app:py3.X",
@@ -264,7 +264,7 @@ def test_install_app_requirements_no_docker(
             "install",
             "--upgrade",
             "--no-user",
-            f"--target={tmp_path}/base_path/build/first-app_0.0.1/linux/appimage/path/to/app_packages",
+            f"--target={tmp_path}/base_path/build/first-app/linux/appimage/path/to/app_packages",
             "foo==1.2.3",
             "bar>=4.5",
         ],
@@ -325,7 +325,7 @@ def test_install_app_requirements_with_locals(
             tmp_path
             / "base_path"
             / "build"
-            / "first-app_0.0.1"
+            / "first-app"
             / "linux"
             / "appimage"
             / "_requirements",
@@ -340,7 +340,7 @@ def test_install_app_requirements_with_locals(
             tmp_path
             / "base_path"
             / "build"
-            / "first-app_0.0.1"
+            / "first-app"
             / "linux"
             / "appimage"
             / "_requirements",
@@ -350,7 +350,7 @@ def test_install_app_requirements_with_locals(
             tmp_path
             / "base_path"
             / "build"
-            / "first-app_0.0.1"
+            / "first-app"
             / "linux"
             / "appimage"
             / "_requirements",
@@ -364,7 +364,7 @@ def test_install_app_requirements_with_locals(
             "run",
             "--rm",
             "--volume",
-            f"{tmp_path / 'base_path' / 'build' / 'first-app_0.0.1' / 'linux' / 'appimage'}:/app:z",
+            f"{tmp_path / 'base_path' / 'build' / 'first-app' / 'linux' / 'appimage'}:/app:z",
             "--volume",
             f"{tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z",
             "briefcase/com.example.first-app:py3.X",
@@ -436,7 +436,7 @@ def test_install_app_requirements_with_bad_local(
             tmp_path
             / "base_path"
             / "build"
-            / "first-app_0.0.1"
+            / "first-app"
             / "linux"
             / "appimage"
             / "_requirements",
@@ -511,7 +511,7 @@ def test_install_app_requirements_with_bad_local_file(
         tmp_path
         / "base_path"
         / "build"
-        / "first-app_0.0.1"
+        / "first-app"
         / "linux"
         / "appimage"
         / "_requirements",

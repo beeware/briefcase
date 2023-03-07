@@ -32,7 +32,7 @@ def test_binary_path(create_command, first_app_config, tmp_path):
         == tmp_path
         / "base_path"
         / "build"
-        / "first-app_0.0.1"
+        / "first-app"
         / "linux"
         / "appimage"
         / "First_App-0.0.1-x86_64.AppImage"
@@ -101,7 +101,7 @@ def test_verify_linux_docker(create_command, tmp_path, first_app_config, monkeyp
         dockerfile_path=tmp_path
         / "base_path"
         / "build"
-        / "first-app_0.0.1"
+        / "first-app"
         / "linux"
         / "appimage"
         / "Dockerfile",
@@ -109,7 +109,7 @@ def test_verify_linux_docker(create_command, tmp_path, first_app_config, monkeyp
         host_bundle_path=tmp_path
         / "base_path"
         / "build"
-        / "first-app_0.0.1"
+        / "first-app"
         / "linux"
         / "appimage",
         host_data_path=tmp_path / "briefcase",
@@ -139,7 +139,7 @@ def test_verify_non_linux_docker(create_command, tmp_path, first_app_config):
         dockerfile_path=tmp_path
         / "base_path"
         / "build"
-        / "first-app_0.0.1"
+        / "first-app"
         / "linux"
         / "appimage"
         / "Dockerfile",
@@ -147,7 +147,7 @@ def test_verify_non_linux_docker(create_command, tmp_path, first_app_config):
         host_bundle_path=tmp_path
         / "base_path"
         / "build"
-        / "first-app_0.0.1"
+        / "first-app"
         / "linux"
         / "appimage",
         host_data_path=tmp_path / "briefcase",

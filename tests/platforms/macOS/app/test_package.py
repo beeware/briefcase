@@ -76,8 +76,8 @@ def test_package_app(package_command, first_app_with_binaries, tmp_path, capsys)
                     tmp_path
                     / "base_path"
                     / "build"
-                    / "first-app_0.0.1"
-                    / "macOS"
+                    / "first-app"
+                    / "macos"
                     / "app"
                     / "First App.app"
                 )
@@ -143,8 +143,8 @@ def test_package_app_no_notarization(
                     tmp_path
                     / "base_path"
                     / "build"
-                    / "first-app_0.0.1"
-                    / "macOS"
+                    / "first-app"
+                    / "macos"
                     / "app"
                     / "First App.app"
                 )
@@ -313,8 +313,8 @@ def test_package_app_adhoc_sign(package_command, first_app_with_binaries, tmp_pa
                     tmp_path
                     / "base_path"
                     / "build"
-                    / "first-app_0.0.1"
-                    / "macOS"
+                    / "first-app"
+                    / "macos"
                     / "app"
                     / "First App.app"
                 )
@@ -370,8 +370,8 @@ def test_package_app_adhoc_sign_default_notarization(
                     tmp_path
                     / "base_path"
                     / "build"
-                    / "first-app_0.0.1"
-                    / "macOS"
+                    / "first-app"
+                    / "macos"
                     / "app"
                     / "First App.app"
                 )
@@ -421,8 +421,8 @@ def test_package_bare_app(package_command, first_app_with_binaries, tmp_path):
         tmp_path
         / "base_path"
         / "build"
-        / "first-app_0.0.1"
-        / "macOS"
+        / "first-app"
+        / "macos"
         / "app"
         / "First App.app",
         team_id="DEADBEEF",
@@ -555,8 +555,8 @@ def test_dmg_with_installer_icon(package_command, first_app_with_binaries, tmp_p
                     tmp_path
                     / "base_path"
                     / "build"
-                    / "first-app_0.0.1"
-                    / "macOS"
+                    / "first-app"
+                    / "macos"
                     / "app"
                     / "First App.app"
                 )
@@ -602,8 +602,8 @@ def test_dmg_with_missing_installer_icon(
                     tmp_path
                     / "base_path"
                     / "build"
-                    / "first-app_0.0.1"
-                    / "macOS"
+                    / "first-app"
+                    / "macos"
                     / "app"
                     / "First App.app"
                 )
@@ -654,8 +654,8 @@ def test_dmg_with_app_installer_icon(
                     tmp_path
                     / "base_path"
                     / "build"
-                    / "first-app_0.0.1"
-                    / "macOS"
+                    / "first-app"
+                    / "macos"
                     / "app"
                     / "First App.app"
                 )
@@ -701,8 +701,8 @@ def test_dmg_with_missing_app_installer_icon(
                     tmp_path
                     / "base_path"
                     / "build"
-                    / "first-app_0.0.1"
-                    / "macOS"
+                    / "first-app"
+                    / "macos"
                     / "app"
                     / "First App.app"
                 )
@@ -753,8 +753,8 @@ def test_dmg_with_installer_background(
                     tmp_path
                     / "base_path"
                     / "build"
-                    / "first-app_0.0.1"
-                    / "macOS"
+                    / "first-app"
+                    / "macos"
                     / "app"
                     / "First App.app"
                 )
@@ -800,8 +800,8 @@ def test_dmg_with_missing_installer_background(
                     tmp_path
                     / "base_path"
                     / "build"
-                    / "first-app_0.0.1"
-                    / "macOS"
+                    / "first-app"
+                    / "macos"
                     / "app"
                     / "First App.app"
                 )

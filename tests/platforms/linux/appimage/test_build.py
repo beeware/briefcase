@@ -24,7 +24,7 @@ def first_app(first_app_config, tmp_path):
         tmp_path
         / "base_path"
         / "build"
-        / "first-app_0.0.1"
+        / "first-app"
         / "linux"
         / "appimage"
         / "First App.AppDir"
@@ -157,7 +157,7 @@ def test_build_appimage(build_command, first_app, tmp_path):
         tmp_path
         / "base_path"
         / "build"
-        / "first-app_0.0.1"
+        / "first-app"
         / "linux"
         / "appimage"
         / "First App.AppDir"
@@ -188,7 +188,7 @@ def test_build_appimage(build_command, first_app, tmp_path):
             "ARCH": "wonky",
         },
         cwd=os.fsdecode(
-            tmp_path / "base_path" / "build" / "first-app_0.0.1" / "linux" / "appimage"
+            tmp_path / "base_path" / "build" / "first-app" / "linux" / "appimage"
         ),
         text=True,
         encoding=mock.ANY,
@@ -201,7 +201,7 @@ def test_build_appimage(build_command, first_app, tmp_path):
         tmp_path
         / "base_path"
         / "build"
-        / "first-app_0.0.1"
+        / "first-app"
         / "linux"
         / "appimage"
         / "First_App-0.0.1-wonky.AppImage",
@@ -246,7 +246,7 @@ def test_build_appimage_with_plugin(build_command, first_app, tmp_path):
         tmp_path
         / "base_path"
         / "build"
-        / "first-app_0.0.1"
+        / "first-app"
         / "linux"
         / "appimage"
         / "First App.AppDir"
@@ -282,7 +282,7 @@ def test_build_appimage_with_plugin(build_command, first_app, tmp_path):
             "ARCH": "wonky",
         },
         cwd=os.fsdecode(
-            tmp_path / "base_path" / "build" / "first-app_0.0.1" / "linux" / "appimage"
+            tmp_path / "base_path" / "build" / "first-app" / "linux" / "appimage"
         ),
         text=True,
         encoding=mock.ANY,
@@ -295,7 +295,7 @@ def test_build_appimage_with_plugin(build_command, first_app, tmp_path):
         tmp_path
         / "base_path"
         / "build"
-        / "first-app_0.0.1"
+        / "first-app"
         / "linux"
         / "appimage"
         / "linuxdeploy-plugin-something.sh",
@@ -306,7 +306,7 @@ def test_build_appimage_with_plugin(build_command, first_app, tmp_path):
         tmp_path
         / "base_path"
         / "build"
-        / "first-app_0.0.1"
+        / "first-app"
         / "linux"
         / "appimage"
         / "First_App-0.0.1-wonky.AppImage",
@@ -332,7 +332,7 @@ def test_build_failure(build_command, first_app, tmp_path):
         tmp_path
         / "base_path"
         / "build"
-        / "first-app_0.0.1"
+        / "first-app"
         / "linux"
         / "appimage"
         / "First App.AppDir"
@@ -363,7 +363,7 @@ def test_build_failure(build_command, first_app, tmp_path):
             "ARCH": "wonky",
         },
         cwd=os.fsdecode(
-            tmp_path / "base_path" / "build" / "first-app_0.0.1" / "linux" / "appimage"
+            tmp_path / "base_path" / "build" / "first-app" / "linux" / "appimage"
         ),
         text=True,
         encoding=mock.ANY,
@@ -396,7 +396,7 @@ def test_build_appimage_in_docker(build_command, first_app, tmp_path, monkeypatc
         dockerfile_path=tmp_path
         / "base_path"
         / "build"
-        / "first-app_0.0.1"
+        / "first-app"
         / "linux"
         / "appimage"
         / "Dockerfile",
@@ -404,7 +404,7 @@ def test_build_appimage_in_docker(build_command, first_app, tmp_path, monkeypatc
         host_bundle_path=tmp_path
         / "base_path"
         / "build"
-        / "first-app_0.0.1"
+        / "first-app"
         / "linux"
         / "appimage",
         host_data_path=tmp_path / "briefcase",
@@ -420,7 +420,7 @@ def test_build_appimage_in_docker(build_command, first_app, tmp_path, monkeypatc
             "run",
             "--rm",
             "--volume",
-            f"{tmp_path / 'base_path' / 'build' / 'first-app_0.0.1' / 'linux' / 'appimage'}:/app:z",
+            f"{tmp_path / 'base_path' / 'build' / 'first-app' / 'linux' / 'appimage'}:/app:z",
             "--volume",
             f"{build_command.data_path}:/home/brutus/.cache/briefcase:z",
             "--env",
@@ -447,7 +447,7 @@ def test_build_appimage_in_docker(build_command, first_app, tmp_path, monkeypatc
             "/app/First App.AppDir/usr/app_packages/secondlib",
         ],
         cwd=os.fsdecode(
-            tmp_path / "base_path" / "build" / "first-app_0.0.1" / "linux" / "appimage"
+            tmp_path / "base_path" / "build" / "first-app" / "linux" / "appimage"
         ),
         text=True,
         encoding=mock.ANY,
@@ -460,7 +460,7 @@ def test_build_appimage_in_docker(build_command, first_app, tmp_path, monkeypatc
         tmp_path
         / "base_path"
         / "build"
-        / "first-app_0.0.1"
+        / "first-app"
         / "linux"
         / "appimage"
         / "First_App-0.0.1-wonky.AppImage",
@@ -511,7 +511,7 @@ def test_build_appimage_with_plugins_in_docker(build_command, first_app, tmp_pat
         dockerfile_path=tmp_path
         / "base_path"
         / "build"
-        / "first-app_0.0.1"
+        / "first-app"
         / "linux"
         / "appimage"
         / "Dockerfile",
@@ -519,7 +519,7 @@ def test_build_appimage_with_plugins_in_docker(build_command, first_app, tmp_pat
         host_bundle_path=tmp_path
         / "base_path"
         / "build"
-        / "first-app_0.0.1"
+        / "first-app"
         / "linux"
         / "appimage",
         host_data_path=tmp_path / "briefcase",
@@ -535,7 +535,7 @@ def test_build_appimage_with_plugins_in_docker(build_command, first_app, tmp_pat
             "run",
             "--rm",
             "--volume",
-            f"{tmp_path / 'base_path' / 'build' / 'first-app_0.0.1' / 'linux' / 'appimage'}:/app:z",
+            f"{tmp_path / 'base_path' / 'build' / 'first-app' / 'linux' / 'appimage'}:/app:z",
             "--volume",
             f"{build_command.data_path}:/home/brutus/.cache/briefcase:z",
             "--env",
@@ -573,7 +573,7 @@ def test_build_appimage_with_plugins_in_docker(build_command, first_app, tmp_pat
             "something",
         ],
         cwd=os.fsdecode(
-            tmp_path / "base_path" / "build" / "first-app_0.0.1" / "linux" / "appimage"
+            tmp_path / "base_path" / "build" / "first-app" / "linux" / "appimage"
         ),
         text=True,
         encoding=mock.ANY,
@@ -586,7 +586,7 @@ def test_build_appimage_with_plugins_in_docker(build_command, first_app, tmp_pat
         tmp_path
         / "base_path"
         / "build"
-        / "first-app_0.0.1"
+        / "first-app"
         / "linux"
         / "appimage"
         / "linuxdeploy-plugin-something.sh",
@@ -597,7 +597,7 @@ def test_build_appimage_with_plugins_in_docker(build_command, first_app, tmp_pat
         tmp_path
         / "base_path"
         / "build"
-        / "first-app_0.0.1"
+        / "first-app"
         / "linux"
         / "appimage"
         / "First_App-0.0.1-wonky.AppImage",

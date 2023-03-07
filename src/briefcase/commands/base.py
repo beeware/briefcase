@@ -287,9 +287,7 @@ a custom location for Briefcase's tools.
 
         :param app: The app config
         """
-        return (
-            self.base_path / "build" / f"{app.app_name}_{app.version}" / self.platform
-        )
+        return self.base_path / "build" / app.app_name / self.platform.lower()
 
     @property
     def dist_path(self):
@@ -307,7 +305,7 @@ a custom location for Briefcase's tools.
 
         :param app: The app config
         """
-        return self.build_path(app) / self.output_format
+        return self.build_path(app) / self.output_format.lower()
 
     @abstractmethod
     def binary_path(self, app):

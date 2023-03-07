@@ -69,7 +69,7 @@ def test_execute_gradle(
             tmp_path
             / "base_path"
             / "build"
-            / "first-app_0.0.1"
+            / "first-app"
             / "android"
             / "gradle"
             / "app"

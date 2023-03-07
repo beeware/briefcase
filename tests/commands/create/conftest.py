@@ -34,9 +34,10 @@ class DummyCreateCommand(CreateCommand):
     """A dummy create command that stubs out all the required interfaces of the Create
     command."""
 
-    platform = "tester"
     supported_host_os = {"c64"}
-    output_format = "dummy"
+    # Platform and format contain upper case to test case normalization
+    platform = "Tester"
+    output_format = "Dummy"
     description = "Dummy create command"
 
     def __init__(self, *args, support_file=None, git=None, home_path=None, **kwargs):
@@ -183,14 +184,7 @@ def bundle_path(myapp, tmp_path):
     # Return the bundle path for the app; however, as a side effect,
     # ensure that the app, app_packages and support target directories
     # exist, and the briefcase index file has been created.
-    bundle_path = (
-        tmp_path
-        / "base_path"
-        / "build"
-        / f"{myapp.app_name}_{myapp.version}"
-        / "tester"
-        / "dummy"
-    )
+    bundle_path = tmp_path / "base_path" / "build" / myapp.app_name / "tester" / "dummy"
     (bundle_path / "path" / "to" / "app").mkdir(parents=True, exist_ok=True)
     (bundle_path / "path" / "to" / "support").mkdir(parents=True, exist_ok=True)
 

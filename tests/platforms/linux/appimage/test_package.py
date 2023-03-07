@@ -31,7 +31,7 @@ def test_package_app(package_command, first_app_config, tmp_path):
         tmp_path
         / "base_path"
         / "build"
-        / "first-app_0.0.1"
+        / "first-app"
         / "linux"
         / "appimage"
         / "First_App-0.0.1-wonky.AppImage",

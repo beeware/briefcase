@@ -66,7 +66,7 @@ def test_icon_target(create_command, tmp_path):
                 target=tmp_path
                 / "base_path"
                 / "build"
-                / "my-app_1.2.3"
+                / "my-app"
                 / "tester"
                 / "dummy"
                 / "path"
@@ -81,7 +81,7 @@ def test_icon_target(create_command, tmp_path):
                 target=tmp_path
                 / "base_path"
                 / "build"
-                / "my-app_1.2.3"
+                / "my-app"
                 / "tester"
                 / "dummy"
                 / "path"
@@ -138,7 +138,7 @@ def test_icon_variant_target(create_command, tmp_path):
                 target=tmp_path
                 / "base_path"
                 / "build"
-                / "my-app_1.2.3"
+                / "my-app"
                 / "tester"
                 / "dummy"
                 / "path"
@@ -153,7 +153,7 @@ def test_icon_variant_target(create_command, tmp_path):
                 target=tmp_path
                 / "base_path"
                 / "build"
-                / "my-app_1.2.3"
+                / "my-app"
                 / "tester"
                 / "dummy"
                 / "path"
@@ -168,7 +168,7 @@ def test_icon_variant_target(create_command, tmp_path):
                 target=tmp_path
                 / "base_path"
                 / "build"
-                / "my-app_1.2.3"
+                / "my-app"
                 / "tester"
                 / "dummy"
                 / "path"
@@ -219,7 +219,7 @@ def test_splash_target(create_command, tmp_path):
                 target=tmp_path
                 / "base_path"
                 / "build"
-                / "my-app_1.2.3"
+                / "my-app"
                 / "tester"
                 / "dummy"
                 / "path"
@@ -234,7 +234,7 @@ def test_splash_target(create_command, tmp_path):
                 target=tmp_path
                 / "base_path"
                 / "build"
-                / "my-app_1.2.3"
+                / "my-app"
                 / "tester"
                 / "dummy"
                 / "path"
@@ -291,7 +291,7 @@ def test_splash_variant_target(create_command, tmp_path):
                 target=tmp_path
                 / "base_path"
                 / "build"
-                / "my-app_1.2.3"
+                / "my-app"
                 / "tester"
                 / "dummy"
                 / "path"
@@ -306,7 +306,7 @@ def test_splash_variant_target(create_command, tmp_path):
                 target=tmp_path
                 / "base_path"
                 / "build"
-                / "my-app_1.2.3"
+                / "my-app"
                 / "tester"
                 / "dummy"
                 / "path"
@@ -321,7 +321,7 @@ def test_splash_variant_target(create_command, tmp_path):
                 target=tmp_path
                 / "base_path"
                 / "build"
-                / "my-app_1.2.3"
+                / "my-app"
                 / "tester"
                 / "dummy"
                 / "path"
@@ -382,7 +382,7 @@ def test_doctype_icon_target(create_command, tmp_path):
                 target=tmp_path
                 / "base_path"
                 / "build"
-                / "my-app_1.2.3"
+                / "my-app"
                 / "tester"
                 / "dummy"
                 / "path"
@@ -397,7 +397,7 @@ def test_doctype_icon_target(create_command, tmp_path):
                 target=tmp_path
                 / "base_path"
                 / "build"
-                / "my-app_1.2.3"
+                / "my-app"
                 / "tester"
                 / "dummy"
                 / "path"
@@ -412,7 +412,7 @@ def test_doctype_icon_target(create_command, tmp_path):
                 target=tmp_path
                 / "base_path"
                 / "build"
-                / "my-app_1.2.3"
+                / "my-app"
                 / "tester"
                 / "dummy"
                 / "path"
