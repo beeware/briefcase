@@ -176,11 +176,9 @@ class LinuxSystemPassiveMixin(LinuxMixin):
             app.target_image = self.target_image
 
             # Ensure that the Docker base image is available.
-            with self.input.wait_bar(
-                f"Checking Docker target image {app.target_image}..."
-            ):
-                self.tools.docker.prepare(app.target_image)
+            self.tools.docker.prepare(app.target_image)
 
+            # Extract release information from the image.
             output = self.tools.docker.check_output(
                 ["cat", "/etc/os-release"],
                 image_tag=app.target_image,

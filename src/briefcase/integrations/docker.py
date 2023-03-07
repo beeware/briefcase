@@ -212,8 +212,10 @@ installation, and try again.
         :param image_tag: The Docker image to prepare
         """
         try:
-            self.tools.subprocess.check_output(
-                ["docker", "run", "--rm", image_tag, "echo"]
+            self.tools.subprocess.run(
+                ["docker", "run", "--rm", image_tag, "printf", ""],
+                check=True,
+                stream_output=False,
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(

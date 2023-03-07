@@ -22,15 +22,17 @@ def test_prepare(mock_tools):
     # Prepare an image
     mock_tools.docker.prepare("ubuntu:jammy")
 
-    mock_tools.subprocess.check_output.assert_called_once_with(
-        ["docker", "run", "--rm", "ubuntu:jammy", "echo"]
+    mock_tools.subprocess.run.assert_called_once_with(
+        ["docker", "run", "--rm", "ubuntu:jammy", "printf", ""],
+        check=True,
+        stream_output=False,
     )
 
 
 def test_prepare_bad_image(mock_tools):
     "If an image is invalid, an exception raised"
     # Mock a Docker failure due to a bad image
-    mock_tools.subprocess.check_output.side_effect = subprocess.CalledProcessError(
+    mock_tools.subprocess.run.side_effect = subprocess.CalledProcessError(
         returncode=125,
         cmd="docker...",
     )
@@ -43,6 +45,8 @@ def test_prepare_bad_image(mock_tools):
         mock_tools.docker.prepare("ubuntu:does-not-exist")
 
     # The subprocess call was made.
-    mock_tools.subprocess.check_output.assert_called_once_with(
-        ["docker", "run", "--rm", "ubuntu:does-not-exist", "echo"]
+    mock_tools.subprocess.run.assert_called_once_with(
+        ["docker", "run", "--rm", "ubuntu:does-not-exist", "printf", ""],
+        check=True,
+        stream_output=False,
     )
