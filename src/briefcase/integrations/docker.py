@@ -303,36 +303,37 @@ class DockerAppContext(Tool):
             prefix=self.app.app_name,
         )
         with self.tools.input.wait_bar("Building Docker image..."):
-            try:
-                self.tools.subprocess.run(
-                    [
-                        "docker",
-                        "build",
-                        "--progress",
-                        "plain",
-                        "--tag",
-                        self.image_tag,
-                        "--file",
-                        dockerfile_path,
-                        "--build-arg",
-                        f"PY_VERSION={self.python_version}",
-                        "--build-arg",
-                        f"SYSTEM_REQUIRES={' '.join(getattr(self.app, 'system_requires', ''))}",
-                        "--build-arg",
-                        f"HOST_UID={self.tools.os.getuid()}",
-                        "--build-arg",
-                        f"HOST_GID={self.tools.os.getgid()}",
-                        Path(
-                            self.app_base_path,
-                            *self.app.sources[0].split("/")[:-1],
-                        ),
-                    ],
-                    check=True,
-                )
-            except subprocess.CalledProcessError as e:
-                raise BriefcaseCommandError(
-                    f"Error building Docker container image for {self.app.app_name}."
-                ) from e
+            with self.tools.logger.context("Docker"):
+                try:
+                    self.tools.subprocess.run(
+                        [
+                            "docker",
+                            "build",
+                            "--progress",
+                            "plain",
+                            "--tag",
+                            self.image_tag,
+                            "--file",
+                            dockerfile_path,
+                            "--build-arg",
+                            f"PY_VERSION={self.python_version}",
+                            "--build-arg",
+                            f"SYSTEM_REQUIRES={' '.join(getattr(self.app, 'system_requires', ''))}",
+                            "--build-arg",
+                            f"HOST_UID={self.tools.os.getuid()}",
+                            "--build-arg",
+                            f"HOST_GID={self.tools.os.getgid()}",
+                            Path(
+                                self.app_base_path,
+                                *self.app.sources[0].split("/")[:-1],
+                            ),
+                        ],
+                        check=True,
+                    )
+                except subprocess.CalledProcessError as e:
+                    raise BriefcaseCommandError(
+                        f"Error building Docker container image for {self.app.app_name}."
+                    ) from e
 
     def _dockerize_path(self, arg: str):
         """Relocate any local path into the equivalent location on the docker
