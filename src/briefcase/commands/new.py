@@ -417,6 +417,7 @@ What GUI toolkit do you want to use for this project?""",
                 "PySide2 (does not support iOS/Android deployment)",
                 "PySide6 (does not support iOS/Android deployment)",
                 "PursuedPyBear (does not support iOS/Android deployment)",
+                "Pygame (does not support iOS/Android deployment)",
                 "None",
             ],
         )
