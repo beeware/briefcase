@@ -900,7 +900,15 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
                             "%description",
                             app.long_description,
                             "",
+                            # Disable all the auto-detection that tries to magically
+                            # determine requirements from the binaries
+                            f"%global __requires_exclude /usr/lib/{app.app_name}",
+                            f"%global __provides_exclude /usr/lib/{app.app_name}",
+                            # Disable all build post-processing so that binary
+                            # wheels aren't munged.
+                            "%global _enable_debug_package 0",
                             "%global debug_package %{nil}",
+                            "%global __os_install_post /usr/lib/rpm/brp-compress %{nil}",
                             "",
                             "%prep",
                             "%autosetup",
