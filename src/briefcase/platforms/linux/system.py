@@ -877,7 +877,23 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
                             # tell you that it will remove the executable bit -
                             # even if the executable bit isn't set.
                             # We disable the processor that does this.
-                            "%undefine __brp_mangle_shebangs",
+                            "%global __brp_mangle_shebangs %{nil}",
+                            # rpmbuild tries to strip binaries, which messes with
+                            # binary wheels. Disable these checks.
+                            "%global __brp_strip %{nil}",
+                            "%global __brp_strip_static_archive %{nil}",
+                            "%global __brp_strip_comment_note %{nil}",
+                            # Disable RPATH checking, because check-rpaths can't deal with
+                            # the structure of manylinux wheels
+                            "%global __brp_check_rpaths %{nil}",
+                            # Disable all the auto-detection that tries to magically
+                            # determine requirements from the binaries
+                            f"%global __requires_exclude_from ^%{{_libdir}}/{app.app_name}/.*$",
+                            f"%global __provides_exclude_from ^%{{_libdir}}/{app.app_name}/.*$",
+                            # Disable debug processing.
+                            "%global _enable_debug_package 0",
+                            "%global debug_package %{nil}",
+                            "",
                             # Base package metadata
                             f"Name:           {app.app_name}",
                             f"Version:        {app.version}",
@@ -899,16 +915,6 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
                             "",
                             "%description",
                             app.long_description,
-                            "",
-                            # Disable all the auto-detection that tries to magically
-                            # determine requirements from the binaries
-                            f"%global __requires_exclude /usr/lib/{app.app_name}",
-                            f"%global __provides_exclude /usr/lib/{app.app_name}",
-                            # Disable all build post-processing so that binary
-                            # wheels aren't munged.
-                            "%global _enable_debug_package 0",
-                            "%global debug_package %{nil}",
-                            "%global __os_install_post /usr/lib/rpm/brp-compress %{nil}",
                             "",
                             "%prep",
                             "%autosetup",
