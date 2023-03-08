@@ -37,7 +37,7 @@ def test_extra_pip_args(update_command, first_app_generated, tmp_path):
             "install",
             "--upgrade",
             "--no-user",
-            f"--target={tmp_path / 'base_path' / 'iOS' / 'Xcode' / 'First App' / 'app_packages'}",
+            f"--target={tmp_path / 'base_path' / 'build' / 'first-app' / 'ios' / 'xcode' / 'app_packages'}",
             "--prefer-binary",
             "--extra-index-url",
             "https://pypi.anaconda.org/beeware/simple",
@@ -49,9 +49,10 @@ def test_extra_pip_args(update_command, first_app_generated, tmp_path):
             "PYTHONPATH": str(
                 tmp_path
                 / "base_path"
-                / "iOS"
-                / "Xcode"
-                / "First App"
+                / "build"
+                / "first-app"
+                / "ios"
+                / "xcode"
                 / "support"
                 / "platform-site"
             )

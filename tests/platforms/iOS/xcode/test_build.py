@@ -36,9 +36,10 @@ def test_build_app(build_command, first_app_generated, tmp_path):
             "-project",
             tmp_path
             / "base_path"
-            / "iOS"
-            / "Xcode"
-            / "First App"
+            / "build"
+            / "first-app"
+            / "ios"
+            / "xcode"
             / "First App.xcodeproj",
             "-destination",
             'platform="iOS Simulator"',
@@ -54,9 +55,9 @@ def test_build_app(build_command, first_app_generated, tmp_path):
     )
 
     # The app metadata references the app module
-    with (tmp_path / "base_path" / "iOS" / "Xcode" / "First App" / "Info.plist").open(
-        "rb"
-    ) as f:
+    with (
+        tmp_path / "base_path" / "build" / "first-app" / "ios" / "xcode" / "Info.plist"
+    ).open("rb") as f:
         plist = plistlib.load(f)
         assert plist["MainModule"] == "first_app"
 
@@ -77,9 +78,10 @@ def test_build_app_test_mode(build_command, first_app_generated, tmp_path):
             "-project",
             tmp_path
             / "base_path"
-            / "iOS"
-            / "Xcode"
-            / "First App"
+            / "build"
+            / "first-app"
+            / "ios"
+            / "xcode"
             / "First App.xcodeproj",
             "-destination",
             'platform="iOS Simulator"',
@@ -95,9 +97,9 @@ def test_build_app_test_mode(build_command, first_app_generated, tmp_path):
     )
 
     # The app metadata has been rewritten to reference the test module
-    with (tmp_path / "base_path" / "iOS" / "Xcode" / "First App" / "Info.plist").open(
-        "rb"
-    ) as f:
+    with (
+        tmp_path / "base_path" / "build" / "first-app" / "ios" / "xcode" / "Info.plist"
+    ).open("rb") as f:
         plist = plistlib.load(f)
         assert plist["MainModule"] == "tests.first_app"
 
@@ -123,9 +125,10 @@ def test_build_app_failed(build_command, first_app_generated, tmp_path):
             "-project",
             tmp_path
             / "base_path"
-            / "iOS"
-            / "Xcode"
-            / "First App"
+            / "build"
+            / "first-app"
+            / "ios"
+            / "xcode"
             / "First App.xcodeproj",
             "-destination",
             'platform="iOS Simulator"',

@@ -64,13 +64,18 @@ def test_linux_docker(create_command, tmp_path, first_app_config, monkeypatch):
         image_tag="briefcase/com.example.first-app:somevendor-surprising",
         dockerfile_path=tmp_path
         / "base_path"
-        / "linux"
+        / "build"
+        / "first-app"
         / "somevendor"
         / "surprising"
-        / "first-app"
         / "Dockerfile",
         app_base_path=tmp_path / "base_path",
-        host_platform_path=tmp_path / "base_path" / "linux",
+        host_bundle_path=tmp_path
+        / "base_path"
+        / "build"
+        / "first-app"
+        / "somevendor"
+        / "surprising",
         host_data_path=tmp_path / "briefcase",
         python_version="3",
     )
@@ -114,13 +119,18 @@ def test_non_linux_docker(create_command, tmp_path, first_app_config):
         image_tag="briefcase/com.example.first-app:somevendor-surprising",
         dockerfile_path=tmp_path
         / "base_path"
-        / "linux"
+        / "build"
+        / "first-app"
         / "somevendor"
         / "surprising"
-        / "first-app"
         / "Dockerfile",
         app_base_path=tmp_path / "base_path",
-        host_platform_path=tmp_path / "base_path" / "linux",
+        host_bundle_path=tmp_path
+        / "base_path"
+        / "build"
+        / "first-app"
+        / "somevendor"
+        / "surprising",
         host_data_path=tmp_path / "briefcase",
         python_version="3",
     )

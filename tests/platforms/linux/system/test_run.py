@@ -60,10 +60,10 @@ def test_run_app(run_command, first_app, tmp_path):
             os.fsdecode(
                 tmp_path
                 / "base_path"
-                / "linux"
+                / "build"
+                / "first-app"
                 / "somevendor"
                 / "surprising"
-                / "first-app"
                 / "first-app-0.0.1"
                 / "usr"
                 / "bin"
@@ -105,10 +105,10 @@ def test_run_app_with_passthrough(run_command, first_app, tmp_path):
             os.fsdecode(
                 tmp_path
                 / "base_path"
-                / "linux"
+                / "build"
+                / "first-app"
                 / "somevendor"
                 / "surprising"
-                / "first-app"
                 / "first-app-0.0.1"
                 / "usr"
                 / "bin"
@@ -146,10 +146,10 @@ def test_run_app_failed(run_command, first_app, tmp_path):
             os.fsdecode(
                 tmp_path
                 / "base_path"
-                / "linux"
+                / "build"
+                / "first-app"
                 / "somevendor"
                 / "surprising"
-                / "first-app"
                 / "first-app-0.0.1"
                 / "usr"
                 / "bin"
@@ -182,10 +182,10 @@ def test_run_app_test_mode(run_command, first_app, tmp_path):
             os.fsdecode(
                 tmp_path
                 / "base_path"
-                / "linux"
+                / "build"
+                / "first-app"
                 / "somevendor"
                 / "surprising"
-                / "first-app"
                 / "first-app-0.0.1"
                 / "usr"
                 / "bin"
@@ -228,10 +228,10 @@ def test_run_app_test_mode_with_args(run_command, first_app, tmp_path):
             os.fsdecode(
                 tmp_path
                 / "base_path"
-                / "linux"
+                / "build"
+                / "first-app"
                 / "somevendor"
                 / "surprising"
-                / "first-app"
                 / "first-app-0.0.1"
                 / "usr"
                 / "bin"

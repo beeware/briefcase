@@ -18,8 +18,9 @@ class DummyOpenCommand(OpenCommand):
     It only serves to track which actions would be performed.
     """
 
-    platform = "tester"
-    output_format = "dummy"
+    # Platform and format contain upper case to test case normalization
+    platform = "Tester"
+    output_format = "Dummy"
     description = "Dummy Open command"
 
     def __init__(self, *args, apps, **kwargs):
@@ -72,7 +73,7 @@ class DummyOpenCommand(OpenCommand):
 @pytest.fixture
 def open_command(tmp_path):
     return DummyOpenCommand(
-        base_path=tmp_path,
+        base_path=tmp_path / "base_path",
         apps={
             "first": AppConfig(
                 app_name="first",
@@ -95,7 +96,15 @@ def open_command(tmp_path):
 @pytest.fixture
 def first_app(tmp_path):
     """Populate skeleton app content for the first app."""
-    project_file = tmp_path / "tester" / "dummy" / "first" / "first.project"
+    project_file = (
+        tmp_path
+        / "base_path"
+        / "build"
+        / "first"
+        / "tester"
+        / "dummy"
+        / "first.project"
+    )
     create_file(project_file, "first project")
     return project_file
 
@@ -103,6 +112,14 @@ def first_app(tmp_path):
 @pytest.fixture
 def second_app(tmp_path):
     """Populate skeleton app content for the second app."""
-    project_file = tmp_path / "tester" / "dummy" / "second" / "second.project"
+    project_file = (
+        tmp_path
+        / "base_path"
+        / "build"
+        / "second"
+        / "tester"
+        / "dummy"
+        / "second.project"
+    )
     create_file(project_file, "second project")
     return project_file

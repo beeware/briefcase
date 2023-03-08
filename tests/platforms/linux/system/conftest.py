@@ -30,7 +30,7 @@ def first_app(first_app_config, tmp_path):
 
     # Make it look like the template has been generated
     bundle_dir = (
-        tmp_path / "base_path" / "linux" / "somevendor" / "surprising" / "first-app"
+        tmp_path / "base_path" / "build" / "first-app" / "somevendor" / "surprising"
     )
 
     create_file(bundle_dir / "first-app.1", "First App manpage")

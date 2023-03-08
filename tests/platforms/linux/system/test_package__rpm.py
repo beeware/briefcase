@@ -54,10 +54,10 @@ def first_app_rpm(first_app, tmp_path):
     usr_dir = (
         tmp_path
         / "base_path"
-        / "linux"
+        / "build"
+        / "first-app"
         / "somevendor"
         / "surprising"
-        / "first-app"
         / "first-app-0.0.1"
         / "usr"
     )
@@ -147,7 +147,7 @@ def test_verify_docker(monkeypatch, package_command, first_app_rpm):
 def test_rpm_package(package_command, first_app_rpm, tmp_path):
     """A rpm app can be packaged."""
     bundle_path = (
-        tmp_path / "base_path" / "linux" / "somevendor" / "surprising" / "first-app"
+        tmp_path / "base_path" / "build" / "first-app" / "somevendor" / "surprising"
     )
 
     # Package the app
@@ -270,7 +270,7 @@ def test_rpm_package(package_command, first_app_rpm, tmp_path):
         / "RPMS"
         / "wonky"
         / "first-app-0.0.1-1.fcXX.wonky.rpm",
-        tmp_path / "base_path" / "linux" / "first-app-0.0.1-1.fcXX.wonky.rpm",
+        tmp_path / "base_path" / "dist" / "first-app-0.0.1-1.fcXX.wonky.rpm",
     )
 
 
@@ -278,7 +278,7 @@ def test_rpm_package(package_command, first_app_rpm, tmp_path):
 def test_rpm_re_package(package_command, first_app_rpm, tmp_path):
     """A rpm app that has previously been packaged can be re-packaged."""
     bundle_path = (
-        tmp_path / "base_path" / "linux" / "somevendor" / "surprising" / "first-app"
+        tmp_path / "base_path" / "build" / "first-app" / "somevendor" / "surprising"
     )
 
     # Create an old spec file and tarball that will be overwritten.
@@ -411,7 +411,7 @@ def test_rpm_re_package(package_command, first_app_rpm, tmp_path):
         / "RPMS"
         / "wonky"
         / "first-app-0.0.1-1.fcXX.wonky.rpm",
-        tmp_path / "base_path" / "linux" / "first-app-0.0.1-1.fcXX.wonky.rpm",
+        tmp_path / "base_path" / "dist" / "first-app-0.0.1-1.fcXX.wonky.rpm",
     )
 
 
@@ -419,7 +419,7 @@ def test_rpm_re_package(package_command, first_app_rpm, tmp_path):
 def test_rpm_package_no_long_description(package_command, first_app_rpm, tmp_path):
     """A rpm app without a long description raises an error."""
     bundle_path = (
-        tmp_path / "base_path" / "linux" / "somevendor" / "surprising" / "first-app"
+        tmp_path / "base_path" / "build" / "first-app" / "somevendor" / "surprising"
     )
 
     # Delete the long description
@@ -443,7 +443,7 @@ def test_rpm_package_no_long_description(package_command, first_app_rpm, tmp_pat
 def test_rpm_package_extra_requirements(package_command, first_app_rpm, tmp_path):
     """A rpm app can be packaged with extra runtime requirements and config features."""
     bundle_path = (
-        tmp_path / "base_path" / "linux" / "somevendor" / "surprising" / "first-app"
+        tmp_path / "base_path" / "build" / "first-app" / "somevendor" / "surprising"
     )
 
     # Add system requirements and other optional settings.
@@ -547,7 +547,7 @@ def test_rpm_package_extra_requirements(package_command, first_app_rpm, tmp_path
         / "RPMS"
         / "wonky"
         / "first-app-0.0.1-42.fcXX.wonky.rpm",
-        tmp_path / "base_path" / "linux" / "first-app-0.0.1-42.fcXX.wonky.rpm",
+        tmp_path / "base_path" / "dist" / "first-app-0.0.1-42.fcXX.wonky.rpm",
     )
 
 
@@ -555,7 +555,7 @@ def test_rpm_package_extra_requirements(package_command, first_app_rpm, tmp_path
 def test_rpm_package_failure(package_command, first_app_rpm, tmp_path):
     """If an packaging doesn't succeed, an error is raised."""
     bundle_path = (
-        tmp_path / "base_path" / "linux" / "somevendor" / "surprising" / "first-app"
+        tmp_path / "base_path" / "build" / "first-app" / "somevendor" / "surprising"
     )
 
     # Mock a packaging failure
@@ -609,7 +609,7 @@ def test_rpm_package_failure(package_command, first_app_rpm, tmp_path):
 def test_no_changelog(package_command, first_app_rpm, tmp_path):
     """If an packaging doesn't succeed, an error is raised."""
     bundle_path = (
-        tmp_path / "base_path" / "linux" / "somevendor" / "surprising" / "first-app"
+        tmp_path / "base_path" / "build" / "first-app" / "somevendor" / "surprising"
     )
 
     # Remove the changelog file

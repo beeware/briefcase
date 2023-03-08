@@ -70,6 +70,8 @@ def test_output_format_template_context(create_command, first_app_config):
     # Add some properties defined in config finalization
     first_app_config.python_version_tag = "3.X"
     first_app_config.target_image = "somevendor:surprising"
+    first_app_config.target_vendor = "somevendor"
+    first_app_config.target_codename = "surprising"
     first_app_config.target_vendor_base = "basevendor"
     first_app_config.glibc_version = "2.42"
 
@@ -79,7 +81,10 @@ def test_output_format_template_context(create_command, first_app_config):
     # Generate the context
     context = create_command.output_format_template_context(first_app_config)
 
-    # Deb-specific context
-    assert context["python_version"] == "3.X"
-    assert context["docker_base_image"] == "somevendor:surprising"
-    assert context["vendor_base"] == "basevendor"
+    # Context extras are what we expect
+    assert context == {
+        "format": "surprising",
+        "python_version": "3.X",
+        "docker_base_image": "somevendor:surprising",
+        "vendor_base": "basevendor",
+    }

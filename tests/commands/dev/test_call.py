@@ -12,8 +12,9 @@ class DummyDevCommand(DevCommand):
     It only serves to track which actions would be performed.
     """
 
-    platform = "tester"
-    output_format = "dummy"
+    # Platform and format contain upper case to test case normalization
+    platform = "Tester"
+    output_format = "Dummy"
     description = "Dummy dev command"
 
     def __init__(self, *args, **kwargs):

@@ -18,7 +18,7 @@ import pytest
         ),
         # bundle path is replaced with /app
         (
-            "{tmp_path}/platform/path/to/file",
+            "{tmp_path}/bundle/path/to/file",
             "/app/path/to/file",
         ),
         # data path is replaced with ~brutus/.cache/briefcase
@@ -28,7 +28,7 @@ import pytest
         ),
         # Multiple references in a single path are converted
         (
-            "/unmodified/path:{tmp_path}/platform/path/to/file:{tmp_path}/briefcase/path/to/other/file",
+            "/unmodified/path:{tmp_path}/bundle/path/to/file:{tmp_path}/briefcase/path/to/other/file",
             "/unmodified/path:/app/path/to/file:/home/brutus/.cache/briefcase/path/to/other/file",
         ),
     ],

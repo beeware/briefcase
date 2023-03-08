@@ -7,26 +7,14 @@ import pytest
 from briefcase.console import Console, Log
 from briefcase.integrations.docker import DockerAppContext
 from briefcase.integrations.subprocess import Subprocess
-from briefcase.platforms.linux import DockerOpenCommand
+from briefcase.platforms.linux.appimage import LinuxAppImageOpenCommand
 
 from ...utils import create_file
 
 
-class DummyOpenCommand(DockerOpenCommand):
-    # An command that provides the stubs required to satisfy DockerOpenCommand
-    platform = "dummy"
-    output_format = "weird"
-
-    def project_path(self, app):
-        return self.bundle_path(app)
-
-    def binary_path(self, app):
-        return self.platform_path / f"{app.app_name}.bin"
-
-
 @pytest.fixture
-def open_command(tmp_path, first_app_config):
-    command = DummyOpenCommand(
+def open_command(tmp_path):
+    command = LinuxAppImageOpenCommand(
         logger=Log(),
         console=Console(),
         base_path=tmp_path / "base_path",
@@ -60,12 +48,18 @@ def test_open_docker(open_command, first_app_config, tmp_path):
         image_tag=f"briefcase/com.example.first-app:py3.{sys.version_info.minor}",
         dockerfile_path=tmp_path
         / "base_path"
-        / "dummy"
-        / "weird"
-        / "First App"
+        / "build"
+        / "first-app"
+        / "linux"
+        / "appimage"
         / "Dockerfile",
         app_base_path=tmp_path / "base_path",
-        host_platform_path=tmp_path / "base_path" / "dummy",
+        host_bundle_path=tmp_path
+        / "base_path"
+        / "build"
+        / "first-app"
+        / "linux"
+        / "appimage",
         host_data_path=tmp_path / "briefcase",
         python_version=f"3.{sys.version_info.minor}",
     )
@@ -91,7 +85,7 @@ def test_open_docker(open_command, first_app_config, tmp_path):
             "--rm",
             "-it",
             "--volume",
-            f"{open_command.platform_path}:/app:z",
+            f"{open_command.base_path}/build/first-app/linux/appimage:/app:z",
             "--volume",
             f"{open_command.data_path}:/home/brutus/.cache/briefcase:z",
             f"briefcase/com.example.first-app:py3.{sys.version_info.minor}",
@@ -100,8 +94,8 @@ def test_open_docker(open_command, first_app_config, tmp_path):
     )
 
 
-@pytest.mark.skipif(sys.platform != "dummy", reason="Linux specific test")
-def test_open_no_docker_dummy(open_command, first_app_config, tmp_path):
+@pytest.mark.skipif(sys.platform != "linux", reason="Linux specific test")
+def test_open_no_docker_linux(open_command, first_app_config, tmp_path):
     """On Linux, Open runs `xdg-open` on the project folder if we specify --no-
     docker."""
     # Create the desktop file that would be in the project folder.
@@ -120,7 +114,7 @@ def test_open_no_docker_dummy(open_command, first_app_config, tmp_path):
     open_command.tools.subprocess.Popen.assert_called_once_with(
         [
             "xdg-open",
-            tmp_path / "base_path" / "dummy" / "weird" / "First App",
+            tmp_path / "base_path" / "build" / "first-app" / "linux" / "appimage",
         ]
     )
 
@@ -144,6 +138,6 @@ def test_open_no_docker_macOS(open_command, first_app_config, tmp_path):
     open_command.tools.subprocess.Popen.assert_called_once_with(
         [
             "open",
-            tmp_path / "base_path" / "dummy" / "weird" / "First App",
+            tmp_path / "base_path" / "build" / "first-app" / "linux" / "appimage",
         ]
     )

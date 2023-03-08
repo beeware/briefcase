@@ -124,7 +124,7 @@ def test_verify_docker(monkeypatch, package_command, first_app_deb):
 def test_deb_package(package_command, first_app_deb, tmp_path):
     """A deb app can be packaged."""
     bundle_path = (
-        tmp_path / "base_path" / "linux" / "somevendor" / "surprising" / "first-app"
+        tmp_path / "base_path" / "build" / "first-app" / "somevendor" / "surprising"
     )
 
     # Package the app
@@ -173,7 +173,7 @@ def test_deb_package(package_command, first_app_deb, tmp_path):
         bundle_path / "first-app-0.0.1.deb",
         tmp_path
         / "base_path"
-        / "linux"
+        / "dist"
         / "first-app_0.0.1-1~somevendor-surprising_wonky.deb",
     )
 
@@ -181,7 +181,7 @@ def test_deb_package(package_command, first_app_deb, tmp_path):
 def test_deb_re_package(package_command, first_app_deb, tmp_path):
     """A deb app that has previously been packaged can be re-packaged."""
     bundle_path = (
-        tmp_path / "base_path" / "linux" / "somevendor" / "surprising" / "first-app"
+        tmp_path / "base_path" / "build" / "first-app" / "somevendor" / "surprising"
     )
 
     # Create an old control file that will be overwritten.
@@ -235,7 +235,7 @@ def test_deb_re_package(package_command, first_app_deb, tmp_path):
         bundle_path / "first-app-0.0.1.deb",
         tmp_path
         / "base_path"
-        / "linux"
+        / "dist"
         / "first-app_0.0.1-1~somevendor-surprising_wonky.deb",
     )
 
@@ -243,7 +243,7 @@ def test_deb_re_package(package_command, first_app_deb, tmp_path):
 def test_deb_package_no_long_description(package_command, first_app_deb, tmp_path):
     """A deb app without a long description raises an error."""
     bundle_path = (
-        tmp_path / "base_path" / "linux" / "somevendor" / "surprising" / "first-app"
+        tmp_path / "base_path" / "build" / "first-app" / "somevendor" / "surprising"
     )
 
     # Delete the long description
@@ -278,7 +278,7 @@ def test_multiline_long_description(input, output):
 def test_deb_package_extra_requirements(package_command, first_app_deb, tmp_path):
     """A deb app can be packaged with extra runtime requirements and configuration options."""
     bundle_path = (
-        tmp_path / "base_path" / "linux" / "somevendor" / "surprising" / "first-app"
+        tmp_path / "base_path" / "build" / "first-app" / "somevendor" / "surprising"
     )
 
     # Add system requirements and other optional settings.
@@ -332,7 +332,7 @@ def test_deb_package_extra_requirements(package_command, first_app_deb, tmp_path
         bundle_path / "first-app-0.0.1.deb",
         tmp_path
         / "base_path"
-        / "linux"
+        / "dist"
         / "first-app_0.0.1-42~somevendor-surprising_wonky.deb",
     )
 
@@ -340,7 +340,7 @@ def test_deb_package_extra_requirements(package_command, first_app_deb, tmp_path
 def test_deb_package_failure(package_command, first_app_deb, tmp_path):
     """If an packaging doesn't succeed, an error is raised."""
     bundle_path = (
-        tmp_path / "base_path" / "linux" / "somevendor" / "surprising" / "first-app"
+        tmp_path / "base_path" / "build" / "first-app" / "somevendor" / "surprising"
     )
 
     # Mock a packaging failure

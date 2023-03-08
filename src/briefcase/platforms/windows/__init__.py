@@ -20,7 +20,7 @@ class WindowsMixin:
         return self.bundle_path(app) / self.packaging_root / f"{app.formal_name}.exe"
 
     def distribution_path(self, app):
-        return self.platform_path / f"{app.formal_name}-{app.version}.msi"
+        return self.dist_path / f"{app.formal_name}-{app.version}.msi"
 
 
 class WindowsCreateCommand(CreateCommand):

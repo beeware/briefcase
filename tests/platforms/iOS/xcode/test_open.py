@@ -53,9 +53,10 @@ def test_open(open_command, first_app_config, tmp_path):
             "open",
             tmp_path
             / "base_path"
-            / "iOS"
-            / "Xcode"
-            / "First App"
+            / "build"
+            / "first-app"
+            / "ios"
+            / "xcode"
             / "First App.xcodeproj",
         ]
     )

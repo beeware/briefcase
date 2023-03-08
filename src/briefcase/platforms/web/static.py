@@ -41,7 +41,7 @@ class StaticWebMixin:
         return self.project_path(app) / "static" / "wheels"
 
     def distribution_path(self, app):
-        return self.platform_path / f"{app.formal_name}-{app.version}.zip"
+        return self.dist_path / f"{app.formal_name}-{app.version}.web.zip"
 
 
 class StaticWebCreateCommand(StaticWebMixin, CreateCommand):
@@ -386,14 +386,11 @@ class StaticWebPackageCommand(StaticWebMixin, PackageCommand):
         )
 
         with self.input.wait_bar("Building archive..."):
-            with ZipFile(self.distribution_path(app), "w") as archive:
-                for filename in self.project_path(app).glob("**/*"):
-                    self.logger.info(
-                        f"Adding {filename.relative_to(self.project_path(app))}"
-                    )
-                    archive.write(
-                        filename, arcname=filename.relative_to(self.project_path(app))
-                    )
+            self.tools.shutil.make_archive(
+                self.distribution_path(app).with_suffix(""),
+                format="zip",
+                root_dir=self.project_path(app),
+            )
 
 
 class StaticWebPublishCommand(StaticWebMixin, PublishCommand):

@@ -33,7 +33,7 @@ class LinuxFlatpakMixin(LinuxMixin):
     def distribution_path(self, app):
         binary_name = app.formal_name.replace(" ", "_")
         return (
-            self.platform_path
+            self.dist_path
             / f"{binary_name}-{app.version}-{self.tools.host_arch}.flatpak"
         )
 

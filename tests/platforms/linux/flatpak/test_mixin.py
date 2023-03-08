@@ -26,9 +26,10 @@ def test_binary_path(create_command, first_app_config, tmp_path):
     expected_path = (
         tmp_path
         / "base_path"
+        / "build"
+        / "first-app"
         / "linux"
         / "flatpak"
-        / "First App"
         / "com.example.first-app"
     )
     assert binary_path == expected_path
@@ -40,7 +41,7 @@ def test_distribution_path(create_command, first_app_config, tmp_path):
     create_command.tools.host_arch = "gothic"
     distribution_path = create_command.distribution_path(first_app_config)
 
-    expected_path = tmp_path / "base_path" / "linux" / "First_App-0.0.1-gothic.flatpak"
+    expected_path = tmp_path / "base_path" / "dist" / "First_App-0.0.1-gothic.flatpak"
     assert distribution_path == expected_path
 
 

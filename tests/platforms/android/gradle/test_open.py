@@ -71,7 +71,10 @@ def test_open_macOS(open_command, first_app_config, tmp_path):
     open_command(first_app_config)
 
     open_command.tools.subprocess.Popen.assert_called_once_with(
-        ["open", tmp_path / "base_path" / "android" / "gradle" / "First App"]
+        [
+            "open",
+            tmp_path / "base_path" / "build" / "first-app" / "android" / "gradle",
+        ]
     )
 
 
@@ -90,7 +93,10 @@ def test_open_linux(open_command, first_app_config, tmp_path):
     open_command(first_app_config)
 
     open_command.tools.subprocess.Popen.assert_called_once_with(
-        ["xdg-open", tmp_path / "base_path" / "android" / "gradle" / "First App"]
+        [
+            "xdg-open",
+            tmp_path / "base_path" / "build" / "first-app" / "android" / "gradle",
+        ]
     )
 
 
@@ -109,5 +115,5 @@ def test_open_windows(open_command, first_app_config, tmp_path):
     open_command(first_app_config)
 
     open_command.tools.os.startfile.assert_called_once_with(
-        tmp_path / "base_path" / "android" / "gradle" / "First App"
+        tmp_path / "base_path" / "build" / "first-app" / "android" / "gradle"
     )

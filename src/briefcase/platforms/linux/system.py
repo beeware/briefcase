@@ -55,12 +55,15 @@ class LinuxSystemPassiveMixin(LinuxMixin):
             "armv6l": "armhf",
         }.get(self.tools.host_arch, self.tools.host_arch)
 
+    def build_path(self, app):
+        # Override the default build path to use the vendor name,
+        # rather than "linux"
+        return self.base_path / "build" / app.app_name / app.target_vendor
+
     def bundle_path(self, app):
-        # Override the bundle path to use the app name, rather than formal name
-        # This is because Red Hat doesn't like spaces in paths.
-        return (
-            self.platform_path / app.target_vendor / app.target_codename / app.app_name
-        )
+        # Override the default bundle path to use the codename,
+        # rather than "system"
+        return self.build_path(app) / app.target_codename
 
     def project_path(self, app):
         return self.bundle_path(app) / f"{app.app_name}-{app.version}"
@@ -92,7 +95,7 @@ class LinuxSystemPassiveMixin(LinuxMixin):
             )
 
     def distribution_path(self, app):
-        return self.platform_path / self.distribution_filename(app)
+        return self.dist_path / self.distribution_filename(app)
 
     def add_options(self, parser):
         super().add_options(parser)
@@ -465,7 +468,7 @@ to install the missing dependencies, and re-run Briefcase.
                 image_tag=self.docker_image_tag(app),
                 dockerfile_path=self.bundle_path(app) / "Dockerfile",
                 app_base_path=self.base_path,
-                host_platform_path=self.platform_path,
+                host_bundle_path=self.bundle_path(app),
                 host_data_path=self.data_path,
                 python_version=app.python_version_tag,
             )
@@ -502,6 +505,10 @@ class LinuxSystemCreateCommand(LinuxSystemMixin, LocalRequirementsMixin, CreateC
 
     def output_format_template_context(self, app: AppConfig):
         context = super().output_format_template_context(app)
+
+        # Linux system templates use the target codename, rather than
+        # the format "system" as the leaf of the bundle path
+        context["format"] = app.target_codename
 
         # The base template context includes the host Python version;
         # override that with an app-specific Python version, allowing

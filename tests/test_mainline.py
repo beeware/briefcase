@@ -7,7 +7,7 @@ from briefcase.__main__ import main
 from briefcase.commands.create import CreateCommand
 from briefcase.commands.run import RunCommand
 from briefcase.console import Log
-from briefcase.exceptions import BriefcaseTestSuiteFailure
+from briefcase.exceptions import BriefcaseTestSuiteFailure, BriefcaseWarning
 
 from .utils import create_file
 
@@ -79,6 +79,33 @@ def test_command(monkeypatch, tmp_path, capsys):
 
     # No log file was written
     assert len(list(tmp_path.glob(f"{Log.LOG_DIR}/briefcase.*.log"))) == 0
+
+
+def test_command_warning(monkeypatch, pyproject_toml, tmp_path, capsys):
+    """A command can raise a known warning."""
+    # Monkeypatch cwd() to use a test folder.
+    monkeypatch.setattr(Path, "cwd", lambda: tmp_path)
+
+    # Set the test command line
+    monkeypatch.setattr(sys, "argv", ["briefcase", "create"])
+
+    # Monkeypatch a warning into the create command
+    def sort_of_bad_generate_app_template(self, app):
+        raise BriefcaseWarning(error_code=0, msg="This is bad, but not *really* bad")
+
+    monkeypatch.setattr(
+        CreateCommand, "generate_app_template", sort_of_bad_generate_app_template
+    )
+
+    # The error code has been returned
+    assert main() == 0
+
+    # The warning has been output
+    output = capsys.readouterr().out
+    assert output.endswith("\nThis is bad, but not *really* bad\n")
+
+    # Log files are not created for BriefcaseWarnings
+    assert len(list(tmp_path.glob(f"{Log.LOG_DIR}/briefcase.*.create.log"))) == 0
 
 
 def test_command_error(monkeypatch, tmp_path, capsys):

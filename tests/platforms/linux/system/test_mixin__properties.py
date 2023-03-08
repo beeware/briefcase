@@ -26,6 +26,30 @@ def test_linux_arch(create_command, host_arch, linux_arch):
         ("debian", "bullseye"),
     ],
 )
+def test_build_path(
+    create_command,
+    first_app_config,
+    vendor,
+    codename,
+    tmp_path,
+):
+    """The bundle path contains vendor and Python source details."""
+    first_app_config.target_vendor = vendor
+    first_app_config.target_codename = codename
+
+    assert (
+        create_command.build_path(first_app_config)
+        == tmp_path / "base_path" / "build" / "first-app" / vendor
+    )
+
+
+@pytest.mark.parametrize(
+    "vendor, codename",
+    [
+        ("ubuntu", "jammy"),
+        ("debian", "bullseye"),
+    ],
+)
 def test_bundle_path(
     create_command,
     first_app_config,
@@ -39,7 +63,7 @@ def test_bundle_path(
 
     assert (
         create_command.bundle_path(first_app_config)
-        == tmp_path / "base_path" / "linux" / vendor / codename / "first-app"
+        == tmp_path / "base_path" / "build" / "first-app" / vendor / codename
     )
 
 
@@ -56,10 +80,10 @@ def test_binary_path(create_command, first_app_config, tmp_path):
         create_command.binary_path(first_app_config)
         == tmp_path
         / "base_path"
-        / "linux"
+        / "build"
+        / "first-app"
         / "somevendor"
         / "surprising"
-        / "first-app"
         / "first-app-0.0.1"
         / "usr"
         / "bin"
@@ -85,7 +109,7 @@ def test_distribution_path(
 
     assert (
         create_command.distribution_path(first_app_config)
-        == tmp_path / "base_path" / "linux" / filename
+        == tmp_path / "base_path" / "dist" / filename
     )
 
 

@@ -8,7 +8,9 @@ def test_briefcase_required_python_version(base_command):
 def test_bundle_path(base_command, my_app, tmp_path):
     bundle_path = base_command.bundle_path(my_app)
 
-    assert bundle_path == tmp_path / "tester" / "dumdum" / "My App"
+    assert (
+        bundle_path == tmp_path / "base_path" / "build" / "my-app" / "tester" / "dummy"
+    )
 
 
 def test_create_command(base_command):

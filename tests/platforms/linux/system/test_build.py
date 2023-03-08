@@ -40,7 +40,7 @@ def test_build_app(build_command, first_app, tmp_path):
 
     # The bootstrap binary was compiled
     bundle_path = (
-        tmp_path / "base_path" / "linux" / "somevendor" / "surprising" / "first-app"
+        tmp_path / "base_path" / "build" / "first-app" / "somevendor" / "surprising"
     )
     build_command.tools[first_app].app_context.run.assert_called_with(
         ["make", "-C", "bootstrap", "install"],
@@ -102,7 +102,7 @@ def test_build_bootstrap_failed(build_command, first_app, tmp_path):
 
     # An attempt to do the compile occurred.
     bundle_path = (
-        tmp_path / "base_path" / "linux" / "somevendor" / "surprising" / "first-app"
+        tmp_path / "base_path" / "build" / "first-app" / "somevendor" / "surprising"
     )
     build_command.tools[first_app].app_context.run.assert_called_with(
         ["make", "-C", "bootstrap", "install"],
@@ -114,7 +114,7 @@ def test_build_bootstrap_failed(build_command, first_app, tmp_path):
 def test_missing_license(build_command, first_app, tmp_path):
     """If the license source file is missing, an error is raised."""
     bundle_path = (
-        tmp_path / "base_path" / "linux" / "somevendor" / "surprising" / "first-app"
+        tmp_path / "base_path" / "build" / "first-app" / "somevendor" / "surprising"
     )
 
     # Delete the license source
@@ -138,7 +138,7 @@ def test_missing_license(build_command, first_app, tmp_path):
 def test_missing_changelog(build_command, first_app, tmp_path):
     """If the changelog source file is missing, an error is raised."""
     bundle_path = (
-        tmp_path / "base_path" / "linux" / "somevendor" / "surprising" / "first-app"
+        tmp_path / "base_path" / "build" / "first-app" / "somevendor" / "surprising"
     )
 
     # Delete the changelog source
@@ -168,7 +168,7 @@ def test_missing_changelog(build_command, first_app, tmp_path):
 def test_missing_manpage(build_command, first_app, tmp_path):
     """If the manpage source file is missing, an error is raised."""
     bundle_path = (
-        tmp_path / "base_path" / "linux" / "somevendor" / "surprising" / "first-app"
+        tmp_path / "base_path" / "build" / "first-app" / "somevendor" / "surprising"
     )
 
     # Delete the manpage source

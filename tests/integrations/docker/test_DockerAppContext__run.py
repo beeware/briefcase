@@ -18,7 +18,7 @@ def test_simple_call(mock_docker_app_context, tmp_path, capsys):
             "run",
             "--rm",
             "--volume",
-            f"{tmp_path / 'platform'}:/app:z",
+            f"{tmp_path / 'bundle'}:/app:z",
             "--volume",
             f"{tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z",
             "briefcase/com.example.myapp:py3.X",
@@ -53,7 +53,7 @@ def test_interactive(mock_docker_app_context, tmp_path, capsys):
             "--rm",
             "-it",
             "--volume",
-            f"{tmp_path / 'platform'}:/app:z",
+            f"{tmp_path / 'bundle'}:/app:z",
             "--volume",
             f"{tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z",
             "briefcase/com.example.myapp:py3.X",
@@ -90,7 +90,7 @@ def test_extra_mounts(mock_docker_app_context, tmp_path, capsys):
             "run",
             "--rm",
             "--volume",
-            f"{tmp_path / 'platform'}:/app:z",
+            f"{tmp_path / 'bundle'}:/app:z",
             "--volume",
             f"{tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z",
             "--volume",
@@ -125,7 +125,7 @@ def test_cwd(mock_docker_app_context, tmp_path, capsys):
 
     mock_docker_app_context.run(
         ["hello", "world"],
-        cwd=tmp_path / "platform" / "foobar",
+        cwd=tmp_path / "bundle" / "foobar",
     )
 
     mock_docker_app_context.tools.subprocess._subprocess.Popen.assert_called_once_with(
@@ -134,7 +134,7 @@ def test_cwd(mock_docker_app_context, tmp_path, capsys):
             "run",
             "--rm",
             "--volume",
-            f"{tmp_path / 'platform'}:/app:z",
+            f"{tmp_path / 'bundle'}:/app:z",
             "--volume",
             f"{tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z",
             "--workdir",
@@ -178,7 +178,7 @@ def test_call_with_arg_and_env(mock_docker_app_context, tmp_path, capsys):
             "run",
             "--rm",
             "--volume",
-            f"{tmp_path / 'platform'}:/app:z",
+            f"{tmp_path / 'bundle'}:/app:z",
             "--volume",
             f"{tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z",
             "--env",
@@ -216,7 +216,7 @@ def test_call_with_path_arg_and_env(mock_docker_app_context, tmp_path, capsys):
         ["hello", tmp_path / "location"],
         env={
             "MAGIC": "True",
-            "PATH": f"/somewhere/safe:{tmp_path / 'briefcase' / 'tools'}:{tmp_path / 'platform' / 'location'}",
+            "PATH": f"/somewhere/safe:{tmp_path / 'briefcase' / 'tools'}:{tmp_path / 'bundle' / 'location'}",
         },
         cwd=tmp_path / "cwd",
     )
@@ -227,7 +227,7 @@ def test_call_with_path_arg_and_env(mock_docker_app_context, tmp_path, capsys):
             "run",
             "--rm",
             "--volume",
-            f"{tmp_path / 'platform'}:/app:z",
+            f"{tmp_path / 'bundle'}:/app:z",
             "--volume",
             f"{tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z",
             "--env",
@@ -267,7 +267,7 @@ def test_interactive_with_path_arg_and_env_and_mounts(
         ["hello", tmp_path / "location"],
         env={
             "MAGIC": "True",
-            "PATH": f"/somewhere/safe:{tmp_path / 'briefcase' / 'tools'}:{tmp_path / 'platform' / 'location'}",
+            "PATH": f"/somewhere/safe:{tmp_path / 'briefcase' / 'tools'}:{tmp_path / 'bundle' / 'location'}",
         },
         cwd=tmp_path / "cwd",
         interactive=True,
@@ -285,7 +285,7 @@ def test_interactive_with_path_arg_and_env_and_mounts(
             "--rm",
             "-it",
             "--volume",
-            f"{tmp_path / 'platform'}:/app:z",
+            f"{tmp_path / 'bundle'}:/app:z",
             "--volume",
             f"{tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z",
             "--volume",
@@ -330,7 +330,7 @@ def test_simple_verbose_call(mock_docker_app_context, tmp_path, capsys):
             "run",
             "--rm",
             "--volume",
-            f"{tmp_path / 'platform'}:/app:z",
+            f"{tmp_path / 'bundle'}:/app:z",
             "--volume",
             f"{tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z",
             "briefcase/com.example.myapp:py3.X",
@@ -351,7 +351,7 @@ def test_simple_verbose_call(mock_docker_app_context, tmp_path, capsys):
         "Docker| >>> Running Command:\n"
         "Docker| >>>     docker run "
         "--rm "
-        f"--volume {tmp_path / 'platform'}:/app:z "
+        f"--volume {tmp_path / 'bundle'}:/app:z "
         f"--volume {tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z "
         "briefcase/com.example.myapp:py3.X "
         "hello world\n"

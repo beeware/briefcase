@@ -230,7 +230,7 @@ class DockerAppContext(Tool):
         self.app = app
 
         self.app_base_path = None
-        self.host_platform_path = None
+        self.host_bundle_path = None
         self.host_data_path = None
         self.image_tag = None
         self.python_version = None
@@ -248,7 +248,7 @@ class DockerAppContext(Tool):
         image_tag: str,
         dockerfile_path: Path,
         app_base_path: Path,
-        host_platform_path: Path,
+        host_bundle_path: Path,
         host_data_path: Path,
         python_version: str,
     ):
@@ -262,7 +262,7 @@ class DockerAppContext(Tool):
         :param image_tag: Tag to assign to Docker image
         :param dockerfile_path: Dockerfile to use to build Docker image
         :param app_base_path: Base directory path for App
-        :param host_platform_path: Base directory for where App is built
+        :param host_bundle_path: Base directory for where App is built
         :param host_data_path: Base directory for host's Briefcase data
         :param python_version: Version of python, e.g. 3.10
         :returns: A wrapper for a Docker app context.
@@ -278,7 +278,7 @@ class DockerAppContext(Tool):
             image_tag=image_tag,
             dockerfile_path=dockerfile_path,
             app_base_path=app_base_path,
-            host_platform_path=host_platform_path,
+            host_bundle_path=host_bundle_path,
             host_data_path=host_data_path,
             python_version=python_version,
         )
@@ -289,13 +289,13 @@ class DockerAppContext(Tool):
         image_tag: str,
         dockerfile_path: Path,
         app_base_path: Path,
-        host_platform_path: Path,
+        host_bundle_path: Path,
         host_data_path: Path,
         python_version: str,
     ):
         """Create/update the Docker image from the app's Dockerfile."""
         self.app_base_path = app_base_path
-        self.host_platform_path = host_platform_path
+        self.host_bundle_path = host_bundle_path
         self.host_data_path = host_data_path
         self.image_tag = image_tag
         self.python_version = python_version
@@ -343,7 +343,7 @@ class DockerAppContext(Tool):
 
         Converts:
         * any reference to sys.executable into the python executable in the docker container
-        * any path in <platform path> into the equivalent stemming from /app
+        * any path in <build path> into the equivalent stemming from /app
         * any path in <data path> into the equivalent in ~/.cache/briefcase
 
         :param arg: The string argument to convert to dockerized paths
@@ -351,7 +351,7 @@ class DockerAppContext(Tool):
         """
         if arg == sys.executable:
             return f"python{self.python_version}"
-        arg = arg.replace(os.fsdecode(self.host_platform_path), "/app")
+        arg = arg.replace(os.fsdecode(self.host_bundle_path), "/app")
         arg = arg.replace(os.fsdecode(self.host_data_path), self.docker_data_path)
 
         return arg
@@ -386,7 +386,7 @@ class DockerAppContext(Tool):
         docker_args.extend(
             [
                 "--volume",
-                f"{self.host_platform_path}:/app:z",
+                f"{self.host_bundle_path}:/app:z",
                 "--volume",
                 f"{self.host_data_path}:{self.docker_data_path}:z",
             ]

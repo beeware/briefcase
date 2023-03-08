@@ -9,8 +9,9 @@ class DummyCommand(BaseCommand):
     """A dummy command to test the BaseCommand interface."""
 
     command = ("dummy",)
-    platform = "tester"
-    output_format = "dumdum"
+    # Platform and format contain upper case to test case normalization
+    platform = "Tester"
+    output_format = "Dummy"
     description = "Dummy base command"
 
     def __init__(self, *args, **kwargs):
@@ -46,7 +47,7 @@ class DummyCommand(BaseCommand):
 
 @pytest.fixture
 def base_command(tmp_path):
-    command = DummyCommand(base_path=tmp_path)
+    command = DummyCommand(base_path=tmp_path / "base_path")
     command.parse_options(["-r", "default"])
     return command
 

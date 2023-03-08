@@ -201,11 +201,11 @@ def test_create_app_before_start(run_command, first_app_config):
     ]
 
 
-def test_build_app_before_start(run_command, first_app_uncompiled):
-    """The run command can request that an uncompiled app is compiled first."""
+def test_build_app_before_start(run_command, first_app_unbuilt):
+    """The run command can request that an unbuilt app is compiled first."""
     # Add a single app
     run_command.apps = {
-        "first": first_app_uncompiled,
+        "first": first_app_unbuilt,
     }
 
     # Configure no command line options
@@ -377,11 +377,11 @@ def test_update_app_resources(run_command, first_app):
     ]
 
 
-def test_update_uncompiled_app(run_command, first_app_uncompiled):
-    """The run command can request that an uncompiled app is updated first."""
+def test_update_unbuilt_app(run_command, first_app_unbuilt):
+    """The run command can request that an unbuilt app is updated first."""
     # Add a single app
     run_command.apps = {
-        "first": first_app_uncompiled,
+        "first": first_app_unbuilt,
     }
 
     # Configure an update option

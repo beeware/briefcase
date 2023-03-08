@@ -38,15 +38,15 @@ class LinuxAppImagePassiveMixin(LinuxMixin):
     def project_path(self, app):
         return self.bundle_path(app)
 
+    def binary_name(self, app):
+        safe_name = app.formal_name.replace(" ", "_")
+        return f"{safe_name}-{app.version}-{self.tools.host_arch}.AppImage"
+
     def binary_path(self, app):
-        binary_name = app.formal_name.replace(" ", "_")
-        return (
-            self.platform_path
-            / f"{binary_name}-{app.version}-{self.tools.host_arch}.AppImage"
-        )
+        return self.bundle_path(app) / self.binary_name(app)
 
     def distribution_path(self, app):
-        return self.binary_path(app)
+        return self.dist_path / self.binary_name(app)
 
     def add_options(self, parser):
         super().add_options(parser)
@@ -100,7 +100,7 @@ class LinuxAppImageMostlyPassiveMixin(LinuxAppImagePassiveMixin):
                 image_tag=self.docker_image_tag(app),
                 dockerfile_path=self.bundle_path(app) / "Dockerfile",
                 app_base_path=self.base_path,
-                host_platform_path=self.platform_path,
+                host_bundle_path=self.bundle_path(app),
                 host_data_path=self.data_path,
                 python_version=self.python_version_tag,
             )
@@ -244,7 +244,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
                     + additional_args,
                     env=env,
                     check=True,
-                    cwd=self.platform_path,
+                    cwd=self.bundle_path(app),
                 )
 
                 # Make the binary executable.
@@ -297,6 +297,13 @@ class LinuxAppImageRunCommand(LinuxAppImagePassiveMixin, RunCommand):
 
 class LinuxAppImagePackageCommand(LinuxAppImageMixin, PackageCommand):
     description = "Package a Linux AppImage."
+
+    def package_app(self, app: AppConfig, **kwargs):
+        """Package an AppImage.
+
+        :param app: The application to package
+        """
+        self.tools.shutil.copy(self.binary_path(app), self.distribution_path(app))
 
 
 class LinuxAppImagePublishCommand(LinuxAppImageMixin, PublishCommand):

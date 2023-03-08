@@ -66,9 +66,10 @@ def test_build_app(
     with (
         tmp_path
         / "base_path"
+        / "build"
+        / "first-app"
         / "android"
         / "gradle"
-        / "First App"
         / "res"
         / "briefcase.xml"
     ).open() as f:
@@ -121,9 +122,10 @@ def test_build_app_test_mode(
     with (
         tmp_path
         / "base_path"
+        / "build"
+        / "first-app"
         / "android"
         / "gradle"
-        / "First App"
         / "res"
         / "briefcase.xml"
     ).open() as f:
