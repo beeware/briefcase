@@ -1,7 +1,7 @@
 import pytest
 
 from briefcase.console import Console, Log
-from briefcase.exceptions import BriefcaseCommandError
+from briefcase.exceptions import NoDistributionArtefact
 from briefcase.platforms.iOS.xcode import iOSXcodeCreateCommand
 
 
@@ -33,7 +33,7 @@ def test_binary_path(create_command, first_app_config, tmp_path):
 
 def test_distribution_path(create_command, first_app_config, tmp_path):
     with pytest.raises(
-        BriefcaseCommandError,
-        match=r"Can't generate distribution artefacts for iOS apps.",
+        NoDistributionArtefact,
+        match=r"WARNING: No distributable artefact has been generated",
     ):
         create_command.distribution_path(first_app_config)
