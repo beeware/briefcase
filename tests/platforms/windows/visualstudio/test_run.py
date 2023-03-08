@@ -44,9 +44,10 @@ def test_run_app(run_command, first_app_config, tmp_path):
             os.fsdecode(
                 tmp_path
                 / "base_path"
+                / "build"
+                / "first-app"
                 / "windows"
-                / "VisualStudio"
-                / "First App"
+                / "visualstudio"
                 / "x64"
                 / "Release"
                 / "First App.exe"
@@ -87,9 +88,10 @@ def test_run_app_with_args(run_command, first_app_config, tmp_path):
             os.fsdecode(
                 tmp_path
                 / "base_path"
+                / "build"
+                / "first-app"
                 / "windows"
-                / "VisualStudio"
-                / "First App"
+                / "visualstudio"
                 / "x64"
                 / "Release"
                 / "First App.exe"
@@ -128,9 +130,10 @@ def test_run_app_test_mode(run_command, first_app_config, tmp_path):
             os.fsdecode(
                 tmp_path
                 / "base_path"
+                / "build"
+                / "first-app"
                 / "windows"
-                / "VisualStudio"
-                / "First App"
+                / "visualstudio"
                 / "x64"
                 / "Release"
                 / "First App.exe"
@@ -173,9 +176,10 @@ def test_run_app_test_mode_with_args(run_command, first_app_config, tmp_path):
             os.fsdecode(
                 tmp_path
                 / "base_path"
+                / "build"
+                / "first-app"
                 / "windows"
-                / "VisualStudio"
-                / "First App"
+                / "visualstudio"
                 / "x64"
                 / "Release"
                 / "First App.exe"

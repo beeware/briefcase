@@ -223,6 +223,8 @@ class CreateCommand(BaseCommand):
         # Augment with some extra fields.
         extra_context.update(
             {
+                # Ensure the output format is in the case we expect
+                "format": self.output_format.lower(),
                 # Properties of the generating environment
                 # The full Python version string, including minor and dev/a/b/c suffixes (e.g., 3.11.0rc2)
                 "python_version": platform.python_version(),

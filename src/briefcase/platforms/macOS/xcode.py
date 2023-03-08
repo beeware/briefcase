@@ -36,20 +36,7 @@ class macOSXcodeMixin(macOSMixin):
         return self.bundle_path(app) / f"{app.formal_name}.xcodeproj"
 
     def binary_path(self, app):
-        return (
-            self.platform_path
-            / self.output_format
-            / f"{app.formal_name}"
-            / "build"
-            / "Release"
-            / f"{app.formal_name}.app"
-        )
-
-    def distribution_path(self, app, packaging_format):
-        if packaging_format == "dmg":
-            return self.platform_path / f"{app.formal_name}-{app.version}.dmg"
-        else:
-            return self.binary_path(app)
+        return self.bundle_path(app) / "build" / "Release" / f"{app.formal_name}.app"
 
 
 class macOSXcodeCreateCommand(macOSXcodeMixin, CreateCommand):

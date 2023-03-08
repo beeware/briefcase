@@ -74,21 +74,6 @@ class GradleMixin:
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def bundle_path(self, app):
-        """The path to the bundle for the app in the output format.
-
-        The bundle is the template-generated source form of the app.
-        The path will usually be a directory, the existence of which is
-        indicative that the template has been rolled out for an app.
-
-        This overrides the default behavior, using a "safe" formal name
-
-        :param app: The app config
-        """
-        return (
-            self.platform_path / self.output_format / safe_formal_name(app.formal_name)
-        )
-
     def project_path(self, app):
         return self.bundle_path(app)
 
@@ -103,16 +88,8 @@ class GradleMixin:
             / "app-debug.apk"
         )
 
-    def distribution_path(self, app, packaging_format):
-        return (
-            self.bundle_path(app)
-            / "app"
-            / "build"
-            / "outputs"
-            / "bundle"
-            / "release"
-            / "app-release.aab"
-        )
+    def distribution_path(self, app):
+        return self.dist_path / f"{app.formal_name}-{app.version}.aab"
 
     def run_gradle(self, app, args):
         # Gradle may install the emulator via the dependency chain build-tools > tools >
@@ -414,6 +391,18 @@ class GradlePackageCommand(GradleMixin, PackageCommand):
                 self.run_gradle(app, ["bundleRelease"])
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError("Error while building project.") from e
+
+        # Move artefact to final location.
+        self.tools.shutil.move(
+            self.bundle_path(app)
+            / "app"
+            / "build"
+            / "outputs"
+            / "bundle"
+            / "release"
+            / "app-release.aab",
+            self.distribution_path(app),
+        )
 
 
 class GradlePublishCommand(GradleMixin, PublishCommand):

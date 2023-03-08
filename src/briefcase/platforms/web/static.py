@@ -40,8 +40,8 @@ class StaticWebMixin:
     def wheel_path(self, app):
         return self.project_path(app) / "static" / "wheels"
 
-    def distribution_path(self, app, packaging_format):
-        return self.platform_path / f"{app.formal_name}-{app.version}.zip"
+    def distribution_path(self, app):
+        return self.dist_path / f"{app.formal_name}-{app.version}.web.zip"
 
 
 class StaticWebCreateCommand(StaticWebMixin, CreateCommand):
@@ -375,12 +375,10 @@ class StaticWebPackageCommand(StaticWebMixin, PackageCommand):
     def default_packaging_format(self):
         return "zip"
 
-    def package_app(self, app: AppConfig, packaging_format: str, **kwargs):
+    def package_app(self, app: AppConfig, **kwargs):
         """Package an app for distribution.
 
         :param app: The app to package.
-        :param packaging_format: The packaging format; the only supported value
-            is ``zip``, enforced at the command level.
         """
         self.logger.info(
             "Packaging web app for distribution...",
@@ -388,16 +386,11 @@ class StaticWebPackageCommand(StaticWebMixin, PackageCommand):
         )
 
         with self.input.wait_bar("Building archive..."):
-            with ZipFile(
-                self.distribution_path(app, packaging_format=packaging_format), "w"
-            ) as archive:
-                for filename in self.project_path(app).glob("**/*"):
-                    self.logger.info(
-                        f"Adding {filename.relative_to(self.project_path(app))}"
-                    )
-                    archive.write(
-                        filename, arcname=filename.relative_to(self.project_path(app))
-                    )
+            self.tools.shutil.make_archive(
+                self.distribution_path(app).with_suffix(""),
+                format="zip",
+                root_dir=self.project_path(app),
+            )
 
 
 class StaticWebPublishCommand(StaticWebMixin, PublishCommand):

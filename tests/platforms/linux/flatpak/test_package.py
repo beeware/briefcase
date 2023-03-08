@@ -34,6 +34,6 @@ def test_package(package_command, first_app_config, tmp_path):
         bundle="com.example",
         app_name="first-app",
         version="0.0.1",
-        build_path=tmp_path / "base_path" / "linux" / "flatpak" / "First App",
-        output_path=tmp_path / "base_path" / "linux" / "First_App-0.0.1-gothic.flatpak",
+        build_path=tmp_path / "base_path" / "build" / "first-app" / "linux" / "flatpak",
+        output_path=tmp_path / "base_path" / "dist" / "First_App-0.0.1-gothic.flatpak",
     )

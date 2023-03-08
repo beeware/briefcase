@@ -41,9 +41,10 @@ def test_open(open_command, first_app_config, tmp_path):
             "open",
             tmp_path
             / "base_path"
-            / "macOS"
+            / "build"
+            / "first-app"
+            / "macos"
             / "app"
-            / "First App"
             / "First App.app"
             / "Contents",
         ]

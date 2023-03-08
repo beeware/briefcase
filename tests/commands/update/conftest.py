@@ -4,6 +4,8 @@ from briefcase.commands import UpdateCommand
 from briefcase.config import AppConfig
 from briefcase.console import Console, Log
 
+from ...utils import create_file
+
 
 class DummyUpdateCommand(UpdateCommand):
     """A dummy update command that doesn't actually do anything.
@@ -11,8 +13,9 @@ class DummyUpdateCommand(UpdateCommand):
     It only serves to track which actions would be performed.
     """
 
-    platform = "tester"
-    output_format = "dummy"
+    # Platform and format contain upper case to test case normalization
+    platform = "Tester"
+    output_format = "Dummy"
     description = "Dummy update command"
 
     def __init__(self, *args, apps, **kwargs):
@@ -22,14 +25,8 @@ class DummyUpdateCommand(UpdateCommand):
 
         self.actions = []
 
-    def bundle_path(self, app):
-        return self.platform_path / f"{app.app_name}.dummy"
-
     def binary_path(self, app):
-        return self.platform_path / f"{app.app_name}.dummy.bin"
-
-    def distribution_path(self, app, packaging_format):
-        return self.platform_path / f"{app.app_name}.dummy.{packaging_format}"
+        return self.bundle_path(app) / f"{app.app_name}.bin"
 
     def verify_host(self):
         super().verify_host()
@@ -43,18 +40,15 @@ class DummyUpdateCommand(UpdateCommand):
     # with versions that we can use to track actions performed.
     def install_app_requirements(self, app, test_mode):
         self.actions.append(("requirements", app, test_mode))
-        with (self.bundle_path(app) / "requirements").open("w") as f:
-            f.write("app requirements")
+        create_file(self.bundle_path(app) / "requirements", "app requirements")
 
     def install_app_code(self, app, test_mode):
         self.actions.append(("code", app, test_mode))
-        with (self.bundle_path(app) / "code.py").open("w") as f:
-            f.write("print('app')")
+        create_file(self.bundle_path(app) / "code.py", "print('app')")
 
     def install_app_resources(self, app):
         self.actions.append(("resources", app))
-        with (self.bundle_path(app) / "resources").open("w") as f:
-            f.write("app resources")
+        create_file(self.bundle_path(app) / "resources", "app resources")
 
     def cleanup_app_content(self, app):
         self.actions.append(("cleanup", app))
@@ -63,7 +57,7 @@ class DummyUpdateCommand(UpdateCommand):
 @pytest.fixture
 def update_command(tmp_path):
     return DummyUpdateCommand(
-        base_path=tmp_path,
+        base_path=tmp_path / "base_path",
         apps={
             "first": AppConfig(
                 app_name="first",
@@ -86,16 +80,28 @@ def update_command(tmp_path):
 @pytest.fixture
 def first_app(tmp_path):
     """Populate skeleton app content for the first app."""
-    bundle_dir = tmp_path / "tester" / "first.dummy"
-    bundle_dir.mkdir(parents=True)
-    with (bundle_dir / "Content").open("w") as f:
-        f.write("first app.bundle")
+    create_file(
+        tmp_path
+        / "base_path"
+        / "build"
+        / "first"
+        / "tester"
+        / "dummy"
+        / "first.bundle",
+        "first.bundle",
+    )
 
 
 @pytest.fixture
 def second_app(tmp_path):
     """Populate skeleton app content for the second app."""
-    bundle_dir = tmp_path / "tester" / "second.dummy"
-    bundle_dir.mkdir(parents=True)
-    with (bundle_dir / "Content").open("w") as f:
-        f.write("second app.bundle")
+    create_file(
+        tmp_path
+        / "base_path"
+        / "build"
+        / "second"
+        / "tester"
+        / "dummy"
+        / "second.bundle",
+        "second.bundle",
+    )

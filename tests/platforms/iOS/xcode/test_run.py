@@ -129,9 +129,10 @@ def test_run_app_simulator_booted(run_command, first_app_config, tmp_path):
                     "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
                     tmp_path
                     / "base_path"
-                    / "iOS"
-                    / "Xcode"
-                    / "First App"
+                    / "build"
+                    / "first-app"
+                    / "ios"
+                    / "xcode"
                     / "build"
                     / "Debug-iphonesimulator"
                     / "First App.app",
@@ -245,9 +246,10 @@ def test_run_app_with_passthrough(run_command, first_app_config, tmp_path):
                     "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
                     tmp_path
                     / "base_path"
-                    / "iOS"
-                    / "Xcode"
-                    / "First App"
+                    / "build"
+                    / "first-app"
+                    / "ios"
+                    / "xcode"
                     / "build"
                     / "Debug-iphonesimulator"
                     / "First App.app",
@@ -366,9 +368,10 @@ def test_run_app_simulator_shut_down(run_command, first_app_config, tmp_path):
                     "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
                     tmp_path
                     / "base_path"
-                    / "iOS"
-                    / "Xcode"
-                    / "First App"
+                    / "build"
+                    / "first-app"
+                    / "ios"
+                    / "xcode"
                     / "build"
                     / "Debug-iphonesimulator"
                     / "First App.app",
@@ -499,9 +502,10 @@ def test_run_app_simulator_shutting_down(run_command, first_app_config, tmp_path
                     "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
                     tmp_path
                     / "base_path"
-                    / "iOS"
-                    / "Xcode"
-                    / "First App"
+                    / "build"
+                    / "first-app"
+                    / "ios"
+                    / "xcode"
                     / "build"
                     / "Debug-iphonesimulator"
                     / "First App.app",
@@ -768,9 +772,10 @@ def test_run_app_simulator_install_failure(run_command, first_app_config, tmp_pa
                     "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
                     tmp_path
                     / "base_path"
-                    / "iOS"
-                    / "Xcode"
-                    / "First App"
+                    / "build"
+                    / "first-app"
+                    / "ios"
+                    / "xcode"
                     / "build"
                     / "Debug-iphonesimulator"
                     / "First App.app",
@@ -858,9 +863,10 @@ def test_run_app_simulator_launch_failure(run_command, first_app_config, tmp_pat
                     "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
                     tmp_path
                     / "base_path"
-                    / "iOS"
-                    / "Xcode"
-                    / "First App"
+                    / "build"
+                    / "first-app"
+                    / "ios"
+                    / "xcode"
                     / "build"
                     / "Debug-iphonesimulator"
                     / "First App.app",
@@ -976,9 +982,10 @@ def test_run_app_simulator_no_pid(run_command, first_app_config, tmp_path):
                     "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
                     tmp_path
                     / "base_path"
-                    / "iOS"
-                    / "Xcode"
-                    / "First App"
+                    / "build"
+                    / "first-app"
+                    / "ios"
+                    / "xcode"
                     / "build"
                     / "Debug-iphonesimulator"
                     / "First App.app",
@@ -1096,9 +1103,10 @@ def test_run_app_simulator_non_integer_pid(run_command, first_app_config, tmp_pa
                     "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
                     tmp_path
                     / "base_path"
-                    / "iOS"
-                    / "Xcode"
-                    / "First App"
+                    / "build"
+                    / "first-app"
+                    / "ios"
+                    / "xcode"
                     / "build"
                     / "Debug-iphonesimulator"
                     / "First App.app",
@@ -1190,9 +1198,10 @@ def test_run_app_test_mode(run_command, first_app_config, tmp_path):
                     "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
                     tmp_path
                     / "base_path"
-                    / "iOS"
-                    / "Xcode"
-                    / "First App"
+                    / "build"
+                    / "first-app"
+                    / "ios"
+                    / "xcode"
                     / "build"
                     / "Debug-iphonesimulator"
                     / "First App.app",
@@ -1296,9 +1305,10 @@ def test_run_app_test_mode_with_passthrough(run_command, first_app_config, tmp_p
                     "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
                     tmp_path
                     / "base_path"
-                    / "iOS"
-                    / "Xcode"
-                    / "First App"
+                    / "build"
+                    / "first-app"
+                    / "ios"
+                    / "xcode"
                     / "build"
                     / "Debug-iphonesimulator"
                     / "First App.app",

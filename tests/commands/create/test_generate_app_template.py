@@ -20,6 +20,7 @@ from briefcase.exceptions import (
 @pytest.fixture
 def full_context():
     return {
+        "format": "dummy",
         "app_name": "my-app",
         "formal_name": "My App",
         "bundle": "com.example",
@@ -69,6 +70,7 @@ def test_default_template(
     full_context,
     briefcase_version,
     expected_branch,
+    tmp_path,
 ):
     """Absent of other information, the briefcase version (without suffixes) is used as
     the template branch."""
@@ -84,10 +86,10 @@ def test_default_template(
 
     # Cookiecutter was invoked with the expected template name and context.
     create_command.tools.cookiecutter.assert_called_once_with(
-        "https://github.com/beeware/briefcase-tester-dummy-template.git",
+        "https://github.com/beeware/briefcase-Tester-Dummy-template.git",
         no_input=True,
         checkout=expected_branch,
-        output_dir=os.fsdecode(create_command.platform_path),
+        output_dir=os.fsdecode(tmp_path / "base_path" / "build" / "my-app" / "tester"),
         extra_context=full_context,
     )
 
@@ -102,6 +104,7 @@ def test_default_template_dev(
     myapp,
     full_context,
     briefcase_version,
+    tmp_path,
 ):
     """In a dev version, template will fall back to the 'main' branch if a versioned
     template doesn't exist."""
@@ -126,17 +129,21 @@ def test_default_template_dev(
     # Cookiecutter was invoked with the expected template name and context.
     assert create_command.tools.cookiecutter.mock_calls == [
         mock.call(
-            "https://github.com/beeware/briefcase-tester-dummy-template.git",
+            "https://github.com/beeware/briefcase-Tester-Dummy-template.git",
             no_input=True,
             checkout="v37.42.7",
-            output_dir=os.fsdecode(create_command.platform_path),
+            output_dir=os.fsdecode(
+                tmp_path / "base_path" / "build" / "my-app" / "tester"
+            ),
             extra_context=full_context,
         ),
         mock.call(
-            "https://github.com/beeware/briefcase-tester-dummy-template.git",
+            "https://github.com/beeware/briefcase-Tester-Dummy-template.git",
             no_input=True,
             checkout="main",
-            output_dir=os.fsdecode(create_command.platform_path),
+            output_dir=os.fsdecode(
+                tmp_path / "base_path" / "build" / "my-app" / "tester"
+            ),
             extra_context=full_context,
         ),
     ]
@@ -152,6 +159,7 @@ def test_default_template_dev_explicit_branch(
     myapp,
     full_context,
     briefcase_version,
+    tmp_path,
 ):
     """In a dev version, if an explicit branch is provided, it is used."""
     # Set the Briefcase version
@@ -171,10 +179,12 @@ def test_default_template_dev_explicit_branch(
     # Cookiecutter was invoked (once) with the expected template name and context.
     assert create_command.tools.cookiecutter.mock_calls == [
         mock.call(
-            "https://github.com/beeware/briefcase-tester-dummy-template.git",
+            "https://github.com/beeware/briefcase-Tester-Dummy-template.git",
             no_input=True,
             checkout=branch,
-            output_dir=os.fsdecode(create_command.platform_path),
+            output_dir=os.fsdecode(
+                tmp_path / "base_path" / "build" / "my-app" / "tester"
+            ),
             extra_context=full_context,
         ),
     ]
@@ -190,6 +200,7 @@ def test_default_template_dev_explicit_invalid_branch(
     myapp,
     full_context,
     briefcase_version,
+    tmp_path,
 ):
     """In a dev version, if an explicit (but invalid) branch is provided, the fallback
     to the 'main' branch will not occur."""
@@ -216,16 +227,18 @@ def test_default_template_dev_explicit_invalid_branch(
     # Cookiecutter was invoked (once) with the expected template name and context.
     assert create_command.tools.cookiecutter.mock_calls == [
         mock.call(
-            "https://github.com/beeware/briefcase-tester-dummy-template.git",
+            "https://github.com/beeware/briefcase-Tester-Dummy-template.git",
             no_input=True,
             checkout=branch,
-            output_dir=os.fsdecode(create_command.platform_path),
+            output_dir=os.fsdecode(
+                tmp_path / "base_path" / "build" / "my-app" / "tester"
+            ),
             extra_context=full_context,
         ),
     ]
 
 
-def test_explicit_branch(monkeypatch, create_command, myapp, full_context):
+def test_explicit_branch(monkeypatch, create_command, myapp, full_context, tmp_path):
     """user can choose which branch to take the template from."""
     # Set the Briefcase version
     monkeypatch.setattr(briefcase, "__version__", "37.42.7")
@@ -243,15 +256,15 @@ def test_explicit_branch(monkeypatch, create_command, myapp, full_context):
 
     # Cookiecutter was invoked with the expected template name and context.
     create_command.tools.cookiecutter.assert_called_once_with(
-        "https://github.com/beeware/briefcase-tester-dummy-template.git",
+        "https://github.com/beeware/briefcase-Tester-Dummy-template.git",
         no_input=True,
         checkout=branch,
-        output_dir=os.fsdecode(create_command.platform_path),
+        output_dir=os.fsdecode(tmp_path / "base_path" / "build" / "my-app" / "tester"),
         extra_context=full_context,
     )
 
 
-def test_platform_exists(monkeypatch, create_command, myapp, full_context):
+def test_platform_exists(monkeypatch, create_command, myapp, full_context, tmp_path):
     """If the platform directory already exists, it's ok."""
     # Set the Briefcase version
     monkeypatch.setattr(briefcase, "__version__", "37.42.7")
@@ -260,23 +273,25 @@ def test_platform_exists(monkeypatch, create_command, myapp, full_context):
     # a cache path (yet).
     create_command.tools.git.Repo.side_effect = git_exceptions.NoSuchPathError
 
-    # Create the platform directory
-    create_command.platform_path.mkdir(parents=True)
+    # Create the build directory
+    create_command.build_path(myapp).mkdir(parents=True)
 
     # Generate the template.
     create_command.generate_app_template(myapp)
 
     # Cookiecutter was invoked with the expected template name and context.
     create_command.tools.cookiecutter.assert_called_once_with(
-        "https://github.com/beeware/briefcase-tester-dummy-template.git",
+        "https://github.com/beeware/briefcase-Tester-Dummy-template.git",
         no_input=True,
         checkout="v37.42.7",
-        output_dir=os.fsdecode(create_command.platform_path),
+        output_dir=os.fsdecode(tmp_path / "base_path" / "build" / "my-app" / "tester"),
         extra_context=full_context,
     )
 
 
-def test_explicit_repo_template(monkeypatch, create_command, myapp, full_context):
+def test_explicit_repo_template(
+    monkeypatch, create_command, myapp, full_context, tmp_path
+):
     """If a template is specified in the app config, it is used."""
     # Set the Briefcase version
     monkeypatch.setattr(briefcase, "__version__", "37.42.7")
@@ -295,7 +310,7 @@ def test_explicit_repo_template(monkeypatch, create_command, myapp, full_context
         "https://example.com/magic/special-template.git",
         no_input=True,
         checkout="v37.42.7",
-        output_dir=os.fsdecode(create_command.platform_path),
+        output_dir=os.fsdecode(tmp_path / "base_path" / "build" / "my-app" / "tester"),
         extra_context=full_context,
     )
 
@@ -305,6 +320,7 @@ def test_explicit_repo_template_and_branch(
     create_command,
     myapp,
     full_context,
+    tmp_path,
 ):
     """If a template and branch is specified in the app config, it is used."""
     # Set the Briefcase version
@@ -327,12 +343,14 @@ def test_explicit_repo_template_and_branch(
         "https://example.com/magic/special-template.git",
         no_input=True,
         checkout=branch,
-        output_dir=os.fsdecode(create_command.platform_path),
+        output_dir=os.fsdecode(tmp_path / "base_path" / "build" / "my-app" / "tester"),
         extra_context=full_context,
     )
 
 
-def test_explicit_local_template(monkeypatch, create_command, myapp, full_context):
+def test_explicit_local_template(
+    monkeypatch, create_command, myapp, full_context, tmp_path
+):
     """If a local template path is specified in the app config, it is used."""
     # Set the Briefcase version
     monkeypatch.setattr(briefcase, "__version__", "37.42.7")
@@ -347,7 +365,7 @@ def test_explicit_local_template(monkeypatch, create_command, myapp, full_contex
         "/path/to/special-template",
         no_input=True,
         checkout="v37.42.7",
-        output_dir=os.fsdecode(create_command.platform_path),
+        output_dir=os.fsdecode(tmp_path / "base_path" / "build" / "my-app" / "tester"),
         extra_context=full_context,
     )
 
@@ -360,6 +378,7 @@ def test_explicit_local_template_and_branch(
     create_command,
     myapp,
     full_context,
+    tmp_path,
 ):
     """If a local template path and branch is specified in the app config, it is
     used."""
@@ -378,7 +397,7 @@ def test_explicit_local_template_and_branch(
         "/path/to/special-template",
         no_input=True,
         checkout=branch,
-        output_dir=os.fsdecode(create_command.platform_path),
+        output_dir=os.fsdecode(tmp_path / "base_path" / "build" / "my-app" / "tester"),
         extra_context=full_context,
     )
 
@@ -386,7 +405,9 @@ def test_explicit_local_template_and_branch(
     assert create_command.tools.git.Repo.call_count == 0
 
 
-def test_offline_repo_template(monkeypatch, create_command, myapp, full_context):
+def test_offline_repo_template(
+    monkeypatch, create_command, myapp, full_context, tmp_path
+):
     """If the user is offline the first time a repo template is requested, an error is
     raised."""
     # Set the Briefcase version
@@ -401,7 +422,7 @@ def test_offline_repo_template(monkeypatch, create_command, myapp, full_context)
         cmd=[
             "git",
             "clone",
-            "https://github.com/beeware/briefcase-tester-dummy-template.git",
+            "https://github.com/beeware/briefcase-Tester-Dummy-template.git",
         ],
         returncode=128,
     )
@@ -412,15 +433,17 @@ def test_offline_repo_template(monkeypatch, create_command, myapp, full_context)
 
     # Cookiecutter was invoked with the expected template name and context.
     create_command.tools.cookiecutter.assert_called_once_with(
-        "https://github.com/beeware/briefcase-tester-dummy-template.git",
+        "https://github.com/beeware/briefcase-Tester-Dummy-template.git",
         no_input=True,
         checkout="v37.42.7",
-        output_dir=os.fsdecode(create_command.platform_path),
+        output_dir=os.fsdecode(tmp_path / "base_path" / "build" / "my-app" / "tester"),
         extra_context=full_context,
     )
 
 
-def test_invalid_repo_template(monkeypatch, create_command, myapp, full_context):
+def test_invalid_repo_template(
+    monkeypatch, create_command, myapp, full_context, tmp_path
+):
     """If the provided template URL isn't valid, an error is raised."""
     # Set the Briefcase version
     monkeypatch.setattr(briefcase, "__version__", "37.42.7")
@@ -445,12 +468,14 @@ def test_invalid_repo_template(monkeypatch, create_command, myapp, full_context)
         "https://example.com/somewhere/not-a-repo.git",
         no_input=True,
         checkout="v37.42.7",
-        output_dir=os.fsdecode(create_command.platform_path),
+        output_dir=os.fsdecode(tmp_path / "base_path" / "build" / "my-app" / "tester"),
         extra_context=full_context,
     )
 
 
-def test_missing_branch_template(monkeypatch, create_command, myapp, full_context):
+def test_missing_branch_template(
+    monkeypatch, create_command, myapp, full_context, tmp_path
+):
     """If the repo at the provided template URL doesn't have a branch for this Briefcase
     version, an error is raised."""
     # Set the Briefcase version
@@ -477,12 +502,12 @@ def test_missing_branch_template(monkeypatch, create_command, myapp, full_contex
         "https://example.com/somewhere/missing-branch.git",
         no_input=True,
         checkout="v37.42.7",
-        output_dir=os.fsdecode(create_command.platform_path),
+        output_dir=os.fsdecode(tmp_path / "base_path" / "build" / "my-app" / "tester"),
         extra_context=full_context,
     )
 
 
-def test_cached_template(monkeypatch, create_command, myapp, full_context):
+def test_cached_template(monkeypatch, create_command, myapp, full_context, tmp_path):
     """If a template has already been used, the cached version will be used."""
     # Set the Briefcase version
     monkeypatch.setattr(briefcase, "__version__", "37.42.7")
@@ -509,10 +534,10 @@ def test_cached_template(monkeypatch, create_command, myapp, full_context):
 
     # Cookiecutter was invoked with the path to the *cached* template name
     create_command.tools.cookiecutter.assert_called_once_with(
-        os.fsdecode(Path.home() / ".cookiecutters" / "briefcase-tester-dummy-template"),
+        os.fsdecode(Path.home() / ".cookiecutters" / "briefcase-Tester-Dummy-template"),
         no_input=True,
         checkout="v37.42.7",
-        output_dir=os.fsdecode(create_command.platform_path),
+        output_dir=os.fsdecode(tmp_path / "base_path" / "build" / "my-app" / "tester"),
         extra_context=full_context,
     )
 
@@ -523,6 +548,7 @@ def test_cached_template_offline(
     myapp,
     full_context,
     capsys,
+    tmp_path,
 ):
     """If the user is offline, a cached template won't be updated, but will still
     work."""
@@ -557,10 +583,10 @@ def test_cached_template_offline(
 
     # Cookiecutter was invoked with the path to the *cached* template name
     create_command.tools.cookiecutter.assert_called_once_with(
-        os.fsdecode(Path.home() / ".cookiecutters" / "briefcase-tester-dummy-template"),
+        os.fsdecode(Path.home() / ".cookiecutters" / "briefcase-Tester-Dummy-template"),
         no_input=True,
         checkout="v37.42.7",
-        output_dir=os.fsdecode(create_command.platform_path),
+        output_dir=os.fsdecode(tmp_path / "base_path" / "build" / "my-app" / "tester"),
         extra_context=full_context,
     )
 

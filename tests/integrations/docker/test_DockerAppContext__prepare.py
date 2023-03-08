@@ -15,7 +15,7 @@ def test_prepare(mock_tools, my_app, tmp_path):
         image_tag="briefcase/com.example.myapp:py3.X",
         dockerfile_path=tmp_path / "bundle" / "Dockerfile",
         app_base_path=tmp_path / "base",
-        host_platform_path=tmp_path / "platform",
+        host_bundle_path=tmp_path / "bundle",
         host_data_path=tmp_path / "briefcase",
         python_version="3.X",
     )
@@ -48,7 +48,7 @@ def test_prepare(mock_tools, my_app, tmp_path):
     )
 
     assert mock_docker_app_context.app_base_path == tmp_path / "base"
-    assert mock_docker_app_context.host_platform_path == tmp_path / "platform"
+    assert mock_docker_app_context.host_bundle_path == tmp_path / "bundle"
     assert mock_docker_app_context.host_data_path == tmp_path / "briefcase"
     assert mock_docker_app_context.image_tag == "briefcase/com.example.myapp:py3.X"
     assert mock_docker_app_context.python_version == "3.X"
@@ -66,7 +66,7 @@ def test_prepare_failure(mock_docker_app_context, tmp_path):
             image_tag="briefcase/com.example.myapp:py3.X",
             dockerfile_path=tmp_path / "bundle" / "Dockerfile",
             app_base_path=tmp_path / "base",
-            host_platform_path=tmp_path / "platform",
+            host_bundle_path=tmp_path / "bundle",
             host_data_path=tmp_path / "briefcase",
             python_version="3.X",
         )

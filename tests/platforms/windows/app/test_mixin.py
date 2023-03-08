@@ -20,9 +20,10 @@ def test_binary_path(create_command, first_app_config, tmp_path):
     expected_path = (
         tmp_path
         / "base_path"
+        / "build"
+        / "first-app"
         / "windows"
         / "app"
-        / "First App"
         / "src"
         / "First App.exe"
     )
@@ -30,7 +31,7 @@ def test_binary_path(create_command, first_app_config, tmp_path):
 
 
 def test_distribution_path(create_command, first_app_config, tmp_path):
-    distribution_path = create_command.distribution_path(first_app_config, "app")
+    distribution_path = create_command.distribution_path(first_app_config)
 
-    expected_path = tmp_path / "base_path" / "windows" / "First App-0.0.1.msi"
+    expected_path = tmp_path / "base_path" / "dist" / "First App-0.0.1.msi"
     assert distribution_path == expected_path

@@ -282,10 +282,17 @@ a custom location for Briefcase's tools.
         """Publish Command factory for the same platform and format."""
         return self._command_factory("publish")
 
+    def build_path(self, app):
+        """The path in which all platform artefacts for the app will be built.
+
+        :param app: The app config
+        """
+        return self.base_path / "build" / app.app_name / self.platform.lower()
+
     @property
-    def platform_path(self):
+    def dist_path(self):
         """The path for all applications for this command's platform."""
-        return self.base_path / self.platform
+        return self.base_path / "dist"
 
     def bundle_path(self, app):
         """The path to the bundle for the app in the output format.
@@ -293,10 +300,12 @@ a custom location for Briefcase's tools.
         The bundle is the template-generated source form of the app.
         The path will usually be a directory, the existence of which is
         indicative that the template has been rolled out for an app.
+        The leaf of this path is the base of the content generated from
+        template.
 
         :param app: The app config
         """
-        return self.platform_path / self.output_format / app.formal_name
+        return self.build_path(app) / self.output_format.lower()
 
     @abstractmethod
     def binary_path(self, app):
@@ -309,21 +318,6 @@ a custom location for Briefcase's tools.
         be executed.
 
         :param app: The app config
-        """
-        ...
-
-    @abstractmethod
-    def distribution_path(self, app, packaging_format):
-        """The path to the distributable artefact for the app in the given packaging
-        format.
-
-        This is the single file that should be uploaded for distribution.
-        This may be the binary (if the binary is a self-contained executable);
-        however, if the output format produces an installer, it will be the
-        path to the installer.
-
-        :param app: The app config
-        :param packaging_format: The format of the redistributable artefact.
         """
         ...
 
