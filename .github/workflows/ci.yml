@@ -140,7 +140,11 @@ jobs:
     uses: beeware/.github/.github/workflows/app-build-verify.yml@main
     with:
       # This *must* be the version of Python that is the system Python
-      # on the Ubuntu version used to run Linux tests.
+      # on the Ubuntu version used to run Linux tests. We use a fixed
+      # ubuntu-22.04 rather than latest because at some point, `-latest`
+      # will become `-24.04`, but it will be a soft changeover, which
+      # will cause havoc with the hard Python version requirement for
+      # local system packages.
       python-version: "3.10"
       runner-os: ${{ matrix.runner-os }}
       framework: ${{ matrix.framework }}
