@@ -431,6 +431,8 @@ def test_build_appimage_in_docker(build_command, first_app, tmp_path, monkeypatc
             "APPIMAGE_EXTRACT_AND_RUN=1",
             "--env",
             "ARCH=wonky",
+            "--workdir",
+            "/app",
             f"briefcase/com.example.first-app:py3.{sys.version_info.minor}",
             "/home/brutus/.cache/briefcase/tools/linuxdeploy-wonky.AppImage",
             "--appdir",
@@ -446,9 +448,6 @@ def test_build_appimage_in_docker(build_command, first_app, tmp_path, monkeypatc
             "--deploy-deps-only",
             "/app/First App.AppDir/usr/app_packages/secondlib",
         ],
-        cwd=os.fsdecode(
-            tmp_path / "base_path" / "build" / "first-app" / "linux" / "appimage"
-        ),
         text=True,
         encoding=mock.ANY,
         stdout=subprocess.PIPE,
@@ -553,6 +552,8 @@ def test_build_appimage_with_plugins_in_docker(build_command, first_app, tmp_pat
             "APPIMAGE_EXTRACT_AND_RUN=1",
             "--env",
             "ARCH=wonky",
+            "--workdir",
+            "/app",
             f"briefcase/com.example.first-app:py3.{sys.version_info.minor}",
             "/home/brutus/.cache/briefcase/tools/linuxdeploy-wonky.AppImage",
             "--appdir",
@@ -572,9 +573,6 @@ def test_build_appimage_with_plugins_in_docker(build_command, first_app, tmp_pat
             "--plugin",
             "something",
         ],
-        cwd=os.fsdecode(
-            tmp_path / "base_path" / "build" / "first-app" / "linux" / "appimage"
-        ),
         text=True,
         encoding=mock.ANY,
         stdout=subprocess.PIPE,

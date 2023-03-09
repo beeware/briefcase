@@ -27,7 +27,7 @@ class DummyBuildCommand(BuildCommand):
         self.actions = []
 
     def binary_path(self, app):
-        return self.bundle_path(app) / f"{app.app_name}.bin"
+        return self.bundle_path(app) / f"{app.app_name}.dummy.bin"
 
     def verify_host(self):
         super().verify_host()
@@ -36,6 +36,10 @@ class DummyBuildCommand(BuildCommand):
     def verify_tools(self):
         super().verify_tools()
         self.actions.append(("verify-tools",))
+
+    def finalize_app_config(self, app):
+        super().finalize_app_config(app=app)
+        self.actions.append(("finalize-app-config", app.app_name))
 
     def verify_app_tools(self, app):
         super().verify_app_tools(app=app)

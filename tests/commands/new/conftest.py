@@ -30,6 +30,14 @@ class DummyNewCommand(NewCommand):
         super().verify_tools()
         self.actions.append(("verify-tools",))
 
+    def finalize_app_config(self, app):
+        super().finalize_app_config(app=app)
+        self.actions.append(("finalize-app-config", app))
+
+    def verify_app_tools(self, app):
+        super().verify_app_tools(app=app)
+        self.actions.append(("verify-app-tools", app.app_name))
+
     def new_app(self, **kwargs):
         self.actions.append(("new", kwargs))
         return full_options({"new_state": "done"}, kwargs)

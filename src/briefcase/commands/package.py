@@ -80,6 +80,11 @@ class PackageCommand(BaseCommand):
 
         # Annotate the packaging format onto the app
         app.packaging_format = packaging_format
+
+        # Verify the app tools, which will do final confirmation that we can
+        # package in the requested format.
+        self.verify_app_tools(app)
+
         # If the distribution artefact already exists, remove it.
         if self.distribution_path(app).exists():
             self.distribution_path(app).unlink()
@@ -87,8 +92,7 @@ class PackageCommand(BaseCommand):
             # Ensure the dist folder exists.
             self.dist_path.mkdir(exist_ok=True)
 
-        self.verify_app_tools(app)
-
+        # Package the app
         state = self.package_app(app, **full_options(state, options))
 
         filename = self.distribution_path(app).relative_to(self.base_path)
@@ -132,9 +136,9 @@ class PackageCommand(BaseCommand):
     def __call__(
         self, app: Optional[BaseConfig] = None, update: bool = False, **options
     ):
-        # Confirm host compatibility and all required tools are available
-        self.verify_host()
-        self.verify_tools()
+        # Confirm host compatibility, that all required tools are available,
+        # and that the app configuration is finalized.
+        self.finalize(app)
 
         if app:
             state = self._package_app(app, update=update, **options)

@@ -401,6 +401,9 @@ def test_package_app_adhoc_sign_default_notarization(
 
 def test_package_bare_app(package_command, first_app_with_binaries, tmp_path):
     """A macOS App can be packaged without building dmg."""
+    # Select app packaging
+    first_app_with_binaries.packaging_format = "app"
+
     # Select a code signing identity
     package_command.select_identity.return_value = (
         "CAFEBEEF",
@@ -469,6 +472,9 @@ def test_package_bare_app(package_command, first_app_with_binaries, tmp_path):
 
 def test_package_bare_app_no_sign(package_command, first_app_with_binaries):
     """A macOS App can be packaged without building dmg, and without signing."""
+    # Select app packaging
+    first_app_with_binaries.packaging_format = "app"
+
     # Select a code signing identity
     package_command.select_identity.return_value = (
         "CAFEBEEF",
@@ -500,6 +506,9 @@ def test_package_bare_app_no_sign(package_command, first_app_with_binaries):
 
 def test_package_bare_app_no_notarization(package_command, first_app_with_binaries):
     """A macOS App can be packaged without building dmg, and without notarization."""
+    # Select app packaging
+    first_app_with_binaries.packaging_format = "app"
+
     # Select a code signing identity
     package_command.select_identity.return_value = (
         "CAFEBEEF",
@@ -584,6 +593,7 @@ def test_dmg_with_missing_installer_icon(
     warning."""
     # Specify an installer icon, but don't create the matching file.
     first_app_with_binaries.installer_icon = "pretty"
+    first_app_with_binaries.packaging_format = "dmg"
 
     # Package the app without signing or notarization
     package_command.package_app(
@@ -782,6 +792,7 @@ def test_dmg_with_missing_installer_background(
     warning."""
     # Specify an installer background, but don't create the matching file.
     first_app_with_binaries.installer_background = "pretty_background"
+    first_app_with_binaries.packaging_format = "dmg"
 
     # Package the app without signing or notarization
     package_command.package_app(

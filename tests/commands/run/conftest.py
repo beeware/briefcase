@@ -37,6 +37,14 @@ class DummyRunCommand(RunCommand):
         super().verify_tools()
         self.actions.append(("verify-tools",))
 
+    def finalize_app_config(self, app):
+        super().finalize_app_config(app)
+        self.actions.append(("finalize-app-config", app.app_name))
+
+    def verify_app_tools(self, app):
+        super().verify_app_tools(app=app)
+        self.actions.append(("verify-app-tools", app.app_name))
+
     def run_app(self, app, **kwargs):
         self.actions.append(("run", app.app_name, kwargs.copy()))
         # Remove arguments consumed by the underlying call to run_app()

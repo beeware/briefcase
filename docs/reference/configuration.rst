@@ -83,7 +83,13 @@ be obtained by running ``briefcase -h``, and inspecting the help for the
 --------------------------------------------------------------
 
 Configuration options that are specific to a particular output format. For
-example, ``macOS`` applications can be generated in ``app`` or ``dmg`` format.
+example, macOS applications can be generated in ``app`` or ``dmg`` format.
+
+This section can contain additional layers. for example, an app targeting the
+Linux ``system`` backend can define a ``tool.briefcase.app.<app
+name>.linux.system.ubuntu.jammy`` section to provide configurations specific to
+Ubuntu 22.04 "Jammy" deployments. See the documentation for each backend for
+more details.
 
 Project configuration
 =====================
@@ -278,6 +284,14 @@ to an image to use as the background for the installer. As with ``splash``, the
 path should *exclude* the extension, and a platform-appropriate extension will
 be appended when the application is built.
 
+``long_description``
+~~~~~~~~~~~~~~~~~~~~
+
+A longer description of the purpose of the application. This description can be
+multiple paragraphs, if necessary. The long description *must not* be a copy of
+the ``description``, or include the ``description`` as the first line of the
+``long_description``.
+
 ``requires``
 ~~~~~~~~~~~~
 
@@ -288,6 +302,12 @@ setting. If an application defines requirements at the global level,
 application level, *and* platform level, the final set of requirements will be
 the *concatenation* of requirements from all levels, starting from least to
 most specific.
+
+``revision``
+~~~~~~~~~~~~
+
+An identifier used to differentiate specific builds of the same version of an
+app. Defaults to ``1`` if not provided.
 
 ``splash``
 ~~~~~~~~~~

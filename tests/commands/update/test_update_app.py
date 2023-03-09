@@ -9,8 +9,9 @@ def test_update_app(update_command, first_app, tmp_path):
 
     # The right sequence of things will be done
     assert update_command.actions == [
-        ("code", update_command.apps["first"], False),
-        ("cleanup", update_command.apps["first"]),
+        ("verify-app-tools", "first"),
+        ("code", "first", False),
+        ("cleanup", "first"),
     ]
 
     # App content and resources have been updated
@@ -63,9 +64,10 @@ def test_update_app_with_requirements(update_command, first_app, tmp_path):
 
     # The right sequence of things will be done
     assert update_command.actions == [
-        ("code", update_command.apps["first"], False),
-        ("requirements", update_command.apps["first"], False),
-        ("cleanup", update_command.apps["first"]),
+        ("verify-app-tools", "first"),
+        ("code", "first", False),
+        ("requirements", "first", False),
+        ("cleanup", "first"),
     ]
 
     # App content has been updated
@@ -96,9 +98,10 @@ def test_update_app_with_resources(update_command, first_app, tmp_path):
 
     # The right sequence of things will be done
     assert update_command.actions == [
-        ("code", update_command.apps["first"], False),
-        ("resources", update_command.apps["first"]),
-        ("cleanup", update_command.apps["first"]),
+        ("verify-app-tools", "first"),
+        ("code", "first", False),
+        ("resources", "first"),
+        ("cleanup", "first"),
     ]
 
     # App content and resources have been updated
@@ -130,8 +133,9 @@ def test_update_app_test_mode(update_command, first_app, tmp_path):
 
     # The right sequence of things will be done
     assert update_command.actions == [
-        ("code", update_command.apps["first"], True),
-        ("cleanup", update_command.apps["first"]),
+        ("verify-app-tools", "first"),
+        ("code", "first", True),
+        ("cleanup", "first"),
     ]
 
     # App code has been updated
@@ -163,9 +167,10 @@ def test_update_app_test_mode_requirements(update_command, first_app, tmp_path):
 
     # The right sequence of things will be done
     assert update_command.actions == [
-        ("code", update_command.apps["first"], True),
-        ("requirements", update_command.apps["first"], True),
-        ("cleanup", update_command.apps["first"]),
+        ("verify-app-tools", "first"),
+        ("code", "first", True),
+        ("requirements", "first", True),
+        ("cleanup", "first"),
     ]
 
     # App content and requirements have been updated
@@ -197,9 +202,10 @@ def test_update_app_test_mode_resources(update_command, first_app, tmp_path):
 
     # The right sequence of things will be done
     assert update_command.actions == [
-        ("code", update_command.apps["first"], True),
-        ("resources", update_command.apps["first"]),
-        ("cleanup", update_command.apps["first"]),
+        ("verify-app-tools", "first"),
+        ("code", "first", True),
+        ("resources", "first"),
+        ("cleanup", "first"),
     ]
 
     # App content and resources have been updated

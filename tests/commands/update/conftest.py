@@ -36,22 +36,30 @@ class DummyUpdateCommand(UpdateCommand):
         super().verify_tools()
         self.actions.append(("verify-tools",))
 
+    def finalize_app_config(self, app):
+        super().finalize_app_config(app=app)
+        self.actions.append(("finalize-app-config", app.app_name))
+
+    def verify_app_tools(self, app):
+        super().verify_app_tools(app=app)
+        self.actions.append(("verify-app-tools", app.app_name))
+
     # Override all the body methods of a UpdateCommand
     # with versions that we can use to track actions performed.
     def install_app_requirements(self, app, test_mode):
-        self.actions.append(("requirements", app, test_mode))
+        self.actions.append(("requirements", app.app_name, test_mode))
         create_file(self.bundle_path(app) / "requirements", "app requirements")
 
     def install_app_code(self, app, test_mode):
-        self.actions.append(("code", app, test_mode))
+        self.actions.append(("code", app.app_name, test_mode))
         create_file(self.bundle_path(app) / "code.py", "print('app')")
 
     def install_app_resources(self, app):
-        self.actions.append(("resources", app))
+        self.actions.append(("resources", app.app_name))
         create_file(self.bundle_path(app) / "resources", "app resources")
 
     def cleanup_app_content(self, app):
-        self.actions.append(("cleanup", app))
+        self.actions.append(("cleanup", app.app_name))
 
 
 @pytest.fixture

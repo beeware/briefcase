@@ -32,12 +32,17 @@ def test_update(update_command, first_app, second_app):
         ("verify-host",),
         # Tools are verified
         ("verify-tools",),
+        # App configs have been finalized
+        ("finalize-app-config", "first"),
+        ("finalize-app-config", "second"),
         # Update the first app
-        ("code", update_command.apps["first"], False),
-        ("cleanup", update_command.apps["first"]),
+        ("verify-app-tools", "first"),
+        ("code", "first", False),
+        ("cleanup", "first"),
         # Update the second app
-        ("code", update_command.apps["second"], False),
-        ("cleanup", update_command.apps["second"]),
+        ("verify-app-tools", "second"),
+        ("code", "second", False),
+        ("cleanup", "second"),
     ]
 
 
@@ -54,9 +59,12 @@ def test_update_single(update_command, first_app, second_app):
         ("verify-host",),
         # Tools are verified
         ("verify-tools",),
+        # App config has been finalized
+        ("finalize-app-config", "first"),
         # update the first app
-        ("code", update_command.apps["first"], False),
-        ("cleanup", update_command.apps["first"]),
+        ("verify-app-tools", "first"),
+        ("code", "first", False),
+        ("cleanup", "first"),
     ]
 
 
@@ -73,14 +81,19 @@ def test_update_with_requirements(update_command, first_app, second_app):
         ("verify-host",),
         # Tools are verified
         ("verify-tools",),
+        # App configs have been finalized
+        ("finalize-app-config", "first"),
+        ("finalize-app-config", "second"),
         # Update the first app
-        ("code", update_command.apps["first"], False),
-        ("requirements", update_command.apps["first"], False),
-        ("cleanup", update_command.apps["first"]),
+        ("verify-app-tools", "first"),
+        ("code", "first", False),
+        ("requirements", "first", False),
+        ("cleanup", "first"),
         # Update the second app
-        ("code", update_command.apps["second"], False),
-        ("requirements", update_command.apps["second"], False),
-        ("cleanup", update_command.apps["second"]),
+        ("verify-app-tools", "second"),
+        ("code", "second", False),
+        ("requirements", "second", False),
+        ("cleanup", "second"),
     ]
 
 
@@ -97,12 +110,17 @@ def test_update_with_resources(update_command, first_app, second_app):
         ("verify-host",),
         # Tools are verified
         ("verify-tools",),
+        # App configs have been finalized
+        ("finalize-app-config", "first"),
+        ("finalize-app-config", "second"),
         # Update the first app
-        ("code", update_command.apps["first"], False),
-        ("resources", update_command.apps["first"]),
-        ("cleanup", update_command.apps["first"]),
+        ("verify-app-tools", "first"),
+        ("code", "first", False),
+        ("resources", "first"),
+        ("cleanup", "first"),
         # Update the second app
-        ("code", update_command.apps["second"], False),
-        ("resources", update_command.apps["second"]),
-        ("cleanup", update_command.apps["second"]),
+        ("verify-app-tools", "second"),
+        ("code", "second", False),
+        ("resources", "second"),
+        ("cleanup", "second"),
     ]

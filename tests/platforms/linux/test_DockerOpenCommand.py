@@ -9,11 +9,11 @@ from briefcase.integrations.docker import DockerAppContext
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.linux.appimage import LinuxAppImageOpenCommand
 
-from ....utils import create_file
+from ...utils import create_file
 
 
 @pytest.fixture
-def open_command(tmp_path, first_app_config):
+def open_command(tmp_path):
     command = LinuxAppImageOpenCommand(
         logger=Log(),
         console=Console(),
@@ -85,11 +85,10 @@ def test_open_docker(open_command, first_app_config, tmp_path):
             "--rm",
             "-it",
             "--volume",
-            f"{tmp_path / 'base_path' / 'build' / 'first-app' / 'linux' / 'appimage'}:/app:z",
+            f"{open_command.base_path}/build/first-app/linux/appimage:/app:z",
             "--volume",
             f"{open_command.data_path}:/home/brutus/.cache/briefcase:z",
             f"briefcase/com.example.first-app:py3.{sys.version_info.minor}",
-            "/bin/bash",
         ],
         stream_output=False,
     )

@@ -521,9 +521,9 @@ Application '{context['formal_name']}' has been generated. To run your applicati
         template_branch: Optional[str] = None,
         **options,
     ):
-        # Confirm host compatibility and all required tools are available
-        self.verify_host()
-        self.verify_tools()
+        # Confirm host compatibility, and that all required tools are available.
+        # There are no apps, so finalize() will be a no op on app configurations.
+        self.finalize()
 
         return self.new_app(
             template=template, template_branch=template_branch, **options

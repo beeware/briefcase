@@ -34,6 +34,8 @@ def run_command(tmp_path):
 def test_unsupported_host_os(run_command, host_os):
     """Error raised for an unsupported OS."""
     run_command.tools.host_os = host_os
+    # Mock the existence of a single app
+    run_command.apps = {"app": None}
 
     with pytest.raises(
         UnsupportedHostError,

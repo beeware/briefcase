@@ -68,6 +68,41 @@ def test_extra_mounts(mock_docker_app_context, tmp_path, capsys):
     assert capsys.readouterr().out == ""
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
+)
+def test_cwd(mock_docker_app_context, tmp_path, capsys):
+    """A call can use a working directory relative to the project folder."""
+    assert (
+        mock_docker_app_context.check_output(
+            ["hello", "world"],
+            cwd=tmp_path / "bundle" / "foobar",
+        )
+        == "goodbye\n"
+    )
+
+    mock_docker_app_context.tools.subprocess._subprocess.check_output.assert_called_once_with(
+        [
+            "docker",
+            "run",
+            "--rm",
+            "--volume",
+            f"{tmp_path / 'bundle'}:/app:z",
+            "--volume",
+            f"{tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z",
+            "--workdir",
+            "/app/foobar",
+            "briefcase/com.example.myapp:py3.X",
+            "hello",
+            "world",
+        ],
+        text=True,
+        encoding=ANY,
+        stderr=subprocess.STDOUT,
+    )
+    assert capsys.readouterr().out == ""
+
+
 def test_call_with_arg_and_env(mock_docker_app_context, tmp_path, capsys):
     """Extra keyword arguments are passed through as-is; env modifications are
     converted."""
@@ -135,11 +170,12 @@ def test_call_with_path_arg_and_env(mock_docker_app_context, tmp_path, capsys):
             "MAGIC=True",
             "--env",
             "PATH=/somewhere/safe:/home/brutus/.cache/briefcase/tools:/app/location",
+            "--workdir",
+            f"{tmp_path / 'cwd'}",
             "briefcase/com.example.myapp:py3.X",
             "hello",
             os.fsdecode(tmp_path / "location"),
         ],
-        cwd=os.fsdecode(tmp_path / "cwd"),
         text=True,
         encoding=ANY,
         stderr=subprocess.STDOUT,

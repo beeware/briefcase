@@ -26,6 +26,7 @@ def full_context():
         "bundle": "com.example",
         "version": "1.2.3",
         "description": "This is a simple app",
+        "long_description": None,
         "sources": ["src/my_app"],
         "test_sources": None,
         "test_requires": None,
@@ -39,6 +40,7 @@ def full_context():
         "document_types": {},
         # Properties of the generating environment
         "python_version": platform.python_version(),
+        "briefcase_version": briefcase.__version__,
         # Fields generated from other properties
         "module_name": "my_app",
         "class_name": "MyApp",
@@ -48,6 +50,9 @@ def full_context():
         "month": date.today().strftime("%B"),
         # Fields added by the output format.
         "output_format": "dummy",
+        # These tests don't do a full finalization, so the context will still be
+        # marked as draft.
+        "__draft__": True,
     }
 
 
@@ -76,6 +81,7 @@ def test_default_template(
     the template branch."""
     # Set the Briefcase version
     monkeypatch.setattr(briefcase, "__version__", briefcase_version)
+    full_context["briefcase_version"] = briefcase_version
 
     # There won't be a cookiecutter cache, so there won't be
     # a cache path (yet).
@@ -110,6 +116,7 @@ def test_default_template_dev(
     template doesn't exist."""
     # Set the Briefcase version
     monkeypatch.setattr(briefcase, "__version__", briefcase_version)
+    full_context["briefcase_version"] = briefcase_version
 
     # There won't be a cookiecutter cache, so there won't be
     # a cache path (yet).
@@ -164,6 +171,7 @@ def test_default_template_dev_explicit_branch(
     """In a dev version, if an explicit branch is provided, it is used."""
     # Set the Briefcase version
     monkeypatch.setattr(briefcase, "__version__", briefcase_version)
+    full_context["briefcase_version"] = briefcase_version
 
     # Set an explicit branch
     branch = "some_branch"
@@ -206,6 +214,7 @@ def test_default_template_dev_explicit_invalid_branch(
     to the 'main' branch will not occur."""
     # Set the Briefcase version to a dev version
     monkeypatch.setattr(briefcase, "__version__", briefcase_version)
+    full_context["briefcase_version"] = briefcase_version
 
     # Set an explicit branch
     branch = "some_branch"
@@ -242,6 +251,7 @@ def test_explicit_branch(monkeypatch, create_command, myapp, full_context, tmp_p
     """user can choose which branch to take the template from."""
     # Set the Briefcase version
     monkeypatch.setattr(briefcase, "__version__", "37.42.7")
+    full_context["briefcase_version"] = "37.42.7"
 
     # Set an explicit branch
     branch = "some_branch"
@@ -268,6 +278,7 @@ def test_platform_exists(monkeypatch, create_command, myapp, full_context, tmp_p
     """If the platform directory already exists, it's ok."""
     # Set the Briefcase version
     monkeypatch.setattr(briefcase, "__version__", "37.42.7")
+    full_context["briefcase_version"] = "37.42.7"
 
     # There won't be a cookiecutter cache, so there won't be
     # a cache path (yet).
@@ -295,6 +306,7 @@ def test_explicit_repo_template(
     """If a template is specified in the app config, it is used."""
     # Set the Briefcase version
     monkeypatch.setattr(briefcase, "__version__", "37.42.7")
+    full_context["briefcase_version"] = "37.42.7"
 
     myapp.template = "https://example.com/magic/special-template.git"
 
@@ -325,6 +337,7 @@ def test_explicit_repo_template_and_branch(
     """If a template and branch is specified in the app config, it is used."""
     # Set the Briefcase version
     monkeypatch.setattr(briefcase, "__version__", "37.42.7")
+    full_context["briefcase_version"] = "37.42.7"
 
     # Set an explicit template and branch
     myapp.template = "https://example.com/magic/special-template.git"
@@ -354,6 +367,7 @@ def test_explicit_local_template(
     """If a local template path is specified in the app config, it is used."""
     # Set the Briefcase version
     monkeypatch.setattr(briefcase, "__version__", "37.42.7")
+    full_context["briefcase_version"] = "37.42.7"
 
     myapp.template = "/path/to/special-template"
 
@@ -384,6 +398,7 @@ def test_explicit_local_template_and_branch(
     used."""
     # Set the Briefcase version
     monkeypatch.setattr(briefcase, "__version__", "37.42.7")
+    full_context["briefcase_version"] = "37.42.7"
 
     myapp.template = "/path/to/special-template"
     branch = "some_branch"
@@ -412,6 +427,7 @@ def test_offline_repo_template(
     raised."""
     # Set the Briefcase version
     monkeypatch.setattr(briefcase, "__version__", "37.42.7")
+    full_context["briefcase_version"] = "37.42.7"
 
     # There won't be a cookiecutter cache, so there won't be
     # a repo path (yet).
@@ -447,6 +463,7 @@ def test_invalid_repo_template(
     """If the provided template URL isn't valid, an error is raised."""
     # Set the Briefcase version
     monkeypatch.setattr(briefcase, "__version__", "37.42.7")
+    full_context["briefcase_version"] = "37.42.7"
 
     myapp.template = "https://example.com/somewhere/not-a-repo.git"
 
@@ -480,6 +497,7 @@ def test_missing_branch_template(
     version, an error is raised."""
     # Set the Briefcase version
     monkeypatch.setattr(briefcase, "__version__", "37.42.7")
+    full_context["briefcase_version"] = "37.42.7"
 
     myapp.template = "https://example.com/somewhere/missing-branch.git"
 
@@ -511,6 +529,7 @@ def test_cached_template(monkeypatch, create_command, myapp, full_context, tmp_p
     """If a template has already been used, the cached version will be used."""
     # Set the Briefcase version
     monkeypatch.setattr(briefcase, "__version__", "37.42.7")
+    full_context["briefcase_version"] = "37.42.7"
 
     mock_repo = mock.MagicMock()
     mock_remote = mock.MagicMock()
@@ -554,6 +573,7 @@ def test_cached_template_offline(
     work."""
     # Set the Briefcase version
     monkeypatch.setattr(briefcase, "__version__", "37.42.7")
+    full_context["briefcase_version"] = "37.42.7"
 
     mock_repo = mock.MagicMock()
     mock_remote = mock.MagicMock()
@@ -591,12 +611,7 @@ def test_cached_template_offline(
     )
 
 
-def test_cached_missing_branch_template(
-    monkeypatch,
-    create_command,
-    myapp,
-    full_context,
-):
+def test_cached_missing_branch_template(monkeypatch, create_command, myapp):
     """If the cached repo doesn't have a branch for this Briefcase version, an error is
     raised."""
     # Set the Briefcase version

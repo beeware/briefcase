@@ -46,7 +46,13 @@ def test_toolcache_typing():
     # Tools that are intentionally not annotated in ToolCache.
     tools_unannotated = {"cookiecutter"}
     # Tool names to exclude from the dynamic annotation checks; they are manually checked.
-    tool_names_skip_dynamic_check = {"app_context", "git", "xcode", "xcode_cli"}
+    tool_names_skip_dynamic_check = {
+        "app_context",
+        "git",
+        "xcode",
+        "xcode_cli",
+        "ETC_OS_RELEASE",
+    }
     # Tool classes to exclude from dynamic annotation checks.
     tool_klasses_skip_dynamic_checks = {"DockerAppContext", "NativeAppContext"}
 
@@ -89,6 +95,8 @@ def test_toolcache_typing():
     assert ToolCache.__annotations__["xcode_cli"] == "bool"
 
     assert ToolCache.__annotations__["git"] == "git_"
+
+    assert ToolCache.__annotations__["ETC_OS_RELEASE"] == "Path"
 
 
 def test_third_party_tools_available():

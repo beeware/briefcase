@@ -20,6 +20,8 @@ def test_no_args_package_one_app(package_command, first_app, tmp_path):
         ("verify-host",),
         # Tools are verified
         ("verify-tools",),
+        # App config has been finalized
+        ("finalize-app-config", "first"),
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Package the first app
@@ -61,6 +63,8 @@ def test_package_one_explicit_app(package_command, first_app, second_app, tmp_pa
         ("verify-host",),
         # Tools are verified
         ("verify-tools",),
+        # App config has been finalized
+        ("finalize-app-config", "first"),
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Package the first app
@@ -103,6 +107,9 @@ def test_no_args_package_two_app(package_command, first_app, second_app, tmp_pat
         ("verify-host",),
         # Tools are verified
         ("verify-tools",),
+        # App configs have been finalized
+        ("finalize-app-config", "first"),
+        ("finalize-app-config", "second"),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
         # Package the first app
@@ -158,6 +165,8 @@ def test_no_sign_package_one_app(package_command, first_app, tmp_path):
         ("verify-host",),
         # Tools are verified
         ("verify-tools",),
+        # App config has been finalized
+        ("finalize-app-config", "first"),
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Package the first app
@@ -199,6 +208,8 @@ def test_identity_arg_package_one_app(package_command, first_app, tmp_path):
         ("verify-host",),
         # Tools are verified
         ("verify-tools",),
+        # App config has been finalized
+        ("finalize-app-config", "first"),
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Package the first app
@@ -240,6 +251,8 @@ def test_adhoc_sign_package_one_app(package_command, first_app, tmp_path):
         ("verify-host",),
         # Tools are verified
         ("verify-tools",),
+        # App config has been finalized
+        ("finalize-app-config", "first"),
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Package the first app
@@ -282,6 +295,9 @@ def test_no_sign_args_package_two_app(package_command, first_app, second_app, tm
         ("verify-host",),
         # Tools are verified
         ("verify-tools",),
+        # App configs have been finalized
+        ("finalize-app-config", "first"),
+        ("finalize-app-config", "second"),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
         # Package the first app
@@ -343,6 +359,9 @@ def test_adhoc_sign_args_package_two_app(
         ("verify-host",),
         # Tools are verified
         ("verify-tools",),
+        # App configs have been finalized
+        ("finalize-app-config", "first"),
+        ("finalize-app-config", "second"),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
         # Package the first app
@@ -402,6 +421,9 @@ def test_identity_sign_args_package_two_app(
         ("verify-host",),
         # Tools are verified
         ("verify-tools",),
+        # App configs have been finalized
+        ("finalize-app-config", "first"),
+        ("finalize-app-config", "second"),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
         # Package the first app
@@ -457,6 +479,8 @@ def test_package_alternate_format(package_command, first_app, tmp_path):
         ("verify-host",),
         # Tools are verified
         ("verify-tools",),
+        # App config has been finalized
+        ("finalize-app-config", "first"),
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Package the first app
@@ -497,6 +521,8 @@ def test_create_before_package(package_command, first_app_config, tmp_path):
         ("verify-host",),
         # Tools are verified
         ("verify-tools",),
+        # App config has been finalized
+        ("finalize-app-config", "first"),
         # Create and then build the first app
         (
             "create",
@@ -559,6 +585,8 @@ def test_update_package_one_app(package_command, first_app, tmp_path):
         ("verify-host",),
         # Tools are verified
         ("verify-tools",),
+        # App config has been finalized
+        ("finalize-app-config", "first"),
         # Update (and then build) the first app
         (
             "update",
@@ -624,6 +652,9 @@ def test_update_package_two_app(package_command, first_app, second_app, tmp_path
         ("verify-host",),
         # Tools are verified
         ("verify-tools",),
+        # App configs have been finalized
+        ("finalize-app-config", "first"),
+        ("finalize-app-config", "second"),
         # Update (and then build) the first app
         (
             "update",
@@ -734,6 +765,8 @@ def test_build_before_package(package_command, first_app_unbuilt, tmp_path):
         ("verify-host",),
         # Tools are verified
         ("verify-tools",),
+        # App config has been finalized
+        ("finalize-app-config", "first"),
         # Build the first app
         (
             "build",
@@ -789,6 +822,8 @@ def test_already_packaged(package_command, first_app, tmp_path):
         ("verify-host",),
         # Tools are verified
         ("verify-tools",),
+        # App config has been finalized
+        ("finalize-app-config", "first"),
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Package the first app

@@ -103,7 +103,7 @@ entitlements_path="Entitlements.plist"
     with (lib_path / "unknown.binary").open("wb") as f:
         f.write(b"\xCA\xFE\xBA\xBEother")
 
-    # Set a default packaging format
+    # Select dmg packaging by default
     first_app_config.packaging_format = "dmg"
 
     return first_app_config
