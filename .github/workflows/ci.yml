@@ -139,12 +139,11 @@ jobs:
     needs: unit-tests
     uses: beeware/.github/.github/workflows/app-build-verify.yml@main
     with:
-      # This *must* be the version of Python that is the system Python
-      # on the Ubuntu version used to run Linux tests. We use a fixed
-      # ubuntu-22.04 rather than latest because at some point, `-latest`
-      # will become `-24.04`, but it will be a soft changeover, which
-      # will cause havoc with the hard Python version requirement for
-      # local system packages.
+      # This *must* be the version of Python that is the system Python on the
+      # Ubuntu version used to run Linux tests. We use a fixed ubuntu-22.04
+      # rather than `-latest` because at some point, `-latest` will become
+      # `-24.04`, but it will be a soft changeover, which will cause havoc with
+      # the hard Python version requirement for local system packages.
       python-version: "3.10"
       runner-os: ${{ matrix.runner-os }}
       framework: ${{ matrix.framework }}
@@ -153,3 +152,12 @@ jobs:
       matrix:
         framework: [ "toga", "pyside2", "pyside6", "ppb" ]
         runner-os: [ "macos-latest", "ubuntu-22.04", "windows-latest" ]
+
+        # PySide2 is uninstallable on most modern Linux/Python combos, as
+        # there's either (a) no wheel for the system python version, or (b) the
+        # wheel is a manylinux_2_28 wheel. That's a very narrow window of
+        # support; most current linux distro ship with Py3.11 or newer; the ones
+        # that don't aren't always manylinux_2_28 compatible.
+        exclude:
+          - framework: "pyside2"
+            runner-os: "ubuntu-22.04"
