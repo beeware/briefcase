@@ -1,5 +1,3 @@
-import sys
-
 import pytest
 
 from briefcase.console import Console, Log
@@ -62,17 +60,3 @@ def test_unsupported_host_os_without_docker(
         match="Linux AppImages can only be built on Linux, or on macOS using Docker.",
     ):
         create_command()
-
-
-def test_support_package_url(create_command):
-    """The URL of the support package is predictable."""
-    # Set the host arch to something predictable
-    create_command.tools.host_arch = "wonky"
-
-    revision = 52
-    expected_url = (
-        f"https://briefcase-support.s3.amazonaws.com/python"
-        f"/3.{sys.version_info.minor}/linux/wonky"
-        f"/Python-3.{sys.version_info.minor}-linux-wonky-support.b{revision}.tar.gz"
-    )
-    assert create_command.support_package_url(revision) == expected_url

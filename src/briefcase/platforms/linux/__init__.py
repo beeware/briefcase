@@ -56,6 +56,22 @@ def parse_freedesktop_os_release(content):
 class LinuxMixin:
     platform = "linux"
 
+    def support_package_url(self, support_revision):
+        """The URL of the support package to use for apps of this type.
+
+        Linux builds that use a support package (AppImage, Flatpak) use
+        indygreg's Standalone Python to provide system packages. See
+        https://github.com/indygreg/python-build-standalone for details
+
+        System packages don't use a support package; this is defined by
+        the template, so this method won't be invoked
+        """
+        version, datestamp = support_revision.split("+")
+        return (
+            "https://github.com/indygreg/python-build-standalone/releases/download/"
+            f"{datestamp}/cpython-{support_revision}-x86_64-unknown-linux-gnu-install_only.tar.gz"
+        )
+
     def vendor_details(self, freedesktop_info):
         """Normalize the identity of the target Linux vendor, version, and base.
 

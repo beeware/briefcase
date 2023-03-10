@@ -120,20 +120,11 @@ class LinuxAppImageMixin(LinuxAppImageMostlyPassiveMixin):
 
 
 class LinuxAppImageCreateCommand(
-    LinuxAppImageMixin, LocalRequirementsMixin, CreateCommand
+    LinuxAppImageMixin,
+    LocalRequirementsMixin,
+    CreateCommand,
 ):
     description = "Create and populate a Linux AppImage."
-
-    def support_package_url(self, support_revision):
-        """The URL of the support package to use for apps of this type.
-
-        AppImage uses Standalone Python builds.
-        """
-        version, datestamp = support_revision.split("+")
-        return (
-            "https://github.com/indygreg/python-build-standalone/releases/download/"
-            f"{datestamp}/cpython-{support_revision}-x86_64-unknown-linux-gnu-install_only.tar.gz"
-        )
 
 
 class LinuxAppImageUpdateCommand(LinuxAppImageCreateCommand, UpdateCommand):
