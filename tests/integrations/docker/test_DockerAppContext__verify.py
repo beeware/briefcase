@@ -56,8 +56,6 @@ def test_success(mock_tools, first_app_config, verify_kwargs):
             "--file",
             Path("/path/to/Dockerfile"),
             "--build-arg",
-            "PY_VERSION=py3.X",
-            "--build-arg",
             "SYSTEM_REQUIRES=",
             "--build-arg",
             "HOST_UID=37",
