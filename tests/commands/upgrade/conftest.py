@@ -13,8 +13,9 @@ class DummyUpgradeCommand(UpgradeCommand):
     It only serves to track which actions would be performed.
     """
 
-    platform = "tester"
-    output_format = "dummy"
+    # Platform and format contain upper case to test case normalization
+    platform = "Tester"
+    output_format = "Dummy"
     description = "Dummy update command"
 
     def __init__(self, *args, sdks, **kwargs):
@@ -24,14 +25,8 @@ class DummyUpgradeCommand(UpgradeCommand):
 
         self.sdks = sdks
 
-    def bundle_path(self, app):
-        return self.platform_path / f"{app.app_name}.dummy"
-
     def binary_path(self, app):
-        return self.platform_path / f"{app.app_name}.dummy.bin"
-
-    def distribution_path(self, app, packaging_format):
-        return self.platform_path / f"{app.app_name}.dummy.{packaging_format}"
+        return self.bundle_path(app) / f"{app.app_name}.bin"
 
 
 @pytest.fixture

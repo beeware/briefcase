@@ -17,7 +17,7 @@ def test_simple_call(mock_docker_app_context, tmp_path, capsys):
             "run",
             "--rm",
             "--volume",
-            f"{tmp_path / 'platform'}:/app:z",
+            f"{tmp_path / 'bundle'}:/app:z",
             "--volume",
             f"{tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z",
             "briefcase/com.example.myapp:py3.X",
@@ -50,13 +50,48 @@ def test_extra_mounts(mock_docker_app_context, tmp_path, capsys):
             "run",
             "--rm",
             "--volume",
-            f"{tmp_path / 'platform'}:/app:z",
+            f"{tmp_path / 'bundle'}:/app:z",
             "--volume",
             f"{tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z",
             "--volume",
             "/path/to/first:/container/first:z",
             "--volume",
             "/path/to/second:/container/second:z",
+            "briefcase/com.example.myapp:py3.X",
+            "hello",
+            "world",
+        ],
+        text=True,
+        encoding=ANY,
+        stderr=subprocess.STDOUT,
+    )
+    assert capsys.readouterr().out == ""
+
+
+@pytest.mark.skipif(
+    sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
+)
+def test_cwd(mock_docker_app_context, tmp_path, capsys):
+    """A call can use a working directory relative to the project folder."""
+    assert (
+        mock_docker_app_context.check_output(
+            ["hello", "world"],
+            cwd=tmp_path / "bundle" / "foobar",
+        )
+        == "goodbye\n"
+    )
+
+    mock_docker_app_context.tools.subprocess._subprocess.check_output.assert_called_once_with(
+        [
+            "docker",
+            "run",
+            "--rm",
+            "--volume",
+            f"{tmp_path / 'bundle'}:/app:z",
+            "--volume",
+            f"{tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z",
+            "--workdir",
+            "/app/foobar",
             "briefcase/com.example.myapp:py3.X",
             "hello",
             "world",
@@ -87,7 +122,7 @@ def test_call_with_arg_and_env(mock_docker_app_context, tmp_path, capsys):
             "run",
             "--rm",
             "--volume",
-            f"{tmp_path / 'platform'}:/app:z",
+            f"{tmp_path / 'bundle'}:/app:z",
             "--volume",
             f"{tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z",
             "--env",
@@ -116,7 +151,7 @@ def test_call_with_path_arg_and_env(mock_docker_app_context, tmp_path, capsys):
         ["hello", tmp_path / "location"],
         env={
             "MAGIC": "True",
-            "PATH": f"/somewhere/safe:{tmp_path / 'briefcase' / 'tools'}:{tmp_path / 'platform' / 'location'}",
+            "PATH": f"/somewhere/safe:{tmp_path / 'briefcase' / 'tools'}:{tmp_path / 'bundle' / 'location'}",
         },
         cwd=tmp_path / "cwd",
     )
@@ -128,18 +163,19 @@ def test_call_with_path_arg_and_env(mock_docker_app_context, tmp_path, capsys):
             "run",
             "--rm",
             "--volume",
-            f"{tmp_path / 'platform'}:/app:z",
+            f"{tmp_path / 'bundle'}:/app:z",
             "--volume",
             f"{tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z",
             "--env",
             "MAGIC=True",
             "--env",
             "PATH=/somewhere/safe:/home/brutus/.cache/briefcase/tools:/app/location",
+            "--workdir",
+            f"{tmp_path / 'cwd'}",
             "briefcase/com.example.myapp:py3.X",
             "hello",
             os.fsdecode(tmp_path / "location"),
         ],
-        cwd=os.fsdecode(tmp_path / "cwd"),
         text=True,
         encoding=ANY,
         stderr=subprocess.STDOUT,
@@ -162,7 +198,7 @@ def test_simple_verbose_call(mock_docker_app_context, tmp_path, capsys):
             "run",
             "--rm",
             "--volume",
-            f"{tmp_path / 'platform'}:/app:z",
+            f"{tmp_path / 'bundle'}:/app:z",
             "--volume",
             f"{tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z",
             "briefcase/com.example.myapp:py3.X",
@@ -178,7 +214,7 @@ def test_simple_verbose_call(mock_docker_app_context, tmp_path, capsys):
         ">>> Running Command:\n"
         ">>>     docker run "
         "--rm "
-        f"--volume {tmp_path / 'platform'}:/app:z "
+        f"--volume {tmp_path / 'bundle'}:/app:z "
         f"--volume {tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z "
         "briefcase/com.example.myapp:py3.X "
         "hello world\n"

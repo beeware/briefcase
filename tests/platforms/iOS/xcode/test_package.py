@@ -13,6 +13,7 @@ def package_command(tmp_path, first_app_config):
         data_path=tmp_path / "briefcase",
     )
     command.data_path = tmp_path / "briefcase"
+
     return command
 
 

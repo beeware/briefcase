@@ -223,9 +223,13 @@ class CreateCommand(BaseCommand):
         # Augment with some extra fields.
         extra_context.update(
             {
+                # Ensure the output format is in the case we expect
+                "format": self.output_format.lower(),
                 # Properties of the generating environment
                 # The full Python version string, including minor and dev/a/b/c suffixes (e.g., 3.11.0rc2)
                 "python_version": platform.python_version(),
+                # The Briefcase version
+                "briefcase_version": briefcase.__version__,
                 # Transformations of explicit properties into useful forms
                 "class_name": app.class_name,
                 "module_name": app.module_name,
@@ -706,21 +710,24 @@ class CreateCommand(BaseCommand):
         except AttributeError:
             pass
 
-        if paths_to_remove:
-            with self.input.wait_bar("Removing unneeded app bundle content..."):
-                for glob in paths_to_remove:
-                    # Expand each glob into a full list of files that actually exist
-                    # on the file system.
-                    for path in self.bundle_path(app).glob(glob):
-                        relative_path = path.relative_to(self.bundle_path(app))
-                        if path.is_dir():
-                            self.logger.info(f"Removing directory {relative_path}")
-                            self.tools.shutil.rmtree(path)
-                        else:
-                            self.logger.info(f"Removing {relative_path}")
-                            path.unlink()
-        else:
-            self.logger.info("No app content clean up required.")
+        # Remove __pycache__ folders. These folders might contain stale PYC
+        # artefacts, or encode file paths that reflect the original source
+        # location. The stub binaries all disable PYC generation, to avoid
+        # corrupting any app bundle signatures.
+        paths_to_remove.append("**/__pycache__")
+
+        with self.input.wait_bar("Removing unneeded app bundle content..."):
+            for glob in paths_to_remove:
+                # Expand each glob into a full list of files that actually exist
+                # on the file system.
+                for path in self.bundle_path(app).glob(glob):
+                    relative_path = path.relative_to(self.bundle_path(app))
+                    if path.is_dir():
+                        self.logger.info(f"Removing directory {relative_path}")
+                        self.tools.shutil.rmtree(path)
+                    else:
+                        self.logger.info(f"Removing {relative_path}")
+                        path.unlink()
 
     def create_app(self, app: BaseConfig, test_mode: bool = False, **options):
         """Create an application bundle.
@@ -786,9 +793,9 @@ class CreateCommand(BaseCommand):
         NativeAppContext.verify(tools=self.tools, app=app)
 
     def __call__(self, app: Optional[BaseConfig] = None, **options):
-        # Confirm host compatibility and all required tools are available
-        self.verify_host()
-        self.verify_tools()
+        # Confirm host compatibility, that all required tools are available,
+        # and that the app configuration is finalized.
+        self.finalize(app)
 
         if app:
             state = self.create_app(app, **options)

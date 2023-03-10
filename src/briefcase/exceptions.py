@@ -4,6 +4,15 @@ class BriefcaseError(Exception):
         self.skip_logfile = skip_logfile
 
 
+class BriefcaseWarning(Exception):
+    def __init__(self, error_code, msg):
+        self.error_code = error_code
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
+
+
 class HelpText(BriefcaseError):
     """Exceptions that contain help text and shouldn't be displayed as an error."""
 
@@ -188,3 +197,12 @@ class CommandOutputParseError(BriefcaseCommandError):
 class BriefcaseTestSuiteFailure(BriefcaseError):
     def __init__(self):
         super().__init__(error_code=1000, skip_logfile=True)
+
+
+class NoDistributionArtefact(BriefcaseWarning):
+    def __init__(self, msg):
+        super().__init__(error_code=0, msg=msg)
+
+
+class ParseError(Exception):
+    """Raised by parser functions to signal parsing was unsuccessful."""

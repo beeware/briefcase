@@ -18,7 +18,7 @@ def test_simple_call(mock_docker_app_context, tmp_path, capsys):
             "run",
             "--rm",
             "--volume",
-            f"{tmp_path / 'platform'}:/app:z",
+            f"{tmp_path / 'bundle'}:/app:z",
             "--volume",
             f"{tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z",
             "briefcase/com.example.myapp:py3.X",
@@ -33,9 +33,11 @@ def test_simple_call(mock_docker_app_context, tmp_path, capsys):
     )
     assert capsys.readouterr().out == (
         "\n"
-        "[myapp] Entering Docker context...\n"
+        "Entering Docker context...\n"
+        "Docker| ------------------------------------------------------------------\n"
+        "Docker| ------------------------------------------------------------------\n"
+        "Leaving Docker context.\n"
         "\n"
-        "[myapp] Leaving Docker context\n"
     )
 
 
@@ -51,7 +53,7 @@ def test_interactive(mock_docker_app_context, tmp_path, capsys):
             "--rm",
             "-it",
             "--volume",
-            f"{tmp_path / 'platform'}:/app:z",
+            f"{tmp_path / 'bundle'}:/app:z",
             "--volume",
             f"{tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z",
             "briefcase/com.example.myapp:py3.X",
@@ -63,9 +65,11 @@ def test_interactive(mock_docker_app_context, tmp_path, capsys):
     )
     assert capsys.readouterr().out == (
         "\n"
-        "[myapp] Entering Docker context...\n"
+        "Entering Docker context...\n"
+        "Docker| ------------------------------------------------------------------\n"
+        "Docker| ------------------------------------------------------------------\n"
+        "Leaving Docker context.\n"
         "\n"
-        "[myapp] Leaving Docker context\n"
     )
 
 
@@ -86,7 +90,7 @@ def test_extra_mounts(mock_docker_app_context, tmp_path, capsys):
             "run",
             "--rm",
             "--volume",
-            f"{tmp_path / 'platform'}:/app:z",
+            f"{tmp_path / 'bundle'}:/app:z",
             "--volume",
             f"{tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z",
             "--volume",
@@ -105,9 +109,53 @@ def test_extra_mounts(mock_docker_app_context, tmp_path, capsys):
     )
     assert capsys.readouterr().out == (
         "\n"
-        "[myapp] Entering Docker context...\n"
+        "Entering Docker context...\n"
+        "Docker| ------------------------------------------------------------------\n"
+        "Docker| ------------------------------------------------------------------\n"
+        "Leaving Docker context.\n"
         "\n"
-        "[myapp] Leaving Docker context\n"
+    )
+
+
+@pytest.mark.skipif(
+    sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
+)
+def test_cwd(mock_docker_app_context, tmp_path, capsys):
+    """A subprocess call can use a working directory relative to the project folder."""
+
+    mock_docker_app_context.run(
+        ["hello", "world"],
+        cwd=tmp_path / "bundle" / "foobar",
+    )
+
+    mock_docker_app_context.tools.subprocess._subprocess.Popen.assert_called_once_with(
+        [
+            "docker",
+            "run",
+            "--rm",
+            "--volume",
+            f"{tmp_path / 'bundle'}:/app:z",
+            "--volume",
+            f"{tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z",
+            "--workdir",
+            "/app/foobar",
+            "briefcase/com.example.myapp:py3.X",
+            "hello",
+            "world",
+        ],
+        text=True,
+        encoding=ANY,
+        bufsize=1,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+    )
+    assert capsys.readouterr().out == (
+        "\n"
+        "Entering Docker context...\n"
+        "Docker| ------------------------------------------------------------------\n"
+        "Docker| ------------------------------------------------------------------\n"
+        "Leaving Docker context.\n"
+        "\n"
     )
 
 
@@ -130,7 +178,7 @@ def test_call_with_arg_and_env(mock_docker_app_context, tmp_path, capsys):
             "run",
             "--rm",
             "--volume",
-            f"{tmp_path / 'platform'}:/app:z",
+            f"{tmp_path / 'bundle'}:/app:z",
             "--volume",
             f"{tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z",
             "--env",
@@ -149,9 +197,11 @@ def test_call_with_arg_and_env(mock_docker_app_context, tmp_path, capsys):
     )
     assert capsys.readouterr().out == (
         "\n"
-        "[myapp] Entering Docker context...\n"
+        "Entering Docker context...\n"
+        "Docker| ------------------------------------------------------------------\n"
+        "Docker| ------------------------------------------------------------------\n"
+        "Leaving Docker context.\n"
         "\n"
-        "[myapp] Leaving Docker context\n"
     )
 
 
@@ -166,7 +216,7 @@ def test_call_with_path_arg_and_env(mock_docker_app_context, tmp_path, capsys):
         ["hello", tmp_path / "location"],
         env={
             "MAGIC": "True",
-            "PATH": f"/somewhere/safe:{tmp_path / 'briefcase' / 'tools'}:{tmp_path / 'platform' / 'location'}",
+            "PATH": f"/somewhere/safe:{tmp_path / 'briefcase' / 'tools'}:{tmp_path / 'bundle' / 'location'}",
         },
         cwd=tmp_path / "cwd",
     )
@@ -177,18 +227,19 @@ def test_call_with_path_arg_and_env(mock_docker_app_context, tmp_path, capsys):
             "run",
             "--rm",
             "--volume",
-            f"{tmp_path / 'platform'}:/app:z",
+            f"{tmp_path / 'bundle'}:/app:z",
             "--volume",
             f"{tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z",
             "--env",
             "MAGIC=True",
             "--env",
             "PATH=/somewhere/safe:/home/brutus/.cache/briefcase/tools:/app/location",
+            "--workdir",
+            f"{tmp_path / 'cwd'}",
             "briefcase/com.example.myapp:py3.X",
             "hello",
             os.fsdecode(tmp_path / "location"),
         ],
-        cwd=os.fsdecode(tmp_path / "cwd"),
         text=True,
         encoding=ANY,
         bufsize=1,
@@ -197,9 +248,11 @@ def test_call_with_path_arg_and_env(mock_docker_app_context, tmp_path, capsys):
     )
     assert capsys.readouterr().out == (
         "\n"
-        "[myapp] Entering Docker context...\n"
+        "Entering Docker context...\n"
+        "Docker| ------------------------------------------------------------------\n"
+        "Docker| ------------------------------------------------------------------\n"
+        "Leaving Docker context.\n"
         "\n"
-        "[myapp] Leaving Docker context\n"
     )
 
 
@@ -214,7 +267,7 @@ def test_interactive_with_path_arg_and_env_and_mounts(
         ["hello", tmp_path / "location"],
         env={
             "MAGIC": "True",
-            "PATH": f"/somewhere/safe:{tmp_path / 'briefcase' / 'tools'}:{tmp_path / 'platform' / 'location'}",
+            "PATH": f"/somewhere/safe:{tmp_path / 'briefcase' / 'tools'}:{tmp_path / 'bundle' / 'location'}",
         },
         cwd=tmp_path / "cwd",
         interactive=True,
@@ -232,7 +285,7 @@ def test_interactive_with_path_arg_and_env_and_mounts(
             "--rm",
             "-it",
             "--volume",
-            f"{tmp_path / 'platform'}:/app:z",
+            f"{tmp_path / 'bundle'}:/app:z",
             "--volume",
             f"{tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z",
             "--volume",
@@ -243,19 +296,22 @@ def test_interactive_with_path_arg_and_env_and_mounts(
             "MAGIC=True",
             "--env",
             "PATH=/somewhere/safe:/home/brutus/.cache/briefcase/tools:/app/location",
+            "--workdir",
+            f"{tmp_path / 'cwd'}",
             "briefcase/com.example.myapp:py3.X",
             "hello",
             os.fsdecode(tmp_path / "location"),
         ],
-        cwd=os.fsdecode(tmp_path / "cwd"),
         text=True,
         encoding=ANY,
     )
     assert capsys.readouterr().out == (
         "\n"
-        "[myapp] Entering Docker context...\n"
+        "Entering Docker context...\n"
+        "Docker| ------------------------------------------------------------------\n"
+        "Docker| ------------------------------------------------------------------\n"
+        "Leaving Docker context.\n"
         "\n"
-        "[myapp] Leaving Docker context\n"
     )
 
 
@@ -274,7 +330,7 @@ def test_simple_verbose_call(mock_docker_app_context, tmp_path, capsys):
             "run",
             "--rm",
             "--volume",
-            f"{tmp_path / 'platform'}:/app:z",
+            f"{tmp_path / 'bundle'}:/app:z",
             "--volume",
             f"{tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z",
             "briefcase/com.example.myapp:py3.X",
@@ -289,18 +345,20 @@ def test_simple_verbose_call(mock_docker_app_context, tmp_path, capsys):
     )
     assert capsys.readouterr().out == (
         "\n"
-        "[myapp] Entering Docker context...\n"
-        "\n"
-        ">>> Running Command:\n"
-        ">>>     docker run "
+        "Entering Docker context...\n"
+        "Docker| ------------------------------------------------------------------\n"
+        "Docker| \n"
+        "Docker| >>> Running Command:\n"
+        "Docker| >>>     docker run "
         "--rm "
-        f"--volume {tmp_path / 'platform'}:/app:z "
+        f"--volume {tmp_path / 'bundle'}:/app:z "
         f"--volume {tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z "
         "briefcase/com.example.myapp:py3.X "
         "hello world\n"
-        ">>> Working Directory:\n"
-        f">>>     {Path.cwd()}\n"
-        ">>> Return code: 0\n"
+        "Docker| >>> Working Directory:\n"
+        f"Docker| >>>     {Path.cwd()}\n"
+        "Docker| >>> Return code: 0\n"
+        "Docker| ------------------------------------------------------------------\n"
+        "Leaving Docker context.\n"
         "\n"
-        "[myapp] Leaving Docker context\n"
     )

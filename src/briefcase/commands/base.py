@@ -9,12 +9,16 @@ import textwrap
 from abc import ABC, abstractmethod
 from argparse import RawDescriptionHelpFormatter
 from pathlib import Path
+from typing import Optional
 
 from cookiecutter import exceptions as cookiecutter_exceptions
 from cookiecutter.repository import is_repo_url
 from platformdirs import PlatformDirs
 
-from briefcase.platforms import get_output_formats, get_platforms
+try:
+    import importlib_metadata
+except ImportError:
+    import importlib.metadata as importlib_metadata
 
 try:
     import tomllib
@@ -35,6 +39,7 @@ from briefcase.exceptions import (
 from briefcase.integrations.base import ToolCache
 from briefcase.integrations.download import Download
 from briefcase.integrations.subprocess import Subprocess
+from briefcase.platforms import get_output_formats, get_platforms
 
 
 def create_config(klass, config, msg):
@@ -282,10 +287,17 @@ a custom location for Briefcase's tools.
         """Publish Command factory for the same platform and format."""
         return self._command_factory("publish")
 
+    def build_path(self, app):
+        """The path in which all platform artefacts for the app will be built.
+
+        :param app: The app config
+        """
+        return self.base_path / "build" / app.app_name / self.platform.lower()
+
     @property
-    def platform_path(self):
+    def dist_path(self):
         """The path for all applications for this command's platform."""
-        return self.base_path / self.platform
+        return self.base_path / "dist"
 
     def bundle_path(self, app):
         """The path to the bundle for the app in the output format.
@@ -293,10 +305,12 @@ a custom location for Briefcase's tools.
         The bundle is the template-generated source form of the app.
         The path will usually be a directory, the existence of which is
         indicative that the template has been rolled out for an app.
+        The leaf of this path is the base of the content generated from
+        template.
 
         :param app: The app config
         """
-        return self.platform_path / self.output_format / app.formal_name
+        return self.build_path(app) / self.output_format.lower()
 
     @abstractmethod
     def binary_path(self, app):
@@ -309,21 +323,6 @@ a custom location for Briefcase's tools.
         be executed.
 
         :param app: The app config
-        """
-        ...
-
-    @abstractmethod
-    def distribution_path(self, app, packaging_format):
-        """The path to the distributable artefact for the app in the given packaging
-        format.
-
-        This is the single file that should be uploaded for distribution.
-        This may be the binary (if the binary is a self-contained executable);
-        however, if the output format produces an installer, it will be the
-        path to the installer.
-
-        :param app: The app config
-        :param packaging_format: The format of the redistributable artefact.
         """
         ...
 
@@ -443,6 +442,21 @@ a custom location for Briefcase's tools.
         return path
 
     @property
+    def briefcase_required_python_version(self):
+        """The major.minor of the minimum Python version required by Briefcase itself.
+
+        This is extracted from packaging metadata.
+        """
+        # Native format is ">=3.8"
+        return tuple(
+            int(v)
+            for v in importlib_metadata.metadata("briefcase")["Requires-Python"]
+            .split("=")[1]
+            .strip()
+            .split(".")
+        )
+
+    @property
     def python_version_tag(self):
         """The major.minor of the Python version in use, as a string.
 
@@ -464,6 +478,51 @@ a custom location for Briefcase's tools.
         Raises MissingToolException if a required system tool is missing.
         """
         pass
+
+    def finalize_app_config(self, app: BaseConfig):
+        """Finalize the application config.
+
+        Some app configurations (notably, Linux system packages like .deb) have
+        configurations that are deeper than other platforms, because they need
+        to include components that are dependent on command-line arguments. They
+        may also require the existence of system tools to complete
+        configuration.
+
+        The final app configuration merges those "deep" properties into the app
+        configuration, and performs any other app-specific platform
+        configuration and verification that is required as a result of
+        command-line arguments.
+
+        :param app: The app configuration to finalize.
+        """
+        pass
+
+    def finalize(self, app: Optional[BaseConfig] = None):
+        """Finalize Briefcase configuration.
+
+        This will:
+
+        1. Ensure that the host has been verified
+        2. Ensure that the platform tools have been verified
+        3. Ensure that app configurations have been finalized.
+
+        App finalization will only occur once per invocation.
+
+        :param app: If provided, the specific app configuration
+            to finalize. By default, all apps will be finalized.
+        """
+        self.verify_host()
+        self.verify_tools()
+
+        if app is None:
+            for app in self.apps.values():
+                if hasattr(app, "__draft__"):
+                    self.finalize_app_config(app)
+                    delattr(app, "__draft__")
+        else:
+            if hasattr(app, "__draft__"):
+                self.finalize_app_config(app)
+                delattr(app, "__draft__")
 
     def verify_app_tools(self, app: BaseConfig):
         """Verify that tools needed to run the command for this app exist."""

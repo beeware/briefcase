@@ -1,3 +1,4 @@
+from abc import abstractmethod
 from typing import Optional
 
 from briefcase.config import BaseConfig
@@ -16,6 +17,22 @@ class PackageCommand(BaseCommand):
     @property
     def default_packaging_format(self):
         return self.output_format
+
+    @abstractmethod
+    def distribution_path(self, app):
+        """The path to the distributable artefact for the app.
+
+        Requires that the packaging format has been annotated onto
+        the application definition
+
+        This is the single file that should be uploaded for distribution.
+        This may be the binary (if the binary is a self-contained executable);
+        however, if the output format produces an installer, it will be the
+        path to the installer.
+
+        :param app: The app config
+        """
+        ...
 
     def package_app(self, app: BaseConfig, **options):
         """Package an application.
@@ -61,15 +78,24 @@ class PackageCommand(BaseCommand):
         else:
             state = None
 
+        # Annotate the packaging format onto the app
+        app.packaging_format = packaging_format
+
+        # Verify the app tools, which will do final confirmation that we can
+        # package in the requested format.
         self.verify_app_tools(app)
 
-        state = self.package_app(
-            app, packaging_format=packaging_format, **full_options(state, options)
-        )
+        # If the distribution artefact already exists, remove it.
+        if self.distribution_path(app).exists():
+            self.distribution_path(app).unlink()
+        else:
+            # Ensure the dist folder exists.
+            self.dist_path.mkdir(exist_ok=True)
 
-        filename = self.distribution_path(
-            app, packaging_format=packaging_format
-        ).relative_to(self.base_path)
+        # Package the app
+        state = self.package_app(app, **full_options(state, options))
+
+        filename = self.distribution_path(app).relative_to(self.base_path)
         self.logger.info(f"Packaged {filename}", prefix=app.app_name)
         return state
 
@@ -110,9 +136,9 @@ class PackageCommand(BaseCommand):
     def __call__(
         self, app: Optional[BaseConfig] = None, update: bool = False, **options
     ):
-        # Confirm host compatibility and all required tools are available
-        self.verify_host()
-        self.verify_tools()
+        # Confirm host compatibility, that all required tools are available,
+        # and that the app configuration is finalized.
+        self.finalize(app)
 
         if app:
             state = self._package_app(app, update=update, **options)

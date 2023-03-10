@@ -1,4 +1,4 @@
-def test_update_app(update_command, first_app):
+def test_update_app(update_command, first_app, tmp_path):
     """If the app already exists, it will be updated."""
     update_command.update_app(
         update_command.apps["first"],
@@ -9,20 +9,29 @@ def test_update_app(update_command, first_app):
 
     # The right sequence of things will be done
     assert update_command.actions == [
-        ("code", update_command.apps["first"], False),
-        ("cleanup", update_command.apps["first"]),
+        ("verify-app-tools", "first"),
+        ("code", "first", False),
+        ("cleanup", "first"),
     ]
 
     # App content and resources have been updated
-    assert (update_command.platform_path / "first.dummy" / "code.py").exists()
+    assert (
+        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "code.py"
+    ).exists()
     # requirements and resources haven't been updated
-    assert not (update_command.platform_path / "first.dummy" / "requirements").exists()
-    assert not (update_command.platform_path / "first.dummy" / "resources").exists()
+    assert not (
+        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "requirements"
+    ).exists()
+    assert not (
+        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "resources"
+    ).exists()
     # ... and the app still exists
-    assert (update_command.platform_path / "first.dummy" / "Content").exists()
+    assert (
+        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "first.bundle"
+    ).exists()
 
 
-def test_update_non_existing_app(update_command):
+def test_update_non_existing_app(update_command, tmp_path):
     """If the app hasn't been generated yet, it won't be created."""
 
     update_command.update_app(
@@ -36,11 +45,15 @@ def test_update_non_existing_app(update_command):
     assert update_command.actions == []
 
     # App content has been not updated
-    assert not (update_command.platform_path / "first.dummy" / "requirements").exists()
-    assert not (update_command.platform_path / "first.dummy" / "code.py").exists()
+    assert not (
+        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "requirements"
+    ).exists()
+    assert not (
+        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "code.py"
+    ).exists()
 
 
-def test_update_app_with_requirements(update_command, first_app):
+def test_update_app_with_requirements(update_command, first_app, tmp_path):
     """If the user requests a dependency update, they are updated."""
     update_command.update_app(
         update_command.apps["first"],
@@ -51,21 +64,30 @@ def test_update_app_with_requirements(update_command, first_app):
 
     # The right sequence of things will be done
     assert update_command.actions == [
-        ("code", update_command.apps["first"], False),
-        ("requirements", update_command.apps["first"], False),
-        ("cleanup", update_command.apps["first"]),
+        ("verify-app-tools", "first"),
+        ("code", "first", False),
+        ("requirements", "first", False),
+        ("cleanup", "first"),
     ]
 
     # App content has been updated
-    assert (update_command.platform_path / "first.dummy" / "requirements").exists()
-    assert (update_command.platform_path / "first.dummy" / "code.py").exists()
+    assert (
+        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "requirements"
+    ).exists()
+    assert (
+        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "code.py"
+    ).exists()
     # Extras haven't been updated
-    assert not (update_command.platform_path / "first.dummy" / "resources").exists()
+    assert not (
+        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "resources"
+    ).exists()
     # ... and the app still exists
-    assert (update_command.platform_path / "first.dummy" / "Content").exists()
+    assert (
+        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "first.bundle"
+    ).exists()
 
 
-def test_update_app_with_resources(update_command, first_app):
+def test_update_app_with_resources(update_command, first_app, tmp_path):
     """If the user requests a resources update, they are updated."""
     update_command.update_app(
         update_command.apps["first"],
@@ -76,21 +98,30 @@ def test_update_app_with_resources(update_command, first_app):
 
     # The right sequence of things will be done
     assert update_command.actions == [
-        ("code", update_command.apps["first"], False),
-        ("resources", update_command.apps["first"]),
-        ("cleanup", update_command.apps["first"]),
+        ("verify-app-tools", "first"),
+        ("code", "first", False),
+        ("resources", "first"),
+        ("cleanup", "first"),
     ]
 
     # App content and resources have been updated
-    assert (update_command.platform_path / "first.dummy" / "code.py").exists()
-    assert (update_command.platform_path / "first.dummy" / "resources").exists()
+    assert (
+        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "code.py"
+    ).exists()
+    assert (
+        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "resources"
+    ).exists()
     # requirements haven't been updated
-    assert not (update_command.platform_path / "first.dummy" / "requirements").exists()
+    assert not (
+        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "requirements"
+    ).exists()
     # ... and the app still exists
-    assert (update_command.platform_path / "first.dummy" / "Content").exists()
+    assert (
+        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "first.bundle"
+    ).exists()
 
 
-def test_update_app_test_mode(update_command, first_app):
+def test_update_app_test_mode(update_command, first_app, tmp_path):
     """Update app in test mode."""
     # Pass in the defaults for the update flags
     update_command.update_app(
@@ -102,20 +133,29 @@ def test_update_app_test_mode(update_command, first_app):
 
     # The right sequence of things will be done
     assert update_command.actions == [
-        ("code", update_command.apps["first"], True),
-        ("cleanup", update_command.apps["first"]),
+        ("verify-app-tools", "first"),
+        ("code", "first", True),
+        ("cleanup", "first"),
     ]
 
     # App code has been updated
-    assert (update_command.platform_path / "first.dummy" / "code.py").exists()
+    assert (
+        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "code.py"
+    ).exists()
     # App requirements and resources have not been updated
-    assert not (update_command.platform_path / "first.dummy" / "requirements").exists()
-    assert not (update_command.platform_path / "first.dummy" / "resources").exists()
+    assert not (
+        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "requirements"
+    ).exists()
+    assert not (
+        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "resources"
+    ).exists()
     # ... and the app still exists
-    assert (update_command.platform_path / "first.dummy" / "Content").exists()
+    assert (
+        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "first.bundle"
+    ).exists()
 
 
-def test_update_app_test_mode_requirements(update_command, first_app):
+def test_update_app_test_mode_requirements(update_command, first_app, tmp_path):
     """Update app in test mode, but with requirements."""
     # Pass in the defaults for the update flags
     update_command.update_app(
@@ -127,21 +167,30 @@ def test_update_app_test_mode_requirements(update_command, first_app):
 
     # The right sequence of things will be done
     assert update_command.actions == [
-        ("code", update_command.apps["first"], True),
-        ("requirements", update_command.apps["first"], True),
-        ("cleanup", update_command.apps["first"]),
+        ("verify-app-tools", "first"),
+        ("code", "first", True),
+        ("requirements", "first", True),
+        ("cleanup", "first"),
     ]
 
     # App content and requirements have been updated
-    assert (update_command.platform_path / "first.dummy" / "code.py").exists()
-    assert (update_command.platform_path / "first.dummy" / "requirements").exists()
+    assert (
+        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "code.py"
+    ).exists()
+    assert (
+        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "requirements"
+    ).exists()
     # App resources have not been updated
-    assert not (update_command.platform_path / "first.dummy" / "resources").exists()
+    assert not (
+        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "resources"
+    ).exists()
     # ... and the app still exists
-    assert (update_command.platform_path / "first.dummy" / "Content").exists()
+    assert (
+        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "first.bundle"
+    ).exists()
 
 
-def test_update_app_test_mode_resources(update_command, first_app):
+def test_update_app_test_mode_resources(update_command, first_app, tmp_path):
     """Update app in test mode, but with resources."""
     # Pass in the defaults for the update flags
     update_command.update_app(
@@ -153,15 +202,24 @@ def test_update_app_test_mode_resources(update_command, first_app):
 
     # The right sequence of things will be done
     assert update_command.actions == [
-        ("code", update_command.apps["first"], True),
-        ("resources", update_command.apps["first"]),
-        ("cleanup", update_command.apps["first"]),
+        ("verify-app-tools", "first"),
+        ("code", "first", True),
+        ("resources", "first"),
+        ("cleanup", "first"),
     ]
 
     # App content and resources have been updated
-    assert (update_command.platform_path / "first.dummy" / "code.py").exists()
-    assert (update_command.platform_path / "first.dummy" / "resources").exists()
+    assert (
+        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "code.py"
+    ).exists()
+    assert (
+        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "resources"
+    ).exists()
     # App requirements have not been updated
-    assert not (update_command.platform_path / "first.dummy" / "requirements").exists()
+    assert not (
+        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "requirements"
+    ).exists()
     # ... and the app still exists
-    assert (update_command.platform_path / "first.dummy" / "Content").exists()
+    assert (
+        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "first.bundle"
+    ).exists()

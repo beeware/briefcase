@@ -12,6 +12,8 @@ from briefcase.integrations.android_sdk import AndroidSDK
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.android.gradle import GradlePackageCommand
 
+from ....utils import create_file
+
 
 @pytest.fixture
 def package_command(tmp_path, first_app_config):
@@ -27,6 +29,9 @@ def package_command(tmp_path, first_app_config):
     command.tools.sys = MagicMock(spec_set=sys)
     command.tools.requests = MagicMock(spec_set=requests)
     command.tools.subprocess = MagicMock(spec_set=Subprocess)
+
+    # Make sure the dist folder exists
+    (tmp_path / "base_path" / "dist").mkdir(parents=True)
     return command
 
 
@@ -40,18 +45,8 @@ def test_default_packaging_format(package_command):
 
 def test_distribution_path(package_command, first_app_config, tmp_path):
     assert (
-        package_command.distribution_path(first_app_config, packaging_format="any")
-        == tmp_path
-        / "base_path"
-        / "android"
-        / "gradle"
-        / "First App"
-        / "app"
-        / "build"
-        / "outputs"
-        / "bundle"
-        / "release"
-        / "app-release.aab"
+        package_command.distribution_path(first_app_config)
+        == tmp_path / "base_path" / "dist" / "First App-0.0.1.aab"
     )
 
 
@@ -59,12 +54,35 @@ def test_distribution_path(package_command, first_app_config, tmp_path):
     "host_os,gradlew_name",
     [("Windows", "gradlew.bat"), ("NonWindows", "gradlew")],
 )
-def test_execute_gradle(package_command, first_app_config, host_os, gradlew_name):
+def test_execute_gradle(
+    package_command, first_app_config, host_os, gradlew_name, tmp_path
+):
     """Validate that package_app() will launch `gradlew bundleRelease` with the
     appropriate environment & cwd, and that it will use `gradlew.bat` on Windows but
     `gradlew` elsewhere."""
     # Mock out `host_os` so we can validate which name is used for gradlew.
     package_command.tools.host_os = host_os
+
+    # Set up a side effect of invoking gradle to create a bundle
+    def create_bundle(*args, **kwargs):
+        create_file(
+            tmp_path
+            / "base_path"
+            / "build"
+            / "first-app"
+            / "android"
+            / "gradle"
+            / "app"
+            / "build"
+            / "outputs"
+            / "bundle"
+            / "release"
+            / "app-release.aab",
+            "Android release",
+        )
+
+    package_command.tools.subprocess.run.side_effect = create_bundle
+
     # Create mock environment with `key`, which we expect to be preserved, and
     # `ANDROID_SDK_ROOT`, which we expect to be overwritten.
     package_command.tools.os.environ = {"ANDROID_SDK_ROOT": "somewhere", "key": "value"}
@@ -81,6 +99,9 @@ def test_execute_gradle(package_command, first_app_config, host_os, gradlew_name
         env=package_command.tools.android_sdk.env,
         check=True,
     )
+
+    # The release asset has been moved into the dist folder
+    assert (tmp_path / "base_path" / "dist" / "First App-0.0.1.aab").exists()
 
 
 def test_print_gradle_errors(package_command, first_app_config):

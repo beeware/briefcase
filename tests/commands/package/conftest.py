@@ -5,6 +5,8 @@ from briefcase.commands.base import full_options
 from briefcase.config import AppConfig
 from briefcase.console import Console, Log
 
+from ...utils import create_file
+
 
 class DefaultPackageCommand(PackageCommand):
     # An instance of PackageCommand that inherits the default
@@ -17,7 +19,7 @@ class DefaultPackageCommand(PackageCommand):
     def binary_path(self, app):
         return NotImplementedError()
 
-    def distribution_path(self, app, packaging_format):
+    def distribution_path(self, app):
         return NotImplementedError()
 
 
@@ -32,8 +34,9 @@ class DummyPackageCommand(PackageCommand):
     It only serves to track which actions would be performed.
     """
 
-    platform = "tester"
-    output_format = "dummy"
+    # Platform and format contain upper case to test case normalization
+    platform = "Tester"
+    output_format = "Dummy"
     description = "Dummy package command"
 
     @property
@@ -51,14 +54,11 @@ class DummyPackageCommand(PackageCommand):
 
         self.actions = []
 
-    def bundle_path(self, app):
-        return self.platform_path / app.app_name
-
     def binary_path(self, app):
-        return self.platform_path / app.app_name / f"{app.app_name}.bin"
+        return self.bundle_path(app) / f"{app.app_name}.bin"
 
-    def distribution_path(self, app, packaging_format):
-        return self.platform_path / f"{app.app_name}.{packaging_format}"
+    def distribution_path(self, app):
+        return self.dist_path / f"{app.app_name}-{app.version}.{app.packaging_format}"
 
     def verify_host(self):
         super().verify_host()
@@ -67,6 +67,10 @@ class DummyPackageCommand(PackageCommand):
     def verify_tools(self):
         super().verify_tools()
         self.actions.append(("verify-tools",))
+
+    def finalize_app_config(self, app):
+        super().finalize_app_config(app=app)
+        self.actions.append(("finalize-app-config", app.app_name))
 
     def verify_app_tools(self, app):
         super().verify_app_tools(app=app)
@@ -106,7 +110,8 @@ class DummyPackageCommand(PackageCommand):
 
 @pytest.fixture
 def package_command(tmp_path):
-    return DummyPackageCommand(base_path=tmp_path)
+    (tmp_path / "base_path").mkdir()
+    return DummyPackageCommand(base_path=tmp_path / "base_path")
 
 
 @pytest.fixture
@@ -124,9 +129,10 @@ def first_app_config():
 def first_app_unbuilt(first_app_config, tmp_path):
     # The same fixture as first_app_config,
     # but ensures that the bundle for the app exists
-    (tmp_path / "tester" / "first").mkdir(parents=True, exist_ok=True)
-    with (tmp_path / "tester" / "first" / "first.dummy").open("w") as f:
-        f.write("first.dummy")
+    create_file(
+        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "first.dummy",
+        "first.dummy",
+    )
 
     return first_app_config
 
@@ -135,8 +141,10 @@ def first_app_unbuilt(first_app_config, tmp_path):
 def first_app(first_app_unbuilt, tmp_path):
     # The same fixture as first_app_uncompiled,
     # but ensures that the binary for the app exists
-    with (tmp_path / "tester" / "first" / "first.bin").open("w") as f:
-        f.write("first.bin")
+    create_file(
+        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "first.bin",
+        "first.bin",
+    )
 
     return first_app_unbuilt
 
@@ -156,9 +164,16 @@ def second_app_config():
 def second_app_uncompiled(second_app_config, tmp_path):
     # The same fixture as second_app_config,
     # but ensures that the bundle for the app exists
-    (tmp_path / "tester" / "second").mkdir(parents=True, exist_ok=True)
-    with (tmp_path / "tester" / "second" / "second.dummy").open("w") as f:
-        f.write("second.dummy")
+    create_file(
+        tmp_path
+        / "base_path"
+        / "build"
+        / "second"
+        / "tester"
+        / "dummy"
+        / "second.dummy",
+        "second.dummy",
+    )
 
     return second_app_config
 
@@ -167,8 +182,9 @@ def second_app_uncompiled(second_app_config, tmp_path):
 def second_app(second_app_uncompiled, tmp_path):
     # The same fixture as second_app_uncompiled,
     # but ensures that the binary for the app exists
-    (tmp_path / "tester").mkdir(parents=True, exist_ok=True)
-    with (tmp_path / "tester" / "second" / "second.bin").open("w") as f:
-        f.write("second.bin")
+    create_file(
+        tmp_path / "base_path" / "build" / "second" / "tester" / "dummy" / "second.bin",
+        "second.bin",
+    )
 
     return second_app_uncompiled

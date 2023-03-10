@@ -10,19 +10,19 @@ Icon format
 iOS projects use ``.png`` format icons. An application must provide icons of
 the following sizes:
 
-  * 20px
-  * 29px
-  * 40px
-  * 58px
-  * 60px
-  * 76px
-  * 80px
-  * 87px
-  * 120px
-  * 152px
-  * 167px
-  * 180px
-  * 1024px
+* 20px
+* 29px
+* 40px
+* 58px
+* 60px
+* 76px
+* 80px
+* 87px
+* 120px
+* 152px
+* 167px
+* 180px
+* 1024px
 
 Splash Image format
 ===================
@@ -30,9 +30,9 @@ Splash Image format
 iOS projects use ``.png`` format splash screen images. A splash screen should
 be a square, transparent image, provided in the following sizes:
 
-  * 1024px
-  * 2048px
-  * 3072px
+* 1024px
+* 2048px
+* 3072px
 
 You can specify a background color for the splash screen using the
 ``splash_background_color`` configuration setting.

@@ -48,5 +48,5 @@ def test_build(build_command, first_app_config, tmp_path):
     build_command.tools.flatpak.build.assert_called_once_with(
         bundle="com.example",
         app_name="first-app",
-        path=tmp_path / "base_path" / "linux" / "flatpak" / "First App",
+        path=tmp_path / "base_path" / "build" / "first-app" / "linux" / "flatpak",
     )

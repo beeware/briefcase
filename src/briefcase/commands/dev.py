@@ -35,10 +35,6 @@ class DevCommand(RunAppMixin, BaseCommand):
         """A placeholder; Dev command doesn't have a binary path."""
         raise NotImplementedError()
 
-    def distribution_path(self, app, packaging_format):
-        """A placeholder; Dev command doesn't have a distribution path."""
-        raise NotImplementedError()
-
     def add_options(self, parser):
         parser.add_argument("-a", "--app", dest="appname", help="The app to run")
         parser.add_argument(
@@ -165,10 +161,6 @@ class DevCommand(RunAppMixin, BaseCommand):
         passthrough: Optional[List[str]] = None,
         **options,
     ):
-        # Confirm host compatibility and all required tools are available
-        self.verify_host()
-        self.verify_tools()
-
         # Which app should we run? If there's only one defined
         # in pyproject.toml, then we can use it as a default;
         # otherwise look for a -a/--app option.
@@ -186,6 +178,9 @@ class DevCommand(RunAppMixin, BaseCommand):
             raise BriefcaseCommandError(
                 "Project specifies more than one application; use --app to specify which one to start."
             )
+        # Confirm host compatibility, that all required tools are available,
+        # and that the app configuration is finalized.
+        self.finalize(app)
 
         self.verify_app_tools(app)
 

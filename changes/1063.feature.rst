@@ -1,0 +1,1 @@
+Support for `.rpm` packaging was added to the Linux system backend.

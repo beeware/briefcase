@@ -11,6 +11,10 @@ def test_open(open_command, first_app, second_app):
         ("verify-host",),
         # Tools are verified
         ("verify-tools",),
+        # App configs have been finalized
+        ("finalize-app-config", "first"),
+        ("finalize-app-config", "second"),
+        # App tools are verified
         ("verify-app-tools", "first"),
         # open the first app
         ("open", "first"),
@@ -33,6 +37,9 @@ def test_open_single(open_command, first_app):
         ("verify-host",),
         # Tools are verified
         ("verify-tools",),
+        # App config has been finalized
+        ("finalize-app-config", "first"),
+        # App tools are verified
         ("verify-app-tools", "first"),
         # open the first app
         ("open", "first"),
@@ -52,8 +59,11 @@ def test_create_before_open(open_command, tmp_path):
         ("verify-host",),
         # Tools are verified
         ("verify-tools",),
+        # App config has been finalized
+        ("finalize-app-config", "first"),
         # create, then open the first app
         ("create", "first", {}),
+        # App tools are verified
         ("verify-app-tools", "first"),
         ("open", "first"),
     ]

@@ -21,7 +21,13 @@ def first_app(first_app_config, tmp_path):
     """A fixture for the first app, rolled out on disk."""
     # Make it look like the template has been generated
     app_dir = (
-        tmp_path / "base_path" / "linux" / "appimage" / "First App" / "First App.AppDir"
+        tmp_path
+        / "base_path"
+        / "build"
+        / "first-app"
+        / "linux"
+        / "appimage"
+        / "First App.AppDir"
     )
     (app_dir / "usr" / "app" / "support").mkdir(parents=True, exist_ok=True)
     (app_dir / "usr" / "app_packages" / "firstlib").mkdir(parents=True, exist_ok=True)
@@ -148,7 +154,13 @@ def test_build_appimage(build_command, first_app, tmp_path):
 
     # linuxdeploy was invoked
     app_dir = (
-        tmp_path / "base_path" / "linux" / "appimage" / "First App" / "First App.AppDir"
+        tmp_path
+        / "base_path"
+        / "build"
+        / "first-app"
+        / "linux"
+        / "appimage"
+        / "First App.AppDir"
     )
     build_command._subprocess.Popen.assert_called_with(
         [
@@ -175,7 +187,9 @@ def test_build_appimage(build_command, first_app, tmp_path):
             "APPIMAGE_EXTRACT_AND_RUN": "1",
             "ARCH": "wonky",
         },
-        cwd=os.fsdecode(tmp_path / "base_path" / "linux"),
+        cwd=os.fsdecode(
+            tmp_path / "base_path" / "build" / "first-app" / "linux" / "appimage"
+        ),
         text=True,
         encoding=mock.ANY,
         stdout=subprocess.PIPE,
@@ -184,7 +198,14 @@ def test_build_appimage(build_command, first_app, tmp_path):
     )
     # Binary is marked executable
     build_command.tools.os.chmod.assert_called_with(
-        tmp_path / "base_path" / "linux" / "First_App-0.0.1-wonky.AppImage", 0o755
+        tmp_path
+        / "base_path"
+        / "build"
+        / "first-app"
+        / "linux"
+        / "appimage"
+        / "First_App-0.0.1-wonky.AppImage",
+        0o755,
     )
 
 
@@ -222,7 +243,13 @@ def test_build_appimage_with_plugin(build_command, first_app, tmp_path):
 
     # linuxdeploy was invoked
     app_dir = (
-        tmp_path / "base_path" / "linux" / "appimage" / "First App" / "First App.AppDir"
+        tmp_path
+        / "base_path"
+        / "build"
+        / "first-app"
+        / "linux"
+        / "appimage"
+        / "First App.AppDir"
     )
     build_command._subprocess.Popen.assert_called_with(
         [
@@ -254,7 +281,9 @@ def test_build_appimage_with_plugin(build_command, first_app, tmp_path):
             "APPIMAGE_EXTRACT_AND_RUN": "1",
             "ARCH": "wonky",
         },
-        cwd=os.fsdecode(tmp_path / "base_path" / "linux"),
+        cwd=os.fsdecode(
+            tmp_path / "base_path" / "build" / "first-app" / "linux" / "appimage"
+        ),
         text=True,
         encoding=mock.ANY,
         stdout=subprocess.PIPE,
@@ -265,15 +294,23 @@ def test_build_appimage_with_plugin(build_command, first_app, tmp_path):
     build_command.tools.os.chmod.assert_any_call(
         tmp_path
         / "base_path"
+        / "build"
+        / "first-app"
         / "linux"
         / "appimage"
-        / "First App"
         / "linuxdeploy-plugin-something.sh",
         0o755,
     )
     # Binary is marked executable
     build_command.tools.os.chmod.assert_called_with(
-        tmp_path / "base_path" / "linux" / "First_App-0.0.1-wonky.AppImage", 0o755
+        tmp_path
+        / "base_path"
+        / "build"
+        / "first-app"
+        / "linux"
+        / "appimage"
+        / "First_App-0.0.1-wonky.AppImage",
+        0o755,
     )
 
 
@@ -292,7 +329,13 @@ def test_build_failure(build_command, first_app, tmp_path):
 
     # linuxdeploy was invoked
     app_dir = (
-        tmp_path / "base_path" / "linux" / "appimage" / "First App" / "First App.AppDir"
+        tmp_path
+        / "base_path"
+        / "build"
+        / "first-app"
+        / "linux"
+        / "appimage"
+        / "First App.AppDir"
     )
     build_command._subprocess.Popen.assert_called_with(
         [
@@ -319,7 +362,9 @@ def test_build_failure(build_command, first_app, tmp_path):
             "APPIMAGE_EXTRACT_AND_RUN": "1",
             "ARCH": "wonky",
         },
-        cwd=os.fsdecode(tmp_path / "base_path" / "linux"),
+        cwd=os.fsdecode(
+            tmp_path / "base_path" / "build" / "first-app" / "linux" / "appimage"
+        ),
         text=True,
         encoding=mock.ANY,
         stdout=subprocess.PIPE,
@@ -350,12 +395,18 @@ def test_build_appimage_in_docker(build_command, first_app, tmp_path, monkeypatc
         image_tag=f"briefcase/com.example.first-app:py3.{sys.version_info.minor}",
         dockerfile_path=tmp_path
         / "base_path"
+        / "build"
+        / "first-app"
         / "linux"
         / "appimage"
-        / "First App"
         / "Dockerfile",
         app_base_path=tmp_path / "base_path",
-        host_platform_path=tmp_path / "base_path" / "linux",
+        host_bundle_path=tmp_path
+        / "base_path"
+        / "build"
+        / "first-app"
+        / "linux"
+        / "appimage",
         host_data_path=tmp_path / "briefcase",
         python_version=f"3.{sys.version_info.minor}",
     )
@@ -369,7 +420,7 @@ def test_build_appimage_in_docker(build_command, first_app, tmp_path, monkeypatc
             "run",
             "--rm",
             "--volume",
-            f"{build_command.platform_path}:/app:z",
+            f"{tmp_path / 'base_path' / 'build' / 'first-app' / 'linux' / 'appimage'}:/app:z",
             "--volume",
             f"{build_command.data_path}:/home/brutus/.cache/briefcase:z",
             "--env",
@@ -380,22 +431,23 @@ def test_build_appimage_in_docker(build_command, first_app, tmp_path, monkeypatc
             "APPIMAGE_EXTRACT_AND_RUN=1",
             "--env",
             "ARCH=wonky",
+            "--workdir",
+            "/app",
             f"briefcase/com.example.first-app:py3.{sys.version_info.minor}",
             "/home/brutus/.cache/briefcase/tools/linuxdeploy-wonky.AppImage",
             "--appdir",
-            "/app/appimage/First App/First App.AppDir",
+            "/app/First App.AppDir",
             "--desktop-file",
-            "/app/appimage/First App/First App.AppDir/com.example.first-app.desktop",
+            "/app/First App.AppDir/com.example.first-app.desktop",
             "--output",
             "appimage",
             "--deploy-deps-only",
-            "/app/appimage/First App/First App.AppDir/usr/app/support",
+            "/app/First App.AppDir/usr/app/support",
             "--deploy-deps-only",
-            "/app/appimage/First App/First App.AppDir/usr/app_packages/firstlib",
+            "/app/First App.AppDir/usr/app_packages/firstlib",
             "--deploy-deps-only",
-            "/app/appimage/First App/First App.AppDir/usr/app_packages/secondlib",
+            "/app/First App.AppDir/usr/app_packages/secondlib",
         ],
-        cwd=os.fsdecode(tmp_path / "base_path" / "linux"),
         text=True,
         encoding=mock.ANY,
         stdout=subprocess.PIPE,
@@ -404,7 +456,14 @@ def test_build_appimage_in_docker(build_command, first_app, tmp_path, monkeypatc
     )
     # Binary is marked executable
     build_command.tools.os.chmod.assert_called_with(
-        tmp_path / "base_path" / "linux" / "First_App-0.0.1-wonky.AppImage", 0o755
+        tmp_path
+        / "base_path"
+        / "build"
+        / "first-app"
+        / "linux"
+        / "appimage"
+        / "First_App-0.0.1-wonky.AppImage",
+        0o755,
     )
 
 
@@ -450,12 +509,18 @@ def test_build_appimage_with_plugins_in_docker(build_command, first_app, tmp_pat
         image_tag=f"briefcase/com.example.first-app:py3.{sys.version_info.minor}",
         dockerfile_path=tmp_path
         / "base_path"
+        / "build"
+        / "first-app"
         / "linux"
         / "appimage"
-        / "First App"
         / "Dockerfile",
         app_base_path=tmp_path / "base_path",
-        host_platform_path=tmp_path / "base_path" / "linux",
+        host_bundle_path=tmp_path
+        / "base_path"
+        / "build"
+        / "first-app"
+        / "linux"
+        / "appimage",
         host_data_path=tmp_path / "briefcase",
         python_version=f"3.{sys.version_info.minor}",
     )
@@ -469,7 +534,7 @@ def test_build_appimage_with_plugins_in_docker(build_command, first_app, tmp_pat
             "run",
             "--rm",
             "--volume",
-            f"{build_command.platform_path}:/app:z",
+            f"{tmp_path / 'base_path' / 'build' / 'first-app' / 'linux' / 'appimage'}:/app:z",
             "--volume",
             f"{build_command.data_path}:/home/brutus/.cache/briefcase:z",
             "--env",
@@ -477,7 +542,7 @@ def test_build_appimage_with_plugins_in_docker(build_command, first_app, tmp_pat
             "--env",
             (
                 "PATH=/home/brutus/.cache/briefcase/tools/linuxdeploy_plugins/gtk"
-                ":/app/appimage/First App:/docker/bin:/docker/sbin"
+                ":/app:/docker/bin:/docker/sbin"
             ),
             "--env",
             "VERSION=0.0.1",
@@ -487,26 +552,27 @@ def test_build_appimage_with_plugins_in_docker(build_command, first_app, tmp_pat
             "APPIMAGE_EXTRACT_AND_RUN=1",
             "--env",
             "ARCH=wonky",
+            "--workdir",
+            "/app",
             f"briefcase/com.example.first-app:py3.{sys.version_info.minor}",
             "/home/brutus/.cache/briefcase/tools/linuxdeploy-wonky.AppImage",
             "--appdir",
-            "/app/appimage/First App/First App.AppDir",
+            "/app/First App.AppDir",
             "--desktop-file",
-            "/app/appimage/First App/First App.AppDir/com.example.first-app.desktop",
+            "/app/First App.AppDir/com.example.first-app.desktop",
             "--output",
             "appimage",
             "--deploy-deps-only",
-            "/app/appimage/First App/First App.AppDir/usr/app/support",
+            "/app/First App.AppDir/usr/app/support",
             "--deploy-deps-only",
-            "/app/appimage/First App/First App.AppDir/usr/app_packages/firstlib",
+            "/app/First App.AppDir/usr/app_packages/firstlib",
             "--deploy-deps-only",
-            "/app/appimage/First App/First App.AppDir/usr/app_packages/secondlib",
+            "/app/First App.AppDir/usr/app_packages/secondlib",
             "--plugin",
             "gtk",
             "--plugin",
             "something",
         ],
-        cwd=os.fsdecode(tmp_path / "base_path" / "linux"),
         text=True,
         encoding=mock.ANY,
         stdout=subprocess.PIPE,
@@ -517,13 +583,21 @@ def test_build_appimage_with_plugins_in_docker(build_command, first_app, tmp_pat
     build_command.tools.os.chmod.assert_any_call(
         tmp_path
         / "base_path"
+        / "build"
+        / "first-app"
         / "linux"
         / "appimage"
-        / "First App"
         / "linuxdeploy-plugin-something.sh",
         0o755,
     )
     # Binary is marked executable
     build_command.tools.os.chmod.assert_called_with(
-        tmp_path / "base_path" / "linux" / "First_App-0.0.1-wonky.AppImage", 0o755
+        tmp_path
+        / "base_path"
+        / "build"
+        / "first-app"
+        / "linux"
+        / "appimage"
+        / "First_App-0.0.1-wonky.AppImage",
+        0o755,
     )

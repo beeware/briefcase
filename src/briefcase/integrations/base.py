@@ -39,6 +39,9 @@ class Tool(ABC):
 
 
 class ToolCache(Mapping):
+    # Useful fixed filesystem locations
+    ETC_OS_RELEASE: Path = Path("/etc/os-release")
+
     # Briefcase tools
     android_sdk: AndroidSDK
     app_context: Subprocess | DockerAppContext

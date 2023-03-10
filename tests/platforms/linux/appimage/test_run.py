@@ -34,6 +34,8 @@ def run_command(tmp_path):
 def test_unsupported_host_os(run_command, host_os):
     """Error raised for an unsupported OS."""
     run_command.tools.host_os = host_os
+    # Mock the existence of a single app
+    run_command.apps = {"app": None}
 
     with pytest.raises(
         UnsupportedHostError,
@@ -55,7 +57,13 @@ def test_run_app(run_command, first_app_config, tmp_path):
     run_command.tools.subprocess.Popen.assert_called_with(
         [
             os.fsdecode(
-                tmp_path / "base_path" / "linux" / "First_App-0.0.1-wonky.AppImage"
+                tmp_path
+                / "base_path"
+                / "build"
+                / "first-app"
+                / "linux"
+                / "appimage"
+                / "First_App-0.0.1-wonky.AppImage"
             )
         ],
         cwd=tmp_path / "home",
@@ -90,7 +98,13 @@ def test_run_app_with_passthrough(run_command, first_app_config, tmp_path):
     run_command.tools.subprocess.Popen.assert_called_with(
         [
             os.fsdecode(
-                tmp_path / "base_path" / "linux" / "First_App-0.0.1-wonky.AppImage"
+                tmp_path
+                / "base_path"
+                / "build"
+                / "first-app"
+                / "linux"
+                / "appimage"
+                / "First_App-0.0.1-wonky.AppImage"
             ),
             "foo",
             "--bar",
@@ -121,7 +135,13 @@ def test_run_app_failed(run_command, first_app_config, tmp_path):
     run_command.tools.subprocess.Popen.assert_called_with(
         [
             os.fsdecode(
-                tmp_path / "base_path" / "linux" / "First_App-0.0.1-wonky.AppImage"
+                tmp_path
+                / "base_path"
+                / "build"
+                / "first-app"
+                / "linux"
+                / "appimage"
+                / "First_App-0.0.1-wonky.AppImage"
             )
         ],
         cwd=tmp_path / "home",
@@ -147,7 +167,13 @@ def test_run_app_test_mode(run_command, first_app_config, tmp_path):
     run_command.tools.subprocess.Popen.assert_called_with(
         [
             os.fsdecode(
-                tmp_path / "base_path" / "linux" / "First_App-0.0.1-wonky.AppImage"
+                tmp_path
+                / "base_path"
+                / "build"
+                / "first-app"
+                / "linux"
+                / "appimage"
+                / "First_App-0.0.1-wonky.AppImage"
             )
         ],
         cwd=tmp_path / "home",
@@ -183,7 +209,13 @@ def test_run_app_test_mode_with_args(run_command, first_app_config, tmp_path):
     run_command.tools.subprocess.Popen.assert_called_with(
         [
             os.fsdecode(
-                tmp_path / "base_path" / "linux" / "First_App-0.0.1-wonky.AppImage"
+                tmp_path
+                / "base_path"
+                / "build"
+                / "first-app"
+                / "linux"
+                / "appimage"
+                / "First_App-0.0.1-wonky.AppImage"
             ),
             "foo",
             "--bar",

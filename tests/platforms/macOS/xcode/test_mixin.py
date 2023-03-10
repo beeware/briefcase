@@ -33,33 +33,12 @@ def test_binary_path(create_command, first_app_config, tmp_path):
     expected_path = (
         tmp_path
         / "base_path"
-        / "macOS"
-        / "Xcode"
-        / "First App"
+        / "build"
+        / "first-app"
+        / "macos"
+        / "xcode"
         / "build"
         / "Release"
         / "First App.app"
     )
     assert binary_path == expected_path
-
-
-def test_distribution_path_app(create_command, first_app_config, tmp_path):
-    distribution_path = create_command.distribution_path(first_app_config, "app")
-
-    expected_path = (
-        tmp_path
-        / "base_path"
-        / "macOS"
-        / "Xcode"
-        / "First App"
-        / "build"
-        / "Release"
-        / "First App.app"
-    )
-    assert distribution_path == expected_path
-
-
-def test_distribution_path_dmg(create_command, first_app_config, tmp_path):
-    distribution_path = create_command.distribution_path(first_app_config, "dmg")
-
-    assert distribution_path == tmp_path / "base_path" / "macOS" / "First App-0.0.1.dmg"
