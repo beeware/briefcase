@@ -98,8 +98,7 @@ class LinuxFlatpakCreateCommand(LinuxFlatpakMixin, CreateCommand):
     def support_package_url(self, support_revision):
         """The URL of the support package to use for apps of this type.
 
-        Flatpak uses the original CPython sources, and compiles them in the flatpak
-        sandbox.
+        AppImage uses Standalone Python builds.
         """
         version, datestamp = support_revision.split("+")
         return (

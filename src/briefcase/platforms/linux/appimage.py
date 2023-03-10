@@ -124,16 +124,15 @@ class LinuxAppImageCreateCommand(
 ):
     description = "Create and populate a Linux AppImage."
 
-    def support_package_filename(self, support_revision):
-        """The query arguments to use in a support package query request."""
-        return f"Python-{self.python_version_tag}-linux-{self.tools.host_arch}-support.b{support_revision}.tar.gz"
-
     def support_package_url(self, support_revision):
-        """The URL of the support package to use for apps of this type."""
+        """The URL of the support package to use for apps of this type.
+
+        AppImage uses Standalone Python builds.
+        """
+        version, datestamp = support_revision.split("+")
         return (
-            "https://briefcase-support.s3.amazonaws.com/"
-            f"python/{self.python_version_tag}/{self.platform}/{self.tools.host_arch}/"
-            + self.support_package_filename(support_revision)
+            "https://github.com/indygreg/python-build-standalone/releases/download/"
+            f"{datestamp}/cpython-{support_revision}-x86_64-unknown-linux-gnu-install_only.tar.gz"
         )
 
 
