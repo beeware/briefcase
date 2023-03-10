@@ -1,1 +1,0 @@
-The stub executable used by Windows now clears the threading mode before starting the Python app. This caused problems with displaying dialogs in Qt apps.

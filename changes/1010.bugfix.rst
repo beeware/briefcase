@@ -1,1 +1,0 @@
-Briefcase now prevents running commands targeting Windows platforms when not on Windows.

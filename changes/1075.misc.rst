@@ -1,1 +1,0 @@
-Updated the hooks for ``pre-commit`` to recent versions.

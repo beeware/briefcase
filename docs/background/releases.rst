@@ -4,6 +4,54 @@ Release History
 
 .. towncrier release notes start
 
+0.3.13 (2023-03-10)
+===================
+
+Features
+--------
+
+* Distribution artefacts are now generated into a single ``dist`` folder. (`#424 <https://github.com/beeware/briefcase/issues/424>`__)
+* When installing application sources and dependencies, any ``__pycache__`` folders are now automatically removed. (`#986 <https://github.com/beeware/briefcase/issues/986>`__)
+* A Linux System backend was added, supporting ``.deb`` as a packaging format. (`#1062 <https://github.com/beeware/briefcase/issues/1062>`__)
+* Support for ``.rpm`` packaging was added to the Linux system backend. (`#1063 <https://github.com/beeware/briefcase/issues/1063>`__)
+* Support for passthrough arguments was added to the ``dev`` and ``run`` commands. (`#1077 <https://github.com/beeware/briefcase/issues/1077>`__)
+* Users can now define custom content to include in their ``pyscript.toml`` configuration file for web deployments. (`#1089 <https://github.com/beeware/briefcase/issues/1089>`__)
+* The ``new`` command now allows for specifying a custom template branch, as well as a custom template. (`#1101 <https://github.com/beeware/briefcase/issues/1101>`__)
+
+Bugfixes
+--------
+
+* Spaces are no longer used in the paths for generated app templates. (`#804 <https://github.com/beeware/briefcase/issues/804>`__)
+* The stub executable used by Windows now clears the threading mode before starting the Python app. This caused problems with displaying dialogs in Qt apps. (`#930 <https://github.com/beeware/briefcase/issues/930>`__)
+* Briefcase now prevents running commands targeting Windows platforms when not on Windows. (`#1010 <https://github.com/beeware/briefcase/issues/1010>`__)
+* The command to store notarization credentials no longer causes Briefcase to hang. (`#1100 <https://github.com/beeware/briefcase/issues/1100>`__)
+* macOS developer tool installation prompts have been improved. (`#1122 <https://github.com/beeware/briefcase/issues/1122>`__)
+
+Misc
+----
+
+* `#1070 <https://github.com/beeware/briefcase/issues/1070>`__, `#1074
+  <https://github.com/beeware/briefcase/issues/1074>`__, `#1075
+  <https://github.com/beeware/briefcase/issues/1075>`__, `#1076
+  <https://github.com/beeware/briefcase/issues/1076>`__, `#1080
+  <https://github.com/beeware/briefcase/issues/1080>`__, `#1084
+  <https://github.com/beeware/briefcase/issues/1084>`__, `#1085
+  <https://github.com/beeware/briefcase/issues/1085>`__, `#1086
+  <https://github.com/beeware/briefcase/issues/1086>`__, `#1087
+  <https://github.com/beeware/briefcase/issues/1087>`__, `#1094
+  <https://github.com/beeware/briefcase/issues/1094>`__, `#1096
+  <https://github.com/beeware/briefcase/issues/1096>`__, `#1097
+  <https://github.com/beeware/briefcase/issues/1097>`__, `#1098
+  <https://github.com/beeware/briefcase/issues/1098>`__, `#1103
+  <https://github.com/beeware/briefcase/issues/1103>`__, `#1109
+  <https://github.com/beeware/briefcase/issues/1109>`__, `#1110
+  <https://github.com/beeware/briefcase/issues/1110>`__, `#1111
+  <https://github.com/beeware/briefcase/issues/1111>`__, `#1119
+  <https://github.com/beeware/briefcase/issues/1119>`__, `#1120
+  <https://github.com/beeware/briefcase/issues/1120>`__, `#1130
+  <https://github.com/beeware/briefcase/issues/1130>`__
+
+
 0.3.12 (2023-01-30)
 ===================
 

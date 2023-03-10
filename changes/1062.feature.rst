@@ -1,1 +1,0 @@
-A Linux System backend was added, supporting ``.deb`` as a packaging format.

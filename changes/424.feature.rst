@@ -1,1 +1,0 @@
-Distribution artefacts are now generated into a single ``dist`` folder.
