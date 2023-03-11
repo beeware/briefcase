@@ -17,12 +17,13 @@ library versions present on each distribution. An AppImage can be executed on
 version of the distribution where the AppImage was created.
 
 To ensure that an application is built in an environment that is as compatible
-as possible, Briefcase builds AppImages inside Docker. The Docker base image is
-ubuntu:18.04 by default, but can be configured to any `manylinux
+as possible, Briefcase builds AppImages inside Docker. The Docker base image
+used by Briefcase can be configured to any `manylinux
 <https://github.com/pypa/manylinux>`__ base using the `manylinux` application
-configuration option. While it is possible to build AppImages *without* Docker,
-it is highly recommended that you do not, as the resulting AppImages will not be
-as portable as they could otherwise be.
+configuration option; if `manylinux` isn't specified, it falls back to an Ubuntu
+18.04 base image. While it is *possible* to build AppImages without Docker, it
+is highly recommended that you do not, as the resulting AppImages will not be as
+portable as they could otherwise be.
 
 Icon format
 ===========
