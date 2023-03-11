@@ -19,8 +19,8 @@ version of the distribution where the AppImage was created.
 To ensure that an application is built in an environment that is as compatible
 as possible, Briefcase builds AppImages inside Docker. The Docker base image
 used by Briefcase can be configured to any `manylinux
-<https://github.com/pypa/manylinux>`__ base using the `manylinux` application
-configuration option; if `manylinux` isn't specified, it falls back to an Ubuntu
+<https://github.com/pypa/manylinux>`__ base using the ``manylinux`` application
+configuration option; if ``manylinux`` isn't specified, it falls back to an Ubuntu
 18.04 base image. While it is *possible* to build AppImages without Docker, it
 is highly recommended that you do not, as the resulting AppImages will not be as
 portable as they could otherwise be.
@@ -73,8 +73,13 @@ when building the AppImage. Should be one of:
 * `manylinux2_24`
 * `manylinux2_28`
 
-New projects will default to `manylinux2014`. If an application doesn't specify
-a `manylinux` value, Ubuntu 18.04 will be used as a base image.
+New projects will default to ``manylinux2014``. If an application doesn't specify
+a ``manylinux`` value, ``ubuntu:18.04`` will be used as the base image.
+
+``manylinux_image_tag``
+~~~~~~~~~~~~~~~~~~~~~~~
+
+The specific tag of the ``manylinux`` image to use. Defaults to ``latest``.
 
 ``system_requires``
 ~~~~~~~~~~~~~~~~~~~

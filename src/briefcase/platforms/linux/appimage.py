@@ -132,9 +132,9 @@ class LinuxAppImageCreateCommand(
     description = "Create and populate a Linux AppImage."
 
     def finalize_app_config(self, app: AppConfig):
-        """If we're *not* using Docker, verify that we're actually on Linux."""
+        """If we're *not* using Docker, warn the user about portability."""
         if not self.use_docker:
-            self.logger.info(
+            self.logger.warning(
                 """\
 *************************************************************************
 ** WARNING: Building a Local AppImage!                                 **
@@ -152,7 +152,8 @@ class LinuxAppImageCreateCommand(
         context = super().output_format_template_context(app)
         # Add the manylinux tag to the template context.
         try:
-            context["manylinux_tag"] = f"{app.manylinux}_{self.tools.host_arch}"
+            tag = getattr(app, "manylinux_image_tag", "latest")
+            context["manylinux_image"] = f"{app.manylinux}_{self.tools.host_arch}:{tag}"
             if app.manylinux in {"manylinux1", "manylinux2010", "manylinux2014"}:
                 context["vendor_base"] = "centos"
             elif app.manylinux == "manylinux_2_24":

@@ -83,50 +83,73 @@ def test_finalize_nodocker(create_command, first_app_config, capsys):
 
 
 @pytest.mark.parametrize(
-    "manylinux, host_arch, context",
+    "manylinux, tag, host_arch, context",
     [
         # Fallback.
-        (None, "x86_64", {}),
-        # x86_64 architecture, all tags
+        (None, None, "x86_64", {}),
+        # x86_64 architecture, all versions
+        # Explicit tag
         (
             "manylinux1",
+            "2023-03-05-271004f",
             "x86_64",
-            {"manylinux_tag": "manylinux1_x86_64", "vendor_base": "centos"},
+            {
+                "manylinux_image": "manylinux1_x86_64:2023-03-05-271004f",
+                "vendor_base": "centos",
+            },
         ),
+        # Explicit latest
         (
             "manylinux2010",
+            "latest",
             "x86_64",
-            {"manylinux_tag": "manylinux2010_x86_64", "vendor_base": "centos"},
+            {"manylinux_image": "manylinux2010_x86_64:latest", "vendor_base": "centos"},
         ),
+        # Implicit latest
         (
             "manylinux2014",
+            None,
             "x86_64",
-            {"manylinux_tag": "manylinux2014_x86_64", "vendor_base": "centos"},
+            {"manylinux_image": "manylinux2014_x86_64:latest", "vendor_base": "centos"},
         ),
         (
             "manylinux_2_24",
+            None,
             "x86_64",
-            {"manylinux_tag": "manylinux_2_24_x86_64", "vendor_base": "debian"},
+            {
+                "manylinux_image": "manylinux_2_24_x86_64:latest",
+                "vendor_base": "debian",
+            },
         ),
         (
             "manylinux_2_28",
+            None,
             "x86_64",
-            {"manylinux_tag": "manylinux_2_28_x86_64", "vendor_base": "almalinux"},
+            {
+                "manylinux_image": "manylinux_2_28_x86_64:latest",
+                "vendor_base": "almalinux",
+            },
         ),
         # non x86 architecture
         (
             "manylinux2014",
+            None,
             "aarch64",
-            {"manylinux_tag": "manylinux2014_aarch64", "vendor_base": "centos"},
+            {
+                "manylinux_image": "manylinux2014_aarch64:latest",
+                "vendor_base": "centos",
+            },
         ),
     ],
 )
 def test_output_format_template_context(
-    create_command, first_app_config, manylinux, host_arch, context
+    create_command, first_app_config, manylinux, tag, host_arch, context
 ):
-    """The template context reflects the manylinux tag and architecture"""
+    """The template context reflects the manylinux name, tag and architecture"""
     if manylinux:
         first_app_config.manylinux = manylinux
+    if tag:
+        first_app_config.manylinux_image_tag = tag
 
     create_command.tools.host_arch = host_arch
 
