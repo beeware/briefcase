@@ -1,7 +1,7 @@
 import pytest
 
 from briefcase.console import Console, Log
-from briefcase.exceptions import UnsupportedHostError
+from briefcase.exceptions import BriefcaseConfigError, UnsupportedHostError
 from briefcase.platforms.linux.appimage import LinuxAppImageCreateCommand
 
 
@@ -131,3 +131,10 @@ def test_output_format_template_context(
     create_command.tools.host_arch = host_arch
 
     assert create_command.output_format_template_context(first_app_config) == context
+
+
+def test_output_format_template_context_bad_tag(create_command, first_app_config):
+    """An unknown manylinux tag raises an error"""
+    first_app_config.manylinux = "unknown"
+    with pytest.raises(BriefcaseConfigError, match=r"Unknown manylinux tag 'unknown'"):
+        assert create_command.output_format_template_context(first_app_config)

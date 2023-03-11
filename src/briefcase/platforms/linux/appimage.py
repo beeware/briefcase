@@ -11,7 +11,11 @@ from briefcase.commands import (
     UpdateCommand,
 )
 from briefcase.config import AppConfig
-from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
+from briefcase.exceptions import (
+    BriefcaseCommandError,
+    BriefcaseConfigError,
+    UnsupportedHostError,
+)
 from briefcase.integrations.docker import Docker, DockerAppContext
 from briefcase.integrations.linuxdeploy import LinuxDeploy
 from briefcase.integrations.subprocess import NativeAppContext
@@ -156,7 +160,7 @@ class LinuxAppImageCreateCommand(
             elif app.manylinux.startswith("manylinux_2_"):
                 context["vendor_base"] = "almalinux"
             else:
-                raise BriefcaseCommandError(
+                raise BriefcaseConfigError(
                     f"""Unknown manylinux tag {app.manylinux!r}"""
                 )
         except AttributeError:
