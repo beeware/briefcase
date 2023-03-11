@@ -16,32 +16,13 @@ library versions present on each distribution. An AppImage can be executed on
 *any* Linux distribution with a version of ``libc`` greater than or equal the
 version of the distribution where the AppImage was created.
 
-To simplify the packaging process, Briefcase provides a pre-compiled Python
-support library. This support library was compiled on Ubuntu 18.04, which means
-the AppImages build by Briefcase can be used on *any* Linux distribution of
-about the same age or newer - but those AppImages *must* be compiled on Ubuntu
-18.04.
-
-This means you have four options for using Briefcase to compile a Linux
-AppImage:
-
-1. Run the version-sensitive parts of the build process inside Docker. This is
-   the default behavior of Briefcase. This also means that it is possible to
-   build Linux binaries on any platform that can run Docker.
-
-2. Install Ubuntu 18.04 on your own machine.
-
-3. Find a cloud or CI provider that can provide you an Ubuntu 18.04
-   machine for build purposes. Github Actions, for example, provides Ubuntu
-   18.04 as a build option. Again, you'll need to use the ``--no-docker``
-   command line option.
-
-4. Build your own version of the BeeWare `Python support libraries
-   <https://github.com/beeware/Python-Linux-support>`__. If you take this
-   approach, be aware that your AppImage will only be as portable as the
-   version of libc that is available on the distribution you use. If you build
-   using Ubuntu 19.10, for example, you can expect that only people on the most
-   recent versions of another distribution will be able to run your AppImage.
+To ensure that an application is built in an environment that is as compatible
+as possible, Briefcase builds AppImages inside Docker. The Docker base image is
+ubuntu:18.04 by default, but can be configured to any `manylinux
+<https://github.com/pypa/manylinux>`__ base using the `manylinux` application
+configuration option. While it is possible to build AppImages *without* Docker,
+it is highly recommended that you do not, as the resulting AppImages will not be
+as portable as they could otherwise be.
 
 Icon format
 ===========
@@ -78,6 +59,21 @@ Application configuration
 The following options can be added to the
 ``tool.briefcase.app.<appname>.linux.appimage`` section of your
 ``pyproject.toml`` file.
+
+``manylinux``
+~~~~~~~~~~~~~
+
+The `manylinux <https://github.com/pypa/manylinux>`__ tag to use as a base image
+when building the AppImage. Should be one of:
+
+* `manylinux1`
+* `manylinux2010`
+* `manylinux2014`
+* `manylinux2_24`
+* `manylinux2_28`
+
+New projects will default to `manylinux2014`. If an application doesn't specify
+a `manylinux` value, Ubuntu 18.04 will be used as a base image.
 
 ``system_requires``
 ~~~~~~~~~~~~~~~~~~~

@@ -75,9 +75,10 @@ class LinuxAppImageMostlyPassiveMixin(LinuxAppImagePassiveMixin):
     # doesn't require that we're actually in a Linux environment.
     def docker_image_tag(self, app):
         """The Docker image tag for an app."""
-        return (
-            f"briefcase/{app.bundle}.{app.app_name.lower()}:py{self.python_version_tag}"
-        )
+        try:
+            return f"briefcase/{app.bundle}.{app.app_name.lower()}:{app.manylinux}-appimage"
+        except AttributeError:
+            return f"briefcase/{app.bundle}.{app.app_name.lower()}:appimage"
 
     def verify_tools(self):
         """If we're using docker, verify that it is available."""
@@ -125,6 +126,43 @@ class LinuxAppImageCreateCommand(
     CreateCommand,
 ):
     description = "Create and populate a Linux AppImage."
+
+    def finalize_app_config(self, app: AppConfig):
+        """If we're *not* using Docker, verify that we're actually on Linux."""
+        if not self.use_docker:
+            self.logger.info(
+                """\
+*************************************************************************
+** WARNING: Building a Local AppImage!                                 **
+*************************************************************************
+
+    You are building an AppImage outside Docker. The resulting AppImage
+    will work, but will not be as portable as a Docker-based AppImage.
+    Any `manylinux` setting will be ignored.
+
+*************************************************************************
+"""
+            )
+
+    def output_format_template_context(self, app: AppConfig):
+        context = super().output_format_template_context(app)
+        # Add the manylinux tag to the template context.
+        try:
+            context["manylinux_tag"] = f"{app.manylinux}_{self.tools.host_arch}"
+            if app.manylinux in {"manylinux1", "manylinux2010", "manylinux2014"}:
+                context["vendor_base"] = "centos"
+            elif app.manylinux == "manylinux_2_24":
+                context["vendor_base"] = "debian"
+            elif app.manylinux.startswith("manylinux_2_"):
+                context["vendor_base"] = "almalinux"
+            else:
+                raise BriefcaseCommandError(
+                    f"""Unknown manylinux tag {app.manylinux!r}"""
+                )
+        except AttributeError:
+            pass
+
+        return context
 
 
 class LinuxAppImageUpdateCommand(LinuxAppImageCreateCommand, UpdateCommand):

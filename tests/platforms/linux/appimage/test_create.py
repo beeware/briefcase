@@ -60,3 +60,74 @@ def test_unsupported_host_os_without_docker(
         match="Linux AppImages can only be built on Linux, or on macOS using Docker.",
     ):
         create_command()
+
+
+def test_finalize_docker(create_command, first_app_config, capsys):
+    """No warning is generated when building an AppImage in Docker."""
+    create_command.use_docker = True
+
+    create_command.finalize_app_config(first_app_config)
+
+    # Warning message was not recorded
+    assert "WARNING: Building a Local AppImage!" not in capsys.readouterr().out
+
+
+def test_finalize_nodocker(create_command, first_app_config, capsys):
+    """A warning is generated when building an AppImage outside Docker."""
+    create_command.use_docker = False
+
+    create_command.finalize_app_config(first_app_config)
+
+    # Warning message was not recorded
+    assert "WARNING: Building a Local AppImage!" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize(
+    "manylinux, host_arch, context",
+    [
+        # Fallback.
+        (None, "x86_64", {}),
+        # x86_64 architecture, all tags
+        (
+            "manylinux1",
+            "x86_64",
+            {"manylinux_tag": "manylinux1_x86_64", "vendor_base": "centos"},
+        ),
+        (
+            "manylinux2010",
+            "x86_64",
+            {"manylinux_tag": "manylinux2010_x86_64", "vendor_base": "centos"},
+        ),
+        (
+            "manylinux2014",
+            "x86_64",
+            {"manylinux_tag": "manylinux2014_x86_64", "vendor_base": "centos"},
+        ),
+        (
+            "manylinux_2_24",
+            "x86_64",
+            {"manylinux_tag": "manylinux_2_24_x86_64", "vendor_base": "debian"},
+        ),
+        (
+            "manylinux_2_28",
+            "x86_64",
+            {"manylinux_tag": "manylinux_2_28_x86_64", "vendor_base": "almalinux"},
+        ),
+        # non x86 architecture
+        (
+            "manylinux2014",
+            "aarch64",
+            {"manylinux_tag": "manylinux2014_aarch64", "vendor_base": "centos"},
+        ),
+    ],
+)
+def test_output_format_template_context(
+    create_command, first_app_config, manylinux, host_arch, context
+):
+    """The template context reflects the manylinux tag and architecture"""
+    if manylinux:
+        first_app_config.manylinux = manylinux
+
+    create_command.tools.host_arch = host_arch
+
+    assert create_command.output_format_template_context(first_app_config) == context
