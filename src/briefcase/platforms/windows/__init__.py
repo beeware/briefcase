@@ -353,6 +353,6 @@ class WindowsPackageCommand(PackageCommand):
             self.logger.info("Signing MSI...", prefix=app.app_name)
             self.sign_file(
                 app=app,
-                filepath=self.distribution_path(app, packaging_format="msi"),
+                filepath=self.distribution_path(app),
                 **sign_options,
             )
