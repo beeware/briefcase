@@ -4,7 +4,7 @@ from briefcase.config import AppConfig
 from briefcase.exceptions import UnsupportedPlatform
 
 
-def test_create_app(tracking_create_command):
+def test_create_app(tracking_create_command, tmp_path):
     """If the app doesn't already exist, it will be created."""
     tracking_create_command.create_app(tracking_create_command.apps["first"])
 
@@ -13,26 +13,28 @@ def test_create_app(tracking_create_command):
 
     # The right sequence of things will be done
     assert tracking_create_command.actions == [
-        ("generate", tracking_create_command.apps["first"]),
-        ("support", tracking_create_command.apps["first"]),
-        ("verify-app-tools", tracking_create_command.apps["first"]),
-        ("code", tracking_create_command.apps["first"], False),
-        ("requirements", tracking_create_command.apps["first"], False),
-        ("resources", tracking_create_command.apps["first"]),
-        ("cleanup", tracking_create_command.apps["first"]),
+        ("generate", "first"),
+        ("support", "first"),
+        ("verify-app-tools", "first"),
+        ("code", "first", False),
+        ("requirements", "first", False),
+        ("resources", "first"),
+        ("cleanup", "first"),
     ]
 
     # New app content has been created
-    assert (tracking_create_command.platform_path / "first.bundle" / "new").exists()
+    assert (
+        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "new"
+    ).exists()
 
 
-def test_create_existing_app_overwrite(tracking_create_command):
+def test_create_existing_app_overwrite(tracking_create_command, tmp_path):
     """An existing app can be overwritten if requested."""
     # Answer yes when asked
     tracking_create_command.input.values = ["y"]
 
     # Generate an app in the location.
-    bundle_path = tracking_create_command.platform_path / "first.bundle"
+    bundle_path = tmp_path / "base_path" / "build" / "first" / "tester" / "dummy"
     bundle_path.mkdir(parents=True)
     with (bundle_path / "original").open("w") as f:
         f.write("original template!")
@@ -46,13 +48,13 @@ def test_create_existing_app_overwrite(tracking_create_command):
 
     # The right sequence of things will be done
     assert tracking_create_command.actions == [
-        ("generate", tracking_create_command.apps["first"]),
-        ("support", tracking_create_command.apps["first"]),
-        ("verify-app-tools", tracking_create_command.apps["first"]),
-        ("code", tracking_create_command.apps["first"], False),
-        ("requirements", tracking_create_command.apps["first"], False),
-        ("resources", tracking_create_command.apps["first"]),
-        ("cleanup", tracking_create_command.apps["first"]),
+        ("generate", "first"),
+        ("support", "first"),
+        ("verify-app-tools", "first"),
+        ("code", "first", False),
+        ("requirements", "first", False),
+        ("resources", "first"),
+        ("cleanup", "first"),
     ]
 
     # Original content has been deleted
@@ -62,12 +64,12 @@ def test_create_existing_app_overwrite(tracking_create_command):
     assert (bundle_path / "new").exists()
 
 
-def test_create_existing_app_no_overwrite(tracking_create_command):
+def test_create_existing_app_no_overwrite(tracking_create_command, tmp_path):
     """If you say no, the existing app won't be overwritten."""
     # Answer no when asked
     tracking_create_command.input.values = ["n"]
 
-    bundle_path = tracking_create_command.platform_path / "first.bundle"
+    bundle_path = tmp_path / "base_path" / "build" / "first" / "tester" / "dummy"
     bundle_path.mkdir(parents=True)
     with (bundle_path / "original").open("w") as f:
         f.write("original template!")
@@ -88,12 +90,12 @@ def test_create_existing_app_no_overwrite(tracking_create_command):
     assert not (bundle_path / "new").exists()
 
 
-def test_create_existing_app_no_overwrite_default(tracking_create_command):
+def test_create_existing_app_no_overwrite_default(tracking_create_command, tmp_path):
     """By default, the existing app won't be overwritten."""
     # Answer '' (i.e., just press return) when asked
     tracking_create_command.input.values = [""]
 
-    bundle_path = tracking_create_command.platform_path / "first.bundle"
+    bundle_path = tmp_path / "base_path" / "build" / "first" / "tester" / "dummy"
     bundle_path.mkdir(parents=True)
     with (bundle_path / "original").open("w") as f:
         f.write("original template!")
@@ -115,12 +117,12 @@ def test_create_existing_app_no_overwrite_default(tracking_create_command):
     assert not (bundle_path / "new").exists()
 
 
-def test_create_existing_app_input_disabled(tracking_create_command):
+def test_create_existing_app_input_disabled(tracking_create_command, tmp_path):
     """If input is disabled, fallback to default without get input from user."""
     # Answer '' (i.e., just press return) when asked
     tracking_create_command.input.enabled = False
 
-    bundle_path = tracking_create_command.platform_path / "first.bundle"
+    bundle_path = tmp_path / "base_path" / "build" / "first" / "tester" / "dummy"
     bundle_path.mkdir(parents=True)
     with (bundle_path / "original").open("w") as f:
         f.write("original template!")
@@ -140,7 +142,7 @@ def test_create_existing_app_input_disabled(tracking_create_command):
     assert not (bundle_path / "new").exists()
 
 
-def test_create_app_not_supported(tracking_create_command):
+def test_create_app_not_supported(tracking_create_command, tmp_path):
     """If the supported attribute is false, the command will terminate with an error
     message."""
 

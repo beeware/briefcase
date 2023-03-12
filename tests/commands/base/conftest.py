@@ -9,14 +9,17 @@ class DummyCommand(BaseCommand):
     """A dummy command to test the BaseCommand interface."""
 
     command = ("dummy",)
-    platform = "tester"
-    output_format = "dumdum"
+    # Platform and format contain upper case to test case normalization
+    platform = "Tester"
+    output_format = "Dummy"
     description = "Dummy base command"
 
     def __init__(self, *args, **kwargs):
         kwargs.setdefault("logger", Log())
         kwargs.setdefault("console", Console())
         super().__init__(*args, **kwargs)
+
+        self.actions = []
 
     def add_options(self, parser):
         # Provide some extra arguments:
@@ -29,13 +32,22 @@ class DummyCommand(BaseCommand):
     def binary_path(self, app):
         raise NotImplementedError()
 
-    def distribution_path(self, app, packaging_format):
-        raise NotImplementedError()
+    def verify_host(self):
+        super().verify_host()
+        self.actions.append(("verify-host",))
+
+    def verify_tools(self):
+        super().verify_tools()
+        self.actions.append(("verify-tools",))
+
+    def finalize_app_config(self, app):
+        super().finalize_app_config(app=app)
+        self.actions.append(("finalize-app-config", app.app_name))
 
 
 @pytest.fixture
 def base_command(tmp_path):
-    command = DummyCommand(base_path=tmp_path)
+    command = DummyCommand(base_path=tmp_path / "base_path")
     command.parse_options(["-r", "default"])
     return command
 
@@ -114,9 +126,6 @@ class OtherDummyCommand(BaseCommand):
         super().__init__(*args, **kwargs)
 
     def binary_path(self, app):
-        raise NotImplementedError()
-
-    def distribution_path(self, app, packaging_format):
         raise NotImplementedError()
 
 

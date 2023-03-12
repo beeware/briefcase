@@ -8,11 +8,25 @@ from ....utils import create_file, create_plist_file
 
 @pytest.fixture
 def first_app_with_binaries(first_app_config, tmp_path):
-    app_path = tmp_path / "base_path" / "macOS" / "app" / "First App" / "First App.app"
+    app_path = (
+        tmp_path
+        / "base_path"
+        / "build"
+        / "first-app"
+        / "macos"
+        / "app"
+        / "First App.app"
+    )
 
     # Create the briefcase.toml file
     create_file(
-        tmp_path / "base_path" / "macOS" / "app" / "First App" / "briefcase.toml",
+        tmp_path
+        / "base_path"
+        / "build"
+        / "first-app"
+        / "macos"
+        / "app"
+        / "briefcase.toml",
         """
 [paths]
 app_packages_path="First App.app/Contents/Resources/app_packages"
@@ -32,7 +46,13 @@ entitlements_path="Entitlements.plist"
 
     # Create the entitlements file for the app
     create_plist_file(
-        tmp_path / "base_path" / "macOS" / "app" / "First App" / "Entitlements.plist",
+        tmp_path
+        / "base_path"
+        / "build"
+        / "first-app"
+        / "macos"
+        / "app"
+        / "Entitlements.plist",
         {
             "com.apple.security.cs.allow-unsigned-executable-memory": True,
             "com.apple.security.cs.disable-library-validation": True,
@@ -82,5 +102,8 @@ entitlements_path="Entitlements.plist"
     # A file that has a Mach-O header, but isn't executable
     with (lib_path / "unknown.binary").open("wb") as f:
         f.write(b"\xCA\xFE\xBA\xBEother")
+
+    # Select dmg packaging by default
+    first_app_config.packaging_format = "dmg"
 
     return first_app_config

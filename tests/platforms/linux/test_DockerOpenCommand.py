@@ -9,11 +9,11 @@ from briefcase.integrations.docker import DockerAppContext
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.linux.appimage import LinuxAppImageOpenCommand
 
-from ....utils import create_file
+from ...utils import create_file
 
 
 @pytest.fixture
-def open_command(tmp_path, first_app_config):
+def open_command(tmp_path):
     command = LinuxAppImageOpenCommand(
         logger=Log(),
         console=Console(),
@@ -48,12 +48,18 @@ def test_open_docker(open_command, first_app_config, tmp_path):
         image_tag=f"briefcase/com.example.first-app:py3.{sys.version_info.minor}",
         dockerfile_path=tmp_path
         / "base_path"
+        / "build"
+        / "first-app"
         / "linux"
         / "appimage"
-        / "First App"
         / "Dockerfile",
         app_base_path=tmp_path / "base_path",
-        host_platform_path=tmp_path / "base_path" / "linux",
+        host_bundle_path=tmp_path
+        / "base_path"
+        / "build"
+        / "first-app"
+        / "linux"
+        / "appimage",
         host_data_path=tmp_path / "briefcase",
         python_version=f"3.{sys.version_info.minor}",
     )
@@ -79,11 +85,10 @@ def test_open_docker(open_command, first_app_config, tmp_path):
             "--rm",
             "-it",
             "--volume",
-            f"{open_command.platform_path}:/app:z",
+            f"{open_command.base_path}/build/first-app/linux/appimage:/app:z",
             "--volume",
             f"{open_command.data_path}:/home/brutus/.cache/briefcase:z",
             f"briefcase/com.example.first-app:py3.{sys.version_info.minor}",
-            "/bin/bash",
         ],
         stream_output=False,
     )
@@ -109,7 +114,7 @@ def test_open_no_docker_linux(open_command, first_app_config, tmp_path):
     open_command.tools.subprocess.Popen.assert_called_once_with(
         [
             "xdg-open",
-            tmp_path / "base_path" / "linux" / "appimage" / "First App",
+            tmp_path / "base_path" / "build" / "first-app" / "linux" / "appimage",
         ]
     )
 
@@ -133,6 +138,6 @@ def test_open_no_docker_macOS(open_command, first_app_config, tmp_path):
     open_command.tools.subprocess.Popen.assert_called_once_with(
         [
             "open",
-            tmp_path / "base_path" / "linux" / "appimage" / "First App",
+            tmp_path / "base_path" / "build" / "first-app" / "linux" / "appimage",
         ]
     )

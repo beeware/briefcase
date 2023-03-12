@@ -29,18 +29,24 @@ def test_binary_path(create_command, first_app_config, tmp_path):
 
     assert (
         binary_path
-        == tmp_path / "base_path" / "linux" / "First_App-0.0.1-x86_64.AppImage"
+        == tmp_path
+        / "base_path"
+        / "build"
+        / "first-app"
+        / "linux"
+        / "appimage"
+        / "First_App-0.0.1-x86_64.AppImage"
     )
 
 
 def test_distribution_path(create_command, first_app_config, tmp_path):
     # Force the architecture to x86_64 for test purposes.
     create_command.tools.host_arch = "x86_64"
-    distribution_path = create_command.distribution_path(first_app_config, "appimage")
+    distribution_path = create_command.distribution_path(first_app_config)
 
     assert (
         distribution_path
-        == tmp_path / "base_path" / "linux" / "First_App-0.0.1-x86_64.AppImage"
+        == tmp_path / "base_path" / "dist" / "First_App-0.0.1-x86_64.AppImage"
     )
 
 
@@ -94,12 +100,18 @@ def test_verify_linux_docker(create_command, tmp_path, first_app_config, monkeyp
         image_tag=f"briefcase/com.example.first-app:py3.{sys.version_info.minor}",
         dockerfile_path=tmp_path
         / "base_path"
+        / "build"
+        / "first-app"
         / "linux"
         / "appimage"
-        / "First App"
         / "Dockerfile",
         app_base_path=tmp_path / "base_path",
-        host_platform_path=tmp_path / "base_path" / "linux",
+        host_bundle_path=tmp_path
+        / "base_path"
+        / "build"
+        / "first-app"
+        / "linux"
+        / "appimage",
         host_data_path=tmp_path / "briefcase",
         python_version=f"3.{sys.version_info.minor}",
     )
@@ -126,12 +138,18 @@ def test_verify_non_linux_docker(create_command, tmp_path, first_app_config):
         image_tag=f"briefcase/com.example.first-app:py3.{sys.version_info.minor}",
         dockerfile_path=tmp_path
         / "base_path"
+        / "build"
+        / "first-app"
         / "linux"
         / "appimage"
-        / "First App"
         / "Dockerfile",
         app_base_path=tmp_path / "base_path",
-        host_platform_path=tmp_path / "base_path" / "linux",
+        host_bundle_path=tmp_path
+        / "base_path"
+        / "build"
+        / "first-app"
+        / "linux"
+        / "appimage",
         host_data_path=tmp_path / "briefcase",
         python_version=f"3.{sys.version_info.minor}",
     )

@@ -12,8 +12,9 @@ class DummyDevCommand(DevCommand):
     It only serves to track which actions would be performed.
     """
 
-    platform = "tester"
-    output_format = "dummy"
+    # Platform and format contain upper case to test case normalization
+    platform = "Tester"
+    output_format = "Dummy"
     description = "Dummy dev command"
 
     def __init__(self, *args, **kwargs):
@@ -79,7 +80,7 @@ def test_no_args_one_app(dev_command, first_app):
 
 
 def test_no_args_two_apps(dev_command, first_app, second_app):
-    """If there are one app, dev starts that app by default."""
+    """If there are two apps and no explicit app provided, an error is raised."""
     # Add two apps
     dev_command.apps = {
         "first": first_app,
@@ -93,13 +94,8 @@ def test_no_args_two_apps(dev_command, first_app, second_app):
     with pytest.raises(BriefcaseCommandError):
         dev_command(**options)
 
-    # No apps will be launched
-    assert dev_command.actions == [
-        # Host OS is verified
-        ("verify-host",),
-        # Tools are verified
-        ("verify-tools",),
-    ]
+    # Finalization will not occur.
+    assert dev_command.actions == []
 
 
 def test_with_arg_one_app(dev_command, first_app):
@@ -171,13 +167,8 @@ def test_bad_app_reference(dev_command, first_app, second_app):
     with pytest.raises(BriefcaseCommandError):
         dev_command(**options)
 
-    # No apps will be launched
-    assert dev_command.actions == [
-        # Host OS is verified
-        ("verify-host",),
-        # Tools are verified
-        ("verify-tools",),
-    ]
+    # Finalization will not occur.
+    assert dev_command.actions == []
 
 
 def test_update_requirements(dev_command, first_app):

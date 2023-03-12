@@ -8,6 +8,8 @@ from git import exc as git_exceptions
 from briefcase.config import AppConfig
 from briefcase.console import Printer
 
+from .utils import create_file
+
 
 def pytest_sessionfinish(session, exitstatus):
     """When pytest is wrapping up, close the /dev/null file handle for the logfile Rich
@@ -62,9 +64,16 @@ def first_app_config():
 def first_app_unbuilt(first_app_config, tmp_path):
     # The same fixture as first_app_config,
     # but ensures that the bundle for the app exists
-    (tmp_path / "tester").mkdir(parents=True, exist_ok=True)
-    with (tmp_path / "tester" / "first.dummy").open("w") as f:
-        f.write("first.bundle")
+    create_file(
+        tmp_path
+        / "base_path"
+        / "build"
+        / "first"
+        / "tester"
+        / "dummy"
+        / "first.bundle",
+        "first.bundle",
+    )
 
     return first_app_config
 
@@ -73,7 +82,9 @@ def first_app_unbuilt(first_app_config, tmp_path):
 def first_app(first_app_unbuilt, tmp_path):
     # The same fixture as first_app_config,
     # but ensures that the binary for the app exists
-    with (tmp_path / "tester" / "first.dummy.bin").open("w") as f:
-        f.write("first.exe")
+    create_file(
+        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "first.bin",
+        "first.bin",
+    )
 
     return first_app_unbuilt

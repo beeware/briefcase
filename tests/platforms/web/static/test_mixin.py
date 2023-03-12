@@ -18,7 +18,7 @@ def test_project_path(create_command, first_app_config, tmp_path):
     project_path = create_command.project_path(first_app_config)
 
     assert project_path == (
-        tmp_path / "base_path" / "web" / "static" / "First App" / "www"
+        tmp_path / "base_path" / "build" / "first-app" / "web" / "static" / "www"
     )
 
 
@@ -26,7 +26,14 @@ def test_binary_path(create_command, first_app_config, tmp_path):
     binary_path = create_command.binary_path(first_app_config)
 
     assert binary_path == (
-        tmp_path / "base_path" / "web" / "static" / "First App" / "www" / "index.html"
+        tmp_path
+        / "base_path"
+        / "build"
+        / "first-app"
+        / "web"
+        / "static"
+        / "www"
+        / "index.html"
     )
 
 
@@ -36,9 +43,10 @@ def test_wheel_path(create_command, first_app_config, tmp_path):
     assert wheel_path == (
         tmp_path
         / "base_path"
+        / "build"
+        / "first-app"
         / "web"
         / "static"
-        / "First App"
         / "www"
         / "static"
         / "wheels"
@@ -46,9 +54,8 @@ def test_wheel_path(create_command, first_app_config, tmp_path):
 
 
 def test_distribution_path(create_command, first_app_config, tmp_path):
-    distribution_path = create_command.distribution_path(
-        first_app_config,
-        packaging_format="any",
-    )
+    distribution_path = create_command.distribution_path(first_app_config)
 
-    assert distribution_path == (tmp_path / "base_path" / "web" / "First App-0.0.1.zip")
+    assert distribution_path == (
+        tmp_path / "base_path" / "dist" / "First App-0.0.1.web.zip"
+    )

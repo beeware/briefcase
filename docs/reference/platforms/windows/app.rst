@@ -9,10 +9,10 @@ Briefcase uses the `WiX Toolset <https://wixtoolset.org/>`__ to build an MSI
 installer for a Windows App. WiX, in turn, requires that .NET Framework 3.5 is
 enabled. To ensure .NET Framework 3.5 is enabled:
 
-    1. Open the Windows Control Panel
-    2. Traverse to Programs -> Programs and Features
-    3. Select "Turn Windows features On or Off"
-    4. Ensure that ".NET framework 3.5 (includes .NET 2.0 and 3.0)" is selected.
+1. Open the Windows Control Panel
+2. Traverse to Programs -> Programs and Features
+3. Select "Turn Windows features On or Off"
+4. Ensure that ".NET framework 3.5 (includes .NET 2.0 and 3.0)" is selected.
 
 Icon format
 ===========
@@ -20,11 +20,11 @@ Icon format
 Windows apps installers use multiformat ``.ico`` icons; these icons should
 contain images in the following sizes:
 
-* 16x16
-* 32x32
-* 48x48
-* 64x64
-* 256x256
+* 16px
+* 32px
+* 48px
+* 64px
+* 256px
 
 Splash Image format
 ===================

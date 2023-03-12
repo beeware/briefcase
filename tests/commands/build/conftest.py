@@ -5,6 +5,8 @@ from briefcase.commands.base import full_options
 from briefcase.config import AppConfig
 from briefcase.console import Console, Log
 
+from ...utils import create_file
+
 
 class DummyBuildCommand(BuildCommand):
     """A dummy build command that doesn't actually do anything.
@@ -12,8 +14,9 @@ class DummyBuildCommand(BuildCommand):
     It only serves to track which actions would be performed.
     """
 
-    platform = "tester"
-    output_format = "dummy"
+    # Platform and format contain upper case to test case normalization
+    platform = "Tester"
+    output_format = "Dummy"
     description = "Dummy build command"
 
     def __init__(self, *args, **kwargs):
@@ -23,14 +26,8 @@ class DummyBuildCommand(BuildCommand):
 
         self.actions = []
 
-    def bundle_path(self, app):
-        return self.platform_path / f"{app.app_name}.dummy"
-
     def binary_path(self, app):
-        return self.platform_path / f"{app.app_name}.dummy.bin"
-
-    def distribution_path(self, app, packaging_format):
-        return self.platform_path / f"{app.app_name}.dummy.{packaging_format}"
+        return self.bundle_path(app) / f"{app.app_name}.dummy.bin"
 
     def verify_host(self):
         super().verify_host()
@@ -39,6 +36,10 @@ class DummyBuildCommand(BuildCommand):
     def verify_tools(self):
         super().verify_tools()
         self.actions.append(("verify-tools",))
+
+    def finalize_app_config(self, app):
+        super().finalize_app_config(app=app)
+        self.actions.append(("finalize-app-config", app.app_name))
 
     def verify_app_tools(self, app):
         super().verify_app_tools(app=app)
@@ -74,7 +75,7 @@ class DummyBuildCommand(BuildCommand):
 
 @pytest.fixture
 def build_command(tmp_path):
-    return DummyBuildCommand(base_path=tmp_path)
+    return DummyBuildCommand(base_path=tmp_path / "base_path")
 
 
 @pytest.fixture
@@ -92,10 +93,19 @@ def second_app_config():
 def second_app(second_app_config, tmp_path):
     # The same fixture as second_app_config,
     # but ensures that the binary for the app exists
-    (tmp_path / "tester").mkdir(parents=True, exist_ok=True)
-    with (tmp_path / "tester" / "second.dummy").open("w") as f:
-        f.write("second.bundle")
-    with (tmp_path / "tester" / "second.dummy.bin").open("w") as f:
-        f.write("second.exe")
+    create_file(
+        tmp_path
+        / "base_path"
+        / "build"
+        / "second"
+        / "tester"
+        / "dummy"
+        / "second.bundle",
+        "second.bundle",
+    )
+    create_file(
+        tmp_path / "base_path" / "build" / "second" / "tester" / "dummy" / "second.bin",
+        "second.bin",
+    )
 
     return second_app_config

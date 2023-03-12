@@ -125,15 +125,15 @@ def test_source_dir(
     #     submodule /
     #       deeper.py
     create_file(
-        tmp_path / "project" / "src" / "first" / "demo.py",
+        tmp_path / "base_path" / "src" / "first" / "demo.py",
         "print('hello first')\n",
     )
     create_file(
-        tmp_path / "project" / "src" / "second" / "shallow.py",
+        tmp_path / "base_path" / "src" / "second" / "shallow.py",
         "print('hello shallow second')\n",
     )
     create_file(
-        tmp_path / "project" / "src" / "second" / "submodule" / "deeper.py",
+        tmp_path / "base_path" / "src" / "second" / "submodule" / "deeper.py",
         "print('hello deep second')\n",
     )
 
@@ -173,11 +173,11 @@ def test_source_file(
     #   demo.py
     # other.py
     create_file(
-        tmp_path / "project" / "src" / "demo.py",
+        tmp_path / "base_path" / "src" / "demo.py",
         "print('hello first')\n",
     )
     create_file(
-        tmp_path / "project" / "other.py",
+        tmp_path / "base_path" / "other.py",
         "print('hello second')\n",
     )
 
@@ -215,15 +215,15 @@ def test_no_existing_app_folder(
     #     submodule /
     #       deeper.py
     create_file(
-        tmp_path / "project" / "src" / "first" / "demo.py",
+        tmp_path / "base_path" / "src" / "first" / "demo.py",
         "print('hello first')\n",
     )
     create_file(
-        tmp_path / "project" / "src" / "second" / "shallow.py",
+        tmp_path / "base_path" / "src" / "second" / "shallow.py",
         "print('hello shallow second')\n",
     )
     create_file(
-        tmp_path / "project" / "src" / "second" / "submodule" / "deeper.py",
+        tmp_path / "base_path" / "src" / "second" / "submodule" / "deeper.py",
         "print('hello deep second')\n",
     )
 
@@ -281,15 +281,15 @@ def test_replace_sources(
     #     submodule /
     #       deeper.py
     create_file(
-        tmp_path / "project" / "src" / "first" / "demo.py",
+        tmp_path / "base_path" / "src" / "first" / "demo.py",
         "print('hello first')\n",
     )
     create_file(
-        tmp_path / "project" / "src" / "second" / "shallow.py",
+        tmp_path / "base_path" / "src" / "second" / "shallow.py",
         "print('hello shallow second')\n",
     )
     create_file(
-        tmp_path / "project" / "src" / "second" / "submodule" / "deeper.py",
+        tmp_path / "base_path" / "src" / "second" / "submodule" / "deeper.py",
         "print('hello deep second')\n",
     )
 
@@ -446,27 +446,27 @@ def test_test_sources(
     #   special /
     #     test_weird.py
     create_file(
-        tmp_path / "project" / "src" / "first" / "demo.py",
+        tmp_path / "base_path" / "src" / "first" / "demo.py",
         "print('hello first')\n",
     )
     create_file(
-        tmp_path / "project" / "src" / "second" / "shallow.py",
+        tmp_path / "base_path" / "src" / "second" / "shallow.py",
         "print('hello shallow second')\n",
     )
     create_file(
-        tmp_path / "project" / "tests" / "first.py",
+        tmp_path / "base_path" / "tests" / "first.py",
         "print('hello first test suite')\n",
     )
     create_file(
-        tmp_path / "project" / "tests" / "deep" / "test_case.py",
+        tmp_path / "base_path" / "tests" / "deep" / "test_case.py",
         "print('hello test case')\n",
     )
     create_file(
-        tmp_path / "project" / "othertests" / "test_more.py",
+        tmp_path / "base_path" / "othertests" / "test_more.py",
         "print('hello more tests')\n",
     )
     create_file(
-        tmp_path / "project" / "othertests" / "special" / "test_weird.py",
+        tmp_path / "base_path" / "othertests" / "special" / "test_weird.py",
         "print('hello weird tests')\n",
     )
 
@@ -518,27 +518,27 @@ def test_test_sources_test_mode(
     #   special /
     #     test_weird.py
     create_file(
-        tmp_path / "project" / "src" / "first" / "demo.py",
+        tmp_path / "base_path" / "src" / "first" / "demo.py",
         "print('hello first')\n",
     )
     create_file(
-        tmp_path / "project" / "src" / "second" / "shallow.py",
+        tmp_path / "base_path" / "src" / "second" / "shallow.py",
         "print('hello shallow second')\n",
     )
     create_file(
-        tmp_path / "project" / "tests" / "first.py",
+        tmp_path / "base_path" / "tests" / "first.py",
         "print('hello first test suite')\n",
     )
     create_file(
-        tmp_path / "project" / "tests" / "deep" / "test_case.py",
+        tmp_path / "base_path" / "tests" / "deep" / "test_case.py",
         "print('hello test case')\n",
     )
     create_file(
-        tmp_path / "project" / "othertests" / "test_more.py",
+        tmp_path / "base_path" / "othertests" / "test_more.py",
         "print('hello more tests')\n",
     )
     create_file(
-        tmp_path / "project" / "othertests" / "special" / "test_weird.py",
+        tmp_path / "base_path" / "othertests" / "special" / "test_weird.py",
         "print('hello weird tests')\n",
     )
 
@@ -589,27 +589,27 @@ def test_only_test_sources_test_mode(
     #   special /
     #     test_weird.py
     create_file(
-        tmp_path / "project" / "src" / "first" / "demo.py",
+        tmp_path / "base_path" / "src" / "first" / "demo.py",
         "print('hello first')\n",
     )
     create_file(
-        tmp_path / "project" / "src" / "second" / "shallow.py",
+        tmp_path / "base_path" / "src" / "second" / "shallow.py",
         "print('hello shallow second')\n",
     )
     create_file(
-        tmp_path / "project" / "tests" / "first.py",
+        tmp_path / "base_path" / "tests" / "first.py",
         "print('hello first test suite')\n",
     )
     create_file(
-        tmp_path / "project" / "tests" / "deep" / "test_case.py",
+        tmp_path / "base_path" / "tests" / "deep" / "test_case.py",
         "print('hello test case')\n",
     )
     create_file(
-        tmp_path / "project" / "othertests" / "test_more.py",
+        tmp_path / "base_path" / "othertests" / "test_more.py",
         "print('hello more tests')\n",
     )
     create_file(
-        tmp_path / "project" / "othertests" / "special" / "test_weird.py",
+        tmp_path / "base_path" / "othertests" / "special" / "test_weird.py",
         "print('hello weird tests')\n",
     )
 

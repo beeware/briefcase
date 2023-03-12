@@ -25,12 +25,6 @@ class macOSAppMixin(macOSMixin):
     def binary_path(self, app):
         return self.bundle_path(app) / f"{app.formal_name}.app"
 
-    def distribution_path(self, app, packaging_format):
-        if packaging_format == "dmg":
-            return self.platform_path / f"{app.formal_name}-{app.version}.dmg"
-        else:
-            return self.binary_path(app)
-
 
 class macOSAppCreateCommand(macOSAppMixin, CreateCommand):
     description = "Create and populate a macOS app."

@@ -35,8 +35,9 @@ def test_open(open_command, first_app_config, tmp_path):
     open_command.tools.os.startfile.assert_called_once_with(
         tmp_path
         / "base_path"
+        / "build"
+        / "first-app"
         / "windows"
-        / "VisualStudio"
-        / "First App"
+        / "visualstudio"
         / "First App.sln"
     )

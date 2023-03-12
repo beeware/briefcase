@@ -137,6 +137,33 @@ class Log:
         self.stacktraces = []
         # functions to run for additional logging if creating a logfile
         self.log_file_extras = []
+        # The current context for the log
+        self._context = ""
+
+    @contextmanager
+    def context(self, context):
+        """Wrap a collection of output in a logging context.
+
+        A logging context is a prefix on every logging line. It is used when a
+        set of commands (and output) is being run in a very specific way that
+        needs to be highlighted, such as running a command in a Docker
+        container.
+
+        :param context: The name of the context to enter. This *must* be
+            simple text, with no markup or other special characters.
+        """
+        try:
+            self.info()
+            self.info(f"Entering {context} context...")
+            old_context = self._context
+            self._context = f"{context}| "
+            self.info("-" * (72 - len(context)))
+            yield
+        finally:
+            self.info("-" * (72 - len(context)))
+            self._context = old_context
+            self.info(f"Leaving {context} context.")
+            self.info()
 
     def _log(
         self,
@@ -161,13 +188,13 @@ class Log:
         :param style: Rich style to apply to everything printed for message.
         """
         if not message:
-            # When a message is not provided, do not output anything;
+            # When a message is not provided, only output the context;
             # This type of call is just clearing some vertical space.
-            self.print(show=show)
+            self.print(self._context, show=show)
         else:
             if prefix:
                 # insert vertical space before for all messages with a prefix
-                self.print(show=show)
+                self.print(self._context, show=show)
                 if not markup:
                     preface, prefix, message = (
                         escape(text) for text in (preface, prefix, message)
@@ -176,7 +203,7 @@ class Log:
                 markup = True
             for line in message.splitlines():
                 self.print(
-                    f"{preface}{prefix}{line}",
+                    f"{self._context}{preface}{prefix}{line}",
                     show=show,
                     markup=markup,
                     style=style,

@@ -349,14 +349,19 @@ class AppConfig(BaseConfig):
         test_sources=None,
         test_requires=None,
         supported=True,
+        long_description=None,
         **kwargs,
     ):
         super().__init__(**kwargs)
 
+        # All app configs are created in unfinalized draft form.
+        self.__draft__ = True
+
         self.app_name = app_name
         self.version = version
         self.bundle = bundle
-        self.description = description
+        # Description can only be a single line. Ignore everything else.
+        self.description = description.split("\n")[0]
         self.sources = sources
         self.formal_name = app_name if formal_name is None else formal_name
         self.url = url
@@ -371,6 +376,7 @@ class AppConfig(BaseConfig):
         self.test_sources = test_sources
         self.test_requires = test_requires
         self.supported = supported
+        self.long_description = long_description
 
         if not is_valid_app_name(self.app_name):
             raise BriefcaseConfigError(

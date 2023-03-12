@@ -2,6 +2,7 @@ import os
 import subprocess
 import sys
 from unittest import mock
+from zipfile import ZipFile
 
 import pytest
 
@@ -67,16 +68,17 @@ def test_package_app(package_command, first_app_with_binaries, tmp_path, capsys)
 
     # The DMG has been built as expected
     package_command.dmgbuild.build_dmg.assert_called_once_with(
-        filename=os.fsdecode(tmp_path / "base_path" / "macOS" / "First App-0.0.1.dmg"),
+        filename=os.fsdecode(tmp_path / "base_path" / "dist" / "First App-0.0.1.dmg"),
         volume_name="First App 0.0.1",
         settings={
             "files": [
                 os.fsdecode(
                     tmp_path
                     / "base_path"
-                    / "macOS"
+                    / "build"
+                    / "first-app"
+                    / "macos"
                     / "app"
-                    / "First App"
                     / "First App.app"
                 )
             ],
@@ -95,13 +97,13 @@ def test_package_app(package_command, first_app_with_binaries, tmp_path, capsys)
     # This ignores the calls that would have been made transitively
     # by calling sign_app()
     package_command.sign_file.assert_called_once_with(
-        tmp_path / "base_path" / "macOS" / "First App-0.0.1.dmg",
+        tmp_path / "base_path" / "dist" / "First App-0.0.1.dmg",
         identity="CAFEBEEF",
     )
 
     # A request was made to notarize the DMG
     package_command.notarize.assert_called_once_with(
-        tmp_path / "base_path" / "macOS" / "First App-0.0.1.dmg",
+        tmp_path / "base_path" / "dist" / "First App-0.0.1.dmg",
         team_id="DEADBEEF",
     )
 
@@ -133,16 +135,17 @@ def test_package_app_no_notarization(
 
     # The DMG has been built as expected
     package_command.dmgbuild.build_dmg.assert_called_once_with(
-        filename=os.fsdecode(tmp_path / "base_path" / "macOS" / "First App-0.0.1.dmg"),
+        filename=os.fsdecode(tmp_path / "base_path" / "dist" / "First App-0.0.1.dmg"),
         volume_name="First App 0.0.1",
         settings={
             "files": [
                 os.fsdecode(
                     tmp_path
                     / "base_path"
-                    / "macOS"
+                    / "build"
+                    / "first-app"
+                    / "macos"
                     / "app"
-                    / "First App"
                     / "First App.app"
                 )
             ],
@@ -161,7 +164,7 @@ def test_package_app_no_notarization(
     # This ignores the calls that would have been made transitively
     # by calling sign_app()
     package_command.sign_file.assert_called_once_with(
-        tmp_path / "base_path" / "macOS" / "First App-0.0.1.dmg",
+        tmp_path / "base_path" / "dist" / "First App-0.0.1.dmg",
         identity="CAFEBEEF",
     )
 
@@ -302,16 +305,17 @@ def test_package_app_adhoc_sign(package_command, first_app_with_binaries, tmp_pa
 
     # The DMG has been built as expected
     package_command.dmgbuild.build_dmg.assert_called_once_with(
-        filename=os.fsdecode(tmp_path / "base_path" / "macOS" / "First App-0.0.1.dmg"),
+        filename=os.fsdecode(tmp_path / "base_path" / "dist" / "First App-0.0.1.dmg"),
         volume_name="First App 0.0.1",
         settings={
             "files": [
                 os.fsdecode(
                     tmp_path
                     / "base_path"
-                    / "macOS"
+                    / "build"
+                    / "first-app"
+                    / "macos"
                     / "app"
-                    / "First App"
                     / "First App.app"
                 )
             ],
@@ -330,7 +334,7 @@ def test_package_app_adhoc_sign(package_command, first_app_with_binaries, tmp_pa
     # This ignores the calls that would have been made transitively
     # by calling sign_app()
     package_command.sign_file.assert_called_once_with(
-        tmp_path / "base_path" / "macOS" / "First App-0.0.1.dmg",
+        tmp_path / "base_path" / "dist" / "First App-0.0.1.dmg",
         identity="-",
     )
 
@@ -358,16 +362,17 @@ def test_package_app_adhoc_sign_default_notarization(
 
     # The DMG has been built as expected
     package_command.dmgbuild.build_dmg.assert_called_once_with(
-        filename=os.fsdecode(tmp_path / "base_path" / "macOS" / "First App-0.0.1.dmg"),
+        filename=os.fsdecode(tmp_path / "base_path" / "dist" / "First App-0.0.1.dmg"),
         volume_name="First App 0.0.1",
         settings={
             "files": [
                 os.fsdecode(
                     tmp_path
                     / "base_path"
-                    / "macOS"
+                    / "build"
+                    / "first-app"
+                    / "macos"
                     / "app"
-                    / "First App"
                     / "First App.app"
                 )
             ],
@@ -386,7 +391,7 @@ def test_package_app_adhoc_sign_default_notarization(
     # This ignores the calls that would have been made transitively
     # by calling sign_app()
     package_command.sign_file.assert_called_once_with(
-        tmp_path / "base_path" / "macOS" / "First App-0.0.1.dmg",
+        tmp_path / "base_path" / "dist" / "First App-0.0.1.dmg",
         identity="-",
     )
 
@@ -396,6 +401,9 @@ def test_package_app_adhoc_sign_default_notarization(
 
 def test_package_bare_app(package_command, first_app_with_binaries, tmp_path):
     """A macOS App can be packaged without building dmg."""
+    # Select app packaging
+    first_app_with_binaries.packaging_format = "app"
+
     # Select a code signing identity
     package_command.select_identity.return_value = (
         "CAFEBEEF",
@@ -403,7 +411,8 @@ def test_package_bare_app(package_command, first_app_with_binaries, tmp_path):
     )
 
     # Package the app in app (not DMG) format
-    package_command.package_app(first_app_with_binaries, packaging_format="app")
+    first_app_with_binaries.packaging_format = "app"
+    package_command.package_app(first_app_with_binaries)
 
     # A request has been made to sign the app
     package_command.sign_app.assert_called_once_with(
@@ -412,7 +421,13 @@ def test_package_bare_app(package_command, first_app_with_binaries, tmp_path):
 
     # A request has been made to notarize the app
     package_command.notarize.assert_called_once_with(
-        tmp_path / "base_path" / "macOS" / "app" / "First App" / "First App.app",
+        tmp_path
+        / "base_path"
+        / "build"
+        / "first-app"
+        / "macos"
+        / "app"
+        / "First App.app",
         team_id="DEADBEEF",
     )
 
@@ -424,9 +439,42 @@ def test_package_bare_app(package_command, first_app_with_binaries, tmp_path):
     # by calling sign_app()
     assert package_command.sign_file.call_count == 0
 
+    # The packaged archive exists, and contains all the files,
+    # contained in the `.app` bundle.
+    archive_file = tmp_path / "base_path" / "dist" / "First App-0.0.1.app.zip"
+    assert archive_file.exists()
+    with ZipFile(archive_file) as archive:
+        assert sorted(archive.namelist()) == [
+            "First App.app/",
+            "First App.app/Contents/",
+            "First App.app/Contents/Frameworks/",
+            "First App.app/Contents/Frameworks/Extras.framework/",
+            "First App.app/Contents/Frameworks/Extras.framework/Resources/",
+            "First App.app/Contents/Frameworks/Extras.framework/Resources/extras.dylib",
+            "First App.app/Contents/Info.plist",
+            "First App.app/Contents/Resources/",
+            "First App.app/Contents/Resources/Extras.app/",
+            "First App.app/Contents/Resources/Extras.app/Contents/",
+            "First App.app/Contents/Resources/Extras.app/Contents/MacOS/",
+            "First App.app/Contents/Resources/Extras.app/Contents/MacOS/Extras",
+            "First App.app/Contents/Resources/first.other",
+            "First App.app/Contents/Resources/first_dylib.dylib",
+            "First App.app/Contents/Resources/first_so.so",
+            "First App.app/Contents/Resources/other_binary",
+            "First App.app/Contents/Resources/second.other",
+            "First App.app/Contents/Resources/special.binary",
+            "First App.app/Contents/Resources/subfolder/",
+            "First App.app/Contents/Resources/subfolder/second_dylib.dylib",
+            "First App.app/Contents/Resources/subfolder/second_so.so",
+            "First App.app/Contents/Resources/unknown.binary",
+        ]
+
 
 def test_package_bare_app_no_sign(package_command, first_app_with_binaries):
     """A macOS App can be packaged without building dmg, and without signing."""
+    # Select app packaging
+    first_app_with_binaries.packaging_format = "app"
+
     # Select a code signing identity
     package_command.select_identity.return_value = (
         "CAFEBEEF",
@@ -434,9 +482,9 @@ def test_package_bare_app_no_sign(package_command, first_app_with_binaries):
     )
 
     # Package the app in app (not DMG) format, disabling signing and notarization
+    first_app_with_binaries.packaging_format = "app"
     package_command.package_app(
         first_app_with_binaries,
-        packaging_format="app",
         sign_app=False,
         notarize_app=False,
     )
@@ -458,6 +506,9 @@ def test_package_bare_app_no_sign(package_command, first_app_with_binaries):
 
 def test_package_bare_app_no_notarization(package_command, first_app_with_binaries):
     """A macOS App can be packaged without building dmg, and without notarization."""
+    # Select app packaging
+    first_app_with_binaries.packaging_format = "app"
+
     # Select a code signing identity
     package_command.select_identity.return_value = (
         "CAFEBEEF",
@@ -465,9 +516,9 @@ def test_package_bare_app_no_notarization(package_command, first_app_with_binari
     )
 
     # Package the app in app (not DMG) format, disabling notarization
+    first_app_with_binaries.packaging_format = "app"
     package_command.package_app(
         first_app_with_binaries,
-        packaging_format="app",
         notarize_app=False,
     )
 
@@ -505,16 +556,17 @@ def test_dmg_with_installer_icon(package_command, first_app_with_binaries, tmp_p
 
     # The DMG has been built as expected
     package_command.dmgbuild.build_dmg.assert_called_once_with(
-        filename=os.fsdecode(tmp_path / "base_path" / "macOS" / "First App-0.0.1.dmg"),
+        filename=os.fsdecode(tmp_path / "base_path" / "dist" / "First App-0.0.1.dmg"),
         volume_name="First App 0.0.1",
         settings={
             "files": [
                 os.fsdecode(
                     tmp_path
                     / "base_path"
-                    / "macOS"
+                    / "build"
+                    / "first-app"
+                    / "macos"
                     / "app"
-                    / "First App"
                     / "First App.app"
                 )
             ],
@@ -541,6 +593,7 @@ def test_dmg_with_missing_installer_icon(
     warning."""
     # Specify an installer icon, but don't create the matching file.
     first_app_with_binaries.installer_icon = "pretty"
+    first_app_with_binaries.packaging_format = "dmg"
 
     # Package the app without signing or notarization
     package_command.package_app(
@@ -551,16 +604,17 @@ def test_dmg_with_missing_installer_icon(
 
     # The DMG has been built as expected
     package_command.dmgbuild.build_dmg.assert_called_once_with(
-        filename=os.fsdecode(tmp_path / "base_path" / "macOS" / "First App-0.0.1.dmg"),
+        filename=os.fsdecode(tmp_path / "base_path" / "dist" / "First App-0.0.1.dmg"),
         volume_name="First App 0.0.1",
         settings={
             "files": [
                 os.fsdecode(
                     tmp_path
                     / "base_path"
-                    / "macOS"
+                    / "build"
+                    / "first-app"
+                    / "macos"
                     / "app"
-                    / "First App"
                     / "First App.app"
                 )
             ],
@@ -602,16 +656,17 @@ def test_dmg_with_app_installer_icon(
 
     # The DMG has been built as expected
     package_command.dmgbuild.build_dmg.assert_called_once_with(
-        filename=os.fsdecode(tmp_path / "base_path" / "macOS" / "First App-0.0.1.dmg"),
+        filename=os.fsdecode(tmp_path / "base_path" / "dist" / "First App-0.0.1.dmg"),
         volume_name="First App 0.0.1",
         settings={
             "files": [
                 os.fsdecode(
                     tmp_path
                     / "base_path"
-                    / "macOS"
+                    / "build"
+                    / "first-app"
+                    / "macos"
                     / "app"
-                    / "First App"
                     / "First App.app"
                 )
             ],
@@ -648,16 +703,17 @@ def test_dmg_with_missing_app_installer_icon(
 
     # The DMG has been built as expected
     package_command.dmgbuild.build_dmg.assert_called_once_with(
-        filename=os.fsdecode(tmp_path / "base_path" / "macOS" / "First App-0.0.1.dmg"),
+        filename=os.fsdecode(tmp_path / "base_path" / "dist" / "First App-0.0.1.dmg"),
         volume_name="First App 0.0.1",
         settings={
             "files": [
                 os.fsdecode(
                     tmp_path
                     / "base_path"
-                    / "macOS"
+                    / "build"
+                    / "first-app"
+                    / "macos"
                     / "app"
-                    / "First App"
                     / "First App.app"
                 )
             ],
@@ -699,16 +755,17 @@ def test_dmg_with_installer_background(
 
     # The DMG has been built as expected
     package_command.dmgbuild.build_dmg.assert_called_once_with(
-        filename=os.fsdecode(tmp_path / "base_path" / "macOS" / "First App-0.0.1.dmg"),
+        filename=os.fsdecode(tmp_path / "base_path" / "dist" / "First App-0.0.1.dmg"),
         volume_name="First App 0.0.1",
         settings={
             "files": [
                 os.fsdecode(
                     tmp_path
                     / "base_path"
-                    / "macOS"
+                    / "build"
+                    / "first-app"
+                    / "macos"
                     / "app"
-                    / "First App"
                     / "First App.app"
                 )
             ],
@@ -735,6 +792,7 @@ def test_dmg_with_missing_installer_background(
     warning."""
     # Specify an installer background, but don't create the matching file.
     first_app_with_binaries.installer_background = "pretty_background"
+    first_app_with_binaries.packaging_format = "dmg"
 
     # Package the app without signing or notarization
     package_command.package_app(
@@ -745,16 +803,17 @@ def test_dmg_with_missing_installer_background(
 
     # The DMG has been built as expected
     package_command.dmgbuild.build_dmg.assert_called_once_with(
-        filename=os.fsdecode(tmp_path / "base_path" / "macOS" / "First App-0.0.1.dmg"),
+        filename=os.fsdecode(tmp_path / "base_path" / "dist" / "First App-0.0.1.dmg"),
         volume_name="First App 0.0.1",
         settings={
             "files": [
                 os.fsdecode(
                     tmp_path
                     / "base_path"
-                    / "macOS"
+                    / "build"
+                    / "first-app"
+                    / "macos"
                     / "app"
-                    / "First App"
                     / "First App.app"
                 )
             ],

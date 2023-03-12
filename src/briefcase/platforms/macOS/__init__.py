@@ -6,7 +6,6 @@ from contextlib import suppress
 from pathlib import Path
 from signal import SIGTERM
 from typing import List
-from zipfile import ZipFile
 
 from briefcase.config import BaseConfig
 from briefcase.console import select_option
@@ -382,6 +381,12 @@ class macOSPackageMixin(macOSSigningMixin):
     def default_packaging_format(self):
         return "dmg"
 
+    def distribution_path(self, app):
+        if app.packaging_format == "dmg":
+            return self.dist_path / f"{app.formal_name}-{app.version}.dmg"
+        else:
+            return self.dist_path / f"{app.formal_name}-{app.version}.app.zip"
+
     def add_options(self, parser):
         super().add_options(parser)
         # We use store_const:False rather than store_false so that the
@@ -443,11 +448,12 @@ class macOSPackageMixin(macOSSigningMixin):
                 # Archive the app into a zip.
                 with self.input.wait_bar(f"Archiving {filename.name}..."):
                     archive_filename = filename.parent / "archive.zip"
-                    with ZipFile(archive_filename, "a") as archive:
-                        for path in filename.glob("**/*"):
-                            archive.write(
-                                path, arcname=path.relative_to(filename.parent)
-                            )
+                    self.tools.shutil.make_archive(
+                        archive_filename.with_suffix(""),
+                        format="zip",
+                        root_dir=filename.parent,
+                        base_dir=filename.name,
+                    )
             elif filename.suffix == ".dmg":
                 archive_filename = filename
             else:
@@ -566,7 +572,6 @@ password:
         notarize_app=None,
         identity=None,
         adhoc_sign=False,
-        packaging_format="dmg",
         **kwargs,
     ):
         """Package an app bundle.
@@ -581,7 +586,6 @@ password:
             If unspecified, the user will be prompted for a code signing
             identity. Ignored if ``sign_app`` is ``False``.
         :param adhoc_sign: If ``True``, code will be signed with adhoc identity of "-"
-        :param packaging_format: The packaging format to use. Default is ``dmg``.
         """
         if sign_app:
             if adhoc_sign:
@@ -616,7 +620,7 @@ password:
                     "Can't notarize an app that hasn't been signed"
                 )
 
-        if packaging_format == "app":
+        if app.packaging_format == "app":
             if notarize_app:
                 self.logger.info(
                     f"Notarizing app using team ID {team_id}...",
@@ -624,7 +628,17 @@ password:
                 )
                 self.notarize(self.binary_path(app), team_id=team_id)
 
-        if packaging_format == "dmg":
+            with self.input.wait_bar(
+                f"Archiving {self.distribution_path(app).name}..."
+            ):
+                self.tools.shutil.make_archive(
+                    self.distribution_path(app).with_suffix(""),
+                    format="zip",
+                    root_dir=self.binary_path(app).parent,
+                    base_dir=self.binary_path(app).name,
+                )
+
+        else:  # Default packaging format is DMG
             self.logger.info("Building DMG...", prefix=app.app_name)
 
             dmg_settings = {
@@ -674,7 +688,7 @@ password:
                 # No installer background image provided
                 pass
 
-            dmg_path = self.distribution_path(app, packaging_format=packaging_format)
+            dmg_path = self.distribution_path(app)
             self.dmgbuild.build_dmg(
                 filename=os.fsdecode(dmg_path),
                 volume_name=f"{app.formal_name} {app.version}",

@@ -55,7 +55,12 @@ def test_package_msi(package_command, first_app_config, tmp_path):
                     "first-app-manifest.wxs",
                 ],
                 check=True,
-                cwd=tmp_path / "base_path" / "windows" / "VisualStudio" / "First App",
+                cwd=tmp_path
+                / "base_path"
+                / "build"
+                / "first-app"
+                / "windows"
+                / "visualstudio",
             ),
             # Compile MSI
             mock.call(
@@ -73,7 +78,12 @@ def test_package_msi(package_command, first_app_config, tmp_path):
                     "first-app-manifest.wxs",
                 ],
                 check=True,
-                cwd=tmp_path / "base_path" / "windows" / "VisualStudio" / "First App",
+                cwd=tmp_path
+                / "base_path"
+                / "build"
+                / "first-app"
+                / "windows"
+                / "visualstudio",
             ),
             # Link MSI
             mock.call(
@@ -87,12 +97,17 @@ def test_package_msi(package_command, first_app_config, tmp_path):
                     "-loc",
                     "unicode.wxl",
                     "-o",
-                    tmp_path / "base_path" / "windows" / "First App-0.0.1.msi",
+                    tmp_path / "base_path" / "dist" / "First App-0.0.1.msi",
                     "first-app.wixobj",
                     "first-app-manifest.wixobj",
                 ],
                 check=True,
-                cwd=tmp_path / "base_path" / "windows" / "VisualStudio" / "First App",
+                cwd=tmp_path
+                / "base_path"
+                / "build"
+                / "first-app"
+                / "windows"
+                / "visualstudio",
             ),
         ]
     )

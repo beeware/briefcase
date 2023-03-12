@@ -57,7 +57,7 @@ def mock_docker_app_context(tmp_path, my_app, mock_tools) -> DockerAppContext:
         image_tag="briefcase/com.example.myapp:py3.X",
         dockerfile_path=tmp_path / "bundle" / "Dockerfile",
         app_base_path=tmp_path / "base",
-        host_platform_path=tmp_path / "platform",
+        host_bundle_path=tmp_path / "bundle",
         host_data_path=tmp_path / "briefcase",
         python_version="3.X",
     )

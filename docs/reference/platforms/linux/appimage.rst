@@ -49,12 +49,12 @@ Icon format
 AppImages uses ``.png`` format icons. An application must provide icons in
 the following sizes:
 
-  * 16px
-  * 32px
-  * 64px
-  * 128px
-  * 256px
-  * 512px
+* 16px
+* 32px
+* 64px
+* 128px
+* 256px
+* 512px
 
 Splash Image format
 ===================
@@ -76,8 +76,8 @@ Application configuration
 =========================
 
 The following options can be added to the
-``tool.briefcase.app.<appname>.linux`` section of your ``pyproject.toml``
-file.
+``tool.briefcase.app.<appname>.linux.appimage`` section of your
+``pyproject.toml`` file.
 
 ``system_requires``
 ~~~~~~~~~~~~~~~~~~~

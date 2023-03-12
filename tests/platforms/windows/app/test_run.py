@@ -40,9 +40,10 @@ def test_run_app(run_command, first_app_config, tmp_path):
             os.fsdecode(
                 tmp_path
                 / "base_path"
+                / "build"
+                / "first-app"
                 / "windows"
                 / "app"
-                / "First App"
                 / "src"
                 / "First App.exe"
             ),
@@ -81,9 +82,10 @@ def test_run_app_with_passthrough(run_command, first_app_config, tmp_path):
             os.fsdecode(
                 tmp_path
                 / "base_path"
+                / "build"
+                / "first-app"
                 / "windows"
                 / "app"
-                / "First App"
                 / "src"
                 / "First App.exe"
             ),
@@ -119,9 +121,10 @@ def test_run_app_failed(run_command, first_app_config, tmp_path):
             os.fsdecode(
                 tmp_path
                 / "base_path"
+                / "build"
+                / "first-app"
                 / "windows"
                 / "app"
-                / "First App"
                 / "src"
                 / "First App.exe"
             ),
@@ -151,9 +154,10 @@ def test_run_app_test_mode(run_command, first_app_config, tmp_path):
             os.fsdecode(
                 tmp_path
                 / "base_path"
+                / "build"
+                / "first-app"
                 / "windows"
                 / "app"
-                / "First App"
                 / "src"
                 / "First App.exe"
             ),
@@ -174,7 +178,7 @@ def test_run_app_test_mode(run_command, first_app_config, tmp_path):
     )
 
 
-def test_run_app_test_mod0e_with_passthrough(run_command, first_app_config, tmp_path):
+def test_run_app_test_mode_with_passthrough(run_command, first_app_config, tmp_path):
     """A Windows app can be started in test mode with args."""
     # Set up the log streamer to return a known stream
     log_popen = mock.MagicMock()
@@ -193,9 +197,10 @@ def test_run_app_test_mod0e_with_passthrough(run_command, first_app_config, tmp_
             os.fsdecode(
                 tmp_path
                 / "base_path"
+                / "build"
+                / "first-app"
                 / "windows"
                 / "app"
-                / "First App"
                 / "src"
                 / "First App.exe"
             ),

@@ -47,6 +47,7 @@ def test_extra_attrs():
         version="1.2.3",
         bundle="org.beeware",
         description="A simple app",
+        long_description="A longer description\nof the app",
         template="/path/to/template",
         sources=["src/myapp"],
         requires=["first", "second", "third"],
@@ -65,6 +66,7 @@ def test_extra_attrs():
     assert config.version == "1.2.3"
     assert config.bundle == "org.beeware"
     assert config.description == "A simple app"
+    assert config.long_description == "A longer description\nof the app"
     assert config.template == "/path/to/template"
     assert config.requires == ["first", "second", "third"]
 

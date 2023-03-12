@@ -9,7 +9,16 @@ def test_open_macOS(open_command, tmp_path):
     open_command(app=open_command.apps["first"])
 
     open_command.tools.subprocess.Popen.assert_called_once_with(
-        ["open", tmp_path / "tester" / "dummy" / "first" / "first.project"]
+        [
+            "open",
+            tmp_path
+            / "base_path"
+            / "build"
+            / "first"
+            / "tester"
+            / "dummy"
+            / "first.project",
+        ]
     )
 
 
@@ -19,7 +28,16 @@ def test_open_linux(open_command, tmp_path):
     open_command(app=open_command.apps["first"])
 
     open_command.tools.subprocess.Popen.assert_called_once_with(
-        ["xdg-open", tmp_path / "tester" / "dummy" / "first" / "first.project"]
+        [
+            "xdg-open",
+            tmp_path
+            / "base_path"
+            / "build"
+            / "first"
+            / "tester"
+            / "dummy"
+            / "first.project",
+        ]
     )
 
 
@@ -29,5 +47,11 @@ def test_open_windows(open_command, tmp_path):
     open_command(app=open_command.apps["first"])
 
     open_command.tools.os.startfile.assert_called_once_with(
-        tmp_path / "tester" / "dummy" / "first" / "first.project"
+        tmp_path
+        / "base_path"
+        / "build"
+        / "first"
+        / "tester"
+        / "dummy"
+        / "first.project"
     )

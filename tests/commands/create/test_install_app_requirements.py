@@ -564,9 +564,9 @@ def test_app_requirements_non_paths(
         # A reference that involves an absolute path
         "/absolute/path/to/package",
         # Relative paths.
-        ("./package/inside/project", "{}/project/package/inside/project"),
+        ("./package/inside/project", "{}/base_path/package/inside/project"),
         ("../package/outside/project", "{}/package/outside/project"),
-        ("sub/package/inside/project", "{}/project/sub/package/inside/project"),
+        ("sub/package/inside/project", "{}/base_path/sub/package/inside/project"),
     ],
 )
 def test_app_requirements_paths_unix(
@@ -597,13 +597,13 @@ def test_app_requirements_paths_unix(
         ("C:/absolute/path/to/package", r"C:\absolute\path\to\package"),
         ("/absolute/path/to/package", r"C:\absolute\path\to\package"),
         # Relative paths using forward slash separators
-        ("./package/inside/project", r"{}\project\package\inside\project"),
+        ("./package/inside/project", r"{}\base_path\package\inside\project"),
         ("../package/outside/project", r"{}\package\outside\project"),
-        ("sub/package/inside/project", r"{}\project\sub\package\inside\project"),
+        ("sub/package/inside/project", r"{}\base_path\sub\package\inside\project"),
         # Relative paths using backslash separators
-        (r".\package\inside\project", r"{}\project\package\inside\project"),
+        (r".\package\inside\project", r"{}\base_path\package\inside\project"),
         (r"..\package\outside\project", r"{}\package\outside\project"),
-        (r"sub\package\inside\project", r"{}\project\sub\package\inside\project"),
+        (r"sub\package\inside\project", r"{}\base_path\sub\package\inside\project"),
     ],
 )
 def test_app_requirements_paths_windows(

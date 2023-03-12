@@ -90,5 +90,11 @@ def test_install_support_package(create_command, first_app_config, tmp_path):
     # The support file was copied into place
     create_command.tools.shutil.copy.assert_called_once_with(
         tmp_path / "support" / "Python-3.X.Y.tgz",
-        tmp_path / "base_path" / "linux" / "flatpak" / "First App" / "Python-3.X.Y.tgz",
+        tmp_path
+        / "base_path"
+        / "build"
+        / "first-app"
+        / "linux"
+        / "flatpak"
+        / "Python-3.X.Y.tgz",
     )

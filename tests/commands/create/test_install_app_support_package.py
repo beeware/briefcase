@@ -48,7 +48,7 @@ def test_install_app_support_package(
     # Confirm the right URL was used
     create_command.tools.download.file.assert_called_with(
         download_path=create_command.data_path / "support",
-        url="https://briefcase-support.s3.amazonaws.com/python/3.X/tester/Python-3.X-tester-support.b37.tar.gz",
+        url="https://briefcase-support.s3.amazonaws.com/python/3.X/Tester/Python-3.X-Tester-support.b37.tar.gz",
         role="support package",
     )
 
@@ -77,7 +77,7 @@ def test_install_pinned_app_support_package(
     # Mock download.file to return a support package
     create_command.tools.download.file = mock.MagicMock(
         side_effect=mock_tgz_download(
-            "Python-3.X-tester-support.b42.tar.gz",
+            "Python-3.X-Tester-support.b42.tar.gz",
             [("internal/file.txt", "hello world")],
         )
     )
@@ -93,13 +93,13 @@ def test_install_pinned_app_support_package(
     # Confirm the right URL was used
     create_command.tools.download.file.assert_called_with(
         download_path=create_command.data_path / "support",
-        url="https://briefcase-support.s3.amazonaws.com/python/3.X/tester/Python-3.X-tester-support.b42.tar.gz",
+        url="https://briefcase-support.s3.amazonaws.com/python/3.X/Tester/Python-3.X-Tester-support.b42.tar.gz",
         role="support package",
     )
 
     # Confirm the right file was unpacked
     create_command.tools.shutil.unpack_archive.assert_called_with(
-        tmp_path / "data" / "support" / "Python-3.X-tester-support.b42.tar.gz",
+        tmp_path / "data" / "support" / "Python-3.X-Tester-support.b42.tar.gz",
         extract_dir=support_path,
     )
 
@@ -241,7 +241,7 @@ def test_support_package_url_with_unsupported_platform(
     # Modify download.file to raise an exception due to missing support package
     create_command.tools.download.file = mock.MagicMock(
         side_effect=MissingNetworkResourceError(
-            url="https://briefcase-support.s3.amazonaws.com/python/3.X/tester/Python-3.X-tester-support.b37.tar.gz",
+            url="https://briefcase-support.s3.amazonaws.com/python/3.X/Tester/Python-3.X-Tester-support.b37.tar.gz",
         )
     )
 
@@ -252,7 +252,7 @@ def test_support_package_url_with_unsupported_platform(
     # However, there will have been a download attempt
     create_command.tools.download.file.assert_called_with(
         download_path=create_command.data_path / "support",
-        url="https://briefcase-support.s3.amazonaws.com/python/3.X/tester/Python-3.X-tester-support.b37.tar.gz",
+        url="https://briefcase-support.s3.amazonaws.com/python/3.X/Tester/Python-3.X-Tester-support.b37.tar.gz",
         role="support package",
     )
 

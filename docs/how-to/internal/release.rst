@@ -41,6 +41,7 @@ The procedure for cutting a new release is as follows:
    * briefcase-windows-VisualStudio-template
    * briefcase-linux-appimage-template
    * briefcase-linux-flatpak-template
+   * briefcase-linux-system-template
    * briefcase-iOS-Xcode-template
    * briefcase-android-gradle-template
    * briefcase-web-static-template

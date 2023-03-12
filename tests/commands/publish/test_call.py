@@ -23,6 +23,9 @@ def test_publish(publish_command, first_app, second_app):
         ("verify-host",),
         # Tools are verified
         ("verify-tools",),
+        # App configs have been finalized
+        ("finalize-app-config", "first"),
+        ("finalize-app-config", "second"),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
         # Publish the first app to s3
@@ -54,6 +57,9 @@ def test_publish_alternative_channel(publish_command, first_app, second_app):
         ("verify-host",),
         # Tools are verified
         ("verify-tools",),
+        # App configs have been finalized
+        ("finalize-app-config", "first"),
+        ("finalize-app-config", "second"),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
         # Publish the first app to the alternative channel
@@ -86,6 +92,9 @@ def test_non_existent(publish_command, first_app_config, second_app):
         ("verify-host",),
         # Tools are verified
         ("verify-tools",),
+        # App configs have been finalized
+        ("finalize-app-config", "first"),
+        ("finalize-app-config", "second"),
     ]
 
 
@@ -111,4 +120,7 @@ def test_unbuilt(publish_command, first_app_unbuilt, second_app):
         ("verify-host",),
         # Tools are verified
         ("verify-tools",),
+        # App configs have been finalized
+        ("finalize-app-config", "first"),
+        ("finalize-app-config", "second"),
     ]

@@ -8,7 +8,8 @@ from briefcase.commands import CreateCommand
 from briefcase.config import AppConfig
 from briefcase.console import Console, Log
 from briefcase.integrations.subprocess import Subprocess
-from tests.utils import DummyConsole
+
+from ...utils import DummyConsole, create_file
 
 
 class DefaultCreateCommand(CreateCommand):
@@ -18,9 +19,6 @@ class DefaultCreateCommand(CreateCommand):
     # Two methods that are required by the interface, but are not needed
     # for these tests.
     def binary_path(self, app):
-        return NotImplementedError()
-
-    def distribution_path(self, app, packaging_format):
         return NotImplementedError()
 
 
@@ -33,9 +31,10 @@ class DummyCreateCommand(CreateCommand):
     """A dummy create command that stubs out all the required interfaces of the Create
     command."""
 
-    platform = "tester"
     supported_host_os = {"c64"}
-    output_format = "dummy"
+    # Platform and format contain upper case to test case normalization
+    platform = "Tester"
+    output_format = "Dummy"
     description = "Dummy create command"
 
     def __init__(self, *args, support_file=None, git=None, home_path=None, **kwargs):
@@ -68,14 +67,8 @@ class DummyCreateCommand(CreateCommand):
             ("arch", self.tools.host_arch),
         ]
 
-    def bundle_path(self, app):
-        return self.platform_path / f"{app.app_name}.bundle"
-
     def binary_path(self, app):
-        return self.platform_path / f"{app.app_name}.binary"
-
-    def distribution_path(self, app, packaging_format):
-        return self.platform_path / f"{app.app_name}.dummy.{packaging_format}"
+        return self.bundle_path(app) / f"{app.app_name}.bin"
 
     # Hard code the python version to make testing easier.
     @property
@@ -106,40 +99,42 @@ class TrackingCreateCommand(DummyCreateCommand):
         super().verify_tools()
         self.actions.append(("verify-tools",))
 
+    def finalize_app_config(self, app):
+        super().finalize_app_config(app=app)
+        self.actions.append(("finalize-app-config", app.app_name))
+
     def verify_app_tools(self, app):
         super().verify_app_tools(app=app)
-        self.actions.append(("verify-app-tools", app))
+        self.actions.append(("verify-app-tools", app.app_name))
 
     # Override all the body methods of a CreateCommand
     # with versions that we can use to track actions performed.
     def generate_app_template(self, app):
-        self.actions.append(("generate", app))
+        self.actions.append(("generate", app.app_name))
 
         # A mock version of template generation.
-        self.bundle_path(app).mkdir(parents=True, exist_ok=True)
-        with (self.bundle_path(app) / "new").open("w") as f:
-            f.write("new template!")
+        create_file(self.bundle_path(app) / "new", "new template!")
 
     def install_app_support_package(self, app):
-        self.actions.append(("support", app))
+        self.actions.append(("support", app.app_name))
 
     def install_app_requirements(self, app, test_mode):
-        self.actions.append(("requirements", app, test_mode))
+        self.actions.append(("requirements", app.app_name, test_mode))
 
     def install_app_code(self, app, test_mode):
-        self.actions.append(("code", app, test_mode))
+        self.actions.append(("code", app.app_name, test_mode))
 
     def install_app_resources(self, app):
-        self.actions.append(("resources", app))
+        self.actions.append(("resources", app.app_name))
 
     def cleanup_app_content(self, app):
-        self.actions.append(("cleanup", app))
+        self.actions.append(("cleanup", app.app_name))
 
 
 @pytest.fixture
 def create_command(tmp_path, mock_git):
     return DummyCreateCommand(
-        base_path=tmp_path / "project",
+        base_path=tmp_path / "base_path",
         data_path=tmp_path / "data",
         git=mock_git,
         home_path=tmp_path / "home",
@@ -150,7 +145,7 @@ def create_command(tmp_path, mock_git):
 def tracking_create_command(tmp_path, mock_git):
     return TrackingCreateCommand(
         git=mock_git,
-        base_path=tmp_path,
+        base_path=tmp_path / "base_path",
         apps={
             "first": AppConfig(
                 app_name="first",
@@ -190,7 +185,7 @@ def bundle_path(myapp, tmp_path):
     # Return the bundle path for the app; however, as a side effect,
     # ensure that the app, app_packages and support target directories
     # exist, and the briefcase index file has been created.
-    bundle_path = tmp_path / "project" / "tester" / f"{myapp.app_name}.bundle"
+    bundle_path = tmp_path / "base_path" / "build" / myapp.app_name / "tester" / "dummy"
     (bundle_path / "path" / "to" / "app").mkdir(parents=True, exist_ok=True)
     (bundle_path / "path" / "to" / "support").mkdir(parents=True, exist_ok=True)
 

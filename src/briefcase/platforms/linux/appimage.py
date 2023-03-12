@@ -1,25 +1,25 @@
 import os
 import subprocess
-import sys
-from pathlib import Path
 from typing import List
 
 from briefcase.commands import (
     BuildCommand,
     CreateCommand,
-    OpenCommand,
     PackageCommand,
     PublishCommand,
     RunCommand,
     UpdateCommand,
 )
-from briefcase.commands.create import _is_local_requirement
 from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
 from briefcase.integrations.docker import Docker, DockerAppContext
 from briefcase.integrations.linuxdeploy import LinuxDeploy
 from briefcase.integrations.subprocess import NativeAppContext
-from briefcase.platforms.linux import LinuxMixin
+from briefcase.platforms.linux import (
+    DockerOpenCommand,
+    LinuxMixin,
+    LocalRequirementsMixin,
+)
 
 
 class LinuxAppImagePassiveMixin(LinuxMixin):
@@ -38,18 +38,15 @@ class LinuxAppImagePassiveMixin(LinuxMixin):
     def project_path(self, app):
         return self.bundle_path(app)
 
-    def local_requirements_path(self, app):
-        return self.bundle_path(app) / "_requirements"
+    def binary_name(self, app):
+        safe_name = app.formal_name.replace(" ", "_")
+        return f"{safe_name}-{app.version}-{self.tools.host_arch}.AppImage"
 
     def binary_path(self, app):
-        binary_name = app.formal_name.replace(" ", "_")
-        return (
-            self.platform_path
-            / f"{binary_name}-{app.version}-{self.tools.host_arch}.AppImage"
-        )
+        return self.bundle_path(app) / self.binary_name(app)
 
-    def distribution_path(self, app, packaging_format):
-        return self.binary_path(app)
+    def distribution_path(self, app):
+        return self.dist_path / self.binary_name(app)
 
     def add_options(self, parser):
         super().add_options(parser)
@@ -103,7 +100,7 @@ class LinuxAppImageMostlyPassiveMixin(LinuxAppImagePassiveMixin):
                 image_tag=self.docker_image_tag(app),
                 dockerfile_path=self.bundle_path(app) / "Dockerfile",
                 app_base_path=self.base_path,
-                host_platform_path=self.platform_path,
+                host_bundle_path=self.bundle_path(app),
                 host_data_path=self.data_path,
                 python_version=self.python_version_tag,
             )
@@ -122,7 +119,9 @@ class LinuxAppImageMixin(LinuxAppImageMostlyPassiveMixin):
             raise UnsupportedHostError(self.supported_host_os_reason)
 
 
-class LinuxAppImageCreateCommand(LinuxAppImageMixin, CreateCommand):
+class LinuxAppImageCreateCommand(
+    LinuxAppImageMixin, LocalRequirementsMixin, CreateCommand
+):
     description = "Create and populate a Linux AppImage."
 
     def support_package_filename(self, support_revision):
@@ -137,110 +136,15 @@ class LinuxAppImageCreateCommand(LinuxAppImageMixin, CreateCommand):
             + self.support_package_filename(support_revision)
         )
 
-    def _install_app_requirements(
-        self,
-        app: AppConfig,
-        requires: List[str],
-        app_packages_path: Path,
-    ):
-        """Install requirements for the app with pip.
-
-        This method pre-compiles any requirement defined using a local path
-        reference into an sdist tarball. This will be used when installing under
-        Docker, as local file references can't be accessed in the Docker
-        container.
-
-        :param app: The app configuration
-        :param requires: The list of requirements to install
-        :param app_packages_path: The full path of the app_packages folder into
-            which requirements should be installed.
-        """
-        # If we're re-building requirements, purge any pre-existing local
-        # requirements.
-        local_requirements_path = self.local_requirements_path(app)
-        if local_requirements_path.exists():
-            self.tools.shutil.rmtree(local_requirements_path)
-        self.tools.os.mkdir(local_requirements_path)
-
-        # Iterate over every requirements, looking for local references
-        for requirement in requires:
-            if _is_local_requirement(requirement):
-                if Path(requirement).is_dir():
-                    # Requirement is a filesystem reference
-                    # Build an sdist for the local requirement
-                    with self.input.wait_bar(f"Building sdist for {requirement}..."):
-                        try:
-                            self.tools.subprocess.check_output(
-                                [
-                                    sys.executable,
-                                    "-m",
-                                    "build",
-                                    "--sdist",
-                                    "--outdir",
-                                    local_requirements_path,
-                                    requirement,
-                                ],
-                            )
-                        except subprocess.CalledProcessError as e:
-                            raise BriefcaseCommandError(
-                                f"Unable to build sdist for {requirement}"
-                            ) from e
-                else:
-                    try:
-                        # Requirement is an existing sdist or wheel file.
-                        self.tools.shutil.copy(requirement, local_requirements_path)
-                    except FileNotFoundError as e:
-                        raise BriefcaseCommandError(
-                            f"Unable to find local requirement {requirement}"
-                        ) from e
-
-        # Continue with the default app requirement handling.
-        return super()._install_app_requirements(
-            app,
-            requires=requires,
-            app_packages_path=app_packages_path,
-        )
-
-    def _pip_requires(self, app: AppConfig, requires: List[str]):
-        """Convert the requirements list to an AppImage compatible format.
-
-        Any local file requirements are converted into a reference to the file
-        generated by _install_app_requirements().
-
-        :param app: The app configuration
-        :param requires: The user-specified list of app requirements
-        :returns: The final list of requirement arguments to pass to pip
-        """
-        # Copy all the requirements that are non-local
-        final = [
-            requirement
-            for requirement in super()._pip_requires(app, requires)
-            if not _is_local_requirement(requirement)
-        ]
-
-        # Add in any local packages.
-        # The sort is needed to ensure testing consistency
-        for filename in sorted(self.local_requirements_path(app).iterdir()):
-            final.append(filename)
-
-        return final
-
 
 class LinuxAppImageUpdateCommand(LinuxAppImageCreateCommand, UpdateCommand):
     description = "Update an existing Linux AppImage."
 
 
-class LinuxAppImageOpenCommand(LinuxAppImageMostlyPassiveMixin, OpenCommand):
+class LinuxAppImageOpenCommand(LinuxAppImageMostlyPassiveMixin, DockerOpenCommand):
     description = (
         "Open a shell in a Docker container for an existing Linux AppImage project."
     )
-
-    def _open_app(self, app: AppConfig):
-        # If we're using Docker, open an interactive shell in the container
-        if self.use_docker:
-            self.tools[app].app_context.run(["/bin/bash"], interactive=True)
-        else:
-            super()._open_app(app)
 
 
 class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
@@ -340,7 +244,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
                     + additional_args,
                     env=env,
                     check=True,
-                    cwd=self.platform_path,
+                    cwd=self.bundle_path(app),
                 )
 
                 # Make the binary executable.
@@ -393,6 +297,13 @@ class LinuxAppImageRunCommand(LinuxAppImagePassiveMixin, RunCommand):
 
 class LinuxAppImagePackageCommand(LinuxAppImageMixin, PackageCommand):
     description = "Package a Linux AppImage."
+
+    def package_app(self, app: AppConfig, **kwargs):
+        """Package an AppImage.
+
+        :param app: The application to package
+        """
+        self.tools.shutil.copy(self.binary_path(app), self.distribution_path(app))
 
 
 class LinuxAppImagePublishCommand(LinuxAppImageMixin, PublishCommand):

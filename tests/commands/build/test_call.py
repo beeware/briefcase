@@ -23,6 +23,8 @@ def test_specific_app(build_command, first_app, second_app):
         ("verify-host",),
         # Tools are verified
         ("verify-tools",),
+        # App config has been finalized
+        ("finalize-app-config", "first"),
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Build the first app; no state
@@ -50,6 +52,9 @@ def test_multiple_apps(build_command, first_app, second_app):
         ("verify-host",),
         # Tools are verified
         ("verify-tools",),
+        # App configs have been finalized
+        ("finalize-app-config", "first"),
+        ("finalize-app-config", "second"),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
         # Build the first app; no state
@@ -81,6 +86,9 @@ def test_non_existent(build_command, first_app_config, second_app):
         ("verify-host",),
         # Tools are verified
         ("verify-tools",),
+        # App configs have been finalized
+        ("finalize-app-config", "first"),
+        ("finalize-app-config", "second"),
         # First App doesn't exist, so it will be created, then built
         ("create", "first", {"test_mode": False}),
         # App tools are verified for first app
@@ -118,6 +126,9 @@ def test_unbuilt(build_command, first_app_unbuilt, second_app):
         ("verify-host",),
         # Tools are verified
         ("verify-tools",),
+        # App configs have been finalized
+        ("finalize-app-config", "first"),
+        ("finalize-app-config", "second"),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
         # First App exists, but hasn't been built; it will be built.
@@ -149,6 +160,9 @@ def test_update_app(build_command, first_app, second_app):
         ("verify-host",),
         # Tools are verified
         ("verify-tools",),
+        # App configs have been finalized
+        ("finalize-app-config", "first"),
+        ("finalize-app-config", "second"),
         # Update then build the first app
         (
             "update",
@@ -204,6 +218,9 @@ def test_update_app_requirements(build_command, first_app, second_app):
         ("verify-host",),
         # Tools are verified
         ("verify-tools",),
+        # App configs have been finalized
+        ("finalize-app-config", "first"),
+        ("finalize-app-config", "second"),
         # Update then build the first app
         (
             "update",
@@ -259,6 +276,9 @@ def test_update_app_resources(build_command, first_app, second_app):
         ("verify-host",),
         # Tools are verified
         ("verify-tools",),
+        # App configs have been finalized
+        ("finalize-app-config", "first"),
+        ("finalize-app-config", "second"),
         # Update then build the first app
         (
             "update",
@@ -314,6 +334,9 @@ def test_update_non_existent(build_command, first_app_config, second_app):
         ("verify-host",),
         # Tools are verified
         ("verify-tools",),
+        # App configs have been finalized
+        ("finalize-app-config", "first"),
+        ("finalize-app-config", "second"),
         # First App doesn't exist, so it will be created, then built
         ("create", "first", {"test_mode": False}),
         # App tools are verified for first app
@@ -366,6 +389,9 @@ def test_update_unbuilt(build_command, first_app_unbuilt, second_app):
         ("verify-host",),
         # Tools are verified
         ("verify-tools",),
+        # App configs have been finalized
+        ("finalize-app-config", "first"),
+        ("finalize-app-config", "second"),
         # First App exists, but hasn't been built; it will be updated then built.
         (
             "update",
@@ -421,6 +447,9 @@ def test_build_test(build_command, first_app, second_app):
         ("verify-host",),
         # Tools are verified
         ("verify-tools",),
+        # App configs have been finalized
+        ("finalize-app-config", "first"),
+        ("finalize-app-config", "second"),
         # Update then build the first app
         (
             "update",
@@ -477,6 +506,9 @@ def test_build_test_no_update(build_command, first_app, second_app):
         ("verify-host",),
         # Tools are verified
         ("verify-tools",),
+        # App configs have been finalized
+        ("finalize-app-config", "first"),
+        ("finalize-app-config", "second"),
         # No update of the first app
         # App tools are verified for first app
         ("verify-app-tools", "first"),
@@ -513,6 +545,9 @@ def test_build_test_update_dependencies(build_command, first_app, second_app):
         ("verify-host",),
         # Tools are verified
         ("verify-tools",),
+        # App configs have been finalized
+        ("finalize-app-config", "first"),
+        ("finalize-app-config", "second"),
         # Update then build the first app
         (
             "update",
@@ -569,6 +604,9 @@ def test_build_test_update_resources(build_command, first_app, second_app):
         ("verify-host",),
         # Tools are verified
         ("verify-tools",),
+        # App configs have been finalized
+        ("finalize-app-config", "first"),
+        ("finalize-app-config", "second"),
         # Update then build the first app
         (
             "update",
@@ -683,6 +721,9 @@ def test_test_app_non_existent(build_command, first_app_config, second_app):
         ("verify-host",),
         # Tools are verified
         ("verify-tools",),
+        # App configs have been finalized
+        ("finalize-app-config", "first"),
+        ("finalize-app-config", "second"),
         # First App doesn't exist, so it will be created, then built
         ("create", "first", {"test_mode": True}),
         # App tools are verified for first app
@@ -736,6 +777,9 @@ def test_test_app_unbuilt(build_command, first_app_unbuilt, second_app):
         ("verify-host",),
         # Tools are verified
         ("verify-tools",),
+        # App configs have been finalized
+        ("finalize-app-config", "first"),
+        ("finalize-app-config", "second"),
         # First App exists, but hasn't been built; it will be updated then built.
         (
             "update",

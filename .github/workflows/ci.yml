@@ -139,11 +139,16 @@ jobs:
     needs: unit-tests
     uses: beeware/.github/.github/workflows/app-build-verify.yml@main
     with:
-      python-version: "3.9"
+      # This *must* be the version of Python that is the system Python on the
+      # Ubuntu version used to run Linux tests. We use a fixed ubuntu-22.04
+      # rather than `-latest` because at some point, `-latest` will become
+      # `-24.04`, but it will be a soft changeover, which will cause havoc with
+      # the hard Python version requirement for local system packages.
+      python-version: "3.10"
       runner-os: ${{ matrix.runner-os }}
       framework: ${{ matrix.framework }}
     strategy:
       fail-fast: false
       matrix:
-        framework: [ "toga", "pyside2", "pyside6", "ppb" ]
-        runner-os: [ "macos-latest", "ubuntu-latest", "windows-latest" ]
+        framework: [ "toga", "pyside2", "pyside6", "ppb", "pygame" ]
+        runner-os: [ "macos-latest", "ubuntu-22.04", "windows-latest" ]

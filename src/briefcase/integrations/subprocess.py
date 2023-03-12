@@ -13,12 +13,8 @@ import psutil
 
 from briefcase.config import AppConfig
 from briefcase.console import Log
-from briefcase.exceptions import CommandOutputParseError
+from briefcase.exceptions import CommandOutputParseError, ParseError
 from briefcase.integrations.base import Tool, ToolCache
-
-
-class ParseError(Exception):
-    """Raised by parser functions to signal parsing was unsuccessful."""
 
 
 class StopStreaming(Exception):

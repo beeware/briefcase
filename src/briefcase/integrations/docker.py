@@ -177,6 +177,52 @@ installation, and try again.
         tools.docker = Docker(tools=tools)
         return tools.docker
 
+    def check_output(self, args, image_tag):
+        """Run a process inside a Docker container, capturing output.
+
+        This is a bare Docker invocation; it's really only useful for running
+        simple commands on an image, ensuring that the container is destroyed
+        afterwards. In most cases, you'll want to use an app context, rather
+        than this.
+
+        :param args: The list of arguments to pass to the Docker instance.
+        :param image_tag: The Docker image to run
+        """
+        # Any exceptions from running the process are *not* caught.
+        # This ensures that "docker.check_output()" behaves as closely to
+        # "subprocess.check_output()" as possible.
+        return self.tools.subprocess.check_output(
+            [
+                "docker",
+                "run",
+                "--rm",
+                image_tag,
+            ]
+            + args,
+        )
+
+    def prepare(self, image_tag):
+        """Ensure that the given image exists, and is cached locally.
+
+        This is achieved by trying to run a no-op command (echo) on the image;
+        if it succeeds, the image exists locally.
+
+        A pull is forced, so you can be certain that the image is up to date.
+
+        :param image_tag: The Docker image to prepare
+        """
+        try:
+            self.tools.subprocess.run(
+                ["docker", "run", "--rm", image_tag, "printf", ""],
+                check=True,
+                stream_output=False,
+            )
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(
+                f"Unable to obtain the Docker base image {image_tag}. "
+                "Is the image name correct?"
+            ) from e
+
 
 class DockerAppContext(Tool):
     def __init__(self, tools: ToolCache, app: AppConfig):
@@ -184,7 +230,7 @@ class DockerAppContext(Tool):
         self.app = app
 
         self.app_base_path = None
-        self.host_platform_path = None
+        self.host_bundle_path = None
         self.host_data_path = None
         self.image_tag = None
         self.python_version = None
@@ -202,7 +248,7 @@ class DockerAppContext(Tool):
         image_tag: str,
         dockerfile_path: Path,
         app_base_path: Path,
-        host_platform_path: Path,
+        host_bundle_path: Path,
         host_data_path: Path,
         python_version: str,
     ):
@@ -216,7 +262,7 @@ class DockerAppContext(Tool):
         :param image_tag: Tag to assign to Docker image
         :param dockerfile_path: Dockerfile to use to build Docker image
         :param app_base_path: Base directory path for App
-        :param host_platform_path: Base directory for where App is built
+        :param host_bundle_path: Base directory for where App is built
         :param host_data_path: Base directory for host's Briefcase data
         :param python_version: Version of python, e.g. 3.10
         :returns: A wrapper for a Docker app context.
@@ -232,7 +278,7 @@ class DockerAppContext(Tool):
             image_tag=image_tag,
             dockerfile_path=dockerfile_path,
             app_base_path=app_base_path,
-            host_platform_path=host_platform_path,
+            host_bundle_path=host_bundle_path,
             host_data_path=host_data_path,
             python_version=python_version,
         )
@@ -243,13 +289,13 @@ class DockerAppContext(Tool):
         image_tag: str,
         dockerfile_path: Path,
         app_base_path: Path,
-        host_platform_path: Path,
+        host_bundle_path: Path,
         host_data_path: Path,
         python_version: str,
     ):
         """Create/update the Docker image from the app's Dockerfile."""
         self.app_base_path = app_base_path
-        self.host_platform_path = host_platform_path
+        self.host_bundle_path = host_bundle_path
         self.host_data_path = host_data_path
         self.image_tag = image_tag
         self.python_version = python_version
@@ -259,36 +305,37 @@ class DockerAppContext(Tool):
             prefix=self.app.app_name,
         )
         with self.tools.input.wait_bar("Building Docker image..."):
-            try:
-                self.tools.subprocess.run(
-                    [
-                        "docker",
-                        "build",
-                        "--progress",
-                        "plain",
-                        "--tag",
-                        self.image_tag,
-                        "--file",
-                        dockerfile_path,
-                        "--build-arg",
-                        f"PY_VERSION={self.python_version}",
-                        "--build-arg",
-                        f"SYSTEM_REQUIRES={' '.join(getattr(self.app, 'system_requires', ''))}",
-                        "--build-arg",
-                        f"HOST_UID={self.tools.os.getuid()}",
-                        "--build-arg",
-                        f"HOST_GID={self.tools.os.getgid()}",
-                        Path(
-                            self.app_base_path,
-                            *self.app.sources[0].split("/")[:-1],
-                        ),
-                    ],
-                    check=True,
-                )
-            except subprocess.CalledProcessError as e:
-                raise BriefcaseCommandError(
-                    f"Error building Docker container image for {self.app.app_name}."
-                ) from e
+            with self.tools.logger.context("Docker"):
+                try:
+                    self.tools.subprocess.run(
+                        [
+                            "docker",
+                            "build",
+                            "--progress",
+                            "plain",
+                            "--tag",
+                            self.image_tag,
+                            "--file",
+                            dockerfile_path,
+                            "--build-arg",
+                            f"PY_VERSION={self.python_version}",
+                            "--build-arg",
+                            f"SYSTEM_REQUIRES={' '.join(getattr(self.app, 'system_requires', ''))}",
+                            "--build-arg",
+                            f"HOST_UID={self.tools.os.getuid()}",
+                            "--build-arg",
+                            f"HOST_GID={self.tools.os.getgid()}",
+                            Path(
+                                self.app_base_path,
+                                *self.app.sources[0].split("/")[:-1],
+                            ),
+                        ],
+                        check=True,
+                    )
+                except subprocess.CalledProcessError as e:
+                    raise BriefcaseCommandError(
+                        f"Error building Docker container image for {self.app.app_name}."
+                    ) from e
 
     def _dockerize_path(self, arg: str):
         """Relocate any local path into the equivalent location on the docker
@@ -296,7 +343,7 @@ class DockerAppContext(Tool):
 
         Converts:
         * any reference to sys.executable into the python executable in the docker container
-        * any path in <platform path> into the equivalent stemming from /app
+        * any path in <build path> into the equivalent stemming from /app
         * any path in <data path> into the equivalent in ~/.cache/briefcase
 
         :param arg: The string argument to convert to dockerized paths
@@ -304,12 +351,12 @@ class DockerAppContext(Tool):
         """
         if arg == sys.executable:
             return f"python{self.python_version}"
-        arg = arg.replace(os.fsdecode(self.host_platform_path), "/app")
+        arg = arg.replace(os.fsdecode(self.host_bundle_path), "/app")
         arg = arg.replace(os.fsdecode(self.host_data_path), self.docker_data_path)
 
         return arg
 
-    def _dockerize_args(self, args, interactive=False, mounts=None, env=None):
+    def _dockerize_args(self, args, interactive=False, mounts=None, env=None, cwd=None):
         """Convert arguments and environment into a Docker-compatible form. Convert an
         argument and environment specification into a form that can be used as arguments
         to invoke Docker. This involves:
@@ -321,6 +368,7 @@ class DockerAppContext(Tool):
 
         :param args: The arguments for the command to be invoked
         :param env: The environment specification for the command to be executed
+        :param cwd: The working directory for the command to be executed
         :returns: A list of arguments that can be used to invoke the command
             inside a docker container.
         """
@@ -338,7 +386,7 @@ class DockerAppContext(Tool):
         docker_args.extend(
             [
                 "--volume",
-                f"{self.host_platform_path}:/app:z",
+                f"{self.host_bundle_path}:/app:z",
                 "--volume",
                 f"{self.host_data_path}:{self.docker_data_path}:z",
             ]
@@ -355,6 +403,10 @@ class DockerAppContext(Tool):
             for key, value in env.items():
                 docker_args.extend(["--env", f"{key}={self._dockerize_path(value)}"])
 
+        # If a working directory has been specified, pass it
+        if cwd:
+            docker_args.extend(["--workdir", self._dockerize_path(os.fsdecode(cwd))])
+
         # ... then the image name to create the temporary container with
         docker_args.append(self.image_tag)
 
@@ -363,32 +415,32 @@ class DockerAppContext(Tool):
 
         return docker_args
 
-    def run(self, args, env=None, interactive=False, mounts=None, **kwargs):
+    def run(self, args, env=None, cwd=None, interactive=False, mounts=None, **kwargs):
         """Run a process inside a Docker container."""
         # Any exceptions from running the process are *not* caught.
         # This ensures that "docker.run()" behaves as closely to
         # "subprocess.run()" as possible.
-        self.tools.logger.info("Entering Docker context...", prefix=self.app.app_name)
-        if interactive:
-            kwargs["stream_output"] = False
+        with self.tools.logger.context("Docker"):
+            if interactive:
+                kwargs["stream_output"] = False
 
-        self.tools.subprocess.run(
-            self._dockerize_args(
-                args,
-                interactive=interactive,
-                mounts=mounts,
-                env=env,
-            ),
-            **kwargs,
-        )
-        self.tools.logger.info("Leaving Docker context", prefix=self.app.app_name)
+            self.tools.subprocess.run(
+                self._dockerize_args(
+                    args,
+                    interactive=interactive,
+                    mounts=mounts,
+                    env=env,
+                    cwd=cwd,
+                ),
+                **kwargs,
+            )
 
-    def check_output(self, args, env=None, mounts=None, **kwargs):
+    def check_output(self, args, env=None, cwd=None, mounts=None, **kwargs):
         """Run a process inside a Docker container, capturing output."""
         # Any exceptions from running the process are *not* caught.
         # This ensures that "docker.check_output()" behaves as closely to
         # "subprocess.check_output()" as possible.
         return self.tools.subprocess.check_output(
-            self._dockerize_args(args, mounts=mounts, env=env),
+            self._dockerize_args(args, mounts=mounts, env=env, cwd=cwd),
             **kwargs,
         )

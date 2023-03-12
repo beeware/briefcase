@@ -75,10 +75,6 @@ class NewCommand(BaseCommand):
         """A placeholder; New command doesn't have a binary path."""
         raise NotImplementedError()
 
-    def distribution_path(self, app, packaging_format):
-        """A placeholder; New command doesn't have a distribution path."""
-        raise NotImplementedError()
-
     def parse_config(self, filename):
         """There is no configuration when starting a new project; this implementation
         overrides the base so that no config is parsed."""
@@ -90,6 +86,12 @@ class NewCommand(BaseCommand):
             "--template",
             dest="template",
             help="The cookiecutter template to use for the new project",
+        )
+
+        parser.add_argument(
+            "--template-branch",
+            dest="template_branch",
+            help="The branch of the cookiecutter template to use for the new project",
         )
 
     def make_app_name(self, formal_name):
@@ -411,6 +413,7 @@ What GUI toolkit do you want to use for this project?""",
                 "PySide2 (does not support iOS/Android deployment)",
                 "PySide6 (does not support iOS/Android deployment)",
                 "PursuedPyBear (does not support iOS/Android deployment)",
+                "Pygame (does not support iOS/Android deployment)",
                 "None",
             ],
         )
@@ -430,7 +433,12 @@ What GUI toolkit do you want to use for this project?""",
             "gui_framework": (gui_framework.split())[0],
         }
 
-    def new_app(self, template: Optional[str] = None, **options):
+    def new_app(
+        self,
+        template: Optional[str] = None,
+        template_branch: Optional[str] = None,
+        **options,
+    ):
         """Ask questions to generate a new application, and generate a stub project from
         the briefcase-template."""
         if template is None:
@@ -445,8 +453,13 @@ What GUI toolkit do you want to use for this project?""",
         self.logger.info()
         self.logger.info(f"Generating a new application '{context['formal_name']}'")
 
+        # If a branch wasn't supplied through the --template-branch argument,
+        # use the branch derived from the Briefcase version
         version = Version(briefcase.__version__)
-        branch = f"v{version.base_version}"
+        if template_branch is None:
+            branch = f"v{version.base_version}"
+        else:
+            branch = template_branch
 
         # Make extra sure we won't clobber an existing application.
         if (self.base_path / context["app_name"]).exists():
@@ -503,9 +516,16 @@ Application '{context['formal_name']}' has been generated. To run your applicati
         super().verify_tools()
         git.verify_git_is_installed(tools=self.tools)
 
-    def __call__(self, template: Optional[str] = None, **options):
-        # Confirm host compatibility and all required tools are available
-        self.verify_host()
-        self.verify_tools()
+    def __call__(
+        self,
+        template: Optional[str] = None,
+        template_branch: Optional[str] = None,
+        **options,
+    ):
+        # Confirm host compatibility, and that all required tools are available.
+        # There are no apps, so finalize() will be a no op on app configurations.
+        self.finalize()
 
-        return self.new_app(template=template, **options)
+        return self.new_app(
+            template=template, template_branch=template_branch, **options
+        )

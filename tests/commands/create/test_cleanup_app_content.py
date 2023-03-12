@@ -9,6 +9,8 @@ def myapp_unrolled(myapp, support_path, app_packages_path_index):
     create_file(support_path / "dir1" / "a_file1.txt", "pork")
     create_file(support_path / "dir1" / "a_file2.doc", "ham")
     create_file(support_path / "dir1" / "b_file.txt", "eggs")
+    create_file(support_path / "dir1" / "__pycache__" / "first.pyc", "pyc 1")
+    create_file(support_path / "dir1" / "__pycache__" / "second.pyc", "pyc 2")
     create_file(support_path / "dir2" / "b_file.txt", "spam")
     create_file(support_path / "other" / "deep" / "b_file.doc", "wigs")
     create_file(support_path / "other" / "deep" / "other.doc", "wigs")
@@ -17,15 +19,16 @@ def myapp_unrolled(myapp, support_path, app_packages_path_index):
 
 
 def test_no_cleanup(create_command, myapp_unrolled, support_path):
-    """If there are no cleanup directives, bundle content isn't touched."""
+    """If there are no cleanup directives, bundle content isn't touched; but __pycache__ is cleaned"""
 
     # Cleanup app content
     create_command.cleanup_app_content(myapp_unrolled)
 
-    # Confirm the files are still there
+    # Confirm the files are still there, except for the pycache
     assert (support_path / "dir1" / "a_file1.txt").exists()
     assert (support_path / "dir1" / "a_file2.doc").exists()
     assert (support_path / "dir1" / "b_file.txt").exists()
+    assert not (support_path / "dir1" / "__pycache__").exists()
     assert (support_path / "dir2" / "b_file.txt").exists()
     assert (support_path / "other" / "deep" / "b_file.doc").exists()
 
@@ -50,11 +53,12 @@ def test_file_cleanup(create_command, myapp_unrolled, support_path):
     # Cleanup app content
     create_command.cleanup_app_content(myapp_unrolled)
 
-    # Confirm the named file has been removed
+    # Confirm the named file (plus __pycache__) has been removed
     assert not (support_path / "dir1" / "a_file1.txt").exists()
     assert (support_path / "dir1" / "a_file2.doc").exists()
     assert (support_path / "dir1" / "b_file.txt").exists()
     assert (support_path / "dir2" / "b_file.txt").exists()
+    assert not (support_path / "dir1" / "__pycache__").exists()
     assert (support_path / "other" / "deep" / "b_file.doc").exists()
 
 
@@ -65,10 +69,12 @@ def test_all_files_in_dir_cleanup(create_command, myapp_unrolled, support_path):
     # Cleanup app content
     create_command.cleanup_app_content(myapp_unrolled)
 
-    # Confirm the named files have been removed, but the dir still exists
+    # Confirm the named files (and __pycache__) have been removed,
+    # but the dir still exists
     assert not (support_path / "dir1" / "a_file1.txt").exists()
     assert not (support_path / "dir1" / "a_file2.doc").exists()
     assert not (support_path / "dir1" / "b_file.txt").exists()
+    assert not (support_path / "dir1" / "__pycache__").exists()
     assert (support_path / "dir1").exists()
     assert (support_path / "dir2" / "b_file.txt").exists()
     assert (support_path / "other" / "deep" / "b_file.doc").exists()
@@ -94,10 +100,11 @@ def test_file_glob_cleanup(create_command, myapp_unrolled, support_path):
     # Cleanup app content
     create_command.cleanup_app_content(myapp_unrolled)
 
-    # Confirm the matching files have been removed
+    # Confirm the matching files (plus __pycache__) have been removed
     assert not (support_path / "dir1" / "a_file1.txt").exists()
     assert (support_path / "dir1" / "a_file2.doc").exists()
     assert not (support_path / "dir1" / "b_file.txt").exists()
+    assert not (support_path / "dir1" / "__pycache__").exists()
     assert (support_path / "dir2" / "b_file.txt").exists()
     assert (support_path / "other" / "deep" / "b_file.doc").exists()
 
@@ -109,10 +116,11 @@ def test_deep_glob_cleanup(create_command, myapp_unrolled, support_path):
     # Cleanup app content
     create_command.cleanup_app_content(myapp_unrolled)
 
-    # Confirm the matching files have been removed
+    # Confirm the matching files (plus __pycache__) have been removed
     assert (support_path / "dir1" / "a_file1.txt").exists()
     assert (support_path / "dir1" / "a_file2.doc").exists()
     assert not (support_path / "dir1" / "b_file.txt").exists()
+    assert not (support_path / "dir1" / "__pycache__").exists()
     assert not (support_path / "dir2" / "b_file.txt").exists()
     assert not (support_path / "other" / "deep" / "b_file.doc").exists()
     assert (support_path / "other" / "deep" / "other.doc").exists()
@@ -131,10 +139,12 @@ def test_template_glob_cleanup(create_command, myapp_unrolled, support_path):
     # Cleanup app content
     create_command.cleanup_app_content(myapp_unrolled)
 
-    # Confirm the files from the app config and template config have been removed
+    # Confirm the files from the app config and template config have been
+    # removed, as well as __pycache__
     assert not (support_path / "dir1" / "a_file1.txt").exists()
     assert not (support_path / "dir1" / "a_file2.doc").exists()
     assert (support_path / "dir1" / "b_file.txt").exists()
+    assert not (support_path / "dir1" / "__pycache__").exists()
     assert (support_path / "dir2" / "b_file.txt").exists()
     assert not (support_path / "other" / "deep" / "b_file.doc").exists()
 
@@ -153,9 +163,11 @@ def test_non_existent_cleanup(create_command, myapp_unrolled, support_path):
     # Cleanup app content
     create_command.cleanup_app_content(myapp_unrolled)
 
-    # Confirm the single existing file named has been removed
+    # Confirm the single existing file named has been removed,
+    # as well as __pycache__
     assert not (support_path / "dir1" / "a_file1.txt").exists()
     assert (support_path / "dir1" / "a_file2.doc").exists()
     assert (support_path / "dir1" / "b_file.txt").exists()
+    assert not (support_path / "dir1" / "__pycache__").exists()
     assert (support_path / "dir2" / "b_file.txt").exists()
     assert (support_path / "other" / "deep" / "b_file.doc").exists()
