@@ -73,6 +73,23 @@ class LinuxAppImagePassiveMixin(LinuxMixin):
         super().clone_options(command)
         self.use_docker = command.use_docker
 
+    def finalize_app_config(self, app: AppConfig):
+        """If we're *not* using Docker, warn the user about portability."""
+        if not self.use_docker:
+            self.logger.warning(
+                """\
+*************************************************************************
+** WARNING: Building a Local AppImage!                                 **
+*************************************************************************
+
+    You are building an AppImage outside Docker. The resulting AppImage
+    will work, but will not be as portable as a Docker-based AppImage.
+    Any `manylinux` setting will be ignored.
+
+*************************************************************************
+"""
+            )
+
 
 class LinuxAppImageMostlyPassiveMixin(LinuxAppImagePassiveMixin):
     # The Mostly Passive mixin verifies that Docker exists and can be run, but
@@ -130,23 +147,6 @@ class LinuxAppImageCreateCommand(
     CreateCommand,
 ):
     description = "Create and populate a Linux AppImage."
-
-    def finalize_app_config(self, app: AppConfig):
-        """If we're *not* using Docker, warn the user about portability."""
-        if not self.use_docker:
-            self.logger.warning(
-                """\
-*************************************************************************
-** WARNING: Building a Local AppImage!                                 **
-*************************************************************************
-
-    You are building an AppImage outside Docker. The resulting AppImage
-    will work, but will not be as portable as a Docker-based AppImage.
-    Any `manylinux` setting will be ignored.
-
-*************************************************************************
-"""
-            )
 
     def output_format_template_context(self, app: AppConfig):
         context = super().output_format_template_context(app)
