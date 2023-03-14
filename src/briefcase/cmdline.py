@@ -91,7 +91,7 @@ def parse_cmdline(args):
     # usage string so that the instructions displayed are correct
     parser.add_argument(
         "command",
-        choices=list(cmd.command for cmd in COMMANDS),
+        choices=[cmd.command for cmd in COMMANDS],
         metavar="command",
         nargs="?",
         help=argparse.SUPPRESS,

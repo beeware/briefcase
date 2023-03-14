@@ -77,7 +77,7 @@ entitlements_path="Entitlements.plist"
     # Mach-O file that is executable, with an odd extension
     with (lib_path / "special.binary").open("wb") as f:
         f.write(b"\xCA\xFE\xBA\xBEBinary content here")
-    os.chmod(lib_path / "special.binary", 0o755)
+    os.chmod(lib_path / "special.binary", 0o755)  # noqa: S103
 
     # An embedded app
     (lib_path / "Extras.app" / "Contents" / "MacOS").mkdir(parents=True, exist_ok=True)
