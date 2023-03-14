@@ -1,0 +1,1 @@
+misc: PEP621: Migrate setup.py config into pyproject.toml

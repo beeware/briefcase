@@ -1,0 +1,13 @@
+[flake8]
+# https://flake8.readthedocs.org/en/latest/
+exclude=\
+    .eggs/*,\
+    .tox/*
+    build/*,\
+    docs/*,\
+    local/*,\
+    tests/apps/*,\
+    venv*/*,\
+max-complexity = 10
+max-line-length = 119
+ignore = E121,E123,E126,E203,E226,E24,E704,W503,W504,C901

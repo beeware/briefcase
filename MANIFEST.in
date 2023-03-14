@@ -6,6 +6,7 @@ include docs/spelling_wordlist
 include tests/integrations/xcode/simctl/README
 include pyproject.toml
 include tox.ini
+include .flake8
 include .git-blame-ignore-revs
 include .pre-commit-config.yaml
 include .readthedocs.yaml
