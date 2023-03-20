@@ -90,7 +90,7 @@ class LinuxSystemPassiveMixin(LinuxMixin):
             )
         elif app.packaging_format == "pkg":
             return (
-                f"{app.app_name}-{app.version}-{getattr(app, 'revision', 1)}"
+                f"{app.app_name}-{app.version}-{getattr(app, 'revision', 1)}%{{?dist}}"
                 f"-{self.linux_arch}.pkg.tar.zst"
             )
         else:
