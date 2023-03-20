@@ -90,7 +90,7 @@ class LinuxSystemPassiveMixin(LinuxMixin):
             )
         elif app.packaging_format == "pkg":
             return (
-                f"{app.app_name}-{app.version}-{getattr(app, 'revision', 1)}%{{?dist}}"
+                f"{app.app_name}-{app.version}-{getattr(app, 'revision', 1)}"
                 f"-{self.linux_arch}.pkg.tar.zst"
             )
         else:
@@ -399,7 +399,7 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
             system_installer = "dnf"
         elif app.target_vender_base == ARCH:
             base_system_packages = [
-                "python", # Arch does not have -dev packages, it ships headers with the regular package. 
+                "python",  # Arch does not have -dev packages, it ships headers with the regular package.
                 "base-devel",
             ]
             system_verify = ["pacman", "-Q"]
@@ -738,6 +738,7 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
             raise BriefcaseCommandError(
                 "Can't find the rpm-build tools. Try running `sudo dnf install rpm-build`."
             )
+
     def _verify_pkg_tools(self):
         """Verify that the local environment contains the arch packaging tools(ABS)."""
         if not Path("/usr/bin/makepkg").exists():
@@ -745,6 +746,7 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
                 "Can't find the `makepkg` tool. Try running `sudo pacman -Syu pacman`."
                 # makepkg is part of pacman package
             )
+
     def verify_app_tools(self, app):
         super().verify_app_tools(app)
         # If "system" packaging format was selected, determine what that means.
@@ -919,7 +921,7 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
                             # Base package metadata
                             f"Name:           {app.app_name}",
                             f"Version:        {app.version}",
-                            f"Release:        {getattr(app, 'revision', 1)}%{{?dist}}",
+                            f"Release:        {getattr(app, 'revision', 1)}",
                             f"Summary:        {app.description}",
                             "",
                             f"License:        {getattr(app, 'license', 'Unknown')}",
@@ -1028,68 +1030,65 @@ with details about the release.
             )
         # The changelog should exist.
         changelog_source = self.base_path / "CHANGELOG"
-                if not changelog_source.exists():
-                    raise BriefcaseCommandError(
-                        """\
+        if not changelog_source.exists():
+            raise BriefcaseCommandError(
+                """\
 Your project does not contain a CHANGELOG file.
 Create a file named `CHANGELOG` in the same directory as your `pyproject.toml`
 with details about the release.
 """
-                    )
-                    
+            )
+
         # Generate the pkgbuild layout
         pkgbuild_path = self.bundle_path(app) / "pkgbuild"
         with self.input.wait_bar("Generating pkgbuild layout..."):
             if pkgbuild_path.exists():
                 self.tools.shutil.rmtree(pkgbuild_path)
             (pkgbuild_path).mkdir(parents=True)
-            
+
             # Build the source archive
             with self.input.wait_bar("Building source archive..."):
-            self.tools.shutil.make_archive(
-                pkgbuild_path / f"{app.app_name}-{app.version}",
-                format="gztar",
-                root_dir=self.bundle_path(app),
-                base_dir=f"{app.app_name}-{app.version}",
-            )
+                self.tools.shutil.make_archive(
+                    pkgbuild_path / f"{app.app_name}-{app.version}",
+                    format="gztar",
+                    root_dir=self.bundle_path(app),
+                    base_dir=f"{app.app_name}-{app.version}",
+                )
             # Write the arch PKGBUILD file.
 
             # Add runtime package dependencies. App config has been finalized,
             # so this will be the target-specific definition, if one exists.
             system_runtime_requires_list = [
-                    f"glibc>={app.glibc_version}",
-                    f"python{app.python_version_tag}",
-                    f"gobject-introspection",
-                    f"gobject-introspection-runtime",
-                    f"gtk3",
-                ] + getattr(app, "system_runtime_requires", [])
-            
-            # Doing this since depends syntax is: depends=('pkg1' 'pkg2' ...)
-            system_runtime_requires_str = str()
-            for entry in system_runtime_requires_list:
-                system_runtime_requires_str += f"'{entry}'"
-                
-            with (pkgbuild_path / "PKGBUILD").open(
-                "w", encoding="utf-8"
-            ) as f:
+                f"glibc>={app.glibc_version}",
+                f"python{app.python_version_tag}",
+                "gobject-introspection",
+                "gobject-introspection-runtime",
+                "gtk3",
+            ] + getattr(app, "system_runtime_requires", [])
+
+            system_runtime_requires = " ".join(
+                f"'{pkg}'" for pkg in system_runtime_requires_list
+            )
+
+            with (pkgbuild_path / "PKGBUILD").open("w", encoding="utf-8") as f:
                 f.write(
                     "\n".join(
                         [
-                            f"# Maintainer: { app.author } <{ app.author_email }>",
+                            f"# Maintainer: {app.author} <{app.author_email}>",
                             f"pkgname={app.app_name}",
                             f"pkgver={app.version}",
-                            f"pkgrel={getattr(app, 'revision', 1)}%{{?dist}}",
-                            f"pkgdesc={app.description}",
+                            f"pkgrel={getattr(app, 'revision', 1)}",
+                            f'pkgdesc="{app.description}"',
                             f"arch=('{self.linux_arch}')",
                             f'url="{app.url}"',
                             f"license=('{app.license}')",
-                            f"depends=({system_runtime_requires_str})",
-                            f'changelog={str(changelog_source)}'
-                            f'source=("$pkgname-$pkgver.tar.gz")',
-                            f"md5sums=('SKIP')",
-                            f"package() {",
-                            f''' cp -r "$srcdir/$pkgname-$pkgver"/usr/ "$pkgdir"/usr/''',
-                            f"}",
+                            f"depends=({system_runtime_requires})",
+                            f"changelog={changelog_source}",
+                            'source=("$pkgname-$pkgver.tar.gz")',
+                            "md5sums=('SKIP')",
+                            "package() {",
+                            '    cp -r "$srcdir/$pkgname-$pkgver"/usr/ "$pkgdir"/usr/',
+                            "}",
                         ]
                     )
                 )
@@ -1110,9 +1109,8 @@ with details about the release.
                 ) from e
 
             # Move the pkg file to its final location
-            # The output file of makepkg is of the form: $pkgname-$pkgver-$pkgrel-$arch.pkg.tar.zst
             self.tools.shutil.move(
-                pkgbuild_path / f"{app.app_name}-{app.version}-{getattr(app, 'revision', 1)}%{{?dist}}-{self.linux_arch}.pkg.tar.zst",
+                pkgbuild_path / self.distribution_filename(app),
                 self.distribution_path(app),
             )
 
