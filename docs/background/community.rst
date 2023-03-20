@@ -4,8 +4,9 @@ The Briefcase Developer and User community
 Briefcase is part of the `BeeWare suite`_. You can talk to the community
 through:
 
-* `@pybeeware on Twitter`_
-* `BeeWare Getting Help page`_
+* `@beeware@fosstodon.org on Mastodon <https://fosstodon.org/@beeware>`__
+* `Discord <https://beeware.org/bee/chat/>`__
+* `BeeWare Getting Help page <https://beeware.org/community/getting-help/>`__
 
 Code of Conduct
 ---------------
@@ -25,8 +26,6 @@ to contribute code, please `fork the code`_ and `submit a pull request`_.
 
 .. _BeeWare suite: http://beeware.org
 .. _Read The Docs: https://briefcase.readthedocs.io
-.. _@pybeeware on Twitter: https://twitter.com/pybeeware
-.. _BeeWare Getting Help page: https://beeware.org/community/getting-help/
 .. _log them on Github: https://github.com/beeware/briefcase/issues
 .. _fork the code: https://github.com/beeware/briefcase
 .. _submit a pull request: https://github.com/beeware/briefcase/pulls
