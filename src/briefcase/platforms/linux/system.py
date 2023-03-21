@@ -1038,9 +1038,9 @@ Create a file named `CHANGELOG` in the same directory as your `pyproject.toml`
 with details about the release.
 """
             )
-
+            
         # Generate the pkgbuild layout
-        pkgbuild_path = self.bundle_path(app) / "pkgbuild"
+        pkgbuild_path = self.build_path(app) / "pkgbuild"
         with self.input.wait_bar("Generating pkgbuild layout..."):
             if pkgbuild_path.exists():
                 self.tools.shutil.rmtree(pkgbuild_path)
@@ -1048,11 +1048,15 @@ with details about the release.
 
             # Build the source archive
             with self.input.wait_bar("Building source archive..."):
+                
+                # Copy the CHANGELOG file to the bundle_path so it can be included in the source archive
+                self.tools.shutil.copy(changelog_source, self.bundle_path(app) / "CHANGELOG")
+                
                 self.tools.shutil.make_archive(
                     pkgbuild_path / f"{app.app_name}-{app.version}",
                     format="gztar",
-                    root_dir=self.bundle_path(app),
-                    base_dir=f"{app.app_name}-{app.version}",
+                    root_dir=self.build_path(app),
+                    base_dir=self.bundle_path(app),
                 )
             # Write the arch PKGBUILD file.
 
@@ -1079,15 +1083,24 @@ with details about the release.
                             f"pkgver={app.version}",
                             f"pkgrel={getattr(app, 'revision', 1)}",
                             f'pkgdesc="{app.description}"',
-                            f"arch=('{self.linux_arch}')",
+                            f"arch=('any')",  # We should use {self.linux_arch}, but doing this as the architecture error 
+                                              # was probably caused due to this parameter.
+                                              # Moreover arch wiki recommends 'any' for architecture independent packages.
                             f'url="{app.url}"',
                             f"license=('{app.license}')",
                             f"depends=({system_runtime_requires})",
-                            f"changelog={changelog_source}",
+                            f"makedepends=('base-devel')",
+                            f'changelog="$srcdir/$pkgname-$pkgver"/CHANGELOG',
                             'source=("$pkgname-$pkgver.tar.gz")',
                             "md5sums=('SKIP')",
+                            "build() {",
+                            '    cd "$srcdir/$pkgname-$pkgver"/bootstrap',
+                            '    make',
+                            "}",
                             "package() {",
-                            '    cp -r "$srcdir/$pkgname-$pkgver"/usr/ "$pkgdir"/usr/',
+                            '    cd "$srcdir/$pkgname-$pkgver"/bootstrap',
+                            '    make install',  # We do not need to prefix as the makefile does not assume it is installing on to a live system.
+                            '    cp -r "$srcdir/$pkgname-$pkgver/$pkgname-$pkgver/usr/" "$pkgdir"/usr/',
                             "}",
                         ]
                     )
