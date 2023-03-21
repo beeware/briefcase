@@ -248,11 +248,11 @@ class LinuxDeployLocalFilePlugin(LinuxDeployPluginBase):
                 self.local_path / self.file_name,
                 self.file_path / self.file_name,
             )
-        except FileNotFoundError:
+        except OSError as e:
             raise BriefcaseCommandError(
                 f"Could not locate linuxdeploy plugin {self.local_path / self.file_name}. "
                 "Is the path correct?"
-            )
+            ) from e
 
         self.prepare_executable()
 

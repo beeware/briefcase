@@ -129,7 +129,7 @@ class LocalRequirementsMixin:
             self.tools.shutil.rmtree(local_requirements_path)
         self.tools.os.mkdir(local_requirements_path)
 
-        # Iterate over every requirements, looking for local references
+        # Iterate over every requirement, looking for local references
         for requirement in requires:
             if _is_local_requirement(requirement):
                 if Path(requirement).is_dir():
@@ -156,7 +156,7 @@ class LocalRequirementsMixin:
                     try:
                         # Requirement is an existing sdist or wheel file.
                         self.tools.shutil.copy(requirement, local_requirements_path)
-                    except FileNotFoundError as e:
+                    except OSError as e:
                         raise BriefcaseCommandError(
                             f"Unable to find local requirement {requirement}"
                         ) from e

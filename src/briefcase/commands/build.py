@@ -44,8 +44,7 @@ class BuildCommand(BaseCommand):
         :param no_update: Should automated updates be disabled?
         :param test_mode: Is the app being build in test mode?
         """
-        target_file = self.bundle_path(app)
-        if not target_file.exists():
+        if not self.bundle_path(app).exists():
             state = self.create_command(app, test_mode=test_mode, **options)
         elif (
             update  # An explicit update has been requested
