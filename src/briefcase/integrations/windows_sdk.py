@@ -1,20 +1,30 @@
 from pathlib import Path
 from typing import Generator, List, Tuple
 
-from briefcase.exceptions import BriefcaseCommandError, MissingToolError
-from briefcase.integrations.base import Tool, ToolCache
-
 # winreg can only be imported on Windows
 try:
     import winreg
 except ImportError:
     winreg = None
 
+from briefcase.exceptions import BriefcaseCommandError, MissingToolError
+from briefcase.integrations.base import Tool, ToolCache
+
 
 class WindowsSDK(Tool):
     name = "windows_sdk"
     full_name = "Windows SDK"
-    sdk_version = "10.0"
+    SDK_VERSION = "10.0"
+    # Registry path to keys with details of the installed Windows SDKs
+    SDK_KEY = rf"SOFTWARE\Microsoft\Microsoft SDKs\Windows\v{SDK_VERSION}"
+    # Subkey containing the installation directory for the SDK
+    SDK_DIR_KEY = "InstallationFolder"
+    # Subkey for "latest" installed SDK version
+    SDK_VERSION_KEY = "ProductVersion"
+    # As a fallback, possible default locations for SDK
+    DEFAULT_SDK_DIRS = [
+        Path(rf"C:\Program Files (x86)\Windows Kits\{SDK_VERSION.split('.')[0]}")
+    ]
 
     def __init__(self, tools: ToolCache, root_path: Path, version: str, arch: str):
         """Create a wrapper around the Windows SDK.
@@ -42,7 +52,7 @@ class WindowsSDK(Tool):
         """Returns list of SDK versions from the install location bin directory."""
         bin_dir = sdk_dir / "bin"
         # prioritize newer versions of the SDK
-        version_dirs = sorted(bin_dir.glob(f"{cls.sdk_version}.*.0/"), reverse=True)
+        version_dirs = sorted(bin_dir.glob(f"{cls.SDK_VERSION}.*.0/"), reverse=True)
         return [d.name for d in version_dirs]
 
     @classmethod
@@ -55,6 +65,22 @@ class WindowsSDK(Tool):
         be installed.
         """
         tools.logger.debug("Finding Suitable Installation...", prefix=cls.full_name)
+
+        # Return user-specified SDK
+        if (environ_sdk_dir := tools.os.environ.get("WindowsSDKDir")) and (
+            environ_sdk_version := tools.os.environ.get("WindowsSDKVersion")
+        ):
+            yield Path(environ_sdk_dir), environ_sdk_version
+            raise BriefcaseCommandError(
+                f"""\
+The 'WindowsSDKDir' and 'WindowsSDKVersion' environment variables do not point
+to a valid install of the Windows SDK v{cls.SDK_VERSION}:
+
+WindowsSDKDir:     {environ_sdk_dir}
+WindowsSDKVersion: {environ_sdk_version}
+"""
+            )
+
         # To support the varied bitness of processes and installations within Windows,
         # the registry is split among different views to avoid a process naively and
         # likely unintentionally referencing incompatible software/settings. This is
@@ -70,65 +96,42 @@ class WindowsSDK(Tool):
             # 32-bit process sees 64-bit registry; 64-bit process sees 64-bit registry
             winreg.KEY_READ | winreg.KEY_WOW64_64KEY,
         ]
-        # Path to keys with details of the installed Windows SDKs
-        sdk_key = rf"SOFTWARE\Microsoft\Microsoft SDKs\Windows\v{cls.sdk_version}"
-        # Subkey containing the installation directory for the SDK
-        install_dir_subkey = "InstallationFolder"
-        # Subkey for "latest" installed SDK version
-        version_subkey = "ProductVersion"
-        # As a fallback, possible default locations for SDK
-        default_directories = [Path(r"C:\Program Files (x86)\Windows Kits\10")]
 
-        # Return user-specified SDK first
-        if environ_sdk_dir := tools.os.environ.get("WindowsSDKDir"):
-            if environ_sdk_version := tools.os.environ.get("WindowsSDKVersion"):
-                yield environ_sdk_dir, environ_sdk_version
-                raise BriefcaseCommandError(
-                    f"""\
-The 'WindowsSDKDir' and 'WindowsSDKVersion' environment variables do not point
-to a valid install of the Windows SDK v{cls.sdk_version}:
+        registry_tree_order = (
+            (hkey, access)
+            for hkey in [winreg.HKEY_LOCAL_MACHINE, winreg.HKEY_CURRENT_USER]
+            for access in access_right_precedence
+        )
 
-    WindowsSDKDir:     {environ_sdk_dir}
-    WindowsSDKVersion: {environ_sdk_version}
-"""
-                )
+        for hkey, access in registry_tree_order:
+            try:
+                with winreg.OpenKeyEx(hkey, cls.SDK_KEY, access=access) as key:
+                    if not (sdk_dir := winreg.QueryValueEx(key, cls.SDK_DIR_KEY)[0]):
+                        continue
+                    if not (sdk_dir := Path(tools.os.fsdecode(sdk_dir))).is_dir():
+                        continue
 
-        seen_sdk_dirs: set[Path] = set()
-        for hkey in [winreg.HKEY_LOCAL_MACHINE, winreg.HKEY_CURRENT_USER]:
-            for access_right in access_right_precedence:
-                try:
-                    with winreg.OpenKeyEx(hkey, sdk_key, access=access_right) as key:
-                        sdk_dir, key_type = winreg.QueryValueEx(key, install_dir_subkey)
-                        if key_type != winreg.REG_SZ or not sdk_dir:
-                            continue
+                    # Return the "latest" installed SDK first
+                    if reg_version := winreg.QueryValueEx(key, cls.SDK_VERSION_KEY)[0]:
+                        # Append missing "servicing" revision to registry version
+                        reg_version = f"{reg_version}.0"
+                        tools.logger.debug(
+                            f"Evaluating Registry SDK version '{reg_version}' at {sdk_dir}"
+                        )
+                        yield sdk_dir, reg_version
 
-                        sdk_dir = Path(sdk_dir)
-                        if sdk_dir in seen_sdk_dirs or not sdk_dir.is_dir():
-                            continue
-
-                        # Return the "latest" installed SDK first
-                        reg_version, key_type = winreg.QueryValueEx(key, version_subkey)
-                        if key_type == winreg.REG_SZ and reg_version:
+                    # Return other versions of the SDK installed in sdk_dir
+                    for sdk_version in cls._sdk_versions_from_bin(sdk_dir):
+                        if sdk_version != reg_version:
                             tools.logger.debug(
-                                f"Evaluating Registry SDK version '{reg_version}' at {sdk_dir}"
+                                f"Evaluating Registry SDK Bin version '{sdk_version}' at {sdk_dir}"
                             )
-                            # Append missing "servicing" revision to registry version
-                            yield sdk_dir, f"{reg_version}.0"
+                            yield sdk_dir, sdk_version
+            except FileNotFoundError:
+                pass  # ignore missing registry keys
 
-                        # Return SDKs that may be installed at sdk_dir location
-                        for sdk_version in cls._sdk_versions_from_bin(sdk_dir):
-                            if not sdk_version == reg_version:
-                                tools.logger.debug(
-                                    f"Evaluating Registry SDK Bin version '{sdk_version}' at {sdk_dir}"
-                                )
-                                yield sdk_dir, sdk_version
-
-                        seen_sdk_dirs.add(sdk_dir)
-                except FileNotFoundError:
-                    pass  # ignore missing registry keys
-
-        for sdk_dir in default_directories:
-            if sdk_dir not in seen_sdk_dirs and sdk_dir.is_dir():
+        for sdk_dir in cls.DEFAULT_SDK_DIRS:
+            if sdk_dir.is_dir():
                 for sdk_version in cls._sdk_versions_from_bin(sdk_dir):
                     tools.logger.debug(
                         f"Evaluating Default Bin SDK version '{sdk_version}' at {sdk_dir}"
@@ -162,7 +165,7 @@ to a valid install of the Windows SDK v{cls.sdk_version}:
             break
 
         if windows_sdk is None:
-            raise MissingToolError(f"Windows SDK v{cls.sdk_version}")
+            raise MissingToolError(f"Windows SDK v{cls.SDK_VERSION}")
 
         tools.logger.debug(f"Using Windows SDK v{sdk_version} at {sdk_dir}")
         tools.windows_sdk = windows_sdk
