@@ -1049,21 +1049,15 @@ with details about the release.
             # Build the source archive
             with self.input.wait_bar("Building source archive..."):
                 
-                # Copy the CHANGELOG file to the bundle_path so it can be included in the source archive
-                #self.tools.shutil.copy(changelog_source, self.bundle_path(app) / "CHANGELOG")
+                # Copy the CHANGELOG file to the pkgbuild_path so that it is visible to PKGBUILD
+                self.tools.shutil.copy(changelog_source, pkgbuild_path / "CHANGELOG")
                 
-                #self.tools.shutil.make_archive(
-                #    pkgbuild_path / f"{app.app_name}-{app.version}",
-                #    format="gztar",
-                #    root_dir=self.bundle_path(app),
-                #    base_dir=f"{app.app_name}-{app.version}",
-                #)
-                
-                # I am not sure how to append the CHANGELOG file to the archive, so I am using tarfile module(can you add it)
-                with self.tools.tarfile.open(pkgbuild_path / f"{app.app_name}-{app.version}","w|gz") as arc:
-                    arc_prefix = f"{app.app_name}-{app.version}"
-                    arc.add(self.bundle_path(app) / f"{app.app_name}-{app.version}", arc_prefix+'/'+arc_prefix)
-                    arc.add(self.bundle_path(app) / "CHANGELOG", arc_prefix+'/CHANGELOG')
+                self.tools.shutil.make_archive(
+                    pkgbuild_path / f"{app.app_name}-{app.version}",
+                    format="gztar",
+                    root_dir=self.bundle_path(app),
+                    base_dir=f"{app.app_name}-{app.version}",
+                )
                     
             # Write the arch PKGBUILD file.
 
@@ -1090,13 +1084,11 @@ with details about the release.
                             f"pkgver={app.version}",
                             f"pkgrel={getattr(app, 'revision', 1)}",
                             f'pkgdesc="{app.description}"',
-                            f"arch=('any')",  # We should use {self.linux_arch}, but doing this as the architecture error 
-                                              # was probably caused due to this parameter.
-                                              # Moreover arch wiki recommends 'any' for architecture independent packages.
+                            f"arch=('{self.tools.host_arch}')",
                             f'url="{app.url}"',
                             f"license=('{app.license}')",
                             f"depends=({system_runtime_requires})",
-                            f'changelog="$srcdir/$pkgname-$pkgver"/CHANGELOG',
+                            f'changelog=CHANGELOG',
                             'source=("$pkgname-$pkgver.tar.gz")',
                             "md5sums=('SKIP')",
                             "package() {",
