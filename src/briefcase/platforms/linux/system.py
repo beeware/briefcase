@@ -91,7 +91,7 @@ class LinuxSystemPassiveMixin(LinuxMixin):
         elif app.packaging_format == "pkg":
             return (
                 f"{app.app_name}-{app.version}-{getattr(app, 'revision', 1)}"
-                f"-{self.linux_arch}.pkg.tar.zst"
+                f"-{self.tools.host_arch}.pkg.tar.zst"
             )
         else:
             raise BriefcaseCommandError(
@@ -399,7 +399,7 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
             system_installer = "dnf"
         elif app.target_vender_base == ARCH:
             base_system_packages = [
-                "python",  # Arch does not have -dev packages, it ships headers with the regular package.
+                "python3",
                 "base-devel",
             ]
             system_verify = ["pacman", "-Q"]
@@ -921,7 +921,7 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
                             # Base package metadata
                             f"Name:           {app.app_name}",
                             f"Version:        {app.version}",
-                            f"Release:        {getattr(app, 'revision', 1)}",
+                            f"Release:        {getattr(app, 'revision', 1)}%{{?dist}}",
                             f"Summary:        {app.description}",
                             "",
                             f"License:        {getattr(app, 'license', 'Unknown')}",
@@ -1038,7 +1038,7 @@ Create a file named `CHANGELOG` in the same directory as your `pyproject.toml`
 with details about the release.
 """
             )
-            
+
         # Generate the pkgbuild layout
         pkgbuild_path = self.bundle_path(app) / "pkgbuild"
         with self.input.wait_bar("Generating pkgbuild layout..."):
@@ -1046,29 +1046,25 @@ with details about the release.
                 self.tools.shutil.rmtree(pkgbuild_path)
             (pkgbuild_path).mkdir(parents=True)
 
-            # Build the source archive
-            with self.input.wait_bar("Building source archive..."):
-                
-                # Copy the CHANGELOG file to the pkgbuild_path so that it is visible to PKGBUILD
-                self.tools.shutil.copy(changelog_source, pkgbuild_path / "CHANGELOG")
-                
-                self.tools.shutil.make_archive(
-                    pkgbuild_path / f"{app.app_name}-{app.version}",
-                    format="gztar",
-                    root_dir=self.bundle_path(app),
-                    base_dir=f"{app.app_name}-{app.version}",
-                )
-                    
-            # Write the arch PKGBUILD file.
+            # Copy the CHANGELOG file to the pkgbuild_path so that it is visible to PKGBUILD
+            self.tools.shutil.copy(changelog_source, pkgbuild_path / "CHANGELOG")
 
+        # Build the source archive
+        with self.input.wait_bar("Building source archive..."):
+            self.tools.shutil.make_archive(
+                pkgbuild_path / f"{app.app_name}-{app.version}",
+                format="gztar",
+                root_dir=self.bundle_path(app),
+                base_dir=f"{app.app_name}-{app.version}",
+            )
+
+        # Write the arch PKGBUILD file.
+        with self.input.wait_bar("Write PKGBUILD file..."):
             # Add runtime package dependencies. App config has been finalized,
             # so this will be the target-specific definition, if one exists.
             system_runtime_requires_list = [
                 f"glibc>={app.glibc_version}",
-                f"python{app.python_version_tag}",
-                "gobject-introspection",
-                "gobject-introspection-runtime",
-                "gtk3",
+                "python3",
             ] + getattr(app, "system_runtime_requires", [])
 
             system_runtime_requires = " ".join(
@@ -1088,7 +1084,7 @@ with details about the release.
                             f'url="{app.url}"',
                             f"license=('{app.license}')",
                             f"depends=({system_runtime_requires})",
-                            f'changelog=CHANGELOG',
+                            "changelog=CHANGELOG",
                             'source=("$pkgname-$pkgver.tar.gz")',
                             "md5sums=('SKIP')",
                             "package() {",
