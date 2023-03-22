@@ -234,7 +234,7 @@ class HTTPHandler(SimpleHTTPRequestHandler):
 
 
 class LocalHTTPServer(ThreadingHTTPServer):
-    """A HTTP server that serves local static content."""
+    """An HTTP server that serves local static content."""
 
     def __init__(self, base_path, host, port, RequestHandlerClass=HTTPHandler):
         self.base_path = base_path

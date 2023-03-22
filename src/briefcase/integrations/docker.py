@@ -146,7 +146,7 @@ installation, and try again.
                 tools.logger.warning(cls.UNKNOWN_DOCKER_VERSION_WARNING)
         except subprocess.CalledProcessError:
             tools.logger.warning(cls.DOCKER_INSTALLATION_STATUS_UNKNOWN_WARNING)
-        except FileNotFoundError as e:
+        except OSError as e:
             # Docker executable doesn't exist.
             raise BriefcaseCommandError(
                 cls.DOCKER_NOT_INSTALLED_ERROR.format(

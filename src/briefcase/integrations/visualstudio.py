@@ -68,7 +68,7 @@ class VisualStudio(Tool):
             pass
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(
-                """MSBuild is on the path, but Briefcase cannot start it."""
+                "MSBuild is on the path, but Briefcase cannot start it."
             ) from e
 
         # try to find Visual Studio
@@ -137,6 +137,7 @@ installation.
                     KeyError,
                     CommandOutputParseError,
                     subprocess.CalledProcessError,
+                    OSError,
                 ) as e:
                     raise BriefcaseCommandError(
                         f"""\
@@ -174,7 +175,7 @@ Then restart Briefcase.
             # Try to invoke MSBuild at the established location
             try:
                 tools.subprocess.check_output([msbuild_path, "--version"])
-            except subprocess.CalledProcessError:
+            except (subprocess.CalledProcessError, OSError):
                 raise BriefcaseCommandError(
                     "MSBuild appears to exist, but Briefcase can't start it."
                 )

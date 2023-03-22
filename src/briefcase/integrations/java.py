@@ -121,7 +121,7 @@ class JDK(Tool):
 
 """
 
-            except FileNotFoundError:
+            except OSError:
                 install_message = f"""
 *************************************************************************
 ** WARNING: JAVA_HOME does not point to a JDK                          **

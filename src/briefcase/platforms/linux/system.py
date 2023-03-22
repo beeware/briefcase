@@ -198,7 +198,7 @@ class LinuxSystemPassiveMixin(LinuxMixin):
                     # form of this to pass coverage, you get a shiny penny. For
                     # some reason, coverage generated on Py3.9, but reported on
                     # Py3.10+, finds a missing branch from the `with` statement
-                    # to the first line after the `except FileNotFound` below.
+                    # to the first line after the `except OSError` below.
                     # Since this is (a) a very simple file I/O sequence, and
                     # (b) will be removed once we're at a Python3.10 minimum,
                     # I can live with the Old Skool I/O calls.
@@ -208,11 +208,11 @@ class LinuxSystemPassiveMixin(LinuxMixin):
                 else:
                     freedesktop_info = self.tools.platform.freedesktop_os_release()
 
-            except FileNotFoundError:
+            except OSError as e:
                 raise BriefcaseCommandError(
                     "Could not find the /etc/os-release file. "
                     "Is this a FreeDesktop-compliant Linux distribution?"
-                )
+                ) from e
 
         # Process the FreeDesktop content to give the vendor, codename and vendor base.
         (
@@ -576,7 +576,7 @@ class LinuxSystemBuildCommand(LinuxSystemMixin, BuildCommand):
 
         with self.input.wait_bar("Installing license..."):
             license_file = self.base_path / "LICENSE"
-            if license_file.exists():
+            if license_file.is_file():
                 self.tools.shutil.copy(license_file, doc_folder / "copyright")
             else:
                 raise BriefcaseCommandError(
@@ -590,7 +590,7 @@ with your app's licensing terms.
 
         with self.input.wait_bar("Installing changelog..."):
             changelog = self.base_path / "CHANGELOG"
-            if changelog.exists():
+            if changelog.is_file():
                 with changelog.open() as infile:
                     outfile = gzip.GzipFile(
                         doc_folder / "changelog.gz", mode="wb", mtime=0
@@ -620,7 +620,7 @@ with details about the release.
 
         with self.input.wait_bar("Installing man page..."):
             manpage_source = self.bundle_path(app) / f"{app.app_name}.1"
-            if manpage_source.exists():
+            if manpage_source.is_file():
                 with manpage_source.open() as infile:
                     outfile = gzip.GzipFile(
                         man_folder / f"{app.app_name}.1.gz", mode="wb", mtime=0
@@ -774,10 +774,12 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
 
         # Write the Debian metadata control file.
         with self.input.wait_bar("Write Debian package control file..."):
-            if (self.project_path(app) / "DEBIAN").exists():
-                self.tools.shutil.rmtree(self.project_path(app) / "DEBIAN")
+            DEBIAN_path = self.project_path(app) / "DEBIAN"
 
-            (self.project_path(app) / "DEBIAN").mkdir()
+            if DEBIAN_path.exists():
+                self.tools.shutil.rmtree(DEBIAN_path)
+
+            DEBIAN_path.mkdir()
 
             # Add runtime package dependencies. App config has been finalized,
             # so this will be the target-specific definition, if one exists.
@@ -791,9 +793,7 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
                 + getattr(app, "system_runtime_requires", [])
             )
 
-            with (self.project_path(app) / "DEBIAN" / "control").open(
-                "w", encoding="utf-8"
-            ) as f:
+            with (DEBIAN_path / "control").open("w", encoding="utf-8") as f:
                 f.write(
                     "\n".join(
                         [
@@ -946,7 +946,7 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
                 # Add the changelog content to the bottom of the spec file.
                 f.write("\n%changelog\n")
                 changelog_source = self.base_path / "CHANGELOG"
-                if not changelog_source.exists():
+                if not changelog_source.is_file():
                     raise BriefcaseCommandError(
                         """\
 Your project does not contain a CHANGELOG file.
