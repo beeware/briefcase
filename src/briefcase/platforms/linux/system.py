@@ -1040,7 +1040,7 @@ with details about the release.
             )
             
         # Generate the pkgbuild layout
-        pkgbuild_path = self.build_path(app) / "pkgbuild"
+        pkgbuild_path = self.bundle_path(app) / "pkgbuild"
         with self.input.wait_bar("Generating pkgbuild layout..."):
             if pkgbuild_path.exists():
                 self.tools.shutil.rmtree(pkgbuild_path)
@@ -1050,14 +1050,21 @@ with details about the release.
             with self.input.wait_bar("Building source archive..."):
                 
                 # Copy the CHANGELOG file to the bundle_path so it can be included in the source archive
-                self.tools.shutil.copy(changelog_source, self.bundle_path(app) / "CHANGELOG")
+                #self.tools.shutil.copy(changelog_source, self.bundle_path(app) / "CHANGELOG")
                 
-                self.tools.shutil.make_archive(
-                    pkgbuild_path / f"{app.app_name}-{app.version}",
-                    format="gztar",
-                    root_dir=self.build_path(app),
-                    base_dir=self.bundle_path(app),
-                )
+                #self.tools.shutil.make_archive(
+                #    pkgbuild_path / f"{app.app_name}-{app.version}",
+                #    format="gztar",
+                #    root_dir=self.bundle_path(app),
+                #    base_dir=f"{app.app_name}-{app.version}",
+                #)
+                
+                # I am not sure how to append the CHANGELOG file to the archive, so I am using tarfile module(can you add it)
+                with self.tools.tarfile.open(pkgbuild_path / f"{app.app_name}-{app.version}","w|gz") as arc:
+                    arc_prefix = f"{app.app_name}-{app.version}"
+                    arc.add(self.bundle_path(app) / f"{app.app_name}-{app.version}", arc_prefix+'/'+arc_prefix)
+                    arc.add(self.bundle_path(app) / "CHANGELOG", arc_prefix+'/CHANGELOG')
+                    
             # Write the arch PKGBUILD file.
 
             # Add runtime package dependencies. App config has been finalized,
@@ -1089,18 +1096,11 @@ with details about the release.
                             f'url="{app.url}"',
                             f"license=('{app.license}')",
                             f"depends=({system_runtime_requires})",
-                            f"makedepends=('base-devel')",
                             f'changelog="$srcdir/$pkgname-$pkgver"/CHANGELOG',
                             'source=("$pkgname-$pkgver.tar.gz")',
                             "md5sums=('SKIP')",
-                            "build() {",
-                            '    cd "$srcdir/$pkgname-$pkgver"/bootstrap',
-                            '    make',
-                            "}",
                             "package() {",
-                            '    cd "$srcdir/$pkgname-$pkgver"/bootstrap',
-                            '    make install',  # We do not need to prefix as the makefile does not assume it is installing on to a live system.
-                            '    cp -r "$srcdir/$pkgname-$pkgver/$pkgname-$pkgver/usr/" "$pkgdir"/usr/',
+                            '    cp -r "$srcdir/$pkgname-$pkgver/usr/" "$pkgdir"/usr/',
                             "}",
                         ]
                     )
