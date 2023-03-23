@@ -221,25 +221,36 @@ class Subprocess(Tool):
                 "encoding", os.device_encoding(sys.__stdout__.fileno()) or "UTF-8"
             )
 
+        # When text mode is enabled, subprocess defaults to "strict"
+        # handling for errors arising from decoding output to Unicode.
+        # To avoid Unicode exceptions from misbehaving commands, set
+        # `errors` so output that cannot be decoded for the specified
+        # encoding are replaced with hex of the raw bytes.
+        if any(kwargs.get(kw) for kw in ["text", "encoding", "universal_encoding"]):
+            kwargs.setdefault("errors", "backslashreplace")
+
         # For Windows, convert start_new_session=True to creation flags
         if self.tools.host_os == "Windows":
             try:
                 if kwargs.pop("start_new_session") is True:
                     if "creationflags" in kwargs:
                         raise AssertionError(
-                            "Subprocess called with creationflags set and start_new_session=True.\n"
-                            "This will result in CREATE_NEW_PROCESS_GROUP and CREATE_NO_WINDOW being "
-                            "merged in to the creationflags.\n\n"
-                            "Ensure this is desired configuration or don't set start_new_session=True."
+                            "Subprocess called with creationflags set and "
+                            "start_new_session=True.\nThis will result in "
+                            "CREATE_NEW_PROCESS_GROUP and CREATE_NO_WINDOW "
+                            "being merged in to the creationflags.\n\nEnsure "
+                            "this is desired configuration or don't set "
+                            "start_new_session=True."
                         )
-                    # CREATE_NEW_PROCESS_GROUP: Makes the new process the root process
-                    #     of a new process group. This also disables CTRL+C signal handlers
-                    #     for all processes of the new process group.
-                    # CREATE_NO_WINDOW: Creates a new console for the process but does not
-                    #     open a visible window for that console. This flag is used instead
-                    #     of DETACHED_PROCESS since the new process can spawn a new console
-                    #     itself (in the absence of one being available) but that console
-                    #     creation will also spawn a visible console window.
+                    # CREATE_NEW_PROCESS_GROUP: Promotes the new process to the root
+                    #    process of a new process group. This also disables CTRL+C
+                    #    signal handlers for all processes of the new process group.
+                    # CREATE_NO_WINDOW: Creates a new console for the process but
+                    #    does not open a visible window for that console. This flag
+                    #    is used instead of DETACHED_PROCESS since the new process
+                    #    can spawn a new console itself (in the absence of one being
+                    #    available) but that console creation will also spawn a
+                    #    visible console window.
                     new_session_flags = (
                         self._subprocess.CREATE_NEW_PROCESS_GROUP
                         | self._subprocess.CREATE_NO_WINDOW

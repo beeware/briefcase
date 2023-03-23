@@ -15,6 +15,7 @@ def test_no_overrides(mock_sub):
     assert mock_sub.final_kwargs() == {
         "text": True,
         "encoding": CONSOLE_ENCODING,
+        "errors": "backslashreplace",
     }
 
 
@@ -28,6 +29,7 @@ def test_explicit_no_overrides(mock_sub):
         },
         "text": True,
         "encoding": CONSOLE_ENCODING,
+        "errors": "backslashreplace",
     }
 
 
@@ -43,6 +45,7 @@ def test_env_overrides(mock_sub):
         },
         "text": True,
         "encoding": CONSOLE_ENCODING,
+        "errors": "backslashreplace",
     }
 
 
@@ -52,6 +55,7 @@ def test_cwd_provided(mock_sub):
     assert mock_sub.final_kwargs(cwd=cwd_override) == {
         "text": True,
         "encoding": CONSOLE_ENCODING,
+        "errors": "backslashreplace",
         "cwd": cwd_override,
     }
 
@@ -62,6 +66,7 @@ def test_non_str_cwd_provided(mock_sub):
     assert mock_sub.final_kwargs(cwd=cwd_override) == {
         "text": True,
         "encoding": CONSOLE_ENCODING,
+        "errors": "backslashreplace",
         "cwd": str(cwd_override),
     }
 
@@ -69,25 +74,52 @@ def test_non_str_cwd_provided(mock_sub):
 @pytest.mark.parametrize(
     "in_kwargs, final_kwargs",
     [
-        ({}, {"text": True, "encoding": CONSOLE_ENCODING}),
-        ({"text": True}, {"text": True, "encoding": CONSOLE_ENCODING}),
+        (
+            {},
+            {"text": True, "encoding": CONSOLE_ENCODING, "errors": "backslashreplace"},
+        ),
+        (
+            {"text": True},
+            {"text": True, "encoding": CONSOLE_ENCODING, "errors": "backslashreplace"},
+        ),
         ({"text": False}, {"text": False}),
         ({"universal_newlines": False}, {"universal_newlines": False}),
         (
             {"universal_newlines": True},
-            {"universal_newlines": True, "encoding": CONSOLE_ENCODING},
+            {
+                "universal_newlines": True,
+                "encoding": CONSOLE_ENCODING,
+                "errors": "backslashreplace",
+            },
         ),
-        # Explcit encoding provided
-        ({"encoding": "ibm850"}, {"text": True, "encoding": "ibm850"}),
-        ({"text": True, "encoding": "ibm850"}, {"text": True, "encoding": "ibm850"}),
-        ({"text": False, "encoding": "ibm850"}, {"text": False, "encoding": "ibm850"}),
+        # Explicit encoding provided
+        (
+            {"encoding": "ibm850"},
+            {"text": True, "encoding": "ibm850", "errors": "backslashreplace"},
+        ),
+        (
+            {"text": True, "encoding": "ibm850"},
+            {"text": True, "encoding": "ibm850", "errors": "backslashreplace"},
+        ),
+        (
+            {"text": False, "encoding": "ibm850"},
+            {"text": False, "encoding": "ibm850", "errors": "backslashreplace"},
+        ),
         (
             {"universal_newlines": False, "encoding": "ibm850"},
-            {"universal_newlines": False, "encoding": "ibm850"},
+            {
+                "universal_newlines": False,
+                "encoding": "ibm850",
+                "errors": "backslashreplace",
+            },
         ),
         (
             {"universal_newlines": True, "encoding": "ibm850"},
-            {"universal_newlines": True, "encoding": "ibm850"},
+            {
+                "universal_newlines": True,
+                "encoding": "ibm850",
+                "errors": "backslashreplace",
+            },
         ),
     ],
 )
