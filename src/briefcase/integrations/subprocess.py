@@ -623,11 +623,16 @@ class Subprocess(Tool):
             while True:
                 try:
                     output_line = ensure_str(popen_process.stdout.readline())
-                except ValueError:
-                    # ValueError is raised if stdout is unexpectedly closed. This can
-                    # happen if the user starts spamming CTRL+C, for instance. Silently
-                    # exit to avoid Python printing the exception to the console.
-                    return
+                except ValueError as e:
+                    # Catch ValueError if stdout is unexpectedly closed; this can
+                    # happen, for instance, if the user starts spamming CTRL+C.
+                    if "I/O operation on closed file" in str(e):
+                        self.tools.logger.warning(
+                            "WARNING: stdout was unexpectedly closed while streaming output"
+                        )
+                        return
+                    else:
+                        raise
 
                 # readline should always return at least a newline (ie \n) UNLESS
                 # the underlying process is exiting/gone; then "" is returned.
