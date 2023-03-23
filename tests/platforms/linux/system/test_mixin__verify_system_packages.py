@@ -59,14 +59,10 @@ def test_arch_requirements(build_command, first_app_config, capsys):
 
     build_command.verify_system_packages(first_app_config)
 
-    # For now, we don't know how to verify arch packages.
-
-    # No packages verified
-    build_command.tools.subprocess.check_output.assert_not_called()
-
-    # A warning was logged.
-    output = capsys.readouterr().out
-    assert "WARNING: Can't verify system packages" in output
+    assert build_command.tools.subprocess.check_output.mock_calls == [
+        call(["pacman", "-Q", "python3"]),
+        call(["pacman", "-Q", "base-devel"]),
+    ]
 
 
 def test_unknown_requirements(build_command, first_app_config, capsys):

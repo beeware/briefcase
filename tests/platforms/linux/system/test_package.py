@@ -30,6 +30,7 @@ def package_command(monkeypatch, first_app, tmp_path):
     # Mock the packaging tools.
     command._verify_deb_tools = mock.MagicMock()
     command._verify_rpm_tools = mock.MagicMock()
+    command._verify_pkg_tools = mock.MagicMock()
 
     return command
 

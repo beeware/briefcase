@@ -397,7 +397,7 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
             ]
             system_verify = ["rpm", "-q"]
             system_installer = "dnf"
-        elif app.target_vender_base == ARCH:
+        elif app.target_vendor_base == ARCH:
             base_system_packages = [
                 "python3",
                 "base-devel",
