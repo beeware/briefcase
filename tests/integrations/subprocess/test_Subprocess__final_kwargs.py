@@ -34,7 +34,7 @@ def test_explicit_no_overrides(mock_sub):
 
 
 def test_env_overrides(mock_sub):
-    """If environmental overrides are provided, they supercede the default
+    """If environmental overrides are provided, they supersede the default
     environment."""
     assert mock_sub.final_kwargs(env={"NEWVAR": "value", "VAR1": "New Value"}) == {
         "env": {
@@ -74,10 +74,12 @@ def test_non_str_cwd_provided(mock_sub):
 @pytest.mark.parametrize(
     "in_kwargs, final_kwargs",
     [
+        # Default handling
         (
             {},
             {"text": True, "encoding": CONSOLE_ENCODING, "errors": "backslashreplace"},
         ),
+        # Explicit text/universal_newlines provided
         (
             {"text": True},
             {"text": True, "encoding": CONSOLE_ENCODING, "errors": "backslashreplace"},
@@ -120,6 +122,35 @@ def test_non_str_cwd_provided(mock_sub):
                 "encoding": "ibm850",
                 "errors": "backslashreplace",
             },
+        ),
+        # Explicit errors provided
+        (
+            {"errors": "emojireplace"},
+            {"text": True, "encoding": CONSOLE_ENCODING, "errors": "emojireplace"},
+        ),
+        (
+            {"encoding": "ascii", "errors": "emojireplace"},
+            {"text": True, "encoding": "ascii", "errors": "emojireplace"},
+        ),
+        (
+            {"text": True, "errors": "emojireplace"},
+            {"text": True, "encoding": CONSOLE_ENCODING, "errors": "emojireplace"},
+        ),
+        (
+            {"text": False, "errors": "emojireplace"},
+            {"text": False, "errors": "emojireplace"},
+        ),
+        (
+            {"universal_newlines": True, "errors": "emojireplace"},
+            {
+                "universal_newlines": True,
+                "encoding": CONSOLE_ENCODING,
+                "errors": "emojireplace",
+            },
+        ),
+        (
+            {"universal_newlines": False, "errors": "emojireplace"},
+            {"universal_newlines": False, "errors": "emojireplace"},
         ),
     ],
 )
