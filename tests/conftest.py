@@ -52,13 +52,22 @@ def no_print(monkeypatch):
 @pytest.fixture
 def sub_kw():
     """Default keyword arguments for all subprocess calls."""
-    return dict(text=True, encoding=ANY, errors="backslashreplace")
+    return dict(
+        text=True,
+        encoding=ANY,
+        errors="backslashreplace",
+    )
 
 
 @pytest.fixture
 def sub_check_output_kw(sub_kw):
     """Default keyword arguments for all subprocess.check_output calls."""
-    return {**sub_kw, **dict(stderr=subprocess.STDOUT)}
+    return {
+        **sub_kw,
+        **dict(
+            stderr=subprocess.STDOUT,
+        ),
+    }
 
 
 @pytest.fixture
@@ -66,7 +75,11 @@ def sub_stream_kw(sub_kw):
     """Default keyword arguments for all output streaming subprocess calls."""
     return {
         **sub_kw,
-        **dict(stdout=subprocess.PIPE, stderr=subprocess.STDOUT, bufsize=1),
+        **dict(
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            bufsize=1,
+        ),
     }
 
 
