@@ -113,7 +113,7 @@ def test_stuck_streamer(mock_sub, streaming_process, monkeypatch, capsys):
 
     def monkeypatched_blocked_streamer(*a, **kw):
         """Simulate a streamer that blocks longer than it will be waited on."""
-        time.sleep(1)
+        time.sleep(1.5)
         if monkeypatched_streamer_should_exit.is_set():
             return
         print("This should not be printed while waiting on the streamer to exit")
@@ -129,14 +129,14 @@ def test_stuck_streamer(mock_sub, streaming_process, monkeypatch, capsys):
     with pytest.raises(KeyboardInterrupt):
         mock_sub.stream_output("testing", streaming_process, stop_func=send_ctrl_c)
 
+    monkeypatched_streamer_should_exit.set()
+
     # fmt: off
     assert capsys.readouterr().out == (
         "Stopping...\n"
         "Log stream hasn't terminated; log output may be corrupted.\n"
     )
     # fmt: on
-
-    monkeypatched_streamer_should_exit.set()
 
 
 def test_stdout_closes_unexpectedly(mock_sub, streaming_process, monkeypatch, capsys):
