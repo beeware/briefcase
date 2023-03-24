@@ -140,7 +140,7 @@ def test_stuck_streamer(mock_sub, streaming_process, monkeypatch, capsys):
 
 
 def test_stdout_closes_unexpectedly(mock_sub, streaming_process, monkeypatch, capsys):
-    """Streamer silently exits from ValueError because stdout was closed."""
+    """Streamer exits from ValueError because stdout was closed."""
 
     def monkeypatch_ensure_str(value):
         """Close stdout when ensure_str() runs on output from readline()."""
@@ -152,7 +152,27 @@ def test_stdout_closes_unexpectedly(mock_sub, streaming_process, monkeypatch, ca
 
     mock_sub.stream_output("testing", streaming_process)
 
-    assert capsys.readouterr().out == "output line 1\n"
+    assert capsys.readouterr().out == (
+        "output line 1\n"
+        "WARNING: stdout was unexpectedly closed while streaming output\n"
+    )
+
+
+def test_readline_raises_exception(mock_sub, streaming_process, monkeypatch, capsys):
+    """Streamer aborts if readline() raises ValueError for reasons other than stdout closing."""
+
+    def monkeypatch_ensure_str(value):
+        """Simulate readline() raising an ValueError-derived exception."""
+        raise UnicodeError("readline() exception")
+
+    streaming_process.stdout = StringIO(initial_value="output line 1\noutput line 2")
+    monkeypatch.setattr(subprocess, "ensure_str", monkeypatch_ensure_str)
+
+    mock_sub.stream_output("testing", streaming_process)
+
+    assert capsys.readouterr().out == (
+        "Error while streaming output: UnicodeError: readline() exception\n"
+    )
 
 
 def test_filter_func(mock_sub, streaming_process, capsys):

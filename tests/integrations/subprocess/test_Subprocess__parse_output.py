@@ -27,23 +27,20 @@ def third_line_parser(data):
         raise ParseError("Input does not contain 3 lines")
 
 
-def test_call(mock_sub, capsys):
+def test_call(mock_sub, capsys, sub_check_output_kw):
     """A simple call to check_output will be invoked."""
 
     output = mock_sub.parse_output(splitlines_parser, ["hello", "world"])
 
     mock_sub._subprocess.check_output.assert_called_with(
         ["hello", "world"],
-        text=True,
-        encoding=ANY,
-        stderr=subprocess.STDOUT,
+        **sub_check_output_kw,
     )
     assert capsys.readouterr().out == ""
-
     assert output == ["some output line 1", "more output line 2"]
 
 
-def test_call_with_arg(mock_sub, capsys):
+def test_call_with_arg(mock_sub, capsys, sub_check_output_kw):
     """Any extra keyword arguments are passed through as-is to check_output."""
 
     output = mock_sub.parse_output(
@@ -53,30 +50,26 @@ def test_call_with_arg(mock_sub, capsys):
     mock_sub._subprocess.check_output.assert_called_with(
         ["hello", "world"],
         extra_arg="asdf",
-        text=True,
-        encoding=ANY,
-        stderr=subprocess.STDOUT,
+        **sub_check_output_kw,
     )
     assert capsys.readouterr().out == ""
-
     assert output == ["some output line 1", "more output line 2"]
 
 
-def test_call_with_parser_success(mock_sub, capsys):
+def test_call_with_parser_success(mock_sub, capsys, sub_check_output_kw):
     """Parser returns expected portion of check_output's output."""
 
     output = mock_sub.parse_output(second_line_parser, ["hello", "world"])
 
     mock_sub._subprocess.check_output.assert_called_with(
         ["hello", "world"],
-        text=True,
-        encoding=ANY,
-        stderr=subprocess.STDOUT,
+        **sub_check_output_kw,
     )
+
     assert output == "more output line 2"
 
 
-def test_call_with_parser_error(mock_sub, capsys):
+def test_call_with_parser_error(mock_sub, capsys, sub_check_output_kw):
     """Parser errors on output from check_output."""
 
     with pytest.raises(
@@ -87,10 +80,9 @@ def test_call_with_parser_error(mock_sub, capsys):
 
     mock_sub._subprocess.check_output.assert_called_with(
         ["hello", "world"],
-        text=True,
-        encoding=ANY,
-        stderr=subprocess.STDOUT,
+        **sub_check_output_kw,
     )
+
     expected_output = (
         "\n"
         "Command Output Parsing Error:\n"
@@ -107,11 +99,14 @@ def test_call_with_parser_error(mock_sub, capsys):
 @pytest.mark.parametrize(
     "in_kwargs, kwargs",
     [
-        ({}, {"text": True, "encoding": ANY}),
-        ({"text": True}, {"text": True, "encoding": ANY}),
+        ({}, {"text": True, "encoding": ANY, "errors": "backslashreplace"}),
+        ({"text": True}, {"text": True, "encoding": ANY, "errors": "backslashreplace"}),
         ({"text": False}, {"text": False}),
         ({"universal_newlines": False}, {"universal_newlines": False}),
-        ({"universal_newlines": True}, {"universal_newlines": True, "encoding": ANY}),
+        (
+            {"universal_newlines": True},
+            {"universal_newlines": True, "encoding": ANY, "errors": "backslashreplace"},
+        ),
     ],
 )
 def test_text_eq_true_default_overriding(mock_sub, in_kwargs, kwargs):
@@ -119,6 +114,9 @@ def test_text_eq_true_default_overriding(mock_sub, in_kwargs, kwargs):
     text=true default."""
 
     mock_sub.parse_output(splitlines_parser, ["hello", "world"], **in_kwargs)
+
     mock_sub._subprocess.check_output.assert_called_with(
-        ["hello", "world"], stderr=subprocess.STDOUT, **kwargs
+        ["hello", "world"],
+        stderr=subprocess.STDOUT,
+        **kwargs,
     )

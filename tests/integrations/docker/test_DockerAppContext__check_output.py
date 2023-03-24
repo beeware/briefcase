@@ -1,13 +1,11 @@
 import os
-import subprocess
 import sys
 from pathlib import Path
-from unittest.mock import ANY
 
 import pytest
 
 
-def test_simple_call(mock_docker_app_context, tmp_path, capsys):
+def test_simple_call(mock_docker_app_context, tmp_path, sub_check_output_kw, capsys):
     """A simple call will be invoked."""
     assert mock_docker_app_context.check_output(["hello", "world"]) == "goodbye\n"
 
@@ -24,14 +22,12 @@ def test_simple_call(mock_docker_app_context, tmp_path, capsys):
             "hello",
             "world",
         ],
-        text=True,
-        encoding=ANY,
-        stderr=subprocess.STDOUT,
+        **sub_check_output_kw,
     )
     assert capsys.readouterr().out == ""
 
 
-def test_extra_mounts(mock_docker_app_context, tmp_path, capsys):
+def test_extra_mounts(mock_docker_app_context, tmp_path, sub_check_output_kw, capsys):
     """A call can request additional mounts."""
     assert (
         mock_docker_app_context.check_output(
@@ -61,9 +57,7 @@ def test_extra_mounts(mock_docker_app_context, tmp_path, capsys):
             "hello",
             "world",
         ],
-        text=True,
-        encoding=ANY,
-        stderr=subprocess.STDOUT,
+        **sub_check_output_kw,
     )
     assert capsys.readouterr().out == ""
 
@@ -71,7 +65,7 @@ def test_extra_mounts(mock_docker_app_context, tmp_path, capsys):
 @pytest.mark.skipif(
     sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
 )
-def test_cwd(mock_docker_app_context, tmp_path, capsys):
+def test_cwd(mock_docker_app_context, tmp_path, sub_check_output_kw, capsys):
     """A call can use a working directory relative to the project folder."""
     assert (
         mock_docker_app_context.check_output(
@@ -96,14 +90,17 @@ def test_cwd(mock_docker_app_context, tmp_path, capsys):
             "hello",
             "world",
         ],
-        text=True,
-        encoding=ANY,
-        stderr=subprocess.STDOUT,
+        **sub_check_output_kw,
     )
     assert capsys.readouterr().out == ""
 
 
-def test_call_with_arg_and_env(mock_docker_app_context, tmp_path, capsys):
+def test_call_with_arg_and_env(
+    mock_docker_app_context,
+    tmp_path,
+    sub_check_output_kw,
+    capsys,
+):
     """Extra keyword arguments are passed through as-is; env modifications are
     converted."""
     output = mock_docker_app_context.check_output(
@@ -116,6 +113,7 @@ def test_call_with_arg_and_env(mock_docker_app_context, tmp_path, capsys):
     )
     assert output == "goodbye\n"
 
+    sub_check_output_kw.pop("text")
     mock_docker_app_context.tools.subprocess._subprocess.check_output.assert_called_once_with(
         [
             "docker",
@@ -134,8 +132,7 @@ def test_call_with_arg_and_env(mock_docker_app_context, tmp_path, capsys):
             "world",
         ],
         universal_newlines=True,
-        encoding=ANY,
-        stderr=subprocess.STDOUT,
+        **sub_check_output_kw,
     )
     assert capsys.readouterr().out == ""
 
@@ -144,7 +141,12 @@ def test_call_with_arg_and_env(mock_docker_app_context, tmp_path, capsys):
     sys.platform == "win32",
     reason="Windows paths aren't converted in Docker context",
 )
-def test_call_with_path_arg_and_env(mock_docker_app_context, tmp_path, capsys):
+def test_call_with_path_arg_and_env(
+    mock_docker_app_context,
+    tmp_path,
+    sub_check_output_kw,
+    capsys,
+):
     """Path-based arguments and environment are converted to strings and passed in as-
     is."""
     output = mock_docker_app_context.check_output(
@@ -176,9 +178,7 @@ def test_call_with_path_arg_and_env(mock_docker_app_context, tmp_path, capsys):
             "hello",
             os.fsdecode(tmp_path / "location"),
         ],
-        text=True,
-        encoding=ANY,
-        stderr=subprocess.STDOUT,
+        **sub_check_output_kw,
     )
     assert capsys.readouterr().out == ""
 
@@ -186,7 +186,12 @@ def test_call_with_path_arg_and_env(mock_docker_app_context, tmp_path, capsys):
 @pytest.mark.skipif(
     sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
 )
-def test_simple_verbose_call(mock_docker_app_context, tmp_path, capsys):
+def test_simple_verbose_call(
+    mock_docker_app_context,
+    tmp_path,
+    sub_check_output_kw,
+    capsys,
+):
     """If verbosity is turned out, there is output."""
     mock_docker_app_context.tools.logger.verbosity = 2
 
@@ -205,9 +210,7 @@ def test_simple_verbose_call(mock_docker_app_context, tmp_path, capsys):
             "hello",
             "world",
         ],
-        text=True,
-        encoding=ANY,
-        stderr=subprocess.STDOUT,
+        **sub_check_output_kw,
     )
     assert capsys.readouterr().out == (
         "\n"

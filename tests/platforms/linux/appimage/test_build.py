@@ -146,7 +146,7 @@ def test_verify_tools_download_failure(build_command):
     assert build_command.build_app.call_count == 0
 
 
-def test_build_appimage(build_command, first_app, tmp_path):
+def test_build_appimage(build_command, first_app, tmp_path, sub_stream_kw):
     """A Linux app can be packaged as an AppImage."""
 
     build_command.verify_app_tools(first_app)
@@ -190,11 +190,7 @@ def test_build_appimage(build_command, first_app, tmp_path):
         cwd=os.fsdecode(
             tmp_path / "base_path" / "build" / "first-app" / "linux" / "appimage"
         ),
-        text=True,
-        encoding=mock.ANY,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        bufsize=1,
+        **sub_stream_kw,
     )
     # Binary is marked executable
     build_command.tools.os.chmod.assert_called_with(
@@ -213,7 +209,7 @@ def test_build_appimage(build_command, first_app, tmp_path):
     sys.platform == "win32",
     reason="Windows paths can't be passed to linuxdeploy",
 )
-def test_build_appimage_with_plugin(build_command, first_app, tmp_path):
+def test_build_appimage_with_plugin(build_command, first_app, tmp_path, sub_stream_kw):
     """A Linux app can be packaged as an AppImage with a plugin."""
     # Mock the existence of some plugins
     gtk_plugin_path = (
@@ -284,11 +280,7 @@ def test_build_appimage_with_plugin(build_command, first_app, tmp_path):
         cwd=os.fsdecode(
             tmp_path / "base_path" / "build" / "first-app" / "linux" / "appimage"
         ),
-        text=True,
-        encoding=mock.ANY,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        bufsize=1,
+        **sub_stream_kw,
     )
     # Local plugin marked executable
     build_command.tools.os.chmod.assert_any_call(
@@ -314,7 +306,7 @@ def test_build_appimage_with_plugin(build_command, first_app, tmp_path):
     )
 
 
-def test_build_failure(build_command, first_app, tmp_path):
+def test_build_failure(build_command, first_app, tmp_path, sub_stream_kw):
     """If linuxdeploy fails, the build is stopped."""
     # Mock a failure in the build
     build_command._subprocess.Popen.side_effect = subprocess.CalledProcessError(
@@ -365,11 +357,7 @@ def test_build_failure(build_command, first_app, tmp_path):
         cwd=os.fsdecode(
             tmp_path / "base_path" / "build" / "first-app" / "linux" / "appimage"
         ),
-        text=True,
-        encoding=mock.ANY,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        bufsize=1,
+        **sub_stream_kw,
     )
 
     # chmod isn't invoked if the binary wasn't created.
@@ -379,7 +367,7 @@ def test_build_failure(build_command, first_app, tmp_path):
 @pytest.mark.skipif(
     sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
 )
-def test_build_appimage_in_docker(build_command, first_app, tmp_path, monkeypatch):
+def test_build_appimage_in_docker(build_command, first_app, tmp_path, sub_stream_kw):
     """A Linux app can be packaged as an AppImage in a docker container."""
 
     # Enable docker, and move to a non-Linux OS.
@@ -448,11 +436,7 @@ def test_build_appimage_in_docker(build_command, first_app, tmp_path, monkeypatc
             "--deploy-deps-only",
             "/app/First App.AppDir/usr/app_packages/secondlib",
         ],
-        text=True,
-        encoding=mock.ANY,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        bufsize=1,
+        **sub_stream_kw,
     )
     # Binary is marked executable
     build_command.tools.os.chmod.assert_called_with(
@@ -470,7 +454,12 @@ def test_build_appimage_in_docker(build_command, first_app, tmp_path, monkeypatc
 @pytest.mark.skipif(
     sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
 )
-def test_build_appimage_with_plugins_in_docker(build_command, first_app, tmp_path):
+def test_build_appimage_with_plugins_in_docker(
+    build_command,
+    first_app,
+    tmp_path,
+    sub_stream_kw,
+):
     """A Linux app can be packaged as an AppImage with plugins in a Docker container."""
     # Mock the existence of some plugins
     gtk_plugin_path = (
@@ -573,11 +562,7 @@ def test_build_appimage_with_plugins_in_docker(build_command, first_app, tmp_pat
             "--plugin",
             "something",
         ],
-        text=True,
-        encoding=mock.ANY,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        bufsize=1,
+        **sub_stream_kw,
     )
     # Local plugin marked executable
     build_command.tools.os.chmod.assert_any_call(
