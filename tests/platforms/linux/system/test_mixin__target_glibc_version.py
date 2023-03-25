@@ -27,7 +27,7 @@ from briefcase.exceptions import BriefcaseCommandError
             ],
             "2.36",
         ),
-        # arch:rolling
+        # arch:rolling (20230301)
         (
             [
                 "ldd (GNU libc) 2.37",

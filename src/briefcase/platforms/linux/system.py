@@ -766,12 +766,7 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
 
         if not self.use_docker:
             # Check for the format-specific packaging tools.
-            if app.packaging_format == "deb":
-                self._verify_deb_tools()
-            elif app.packaging_format == "rpm":
-                self._verify_rpm_tools()
-            elif app.packaging_format == "pkg":
-                self._verify_pkg_tools()
+            getattr(self, f"_verify_{app.packaging_format}_tools")()
 
     def package_app(self, app: AppConfig, **kwargs):
         if app.packaging_format == "deb":
