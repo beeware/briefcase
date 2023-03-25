@@ -85,7 +85,7 @@ def test_missing_packages(build_command, first_app_config, capsys):
     # a packaged called "compiler", verified using "check <pkg>", and
     # isntalled using "system <pkg>"
     build_command._system_requirement_tools = MagicMock(
-        return_value=(["compiler"], ["check"], "system")
+        return_value=(["compiler"], ["check"], "system", "install_flag")
     )
 
     # Add some system requirements.
@@ -103,7 +103,7 @@ def test_missing_packages(build_command, first_app_config, capsys):
     # message will tell you how to install the system packages.
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"    sudo system install compiler second",
+        match=r"    sudo system install_flag compiler second",
     ):
         build_command.verify_system_packages(first_app_config)
 
@@ -114,7 +114,7 @@ def test_packages_installed(build_command, first_app_config, capsys):
     # a packaged called "compiler", verified using "check <pkg>", and
     # isntalled using "system <pkg>"
     build_command._system_requirement_tools = MagicMock(
-        return_value=(["compiler"], ["check"], "system")
+        return_value=(["compiler"], ["check"], "system", "install_flag")
     )
 
     # Add some system requirements.

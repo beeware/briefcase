@@ -388,6 +388,7 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
             base_system_packages = ["python3-dev", "build-essential"]
             system_verify = ["dpkg", "-s"]
             system_installer = "apt"
+            system_installer_install_flag = ["install"]
         elif app.target_vendor_base == RHEL:
             base_system_packages = [
                 "python3-devel",
@@ -397,6 +398,7 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
             ]
             system_verify = ["rpm", "-q"]
             system_installer = "dnf"
+            system_installer_install_flag = ["install"]
         elif app.target_vendor_base == ARCH:
             base_system_packages = [
                 "python3",
@@ -404,12 +406,19 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
             ]
             system_verify = ["pacman", "-Q"]
             system_installer = ["pacman"]
+            system_installer_install_flag = ["-Syu"]
         else:
             base_system_packages = None
             system_verify = None
             system_installer = None
+            system_installer_install_flag = None
 
-        return base_system_packages, system_verify, system_installer
+        return (
+            base_system_packages,
+            system_verify,
+            system_installer,
+            system_installer_install_flag,
+        )
 
     def verify_system_packages(self, app: AppConfig):
         """Verify that the required system packages are installed.
@@ -420,6 +429,7 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
             base_system_packages,
             system_verify,
             system_installer,
+            system_installer_install_flag,
         ) = self._system_requirement_tools(app)
 
         if system_installer is None:
@@ -454,7 +464,7 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
                 f"""\
 Unable to build {app.app_name} due to missing system dependencies. Run:
 
-    sudo {system_installer} install {' '.join(missing)}
+    sudo {system_installer} {system_installer_install_flag} {' '.join(missing)}
 
 to install the missing dependencies, and re-run Briefcase.
 """
