@@ -172,7 +172,7 @@ class BaseCommand(ABC):
                 briefcase_home = os.environ["BRIEFCASE_HOME"]
                 data_path = Path(briefcase_home).resolve()
                 # Path("") converts to ".", so check for that edge case.
-                if briefcase_home == "" or not data_path.exists():
+                if briefcase_home == "" or not data_path.is_dir():
                     raise BriefcaseCommandError(
                         "The path specified by BRIEFCASE_HOME does not exist."
                     )
@@ -332,8 +332,13 @@ a custom location for Briefcase's tools.
         :param app: The config object for the app
         :return: The contents of the application path index.
         """
-        with (self.bundle_path(app) / "briefcase.toml").open("rb") as f:
-            self._path_index[app] = tomllib.load(f)["paths"]
+        try:
+            with (self.bundle_path(app) / "briefcase.toml").open("rb") as f:
+                self._path_index[app] = tomllib.load(f)["paths"]
+        except OSError as e:
+            raise BriefcaseCommandError(
+                f"Unable to find '{self.bundle_path(app) / 'briefcase.toml'}'"
+            ) from e
         return self._path_index[app]
 
     def support_path(self, app: BaseConfig):
@@ -729,9 +734,10 @@ a custom location for Briefcase's tools.
                         msg=f"Configuration for '{app_name}'",
                     )
 
-        except FileNotFoundError as e:
+        except OSError as e:
             raise BriefcaseConfigError(
-                f"""Configuration file not found.
+                f"""\
+Configuration file not found.
 
 Did you run Briefcase in a project directory that contains {filename.name!r}?"""
             ) from e

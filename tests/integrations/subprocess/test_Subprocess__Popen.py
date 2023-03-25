@@ -8,34 +8,31 @@ from .conftest import CREATE_NEW_PROCESS_GROUP, CREATE_NO_WINDOW
 
 
 @pytest.mark.parametrize("platform", ["Linux", "Darwin", "Windows"])
-def test_call(mock_sub, capsys, platform):
+def test_call(mock_sub, capsys, platform, sub_kw):
     """A simple call will be invoked."""
 
     mock_sub.tools.host_os = platform
     mock_sub.Popen(["hello", "world"])
 
-    mock_sub._subprocess.Popen.assert_called_with(
-        ["hello", "world"],
-        text=True,
-        encoding=ANY,
-    )
+    mock_sub._subprocess.Popen.assert_called_with(["hello", "world"], **sub_kw)
     assert capsys.readouterr().out == ""
 
 
-def test_call_with_arg(mock_sub, capsys):
+def test_call_with_arg(mock_sub, capsys, sub_kw):
     """Any extra keyword arguments are passed through as-is."""
 
     mock_sub.Popen(["hello", "world"], universal_newlines=True)
 
+    sub_kw.pop("text")
     mock_sub._subprocess.Popen.assert_called_with(
         ["hello", "world"],
         universal_newlines=True,
-        encoding=ANY,
+        **sub_kw,
     )
     assert capsys.readouterr().out == ""
 
 
-def test_call_with_path_arg(mock_sub, capsys, tmp_path):
+def test_call_with_path_arg(mock_sub, capsys, tmp_path, sub_kw):
     """Path-based arguments are converted to strings and passed in as-is."""
 
     mock_sub.Popen(["hello", tmp_path / "location"], cwd=tmp_path / "cwd")
@@ -43,8 +40,7 @@ def test_call_with_path_arg(mock_sub, capsys, tmp_path):
     mock_sub._subprocess.Popen.assert_called_with(
         ["hello", os.fsdecode(tmp_path / "location")],
         cwd=os.fsdecode(tmp_path / "cwd"),
-        text=True,
-        encoding=ANY,
+        **sub_kw,
     )
     assert capsys.readouterr().out == ""
 
@@ -73,27 +69,24 @@ def test_call_with_start_new_session(
     platform,
     start_new_session,
     popen_kwargs,
+    sub_kw,
 ):
     """start_new_session is passed thru on Linux and macOS but converted for Windows."""
 
     mock_sub.tools.host_os = platform
     mock_sub.Popen(["hello", "world"], start_new_session=start_new_session)
 
+    final_kwargs = {**sub_kw, **popen_kwargs}
     if platform == "Windows":
         mock_sub._subprocess.Popen.assert_called_with(
-            ["hello", "world"],
-            text=True,
-            encoding=ANY,
-            **popen_kwargs,
+            ["hello", "world"], **final_kwargs
         )
         assert capsys.readouterr().out == ""
     else:
         mock_sub._subprocess.Popen.assert_called_with(
             ["hello", "world"],
             start_new_session=start_new_session,
-            text=True,
-            encoding=ANY,
-            **popen_kwargs,
+            **final_kwargs,
         )
         assert capsys.readouterr().out == ""
 
@@ -122,21 +115,19 @@ def test_call_windows_with_start_new_session_and_creationflags(
         AssertionError, match="Subprocess called with creationflags set"
     ):
         mock_sub.Popen(
-            ["hello", "world"], start_new_session=True, creationflags=creationflags
+            ["hello", "world"],
+            start_new_session=True,
+            creationflags=creationflags,
         )
 
 
-def test_debug_call(mock_sub, capsys):
+def test_debug_call(mock_sub, capsys, sub_kw):
     """If verbosity is turned up, there is output."""
     mock_sub.tools.logger.verbosity = 2
-
     mock_sub.Popen(["hello", "world"])
 
-    mock_sub._subprocess.Popen.assert_called_with(
-        ["hello", "world"],
-        text=True,
-        encoding=ANY,
-    )
+    mock_sub._subprocess.Popen.assert_called_with(["hello", "world"], **sub_kw)
+
     assert capsys.readouterr().out == (
         "\n"
         ">>> Running Command:\n"
@@ -146,7 +137,7 @@ def test_debug_call(mock_sub, capsys):
     )
 
 
-def test_debug_call_with_env(mock_sub, capsys, tmp_path):
+def test_debug_call_with_env(mock_sub, capsys, tmp_path, sub_kw):
     """If verbosity is turned up, and injected env vars are included output."""
     mock_sub.tools.logger.verbosity = 2
 
@@ -160,8 +151,7 @@ def test_debug_call_with_env(mock_sub, capsys, tmp_path):
         ["hello", "world"],
         env=merged_env,
         cwd=os.fsdecode(tmp_path / "cwd"),
-        text=True,
-        encoding=ANY,
+        **sub_kw,
     )
 
     expected_output = (
@@ -173,18 +163,20 @@ def test_debug_call_with_env(mock_sub, capsys, tmp_path):
         ">>> Environment Overrides:\n"
         ">>>     NewVar=NewVarValue\n"
     )
-
     assert capsys.readouterr().out == expected_output
 
 
 @pytest.mark.parametrize(
     "in_kwargs, kwargs",
     [
-        ({}, {"text": True, "encoding": ANY}),
-        ({"text": True}, {"text": True, "encoding": ANY}),
+        ({}, {"text": True, "encoding": ANY, "errors": "backslashreplace"}),
+        ({"text": True}, {"text": True, "encoding": ANY, "errors": "backslashreplace"}),
         ({"text": False}, {"text": False}),
         ({"universal_newlines": False}, {"universal_newlines": False}),
-        ({"universal_newlines": True}, {"universal_newlines": True, "encoding": ANY}),
+        (
+            {"universal_newlines": True},
+            {"universal_newlines": True, "encoding": ANY, "errors": "backslashreplace"},
+        ),
     ],
 )
 def test_text_eq_true_default_overriding(mock_sub, in_kwargs, kwargs):

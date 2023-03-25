@@ -1,5 +1,6 @@
 import inspect
-from unittest import mock
+import subprocess
+from unittest.mock import ANY, MagicMock
 
 import git as git_
 import pytest
@@ -19,9 +20,8 @@ def pytest_sessionfinish(session, exitstatus):
 
 @pytest.fixture
 def mock_git():
-    git = mock.MagicMock(spec_set=git_)
+    git = MagicMock(spec_set=git_)
     git.exc = git_exceptions
-
     return git
 
 
@@ -47,6 +47,40 @@ def monkeypatched_print(*args, **kwargs):
 def no_print(monkeypatch):
     """Replace builtin print function for ALL tests."""
     monkeypatch.setattr("builtins.print", monkeypatched_print)
+
+
+@pytest.fixture
+def sub_kw():
+    """Default keyword arguments for all subprocess calls."""
+    return dict(
+        text=True,
+        encoding=ANY,
+        errors="backslashreplace",
+    )
+
+
+@pytest.fixture
+def sub_check_output_kw(sub_kw):
+    """Default keyword arguments for all subprocess.check_output calls."""
+    return {
+        **sub_kw,
+        **dict(
+            stderr=subprocess.STDOUT,
+        ),
+    }
+
+
+@pytest.fixture
+def sub_stream_kw(sub_kw):
+    """Default keyword arguments for all output streaming subprocess calls."""
+    return {
+        **sub_kw,
+        **dict(
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            bufsize=1,
+        ),
+    }
 
 
 @pytest.fixture

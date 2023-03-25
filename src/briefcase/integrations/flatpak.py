@@ -67,7 +67,7 @@ class Flatpak(Tool):
 """
                 )
 
-        except FileNotFoundError as e:
+        except OSError as e:
             raise BriefcaseCommandError(
                 """\
 Briefcase requires the Flatpak toolchain, but it does not appear to be installed.
@@ -122,7 +122,7 @@ You must install both flatpak and flatpak-builder.
 """
                 )
 
-        except FileNotFoundError as e:
+        except OSError as e:
             raise BriefcaseCommandError(
                 """\
 Briefcase requires the full Flatpak development toolchain, but flatpak-builder

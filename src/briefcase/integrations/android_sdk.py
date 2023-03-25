@@ -206,22 +206,22 @@ class AndroidSDK(Tool):
                 if (sdk_root_path / "tools").exists():
                     tools.logger.warning(
                         f"""
-        *************************************************************************
-        ** WARNING: Upgrading Android SDK tools                                **
-        *************************************************************************
+*************************************************************************
+** WARNING: Upgrading Android SDK tools                                **
+*************************************************************************
 
-            Briefcase needs to replace the older Android SDK Tools with the
-            newer Android SDK Command-Line Tools. This will involve some large
-            downloads, as well as re-accepting the licenses for the Android
-            SDKs.
+    Briefcase needs to replace the older Android SDK Tools with the
+    newer Android SDK Command-Line Tools. This will involve some large
+    downloads, as well as re-accepting the licenses for the Android
+    SDKs.
 
-            Any emulators created with the older Android SDK Tools will not be
-            compatible with the new tools. You will need to create new
-            emulators. Old emulators can be removed by deleting the files
-            in {sdk.avd_path} matching the emulator name.
+    Any emulators created with the older Android SDK Tools will not be
+    compatible with the new tools. You will need to create new
+    emulators. Old emulators can be removed by deleting the files
+    in {sdk.avd_path} matching the emulator name.
 
-        *************************************************************************
-        """
+*************************************************************************
+"""
                     )
                     tools.shutil.rmtree(sdk_root_path)
 
@@ -242,7 +242,7 @@ class AndroidSDK(Tool):
 
         Look for the sdkmanager; and, if necessary, confirm that it is executable.
         """
-        return self.sdkmanager_path.exists() and (
+        return self.sdkmanager_path.is_file() and (
             self.tools.host_os == "Windows"
             or self.tools.os.access(self.sdkmanager_path, self.tools.os.X_OK)
         )
@@ -384,7 +384,7 @@ before you may use those tools.
                 check=True,
                 stream_output=False,
             )
-        except subprocess.CalledProcessError as e:
+        except (subprocess.CalledProcessError, OSError) as e:
             raise BriefcaseCommandError(
                 f"""\
 Error while reviewing Android SDK licenses. Please run this command and examine
@@ -453,10 +453,7 @@ connection.
         # Read the AVD configuration to retrieve the system image.
         # This is stored in the AVD configuration file with the key:
         #   image.sysdir.1=system-images/android-31/default/arm64-v8a/
-        try:
-            avd_config = self.avd_config(avd)
-        except FileNotFoundError:
-            raise BriefcaseCommandError(f"Unable to read configuration of AVD @{avd}")
+        avd_config = self.avd_config(avd)
 
         try:
             system_image_path = Path(avd_config["image.sysdir.1"])
@@ -1022,13 +1019,18 @@ In future, you can specify this device by running:
         """
         # Parse the existing config into key-value pairs
         avd_config = {}
-        with self.avd_config_filename(avd).open("r") as f:
-            for line in f:
-                try:
-                    key, value = line.rstrip().split("=", 1)
-                    avd_config[key.strip()] = value.strip()
-                except ValueError:
-                    pass
+        try:
+            with self.avd_config_filename(avd).open("r") as f:
+                for line in f:
+                    try:
+                        key, value = line.rstrip().split("=", 1)
+                        avd_config[key.strip()] = value.strip()
+                    except ValueError:
+                        pass
+        except OSError as e:
+            raise BriefcaseCommandError(
+                f"Unable to read configuration of AVD @{avd}"
+            ) from e
 
         return avd_config
 
