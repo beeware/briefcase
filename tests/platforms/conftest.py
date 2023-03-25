@@ -10,6 +10,8 @@ def first_app_config():
         project_name="First Project",
         formal_name="First App",
         author="Megacorp",
+        author_email="maintainer@example.com",
+        url="https://example.com/first-app",
         bundle="com.example",
         version="0.0.1",
         description="The first simple app \\ demonstration",

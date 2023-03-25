@@ -62,6 +62,8 @@ def test_formats(package_command):
             None,
             "first-app_0.0.1-1~linuxmint-vera_wonky.deb",
         ],
+        ["pkg", "arch", "rolling", None, "first-app-0.0.1-1-x86_64.pkg.tar.zst"],
+        ["pkg", "manjaro", "rolling", None, "first-app-0.0.1-1-x86_64.pkg.tar.zst"],
     ],
 )
 def test_distribution_path(
@@ -73,6 +75,10 @@ def test_distribution_path(
 
     if revision:
         first_app.revision = revision
+
+    if first_app.packaging_format == "pkg":
+        # Set the host architecture for arch test purposes.
+        package_command.tools.host_arch = "x86_64"
 
     assert (
         package_command.distribution_path(first_app)
@@ -151,6 +157,24 @@ def test_package_rpm_app(package_command, first_app):
 
     # Assert the right backend was called.
     package_command._package_rpm.assert_called_once_with(first_app)
+
+
+def test_package_pkg_app(package_command, first_app):
+    """An Arch app can be packaged"""
+    # Set the packaging format
+    first_app.packaging_format = "pkg"
+
+    # Set the host architecture for test purposes.
+    package_command.tools.host_arch = "x86_64"
+
+    # Mock the actual packaging call
+    package_command._package_pkg = mock.MagicMock()
+
+    # Package the app
+    package_command.package_app(first_app)
+
+    # Assert the right backend was called.
+    package_command._package_pkg.assert_called_once_with(first_app)
 
 
 def test_package_unknown_format(package_command, first_app):
