@@ -161,6 +161,7 @@ def test_pkg_package(package_command, first_app_pkg, tmp_path):
         assert f.read() == "\n".join(
             [
                 "# Maintainer: Megacorp <maintainer@example.com>",
+                'export PACKAGER="Megacorp <maintainer@example.com>"',
                 "pkgname=first-app",
                 "pkgver=0.0.1",
                 "pkgrel=1",
@@ -255,6 +256,7 @@ def test_pkg_re_package(package_command, first_app_pkg, tmp_path):
         assert f.read() == "\n".join(
             [
                 "# Maintainer: Megacorp <maintainer@example.com>",
+                'export PACKAGER="Megacorp <maintainer@example.com>"',
                 "pkgname=first-app",
                 "pkgver=0.0.1",
                 "pkgrel=1",
@@ -367,6 +369,7 @@ def test_pkg_package_extra_requirements(package_command, first_app_pkg, tmp_path
         assert f.read() == "\n".join(
             [
                 "# Maintainer: Megacorp <maintainer@example.com>",
+                'export PACKAGER="Megacorp <maintainer@example.com>"',
                 "pkgname=first-app",
                 "pkgver=0.0.1",
                 "pkgrel=1",
