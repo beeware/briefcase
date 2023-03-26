@@ -85,7 +85,11 @@ def test_missing_packages(build_command, first_app_config, capsys):
     # a packaged called "compiler", verified using "check <pkg>", and
     # isntalled using "system <pkg>"
     build_command._system_requirement_tools = MagicMock(
-        return_value=(["compiler"], ["check"], "system", "install_flag")
+        return_value=(
+            ["compiler"],
+            ["check"],
+            ["system", "install_flag"],
+        )
     )
 
     # Add some system requirements.
@@ -114,7 +118,11 @@ def test_packages_installed(build_command, first_app_config, capsys):
     # a packaged called "compiler", verified using "check <pkg>", and
     # isntalled using "system <pkg>"
     build_command._system_requirement_tools = MagicMock(
-        return_value=(["compiler"], ["check"], "system", "install_flag")
+        return_value=(
+            ["compiler"],
+            ["check"],
+            ["system", "install_flag"],
+        )
     )
 
     # Add some system requirements.

@@ -387,8 +387,7 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
         if app.target_vendor_base == DEBIAN:
             base_system_packages = ["python3-dev", "build-essential"]
             system_verify = ["dpkg", "-s"]
-            system_installer = "apt"
-            system_installer_install_flag = ["install"]
+            system_installer = ["apt", "install"]
         elif app.target_vendor_base == RHEL:
             base_system_packages = [
                 "python3-devel",
@@ -397,27 +396,23 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
                 "pkgconf-pkg-config",
             ]
             system_verify = ["rpm", "-q"]
-            system_installer = "dnf"
-            system_installer_install_flag = ["install"]
+            system_installer = ["dnf", "install"]
         elif app.target_vendor_base == ARCH:
             base_system_packages = [
                 "python3",
                 "base-devel",
             ]
             system_verify = ["pacman", "-Q"]
-            system_installer = ["pacman"]
-            system_installer_install_flag = ["-Syu"]
+            system_installer = ["pacman", "-Syu"]
         else:
             base_system_packages = None
             system_verify = None
             system_installer = None
-            system_installer_install_flag = None
 
         return (
             base_system_packages,
             system_verify,
             system_installer,
-            system_installer_install_flag,
         )
 
     def verify_system_packages(self, app: AppConfig):
@@ -429,10 +424,9 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
             base_system_packages,
             system_verify,
             system_installer,
-            system_installer_install_flag,
         ) = self._system_requirement_tools(app)
 
-        if system_installer is None:
+        if system_verify is None:
             self.logger.warning(
                 """
 *************************************************************************
@@ -464,7 +458,7 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
                 f"""\
 Unable to build {app.app_name} due to missing system dependencies. Run:
 
-    sudo {system_installer} {system_installer_install_flag} {' '.join(missing)}
+    sudo {' '.join(system_installer)} {' '.join(missing)}
 
 to install the missing dependencies, and re-run Briefcase.
 """
@@ -1035,7 +1029,7 @@ with details about the release.
             )
         # The changelog should exist.
         changelog_source = self.base_path / "CHANGELOG"
-        if not changelog_source.exists():
+        if not changelog_source.is_file():
             raise BriefcaseCommandError(
                 """\
 Your project does not contain a CHANGELOG file.
@@ -1049,7 +1043,7 @@ with details about the release.
         with self.input.wait_bar("Generating pkgbuild layout..."):
             if pkgbuild_path.exists():
                 self.tools.shutil.rmtree(pkgbuild_path)
-            (pkgbuild_path).mkdir(parents=True)
+            pkgbuild_path.mkdir(parents=True)
 
             # Copy the CHANGELOG file to the pkgbuild_path so that it is visible to PKGBUILD
             self.tools.shutil.copy(changelog_source, pkgbuild_path / "CHANGELOG")
