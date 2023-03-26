@@ -1087,6 +1087,7 @@ with details about the release.
                             "changelog=CHANGELOG",
                             'source=("$pkgname-$pkgver.tar.gz")',
                             "md5sums=('SKIP')",
+                            "options=('!strip')",
                             "package() {",
                             '    cp -r "$srcdir/$pkgname-$pkgver/usr/" "$pkgdir"/usr/',
                             "}",
