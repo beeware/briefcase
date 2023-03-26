@@ -1081,6 +1081,7 @@ with details about the release.
                     "\n".join(
                         [
                             f"# Maintainer: {app.author} <{app.author_email}>",
+                            f'export PACKAGER="{app.author} <{app.author_email}>"',
                             f"pkgname={app.app_name}",
                             f"pkgver={app.version}",
                             f"pkgrel={getattr(app, 'revision', 1)}",
