@@ -59,14 +59,10 @@ def test_arch_requirements(build_command, first_app_config, capsys):
 
     build_command.verify_system_packages(first_app_config)
 
-    # For now, we don't know how to verify arch packages.
-
-    # No packages verified
-    build_command.tools.subprocess.check_output.assert_not_called()
-
-    # A warning was logged.
-    output = capsys.readouterr().out
-    assert "WARNING: Can't verify system packages" in output
+    assert build_command.tools.subprocess.check_output.mock_calls == [
+        call(["pacman", "-Q", "python3"]),
+        call(["pacman", "-Q", "base-devel"]),
+    ]
 
 
 def test_unknown_requirements(build_command, first_app_config, capsys):
@@ -89,7 +85,11 @@ def test_missing_packages(build_command, first_app_config, capsys):
     # a packaged called "compiler", verified using "check <pkg>", and
     # isntalled using "system <pkg>"
     build_command._system_requirement_tools = MagicMock(
-        return_value=(["compiler"], ["check"], "system")
+        return_value=(
+            ["compiler"],
+            ["check"],
+            ["system", "install_flag"],
+        )
     )
 
     # Add some system requirements.
@@ -107,7 +107,7 @@ def test_missing_packages(build_command, first_app_config, capsys):
     # message will tell you how to install the system packages.
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"    sudo system install compiler second",
+        match=r"    sudo system install_flag compiler second",
     ):
         build_command.verify_system_packages(first_app_config)
 
@@ -118,7 +118,11 @@ def test_packages_installed(build_command, first_app_config, capsys):
     # a packaged called "compiler", verified using "check <pkg>", and
     # isntalled using "system <pkg>"
     build_command._system_requirement_tools = MagicMock(
-        return_value=(["compiler"], ["check"], "system")
+        return_value=(
+            ["compiler"],
+            ["check"],
+            ["system", "install_flag"],
+        )
     )
 
     # Add some system requirements.

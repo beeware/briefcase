@@ -30,6 +30,7 @@ def package_command(monkeypatch, first_app, tmp_path):
     # Mock the packaging tools.
     command._verify_deb_tools = mock.MagicMock()
     command._verify_rpm_tools = mock.MagicMock()
+    command._verify_pkg_tools = mock.MagicMock()
 
     return command
 
@@ -61,6 +62,8 @@ def test_formats(package_command):
             None,
             "first-app_0.0.1-1~linuxmint-vera_wonky.deb",
         ],
+        ["pkg", "arch", "rolling", None, "first-app-0.0.1-1-wonky.pkg.tar.zst"],
+        ["pkg", "manjaro", "rolling", None, "first-app-0.0.1-1-wonky.pkg.tar.zst"],
     ],
 )
 def test_distribution_path(
@@ -150,6 +153,21 @@ def test_package_rpm_app(package_command, first_app):
 
     # Assert the right backend was called.
     package_command._package_rpm.assert_called_once_with(first_app)
+
+
+def test_package_pkg_app(package_command, first_app):
+    """An Arch app can be packaged"""
+    # Set the packaging format
+    first_app.packaging_format = "pkg"
+
+    # Mock the actual packaging call
+    package_command._package_pkg = mock.MagicMock()
+
+    # Package the app
+    package_command.package_app(first_app)
+
+    # Assert the right backend was called.
+    package_command._package_pkg.assert_called_once_with(first_app)
 
 
 def test_package_unknown_format(package_command, first_app):
