@@ -43,6 +43,7 @@ def test_docker_exists(mock_tools, valid_docker_version, capsys):
     mock_tools.subprocess.check_output.side_effect = [
         valid_docker_version,
         "docker info return value",
+        "github.com/docker/buildx v0.10.2 00ed17d\n",
     ]
 
     # Invoke docker verify
@@ -55,6 +56,7 @@ def test_docker_exists(mock_tools, valid_docker_version, capsys):
         [
             call(["docker", "--version"]),
             call(["docker", "info"]),
+            call(["docker", "buildx", "version"]),
         ]
     )
 
@@ -87,6 +89,7 @@ def test_docker_failure(mock_tools, capsys):
             cmd="docker --version",
         ),
         "Success!",
+        "github.com/docker/buildx v0.10.2 00ed17d\n",
     ]
 
     # Invoke Docker verify
@@ -99,6 +102,7 @@ def test_docker_failure(mock_tools, capsys):
         [
             call(["docker", "--version"]),
             call(["docker", "info"]),
+            call(["docker", "buildx", "version"]),
         ]
     )
 
@@ -116,7 +120,8 @@ def test_docker_bad_version(mock_tools, capsys):
 
     # Invoke Docker verify
     with pytest.raises(
-        BriefcaseCommandError, match=r"Briefcase requires Docker 19 or higher"
+        BriefcaseCommandError,
+        match=r"Briefcase requires Docker 19 or higher",
     ):
         Docker.verify(mock_tools)
 
@@ -137,6 +142,7 @@ def test_docker_unknown_version(mock_tools, capsys):
         [
             call(["docker", "--version"]),
             call(["docker", "info"]),
+            call(["docker", "buildx", "version"]),
         ]
     )
 
@@ -172,10 +178,11 @@ errors pretty printing info"""  # noqa: E501
             output=error_message,
         ),
     ]
-    with pytest.raises(BriefcaseCommandError) as exc_info:
+    with pytest.raises(
+        BriefcaseCommandError,
+        match="does not have\npermissions to invoke Docker.",
+    ):
         Docker.verify(mock_tools)
-
-    assert "does not have\npermissions to invoke Docker." in exc_info.value.msg
 
 
 docker_not_running_error_messages = [
@@ -212,10 +219,11 @@ def test_docker_exists_but_is_not_running(
             output=error_message,
         ),
     ]
-    with pytest.raises(BriefcaseCommandError) as exc_info:
+    with pytest.raises(
+        BriefcaseCommandError,
+        match="the Docker\ndaemon is not running",
+    ):
         Docker.verify(mock_tools)
-
-    assert "the Docker\ndaemon is not running" in exc_info.value.msg
 
 
 def test_docker_exists_but_unknown_error_when_running_command(
@@ -232,7 +240,26 @@ def test_docker_exists_but_unknown_error_when_running_command(
         ),
     ]
 
-    with pytest.raises(BriefcaseCommandError) as exc_info:
+    with pytest.raises(
+        BriefcaseCommandError,
+        match="Check your Docker\ninstallation, and try again",
+    ):
         Docker.verify(mock_tools)
 
-    assert "Check your Docker\ninstallation, and try again" in exc_info.value.msg
+
+def test_buildx_plugin_not_installed(mock_tools, valid_docker_version):
+    """If the buildx plugin is not installed, verification fails."""
+    mock_tools.subprocess.check_output.side_effect = [
+        valid_docker_version,
+        "Success!",
+        subprocess.CalledProcessError(
+            returncode=1,
+            cmd="docker buildx version",
+        ),
+    ]
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match="Docker is installed and available for use but the buildx plugin\nis not installed",
+    ):
+        Docker.verify(mock_tools)
