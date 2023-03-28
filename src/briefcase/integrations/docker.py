@@ -19,7 +19,6 @@ version {docker_version}. Visit:
     {install_url}
 
 to download and install an updated version of Docker.
-{extra_content}
 """
     UNKNOWN_DOCKER_VERSION_WARNING = """
 *************************************************************************
@@ -70,7 +69,7 @@ Visit:
     {install_url}
 
 to download and install Docker manually.
-{extra_content}
+
 If you have installed Docker recently and are still getting this error, you may
 need to restart your terminal session.
 """
@@ -103,20 +102,10 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
 """
 
     # Platform-specific template context dictionary for Docker installation details
-    DOCKER_INSTALL_DETAILS = {
-        "Windows": {
-            "install_url": "https://docs.docker.com/docker-for-windows/install/",
-            "extra_content": "",
-        },
-        "Darwin": {
-            "install_url": "https://docs.docker.com/docker-for-mac/install/",
-            "extra_content": "",
-        },
-        "Linux": {
-            "install_url": "https://docs.docker.com/engine/install/#server",
-            "extra_content": "Alternatively, to run briefcase natively (i.e. without Docker), use the\n"
-            "`--no-docker` command-line argument.",
-        },
+    DOCKER_INSTALL_URL = {
+        "Windows": "https://docs.docker.com/docker-for-windows/install/",
+        "Darwin": "https://docs.docker.com/docker-for-mac/install/",
+        "Linux": "https://docs.docker.com/engine/install/#server",
     }
 
     def __init__(self, tools: ToolCache):
@@ -154,7 +143,7 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
                     raise BriefcaseCommandError(
                         cls.WRONG_DOCKER_VERSION_ERROR.format(
                             docker_version=docker_version,
-                            **cls.DOCKER_INSTALL_DETAILS[tools.host_os],
+                            install_url=cls.DOCKER_INSTALL_URL[tools.host_os],
                         )
                     )
 
@@ -166,7 +155,7 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
             # Docker executable doesn't exist.
             raise BriefcaseCommandError(
                 cls.DOCKER_NOT_INSTALLED_ERROR.format(
-                    **cls.DOCKER_INSTALL_DETAILS[tools.host_os]
+                    install_url=cls.DOCKER_INSTALL_URL[tools.host_os]
                 )
             ) from e
 

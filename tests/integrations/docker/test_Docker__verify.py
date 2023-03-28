@@ -31,10 +31,9 @@ def test_short_circuit(mock_tools):
 
 
 @pytest.mark.parametrize("host_os", ["Windows", "Linux", "Darwin"])
-def test_docker_install_details(host_os):
+def test_docker_install_url(host_os):
     """Docker details available for each OS."""
-    assert "install_url" in Docker.DOCKER_INSTALL_DETAILS[host_os]
-    assert "extra_content" in Docker.DOCKER_INSTALL_DETAILS[host_os]
+    assert host_os in Docker.DOCKER_INSTALL_URL
 
 
 def test_docker_exists(mock_tools, valid_docker_version, capsys):
