@@ -1,4 +1,5 @@
 import sys
+import platform
 
 import pytest
 
@@ -98,17 +99,17 @@ extract_packages_params = [
 extract_packages_params += [
     (
         ["//leading"],
-        "" if sys.platform == "win32" and sys.version_info >= (3, 12) else '"leading"',
+        "" if platform.system() == "Windows" and sys.version_info >= (3, 12) else '"leading"',
     ),
     (
         ["//leading/two"],
-        "" if sys.platform == "win32" else '"two"',
+        "" if platform.system() == "Windows" else '"two"',
     ),
     (["//leading/two/three"], '"three"'),
     (["//leading/two/three/four"], '"four"'),
 ]
 
-if sys.platform == "win32":
+if platform.system == "Windows":
     extract_packages_params += [
         ([path.replace("/", "\\") for path in test_sources], expected)
         for test_sources, expected in extract_packages_params

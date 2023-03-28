@@ -12,7 +12,7 @@ from .conftest import CREATE_NEW_PROCESS_GROUP, CREATE_NO_WINDOW
 def test_call(mock_sub, capsys, platform, sub_kw):
     """A simple call will be invoked."""
 
-    mock_sub.tools.sys.platform = platform
+    mock_sub.tools.platform.system = lambda: platform
     mock_sub.run(["hello", "world"], stream_output=False)
 
     mock_sub._subprocess.run.assert_called_with(["hello", "world"], **sub_kw)

@@ -1,7 +1,7 @@
 import os
 import platform
 import shutil
-import sys
+import platform
 from unittest.mock import MagicMock
 
 import pytest
@@ -306,7 +306,7 @@ def test_no_install(mock_tools, tmp_path):
 
 
 @pytest.mark.skipif(
-    sys.platform == "win32",
+    platform.system() == "Windows",
     reason="executable permission doesn't make sense on Windows",
 )
 def test_download_sdk_if_sdkmanager_not_executable(mock_tools, tmp_path):

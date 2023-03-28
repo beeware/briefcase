@@ -1,4 +1,4 @@
-import sys
+import platform
 from typing import List
 
 from briefcase.exceptions import BriefcaseCommandError
@@ -31,10 +31,10 @@ class UpgradeCommand(BaseCommand):
     def platform(self):
         """The upgrade command always reports as the local platform."""
         return {
-            "darwin": "macOS",
-            "linux": "linux",
-            "win32": "windows",
-        }[sys.platform]
+            "Darwin": "macOS",
+            "Linux": "linux",
+            "Windows": "windows",
+        }[platform.system()]
 
     def bundle_path(self, app):
         """A placeholder; Upgrade command doesn't have a bundle path."""

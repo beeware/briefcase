@@ -1,5 +1,5 @@
 import os
-import sys
+import platform
 from unittest.mock import MagicMock
 
 import pytest
@@ -56,7 +56,7 @@ def open_command(tmp_path, first_app_config):
     return command
 
 
-@pytest.mark.skipif(sys.platform != "darwin", reason="macOS specific test")
+@pytest.mark.skipif(platform.system() != "Darwin", reason="macOS specific test")
 def test_open_macOS(open_command, first_app_config, tmp_path):
     """On macOS, open uses Finder to open the project folder."""
     # Mock the call to verify the existence of java
@@ -78,7 +78,7 @@ def test_open_macOS(open_command, first_app_config, tmp_path):
     )
 
 
-@pytest.mark.skipif(sys.platform != "linux", reason="Linux specific test")
+@pytest.mark.skipif(platform.system() != "Linux", reason="Linux specific test")
 def test_open_linux(open_command, first_app_config, tmp_path):
     """On linux, open invokes `xdg-open` on the project folder."""
     # Create the project folder to mock a created project.
@@ -100,7 +100,7 @@ def test_open_linux(open_command, first_app_config, tmp_path):
     )
 
 
-@pytest.mark.skipif(sys.platform != "win32", reason="Windows specific test")
+@pytest.mark.skipif(platform.system() != "Windows", reason="Windows specific test")
 def test_open_windows(open_command, first_app_config, tmp_path):
     """On Windows, open invokes `startfile` on the project folder."""
     # Create the project folder to mock a created project.

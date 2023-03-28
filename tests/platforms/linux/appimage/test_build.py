@@ -1,6 +1,7 @@
 import os
 import subprocess
 import sys
+import platform
 from unittest import mock
 
 import pytest
@@ -206,7 +207,7 @@ def test_build_appimage(build_command, first_app, tmp_path, sub_stream_kw):
 
 
 @pytest.mark.skipif(
-    sys.platform == "win32",
+    platform.system() == "Windows",
     reason="Windows paths can't be passed to linuxdeploy",
 )
 def test_build_appimage_with_plugin(build_command, first_app, tmp_path, sub_stream_kw):
@@ -365,7 +366,7 @@ def test_build_failure(build_command, first_app, tmp_path, sub_stream_kw):
 
 
 @pytest.mark.skipif(
-    sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
+    platform.system() == "Windows", reason="Windows paths aren't converted in Docker context"
 )
 def test_build_appimage_in_docker(build_command, first_app, tmp_path, sub_stream_kw):
     """A Linux app can be packaged as an AppImage in a docker container."""
@@ -452,7 +453,7 @@ def test_build_appimage_in_docker(build_command, first_app, tmp_path, sub_stream
 
 
 @pytest.mark.skipif(
-    sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
+    platform.system() == "Windows", reason="Windows paths aren't converted in Docker context"
 )
 def test_build_appimage_with_plugins_in_docker(
     build_command,

@@ -1,6 +1,7 @@
 import os
 import subprocess
 import sys
+import platform
 from pathlib import Path
 from typing import List, Optional
 
@@ -22,10 +23,10 @@ class DevCommand(RunAppMixin, BaseCommand):
     def platform(self):
         """The dev command always reports as the local platform."""
         return {
-            "darwin": "macOS",
-            "linux": "linux",
-            "win32": "windows",
-        }[sys.platform]
+            "Darwin": "macOS",
+            "Linux": "linux",
+            "Windows": "windows",
+        }[platform.system()]
 
     def bundle_path(self, app):
         """A placeholder; Dev command doesn't have a bundle path."""

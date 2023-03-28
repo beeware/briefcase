@@ -1,5 +1,5 @@
 import os
-import sys
+import platform
 from unittest.mock import MagicMock
 
 import pytest
@@ -114,7 +114,7 @@ def test_custom_url_plugin(linuxdeploy, mock_tools, tmp_path):
 
 
 @pytest.mark.skipif(
-    sys.platform == "win32",
+    platform.system() == "Windows",
     reason="Windows paths can't be passed to linuxdeploy",
 )
 def test_custom_local_file_plugin(linuxdeploy, mock_tools, tmp_path):
@@ -195,7 +195,7 @@ def test_plugin_env(
 
 
 @pytest.mark.skipif(
-    sys.platform == "win32",
+    platform.system() == "Windows",
     reason="Windows paths can't be passed to linuxdeploy",
 )
 def test_complex_plugin_config(linuxdeploy, mock_tools, tmp_path):

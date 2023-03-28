@@ -1,6 +1,7 @@
 import shutil
 import subprocess
 import sys
+import platform
 from pathlib import Path
 from unittest import mock
 
@@ -121,7 +122,7 @@ def test_verify_docker(monkeypatch, package_command, first_app_deb):
     dpkg_deb.exists.assert_not_called()
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Can't build PKGs on Windows")
+@pytest.mark.skipif(platform.system() == "Windows", reason="Can't build PKGs on Windows")
 def test_deb_package(package_command, first_app_deb, tmp_path):
     """A deb app can be packaged."""
     bundle_path = (

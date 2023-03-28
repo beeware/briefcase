@@ -1,6 +1,6 @@
 import os
 import subprocess
-import sys
+import platform
 
 import pytest
 
@@ -11,7 +11,7 @@ from ....utils import create_file
 
 def create_emulator(root_path):
     # Create `emulator` within `root_path`.
-    if sys.platform == "win32":
+    if platform.system() == "Windows":
         emulator_bin = "emulator.exe"
     else:
         emulator_bin = "emulator"

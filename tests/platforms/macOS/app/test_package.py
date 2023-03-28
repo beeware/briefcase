@@ -1,6 +1,6 @@
 import os
 import subprocess
-import sys
+import platform
 from unittest import mock
 from zipfile import ZipFile
 
@@ -835,7 +835,7 @@ def test_dmg_with_missing_installer_background(
     )
 
 
-@pytest.mark.skipif(sys.platform != "darwin", reason="macOS specific test")
+@pytest.mark.skipif(platform.system() != "Darwin", reason="macOS specific test")
 def test_verify(package_command):
     """If you're on macOS, you can verify tools."""
     # Mock the existence of the command line tools

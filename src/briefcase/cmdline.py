@@ -1,6 +1,6 @@
 import argparse
 import shutil
-import sys
+import platform
 import textwrap
 from argparse import RawDescriptionHelpFormatter
 
@@ -135,10 +135,10 @@ def parse_cmdline(args):
             "platform",
             choices=list(platforms.keys()),
             default={
-                "darwin": "macOS",
-                "linux": "linux",
-                "win32": "windows",
-            }[sys.platform],
+                "Darwin": "macOS",
+                "Linux": "linux",
+                "Windows": "windows",
+            }[platform.system()],
             metavar="platform",
             nargs="?",
             type=normalize,

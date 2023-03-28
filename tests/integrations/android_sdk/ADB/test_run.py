@@ -1,6 +1,6 @@
 import os
 import subprocess
-import sys
+import platform
 from pathlib import Path
 
 import pytest
@@ -23,7 +23,7 @@ def test_simple_command(mock_tools, tmp_path):
                 tmp_path
                 / "sdk"
                 / "platform-tools"
-                / f"adb{'.exe' if sys.platform == 'win32' else ''}"
+                / f"adb{'.exe' if platform.system() == 'Windows' else ''}"
             ),
             "-s",
             "exampleDevice",
@@ -48,7 +48,7 @@ def test_quiet_command(mock_tools, tmp_path):
                 tmp_path
                 / "sdk"
                 / "platform-tools"
-                / f"adb{'.exe' if sys.platform == 'win32' else ''}"
+                / f"adb{'.exe' if platform.system() == 'Windows' else ''}"
             ),
             "-s",
             "exampleDevice",
@@ -98,7 +98,7 @@ def test_error_handling(mock_tools, tmp_path, name, exception):
                 tmp_path
                 / "sdk"
                 / "platform-tools"
-                / f"adb{'.exe' if sys.platform == 'win32' else ''}"
+                / f"adb{'.exe' if platform.system() == 'Windows' else ''}"
             ),
             "-s",
             "exampleDevice",

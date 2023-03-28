@@ -1,5 +1,5 @@
 import os
-import sys
+import platform
 from unittest.mock import MagicMock
 
 import pytest
@@ -33,7 +33,7 @@ def open_command(tmp_path, first_app_config):
     return command
 
 
-@pytest.mark.skipif(sys.platform != "linux", reason="Linux specific test")
+@pytest.mark.skipif(platform.system() != "Linux", reason="Linux specific test")
 def test_open(open_command, first_app_config, tmp_path):
     """On Linux, Open run `xdg-open` on the Content folder."""
     # Create the flatpak manifest file that would be in the project bundle.
