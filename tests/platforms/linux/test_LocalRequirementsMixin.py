@@ -1,7 +1,7 @@
+import platform
 import shutil
 import subprocess
 import sys
-import platform
 from pathlib import Path
 from unittest.mock import MagicMock, call
 
@@ -153,7 +153,8 @@ def other_package(create_command, first_app_config):
 
 
 @pytest.mark.skipif(
-    platform.system() == "Windows", reason="Windows paths aren't converted in Docker context"
+    platform.system() == "Windows",
+    reason="Windows paths aren't converted in Docker context",
 )
 def test_install_app_requirements_in_docker(create_command, first_app_config, tmp_path):
     """If Docker is in use, a docker context is used to invoke pip."""
@@ -193,7 +194,8 @@ def test_install_app_requirements_in_docker(create_command, first_app_config, tm
 
 
 @pytest.mark.skipif(
-    platform.system() == "Windows", reason="Windows paths aren't converted in Docker context"
+    platform.system() == "Windows",
+    reason="Windows paths aren't converted in Docker context",
 )
 def test_install_app_requirements_no_docker(
     no_docker_create_command,
@@ -248,7 +250,8 @@ def test_install_app_requirements_no_docker(
 
 
 @pytest.mark.skipif(
-    platform.system() == "Windows", reason="Windows paths aren't converted in Docker context"
+    platform.system() == "Windows",
+    reason="Windows paths aren't converted in Docker context",
 )
 def test_install_app_requirements_with_locals(
     create_command,
@@ -366,7 +369,8 @@ def test_install_app_requirements_with_locals(
 
 
 @pytest.mark.skipif(
-    platform.system() == "Windows", reason="Windows paths aren't converted in Docker context"
+    platform.system() == "Windows",
+    reason="Windows paths aren't converted in Docker context",
 )
 def test_install_app_requirements_with_bad_local(
     create_command,
@@ -422,7 +426,8 @@ def test_install_app_requirements_with_bad_local(
 
 
 @pytest.mark.skipif(
-    platform.system() == "Windows", reason="Windows paths aren't converted in Docker context"
+    platform.system() == "Windows",
+    reason="Windows paths aren't converted in Docker context",
 )
 def test_install_app_requirements_with_missing_local_build(
     create_command,
@@ -454,7 +459,8 @@ def test_install_app_requirements_with_missing_local_build(
 
 
 @pytest.mark.skipif(
-    platform.system() == "Windows", reason="Windows paths aren't converted in Docker context"
+    platform.system() == "Windows",
+    reason="Windows paths aren't converted in Docker context",
 )
 def test_install_app_requirements_with_bad_local_file(
     create_command,

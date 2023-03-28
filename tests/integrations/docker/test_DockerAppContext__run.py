@@ -107,7 +107,8 @@ def test_extra_mounts(mock_docker_app_context, tmp_path, sub_stream_kw, capsys):
 
 
 @pytest.mark.skipif(
-    platform.system() == "Windows", reason="Windows paths aren't converted in Docker context"
+    platform.system() == "Windows",
+    reason="Windows paths aren't converted in Docker context",
 )
 def test_cwd(mock_docker_app_context, tmp_path, sub_stream_kw, capsys):
     """A subprocess call can use a working directory relative to the project folder."""
@@ -194,7 +195,8 @@ def test_call_with_arg_and_env(
 
 
 @pytest.mark.skipif(
-    platform.system() == "Windows", reason="Windows paths aren't converted in Docker context"
+    platform.system() == "Windows",
+    reason="Windows paths aren't converted in Docker context",
 )
 def test_call_with_path_arg_and_env(
     mock_docker_app_context,
@@ -246,7 +248,8 @@ def test_call_with_path_arg_and_env(
 
 
 @pytest.mark.skipif(
-    platform.system() == "Windows", reason="Windows paths aren't converted in Docker context"
+    platform.system() == "Windows",
+    reason="Windows paths aren't converted in Docker context",
 )
 def test_interactive_with_path_arg_and_env_and_mounts(
     mock_docker_app_context,
@@ -307,7 +310,8 @@ def test_interactive_with_path_arg_and_env_and_mounts(
 
 
 @pytest.mark.skipif(
-    platform.system() == "Windows", reason="Windows paths aren't converted in Docker context"
+    platform.system() == "Windows",
+    reason="Windows paths aren't converted in Docker context",
 )
 def test_simple_verbose_call(mock_docker_app_context, tmp_path, sub_stream_kw, capsys):
     """If verbosity is turned out, there is output."""

@@ -1,6 +1,6 @@
 import os
-import subprocess
 import platform
+import subprocess
 from unittest.mock import MagicMock
 
 import pytest

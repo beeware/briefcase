@@ -63,7 +63,8 @@ def test_extra_mounts(mock_docker_app_context, tmp_path, sub_check_output_kw, ca
 
 
 @pytest.mark.skipif(
-    platform.system() == "Windows", reason="Windows paths aren't converted in Docker context"
+    platform.system() == "Windows",
+    reason="Windows paths aren't converted in Docker context",
 )
 def test_cwd(mock_docker_app_context, tmp_path, sub_check_output_kw, capsys):
     """A call can use a working directory relative to the project folder."""
@@ -184,7 +185,8 @@ def test_call_with_path_arg_and_env(
 
 
 @pytest.mark.skipif(
-    platform.system() == "Windows", reason="Windows paths aren't converted in Docker context"
+    platform.system() == "Windows",
+    reason="Windows paths aren't converted in Docker context",
 )
 def test_simple_verbose_call(
     mock_docker_app_context,

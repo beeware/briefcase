@@ -1,7 +1,6 @@
 import os
 import platform
 import shutil
-import platform
 from unittest.mock import MagicMock
 
 import pytest

@@ -1,5 +1,5 @@
-import sys
 import platform
+import sys
 
 import pytest
 
@@ -99,7 +99,9 @@ extract_packages_params = [
 extract_packages_params += [
     (
         ["//leading"],
-        "" if platform.system() == "Windows" and sys.version_info >= (3, 12) else '"leading"',
+        ""
+        if platform.system() == "Windows" and sys.version_info >= (3, 12)
+        else '"leading"',
     ),
     (
         ["//leading/two"],

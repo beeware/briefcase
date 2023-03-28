@@ -1,7 +1,7 @@
+import platform
 import shutil
 import subprocess
 import sys
-import platform
 import tarfile
 from pathlib import Path
 from unittest import mock
@@ -144,7 +144,9 @@ def test_verify_docker(monkeypatch, package_command, first_app_rpm):
     rpmbuild.exists.assert_not_called()
 
 
-@pytest.mark.skipif(platform.system() == "Windows", reason="Can't build RPMs on Windows")
+@pytest.mark.skipif(
+    platform.system() == "Windows", reason="Can't build RPMs on Windows"
+)
 def test_rpm_package(package_command, first_app_rpm, tmp_path):
     """A rpm app can be packaged."""
     bundle_path = (
@@ -282,7 +284,9 @@ def test_rpm_package(package_command, first_app_rpm, tmp_path):
     )
 
 
-@pytest.mark.skipif(platform.system() == "Windows", reason="Can't build RPMs on Windows")
+@pytest.mark.skipif(
+    platform.system() == "Windows", reason="Can't build RPMs on Windows"
+)
 def test_rpm_re_package(package_command, first_app_rpm, tmp_path):
     """A rpm app that has previously been packaged can be re-packaged."""
     bundle_path = (
@@ -430,7 +434,9 @@ def test_rpm_re_package(package_command, first_app_rpm, tmp_path):
     )
 
 
-@pytest.mark.skipif(platform.system() == "Windows", reason="Can't build RPMs on Windows")
+@pytest.mark.skipif(
+    platform.system() == "Windows", reason="Can't build RPMs on Windows"
+)
 def test_rpm_package_no_long_description(package_command, first_app_rpm, tmp_path):
     """A rpm app without a long description raises an error."""
     bundle_path = (
@@ -454,7 +460,9 @@ def test_rpm_package_no_long_description(package_command, first_app_rpm, tmp_pat
     ).exists()
 
 
-@pytest.mark.skipif(platform.system() == "Windows", reason="Can't build RPMs on Windows")
+@pytest.mark.skipif(
+    platform.system() == "Windows", reason="Can't build RPMs on Windows"
+)
 def test_rpm_package_extra_requirements(package_command, first_app_rpm, tmp_path):
     """A rpm app can be packaged with extra runtime requirements and config features."""
     bundle_path = (
@@ -573,7 +581,9 @@ def test_rpm_package_extra_requirements(package_command, first_app_rpm, tmp_path
     )
 
 
-@pytest.mark.skipif(platform.system() == "Windows", reason="Can't build RPMs on Windows")
+@pytest.mark.skipif(
+    platform.system() == "Windows", reason="Can't build RPMs on Windows"
+)
 def test_rpm_package_failure(package_command, first_app_rpm, tmp_path):
     """If an packaging doesn't succeed, an error is raised."""
     bundle_path = (
@@ -627,7 +637,9 @@ def test_rpm_package_failure(package_command, first_app_rpm, tmp_path):
     package_command.tools.shutil.move.assert_not_called()
 
 
-@pytest.mark.skipif(platform.system() == "Windows", reason="Can't build RPMs on Windows")
+@pytest.mark.skipif(
+    platform.system() == "Windows", reason="Can't build RPMs on Windows"
+)
 def test_no_changelog(package_command, first_app_rpm, tmp_path):
     """If an packaging doesn't succeed, an error is raised."""
     bundle_path = (

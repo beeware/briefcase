@@ -1,11 +1,12 @@
-import sys
 import platform
+import sys  # noqa
 
 import pytest
 
 
 @pytest.mark.skipif(
-    platform.system() == "Windows", reason="Windows paths aren't converted in Docker context"
+    platform.system() == "Windows",
+    reason="Windows paths aren't converted in Docker context",
 )
 @pytest.mark.parametrize(
     "original, dockerized",

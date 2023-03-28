@@ -1,6 +1,6 @@
 import argparse
-import shutil
 import platform
+import shutil
 import textwrap
 from argparse import RawDescriptionHelpFormatter
 

@@ -1,5 +1,5 @@
+import platform
 import shlex
-import sys
 from unittest import mock
 
 import pytest

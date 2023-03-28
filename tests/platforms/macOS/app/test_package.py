@@ -1,6 +1,6 @@
 import os
-import subprocess
 import platform
+import subprocess
 from unittest import mock
 from zipfile import ZipFile
 

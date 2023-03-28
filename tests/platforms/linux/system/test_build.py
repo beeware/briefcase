@@ -1,7 +1,7 @@
 import gzip
 import os
-import subprocess
 import platform
+import subprocess
 from unittest import mock
 
 import pytest
@@ -32,7 +32,9 @@ def build_command(tmp_path, first_app):
     return command
 
 
-@pytest.mark.skipif(platform.system() == "Windows", reason="Can't build Linux apps on Windows")
+@pytest.mark.skipif(
+    platform.system() == "Windows", reason="Can't build Linux apps on Windows"
+)
 def test_build_app(build_command, first_app, tmp_path):
     """An app can be built as a deb."""
     # Build the app
