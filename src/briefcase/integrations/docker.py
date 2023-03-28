@@ -19,7 +19,6 @@ version {docker_version}. Visit:
     {install_url}
 
 to download and install an updated version of Docker.
-{extra_content}
 """
     UNKNOWN_DOCKER_VERSION_WARNING = """
 *************************************************************************
@@ -70,7 +69,7 @@ Visit:
     {install_url}
 
 to download and install Docker manually.
-{extra_content}
+
 If you have installed Docker recently and are still getting this error, you may
 need to restart your terminal session.
 """
@@ -94,22 +93,19 @@ configure your Docker daemon.
 Briefcase was unable to use Docker commands. Check your Docker
 installation, and try again.
 """
+    BUILDX_PLUGIN_MISSING = """\
+Docker is installed and available for use but the buildx plugin
+is not installed. Briefcase leverages the BuildKit Docker backend
+to build Docker images and the buildx plugin makes this available.
+
+See https://docs.docker.com/go/buildx/ to install the buildx plugin.
+"""
 
     # Platform-specific template context dictionary for Docker installation details
-    DOCKER_INSTALL_DETAILS = {
-        "Windows": {
-            "install_url": "https://docs.docker.com/docker-for-windows/install/",
-            "extra_content": "",
-        },
-        "Darwin": {
-            "install_url": "https://docs.docker.com/docker-for-mac/install/",
-            "extra_content": "",
-        },
-        "Linux": {
-            "install_url": "https://docs.docker.com/engine/install/#server",
-            "extra_content": "Alternatively, to run briefcase natively (i.e. without Docker), use the\n"
-            "`--no-docker` command-line argument.",
-        },
+    DOCKER_INSTALL_URL = {
+        "Windows": "https://docs.docker.com/docker-for-windows/install/",
+        "Darwin": "https://docs.docker.com/docker-for-mac/install/",
+        "Linux": "https://docs.docker.com/engine/install/#server",
     }
 
     def __init__(self, tools: ToolCache):
@@ -122,7 +118,16 @@ installation, and try again.
         if hasattr(tools, "docker"):
             return tools.docker
 
-        # Verify Docker version is compatible.
+        cls._version_compat(tools=tools)
+        cls._user_access(tools=tools)
+        cls._buildx_installed(tools=tools)
+
+        tools.docker = Docker(tools=tools)
+        return tools.docker
+
+    @classmethod
+    def _version_compat(cls, tools):
+        """Verify Docker version is compatible."""
         try:
             # Try to get the version of docker that is installed.
             output = tools.subprocess.check_output(["docker", "--version"]).strip("\n")
@@ -138,7 +143,7 @@ installation, and try again.
                     raise BriefcaseCommandError(
                         cls.WRONG_DOCKER_VERSION_ERROR.format(
                             docker_version=docker_version,
-                            **cls.DOCKER_INSTALL_DETAILS[tools.host_os],
+                            install_url=cls.DOCKER_INSTALL_URL[tools.host_os],
                         )
                     )
 
@@ -150,11 +155,13 @@ installation, and try again.
             # Docker executable doesn't exist.
             raise BriefcaseCommandError(
                 cls.DOCKER_NOT_INSTALLED_ERROR.format(
-                    **cls.DOCKER_INSTALL_DETAILS[tools.host_os]
+                    install_url=cls.DOCKER_INSTALL_URL[tools.host_os]
                 )
             ) from e
 
-        # Verify Docker is operational for user.
+    @classmethod
+    def _user_access(cls, tools):
+        """Verify Docker is operational for user."""
         try:
             # Invoke a docker command to check if the daemon is running,
             # and the user has sufficient permissions.
@@ -174,8 +181,13 @@ installation, and try again.
             else:
                 raise BriefcaseCommandError(cls.GENERIC_DOCKER_ERROR) from e
 
-        tools.docker = Docker(tools=tools)
-        return tools.docker
+    @classmethod
+    def _buildx_installed(cls, tools):
+        """Verify the buildx plugin is installed."""
+        try:
+            tools.subprocess.check_output(["docker", "buildx", "version"])
+        except subprocess.CalledProcessError:
+            raise BriefcaseCommandError(cls.BUILDX_PLUGIN_MISSING)
 
     def check_output(self, args, image_tag):
         """Run a process inside a Docker container, capturing output.

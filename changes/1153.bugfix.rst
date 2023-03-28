@@ -1,0 +1,1 @@
+If the Docker ``buildx`` plugin is not installed, users are now directed by Briefcase to install it instead of Docker failing to build the image.
