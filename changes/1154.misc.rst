@@ -1,0 +1,1 @@
+Modified to remove usage of `sys.platform` in favour of `platform.system()` due to its consistent behaviour.
