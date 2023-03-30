@@ -83,10 +83,10 @@ class WindowsVisualStudioPublishCommand(WindowsVisualStudioMixin, PublishCommand
 
 
 # Declare the briefcase command bindings
-create = WindowsVisualStudioCreateCommand  # noqa
-update = WindowsVisualStudioUpdateCommand  # noqa
-open = WindowsVisualStudioOpenCommand  # noqa
-build = WindowsVisualStudioBuildCommand  # noqa
-run = WindowsVisualStudioRunCommand  # noqa
-package = WindowsVisualStudioPackageCommand  # noqa
-publish = WindowsVisualStudioPublishCommand  # noqa
+create = WindowsVisualStudioCreateCommand
+update = WindowsVisualStudioUpdateCommand
+open = WindowsVisualStudioOpenCommand
+build = WindowsVisualStudioBuildCommand
+run = WindowsVisualStudioRunCommand
+package = WindowsVisualStudioPackageCommand
+publish = WindowsVisualStudioPublishCommand

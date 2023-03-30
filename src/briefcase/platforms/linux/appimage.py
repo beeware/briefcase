@@ -311,10 +311,10 @@ class LinuxAppImagePublishCommand(LinuxAppImageMixin, PublishCommand):
 
 
 # Declare the briefcase command bindings
-create = LinuxAppImageCreateCommand  # noqa
-update = LinuxAppImageUpdateCommand  # noqa
-open = LinuxAppImageOpenCommand  # noqa
-build = LinuxAppImageBuildCommand  # noqa
-run = LinuxAppImageRunCommand  # noqa
-package = LinuxAppImagePackageCommand  # noqa
-publish = LinuxAppImagePublishCommand  # noqa
+create = LinuxAppImageCreateCommand
+update = LinuxAppImageUpdateCommand
+open = LinuxAppImageOpenCommand
+build = LinuxAppImageBuildCommand
+run = LinuxAppImageRunCommand
+package = LinuxAppImagePackageCommand
+publish = LinuxAppImagePublishCommand

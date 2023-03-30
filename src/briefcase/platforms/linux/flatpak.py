@@ -253,10 +253,10 @@ class LinuxFlatpakPublishCommand(LinuxFlatpakMixin, PublishCommand):
 
 
 # Declare the briefcase command bindings
-create = LinuxFlatpakCreateCommand  # noqa
-update = LinuxFlatpakUpdateCommand  # noqa
-open = LinuxFlatpakOpenCommand  # noqa
-build = LinuxFlatpakBuildCommand  # noqa
-run = LinuxFlatpakRunCommand  # noqa
-package = LinuxFlatpakPackageCommand  # noqa
-publish = LinuxFlatpakPublishCommand  # noqa
+create = LinuxFlatpakCreateCommand
+update = LinuxFlatpakUpdateCommand
+open = LinuxFlatpakOpenCommand
+build = LinuxFlatpakBuildCommand
+run = LinuxFlatpakRunCommand
+package = LinuxFlatpakPackageCommand
+publish = LinuxFlatpakPublishCommand
