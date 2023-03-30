@@ -15,7 +15,7 @@ def mock_tools(mock_tools) -> ToolCache:
 
 
 def test_check_output(mock_tools):
-    "A command can be invoked on a bare Docker image."
+    """A command can be invoked on a bare Docker image."""
 
     # Run the command in a container
     mock_tools.docker.check_output(["cmd", "arg1", "arg2"], image_tag="ubuntu:jammy")

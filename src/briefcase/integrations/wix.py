@@ -83,8 +83,11 @@ class WiX(Tool):
             if not wix.exists():
                 raise BriefcaseCommandError(
                     f"""\
-The WIX environment variable does not point to an install of the
-WiX Toolset. Current value: {wix_home!r}
+The WIX environment variable:
+
+{wix_home}
+
+does not point to an install of the WiX Toolset.
 """
                 )
 
@@ -106,9 +109,9 @@ WiX Toolset. Current value: {wix_home!r}
 
     def exists(self):
         return (
-            self.heat_exe.exists()
-            and self.light_exe.exists()
-            and self.candle_exe.exists()
+            self.heat_exe.is_file()
+            and self.light_exe.is_file()
+            and self.candle_exe.is_file()
         )
 
     @property

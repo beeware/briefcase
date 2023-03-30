@@ -43,7 +43,7 @@ Community
 
 Briefcase is part of the `BeeWare suite`_. You can talk to the community through:
 
-* `@pybeeware on Twitter <https://twitter.com/pybeeware>`__
+* `@beeware@fosstodon.org on Mastodon <https://fosstodon.org/@beeware>`__
 
 * `Discord <https://beeware.org/bee/chat/>`__
 

@@ -6,20 +6,13 @@ from unittest.mock import ANY
 import pytest
 
 
-def test_call(mock_sub, capsys):
+def test_call(mock_sub, capsys, sub_stream_kw):
     """A simple call will be invoked."""
 
     with mock_sub.tools.input.wait_bar():
         mock_sub.run(["hello", "world"])
 
-    mock_sub._subprocess.Popen.assert_called_with(
-        ["hello", "world"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        bufsize=1,
-        text=True,
-        encoding=ANY,
-    )
+    mock_sub._subprocess.Popen.assert_called_with(["hello", "world"], **sub_stream_kw)
     # fmt: off
     expected_output = (
         "output line 1\n"
@@ -31,19 +24,17 @@ def test_call(mock_sub, capsys):
     assert capsys.readouterr().out == expected_output
 
 
-def test_call_with_arg(mock_sub, capsys):
+def test_call_with_arg(mock_sub, capsys, sub_stream_kw):
     """Any extra keyword arguments are passed through as-is."""
 
     with mock_sub.tools.input.wait_bar():
         mock_sub.run(["hello", "world"], universal_newlines=True)
 
+    sub_stream_kw.pop("text")
     mock_sub._subprocess.Popen.assert_called_with(
         ["hello", "world"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        bufsize=1,
         universal_newlines=True,
-        encoding=ANY,
+        **sub_stream_kw,
     )
     # fmt: off
     expected_output = (
@@ -56,21 +47,14 @@ def test_call_with_arg(mock_sub, capsys):
     assert capsys.readouterr().out == expected_output
 
 
-def test_debug_call(mock_sub, capsys):
+def test_debug_call(mock_sub, capsys, sub_stream_kw):
     """If verbosity is turned up, there is debug output."""
     mock_sub.tools.logger.verbosity = 2
 
     with mock_sub.tools.input.wait_bar():
         mock_sub.run(["hello", "world"])
 
-    mock_sub._subprocess.Popen.assert_called_with(
-        ["hello", "world"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        bufsize=1,
-        text=True,
-        encoding=ANY,
-    )
+    mock_sub._subprocess.Popen.assert_called_with(["hello", "world"], **sub_stream_kw)
     expected_output = (
         "\n"
         ">>> Running Command:\n"
@@ -86,7 +70,7 @@ def test_debug_call(mock_sub, capsys):
     assert capsys.readouterr().out == expected_output
 
 
-def test_debug_call_with_env(mock_sub, capsys, tmp_path):
+def test_debug_call_with_env(mock_sub, capsys, tmp_path, sub_stream_kw):
     """If verbosity is turned up, injected env vars are included in debug output."""
     mock_sub.tools.logger.verbosity = 2
 
@@ -105,11 +89,7 @@ def test_debug_call_with_env(mock_sub, capsys, tmp_path):
         ["hello", "world"],
         env=merged_env,
         cwd=os.fsdecode(tmp_path / "cwd"),
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        bufsize=1,
-        text=True,
-        encoding=ANY,
+        **sub_stream_kw,
     )
     expected_output = (
         "\n"
@@ -131,14 +111,25 @@ def test_debug_call_with_env(mock_sub, capsys, tmp_path):
 @pytest.mark.parametrize(
     "in_kwargs, kwargs",
     [
-        ({}, {"text": True, "encoding": ANY, "bufsize": 1}),
-        ({"text": True}, {"text": True, "encoding": ANY, "bufsize": 1}),
+        (
+            {},
+            {"text": True, "encoding": ANY, "bufsize": 1, "errors": "backslashreplace"},
+        ),
+        (
+            {"text": True},
+            {"text": True, "encoding": ANY, "bufsize": 1, "errors": "backslashreplace"},
+        ),
         ({"text": False}, {"text": False, "bufsize": 1}),
         ({"text": False, "bufsize": 42}, {"text": False, "bufsize": 42}),
         ({"universal_newlines": False}, {"universal_newlines": False, "bufsize": 1}),
         (
             {"universal_newlines": True},
-            {"universal_newlines": True, "encoding": ANY, "bufsize": 1},
+            {
+                "universal_newlines": True,
+                "encoding": ANY,
+                "bufsize": 1,
+                "errors": "backslashreplace",
+            },
         ),
     ],
 )
@@ -156,7 +147,7 @@ def test_text_eq_true_default_overriding(mock_sub, in_kwargs, kwargs):
     )
 
 
-def test_stderr_is_redirected(mock_sub, streaming_process, capsys):
+def test_stderr_is_redirected(mock_sub, streaming_process, sub_stream_kw, capsys):
     """When stderr is redirected, it should be included in the result."""
     stderr_output = "stderr output\nline 2"
     streaming_process.stderr.read.return_value = stderr_output
@@ -167,13 +158,11 @@ def test_stderr_is_redirected(mock_sub, streaming_process, capsys):
             stderr=subprocess.PIPE,
         )
 
+    sub_stream_kw.pop("stderr")
     mock_sub._subprocess.Popen.assert_called_with(
         ["hello", "world"],
-        stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        bufsize=1,
-        text=True,
-        encoding=ANY,
+        **sub_stream_kw,
     )
     # fmt: off
     expected_output = (
@@ -187,7 +176,7 @@ def test_stderr_is_redirected(mock_sub, streaming_process, capsys):
     assert run_result.stderr == stderr_output
 
 
-def test_stderr_dev_null(mock_sub, streaming_process, capsys):
+def test_stderr_dev_null(mock_sub, streaming_process, capsys, sub_stream_kw):
     """When stderr is discarded, it should be None in the result."""
     streaming_process.stderr = None
 
@@ -197,13 +186,11 @@ def test_stderr_dev_null(mock_sub, streaming_process, capsys):
             stderr=subprocess.DEVNULL,
         )
 
+    sub_stream_kw.pop("stderr")
     mock_sub._subprocess.Popen.assert_called_with(
         ["hello", "world"],
-        stdout=subprocess.PIPE,
         stderr=subprocess.DEVNULL,
-        bufsize=1,
-        text=True,
-        encoding=ANY,
+        **sub_stream_kw,
     )
     # fmt: off
     expected_output = (

@@ -38,6 +38,7 @@ def test_success(mock_tools, first_app_config, verify_kwargs):
     mock_tools.subprocess.check_output.side_effect = [
         "Docker version 19.03.8, build afacb8b\n",
         "docker info return value",
+        "github.com/docker/buildx v0.10.2 00ed17d\n",
     ]
 
     DockerAppContext.verify(mock_tools, first_app_config, **verify_kwargs)
@@ -86,6 +87,7 @@ def test_docker_image_build_fail(mock_tools, first_app_config, verify_kwargs):
     mock_tools.subprocess.check_output.side_effect = [
         "Docker version 19.03.8, build afacb8b\n",
         "docker info return value",
+        "github.com/docker/buildx v0.10.2 00ed17d\n",
     ]
 
     mock_tools.subprocess.run.side_effect = subprocess.CalledProcessError(

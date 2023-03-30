@@ -1,4 +1,7 @@
+import pytest
 import tomli_w
+
+from briefcase.exceptions import BriefcaseCommandError
 
 
 def test_template_url(create_command):
@@ -7,6 +10,11 @@ def test_template_url(create_command):
         create_command.app_template_url
         == "https://github.com/beeware/briefcase-Tester-Dummy-template.git"
     )
+
+
+def test_missing_briefcase_toml(create_command, myapp):
+    with pytest.raises(BriefcaseCommandError, match=r"Unable to find.*briefcase.toml'"):
+        _ = create_command.app_path(myapp)
 
 
 def test_app_path(create_command, myapp):

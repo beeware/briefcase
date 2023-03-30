@@ -107,16 +107,19 @@ def test_stuck_streamer(mock_sub, streaming_process, monkeypatch, capsys):
     mock_time = mock.MagicMock(side_effect=range(1000, 1005))
     monkeypatch.setattr(time, "time", mock_time)
 
-    # Flag for the mock streamer to exit and prevent it
-    # potentially printing in the middle of a later test.
+    # Flag that Briefcase has finished simulating its waiting on the output
+    # streamer to exit normally; so, it should now exit.
     monkeypatched_streamer_should_exit = Event()
+    # Flag that Briefcase waited too long on the output streamer
+    monkeypatched_streamer_was_improperly_awaited = Event()
+    # Flag that output streamer has exited
+    monkeypatched_streamer_exited = Event()
 
     def monkeypatched_blocked_streamer(*a, **kw):
         """Simulate a streamer that blocks longer than it will be waited on."""
-        time.sleep(1)
-        if monkeypatched_streamer_should_exit.is_set():
-            return
-        print("This should not be printed while waiting on the streamer to exit")
+        if not monkeypatched_streamer_should_exit.wait(timeout=1):
+            monkeypatched_streamer_was_improperly_awaited.set()
+        monkeypatched_streamer_exited.set()
 
     monkeypatch.setattr(
         mock_sub,
@@ -129,6 +132,8 @@ def test_stuck_streamer(mock_sub, streaming_process, monkeypatch, capsys):
     with pytest.raises(KeyboardInterrupt):
         mock_sub.stream_output("testing", streaming_process, stop_func=send_ctrl_c)
 
+    monkeypatched_streamer_should_exit.set()
+
     # fmt: off
     assert capsys.readouterr().out == (
         "Stopping...\n"
@@ -136,11 +141,15 @@ def test_stuck_streamer(mock_sub, streaming_process, monkeypatch, capsys):
     )
     # fmt: on
 
-    monkeypatched_streamer_should_exit.set()
+    # Since the waiting around for the output streamer has been
+    # short-circuited, Briefcase should quickly give up waiting on
+    # the output streamer and it should exit...so, confirm it does.
+    assert monkeypatched_streamer_exited.wait(timeout=1)
+    assert not monkeypatched_streamer_was_improperly_awaited.is_set()
 
 
 def test_stdout_closes_unexpectedly(mock_sub, streaming_process, monkeypatch, capsys):
-    """Streamer silently exits from ValueError because stdout was closed."""
+    """Streamer exits from ValueError because stdout was closed."""
 
     def monkeypatch_ensure_str(value):
         """Close stdout when ensure_str() runs on output from readline()."""
@@ -152,7 +161,27 @@ def test_stdout_closes_unexpectedly(mock_sub, streaming_process, monkeypatch, ca
 
     mock_sub.stream_output("testing", streaming_process)
 
-    assert capsys.readouterr().out == "output line 1\n"
+    assert capsys.readouterr().out == (
+        "output line 1\n"
+        "WARNING: stdout was unexpectedly closed while streaming output\n"
+    )
+
+
+def test_readline_raises_exception(mock_sub, streaming_process, monkeypatch, capsys):
+    """Streamer aborts if readline() raises ValueError for reasons other than stdout closing."""
+
+    def monkeypatch_ensure_str(value):
+        """Simulate readline() raising an ValueError-derived exception."""
+        raise UnicodeError("readline() exception")
+
+    streaming_process.stdout = StringIO(initial_value="output line 1\noutput line 2")
+    monkeypatch.setattr(subprocess, "ensure_str", monkeypatch_ensure_str)
+
+    mock_sub.stream_output("testing", streaming_process)
+
+    assert capsys.readouterr().out == (
+        "Error while streaming output: UnicodeError: readline() exception\n"
+    )
 
 
 def test_filter_func(mock_sub, streaming_process, capsys):
