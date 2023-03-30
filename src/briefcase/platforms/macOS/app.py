@@ -67,10 +67,10 @@ class macOSAppPublishCommand(macOSAppMixin, PublishCommand):
 
 
 # Declare the briefcase command bindings
-create = macOSAppCreateCommand  # noqa
-update = macOSAppUpdateCommand  # noqa
-open = macOSAppOpenCommand  # noqa
-build = macOSAppBuildCommand  # noqa
-run = macOSAppRunCommand  # noqa
-package = macOSAppPackageCommand  # noqa
-publish = macOSAppPublishCommand  # noqa
+create = macOSAppCreateCommand
+update = macOSAppUpdateCommand
+open = macOSAppOpenCommand
+build = macOSAppBuildCommand
+run = macOSAppRunCommand
+package = macOSAppPackageCommand
+publish = macOSAppPublishCommand
