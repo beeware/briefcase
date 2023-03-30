@@ -3,7 +3,7 @@ import re
 import subprocess
 import uuid
 from pathlib import Path
-from typing import List
+from typing import List, Literal
 
 from briefcase.commands import CreateCommand, PackageCommand, RunCommand
 from briefcase.config import AppConfig, parsed_version
@@ -116,10 +116,6 @@ class WindowsRunCommand(RunCommand):
 
 
 class WindowsPackageCommand(PackageCommand):
-    def __init__(self, *a, **kw):
-        super().__init__(*a, **kw)
-        self._windows_sdk_needed = False
-
     @property
     def packaging_formats(self):
         return ["msi"]
@@ -131,7 +127,7 @@ class WindowsPackageCommand(PackageCommand):
     def verify_tools(self):
         super().verify_tools()
         WiX.verify(self.tools)
-        if self._windows_sdk_needed:
+        if hasattr(self, "_windows_sdk_needed"):
             WindowsSDK.verify(self.tools)
 
     def add_options(self, parser):
@@ -172,16 +168,9 @@ class WindowsPackageCommand(PackageCommand):
         )
 
     def parse_options(self, extra):
-        """Verify signing identity is valid and Windows SDK tool is required."""
+        """Require the Windows SDK tool if an `identity` is specified."""
         options = super().parse_options(extra=extra)
-
-        if identity := options.get("identity"):
-            self._windows_sdk_needed = True
-            if not re.fullmatch(r"^[0-9a-f]{40}$", identity, flags=re.IGNORECASE):
-                raise BriefcaseCommandError(
-                    f"Codesigning identify {identity!r} must be a certificate SHA-1 thumbprint."
-                )
-
+        self._windows_sdk_needed = options["identity"] is not None
         return options
 
     def sign_file(
@@ -190,12 +179,18 @@ class WindowsPackageCommand(PackageCommand):
         filepath: Path,
         identity: str,
         file_digest: str,
-        cert_store_location: str,
+        cert_store_location: Literal["Current User", "Local Machine"],
         cert_store: str,
         timestamp_url: str,
         timestamp_digest: str,
     ):
         """Sign a file."""
+
+        if not re.fullmatch(r"^[0-9a-f]{40}$", identity, flags=re.IGNORECASE):
+            raise BriefcaseCommandError(
+                f"Codesigning identify {identity!r} must be a certificate SHA-1 thumbprint."
+            )
+
         sign_command = [
             self.tools.windows_sdk.signtool_exe,
             "sign",
@@ -219,7 +214,7 @@ class WindowsPackageCommand(PackageCommand):
             sign_command.append("-sm")
 
         # Filepath to sign must come last
-        sign_command.append(os.fsdecode(filepath))
+        sign_command.append(filepath)
 
         try:
             self.tools.subprocess.run(sign_command, check=True)

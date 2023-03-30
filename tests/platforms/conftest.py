@@ -9,6 +9,7 @@ def first_app_config():
         app_name="first-app",
         project_name="First Project",
         formal_name="First App",
+        url="http://example.com/firstapp",
         author="Megacorp",
         bundle="com.example",
         version="0.0.1",
