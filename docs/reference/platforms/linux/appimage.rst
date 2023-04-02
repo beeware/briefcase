@@ -16,32 +16,28 @@ library versions present on each distribution. An AppImage can be executed on
 *any* Linux distribution with a version of ``libc`` greater than or equal the
 version of the distribution where the AppImage was created.
 
-To simplify the packaging process, Briefcase provides a pre-compiled Python
-support library. This support library was compiled on Ubuntu 18.04, which means
-the AppImages build by Briefcase can be used on *any* Linux distribution of
-about the same age or newer - but those AppImages *must* be compiled on Ubuntu
-18.04.
+To ensure that an application is built in an environment that is as compatible
+as possible, Briefcase builds AppImages inside Docker. The Docker base image
+used by Briefcase can be configured to any `manylinux
+<https://github.com/pypa/manylinux>`__ base using the ``manylinux`` application
+configuration option; if ``manylinux`` isn't specified, it falls back to an Ubuntu
+18.04 base image. While it is *possible* to build AppImages without Docker, it
+is highly recommended that you do not, as the resulting AppImages will not be as
+portable as they could otherwise be.
 
-This means you have four options for using Briefcase to compile a Linux
-AppImage:
+.. note::
 
-1. Run the version-sensitive parts of the build process inside Docker. This is
-   the default behavior of Briefcase. This also means that it is possible to
-   build Linux binaries on any platform that can run Docker.
+    AppImage works by attempting to autodetect all the libraries that an
+    application requires, copying those libraries into a distribution, and
+    manipulating them to reflect their new locations. This approach *can* work
+    well... but it is also prone to major problems. Python apps (which load
+    their dependencies dynamically) are particularly prone to exposing those
+    flaws.
 
-2. Install Ubuntu 18.04 on your own machine.
-
-3. Find a cloud or CI provider that can provide you an Ubuntu 18.04
-   machine for build purposes. Github Actions, for example, provides Ubuntu
-   18.04 as a build option. Again, you'll need to use the ``--no-docker``
-   command line option.
-
-4. Build your own version of the BeeWare `Python support libraries
-   <https://github.com/beeware/Python-Linux-support>`__. If you take this
-   approach, be aware that your AppImage will only be as portable as the
-   version of libc that is available on the distribution you use. If you build
-   using Ubuntu 19.10, for example, you can expect that only people on the most
-   recent versions of another distribution will be able to run your AppImage.
+    Briefcase makes a best-effort attempt to use the AppImage tools to build
+    a binary, but sometimes, the problem lies with AppImage itself. If you
+    have problems with AppImage binaries, you should first check whether the
+    problem is a limitation with AppImage.
 
 Icon format
 ===========
@@ -78,6 +74,26 @@ Application configuration
 The following options can be added to the
 ``tool.briefcase.app.<appname>.linux.appimage`` section of your
 ``pyproject.toml`` file.
+
+``manylinux``
+~~~~~~~~~~~~~
+
+The `manylinux <https://github.com/pypa/manylinux>`__ tag to use as a base image
+when building the AppImage. Should be one of:
+
+* `manylinux1`
+* `manylinux2010`
+* `manylinux2014`
+* `manylinux2_24`
+* `manylinux2_28`
+
+New projects will default to ``manylinux2014``. If an application doesn't specify
+a ``manylinux`` value, ``ubuntu:18.04`` will be used as the base image.
+
+``manylinux_image_tag``
+~~~~~~~~~~~~~~~~~~~~~~~
+
+The specific tag of the ``manylinux`` image to use. Defaults to ``latest``.
 
 ``system_requires``
 ~~~~~~~~~~~~~~~~~~~
@@ -163,6 +179,27 @@ Runtime issues with AppImages
 Packaging on Linux is a difficult problem - especially when it comes to binary
 libraries. The following are some common problems you may see, and ways that
 they can be mitigated.
+
+Missing ``libcrypt.so.1``
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The support package used by Briefcase has a `number of runtime requirements
+<https://gregoryszorc.com/docs/python-build-standalone/main/running.html#runtime-requirements>`__.
+One of those requirements is ``libcrypt.so.1``, which *should* be provided by
+most modern Linux distributions, as it is mandated as part of the Linux Standard
+Base Core Specification. However, some Red Hat maintained distributions don't
+include ``libcrypt.so.1`` as part of the base OS configuration. This can usually
+be fixed by installing the ``libxcrypt-compat`` package.
+
+Failure to load ``libpango-1.0-so.0``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Older Linux distributions (e.g., Ubuntu 18.04) may not be compatible with
+AppImages of Toga apps produced by Briefcase, complaining about problems with
+``libpango-1.0.so.0`` and an undefined symbols
+(``fribidi_get_par_embedding_levels_ex`` is a common missing symbol to be
+reported). This is caused because the version of ``fribidi`` provided by these
+distributions. Unfortunately, there's no way to fix this limitation.
 
 Undefined symbol and Namespace not available errors
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

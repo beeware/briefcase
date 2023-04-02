@@ -330,8 +330,6 @@ class DockerAppContext(Tool):
                             "--file",
                             dockerfile_path,
                             "--build-arg",
-                            f"PY_VERSION={self.python_version}",
-                            "--build-arg",
                             f"SYSTEM_REQUIRES={' '.join(getattr(self.app, 'system_requires', ''))}",
                             "--build-arg",
                             f"HOST_UID={self.tools.os.getuid()}",
