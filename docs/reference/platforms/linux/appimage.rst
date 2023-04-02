@@ -25,6 +25,20 @@ configuration option; if ``manylinux`` isn't specified, it falls back to an Ubun
 is highly recommended that you do not, as the resulting AppImages will not be as
 portable as they could otherwise be.
 
+.. note::
+
+    AppImage works by attempting to autodetect all the libraries that an
+    application requires, copying those libraries into a distribution, and
+    manipulating them to reflect their new locations. This approach *can* work
+    well... but it is also prone to major problems. Python apps (which load
+    their dependencies dynamically) are particularly prone to exposing those
+    flaws.
+
+    Briefcase makes a best-effort attempt to use the AppImage tools to build
+    a binary, but sometimes, the problem lies with AppImage itself. If you
+    have problems with AppImage binaries, you should first check whether the
+    problem is a limitation with AppImage.
+
 Icon format
 ===========
 
@@ -165,6 +179,27 @@ Runtime issues with AppImages
 Packaging on Linux is a difficult problem - especially when it comes to binary
 libraries. The following are some common problems you may see, and ways that
 they can be mitigated.
+
+Missing ``libcrypt.so.1``
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The support package used by Briefcase has a `number of runtime requirements
+<https://gregoryszorc.com/docs/python-build-standalone/main/running.html#runtime-requirements>`__.
+One of those requirements is ``libcrypt.so.1``, which *should* be provided by
+most modern Linux distributions, as it is mandated as part of the Linux Standard
+Base Core Specification. However, some Red Hat maintained distributions don't
+include ``libcrypt.so.1`` as part of the base OS configuration. This can usually
+be fixed by installing the ``libxcrypt-compat`` package.
+
+Failure to load ``libpango-1.0-so.0``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Older Linux distributions (e.g., Ubuntu 18.04) may not be compatible with
+AppImages of Toga apps produced by Briefcase, complaining about problems with
+``libpango-1.0.so.0`` and an undefined symbols
+(``fribidi_get_par_embedding_levels_ex`` is a common missing symbol to be
+reported). This is caused because the version of ``fribidi`` provided by these
+distributions. Unfortunately, there's no way to fix this limitation.
 
 Undefined symbol and Namespace not available errors
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
