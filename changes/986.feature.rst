@@ -1,1 +1,0 @@
-When installing application sources and dependencies, any ``__pycache__`` folders are now automatically removed.

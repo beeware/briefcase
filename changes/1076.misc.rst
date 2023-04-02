@@ -1,1 +1,0 @@
-The handling of version information in the documentation sidebar was corrected.

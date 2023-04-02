@@ -193,14 +193,17 @@ def test_invalid_jdk_version(mock_tools, host_os, java_home, tmp_path, capsys):
 
 
 @pytest.mark.parametrize(
-    "host_os, java_home",
+    "host_os, java_home, error_type",
     [
-        ("Linux", Path("tools", "java")),
-        ("Windows", Path("tools", "java")),
-        ("Darwin", Path("tools", "java", "Contents", "Home")),
+        ("Linux", Path("tools", "java"), FileNotFoundError),
+        ("Linux", Path("tools", "java"), NotADirectoryError),
+        ("Windows", Path("tools", "java"), FileNotFoundError),
+        ("Windows", Path("tools", "java"), NotADirectoryError),
+        ("Darwin", Path("tools", "java", "Contents", "Home"), FileNotFoundError),
+        ("Darwin", Path("tools", "java", "Contents", "Home"), NotADirectoryError),
     ],
 )
-def test_no_javac(mock_tools, host_os, java_home, tmp_path, capsys):
+def test_no_javac(mock_tools, host_os, java_home, error_type, tmp_path, capsys):
     """If the JAVA_HOME doesn't point to a location with a bin/javac, the briefcase JDK
     is used."""
     # Mock os
@@ -213,7 +216,10 @@ def test_no_javac(mock_tools, host_os, java_home, tmp_path, capsys):
     mock_tools.os.environ = {"JAVA_HOME": "/path/to/nowhere"}
 
     # Mock return value from javac failing because executable doesn't exist
-    mock_tools.subprocess.check_output.side_effect = FileNotFoundError
+    # FileNotFoundError is raised if bin/javac doesn't exist.
+    # NotADirectoryError is raised if the user-provided path in JAVA_HOME
+    #   contains parts that exist in the filesystem but are not a directory.
+    mock_tools.subprocess.check_output.side_effect = error_type
 
     # Create a directory to make it look like the Briefcase Java already exists.
     (tmp_path / java_home / "bin").mkdir(parents=True)

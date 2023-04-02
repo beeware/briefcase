@@ -88,6 +88,11 @@ class LinuxSystemPassiveMixin(LinuxMixin):
                 f"{app.app_name}-{app.version}-{getattr(app, 'revision', 1)}"
                 f".{self.rpm_tag(app)}.{self.tools.host_arch}.rpm"
             )
+        elif app.packaging_format == "pkg":
+            return (
+                f"{app.app_name}-{app.version}-{getattr(app, 'revision', 1)}"
+                f"-{self.tools.host_arch}.pkg.tar.zst"
+            )
         else:
             raise BriefcaseCommandError(
                 "Briefcase doesn't currently know how to build system packages in "
@@ -198,7 +203,7 @@ class LinuxSystemPassiveMixin(LinuxMixin):
                     # form of this to pass coverage, you get a shiny penny. For
                     # some reason, coverage generated on Py3.9, but reported on
                     # Py3.10+, finds a missing branch from the `with` statement
-                    # to the first line after the `except FileNotFound` below.
+                    # to the first line after the `except OSError` below.
                     # Since this is (a) a very simple file I/O sequence, and
                     # (b) will be removed once we're at a Python3.10 minimum,
                     # I can live with the Old Skool I/O calls.
@@ -208,11 +213,11 @@ class LinuxSystemPassiveMixin(LinuxMixin):
                 else:
                     freedesktop_info = self.tools.platform.freedesktop_os_release()
 
-            except FileNotFoundError:
+            except OSError as e:
                 raise BriefcaseCommandError(
                     "Could not find the /etc/os-release file. "
                     "Is this a FreeDesktop-compliant Linux distribution?"
-                )
+                ) from e
 
         # Process the FreeDesktop content to give the vendor, codename and vendor base.
         (
@@ -382,7 +387,7 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
         if app.target_vendor_base == DEBIAN:
             base_system_packages = ["python3-dev", "build-essential"]
             system_verify = ["dpkg", "-s"]
-            system_installer = "apt"
+            system_installer = ["apt", "install"]
         elif app.target_vendor_base == RHEL:
             base_system_packages = [
                 "python3-devel",
@@ -391,13 +396,24 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
                 "pkgconf-pkg-config",
             ]
             system_verify = ["rpm", "-q"]
-            system_installer = "dnf"
+            system_installer = ["dnf", "install"]
+        elif app.target_vendor_base == ARCH:
+            base_system_packages = [
+                "python3",
+                "base-devel",
+            ]
+            system_verify = ["pacman", "-Q"]
+            system_installer = ["pacman", "-Syu"]
         else:
             base_system_packages = None
             system_verify = None
             system_installer = None
 
-        return base_system_packages, system_verify, system_installer
+        return (
+            base_system_packages,
+            system_verify,
+            system_installer,
+        )
 
     def verify_system_packages(self, app: AppConfig):
         """Verify that the required system packages are installed.
@@ -410,7 +426,7 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
             system_installer,
         ) = self._system_requirement_tools(app)
 
-        if system_installer is None:
+        if system_verify is None:
             self.logger.warning(
                 """
 *************************************************************************
@@ -442,7 +458,7 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
                 f"""\
 Unable to build {app.app_name} due to missing system dependencies. Run:
 
-    sudo {system_installer} install {' '.join(missing)}
+    sudo {' '.join(system_installer)} {' '.join(missing)}
 
 to install the missing dependencies, and re-run Briefcase.
 """
@@ -576,7 +592,7 @@ class LinuxSystemBuildCommand(LinuxSystemMixin, BuildCommand):
 
         with self.input.wait_bar("Installing license..."):
             license_file = self.base_path / "LICENSE"
-            if license_file.exists():
+            if license_file.is_file():
                 self.tools.shutil.copy(license_file, doc_folder / "copyright")
             else:
                 raise BriefcaseCommandError(
@@ -590,7 +606,7 @@ with your app's licensing terms.
 
         with self.input.wait_bar("Installing changelog..."):
             changelog = self.base_path / "CHANGELOG"
-            if changelog.exists():
+            if changelog.is_file():
                 with changelog.open() as infile:
                     outfile = gzip.GzipFile(
                         doc_folder / "changelog.gz", mode="wb", mtime=0
@@ -620,7 +636,7 @@ with details about the release.
 
         with self.input.wait_bar("Installing man page..."):
             manpage_source = self.bundle_path(app) / f"{app.app_name}.1"
-            if manpage_source.exists():
+            if manpage_source.is_file():
                 with manpage_source.open() as infile:
                     outfile = gzip.GzipFile(
                         man_folder / f"{app.app_name}.1.gz", mode="wb", mtime=0
@@ -727,6 +743,14 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
                 "Can't find the rpm-build tools. Try running `sudo dnf install rpm-build`."
             )
 
+    def _verify_pkg_tools(self):
+        """Verify that the local environment contains the arch packaging tools(ABS)."""
+        if not Path("/usr/bin/makepkg").exists():
+            raise BriefcaseCommandError(
+                "Can't find the `makepkg` tool. Try running `sudo pacman -Syu pacman`."
+                # makepkg is part of pacman package
+            )
+
     def verify_app_tools(self, app):
         super().verify_app_tools(app)
         # If "system" packaging format was selected, determine what that means.
@@ -746,16 +770,15 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
 
         if not self.use_docker:
             # Check for the format-specific packaging tools.
-            if app.packaging_format == "deb":
-                self._verify_deb_tools()
-            elif app.packaging_format == "rpm":
-                self._verify_rpm_tools()
+            getattr(self, f"_verify_{app.packaging_format}_tools")()
 
     def package_app(self, app: AppConfig, **kwargs):
         if app.packaging_format == "deb":
             self._package_deb(app, **kwargs)
         elif app.packaging_format == "rpm":
             self._package_rpm(app, **kwargs)
+        elif app.packaging_format == "pkg":
+            self._package_pkg(app, **kwargs)
         else:
             raise BriefcaseCommandError(
                 "Briefcase doesn't currently know how to build system packages in "
@@ -774,10 +797,12 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
 
         # Write the Debian metadata control file.
         with self.input.wait_bar("Write Debian package control file..."):
-            if (self.project_path(app) / "DEBIAN").exists():
-                self.tools.shutil.rmtree(self.project_path(app) / "DEBIAN")
+            DEBIAN_path = self.project_path(app) / "DEBIAN"
 
-            (self.project_path(app) / "DEBIAN").mkdir()
+            if DEBIAN_path.exists():
+                self.tools.shutil.rmtree(DEBIAN_path)
+
+            DEBIAN_path.mkdir()
 
             # Add runtime package dependencies. App config has been finalized,
             # so this will be the target-specific definition, if one exists.
@@ -791,9 +816,7 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
                 + getattr(app, "system_runtime_requires", [])
             )
 
-            with (self.project_path(app) / "DEBIAN" / "control").open(
-                "w", encoding="utf-8"
-            ) as f:
+            with (DEBIAN_path / "control").open("w", encoding="utf-8") as f:
                 f.write(
                     "\n".join(
                         [
@@ -946,7 +969,7 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
                 # Add the changelog content to the bottom of the spec file.
                 f.write("\n%changelog\n")
                 changelog_source = self.base_path / "CHANGELOG"
-                if not changelog_source.exists():
+                if not changelog_source.is_file():
                     raise BriefcaseCommandError(
                         """\
 Your project does not contain a CHANGELOG file.
@@ -994,16 +1017,115 @@ with details about the release.
             self.distribution_path(app),
         )
 
+    def _package_pkg(self, app: AppConfig, **kwargs):
+        self.logger.info("Building .pkg.tar.zst package...", prefix=app.app_name)
+
+        # The description *must* exist.
+        # pkgdesc has 80 char limit.
+        if app.description is None:
+            raise BriefcaseCommandError(
+                "App configuration does not define `description`. "
+                "Arch projects require a description."
+            )
+        # The changelog should exist.
+        changelog_source = self.base_path / "CHANGELOG"
+        if not changelog_source.is_file():
+            raise BriefcaseCommandError(
+                """\
+Your project does not contain a CHANGELOG file.
+Create a file named `CHANGELOG` in the same directory as your `pyproject.toml`
+with details about the release.
+"""
+            )
+
+        # Generate the pkgbuild layout
+        pkgbuild_path = self.bundle_path(app) / "pkgbuild"
+        with self.input.wait_bar("Generating pkgbuild layout..."):
+            if pkgbuild_path.exists():
+                self.tools.shutil.rmtree(pkgbuild_path)
+            pkgbuild_path.mkdir(parents=True)
+
+            # Copy the CHANGELOG file to the pkgbuild_path so that it is visible to PKGBUILD
+            self.tools.shutil.copy(changelog_source, pkgbuild_path / "CHANGELOG")
+
+        # Build the source archive
+        with self.input.wait_bar("Building source archive..."):
+            self.tools.shutil.make_archive(
+                pkgbuild_path / f"{app.app_name}-{app.version}",
+                format="gztar",
+                root_dir=self.bundle_path(app),
+                base_dir=f"{app.app_name}-{app.version}",
+            )
+
+        # Write the arch PKGBUILD file.
+        with self.input.wait_bar("Write PKGBUILD file..."):
+            # Add runtime package dependencies. App config has been finalized,
+            # so this will be the target-specific definition, if one exists.
+            system_runtime_requires_list = [
+                f"glibc>={app.glibc_version}",
+                "python3",
+            ] + getattr(app, "system_runtime_requires", [])
+
+            system_runtime_requires = " ".join(
+                f"'{pkg}'" for pkg in system_runtime_requires_list
+            )
+
+            with (pkgbuild_path / "PKGBUILD").open("w", encoding="utf-8") as f:
+                f.write(
+                    "\n".join(
+                        [
+                            f"# Maintainer: {app.author} <{app.author_email}>",
+                            f'export PACKAGER="{app.author} <{app.author_email}>"',
+                            f"pkgname={app.app_name}",
+                            f"pkgver={app.version}",
+                            f"pkgrel={getattr(app, 'revision', 1)}",
+                            f'pkgdesc="{app.description}"',
+                            f"arch=('{self.tools.host_arch}')",
+                            f'url="{app.url}"',
+                            f"license=('{app.license}')",
+                            f"depends=({system_runtime_requires})",
+                            "changelog=CHANGELOG",
+                            'source=("$pkgname-$pkgver.tar.gz")',
+                            "md5sums=('SKIP')",
+                            "options=('!strip')",
+                            "package() {",
+                            '    cp -r "$srcdir/$pkgname-$pkgver/usr/" "$pkgdir"/usr/',
+                            "}",
+                        ]
+                    )
+                )
+
+        with self.input.wait_bar("Building Arch package..."):
+            try:
+                # Build the pkg.
+                self.tools[app].app_context.run(
+                    [
+                        "makepkg",
+                    ],
+                    check=True,
+                    cwd=pkgbuild_path,
+                )
+            except subprocess.CalledProcessError as e:
+                raise BriefcaseCommandError(
+                    f"Error while building .pkg.tar.zst package for {app.app_name}."
+                ) from e
+
+            # Move the pkg file to its final location
+            self.tools.shutil.move(
+                pkgbuild_path / self.distribution_filename(app),
+                self.distribution_path(app),
+            )
+
 
 class LinuxSystemPublishCommand(LinuxSystemMixin, PublishCommand):
     description = "Publish a Linux system project."
 
 
 # Declare the briefcase command bindings
-create = LinuxSystemCreateCommand  # noqa
-update = LinuxSystemUpdateCommand  # noqa
-open = LinuxSystemOpenCommand  # noqa
-build = LinuxSystemBuildCommand  # noqa
-run = LinuxSystemRunCommand  # noqa
-package = LinuxSystemPackageCommand  # noqa
-publish = LinuxSystemPublishCommand  # noqa
+create = LinuxSystemCreateCommand
+update = LinuxSystemUpdateCommand
+open = LinuxSystemOpenCommand
+build = LinuxSystemBuildCommand
+run = LinuxSystemRunCommand
+package = LinuxSystemPackageCommand
+publish = LinuxSystemPublishCommand

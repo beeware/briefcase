@@ -234,7 +234,7 @@ class HTTPHandler(SimpleHTTPRequestHandler):
 
 
 class LocalHTTPServer(ThreadingHTTPServer):
-    """A HTTP server that serves local static content."""
+    """An HTTP server that serves local static content."""
 
     def __init__(self, base_path, host, port, RequestHandlerClass=HTTPHandler):
         self.base_path = base_path
@@ -400,10 +400,10 @@ class StaticWebPublishCommand(StaticWebMixin, PublishCommand):
 
 
 # Declare the briefcase command bindings
-create = StaticWebCreateCommand  # noqa
-update = StaticWebUpdateCommand  # noqa
-open = StaticWebOpenCommand  # noqa
-build = StaticWebBuildCommand  # noqa
-run = StaticWebRunCommand  # noqa
-package = StaticWebPackageCommand  # noqa
-publish = StaticWebPublishCommand  # noqa
+create = StaticWebCreateCommand
+update = StaticWebUpdateCommand
+open = StaticWebOpenCommand
+build = StaticWebBuildCommand
+run = StaticWebRunCommand
+package = StaticWebPackageCommand
+publish = StaticWebPublishCommand

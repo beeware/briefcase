@@ -1,13 +1,11 @@
 import os
-import subprocess
 import sys
 from pathlib import Path
-from unittest.mock import ANY
 
 import pytest
 
 
-def test_simple_call(mock_docker_app_context, tmp_path, capsys):
+def test_simple_call(mock_docker_app_context, tmp_path, sub_stream_kw, capsys):
     """A simple call will be invoked."""
 
     mock_docker_app_context.run(["hello", "world"])
@@ -25,11 +23,7 @@ def test_simple_call(mock_docker_app_context, tmp_path, capsys):
             "hello",
             "world",
         ],
-        text=True,
-        encoding=ANY,
-        bufsize=1,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
+        **sub_stream_kw,
     )
     assert capsys.readouterr().out == (
         "\n"
@@ -41,7 +35,7 @@ def test_simple_call(mock_docker_app_context, tmp_path, capsys):
     )
 
 
-def test_interactive(mock_docker_app_context, tmp_path, capsys):
+def test_interactive(mock_docker_app_context, tmp_path, sub_kw, capsys):
     """Docker can be invoked in interactive mode."""
     mock_docker_app_context.run(["hello", "world"], interactive=True)
 
@@ -60,8 +54,7 @@ def test_interactive(mock_docker_app_context, tmp_path, capsys):
             "hello",
             "world",
         ],
-        text=True,
-        encoding=ANY,
+        **sub_kw,
     )
     assert capsys.readouterr().out == (
         "\n"
@@ -73,7 +66,7 @@ def test_interactive(mock_docker_app_context, tmp_path, capsys):
     )
 
 
-def test_extra_mounts(mock_docker_app_context, tmp_path, capsys):
+def test_extra_mounts(mock_docker_app_context, tmp_path, sub_stream_kw, capsys):
     """A subprocess call can be augmented with mounts."""
 
     mock_docker_app_context.run(
@@ -101,11 +94,7 @@ def test_extra_mounts(mock_docker_app_context, tmp_path, capsys):
             "hello",
             "world",
         ],
-        text=True,
-        encoding=ANY,
-        bufsize=1,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
+        **sub_stream_kw,
     )
     assert capsys.readouterr().out == (
         "\n"
@@ -120,7 +109,7 @@ def test_extra_mounts(mock_docker_app_context, tmp_path, capsys):
 @pytest.mark.skipif(
     sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
 )
-def test_cwd(mock_docker_app_context, tmp_path, capsys):
+def test_cwd(mock_docker_app_context, tmp_path, sub_stream_kw, capsys):
     """A subprocess call can use a working directory relative to the project folder."""
 
     mock_docker_app_context.run(
@@ -143,11 +132,7 @@ def test_cwd(mock_docker_app_context, tmp_path, capsys):
             "hello",
             "world",
         ],
-        text=True,
-        encoding=ANY,
-        bufsize=1,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
+        **sub_stream_kw,
     )
     assert capsys.readouterr().out == (
         "\n"
@@ -159,7 +144,12 @@ def test_cwd(mock_docker_app_context, tmp_path, capsys):
     )
 
 
-def test_call_with_arg_and_env(mock_docker_app_context, tmp_path, capsys):
+def test_call_with_arg_and_env(
+    mock_docker_app_context,
+    tmp_path,
+    sub_stream_kw,
+    capsys,
+):
     """Extra keyword arguments are passed through as-is; env modifications are
     converted."""
 
@@ -172,6 +162,7 @@ def test_call_with_arg_and_env(mock_docker_app_context, tmp_path, capsys):
         universal_newlines=True,
     )
 
+    sub_stream_kw.pop("text")
     mock_docker_app_context.tools.subprocess._subprocess.Popen.assert_called_once_with(
         [
             "docker",
@@ -190,10 +181,7 @@ def test_call_with_arg_and_env(mock_docker_app_context, tmp_path, capsys):
             "world",
         ],
         universal_newlines=True,
-        encoding=ANY,
-        bufsize=1,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
+        **sub_stream_kw,
     )
     assert capsys.readouterr().out == (
         "\n"
@@ -208,7 +196,12 @@ def test_call_with_arg_and_env(mock_docker_app_context, tmp_path, capsys):
 @pytest.mark.skipif(
     sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
 )
-def test_call_with_path_arg_and_env(mock_docker_app_context, tmp_path, capsys):
+def test_call_with_path_arg_and_env(
+    mock_docker_app_context,
+    tmp_path,
+    sub_stream_kw,
+    capsys,
+):
     """Path-based arguments and environment are converted to strings and passed in as-
     is."""
 
@@ -240,11 +233,7 @@ def test_call_with_path_arg_and_env(mock_docker_app_context, tmp_path, capsys):
             "hello",
             os.fsdecode(tmp_path / "location"),
         ],
-        text=True,
-        encoding=ANY,
-        bufsize=1,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
+        **sub_stream_kw,
     )
     assert capsys.readouterr().out == (
         "\n"
@@ -260,7 +249,10 @@ def test_call_with_path_arg_and_env(mock_docker_app_context, tmp_path, capsys):
     sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
 )
 def test_interactive_with_path_arg_and_env_and_mounts(
-    mock_docker_app_context, tmp_path, capsys
+    mock_docker_app_context,
+    tmp_path,
+    sub_kw,
+    capsys,
 ):
     """Docker can be invoked in interactive mode with all the extras."""
     mock_docker_app_context.run(
@@ -302,8 +294,7 @@ def test_interactive_with_path_arg_and_env_and_mounts(
             "hello",
             os.fsdecode(tmp_path / "location"),
         ],
-        text=True,
-        encoding=ANY,
+        **sub_kw,
     )
     assert capsys.readouterr().out == (
         "\n"
@@ -318,7 +309,7 @@ def test_interactive_with_path_arg_and_env_and_mounts(
 @pytest.mark.skipif(
     sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
 )
-def test_simple_verbose_call(mock_docker_app_context, tmp_path, capsys):
+def test_simple_verbose_call(mock_docker_app_context, tmp_path, sub_stream_kw, capsys):
     """If verbosity is turned out, there is output."""
     mock_docker_app_context.tools.logger.verbosity = 2
 
@@ -337,11 +328,7 @@ def test_simple_verbose_call(mock_docker_app_context, tmp_path, capsys):
             "hello",
             "world",
         ],
-        text=True,
-        encoding=ANY,
-        bufsize=1,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
+        **sub_stream_kw,
     )
     assert capsys.readouterr().out == (
         "\n"

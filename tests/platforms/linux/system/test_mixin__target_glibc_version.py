@@ -27,6 +27,15 @@ from briefcase.exceptions import BriefcaseCommandError
             ],
             "2.36",
         ),
+        # arch:rolling (20230301)
+        (
+            [
+                "ldd (GNU libc) 2.37",
+                "Copyright (C) 2023 Free Software Foundation, Inc.",
+                "...",
+            ],
+            "2.37",
+        ),
     ],
 )
 def test_target_glibc_version_docker(
