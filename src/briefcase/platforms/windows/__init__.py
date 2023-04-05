@@ -155,7 +155,7 @@ class WindowsPackageCommand(PackageCommand):
             "--timestamp-url",
             help=(
                 "URL for the Timestamp Authority server to timestamp "
-                "the codesigning; defaults to timestamp.digicert.com."
+                "the code signing; defaults to timestamp.digicert.com."
             ),
             default="http://timestamp.digicert.com",
             required=False,

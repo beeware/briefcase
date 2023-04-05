@@ -2,7 +2,7 @@
 Windows App
 ===========
 
-A Windows app is a stub binary, allow with a collection of folders taht contain
+A Windows app is a stub binary, allow with a collection of folders that contain
 the Python code for the app and the Python runtime libraries.
 
 Briefcase uses the `WiX Toolset <https://wixtoolset.org/>`__ to build an MSI
@@ -30,6 +30,58 @@ Splash Image format
 ===================
 
 Windows Apps do not support splash screens or installer images.
+
+Additional options
+==================
+
+The following options can be provided at the command line when packaging
+Windows apps.
+
+``--file-digest <digest>``
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The digest algorithm to use for creating signatures for files. Defaults to
+``sha256``.
+
+``--cert-store-location <location>``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Either ``Current User`` or ``Local Machine`` for the location of stores
+containing the certificate. Defaults to ``Current User``.
+
+``--cert-store <store>``
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+The internal Windows name for the certificate store containing the certificate.
+Defaults to ``My``.
+
+Common Stores:
+
++--------------------------------------------+------------------+
+| Personal                                   | My               |
++--------------------------------------------+------------------+
+| Intermediate Certification Authorities     | CA               |
++--------------------------------------------+------------------+
+| Third-Party Root Certification Authorities | AuthRoot         |
++--------------------------------------------+------------------+
+| Trusted People                             | TrustedPeople    |
++--------------------------------------------+------------------+
+| Trusted Publishers                         | TrustedPublisher |
++--------------------------------------------+------------------+
+| Trusted Root Certification Authorities     | Root             |
++--------------------------------------------+------------------+
+
+``--timestamp-url <url>``
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The URL of the Timestamp Authority server to timestamp the code signing.
+Defaults to ``http://timestamp.digicert.com``.
+
+``--timestamp-digest <url>``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The digest algorithm to request the Timestamp Authority server uses for signing
+the timestamp. Defaults to ``sha256``.
 
 Application configuration
 =========================
