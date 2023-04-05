@@ -2,7 +2,7 @@ import pytest
 
 from briefcase.integrations.windows_sdk import WindowsSDK
 
-from .test_WindowsSDK__verify import setup_sdk_path
+from .test_WindowsSDK__verify import setup_winsdk_path
 
 
 @pytest.mark.parametrize(
@@ -23,6 +23,6 @@ def test_sdk_versions_from_bin(tmp_path, versions, expected):
     WindowsSDK.SDK_VERSION = "85.0"
     sdk_path = tmp_path / "win_sdk"
     for version in versions:
-        setup_sdk_path(sdk_path.parent, version)
+        setup_winsdk_path(sdk_path.parent, version)
 
     assert WindowsSDK._sdk_versions_from_bin(sdk_path) == expected

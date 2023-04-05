@@ -26,7 +26,7 @@ def mock_winreg(monkeypatch):
     return winreg
 
 
-def setup_sdk_path(base_path, version, arch="x64", skip_bins=False) -> (Path, str):
+def setup_winsdk_path(base_path, version, arch="x64", skip_bins=False) -> (Path, str):
     """Create a mock Windows SDK for the version and arch.
 
     :param base_path: base path to create the SDK in; should be pytest's tmp_path.
@@ -58,17 +58,23 @@ def test_short_circuit(mock_tools):
 @pytest.mark.parametrize(
     "host_arch, sdk_arch", [("AMD64", "x64"), ("ARM64", "arm64"), ("gothic", "gothic")]
 )
-def test_valid_sdk_env_vars(mock_tools, mock_winreg, host_arch, sdk_arch, tmp_path):
-    """If the WindowsSDKDir and WindowsSDKVersion env vars point to a suitable
-    Windows SDK install, the validator succeeds."""
+def test_winsdk_arch(
+    mock_tools,
+    mock_winreg,
+    host_arch,
+    sdk_arch,
+    tmp_path,
+    monkeypatch,
+):
+    """The architecture of the host machine is respected."""
     # Mock the environment for a Windows SDK install
-    sdk_path, sdk_ver = setup_sdk_path(tmp_path, "1.1.1", sdk_arch)
+    sdk_path, sdk_ver = setup_winsdk_path(tmp_path, "1.1.1", sdk_arch)
 
-    # Set up environment variables for SDK location
-    mock_tools.os.environ = {
-        "WindowsSDKDir": os.fsdecode(sdk_path),
-        "WindowsSDKVersion": f"{sdk_ver}.0",
-    }
+    # Mock lookup of Windows SDK
+    WindowsSDK.SDK_VERSION = "1.1"
+    mock_sdks = MagicMock(spec=WindowsSDK._windows_sdks)
+    mock_sdks.return_value = [(sdk_path, f"{sdk_ver}.0")]
+    monkeypatch.setattr(WindowsSDK, "_windows_sdks", mock_sdks)
 
     # Mock the machine
     mock_tools.host_arch = host_arch
@@ -81,7 +87,30 @@ def test_valid_sdk_env_vars(mock_tools, mock_winreg, host_arch, sdk_arch, tmp_pa
     assert win_sdk.signtool_exe == signtool_path
 
 
-def test_invalid_sdk_env_vars(mock_tools, mock_winreg, tmp_path):
+def test_winsdk_valid_env_vars(mock_tools, mock_winreg, tmp_path):
+    """If the WindowsSDKDir and WindowsSDKVersion env vars point to a suitable
+    Windows SDK install, the validator succeeds."""
+    # Mock the environment for a Windows SDK install
+    sdk_path, sdk_ver = setup_winsdk_path(tmp_path, "1.1.1", "x64")
+
+    # Set up environment variables for SDK location
+    mock_tools.os.environ = {
+        "WindowsSDKDir": os.fsdecode(sdk_path),
+        "WindowsSDKVersion": f"{sdk_ver}.0",
+    }
+
+    # Mock the machine
+    mock_tools.host_arch = "AMD64"
+
+    # Verify the install
+    win_sdk = WindowsSDK.verify(mock_tools)
+
+    # The returned paths are as expected (and are the full paths)
+    signtool_path = tmp_path / "win_sdk" / "bin" / "1.1.1.0" / "x64" / "signtool.exe"
+    assert win_sdk.signtool_exe == signtool_path
+
+
+def test_winsdk_invalid_env_vars(mock_tools, mock_winreg, tmp_path):
     """If the WindowsSDKDir and WindowsSDKVersion env vars point to an invalid
     Windows SDK install, the validator fails."""
     # Mock the environment for a Windows SDK install
@@ -103,7 +132,7 @@ def test_invalid_sdk_env_vars(mock_tools, mock_winreg, tmp_path):
         WindowsSDK.verify(mock_tools)
 
 
-def test_latest_sdk_install_from_reg(mock_tools, mock_winreg, tmp_path):
+def test_winsdk_latest_install_from_reg(mock_tools, mock_winreg, tmp_path):
     """If the first (i.e. "latest") version of the SDK found in the registry is valid, the validator succeeds."""
     # Bypass using sdk in env vars
     mock_tools.os.environ.get.return_value = None
@@ -116,7 +145,7 @@ def test_latest_sdk_install_from_reg(mock_tools, mock_winreg, tmp_path):
 
     # Mock the SDK install
     WindowsSDK.SDK_VERSION = "83.0"
-    sdk_path, sdk_ver = setup_sdk_path(tmp_path, "83.0.1")
+    sdk_path, sdk_ver = setup_winsdk_path(tmp_path, "83.0.1")
 
     # Return "latest" SDK as first match
     mock_winreg.QueryValueEx.side_effect = [
@@ -135,7 +164,7 @@ def test_latest_sdk_install_from_reg(mock_tools, mock_winreg, tmp_path):
     assert win_sdk.signtool_exe == signtool_path
 
 
-def test_nonlatest_sdk_install_from_reg(mock_tools, mock_winreg, tmp_path, capsys):
+def test_winsdk_nonlatest_install_from_reg(mock_tools, mock_winreg, tmp_path, capsys):
     """If a subsequent version of the SDK found in the registry is valid, the validator succeeds."""
     # Bypass using sdk in env vars
     mock_tools.os.environ.get.return_value = None
@@ -148,12 +177,12 @@ def test_nonlatest_sdk_install_from_reg(mock_tools, mock_winreg, tmp_path, capsy
 
     # Set up an SDK installation without expected binaries
     WindowsSDK.SDK_VERSION = "85.0"
-    invalid_sdk_path, invalid_sdk_ver = setup_sdk_path(
+    invalid_sdk_path, invalid_sdk_ver = setup_winsdk_path(
         tmp_path / "invalid", "85.0.9", skip_bins=True
     )
 
     # Mock the SDK install to be used
-    sdk_path, sdk_ver = setup_sdk_path(tmp_path, "85.0.8")
+    sdk_path, sdk_ver = setup_winsdk_path(tmp_path, "85.0.8")
 
     # Mock the registry queries via QueryValueEx
     mock_winreg.QueryValueEx.side_effect = [
@@ -167,7 +196,6 @@ def test_nonlatest_sdk_install_from_reg(mock_tools, mock_winreg, tmp_path, capsy
     win_sdk = WindowsSDK.verify(mock_tools)
 
     # Confirm invalid SDK was evaluated
-    output = capsys.readouterr().out
     expected_output = (
         "\n"
         ">>> [Windows SDK] Finding Suitable Installation...\n"
@@ -175,7 +203,7 @@ def test_nonlatest_sdk_install_from_reg(mock_tools, mock_winreg, tmp_path, capsy
         f">>> Evaluating Registry SDK version '85.0.8.0' at {tmp_path / 'win_sdk'}\n"
         f">>> Using Windows SDK v85.0.8.0 at {tmp_path / 'win_sdk'}\n"
     )
-    assert output == expected_output
+    assert capsys.readouterr().out == expected_output
 
     # The returned paths are as expected (and are the full paths)
     signtool_path = tmp_path / "win_sdk" / "bin" / "85.0.8.0" / "x64" / "signtool.exe"
@@ -209,7 +237,7 @@ def test_nonlatest_sdk_install_from_reg(mock_tools, mock_winreg, tmp_path, capsy
         [[(FileNotFoundError, ""), ("invalid_5", "85.0.3")], [("invalid_5", "85.0.4")]],
     ],
 )
-def test_invalid_sdk_install_from_reg(
+def test_winsdk_invalid_install_from_reg(
     mock_tools,
     mock_winreg,
     reg_installs,
@@ -234,16 +262,14 @@ def test_invalid_sdk_install_from_reg(
     WindowsSDK.SDK_VERSION = "85.0"
     reg_queries = []
     for subdir, version in reg_installs:
-        if FileNotFoundError not in {subdir, version}:
-            reg_queries.extend(
-                setup_sdk_path(tmp_path / subdir, version, skip_bins=True)
-            )
-        else:
-            reg_queries.extend([subdir, version])
+        reg_queries.extend(
+            setup_winsdk_path(tmp_path / subdir, version, skip_bins=True)
+            if FileNotFoundError not in {subdir, version}
+            else [subdir, version]
+        )
     for subdir, version in additional_installs:
-        setup_sdk_path(tmp_path / subdir, version, skip_bins=True)
-    # Add enough FileNotFoundError exceptions to run out the other
-    # registry tree and access rights iterations
+        setup_winsdk_path(tmp_path / subdir, version, skip_bins=True)
+    # Add enough exceptions to run out any remaining registry reads
     reg_queries.extend([FileNotFoundError] * 12)
 
     # Mock the registry queries for install dir and version
@@ -257,10 +283,9 @@ def test_invalid_sdk_install_from_reg(
         BriefcaseCommandError,
         match="Unable to locate 'Windows SDK v85.0'. Has it been installed?",
     ):
-        _ = WindowsSDK.verify(mock_tools)
+        WindowsSDK.verify(mock_tools)
 
     # Confirm invalid SDK was evaluated
-    output = capsys.readouterr().out
     expected_output = "\n>>> [Windows SDK] Finding Suitable Installation...\n"
     for subdir, version in [t for t in reg_installs if FileNotFoundError not in t]:
         if subdir and version:
@@ -273,10 +298,15 @@ def test_invalid_sdk_install_from_reg(
         expected_output += (
             f">>> Evaluating Registry SDK Bin version '{version}.0' at {sdk_path}\n"
         )
-    assert output == expected_output
+    assert capsys.readouterr().out == expected_output
 
 
-def test_sdk_install_from_default_dir(mock_tools, mock_winreg, tmp_path, capsys):
+def test_winsdk_valid_install_from_default_dir(
+    mock_tools,
+    mock_winreg,
+    tmp_path,
+    capsys,
+):
     """If an SDKs in a default directory is valid, the validator succeeds."""
     # Bypass using sdk in env vars
     mock_tools.os.environ.get.return_value = None
@@ -292,15 +322,16 @@ def test_sdk_install_from_default_dir(mock_tools, mock_winreg, tmp_path, capsys)
 
     # Set up SDK installations
     WindowsSDK.SDK_VERSION = "86.0"
-    sdk_dir, _ = setup_sdk_path(tmp_path, "86.0.8")
-    invalid_sdk_path, _ = setup_sdk_path(tmp_path / "invalid", "86.0.7", skip_bins=True)
+    sdk_dir, _ = setup_winsdk_path(tmp_path, "86.0.8")
+    invalid_sdk_path, _ = setup_winsdk_path(
+        tmp_path / "invalid", "86.0.7", skip_bins=True
+    )
     WindowsSDK.DEFAULT_SDK_DIRS = [invalid_sdk_path, sdk_dir]
 
     # Verify the install
     win_sdk = WindowsSDK.verify(mock_tools)
 
     # Confirm invalid SDK was evaluated
-    output = capsys.readouterr().out
     expected_output = (
         "\n"
         ">>> [Windows SDK] Finding Suitable Installation...\n"
@@ -308,14 +339,14 @@ def test_sdk_install_from_default_dir(mock_tools, mock_winreg, tmp_path, capsys)
         f">>> Evaluating Default Bin SDK version '86.0.8.0' at {tmp_path / 'win_sdk'}\n"
         f">>> Using Windows SDK v86.0.8.0 at {tmp_path / 'win_sdk'}\n"
     )
-    assert output == expected_output
+    assert capsys.readouterr().out == expected_output
 
     # The returned paths are as expected (and are the full paths)
     signtool_path = tmp_path / "win_sdk" / "bin" / "86.0.8.0" / "x64" / "signtool.exe"
     assert win_sdk.signtool_exe == signtool_path
 
 
-def test_invalid_sdk_install_from_default_dir(
+def test_winsdk_invalid_install_from_default_dir(
     mock_tools,
     mock_winreg,
     tmp_path,
@@ -336,10 +367,10 @@ def test_invalid_sdk_install_from_default_dir(
 
     # Set up SDK installations
     WindowsSDK.SDK_VERSION = "87.0"
-    invalid_sdk_path_1, _ = setup_sdk_path(
+    invalid_sdk_path_1, _ = setup_winsdk_path(
         tmp_path / "invalid_1", "87.0.7", skip_bins=True
     )
-    invalid_sdk_path_2, _ = setup_sdk_path(
+    invalid_sdk_path_2, _ = setup_winsdk_path(
         tmp_path / "invalid_2", "87.0.8", skip_bins=True
     )
     WindowsSDK.DEFAULT_SDK_DIRS = [
@@ -353,14 +384,13 @@ def test_invalid_sdk_install_from_default_dir(
         BriefcaseCommandError,
         match="Unable to locate 'Windows SDK v87.0'. Has it been installed?",
     ):
-        _ = WindowsSDK.verify(mock_tools)
+        WindowsSDK.verify(mock_tools)
 
     # Confirm invalid SDK was evaluated
-    output = capsys.readouterr().out
     expected_output = (
         "\n"
         ">>> [Windows SDK] Finding Suitable Installation...\n"
         f">>> Evaluating Default Bin SDK version '87.0.7.0' at {tmp_path / 'invalid_1' / 'win_sdk'}\n"
         f">>> Evaluating Default Bin SDK version '87.0.8.0' at {tmp_path / 'invalid_2' / 'win_sdk'}\n"
     )
-    assert output == expected_output
+    assert capsys.readouterr().out == expected_output

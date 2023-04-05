@@ -127,7 +127,7 @@ class WindowsPackageCommand(PackageCommand):
     def verify_tools(self):
         super().verify_tools()
         WiX.verify(self.tools)
-        if hasattr(self, "_windows_sdk_needed"):
+        if getattr(self, "_windows_sdk_needed", False):
             WindowsSDK.verify(self.tools)
 
     def add_options(self, parser):
