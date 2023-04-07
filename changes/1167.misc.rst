@@ -1,0 +1,1 @@
+Some minor docs markup errors were corrected.
