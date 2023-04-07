@@ -192,7 +192,7 @@ include ``libcrypt.so.1`` as part of the base OS configuration. This can usually
 be fixed by installing the ``libxcrypt-compat`` package.
 
 Failure to load ``libpango-1.0-so.0``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Older Linux distributions (e.g., Ubuntu 18.04) may not be compatible with
 AppImages of Toga apps produced by Briefcase, complaining about problems with

@@ -89,7 +89,7 @@ Additional options
 ==================
 
 The following options can be provided at the command line when producing
-Deb packages.
+Deb packages:
 
 ``--target``
 ~~~~~~~~~~~~
