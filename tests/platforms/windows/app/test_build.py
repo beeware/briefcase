@@ -1,3 +1,4 @@
+import re
 import subprocess
 from pathlib import Path
 from unittest import mock
@@ -225,22 +226,28 @@ def test_build_app_error_remove_signature(
     first_app_config,
     tmp_path,
 ):
-    """If the attempt to remove any exist digital signatures fails for an unknown reason, then the build fails."""
+    """If the attempt to remove any exist digital signatures fails because signtool
+    raises an unexpected error, then the build fails."""
     build_command.tools.windows_sdk = windows_sdk
 
     build_command.tools.subprocess.check_output.side_effect = subprocess.CalledProcessError(
-        returncode=2,
-        cmd="signtool.exe remove -s app.exe",
+        returncode=1,
+        cmd="signtool.exe remove /s filepath",
         output="""
     Number of errors: 1
     Unknown and unexpected error
 """,
     )
 
-    with pytest.raises(
-        BriefcaseCommandError,
-        match="Failed to remove any existing digital signatures",
-    ):
+    error_message = (
+        "Failed to remove any existing digital signatures from the stub app.\n"
+        "\n"
+        "Recreating the app layout may also help resolve this issue:\n"
+        "\n"
+        "    $ briefcase create windows app\n"
+        "\n"
+    )
+    with pytest.raises(BriefcaseCommandError, match=re.escape(error_message)):
         build_command.build_app(first_app_config)
 
     # remove any digital signatures on the app binary

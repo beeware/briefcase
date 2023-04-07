@@ -127,7 +127,7 @@ class WindowsPackageCommand(PackageCommand):
     def verify_tools(self):
         super().verify_tools()
         WiX.verify(self.tools)
-        if getattr(self, "_windows_sdk_needed", False):
+        if self._windows_sdk_needed:
             WindowsSDK.verify(self.tools)
 
     def add_options(self, parser):
@@ -168,7 +168,7 @@ class WindowsPackageCommand(PackageCommand):
         )
 
     def parse_options(self, extra):
-        """Require the Windows SDK tool if an `identity` is specified."""
+        """Require the Windows SDK tool if an `identity` is specified for signing."""
         options = super().parse_options(extra=extra)
         self._windows_sdk_needed = options["identity"] is not None
         return options

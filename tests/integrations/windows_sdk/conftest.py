@@ -14,6 +14,9 @@ def mock_tools(tmp_path, mock_tools) -> ToolCache:
     mock_tools.os = MagicMock(spec=os)
     mock_tools.os.fsdecode = os.fsdecode
 
+    # Mock the machine
+    mock_tools.host_arch = "AMD64"
+
     # Mock default tools
     mock_tools.subprocess = MagicMock(spec_set=Subprocess)
     mock_tools.download = MagicMock(spec_set=Download)

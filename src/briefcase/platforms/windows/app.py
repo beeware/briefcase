@@ -4,7 +4,7 @@ from pathlib import Path
 
 from briefcase.commands import BuildCommand, OpenCommand, PublishCommand, UpdateCommand
 from briefcase.config import BaseConfig
-from briefcase.exceptions import BriefcaseCommandError, MissingToolError
+from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.rcedit import RCEdit
 from briefcase.integrations.windows_sdk import WindowsSDK
 from briefcase.platforms.windows import (
@@ -41,10 +41,10 @@ class WindowsAppBuildCommand(WindowsAppMixin, BuildCommand):
     def verify_tools(self):
         super().verify_tools()
         RCEdit.verify(tools=self.tools)
-        # The Windows SDK is only needed if it has previously been used to
-        # sign the binary and MSI; therefore, ignore if it isn't available
-        # since it will not be needed to remove previously added signatures.
-        with suppress(MissingToolError):
+        # The Windows SDK is only needed if it has previously been used to sign
+        # the binary and MSI; therefore, ignore if it isn't available since the
+        # stub app should not have any signatures to remove in that case.
+        with suppress(BriefcaseCommandError):
             WindowsSDK.verify(tools=self.tools)
 
     def build_app(self, app: BaseConfig, **kwargs):
@@ -76,12 +76,15 @@ class WindowsAppBuildCommand(WindowsAppMixin, BuildCommand):
                     # is not currently signed
                     if "error: 0x00000057" not in e.stdout:
                         raise BriefcaseCommandError(
-                            """\
+                            f"""\
 Failed to remove any existing digital signatures from the stub app.
 
-Run `briefcase create windows app` to reset the app and try again.
+Recreating the app layout may also help resolve this issue:
+
+    $ briefcase create {self.platform} {self.output_format}
+
 """
-                        )
+                        ) from e
 
         with self.input.wait_bar("Setting stub app details..."):
             try:

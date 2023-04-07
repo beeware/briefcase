@@ -38,7 +38,8 @@ def test_package_formats(package_command):
 
 def test_verify(package_command):
     """Verifying on Windows creates a WiX wrapper."""
-    package_command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
+    # prime Command to _not_ need Windows SDK
+    package_command._windows_sdk_needed = False
 
     package_command.verify_tools()
 
@@ -48,7 +49,7 @@ def test_verify(package_command):
 
 def test_verify_with_signing(package_command):
     """Verifying on Windows creates WiX and WindowsSDK wrappers when code signing."""
-    package_command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
+    # prime Command to need Windows SDK
     package_command._windows_sdk_needed = True
 
     package_command.verify_tools()

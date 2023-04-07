@@ -2,7 +2,7 @@ import pytest
 
 from briefcase.integrations.windows_sdk import WindowsSDK
 
-from .test_WindowsSDK__verify import setup_winsdk_path
+from .test_WindowsSDK__verify import setup_winsdk_install
 
 
 @pytest.mark.parametrize(
@@ -18,11 +18,14 @@ from .test_WindowsSDK__verify import setup_winsdk_path
         (["86.0.1", "86.0.2", "86.0.3"], []),
     ],
 )
-def test_sdk_versions_from_bin(tmp_path, versions, expected):
+def test_sdk_versions_from_bin(tmp_path, versions, expected, monkeypatch):
     """Versions from SDK bin directory are properly found and sorted."""
-    WindowsSDK.SDK_VERSION = "85.0"
+    # Patch target SDK version
+    monkeypatch.setattr(WindowsSDK, "SDK_VERSION", "85.0")
+    monkeypatch.setattr(WindowsSDK, "SDK_MIN_VERSION", 0)
+
     sdk_path = tmp_path / "win_sdk"
     for version in versions:
-        setup_winsdk_path(sdk_path.parent, version)
+        setup_winsdk_install(sdk_path.parent, version)
 
     assert WindowsSDK._sdk_versions_from_bin(sdk_path) == expected
