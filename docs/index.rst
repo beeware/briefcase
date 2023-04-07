@@ -49,7 +49,7 @@ Briefcase is part of the `BeeWare suite`_. You can talk to the community through
 
 * The Briefcase `Github Discussions forum <https://github.com/beeware/briefcase/discussions>`__
 
-.. _BeeWare suite: http://beeware.org
+.. _BeeWare suite: https://beeware.org
 .. _Read The Docs: https://briefcase.readthedocs.io
 
 

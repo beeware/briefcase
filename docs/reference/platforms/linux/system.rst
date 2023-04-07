@@ -134,7 +134,7 @@ vendor and version information. Each distribution is identified by:
 * Codename (e.g., a version number, or ``jammy``).
 
 For example, a full configuration for ``myapp`` running on Ubuntu 22.04 (jammy)
-would consist of the following sectionss:
+would consist of the following sections:
 
 * ``tool.briefcase.app.myapp`` providing global configuration options
 * ``tool.briefcase.app.myapp.linux`` providing definitions common to *all* Linux
@@ -150,7 +150,7 @@ would consist of the following sectionss:
 
 These configurations will be merged at runtime; any version-specific definitions
 will override the generic vendor definitions; any vendor definitions will
-override the vendor-base definitions; and any venor-base definitions will
+override the vendor-base definitions; and any vendor-base definitions will
 override generic system package definitions.
 
 ``system_requires``

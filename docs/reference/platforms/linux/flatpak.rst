@@ -68,14 +68,14 @@ The following options can be added to the
 
 An alias to use when registering the Flatpak repository that will store the
 Flatpak runtime used to build the app. By default, Briefcase will use `Flathub
-<flathub.org>`__ as it's runtime repository, with an alias of ``flathub``.
+<https://flathub.org>`__ as its runtime repository, with an alias of ``flathub``.
 
 ``flatpak_runtime_repo_url``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The repository URL hosting the runtime and SDK package that the Flatpak will
-use. By default, Briefcase will use `Flathub <flathub.org>`__ as it's runtime
-repository.
+use. By default, Briefcase will use `Flathub <https://flathub.org>`__ as its
+runtime repository.
 
 ``flatpak_runtime``
 ~~~~~~~~~~~~~~~~~~~

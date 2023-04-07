@@ -312,7 +312,8 @@ perspective of the user, not a deep technical description or implementation
 detail. It should also be written in past tense (i.e., "Added an option to
 enable X" or "Fixed handling of Y").
 
-See `News Fragments <https://pypi.org/project/towncrier/#news-fragments>`__
+See `News Fragments
+<https://towncrier.readthedocs.io/en/stable/tutorial.html#creating-news-fragments>`__
 for more details on the types of news fragments you can add. You can also see
 existing examples of news fragments in the ``changes/`` folder.
 

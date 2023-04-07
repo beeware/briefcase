@@ -1,0 +1,1 @@
+Some minor docs markup errors were corrected and verification of docs was implemented in CI.

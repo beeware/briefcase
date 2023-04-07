@@ -126,7 +126,7 @@ Bugfixes
 * On macOS, Rosetta is now installed automatically if needed. (`#1000
   <https://github.com/beeware/briefcase/issues/1000>`__)
 * The way dependency versions are specified has been modified to make Briefcase
-  as accomodating as possible with end-user environments, but as stable as
+  as accommodating as possible with end-user environments, but as stable as
   possible for development environments. (`#1041
   <https://github.com/beeware/briefcase/issues/1041>`__)
 * To prevent console corruption, dynamic console elements (such as the Wait Bar)
@@ -452,7 +452,7 @@ Features
   device model name and unique ID e.g. a Pixel 3a shows up as ``Pixel 3a
   (adbDeviceId)``. (#433)
 * Android apps are now packaged in Android App Bundle format. This allows the
-  Play Store to dynmically build the smallest APK appropriate to a device
+  Play Store to dynamically build the smallest APK appropriate to a device
   installing an app. (#438)
 * PursuedPyBear is now included in the new project wizard. (#440)
 
@@ -512,7 +512,7 @@ Improved Documentation
 ----------------------
 
 * Documented that Windows MSI builds produce per-user installable MSI installers,
-  while still supporting per-maching installs via the CLI. (#382)
+  while still supporting per-machine installs via the CLI. (#382)
 * ``CONTRIBUTING.md`` has been updated to link to Briefcase-specific
   documentation. (#404)
 * Removed references to the ``build-system`` table in ``pyproject.toml``. (#410)
