@@ -73,8 +73,7 @@ def test_verify_with_signing(package_command):
                 "asdf",
                 "--file-digest",
                 "sha42",
-                "--cert-store-location",
-                "Local Machine",
+                "--use-local-machine-stores",
                 "--cert-store",
                 "mystore",
                 "--timestamp-url",
@@ -85,7 +84,29 @@ def test_verify_with_signing(package_command):
             dict(
                 identity="asdf",
                 file_digest="sha42",
-                cert_store_location="Local Machine",
+                use_local_machine=True,
+                cert_store="mystore",
+                timestamp_url="http://freetimestamps.com",
+                timestamp_digest="sha56",
+            ),
+            True,
+        ),
+        (
+            [
+                "-i",
+                "asdf",
+                "--file-digest",
+                "sha42",
+                "--cert-store",
+                "mystore",
+                "--timestamp-url",
+                "http://freetimestamps.com",
+                "--timestamp-digest",
+                "sha56",
+            ],
+            dict(
+                identity="asdf",
+                file_digest="sha42",
                 cert_store="mystore",
                 timestamp_url="http://freetimestamps.com",
                 timestamp_digest="sha56",
@@ -99,7 +120,7 @@ def test_parse_options(package_command, cli_args, signing_options, is_sdk_needed
     default_options = dict(
         identity=None,
         file_digest="sha256",
-        cert_store_location="Current User",
+        use_local_machine=False,
         cert_store="My",
         timestamp_url="http://timestamp.digicert.com",
         timestamp_digest="sha256",
@@ -187,15 +208,15 @@ def test_package_msi(package_command, first_app_config, tmp_path):
 
 
 @pytest.mark.parametrize(
-    "cert_store_location, run_args",
-    [("Current User", []), ("Local Machine", ["-sm"])],
+    "use_local_machine, additional_args",
+    [(False, []), (True, ["-sm"])],
 )
 def test_package_msi_with_codesigning(
     package_command,
     first_app_config,
     tmp_path,
-    cert_store_location,
-    run_args,
+    use_local_machine,
+    additional_args,
 ):
     """A Windows app can be packaged as an MSI and code signed."""
 
@@ -203,7 +224,7 @@ def test_package_msi_with_codesigning(
         first_app_config,
         identity="80ee4c3321122916f5637522451993c2a0a4a56a",
         file_digest="sha42",
-        cert_store_location=cert_store_location,
+        use_local_machine=use_local_machine,
         cert_store="mystore",
         timestamp_url="http://freetimestamps.com",
         timestamp_digest="sha56",
@@ -235,7 +256,7 @@ def test_package_msi_with_codesigning(
                 "-td",
                 "sha56",
             ]
-            + run_args
+            + additional_args
             + [
                 tmp_path
                 / "base_path"
@@ -334,7 +355,7 @@ def test_package_msi_with_codesigning(
                 "-td",
                 "sha56",
             ]
-            + run_args
+            + additional_args
             + [tmp_path / "base_path" / "dist" / "First App-0.0.1.msi"],
             check=True,
         ),
@@ -362,7 +383,6 @@ def test_package_msi_failed_sign_app(package_command, first_app_config, tmp_path
             first_app_config,
             identity="80ee4c3321122916f5637522451993c2a0a4a56a",
             file_digest="sha42",
-            cert_store_location="Current User",
             cert_store="mystore",
             timestamp_url="http://freetimestamps.com",
             timestamp_digest="sha56",
@@ -604,7 +624,6 @@ def test_package_msi_failed_signing_msi(package_command, first_app_config, tmp_p
             first_app_config,
             identity="80ee4c3321122916f5637522451993c2a0a4a56a",
             file_digest="sha42",
-            cert_store_location="Current User",
             cert_store="mystore",
             timestamp_url="http://freetimestamps.com",
             timestamp_digest="sha56",

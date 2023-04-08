@@ -7,7 +7,7 @@ import pytest
 
 import briefcase.platforms.windows.app
 from briefcase.console import Console, Log
-from briefcase.exceptions import BriefcaseCommandError, MissingToolError
+from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.rcedit import RCEdit
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.integrations.windows_sdk import WindowsSDK
@@ -41,7 +41,7 @@ def test_verify_without_windows_sdk(build_command, monkeypatch):
     """Verifying on Windows creates an RCEdit wrapper."""
     mock_sdk = mock.MagicMock(spec_set=WindowsSDK)
     monkeypatch.setattr(briefcase.platforms.windows.app, "WindowsSDK", mock_sdk)
-    mock_sdk.verify.side_effect = MissingToolError("Windows SDK")
+    mock_sdk.verify.side_effect = BriefcaseCommandError("Windows SDK")
 
     build_command.verify_tools()
 
@@ -161,7 +161,8 @@ def test_build_app_without_any_digital_signatures(
     first_app_config,
     tmp_path,
 ):
-    """If the app binary is not already signed, then attempt to remove signatures fails but app build succeeds."""
+    """If the app binary is not already signed, then attempt to remove signatures fails
+    but app build succeeds."""
     build_command.tools.windows_sdk = windows_sdk
 
     build_command.tools.subprocess.check_output.side_effect = subprocess.CalledProcessError(

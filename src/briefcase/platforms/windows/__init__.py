@@ -3,7 +3,7 @@ import re
 import subprocess
 import uuid
 from pathlib import Path
-from typing import List, Literal
+from typing import List
 
 from briefcase.commands import CreateCommand, PackageCommand, RunCommand
 from briefcase.config import AppConfig, parsed_version
@@ -139,10 +139,10 @@ class WindowsPackageCommand(PackageCommand):
             required=False,
         )
         parser.add_argument(
-            "--cert-store-location",
-            help="Location of stores containing the certificate; defaults to Current User.",
-            choices=["Current User", "Local Machine"],
-            default="Current User",
+            "--use-local-machine-stores",
+            help="Use the certificate stores for the Local Machine instead of the Current User.",
+            action="store_true",
+            dest="use_local_machine",
             required=False,
         )
         parser.add_argument(
@@ -179,7 +179,7 @@ class WindowsPackageCommand(PackageCommand):
         filepath: Path,
         identity: str,
         file_digest: str,
-        cert_store_location: Literal["Current User", "Local Machine"],
+        use_local_machine: bool,
         cert_store: str,
         timestamp_url: str,
         timestamp_digest: str,
@@ -210,7 +210,8 @@ class WindowsPackageCommand(PackageCommand):
             timestamp_digest,
         ]
 
-        if cert_store_location == "Local Machine":
+        if use_local_machine:
+            # Look for cert in Local Machine instead of Current User
             sign_command.append("-sm")
 
         # Filepath to sign must come last
@@ -227,7 +228,7 @@ class WindowsPackageCommand(PackageCommand):
         sign_app: bool = True,
         identity: str = None,
         file_digest: str = None,
-        cert_store_location: str = None,
+        use_local_machine: bool = False,
         cert_store: str = None,
         timestamp_url: str = None,
         timestamp_digest: str = None,
@@ -242,8 +243,8 @@ class WindowsPackageCommand(PackageCommand):
         :param sign_app: Should the application be signed? Default: ``True``
         :param identity: SHA-1 thumbprint of the certificate to use for code signing.
         :param file_digest: File hashing algorithm for code signing.
-        :param cert_store_location: Current User or Local Machine for whether the cert
-            is stored for the user or the machine.
+        :param use_local_machine: True to use cert stores for the Local Machine instead
+            of the Current User; default to False for Current User.
         :param cert_store: Certificate store within Current User or Local Machine to
             search for the certificate within.
         :param timestamp_url: Timestamp authority server to use in code signing.
@@ -258,7 +259,7 @@ class WindowsPackageCommand(PackageCommand):
             sign_options = dict(
                 identity=identity,
                 file_digest=file_digest,
-                cert_store_location=cert_store_location,
+                use_local_machine=use_local_machine,
                 cert_store=cert_store,
                 timestamp_url=timestamp_url,
                 timestamp_digest=timestamp_digest,
