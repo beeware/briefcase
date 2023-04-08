@@ -4,8 +4,6 @@
 Tutorial
 ========
 
-https://notarealdomain.com
-
 Briefcase is a packaging tool - but first you need something to package. The
 best way to learn about Briefcase is to see it working with the rest of the
 BeeWare suite of tools.

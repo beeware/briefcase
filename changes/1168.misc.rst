@@ -1,1 +1,1 @@
-Some minor docs markup errors were corrected and verification of docs was implemented in CI.
+New ``tox`` environments were added for documentation linting and rebuilding as well as running linting prior to RTD CI builds.

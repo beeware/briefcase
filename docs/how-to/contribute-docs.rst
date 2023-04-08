@@ -38,9 +38,73 @@ To build the documentation locally, :ref:`set up a development environment
 
   .. group-tab:: Windows
 
-    .. code-block:: bash
+    .. code-block:: powershell
 
       C:\...>tox -e docs
 
-The output of the file should be in the ``build/sphinx/html`` folder. If there
+The output of the file should be in the ``docs/_build/html`` folder. If there
 are any markup problems, they'll raise an error.
+
+Documentation linting
+---------------------
+
+Before committing and pushing documentation updates, run linting for the
+documentation:
+
+.. tabs::
+
+  .. group-tab:: macOS
+
+    .. code-block:: bash
+
+      (venv) $ tox -e docs-lint
+
+  .. group-tab:: Linux
+
+    .. code-block:: bash
+
+      (venv) $ tox -e docs-lint
+
+  .. group-tab:: Windows
+
+    .. code-block:: powershell
+
+      C:\...>tox -e docs-lint
+
+This will validate the documentation does not contain:
+
+* invalid syntax and markup
+* dead hyperlinks
+* misspelled words
+
+If a valid spelling of a word is identified as misspelled, then add the word to
+the list in ``docs/spelling_wordlist``. This will add the word to the
+spellchecker's dictionary.
+
+Rebuilding all documentation
+----------------------------
+
+To force a rebuild for all of the documentation:
+
+.. tabs::
+
+  .. group-tab:: macOS
+
+    .. code-block:: bash
+
+      (venv) $ tox -e docs-all
+
+  .. group-tab:: Linux
+
+    .. code-block:: bash
+
+      (venv) $ tox -e docs-all
+
+  .. group-tab:: Windows
+
+    .. code-block:: powershell
+
+      C:\...>tox -e docs-all
+
+The documentation should be fully rebuilt in the ``docs/_build/html`` folder.
+If there are any markup problems, they'll raise an error.
