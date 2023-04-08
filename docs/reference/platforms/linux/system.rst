@@ -130,7 +130,7 @@ vendor and version information. Each distribution is identified by:
 * Vendor base (e.g., ``debian``, ``rhel``, ``arch``)
 * Vendor (e.g, ``debian``, ``ubuntu``, ``rhel``, ``fedora``). The vendor
   identifier *may* be the same as the vendor base (e.g, in the case of Debian or
-  Redhat)
+  Red Hat)
 * Codename (e.g., a version number, or ``jammy``).
 
 For example, a full configuration for ``myapp`` running on Ubuntu 22.04 (jammy)

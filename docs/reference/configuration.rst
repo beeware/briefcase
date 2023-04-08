@@ -347,7 +347,7 @@ setting is ignored.
 ``splash_background_color``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A hexidecimal RGB color value (e.g., ``#6495ED``) to use as the background
+A hexadecimal RGB color value (e.g., ``#6495ED``) to use as the background
 color for splash screens.
 
 If the platform output format does not use a splash screen, this setting is

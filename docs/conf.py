@@ -90,7 +90,6 @@ pygments_style = "sphinx"
 # modindex_common_prefix = []
 
 # -- Options for link checking -------------------------------------------------
-linkcheck_timeout = 3
 linkcheck_anchors_ignore = [
     # Ignore anchor detection/verification for Apple help links
     # e.g.: https://help.apple.com/xcode/mac/current/#/dev97211aeac

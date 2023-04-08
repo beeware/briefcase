@@ -12,7 +12,7 @@ build:
     python: "3"
   jobs:
     pre_build:
-      - python -m sphinx -v -W --keep-going -E -T -a -b linkcheck docs/ _build/linkcheck
+      - tox -e docs-lint
 
 # Build documentation in the docs/ directory with Sphinx
 sphinx:
@@ -30,4 +30,5 @@ python:
   - method: pip
     path: .
     extra_requirements:
-    - docs
+      - dev
+      - docs

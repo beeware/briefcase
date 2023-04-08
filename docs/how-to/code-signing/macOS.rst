@@ -32,7 +32,7 @@ be guided through in this tutorial:
 Enrolling in the Apple Developer program
 ----------------------------------------
 
-You can enrol in the Apple Developer program either as an individual, or as an
+You can enroll in the Apple Developer program either as an individual, or as an
 organization. In both cases, you'll have to follow the instructions on the
 `Apple Developer website <https://developer.apple.com/programs/enroll/>`__.
 

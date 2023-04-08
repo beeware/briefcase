@@ -245,7 +245,7 @@ Bugfixes
   included when an app runs. (#662)
 * Windows MSI installers now install in ``Program Files``, rather than ``Program
   Files (x86)``. (#688)
-* Linuxdeploy plugiuns can now be used when building Linux AppImages; this
+* Linuxdeploy plugins can now be used when building Linux AppImages; this
   resolves many issues with GTK app deployment. (#756)
 * Collision protection has been added to custom support packages that have the
   same name, but are served by different URLs. (#797)
@@ -346,7 +346,7 @@ Bugfixes
 --------
 
 * Existing app packages are now cleared before reinstalling dependencies. (#644)
-* Added binary patcher for linuxtools AppImage to increase compatibility. (#667)
+* Added binary patcher for linuxdeploy AppImage to increase compatibility. (#667)
 
 
 Improved Documentation
@@ -534,7 +534,7 @@ Features
 0.2.10
 ======
 
-* Improved pre-detection of XCode and related tools
+* Improved pre-detection of Xcode and related tools
 * Improved error handling when starting external tools
 * Fixed iOS simulator integration
 
@@ -543,7 +543,7 @@ Features
 
 * Updated mechanism for starting the iOS simulator
 * Added support for environment markers in ``install_requires``
-* Improved error handling when Wix isn't found
+* Improved error handling when WiX isn't found
 
 0.2.8
 =====
@@ -597,7 +597,7 @@ Features
 =====
 
  * Added ``-s`` option to launch projects
- * Switch to using AWS S3 resources rather than Github Files.
+ * Switch to using AWS S3 resources rather than GitHub Files.
 
 0.1.9
 =====
@@ -607,7 +607,7 @@ Features
 0.1.8
 =====
 
- * Modified template rollout process to avoid API limits on Github.
+ * Modified template rollout process to avoid API limits on GitHub.
 
 0.1.7
 =====

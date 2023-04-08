@@ -80,7 +80,7 @@ However, the following pointers may help port other values.
   will create ``myapp.dist-info`` for your application (using your app name
   instead of ``myapp``).
 
-* Briefcase v0.3 configuration files are heirarchical. ``[tool.briefcase]``
+* Briefcase v0.3 configuration files are hierarchical. ``[tool.briefcase]``
   describes configuration arguments for the entire project;
   ``[tool.briefcase.app.myapp]`` describes configuration arguments for the
   application named ``myapp``; ``[tool.briefcase.app.myapp.macOS]`` describes

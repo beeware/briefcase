@@ -2,7 +2,7 @@
 Windows App
 ===========
 
-A Windows app is a stub binary, allow with a collection of folders taht contain
+A Windows app is a stub binary, allow with a collection of folders that contain
 the Python code for the app and the Python runtime libraries.
 
 Briefcase uses the `WiX Toolset <https://wixtoolset.org/>`__ to build an MSI
