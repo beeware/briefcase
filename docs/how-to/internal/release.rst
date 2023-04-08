@@ -69,12 +69,12 @@ The procedure for cutting a new release is as follows:
       GitHub workflow instead.
    b. The test apps fail to build. This is likely because you forgot to branch
       one (or more) of the templates mentioned in Step 3. If this happens, you
-      can correct the missing template, and re-run the action through the Github
+      can correct the missing template, and re-run the action through the GitHub
       Actions GUI.
    c. Something else fails in the build process. If the problem can be fixed
       without a code change to the Briefcase repository (e.g., a transient
       problem with build machines not being available), you can re-run the
-      action that failed through the Github Actions GUI. If the fix requires a
+      action that failed through the GitHub Actions GUI. If the fix requires a
       code change, delete the old tag, make the code change, and re-tag the
       release.
 

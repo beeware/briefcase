@@ -5,9 +5,9 @@ Accessing Briefcase packaging metadata at runtime
 =================================================
 
 When Briefcase installs your app, it adds a `PEP566
-<https://www.python.org/dev/peps/pep-0566/>`_ metadata file containing
-information about your app, and Briefcase itself. You can retrieve this
-information at runtime using the `Python builtin library 'importlib.metadata'
+<https://peps.python.org/pep-0566/>`__ metadata file containing information
+about your app, and Briefcase itself. You can retrieve this information at
+runtime using the `Python builtin library 'importlib.metadata'
 <https://docs.python.org/3/library/importlib.metadata.html>`__.
 ``importlib.metadata`` was added in Python 3.8; however, it has been backported
 and published on PyPI as `'importlib_metadata'
@@ -31,11 +31,11 @@ The ``metadata`` returned by this code will be a dictionary-like object that
 contains the following identifying keys:
 
   * **Metadata-Version** - The syntax version of the metadata file itself (as
-    defined in `PEP566 <https://www.python.org/dev/peps/pep-0566/>`_).
+    defined in `PEP566 <https://peps.python.org/pep-0566/>`__).
 
   * **Briefcase-Version** - The version of Briefcase used to package the app.
     The existence of this key in app metadata can be used to identify if your
-    application code is running in a Briecase container; it will only exist if
+    application code is running in a Briefcase container; it will only exist if
     the app has been packaged by Briefcase.
 
 It will also have the following keys, derived from your application's

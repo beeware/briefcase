@@ -42,7 +42,7 @@ and device display densities:
   * 1280px (xxxhdpi)
 
 * ``large`` (large format phones, or phone-tablet "phablet" hybrids; up to
-  720 density-indpendent pixels):
+  720 density-independent pixels):
 
   * 480px
   * 720px (hdpi)
@@ -57,7 +57,7 @@ and device display densities:
   * 2880px (xxxhdpi)
 
 Consult `the Android documentation
-<https://developer.android.com/training/multiscreen/screensizes>`__
+<https://developer.android.com/guide/topics/large-screens/support-different-screen-sizes>`__
 for more details on devices, sizes, and display densities. `This list of common
 devices with their sizes and DPI <https://material.io/resources/devices/>`__
 may also be helpful.

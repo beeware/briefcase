@@ -89,6 +89,12 @@ pygments_style = "sphinx"
 # A list of ignored prefixes for module index sorting.
 # modindex_common_prefix = []
 
+# -- Options for link checking -------------------------------------------------
+linkcheck_anchors_ignore = [
+    # Ignore anchor detection/verification for Apple help links
+    # e.g.: https://help.apple.com/xcode/mac/current/#/dev97211aeac
+    "^/dev[0-9a-f]{9}$"
+]
 
 # -- Options for HTML output ---------------------------------------------------
 

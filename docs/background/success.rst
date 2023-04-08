@@ -3,7 +3,7 @@ Success Stories
 
 Want to see examples of Briefcase in use? Here's some:
 
-* `Travel Tips <https://itunes.apple.com/au/app/travel-tips/id1336372310>`_ is
+* `Travel Tips <https://apps.apple.com/au/app/travel-tips/id1336372310>`_ is
   an app in the iOS App Store that was packaged for distribution using
   Briefcase.
 

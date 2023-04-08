@@ -5,12 +5,12 @@ Briefcase
 Briefcase is a tool for converting a Python project into a standalone
 native application. It supports producing binaries for:
 
-* macOS, as a standalone .app;
-* Windows, as an MSI installer;
-* Linux, as an AppImage;
-* iOS, as an XCode project; and
-* Android, as a Gradle project.
-* the Web, as a static web site using PyScript for client-side Python.
+* macOS, as a standalone .app
+* Windows, as an MSI installer
+* Linux, as an AppImage
+* iOS, as an Xcode project
+* Android, as a Gradle project
+* the Web, as a static web site using PyScript for client-side Python
 
 It is also extensible, allowing for additional platforms and installation
 formats to be produced.
@@ -49,7 +49,7 @@ Briefcase is part of the `BeeWare suite`_. You can talk to the community through
 
 * The Briefcase `Github Discussions forum <https://github.com/beeware/briefcase/discussions>`__
 
-.. _BeeWare suite: http://beeware.org
+.. _BeeWare suite: https://beeware.org
 .. _Read The Docs: https://briefcase.readthedocs.io
 
 

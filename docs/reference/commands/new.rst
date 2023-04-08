@@ -24,7 +24,7 @@ A local directory path or URL to use as a cookiecutter template for the new
 project.
 
 ``--template-branch <branch>``
------------------------------
+------------------------------
 
 The branch of the cookiecutter template repo to use for the new project. If not
 specified, Briefcase will attempt to use a template branch matching the version

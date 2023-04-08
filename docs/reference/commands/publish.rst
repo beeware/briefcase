@@ -23,7 +23,7 @@ To publish the application artefacts for a different platform::
 
     $ briefcase publish <platform>
 
-To publish the application artefacts for a specifif output format::
+To publish the application artefacts for a specific output format::
 
     $ briefcase publish <platform> <output format>
 

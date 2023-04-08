@@ -2,9 +2,9 @@
 Project configuration options
 =============================
 
-Briefcase is a `PEP518 <https://www.python.org/dev/peps/pep-0518/>`__-compliant
-build tool. It uses a ``pyproject.toml`` file, in the root directory of your
-project, to provide build instructions for the packaged file.
+Briefcase is a `PEP518 <https://peps.python.org/pep-0518/>`__-compliant build
+tool. It uses a ``pyproject.toml`` file, in the root directory of your project,
+to provide build instructions for the packaged file.
 
 If you have an application called "My App", with source code in the ``src/myapp``
 directory, the simplest possible ``pyproject.toml`` Briefcase configuration
@@ -63,11 +63,11 @@ or are are common to all applications in this repository.
 Configuration options for a specific application.
 
 ``<app name>`` must adhere to a valid Python distribution name as specified in
-`PEP508 <https://www.python.org/dev/peps/pep-0508/#names>`__. The app name must
-also *not* be a reserved word in Python, Java or JavaScript (i.e., app names
-like ``switch`` or ``pass`` would not be valid); and it may not include any of
-the `filenames prohibited by Windows
-<https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file#naming-conventions>`__
+`PEP508 <https://peps.python.org/pep-0508/#names>`__. The app name must also
+*not* be a reserved word in Python, Java or JavaScript (i.e., app names like
+``switch`` or ``pass`` would not be valid); and it may not include any of the
+`filenames prohibited by Windows
+<https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file#naming-conventions>`__
 (i.e., ``CON``, ``PRN``, or ``LPT1``).
 
 ``[tool.briefcase.app.<app name>.<platform>]``
@@ -116,8 +116,7 @@ as the formal name of the solitary packaged app.
 ``version``
 ~~~~~~~~~~~
 
-A `PEP440 <https://www.python.org/dev/peps/pep-0440/>`__ compliant version
-string.
+A `PEP440 <https://peps.python.org/pep-0440/>`__ compliant version string.
 
 Examples of valid version strings:
 
@@ -348,7 +347,7 @@ setting is ignored.
 ``splash_background_color``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A hexidecimal RGB color value (e.g., ``#6495ED``) to use as the background
+A hexadecimal RGB color value (e.g., ``#6495ED``) to use as the background
 color for splash screens.
 
 If the platform output format does not use a splash screen, this setting is
@@ -467,7 +466,7 @@ A short, one-line description of the document format.
 A path, relative to the directory where the ``pyproject.toml`` file is located,
 to an image for an icon to register for use with documents of this type. The
 path should *exclude* the extension; Briefcase will append a platform
-appropriate extension when configuring the applcation. For example, an icon
+appropriate extension when configuring the application. For example, an icon
 specification of::
 
     icon = "resources/icon"
