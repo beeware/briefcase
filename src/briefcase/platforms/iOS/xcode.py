@@ -541,10 +541,10 @@ class iOSXcodePublishCommand(iOSXcodeMixin, PublishCommand):
 
 
 # Declare the briefcase command bindings
-create = iOSXcodeCreateCommand  # noqa
-update = iOSXcodeUpdateCommand  # noqa
-open = iOSXcodeOpenCommand  # noqa
-build = iOSXcodeBuildCommand  # noqa
-run = iOSXcodeRunCommand  # noqa
-package = iOSXcodePackageCommand  # noqa
-publish = iOSXcodePublishCommand  # noqa
+create = iOSXcodeCreateCommand
+update = iOSXcodeUpdateCommand
+open = iOSXcodeOpenCommand
+build = iOSXcodeBuildCommand
+run = iOSXcodeRunCommand
+package = iOSXcodePackageCommand
+publish = iOSXcodePublishCommand

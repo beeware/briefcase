@@ -11,7 +11,11 @@ from briefcase.commands import (
     UpdateCommand,
 )
 from briefcase.config import AppConfig
-from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
+from briefcase.exceptions import (
+    BriefcaseCommandError,
+    BriefcaseConfigError,
+    UnsupportedHostError,
+)
 from briefcase.integrations.docker import Docker, DockerAppContext
 from briefcase.integrations.linuxdeploy import LinuxDeploy
 from briefcase.integrations.subprocess import NativeAppContext
@@ -69,15 +73,33 @@ class LinuxAppImagePassiveMixin(LinuxMixin):
         super().clone_options(command)
         self.use_docker = command.use_docker
 
+    def finalize_app_config(self, app: AppConfig):
+        """If we're *not* using Docker, warn the user about portability."""
+        if not self.use_docker:
+            self.logger.warning(
+                """\
+*************************************************************************
+** WARNING: Building a Local AppImage!                                 **
+*************************************************************************
+
+    You are building an AppImage outside Docker. The resulting AppImage
+    will work, but will not be as portable as a Docker-based AppImage.
+    Any `manylinux` setting will be ignored.
+
+*************************************************************************
+"""
+            )
+
 
 class LinuxAppImageMostlyPassiveMixin(LinuxAppImagePassiveMixin):
     # The Mostly Passive mixin verifies that Docker exists and can be run, but
     # doesn't require that we're actually in a Linux environment.
     def docker_image_tag(self, app):
         """The Docker image tag for an app."""
-        return (
-            f"briefcase/{app.bundle}.{app.app_name.lower()}:py{self.python_version_tag}"
-        )
+        try:
+            return f"briefcase/{app.bundle}.{app.app_name.lower()}:{app.manylinux}-appimage"
+        except AttributeError:
+            return f"briefcase/{app.bundle}.{app.app_name.lower()}:appimage"
 
     def verify_tools(self):
         """If we're using docker, verify that it is available."""
@@ -120,21 +142,32 @@ class LinuxAppImageMixin(LinuxAppImageMostlyPassiveMixin):
 
 
 class LinuxAppImageCreateCommand(
-    LinuxAppImageMixin, LocalRequirementsMixin, CreateCommand
+    LinuxAppImageMixin,
+    LocalRequirementsMixin,
+    CreateCommand,
 ):
     description = "Create and populate a Linux AppImage."
 
-    def support_package_filename(self, support_revision):
-        """The query arguments to use in a support package query request."""
-        return f"Python-{self.python_version_tag}-linux-{self.tools.host_arch}-support.b{support_revision}.tar.gz"
+    def output_format_template_context(self, app: AppConfig):
+        context = super().output_format_template_context(app)
+        # Add the manylinux tag to the template context.
+        try:
+            tag = getattr(app, "manylinux_image_tag", "latest")
+            context["manylinux_image"] = f"{app.manylinux}_{self.tools.host_arch}:{tag}"
+            if app.manylinux in {"manylinux1", "manylinux2010", "manylinux2014"}:
+                context["vendor_base"] = "centos"
+            elif app.manylinux == "manylinux_2_24":
+                context["vendor_base"] = "debian"
+            elif app.manylinux.startswith("manylinux_2_"):
+                context["vendor_base"] = "almalinux"
+            else:
+                raise BriefcaseConfigError(
+                    f"""Unknown manylinux tag {app.manylinux!r}"""
+                )
+        except AttributeError:
+            pass
 
-    def support_package_url(self, support_revision):
-        """The URL of the support package to use for apps of this type."""
-        return (
-            "https://briefcase-support.s3.amazonaws.com/"
-            f"python/{self.python_version_tag}/{self.platform}/{self.tools.host_arch}/"
-            + self.support_package_filename(support_revision)
-        )
+        return context
 
 
 class LinuxAppImageUpdateCommand(LinuxAppImageCreateCommand, UpdateCommand):
@@ -311,10 +344,10 @@ class LinuxAppImagePublishCommand(LinuxAppImageMixin, PublishCommand):
 
 
 # Declare the briefcase command bindings
-create = LinuxAppImageCreateCommand  # noqa
-update = LinuxAppImageUpdateCommand  # noqa
-open = LinuxAppImageOpenCommand  # noqa
-build = LinuxAppImageBuildCommand  # noqa
-run = LinuxAppImageRunCommand  # noqa
-package = LinuxAppImagePackageCommand  # noqa
-publish = LinuxAppImagePublishCommand  # noqa
+create = LinuxAppImageCreateCommand
+update = LinuxAppImageUpdateCommand
+open = LinuxAppImageOpenCommand
+build = LinuxAppImageBuildCommand
+run = LinuxAppImageRunCommand
+package = LinuxAppImagePackageCommand
+publish = LinuxAppImagePublishCommand

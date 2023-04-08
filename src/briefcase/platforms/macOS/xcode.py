@@ -94,10 +94,10 @@ class macOSXcodePublishCommand(macOSXcodeMixin, PublishCommand):
 
 
 # Declare the briefcase command bindings
-create = macOSXcodeCreateCommand  # noqa
-update = macOSXcodeUpdateCommand  # noqa
-open = macOSXcodeOpenCommand  # noqa
-build = macOSXcodeBuildCommand  # noqa
-run = macOSXcodeRunCommand  # noqa
-package = macOSXcodePackageCommand  # noqa
-publish = macOSXcodePublishCommand  # noqa
+create = macOSXcodeCreateCommand
+update = macOSXcodeUpdateCommand
+open = macOSXcodeOpenCommand
+build = macOSXcodeBuildCommand
+run = macOSXcodeRunCommand
+package = macOSXcodePackageCommand
+publish = macOSXcodePublishCommand

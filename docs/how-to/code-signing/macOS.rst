@@ -32,7 +32,7 @@ be guided through in this tutorial:
 Enrolling in the Apple Developer program
 ----------------------------------------
 
-You can enrol in the Apple Developer program either as an individual, or as an
+You can enroll in the Apple Developer program either as an individual, or as an
 organization. In both cases, you'll have to follow the instructions on the
 `Apple Developer website <https://developer.apple.com/programs/enroll/>`__.
 
@@ -147,7 +147,7 @@ The certificate should be of the format ``example.cer``. Once you download it,
 double-click to install it in your Keychain Access.
 
 If you now open your Keychain, selected the ``login`` keychain on
-the left-hand side, and selec the ``My Certificates`` tab, you should see a
+the left-hand side, and select the ``My Certificates`` tab, you should see a
 certificate with the title "Developer ID Application: <your name>".
 
 Click on the certificate and make sure you see a note that reads ``This

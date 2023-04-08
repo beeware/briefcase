@@ -95,27 +95,6 @@ class LinuxFlatpakMixin(LinuxMixin):
 class LinuxFlatpakCreateCommand(LinuxFlatpakMixin, CreateCommand):
     description = "Create and populate a Linux Flatpak."
 
-    def support_package_url(self, support_revision):
-        """The URL of the support package to use for apps of this type.
-
-        Flatpak uses the original CPython sources, and compiles them in the flatpak
-        sandbox.
-        """
-        base_version = ".".join(str(m) for m in self.tools.sys.version_info[:3])
-        full_version = self.tools.platform.python_version()
-        return f"https://www.python.org/ftp/python/{base_version}/Python-{full_version}.tgz"
-
-    def support_revision(self, app: AppConfig):
-        """The support package revision that the template requires.
-
-        Flatpak uses the original CPython sources, so a support revision
-        isn't needed.
-
-        :param app: The config object for the app
-        :return: None; value should be ignored.
-        """
-        return None
-
     def output_format_template_context(self, app: AppConfig):
         """Add flatpak runtime/SDK details to the app template."""
         return {
@@ -123,19 +102,6 @@ class LinuxFlatpakCreateCommand(LinuxFlatpakMixin, CreateCommand):
             "flatpak_runtime_version": self.flatpak_runtime_version(app),
             "flatpak_sdk": self.flatpak_sdk(app),
         }
-
-    def install_app_support_package(self, app: AppConfig):
-        """Install the support package.
-
-        Flatpak doesn't unpack the support package; it copies the tarball as-is into the
-        source tree.
-        """
-        support_file_path = self._download_support_package(app)
-        with self.input.wait_bar("Installing support file..."):
-            self.tools.shutil.copy(
-                support_file_path,
-                self.bundle_path(app) / support_file_path.name,
-            )
 
 
 class LinuxFlatpakUpdateCommand(LinuxFlatpakCreateCommand, UpdateCommand):
@@ -253,10 +219,10 @@ class LinuxFlatpakPublishCommand(LinuxFlatpakMixin, PublishCommand):
 
 
 # Declare the briefcase command bindings
-create = LinuxFlatpakCreateCommand  # noqa
-update = LinuxFlatpakUpdateCommand  # noqa
-open = LinuxFlatpakOpenCommand  # noqa
-build = LinuxFlatpakBuildCommand  # noqa
-run = LinuxFlatpakRunCommand  # noqa
-package = LinuxFlatpakPackageCommand  # noqa
-publish = LinuxFlatpakPublishCommand  # noqa
+create = LinuxFlatpakCreateCommand
+update = LinuxFlatpakUpdateCommand
+open = LinuxFlatpakOpenCommand
+build = LinuxFlatpakBuildCommand
+run = LinuxFlatpakRunCommand
+package = LinuxFlatpakPackageCommand
+publish = LinuxFlatpakPublishCommand

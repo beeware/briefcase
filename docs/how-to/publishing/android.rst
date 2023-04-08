@@ -245,7 +245,7 @@ and 360 degree stereoscopic images. See also `Google's advice on graphic assets.
 
 Once you've completed the store listing, you'll need to fill out a range of
 other details about your app, including the category where it should appear in
-the Play Store, pricing details, details about the app's content and it's
+the Play Store, pricing details, details about the app's content and its
 suitability for children, and contact details for you as a developer. The
 navigation pane (typically on the left side of the screen) contains grayed out
 check marks covering all the sections with required details. Visit each of
@@ -271,7 +271,7 @@ If prompted to enable App Signing by Google Play, click **Continue**.
 In an earlier section of this tutorial, we used ``briefcase publish`` and
 ``jarsigner`` to create a signed Android App Bundle file. It is stored at
 ``android/Hello World/app/build/outputs/bundle/release/app-release.aab``
-(subtituting the name of your own app as necessary). Upload this file to the
+(substituting the name of your own app as necessary). Upload this file to the
 Google Play console within **Browse Files** under **Android App Bundles and
 APKs to add.**
 

@@ -50,10 +50,21 @@ def test_distribution_path(create_command, first_app_config, tmp_path):
     )
 
 
-def test_docker_image_tag(create_command, first_app_config, tmp_path):
+@pytest.mark.parametrize(
+    "manylinux, tag",
+    [
+        (None, "appimage"),
+        ("manylinux1", "manylinux1-appimage"),
+        ("manylinux_2_28", "manylinux_2_28-appimage"),
+    ],
+)
+def test_docker_image_tag(create_command, first_app_config, manylinux, tag):
+    if manylinux:
+        first_app_config.manylinux = manylinux
+
     image_tag = create_command.docker_image_tag(first_app_config)
 
-    assert image_tag == f"briefcase/com.example.first-app:py3.{sys.version_info.minor}"
+    assert image_tag == f"briefcase/com.example.first-app:{tag}"
 
 
 def test_docker_image_tag_uppercase_name(
@@ -61,7 +72,7 @@ def test_docker_image_tag_uppercase_name(
 ):
     image_tag = create_command.docker_image_tag(uppercase_app_config)
 
-    assert image_tag == f"briefcase/com.example.first-app:py3.{sys.version_info.minor}"
+    assert image_tag == "briefcase/com.example.first-app:appimage"
 
 
 def test_verify_linux_no_docker(create_command, tmp_path, first_app_config):
@@ -97,7 +108,7 @@ def test_verify_linux_docker(create_command, tmp_path, first_app_config, monkeyp
     DockerAppContext.verify.assert_called_with(
         tools=create_command.tools,
         app=first_app_config,
-        image_tag=f"briefcase/com.example.first-app:py3.{sys.version_info.minor}",
+        image_tag="briefcase/com.example.first-app:appimage",
         dockerfile_path=tmp_path
         / "base_path"
         / "build"
@@ -135,7 +146,7 @@ def test_verify_non_linux_docker(create_command, tmp_path, first_app_config):
     DockerAppContext.verify.assert_called_with(
         tools=create_command.tools,
         app=first_app_config,
-        image_tag=f"briefcase/com.example.first-app:py3.{sys.version_info.minor}",
+        image_tag="briefcase/com.example.first-app:appimage",
         dockerfile_path=tmp_path
         / "base_path"
         / "build"

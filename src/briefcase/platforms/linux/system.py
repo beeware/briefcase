@@ -1122,10 +1122,10 @@ class LinuxSystemPublishCommand(LinuxSystemMixin, PublishCommand):
 
 
 # Declare the briefcase command bindings
-create = LinuxSystemCreateCommand  # noqa
-update = LinuxSystemUpdateCommand  # noqa
-open = LinuxSystemOpenCommand  # noqa
-build = LinuxSystemBuildCommand  # noqa
-run = LinuxSystemRunCommand  # noqa
-package = LinuxSystemPackageCommand  # noqa
-publish = LinuxSystemPublishCommand  # noqa
+create = LinuxSystemCreateCommand
+update = LinuxSystemUpdateCommand
+open = LinuxSystemOpenCommand
+build = LinuxSystemBuildCommand
+run = LinuxSystemRunCommand
+package = LinuxSystemPackageCommand
+publish = LinuxSystemPublishCommand

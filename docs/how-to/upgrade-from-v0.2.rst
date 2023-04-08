@@ -8,7 +8,7 @@ Briefcase using ``python setup.py <platform>``.
 
 Briefcase v0.3 represents a significant change in the development of Briefcase.
 Briefcase is now a `PEP518-compliant build tool
-<https://www.python.org/dev/peps/pep-0518/>`__. It uses ``pyproject.toml`` for
+<https://peps.python.org/pep-0518/>`__. It uses ``pyproject.toml`` for
 configuration, and is invoked using a standalone ``briefcase`` command. This
 change gives significantly improved flexibility in configuring Briefcase apps,
 and much better control over the development process.
@@ -80,7 +80,7 @@ However, the following pointers may help port other values.
   will create ``myapp.dist-info`` for your application (using your app name
   instead of ``myapp``).
 
-* Briefcase v0.3 configuration files are heirarchical. ``[tool.briefcase]``
+* Briefcase v0.3 configuration files are hierarchical. ``[tool.briefcase]``
   describes configuration arguments for the entire project;
   ``[tool.briefcase.app.myapp]`` describes configuration arguments for the
   application named ``myapp``; ``[tool.briefcase.app.myapp.macOS]`` describes
@@ -118,7 +118,7 @@ In Briefcase v0.2, there was only one entry point: ``python setup.py
 <platform>``. This would generate a complete output artefact; and, if you
 provided the ``-s`` argument, would also start the app.
 
-Briecase v0.3 uses it's own ``briefcase`` entry point, with :doc:`subcommands
+Briefcase v0.3 uses its own ``briefcase`` entry point, with :doc:`subcommands
 </reference/commands/index>` to perform specific functions:
 
  * ``briefcase new`` - Bootstrap a new project (generating a ``pyproject.toml``
@@ -176,8 +176,8 @@ you would run::
     $ briefcase package macOS app
 
 In the future, we hope to add other output formats for other platforms - `Snap
-<https://snapcraft.io/>`__ and `FlatPak <https://flatpak.org/>`__ on Linux;
+<https://snapcraft.io/>`__ and `FlatPak <https://flatpak.org>`__ on Linux;
 `NSIS <https://nsis.sourceforge.io/>`__ installers on Windows, and possibly
 others. If you're interested in adding support for one of these platforms,
-please `get in touch <https://gitter.im/beeware/general>`__ (or, submit a
-pull request!)
+please `get in touch <https://beeware.org/bee/chat/>`__ (or, submit a pull
+request!)

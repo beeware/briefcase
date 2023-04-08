@@ -62,8 +62,8 @@ app. If undefined the installer will ask the user for their preference.
 ------------------
 
 Python and Briefcase allow any valid `PEP440 version number
-<https://www.python.org/dev/peps/pep-0440/>`_ as a ``version`` specifier.
-However, MSI installers require a strict integer triple version number. Many
+<https://peps.python.org/pep-0440/>`_ as a ``version`` specifier. However, MSI
+installers require a strict integer triple version number. Many
 PEP440-compliant version numbers, such as "1.2", "1.2.3b3", and "1.2.3.4", are
 invalid for MSI installers.
 

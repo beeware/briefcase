@@ -410,10 +410,10 @@ class GradlePublishCommand(GradleMixin, PublishCommand):
 
 
 # Declare the briefcase command bindings
-create = GradleCreateCommand  # noqa
-open = GradleOpenCommand  # noqa
-update = GradleUpdateCommand  # noqa
-build = GradleBuildCommand  # noqa
-run = GradleRunCommand  # noqa
-package = GradlePackageCommand  # noqa
-publish = GradlePublishCommand  # noqa
+create = GradleCreateCommand
+open = GradleOpenCommand
+update = GradleUpdateCommand
+build = GradleBuildCommand
+run = GradleRunCommand
+package = GradlePackageCommand
+publish = GradlePublishCommand

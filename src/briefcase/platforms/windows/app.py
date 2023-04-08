@@ -141,10 +141,10 @@ class WindowsAppPublishCommand(WindowsAppMixin, PublishCommand):
 
 
 # Declare the briefcase command bindings
-create = WindowsAppCreateCommand  # noqa
-update = WindowsAppUpdateCommand  # noqa
-open = WindowsAppOpenCommand  # noqa
-build = WindowsAppBuildCommand  # noqa
-run = WindowsAppRunCommand  # noqa
-package = WindowsAppPackageCommand  # noqa
-publish = WindowsAppPublishCommand  # noqa
+create = WindowsAppCreateCommand
+update = WindowsAppUpdateCommand
+open = WindowsAppOpenCommand
+build = WindowsAppBuildCommand
+run = WindowsAppRunCommand
+package = WindowsAppPackageCommand
+publish = WindowsAppPublishCommand

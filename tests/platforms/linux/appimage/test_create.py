@@ -1,9 +1,7 @@
-import sys
-
 import pytest
 
 from briefcase.console import Console, Log
-from briefcase.exceptions import UnsupportedHostError
+from briefcase.exceptions import BriefcaseConfigError, UnsupportedHostError
 from briefcase.platforms.linux.appimage import LinuxAppImageCreateCommand
 
 
@@ -64,15 +62,102 @@ def test_unsupported_host_os_without_docker(
         create_command()
 
 
-def test_support_package_url(create_command):
-    """The URL of the support package is predictable."""
-    # Set the host arch to something predictable
-    create_command.tools.host_arch = "wonky"
+def test_finalize_docker(create_command, first_app_config, capsys):
+    """No warning is generated when building an AppImage in Docker."""
+    create_command.use_docker = True
 
-    revision = 52
-    expected_url = (
-        f"https://briefcase-support.s3.amazonaws.com/python"
-        f"/3.{sys.version_info.minor}/linux/wonky"
-        f"/Python-3.{sys.version_info.minor}-linux-wonky-support.b{revision}.tar.gz"
-    )
-    assert create_command.support_package_url(revision) == expected_url
+    create_command.finalize_app_config(first_app_config)
+
+    # Warning message was not recorded
+    assert "WARNING: Building a Local AppImage!" not in capsys.readouterr().out
+
+
+def test_finalize_nodocker(create_command, first_app_config, capsys):
+    """A warning is generated when building an AppImage outside Docker."""
+    create_command.use_docker = False
+
+    create_command.finalize_app_config(first_app_config)
+
+    # Warning message was not recorded
+    assert "WARNING: Building a Local AppImage!" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize(
+    "manylinux, tag, host_arch, context",
+    [
+        # Fallback.
+        (None, None, "x86_64", {}),
+        # x86_64 architecture, all versions
+        # Explicit tag
+        (
+            "manylinux1",
+            "2023-03-05-271004f",
+            "x86_64",
+            {
+                "manylinux_image": "manylinux1_x86_64:2023-03-05-271004f",
+                "vendor_base": "centos",
+            },
+        ),
+        # Explicit latest
+        (
+            "manylinux2010",
+            "latest",
+            "x86_64",
+            {"manylinux_image": "manylinux2010_x86_64:latest", "vendor_base": "centos"},
+        ),
+        # Implicit latest
+        (
+            "manylinux2014",
+            None,
+            "x86_64",
+            {"manylinux_image": "manylinux2014_x86_64:latest", "vendor_base": "centos"},
+        ),
+        (
+            "manylinux_2_24",
+            None,
+            "x86_64",
+            {
+                "manylinux_image": "manylinux_2_24_x86_64:latest",
+                "vendor_base": "debian",
+            },
+        ),
+        (
+            "manylinux_2_28",
+            None,
+            "x86_64",
+            {
+                "manylinux_image": "manylinux_2_28_x86_64:latest",
+                "vendor_base": "almalinux",
+            },
+        ),
+        # non x86 architecture
+        (
+            "manylinux2014",
+            None,
+            "aarch64",
+            {
+                "manylinux_image": "manylinux2014_aarch64:latest",
+                "vendor_base": "centos",
+            },
+        ),
+    ],
+)
+def test_output_format_template_context(
+    create_command, first_app_config, manylinux, tag, host_arch, context
+):
+    """The template context reflects the manylinux name, tag and architecture"""
+    if manylinux:
+        first_app_config.manylinux = manylinux
+    if tag:
+        first_app_config.manylinux_image_tag = tag
+
+    create_command.tools.host_arch = host_arch
+
+    assert create_command.output_format_template_context(first_app_config) == context
+
+
+def test_output_format_template_context_bad_tag(create_command, first_app_config):
+    """An unknown manylinux tag raises an error"""
+    first_app_config.manylinux = "unknown"
+    with pytest.raises(BriefcaseConfigError, match=r"Unknown manylinux tag 'unknown'"):
+        assert create_command.output_format_template_context(first_app_config)
