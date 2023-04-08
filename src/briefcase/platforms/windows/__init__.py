@@ -134,35 +134,44 @@ class WindowsPackageCommand(PackageCommand):
         super().add_options(parser)
         parser.add_argument(
             "--file-digest",
-            help="File digest algorithm to use for creating file signatures; defaults to sha256.",
+            help="File digest algorithm to use for code signing; defaults to sha256.",
             default="sha256",
             required=False,
         )
         parser.add_argument(
             "--use-local-machine-stores",
-            help="Use the certificate stores for the Local Machine instead of the Current User.",
+            help=(
+                "Specifies the code signing certificate is stored in the Local Machine's "
+                "stores instead of the Current User's."
+            ),
             action="store_true",
             dest="use_local_machine",
             required=False,
         )
         parser.add_argument(
             "--cert-store",
-            help="Store containing the certificate; defaults to the Personal store.",
+            help=(
+                "The internal Windows name for the certificate store containing the certificate "
+                "for code signing; defaults to 'My' for the Personal store."
+            ),
             default="My",
             required=False,
         )
         parser.add_argument(
             "--timestamp-url",
             help=(
-                "URL for the Timestamp Authority server to timestamp "
-                "the code signing; defaults to timestamp.digicert.com."
+                "URL for the Timestamp Authority server to timestamp the code signing; "
+                "defaults to timestamp.digicert.com."
             ),
             default="http://timestamp.digicert.com",
             required=False,
         )
         parser.add_argument(
             "--timestamp-digest",
-            help="Digest algorithm to request for the timestamp server signature; defaults to sha256.",
+            help=(
+                "Digest algorithm to request the Timestamp Authority server uses "
+                "for the timestamp for code signing; defaults to sha256."
+            ),
             default="sha256",
             required=False,
         )
