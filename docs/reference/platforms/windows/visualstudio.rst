@@ -70,7 +70,7 @@ The following options can be added to the
 file.
 
 ``system_installer``
---------------------
+~~~~~~~~~~~~~~~~~~~~
 
 Controls whether the app will be installed as a per-user or per-machine app.
 Per-machine apps are "system" apps, and require admin permissions to run the
@@ -82,7 +82,7 @@ available to all users. If ``false``, the installer will install as a per-user
 app. If undefined the installer will ask the user for their preference.
 
 ``version_triple``
-------------------
+~~~~~~~~~~~~~~~~~~
 
 Python and Briefcase allow any valid `PEP440 version number
 <https://peps.python.org/pep-0440/>`_ as a ``version`` specifier. However, MSI
