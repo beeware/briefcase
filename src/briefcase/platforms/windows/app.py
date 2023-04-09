@@ -1,10 +1,12 @@
 import subprocess
+from contextlib import suppress
 from pathlib import Path
 
 from briefcase.commands import BuildCommand, OpenCommand, PublishCommand, UpdateCommand
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.rcedit import RCEdit
+from briefcase.integrations.windows_sdk import WindowsSDK
 from briefcase.platforms.windows import (
     WindowsCreateCommand,
     WindowsMixin,
@@ -39,6 +41,11 @@ class WindowsAppBuildCommand(WindowsAppMixin, BuildCommand):
     def verify_tools(self):
         super().verify_tools()
         RCEdit.verify(tools=self.tools)
+        # The Windows SDK is only needed if it has previously been used to sign
+        # the binary and MSI; therefore, ignore if it isn't available since the
+        # stub app should not have any signatures to remove in that case.
+        with suppress(BriefcaseCommandError):
+            WindowsSDK.verify(tools=self.tools)
 
     def build_app(self, app: BaseConfig, **kwargs):
         """Build the application.
@@ -46,6 +53,38 @@ class WindowsAppBuildCommand(WindowsAppMixin, BuildCommand):
         :param app: The config object for the app
         """
         self.logger.info("Building App...", prefix=app.app_name)
+
+        if hasattr(self.tools, "windows_sdk"):
+            # If an app has been packaged and code signed previously, then the digital
+            # signature on the app binary needs to be removed before re-building the app.
+            # It is not safe to use RCEdit on signed binaries since it corrupts them.
+            with self.input.wait_bar(
+                "Removing any digital signatures from stub app..."
+            ):
+                try:
+                    self.tools.subprocess.check_output(
+                        [
+                            self.tools.windows_sdk.signtool_exe,
+                            "remove",
+                            "-s",
+                            self.binary_path(app).relative_to(self.bundle_path(app)),
+                        ],
+                        cwd=self.bundle_path(app),
+                    )
+                except subprocess.CalledProcessError as e:
+                    # Ignore this error from signtool since it is logged if the file
+                    # is not currently signed
+                    if "error: 0x00000057" not in e.stdout:
+                        raise BriefcaseCommandError(
+                            f"""\
+Failed to remove any existing digital signatures from the stub app.
+
+Recreating the app layout may also help resolve this issue:
+
+    $ briefcase create {self.platform} {self.output_format}
+
+"""
+                        ) from e
 
         with self.input.wait_bar("Setting stub app details..."):
             try:

@@ -30,6 +30,7 @@ if TYPE_CHECKING:
     from briefcase.integrations.rcedit import RCEdit
     from briefcase.integrations.subprocess import Subprocess
     from briefcase.integrations.visualstudio import VisualStudio
+    from briefcase.integrations.windows_sdk import WindowsSDK
     from briefcase.integrations.wix import WiX
 
 
@@ -54,6 +55,7 @@ class ToolCache(Mapping):
     rcedit: RCEdit
     subprocess: Subprocess
     visualstudio: VisualStudio
+    windows_sdk: WindowsSDK
     wix: WiX
     xcode: bool
     xcode_cli: bool

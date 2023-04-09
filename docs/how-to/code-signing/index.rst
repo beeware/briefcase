@@ -16,3 +16,4 @@ supports:
 
    android
    macOS
+   windows

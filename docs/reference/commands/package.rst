@@ -36,7 +36,7 @@ Options
 The following options can be provided at the command line.
 
 ``-u`` / ``--update``
----------------------
+~~~~~~~~~~~~~~~~~~~~~
 
 Update and recompile the application's code before running. Equivalent to
 running::
