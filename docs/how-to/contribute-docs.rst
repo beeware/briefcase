@@ -20,7 +20,49 @@ Build documentation locally
 ---------------------------
 
 To build the documentation locally, :ref:`set up a development environment
-<setup-dev-environment>`, and run:
+<setup-dev-environment>`.
+
+You'll also need to install the Enchant spell checking library.
+
+.. tabs::
+
+  .. group-tab:: macOS
+
+    Enchant can be installed using `Homebrew <https://brew.sh>`__:
+
+    .. code-block:: bash
+
+      (venv) $ brew install enchant
+
+  .. group-tab:: Linux
+
+    Enchant can be installed as a system package:
+
+    **Ubuntu 20.04+ / Debian 10+**
+
+    .. code-block:: console
+
+      $ sudo apt-get update
+      $ sudo apt-get install enchant-2
+
+    **Fedora**
+
+    .. code-block:: console
+
+      $ sudo dnf install enchant
+
+    **Arch, Manjaro**
+
+    .. code-block:: console
+
+      $ sudo pacman -Syu enchant
+
+  .. group-tab:: Windows
+
+    Enchant is installed automatically when you set up your development
+    environment.
+
+Once your development environment is set up, run:
 
 .. tabs::
 
