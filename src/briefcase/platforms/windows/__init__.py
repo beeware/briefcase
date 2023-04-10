@@ -118,7 +118,7 @@ class WindowsRunCommand(RunCommand):
 class WindowsPackageCommand(PackageCommand):
     @property
     def packaging_formats(self):
-        return ["msi"]
+        return ["msi", "zip"]
 
     @property
     def default_packaging_format(self):
@@ -259,6 +259,16 @@ class WindowsPackageCommand(PackageCommand):
         :param timestamp_url: Timestamp authority server to use in code signing.
         :param timestamp_digest: Hashing algorithm to request from the timestamp server.
         """
+
+        # Just pack the 'binary' folders in a zip file:
+        if app.packaging_format == "zip":
+            self.logger.info("Building zip file...", prefix=app.app_name)
+            self.tools.shutil.make_archive(
+                self.distribution_path(app).with_suffix(""),
+                "zip",
+                self.bundle_path(app) / self.packaging_root,
+            )
+            return
 
         if sign_app and not identity:
             sign_app = False

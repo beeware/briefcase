@@ -1,5 +1,6 @@
 from subprocess import CalledProcessError
 from unittest import mock
+from zipfile import ZipFile
 
 import pytest
 
@@ -30,9 +31,27 @@ def package_command(tmp_path):
     return command
 
 
+@pytest.fixture
+def package_zip_command(tmp_path):
+    command = WindowsAppPackageCommand(
+        logger=Log(),
+        console=Console(),
+        base_path=tmp_path / "base_path",
+        data_path=tmp_path / "briefcase",
+    )
+    # Build the path for the source folder:
+    src_path = (
+        tmp_path / "base_path" / "build" / "first-app" / "windows" / "app" / "src"
+    )
+    src_path.mkdir(parents=True)
+    # Populate source folder with one dummy file:
+    open(f"{src_path}/First App.exe", "x").close()
+    return command
+
+
 def test_package_formats(package_command):
     """Packaging formats are as expected."""
-    assert package_command.packaging_formats == ["msi"]
+    assert package_command.packaging_formats == ["msi", "zip"]
     assert package_command.default_packaging_format == "msi"
 
 
@@ -205,6 +224,19 @@ def test_package_msi(package_command, first_app_config, tmp_path):
             cwd=tmp_path / "base_path" / "build" / "first-app" / "windows" / "app",
         ),
     ]
+
+
+def test_package_zip(package_zip_command, first_app_config, tmp_path):
+    """A Windows app can be packaged as a zip file."""
+
+    first_app_config.packaging_format = "zip"
+    package_zip_command.package_app(first_app_config)
+
+    # The zip file exists and contains the content of the src folder
+    archive_file = tmp_path / "base_path" / "dist" / "First App-0.0.1.zip"
+    assert archive_file.exists()
+    with ZipFile(archive_file) as archive:
+        assert archive.namelist() == ["First App.exe"]
 
 
 @pytest.mark.parametrize(

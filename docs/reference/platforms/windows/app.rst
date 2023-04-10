@@ -14,6 +14,9 @@ enabled. To ensure .NET Framework 3.5 is enabled:
 3. Select "Turn Windows features On or Off"
 4. Ensure that ".NET framework 3.5 (includes .NET 2.0 and 3.0)" is selected.
 
+Instead of building an MSI installer, you can also pack the folders for
+distribution to a zip file using the ``briefcase package -p zip`` command.
+
 Icon format
 ===========
 

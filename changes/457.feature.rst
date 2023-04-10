@@ -1,0 +1,1 @@
+On Windows, it is now possible to build a zip folder for distribution by using ``package -p zip``.
