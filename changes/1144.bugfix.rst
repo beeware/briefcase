@@ -1,1 +1,0 @@
-When ``JAVA_HOME`` contains a path to a file instead of a directory, Briefcase will now warn the user and install an isolated copy of Java instead of logging a ``NotADirectoryError``.

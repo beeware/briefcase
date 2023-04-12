@@ -1,1 +1,0 @@
-The base image used to build AppImages is now user-configurable.

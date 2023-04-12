@@ -1,1 +1,0 @@
-The ``tox`` environments for docs were condensed together and linking to the Python docs was enabled.

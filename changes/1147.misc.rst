@@ -1,1 +1,0 @@
-The "stuck streamer" test was updated to mitigate the possibility of a race condition failing it or other tests.
