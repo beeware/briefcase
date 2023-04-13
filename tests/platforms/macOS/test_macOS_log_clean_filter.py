@@ -72,6 +72,17 @@ from briefcase.platforms.macOS import macOS_log_clean_filter
             "This doesn't match the regex",
             ("This doesn't match the regex", False),
         ),
+        # Log content that contains square brackets
+        (
+            "2022-11-14 13:21:15.341 Df My App[59972:780a15] (libffi.dylib) Test [1/5] ... OK",
+            ("Test [1/5] ... OK", True),
+        ),
+        # Log content that contains `.so`
+        (
+            "2022-11-14 13:21:15.341 Df My App[59972:780a15] (_ctypes.cpython-312-iphonesimulator.so) "
+            "A problem (foo.so) try to avoid it",
+            ("A problem (foo.so) try to avoid it", True),
+        ),
     ],
 )
 def test_filter(original, filtered):
