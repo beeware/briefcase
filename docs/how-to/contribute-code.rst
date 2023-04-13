@@ -224,9 +224,9 @@ and re-commit the change.
       pyupgrade................................................................Passed
       docformatter.............................................................Passed
 
-Briefcase uses `PyTest <https://pytest.org>`__ for its own test suite. It uses
-`tox <https://tox.readthedocs.io/en/latest/>`__ to manage the testing process.
-To set up a testing environment and run the full test suite:
+Briefcase uses `PyTest <https://docs.pytest.org/en/latest>`__ for its own test
+suite. It uses `tox <https://tox.wiki/en/latest/>`__ to manage the testing
+process. To set up a testing environment and run the full test suite:
 
 .. tabs::
 

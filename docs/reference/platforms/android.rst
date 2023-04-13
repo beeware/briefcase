@@ -59,7 +59,7 @@ and device display densities:
 Consult `the Android documentation
 <https://developer.android.com/guide/topics/large-screens/support-different-screen-sizes>`__
 for more details on devices, sizes, and display densities. `This list of common
-devices with their sizes and DPI <https://material.io/resources/devices/>`__
+devices with their sizes and DPI <https://m2.material.io/resources/devices/>`__
 may also be helpful.
 
 You can specify a background color for the splash screen using the

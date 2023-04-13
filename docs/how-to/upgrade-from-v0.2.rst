@@ -177,7 +177,7 @@ you would run::
 
 In the future, we hope to add other output formats for other platforms - `Snap
 <https://snapcraft.io/>`__ and `FlatPak <https://flatpak.org>`__ on Linux;
-`NSIS <https://nsis.sourceforge.io/>`__ installers on Windows, and possibly
+`NSIS <https://nsis.sourceforge.io/Main_Page>`__ installers on Windows, and possibly
 others. If you're interested in adding support for one of these platforms,
 please `get in touch <https://beeware.org/bee/chat/>`__ (or, submit a pull
 request!)
