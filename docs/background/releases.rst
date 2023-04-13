@@ -178,7 +178,8 @@ Misc
 Features
 --------
 
-* Linux apps can now be packaged in Flatpak format. (#359) * SDKs, tools, and other downloads needed to support app builds are now stored in an OS-native user cache directory instead of ``~/.briefcase``. (#374)
+* Linux apps can now be packaged in Flatpak format. (#359)
+* SDKs, tools, and other downloads needed to support app builds are now stored in an OS-native user cache directory instead of ``~/.briefcase``. (#374)
 * Windows MSI installers can now be configured to ask the user whether they want a per-user or per-machine install. (#382)
 * The console output of Windows apps is now captured and displayed during ``briefcase run``. (#620)
 * Windows apps are now packaged with a stub application. This ensures that Windows apps present with the name and icon of the app, rather than the ``pythonw.exe`` name and icon. It also allows for improvements in logging and error handling. (#629)
