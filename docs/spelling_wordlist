@@ -53,6 +53,7 @@ Passthrough
 pre
 precompiled
 px
+Pygame
 Pyodide
 pyproject
 PyScript
