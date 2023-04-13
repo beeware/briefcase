@@ -273,6 +273,28 @@ the process while developing, you can run the tests on one Python version only:
 
       (venv) C:\...>tox -e py
 
+Or, you can run a single test file on a single version of Python:
+
+.. tabs::
+
+  .. group-tab:: macOS
+
+    .. code-block:: bash
+
+      (venv) $ tox -e py -- tests/path_to_test_file/test_some_test.py
+
+  .. group-tab:: Linux
+
+    .. code-block:: bash
+
+      (venv) $ tox -e py -- tests/path_to_test_file/test_some_test.py
+
+  .. group-tab:: Windows
+
+    .. code-block:: bash
+
+      (venv) C:\...>tox -e py -- tests/path_to_test_file/test_some_test.py
+
 Or, to run using a specific version of Python, e.g. when you want to use Python 3.7:
 
 .. tabs::
