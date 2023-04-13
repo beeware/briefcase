@@ -9,7 +9,7 @@ is packaged as a ``.zip`` file for distribution.
 Although Briefcase provides a ``run`` command that can be used to serve the
 website, this web server is provided as a development convenience. **It should
 not be used in production**. If you wish to serve your app in production, you
-can unzip the ``.zip`` file in the root of any webserver that can serve static
+can unzip the ``.zip`` file in the root of any web server that can serve static
 web content.
 
 .. admonition:: Web support is experimental!

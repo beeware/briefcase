@@ -37,24 +37,24 @@ and device display densities:
 * ``normal`` (typical phones; up to 480 density-independent pixels):
 
   * 320px
-  * 480px (hdpi)
-  * 640px (xhdpi)
-  * 1280px (xxxhdpi)
+  * 480px (``hdpi``)
+  * 640px (``xhdpi``)
+  * 1280px (``xxxhdpi``)
 
 * ``large`` (large format phones, or phone-tablet "phablet" hybrids; up to
   720 density-independent pixels):
 
   * 480px
-  * 720px (hdpi)
-  * 960px (xhdpi)
-  * 1920px (xxxhdpi)
+  * 720px (``hdpi``)
+  * 960px (``xhdpi``)
+  * 1920px (``xxxhdpi``)
 
 * ``xlarge`` (tablets; larger than 720 density-independent pixels)
 
   * 720px
-  * 1080px (hdpi)
-  * 1440px (xhdpi)
-  * 2880px (xxxhdpi)
+  * 1080px (``hdpi``)
+  * 1440px (``xhdpi``)
+  * 2880px (``xxxhdpi``)
 
 Consult `the Android documentation
 <https://developer.android.com/guide/topics/large-screens/support-different-screen-sizes>`__

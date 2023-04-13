@@ -40,7 +40,7 @@ enabled. To ensure .NET Framework 3.5 is enabled:
 Icon format
 ===========
 
-Windows apps installers use multiformat ``.ico`` icons; these icons should
+Windows apps installers use multi-format ``.ico`` icons; these icons should
 contain images in the following sizes:
 
 * 16px

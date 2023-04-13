@@ -161,12 +161,12 @@ A short, one-line description of the purpose of the application.
 ``sources``
 ~~~~~~~~~~~
 
-A list of paths, relative to the pyproject.toml file, where source code for the
-application can be found. The contents of any named files or folders will be
+A list of paths, relative to the ``pyproject.toml`` file, where source code for
+the application can be found. The contents of any named files or folders will be
 copied into the application bundle. Parent directories in any named path will
 not be included. For example, if you specify ``src/myapp`` as a source, the
 contents of the `myapp` folder will be copied into the application bundle; the
-src directory will not be reproduced.
+``src`` directory will not be reproduced.
 
 Unlike most other keys in a configuration file, ``sources`` is a *cumulative*
 setting. If an application defines sources at the global level, application
@@ -205,7 +205,7 @@ folder in the case of a macOS app).
 Paths can be:
  * An explicit reference to a single file
  * An explicit reference to a single directory
- * Any filesystem glob accepted by ``pathlib.glob`` (See `the Python
+ * Any file system glob accepted by ``pathlib.glob`` (See `the Python
    documentation for details
    <https://docs.python.org/3/library/pathlib.html#pathlib.Path.glob>`__)
 
@@ -238,7 +238,7 @@ will be terminated; the line matching the regular expression will *not* be
 output to the console. Used by Briefcase to monitor test suites; however, the
 filter will also be honored on normal ``run`` invocations.
 
-The regular expression should capture a single group named "returncode",
+The regular expression should capture a single group named ``returncode``,
 capturing the integer exit status that should be reported for the process. The
 default value for this regular expression is ``^>>>>>>>>>> EXIT
 (?P<returncode>.*) <<<<<<<<<<$`` The regex will be compiled with the
@@ -325,8 +325,8 @@ with a ``splash`` setting of ``resources/my_splash``, Briefcase will look for
 by the platform template.
 
 Some platforms also require different *variants*. For example, Android requires
-splash screens for "normal", "large" and "xlarge" devices. These variants can
-be specified by qualifying the splash specification:
+splash screens for ``normal``, ``large`` and ``xlarge`` devices. These variants
+can be specified by qualifying the splash specification::
 
     splash.normal = "resource/normal-splash"
     splash.large = "resource/large-splash"
@@ -418,12 +418,12 @@ to most specific.
 ``test_sources``
 ~~~~~~~~~~~~~~~~
 
-A list of paths, relative to the pyproject.toml file, where test code for the
-application can be found. The contents of any named files or folders will be
+A list of paths, relative to the ``pyproject.toml`` file, where test code for
+the application can be found. The contents of any named files or folders will be
 copied into the application bundle. Parent directories in any named path will
 not be included. For example, if you specify ``src/myapp`` as a source, the
 contents of the `myapp` folder will be copied into the application bundle; the
-src directory will not be reproduced.
+``src`` directory will not be reproduced.
 
 As with ``sources``, ``test_sources`` is a *cumulative* setting. If an
 application defines sources at the global level, application level, *and*

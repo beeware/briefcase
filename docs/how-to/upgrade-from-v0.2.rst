@@ -155,7 +155,7 @@ iOS project.
 The exceptions to this platform specification are ``briefcase new`` and
 ``briefcase dev``. These two commands are platform agnostic.
 
-The Briefcase subcommands will also detect if previous steps haven't been
+The Briefcase sub-commands will also detect if previous steps haven't been
 executed, and invoke any prior steps that are required. For example, if you
 execute ``briefcase run`` on clean project, Briefcase will detect that there
 are no platform files, and will automatically run ``briefcase create`` and

@@ -34,17 +34,17 @@ The procedure for cutting a new release is as follows:
 3. Ensure that there is a version branch for the new Briefcase version in
    every template that Briefcase will use at runtime:
 
-   * briefcase-template
-   * briefcase-macOS-app-template
-   * briefcase-macOS-Xcode-template
-   * briefcase-windows-app-template
-   * briefcase-windows-VisualStudio-template
-   * briefcase-linux-appimage-template
-   * briefcase-linux-flatpak-template
-   * briefcase-linux-system-template
-   * briefcase-iOS-Xcode-template
-   * briefcase-android-gradle-template
-   * briefcase-web-static-template
+   * ``briefcase-template``
+   * ``briefcase-macOS-app-template``
+   * ``briefcase-macOS-Xcode-template``
+   * ``briefcase-windows-app-template``
+   * ``briefcase-windows-VisualStudio-template``
+   * ``briefcase-linux-appimage-template``
+   * ``briefcase-linux-flatpak-template``
+   * ``briefcase-linux-system-template``
+   * ``briefcase-iOS-Xcode-template``
+   * ``briefcase-android-gradle-template``
+   * ``briefcase-web-static-template``
 
 4. Tag the release, and push the branch and tag upstream::
 
@@ -93,8 +93,9 @@ The procedure for cutting a new release is as follows:
    new version. Ensure that the build completes; if there's a problem, you
    may need to correct the build configuration, roll back and re-tag the release.
 
-8. Edit the GitHub release. Add release notes (you can use the text generated
-   by towncrier). Check the pre-release checkbox (if necessary).
+8. Edit the GitHub release to add release notes. You can use the text generated
+   by Towncrier, but you'll need to update the format to Markdown, rather than
+   ReST. If necessary, check the pre-release checkbox.
 
 9. Double check everything, then click Publish. This will trigger a
    `publication workflow on GitHub

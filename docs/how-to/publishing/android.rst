@@ -231,7 +231,7 @@ promote your application:
     Desktop folder.
 
     Screenshots must be at least 320px on their smallest dimension, no larger
-    than 3480px on their largest dimension, and can't have an spect ratio more
+    than 3480px on their largest dimension, and can't have an aspect ratio more
     extreme than 2:1. A screenshot from the Android emulator typically fulfills
     these requirements.
 
@@ -250,7 +250,7 @@ suitability for children, and contact details for you as a developer. The
 navigation pane (typically on the left side of the screen) contains grayed out
 check marks covering all the sections with required details. Visit each of
 these sections in turn; when you have met the requirements of each section, the
-checkmark will turn green. Once all the checkmarks are green, you're ready to
+check mark will turn green. Once all the checkmarks are green, you're ready to
 release your app.
 
 Create a release
@@ -297,4 +297,4 @@ Select **Release Management** in the navigation bar, then **App Releases**.
 
 At this point, the release process is the same as it was for your initial
 release; create a release, upload your AAB file, and submit the application
-for rollout.
+for roll out.
