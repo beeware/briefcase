@@ -260,21 +260,18 @@ the process while developing, you can run the tests on one Python version only:
     .. code-block:: bash
 
       (venv) $ tox -e py
-      (venv) $ tox -e py -- tests/path_to_test_file/test_some_test.py
 
   .. group-tab:: Linux
 
     .. code-block:: bash
 
       (venv) $ tox -e py
-      (venv) $ tox -e py -- tests/path_to_test_file/test_some_test.py
 
   .. group-tab:: Windows
 
     .. code-block:: bash
 
       (venv) C:\...>tox -e py
-      (venv) C:\...>tox -e py -- tests/path_to_test_file/test_some_test.py
 
 Or, you can run a single test file on a single version of Python:
 
