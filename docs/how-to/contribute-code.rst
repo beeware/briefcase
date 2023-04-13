@@ -251,8 +251,7 @@ To set up a testing environment and run the full test suite:
 By default this will run the test suite multiple times, once on each Python
 version supported by Briefcase, as well as running some pre-commit checks of
 code style and validity. This can take a while, so if you want to speed up
-the process while developing, you can run the tests on one Python version only
-or even on a single test file:
+the process while developing, you can run the tests on one Python version only:
 
 .. tabs::
 
@@ -275,6 +274,28 @@ or even on a single test file:
     .. code-block:: bash
 
       (venv) C:\...>tox -e py
+      (venv) C:\...>tox -e py -- tests/path_to_test_file/test_some_test.py
+
+Or, you can run a single test file on a single version of Python:
+
+.. tabs::
+
+  .. group-tab:: macOS
+
+    .. code-block:: bash
+
+      (venv) $ tox -e py -- tests/path_to_test_file/test_some_test.py
+
+  .. group-tab:: Linux
+
+    .. code-block:: bash
+
+      (venv) $ tox -e py -- tests/path_to_test_file/test_some_test.py
+
+  .. group-tab:: Windows
+
+    .. code-block:: bash
+
       (venv) C:\...>tox -e py -- tests/path_to_test_file/test_some_test.py
 
 Or, to run using a specific version of Python, e.g. when you want to use Python 3.7:
