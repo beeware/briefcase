@@ -37,29 +37,29 @@ and device display densities:
 * ``normal`` (typical phones; up to 480 density-independent pixels):
 
   * 320px
-  * 480px (hdpi)
-  * 640px (xhdpi)
-  * 1280px (xxxhdpi)
+  * 480px (``hdpi``)
+  * 640px (``xhdpi``)
+  * 1280px (``xxxhdpi``)
 
 * ``large`` (large format phones, or phone-tablet "phablet" hybrids; up to
   720 density-independent pixels):
 
   * 480px
-  * 720px (hdpi)
-  * 960px (xhdpi)
-  * 1920px (xxxhdpi)
+  * 720px (``hdpi``)
+  * 960px (``xhdpi``)
+  * 1920px (``xxxhdpi``)
 
 * ``xlarge`` (tablets; larger than 720 density-independent pixels)
 
   * 720px
-  * 1080px (hdpi)
-  * 1440px (xhdpi)
-  * 2880px (xxxhdpi)
+  * 1080px (``hdpi``)
+  * 1440px (``xhdpi``)
+  * 2880px (``xxxhdpi``)
 
 Consult `the Android documentation
 <https://developer.android.com/guide/topics/large-screens/support-different-screen-sizes>`__
 for more details on devices, sizes, and display densities. `This list of common
-devices with their sizes and DPI <https://material.io/resources/devices/>`__
+devices with their sizes and DPI <https://m2.material.io/resources/devices/>`__
 may also be helpful.
 
 You can specify a background color for the splash screen using the

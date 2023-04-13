@@ -1,8 +1,8 @@
 See Errors on iOS
 =========================
 
-If you have a beeware iOS project that has a crash, it can be difficult to see
-the stacktrace. Here's how to do it -
+If you have a BeeWare iOS project that has a crash, it can be difficult to see
+the stack trace. Here's how to do it -
 
 1. Build your iOS project. You don't have to start it.
 

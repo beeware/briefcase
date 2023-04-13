@@ -7,7 +7,7 @@ AppImage
 common Linux based operating system, including Ubuntu, Debian, Fedora, and more.
 AppImages contain all the dependencies that cannot be assumed to be part of each
 target system, and will run on most Linux distributions without further
-modifications. Briefcase uses `linuxdeploy
+modifications. Briefcase uses `Linuxdeploy
 <https://github.com/linuxdeploy/linuxdeploy>`__ to build the AppImage in the
 correct format.
 
@@ -101,7 +101,7 @@ The specific tag of the ``manylinux`` image to use. Defaults to ``latest``.
 A list of operating system packages that must be installed for the AppImage
 build to succeed. If a Docker build is requested, this list will be passed to
 the Docker context when building the container for the app build. By default,
-entries should be Ubuntu 18.04 ``apt`` package requirements. For example,
+entries should be Ubuntu 18.04 ``apt`` package requirements. For example::
 
     system_requires = ['libgirepository1.0-dev', 'libcairo2-dev']
 
@@ -125,8 +125,8 @@ A list of `linuxdeploy plugins
 <https://docs.appimage.org/packaging-guide/from-source/linuxdeploy-user-guide.html#plugin-system>`__
 that you wish to be included when building the AppImage. This is needed for
 applications that depend on libraries that have dependencies that cannot be
-automatically discovered by linuxdeploy. GTK and Qt both have complex
-runtime resource requirements that can be difficult for linuxdeploy to
+automatically discovered by Linuxdeploy. GTK and Qt both have complex
+runtime resource requirements that can be difficult for Linuxdeploy to
 identify automatically.
 
 The ``linuxdeploy_plugins`` declaration is a list of strings. Briefcase can take
@@ -141,7 +141,7 @@ environment variable can be provided as a prefix to the plugin declaration,
 similar to how environment variables can be defined for a shell command.
 
 For example, the ``gtk`` plugin requires the ``DEPLOY_GTK_VERSION`` environment
-variable. To set this variable with the Briefcase-managed GTK linuxdeploy plugin,
+variable. To set this variable with the Briefcase-managed GTK Linuxdeploy plugin,
 you would define::
 
     linuxdeploy_plugins = ["DEPLOY_GTK_VERSION=3 gtk"]
@@ -213,17 +213,17 @@ or::
     ImportError: /usr/lib/libSomething.so.0: undefined symbol: some_symbol
 
 it is likely that one or more of the libraries you are using in your app
-requires a linuxdeploy plugin. GUI libraries, or libraries that do dynamic
+requires a Linuxdeploy plugin. GUI libraries, or libraries that do dynamic
 module loading are particularly prone to this problem.
 
 ELF load command address/offset not properly aligned
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Briefcase uses a tool named ``linuxdeploy`` to build AppImages. ``linuxdeploy``
+Briefcase uses a tool named Linuxdeploy to build AppImages. Linuxdeploy
 processes all the libraries used by an app so that they can be relocated into
 the final packaged binary. Building a ``manylinux`` binary wheel involves a tool
 named ``auditwheel`` that performs a very similar process. Unfortunately,
-processing a binary with ``linuxdeploy`` after it has been processed by
+processing a binary with Linuxdeploy after it has been processed by
 ``auditwheel`` can result in a binary library that cannot be loaded at runtime.
 
 This is particularly common when a module installed as a binary wheel has a
@@ -313,7 +313,7 @@ top-level ``requires``, not the platform-specific ``requires``. If you add
 ``--no-binary`` in the top-level requires, the use of a binary wheel would be
 prevented on *all* platforms. To avoid this, you can add the requirement in the
 top-level requires, but add the ``--no-binary`` declaration to the
-linux-specific requirements::
+Linux-specific requirements::
 
     [tool.briefcase.app.helloworld]
     formal_name = "Hello World"

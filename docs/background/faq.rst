@@ -12,13 +12,13 @@ What platforms does Briefcase support?
 Briefcase currently has support for:
 
 * macOS (producing DMG files, or raw .app files)
-* Linux (producing AppImage files or Flatpaks)
+* Linux (producing system packages, AppImage files or Flatpaks)
 * Windows (producing MSI installers)
 * iOS (producing Xcode projects)
 * Android (producing Gradle projects)
 
 Support for other some other operating systems (e.g., tvOS, watchOS, WearOS, and
-the web) are on our roadmap.
+the web) are on our road map.
 
 Briefcase's platform support is built on a plugin system, so if you want to add
 support for a custom platform, you can do so; or, you can contribute the

@@ -108,8 +108,8 @@ Compilation issues with Flatpak
 ===============================
 
 Flatpak works by building a sandbox in which to compile the application bundle.
-This sandbox uses some low-level kernel and filesystem operations to provide the
-sandboxing behavior. As a result, Flatpaks cannot be built inside a Docker
+This sandbox uses some low-level kernel and file system operations to provide
+the sandboxing behavior. As a result, Flatpaks cannot be built inside a Docker
 container, and they cannot be build on an NFS mounted drive.
 
 If you get errors about ``renameat`` when building an app, similar to the

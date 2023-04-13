@@ -97,10 +97,11 @@ Deb packages:
 A Docker base image identifier for the Linux distribution you want to target.
 The identifier will be in the pattern ``<vendor>:<codename>`` (e.g.,
 ``debian:buster`` or ``ubuntu:jammy``). You can also use the version number in
-place of the codename (e.g., ``debian:10``, ``ubuntu:22.04``, or ``fedora:37``).
-Whichever form you choose, you should be consistent; no normalization of
-codename and version is performed, so ``ubuntu:jammy`` and ``ubuntu:22.04`` will
-be identified as different versions (even though they the same version).
+place of the code name (e.g., ``debian:10``, ``ubuntu:22.04``, or
+``fedora:37``). Whichever form you choose, you should be consistent; no
+normalization of code name and version is performed, so ``ubuntu:jammy`` and
+``ubuntu:22.04`` will be identified as different versions (even though they the
+same version).
 
 You can specify any identifier you want, provided the distribution is still
 supported by the vendor, and system Python is Python 3.8 or later.
@@ -131,7 +132,7 @@ vendor and version information. Each distribution is identified by:
 * Vendor (e.g, ``debian``, ``ubuntu``, ``rhel``, ``fedora``). The vendor
   identifier *may* be the same as the vendor base (e.g, in the case of Debian or
   Red Hat)
-* Codename (e.g., a version number, or ``jammy``).
+* Code name (e.g., a version number, or ``jammy``).
 
 For example, a full configuration for ``myapp`` running on Ubuntu 22.04 (jammy)
 would consist of the following sections:
@@ -196,8 +197,8 @@ the dependencies needed for Python. For example::
 
     system_runtime_requires = ["libgtk-3-0 (>=3.14)", "libwebkit2gtk-4.0-37"]
 
-will specify that your app needs Python3, a version of libgtk >= 3.14, and any
-version of libwebkit2gtk.
+will specify that your app needs Python 3, a version of ``libgtk >= 3.14``, and any
+version of ``libwebkit2gtk``.
 
 Any problems with installing or running your system package likely indicate an
 issue with your ``system_runtime_requires`` definition.

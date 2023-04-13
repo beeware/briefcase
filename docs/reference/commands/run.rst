@@ -29,7 +29,7 @@ and requirements will only be included in your app when running in test mode.
 
 Briefcase will monitor the log output of the test suite, looking for the output
 corresponding to test suite completion. Briefcase has built-in support for
-`pytest <https://pytest.org>`__ and `unittest
+`pytest <https://docs.pytest.org/en/latest>`__ and `unittest
 <https://docs.python.org/3/library/unittest.html>`__ test suites; support for
 other test frameworks can be added using the ``test_success_regex`` and
 ``test_failure_regex`` settings.

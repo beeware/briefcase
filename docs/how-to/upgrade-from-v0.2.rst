@@ -155,7 +155,7 @@ iOS project.
 The exceptions to this platform specification are ``briefcase new`` and
 ``briefcase dev``. These two commands are platform agnostic.
 
-The Briefcase subcommands will also detect if previous steps haven't been
+The Briefcase sub-commands will also detect if previous steps haven't been
 executed, and invoke any prior steps that are required. For example, if you
 execute ``briefcase run`` on clean project, Briefcase will detect that there
 are no platform files, and will automatically run ``briefcase create`` and
@@ -177,7 +177,7 @@ you would run::
 
 In the future, we hope to add other output formats for other platforms - `Snap
 <https://snapcraft.io/>`__ and `FlatPak <https://flatpak.org>`__ on Linux;
-`NSIS <https://nsis.sourceforge.io/>`__ installers on Windows, and possibly
+`NSIS <https://nsis.sourceforge.io/Main_Page>`__ installers on Windows, and possibly
 others. If you're interested in adding support for one of these platforms,
 please `get in touch <https://beeware.org/bee/chat/>`__ (or, submit a pull
 request!)

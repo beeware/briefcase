@@ -96,7 +96,7 @@ Creating a Developer ID Application Certificate
 -----------------------------------------------
 
 Once you have saved the certificate request, head to the `Apple Developer
-website <https://developer.apple.com/account>`__ and click "Certificates,
+website <https://developer.apple.com/>`__, log in, and click "Certificates,
 Identifiers and Profiles":
 
 .. image:: images/Certificates_Identifiers_Profiles.png
@@ -127,7 +127,7 @@ to choose a different type of a certificate on this page.
    This may happen if you're not assigned the role of the `Account Holder
    <https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution>`__.
    You can access and change these roles using `App Store Connect
-   <https://appstoreconnect.apple.com/access/users>`__.
+   <https://appstoreconnect.apple.com/login>`__.
 
 Select "Developer ID Application" and click "Continue". In the next window,
 click "Choose file" and upload the Certificate Signing Request you have just

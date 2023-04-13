@@ -191,7 +191,7 @@ Registering for a Google Play Developer account requires a Google Account. You
 will need to pay registration fee and accept an agreement in the process.
 
 To check if you already have a Google Play Developer account, you can visit the
-`Google Play console. <https://play.google.com/apps/publish/>`__ If you see a
+`Google Play console. <https://play.google.com/console/about/>`__ If you see a
 button to **Publish an Android App on Google Play** or a button to **Create
 Application**, you can skip this step.
 
@@ -203,9 +203,9 @@ agreements, `follow Google's documentation.
 Create a listing
 ~~~~~~~~~~~~~~~~
 
-Visit the `Google Play console. <https://play.google.com/apps/publish/>`__
-You will see a button labeled **Publish an Android App on Google Play** or
-a button to **Create Application**. Click it.
+Visit the `Google Play console. <https://play.google.com/console/about/>`__ and
+log in. You will see a button labeled **Publish an Android App on Google Play**
+or a button to **Create Application**. Click it.
 
 Once you've done that, click **Create Application**. Choose a language and
 write a brief app title, up to 50 characters. We suggest making this the
@@ -231,7 +231,7 @@ promote your application:
     Desktop folder.
 
     Screenshots must be at least 320px on their smallest dimension, no larger
-    than 3480px on their largest dimension, and can't have an spect ratio more
+    than 3480px on their largest dimension, and can't have an aspect ratio more
     extreme than 2:1. A screenshot from the Android emulator typically fulfills
     these requirements.
 
@@ -241,7 +241,7 @@ promote your application:
 
 Google Play supports optional graphic assets including promo videos, TV banners,
 and 360 degree stereoscopic images. See also `Google's advice on graphic assets.
-<https://support.google.com/googleplay/android-developer/answer/1078870>`__
+<https://support.google.com/googleplay/android-developer/answer/9866151>`__
 
 Once you've completed the store listing, you'll need to fill out a range of
 other details about your app, including the category where it should appear in
@@ -250,7 +250,7 @@ suitability for children, and contact details for you as a developer. The
 navigation pane (typically on the left side of the screen) contains grayed out
 check marks covering all the sections with required details. Visit each of
 these sections in turn; when you have met the requirements of each section, the
-checkmark will turn green. Once all the checkmarks are green, you're ready to
+check mark will turn green. Once all the checkmarks are green, you're ready to
 release your app.
 
 Create a release
@@ -266,7 +266,7 @@ If prompted to enable App Signing by Google Play, click **Continue**.
     The Play Store also supports releasing your app for internal, alpha and
     beta testing. Google's documentation `contains more details about creating
     test releases
-    <https://support.google.com/googleplay/android-developer/answer/3131213>`__.
+    <https://support.google.com/googleplay/android-developer/answer/9845334>`__.
 
 In an earlier section of this tutorial, we used ``briefcase publish`` and
 ``jarsigner`` to create a signed Android App Bundle file. It is stored at
@@ -297,4 +297,4 @@ Select **Release Management** in the navigation bar, then **App Releases**.
 
 At this point, the release process is the same as it was for your initial
 release; create a release, upload your AAB file, and submit the application
-for rollout.
+for roll out.
