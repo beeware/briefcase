@@ -18,7 +18,6 @@ def first_app_config():
         sources=["src/first_app"],
         requires=["foo==1.2.3", "bar>=4.5"],
         test_requires=["pytest"],
-        packaging_format="",
     )
 
 

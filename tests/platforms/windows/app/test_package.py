@@ -28,25 +28,48 @@ def package_command(tmp_path):
         version="81.2.1.0",
         arch="groovy",
     )
+    command.tmp_path = tmp_path
     return command
 
 
 @pytest.fixture
-def package_zip_command(tmp_path):
-    command = WindowsAppPackageCommand(
-        logger=Log(),
-        console=Console(),
-        base_path=tmp_path / "base_path",
-        data_path=tmp_path / "briefcase",
-    )
+def package_command_with_files(package_command):
     # Build the path for the source folder:
     src_path = (
-        tmp_path / "base_path" / "build" / "first-app" / "windows" / "app" / "src"
+        package_command.tmp_path
+        / "base_path"
+        / "build"
+        / "first-app"
+        / "windows"
+        / "app"
+        / "src"
     )
     src_path.mkdir(parents=True)
-    # Populate source folder with one dummy file:
-    open(f"{src_path}/First App.exe", "x").close()
-    return command
+
+    # Mock some typical folders and files in the src folder:
+    package_command.paths = (
+        "app/",
+        "app/first-app/",
+        "app/first-app/resources/",
+        "app/first-app-0.0.1.dist-info/",
+        "app_packages/",
+        "app_packages/toga_winforms/",
+    )
+    package_command.files = (
+        "First App.exe",
+        "python.exe",
+        "python3.dll",
+        "vcruntime140.dll",
+        "app/first-app/app.py",
+        "app/first-app/resources/__init__.py",
+        "app_packages/clr.py",
+        "app_packages/toga_winforms/command.py",
+    )
+    for path in package_command.paths:
+        (src_path / path).mkdir()
+    for file in package_command.files:
+        open(f"{src_path}/{file}", "x").close()
+    return package_command
 
 
 def test_package_formats(package_command):
@@ -226,17 +249,30 @@ def test_package_msi(package_command, first_app_config, tmp_path):
     ]
 
 
-def test_package_zip(package_zip_command, first_app_config, tmp_path):
+def test_package_zip(package_command_with_files, first_app_config, tmp_path):
     """A Windows app can be packaged as a zip file."""
 
     first_app_config.packaging_format = "zip"
-    package_zip_command.package_app(first_app_config)
+    package_command_with_files.package_app(first_app_config)
 
-    # The zip file exists and contains the content of the src folder
     archive_file = tmp_path / "base_path" / "dist" / "First App-0.0.1.zip"
+    src_files_and_paths = (
+        package_command_with_files.paths + package_command_with_files.files + ("",)
+    )
+
+    # The zip file exists
     assert archive_file.exists()
+
+    # Check content of zip file
     with ZipFile(archive_file) as archive:
-        assert archive.namelist() == ["First App.exe"]
+        root = "First App-0.0.1"
+        # All files in zip are from source
+        for name in archive.namelist():
+            # name.removeprefix(f'{root}/') will only work in Python > 3.8
+            assert name[16:] in (src_files_and_paths)
+        # All files from source are in zip
+        for entity in src_files_and_paths:
+            assert f"{root}/{entity}" in archive.namelist()
 
 
 @pytest.mark.parametrize(
