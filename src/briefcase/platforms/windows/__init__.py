@@ -23,7 +23,8 @@ class WindowsMixin:
         return self.bundle_path(app) / self.packaging_root / f"{app.formal_name}.exe"
 
     def distribution_path(self, app):
-        return self.dist_path / f"{app.formal_name}-{app.version}.msi"
+        suffix = "zip" if app.packaging_format == "zip" else "msi"
+        return self.dist_path / f"{app.formal_name}-{app.version}.{suffix}"
 
 
 class WindowsCreateCommand(CreateCommand):
@@ -260,16 +261,6 @@ class WindowsPackageCommand(PackageCommand):
         :param timestamp_digest: Hashing algorithm to request from the timestamp server.
         """
 
-        # Just pack the 'binary' folders in a zip file:
-        if app.packaging_format == "zip":
-            self.logger.info("Building zip file...", prefix=app.app_name)
-            self.tools.shutil.make_archive(
-                self.distribution_path(app).with_suffix(""),
-                "zip",
-                self.bundle_path(app) / self.packaging_root,
-            )
-            return
-
         if sign_app and not identity:
             sign_app = False
 
@@ -284,6 +275,22 @@ class WindowsPackageCommand(PackageCommand):
                 timestamp_digest=timestamp_digest,
             )
             self.sign_file(app=app, filepath=self.binary_path(app), **sign_options)
+
+        if app.packaging_format == "zip":
+            self._package_zip(app)
+        else:
+            self._package_msi(app)
+
+        if sign_app:
+            self.logger.info("Signing package...", prefix=app.app_name)
+            self.sign_file(
+                app=app,
+                filepath=self.distribution_path(app),
+                **sign_options,
+            )
+
+    def _package_msi(self, app):
+        """Build the msi installer."""
 
         self.logger.info("Building MSI...", prefix=app.app_name)
         try:
@@ -364,10 +371,21 @@ class WindowsPackageCommand(PackageCommand):
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(f"Unable to link app {app.app_name}.") from e
 
-        if sign_app:
-            self.logger.info("Signing MSI...", prefix=app.app_name)
-            self.sign_file(
-                app=app,
-                filepath=self.distribution_path(app),
-                **sign_options,
+    def _package_zip(self, app):
+        """Package the app as simple zip file."""
+
+        self.logger.info("Building zip file...", prefix=app.app_name)
+        with self.input.wait_bar("Packing..."):
+            zip_root_path = self.bundle_path(app) / f"{app.formal_name}-{app.version}"
+            self.tools.shutil.copytree(
+                self.bundle_path(app) / self.packaging_root,
+                zip_root_path,
+                dirs_exist_ok=True,
             )
+            self.tools.shutil.make_archive(
+                self.distribution_path(app).with_suffix(""),
+                "zip",
+                self.bundle_path(app),
+                f"{app.formal_name}-{app.version}",
+            )
+            self.tools.shutil.rmtree(zip_root_path)
