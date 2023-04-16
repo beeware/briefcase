@@ -1,1 +1,1 @@
-On Windows, it is now possible to build a zip folder for distribution by using ``package -p zip``.
+Support for packaging Windows apps as simple ZIP files was added.

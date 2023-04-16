@@ -3,7 +3,11 @@ Windows App
 ===========
 
 A Windows app is a stub binary, allow with a collection of folders that contain
-the Python code for the app and the Python runtime libraries.
+the Python code for the app and the Python runtime libraries. Briefcase supports
+two packaging formats for a Windows app:
+
+1. As an MSI installer
+2. As a ZIP file containing all files needed to run the app
 
 Briefcase uses the `WiX Toolset <https://wixtoolset.org/>`__ to build an MSI
 installer for a Windows App. WiX, in turn, requires that .NET Framework 3.5 is
@@ -13,9 +17,6 @@ enabled. To ensure .NET Framework 3.5 is enabled:
 2. Traverse to Programs -> Programs and Features
 3. Select "Turn Windows features On or Off"
 4. Ensure that ".NET framework 3.5 (includes .NET 2.0 and 3.0)" is selected.
-
-Instead of building an MSI installer, you can also pack the folders for
-distribution to a zip file using the ``briefcase package -p zip`` command.
 
 Icon format
 ===========
