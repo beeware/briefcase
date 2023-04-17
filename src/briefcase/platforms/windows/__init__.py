@@ -4,6 +4,7 @@ import subprocess
 import uuid
 from pathlib import Path
 from typing import List
+from zipfile import ZIP_DEFLATED, ZipFile
 
 from briefcase.commands import CreateCommand, PackageCommand, RunCommand
 from briefcase.config import AppConfig, parsed_version
@@ -278,6 +279,8 @@ class WindowsPackageCommand(PackageCommand):
 
         if app.packaging_format == "zip":
             self._package_zip(app)
+            # The zip can't be signed, so:
+            return
         else:
             self._package_msi(app)
 
@@ -376,16 +379,18 @@ class WindowsPackageCommand(PackageCommand):
 
         self.logger.info("Building zip file...", prefix=app.app_name)
         with self.input.wait_bar("Packing..."):
-            zip_root_path = self.bundle_path(app) / f"{app.formal_name}-{app.version}"
-            self.tools.shutil.copytree(
-                self.bundle_path(app) / self.packaging_root,
-                zip_root_path,
-                dirs_exist_ok=True,
-            )
-            self.tools.shutil.make_archive(
-                self.distribution_path(app).with_suffix(""),
-                "zip",
-                self.bundle_path(app),
-                f"{app.formal_name}-{app.version}",
-            )
-            self.tools.shutil.rmtree(zip_root_path)
+            source = self.bundle_path(app) / self.packaging_root  # /src
+            try:
+                os.mkdir(self.dist_path)  # /dist
+            except FileExistsError:
+                pass
+
+            with ZipFile(self.distribution_path(app), "w", ZIP_DEFLATED) as archive:
+                for path, _, files in os.walk(source):
+                    for file in files:
+                        src_path = os.path.join(path, file)
+                        rel_zip_path = os.path.normpath(
+                            f"{app.formal_name}-{app.version}//"
+                            f"{src_path.replace(str(source), '')}"
+                        )
+                        archive.write(src_path, rel_zip_path)
