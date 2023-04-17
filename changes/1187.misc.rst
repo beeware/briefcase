@@ -1,0 +1,1 @@
+When running tests on Windows, a directory named ``a-path-that-will-cause-an-OSError`` is no longer created at the root of the current drive.

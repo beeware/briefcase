@@ -1,12 +1,13 @@
 import datetime
-from pathlib import Path
-from unittest.mock import MagicMock
+from io import TextIOBase
+from unittest.mock import MagicMock, PropertyMock
 
 import pytest
 from rich.traceback import Trace
 
 import briefcase
-from briefcase.console import Log
+from briefcase.commands.dev import DevCommand
+from briefcase.console import Console, Log
 from briefcase.exceptions import BriefcaseError
 
 TRACEBACK_HEADER = "Traceback (most recent call last)"
@@ -14,13 +15,27 @@ EXTRA_HEADER = "Extra information:"
 
 
 @pytest.fixture
-def now(monkeypatch):
-    """monkeypatch the datetime.now inside of briefcase.console."""
+def mock_now(monkeypatch):
+    """Monkeypatch the ``datetime.now`` inside ``briefcase.console``.
+
+    When this fixture is used, the log filename for the test will be
+    ``briefcase.2022_06_25-16_12_29.dev.log``, assuming the command is a DevCommand.
+    """
     now = datetime.datetime(2022, 6, 25, 16, 12, 29)
     datetime_mock = MagicMock(wraps=datetime.datetime)
     datetime_mock.now.return_value = now
     monkeypatch.setattr(briefcase.console, "datetime", datetime_mock)
     return now
+
+
+@pytest.fixture
+def command(mock_now, tmp_path) -> DevCommand:
+    """Provides a mocked DevCommand."""
+    command = MagicMock(spec_set=DevCommand(Log(), Console()))
+    command.base_path = tmp_path
+    command.command = "dev"
+    command.tools.os.environ = {}
+    return command
 
 
 def test_capture_stacktrace():
@@ -56,12 +71,11 @@ def test_capture_stacktrace_for_briefcaseerror(skip_logfile):
     assert logger.skip_log is skip_logfile
 
 
-def test_save_log_to_file_do_not_log():
+def test_save_log_to_file_do_not_log(command):
     """Nothing is done to save log if no command or --log wasn't passed."""
     logger = Log()
     logger.save_log_to_file(command=None)
 
-    command = MagicMock()
     logger.save_log = False
     logger.save_log_to_file(command=command)
     command.input.wait_bar.assert_not_called()
@@ -70,12 +84,9 @@ def test_save_log_to_file_do_not_log():
     assert len(logger.stacktraces) == 0
 
 
-def test_save_log_to_file_no_exception(tmp_path, now):
+def test_save_log_to_file_no_exception(mock_now, command, tmp_path):
     """Log file contains everything printed to log; env vars are sanitized; no
     stacktrace if one is not captured."""
-    command = MagicMock()
-    command.base_path = Path(tmp_path)
-    command.command = "dev"
     command.tools.os.environ = {
         "GITHUB_KEY": "super-secret-key",
         "ANDROID_SDK_ROOT": "/androidsdk",
@@ -130,13 +141,8 @@ def test_save_log_to_file_no_exception(tmp_path, now):
     assert EXTRA_HEADER not in log_contents
 
 
-def test_save_log_to_file_with_exception(tmp_path, now):
+def test_save_log_to_file_with_exception(mock_now, command, tmp_path):
     """Log file contains exception stacktrace when one is captured."""
-    command = MagicMock()
-    command.base_path = Path(tmp_path)
-    command.command = "dev"
-    command.tools.os.environ = {}
-
     logger = Log()
     logger.save_log = True
     try:
@@ -157,13 +163,8 @@ def test_save_log_to_file_with_exception(tmp_path, now):
     assert log_contents.splitlines()[-1].startswith("ZeroDivisionError")
 
 
-def test_save_log_to_file_with_multiple_exceptions(tmp_path, now):
+def test_save_log_to_file_with_multiple_exceptions(mock_now, command, tmp_path):
     """Log file contains exception stacktrace when more than one is captured."""
-    command = MagicMock()
-    command.base_path = Path(tmp_path)
-    command.command = "dev"
-    command.tools.os.environ = {}
-
     logger = Log()
     logger.save_log = True
     for i in range(1, 5):
@@ -188,12 +189,8 @@ def test_save_log_to_file_with_multiple_exceptions(tmp_path, now):
     assert log_contents.splitlines()[-1].startswith("ZeroDivisionError")
 
 
-def test_save_log_to_file_extra(tmp_path, now):
+def test_save_log_to_file_extra(mock_now, command, tmp_path):
     """Log file extras are called when the log is written."""
-    command = MagicMock()
-    command.base_path = Path(tmp_path)
-    command.command = "dev"
-
     logger = Log()
     logger.save_log = True
 
@@ -220,12 +217,8 @@ def test_save_log_to_file_extra(tmp_path, now):
     assert "Log extra 3" in log_contents
 
 
-def test_save_log_to_file_extra_interrupted(tmp_path, now):
+def test_save_log_to_file_extra_interrupted(mock_now, command, tmp_path):
     """Log file extras can be interrupted by Ctrl-C."""
-    command = MagicMock()
-    command.base_path = Path(tmp_path)
-    command.command = "dev"
-
     logger = Log()
     logger.save_log = True
 
@@ -242,12 +235,26 @@ def test_save_log_to_file_extra_interrupted(tmp_path, now):
     assert log_filepath.stat().st_size == 0
 
 
-def test_save_log_to_file_fail_to_write_file(capsys):
-    """User is informed when the log file cannot be written."""
-    command = MagicMock()
-    command.base_path = Path("/a-path-that-will-cause-an-OSError...")
-    command.command = "dev"
-    command.tools.os.environ = {}
+def test_save_log_to_file_fail_to_make_logs_dir(
+    mock_now,
+    command,
+    capsys,
+    monkeypatch,
+    tmp_path,
+):
+    """User is informed when the ``logs`` directory cannot be created."""
+    # Mock the command's base path such that it:
+    mock_base_path = MagicMock(wraps=tmp_path)
+    command.base_path = mock_base_path
+    #  - returns a mocked filepath for the log file
+    mock_base_path.__str__.return_value = "/asdf/log_filepath"
+    #  - returns itself when the "logs" directory and log filename are appended
+    #    to create the full filepath to the log file
+    mock_base_path.__truediv__.return_value = mock_base_path
+    #  - returns itself when ``Log`` requests the ``parent`` for the log filepath
+    type(mock_base_path).parent = PropertyMock(return_value=mock_base_path)
+    #  - raises for the call to ``mkdir`` to create the ``logs`` directory
+    mock_base_path.mkdir.side_effect = OSError("directory creation denied")
 
     logger = Log()
     logger.save_log = True
@@ -255,15 +262,52 @@ def test_save_log_to_file_fail_to_write_file(capsys):
     logger.print("a line of output")
     logger.save_log_to_file(command=command)
 
-    last_line_of_output = capsys.readouterr().out.strip().splitlines()[-1]
-    assert last_line_of_output.startswith("Failed to save log to ")
+    assert capsys.readouterr().out == "\n".join(
+        [
+            "a line of output",
+            "",
+            "Failed to save log to /asdf/log_filepath: directory creation denied",
+            "",
+            "",
+        ]
+    )
 
 
-def test_log_with_context(tmp_path, capsys):
+def test_save_log_to_file_fail_to_write_file(
+    mock_now,
+    command,
+    capsys,
+    monkeypatch,
+    tmp_path,
+):
+    """User is informed when the log file cannot be written."""
+    # Mock opening a file that raises PermissionError on write
+    mock_open = MagicMock(spec_set=open)
+    monkeypatch.setattr("builtins.open", mock_open)
+    mock_log_file = MagicMock(spec_set=TextIOBase)
+    mock_open.return_value.__enter__.return_value = mock_log_file
+    mock_log_file.write.side_effect = OSError("file write denied")
+
+    logger = Log()
+    logger.save_log = True
+
+    logger.print("a line of output")
+    logger.save_log_to_file(command=command)
+
+    log_filepath = tmp_path / "logs" / "briefcase.2022_06_25-16_12_29.dev.log"
+    assert capsys.readouterr().out == "\n".join(
+        [
+            "a line of output",
+            "",
+            f"Failed to save log to {log_filepath}: file write denied",
+            "",
+            "",
+        ]
+    )
+
+
+def test_log_with_context(capsys):
     """Log file can be given a persistent context."""
-    command = MagicMock()
-    command.base_path = Path(tmp_path)
-
     logger = Log(verbosity=2)
     logger.save_log = False
 
@@ -313,11 +357,8 @@ def test_log_with_context(tmp_path, capsys):
     )
 
 
-def test_log_error_with_context_(tmp_path, capsys):
+def test_log_error_with_context(capsys):
     """If an exception is raised in a logging context, the context is cleared."""
-    command = MagicMock()
-    command.base_path = Path(tmp_path)
-
     logger = Log(verbosity=2)
     logger.save_log = False
 
