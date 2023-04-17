@@ -14,13 +14,12 @@ TRACEBACK_HEADER = "Traceback (most recent call last)"
 EXTRA_HEADER = "Extra information:"
 
 
-@pytest.fixture(autouse=True)
-def now(monkeypatch):
+@pytest.fixture
+def mock_now(monkeypatch):
     """Monkeypatch the ``datetime.now`` inside ``briefcase.console``.
 
-    Since this fixture is automatically reused for each test below, the log filename
-    for these tests will be ``briefcase.2022_06_25-16_12_29.dev.log``, assuming the
-    command is a DevCommand.
+    When this fixture is used, the log filename for the test will be
+    ``briefcase.2022_06_25-16_12_29.dev.log``, assuming the command is a DevCommand.
     """
     now = datetime.datetime(2022, 6, 25, 16, 12, 29)
     datetime_mock = MagicMock(wraps=datetime.datetime)
@@ -30,7 +29,7 @@ def now(monkeypatch):
 
 
 @pytest.fixture
-def command(tmp_path) -> DevCommand:
+def command(mock_now, tmp_path) -> DevCommand:
     """Provides a mocked DevCommand."""
     command = MagicMock(spec_set=DevCommand(Log(), Console()))
     command.base_path = tmp_path
@@ -85,7 +84,7 @@ def test_save_log_to_file_do_not_log(command):
     assert len(logger.stacktraces) == 0
 
 
-def test_save_log_to_file_no_exception(command, tmp_path):
+def test_save_log_to_file_no_exception(mock_now, command, tmp_path):
     """Log file contains everything printed to log; env vars are sanitized; no
     stacktrace if one is not captured."""
     command.tools.os.environ = {
@@ -142,7 +141,7 @@ def test_save_log_to_file_no_exception(command, tmp_path):
     assert EXTRA_HEADER not in log_contents
 
 
-def test_save_log_to_file_with_exception(command, tmp_path):
+def test_save_log_to_file_with_exception(mock_now, command, tmp_path):
     """Log file contains exception stacktrace when one is captured."""
     logger = Log()
     logger.save_log = True
@@ -164,7 +163,7 @@ def test_save_log_to_file_with_exception(command, tmp_path):
     assert log_contents.splitlines()[-1].startswith("ZeroDivisionError")
 
 
-def test_save_log_to_file_with_multiple_exceptions(command, tmp_path):
+def test_save_log_to_file_with_multiple_exceptions(mock_now, command, tmp_path):
     """Log file contains exception stacktrace when more than one is captured."""
     logger = Log()
     logger.save_log = True
@@ -190,7 +189,7 @@ def test_save_log_to_file_with_multiple_exceptions(command, tmp_path):
     assert log_contents.splitlines()[-1].startswith("ZeroDivisionError")
 
 
-def test_save_log_to_file_extra(command, tmp_path):
+def test_save_log_to_file_extra(mock_now, command, tmp_path):
     """Log file extras are called when the log is written."""
     logger = Log()
     logger.save_log = True
@@ -218,7 +217,7 @@ def test_save_log_to_file_extra(command, tmp_path):
     assert "Log extra 3" in log_contents
 
 
-def test_save_log_to_file_extra_interrupted(command, tmp_path):
+def test_save_log_to_file_extra_interrupted(mock_now, command, tmp_path):
     """Log file extras can be interrupted by Ctrl-C."""
     logger = Log()
     logger.save_log = True
@@ -236,7 +235,13 @@ def test_save_log_to_file_extra_interrupted(command, tmp_path):
     assert log_filepath.stat().st_size == 0
 
 
-def test_save_log_to_file_fail_to_make_logs_dir(command, capsys, monkeypatch, tmp_path):
+def test_save_log_to_file_fail_to_make_logs_dir(
+    mock_now,
+    command,
+    capsys,
+    monkeypatch,
+    tmp_path,
+):
     """User is informed when the ``logs`` directory cannot be created."""
     # Mock the command's base path such that it:
     mock_base_path = MagicMock(wraps=tmp_path)
@@ -268,7 +273,13 @@ def test_save_log_to_file_fail_to_make_logs_dir(command, capsys, monkeypatch, tm
     )
 
 
-def test_save_log_to_file_fail_to_write_file(command, capsys, monkeypatch, tmp_path):
+def test_save_log_to_file_fail_to_write_file(
+    mock_now,
+    command,
+    capsys,
+    monkeypatch,
+    tmp_path,
+):
     """User is informed when the log file cannot be written."""
     # Mock opening a file that raises PermissionError on write
     mock_open = MagicMock(spec_set=open)

@@ -10,7 +10,7 @@ from briefcase.integrations import windows_sdk
 from briefcase.integrations.windows_sdk import WindowsSDK
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def mock_winreg(monkeypatch):
     """Mock out winreg module."""
     winreg = MagicMock()
@@ -329,6 +329,7 @@ def test_winsdk_invalid_install_from_reg(
 
 def test_winsdk_valid_install_from_default_dir(
     mock_tools,
+    mock_winreg,
     tmp_path,
     capsys,
     monkeypatch,
@@ -371,6 +372,7 @@ def test_winsdk_valid_install_from_default_dir(
 
 def test_winsdk_invalid_install_from_default_dir(
     mock_tools,
+    mock_winreg,
     tmp_path,
     capsys,
     monkeypatch,
