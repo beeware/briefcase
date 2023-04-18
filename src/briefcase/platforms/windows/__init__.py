@@ -2,7 +2,7 @@ import os
 import re
 import subprocess
 import uuid
-from pathlib import Path
+from pathlib import Path, PurePath
 from typing import List
 from zipfile import ZIP_DEFLATED, ZipFile
 
@@ -380,17 +380,10 @@ class WindowsPackageCommand(PackageCommand):
         self.logger.info("Building zip file...", prefix=app.app_name)
         with self.input.wait_bar("Packing..."):
             source = self.bundle_path(app) / self.packaging_root  # /src
-            try:
-                os.mkdir(self.dist_path)  # /dist
-            except FileExistsError:
-                pass
+            zip_root = f"{app.formal_name}-{app.version}"
 
             with ZipFile(self.distribution_path(app), "w", ZIP_DEFLATED) as archive:
-                for path, _, files in os.walk(source):
-                    for file in files:
-                        src_path = os.path.join(path, file)
-                        rel_zip_path = os.path.normpath(
-                            f"{app.formal_name}-{app.version}//"
-                            f"{src_path.replace(str(source), '')}"
-                        )
-                        archive.write(src_path, rel_zip_path)
+                for file_path in source.glob("**/*"):
+                    archive.write(
+                        file_path, zip_root / PurePath(file_path).relative_to(source)
+                    )

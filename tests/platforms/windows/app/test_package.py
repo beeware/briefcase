@@ -11,6 +11,8 @@ from briefcase.integrations.windows_sdk import WindowsSDK
 from briefcase.integrations.wix import WiX
 from briefcase.platforms.windows.app import WindowsAppPackageCommand
 
+from ....utils import create_file
+
 
 @pytest.fixture
 def package_command(tmp_path):
@@ -28,28 +30,26 @@ def package_command(tmp_path):
         version="81.2.1.0",
         arch="groovy",
     )
-    command.tmp_path = tmp_path
     return command
 
 
 @pytest.fixture
-def package_command_with_files(package_command):
+def package_command_with_files(package_command, tmp_path):
     # Build the path for the source folder:
     src_path = (
-        package_command.tmp_path
-        / "base_path"
-        / "build"
-        / "first-app"
-        / "windows"
-        / "app"
-        / "src"
+        tmp_path / "base_path" / "build" / "first-app" / "windows" / "app" / "src"
     )
+    dist_path = tmp_path / "base_path" / "dist"
     src_path.mkdir(parents=True)
+    dist_path.mkdir(parents=True)
 
     # Mock some typical folders and files in the src folder:
-    paths = (
+    package_command.paths = (
+        "app/",
+        "app/first-app/",
         "app/first-app/resources/",
         "app/first-app-0.0.1.dist-info/",
+        "app_packages/",
         "app_packages/toga_winforms/",
     )
     package_command.files = (
@@ -62,10 +62,10 @@ def package_command_with_files(package_command):
         "app_packages/clr.py",
         "app_packages/toga_winforms/command.py",
     )
-    for path in paths:
-        (src_path / path).mkdir(parents=True)
+    for path in package_command.paths:
+        (src_path / path).mkdir()
     for file in package_command.files:
-        open(f"{src_path}/{file}", "x").close()
+        create_file(src_path / file, "")
     return package_command
 
 
@@ -253,7 +253,7 @@ def test_package_zip(package_command_with_files, first_app_config, tmp_path):
     package_command_with_files.package_app(first_app_config)
 
     archive_file = tmp_path / "base_path" / "dist" / "First App-0.0.1.zip"
-    source_files = package_command_with_files.files
+    source_files = package_command_with_files.files + package_command_with_files.paths
 
     # The zip file exists
     assert archive_file.exists()
