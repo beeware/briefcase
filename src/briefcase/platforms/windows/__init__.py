@@ -279,18 +279,16 @@ class WindowsPackageCommand(PackageCommand):
 
         if app.packaging_format == "zip":
             self._package_zip(app)
-            # The zip can't be signed, so:
-            return
         else:
             self._package_msi(app)
 
-        if sign_app:
-            self.logger.info("Signing package...", prefix=app.app_name)
-            self.sign_file(
-                app=app,
-                filepath=self.distribution_path(app),
-                **sign_options,
-            )
+            if sign_app:
+                self.logger.info("Signing MSI...", prefix=app.app_name)
+                self.sign_file(
+                    app=app,
+                    filepath=self.distribution_path(app),
+                    **sign_options,
+                )
 
     def _package_msi(self, app):
         """Build the msi installer."""
