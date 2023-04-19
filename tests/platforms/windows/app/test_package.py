@@ -433,6 +433,73 @@ def test_package_msi_with_codesigning(
     ]
 
 
+@pytest.mark.parametrize(
+    "use_local_machine, additional_args",
+    [(False, []), (True, ["-sm"])],
+)
+def test_package_zip_with_codesigning(
+    package_command_with_files,
+    first_app_config,
+    tmp_path,
+    use_local_machine,
+    additional_args,
+):
+    """In a ZIP package, only the binary will be code signed."""
+
+    first_app_config.packaging_format = "zip"
+
+    package_command_with_files.package_app(
+        first_app_config,
+        identity="80ee4c3321122916f5637522451993c2a0a4a56a",
+        file_digest="sha42",
+        use_local_machine=use_local_machine,
+        cert_store="mystore",
+        timestamp_url="http://freetimestamps.com",
+        timestamp_digest="sha56",
+    )
+
+    assert package_command_with_files.tools.subprocess.run.mock_calls == [
+        # Codesign app exe
+        mock.call(
+            [
+                tmp_path
+                / "windows_sdk"
+                / "bin"
+                / "81.2.1.0"
+                / "groovy"
+                / "signtool.exe",
+                "sign",
+                "-s",
+                "mystore",
+                "-sha1",
+                "80ee4c3321122916f5637522451993c2a0a4a56a",
+                "-fd",
+                "sha42",
+                "-d",
+                "The first simple app \\ demonstration",
+                "-du",
+                "https://example.com/first-app",
+                "-tr",
+                "http://freetimestamps.com",
+                "-td",
+                "sha56",
+            ]
+            + additional_args
+            + [
+                tmp_path
+                / "base_path"
+                / "build"
+                / "first-app"
+                / "windows"
+                / "app"
+                / "src"
+                / "First App.exe"
+            ],
+            check=True,
+        ),
+    ]
+
+
 def test_package_msi_invalid_identity(package_command, first_app_config):
     """Codesigning fails, along with packaging, if the identity is invalid."""
     with pytest.raises(
