@@ -1,0 +1,1 @@
+The stuck streamer test was updated to mitigate false failures potentially stemming from high load macOS GitHub runners.
