@@ -76,7 +76,9 @@ jobs:
 
     - name: Install dev dependencies
       run: |
-        python -m pip install --upgrade pip
+        # pip 23.1 has an issue with --user installs.
+        # See https://github.com/pypa/pip/issues/11982 for details
+        python -m pip install --upgrade "pip!=23.1"
         python -m pip install --upgrade setuptools
         # We don't actually want to install briefcase; we just want the dev
         # extras so we have a known version of tox and coverage.
@@ -113,7 +115,9 @@ jobs:
 
     - name: Install dev dependencies
       run: |
-        python -m pip install --upgrade pip
+        # pip 23.1 has an issue with --user installs.
+        # See https://github.com/pypa/pip/issues/11982 for details
+        python -m pip install --upgrade "pip!=23.1"
         python -m pip install --upgrade setuptools
         # We don't actually want to install briefcase;
         # we just want the dev extras so that we have a known version of coverage
