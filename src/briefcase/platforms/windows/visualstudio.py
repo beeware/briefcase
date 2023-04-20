@@ -75,7 +75,7 @@ class WindowsVisualStudioPackageCommand(
     WindowsVisualStudioMixin,
     WindowsPackageCommand,
 ):
-    description = "Package a Visual Studio project as an MSI."
+    description = "Package a Visual Studio project."
 
 
 class WindowsVisualStudioPublishCommand(WindowsVisualStudioMixin, PublishCommand):

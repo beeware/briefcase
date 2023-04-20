@@ -1,5 +1,6 @@
 from subprocess import CalledProcessError
 from unittest import mock
+from zipfile import ZipFile
 
 import pytest
 
@@ -9,6 +10,8 @@ from briefcase.integrations.subprocess import Subprocess
 from briefcase.integrations.windows_sdk import WindowsSDK
 from briefcase.integrations.wix import WiX
 from briefcase.platforms.windows.app import WindowsAppPackageCommand
+
+from ....utils import create_file
 
 
 @pytest.fixture
@@ -30,9 +33,37 @@ def package_command(tmp_path):
     return command
 
 
+@pytest.fixture
+def package_command_with_files(package_command, tmp_path):
+    # Build the paths for the source and the distribution folders:
+    src_path = (
+        tmp_path / "base_path" / "build" / "first-app" / "windows" / "app" / "src"
+    )
+    dist_path = tmp_path / "base_path" / "dist"
+    src_path.mkdir(parents=True)
+    dist_path.mkdir(parents=True)
+
+    # Mock some typical folders and files in the src folder:
+    files = (
+        src_path / "First App.exe",
+        src_path / "python.exe",
+        src_path / "python3.dll",
+        src_path / "vcruntime140.dll",
+        src_path / "app/first-app" / "app.py",
+        src_path / "app/first-app" / "resources" / "__init__.py",
+        src_path / "app/first-app-0.0.1.dist-info" / "top_level.txt",
+        src_path / "app_packages" / "clr.py",
+        src_path / "app_packages" / "toga_winforms" / "command.py",
+    )
+    for file in files:
+        create_file(file, "")
+
+    return package_command
+
+
 def test_package_formats(package_command):
     """Packaging formats are as expected."""
-    assert package_command.packaging_formats == ["msi"]
+    assert package_command.packaging_formats == ["msi", "zip"]
     assert package_command.default_packaging_format == "msi"
 
 
@@ -207,6 +238,46 @@ def test_package_msi(package_command, first_app_config, tmp_path):
     ]
 
 
+def test_package_zip(package_command_with_files, first_app_config, tmp_path):
+    """A Windows app can be packaged as a zip file."""
+
+    first_app_config.packaging_format = "zip"
+    package_command_with_files.package_app(first_app_config)
+
+    archive_file = tmp_path / "base_path" / "dist" / "First App-0.0.1.zip"
+    source_folders_and_files = (
+        "app/",
+        "app/first-app/",
+        "app/first-app/resources/",
+        "app/first-app-0.0.1.dist-info/",
+        "app_packages/",
+        "app_packages/toga_winforms/",
+        "First App.exe",
+        "python.exe",
+        "python3.dll",
+        "vcruntime140.dll",
+        "app/first-app/app.py",
+        "app/first-app/resources/__init__.py",
+        "app/first-app-0.0.1.dist-info/top_level.txt",
+        "app_packages/clr.py",
+        "app_packages/toga_winforms/command.py",
+    )
+
+    # The zip file exists
+    assert archive_file.exists()
+
+    # Check content of zip file
+    with ZipFile(archive_file) as archive:
+        root = "First App-0.0.1/"
+        # All folders and files in zip are from source
+        for name in archive.namelist():
+            # name.removeprefix(f'{root}') will only work in Python > 3.8
+            assert name[len(root) :] in source_folders_and_files
+        # All files from source are in zip
+        for file in source_folders_and_files:
+            assert f"{root}{file}" in archive.namelist()
+
+
 @pytest.mark.parametrize(
     "use_local_machine, additional_args",
     [(False, []), (True, ["-sm"])],
@@ -357,6 +428,73 @@ def test_package_msi_with_codesigning(
             ]
             + additional_args
             + [tmp_path / "base_path" / "dist" / "First App-0.0.1.msi"],
+            check=True,
+        ),
+    ]
+
+
+@pytest.mark.parametrize(
+    "use_local_machine, additional_args",
+    [(False, []), (True, ["-sm"])],
+)
+def test_package_zip_with_codesigning(
+    package_command_with_files,
+    first_app_config,
+    tmp_path,
+    use_local_machine,
+    additional_args,
+):
+    """In a ZIP package, only the binary will be code signed."""
+
+    first_app_config.packaging_format = "zip"
+
+    package_command_with_files.package_app(
+        first_app_config,
+        identity="80ee4c3321122916f5637522451993c2a0a4a56a",
+        file_digest="sha42",
+        use_local_machine=use_local_machine,
+        cert_store="mystore",
+        timestamp_url="http://freetimestamps.com",
+        timestamp_digest="sha56",
+    )
+
+    assert package_command_with_files.tools.subprocess.run.mock_calls == [
+        # Codesign app exe
+        mock.call(
+            [
+                tmp_path
+                / "windows_sdk"
+                / "bin"
+                / "81.2.1.0"
+                / "groovy"
+                / "signtool.exe",
+                "sign",
+                "-s",
+                "mystore",
+                "-sha1",
+                "80ee4c3321122916f5637522451993c2a0a4a56a",
+                "-fd",
+                "sha42",
+                "-d",
+                "The first simple app \\ demonstration",
+                "-du",
+                "https://example.com/first-app",
+                "-tr",
+                "http://freetimestamps.com",
+                "-td",
+                "sha56",
+            ]
+            + additional_args
+            + [
+                tmp_path
+                / "base_path"
+                / "build"
+                / "first-app"
+                / "windows"
+                / "app"
+                / "src"
+                / "First App.exe"
+            ],
             check=True,
         ),
     ]

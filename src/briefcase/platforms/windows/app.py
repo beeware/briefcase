@@ -133,7 +133,7 @@ class WindowsAppRunCommand(WindowsAppMixin, WindowsRunCommand):
 
 
 class WindowsAppPackageCommand(WindowsAppMixin, WindowsPackageCommand):
-    description = "Package a Windows app as an MSI."
+    description = "Package a Windows app."
 
 
 class WindowsAppPublishCommand(WindowsAppMixin, PublishCommand):
