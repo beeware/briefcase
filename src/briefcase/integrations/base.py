@@ -49,12 +49,9 @@ class Tool(ABC):
     def __init__(self, tools: ToolCache, **kwargs):
         self.tools = tools
 
-    def __init_subclass__(tool, **kwargs):
-        """Register each tool at definition."""
-        try:
-            tool_registry[tool.name] = tool
-        except AttributeError:
-            tool_registry[tool.__name__] = tool
+    def __init_subclass__(tool_cls, **kwargs):
+        """Register each tool when it is defined."""
+        tool_registry[tool_cls.name] = tool_cls
 
     @classmethod
     @abstractmethod
@@ -73,7 +70,7 @@ class Tool(ABC):
         """Is Briefcase managing the installation of this tool?"""
         return False
 
-    def install(self, *a, **kw):
+    def install(self, *args, **kwargs):
         """Install the tool as managed by Briefcase."""
         if self.managed_install:
             raise NotImplementedError(
@@ -82,7 +79,7 @@ class Tool(ABC):
         else:
             raise NonManagedToolError(self.full_name)
 
-    def uninstall(self, *a, **kw):
+    def uninstall(self, *args, **kwargs):
         """Uninstall the tool."""
         if self.managed_install:
             raise NotImplementedError(

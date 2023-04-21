@@ -25,7 +25,7 @@ class VisualStudio(Tool):
         msbuild_path: Path,
         install_metadata: dict[str, str] = None,
     ):
-        self.tools = tools
+        super().__init__(tools=tools)
         self._msbuild_path = msbuild_path
         self._install_metadata = install_metadata
 
@@ -64,7 +64,7 @@ class VisualStudio(Tool):
             tools.subprocess.check_output(["MSBuild.exe", "--version"])
 
             # Create an explicit VisualStudio, with no install metadata
-            visualstudio = VisualStudio(tools, msbuild_path=Path("MSBuild.exe"))
+            visualstudio = VisualStudio(tools=tools, msbuild_path=Path("MSBuild.exe"))
         except FileNotFoundError:
             # MSBuild isn't on the path
             pass
@@ -185,7 +185,7 @@ Then restart Briefcase.
                 )
 
             visualstudio = VisualStudio(
-                tools,
+                tools=tools,
                 msbuild_path=msbuild_path,
                 install_metadata=install_metadata,
             )

@@ -47,7 +47,7 @@ class AndroidSDK(Tool):
     full_name = "Android SDK"
 
     def __init__(self, tools: ToolCache, root_path: Path):
-        self.tools = tools
+        super().__init__(tools=tools)
         self.dot_android_path = self.tools.home_path / ".android"
         self.root_path = root_path
 
@@ -354,7 +354,7 @@ its output for errors.
                 "Unable to invoke the Android SDK manager"
             ) from e
 
-    def adb(self, device) -> ADB:
+    def adb(self, device: str) -> ADB:
         """Obtain an ADB instance for managing a specific device.
 
         :param device: The device ID to manage.
@@ -444,7 +444,7 @@ connection.
                 "Error while installing Android emulator."
             ) from e
 
-    def verify_avd(self, avd):
+    def verify_avd(self, avd: str):
         """Verify that the AVD has the necessary system components to launch.
 
         This includes:
@@ -510,7 +510,7 @@ connection.
         except KeyError:
             self.tools.logger.debug(f"Device {avd!r} doesn't define a skin.")
 
-    def verify_system_image(self, system_image):
+    def verify_system_image(self, system_image: str):
         """Verify that the required system image is installed.
 
         :param system_image: The SDKManager identifier for the system
@@ -573,7 +573,7 @@ connection.
                 f"Error while installing the {system_image!r} Android system image."
             ) from e
 
-    def verify_emulator_skin(self, skin):
+    def verify_emulator_skin(self, skin: str):
         """Verify that an emulator skin is available.
 
         A human-readable list of available skins can be found here:
@@ -678,7 +678,7 @@ connection.
     def select_target_device(
         self,
         device_or_avd: str | None,
-    ) -> tuple[None | str, None | str, None | str]:
+    ) -> tuple[str | None, str | None, str | None]:
         """Select a device to be the target for actions.
 
         Interrogates the system to get the list of available devices.
@@ -781,7 +781,6 @@ connection.
                         return None, name, avd
                 else:
                     # Specifier is a direct device ID
-                    avd = None
                     device = device_or_avd
 
                 details = running_devices[device]
@@ -1223,7 +1222,7 @@ class ADB:
                 f"Unable to determine if emulator {self.device} has booted."
             ) from e
 
-    def run(self, *arguments, quiet: bool = False) -> str:
+    def run(self, *arguments: str | Path, quiet: bool = False) -> str:
         """Run a command on a device using Android debug bridge, `adb`. The device name
         is mandatory to ensure clarity in the case of multiple attached devices.
 

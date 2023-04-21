@@ -9,7 +9,7 @@ class Git(Tool):
     full_name = "Git"
 
     @classmethod
-    def verify(cls, tools: ToolCache):
+    def verify(cls, tools: ToolCache, **kwargs):
         """Verify if git is installed.
 
         Unfortunately, `import git` triggers a call on the operating system

@@ -51,7 +51,7 @@ class Xcode(Tool):
         if hasattr(tools, "xcode"):
             return tools.xcode
 
-        ensure_xcode_is_installed(tools, min_version=min_version)
+        ensure_xcode_is_installed(tools=tools, min_version=min_version)
         XcodeCliTools.verify(tools=tools)
         tools.xcode = Xcode(tools=tools)
         return tools.xcode
@@ -77,8 +77,8 @@ class XcodeCliTools(Tool):
         if hasattr(tools, "xcode_cli"):
             return tools.xcode_cli
 
-        ensure_command_line_tools_are_installed(tools)
-        confirm_xcode_license_accepted(tools)
+        ensure_command_line_tools_are_installed(tools=tools)
+        confirm_xcode_license_accepted(tools=tools)
         tools.xcode_cli = XcodeCliTools(tools=tools)
         return tools.xcode_cli
 
@@ -140,7 +140,7 @@ to continue, and re-run Briefcase once that installation is complete.
 
 def ensure_xcode_is_installed(
     tools: ToolCache,
-    min_version: tuple = None,
+    min_version: tuple[int, int, int] = None,
     xcode_location: str = "/Applications/Xcode.app",
 ):
     """Determine if Xcode is installed; and if so, that it meets minimum version

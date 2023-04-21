@@ -30,7 +30,7 @@ class WiX(Tool):
         :returns: A valid WiX SDK wrapper. If WiX is not available, and was
             not installed, raises MissingToolError.
         """
-        self.tools = tools
+        super().__init__(tools=tools)
         if wix_home:
             self.wix_home = wix_home
         else:

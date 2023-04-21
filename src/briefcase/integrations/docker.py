@@ -3,11 +3,12 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.base import Tool, ToolCache
+from briefcase.integrations.subprocess import SubprocessArgsT
 
 
 class Docker(Tool):
@@ -125,7 +126,7 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
         return tools.docker
 
     @classmethod
-    def _version_compat(cls, tools):
+    def _version_compat(cls, tools: ToolCache):
         """Verify Docker version is compatible."""
         try:
             # Try to get the version of docker that is installed.
@@ -159,7 +160,7 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
             ) from e
 
     @classmethod
-    def _user_access(cls, tools):
+    def _user_access(cls, tools: ToolCache):
         """Verify Docker is operational for user."""
         try:
             # Invoke a docker command to check if the daemon is running,
@@ -181,19 +182,19 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
                 raise BriefcaseCommandError(cls.GENERIC_DOCKER_ERROR) from e
 
     @classmethod
-    def _buildx_installed(cls, tools):
+    def _buildx_installed(cls, tools: ToolCache):
         """Verify the buildx plugin is installed."""
         try:
             tools.subprocess.check_output(["docker", "buildx", "version"])
         except subprocess.CalledProcessError:
             raise BriefcaseCommandError(cls.BUILDX_PLUGIN_MISSING)
 
-    def check_output(self, args, image_tag):
+    def check_output(self, args: list[str | Path], image_tag: str):
         """Run a process inside a Docker container, capturing output.
 
         This is a bare Docker invocation; it's really only useful for running
         simple commands on an image, ensuring that the container is destroyed
-        afterwards. In most cases, you'll want to use an app context, rather
+        afterward. In most cases, you'll want to use an app context, rather
         than this.
 
         :param args: The list of arguments to pass to the Docker instance.
@@ -212,13 +213,13 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
             + args,
         )
 
-    def prepare(self, image_tag):
+    def prepare(self, image_tag: str):
         """Ensure that the given image exists, and is cached locally.
 
         This is achieved by trying to run a no-op command (echo) on the image;
         if it succeeds, the image exists locally.
 
-        A pull is forced, so you can be certain that the image is up to date.
+        A pull is forced, so you can be certain that the image is up-to-date.
 
         :param image_tag: The Docker image to prepare
         """
@@ -240,9 +241,8 @@ class DockerAppContext(Tool):
     full_name = "Docker"
 
     def __init__(self, tools: ToolCache, app: AppConfig):
-        self.tools = tools
+        super().__init__(tools=tools)
         self.app = app
-
         self.app_base_path = None
         self.host_bundle_path = None
         self.host_data_path = None
@@ -250,9 +250,9 @@ class DockerAppContext(Tool):
         self.python_version = None
 
     @property
-    def docker_data_path(self):
+    def docker_data_path(self) -> PurePosixPath:
         """The briefcase data directory used inside container."""
-        return "/home/brutus/.cache/briefcase"
+        return PurePosixPath("/home/brutus/.cache/briefcase")
 
     @classmethod
     def verify(
@@ -288,7 +288,7 @@ class DockerAppContext(Tool):
 
         Docker.verify(tools=tools)
 
-        tools[app].app_context = DockerAppContext(tools, app)
+        tools[app].app_context = DockerAppContext(tools=tools, app=app)
         tools[app].app_context.prepare(
             image_tag=image_tag,
             dockerfile_path=dockerfile_path,
@@ -350,7 +350,7 @@ class DockerAppContext(Tool):
                         f"Error building Docker container image for {self.app.app_name}."
                     ) from e
 
-    def _dockerize_path(self, arg: str) -> str:
+    def _dockerize_path(self, arg: str | Path) -> str:
         """Relocate any local path into the equivalent location on the docker
         filesystem.
 
@@ -365,13 +365,13 @@ class DockerAppContext(Tool):
         if arg == sys.executable:
             return f"python{self.python_version}"
         arg = arg.replace(os.fsdecode(self.host_bundle_path), "/app")
-        arg = arg.replace(os.fsdecode(self.host_data_path), self.docker_data_path)
+        arg = arg.replace(os.fsdecode(self.host_data_path), str(self.docker_data_path))
 
         return arg
 
     def _dockerize_args(
         self,
-        args: list[str],
+        args: SubprocessArgsT,
         interactive: bool = False,
         mounts: dict[str | Path, str | Path] = None,
         env: dict[str, str] = None,
@@ -382,7 +382,7 @@ class DockerAppContext(Tool):
         to invoke Docker. This involves:
 
          * Configuring the Docker invocation to reference the
-           appropriate container image, and clean up afterwards
+           appropriate container image, and clean up afterward
          * Setting volume mounts for the container instance
          * Transforming any references to local paths into Docker path references.
 
@@ -437,7 +437,7 @@ class DockerAppContext(Tool):
 
     def run(
         self,
-        args: list[str],
+        args: SubprocessArgsT,
         env: dict[str, str] = None,
         cwd: Path = None,
         interactive: bool = False,
@@ -465,7 +465,7 @@ class DockerAppContext(Tool):
 
     def check_output(
         self,
-        args: list[str],
+        args: SubprocessArgsT,
         env: dict[str, str] = None,
         cwd: Path = None,
         mounts: dict[str | Path, str | Path] = None,

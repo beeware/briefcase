@@ -22,7 +22,7 @@ ELF_PATCH_ORIGINAL_BYTES = bytes.fromhex("414902")
 ELF_PATCH_PATCHED_BYTES = bytes.fromhex("000000")
 
 
-class LinuxDeployBase(Tool, ABC):
+class LinuxDeployBase(ABC):
     name: str
     full_name: str
     install_msg: str
@@ -99,7 +99,7 @@ class LinuxDeployBase(Tool, ABC):
         if not is_plugin and hasattr(tools, "linuxdeploy"):
             return tools.linuxdeploy
 
-        tool = cls(tools, **kwargs)
+        tool = cls(tools=tools, **kwargs)
         if not tool.exists():
             if install:
                 tools.logger.info(
@@ -191,7 +191,7 @@ class LinuxDeployPluginBase(LinuxDeployBase):
         return self.tools.base_path / "linuxdeploy_plugins" / self.plugin_id
 
 
-class LinuxDeployGtkPlugin(LinuxDeployPluginBase):
+class LinuxDeployGtkPlugin(LinuxDeployPluginBase, Tool):
     name = "linuxdeploygtkplugin"
     full_name = "LinuxDeploy GTK plugin"
 
@@ -207,7 +207,7 @@ class LinuxDeployGtkPlugin(LinuxDeployPluginBase):
         )
 
 
-class LinuxDeployQtPlugin(LinuxDeployPluginBase):
+class LinuxDeployQtPlugin(LinuxDeployPluginBase, Tool):
     name = "linuxdeployqtplugin"
     full_name = "LinuxDeploy Qt plugin"
 
@@ -223,18 +223,24 @@ class LinuxDeployQtPlugin(LinuxDeployPluginBase):
         )
 
 
-class LinuxDeployLocalFilePlugin(LinuxDeployPluginBase):
+class LinuxDeployLocalFilePlugin(LinuxDeployPluginBase, Tool):
     name = "linuxdeploy_user_file_plugin"
     full_name = "user-provided linuxdeploy plugin from local file"
     install_msg = "Copying user-provided plugin into project"
 
-    def __init__(self, tools, plugin_path, bundle_path, **kwargs):
+    def __init__(
+        self,
+        tools: ToolCache,
+        plugin_path: Path,
+        bundle_path: Path,
+        **kwargs,
+    ):
         self._file_name = plugin_path.name
         self.local_path = plugin_path.parent
         self._file_path = bundle_path
 
         # Call the super last to ensure validation of the filename
-        super().__init__(tools)
+        super().__init__(tools=tools)
 
     @property
     def file_name(self) -> str:
@@ -245,7 +251,7 @@ class LinuxDeployLocalFilePlugin(LinuxDeployPluginBase):
         return self._file_path
 
     @property
-    def download_url(self):
+    def download_url(self) -> str:
         raise RuntimeError("Shouldn't be trying to download a local file plugin")
 
     def install(self):
@@ -266,11 +272,11 @@ class LinuxDeployLocalFilePlugin(LinuxDeployPluginBase):
         self.prepare_executable()
 
 
-class LinuxDeployURLPlugin(LinuxDeployPluginBase):
+class LinuxDeployURLPlugin(LinuxDeployPluginBase, Tool):
     name = "linuxdeploy_user_url_plugin"
     full_name = "user-provided linuxdeploy plugin from URL"
 
-    def __init__(self, tools, url, **kwargs):
+    def __init__(self, tools: ToolCache, url: str, **kwargs):
         self._download_url = url
 
         url_parts = urlparse(url)
@@ -287,7 +293,7 @@ class LinuxDeployURLPlugin(LinuxDeployPluginBase):
         self.hash = hashlib.sha256(url.encode("utf-8"))
 
         # Call the super last to ensure validation of the filename
-        super().__init__(tools)
+        super().__init__(tools=tools)
 
     @property
     def file_name(self) -> str:
@@ -307,7 +313,7 @@ class LinuxDeployURLPlugin(LinuxDeployPluginBase):
         return self._download_url
 
 
-class LinuxDeploy(LinuxDeployBase):
+class LinuxDeploy(LinuxDeployBase, Tool):
     name = "linuxdeploy"
     full_name = "LinuxDeploy"
     install_msg = "linuxdeploy was not found; downloading and installing..."
@@ -343,7 +349,7 @@ class LinuxDeploy(LinuxDeployBase):
         self,
         plugin_definitions: list[str],
         bundle_path: Path,
-    ) -> dict[str, type[LinuxDeployPluginBase]]:
+    ) -> dict[str, LinuxDeployT]:
         """Verify that all the declared plugin dependencies are available.
 
         Each plugin definition is a string, and can be:

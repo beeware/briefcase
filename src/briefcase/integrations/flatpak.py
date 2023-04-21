@@ -5,6 +5,7 @@ from pathlib import Path
 
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.base import Tool, ToolCache
+from briefcase.integrations.subprocess import SubprocessArgsT
 
 
 class Flatpak(Tool):
@@ -252,7 +253,7 @@ flatpak run {bundle_identifier}
         self,
         bundle_identifier: str,
         app_name: str,
-        args: list[str] = None,
+        args: SubprocessArgsT = None,
         main_module: str = None,
     ) -> subprocess.Popen[str]:
         """Run a Flatpak in a way that allows for log streaming.

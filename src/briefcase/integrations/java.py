@@ -14,7 +14,7 @@ class JDK(Tool):
     full_name = "Java JDK"
 
     def __init__(self, tools: ToolCache, java_home: Path):
-        self.tools = tools
+        super().__init__(tools=tools)
 
         # As of April 10 2020, 8u242-b08 is the current AdoptOpenJDK
         # https://adoptopenjdk.net/releases.html
@@ -69,7 +69,7 @@ class JDK(Tool):
 
         if tools.host_arch == "arm64" and tools.host_os == "Darwin":
             # Java 8 is not available for macOS on ARM64, so we will require Rosetta.
-            cls.verify_rosetta(tools)
+            cls.verify_rosetta(tools=tools)
 
         # macOS has a helpful system utility to determine JAVA_HOME. Try it.
         if not java_home and tools.host_os == "Darwin":
@@ -98,7 +98,7 @@ class JDK(Tool):
                 vparts = version_str.split(".")
                 if len(vparts) == 3 and vparts[:2] == ["1", "8"]:
                     # It appears to be a Java 8 JDK.
-                    java = JDK(tools, java_home=Path(java_home))
+                    java = JDK(tools=tools, java_home=Path(java_home))
                 else:
                     # It's not a Java 8 JDK.
                     install_message = f"""
@@ -201,7 +201,7 @@ class JDK(Tool):
             if tools.host_os == "Darwin":
                 java_home = java_home / "Contents" / "Home"
 
-            java = JDK(tools, java_home=java_home)
+            java = JDK(tools=tools, java_home=java_home)
 
             if not java.exists():
                 if install:
@@ -276,7 +276,7 @@ Delete {jdk_zip_path} and run briefcase again.
                 self.tools.shutil.rmtree(self.java_home)
 
     @classmethod
-    def verify_rosetta(cls, tools):
+    def verify_rosetta(cls, tools: ToolCache):
         try:
             tools.subprocess.check_output(["arch", "-x86_64", "true"])
         except subprocess.CalledProcessError:

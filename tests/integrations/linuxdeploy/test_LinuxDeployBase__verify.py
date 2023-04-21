@@ -1,6 +1,7 @@
 import pytest
 
 from briefcase.exceptions import BriefcaseCommandError, MissingToolError, NetworkFailure
+from briefcase.integrations.base import Tool
 from briefcase.integrations.linuxdeploy import LinuxDeployBase
 from tests.integrations.linuxdeploy.utils import (
     side_effect_create_mock_appimage,
@@ -8,13 +9,13 @@ from tests.integrations.linuxdeploy.utils import (
 )
 
 
-class LinuxDeployDummy(LinuxDeployBase):
+class LinuxDeployDummy(LinuxDeployBase, Tool):
     name = "dummy-plugin"
     full_name = "Dummy plugin"
     install_msg = "Installing dummy plugin"
 
-    def __init__(self, command, file_name="linuxdeploy-dummy-wonky.AppImage", **kwargs):
-        super().__init__(command)
+    def __init__(self, tools, file_name="linuxdeploy-dummy-wonky.AppImage", **kwargs):
+        super().__init__(tools=tools)
         self._file_name = file_name
         self.kwargs = kwargs
 
@@ -37,7 +38,7 @@ def test_short_circuit(mock_tools):
         BriefcaseCommandError,
         match="LinuxDeployBase cannot be used as a Tool.",
     ):
-        _ = LinuxDeployBase.verify(mock_tools)
+        LinuxDeployBase.verify(mock_tools)
 
 
 def test_verify_exists(mock_tools, tmp_path):

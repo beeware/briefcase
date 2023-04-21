@@ -5,6 +5,7 @@ import pytest
 
 from briefcase.integrations.base import ToolCache
 from briefcase.integrations.download import Download
+from briefcase.integrations.linuxdeploy import LinuxDeploy
 from briefcase.integrations.subprocess import Subprocess
 
 
@@ -23,3 +24,8 @@ def mock_tools(tmp_path, mock_tools) -> ToolCache:
     (tmp_path / "bundle").mkdir()
 
     return mock_tools
+
+
+@pytest.fixture
+def linuxdeploy(mock_tools):
+    return LinuxDeploy(mock_tools)

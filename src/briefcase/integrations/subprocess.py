@@ -11,7 +11,7 @@ import time
 from functools import wraps
 from pathlib import Path
 from subprocess import CompletedProcess
-from typing import Any, Callable, Generator
+from typing import Any, Callable, Iterator, Sequence, Union
 
 import psutil
 
@@ -19,6 +19,8 @@ from briefcase.config import AppConfig
 from briefcase.console import Log
 from briefcase.exceptions import CommandOutputParseError, ParseError
 from briefcase.integrations.base import Tool, ToolCache
+
+SubprocessArgsT = Sequence[Union[str, Path]]
 
 
 class StopStreaming(Exception):
@@ -56,7 +58,7 @@ def is_process_dead(pid: int) -> bool:
 
 
 def get_process_id_by_command(
-    command_list: list = None,
+    command_list: list[str] = None,
     command: str = "",
     logger: Log = None,
 ) -> int | None:
@@ -76,7 +78,7 @@ def get_process_id_by_command(
     # note: psutil returns None for a process attribute if it is unavailable;
     #   this is most likely to happen for restricted or zombie processes.
     for proc in psutil.process_iter(["cmdline", "create_time", "pid"]):
-        proc_cmdline = proc.info["cmdline"]
+        proc_cmdline: list[str] = proc.info["cmdline"]
         if command_list and proc_cmdline == command_list:
             matching_procs.append(proc.info)
         if command and proc_cmdline and proc_cmdline[0].startswith(command):
@@ -104,17 +106,20 @@ def ensure_console_is_safe(sub_method):
     """
 
     @wraps(sub_method)
-    def inner(sub, args, **kwargs):
+    def inner(*args: SubprocessArgsT, **kwargs):
         """Evaluate whether conditions are met to remove any dynamic elements in the
         console before returning control to Subprocess.
 
-        :param sub: Subprocess object
         :param args: list of implicit strings that will be run as subprocess command
         :return: the return value for the Subprocess method
         """
+        sub: Subprocess = args[0]
+        sub_args = args[1]
+        pos_args = args[2:]
+
         # Just run the command if no dynamic elements are active
         if not sub.tools.input.is_console_controlled:
-            return sub_method(sub, args, **kwargs)
+            return sub_method(sub, sub_args, *pos_args, **kwargs)
 
         remove_dynamic_elements = False
 
@@ -123,7 +128,7 @@ def ensure_console_is_safe(sub_method):
         # it may prompt the user to abort the script and dynamic elements
         # such as the Wait Bar can hide this message from the user.
         if sub.tools.host_os == "Windows":
-            executable = str(args[0]).strip() if args else ""
+            executable = str(sub_args[0]).strip() if sub_args else ""
             remove_dynamic_elements |= executable.lower().endswith(".bat")
 
         # Release control for commands that cannot be streamed.
@@ -132,15 +137,17 @@ def ensure_console_is_safe(sub_method):
         # Run subprocess command with or without console control
         if remove_dynamic_elements:
             with sub.tools.input.release_console_control():
-                return sub_method(sub, args, **kwargs)
+                return sub_method(sub, sub_args, *pos_args, **kwargs)
         else:
-            return sub_method(sub, args, **kwargs)
+            return sub_method(sub, sub_args, *pos_args, **kwargs)
 
     return inner
 
 
 class NativeAppContext(Tool):
     """A wrapper around subprocess for use as an app-bound tool."""
+
+    name = "app_context_subprocess"
 
     @classmethod
     def verify(cls, tools: ToolCache, app: AppConfig, **kwargs) -> Subprocess:
@@ -161,7 +168,7 @@ class Subprocess(Tool):
     full_name = "Subprocess"
 
     def __init__(self, tools: ToolCache):
-        self.tools = tools
+        super().__init__(tools=tools)
         self._subprocess = subprocess
 
     def prepare(self):
@@ -269,17 +276,22 @@ class Subprocess(Tool):
         return kwargs
 
     @classmethod
-    def verify(cls, tools: ToolCache) -> Subprocess:
+    def verify(cls, tools: ToolCache, **kwargs) -> Subprocess:
         """Make subprocess available in tool cache."""
         # short circuit since already verified and available
         if hasattr(tools, "subprocess"):
             return tools.subprocess
 
-        tools.subprocess = Subprocess(tools)
+        tools.subprocess = Subprocess(tools=tools)
         return tools.subprocess
 
     @ensure_console_is_safe
-    def run(self, args: list, stream_output: bool = True, **kwargs) -> CompletedProcess:
+    def run(
+        self,
+        args: SubprocessArgsT,
+        stream_output: bool = True,
+        **kwargs,
+    ) -> CompletedProcess:
         """A wrapper for subprocess.run().
 
         This method implements the behavior of subprocess.run() with some
@@ -413,7 +425,7 @@ class Subprocess(Tool):
 
     def _run_and_stream_output(
         self,
-        args: list,
+        args: SubprocessArgsT,
         check: bool = False,
         **kwargs,
     ) -> CompletedProcess:
@@ -469,7 +481,7 @@ class Subprocess(Tool):
         return subprocess.CompletedProcess(args, return_code, stderr=stderr)
 
     @ensure_console_is_safe
-    def check_output(self, args: list, quiet: bool = False, **kwargs) -> str:
+    def check_output(self, args: SubprocessArgsT, quiet: bool = False, **kwargs) -> str:
         """A wrapper for subprocess.check_output()
 
         The behavior of this method is identical to
@@ -482,6 +494,7 @@ class Subprocess(Tool):
          - The `stderr` argument is defaulted to `stdout` so _all_ output is
            returned and `stderr` isn't unexpectedly printed to the console.
 
+        :param args: commands and its arguments to run via subprocess
         :param quiet: Should the invocation of this command be silent, and
             *not* appear in the logs? This should almost always be False;
             however, for some calls (most notably, calls that are called
@@ -515,7 +528,7 @@ class Subprocess(Tool):
     def parse_output(
         self,
         output_parser: Callable[[str], Any],
-        args: list,
+        args: SubprocessArgsT,
         **kwargs,
     ) -> Any:
         """A wrapper for check_output() where the command output is processed through
@@ -554,7 +567,7 @@ class Subprocess(Tool):
                 self.tools.logger.error(f"    {line}")
             raise CommandOutputParseError(error_reason) from e
 
-    def Popen(self, args: list, **kwargs) -> subprocess.Popen:
+    def Popen(self, args: SubprocessArgsT, **kwargs) -> subprocess.Popen:
         """A wrapper for subprocess.Popen()
 
         The behavior of this method is identical to
@@ -578,7 +591,7 @@ class Subprocess(Tool):
         label: str,
         popen_process: subprocess.Popen,
         stop_func: Callable[[], bool] = lambda: False,
-        filter_func: Callable[[str], Generator[str, None, None]] = None,
+        filter_func: Callable[[str], Iterator[str]] = None,
     ):
         """Stream the output of a Popen process until the process exits. If the user
         sends CTRL+C, the process will be terminated.
@@ -629,7 +642,7 @@ class Subprocess(Tool):
     def _stream_output_thread(
         self,
         popen_process: subprocess.Popen,
-        filter_func: Callable[[str], Generator[str, None, None]],
+        filter_func: Callable[[str], Iterator[str]],
     ):
         """Stream output for a Popen process in a Thread.
 
@@ -688,7 +701,7 @@ class Subprocess(Tool):
             self.tools.logger.warning(f"Forcibly killing {label}...")
             popen_process.kill()
 
-    def _log_command(self, args: list):
+    def _log_command(self, args: SubprocessArgsT):
         """Log the entire console command being executed."""
         self.tools.logger.debug()
         self.tools.logger.debug("Running Command:")

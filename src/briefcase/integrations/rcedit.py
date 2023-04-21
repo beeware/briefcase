@@ -33,7 +33,7 @@ class RCEdit(Tool):
         if hasattr(tools, "rcedit"):
             return tools.rcedit
 
-        rcedit = RCEdit(tools)
+        rcedit = RCEdit(tools=tools)
 
         if not rcedit.exists():
             if install:
