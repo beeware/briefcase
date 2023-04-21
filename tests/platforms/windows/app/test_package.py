@@ -147,7 +147,8 @@ def test_verify_with_signing(package_command):
     ],
 )
 def test_parse_options(package_command, cli_args, signing_options, is_sdk_needed):
-    """Command line arguments are parsed as expected; Windows SDK is required if an identity is specified."""
+    """Command line arguments are parsed as expected; Windows SDK is required if an
+    identity is specified."""
     default_options = dict(
         identity=None,
         file_digest="sha256",

@@ -18,11 +18,16 @@ repos:
     hooks:
       - id: pyupgrade
         args: [--py38-plus]
+  - repo: https://github.com/myint/docformatter
+    rev: v1.6.1
+    hooks:
+      - id: docformatter
+        args: [--in-place, --wrap-descriptions=88, --wrap-summaries=88]
   - repo: https://github.com/psf/black
     rev: 23.3.0
     hooks:
-    - id: black
-      language_version: python3
+      - id: black
+        language_version: python3
   - repo: https://github.com/PyCQA/flake8
     rev: 6.0.0
     hooks:

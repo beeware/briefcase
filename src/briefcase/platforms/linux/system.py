@@ -126,8 +126,8 @@ class LinuxSystemPassiveMixin(LinuxMixin):
     def target_glibc_version(self, app):
         """Determine the glibc version.
 
-        If running in Docker, this is done by interrogating libc.so.6; outside
-        docker, we can use os.confstr().
+        If running in Docker, this is done by interrogating libc.so.6; outside docker,
+        we can use os.confstr().
         """
         if self.use_docker:
             try:
@@ -296,8 +296,8 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
             Docker.verify(tools=self.tools)
 
     def verify_python(self, app):
-        """Verify that the version of Python being used to build the app in
-        Docker is compatible with the version being used to run Briefcase.
+        """Verify that the version of Python being used to build the app in Docker is
+        compatible with the version being used to run Briefcase.
 
         Will raise an exception if the Python version is fundamentally
         incompatible (i.e., if Briefcase doesn't support it); any other version
@@ -354,11 +354,11 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
             )
 
     def verify_system_python(self):
-        """Verify that the Python being used to run Briefcase is the
-        default system python.
+        """Verify that the Python being used to run Briefcase is the default system
+        python.
 
-        Will raise an exception if the system Python isn't an obvious Python3,
-        or the Briefcase Python isn't the same version as the system Python.
+        Will raise an exception if the system Python isn't an obvious Python3, or the
+        Briefcase Python isn't the same version as the system Python.
 
         Requires that the app tools have been verified.
         """
@@ -374,8 +374,8 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
             )
 
     def _system_requirement_tools(self, app: AppConfig):
-        """Utility method returning the packages and tools needed to verify
-        system requirements.
+        """Utility method returning the packages and tools needed to verify system
+        requirements.
 
         :param app: The app being built.
         :returns: A triple containing (0) The list of package names that must

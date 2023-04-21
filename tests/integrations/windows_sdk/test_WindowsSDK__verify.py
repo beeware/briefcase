@@ -94,8 +94,8 @@ def test_winsdk_arch(mock_tools, host_arch, sdk_arch, tmp_path, monkeypatch):
 
 
 def test_winsdk_valid_env_vars(mock_tools, tmp_path, monkeypatch):
-    """If the WindowsSDKDir and WindowsSDKVersion env vars point to a suitable
-    Windows SDK install, the validator succeeds."""
+    """If the WindowsSDKDir and WindowsSDKVersion env vars point to a suitable Windows
+    SDK install, the validator succeeds."""
     # Mock the environment for a Windows SDK install
     sdk_path, sdk_ver = setup_winsdk_install(tmp_path, "1.1.1", "x64")
 
@@ -118,8 +118,8 @@ def test_winsdk_valid_env_vars(mock_tools, tmp_path, monkeypatch):
 
 
 def test_winsdk_invalid_env_vars(mock_tools, tmp_path, monkeypatch):
-    """If the WindowsSDKDir and WindowsSDKVersion env vars point to an invalid
-    Windows SDK install, the validator fails."""
+    """If the WindowsSDKDir and WindowsSDKVersion env vars point to an invalid Windows
+    SDK install, the validator fails."""
     # Mock the environment for a Windows SDK install
     sdk_path = tmp_path / "win_sdk"
     sdk_ver = "1.1.1.0"
@@ -143,7 +143,8 @@ def test_winsdk_invalid_env_vars(mock_tools, tmp_path, monkeypatch):
 
 
 def test_winsdk_latest_install_from_reg(mock_tools, mock_winreg, tmp_path, monkeypatch):
-    """If the first (i.e. "latest") version of the SDK found in the registry is valid, the validator succeeds."""
+    """If the first (i.e. "latest") version of the SDK found in the registry is valid,
+    the validator succeeds."""
     # Bypass using SDK in env vars
     mock_tools.os.environ.get.return_value = None
 
@@ -181,7 +182,8 @@ def test_winsdk_nonlatest_install_from_reg(
     capsys,
     monkeypatch,
 ):
-    """If a subsequent version of the SDK found in the registry is valid, the validator succeeds."""
+    """If a subsequent version of the SDK found in the registry is valid, the validator
+    succeeds."""
     # Bypass using SDK in env vars
     mock_tools.os.environ.get.return_value = None
 

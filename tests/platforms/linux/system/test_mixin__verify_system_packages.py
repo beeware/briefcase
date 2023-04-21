@@ -27,7 +27,7 @@ def build_command(tmp_path, first_app):
 
 
 def test_deb_requirements(build_command, first_app_config):
-    """Debian requirements can be verified"""
+    """Debian requirements can be verified."""
     first_app_config.target_vendor_base = "debian"
 
     build_command.verify_system_packages(first_app_config)
@@ -40,7 +40,7 @@ def test_deb_requirements(build_command, first_app_config):
 
 
 def test_rpm_requirements(build_command, first_app_config):
-    """RHEL requirements can be verified"""
+    """RHEL requirements can be verified."""
     first_app_config.target_vendor_base = "rhel"
 
     build_command.verify_system_packages(first_app_config)
@@ -54,7 +54,7 @@ def test_rpm_requirements(build_command, first_app_config):
 
 
 def test_arch_requirements(build_command, first_app_config, capsys):
-    """Arch requirements can be verified"""
+    """Arch requirements can be verified."""
     first_app_config.target_vendor_base = "arch"
 
     build_command.verify_system_packages(first_app_config)
@@ -66,7 +66,7 @@ def test_arch_requirements(build_command, first_app_config, capsys):
 
 
 def test_unknown_requirements(build_command, first_app_config, capsys):
-    """An unknown system can't be verified"""
+    """An unknown system can't be verified."""
     first_app_config.target_vendor_base = "somevendor"
 
     build_command.verify_system_packages(first_app_config)
@@ -80,7 +80,7 @@ def test_unknown_requirements(build_command, first_app_config, capsys):
 
 
 def test_missing_packages(build_command, first_app_config, capsys):
-    """If there are missing system packages, an error is raised"""
+    """If there are missing system packages, an error is raised."""
     # Mock the system requirement tools; there's a base requirement of
     # a packaged called "compiler", verified using "check <pkg>", and
     # isntalled using "system <pkg>"
@@ -113,7 +113,7 @@ def test_missing_packages(build_command, first_app_config, capsys):
 
 
 def test_packages_installed(build_command, first_app_config, capsys):
-    """If all required packages are installed, no error is raised"""
+    """If all required packages are installed, no error is raised."""
     # Mock the system requirement tools; there's a base requirement of
     # a packaged called "compiler", verified using "check <pkg>", and
     # isntalled using "system <pkg>"

@@ -145,7 +145,7 @@ def test_finalize_nodocker(create_command, first_app_config, capsys):
 def test_output_format_template_context(
     create_command, first_app_config, manylinux, tag, host_arch, context
 ):
-    """The template context reflects the manylinux name, tag and architecture"""
+    """The template context reflects the manylinux name, tag and architecture."""
     if manylinux:
         first_app_config.manylinux = manylinux
     if tag:
@@ -157,7 +157,7 @@ def test_output_format_template_context(
 
 
 def test_output_format_template_context_bad_tag(create_command, first_app_config):
-    """An unknown manylinux tag raises an error"""
+    """An unknown manylinux tag raises an error."""
     first_app_config.manylinux = "unknown"
     with pytest.raises(BriefcaseConfigError, match=r"Unknown manylinux tag 'unknown'"):
         assert create_command.output_format_template_context(first_app_config)

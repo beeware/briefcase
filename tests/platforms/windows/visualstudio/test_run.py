@@ -156,8 +156,7 @@ def test_run_app_test_mode(run_command, first_app_config, tmp_path):
 
 
 def test_run_app_test_mode_with_args(run_command, first_app_config, tmp_path):
-    """A windows Visual Studio project app can be started in test mode with
-    args."""
+    """A windows Visual Studio project app can be started in test mode with args."""
 
     # Set up the log streamer to return a known stream with a good returncode
     log_popen = mock.MagicMock()

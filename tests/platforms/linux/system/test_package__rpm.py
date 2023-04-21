@@ -76,7 +76,7 @@ def first_app_rpm(first_app, tmp_path):
 
 
 def test_verify_no_docker(monkeypatch, package_command, first_app_rpm):
-    """If not using docker, existence of rpmbuild is verified"""
+    """If not using docker, existence of rpmbuild is verified."""
     # Mock not using docker
     package_command.target_image = None
 
@@ -95,7 +95,7 @@ def test_verify_no_docker(monkeypatch, package_command, first_app_rpm):
 
 
 def test_verify_rpmbuild_missing(monkeypatch, package_command, first_app_rpm):
-    """If rpmbuild isn't installed, an error is raised"""
+    """If rpmbuild isn't installed, an error is raised."""
     # Mock not using docker
     package_command.target_image = None
 
@@ -118,7 +118,7 @@ def test_verify_rpmbuild_missing(monkeypatch, package_command, first_app_rpm):
 
 
 def test_verify_docker(monkeypatch, package_command, first_app_rpm):
-    """If using Docker, no tool checks are needed"""
+    """If using Docker, no tool checks are needed."""
     # Mock using docker
     package_command.target_image = "somevendor:surprising"
 

@@ -75,7 +75,7 @@ def first_app_pkg(first_app, tmp_path):
 
 
 def test_verify_no_docker(monkeypatch, package_command, first_app_pkg):
-    """If not using docker, existence of makepkg is verified"""
+    """If not using docker, existence of makepkg is verified."""
     # Mock not using docker
     package_command.target_image = None
 
@@ -94,7 +94,7 @@ def test_verify_no_docker(monkeypatch, package_command, first_app_pkg):
 
 
 def test_verify_makepkg_missing(monkeypatch, package_command, first_app_pkg):
-    """If makepkg isn't installed, an error is raised"""
+    """If makepkg isn't installed, an error is raised."""
     # Mock not using docker
     package_command.target_image = None
 
@@ -117,7 +117,7 @@ def test_verify_makepkg_missing(monkeypatch, package_command, first_app_pkg):
 
 
 def test_verify_docker(monkeypatch, package_command, first_app_pkg):
-    """If using Docker, no tool checks are needed"""
+    """If using Docker, no tool checks are needed."""
     # Mock using docker
     package_command.target_image = "somevendor:surprising"
 

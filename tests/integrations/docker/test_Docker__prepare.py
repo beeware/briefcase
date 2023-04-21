@@ -17,7 +17,7 @@ def mock_tools(mock_tools) -> ToolCache:
 
 
 def test_prepare(mock_tools):
-    """A docker image can be prepared"""
+    """A docker image can be prepared."""
 
     # Prepare an image
     mock_tools.docker.prepare("ubuntu:jammy")

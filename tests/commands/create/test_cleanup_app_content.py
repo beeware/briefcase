@@ -19,7 +19,8 @@ def myapp_unrolled(myapp, support_path, app_packages_path_index):
 
 
 def test_no_cleanup(create_command, myapp_unrolled, support_path):
-    """If there are no cleanup directives, bundle content isn't touched; but __pycache__ is cleaned"""
+    """If there are no cleanup directives, bundle content isn't touched; but __pycache__
+    is cleaned."""
 
     # Cleanup app content
     create_command.cleanup_app_content(myapp_unrolled)

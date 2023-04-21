@@ -72,10 +72,9 @@ class WindowsSDK(Tool):
     def _windows_sdks(cls, tools: ToolCache) -> Generator[tuple[Path, str], None, None]:
         """Generator of (path, version) for instances of Windows SDK.
 
-        All instances of Windows SDK should reside in the same base directory;
-        this is enforced by the SDK installer. Certain subdirectories, such as
-        `include` and `bin`, will contain subdirectories for versions that may
-        be installed.
+        All instances of Windows SDK should reside in the same base directory; this is
+        enforced by the SDK installer. Certain subdirectories, such as `include` and
+        `bin`, will contain subdirectories for versions that may be installed.
         """
         tools.logger.debug("Finding Suitable Installation...", prefix=cls.full_name)
 

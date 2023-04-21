@@ -32,11 +32,11 @@ def mock_tools(mock_tools) -> ToolCache:
 def file_perms() -> int:
     """The expected permissions for the downloaded file.
 
-    Since umask can vary on different systems, it is updated to a known
-    value and reset after the test finishes.
+    Since umask can vary on different systems, it is updated to a known value and reset
+    after the test finishes.
 
-    On Windows, the umask seems to always be zero and chmod doesn't really
-    do anything anyway.
+    On Windows, the umask seems to always be zero and chmod doesn't really do anything
+    anyway.
     """
     if platform.system() == "Windows":
         yield 0o666

@@ -38,14 +38,13 @@ class RichConsoleHighlighter(RegexHighlighter):
 
     This highlighter limits text highlighting to only URLs.
 
-    By default, Rich applies several highlighting rules to anything it
-    prints for concepts like UUIDs, markup, IP addresses, numbers, etc.
-    All these colorful additions to the text can become overbearing and
-    distracting given much of the output does not benefit from coloring.
+    By default, Rich applies several highlighting rules to anything it prints for
+    concepts like UUIDs, markup, IP addresses, numbers, etc. All these colorful
+    additions to the text can become overbearing and distracting given much of the
+    output does not benefit from coloring.
 
-    This defines a visually simpler style that highlights URLs in a way
-    that is vaguely consistent with a default HTML stylesheet, but
-    otherwise renders content as-is.
+    This defines a visually simpler style that highlights URLs in a way that is vaguely
+    consistent with a default HTML stylesheet, but otherwise renders content as-is.
     """
 
     base_style = "repr."
