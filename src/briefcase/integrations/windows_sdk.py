@@ -180,7 +180,7 @@ WindowsSDKVersion: {environ_sdk_version}
         return True
 
     @classmethod
-    def verify(cls, tools: ToolCache):
+    def verify(cls, tools: ToolCache, **kwargs):
         """Verify the Windows SDK is installed with needed components.
 
         :param tools: ToolCache of available tools
@@ -219,7 +219,3 @@ See https://developer.microsoft.com/en-us/windows/downloads/windows-sdk/ to inst
         tools.logger.debug(f"Using Windows SDK v{sdk.version} at {sdk.root_path}")
         tools.windows_sdk = sdk
         return sdk
-
-    @property
-    def managed_install(self):
-        return False
