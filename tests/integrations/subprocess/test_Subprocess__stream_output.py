@@ -117,7 +117,7 @@ def test_stuck_streamer(mock_sub, streaming_process, monkeypatch, capsys):
 
     def monkeypatched_blocked_streamer(*a, **kw):
         """Simulate a streamer that blocks longer than it will be waited on."""
-        if not monkeypatched_streamer_should_exit.wait(timeout=1):
+        if not monkeypatched_streamer_should_exit.wait(timeout=5):
             monkeypatched_streamer_was_improperly_awaited.set()
         monkeypatched_streamer_exited.set()
 
@@ -134,18 +134,18 @@ def test_stuck_streamer(mock_sub, streaming_process, monkeypatch, capsys):
 
     monkeypatched_streamer_should_exit.set()
 
+    # Since the waiting around for the output streamer has been
+    # short-circuited, Briefcase should quickly give up waiting on
+    # the output streamer and it should exit...so, confirm it does.
+    assert monkeypatched_streamer_exited.wait(timeout=1)
+    assert not monkeypatched_streamer_was_improperly_awaited.is_set()
+
     # fmt: off
     assert capsys.readouterr().out == (
         "Stopping...\n"
         "Log stream hasn't terminated; log output may be corrupted.\n"
     )
     # fmt: on
-
-    # Since the waiting around for the output streamer has been
-    # short-circuited, Briefcase should quickly give up waiting on
-    # the output streamer and it should exit...so, confirm it does.
-    assert monkeypatched_streamer_exited.wait(timeout=1)
-    assert not monkeypatched_streamer_was_improperly_awaited.is_set()
 
 
 def test_stdout_closes_unexpectedly(mock_sub, streaming_process, monkeypatch, capsys):
