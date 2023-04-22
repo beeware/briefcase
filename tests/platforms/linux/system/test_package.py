@@ -126,7 +126,7 @@ def test_unknown_packaging_format(package_command, first_app):
 
 
 def test_package_deb_app(package_command, first_app):
-    """A debian app can be packaged"""
+    """A debian app can be packaged."""
     # Set the packaging format
     first_app.packaging_format = "deb"
 
@@ -141,7 +141,7 @@ def test_package_deb_app(package_command, first_app):
 
 
 def test_package_rpm_app(package_command, first_app):
-    """A Red Hat app can be packaged"""
+    """A Red Hat app can be packaged."""
     # Set the packaging format
     first_app.packaging_format = "rpm"
 
@@ -156,7 +156,7 @@ def test_package_rpm_app(package_command, first_app):
 
 
 def test_package_pkg_app(package_command, first_app):
-    """An Arch app can be packaged"""
+    """An Arch app can be packaged."""
     # Set the packaging format
     first_app.packaging_format = "pkg"
 

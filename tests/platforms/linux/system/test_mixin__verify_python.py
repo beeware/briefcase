@@ -8,7 +8,7 @@ from briefcase.integrations.docker import DockerAppContext
 
 
 def test_match(create_command, first_app_config, capsys):
-    """If the system python matches the target python, everything is OK"""
+    """If the system python matches the target python, everything is OK."""
     first_app_config.python_version_tag = "3"
     first_app_config.target_image = "somevendor:surprising"
 
@@ -47,7 +47,7 @@ def test_match(create_command, first_app_config, capsys):
 
 
 def test_mismatch(create_command, first_app_config, capsys):
-    """If the system python doesn't match the target python, a warning is raised"""
+    """If the system python doesn't match the target python, a warning is raised."""
     first_app_config.python_version_tag = "3"
     first_app_config.target_image = "somevendor:surprising"
 
@@ -86,7 +86,7 @@ def test_mismatch(create_command, first_app_config, capsys):
 
 
 def test_target_too_old(create_command, first_app_config):
-    """If the target python is too old, an error is raised"""
+    """If the target python is too old, an error is raised."""
     first_app_config.python_version_tag = "3"
     first_app_config.target_image = "somevendor:surprising"
 

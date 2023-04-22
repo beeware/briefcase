@@ -59,9 +59,9 @@ class LinuxMixin:
     def support_package_url(self, support_revision):
         """The URL of the support package to use for apps of this type.
 
-        Linux builds that use a support package (AppImage, Flatpak) use
-        indygreg's Standalone Python to provide system packages. See
-        https://github.com/indygreg/python-build-standalone for details
+        Linux builds that use a support package (AppImage, Flatpak) use indygreg's
+        Standalone Python to provide system packages. See
+        `https://github.com/indygreg/python-build-standalone` for details.
 
         System packages don't use a support package; this is defined by
         the template, so this method won't be invoked

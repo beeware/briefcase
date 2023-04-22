@@ -48,7 +48,7 @@ def test_unsupported_host_os_without_docker(create_command, host_os, tmp_path):
 
 
 def test_supported_host_os_docker(create_command):
-    """If using Docker on a supported host, no error is raised"""
+    """If using Docker on a supported host, no error is raised."""
     create_command.target_image = "somevendor:surprising"
     create_command.tools.host_os = "Linux"
 
@@ -57,7 +57,7 @@ def test_supported_host_os_docker(create_command):
 
 
 def test_supported_host_os_without_docker(create_command):
-    """If not using Docker on a supported host, no error is raised"""
+    """If not using Docker on a supported host, no error is raised."""
     create_command.target_image = None
     create_command.tools.host_os = "Linux"
 

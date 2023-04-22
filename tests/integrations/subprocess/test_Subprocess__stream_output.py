@@ -168,7 +168,8 @@ def test_stdout_closes_unexpectedly(mock_sub, streaming_process, monkeypatch, ca
 
 
 def test_readline_raises_exception(mock_sub, streaming_process, monkeypatch, capsys):
-    """Streamer aborts if readline() raises ValueError for reasons other than stdout closing."""
+    """Streamer aborts if readline() raises ValueError for reasons other than stdout
+    closing."""
 
     def monkeypatch_ensure_str(value):
         """Simulate readline() raising an ValueError-derived exception."""

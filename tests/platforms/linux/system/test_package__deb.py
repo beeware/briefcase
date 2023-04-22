@@ -54,7 +54,7 @@ def first_app_deb(first_app):
 
 
 def test_verify_no_docker(monkeypatch, package_command, first_app_deb):
-    """If not using docker, existence of dpkg-deb is verified"""
+    """If not using docker, existence of dpkg-deb is verified."""
     # Mock not using docker
     package_command.target_image = None
 
@@ -73,7 +73,7 @@ def test_verify_no_docker(monkeypatch, package_command, first_app_deb):
 
 
 def test_verify_dpkg_deb_missing(monkeypatch, package_command, first_app_deb):
-    """If dpkg_deb isn't installed, an error is raised"""
+    """If dpkg_deb isn't installed, an error is raised."""
     # Mock not using docker
     package_command.target_image = None
 
@@ -96,7 +96,7 @@ def test_verify_dpkg_deb_missing(monkeypatch, package_command, first_app_deb):
 
 
 def test_verify_docker(monkeypatch, package_command, first_app_deb):
-    """If using Docker, no tool checks are needed"""
+    """If using Docker, no tool checks are needed."""
     # Mock using docker
     package_command.target_image = "somevendor:surprising"
 
@@ -272,12 +272,13 @@ def test_deb_package_no_long_description(package_command, first_app_deb, tmp_pat
     ],
 )
 def test_multiline_long_description(input, output):
-    """Multiline debian descriptions are transformed"""
+    """Multiline debian descriptions are transformed."""
     assert debian_multiline_description(input) == output
 
 
 def test_deb_package_extra_requirements(package_command, first_app_deb, tmp_path):
-    """A deb app can be packaged with extra runtime requirements and configuration options."""
+    """A deb app can be packaged with extra runtime requirements and configuration
+    options."""
     bundle_path = (
         tmp_path / "base_path" / "build" / "first-app" / "somevendor" / "surprising"
     )
