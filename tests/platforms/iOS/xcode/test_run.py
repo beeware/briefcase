@@ -44,6 +44,7 @@ def test_device_option(run_command):
         "update_resources": False,
         "no_update": False,
         "test_mode": False,
+        "relock": False,
         "passthrough": [],
         "appname": None,
     }

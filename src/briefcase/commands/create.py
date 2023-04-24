@@ -519,7 +519,7 @@ class CreateCommand(BaseCommand):
         ]
         return requires
 
-    def install_app_requirements(self, app: BaseConfig, test_mode: bool, relock: bool):
+    def install_app_requirements(self, app: BaseConfig, test_mode: bool, relock: bool=False):
         """Handle requirements for the app.
 
         This will result in either (in preferential order):
