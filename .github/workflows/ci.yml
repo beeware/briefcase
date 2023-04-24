@@ -58,7 +58,7 @@ jobs:
 
     - name: Set up Python
       if: matrix.python-version != 'winstore'
-      uses: actions/setup-python@v4.5.0
+      uses: actions/setup-python@v4.6.0
       with:
         python-version: ${{ matrix.python-version }}
 
@@ -109,7 +109,7 @@ jobs:
         fetch-depth: 0
 
     - name: Setup Python
-      uses: actions/setup-python@v4.5.0
+      uses: actions/setup-python@v4.6.0
       with:
         python-version: "3.x"  # Use latest, so it understands all syntax.
 
