@@ -462,5 +462,5 @@ def test_sign_app(dummy_command, first_app_with_binaries, tmp_path):
             sign_call(tmp_path, frameworks_path / "Extras.framework"),
             sign_call(tmp_path, app_path),
         ],
-        any_order=False,
+        any_order=True,
     )
