@@ -1,0 +1,1 @@
+Error handling for incomplete or corrupted Github clones of templates has been improved.

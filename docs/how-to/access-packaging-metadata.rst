@@ -54,7 +54,7 @@ in your app's ``pyproject.toml`` configuration:
   * **Author** - ``author``
   * **Author-email** - ``author_email``
 
-For example, the metadata for the app constructed by the `Beeware Tutorial
+For example, the metadata for the app constructed by the `BeeWare Tutorial
 <https://docs.beeware.org/en/latest/tutorial/tutorial-1.html>`_ would
 contain::
 

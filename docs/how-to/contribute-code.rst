@@ -21,7 +21,7 @@ and then install the development version of Briefcase and its dependencies:
 
   .. group-tab:: macOS
 
-    .. code-block:: bash
+    .. code-block:: console
 
       $ git clone https://github.com/beeware/briefcase.git
       $ cd briefcase
@@ -31,7 +31,7 @@ and then install the development version of Briefcase and its dependencies:
 
   .. group-tab:: Linux
 
-    .. code-block:: bash
+    .. code-block:: console
 
       $ git clone https://github.com/beeware/briefcase.git
       $ cd briefcase
@@ -58,14 +58,14 @@ git commit. To enable pre-commit, run:
 
   .. group-tab:: macOS
 
-    .. code-block:: bash
+    .. code-block:: console
 
       (venv) $ pre-commit install
       pre-commit installed at .git/hooks/pre-commit
 
   .. group-tab:: Linux
 
-    .. code-block:: bash
+    .. code-block:: console
 
       (venv) $ pre-commit install
       pre-commit installed at .git/hooks/pre-commit
@@ -85,7 +85,7 @@ pre-commit will make the changes needed to correct the problems it has found:
 
   .. group-tab:: macOS
 
-    .. code-block:: bash
+    .. code-block:: console
 
       (venv) $ git add some/interesting_file.py
       (venv) $ git commit -m "Minor change"
@@ -111,7 +111,7 @@ pre-commit will make the changes needed to correct the problems it has found:
 
   .. group-tab:: Linux
 
-    .. code-block:: bash
+    .. code-block:: console
 
       (venv) $ git add some/interesting_file.py
       (venv) $ git commit -m "Minor change"
@@ -168,7 +168,7 @@ and re-commit the change.
 
   .. group-tab:: macOS
 
-    .. code-block:: bash
+    .. code-block:: console
 
       (venv) $ git add some/interesting_file.py
       (venv) $ git commit -m "Minor change"
@@ -188,7 +188,7 @@ and re-commit the change.
 
   .. group-tab:: Linux
 
-    .. code-block:: bash
+    .. code-block:: console
 
       (venv) $ git add some/interesting_file.py
       (venv) $ git commit -m "Minor change"
@@ -232,13 +232,13 @@ process. To set up a testing environment and run the full test suite:
 
   .. group-tab:: macOS
 
-    .. code-block:: bash
+    .. code-block:: console
 
       (venv) $ tox
 
   .. group-tab:: Linux
 
-    .. code-block:: bash
+    .. code-block:: console
 
       (venv) $ tox
 
@@ -257,19 +257,19 @@ the process while developing, you can run the tests on one Python version only:
 
   .. group-tab:: macOS
 
-    .. code-block:: bash
+    .. code-block:: console
 
       (venv) $ tox -e py
 
   .. group-tab:: Linux
 
-    .. code-block:: bash
+    .. code-block:: console
 
       (venv) $ tox -e py
 
   .. group-tab:: Windows
 
-    .. code-block:: bash
+    .. code-block:: doscon
 
       (venv) C:\...>tox -e py
 
@@ -279,43 +279,43 @@ Or, you can run a single test file on a single version of Python:
 
   .. group-tab:: macOS
 
-    .. code-block:: bash
+    .. code-block:: console
 
       (venv) $ tox -e py -- tests/path_to_test_file/test_some_test.py
 
   .. group-tab:: Linux
 
-    .. code-block:: bash
+    .. code-block:: console
 
       (venv) $ tox -e py -- tests/path_to_test_file/test_some_test.py
 
   .. group-tab:: Windows
 
-    .. code-block:: bash
+    .. code-block:: doscon
 
       (venv) C:\...>tox -e py -- tests/path_to_test_file/test_some_test.py
 
-Or, to run using a specific version of Python, e.g. when you want to use Python 3.7:
+Or, to run using a specific version of Python, e.g. when you want to use Python 3.10:
 
 .. tabs::
 
   .. group-tab:: macOS
 
-    .. code-block:: bash
+    .. code-block:: console
 
-      (venv) $ tox -e py37
+      (venv) $ tox -e py310
 
   .. group-tab:: Linux
 
-    .. code-block:: bash
+    .. code-block:: console
 
-      (venv) $ tox -e py37
+      (venv) $ tox -e py310
 
   .. group-tab:: Windows
 
-    .. code-block:: bash
+    .. code-block:: doscon
 
-      (venv) C:\...>tox -e py37
+      (venv) C:\...>tox -e py310
 
 substituting the version number that you want to target. You can also specify
 the `towncrier-check`, `docs` or `package` targets to check release notes,
