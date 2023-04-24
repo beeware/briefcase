@@ -582,4 +582,20 @@ def test_pep621_defaults():
     )
 
     awesome = apps["awesome"]
-    assert awesome == {'project_name': 'Awesome app', 'bundle': 'com.example', 'version': '1.2.3', 'license': 'You can use it while standing on one foot', 'author': 'Kim Park', 'author_email': 'kim@example.com', 'url': 'https://example.com/awesome', 'description': 'awesome project', 'requires': ['numpy', 'toga-cocoa~=0.3.1', 'std-nslog~=1.0.0'], 'test_requires': ['pytest'], 'app_name': 'awesome', 'sources': ['src'], 'test_sources': ['tests'], 'formal_name': 'Awesome Application', 'long_description': 'The application is very awesome'}
+    assert awesome == {
+        "project_name": "Awesome app",
+        "bundle": "com.example",
+        "version": "1.2.3",
+        "license": "You can use it while standing on one foot",
+        "author": "Kim Park",
+        "author_email": "kim@example.com",
+        "url": "https://example.com/awesome",
+        "description": "awesome project",
+        "requires": ["numpy", "toga-cocoa~=0.3.1", "std-nslog~=1.0.0"],
+        "test_requires": ["pytest"],
+        "app_name": "awesome",
+        "sources": ["src"],
+        "test_sources": ["tests"],
+        "formal_name": "Awesome Application",
+        "long_description": "The application is very awesome",
+    }

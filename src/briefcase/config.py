@@ -503,6 +503,7 @@ def update_global_config(global_config, project_config):
             pass
         else:
             global_config[field] = datum
+
     maybe_update("version", "version")
     maybe_update("license", "license", "text")
     maybe_update("authors", "authors")
