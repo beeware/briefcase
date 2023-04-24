@@ -146,48 +146,6 @@ def test_no_args_package_two_app(package_command, first_app, second_app, tmp_pat
     assert tmp_path / "base_path" / "dist"
 
 
-def test_no_sign_package_one_app(package_command, first_app, tmp_path):
-    """If there is one app, and a --no-sign argument,package doesn't sign the app."""
-    # Add a single app
-    package_command.apps = {
-        "first": first_app,
-    }
-
-    # Configure a no-sign option
-    options = package_command.parse_options(["--no-sign"])
-
-    # Run the run command
-    package_command(**options)
-
-    # The right sequence of things will be done
-    assert package_command.actions == [
-        # Host OS is verified
-        ("verify-host",),
-        # Tools are verified
-        ("verify-tools",),
-        # App config has been finalized
-        ("finalize-app-config", "first"),
-        # App tools are verified for app
-        ("verify-app-tools", "first"),
-        # Package the first app
-        (
-            "package",
-            "first",
-            {
-                "adhoc_sign": False,
-                "identity": None,
-                "sign_app": False,
-            },
-        ),
-    ]
-
-    # Packaging format has been annotated on the app
-    assert first_app.packaging_format == "pkg"
-
-    # The dist folder has been created.
-    assert tmp_path / "base_path" / "dist"
-
-
 def test_identity_arg_package_one_app(package_command, first_app, tmp_path):
     """If there is one app,and an --identity argument, package signs the app with the
     specified identity."""
@@ -269,66 +227,6 @@ def test_adhoc_sign_package_one_app(package_command, first_app, tmp_path):
 
     # Packaging format has been annotated on the app
     assert first_app.packaging_format == "pkg"
-
-    # The dist folder has been created.
-    assert tmp_path / "base_path" / "dist"
-
-
-def test_no_sign_args_package_two_app(package_command, first_app, second_app, tmp_path):
-    """If there are multiple apps, and a --no-sign argument,package doesn't sign all the
-    app."""
-    # Add a single app
-    package_command.apps = {
-        "first": first_app,
-        "second": second_app,
-    }
-
-    # Configure a no-sign option
-    options = package_command.parse_options(["--no-sign"])
-
-    # Run the run command
-    package_command(**options)
-
-    # The right sequence of things will be done
-    assert package_command.actions == [
-        # Host OS is verified
-        ("verify-host",),
-        # Tools are verified
-        ("verify-tools",),
-        # App configs have been finalized
-        ("finalize-app-config", "first"),
-        ("finalize-app-config", "second"),
-        # App tools are verified for first app
-        ("verify-app-tools", "first"),
-        # Package the first app
-        (
-            "package",
-            "first",
-            {
-                "adhoc_sign": False,
-                "identity": None,
-                "sign_app": False,
-            },
-        ),
-        # App tools are verified for second app
-        ("verify-app-tools", "second"),
-        # package the second app
-        (
-            "package",
-            "second",
-            {
-                "adhoc_sign": False,
-                "identity": None,
-                "sign_app": False,
-                # state of previous calls have been preserved.
-                "package_state": "first",
-            },
-        ),
-    ]
-
-    # Packaging format has been annotated on both apps
-    assert first_app.packaging_format == "pkg"
-    assert second_app.packaging_format == "pkg"
 
     # The dist folder has been created.
     assert tmp_path / "base_path" / "dist"

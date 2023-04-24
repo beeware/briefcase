@@ -207,23 +207,6 @@ def test_package_app_sign_failure(package_command, first_app_with_binaries, tmp_
     package_command.sign_file.assert_not_called()
 
 
-def test_package_app_no_sign(package_command, first_app_with_binaries):
-    """A macOS App can be packaged without signing or notarization."""
-
-    # Package the app without code signing or notarization
-    package_command.package_app(
-        first_app_with_binaries,
-        sign_app=False,
-        notarize_app=False,
-    )
-
-    # No code signing or notarization has been performed.
-    assert package_command.select_identity.call_count == 0
-    assert package_command.sign_app.call_count == 0
-    assert package_command.sign_file.call_count == 0
-    assert package_command.notarize.call_count == 0
-
-
 def test_package_app_notarize_adhoc_signed(package_command, first_app_with_binaries):
     """A macOS App cannot be notarized if adhoc signing is requested."""
 
@@ -238,46 +221,6 @@ def test_package_app_notarize_adhoc_signed(package_command, first_app_with_binar
             notarize_app=True,
             adhoc_sign=True,
         )
-
-    # No code signing or notarization has been performed.
-    assert package_command.select_identity.call_count == 0
-    assert package_command.sign_app.call_count == 0
-    assert package_command.sign_file.call_count == 0
-    assert package_command.notarize.call_count == 0
-
-
-def test_package_app_notarize_without_sign(package_command, first_app_with_binaries):
-    """A macOS App cannot be notarized if it wasn't signed."""
-
-    # Package the app without code signing
-    with pytest.raises(
-        BriefcaseCommandError,
-        match=r"Can't notarize an app that hasn't been signed",
-    ):
-        package_command.package_app(
-            first_app_with_binaries,
-            sign_app=False,
-            notarize_app=True,
-        )
-
-    # No code signing or notarization has been performed.
-    assert package_command.select_identity.call_count == 0
-    assert package_command.sign_app.call_count == 0
-    assert package_command.sign_file.call_count == 0
-    assert package_command.notarize.call_count == 0
-
-
-def test_package_app_notarize_without_sign_default_notarization(
-    package_command, first_app_with_binaries
-):
-    """A macOS App will default to no notarization if it wasn't signed."""
-
-    # Package the app without code signing; notarization will be disabled
-    # even though it isn't specified
-    package_command.package_app(
-        first_app_with_binaries,
-        sign_app=False,
-    )
 
     # No code signing or notarization has been performed.
     assert package_command.select_identity.call_count == 0
@@ -470,40 +413,6 @@ def test_package_bare_app(package_command, first_app_with_binaries, tmp_path):
         ]
 
 
-def test_package_bare_app_no_sign(package_command, first_app_with_binaries):
-    """A macOS App can be packaged without building dmg, and without signing."""
-    # Select app packaging
-    first_app_with_binaries.packaging_format = "app"
-
-    # Select a code signing identity
-    package_command.select_identity.return_value = (
-        "CAFEBEEF",
-        "Sekrit identity (DEADBEEF)",
-    )
-
-    # Package the app in app (not DMG) format, disabling signing and notarization
-    first_app_with_binaries.packaging_format = "app"
-    package_command.package_app(
-        first_app_with_binaries,
-        sign_app=False,
-        notarize_app=False,
-    )
-
-    # No request has been made to sign the app
-    package_command.sign_app.assert_not_called()
-
-    # No request has been made to notarize the app
-    package_command.notarize.assert_not_called()
-
-    # No dmg was built.
-    assert package_command.dmgbuild.build_dmg.call_count == 0
-
-    # If the DMG doesn't exist, it can't be signed either.
-    # This ignores the calls that would have been made transitively
-    # by calling sign_app()
-    assert package_command.sign_file.call_count == 0
-
-
 def test_package_bare_app_no_notarization(package_command, first_app_with_binaries):
     """A macOS App can be packaged without building dmg, and without notarization."""
     # Select app packaging
@@ -550,8 +459,8 @@ def test_dmg_with_installer_icon(package_command, first_app_with_binaries, tmp_p
     # Package the app without signing or notarization
     package_command.package_app(
         first_app_with_binaries,
-        sign_app=False,
         notarize_app=False,
+        adhoc_sign=True,
     )
 
     # The DMG has been built as expected
@@ -598,8 +507,8 @@ def test_dmg_with_missing_installer_icon(
     # Package the app without signing or notarization
     package_command.package_app(
         first_app_with_binaries,
-        sign_app=False,
         notarize_app=False,
+        adhoc_sign=True,
     )
 
     # The DMG has been built as expected
@@ -650,8 +559,8 @@ def test_dmg_with_app_installer_icon(
     # Package the app without signing or notarization
     package_command.package_app(
         first_app_with_binaries,
-        sign_app=False,
         notarize_app=False,
+        adhoc_sign=True,
     )
 
     # The DMG has been built as expected
@@ -697,8 +606,8 @@ def test_dmg_with_missing_app_installer_icon(
     # Package the app without signing or notarization
     package_command.package_app(
         first_app_with_binaries,
-        sign_app=False,
         notarize_app=False,
+        adhoc_sign=True,
     )
 
     # The DMG has been built as expected
@@ -749,8 +658,8 @@ def test_dmg_with_installer_background(
     # Package the app without signing or notarization
     package_command.package_app(
         first_app_with_binaries,
-        sign_app=False,
         notarize_app=False,
+        adhoc_sign=True,
     )
 
     # The DMG has been built as expected
@@ -797,8 +706,8 @@ def test_dmg_with_missing_installer_background(
     # Package the app without signing or notarization
     package_command.package_app(
         first_app_with_binaries,
-        sign_app=False,
         notarize_app=False,
+        adhoc_sign=True,
     )
 
     # The DMG has been built as expected
