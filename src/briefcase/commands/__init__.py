@@ -4,6 +4,7 @@ from .dev import DevCommand  # noqa: F401
 from .new import NewCommand  # noqa: F401
 from .open import OpenCommand  # noqa: F401
 from .package import PackageCommand  # noqa: F401
+from .project import ProjectCommand  # noqa: F401
 from .publish import PublishCommand  # noqa: F401
 from .run import RunCommand  # noqa: F401
 from .update import UpdateCommand  # noqa: F401

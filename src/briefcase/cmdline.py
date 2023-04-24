@@ -12,6 +12,7 @@ from briefcase.commands import (
     NewCommand,
     OpenCommand,
     PackageCommand,
+    ProjectCommand,
     PublishCommand,
     RunCommand,
     UpdateCommand,
@@ -31,6 +32,7 @@ COMMANDS = [
     UpdateCommand,
     RunCommand,
     PackageCommand,
+    ProjectCommand,
     PublishCommand,
     UpgradeCommand,
 ]
@@ -128,6 +130,8 @@ def parse_cmdline(args):
         Command = DevCommand
     elif options.command == "upgrade":
         Command = UpgradeCommand
+    elif options.command == "project":
+        Command = ProjectCommand
 
     # Commands dependent on the platform and format
     else:

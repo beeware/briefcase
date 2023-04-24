@@ -1,0 +1,1 @@
+add `briefcase project version` command to briefcase
