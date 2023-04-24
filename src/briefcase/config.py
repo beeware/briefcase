@@ -507,11 +507,12 @@ def update_global_config(global_config, project_config):
     maybe_update("license", "license", "text")
     maybe_update("authors", "authors")
     try:
-        authors = global_config["authors"]
+        authors = global_config.pop("authors")
     except KeyError:
         pass
-    global_config["author"] = authors[0]["name"]
-    global_config["author_email"] = authors[0]["email"]
+    else:
+        global_config["author"] = authors[0]["name"]
+        global_config["author_email"] = authors[0]["email"]
     maybe_update("url", "urls", "Homepage")
     maybe_update("description", "description")
     maybe_update("dependencies", "dependencies")
