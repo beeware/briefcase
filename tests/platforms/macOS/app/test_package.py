@@ -45,7 +45,6 @@ def test_device_option(package_command):
         "identity": None,
         "notarize_app": False,
         "packaging_format": "dmg",
-        "sign_app": True,
         "update": False,
     }
 
@@ -217,7 +216,6 @@ def test_package_app_notarize_adhoc_signed(package_command, first_app_with_binar
     ):
         package_command.package_app(
             first_app_with_binaries,
-            sign_app=True,
             notarize_app=True,
             adhoc_sign=True,
         )

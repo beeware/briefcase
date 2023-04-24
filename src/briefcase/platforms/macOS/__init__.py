@@ -580,7 +580,7 @@ password:
         :param identity: The code signing identity to use. This can be either
             the 40-digit hex checksum, or the string name of the identity.
             If unspecified, the user will be prompted for a code signing
-            identity. Ignored if ``sign_app`` is ``False``.
+            identity. Ignored if ``adhoc_sign`` is ``True``.
         :param adhoc_sign: If ``True``, code will be signed with ad-hoc identity
             of "-", and the resulting app will not be re-distributable.
         """

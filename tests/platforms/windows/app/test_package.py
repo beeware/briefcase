@@ -158,7 +158,6 @@ def test_parse_options(package_command, cli_args, signing_options, is_sdk_needed
         timestamp_digest="sha256",
         adhoc_sign=False,
         packaging_format="msi",
-        sign_app=True,
         update=False,
     )
     expected_options = {**default_options, **signing_options}

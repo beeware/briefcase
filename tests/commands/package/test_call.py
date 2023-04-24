@@ -31,7 +31,6 @@ def test_no_args_package_one_app(package_command, first_app, tmp_path):
             {
                 "adhoc_sign": False,
                 "identity": None,
-                "sign_app": True,
             },
         ),
     ]
@@ -74,7 +73,6 @@ def test_package_one_explicit_app(package_command, first_app, second_app, tmp_pa
             {
                 "adhoc_sign": False,
                 "identity": None,
-                "sign_app": True,
             },
         ),
     ]
@@ -119,7 +117,6 @@ def test_no_args_package_two_app(package_command, first_app, second_app, tmp_pat
             {
                 "adhoc_sign": False,
                 "identity": None,
-                "sign_app": True,
             },
         ),
         # App tools are verified for second app
@@ -131,7 +128,6 @@ def test_no_args_package_two_app(package_command, first_app, second_app, tmp_pat
             {
                 "adhoc_sign": False,
                 "identity": None,
-                "sign_app": True,
                 # state of previous calls have been preserved.
                 "package_state": "first",
             },
@@ -177,7 +173,6 @@ def test_identity_arg_package_one_app(package_command, first_app, tmp_path):
             {
                 "adhoc_sign": False,
                 "identity": "test",
-                "sign_app": True,
             },
         ),
     ]
@@ -220,7 +215,6 @@ def test_adhoc_sign_package_one_app(package_command, first_app, tmp_path):
             {
                 "adhoc_sign": True,
                 "identity": None,
-                "sign_app": True,
             },
         ),
     ]
@@ -269,7 +263,6 @@ def test_adhoc_sign_args_package_two_app(
             {
                 "adhoc_sign": True,
                 "identity": None,
-                "sign_app": True,
             },
         ),
         # App tools are verified for second app
@@ -281,7 +274,6 @@ def test_adhoc_sign_args_package_two_app(
             {
                 "adhoc_sign": True,
                 "identity": None,
-                "sign_app": True,
                 # state of previous calls have been preserved.
                 "package_state": "first",
             },
@@ -331,7 +323,6 @@ def test_identity_sign_args_package_two_app(
             {
                 "adhoc_sign": False,
                 "identity": "test",
-                "sign_app": True,
             },
         ),
         # App tools are verified for second app
@@ -343,7 +334,6 @@ def test_identity_sign_args_package_two_app(
             {
                 "adhoc_sign": False,
                 "identity": "test",
-                "sign_app": True,
                 # state of previous calls have been preserved.
                 "package_state": "first",
             },
@@ -388,7 +378,6 @@ def test_package_alternate_format(package_command, first_app, tmp_path):
             {
                 "adhoc_sign": False,
                 "identity": None,
-                "sign_app": True,
             },
         ),
     ]
@@ -428,7 +417,6 @@ def test_create_before_package(package_command, first_app_config, tmp_path):
             {
                 "adhoc_sign": False,
                 "identity": None,
-                "sign_app": True,
             },
         ),
         (
@@ -438,7 +426,6 @@ def test_create_before_package(package_command, first_app_config, tmp_path):
                 "adhoc_sign": False,
                 "create_state": "first",
                 "identity": None,
-                "sign_app": True,
             },
         ),
         # App tools are verified for app
@@ -450,7 +437,6 @@ def test_create_before_package(package_command, first_app_config, tmp_path):
             {
                 "adhoc_sign": False,
                 "identity": None,
-                "sign_app": True,
                 "create_state": "first",
                 "build_state": "first",
             },
@@ -492,7 +478,6 @@ def test_update_package_one_app(package_command, first_app, tmp_path):
             {
                 "adhoc_sign": False,
                 "identity": None,
-                "sign_app": True,
                 "update_requirements": True,
                 "update_resources": True,
             },
@@ -503,7 +488,6 @@ def test_update_package_one_app(package_command, first_app, tmp_path):
             {
                 "adhoc_sign": False,
                 "identity": None,
-                "sign_app": True,
                 "update_state": "first",
             },
         ),
@@ -516,7 +500,6 @@ def test_update_package_one_app(package_command, first_app, tmp_path):
             {
                 "adhoc_sign": False,
                 "identity": None,
-                "sign_app": True,
                 "update_state": "first",
                 "build_state": "first",
             },
@@ -560,7 +543,6 @@ def test_update_package_two_app(package_command, first_app, second_app, tmp_path
             {
                 "adhoc_sign": False,
                 "identity": None,
-                "sign_app": True,
                 "update_requirements": True,
                 "update_resources": True,
             },
@@ -571,7 +553,6 @@ def test_update_package_two_app(package_command, first_app, second_app, tmp_path
             {
                 "adhoc_sign": False,
                 "identity": None,
-                "sign_app": True,
                 "update_state": "first",
             },
         ),
@@ -584,7 +565,6 @@ def test_update_package_two_app(package_command, first_app, second_app, tmp_path
             {
                 "adhoc_sign": False,
                 "identity": None,
-                "sign_app": True,
                 "update_state": "first",
                 "build_state": "first",
             },
@@ -596,7 +576,6 @@ def test_update_package_two_app(package_command, first_app, second_app, tmp_path
             {
                 "adhoc_sign": False,
                 "identity": None,
-                "sign_app": True,
                 "update_requirements": True,
                 "update_resources": True,
                 # state of previous calls have been preserved.
@@ -611,7 +590,6 @@ def test_update_package_two_app(package_command, first_app, second_app, tmp_path
             {
                 "adhoc_sign": False,
                 "identity": None,
-                "sign_app": True,
                 "update_state": "second",
                 # state of previous calls have been preserved.
                 "build_state": "first",
@@ -627,7 +605,6 @@ def test_update_package_two_app(package_command, first_app, second_app, tmp_path
             {
                 "adhoc_sign": False,
                 "identity": None,
-                "sign_app": True,
                 "update_state": "second",
                 "build_state": "second",
                 # state of previous calls have been preserved.
@@ -672,7 +649,6 @@ def test_build_before_package(package_command, first_app_unbuilt, tmp_path):
             {
                 "adhoc_sign": False,
                 "identity": None,
-                "sign_app": True,
             },
         ),
         # App tools are verified for app
@@ -684,7 +660,6 @@ def test_build_before_package(package_command, first_app_unbuilt, tmp_path):
             {
                 "adhoc_sign": False,
                 "identity": None,
-                "sign_app": True,
                 "build_state": "first",
             },
         ),
@@ -731,7 +706,6 @@ def test_already_packaged(package_command, first_app, tmp_path):
             {
                 "adhoc_sign": False,
                 "identity": None,
-                "sign_app": True,
             },
         ),
     ]

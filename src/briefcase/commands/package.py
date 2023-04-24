@@ -1,21 +1,9 @@
-import argparse
-import warnings
 from abc import abstractmethod
 from typing import Optional
 
 from briefcase.config import BaseConfig
 
 from .base import BaseCommand, full_options
-
-
-class DeprecatedAction(argparse.Action):
-    def __call__(option_strings, *args, **kwargs):
-        """Use warnings.warn to tell the user that this argument is deprecated and will
-        have no effect."""
-        warnings.warn(
-            f"The {option_strings} argument is no longer used, and has no effect.",
-            DeprecationWarning,
-        )
 
 
 class PackageCommand(BaseCommand):
@@ -125,16 +113,6 @@ class PackageCommand(BaseCommand):
             help="Packaging format to use.",
             default=self.default_packaging_format,
             choices=self.packaging_formats,
-        )
-        parser.add_argument(
-            "--no-sign",
-            dest="sign_app",
-            help=(
-                "This argument is no longer used, and has no effect. Please "
-                "use `--adhoc-sign` for testing."
-            ),
-            default=True,
-            action=DeprecatedAction,
         )
         parser.add_argument(
             "--adhoc-sign",
