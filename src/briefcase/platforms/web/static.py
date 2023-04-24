@@ -7,8 +7,9 @@ from pathlib import Path
 from typing import Any, List
 from zipfile import ZipFile
 
-from briefcase.console import Log
 from packaging.utils import parse_wheel_filename
+
+from briefcase.console import Log
 
 try:
     import tomllib
@@ -186,8 +187,10 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 # TODO: get pyodide whl so it can be bundled
                 for wheel in packages:
                     name, version, build, tags = parse_wheel_filename(wheel.name)
-                    if not any(tag.platform == "any" or "wasm32" in tag.platform
-                               for tag in tags):
+                    if not any(
+                        tag.platform == "any" or "wasm32" in tag.platform
+                        for tag in tags
+                    ):
                         packages[wheel] = name
                 config = {
                     "name": app.formal_name,

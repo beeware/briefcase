@@ -45,7 +45,7 @@ def test_build_app(build_command, first_app_generated, tmp_path):
                 extra_content=[
                     ("dependency/static/style.css", "span { margin: 10px; }\n"),
                 ],
-            ),
+            )
         elif args[0][3] == "pip":
             create_wheel(
                 bundle_path / "www" / "static" / "wheels",
@@ -53,14 +53,30 @@ def test_build_app(build_command, first_app_generated, tmp_path):
                 extra_content=[
                     ("dependency/static/style.css", "div { margin: 10px; }\n"),
                 ],
-            ),
+            )
+            create_wheel(
+                bundle_path / "www" / "static" / "wheels",
+                "wasm_dep",
+                extra_content=[
+                    ("dependency/static/style.css", "div { margin: 10px; }\n"),
+                ],
+                platform="emscripten_3_1_14_wasm32",
+            )
+            create_wheel(
+                bundle_path / "www" / "static" / "wheels",
+                "macos_dep",
+                extra_content=[
+                    ("dependency/static/style.css", "div { margin: 10px; }\n"),
+                ],
+                platform="macosx_10_9_x86_64",
+            )
             create_wheel(
                 bundle_path / "www" / "static" / "wheels",
                 "other",
                 extra_content=[
                     ("other/static/style.css", "div { padding: 10px; }\n"),
                 ],
-            ),
+            )
         else:
             raise ValueError("Unknown command")
 
@@ -121,7 +137,9 @@ def test_build_app(build_command, first_app_generated, tmp_path):
             "packages": [
                 "/static/wheels/dependency-1.2.3-py3-none-any.whl",
                 "/static/wheels/first_app-1.2.3-py3-none-any.whl",
+                "macos-dep",
                 "/static/wheels/other-1.2.3-py3-none-any.whl",
+                "/static/wheels/wasm_dep-1.2.3-py3-none-emscripten_3_1_14_wasm32.whl",
             ],
         }
 
@@ -157,6 +175,12 @@ def test_build_app(build_command, first_app_generated, tmp_path):
                     " *******************************************************/",
                     "",
                     "div { padding: 10px; }",
+                    "",
+                    "/*******************************************************",
+                    " * wasm_dep 1.2.3::style.css",
+                    " *******************************************************/",
+                    "",
+                    "div { margin: 10px; }",
                 ]
             )
             + "\n"
