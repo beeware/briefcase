@@ -302,6 +302,21 @@ application level, *and* platform level, the final set of requirements will be
 the *concatenation* of requirements from all levels, starting from least to
 most specific.
 
+``requires_lock``
+~~~~~~~~~~~~~~~~~
+
+The name of a lock file.
+If the file exists,
+its contents will be used instead of the
+value of the
+``requires``
+field.
+
+Use
+``briefcase update -r --relock``
+to recompute the lock file.
+
+
 ``revision``
 ~~~~~~~~~~~~
 
@@ -414,6 +429,21 @@ Unlike most other keys in a configuration file, ``test_requires`` is a
 level, application level, *and* platform level, the final set of requirements
 will be the *concatenation* of requirements from all levels, starting from least
 to most specific.
+
+
+``test_requires_lock``
+~~~~~~~~~~~~~~~~~~~~~~
+
+The name of a lock file.
+If the file exists,
+its contents will be used instead of the
+value of the
+``test_requires``
+field.
+
+Use
+``briefcase update -r --test --relock``
+to update the lock file.
 
 ``test_sources``
 ~~~~~~~~~~~~~~~~
