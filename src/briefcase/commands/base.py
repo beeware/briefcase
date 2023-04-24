@@ -811,7 +811,8 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                 cached_template = template
             except ValueError:
                 raise BriefcaseCommandError(
-                    f"Git repository in a weird state, delete {cached_template} and try briefcase create again")
+                    f"Git repository in a weird state, delete {cached_template} and try briefcase create again"
+                )
         else:
             # If this isn't a repository URL, treat it as a local directory
             cached_template = template
