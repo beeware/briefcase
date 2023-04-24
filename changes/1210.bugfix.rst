@@ -1,0 +1,1 @@
+error handling for incomplete github clones have been improved
