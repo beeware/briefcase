@@ -227,6 +227,97 @@ def test_package_app_notarize_adhoc_signed(package_command, first_app_with_binar
     assert package_command.notarize.call_count == 0
 
 
+def test_package_app_notarize_adhoc_signed_via_prompt(
+    package_command, first_app_with_binaries
+):
+    """A macOS App cannot be notarized if ad-hoc signing is requested."""
+
+    package_command.select_identity.return_value = (
+        "-",
+        (
+            "Ad-hoc identity. The resulting package will run but cannot be "
+            "re-distributed."
+        ),
+    )
+    # Package the app without code signing
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Can't notarize an app with an ad-hoc signing identity",
+    ):
+        package_command.package_app(
+            first_app_with_binaries,
+            notarize_app=True,
+        )
+
+    # No code signing or notarization has been performed.
+    assert package_command.select_identity.call_count == 1
+    assert package_command.sign_app.call_count == 0
+    assert package_command.sign_file.call_count == 0
+    assert package_command.notarize.call_count == 0
+
+
+def test_package_app_adhoc_signed_via_prompt(
+    package_command, first_app_with_binaries, tmp_path
+):
+    """A macOS App cannot be notarized if ad-hoc signing is requested."""
+
+    package_command.select_identity.return_value = (
+        "-",
+        (
+            "Ad-hoc identity. The resulting package will run but cannot be "
+            "re-distributed."
+        ),
+    )
+    package_command.package_app(
+        first_app_with_binaries,
+        notarize_app=False,
+    )
+
+    # A request has been made to sign the app
+    package_command.sign_app.assert_called_once_with(
+        app=first_app_with_binaries,
+        identity="-",
+    )
+
+    # The DMG has been built as expected
+    package_command.dmgbuild.build_dmg.assert_called_once_with(
+        filename=os.fsdecode(tmp_path / "base_path" / "dist" / "First App-0.0.1.dmg"),
+        volume_name="First App 0.0.1",
+        settings={
+            "files": [
+                os.fsdecode(
+                    tmp_path
+                    / "base_path"
+                    / "build"
+                    / "first-app"
+                    / "macos"
+                    / "app"
+                    / "First App.app"
+                )
+            ],
+            "symlinks": {"Applications": "/Applications"},
+            "icon_locations": {
+                "First App.app": (75, 75),
+                "Applications": (225, 75),
+            },
+            "window_rect": ((600, 600), (350, 150)),
+            "icon_size": 64,
+            "text_size": 12,
+        },
+    )
+
+    # A request was made to sign the DMG as well.
+    # This ignores the calls that would have been made transitively
+    # by calling sign_app()
+    package_command.sign_file.assert_called_once_with(
+        tmp_path / "base_path" / "dist" / "First App-0.0.1.dmg",
+        identity="-",
+    )
+
+    # No request was made to notarize
+    package_command.notarize.assert_not_called()
+
+
 def test_package_app_adhoc_sign(package_command, first_app_with_binaries, tmp_path):
     """A macOS App can be packaged and signed with ad-hoc identity."""
 

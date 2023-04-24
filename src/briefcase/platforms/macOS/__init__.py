@@ -223,6 +223,10 @@ class macOSSigningMixin:
         """
         # Obtain the valid codesigning identities.
         identities = self.get_identities(self.tools, "codesigning")
+        identities["-"] = (
+            "Ad-hoc identity. The resulting package will run but cannot be "
+            "re-distributed."
+        )
 
         if identity:
             try:
@@ -241,10 +245,6 @@ class macOSSigningMixin:
                         f"Invalid code signing identity {identity}"
                     ) from e
 
-        identities["-"] = (
-            "Ad-hoc identity. The resulting package will run but cannot be "
-            "re-distributed."
-        )
         self.input.prompt()
         self.input.prompt(
             "Select code signing identity to use. If your identity is not listed, please see "
