@@ -8,6 +8,7 @@ from typing import Any, List
 from zipfile import ZipFile
 
 from briefcase.console import Log
+from packaging.utils import parse_wheel_filename
 
 try:
     import tomllib
@@ -174,18 +175,25 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
 
         with self.input.wait_bar("Writing Pyscript configuration file..."):
             with (self.project_path(app) / "pyscript.toml").open("wb") as f:
+                # Ensure that we're using Unix path separators, as the content
+                # will be parsed by pyscript in the browser.
+                packages = {
+                    wheel: f'/{"/".join(wheel.relative_to(self.project_path(app)).parts)}'
+                    for wheel in sorted(self.wheel_path(app).glob("*.whl"))
+                }
+                # Ensure that non-pyodide-compatible wheels are passed as package names
+                # so that micropip can try to install it from the pyodide index.
+                for wheel in packages:
+                    name, version, build, tags = parse_wheel_filename(wheel.name)
+                    if not any(tag.platform == "any" for tag in tags):
+                        packages[wheel] = name
                 config = {
                     "name": app.formal_name,
                     "description": app.description,
                     "version": app.version,
                     "splashscreen": {"autoclose": True},
                     "terminal": False,
-                    # Ensure that we're using Unix path separators, as the content
-                    # will be parsed by pyscript in the browser.
-                    "packages": [
-                        f'/{"/".join(wheel.relative_to(self.project_path(app)).parts)}'
-                        for wheel in sorted(self.wheel_path(app).glob("*.whl"))
-                    ],
+                    "packages": list(packages.values()),
                 }
                 # Parse any additional pyscript.toml content, and merge it into
                 # the overall content
@@ -214,7 +222,9 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
             )
 
             # Extract static resources from packaged wheels
-            for wheelfile in sorted(self.wheel_path(app).glob("*.whl")):
+            for wheelfile, target in packages.items():
+                if not target.endswith(".whl"):  # micropip dependency
+                    continue
                 self.logger.info(f"  Processing {wheelfile.name}...")
                 with briefcase_css_path.open("a", encoding="utf-8") as css_file:
                     self._process_wheel(wheelfile, css_file=css_file)
