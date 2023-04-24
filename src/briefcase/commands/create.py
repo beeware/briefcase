@@ -505,8 +505,16 @@ class CreateCommand(BaseCommand):
             with tempfile.NamedTemporaryFile(mode="w+") as fpout:
                 fpout.writelines(line + "\n" for line in requires)
                 fpout.flush()
-                res = subprocess.run(
-                    ["pip-compile", fpout.name, "--output-file=-"],
+                res = self.tools[app].app_context.run(
+                    [
+                        sys.executable,
+                        "-u",
+                        "-m",
+                        "piptools",
+                        "compile",
+                        fpout.name,
+                        "--output-file=-",
+                    ],
                     text=True,
                     capture_output=True,
                     check=True,

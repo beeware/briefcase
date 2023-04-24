@@ -146,6 +146,53 @@ def test_app_packages_valid_requires(
     assert myapp.test_requires is None
 
 
+def test_app_packages_relock_requires(
+    create_command,
+    myapp,
+    app_packages_path,
+    app_packages_path_index,
+):
+    """If an app has a valid list of requirements, pip is invoked."""
+    myapp.requires = ["first", "second==1.2.3", "third>=3.2.1"]
+    myapp.requires_lock = "requirements-test-lock.txt"
+    create_command.tools[myapp].app_context.run.return_value.stdout = (
+        "first==1.1.1\n" "second==1.2.3\n" "third==4.1.1\n"
+    )
+
+    create_command.install_app_requirements(myapp, test_mode=False, relock=True)
+
+    # A request was made to install requirements
+    create_command.tools[myapp].app_context.run.assert_called_with(
+        [
+            sys.executable,
+            "-u",
+            "-m",
+            "pip",
+            "install",
+            "--upgrade",
+            "--no-user",
+            f"--target={app_packages_path}",
+            "first==1.1.1",
+            "second==1.2.3",
+            "third==4.1.1",
+        ],
+        check=True,
+        env={
+            "PYTHONPATH": str(
+                create_command.bundle_path(myapp)
+                / "path"
+                / "to"
+                / "support"
+                / "platform-site"
+            )
+        },
+    )
+
+    # Original app definitions haven't changed
+    assert myapp.requires == ["first", "second==1.2.3", "third>=3.2.1"]
+    assert myapp.test_requires is None
+
+
 def test_app_packages_valid_requires_no_support_package(
     create_command,
     myapp,
