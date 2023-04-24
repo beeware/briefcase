@@ -200,7 +200,10 @@ def test_no_identities(dummy_command):
 
     assert result == (
         "-",
-        "ad-hoc",
+        (
+            "Ad-hoc identity. The resulting package will run but cannot be "
+            "re-distributed."
+        ),
     )
 
     # User input was solicited

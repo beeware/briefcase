@@ -241,20 +241,29 @@ class macOSSigningMixin:
                         f"Invalid code signing identity {identity!r}"
                     ) from e
 
-        identities["-"] = "ad-hoc"
+        identities["-"] = (
+            "Ad-hoc identity. The resulting package will run but cannot be "
+            "re-distributed."
+        )
         self.input.prompt()
         self.input.prompt(
-            'Select code signing identity to use. "ad-hoc" will result '
-            "in a package that can run locally, but cannot be "
-            "redistributed. If your identity is not listed, please see "
-            "https://briefcase.readthedocs.io/en/stable/how-to/code-signing/macOS.html\n"
-            "To skip this prompt in the future, use `--adhoc-sign` or `--identity=<identity>`:"
+            "Select code signing identity to use. If your identity is not listed, please see "
+            "https://briefcase.readthedocs.io/en/stable/how-to/code-signing/macOS.html:"
         )
         self.input.prompt()
         identity = select_option(identities, input=self.input)
         identity_name = identities[identity]
-        self.logger.info(
-            f"""
+        if identity == "-":
+            self.logger.info(
+                f"""
+In the future, you could specify this signing identity by running:
+
+    $ briefcase {self.command} macOS --adhoc-sign
+"""
+            )
+        else:
+            self.logger.info(
+                f"""
 In the future, you could specify this signing identity by running:
 
     $ briefcase {self.command} macOS -i {identity}
@@ -263,7 +272,7 @@ or
 
     $ briefcase {self.command} macOS -i "{identity_name}"
 """
-        )
+            )
 
         return identity, identity_name
 
@@ -592,9 +601,13 @@ password:
 
             identity = "-"
             self.logger.info(
+                "Signing app with ad-hoc identity...",
+                prefix=app.app_name,
+            )
+            self.logger.warning(
                 (
-                    "Signing app with ad-hoc identity... Note that this app "
-                    "will run, but cannot be re-distributed."
+                    "Because you are signing with the ad-hoc identity, this "
+                    "app will run, but cannot be re-distributed."
                 ),
                 prefix=app.app_name,
             )

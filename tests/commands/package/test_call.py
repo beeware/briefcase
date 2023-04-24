@@ -193,7 +193,7 @@ def test_adhoc_sign_package_one_app(package_command, first_app, tmp_path):
     }
 
     # Configure an ad-hoc signing option
-    options = package_command.parse_options(["--adhoc"])
+    options = package_command.parse_options(["--adhoc-sign"])
 
     # Run the run command
     package_command(**options)
@@ -240,7 +240,7 @@ def test_adhoc_sign_args_package_two_app(
     }
 
     # Configure adhoc command line options
-    options = package_command.parse_options(["--adhoc"])
+    options = package_command.parse_options(["--adhoc-sign"])
 
     # Run the package command
     package_command(**options)
