@@ -321,6 +321,17 @@ substituting the version number that you want to target. You can also specify
 the `towncrier-check`, `docs` or `package` targets to check release notes,
 documentation syntax and packaging metadata, respectively.
 
+Verify test coverage
+--------------------
+
+When you run the test suite, a coverage report is generated and shown at the
+end of the output. Depending on your platform, some lines required by other
+platforms will be skipped and shown as "missing" in the coverage report. You
+can safely ignore those lines. However, make sure that any lines of code that
+you added or modified do not appear in the report. If they do, you need to add
+new tests that will cover those lines. Otherwise, the coverage check will fail
+when you make a PR with your changes.
+
 Add change information for release notes
 ----------------------------------------
 
