@@ -12,5 +12,6 @@ Command reference
    build
    run
    package
+   project
    publish
    upgrade

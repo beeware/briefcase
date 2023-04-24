@@ -5,7 +5,7 @@ from unittest import mock
 import pytest
 
 from briefcase import __version__, cmdline
-from briefcase.commands import DevCommand, NewCommand, UpgradeCommand
+from briefcase.commands import DevCommand, NewCommand, ProjectCommand, UpgradeCommand
 from briefcase.console import Console, Log
 from briefcase.exceptions import (
     InvalidFormatError,
@@ -503,3 +503,16 @@ def test_unknown_command_options(monkeypatch, capsys, logger, console):
         "                                     [-c {s3}]\n"
         "briefcase publish macOS Xcode: error: unrecognized arguments: -x"
     )
+
+
+def test_project_command(logger, console):
+    """``briefcase project version`` returns the Project command."""
+    cmd, options = do_cmdline_parse("project version".split(), logger, console)
+
+    assert isinstance(cmd, ProjectCommand)
+    assert cmd.platform == "all"
+    assert cmd.output_format is None
+    assert cmd.input.enabled
+    assert cmd.logger.verbosity == 1
+    assert cmd.logger is logger
+    assert cmd.input is console

@@ -13,7 +13,7 @@ class ProjectCommand(BaseCommand):
     def add_options(self, parser):
         parser.add_argument(
             "action",
-            help="The app to run",
+            help="Project information",
         )
 
     def binary_path(self, app):
