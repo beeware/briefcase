@@ -491,6 +491,39 @@ def merge_config(config, data):
     config.update(data)
 
 
+def update_global_config(global_config, project_config):
+    def maybe_update(field, *project_fields):
+        if field in global_config:
+            return
+        datum = project_config
+        try:
+            for key in project_fields:
+                datum = datum[key]
+        except KeyError:
+            pass
+        else:
+            global_config[field] = datum
+    maybe_update("version", "version")
+    maybe_update("license", "license", "text")
+    maybe_update("authors", "authors")
+    try:
+        authors = global_config["authors"]
+    except KeyError:
+        pass
+    global_config["author"] = authors[0]["name"]
+    global_config["author_email"] = authors[0]["email"]
+    maybe_update("url", "urls", "Homepage")
+    maybe_update("description", "description")
+    maybe_update("dependencies", "dependencies")
+    global_config.setdefault("requires", []).extend(
+        global_config.pop("dependencies", [])
+    )
+    maybe_update("test_dependencies", "optional-dependencies", "test")
+    global_config.setdefault("test_requires", []).extend(
+        global_config.pop("test_dependencies", [])
+    )
+
+
 def parse_config(config_file, platform, output_format):
     """Parse the briefcase section of the pyproject.toml configuration file.
 
@@ -521,12 +554,15 @@ def parse_config(config_file, platform, output_format):
     """
     try:
         pyproject = tomllib.load(config_file)
-
-        global_config = pyproject["tool"]["briefcase"]
     except tomllib.TOMLDecodeError as e:
         raise BriefcaseConfigError(f"Invalid pyproject.toml: {e}") from e
+
+    try:
+        global_config = pyproject["tool"]["briefcase"]
     except KeyError as e:
         raise BriefcaseConfigError("No tool.briefcase section in pyproject.toml") from e
+
+    update_global_config(global_config, pyproject.get("project", {}))
 
     # For consistent results, sort the platforms and formats
     all_platforms = sorted(get_platforms().keys())
