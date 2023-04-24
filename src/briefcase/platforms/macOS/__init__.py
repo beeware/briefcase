@@ -238,7 +238,7 @@ class macOSSigningMixin:
                 except KeyError:
                     # Not found as an ID or name
                     raise BriefcaseCommandError(
-                        f"Invalid code signing identity {identity!r}"
+                        f"Invalid code signing identity {identity}"
                     ) from e
 
         identities["-"] = (
@@ -436,7 +436,7 @@ class macOSPackageMixin(macOSSigningMixin):
             return re.match(r".*\(([\dA-Z]*)\)", identity_name)[1]
         except TypeError:
             raise BriefcaseCommandError(
-                "Couldn't extract Team ID from signing identity {identity!r}"
+                f"Couldn't extract Team ID from signing identity {identity_name!r}"
             )
 
     def notarize(self, filename, team_id):
@@ -612,19 +612,36 @@ password:
                 prefix=app.app_name,
             )
         else:
-            # If we're signing, and notarization isn't explicitly disabled,
-            # notarize by default.
-            if notarize_app is None:
-                notarize_app = True
-
             identity, identity_name = self.select_identity(identity=identity)
 
-            self.logger.info(
-                f"Signing app with identity {identity_name}...", prefix=app.app_name
-            )
+            if identity == "-":
+                if notarize_app:
+                    raise BriefcaseCommandError(
+                        "Can't notarize an app with an ad-hoc signing identity"
+                    )
+                self.logger.info(
+                    "Signing app with ad-hoc identity...",
+                    prefix=app.app_name,
+                )
+                self.logger.warning(
+                    (
+                        "Because you are signing with the ad-hoc identity, this "
+                        "app will run, but cannot be re-distributed."
+                    ),
+                    prefix=app.app_name,
+                )
+            else:
+                # If we're signing, and notarization isn't explicitly disabled,
+                # notarize by default.
+                if notarize_app is None:
+                    notarize_app = True
 
-            if notarize_app:
-                team_id = self.team_id_from_identity(identity_name)
+                self.logger.info(
+                    f"Signing app with identity {identity_name}...", prefix=app.app_name
+                )
+
+                if notarize_app:
+                    team_id = self.team_id_from_identity(identity_name)
 
         self.sign_app(app=app, identity=identity)
 
