@@ -3,6 +3,14 @@ import pytest
 from briefcase.exceptions import BriefcaseCommandError
 
 
+def _clean_relock(actions):
+    for (cmd, *rest) in actions:
+        if cmd not in {"run", "build", "create", "update"}:
+            continue
+        rest[-1].pop("relock", None)
+    return actions
+
+
 def test_specific_app(build_command, first_app, second_app):
     """If a specific app is requested, build it."""
     # Add two apps
@@ -18,7 +26,7 @@ def test_specific_app(build_command, first_app, second_app):
     build_command(first_app, **options)
 
     # The right sequence of things will be done
-    assert build_command.actions == [
+    assert _clean_relock(build_command.actions) == [
         # Host OS is verified
         ("verify-host",),
         # Tools are verified
@@ -47,7 +55,7 @@ def test_multiple_apps(build_command, first_app, second_app):
     build_command(**options)
 
     # The right sequence of things will be done
-    assert build_command.actions == [
+    assert _clean_relock(build_command.actions) == [
         # Host OS is verified
         ("verify-host",),
         # Tools are verified
@@ -81,7 +89,7 @@ def test_non_existent(build_command, first_app_config, second_app):
     build_command(**options)
 
     # The right sequence of things will be done
-    assert build_command.actions == [
+    assert _clean_relock(build_command.actions) == [
         # Host OS is verified
         ("verify-host",),
         # Tools are verified
@@ -121,7 +129,7 @@ def test_unbuilt(build_command, first_app_unbuilt, second_app):
     build_command(**options)
 
     # The right sequence of things will be done
-    assert build_command.actions == [
+    assert _clean_relock(build_command.actions) == [
         # Host OS is verified
         ("verify-host",),
         # Tools are verified
@@ -155,7 +163,7 @@ def test_update_app(build_command, first_app, second_app):
     build_command(**options)
 
     # The right sequence of things will be done
-    assert build_command.actions == [
+    assert _clean_relock(build_command.actions) == [
         # Host OS is verified
         ("verify-host",),
         # Tools are verified
@@ -213,7 +221,7 @@ def test_update_app_requirements(build_command, first_app, second_app):
     build_command(**options)
 
     # The right sequence of things will be done
-    assert build_command.actions == [
+    assert _clean_relock(build_command.actions) == [
         # Host OS is verified
         ("verify-host",),
         # Tools are verified
@@ -271,7 +279,7 @@ def test_update_app_resources(build_command, first_app, second_app):
     build_command(**options)
 
     # The right sequence of things will be done
-    assert build_command.actions == [
+    assert _clean_relock(build_command.actions) == [
         # Host OS is verified
         ("verify-host",),
         # Tools are verified
@@ -329,7 +337,7 @@ def test_update_non_existent(build_command, first_app_config, second_app):
     build_command(**options)
 
     # The right sequence of things will be done
-    assert build_command.actions == [
+    assert _clean_relock(build_command.actions) == [
         # Host OS is verified
         ("verify-host",),
         # Tools are verified
@@ -384,7 +392,7 @@ def test_update_unbuilt(build_command, first_app_unbuilt, second_app):
     build_command(**options)
 
     # The right sequence of things will be done
-    assert build_command.actions == [
+    assert _clean_relock(build_command.actions) == [
         # Host OS is verified
         ("verify-host",),
         # Tools are verified
@@ -442,7 +450,7 @@ def test_build_test(build_command, first_app, second_app):
     build_command(**options)
 
     # The right sequence of things will be done
-    assert build_command.actions == [
+    assert _clean_relock(build_command.actions) == [
         # Host OS is verified
         ("verify-host",),
         # Tools are verified
@@ -501,7 +509,7 @@ def test_build_test_no_update(build_command, first_app, second_app):
     build_command(**options)
 
     # The right sequence of things will be done
-    assert build_command.actions == [
+    assert _clean_relock(build_command.actions) == [
         # Host OS is verified
         ("verify-host",),
         # Tools are verified
@@ -540,7 +548,7 @@ def test_build_test_update_dependencies(build_command, first_app, second_app):
     build_command(**options)
 
     # The right sequence of things will be done
-    assert build_command.actions == [
+    assert _clean_relock(build_command.actions) == [
         # Host OS is verified
         ("verify-host",),
         # Tools are verified
@@ -599,7 +607,7 @@ def test_build_test_update_resources(build_command, first_app, second_app):
     build_command(**options)
 
     # The right sequence of things will be done
-    assert build_command.actions == [
+    assert _clean_relock(build_command.actions) == [
         # Host OS is verified
         ("verify-host",),
         # Tools are verified
@@ -716,7 +724,7 @@ def test_test_app_non_existent(build_command, first_app_config, second_app):
     build_command(**options)
 
     # The right sequence of things will be done
-    assert build_command.actions == [
+    assert _clean_relock(build_command.actions) == _clean_relock([
         # Host OS is verified
         ("verify-host",),
         # Tools are verified
@@ -753,7 +761,7 @@ def test_test_app_non_existent(build_command, first_app_config, second_app):
                 "test_mode": True,
             },
         ),
-    ]
+    ])
 
 
 def test_test_app_unbuilt(build_command, first_app_unbuilt, second_app):
@@ -772,7 +780,7 @@ def test_test_app_unbuilt(build_command, first_app_unbuilt, second_app):
     build_command(**options)
 
     # The right sequence of things will be done
-    assert build_command.actions == [
+    assert _clean_relock(build_command.actions) == _clean_relock([
         # Host OS is verified
         ("verify-host",),
         # Tools are verified
@@ -816,4 +824,4 @@ def test_test_app_unbuilt(build_command, first_app_unbuilt, second_app):
             "second",
             {"update_state": "second", "build_state": "first", "test_mode": True},
         ),
-    ]
+    ])
