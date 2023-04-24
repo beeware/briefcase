@@ -1,0 +1,1 @@
+Fix up macOS signing options for `beeware package`
