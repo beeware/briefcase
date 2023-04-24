@@ -4,7 +4,7 @@ from briefcase.exceptions import BriefcaseCommandError
 
 
 def _clean_relock(actions):
-    for (cmd, *rest) in actions:
+    for cmd, *rest in actions:
         if cmd not in {"run", "build", "create", "update"}:
             continue
         rest[-1].pop("relock", None)
@@ -724,7 +724,7 @@ def test_test_app_non_existent(build_command, first_app_config, second_app):
     build_command(**options)
 
     # The right sequence of things will be done
-    assert _clean_relock(build_command.actions) == _clean_relock([
+    assert _clean_relock(build_command.actions) == [
         # Host OS is verified
         ("verify-host",),
         # Tools are verified
@@ -761,7 +761,7 @@ def test_test_app_non_existent(build_command, first_app_config, second_app):
                 "test_mode": True,
             },
         ),
-    ])
+    ]
 
 
 def test_test_app_unbuilt(build_command, first_app_unbuilt, second_app):
@@ -780,7 +780,7 @@ def test_test_app_unbuilt(build_command, first_app_unbuilt, second_app):
     build_command(**options)
 
     # The right sequence of things will be done
-    assert _clean_relock(build_command.actions) == _clean_relock([
+    assert _clean_relock(build_command.actions) == [
         # Host OS is verified
         ("verify-host",),
         # Tools are verified
@@ -824,4 +824,4 @@ def test_test_app_unbuilt(build_command, first_app_unbuilt, second_app):
             "second",
             {"update_state": "second", "build_state": "first", "test_mode": True},
         ),
-    ])
+    ]
