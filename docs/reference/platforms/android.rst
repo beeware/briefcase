@@ -86,10 +86,10 @@ number with the build number. It does this by using each part of the main
 version number (padded to 3 digits if necessary) and the build number as 2
 significant digits of the final version code:
 
-  * Version ``1.0``, build 1 becomes ``1000001`` (i.e, `1`, `00`, `00`, `01`)
-  * Version ``1.2``, build 37 becomes ``1020037`` (i.e., `1`, `02`, `00`, `37`)
-  * Version ``1.2.37``, build 42 becomes ``1023742`` (i.e, `1`, `02`, `37`, `42`)
-  * Version ``2020.6``, build 4 becomes ``2020060004`` (i.e., `2020`, `06`, `00`, `04`)
+  * Version ``1.0``, build 1 becomes ``1000001`` (i.e, ``1``, ``00``, ``00``, ``01``)
+  * Version ``1.2``, build 37 becomes ``1020037`` (i.e., ``1``, ``02``, ``00``, ``37``)
+  * Version ``1.2.37``, build 42 becomes ``1023742`` (i.e, ``1``, ``02``, ``37``, ``42``)
+  * Version ``2020.6``, build 4 becomes ``2020060004`` (i.e., ``2020``, ``06``, ``00``, ``04``)
 
 If you want to manually specify a version code by defining ``version_code`` in
 your application configuration. If provided, this value will override any
@@ -113,7 +113,9 @@ The device or emulator to target. Can be specified as:
 * a device ID (a hexadecimal identifier associated with a specific hardware device);
   or
 * a JSON dictionary specifying the properties of a device that will be created.
-  This dictionary must have, at a minimum, an AVD name::
+  This dictionary must have, at a minimum, an AVD name:
+
+.. code-block:: console
 
      $ briefcase run -d '{"avd":"new-device"}'
 

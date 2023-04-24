@@ -8,28 +8,36 @@ Actions to formally publish releases.
 This guide assumes that you have an ``upstream`` remote configured on your
 local clone of the Briefcase repository, pointing at the official repository.
 If all you have is a checkout of a personal fork of the Briefcase repository,
-you can configure that checkout by running::
+you can configure that checkout by running:
 
-    $ git remote add upstream https://github.com/beeware/briefcase.git
+.. code-block:: console
+
+  $ git remote add upstream https://github.com/beeware/briefcase.git
 
 The procedure for cutting a new release is as follows:
 
-1. Check the contents of the upstream repository's main branch::
+1. Check the contents of the upstream repository's main branch:
 
-    $ git fetch upstream
-    $ git checkout --detach upstream/main
+.. code-block:: console
 
-   Check that the HEAD of release now matches upstream/main.
+  $ git fetch upstream
+  $ git checkout --detach upstream/main
 
-2. Ensure that the release notes are up to date. Run::
+Check that the HEAD of release now matches upstream/main.
 
-         $ tox -e towncrier -- --draft
+2. Ensure that the release notes are up to date. Run:
 
-   to review the release notes that will be included, and then::
+.. code-block:: console
 
-         $ tox -e towncrier
+  $ tox -e towncrier -- --draft
 
-   to generate the updated release notes.
+to review the release notes that will be included, and then:
+
+.. code-block:: console
+
+  $ tox -e towncrier
+
+to generate the updated release notes.
 
 3. Ensure that there is a version branch for the new Briefcase version in
    every template that Briefcase will use at runtime:
@@ -46,11 +54,13 @@ The procedure for cutting a new release is as follows:
    * ``briefcase-android-gradle-template``
    * ``briefcase-web-static-template``
 
-4. Tag the release, and push the branch and tag upstream::
+4. Tag the release, and push the branch and tag upstream:
 
-    $ git tag v1.2.3
-    $ git push upstream HEAD:main
-    $ git push upstream v1.2.3
+.. code-block:: console
+
+  $ git tag v1.2.3
+  $ git push upstream HEAD:main
+  $ git push upstream v1.2.3
 
 5. Pushing the tag will start a workflow to create a draft release on GitHub.
    You can `follow the progress of the workflow on GitHub
@@ -79,14 +89,16 @@ The procedure for cutting a new release is as follows:
       release.
 
 6. Create a clean virtual environment, install the new release from Test PyPI, and
-   perform any pre-release testing that may be appropriate::
+   perform any pre-release testing that may be appropriate:
 
-    $ python3 -m venv testvenv
-    $ . ./testvenv/bin/activate
-    (testvenv) $ pip install --extra-index-url https://test.pypi.org/simple/ briefcase==1.2.3
-    (testvenv) $ briefcase --version
-    briefcase 1.2.3
-    (testvenv) $ ... any other manual checks you want to perform ...
+.. code-block:: console
+
+  $ python3 -m venv testvenv
+  $ . ./testvenv/bin/activate
+  (testvenv) $ pip install --extra-index-url https://test.pypi.org/simple/ briefcase==1.2.3
+  (testvenv) $ briefcase --version
+  briefcase 1.2.3
+  (testvenv) $ #... any other manual checks you want to perform ...
 
 7. Log into ReadTheDocs, visit the `Versions tab
    <https://readthedocs.org/projects/briefcase/versions/>`__, and activate the

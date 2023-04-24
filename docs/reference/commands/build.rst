@@ -12,15 +12,21 @@ Usage
 =====
 
 To build the application for the default output format for the current
-platform::
+platform:
+
+.. code-block:: console
 
     $ briefcase build
 
-To build the application for a different platform::
+To build the application for a different platform:
+
+.. code-block:: console
 
     $ briefcase build <platform>
 
-To build the application for a specific output format::
+To build the application for a specific output format:
+
+.. code-block:: console
 
     $ briefcase build <platform> <output format>
 
@@ -40,7 +46,9 @@ The following options can be provided at the command line.
 ``-u`` / ``--update``
 ---------------------
 
-Update the application's source code before building. Equivalent to running::
+Update the application's source code before building. Equivalent to running:
+
+.. code-block:: console
 
     $ briefcase update
     $ briefcase build
@@ -48,7 +56,9 @@ Update the application's source code before building. Equivalent to running::
 ``-r`` / ``--update-requirements``
 ----------------------------------
 
-Update application requirements before building. Equivalent to running::
+Update application requirements before building. Equivalent to running:
+
+.. code-block:: console
 
     $ briefcase update -r
     $ briefcase build
@@ -56,7 +66,9 @@ Update application requirements before building. Equivalent to running::
 ``--update-resources``
 ----------------------
 
-Update application resources (e.g., icons and splash screens) before building. Equivalent to running::
+Update application resources (e.g., icons and splash screens) before building. Equivalent to running:
+
+.. code-block:: console
 
     $ briefcase update --update-resources
     $ briefcase build

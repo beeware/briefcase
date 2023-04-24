@@ -10,15 +10,21 @@ This will produce an installable artefact.
 Usage
 =====
 
-To build an installer of the default output format for the current platform::
+To build an installer of the default output format for the current platform:
+
+.. code-block:: console
 
     $ briefcase package
 
-To build an installer for a different platform::
+To build an installer for a different platform:
+
+.. code-block:: console
 
     $ briefcase package <platform>
 
-To build an installer for a specific output format::
+To build an installer for a specific output format:
+
+.. code-block:: console
 
     $ briefcase package <platform> <output format>
 
@@ -36,30 +42,32 @@ Options
 The following options can be provided at the command line.
 
 ``-u`` / ``--update``
-~~~~~~~~~~~~~~~~~~~~~
+---------------------
 
 Update and recompile the application's code before running. Equivalent to
-running::
+running:
+
+.. code-block:: console
 
     $ briefcase update
     $ briefcase package
 
 ``-p <format>``, ``--packaging-format <format>``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------------------------
 
 The format to use for packaging. The available packaging formats are platform dependent.
 
 ``--no-sign``
-~~~~~~~~~~~~~
+-------------
 
 Don't perform code signing on the app.
 
 ``--adhoc-sign``
-~~~~~~~~~~~~~~~~
+----------------
 
 Sign app with adhoc identity.
 
 ``-i <identity>`` / ``--identity <identity>``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------------------------
 
 The :doc:`code signing identity </how-to/code-signing/index>` to use when signing the app.
