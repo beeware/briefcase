@@ -32,6 +32,10 @@ MACOS_LOG_PREFIX_REGEX = re.compile(
     r"(?P<subsystem>( \(libffi\.dylib\))|( \(_ctypes\.cpython-3\d{1,2}-.*?\.so\)))? (?P<content>.*)"
 )
 
+ADHOC_IDENTITY_NAME = (
+    "Ad-hoc identity. The resulting package will run but cannot be re-distributed."
+)
+
 
 def macOS_log_clean_filter(line):
     """Filter a macOS system log to extract the Python-generated message content.
@@ -223,10 +227,7 @@ class macOSSigningMixin:
         """
         # Obtain the valid codesigning identities.
         identities = self.get_identities(self.tools, "codesigning")
-        identities["-"] = (
-            "Ad-hoc identity. The resulting package will run but cannot be "
-            "re-distributed."
-        )
+        identities["-"] = ADHOC_IDENTITY_NAME
 
         if identity:
             try:
@@ -594,12 +595,16 @@ password:
             of "-", and the resulting app will not be re-distributable.
         """
         if adhoc_sign:
+            identity = "-"
+            identity_name = ADHOC_IDENTITY_NAME
+        else:
+            identity, identity_name = self.select_identity(identity=identity)
+
+        if identity == "-":
             if notarize_app:
                 raise BriefcaseCommandError(
                     "Can't notarize an app with an ad-hoc signing identity"
                 )
-
-            identity = "-"
             self.logger.info(
                 "Signing app with ad-hoc identity...",
                 prefix=app.app_name,
@@ -612,36 +617,17 @@ password:
                 prefix=app.app_name,
             )
         else:
-            identity, identity_name = self.select_identity(identity=identity)
+            # If we're signing, and notarization isn't explicitly disabled,
+            # notarize by default.
+            if notarize_app is None:
+                notarize_app = True
 
-            if identity == "-":
-                if notarize_app:
-                    raise BriefcaseCommandError(
-                        "Can't notarize an app with an ad-hoc signing identity"
-                    )
-                self.logger.info(
-                    "Signing app with ad-hoc identity...",
-                    prefix=app.app_name,
-                )
-                self.logger.warning(
-                    (
-                        "Because you are signing with the ad-hoc identity, this "
-                        "app will run, but cannot be re-distributed."
-                    ),
-                    prefix=app.app_name,
-                )
-            else:
-                # If we're signing, and notarization isn't explicitly disabled,
-                # notarize by default.
-                if notarize_app is None:
-                    notarize_app = True
+            self.logger.info(
+                f"Signing app with identity {identity_name}...", prefix=app.app_name
+            )
 
-                self.logger.info(
-                    f"Signing app with identity {identity_name}...", prefix=app.app_name
-                )
-
-                if notarize_app:
-                    team_id = self.team_id_from_identity(identity_name)
+            if notarize_app:
+                team_id = self.team_id_from_identity(identity_name)
 
         self.sign_app(app=app, identity=identity)
 
