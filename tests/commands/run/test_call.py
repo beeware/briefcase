@@ -4,7 +4,7 @@ from briefcase.exceptions import BriefcaseCommandError
 
 
 def _clean_relock(actions):
-    for (cmd, *rest) in actions:
+    for cmd, *rest in actions:
         if cmd not in {"run", "build"}:
             continue
         rest[-1].pop("relock", None)
@@ -23,7 +23,6 @@ def test_no_args_one_app(run_command, first_app):
 
     # Run the run command
     run_command(**options)
-
 
     # The right sequence of things will be done
     assert _clean_relock(run_command.actions) == [

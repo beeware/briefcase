@@ -505,21 +505,23 @@ class CreateCommand(BaseCommand):
             with tempfile.NamedTemporaryFile(mode="w+") as fpout:
                 fpout.writelines(line + "\n" for line in requires)
                 fpout.flush()
-                res = subprocess.run(["pip-compile", fpout.name, "--output-file=-"], text=True, capture_output=True, check=True)
+                res = subprocess.run(
+                    ["pip-compile", fpout.name, "--output-file=-"],
+                    text=True,
+                    capture_output=True,
+                    check=True,
+                )
             lock_file.write_text(res.stdout)
 
         requires = [
-            line.split("#", 1)[0].strip()
-            for line in lock_file.read_text().splitlines()
+            line.split("#", 1)[0].strip() for line in lock_file.read_text().splitlines()
         ]
-        requires = [
-            potential
-            for potential in requires
-            if potential != ""
-        ]
+        requires = [potential for potential in requires if potential != ""]
         return requires
 
-    def install_app_requirements(self, app: BaseConfig, test_mode: bool, relock: bool=False):
+    def install_app_requirements(
+        self, app: BaseConfig, test_mode: bool, relock: bool = False
+    ):
         """Handle requirements for the app.
 
         This will result in either (in preferential order):
