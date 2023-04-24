@@ -65,7 +65,7 @@ class TOMLEscape(Extension):
             return obj.replace('"', '"').replace("\\", "\\\\")
 
         def escape_non_ascii(obj):
-            """..."""
+            """Quotes obj if non ascii characters are present."""
             if obj.isascii():
                 return obj
             else:
