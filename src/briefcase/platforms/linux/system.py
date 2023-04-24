@@ -40,10 +40,6 @@ class LinuxSystemPassiveMixin(LinuxMixin):
     )
 
     @property
-    def use_docker(self):
-        return False
-
-    @property
     def linux_arch(self):
         # Linux uses different architecture identifiers for some platforms
         return {
