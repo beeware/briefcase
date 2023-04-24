@@ -1,6 +1,5 @@
 import copy
 import keyword
-import pathlib
 import re
 import unicodedata
 from types import SimpleNamespace
