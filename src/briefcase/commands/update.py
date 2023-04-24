@@ -23,6 +23,7 @@ class UpdateCommand(CreateCommand):
         update_requirements: bool,
         update_resources: bool,
         test_mode: bool,
+        relock: bool,
         **options,
     ):
         """Update an existing application bundle.
@@ -47,7 +48,7 @@ class UpdateCommand(CreateCommand):
 
         if update_requirements:
             self.logger.info("Updating requirements...", prefix=app.app_name)
-            self.install_app_requirements(app=app, test_mode=test_mode)
+            self.install_app_requirements(app=app, test_mode=test_mode, relock=relock)
 
         if update_resources:
             self.logger.info("Updating application resources...", prefix=app.app_name)

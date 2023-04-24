@@ -4,6 +4,7 @@ import platform
 import shutil
 import subprocess
 import sys
+import tempfile
 from datetime import date
 from pathlib import Path
 from typing import List, Optional
@@ -487,7 +488,38 @@ class CreateCommand(BaseCommand):
         else:
             self.logger.info("No application requirements.")
 
-    def install_app_requirements(self, app: BaseConfig, test_mode: bool):
+    def _calc_app_requirements(self, app: BaseConfig, test_mode: bool, relock: bool):
+        requires = app.requires.copy() if app.requires else []
+        if test_mode and app.test_requires:
+            requires.extend(app.test_requires)
+
+        lock_attr = "requires_lock" if not test_mode else "test_requires_lock"
+        try:
+            lock_value = getattr(app, lock_attr)
+        except AttributeError:
+            return requires
+        else:
+            lock_file = self.base_path / lock_value
+
+        if relock:
+            with tempfile.NamedTemporaryFile(mode="w+") as fpout:
+                fpout.writelines(line + "\n" for line in requires)
+                fpout.flush()
+                res = subprocess.run(["pip-compile", fpout.name, "--output-file=-"], text=True, capture_output=True, check=True)
+            lock_file.write_text(res.stdout)
+
+        requires = [
+            line.split("#", 1)[0].strip()
+            for line in lock_file.read_text().splitlines()
+        ]
+        requires = [
+            potential
+            for potential in requires
+            if potential != ""
+        ]
+        return requires
+
+    def install_app_requirements(self, app: BaseConfig, test_mode: bool, relock: bool):
         """Handle requirements for the app.
 
         This will result in either (in preferential order):
@@ -504,25 +536,7 @@ class CreateCommand(BaseCommand):
         :param app: The config object for the app
         :param test_mode: Should the test requirements be installed?
         """
-        requires = app.requires.copy() if app.requires else []
-        if test_mode and app.test_requires:
-            requires.extend(app.test_requires)
-        lock_attr = "requires_lock" if not test_mode else "test_requires_lock"
-        try:
-            lock_value = getattr(app, lock_attr)
-        except AttributeError:
-            pass
-        else:
-            lock_file = self.base_path / lock_value
-            requires = [
-                line.split("#", 1)[0].strip()
-                for line in lock_file.read_text().splitlines()
-            ]
-            requires = [
-                potential
-                for potential in requires
-                if potential != ""
-            ]
+        requires = self._calc_app_requirements(app, test_mode, relock)
 
         try:
             requirements_path = self.app_requirements_path(app)
@@ -782,7 +796,7 @@ class CreateCommand(BaseCommand):
         self.install_app_code(app=app, test_mode=test_mode)
 
         self.logger.info("Installing requirements...", prefix=app.app_name)
-        self.install_app_requirements(app=app, test_mode=test_mode)
+        self.install_app_requirements(app=app, test_mode=test_mode, relock=True)
 
         self.logger.info("Installing application resources...", prefix=app.app_name)
         self.install_app_resources(app=app)
