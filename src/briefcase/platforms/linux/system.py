@@ -41,10 +41,7 @@ class LinuxSystemPassiveMixin(LinuxMixin):
 
     @property
     def use_docker(self):
-        # The system backend doesn't have a literal "--use-docker" option, but
-        # `use_docker` is a useful flag for shared logic purposes, so evaluate
-        # what "use docker" means in terms of target_image.
-        return bool(self.target_image)
+        return False
 
     @property
     def linux_arch(self):
@@ -102,26 +99,131 @@ class LinuxSystemPassiveMixin(LinuxMixin):
     def distribution_path(self, app):
         return self.dist_path / self.distribution_filename(app)
 
-    def add_options(self, parser):
-        super().add_options(parser)
-        parser.add_argument(
-            "--target",
-            dest="target",
-            help="Docker base image tag for the distribution to target for the build (e.g., `ubuntu:jammy`)",
-            required=False,
+    def target_glibc_version(self, app):
+        target_glibc = self.tools.os.confstr("CS_GNU_LIBC_VERSION").split()[1]
+        return target_glibc
+
+    def app_python_version_tag(self, app):
+        # Use the version of Python that was used to run Briefcase.
+        return self.python_version_tag
+
+    def platform_freedesktop_info(self, app):
+        try:
+            if sys.version_info < (3, 10):
+                # This reproduces the Python 3.10
+                # platform.freedesktop_os_release() function. Yes, this
+                # should use a context manager, rather than raw file
+                # open/close operations. If you can get the context manager
+                # form of this to pass coverage, you get a shiny penny. For
+                # some reason, coverage generated on Py3.9, but reported on
+                # Py3.10+, finds a missing branch from the `with` statement
+                # to the first line after the `except OSError` below.
+                # Since this is (a) a very simple file I/O sequence, and
+                # (b) will be removed once we're at a Python3.10 minimum,
+                # I can live with the Old Skool I/O calls.
+                f = self.tools.ETC_OS_RELEASE.open(encoding="utf-8")
+                freedesktop_info = parse_freedesktop_os_release(f.read())
+                f.close()
+            else:
+                freedesktop_info = self.tools.platform.freedesktop_os_release()
+
+        except OSError as e:
+            raise BriefcaseCommandError(
+                "Could not find the /etc/os-release file. "
+                "Is this a FreeDesktop-compliant Linux distribution?"
+            ) from e
+
+        return freedesktop_info
+
+    def finalize_app_config(self, app: AppConfig):
+        """Finalize app configuration.
+
+        Linux .deb app configurations are deeper than other platforms, because
+        they need to include components that are dependent on the target vendor
+        and codename. Those properties are extracted from command-line options.
+
+        The final app configuration merges the target-specific configuration
+        into the generic "linux.deb" app configuration, as well as setting the
+        Python version.
+
+        :param app: The app configuration to finalize.
+        """
+        self.logger.info("Finalizing application configuration...", prefix=app.app_name)
+        freedesktop_info = self.platform_freedesktop_info(app)
+
+        # Process the FreeDesktop content to give the vendor, codename and vendor base.
+        (
+            app.target_vendor,
+            app.target_codename,
+            app.target_vendor_base,
+        ) = self.vendor_details(freedesktop_info)
+
+        self.logger.info(
+            f"Targeting {app.target_vendor}:{app.target_codename} (Vendor base {app.target_vendor_base})"
         )
 
-    def parse_options(self, extra):
-        """Extract the target_image option."""
-        options = super().parse_options(extra)
-        self.target_image = options.pop("target")
+        if not self.use_docker:
+            app.target_image = f"{app.target_vendor}:{app.target_codename}"
 
-        return options
+        # Merge target-specific configuration items into the app config This
+        # means:
+        # * merging app.linux.debian into app, overwriting anything global
+        # * merging app.linux.ubuntu into app, overwriting anything vendor-base
+        #   specific
+        # * merging app.linux.ubuntu.focal into app, overwriting anything vendor
+        #   specific
+        # The vendor base config (e.g., redhat). The vendor base might not
+        # be known, so fall back to an empty vendor config.
+        if app.target_vendor_base:
+            vendor_base_config = getattr(app, app.target_vendor_base, {})
+        else:
+            vendor_base_config = {}
+        vendor_config = getattr(app, app.target_vendor, {})
+        try:
+            codename_config = vendor_config[app.target_codename]
+        except KeyError:
+            codename_config = {}
 
-    def clone_options(self, command):
-        """Clone the target_image option."""
-        super().clone_options(command)
-        self.target_image = command.target_image
+        # Copy all the specific configurations to the app config
+        for config in [
+            vendor_base_config,
+            vendor_config,
+            codename_config,
+        ]:
+            for key, value in config.items():
+                setattr(app, key, value)
+
+        with self.input.wait_bar("Determining glibc version..."):
+            app.glibc_version = self.target_glibc_version(app)
+        self.logger.info(f"Targeting glibc {app.glibc_version}")
+
+        app.python_version_tag = self.app_python_version_tag(app)
+
+        self.logger.info(f"Targeting Python{app.python_version_tag}")
+
+
+class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
+    # The Mostly Passive mixin verifies that Docker exists and can be run, but
+    # doesn't require that we're actually in a Linux environment.
+
+    @property
+    def use_docker(self):
+        # The system backend doesn't have a literal "--use-docker" option, but
+        # `use_docker` is a useful flag for shared logic purposes, so evaluate
+        # what "use docker" means in terms of target_image.
+        return bool(self.target_image)
+
+    def app_python_version_tag(self, app):
+        if self.use_docker:
+            # If we're running in Docker, we can't know the Python3 version
+            # before rolling out the template; so we fall back to "3". Later,
+            # once we have a container in which we can run Python, this will be
+            # updated to the actual Python version as part of the
+            # `verify_python` app check.
+            python_version_tag = "3"
+        else:
+            python_version_tag = super().app_python_version_tag(app)
+        return python_version_tag
 
     def target_glibc_version(self, app):
         """Determine the glibc version.
@@ -161,24 +263,11 @@ class LinuxSystemPassiveMixin(LinuxMixin):
                 )
 
         else:
-            target_glibc = self.tools.os.confstr("CS_GNU_LIBC_VERSION").split()[1]
+            target_glibc = super().target_glibc_version(app)
 
         return target_glibc
 
-    def finalize_app_config(self, app: AppConfig):
-        """Finalize app configuration.
-
-        Linux .deb app configurations are deeper than other platforms, because
-        they need to include components that are dependent on the target vendor
-        and codename. Those properties are extracted from command-line options.
-
-        The final app configuration merges the target-specific configuration
-        into the generic "linux.deb" app configuration, as well as setting the
-        Python version.
-
-        :param app: The app configuration to finalize.
-        """
-        self.logger.info("Finalizing application configuration...", prefix=app.app_name)
+    def platform_freedesktop_info(self, app):
         if self.use_docker:
             # Preserve the target image on the command line as the app's target
             app.target_image = self.target_image
@@ -194,96 +283,9 @@ class LinuxSystemPassiveMixin(LinuxMixin):
             )
             freedesktop_info = parse_freedesktop_os_release(output)
         else:
-            try:
-                if sys.version_info < (3, 10):
-                    # This reproduces the Python 3.10
-                    # platform.freedesktop_os_release() function. Yes, this
-                    # should use a context manager, rather than raw file
-                    # open/close operations. If you can get the context manager
-                    # form of this to pass coverage, you get a shiny penny. For
-                    # some reason, coverage generated on Py3.9, but reported on
-                    # Py3.10+, finds a missing branch from the `with` statement
-                    # to the first line after the `except OSError` below.
-                    # Since this is (a) a very simple file I/O sequence, and
-                    # (b) will be removed once we're at a Python3.10 minimum,
-                    # I can live with the Old Skool I/O calls.
-                    f = self.tools.ETC_OS_RELEASE.open(encoding="utf-8")
-                    freedesktop_info = parse_freedesktop_os_release(f.read())
-                    f.close()
-                else:
-                    freedesktop_info = self.tools.platform.freedesktop_os_release()
+            freedesktop_info = super().platform_freedesktop_info(app)
 
-            except OSError as e:
-                raise BriefcaseCommandError(
-                    "Could not find the /etc/os-release file. "
-                    "Is this a FreeDesktop-compliant Linux distribution?"
-                ) from e
-
-        # Process the FreeDesktop content to give the vendor, codename and vendor base.
-        (
-            app.target_vendor,
-            app.target_codename,
-            app.target_vendor_base,
-        ) = self.vendor_details(freedesktop_info)
-
-        self.logger.info(
-            f"Targeting {app.target_vendor}:{app.target_codename} (Vendor base {app.target_vendor_base})"
-        )
-
-        # Non-docker builds need an app representation of the target image
-        # for templating purposes.
-        if not self.use_docker:
-            app.target_image = f"{app.target_vendor}:{app.target_codename}"
-
-        # Merge target-specific configuration items into the app config This
-        # means:
-        # * merging app.linux.debian into app, overwriting anything global
-        # * merging app.linux.ubuntu into app, overwriting anything vendor-base
-        #   specific
-        # * merging app.linux.ubuntu.focal into app, overwriting anything vendor
-        #   specific
-        # The vendor base config (e.g., redhat). The vendor base might not
-        # be known, so fall back to an empty vendor config.
-        if app.target_vendor_base:
-            vendor_base_config = getattr(app, app.target_vendor_base, {})
-        else:
-            vendor_base_config = {}
-        vendor_config = getattr(app, app.target_vendor, {})
-        try:
-            codename_config = vendor_config[app.target_codename]
-        except KeyError:
-            codename_config = {}
-
-        # Copy all the specific configurations to the app config
-        for config in [
-            vendor_base_config,
-            vendor_config,
-            codename_config,
-        ]:
-            for key, value in config.items():
-                setattr(app, key, value)
-
-        with self.input.wait_bar("Determining glibc version..."):
-            app.glibc_version = self.target_glibc_version(app)
-        self.logger.info(f"Targeting glibc {app.glibc_version}")
-
-        if self.use_docker:
-            # If we're running in Docker, we can't know the Python3 version
-            # before rolling out the template; so we fall back to "3". Later,
-            # once we have a container in which we can run Python, this will be
-            # updated to the actual Python version as part of the
-            # `verify_python` app check.
-            app.python_version_tag = "3"
-        else:
-            # Use the version of Python that was used to run Briefcase.
-            app.python_version_tag = self.python_version_tag
-
-        self.logger.info(f"Targeting Python{app.python_version_tag}")
-
-
-class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
-    # The Mostly Passive mixin verifies that Docker exists and can be run, but
-    # doesn't require that we're actually in a Linux environment.
+        return freedesktop_info
 
     def docker_image_tag(self, app):
         """The Docker image tag for an app."""
@@ -294,6 +296,27 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
         super().verify_tools()
         if self.use_docker:
             Docker.verify(tools=self.tools)
+
+    def add_options(self, parser):
+        super().add_options(parser)
+        parser.add_argument(
+            "--target",
+            dest="target",
+            help="Docker base image tag for the distribution to target for the build (e.g., `ubuntu:jammy`)",
+            required=False,
+        )
+
+    def parse_options(self, extra):
+        """Extract the target_image option."""
+        options = super().parse_options(extra)
+        self.target_image = options.pop("target")
+
+        return options
+
+    def clone_options(self, command):
+        """Clone the target_image option."""
+        super().clone_options(command)
+        self.target_image = command.target_image
 
     def verify_python(self, app):
         """Verify that the version of Python being used to build the app in Docker is
