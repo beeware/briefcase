@@ -21,15 +21,21 @@ you must manage any upgrades on your own.
 Usage
 =====
 
-To see what tools are currently being managed by Briefcase::
+To see what tools are currently being managed by Briefcase:
+
+.. code-block:: console
 
     $ briefcase upgrade --list
 
-To upgrade all the tools that are currently being managed by Briefcase::
+To upgrade all the tools that are currently being managed by Briefcase:
+
+.. code-block:: console
 
     $ briefcase upgrade
 
-To upgrade a specific tool::
+To upgrade a specific tool:
+
+.. code-block:: console
 
     $ briefcase upgrade <tool_name>
 
