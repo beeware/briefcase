@@ -360,6 +360,7 @@ or
 
         # Signs code objects in reversed lexicographic order to ensure nesting order is respected
         # (objects must be signed from the inside out)
+        # Run signing through a ThreadPoolExecutor so that they run in parallel 
         with concurrent.futures.ThreadPoolExecutor() as executor:
             futures = []
             progress_bar = self.input.progress_bar()
