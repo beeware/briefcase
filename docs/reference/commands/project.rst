@@ -22,4 +22,4 @@ The following options can be provided at the command line.
 ``version``
 ---------------------------------------
 
-Returns information about the project version from the pyproject.toml file.
+Returns information about the project version from the ``pyproject.toml`` file.
