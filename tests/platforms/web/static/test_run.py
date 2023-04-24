@@ -480,6 +480,18 @@ def test_cache_headers(monkeypatch, tmp_path):
     ]
 
 
+def test_log_requests_to_logger(monkeypatch):
+    """The request handler logs messages to the server's logger."""
+    monkeypatch.setattr(
+        SimpleHTTPRequestHandler, "handle", mock.Mock(return_value=None)
+    )
+    server = mock.MagicMock()
+    handler = HTTPHandler(mock.MagicMock(), ("localhost", 8080), server)
+    handler.log_date_time_string = mock.Mock(return_value="now")
+    handler.log_message("hello\033")
+    server.logger.info.assert_called_once_with("localhost - - [now] hello\\x1b")
+
+
 def test_test_mode(run_command, first_app_built):
     """Test mode raises an error (at least for now)."""
     # Run the app

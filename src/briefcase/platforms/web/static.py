@@ -4,8 +4,10 @@ import sys
 import webbrowser
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from typing import List
+from typing import Any, List
 from zipfile import ZipFile
+
+from briefcase.console import Log
 
 try:
     import tomllib
@@ -223,6 +225,8 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
 class HTTPHandler(SimpleHTTPRequestHandler):
     """Convert any HTTP request into a path request on the static content folder."""
 
+    server: "LocalHTTPServer"
+
     def translate_path(self, path):
         return str(self.server.base_path / path[1:])
 
@@ -232,12 +236,28 @@ class HTTPHandler(SimpleHTTPRequestHandler):
         self.send_header("Expires", "0")
         super().end_headers()
 
+    # Strip out ANSI escape sequences from messages. This was added in security releases
+    # before Python 3.12.
+    _control_char_table = str.maketrans(
+        {c: rf"\x{c:02x}" for c in [*range(0x20), *range(0x7F, 0xA0)]}
+    )
+    _control_char_table[ord("\\")] = r"\\"
+
+    def log_message(self, format: str, *args: Any) -> None:
+        message = (format % args).translate(self._control_char_table)
+        self.server.logger.info(
+            f"{self.address_string()} - - [{self.log_date_time_string()}] {message}"
+        )
+
 
 class LocalHTTPServer(ThreadingHTTPServer):
     """An HTTP server that serves local static content."""
 
-    def __init__(self, base_path, host, port, RequestHandlerClass=HTTPHandler):
+    def __init__(
+        self, base_path, host, port, RequestHandlerClass=HTTPHandler, *, logger: Log
+    ):
         self.base_path = base_path
+        self.logger = logger
         super().__init__((host, port), RequestHandlerClass)
 
 
@@ -304,6 +324,7 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
                 self.project_path(app),
                 host=host,
                 port=port,
+                logger=self.logger,
             )
 
             # Extract the host and port from the server. This is needed

@@ -81,11 +81,11 @@ The following options can be added to the
 The `manylinux <https://github.com/pypa/manylinux>`__ tag to use as a base image
 when building the AppImage. Should be one of:
 
-* `manylinux1`
-* `manylinux2010`
-* `manylinux2014`
-* `manylinux2_24`
-* `manylinux2_28`
+* ``manylinux1``
+* ``manylinux2010``
+* ``manylinux2014``
+* ``manylinux2_24``
+* ``manylinux2_28``
 
 New projects will default to ``manylinux2014``. If an application doesn't specify
 a ``manylinux`` value, ``ubuntu:18.04`` will be used as the base image.

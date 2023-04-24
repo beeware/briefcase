@@ -9,27 +9,31 @@ Linux distribution, including Ubuntu, Debian, Fedora, and more. There are some
 system packages needed to run and build Flatpaks; see the `Flatpak setup guide
 <https://flatpak.org/setup>`__ for more details.
 
-A Flatpak app is built by compiling against a `runtime`. Runtimes provide the
+A Flatpak app is built by compiling against a ``runtime``. Runtimes provide the
 basic dependencies that are used by applications. Each application must be built
 against a runtime, and this runtime must be installed on a host system in order
 for the application to run (Flatpak can automatically install the runtime
 required by an application).
 
 The end user will install the Flatpak into their local app repository; this can
-be done by installing directly from a single file `.flatpak` bundle, or by
+be done by installing directly from a single file ``.flatpak`` bundle, or by
 installing from a package repository like `Flathub <https://flathub.org>`__.
 Apps can be installed into user-space, or if the user has sufficient privileges,
 they can be installed into a system-wide app repository.
 
-Briefcase currently supports creating `.flatpak` single file bundles; end users
-can install the app bundle by running::
+Briefcase currently supports creating ``.flatpak`` single file bundles; end users
+can install the app bundle by running:
+
+.. code-block:: console
 
     $ flatpak install --user App_Name-1.2.3-x86_64.flatpak
 
 substituting the name of the flatpak file as appropriate. The ``--user`` option
 can be omitted if the user wants to install the app system-wide.
 
-The app can then be run with::
+The app can then be run with:
+
+.. code-block:: console
 
     $ flatpak run com.example.appname
 

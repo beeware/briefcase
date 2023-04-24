@@ -7,12 +7,14 @@ Run the application in developer mode.
 Usage
 =====
 
-To run the app, run::
+To run the app, run:
+
+.. code-block:: console
 
     $ briefcase dev
 
 The first time the application runs in developer mode, any requirements listed
-in a `requires` configuration item in `pyproject.toml` will be installed into
+in a ``requires`` configuration item in ``pyproject.toml`` will be installed into
 the current environment.
 
 Options
@@ -46,9 +48,11 @@ Passthrough arguments
 
 If you want to pass any arguments to your app's command line, you can specify them
 using the ``--`` marker to separate Briefcase's arguments from your app's arguments.
-For example::
+For example:
 
-    briefcase dev -- --wiggle --test
+.. code-block:: console
+
+    $ briefcase dev -- --wiggle --test
 
 will run the app in normal mode, passing the ``--wiggle`` and ``--test`` flags to
 the app's command line. The app will *not* run in *Briefcase's* test mode; the

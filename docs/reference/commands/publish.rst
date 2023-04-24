@@ -15,15 +15,21 @@ Usage
 =====
 
 To publish the application artefacts for the current platform's default output
-format to the default publication channel::
+format to the default publication channel:
+
+.. code-block:: console
 
     $ briefcase publish
 
-To publish the application artefacts for a different platform::
+To publish the application artefacts for a different platform:
+
+.. code-block:: console
 
     $ briefcase publish <platform>
 
-To publish the application artefacts for a specific output format::
+To publish the application artefacts for a specific output format:
+
+.. code-block:: console
 
     $ briefcase publish <platform> <output format>
 

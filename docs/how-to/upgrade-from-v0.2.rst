@@ -168,7 +168,9 @@ default).
 
 To use a different output format, add the format as an extra argument to each
 command after the platform. For example, to create a ``app`` file for macOS,
-you would run::
+you would run:
+
+.. code-block:: console
 
     $ briefcase create macOS app
     $ briefcase build macOS app
