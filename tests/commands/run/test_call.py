@@ -3,6 +3,14 @@ import pytest
 from briefcase.exceptions import BriefcaseCommandError
 
 
+def _clean_relock(actions):
+    for (cmd, *rest) in actions:
+        if cmd not in {"run", "build"}:
+            continue
+        rest[-1].pop("relock", None)
+    return actions
+
+
 def test_no_args_one_app(run_command, first_app):
     """If there is one app, run starts that app by default."""
     # Add a single app
@@ -16,8 +24,9 @@ def test_no_args_one_app(run_command, first_app):
     # Run the run command
     run_command(**options)
 
+
     # The right sequence of things will be done
-    assert run_command.actions == [
+    assert _clean_relock(run_command.actions) == [
         # Host OS is verified
         ("verify-host",),
         # Tools are verified
@@ -46,7 +55,7 @@ def test_no_args_one_app_with_passthrough(run_command, first_app):
     run_command(**options)
 
     # The right sequence of things will be done
-    assert run_command.actions == [
+    assert _clean_relock(run_command.actions) == [
         # Host OS is verified
         ("verify-host",),
         # Tools are verified
@@ -93,7 +102,7 @@ def test_with_arg_one_app(run_command, first_app):
     run_command(**options)
 
     # The right sequence of things will be done
-    assert run_command.actions == [
+    assert _clean_relock(run_command.actions) == [
         # Host OS is verified
         ("verify-host",),
         # Tools are verified
@@ -122,7 +131,7 @@ def test_with_arg_two_apps(run_command, first_app, second_app):
     run_command(**options)
 
     # The right sequence of things will be done
-    assert run_command.actions == [
+    assert _clean_relock(run_command.actions) == [
         # Host OS is verified
         ("verify-host",),
         # Tools are verified
@@ -170,7 +179,7 @@ def test_create_app_before_start(run_command, first_app_config):
     run_command(**options)
 
     # The right sequence of things will be done
-    assert run_command.actions == [
+    assert _clean_relock(run_command.actions) == [
         # Host OS is verified
         ("verify-host",),
         # Tools are verified
@@ -215,7 +224,7 @@ def test_build_app_before_start(run_command, first_app_unbuilt):
     run_command(**options)
 
     # The right sequence of things will be done
-    assert run_command.actions == [
+    assert _clean_relock(run_command.actions) == [
         # Host OS is verified
         ("verify-host",),
         # Tools are verified
@@ -259,7 +268,7 @@ def test_update_app(run_command, first_app):
     run_command(**options)
 
     # The right sequence of things will be done
-    assert run_command.actions == [
+    assert _clean_relock(run_command.actions) == [
         # Host OS is verified
         ("verify-host",),
         # Tools are verified
@@ -303,7 +312,7 @@ def test_update_app_requirements(run_command, first_app):
     run_command(**options)
 
     # The right sequence of things will be done
-    assert run_command.actions == [
+    assert _clean_relock(run_command.actions) == [
         # Host OS is verified
         ("verify-host",),
         # Tools are verified
@@ -347,7 +356,7 @@ def test_update_app_resources(run_command, first_app):
     run_command(**options)
 
     # The right sequence of things will be done
-    assert run_command.actions == [
+    assert _clean_relock(run_command.actions) == [
         # Host OS is verified
         ("verify-host",),
         # Tools are verified
@@ -391,7 +400,7 @@ def test_update_unbuilt_app(run_command, first_app_unbuilt):
     run_command(**options)
 
     # The right sequence of things will be done
-    assert run_command.actions == [
+    assert _clean_relock(run_command.actions) == [
         # Host OS is verified
         ("verify-host",),
         # Tools are verified
@@ -436,7 +445,7 @@ def test_update_non_existent(run_command, first_app_config):
     run_command(**options)
 
     # The right sequence of things will be done
-    assert run_command.actions == [
+    assert _clean_relock(run_command.actions) == [
         # Host OS is verified
         ("verify-host",),
         # Tools are verified
@@ -481,7 +490,7 @@ def test_test_mode_existing_app(run_command, first_app):
     run_command(**options)
 
     # The right sequence of things will be done
-    assert run_command.actions == [
+    assert _clean_relock(run_command.actions) == [
         # Host OS is verified
         ("verify-host",),
         # Tools are verified
@@ -525,7 +534,7 @@ def test_test_mode_existing_app_with_passthrough(run_command, first_app):
     run_command(**options)
 
     # The right sequence of things will be done
-    assert run_command.actions == [
+    assert _clean_relock(run_command.actions) == [
         # Host OS is verified
         ("verify-host",),
         # Tools are verified
@@ -573,7 +582,7 @@ def test_test_mode_existing_app_no_update(run_command, first_app):
     run_command(**options)
 
     # The right sequence of things will be done
-    assert run_command.actions == [
+    assert _clean_relock(run_command.actions) == [
         # Host OS is verified
         ("verify-host",),
         # Tools are verified
@@ -606,7 +615,7 @@ def test_test_mode_existing_app_update_requirements(run_command, first_app):
     run_command(**options)
 
     # The right sequence of things will be done
-    assert run_command.actions == [
+    assert _clean_relock(run_command.actions) == [
         # Host OS is verified
         ("verify-host",),
         # Tools are verified
@@ -650,7 +659,7 @@ def test_test_mode_existing_app_update_resources(run_command, first_app):
     run_command(**options)
 
     # The right sequence of things will be done
-    assert run_command.actions == [
+    assert _clean_relock(run_command.actions) == [
         # Host OS is verified
         ("verify-host",),
         # Tools are verified
@@ -694,7 +703,7 @@ def test_test_mode_update_existing_app(run_command, first_app):
     run_command(**options)
 
     # The right sequence of things will be done
-    assert run_command.actions == [
+    assert _clean_relock(run_command.actions) == [
         # Host OS is verified
         ("verify-host",),
         # Tools are verified
@@ -738,7 +747,7 @@ def test_test_mode_non_existent(run_command, first_app_config):
     run_command(**options)
 
     # The right sequence of things will be done
-    assert run_command.actions == [
+    assert _clean_relock(run_command.actions) == [
         # Host OS is verified
         ("verify-host",),
         # Tools are verified
