@@ -208,12 +208,12 @@ def test_package_app_sign_failure(package_command, first_app_with_binaries, tmp_
 
 
 def test_package_app_notarize_adhoc_signed(package_command, first_app_with_binaries):
-    """A macOS App cannot be notarized if adhoc signing is requested."""
+    """A macOS App cannot be notarized if ad-hoc signing is requested."""
 
     # Package the app without code signing
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Can't notarize an app with an adhoc signing identity",
+        match=r"Can't notarize an app with an ad-hoc signing identity",
     ):
         package_command.package_app(
             first_app_with_binaries,
@@ -230,10 +230,10 @@ def test_package_app_notarize_adhoc_signed(package_command, first_app_with_binar
 
 
 def test_package_app_adhoc_sign(package_command, first_app_with_binaries, tmp_path):
-    """A macOS App can be packaged and signed with adhoc identity."""
+    """A macOS App can be packaged and signed with ad-hoc identity."""
 
-    # Package the app with an adhoc identity.
-    # Explicitly disable notarization (can't adhoc notarize an app)
+    # Package the app with an ad-hoc identity.
+    # Explicitly disable notarization (can't ad-hoc notarize an app)
     package_command.package_app(
         first_app_with_binaries,
         adhoc_sign=True,
@@ -288,9 +288,9 @@ def test_package_app_adhoc_sign(package_command, first_app_with_binaries, tmp_pa
 def test_package_app_adhoc_sign_default_notarization(
     package_command, first_app_with_binaries, tmp_path
 ):
-    """An adhoc signed app is not notarized by default."""
+    """An ad-hoc signed app is not notarized by default."""
 
-    # Package the app with an adhoc identity; notarization will
+    # Package the app with an ad-hoc identity; notarization will
     # be disabled as a default
     package_command.package_app(
         first_app_with_binaries,

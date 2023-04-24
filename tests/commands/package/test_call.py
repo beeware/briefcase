@@ -190,14 +190,14 @@ def test_identity_arg_package_one_app(package_command, first_app, tmp_path):
 
 
 def test_adhoc_sign_package_one_app(package_command, first_app, tmp_path):
-    """If there is one app,and an --adhoc argument, package signs the app using adhoc
+    """If there is one app,and an --adhoc argument, package signs the app using ad-hoc
     option."""
     # Add a single app
     package_command.apps = {
         "first": first_app,
     }
 
-    # Configure an adhoc signing option
+    # Configure an ad-hoc signing option
     options = package_command.parse_options(["--adhoc"])
 
     # Run the run command
@@ -236,7 +236,7 @@ def test_adhoc_sign_args_package_two_app(
     package_command, first_app, second_app, tmp_path
 ):
     """If there are multiple apps,and an --adhoc argument, package signs all apps using
-    adhoc option."""
+    ad-hoc identity."""
 
     package_command.apps = {
         # Add the first app

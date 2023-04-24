@@ -129,15 +129,18 @@ class PackageCommand(BaseCommand):
         parser.add_argument(
             "--no-sign",
             dest="sign_app",
-            help="This argument is no longer used, and has no effect.",
+            help=(
+                "This argument is no longer used, and has no effect. Please "
+                "use `--adhoc-sign` for testing."
+            ),
             default=True,
             action=DeprecatedAction,
         )
         parser.add_argument(
             "--adhoc-sign",
             help=(
-                "Sign the app with adhoc identity. Note that this will result "
-                "in an app that cannot be re-distributed."
+                "Sign the app with ad-hoc identity. Note that this will result "
+                "in an app that will run, but cannot be re-distributed."
             ),
             action="store_true",
         )

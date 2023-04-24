@@ -49,15 +49,11 @@ running::
 
 The format to use for packaging. The available packaging formats are platform dependent.
 
-``--no-sign``
-~~~~~~~~~~~~~
-
-Don't perform code signing on the app.
-
 ``--adhoc-sign``
 ~~~~~~~~~~~~~~~~
 
-Sign app with adhoc identity.
+Sign app with ad-hoc identity. Note that the resulting package will run, but
+cannot be re-distributed.
 
 ``-i <identity>`` / ``--identity <identity>``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -390,8 +390,7 @@ class macOSPackageMixin(macOSSigningMixin):
         super().add_options(parser)
         # We use store_const:False rather than store_false so that the
         # "unspecified" value is None, rather than True, allowing for
-        # a "default behavior" interpretation with `--no-sign` or
-        # `--adhoc-sign` is specified
+        # a "default behavior" interpretation when `--adhoc-sign` is specified
         parser.add_argument(
             "--no-notarize",
             dest="notarize_app",
@@ -582,19 +581,19 @@ password:
             the 40-digit hex checksum, or the string name of the identity.
             If unspecified, the user will be prompted for a code signing
             identity. Ignored if ``sign_app`` is ``False``.
-        :param adhoc_sign: If ``True``, code will be signed with adhoc identity
+        :param adhoc_sign: If ``True``, code will be signed with ad-hoc identity
             of "-", and the resulting app will not be re-distributable.
         """
         if adhoc_sign:
             if notarize_app:
                 raise BriefcaseCommandError(
-                    "Can't notarize an app with an adhoc signing identity"
+                    "Can't notarize an app with an ad-hoc signing identity"
                 )
 
             identity = "-"
             self.logger.info(
                 (
-                    "Signing app with adhoc identity... Note that this app "
+                    "Signing app with ad-hoc identity... Note that this app "
                     "will run, but cannot be re-distributed."
                 ),
                 prefix=app.app_name,

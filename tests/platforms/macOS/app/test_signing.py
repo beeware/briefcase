@@ -231,8 +231,8 @@ def test_selected_identity(dummy_command):
 
 
 def test_sign_file_adhoc_identity(dummy_command, tmp_path):
-    """If an adhoc identity is used, the runtime option isn't used."""
-    # Sign the file with an adhoc identity
+    """If an ad-hoc identity is used, the runtime option isn't used."""
+    # Sign the file with an ad-hoc identity
     dummy_command.sign_file(tmp_path / "base_path" / "random.file", identity="-")
 
     # An attempt to codesign was made without the runtime option
@@ -252,7 +252,7 @@ def test_sign_file_adhoc_identity(dummy_command, tmp_path):
 
 def test_sign_file_entitlements(dummy_command, tmp_path):
     """Entitlements can be included in a signing call."""
-    # Sign the file with an adhoc identity
+    # Sign the file with an ad-hoc identity
     dummy_command.sign_file(
         tmp_path / "base_path" / "random.file",
         identity="Sekrit identity (DEADBEEF)",
