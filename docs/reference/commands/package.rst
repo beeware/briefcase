@@ -66,4 +66,5 @@ cannot be re-distributed.
 ``-i <identity>`` / ``--identity <identity>``
 ---------------------------------------------
 
-The :doc:`code signing identity </how-to/code-signing/index>` to use when signing the app.
+The :doc:`code signing identity </how-to/code-signing/index>` to use when
+signing the app. macOS-only.

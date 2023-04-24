@@ -128,7 +128,7 @@ class PackageCommand(BaseCommand):
             dest="identity",
             help=(
                 "The code signing identity to use; either the 40-digit hex "
-                "checksum, or the full name of the identity."
+                "checksum, or the full name of the identity. macOS-only."
             ),
             required=False,
         )
