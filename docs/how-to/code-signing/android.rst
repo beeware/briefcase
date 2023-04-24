@@ -45,24 +45,17 @@ Google Play.
 
   .. group-tab:: macOS
 
-    .. code-block:: bash
+    .. code-block:: console
 
       $ mkdir -p ~/.android
       $ ~/Library/Caches/org.beeware.briefcase/tools/java/Contents/Home/bin/keytool -keyalg RSA -deststoretype pkcs12 -genkey -v -storepass android -keystore ~/.android/upload-key-helloworld.jks -keysize 2048 -dname "cn=Upload Key" -alias upload-key -validity 10000
 
   .. group-tab:: Linux
 
-    .. code-block:: bash
+    .. code-block:: console
 
       $ mkdir -p ~/.android
       $ ~/.cache/briefcase/tools/java/bin/keytool -keyalg RSA -deststoretype pkcs12 -genkey -v -storepass android -keystore ~/.android/upload-key-helloworld.jks -keysize 2048 -dname "cn=Upload Key" -alias upload-key -validity 10000
-
-  .. group-tab:: Windows (PowerShell)
-
-    .. code-block:: powershell
-
-      C:\...>If (-Not (Test-Path "$env:HOMEPATH/.android")) { New-Item -Path "$env:HOMEPATH\.android" -ItemType Directory }
-      C:\...>& "$env:LOCALAPPDATA\BeeWare\briefcase\Cache\tools\java\bin\keytool.exe" -keyalg RSA -deststoretype pkcs12 -genkey -v -storepass android -keystore "$env:HOMEPATH\.android\upload-key-helloworld.jks" -keysize 2048 -dname "cn=Upload Key" -alias upload-key -validity 10000
 
   .. group-tab:: Windows (cmd)
 
@@ -71,6 +64,12 @@ Google Play.
       C:\...>IF not exist %HOMEPATH%\.android mkdir %HOMEPATH%\.android
       C:\...>%LOCALAPPDATA%\BeeWare\briefcase\Cache\tools\java\bin\keytool.exe -keyalg RSA -deststoretype pkcs12 -genkey -v -storepass android -keystore %HOMEPATH%\.android\upload-key-helloworld.jks -keysize 2048 -dname "cn=Upload Key" -alias upload-key -validity 10000
 
+  .. group-tab:: Windows (PowerShell)
+
+    .. code-block:: pwsh-session
+
+      PS C:\...> If (-Not (Test-Path "$env:HOMEPATH/.android")) { New-Item -Path "$env:HOMEPATH\.android" -ItemType Directory }
+      PS C:\...> & "$env:LOCALAPPDATA\BeeWare\briefcase\Cache\tools\java\bin\keytool.exe" -keyalg RSA -deststoretype pkcs12 -genkey -v -storepass android -keystore "$env:HOMEPATH\.android\upload-key-helloworld.jks" -keysize 2048 -dname "cn=Upload Key" -alias upload-key -validity 10000
 
 This creates a 2048-bit key and stores it in a Java keystore located in the
 ``.android`` folder within your home folder. Since the key's purpose is to be

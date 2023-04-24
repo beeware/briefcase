@@ -37,15 +37,21 @@ other test frameworks can be added using the ``test_success_regex`` and
 Usage
 =====
 
-To run your application on the current platform's default output format::
+To run your application on the current platform's default output format:
+
+.. code-block:: console
 
     $ briefcase run
 
-To run your application for a different platform::
+To run your application for a different platform:
+
+.. code-block:: console
 
     $ briefcase run <platform>
 
-To run your application using a specific output format::
+To run your application using a specific output format:
+
+.. code-block:: console
 
     $ briefcase run <platform> <output format>
 
@@ -64,7 +70,9 @@ name specified should be the machine-readable package name for the app.
 ``-u`` / ``--update``
 ---------------------
 
-Update the application's source code before running. Equivalent to running::
+Update the application's source code before running. Equivalent to running:
+
+.. code-block:: console
 
     $ briefcase update
     $ briefcase build
@@ -73,7 +81,9 @@ Update the application's source code before running. Equivalent to running::
 ``-r`` / ``--update-requirements``
 ----------------------------------
 
-Update application requirements before running. Equivalent to running::
+Update application requirements before running. Equivalent to running:
+
+.. code-block:: console
 
     $ briefcase update -r
     $ briefcase build
@@ -83,7 +93,9 @@ Update application requirements before running. Equivalent to running::
 ----------------------
 
 Update application resources (e.g., icons and splash screens) before running.
-Equivalent to running::
+Equivalent to running:
+
+.. code-block:: console
 
     $ briefcase update --update-resources
     $ briefcase build
@@ -108,7 +120,9 @@ Passthrough arguments
 
 If you want to pass any arguments to your app's command line, you can specify them
 using the ``--`` marker to separate Briefcase's arguments from your app's arguments.
-For example::
+For example:
+
+.. code-block:: console
 
     briefcase run -- --wiggle --test
 

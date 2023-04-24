@@ -8,30 +8,38 @@ Actions to formally publish releases.
 This guide assumes that you have an ``upstream`` remote configured on your
 local clone of the Briefcase repository, pointing at the official repository.
 If all you have is a checkout of a personal fork of the Briefcase repository,
-you can configure that checkout by running::
+you can configure that checkout by running:
 
-    $ git remote add upstream https://github.com/beeware/briefcase.git
+.. code-block:: console
+
+  $ git remote add upstream https://github.com/beeware/briefcase.git
 
 The procedure for cutting a new release is as follows:
 
-1. Check the contents of the upstream repository's main branch::
+#. Check the contents of the upstream repository's main branch:
 
-    $ git fetch upstream
-    $ git checkout --detach upstream/main
+   .. code-block:: console
+
+     $ git fetch upstream
+     $ git checkout --detach upstream/main
 
    Check that the HEAD of release now matches upstream/main.
 
-2. Ensure that the release notes are up to date. Run::
+#. Ensure that the release notes are up to date. Run:
 
-         $ tox -e towncrier -- --draft
+   .. code-block:: console
 
-   to review the release notes that will be included, and then::
+     $ tox -e towncrier -- --draft
 
-         $ tox -e towncrier
+   to review the release notes that will be included, and then:
+
+   .. code-block:: console
+
+     $ tox -e towncrier
 
    to generate the updated release notes.
 
-3. Ensure that there is a version branch for the new Briefcase version in
+#. Ensure that there is a version branch for the new Briefcase version in
    every template that Briefcase will use at runtime:
 
    * ``briefcase-template``
@@ -46,13 +54,15 @@ The procedure for cutting a new release is as follows:
    * ``briefcase-android-gradle-template``
    * ``briefcase-web-static-template``
 
-4. Tag the release, and push the branch and tag upstream::
+#. Tag the release, and push the branch and tag upstream:
 
-    $ git tag v1.2.3
-    $ git push upstream HEAD:main
-    $ git push upstream v1.2.3
+   .. code-block:: console
 
-5. Pushing the tag will start a workflow to create a draft release on GitHub.
+     $ git tag v1.2.3
+     $ git push upstream HEAD:main
+     $ git push upstream v1.2.3
+
+#. Pushing the tag will start a workflow to create a draft release on GitHub.
    You can `follow the progress of the workflow on GitHub
    <https://github.com/beeware/briefcase/actions?query=workflow%3A%22Create+Release%22>`__;
    once the workflow completes, there should be a new `draft release
@@ -78,31 +88,33 @@ The procedure for cutting a new release is as follows:
       code change, delete the old tag, make the code change, and re-tag the
       release.
 
-6. Create a clean virtual environment, install the new release from Test PyPI, and
-   perform any pre-release testing that may be appropriate::
+#. Create a clean virtual environment, install the new release from Test PyPI, and
+   perform any pre-release testing that may be appropriate:
 
-    $ python3 -m venv testvenv
-    $ . ./testvenv/bin/activate
-    (testvenv) $ pip install --extra-index-url https://test.pypi.org/simple/ briefcase==1.2.3
-    (testvenv) $ briefcase --version
-    briefcase 1.2.3
-    (testvenv) $ ... any other manual checks you want to perform ...
+   .. code-block:: console
 
-7. Log into ReadTheDocs, visit the `Versions tab
+     $ python3 -m venv testvenv
+     $ . ./testvenv/bin/activate
+     (testvenv) $ pip install --extra-index-url https://test.pypi.org/simple/ briefcase==1.2.3
+     (testvenv) $ briefcase --version
+     briefcase 1.2.3
+     (testvenv) $ #... any other manual checks you want to perform ...
+
+#. Log into ReadTheDocs, visit the `Versions tab
    <https://readthedocs.org/projects/briefcase/versions/>`__, and activate the
    new version. Ensure that the build completes; if there's a problem, you
    may need to correct the build configuration, roll back and re-tag the release.
 
-8. Edit the GitHub release to add release notes. You can use the text generated
+#. Edit the GitHub release to add release notes. You can use the text generated
    by Towncrier, but you'll need to update the format to Markdown, rather than
    ReST. If necessary, check the pre-release checkbox.
 
-9. Double check everything, then click Publish. This will trigger a
+#. Double check everything, then click Publish. This will trigger a
    `publication workflow on GitHub
    <https://github.com/beeware/briefcase/actions?query=workflow%3A%22Upload+Python+Package%22>`__.
 
-10. Wait for the `package to appear on PyPI
-<https://pypi.org/project/briefcase/>`__.
+#. Wait for the `package to appear on PyPI
+   <https://pypi.org/project/briefcase/>`__.
 
 Congratulations, you've just published a release!
 
