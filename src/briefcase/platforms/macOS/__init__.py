@@ -6,7 +6,7 @@ from contextlib import suppress
 from pathlib import Path
 from signal import SIGTERM
 from typing import List
-
+import concurrent.futures
 from briefcase.config import BaseConfig
 from briefcase.console import select_option
 from briefcase.exceptions import BriefcaseCommandError
@@ -360,16 +360,21 @@ or
 
         # Signs code objects in reversed lexicographic order to ensure nesting order is respected
         # (objects must be signed from the inside out)
-        progress_bar = self.input.progress_bar()
-        task_id = progress_bar.add_task("Signing App", total=len(sign_targets))
-        with progress_bar:
-            for path in sorted(sign_targets, reverse=True):
-                self.sign_file(
-                    path,
-                    entitlements=self.entitlements_path(app),
-                    identity=identity,
-                )
-                progress_bar.update(task_id, advance=1)
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            futures = []
+            progress_bar = self.input.progress_bar()
+            task_id = progress_bar.add_task("Signing App", total=len(sign_targets))
+            with progress_bar:
+                for path in sorted(sign_targets, reverse=True):
+                    future = executor.submit(self.sign_file,
+                                            path,
+                                            entitlements=self.entitlements_path(app),
+                                            identity=identity)
+                    futures.append(future)
+                for future in concurrent.futures.as_completed(futures):
+                    progress_bar.update(task_id, advance=1)
+                    if future.exception():
+                        raise future.exception()
 
 
 class macOSPackageMixin(macOSSigningMixin):
