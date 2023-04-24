@@ -488,14 +488,6 @@ def merge_config(config, data):
 
         if value:
             config.setdefault(option, []).extend(value)
-    for prefix in ["", "test_"]:
-        try:
-            fname = data.pop(f"{prefix}requires_file")
-        except KeyError:
-            pass
-        else:
-            value = pathlib.Path(fname).read_text().splitlines()
-            config[f"{prefix}requires"] = value
 
     config.update(data)
 

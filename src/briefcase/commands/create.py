@@ -507,6 +507,22 @@ class CreateCommand(BaseCommand):
         requires = app.requires.copy() if app.requires else []
         if test_mode and app.test_requires:
             requires.extend(app.test_requires)
+        lock_attr = "requires_lock" if not test_mode else "test_requires_lock"
+        try:
+            lock_value = getattr(app, lock_attr)
+        except AttributeError:
+            pass
+        else:
+            lock_file = self.base_path / lock_value
+            requires = [
+                line.split("#", 1)[0].strip()
+                for line in lock_file.read_text().splitlines()
+            ]
+            requires = [
+                potential
+                for potential in requires
+                if potential != ""
+            ]
 
         try:
             requirements_path = self.app_requirements_path(app)
