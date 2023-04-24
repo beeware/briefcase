@@ -4,7 +4,7 @@ import pytest
 from git import exc as git_exceptions
 
 from briefcase.commands.base import cookiecutter_cache_path
-from briefcase.exceptions import TemplateUnsupportedVersion
+from briefcase.exceptions import BriefcaseCommandError, TemplateUnsupportedVersion
 
 
 def test_non_url(base_command, mock_git):
@@ -189,3 +189,33 @@ def test_cached_missing_branch_template(base_command, mock_git):
 
     # An attempt to access the branch was made
     mock_remote.refs.__getitem__.assert_called_once_with("invalid")
+
+
+def test_value_error(base_command, mock_git):
+    """If the git clone fails a ValueError is raised."""
+    base_command.tools.git = mock_git
+
+    mock_repo = mock.MagicMock()
+    mock_remote = mock.MagicMock()
+
+    # Git returns a Repo, that repo can return a remote, and it has
+    # heads that can be accessed. However, getting the remote will fail if git clone is not complete.
+    base_command.tools.git.Repo.return_value = mock_repo
+    mock_repo.remote.side_effect = ValueError("Remote named origin did not exist")
+
+    cached_path = cookiecutter_cache_path(
+        "https://example.com/magic/special-template.git"
+    )
+
+    # Update the cache
+    with pytest.raises(BriefcaseCommandError, match="Git repository in a weird state"):
+        base_command.update_cookiecutter_cache(
+            template="https://example.com/magic/special-template.git", branch="special"
+        )
+
+    # The cookiecutter cache location will be interrogated.
+    base_command.tools.git.Repo.assert_called_once_with(cached_path)
+
+    # The origin of the repo was fetched
+    mock_repo.remote.assert_called_once_with(name="origin")
+    mock_remote.fetch.assert_not_called()
