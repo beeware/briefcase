@@ -10,7 +10,7 @@ def test_empty():
     assert briefcase_config == {"key": "value"}
 
 
-def test_base_keys_override():
+def test_base_keys():
     "If the PEP621 config provides keys, they are added"
     briefcase_config = {"key": "value"}
 
@@ -30,6 +30,35 @@ def test_base_keys_override():
         "version": "1.2.3",
         "license": "BSD License",
         "url": "https://example.com",
+    }
+
+
+def test_base_keys_override():
+    "If the PEP621 config provides keys, they are added"
+    briefcase_config = {
+        "key": "value",
+        "description": "Good code I promise",
+        "version": "2.3.4",
+        "url": "https://beeware.org",
+        "license": "BSD License",
+    }
+
+    merge_pep621_config(
+        briefcase_config,
+        {
+            "description": "It's cool",
+            "version": "1.2.3",
+            "urls": {"Homepage": "https://example.com"},
+            "license": {"text": "GPL3"},
+        },
+    )
+
+    assert briefcase_config == {
+        "key": "value",
+        "description": "Good code I promise",
+        "version": "2.3.4",
+        "license": "BSD License",
+        "url": "https://beeware.org",
     }
 
 
@@ -153,6 +182,52 @@ def test_missing_author_email():
     assert briefcase_config == {
         "key": "value",
         "author": "Jane Developer",
+    }
+
+
+def test_existing_author_name():
+    "If the author is defined in the global config, the PEP621 value is ignored"
+    briefcase_config = {"key": "value", "author": "Grace Hopper"}
+
+    merge_pep621_config(
+        briefcase_config,
+        {
+            "authors": [
+                {
+                    "name": "Jane Developer",
+                    "email": "jane@example.com",
+                }
+            ]
+        },
+    )
+
+    assert briefcase_config == {
+        "key": "value",
+        "author": "Grace Hopper",
+        "author_email": "jane@example.com",
+    }
+
+
+def test_existing_author_email():
+    "If the author email is missing, the name is still recorded"
+    briefcase_config = {"key": "value", "author_email": "grace@hopper.org"}
+
+    merge_pep621_config(
+        briefcase_config,
+        {
+            "authors": [
+                {
+                    "name": "Jane Developer",
+                    "email": "jane@example.com",
+                }
+            ]
+        },
+    )
+
+    assert briefcase_config == {
+        "key": "value",
+        "author": "Jane Developer",
+        "author_email": "grace@hopper.org",
     }
 
 
