@@ -1,0 +1,1 @@
+An edge case of use_docker was corrected.
