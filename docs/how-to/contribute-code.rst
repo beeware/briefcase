@@ -336,20 +336,22 @@ To run the test suite and generate a coverage report, run:
 
     .. code-block:: console
 
-      (venv) $ tox -e coverage
+      (venv) $ tox -e py-coverage
 
   .. group-tab:: Linux
 
     .. code-block:: console
 
-      (venv) $ tox -e coverage
+      (venv) $ tox -e py-coverage
 
   .. group-tab:: Windows
 
     .. code-block:: doscon
 
-      (venv) C:\...>tox -e coverage
+      (venv) C:\...>tox -e py-coverage
 
+You can use a specific Python version for the coverage report by adding the
+version number to the `py-coverage` command. For example, `py310-coverage`.
 Depending on your platform, it's possible that some lines required by other
 platforms will be skipped and shown as "missing" in the coverage report. You
 can safely ignore those lines. However, make sure that any lines of code that
