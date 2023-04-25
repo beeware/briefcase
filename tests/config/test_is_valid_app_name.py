@@ -31,6 +31,9 @@ def test_is_valid_app_name(name):
         "false",
         "False",
         "YIELD",
+        "main",
+        "socket",
+        "test",
     ],
 )
 def test_is_invalid_app_name(name):

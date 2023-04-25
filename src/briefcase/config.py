@@ -11,162 +11,11 @@ except ModuleNotFoundError:
 
 from briefcase.platforms import get_output_formats, get_platforms
 
+from .constants import RESERVED_WORDS
 from .exceptions import BriefcaseConfigError
 
 # PEP508 provides a basic restriction on naming
 PEP508_NAME_RE = re.compile(r"^([A-Z0-9]|[A-Z0-9][A-Z0-9._-]*[A-Z0-9])$", re.IGNORECASE)
-
-# Javascript reserved keywords:
-# https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#reserved_keywords_as_of_ecmascript_2015
-JAVASCRIPT_RESERVED_WORDS = {
-    "break",
-    "case",
-    "catch",
-    "class",
-    "const",
-    "continue",
-    "debugger",
-    "default",
-    "delete",
-    "do",
-    "else",
-    "export",
-    "extends",
-    "finally",
-    "for",
-    "function",
-    "if",
-    "import",
-    "in",
-    "instanceof",
-    "new",
-    "return",
-    "super",
-    "switch",
-    "this",
-    "throw",
-    "try",
-    "typeof",
-    "var",
-    "void",
-    "while",
-    "with",
-    "yield",
-}
-
-# Java reserved keywords
-# https://en.wikipedia.org/wiki/List_of_Java_keywords
-JAVA_RESERVED_WORDS = {
-    # Keywords
-    "abstract",
-    "assert",
-    "boolean",
-    "break",
-    "byte",
-    "case",
-    "catch",
-    "char",
-    "class",
-    "const",
-    "continue",
-    "default",
-    "do",
-    "double",
-    "else",
-    "enum",
-    "extends",
-    "final",
-    "finally",
-    "float",
-    "for",
-    "goto",
-    "if",
-    "implements",
-    "import",
-    "instanceof",
-    "int",
-    "interface",
-    "long",
-    "native",
-    "new",
-    "package",
-    "private",
-    "protected",
-    "public",
-    "return",
-    "short",
-    "static",
-    "super",
-    "switch",
-    "synchronized",
-    "this",
-    "throw",
-    "throws",
-    "transient",
-    "try",
-    "void",
-    "volatile",
-    "while",
-    # Reserved Identifiers
-    "exports",
-    "module",
-    "non-sealed",
-    "open",
-    "opens",
-    "permits",
-    "provides",
-    "record",
-    "requires",
-    "sealed",
-    "to",
-    "transitive",
-    "uses",
-    "var",
-    "with",
-    "yield",
-    # Reserved Literals
-    "true",
-    "false",
-    "null",
-    # Unused, but reserved.
-    "strictfp",
-}
-
-
-# Names that are illegal as Windows filenames
-# https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file
-WINDOWS_RESERVED_WORDS = {
-    "con",
-    "prn",
-    "aux",
-    "nul",
-    "com1",
-    "com2",
-    "com3",
-    "com4",
-    "com5",
-    "com6",
-    "com7",
-    "com8",
-    "com9",
-    "com0",
-    "lpt1",
-    "lpt2",
-    "lpt3",
-    "lpt4",
-    "lpt5",
-    "lpt6",
-    "lpt7",
-    "lpt8",
-    "lpt9",
-    "lpt0",
-}
-
-NON_PYTHON_RESERVED_WORDS = set.union(
-    JAVASCRIPT_RESERVED_WORDS,
-    JAVA_RESERVED_WORDS,
-    WINDOWS_RESERVED_WORDS,
-)
 
 
 def is_valid_pep508_name(app_name):
@@ -178,7 +27,7 @@ def is_reserved_keyword(app_name):
     """Determine if the name is a reserved keyword."""
     return (
         keyword.iskeyword(app_name.lower())
-        or app_name.lower() in NON_PYTHON_RESERVED_WORDS
+        or app_name.lower() in RESERVED_WORDS
     )
 
 
