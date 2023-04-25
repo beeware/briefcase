@@ -8,7 +8,9 @@ application, and creates a stub project using the details provided.
 Usage
 =====
 
-To start a new application, run::
+To start a new application, run:
+
+.. code-block:: console
 
     $ briefcase new
 
@@ -28,7 +30,7 @@ project.
 
 The branch of the cookiecutter template repository to use for the new project.
 If not specified, Briefcase will attempt to use a template branch matching the
-version of Briefcase that is being used (i.e., if you're using Briefcase 0.3.9,
-Briefcase will use the `v0.3.9` template branch when generating the app). If
-you're using a development version of Briefcase, Briefcase will use the `main`
+version of Briefcase that is being used (i.e., if you're using Briefcase 0.3.14,
+Briefcase will use the ``v0.3.14`` template branch when generating the app). If
+you're using a development version of Briefcase, Briefcase will use the ``main``
 branch of the template.

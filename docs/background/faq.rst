@@ -39,7 +39,7 @@ with Briefcase by testing for the existence of the ``Briefcase-Version`` tag::
 Can I use third-party Python packages in my app?
 ------------------------------------------------
 
-Yes! Briefcase uses `pip` to install third-party packages into your app bundle.
+Yes! Briefcase uses ``pip`` to install third-party packages into your app bundle.
 As long as the package is available on PyPI, or you can provide a wheel file for
 the package, it can be added to the ``requires`` declaration in your
 ``pyproject.toml`` file and used by your app at runtime.
