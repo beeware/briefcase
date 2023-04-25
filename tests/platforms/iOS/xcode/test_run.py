@@ -72,7 +72,7 @@ def test_run_multiple_devices_input_disabled(run_command, first_app_config):
         run_command.run_app(first_app_config, test_mode=False, passthrough=[])
 
 
-def test_run_app_simulator_booted(run_command, first_app_config, tmp_path):
+def test_run_app_simulator_booted(run_command, underscore_app_config, tmp_path):
     """An iOS App can be started when the simulator is already booted."""
     # A valid target device will be selected.
     run_command.select_target_device = mock.MagicMock(
@@ -92,7 +92,7 @@ def test_run_app_simulator_booted(run_command, first_app_config, tmp_path):
     run_command.tools.subprocess.Popen.return_value = log_stream_process
 
     # Run the app
-    run_command.run_app(first_app_config, test_mode=False, passthrough=[])
+    run_command.run_app(underscore_app_config, test_mode=False, passthrough=[])
 
     # The correct sequence of commands was issued.
     run_command.tools.subprocess.run.assert_has_calls(
@@ -130,7 +130,7 @@ def test_run_app_simulator_booted(run_command, first_app_config, tmp_path):
                     tmp_path
                     / "base_path"
                     / "build"
-                    / "first-app"
+                    / "first_app"
                     / "ios"
                     / "xcode"
                     / "build"
@@ -175,7 +175,7 @@ def test_run_app_simulator_booted(run_command, first_app_config, tmp_path):
 
     # Log stream monitoring was started
     run_command._stream_app_logs.assert_called_with(
-        first_app_config,
+        underscore_app_config,
         popen=log_stream_process,
         test_mode=False,
         clean_filter=macOS_log_clean_filter,

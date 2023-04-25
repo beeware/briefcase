@@ -33,3 +33,21 @@ def uppercase_app_config():
         description="The first simple app",
         sources=["src/First_App"],
     )
+
+
+@pytest.fixture()
+def underscore_app_config(first_app_config):
+    return AppConfig(
+        app_name="first_app",
+        project_name="First Project",
+        formal_name="First App",
+        author="Megacorp",
+        author_email="maintainer@example.com",
+        url="https://example.com/first-app",
+        bundle="com.example",
+        version="0.0.1",
+        description="The first simple app \\ demonstration",
+        sources=["src/first_app"],
+        requires=["foo==1.2.3", "bar>=4.5"],
+        test_requires=["pytest"],
+    )
