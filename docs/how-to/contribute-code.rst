@@ -324,8 +324,12 @@ documentation syntax and packaging metadata, respectively.
 Verify test coverage
 --------------------
 
-When you run the test suite, a coverage report is generated and shown at the
-end of the output. Depending on your platform, some lines required by other
+Briefcase requires 100% test coverage, so when you add new code it is expected
+that enough tests are added to cover the new code. You can run ``tox`` with the
+`coverage` target to generate a coverage report. The test suite is then run and
+a coverage report is generated and shown at the end of the output.
+
+Depending on your platform, it's possible that some lines required by other
 platforms will be skipped and shown as "missing" in the coverage report. You
 can safely ignore those lines. However, make sure that any lines of code that
 you added or modified do not appear in the report. If they do, you need to add
