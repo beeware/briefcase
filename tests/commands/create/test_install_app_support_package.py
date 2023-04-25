@@ -43,7 +43,7 @@ def test_install_app_support_package(
     create_command.tools.shutil.unpack_archive.side_effect = shutil.unpack_archive
 
     # Install the support package
-    create_command.install_app_support_package(myapp, update=False, update=False)
+    create_command.install_app_support_package(myapp, update=False)
 
     # Confirm the right URL was used
     create_command.tools.download.file.assert_called_with(
