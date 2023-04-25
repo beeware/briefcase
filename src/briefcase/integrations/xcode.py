@@ -28,8 +28,8 @@ class Xcode(Tool):
         min_version: tuple[int, int, int] = None,
         **kwargs,
     ) -> Xcode:
-        """Verify that Xcode and the command line developer tools are installed and ready
-        for use.
+        """Verify that Xcode and the command line developer tools are installed and
+        ready for use.
 
         We need Xcode, *and* the Xcode Command Line Tools. A completely clean
         machine will have neither Xcode *nor* the Command Line Tools. However,

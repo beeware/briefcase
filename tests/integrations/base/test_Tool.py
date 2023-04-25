@@ -93,7 +93,8 @@ def test_upgrade_raises_for_managed_tool_when_exists(managed_tool):
 
 
 def test_upgrade_raises_for_managed_tool_when_not_exists(managed_tool):
-    """Tool.upgrade() raises MissingToolError for managed tool when it does not exist."""
+    """Tool.upgrade() raises MissingToolError for managed tool when it does not
+    exist."""
     managed_tool.exists = lambda: False
     with pytest.raises(
         MissingToolError,
