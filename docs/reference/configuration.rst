@@ -51,36 +51,6 @@ an application called ``myapp``, Briefcase will look for macOS DMG settings for
 ``myapp``, then for macOS settings for ``myapp``, then for ``myapp`` settings,
 then for project-level settings.
 
-``[project]``
--------------
-
-Some project settings are read from the
-``project``
-section of the
-``pyproject.toml`` file.
-They can all be overridden via
-``tool.briefcase``-specific
-configurations: see below.
-
-The following
-`PEP-621`_
-fields are used as defaults:
-
-* ``version``
-* ``authors`` (only the first author is used)
-* ``dependencies``
-  (like ``requires`` in ``tool.briefcase`` sections,
-  they are appended to with more specific dependencies)
-* ``description``
-* ``optional-dependencies.test``
-  (appended to ``test_requires``)
-* ``license.text``
-* ``urls.homepage``
-
-
-.. _PEP-621: https://peps.python.org/pep-0621/
-
-
 ``[tool.briefcase]``
 --------------------
 
@@ -526,3 +496,30 @@ look for ``resource/round-icon-42.png``, ``resource/square-icon-42.png``,
 -------
 
 A URL for help related to the document format.
+
+PEP621 compatibility
+====================
+
+Many of the keys that exist in Briefcase's configuration have analogous settings
+in `PEP621 project metadata
+<https://packaging.python.org/en/latest/specifications/declaring-project-metadata>`__.
+If your ``pyproject.toml`` defines a ``[project]`` section, Briefcase will honor
+those settings as a top level definition. Any ``[tool.briefcase]`` definitions
+will override those in the ``[project]`` section.
+
+The following PEP621 project metadata keys will be used by Briefcase if they are
+available:
+
+* ``version`` maps to the same key in Briefcase.
+* ``authors`` The ``email`` and ``name`` keys of the first value in the
+  ``authors`` setting map to ``author`` and ``author_email``.
+* ``dependencies`` maps to the Briefcase ``requires`` setting. This is a
+  cumulative setting; any packages defined in the ``requires`` setting at the
+  ``[tool.briefcase]`` level will be appended to the packages defined with
+  ``dependencies`` at the ``[project]`` level.
+* ``description`` maps to the same key in Briefcase.
+* ``test`` in an ``[project.optional-dependencies]`` section maps to
+  ``test_requires``., As with ``dependencies``/``requires``, this is a
+  cumulative setting.
+* ``text`` in a ``[project.license]`` section will be mapped to ``license``.
+* ``homepage`` in a ``[project.urls]`` section will be mapped to ``url``.
