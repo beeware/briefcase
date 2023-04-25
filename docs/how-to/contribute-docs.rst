@@ -30,14 +30,14 @@ You'll also need to install the Enchant spell checking library.
 
     Enchant can be installed using `Homebrew <https://brew.sh>`__:
 
-    .. code-block:: bash
+    .. code-block:: console
 
       (venv) $ brew install enchant
 
     If you're on an M1 machine, you'll also need to manually set the location
     of the Enchant library:
 
-    .. code-block:: bash
+    .. code-block:: console
 
       (venv) $ export PYENCHANT_LIBRARY_PATH=/opt/homebrew/lib/libenchant-2.2.dylib
 
@@ -75,19 +75,19 @@ Once your development environment is set up, run:
 
   .. group-tab:: macOS
 
-    .. code-block:: bash
+    .. code-block:: console
 
       (venv) $ tox -e docs
 
   .. group-tab:: Linux
 
-    .. code-block:: bash
+    .. code-block:: console
 
       (venv) $ tox -e docs
 
   .. group-tab:: Windows
 
-    .. code-block:: powershell
+    .. code-block:: doscon
 
       (venv) C:\...>tox -e docs
 
@@ -104,19 +104,19 @@ documentation:
 
   .. group-tab:: macOS
 
-    .. code-block:: bash
+    .. code-block:: console
 
       (venv) $ tox -e docs-lint
 
   .. group-tab:: Linux
 
-    .. code-block:: bash
+    .. code-block:: console
 
       (venv) $ tox -e docs-lint
 
   .. group-tab:: Windows
 
-    .. code-block:: powershell
+    .. code-block:: doscon
 
       (venv) C:\...>tox -e docs-lint
 
@@ -139,19 +139,19 @@ To force a rebuild for all of the documentation:
 
   .. group-tab:: macOS
 
-    .. code-block:: bash
+    .. code-block:: console
 
       (venv) $ tox -e docs-all
 
   .. group-tab:: Linux
 
-    .. code-block:: bash
+    .. code-block:: console
 
       (venv) $ tox -e docs-all
 
   .. group-tab:: Windows
 
-    .. code-block:: powershell
+    .. code-block:: doscon
 
       (venv) C:\...>tox -e docs-all
 

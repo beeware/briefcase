@@ -8,15 +8,21 @@ platform's default output format.
 Usage
 =====
 
-To create a scaffold for the default output format for the current platform::
+To create a scaffold for the default output format for the current platform:
+
+.. code-block:: console
 
     $ briefcase create
 
-To create a scaffold for a different platform::
+To create a scaffold for a different platform:
+
+.. code-block:: console
 
     $ briefcase create <platform>
 
-To create a scaffold for a specific output format::
+To create a scaffold for a specific output format:
+
+.. code-block:: console
 
     $ briefcase create <platform> <output format>
 
