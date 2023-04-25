@@ -1,0 +1,1 @@
+Briefcase will now honor PEP-621 project fields where they map to Briefcase configuration items.

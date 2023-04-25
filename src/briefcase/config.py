@@ -491,6 +491,60 @@ def merge_config(config, data):
     config.update(data)
 
 
+def merge_pep621_config(global_config, pep621_config):
+    """Merge a PEP621 configuration into a Briefcase configuration."""
+
+    def maybe_update(field, *project_fields):
+        # If there's an existing key in the Briefcase config, it takes priority.
+        if field in global_config:
+            return
+
+        # Traverse the fields in the pep621 config; if the config exists, set it
+        # in the Briefcase config.
+        datum = pep621_config
+        try:
+            for key in project_fields:
+                datum = datum[key]
+        except KeyError:
+            pass
+        else:
+            global_config[field] = datum
+
+    # Keys that map direclty
+    maybe_update("description", "description")
+    maybe_update("license", "license", "text")
+    maybe_update("url", "urls", "Homepage")
+    maybe_update("version", "version")
+
+    # Use the details of the first author as the Briefcase author.
+    if "author" not in global_config:
+        try:
+            global_config["author"] = pep621_config["authors"][0]["name"]
+        except (KeyError, IndexError):
+            pass
+    if "author_email" not in global_config:
+        try:
+            global_config["author_email"] = pep621_config["authors"][0]["email"]
+        except (KeyError, IndexError):
+            pass
+
+    # Briefcase requires is cumulative over PEP621 dependencies
+    try:
+        pep621_dependencies = pep621_config["dependencies"]
+        requires = global_config.get("requires", [])
+        global_config["requires"] = pep621_dependencies + requires
+    except KeyError:
+        pass
+
+    # Briefcase test_requires is cumulative over PEP621 optional test dependencies
+    try:
+        pep621_test_dependencies = pep621_config["optional-dependencies"]["test"]
+        test_requires = global_config.get("test_requires", [])
+        global_config["test_requires"] = pep621_test_dependencies + test_requires
+    except KeyError:
+        pass
+
+
 def parse_config(config_file, platform, output_format):
     """Parse the briefcase section of the pyproject.toml configuration file.
 
@@ -521,12 +575,19 @@ def parse_config(config_file, platform, output_format):
     """
     try:
         pyproject = tomllib.load(config_file)
-
-        global_config = pyproject["tool"]["briefcase"]
     except tomllib.TOMLDecodeError as e:
         raise BriefcaseConfigError(f"Invalid pyproject.toml: {e}") from e
+
+    try:
+        global_config = pyproject["tool"]["briefcase"]
     except KeyError as e:
         raise BriefcaseConfigError("No tool.briefcase section in pyproject.toml") from e
+
+    # Merge the PEP621 configuration (if it exists)
+    try:
+        merge_pep621_config(global_config, pyproject["project"])
+    except KeyError:
+        pass
 
     # For consistent results, sort the platforms and formats
     all_platforms = sorted(get_platforms().keys())
