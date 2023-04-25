@@ -1,0 +1,1 @@
+If `git` fails to update a template in the cookiecutter cache, the `git` command and output are now captured in the Briefcase log file.
