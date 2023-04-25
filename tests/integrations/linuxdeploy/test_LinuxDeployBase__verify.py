@@ -1,7 +1,7 @@
 import pytest
 
-from briefcase.exceptions import BriefcaseCommandError, MissingToolError, NetworkFailure
-from briefcase.integrations.base import Tool
+from briefcase.exceptions import MissingToolError, NetworkFailure, UnsupportedHostError
+from briefcase.integrations.base import ManagedTool
 from briefcase.integrations.linuxdeploy import LinuxDeployBase
 from tests.integrations.linuxdeploy.utils import (
     side_effect_create_mock_appimage,
@@ -9,7 +9,7 @@ from tests.integrations.linuxdeploy.utils import (
 )
 
 
-class LinuxDeployDummy(LinuxDeployBase, Tool):
+class LinuxDeployDummy(LinuxDeployBase, ManagedTool):
     name = "dummy-plugin"
     full_name = "Dummy plugin"
     install_msg = "Installing dummy plugin"
@@ -33,12 +33,25 @@ class LinuxDeployDummy(LinuxDeployBase, Tool):
 
 
 def test_short_circuit(mock_tools):
-    """LinuxDeployBase Tool cannot be instantiated."""
+    """Tool is not created if already cached."""
+    mock_tools.linuxdeploy = "tool"
+
+    tool = LinuxDeployDummy.verify(mock_tools)
+
+    assert tool == "tool"
+    assert tool == mock_tools.linuxdeploy
+
+
+@pytest.mark.parametrize("host_os", ["Darwin", "Windows", "wonky"])
+def test_unsupported_os(mock_tools, host_os):
+    """When host OS is not supported, an error is raised."""
+    mock_tools.host_os = host_os
+
     with pytest.raises(
-        BriefcaseCommandError,
-        match="LinuxDeployBase cannot be used as a Tool.",
+        UnsupportedHostError,
+        match=f"{LinuxDeployDummy.name} is not supported on {host_os}",
     ):
-        LinuxDeployBase.verify(mock_tools)
+        LinuxDeployDummy.verify(mock_tools)
 
 
 def test_verify_exists(mock_tools, tmp_path):
@@ -90,6 +103,7 @@ def test_verify_does_not_exist(mock_tools, tmp_path):
 
     # The extra verification arguments were passed to the tool instance
     assert linuxdeploy.kwargs == {
+        "app": None,
         "arg1": "value1",
         "arg2": "value2",
     }

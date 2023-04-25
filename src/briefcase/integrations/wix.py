@@ -5,14 +5,15 @@ import shutil
 from pathlib import Path
 
 from briefcase.exceptions import BriefcaseCommandError, MissingToolError
-from briefcase.integrations.base import Tool, ToolCache
+from briefcase.integrations.base import ManagedTool, ToolCache
 
 WIX_DOWNLOAD_URL = "https://github.com/wixtoolset/wix3/releases/download/wix3112rtm/wix311-binaries.zip"
 
 
-class WiX(Tool):
+class WiX(ManagedTool):
     name = "wix"
     full_name = "WiX"
+    supported_host_os = {"Windows"}
 
     def __init__(
         self,
@@ -59,7 +60,7 @@ class WiX(Tool):
             return self.wix_home / "bin" / "candle.exe"
 
     @classmethod
-    def verify(cls, tools: ToolCache, install: bool = True, **kwargs) -> WiX:
+    def verify_install(cls, tools: ToolCache, install: bool = True, **kwargs) -> WiX:
         """Verify that there is a WiX install available.
 
         If the WIX environment variable is set, that location will be checked

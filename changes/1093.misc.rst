@@ -1,1 +1,1 @@
-Implemented the ``Tool`` base class for all tools.
+The ``Tool`` and ``ManagedTool`` base classes were implemented to unify tool functionality.

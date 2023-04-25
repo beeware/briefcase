@@ -11,9 +11,6 @@ class iOSMixin:
     )
 
     def verify_tools(self):
-        # Require XCode 10.0.0. There's no particular reason for this
-        # specific version, other than it's a nice round number that's
-        # not *that* old at time of writing.
         Xcode.verify(self.tools, min_version=(13, 0, 0))
 
         # Verify superclass tools *after* xcode. This ensures we get the

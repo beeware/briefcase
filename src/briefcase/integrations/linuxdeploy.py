@@ -12,9 +12,10 @@ from briefcase.exceptions import (
     CorruptToolError,
     MissingToolError,
 )
-from briefcase.integrations.base import Tool, ToolCache
+from briefcase.integrations.base import ManagedTool, Tool, ToolCache
 
 LinuxDeployT = TypeVar("LinuxDeployT", bound="LinuxDeployBase")
+LinuxDeployPluginT = TypeVar("LinuxDeployPluginT", bound="LinuxDeployPluginBase")
 
 ELF_HEADER_IDENT = bytes.fromhex("7F454C46")
 ELF_PATCH_OFFSET = 0x08
@@ -26,31 +27,26 @@ class LinuxDeployBase(ABC):
     name: str
     full_name: str
     install_msg: str
+    tools: ToolCache
+    supported_host_os = {"Linux"}
 
     @property
     @abstractmethod
     def file_name(self) -> str:
         """The name of the executable file for the tool/plugin, excluding the path."""
-        ...
 
     @property
     @abstractmethod
     def download_url(self) -> str:
         """The URL where the tool/plugin can be downloaded."""
-        ...
 
     @property
     @abstractmethod
     def file_path(self) -> Path:
         """The folder on the local filesystem that contains the file_name."""
-        ...
-
-    @property
-    def managed_install(self) -> bool:
-        return True
 
     def exists(self) -> bool:
-        return (self.file_path / self.file_name).exists()
+        return (self.file_path / self.file_name).is_file()
 
     def install(self):
         """Download and install linuxdeploy or plugin."""
@@ -59,7 +55,6 @@ class LinuxDeployBase(ABC):
             download_path=self.file_path,
             role=self.full_name,
         )
-
         self.prepare_executable()
 
     def prepare_executable(self):
@@ -75,7 +70,7 @@ class LinuxDeployBase(ABC):
                 self.patch_elf_header()
 
     @classmethod
-    def verify(
+    def verify_install(
         cls: type[LinuxDeployT],
         tools: ToolCache,
         install: bool = True,
@@ -90,16 +85,13 @@ class LinuxDeployBase(ABC):
         :returns: A valid tool wrapper. If the tool/plugin is not
             available, and was not installed, raises MissingToolError.
         """
-        if cls is LinuxDeployBase:
-            raise BriefcaseCommandError(f"{cls.__name__} cannot be used as a Tool.")
-
         is_plugin = issubclass(cls, LinuxDeployPluginBase)
 
         # short circuit since already verified and available
         if not is_plugin and hasattr(tools, "linuxdeploy"):
             return tools.linuxdeploy
 
-        tool = cls(tools=tools, **kwargs)
+        tool: LinuxDeployT = cls(tools=tools, **kwargs)
         if not tool.exists():
             if install:
                 tools.logger.info(
@@ -170,7 +162,7 @@ class LinuxDeployBase(ABC):
                 raise CorruptToolError(self.name)
 
 
-class LinuxDeployPluginBase(LinuxDeployBase):
+class LinuxDeployPluginBase(LinuxDeployBase, ABC):
     """Base class for linuxdeploy plugins."""
 
     install_msg = "{full_name} was not found; downloading and installing..."
@@ -191,9 +183,9 @@ class LinuxDeployPluginBase(LinuxDeployBase):
         return self.tools.base_path / "linuxdeploy_plugins" / self.plugin_id
 
 
-class LinuxDeployGtkPlugin(LinuxDeployPluginBase, Tool):
-    name = "linuxdeploygtkplugin"
-    full_name = "LinuxDeploy GTK plugin"
+class LinuxDeployGtkPlugin(LinuxDeployPluginBase, ManagedTool):
+    name = "linuxdeploy_gtk_plugin"
+    full_name = "linuxdeploy GTK plugin"
 
     @property
     def file_name(self) -> str:
@@ -207,9 +199,9 @@ class LinuxDeployGtkPlugin(LinuxDeployPluginBase, Tool):
         )
 
 
-class LinuxDeployQtPlugin(LinuxDeployPluginBase, Tool):
-    name = "linuxdeployqtplugin"
-    full_name = "LinuxDeploy Qt plugin"
+class LinuxDeployQtPlugin(LinuxDeployPluginBase, ManagedTool):
+    name = "linuxdeploy_qt_plugin"
+    full_name = "linuxdeploy Qt plugin"
 
     @property
     def file_name(self) -> str:
@@ -313,14 +305,10 @@ class LinuxDeployURLPlugin(LinuxDeployPluginBase, Tool):
         return self._download_url
 
 
-class LinuxDeploy(LinuxDeployBase, Tool):
+class LinuxDeploy(LinuxDeployBase, ManagedTool):
     name = "linuxdeploy"
-    full_name = "LinuxDeploy"
+    full_name = "linuxdeploy"
     install_msg = "linuxdeploy was not found; downloading and installing..."
-
-    @property
-    def managed_install(self) -> bool:
-        return True
 
     @property
     def file_path(self) -> Path:
@@ -338,7 +326,7 @@ class LinuxDeploy(LinuxDeployBase, Tool):
         )
 
     @property
-    def plugins(self) -> dict[str, type[LinuxDeployPluginBase]]:
+    def plugins(self) -> dict[str, type[LinuxDeployPluginT]]:
         """The known linuxdeploy plugins."""
         return {
             "gtk": LinuxDeployGtkPlugin,
@@ -380,7 +368,6 @@ class LinuxDeploy(LinuxDeployBase, Tool):
             try:
                 plugin_klass = self.plugins[plugin_name]
                 self.tools.logger.info(f"Using default {plugin_name} plugin")
-
                 plugin = plugin_klass.verify(self.tools)
             except KeyError:
                 if plugin_name.startswith(("https://", "http://")):

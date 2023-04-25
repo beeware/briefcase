@@ -11,6 +11,7 @@ from briefcase.integrations.subprocess import json_parser
 class VisualStudio(Tool):
     name = "visualstudio"
     full_name = "Visual Studio"
+    supported_host_os = {"Windows"}
     VSCODE_REQUIRED_COMPONENTS = """
     * .NET Desktop Development
       - Default packages
@@ -46,7 +47,7 @@ class VisualStudio(Tool):
         return self._install_metadata
 
     @classmethod
-    def verify(cls, tools: ToolCache, **kwargs) -> VisualStudio:
+    def verify_install(cls, tools: ToolCache, **kwargs) -> VisualStudio:
         """Verify that Visual Studio is available.
 
         :param tools: ToolCache of available tools
@@ -59,12 +60,9 @@ class VisualStudio(Tool):
 
         visualstudio = None
 
-        # Try running MSBuild, assuming it is on the PATH.
         try:
+            # Try running MSBuild, assuming it is on the PATH.
             tools.subprocess.check_output(["MSBuild.exe", "--version"])
-
-            # Create an explicit VisualStudio, with no install metadata
-            visualstudio = VisualStudio(tools=tools, msbuild_path=Path("MSBuild.exe"))
         except FileNotFoundError:
             # MSBuild isn't on the path
             pass
@@ -72,6 +70,9 @@ class VisualStudio(Tool):
             raise BriefcaseCommandError(
                 "MSBuild is on the path, but Briefcase cannot start it."
             ) from e
+        else:
+            # Create an explicit VisualStudio, with no install metadata
+            visualstudio = VisualStudio(tools=tools, msbuild_path=Path("MSBuild.exe"))
 
         # try to find Visual Studio
         if visualstudio is None:

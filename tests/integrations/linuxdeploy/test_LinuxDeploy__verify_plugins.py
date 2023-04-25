@@ -44,7 +44,7 @@ def test_gtk_plugin(linuxdeploy, mock_tools, tmp_path):
     mock_tools.download.file.assert_called_with(
         url="https://raw.githubusercontent.com/linuxdeploy/linuxdeploy-plugin-gtk/master/linuxdeploy-plugin-gtk.sh",
         download_path=tmp_path / "tools" / "linuxdeploy_plugins" / "gtk",
-        role="LinuxDeploy GTK plugin",
+        role="linuxdeploy GTK plugin",
     )
 
 
@@ -71,7 +71,7 @@ def test_qt_plugin(linuxdeploy, mock_tools, tmp_path):
             "releases/download/continuous/linuxdeploy-plugin-qt-wonky.AppImage"
         ),
         download_path=tmp_path / "tools" / "linuxdeploy_plugins" / "qt",
-        role="LinuxDeploy Qt plugin",
+        role="linuxdeploy Qt plugin",
     )
 
 

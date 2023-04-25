@@ -18,8 +18,9 @@ from briefcase.exceptions import (
     InvalidDeviceError,
     MissingToolError,
 )
-from briefcase.integrations.base import Tool, ToolCache
+from briefcase.integrations.base import ManagedTool, ToolCache
 from briefcase.integrations.java import JDK
+from briefcase.integrations.subprocess import SubprocessArgT
 
 DEVICE_NOT_FOUND = re.compile(r"^error: device '[^']*' not found")
 
@@ -42,7 +43,7 @@ this device as a deployment target.
         )
 
 
-class AndroidSDK(Tool):
+class AndroidSDK(ManagedTool):
     name = "android_sdk"
     full_name = "Android SDK"
 
@@ -147,7 +148,12 @@ class AndroidSDK(Tool):
         return f"system-images;android-31;default;{self.emulator_abi}"
 
     @classmethod
-    def verify(cls, tools: ToolCache, install: bool = True, **kwargs) -> AndroidSDK:
+    def verify_install(
+        cls,
+        tools: ToolCache,
+        install: bool = True,
+        **kwargs,
+    ) -> AndroidSDK:
         """Verify an Android SDK is available.
 
         If the ANDROID_SDK_ROOT environment variable is set, that location will
@@ -258,6 +264,10 @@ class AndroidSDK(Tool):
         # are managed installs.
         return True
 
+    def uninstall(self):
+        """Uninstall the Android SDK."""
+        # TODO:PR: implement this
+
     def install(self):
         """Download and install the Android SDK."""
         cmdline_tools_zip_path = self.tools.download.file(
@@ -359,7 +369,7 @@ its output for errors.
 
         :param device: The device ID to manage.
         """
-        return ADB(self.tools, device=device)
+        return ADB(tools=self.tools, device=device)
 
     def verify_license(self):
         """Verify that all necessary licenses have been accepted.
@@ -1222,7 +1232,7 @@ class ADB:
                 f"Unable to determine if emulator {self.device} has booted."
             ) from e
 
-    def run(self, *arguments: str | Path, quiet: bool = False) -> str:
+    def run(self, *arguments: SubprocessArgT, quiet: bool = False) -> str:
         """Run a command on a device using Android debug bridge, `adb`. The device name
         is mandatory to ensure clarity in the case of multiple attached devices.
 
@@ -1258,7 +1268,7 @@ class ADB:
                 raise InvalidDeviceError("device id", self.device) from e
             raise
 
-    def install_apk(self, apk_path: str | Path):
+    def install_apk(self, apk_path: SubprocessArgT):
         """Install an APK file on an Android device.
 
         :param apk_path: The path of the Android APK file to install.

@@ -5,12 +5,13 @@ from pathlib import Path
 
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.base import Tool, ToolCache
-from briefcase.integrations.subprocess import SubprocessArgsT
+from briefcase.integrations.subprocess import SubprocessArgT
 
 
 class Flatpak(Tool):
     name = "flatpak"
     full_name = "Flatpak"
+    supported_host_os = {"Linux"}
 
     DEFAULT_REPO_ALIAS = "flathub"
     DEFAULT_REPO_URL = "https://flathub.org/repo/flathub.flatpakrepo"
@@ -20,7 +21,7 @@ class Flatpak(Tool):
     DEFAULT_SDK = "org.freedesktop.Sdk"
 
     @classmethod
-    def verify(cls, tools: ToolCache, **kwargs) -> Flatpak:
+    def verify_install(cls, tools: ToolCache, **kwargs) -> Flatpak:
         """Verify that the Flatpak toolchain is available.
 
         :param tools: ToolCache of available tools
@@ -253,7 +254,7 @@ flatpak run {bundle_identifier}
         self,
         bundle_identifier: str,
         app_name: str,
-        args: SubprocessArgsT = None,
+        args: list[SubprocessArgT] = None,
         main_module: str = None,
     ) -> subprocess.Popen[str]:
         """Run a Flatpak in a way that allows for log streaming.

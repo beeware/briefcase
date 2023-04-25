@@ -26,7 +26,7 @@ def test_upgrade_exists(linuxdeploy, mock_tools, tmp_path):
     mock_tools.download.file.assert_called_with(
         url="https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-wonky.AppImage",
         download_path=tmp_path / "tools",
-        role="LinuxDeploy",
+        role="linuxdeploy",
     )
     # The downloaded file will be made executable
     mock_tools.os.chmod.assert_called_with(appimage_path, 0o755)
@@ -63,5 +63,5 @@ def test_upgrade_linuxdeploy_download_failure(linuxdeploy, mock_tools, tmp_path)
     mock_tools.download.file.assert_called_with(
         url="https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-wonky.AppImage",
         download_path=tmp_path / "tools",
-        role="LinuxDeploy",
+        role="linuxdeploy",
     )

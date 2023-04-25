@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import tempfile
 from contextlib import suppress
@@ -21,7 +23,7 @@ class Download(Tool):
     full_name = "Download"
 
     @classmethod
-    def verify(cls, tools: ToolCache, **kwargs):
+    def verify_install(cls, tools: ToolCache, **kwargs) -> Download:
         """Make downloader available in tool cache."""
         # short circuit since already verified and available
         if hasattr(tools, "download"):
@@ -30,7 +32,7 @@ class Download(Tool):
         tools.download = Download(tools=tools)
         return tools.download
 
-    def file(self, url: str, download_path: Path, role: str = None):
+    def file(self, url: str, download_path: Path, role: str = None) -> Path:
         """Download a given URL, caching it. If it has already been downloaded, return
         the value that has been cached.
 

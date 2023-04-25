@@ -1,37 +1,14 @@
-import sys
 from operator import attrgetter
-from typing import Collection, List, Set
+from typing import List, Set, Type
 
-from briefcase.exceptions import BriefcaseCommandError
-from briefcase.integrations.base import Tool, tool_registry
+from briefcase.exceptions import (
+    BriefcaseCommandError,
+    UnsupportedHostError,
+    UpgradeToolError,
+)
+from briefcase.integrations.base import ManagedTool, Tool, tool_registry
 
 from .base import BaseCommand
-
-
-def stringify(
-    coll: Collection[str],
-    prefix: str = "tool",
-    plural: str = "",
-    conjunction: str = "or",
-):
-    """Create a user-facing string from a list of strings.
-
-    For instance:
-        Inputs:
-            coll: ["one", "two", "three"]
-            prefix: "number"
-            conjunction: "and"
-        Output:
-            "numbers 'one', 'two', and 'three'"
-    :param coll: Collection of strings to stringify
-    :param prefix: Noun that describes the strings
-    :param plural: Plural version of noun; assumes adding 's' is enough if not specified.
-    :param conjunction: Value to use to join the last string to the list; defaults to 'or'.
-    """
-    comma_list = ", ".join(f"'{val}'" for val in coll)
-    if len(coll) > 1:
-        prefix = plural or f"{prefix}s"
-    return f"{prefix} {f', {conjunction}'.join(comma_list.rsplit(',', 1))}"
 
 
 class UpgradeCommand(BaseCommand):
@@ -44,10 +21,10 @@ class UpgradeCommand(BaseCommand):
     def platform(self):
         """The upgrade command always reports as the local platform."""
         return {
-            "darwin": "macOS",
-            "linux": "linux",
-            "win32": "windows",
-        }[sys.platform]
+            "Darwin": "macOS",
+            "Linux": "linux",
+            "Windows": "windows",
+        }[self.tools.host_os]
 
     def bundle_path(self, app):
         """A placeholder; Upgrade command doesn't have a bundle path."""
@@ -72,16 +49,19 @@ class UpgradeCommand(BaseCommand):
             help="The Briefcase-managed tool to upgrade. If no tool is named, all tools will be upgraded.",
         )
 
-    def get_tools_to_upgrade(self, tool_list: Set[str]) -> List[Tool]:
-        """Returns set of Tools that can be upgraded.
+    def get_tools_to_upgrade(self, tool_list: Set[str]) -> List[ManagedTool]:
+        """Returns set of managed Tools that can be upgraded.
 
-        Raises `BriefcaseCommandError` if user list contains any invalid tool names.
+        Raises ``BriefcaseCommandError`` if user list contains any invalid tool names.
         """
+        upgrade_list: set[Type[Tool]]
+        tools_to_upgrade: set[ManagedTool] = set()
+
         # Validate user tool list against tool registry
         if tool_list:
             if invalid_tools := tool_list - set(tool_registry):
-                raise BriefcaseCommandError(
-                    f"Briefcase does not know how to manage {stringify(invalid_tools)}."
+                raise UpgradeToolError(
+                    f"Briefcase does not know how to manage {', '.join(invalid_tools)}."
                 )
             upgrade_list = {
                 tool for name, tool in tool_registry.items() if name in tool_list
@@ -90,40 +70,34 @@ class UpgradeCommand(BaseCommand):
             upgrade_list = set(tool_registry.values())
 
         # Filter list of tools to those that are being managed
-        tools_to_upgrade = set()
         for tool_klass in upgrade_list:
-            try:
-                tool = tool_klass.verify(self.tools, install=False, app=object())
-            except (BriefcaseCommandError, TypeError, FileNotFoundError):
-                # BriefcaseCommandError: Tool isn't installed
-                # TypeError: Signature of tool.verify() was incomplete
-                # FileNotFoundError: An executable for subprocess.run() was not found
-                pass
-            else:
-                if tool.managed_install:
-                    tools_to_upgrade.add(tool)
+            if issubclass(tool_klass, ManagedTool):
+                try:
+                    tool = tool_klass.verify(self.tools, install=False)
+                except (BriefcaseCommandError, UnsupportedHostError):
+                    pass
+                else:
+                    if tool.managed_install:
+                        tools_to_upgrade.add(tool)
 
         # Let the user know if any requested tools are not being managed
         if tool_list:
             if unmanaged_tools := tool_list - {tool.name for tool in tools_to_upgrade}:
-                error_msg = f"Briefcase is not managing {stringify(unmanaged_tools)}."
+                error_msg = f"Briefcase is not managing {', '.join(unmanaged_tools)}."
                 if not tools_to_upgrade:
-                    raise BriefcaseCommandError(error_msg)
+                    raise UpgradeToolError(error_msg)
                 else:
                     self.logger.warning(error_msg)
 
         return sorted(list(tools_to_upgrade), key=attrgetter("name"))
 
     def __call__(self, tool_list: List[str], list_tools: bool = False, **options):
-        """Perform tool upgrades or list tools qualifying for upgrades.
+        """Perform tool upgrades or list tools qualifying for upgrade.
 
-        :param tool_list: List of tool names. from user to upgrade.
+        :param tool_list: List of tool names from user to upgrade.
         :param list_tools: Boolean to only list upgradeable tools (default False).
         """
-        tool_list = set(tool_list)
-        tools_to_upgrade = self.get_tools_to_upgrade(tool_list)
-
-        if tools_to_upgrade:
+        if tools_to_upgrade := self.get_tools_to_upgrade(set(tool_list)):
             action = "is managing" if list_tools else "will upgrade"
             self.logger.info(
                 f"Briefcase {action} the following tools:", prefix=self.command

@@ -20,9 +20,10 @@ class DeviceState(enum.Enum):
 class Xcode(Tool):
     name = "xcode"
     full_name = "Xcode"
+    supported_host_os = {"Darwin"}
 
     @classmethod
-    def verify(
+    def verify_install(
         cls,
         tools: ToolCache,
         min_version: tuple[int, int, int] = None,
@@ -60,9 +61,10 @@ class Xcode(Tool):
 class XcodeCliTools(Tool):
     name = "xcode_cli"
     full_name = "Xcode Command Line Tools"
+    supported_host_os = {"Darwin"}
 
     @classmethod
-    def verify(cls, tools: ToolCache, **kwargs) -> XcodeCliTools:
+    def verify_install(cls, tools: ToolCache, **kwargs) -> XcodeCliTools:
         """Verify that command line developer tools are installed and ready for use.
 
         A completely clean machine will have neither Xcode *nor* the Command Line

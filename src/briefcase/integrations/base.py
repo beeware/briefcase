@@ -8,14 +8,19 @@ from abc import ABC, abstractmethod
 from collections import defaultdict
 from collections.abc import Mapping
 from pathlib import Path
-from typing import TYPE_CHECKING, DefaultDict
+from types import ModuleType
+from typing import TYPE_CHECKING, DefaultDict, TypeVar, Union, overload
 
 import requests
 from cookiecutter.main import cookiecutter
 
 from briefcase.config import AppConfig
 from briefcase.console import Console, Log
-from briefcase.exceptions import MissingToolError, NonManagedToolError
+from briefcase.exceptions import (
+    MissingToolError,
+    NonManagedToolError,
+    UnsupportedHostError,
+)
 
 if TYPE_CHECKING:
     # Tools are imported only for type checking
@@ -35,9 +40,10 @@ if TYPE_CHECKING:
     from briefcase.integrations.wix import WiX
     from briefcase.integrations.xcode import Xcode, XcodeCliTools
 
+ToolT = TypeVar("ToolT", bound=Union["Tool", ModuleType])
 
 # Registry of all defined Tools
-tool_registry: dict[str, type[Tool]] = dict()
+tool_registry: dict[str, type[ToolT]] = dict()
 
 
 class Tool(ABC):
@@ -45,48 +51,92 @@ class Tool(ABC):
 
     name: str
     full_name: str
+    supported_host_os: set[str] = {"Darwin", "Linux", "Windows"}
 
     def __init__(self, tools: ToolCache, **kwargs):
         self.tools = tools
 
-    def __init_subclass__(tool_cls, **kwargs):
+    def __init_subclass__(cls, **kwargs):
         """Register each tool when it is defined."""
-        tool_registry[tool_cls.name] = tool_cls
+        if cls.name != "managed_tool_base":
+            tool_registry[cls.name] = cls
+
+    @classmethod
+    @overload
+    def verify(cls: type[ToolT], tools: ToolCache, **kwargs) -> ToolT:
+        """Verify a tool that is not app-bound."""
+
+    @classmethod
+    @overload
+    def verify(cls: type[ToolT], tools: ToolCache, app: AppConfig, **kwargs) -> ToolT:
+        """Verify an app-bound tool."""
+
+    @classmethod
+    def verify(
+        cls: type[ToolT],
+        tools: ToolCache,
+        app: AppConfig = None,
+        **kwargs,
+    ) -> ToolT:
+        """Confirm the tool is available and usable on the host platform."""
+        cls.verify_host(tools=tools)
+        tool = cls.verify_install(tools=tools, app=app, **kwargs)
+        return tool
+
+    @classmethod
+    def verify_host(cls, tools: ToolCache):
+        """Confirm the tool is supported on the platform."""
+        if tools.host_os not in cls.supported_host_os:
+            raise UnsupportedHostError(
+                f"{cls.name} is not supported on {tools.host_os}"
+            )
 
     @classmethod
     @abstractmethod
-    def verify(cls, tools: ToolCache, **kwargs):
-        """Confirm the tool is available and usable on the host platform."""
-        ...
-
-    def exists(self) -> bool:
-        """Is the tool currently installed?"""
-        raise NotImplementedError(
-            f"Missing implementation for Tool {self.__class__.__name__!r}"
-        )
+    def verify_install(cls: type[ToolT], tools: ToolCache, **kwargs) -> ToolT:
+        """Confirm the tool is installed and available."""
 
     @property
     def managed_install(self) -> bool:
         """Is Briefcase managing the installation of this tool?"""
         return False
 
+
+class ManagedTool(Tool):
+    """Tool that can be managed by Briefcase."""
+
+    name = "managed_tool_base"
+
+    @classmethod
+    @overload
+    def verify(
+        cls: type[ToolT],
+        tools: ToolCache,
+        install: bool = True,
+        **kwargs,
+    ) -> ToolT:
+        """Verify a Managed tool that is not app-bound."""
+
+    @classmethod
+    def verify(cls, tools, **kwargs):
+        return super().verify(tools=tools, **kwargs)
+
+    @property
+    def managed_install(self) -> bool:
+        """Is Briefcase managing the installation of this tool?"""
+        return True
+
+    @abstractmethod
+    def exists(self) -> bool:
+        """Is the tool currently installed?"""
+
+    @abstractmethod
     def install(self, *args, **kwargs):
         """Install the tool as managed by Briefcase."""
-        if self.managed_install:
-            raise NotImplementedError(
-                f"Missing implementation for Tool {self.__class__.__name__!r}"
-            )
-        else:
-            raise NonManagedToolError(self.full_name)
 
+    @abstractmethod
     def uninstall(self, *args, **kwargs):
         """Uninstall the tool."""
-        if self.managed_install:
-            raise NotImplementedError(
-                f"Missing implementation for Tool {self.__class__.__name__!r}"
-            )
-        else:
-            raise NonManagedToolError(self.full_name)
 
     def upgrade(self):
         """Upgrade a managed tool."""
@@ -152,9 +202,7 @@ class ToolCache(Mapping):
         self.logger = logger
         self.input = console
         self.base_path = Path(base_path)
-        self.home_path = Path(
-            os.path.expanduser(home_path if home_path else Path.home())
-        )
+        self.home_path = Path(os.path.expanduser(home_path or Path.home()))
 
         self.host_arch = self.platform.machine()
         self.host_os = self.platform.system()

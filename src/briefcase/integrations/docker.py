@@ -8,7 +8,7 @@ from pathlib import Path, PurePosixPath
 from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.base import Tool, ToolCache
-from briefcase.integrations.subprocess import SubprocessArgsT
+from briefcase.integrations.subprocess import SubprocessArgsT, SubprocessArgT
 
 
 class Docker(Tool):
@@ -112,7 +112,7 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
     }
 
     @classmethod
-    def verify(cls, tools: ToolCache, **kwargs) -> Docker:
+    def verify_install(cls, tools: ToolCache, **kwargs) -> Docker:
         """Verify Docker is installed and operational."""
         # short circuit since already verified and available
         if hasattr(tools, "docker"):
@@ -189,7 +189,7 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
         except subprocess.CalledProcessError:
             raise BriefcaseCommandError(cls.BUILDX_PLUGIN_MISSING)
 
-    def check_output(self, args: list[str | Path], image_tag: str):
+    def check_output(self, args: list[SubprocessArgT], image_tag: str):
         """Run a process inside a Docker container, capturing output.
 
         This is a bare Docker invocation; it's really only useful for running
@@ -237,7 +237,7 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
 
 
 class DockerAppContext(Tool):
-    name = "dockerappcontext"
+    name = "docker_app_context"
     full_name = "Docker"
 
     def __init__(self, tools: ToolCache, app: AppConfig):
@@ -255,7 +255,7 @@ class DockerAppContext(Tool):
         return PurePosixPath("/home/brutus/.cache/briefcase")
 
     @classmethod
-    def verify(
+    def verify_install(
         cls,
         tools: ToolCache,
         app: AppConfig,
@@ -350,7 +350,7 @@ class DockerAppContext(Tool):
                         f"Error building Docker container image for {self.app.app_name}."
                     ) from e
 
-    def _dockerize_path(self, arg: str | Path) -> str:
+    def _dockerize_path(self, arg: SubprocessArgT) -> str:
         """Relocate any local path into the equivalent location on the docker
         filesystem.
 

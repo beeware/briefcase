@@ -22,6 +22,7 @@ def build_command(tmp_path):
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
     )
+    command.tools.host_os = "Windows"
     command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
     command.tools.rcedit = RCEdit(command.tools)
     return command

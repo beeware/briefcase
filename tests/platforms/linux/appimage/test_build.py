@@ -12,7 +12,7 @@ from briefcase.exceptions import (
     UnsupportedHostError,
 )
 from briefcase.integrations.docker import DockerAppContext
-from briefcase.integrations.linuxdeploy import LinuxDeploy
+from briefcase.integrations.linuxdeploy import LinuxDeploy, LinuxDeployBase
 from briefcase.platforms.linux.appimage import LinuxAppImageBuildCommand
 
 
@@ -136,7 +136,7 @@ def test_verify_tools_download_failure(build_command):
     build_command.tools.download.file.assert_called_with(
         url="https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-wonky.AppImage",
         download_path=build_command.tools.base_path,
-        role="LinuxDeploy",
+        role="linuxdeploy",
     )
 
     # But it failed, so the file won't be made executable...
@@ -459,6 +459,7 @@ def test_build_appimage_with_plugins_in_docker(
     first_app,
     tmp_path,
     sub_stream_kw,
+    monkeypatch,
 ):
     """A Linux app can be packaged as an AppImage with plugins in a Docker container."""
     # Mock the existence of some plugins
@@ -487,6 +488,7 @@ def test_build_appimage_with_plugins_in_docker(
 
     # Enable docker, and move to a non-Linux OS.
     build_command.tools.host_os = "TestOS"
+    monkeypatch.setattr(LinuxDeployBase, "supported_host_os", {"TestOS"})
     build_command.use_docker = True
 
     # Provide Docker app context

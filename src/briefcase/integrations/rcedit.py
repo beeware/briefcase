@@ -3,12 +3,13 @@ from __future__ import annotations
 from pathlib import Path
 
 from briefcase.exceptions import MissingToolError
-from briefcase.integrations.base import Tool, ToolCache
+from briefcase.integrations.base import ManagedTool, ToolCache
 
 
-class RCEdit(Tool):
+class RCEdit(ManagedTool):
     name = "rcedit"
     full_name = "RCEdit"
+    supported_host_os = {"Windows"}
 
     @property
     def download_url(self) -> str:
@@ -21,7 +22,7 @@ class RCEdit(Tool):
         return self.tools.base_path / "rcedit-x64.exe"
 
     @classmethod
-    def verify(cls, tools: ToolCache, install: bool = True, **kwargs) -> RCEdit:
+    def verify_install(cls, tools: ToolCache, install: bool = True, **kwargs) -> RCEdit:
         """Verify that rcedit is available.
 
         :param tools: ToolCache of available tools
@@ -50,10 +51,6 @@ class RCEdit(Tool):
 
     def exists(self) -> bool:
         return self.rcedit_path.exists()
-
-    @property
-    def managed_install(self) -> bool:
-        return True
 
     def install(self):
         """Download and install RCEdit."""

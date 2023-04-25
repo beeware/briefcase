@@ -6,6 +6,7 @@ import platform
 import shutil
 import sys
 from pathlib import Path
+from typing import Dict, Set, Type
 
 import pytest
 import requests
@@ -13,19 +14,25 @@ from cookiecutter.main import cookiecutter
 
 import briefcase.integrations
 from briefcase.console import Console, Log
-from briefcase.integrations.base import Tool, ToolCache, tool_registry
+from briefcase.integrations.base import ManagedTool, Tool, ToolCache, tool_registry
 
 
 @pytest.fixture
 def simple_tools(tmp_path):
-    return ToolCache(
-        logger=Log(),
-        console=Console(),
-        base_path=tmp_path,
-    )
+    return ToolCache(logger=Log(), console=Console(), base_path=tmp_path)
 
 
-def tools_for_module(tool_module_name: str) -> dict:
+@pytest.fixture
+def all_defined_tools() -> Set[Type[Tool]]:
+    """All classes that subclass Tool."""
+    return {
+        tool
+        for toolset in map(tools_for_module, briefcase.integrations.__all__)
+        for tool in toolset.values()
+    }
+
+
+def tools_for_module(tool_module_name: str) -> Dict[str, Type[Tool]]:
     """Return classes that subclass Tool in a module in
     ``briefcase.integrations``, e.g. {"android_sdk": AndroidSDK}."""
     return {
@@ -33,27 +40,28 @@ def tools_for_module(tool_module_name: str) -> dict:
         for klass_name, klass in inspect.getmembers(
             sys.modules[f"briefcase.integrations.{tool_module_name}"],
             lambda klass: (
-                inspect.isclass(klass) and issubclass(klass, Tool) and klass is not Tool
+                inspect.isclass(klass)
+                and issubclass(klass, (Tool, ManagedTool))
+                and klass not in {Tool, ManagedTool}
             ),
         )
     }
 
 
-def test_tool_registry(simple_tools):
+def test_tool_registry(all_defined_tools, simple_tools):
     """The Tool Registry must contain all defined Tools."""
-    all_defined_tools = {
-        tool
-        for toolset in map(tools_for_module, briefcase.integrations.__all__)
-        for tool in toolset.values()
-    }
-
-    from pprint import pprint
-
-    pprint(all_defined_tools)
-    pprint(set(tool_registry.values()))
-
     # test uses subset since registry will contain dummy testing tools
     assert all_defined_tools.issubset(tool_registry.values())
+
+
+def test_unique_tool_names(all_defined_tools):
+    """All tools must have a unique name."""
+    assert len(all_defined_tools) == len({t.name for t in all_defined_tools})
+
+
+def test_valid_tool_names(all_defined_tools):
+    """All tools must have a valid name."""
+    assert all(" " not in t.name for t in all_defined_tools)
 
 
 def test_toolcache_typing():
@@ -66,7 +74,6 @@ def test_toolcache_typing():
     tool_names_skip_dynamic_check = {
         "app_context",
         "git",
-        "xcode",
         "xcode_cli",
         "ETC_OS_RELEASE",
     }
@@ -75,8 +82,6 @@ def test_toolcache_typing():
         "Git",
         "DockerAppContext",
         "NativeAppContext",
-        "LinuxDeployBase",
-        "LinuxDeployPluginBase",
         "LinuxDeployQtPlugin",
         "LinuxDeployGtkPlugin",
         "LinuxDeployURLPlugin",
@@ -119,7 +124,7 @@ def test_toolcache_typing():
     assert sorted(app_context_klasses) == sorted(app_context_annotated)
 
     assert ToolCache.__annotations__["git"] == "git_"
-
+    assert ToolCache.__annotations__["xcode_cli"] == "XcodeCliTools"
     assert ToolCache.__annotations__["ETC_OS_RELEASE"] == "Path"
 
 

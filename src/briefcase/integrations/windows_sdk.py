@@ -17,6 +17,8 @@ from briefcase.integrations.base import Tool, ToolCache
 class WindowsSDK(Tool):
     name = "windows_sdk"
     full_name = "Windows SDK"
+    supported_host_os = {"Windows"}
+
     SDK_VERSION = "10.0"
     # Oldest supported SDK version is 10.0.15063.0
     SDK_MIN_VERSION = 15063
@@ -180,7 +182,7 @@ WindowsSDKVersion: {environ_sdk_version}
         return True
 
     @classmethod
-    def verify(cls, tools: ToolCache, **kwargs):
+    def verify_install(cls, tools: ToolCache, **kwargs) -> WindowsSDK:
         """Verify the Windows SDK is installed with needed components.
 
         :param tools: ToolCache of available tools

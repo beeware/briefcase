@@ -12,7 +12,7 @@ from collections.abc import Callable
 from functools import wraps
 from pathlib import Path
 from subprocess import CompletedProcess
-from typing import Any, Iterator, Sequence, Union
+from typing import Any, Iterator, Mapping, Sequence, TypeVar, Union
 
 import psutil
 
@@ -21,7 +21,10 @@ from briefcase.console import Log
 from briefcase.exceptions import CommandOutputParseError, ParseError
 from briefcase.integrations.base import Tool, ToolCache
 
-SubprocessArgsT = Sequence[Union[str, Path]]
+SubprocessArgT = Union[str, Path]
+SubprocessArgsT = Sequence[SubprocessArgT]
+JSON = Union[Mapping[str, "JSON"], Sequence["JSON"], str, int, float, bool, None]
+ParserOutputT = TypeVar("ParserOutputT")
 
 
 class StopStreaming(Exception):
@@ -33,7 +36,7 @@ def ensure_str(text: str | bytes) -> str:
     return text.decode() if isinstance(text, bytes) else str(text)
 
 
-def json_parser(json_output: str) -> Any:
+def json_parser(json_output: str) -> JSON:
     """Wrapper to parse command output as JSON via parse_output.
 
     :param json_output: command output to parse as JSON
@@ -151,7 +154,7 @@ class NativeAppContext(Tool):
     name = "app_context_subprocess"
 
     @classmethod
-    def verify(cls, tools: ToolCache, app: AppConfig, **kwargs) -> Subprocess:
+    def verify_install(cls, tools: ToolCache, app: AppConfig, **kwargs) -> Subprocess:
         """Make subprocess available as app-bound tool."""
         # short circuit since already verified and available
         if hasattr(tools[app], "app_context"):
@@ -277,7 +280,7 @@ class Subprocess(Tool):
         return kwargs
 
     @classmethod
-    def verify(cls, tools: ToolCache, **kwargs) -> Subprocess:
+    def verify_install(cls, tools: ToolCache, **kwargs) -> Subprocess:
         """Make subprocess available in tool cache."""
         # short circuit since already verified and available
         if hasattr(tools, "subprocess"):
@@ -528,10 +531,10 @@ class Subprocess(Tool):
 
     def parse_output(
         self,
-        output_parser: Callable[[str], Any],
+        output_parser: Callable[[str], ParserOutputT],
         args: SubprocessArgsT,
         **kwargs,
-    ) -> Any:
+    ) -> ParserOutputT:
         """A wrapper for check_output() where the command output is processed through
         the supplied parser function.
 

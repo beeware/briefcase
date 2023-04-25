@@ -6,10 +6,10 @@ import subprocess
 from pathlib import Path
 
 from briefcase.exceptions import BriefcaseCommandError, MissingToolError
-from briefcase.integrations.base import Tool, ToolCache
+from briefcase.integrations.base import ManagedTool, ToolCache
 
 
-class JDK(Tool):
+class JDK(ManagedTool):
     name = "java"
     full_name = "Java JDK"
 
@@ -42,7 +42,7 @@ class JDK(Tool):
         )
 
     @classmethod
-    def verify(cls, tools: ToolCache, install: bool = True, **kwargs) -> JDK:
+    def verify_install(cls, tools: ToolCache, install: bool = True, **kwargs) -> JDK:
         """Verify that a Java 8 JDK exists.
 
         If ``JAVA_HOME`` is set, try that version. If it is a JRE, or its *not*

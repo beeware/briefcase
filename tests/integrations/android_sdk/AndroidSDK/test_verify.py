@@ -6,7 +6,12 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from briefcase.exceptions import BriefcaseCommandError, MissingToolError, NetworkFailure
+from briefcase.exceptions import (
+    BriefcaseCommandError,
+    MissingToolError,
+    NetworkFailure,
+    UnsupportedHostError,
+)
 from briefcase.integrations.android_sdk import AndroidSDK
 from briefcase.integrations.base import ToolCache
 
@@ -61,6 +66,17 @@ def test_short_circuit(mock_tools):
 
     assert tool == "tool"
     assert tool == mock_tools.android_sdk
+
+
+def test_unsupported_os(mock_tools):
+    """When host OS is not supported, an error is raised."""
+    mock_tools.host_os = "wonky"
+
+    with pytest.raises(
+        UnsupportedHostError,
+        match=f"{AndroidSDK.name} is not supported on wonky",
+    ):
+        AndroidSDK.verify(mock_tools)
 
 
 def test_succeeds_immediately_in_happy_path(mock_tools, tmp_path):

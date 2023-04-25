@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from briefcase.exceptions import BriefcaseCommandError
+from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
 from briefcase.integrations.docker import DockerAppContext
 from briefcase.integrations.subprocess import Subprocess
 
@@ -29,6 +29,17 @@ def test_short_circuit(mock_tools, first_app_config, verify_kwargs):
 
     assert app_context == "tool"
     assert app_context == mock_tools[first_app_config].app_context
+
+
+def test_unsupported_os(mock_tools, first_app_config, verify_kwargs):
+    """When host OS is not supported, an error is raised."""
+    mock_tools.host_os = "wonky"
+
+    with pytest.raises(
+        UnsupportedHostError,
+        match=f"{DockerAppContext.name} is not supported on wonky",
+    ):
+        DockerAppContext.verify(mock_tools, first_app_config, **verify_kwargs)
 
 
 def test_success(mock_tools, first_app_config, verify_kwargs):

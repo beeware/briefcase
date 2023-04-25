@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from types import ModuleType
+
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.base import Tool, ToolCache
 
@@ -9,7 +11,7 @@ class Git(Tool):
     full_name = "Git"
 
     @classmethod
-    def verify(cls, tools: ToolCache, **kwargs):
+    def verify_install(cls, tools: ToolCache, **kwargs) -> ModuleType:
         """Verify if git is installed.
 
         Unfortunately, `import git` triggers a call on the operating system
