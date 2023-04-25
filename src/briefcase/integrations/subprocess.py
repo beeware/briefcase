@@ -8,10 +8,11 @@ import subprocess
 import sys
 import threading
 import time
+from collections.abc import Callable
 from functools import wraps
 from pathlib import Path
 from subprocess import CompletedProcess
-from typing import Any, Callable, Iterator, Sequence, Union
+from typing import Any, Iterator, Sequence, Union
 
 import psutil
 
@@ -114,8 +115,8 @@ def ensure_console_is_safe(sub_method):
         :return: the return value for the Subprocess method
         """
         sub: Subprocess = args[0]
-        sub_args = args[1]
-        pos_args = args[2:]
+        sub_args: SubprocessArgsT = args[1]
+        pos_args: Sequence[Any] = args[2:]
 
         # Just run the command if no dynamic elements are active
         if not sub.tools.input.is_console_controlled:
