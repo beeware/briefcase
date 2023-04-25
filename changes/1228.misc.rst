@@ -1,1 +1,1 @@
-Added coverage report to tox.ini and updated docs to mention it.
+Added coverage command to tox.ini and updated docs to mention it.
