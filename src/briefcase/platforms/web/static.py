@@ -184,7 +184,6 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 }
                 # Ensure that non-pyodide-compatible wheels are passed as package names
                 # so that micropip can try to install it from the pyodide index.
-                # TODO: get pyodide whl so it can be bundled
                 for wheel in packages:
                     name, version, build, tags = parse_wheel_filename(wheel.name)
                     if not any(
