@@ -58,7 +58,7 @@ class DummyUpdateCommand(UpdateCommand):
         self.actions.append(("resources", app.app_name))
         create_file(self.bundle_path(app) / "resources", "app resources")
 
-    def install_app_support(self, app):
+    def install_app_support(self, app, update=False):
         self.actions.append(("support", app.app_name))
         create_file(self.bundle_path(app) / "support", "app support")
 

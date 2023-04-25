@@ -43,7 +43,7 @@ def test_install_app_support_package(
     create_command.tools.shutil.unpack_archive.side_effect = shutil.unpack_archive
 
     # Install the support package
-    create_command.install_app_support_package(myapp)
+    create_command.install_app_support_package(myapp, update=False, update=False)
 
     # Confirm the right URL was used
     create_command.tools.download.file.assert_called_with(
@@ -88,7 +88,7 @@ def test_install_pinned_app_support_package(
     create_command.tools.shutil.unpack_archive.side_effect = shutil.unpack_archive
 
     # Install the support package
-    create_command.install_app_support_package(myapp)
+    create_command.install_app_support_package(myapp, update=False)
 
     # Confirm the right URL was used
     create_command.tools.download.file.assert_called_with(
@@ -134,7 +134,7 @@ def test_install_custom_app_support_package_file(
     create_command.tools.shutil.unpack_archive.side_effect = shutil.unpack_archive
 
     # Install the support package
-    create_command.install_app_support_package(myapp)
+    create_command.install_app_support_package(myapp, update=False)
 
     # There should have been no download attempt,
     # as the resource is local.
@@ -180,7 +180,7 @@ def test_install_custom_app_support_package_file_with_revision(
     create_command.tools.shutil.unpack_archive.side_effect = shutil.unpack_archive
 
     # Install the support package
-    create_command.install_app_support_package(myapp)
+    create_command.install_app_support_package(myapp, update=False)
 
     # There should have been no download attempt,
     # as the resource is local.
@@ -218,7 +218,7 @@ def test_support_package_url_with_invalid_custom_support_packge_url(
 
     # The bad URL should raise a MissingNetworkResourceError
     with pytest.raises(MissingNetworkResourceError):
-        create_command.install_app_support_package(myapp)
+        create_command.install_app_support_package(myapp, update=False)
 
     # However, there will have been a download attempt
     create_command.tools.download.file.assert_called_with(
@@ -247,7 +247,7 @@ def test_support_package_url_with_unsupported_platform(
 
     # The unknown platform should cause a missing support package error
     with pytest.raises(MissingSupportPackage):
-        create_command.install_app_support_package(myapp)
+        create_command.install_app_support_package(myapp, update=False)
 
     # However, there will have been a download attempt
     create_command.tools.download.file.assert_called_with(
@@ -282,7 +282,7 @@ def test_install_custom_app_support_package_url(
     create_command.tools.shutil.unpack_archive.side_effect = shutil.unpack_archive
 
     # Install the support package
-    create_command.install_app_support_package(myapp)
+    create_command.install_app_support_package(myapp, update=False)
 
     # Confirm the right URL and download path was used
     create_command.tools.download.file.assert_called_with(
@@ -338,7 +338,7 @@ def test_install_custom_app_support_package_url_with_revision(
     create_command.tools.shutil.unpack_archive.side_effect = shutil.unpack_archive
 
     # Install the support package
-    create_command.install_app_support_package(myapp)
+    create_command.install_app_support_package(myapp, update=False)
 
     # Confirm the right URL and download path was used
     create_command.tools.download.file.assert_called_with(
@@ -393,7 +393,7 @@ def test_install_custom_app_support_package_url_with_args(
     create_command.tools.shutil.unpack_archive.side_effect = shutil.unpack_archive
 
     # Install the support package
-    create_command.install_app_support_package(myapp)
+    create_command.install_app_support_package(myapp, update=False)
 
     # Confirm the right URL was used
     create_command.tools.download.file.assert_called_with(
@@ -432,7 +432,7 @@ def test_offline_install(
 
     # Installing while offline raises an error
     with pytest.raises(NetworkFailure):
-        create_command.install_app_support_package(myapp)
+        create_command.install_app_support_package(myapp, update=False)
 
 
 def test_invalid_support_package(
@@ -453,7 +453,7 @@ def test_invalid_support_package(
 
     # Installing the bad support package raises an error
     with pytest.raises(InvalidSupportPackage):
-        create_command.install_app_support_package(myapp)
+        create_command.install_app_support_package(myapp, update=False)
 
 
 def test_missing_support_package(
@@ -469,14 +469,14 @@ def test_missing_support_package(
 
     # Installing the bad support package raises an error
     with pytest.raises(InvalidSupportPackage):
-        create_command.install_app_support_package(myapp)
+        create_command.install_app_support_package(myapp, update=False)
 
 
 def test_no_support_path(create_command, myapp, no_support_path_index):
     """If support_path is not listed in briefcase.toml, a support package will not be
     downloaded."""
     create_command.tools.download.file = mock.MagicMock()
-    create_command.install_app_support_package(myapp)
+    create_command.install_app_support_package(myapp, update=False)
     create_command.tools.download.file.assert_not_called()
 
 
@@ -487,7 +487,7 @@ def test_no_support_revision(create_command, myapp, no_support_revision_index):
 
     # An error is raised when attempting to install the support package
     with pytest.raises(MissingSupportPackage):
-        create_command.install_app_support_package(myapp)
+        create_command.install_app_support_package(myapp, update=False)
 
     # No download attempt is made.
     create_command.tools.download.file.assert_not_called()
