@@ -1,1 +1,1 @@
-Web platform: Allow micropip to install binary dependencies.
+Web platform: Allow micropip to attempt to install binary dependencies if wasm32 binary wheel is not bundled.
