@@ -25,7 +25,7 @@ class LinuxFlatpakMixin(LinuxMixin):
         # build process, so the SDK wrapper creates a file that can use to identify
         # if run has been invoked. As a neat side effect, it's also a shell script
         # that can invoke the flatpak.
-        return self.bundle_path(app) / f"{app.bundle}.{app.app_name}"
+        return self.bundle_path(app) / app.bundle_identifier
 
     def project_path(self, app):
         return self.bundle_path(app)
