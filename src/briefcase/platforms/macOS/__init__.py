@@ -1,3 +1,4 @@
+import itertools
 import os
 import re
 import subprocess
@@ -360,23 +361,26 @@ or
 
         # Signs code objects in reversed lexicographic order to ensure nesting order is respected
         # (objects must be signed from the inside out)
-        # Run signing through a ThreadPoolExecutor so that they run in parallel 
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            futures = []
-            progress_bar = self.input.progress_bar()
-            task_id = progress_bar.add_task("Signing App", total=len(sign_targets))
-            with progress_bar:
-                for path in sorted(sign_targets, reverse=True):
-                    future = executor.submit(self.sign_file,
-                                            path,
-                                            entitlements=self.entitlements_path(app),
-                                            identity=identity)
-                    futures.append(future)
-                for future in concurrent.futures.as_completed(futures):
-                    progress_bar.update(task_id, advance=1)
-                    if future.exception():
-                        raise future.exception()
-
+        # Run signing through a ThreadPoolExecutor so that they run in parallel
+        # for every path in sign_targets, group by the lambda which returns the parent of the path. 
+        # Groups which have the same parent will be returned together in the iterator "names". Names is later cast to a list
+        for _, names in itertools.groupby(sign_targets, lambda name: name.parent):
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                names = list(names)
+                futures = []
+                progress_bar = self.input.progress_bar()
+                task_id = progress_bar.add_task("Signing App", total=len(names))
+                with progress_bar:
+                    for path in sorted(names, reverse=True):
+                        future = executor.submit(self.sign_file,
+                                                path,
+                                                entitlements=self.entitlements_path(app),
+                                                identity=identity)
+                        futures.append(future)
+                    for future in concurrent.futures.as_completed(futures):
+                        progress_bar.update(task_id, advance=1)
+                        if future.exception():
+                            raise future.exception()
 
 class macOSPackageMixin(macOSSigningMixin):
     @property
