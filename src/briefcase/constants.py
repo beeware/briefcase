@@ -1,4 +1,3 @@
-
 # Javascript reserved keywords:
 # https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#reserved_keywords_as_of_ecmascript_2015
 JAVASCRIPT_RESERVED_WORDS = {
@@ -150,7 +149,6 @@ NON_PYTHON_RESERVED_WORDS = set.union(
     JAVA_RESERVED_WORDS,
     WINDOWS_RESERVED_WORDS,
 )
-
 
 # All standard library names for python 3.8 through 3.11,
 # plus 'main' which is reserved for briefcase use.
