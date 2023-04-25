@@ -324,10 +324,31 @@ documentation syntax and packaging metadata, respectively.
 Verify test coverage
 --------------------
 
-Briefcase requires 100% test coverage, so when you add new code it is expected
-that enough tests are added to cover the new code. You can run ``tox`` with the
-`coverage` target to generate a coverage report. The test suite is then run and
-a coverage report is generated and shown at the end of the output.
+Briefcase maintains 100% branch coverage in its codebase. When you add or modify
+code in the project, you must add test code to ensure coverage of any
+changes you make.
+
+To run the test suite and generate a coverage report, run:
+
+.. tabs::
+
+  .. group-tab:: macOS
+
+    .. code-block:: console
+
+      (venv) $ tox -e coverage
+
+  .. group-tab:: Linux
+
+    .. code-block:: console
+
+      (venv) $ tox -e coverage
+
+  .. group-tab:: Windows
+
+    .. code-block:: doscon
+
+      (venv) C:\...>tox -e coverage
 
 Depending on your platform, it's possible that some lines required by other
 platforms will be skipped and shown as "missing" in the coverage report. You
