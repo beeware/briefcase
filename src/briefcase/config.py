@@ -431,6 +431,23 @@ class AppConfig(BaseConfig):
         return self.app_name.replace("-", "_")
 
     @property
+    def bundle_name(self):
+        """The bundle name for the app.
+
+        This is derived from the app name, but:
+        * all `_` have been replaced with `-`.
+        """
+        return self.app_name.replace("_", "-")
+
+    @property
+    def bundle_identifier(self):
+        """The bundle identifier for the app.
+
+        This is derived from the bundle and the bundle name, joined by a `.`.
+        """
+        return f"{self.bundle}.{self.bundle_name}"
+
+    @property
     def class_name(self):
         """The class name for the app.
 

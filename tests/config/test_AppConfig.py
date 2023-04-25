@@ -254,6 +254,46 @@ def test_package_name(bundle, package_name):
 
 
 @pytest.mark.parametrize(
+    "app_name, bundle_name",
+    [
+        ("my-app", "my-app"),
+        ("my_app", "my-app"),
+    ],
+)
+def test_bundle_name(app_name, bundle_name):
+    config = AppConfig(
+        app_name=app_name,
+        version="1.2.3",
+        bundle="com.example",
+        description="A simple app",
+        sources=["src/my_app"],
+    )
+
+    assert config.bundle_name == bundle_name
+
+
+@pytest.mark.parametrize(
+    "app_name, bundle_name",
+    [
+        ("my-app", "my-app"),
+        ("my_app", "my-app"),
+    ],
+)
+def test_bundle_identifier(app_name, bundle_name):
+    bundle = "com.example"
+
+    config = AppConfig(
+        app_name=app_name,
+        version="1.2.3",
+        bundle=bundle,
+        description="A simple app",
+        sources=["src/my_app"],
+    )
+
+    assert config.bundle_identifier == f"{bundle}.{bundle_name}"
+
+
+@pytest.mark.parametrize(
     "sources",
     [
         ["src/dupe", "src/dupe"],
