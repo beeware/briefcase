@@ -124,3 +124,32 @@ def test_update_with_resources(update_command, first_app, second_app):
         ("resources", "second"),
         ("cleanup", "second"),
     ]
+
+
+def test_update_with_support(update_command, first_app, second_app):
+    """The update command can be called, requesting an app support update."""
+    # Configure no command line options
+    options = update_command.parse_options(["--update-support"])
+
+    update_command(**options)
+
+    # The right sequence of things will be done
+    assert update_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
+        # App configs have been finalized
+        ("finalize-app-config", "first"),
+        ("finalize-app-config", "second"),
+        # Update the first app
+        ("verify-app-tools", "first"),
+        ("code", "first", False),
+        ("support", "first"),
+        ("cleanup", "first"),
+        # Update the second app
+        ("verify-app-tools", "second"),
+        ("code", "second", False),
+        ("support", "second"),
+        ("cleanup", "second"),
+    ]

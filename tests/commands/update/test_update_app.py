@@ -4,6 +4,7 @@ def test_update_app(update_command, first_app, tmp_path):
         update_command.apps["first"],
         update_requirements=False,
         update_resources=False,
+        update_support=False,
         test_mode=False,
     )
 
@@ -38,6 +39,7 @@ def test_update_non_existing_app(update_command, tmp_path):
         update_command.apps["first"],
         update_requirements=False,
         update_resources=False,
+        update_support=False,
         test_mode=False,
     )
 
@@ -59,6 +61,7 @@ def test_update_app_with_requirements(update_command, first_app, tmp_path):
         update_command.apps["first"],
         update_requirements=True,
         update_resources=False,
+        update_support=False,
         test_mode=False,
     )
 
@@ -93,6 +96,7 @@ def test_update_app_with_resources(update_command, first_app, tmp_path):
         update_command.apps["first"],
         update_requirements=False,
         update_resources=True,
+        update_support=False,
         test_mode=False,
     )
 
@@ -121,6 +125,44 @@ def test_update_app_with_resources(update_command, first_app, tmp_path):
     ).exists()
 
 
+def test_update_app_with_support_package(update_command, first_app, tmp_path):
+    """If the user requests an app support package update, they are updated."""
+    update_command.update_app(
+        update_command.apps["first"],
+        update_requirements=False,
+        update_resources=False,
+        update_support=True,
+        test_mode=False,
+    )
+
+    # The right sequence of things will be done
+    assert update_command.actions == [
+        ("verify-app-tools", "first"),
+        ("code", "first", False),
+        ("support", "first"),
+        ("cleanup", "first"),
+    ]
+
+    # App content and support have been updated
+    assert (
+        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "code.py"
+    ).exists()
+    assert (
+        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "support"
+    ).exists()
+    # requirements and resources haven't been updated
+    assert not (
+        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "resources"
+    ).exists()
+    assert not (
+        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "requirements"
+    ).exists()
+    # ... and the app still exists
+    assert (
+        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "first.bundle"
+    ).exists()
+
+
 def test_update_app_test_mode(update_command, first_app, tmp_path):
     """Update app in test mode."""
     # Pass in the defaults for the update flags
@@ -129,6 +171,7 @@ def test_update_app_test_mode(update_command, first_app, tmp_path):
         test_mode=True,
         update_requirements=False,
         update_resources=False,
+        update_support=False,
     )
 
     # The right sequence of things will be done
@@ -163,6 +206,7 @@ def test_update_app_test_mode_requirements(update_command, first_app, tmp_path):
         test_mode=True,
         update_requirements=True,
         update_resources=False,
+        update_support=False,
     )
 
     # The right sequence of things will be done
@@ -198,6 +242,7 @@ def test_update_app_test_mode_resources(update_command, first_app, tmp_path):
         test_mode=True,
         update_requirements=False,
         update_resources=True,
+        update_support=False,
     )
 
     # The right sequence of things will be done

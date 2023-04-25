@@ -1,0 +1,1 @@
+Added a new `briefcase update` option `-s/--update-support`` that updates the support package in an existing app.

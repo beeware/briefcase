@@ -70,6 +70,7 @@ class PackageCommand(BaseCommand):
                 app,
                 update_resources=True,
                 update_requirements=True,
+                update_support=True,
                 **options,
             )
             state = self.build_command(app, **full_options(state, options))

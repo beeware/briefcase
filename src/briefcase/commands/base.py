@@ -674,6 +674,13 @@ a custom location for Briefcase's tools.
         )
 
         parser.add_argument(
+            "-s",
+            "--update-support",
+            action="store_true",
+            help=f"Update support package for the app{context_label}",
+        )
+
+        parser.add_argument(
             "--update-resources",
             action="store_true",
             help=f"Update app resources (icons, splash screens, etc){context_label}",
