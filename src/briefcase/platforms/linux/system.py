@@ -981,9 +981,9 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
 
                     if filename.is_dir():
                         if app.app_name in path.parts:
-                            f.write(f"%dir /{path}\n")
+                            f.write(f'%dir "/{path}"\n')
                     else:
-                        f.write(f"/{path}\n")
+                        f.write(f'"/{path}"\n')
 
                 # Add the changelog content to the bottom of the spec file.
                 f.write("\n%changelog\n")
