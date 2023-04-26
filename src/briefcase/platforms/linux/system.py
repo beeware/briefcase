@@ -41,7 +41,18 @@ class LinuxSystemPassiveMixin(LinuxMixin):
 
     @property
     def use_docker(self):
+        # The passive mixing doesn't expose the `--target` option, as it can't use
+        # Docker. However, we need the use_docker property to exist so that the
+        # app config can be finalized in the general case.
         return False
+
+    def parse_options(self, extra):
+        # The passive mixin doesn't expose the `--target` option, but if run infers
+        # build, we need target image to be defined.
+        options = super().parse_options(extra)
+        self.target_image = None
+
+        return options
 
     @property
     def linux_arch(self):
