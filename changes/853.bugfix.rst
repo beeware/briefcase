@@ -1,0 +1,1 @@
+Add python stdlib names and 'main' to reserved words.
