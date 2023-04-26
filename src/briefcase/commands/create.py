@@ -234,6 +234,7 @@ class CreateCommand(BaseCommand):
                 "class_name": app.class_name,
                 "module_name": app.module_name,
                 "package_name": app.package_name,
+                "bundle_identifier": app.bundle_identifier,
                 # Properties that are a function of the execution
                 "year": date.today().strftime("%Y"),
                 "month": date.today().strftime("%B"),
