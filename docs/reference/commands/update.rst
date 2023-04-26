@@ -45,3 +45,8 @@ Update application requirements.
 ----------------------
 
 Update application resources (e.g., icons and splash screens).
+
+``--update-support``
+----------------------
+
+Update application support package.

@@ -63,6 +63,49 @@ def test_install_app_support_package(
     assert (support_path / "internal" / "file.txt").exists()
 
 
+def test_install_app_support_package_with_update(
+    create_command,
+    myapp,
+    tmp_path,
+    support_path,
+    app_requirements_path_index,
+):
+    """A support package can be updated, downloaded and unpacked where it is needed."""
+
+    # Mock download.file to return a support package
+    create_command.tools.download.file = mock.MagicMock(
+        side_effect=mock_tgz_download(
+            "Python-3.X-tester-support.b37.tar.gz",
+            [("internal/file.txt", "hello world")],
+        )
+    )
+
+    # Mock shutil so we can confirm that unpack is called,
+    # but we still want the side effect of calling it
+    create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
+    create_command.tools.shutil.unpack_archive.side_effect = shutil.unpack_archive
+
+    # Install the support package
+    create_command.install_app_support_package(myapp, update=True)
+
+    # Confirm the right URL was used
+    create_command.tools.download.file.assert_called_with(
+        download_path=create_command.data_path / "support",
+        url="https://briefcase-support.s3.amazonaws.com/python/3.X/Tester/Python-3.X-Tester-support.b37.tar.gz",
+        role="support package",
+    )
+
+    # Confirm the right file was unpacked
+    create_command.tools.shutil.unpack_archive.assert_called_with(
+        tmp_path / "data" / "support" / "Python-3.X-tester-support.b37.tar.gz",
+        extract_dir=support_path,
+    )
+
+    # Confirm that the full path to the support file
+    # has been unpacked.
+    assert (support_path / "internal" / "file.txt").exists()
+
+
 def test_install_pinned_app_support_package(
     create_command,
     myapp,

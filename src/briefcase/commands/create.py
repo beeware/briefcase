@@ -296,13 +296,14 @@ class CreateCommand(BaseCommand):
         """Install the application support package.
 
         :param app: The config object for the app
+        :param upsate: The force update the support package
         """
         try:
             support_path = self.support_path(app)
         except KeyError:
             self.logger.info("No support package required.")
         else:
-            if update:
+            if update and support_path.exists():
                 support_path.rmdir()
             support_file_path = self._download_support_package(app)
             self._unpack_support_package(support_file_path, support_path)

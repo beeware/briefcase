@@ -716,6 +716,26 @@ def test_build_invalid_update_resources(build_command, first_app, second_app):
         build_command(**options)
 
 
+def test_build_invalid_update_support(build_command, first_app, second_app):
+    """If the user requests a build with update-support and no-update, an error is
+    raised."""
+    # Add two apps
+    build_command.apps = {
+        "first": first_app,
+        "second": second_app,
+    }
+
+    # Configure command line options
+    options = build_command.parse_options(["--update-support", "--no-update"])
+
+    # Run the build command
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Cannot specify both --update-support and --no-update",
+    ):
+        build_command(**options)
+
+
 def test_test_app_non_existent(build_command, first_app_config, second_app):
     """Requesting a test build of a non-existent app causes a create."""
     # Add two apps; use the "config only" version of the first app.
