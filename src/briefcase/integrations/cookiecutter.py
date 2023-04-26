@@ -64,4 +64,12 @@ class TOMLEscape(Extension):
             """Escapes double quotes and backslashes."""
             return obj.replace('"', '"').replace("\\", "\\\\")
 
+        def escape_non_ascii(obj):
+            """Quotes obj if non ascii characters are present."""
+            if obj.isascii():
+                return obj
+            else:
+                return '"' + obj + '"'
+
         environment.filters["escape_toml"] = escape_toml
+        environment.filters["escape_non_ascii"] = escape_non_ascii
