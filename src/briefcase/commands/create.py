@@ -303,7 +303,7 @@ class CreateCommand(BaseCommand):
         except KeyError:
             self.logger.info("No support package required.")
         else:
-            if update and support_path.exists():
+            if update and support_path.exists() and support_path.is_dir():
                 support_path.rmdir()
             support_file_path = self._download_support_package(app)
             self._unpack_support_package(support_file_path, support_path)

@@ -57,7 +57,7 @@ class UpdateCommand(CreateCommand):
 
         if update_support:
             self.logger.info("Updating application support...", prefix=app.app_name)
-            self.install_app_support(app=app, update=True)
+            self.install_app_support_package(app=app, update=True)
 
         self.logger.info("Removing unneeded app content...", prefix=app.app_name)
         self.cleanup_app_content(app=app)
