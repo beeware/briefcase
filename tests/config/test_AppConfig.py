@@ -22,6 +22,8 @@ def test_minimal_AppConfig():
     assert config.requires is None
 
     # Derived properties have been set.
+    assert config.bundle_name == "myapp"
+    assert config.bundle_identifier == "org.beeware.myapp"
     assert config.formal_name == "myapp"
     assert config.class_name == "myapp"
     assert config.document_types == {}

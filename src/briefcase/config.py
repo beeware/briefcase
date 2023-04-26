@@ -419,7 +419,7 @@ class AppConfig(BaseConfig):
             )
 
     def __repr__(self):
-        return f"<{self.bundle}.{self.app_name} v{self.version} AppConfig>"
+        return f"<{self.bundle_identifier} v{self.version} AppConfig>"
 
     @property
     def module_name(self):
