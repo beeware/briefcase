@@ -109,8 +109,8 @@ linkcheck_anchors_ignore = [
 
 # virtual env prefix: (venv), (beeware-venv), (testenv)
 venv = r"\((?:(?:beeware-)?venv|testvenv)\)"
-# macOS and Linux shell prompt: $, #
-shell = r"\$|#"
+# macOS and Linux shell prompt: $
+shell = r"\$"
 # win CMD prompt: C:\>, C:\...>
 cmd = r"C:\\>|C:\\\.\.\.>"
 # PowerShell prompt: PS C:\>, PS C:\...>
