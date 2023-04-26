@@ -1,0 +1,1 @@
+Changed the version of python in CI used to run coverage to the minimum supported version from the latest supported version to workaround Coverage.

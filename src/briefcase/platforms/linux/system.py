@@ -121,20 +121,9 @@ class LinuxSystemPassiveMixin(LinuxMixin):
     def platform_freedesktop_info(self, app):
         try:
             if sys.version_info < (3, 10):
-                # This reproduces the Python 3.10
-                # platform.freedesktop_os_release() function. Yes, this
-                # should use a context manager, rather than raw file
-                # open/close operations. If you can get the context manager
-                # form of this to pass coverage, you get a shiny penny. For
-                # some reason, coverage generated on Py3.9, but reported on
-                # Py3.10+, finds a missing branch from the `with` statement
-                # to the first line after the `except OSError` below.
-                # Since this is (a) a very simple file I/O sequence, and
-                # (b) will be removed once we're at a Python3.10 minimum,
-                # I can live with the Old Skool I/O calls.
-                f = self.tools.ETC_OS_RELEASE.open(encoding="utf-8")
-                freedesktop_info = parse_freedesktop_os_release(f.read())
-                f.close()
+                # This reproduces the Python 3.10 platform.freedesktop_os_release() function.
+                with self.tools.ETC_OS_RELEASE.open(encoding="utf-8") as f:
+                    freedesktop_info = parse_freedesktop_os_release(f.read())
             else:
                 freedesktop_info = self.tools.platform.freedesktop_os_release()
 
