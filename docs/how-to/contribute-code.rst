@@ -321,6 +321,44 @@ substituting the version number that you want to target. You can also specify
 the `towncrier-check`, `docs` or `package` targets to check release notes,
 documentation syntax and packaging metadata, respectively.
 
+Verify test coverage
+--------------------
+
+Briefcase maintains 100% branch coverage in its codebase. When you add or modify
+code in the project, you must add test code to ensure coverage of any
+changes you make.
+
+To run the test suite and generate a coverage report, run:
+
+.. tabs::
+
+  .. group-tab:: macOS
+
+    .. code-block:: console
+
+      (venv) $ tox -e py-coverage
+
+  .. group-tab:: Linux
+
+    .. code-block:: console
+
+      (venv) $ tox -e py-coverage
+
+  .. group-tab:: Windows
+
+    .. code-block:: doscon
+
+      (venv) C:\...>tox -e py-coverage
+
+You can use a specific Python version for the coverage report by adding the
+version number to the `py-coverage` command. For example, `py310-coverage`.
+Depending on your platform, it's possible that some lines required by other
+platforms will be skipped and shown as "missing" in the coverage report. You
+can safely ignore those lines. However, make sure that any lines of code that
+you added or modified do not appear in the report. If they do, you need to add
+new tests that will cover those lines. Otherwise, the coverage check will fail
+when you make a PR with your changes.
+
 Add change information for release notes
 ----------------------------------------
 
