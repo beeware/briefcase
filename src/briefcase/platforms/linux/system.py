@@ -289,7 +289,7 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
 
     def docker_image_tag(self, app):
         """The Docker image tag for an app."""
-        return f"briefcase/{app.bundle}.{app.app_name.lower()}:{app.target_vendor}-{app.target_codename}"
+        return f"briefcase/{app.bundle_identifier.lower()}:{app.target_vendor}-{app.target_codename}"
 
     def verify_tools(self):
         """If we're using Docker, verify that it is available."""

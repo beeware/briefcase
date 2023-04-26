@@ -64,7 +64,7 @@ class WindowsCreateCommand(CreateCommand):
             guid = app.guid
         except AttributeError:
             # Create a DNS domain by reversing the bundle identifier
-            domain = ".".join([app.app_name] + app.bundle.split(".")[::-1])
+            domain = ".".join(app.bundle_identifier.split(".")[::-1])
             guid = uuid.uuid5(uuid.NAMESPACE_DNS, domain)
             self.logger.info(f"Assigning {app.app_name} an application GUID of {guid}")
 

@@ -24,6 +24,7 @@ def full_context():
         "app_name": "my-app",
         "formal_name": "My App",
         "bundle": "com.example",
+        "bundle_identifier": "com.example.my-app",
         "version": "1.2.3",
         "description": "This is a simple app",
         "long_description": None,

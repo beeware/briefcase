@@ -431,11 +431,10 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         # Try to uninstall the app first. If the app hasn't been installed
         # before, this will still succeed.
         self.logger.info(f"Installing {label}...", prefix=app.app_name)
-        app_identifier = ".".join([app.bundle, app.app_name])
         try:
             with self.input.wait_bar("Uninstalling any existing app version..."):
                 self.tools.subprocess.run(
-                    ["xcrun", "simctl", "uninstall", udid, app_identifier],
+                    ["xcrun", "simctl", "uninstall", udid, app.bundle_identifier],
                     check=True,
                 )
         except subprocess.CalledProcessError as e:
@@ -496,7 +495,8 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
             self.logger.info(f"Starting {label}...", prefix=app.app_name)
             with self.input.wait_bar(f"Launching {label}..."):
                 output = self.tools.subprocess.check_output(
-                    ["xcrun", "simctl", "launch", udid, app_identifier] + passthrough
+                    ["xcrun", "simctl", "launch", udid, app.bundle_identifier]
+                    + passthrough
                 )
                 try:
                     app_pid = int(output.split(":")[1].strip())
