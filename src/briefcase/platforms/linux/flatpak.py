@@ -145,7 +145,7 @@ class LinuxFlatpakBuildCommand(LinuxFlatpakMixin, BuildCommand):
         self.logger.info("Building Flatpak...", prefix=app.app_name)
         with self.input.wait_bar("Building..."):
             self.tools.flatpak.build(
-                bundle=app.bundle,
+                bundle_identifier=app.bundle_identifier,
                 app_name=app.app_name,
                 path=self.bundle_path(app),
             )
@@ -178,7 +178,7 @@ class LinuxFlatpakRunCommand(LinuxFlatpakMixin, RunCommand):
 
         # Start the app in a way that lets us stream the logs
         app_popen = self.tools.flatpak.run(
-            bundle=app.bundle,
+            bundle_identifier=app.bundle_identifier,
             app_name=app.app_name,
             args=passthrough,
             **kwargs,
@@ -206,7 +206,7 @@ class LinuxFlatpakPackageCommand(LinuxFlatpakMixin, PackageCommand):
             _, flatpak_repo_url = self.flatpak_runtime_repo(app)
             self.tools.flatpak.bundle(
                 repo_url=flatpak_repo_url,
-                bundle=app.bundle,
+                bundle_identifier=app.bundle_identifier,
                 app_name=app.app_name,
                 version=app.version,
                 build_path=self.bundle_path(app),
