@@ -15,7 +15,7 @@ def mock_sub(mock_sub):
     return mock_sub
 
 
-def test_output(mock_sub, streaming_process, capsys):
+def test_output(mock_sub, streaming_process, sleep_zero, capsys):
     """Process output is printed."""
     mock_sub.stream_output("testing", streaming_process)
 
@@ -29,7 +29,7 @@ def test_output(mock_sub, streaming_process, capsys):
     mock_sub.cleanup.assert_called_once_with("testing", streaming_process)
 
 
-def test_output_debug(mock_sub, streaming_process, capsys):
+def test_output_debug(mock_sub, streaming_process, sleep_zero, capsys):
     """Process output is printed; no debug output for only stream_output."""
     mock_sub.tools.logger.verbosity = 2
 
@@ -66,7 +66,12 @@ def test_keyboard_interrupt(mock_sub, streaming_process, capsys):
     mock_sub.cleanup.assert_called_once_with("testing", streaming_process)
 
 
-def test_process_exit_with_queued_output(mock_sub, streaming_process, capsys):
+def test_process_exit_with_queued_output(
+    mock_sub,
+    streaming_process,
+    sleep_zero,
+    capsys,
+):
     """All output is printed despite the process exiting early."""
     streaming_process.poll.side_effect = [None, -3, -3, -3]
 
@@ -82,7 +87,7 @@ def test_process_exit_with_queued_output(mock_sub, streaming_process, capsys):
 
 
 @pytest.mark.parametrize("stop_func_ret_val", (True, False))
-def test_stop_func(mock_sub, streaming_process, stop_func_ret_val, capsys):
+def test_stop_func(mock_sub, streaming_process, stop_func_ret_val, sleep_zero, capsys):
     """All output is printed whether stop_func aborts streaming or not."""
     mock_sub.stream_output(
         "testing", streaming_process, stop_func=lambda: stop_func_ret_val
@@ -97,7 +102,7 @@ def test_stop_func(mock_sub, streaming_process, stop_func_ret_val, capsys):
     mock_sub.cleanup.assert_called_once_with("testing", streaming_process)
 
 
-def test_stuck_streamer(mock_sub, streaming_process, monkeypatch, capsys):
+def test_stuck_streamer(mock_sub, streaming_process, sleep_zero, monkeypatch, capsys):
     """Following a KeyboardInterrupt, output streaming returns even if the output
     streamer becomes stuck."""
 
@@ -185,7 +190,7 @@ def test_readline_raises_exception(mock_sub, streaming_process, monkeypatch, cap
     )
 
 
-def test_filter_func(mock_sub, streaming_process, capsys):
+def test_filter_func(mock_sub, streaming_process, sleep_zero, capsys):
     """A filter can be added to modify an output stream."""
 
     # Define a filter function that converts "output" into "filtered"
@@ -206,7 +211,7 @@ def test_filter_func(mock_sub, streaming_process, capsys):
     mock_sub.cleanup.assert_called_once_with("testing", streaming_process)
 
 
-def test_filter_func_reject(mock_sub, streaming_process, capsys):
+def test_filter_func_reject(mock_sub, streaming_process, sleep_zero, capsys):
     """A filter that rejects lines can be added to modify an output stream."""
 
     # Define a filter function that ignores blank lines
@@ -228,7 +233,7 @@ def test_filter_func_reject(mock_sub, streaming_process, capsys):
     mock_sub.cleanup.assert_called_once_with("testing", streaming_process)
 
 
-def test_filter_func_line_ends(mock_sub, streaming_process, capsys):
+def test_filter_func_line_ends(mock_sub, streaming_process, sleep_zero, capsys):
     """Filter functions are not provided the newline."""
 
     # Define a filter function that redacts lines that end with 1
@@ -253,7 +258,12 @@ def test_filter_func_line_ends(mock_sub, streaming_process, capsys):
     mock_sub.cleanup.assert_called_once_with("testing", streaming_process)
 
 
-def test_filter_func_line_multiple_output(mock_sub, streaming_process, capsys):
+def test_filter_func_line_multiple_output(
+    mock_sub,
+    streaming_process,
+    sleep_zero,
+    capsys,
+):
     """Filter functions can generate multiple lines from a single input."""
 
     # Define a filter function that adds an extra line of content when the

@@ -1,5 +1,6 @@
 import inspect
 import subprocess
+import time
 from unittest.mock import ANY, MagicMock
 
 import git as git_
@@ -47,6 +48,15 @@ def monkeypatched_print(*args, **kwargs):
 def no_print(monkeypatch):
     """Replace builtin print function for ALL tests."""
     monkeypatch.setattr("builtins.print", monkeypatched_print)
+
+
+_sleep = time.sleep
+
+
+@pytest.fixture
+def sleep_zero(monkeypatch):
+    """Replace all calls to ``time.sleep(x)`` with ``time.sleep(0)."""
+    monkeypatch.setattr(time, "sleep", lambda x: _sleep(0))
 
 
 @pytest.fixture

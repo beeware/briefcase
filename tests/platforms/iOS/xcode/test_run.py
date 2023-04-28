@@ -1,4 +1,5 @@
 import subprocess
+import time
 from unittest import mock
 
 import pytest
@@ -22,6 +23,9 @@ def run_command(tmp_path):
     command.tools.home_path = tmp_path / "home"
     command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
     command._stream_app_logs = mock.MagicMock()
+
+    # Disable sleeps
+    command.sleep = mock.MagicMock(side_effect=lambda x: time.sleep(0))
 
     # To satisfy coverage, the stop function must be invoked
     # at least once when streaming app logs.
@@ -186,7 +190,9 @@ def test_run_app_simulator_booted(run_command, first_app_config, tmp_path):
 
 
 def test_run_app_simulator_booted_underscore(
-    run_command, underscore_app_config, tmp_path
+    run_command,
+    underscore_app_config,
+    tmp_path,
 ):
     """An iOS App can be started when the simulator is already booted.
 

@@ -35,7 +35,7 @@ def run_command(tmp_path):
     return command
 
 
-def test_run_app(run_command, first_app_config, tmp_path, monkeypatch):
+def test_run_app(run_command, first_app_config, sleep_zero, tmp_path, monkeypatch):
     """A macOS app can be started."""
     # Mock a popen object that represents the log stream
     log_stream_process = mock.MagicMock(spec_set=subprocess.Popen)
@@ -87,7 +87,13 @@ def test_run_app(run_command, first_app_config, tmp_path, monkeypatch):
     run_command.tools.os.kill.assert_called_with(100, SIGTERM)
 
 
-def test_run_app_with_passthrough(run_command, first_app_config, tmp_path, monkeypatch):
+def test_run_app_with_passthrough(
+    run_command,
+    first_app_config,
+    sleep_zero,
+    tmp_path,
+    monkeypatch,
+):
     """A macOS app can be started with args."""
     # Mock a popen object that represents the log stream
     log_stream_process = mock.MagicMock(spec_set=subprocess.Popen)
@@ -144,7 +150,7 @@ def test_run_app_with_passthrough(run_command, first_app_config, tmp_path, monke
     run_command.tools.os.kill.assert_called_with(100, SIGTERM)
 
 
-def test_run_app_failed(run_command, first_app_config, tmp_path):
+def test_run_app_failed(run_command, first_app_config, sleep_zero, tmp_path):
     """If there's a problem started the app, an exception is raised."""
     # Mock a failure opening the app
     run_command.tools.subprocess.run.side_effect = subprocess.CalledProcessError(
@@ -185,7 +191,12 @@ def test_run_app_failed(run_command, first_app_config, tmp_path):
 
 
 def test_run_app_find_pid_failed(
-    run_command, first_app_config, tmp_path, monkeypatch, capsys
+    run_command,
+    first_app_config,
+    sleep_zero,
+    tmp_path,
+    monkeypatch,
+    capsys,
 ):
     """If after app is started, its pid is not found, do not stream output."""
     # Mock a failed PID lookup
@@ -229,7 +240,13 @@ def test_run_app_find_pid_failed(
     run_command.tools.os.kill.assert_not_called()
 
 
-def test_run_app_test_mode(run_command, first_app_config, tmp_path, monkeypatch):
+def test_run_app_test_mode(
+    run_command,
+    first_app_config,
+    sleep_zero,
+    tmp_path,
+    monkeypatch,
+):
     """A macOS app can be started in test mode."""
     # Mock a popen object that represents the log stream
     log_stream_process = mock.MagicMock(spec_set=subprocess.Popen)
