@@ -4,6 +4,7 @@ from zipfile import ZipFile
 
 import pytest
 
+import briefcase.platforms.windows.app
 from briefcase.console import Console, Log
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.subprocess import Subprocess
@@ -67,26 +68,51 @@ def test_package_formats(package_command):
     assert package_command.default_packaging_format == "msi"
 
 
-def test_verify(package_command):
+def test_verify(package_command, monkeypatch):
     """Verifying on Windows creates a WiX wrapper."""
     # prime Command to _not_ need Windows SDK
     package_command._windows_sdk_needed = False
 
+    mock_wix_verify = mock.MagicMock(wraps=WiX.verify)
+    monkeypatch.setattr(
+        briefcase.platforms.windows.WiX,
+        "verify",
+        mock_wix_verify,
+    )
+
     package_command.verify_tools()
 
-    # No error and an SDK wrapper is created
+    # WiX tool was created
+    mock_wix_verify.assert_called_once_with(tools=package_command.tools)
     assert isinstance(package_command.tools.wix, WiX)
 
 
-def test_verify_with_signing(package_command):
+def test_verify_with_signing(package_command, monkeypatch):
     """Verifying on Windows creates WiX and WindowsSDK wrappers when code signing."""
     # prime Command to need Windows SDK
     package_command._windows_sdk_needed = True
 
+    mock_windows_sdk_verify = mock.MagicMock(wraps=WindowsSDK.verify)
+    monkeypatch.setattr(
+        briefcase.platforms.windows.WindowsSDK,
+        "verify",
+        mock_windows_sdk_verify,
+    )
+
+    mock_wix_verify = mock.MagicMock(wraps=WiX.verify)
+    monkeypatch.setattr(
+        briefcase.platforms.windows.WiX,
+        "verify",
+        mock_wix_verify,
+    )
+
     package_command.verify_tools()
 
-    # No error and SDK wrappers are created
+    # WiX tool was verified
+    mock_wix_verify.assert_called_once_with(tools=package_command.tools)
     assert isinstance(package_command.tools.wix, WiX)
+    # WindowsSDK tool was verified
+    mock_windows_sdk_verify.assert_called_once_with(tools=package_command.tools)
     assert isinstance(package_command.tools.windows_sdk, WindowsSDK)
 
 

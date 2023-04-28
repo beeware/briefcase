@@ -2,6 +2,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+import briefcase.platforms.linux.flatpak
 from briefcase.console import Console, Log
 from briefcase.exceptions import BriefcaseConfigError
 from briefcase.integrations.flatpak import Flatpak
@@ -33,6 +34,15 @@ def test_binary_path(create_command, first_app_config, tmp_path):
         / "com.example.first-app"
     )
     assert binary_path == expected_path
+
+
+def test_project_path(create_command, first_app_config, tmp_path):
+    """The project path is the bundle path."""
+    project_path = create_command.project_path(first_app_config)
+    bundle_path = create_command.bundle_path(first_app_config)
+
+    expected_path = tmp_path / "base_path" / "build" / "first-app" / "linux" / "flatpak"
+    assert expected_path == project_path == bundle_path
 
 
 def test_distribution_path(create_command, first_app_config, tmp_path):
@@ -116,13 +126,21 @@ def test_custom_runtime_sdk_only(create_command, first_app_config, tmp_path):
         create_command.flatpak_sdk(first_app_config)
 
 
-def test_verify_linux(create_command, tmp_path):
+def test_verify_linux(create_command, monkeypatch, tmp_path):
     """Verifying on Linux creates an SDK wrapper."""
     create_command.tools.host_os = "Linux"
     create_command.tools.subprocess = MagicMock(spec_set=Subprocess)
 
+    mock_flatpak_verify = MagicMock(wraps=Flatpak.verify)
+    monkeypatch.setattr(
+        briefcase.platforms.linux.flatpak.Flatpak,
+        "verify",
+        mock_flatpak_verify,
+    )
+
     # Verify the tools
     create_command.verify_tools()
 
-    # No error and an SDK wrapper is created
+    # Flatpak tool was verified
+    mock_flatpak_verify.assert_called_once_with(tools=create_command.tools)
     assert isinstance(create_command.tools.flatpak, Flatpak)

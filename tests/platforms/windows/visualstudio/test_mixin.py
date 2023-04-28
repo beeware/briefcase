@@ -44,6 +44,22 @@ def test_binary_path(create_command, first_app_config, tmp_path):
     )
 
 
+def test_project_path(create_command, first_app_config, tmp_path):
+    """The project path is the Visual Studio solution."""
+    project_path = create_command.project_path(first_app_config)
+
+    expected_path = (
+        tmp_path
+        / "base_path"
+        / "build"
+        / "first-app"
+        / "windows"
+        / "visualstudio"
+        / "First App.sln"
+    )
+    assert expected_path == project_path
+
+
 def test_distribution_path(create_command, first_app_config, tmp_path):
     distribution_path = create_command.distribution_path(first_app_config)
 
