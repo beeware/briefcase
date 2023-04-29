@@ -55,7 +55,7 @@ _sleep = time.sleep
 
 @pytest.fixture
 def sleep_zero(monkeypatch):
-    """Replace all calls to ``time.sleep(x)`` with ``time.sleep(0)."""
+    """Replace all calls to ``time.sleep(x)`` with ``time.sleep(0)``."""
     monkeypatch.setattr(time, "sleep", lambda x: _sleep(0))
 
 
