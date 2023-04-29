@@ -85,7 +85,12 @@ jobs:
         python -m pip install $(ls dist/briefcase-*.whl)[dev]
 
     - name: Test
-      run: tox -e py --installpkg dist/briefcase-*.whl
+      run: tox -e py-cov --installpkg dist/briefcase-*.whl
+
+    - name: Report platform coverage
+      run: |
+        python -m coverage report
+        mv .coverage .coverage.${{ runner.os }}.${{ matrix.python-version }}
 
     - name: Store coverage data
       uses: actions/upload-artifact@v3.1.2
@@ -93,11 +98,6 @@ jobs:
         name: coverage-data
         path: ".coverage.*"
         if-no-files-found: ignore
-
-    - name: Report platform coverage
-      run: |
-        python -m coverage combine
-        python -m coverage report
 
   coverage:
     name: Combine & check coverage.

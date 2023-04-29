@@ -1,0 +1,1 @@
+Python tests are now run in parallel by default in ``tox`` and coverage is only calculated when the ``cov`` factor is included, e.g. ``tox -e py-cov``.
