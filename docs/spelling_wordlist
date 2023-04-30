@@ -16,6 +16,7 @@ cryptographic
 dev
 dialogs
 distributable
+Django
 dmg
 Dockerfile
 embeddable
