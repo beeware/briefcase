@@ -12,6 +12,11 @@ def printer():
     return printer
 
 
+def no_sp(text: str) -> str:
+    """Remove spaces from text."""
+    return text.replace(" ", "")
+
+
 @pytest.mark.parametrize(
     "show, message, expected_console_output",
     [
@@ -25,7 +30,9 @@ def test_call(capsys, printer, message, show, expected_console_output):
     assert capsys.readouterr().out == expected_console_output
     log = printer.export_log()
     assert len(log.splitlines()) == 1
-    assert " " + message + " " * 139 + "console.py" in log
+    # The number of spaces in not consistent on Windows.
+    # Remove `no_sp()` when https://github.com/Textualize/rich/issues/2944 is resolved
+    assert no_sp(" " + message + " " * 139 + "console.py") in no_sp(log)
 
 
 def test_to_console(capsys, printer):
@@ -41,7 +48,9 @@ def test_to_log(capsys, printer):
     assert capsys.readouterr().out == ""
     log = printer.export_log()
     assert len(log.splitlines()) == 1
-    assert " a line of output" + " " * 139 + "console.py" in log
+    # The number of spaces in not consistent on Windows.
+    # Remove `no_sp()` when https://github.com/Textualize/rich/issues/2944 is resolved
+    assert no_sp(" a line of output" + " " * 139 + "console.py") in no_sp(log)
 
 
 def test_very_long_line(capsys, printer):
@@ -50,5 +59,9 @@ def test_very_long_line(capsys, printer):
     assert capsys.readouterr().out == ""
     log = printer.export_log()
     assert len(log.splitlines()) == 2
-    assert (" " + "A very long line of output!! " * 5 + "A very    console.py:") in log
-    assert (" long line of output!!" + " " * 148) in log
+    # The number of spaces in not consistent on Windows.
+    # Remove `no_sp()` when https://github.com/Textualize/rich/issues/2944 is resolved
+    assert no_sp(
+        " " + "A very long line of output!! " * 5 + "A very    console.py:"
+    ) in no_sp(log)
+    assert no_sp(" long line of output!!" + " " * 148) in no_sp(log)
