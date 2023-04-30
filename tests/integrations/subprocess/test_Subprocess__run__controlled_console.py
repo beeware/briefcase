@@ -134,7 +134,7 @@ def test_debug_call_with_env(mock_sub, sub_stream_kw, sleep_zero, capsys, tmp_pa
     ],
 )
 def test_text_eq_true_default_overriding(mock_sub, in_kwargs, kwargs, sleep_zero):
-    """if text or universal_newlines is explicitly provided, those should override
+    """If text or universal_newlines is explicitly provided, those should override
     text=true default."""
     with mock_sub.tools.input.wait_bar():
         mock_sub.run(["hello", "world"], **in_kwargs)

@@ -113,7 +113,7 @@ def test_call_windows_with_start_new_session_and_creationflags(
     creationflags,
     final_creationflags,
 ):
-    """creationflags used to simulate start_new_session=True should be merged with any
+    """Creationflags used to simulate start_new_session=True should be merged with any
     existing flags."""
 
     mock_sub.tools.host_os = "Windows"
