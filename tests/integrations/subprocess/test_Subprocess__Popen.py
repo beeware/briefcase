@@ -105,7 +105,7 @@ def test_call_windows_with_start_new_session_and_creationflags(
     creationflags,
     final_creationflags,
 ):
-    """creationflags used to simulate start_new_session=True should be merged with any
+    """Creationflags used to simulate start_new_session=True should be merged with any
     existing flags."""
 
     mock_sub.tools.host_os = "Windows"
@@ -180,7 +180,7 @@ def test_debug_call_with_env(mock_sub, capsys, tmp_path, sub_kw):
     ],
 )
 def test_text_eq_true_default_overriding(mock_sub, in_kwargs, kwargs):
-    """if text or universal_newlines is explicitly provided, those should override
+    """If text or universal_newlines is explicitly provided, those should override
     text=true default."""
 
     mock_sub.Popen(["hello", "world"], **in_kwargs)

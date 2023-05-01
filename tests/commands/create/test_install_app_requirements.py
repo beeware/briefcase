@@ -294,7 +294,7 @@ def test_app_packages_install_requirements(
     app_packages_path,
     app_packages_path_index,
 ):
-    """requirements can be installed."""
+    """Requirements can be installed."""
 
     # Set up the app requirements
     myapp.requires = ["first", "second", "third"]
