@@ -1,3 +1,5 @@
+import re
+
 import pytest
 
 from briefcase.console import Printer
@@ -12,9 +14,13 @@ def printer():
     return printer
 
 
-def no_sp(text: str) -> str:
-    """Remove spaces from text."""
-    return text.replace(" ", "")
+def norm_sp(text: str) -> str:
+    """Normalize >100 spaces in text to 100 spaces.
+
+    This is necessary until https://github.com/Textualize/rich/issues/2944 is resolved
+    to ensure that tests succeed while running in `tox` on Windows.
+    """
+    return re.sub(r"\s{100,}", " " * 100, text)
 
 
 @pytest.mark.parametrize(
@@ -31,8 +37,7 @@ def test_call(capsys, printer, message, show, expected_console_output):
     log = printer.export_log()
     assert len(log.splitlines()) == 1
     # The number of spaces in not consistent on Windows.
-    # Remove `no_sp()` when https://github.com/Textualize/rich/issues/2944 is resolved
-    assert no_sp(" " + message + " " * 139 + "console.py") in no_sp(log)
+    assert norm_sp(" " + message + " " * 139 + "console.py") in norm_sp(log)
 
 
 def test_to_console(capsys, printer):
@@ -49,8 +54,7 @@ def test_to_log(capsys, printer):
     log = printer.export_log()
     assert len(log.splitlines()) == 1
     # The number of spaces in not consistent on Windows.
-    # Remove `no_sp()` when https://github.com/Textualize/rich/issues/2944 is resolved
-    assert no_sp(" a line of output" + " " * 139 + "console.py") in no_sp(log)
+    assert norm_sp(" a line of output" + " " * 139 + "console.py") in norm_sp(log)
 
 
 def test_very_long_line(capsys, printer):
@@ -60,8 +64,7 @@ def test_very_long_line(capsys, printer):
     log = printer.export_log()
     assert len(log.splitlines()) == 2
     # The number of spaces in not consistent on Windows.
-    # Remove `no_sp()` when https://github.com/Textualize/rich/issues/2944 is resolved
-    assert no_sp(
+    assert norm_sp(
         " " + "A very long line of output!! " * 5 + "A very    console.py:"
-    ) in no_sp(log)
-    assert no_sp(" long line of output!!" + " " * 148) in no_sp(log)
+    ) in norm_sp(log)
+    assert norm_sp(" long line of output!!" + " " * 148) in norm_sp(log)
