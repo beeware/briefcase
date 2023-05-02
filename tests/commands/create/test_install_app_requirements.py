@@ -485,6 +485,28 @@ def test_app_requirements_requires(
     assert myapp.test_requires is None
 
 
+@pytest.mark.parametrize(
+    "altsep, requirement, expected",
+    [
+        (None, "asdf/xcvb", True),
+        (None, "asdf>xcvb", False),
+        (">", "asdf/xcvb", True),
+        (">", "asdf>xcvb", True),
+        (">", "asdf+xcvb", False),
+    ],
+)
+def test__is_local_requirement_altsep_respected(
+    altsep,
+    requirement,
+    expected,
+    monkeypatch,
+):
+    """``os.altsep`` is included as a separator when available."""
+    monkeypatch.setattr(os, "sep", "/")
+    monkeypatch.setattr(os, "altsep", altsep)
+    assert _is_local_requirement(requirement) is expected
+
+
 def _test_app_requirements_paths(
     create_command,
     myapp,
@@ -759,25 +781,3 @@ def test_app_packages_only_test_requires_test_mode(
     # Original app definitions haven't changed
     assert myapp.requires is None
     assert myapp.test_requires == ["pytest", "pytest-tldr"]
-
-
-@pytest.mark.parametrize(
-    "altsep, requirement, expected",
-    [
-        (None, "asdf/xcvb", True),
-        (None, "asdf>xcvb", False),
-        (">", "asdf/xcvb", True),
-        (">", "asdf>xcvb", True),
-        (">", "asdf+xcvb", False),
-    ],
-)
-def test__is_local_requirement_altsep_respected(
-    altsep,
-    requirement,
-    expected,
-    monkeypatch,
-):
-    """``os.altsep`` is included as a separator when available."""
-    monkeypatch.setattr(os, "sep", "/")
-    monkeypatch.setattr(os, "altsep", altsep)
-    assert _is_local_requirement(requirement) is expected

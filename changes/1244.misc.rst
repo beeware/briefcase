@@ -1,1 +1,1 @@
-Tests were add or updated to report 100% coverage on Linux and macOS for the ``tox`` command.
+Tests were updated for more accurate coverage on a single platform.

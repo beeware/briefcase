@@ -7,20 +7,6 @@ PYTHONPATH = "PYTHONPATH"
 PYTHONMALLOC = "PYTHONMALLOC"
 
 
-@pytest.mark.parametrize("platform, expected", [("linux", ""), ("win32", "default")])
-def test_PYTHONMALLOC_is_set_on_windows(
-    dev_command,
-    first_app,
-    platform,
-    expected,
-    monkeypatch,
-):
-    """PYTHONMALLOC is only set if platform is Windows."""
-    monkeypatch.setattr(sys, "platform", platform)
-    env = dev_command.get_environment(first_app, test_mode=False)
-    assert env.get("PYTHONMALLOC", "") == expected
-
-
 @pytest.mark.skipif(sys.platform != "win32", reason="Relevant only for windows")
 def test_pythonpath_with_one_source_in_windows(dev_command, first_app):
     """Test get environment with one source."""

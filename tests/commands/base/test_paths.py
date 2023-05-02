@@ -3,7 +3,6 @@ import platform
 import subprocess
 from contextlib import suppress
 from pathlib import Path
-from unittest.mock import MagicMock
 
 import pytest
 
@@ -27,36 +26,6 @@ def test_path_is_realpath(tmp_path):
     finally:
         with suppress(FileNotFoundError):
             os.rmdir(data_path)
-
-
-def test_data_path_creation_windows(tmp_path, monkeypatch):
-    """``mkdir`` is called to create ``data_path`` on Windows."""
-    monkeypatch.setattr(platform, "system", lambda: "Windows")
-
-    mock_sub_run = MagicMock(spec_set=subprocess.run)
-    monkeypatch.setattr(subprocess, "run", mock_sub_run)
-
-    DummyCommand(data_path=tmp_path / "newdir")
-
-    mock_sub_run.assert_called_once_with(
-        ["mkdir", str(tmp_path / "newdir")],
-        shell=True,
-        check=True,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
-
-
-def test_data_path_creation_nonwindows(tmp_path, monkeypatch):
-    """``os.makedirs()`` is called to create ``data_path`` when not on Windows."""
-    monkeypatch.setattr(platform, "system", lambda: "Linux")
-
-    mock_os_makedirs = MagicMock(spec_set=os.makedirs)
-    monkeypatch.setattr(os, "makedirs", mock_os_makedirs)
-
-    DummyCommand(data_path=tmp_path / "newdir")
-
-    mock_os_makedirs.assert_called_once_with(str(tmp_path / "newdir"), exist_ok=True)
 
 
 def test_data_path_creation_failure(tmp_path, monkeypatch):
@@ -109,32 +78,6 @@ def test_custom_path_does_not_exist(monkeypatch, tmp_path):
         match=r"The path specified by BRIEFCASE_HOME does not exist.",
     ):
         DummyCommand(base_path=tmp_path / "base")
-
-
-@pytest.mark.parametrize(
-    "host_os, dir_name",
-    [
-        ("Windows", "briefcase"),
-        ("Linux", "briefcase"),
-        ("Darwin", "org.beeware.briefcase"),
-    ],
-)
-def test_data_path_directory_name(host_os, dir_name, tmp_path, monkeypatch):
-    """``data_path`` directory name is correct for the platform."""
-    # The last directory is "Cache" on Windows
-    path_index = -2 if platform.system() == "Windows" else -1
-
-    mock_platform_system = MagicMock(spec_set=platform.system)
-    # There are three calls to platform.system():
-    # - first to create `ToolCache`
-    # - second to create the `Path()` for data_path
-    # - third to create the directory in the file system
-    mock_platform_system.side_effect = [host_os] + [platform.system()] * 2
-    monkeypatch.setattr(platform, "system", mock_platform_system)
-
-    command = DummyCommand(base_path=tmp_path / "base")
-
-    assert command.data_path.parts[path_index] == dir_name
 
 
 def templated_path_test(

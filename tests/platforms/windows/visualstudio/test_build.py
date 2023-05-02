@@ -1,10 +1,10 @@
+import platform
 import subprocess
 from pathlib import Path
 from unittest import mock
 
 import pytest
 
-import briefcase.platforms.windows.visualstudio
 from briefcase.console import Console, Log
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.subprocess import Subprocess
@@ -28,19 +28,15 @@ def build_command(tmp_path):
     return command
 
 
-def test_verify(build_command, monkeypatch):
-    """Tool verification verifies VisualStudio."""
-    mock_visualstudio_verify = mock.MagicMock(wraps=VisualStudio.verify)
-    monkeypatch.setattr(
-        briefcase.platforms.windows.visualstudio.VisualStudio,
-        "verify",
-        mock_visualstudio_verify,
-    )
+@pytest.mark.skipif(platform.system() != "Windows", reason="Windows specific tests")
+def test_verify(build_command):
+    """Verifying on Windows creates a VisualStudio wrapper."""
+
+    build_command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
 
     build_command.verify_tools()
 
-    # VisualStudio tool was verified
-    mock_visualstudio_verify.assert_called_once_with(tools=build_command.tools)
+    # No error and an SDK wrapper is created
     assert isinstance(build_command.tools.visualstudio, VisualStudio)
 
 

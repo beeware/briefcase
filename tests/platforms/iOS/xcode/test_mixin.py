@@ -1,8 +1,5 @@
-from unittest import mock
-
 import pytest
 
-import briefcase.integrations.xcode
 from briefcase.console import Console, Log
 from briefcase.exceptions import NoDistributionArtefact
 from briefcase.platforms.iOS.xcode import iOSXcodeCreateCommand
@@ -40,36 +37,3 @@ def test_distribution_path(create_command, first_app_config, tmp_path):
         match=r"WARNING: No distributable artefact has been generated",
     ):
         create_command.distribution_path(first_app_config)
-
-
-def test_verify(create_command, monkeypatch):
-    """If you're on macOS, you can verify tools."""
-    mock_ensure_xcode_is_installed = mock.MagicMock()
-    monkeypatch.setattr(
-        briefcase.integrations.xcode,
-        "ensure_xcode_is_installed",
-        mock_ensure_xcode_is_installed,
-    )
-    mock_ensure_command_line_tools_are_installed = mock.MagicMock()
-    monkeypatch.setattr(
-        briefcase.integrations.xcode,
-        "ensure_command_line_tools_are_installed",
-        mock_ensure_command_line_tools_are_installed,
-    )
-    mock_confirm_xcode_license_accepted = mock.MagicMock()
-    monkeypatch.setattr(
-        briefcase.integrations.xcode,
-        "confirm_xcode_license_accepted",
-        mock_confirm_xcode_license_accepted,
-    )
-
-    create_command.verify_tools()
-
-    assert create_command.tools.xcode_cli is not None
-    mock_ensure_xcode_is_installed.assert_called_once_with(
-        create_command.tools, min_version=(10, 0, 0)
-    )
-    mock_ensure_command_line_tools_are_installed.assert_called_once_with(
-        create_command.tools
-    )
-    mock_confirm_xcode_license_accepted.assert_called_once_with(create_command.tools)

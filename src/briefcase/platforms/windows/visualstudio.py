@@ -38,7 +38,7 @@ class WindowsVisualStudioBuildCommand(WindowsVisualStudioMixin, BuildCommand):
 
     def verify_tools(self):
         super().verify_tools()
-        VisualStudio.verify(tools=self.tools)
+        VisualStudio.verify(self.tools)
 
     def build_app(self, app: BaseConfig, **kwargs):
         """Build the Visual Studio project.
