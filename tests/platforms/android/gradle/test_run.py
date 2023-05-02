@@ -487,21 +487,28 @@ def test_run_idle_device(run_command, first_app_config):
 
 def test_log_file_extra(run_command, monkeypatch):
     """Android commands register a log file extra to list SDK packages."""
-    verify = mock.MagicMock(return_value=run_command.tools.android_sdk)
-    monkeypatch.setattr(AndroidSDK, "verify", verify)
+    mock_android_sdk_verify = mock.MagicMock(return_value=run_command.tools.android_sdk)
+    monkeypatch.setattr(AndroidSDK, "verify", mock_android_sdk_verify)
     monkeypatch.setattr(AndroidSDK, "verify_emulator", mock.MagicMock())
 
     # Even if one command triggers another, the sdkmanager should only be run once.
     run_command.update_command.verify_tools()
     run_command.verify_tools()
 
+    # Android SDK tool was verified
+    mock_android_sdk_verify.assert_has_calls([mock.call(tools=run_command.tools)] * 2)
+    assert isinstance(run_command.tools.android_sdk, AndroidSDK)
+
+    # list_packages() was not called
+    run_command.tools.subprocess.check_output.assert_not_called()
+
+    # list_packages() is called when saving the log
+    run_command.tools.logger.save_log = True
+    run_command.tools.logger.save_log_to_file(run_command)
+
     sdk_manager = "/path/to/android_sdk/cmdline-tools/latest/bin/sdkmanager"
     if platform.system() == "Windows":
         sdk_manager += ".bat"
-
-    run_command.tools.logger.save_log = True
-    run_command.tools.subprocess.check_output.assert_not_called()
-    run_command.tools.logger.save_log_to_file(run_command)
     run_command.tools.subprocess.check_output.assert_called_once_with(
         [normpath(sdk_manager), "--list_installed"],
         env={

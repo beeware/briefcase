@@ -1,12 +1,9 @@
 import importlib
-import inspect
 import os
-import pkgutil
 import platform
 import shutil
 import sys
 from pathlib import Path
-from typing import Dict, Set, Type
 
 import pytest
 import requests
@@ -14,60 +11,13 @@ from cookiecutter.main import cookiecutter
 
 import briefcase.integrations
 from briefcase.console import Console, Log
-from briefcase.integrations.base import ManagedTool, Tool, ToolCache, tool_registry
+from briefcase.integrations.base import ToolCache
 
-
-@pytest.fixture
-def simple_tools(tmp_path):
-    return ToolCache(logger=Log(), console=Console(), base_path=tmp_path)
-
-
-@pytest.fixture
-def all_defined_tools() -> Set[Type[Tool]]:
-    """All classes that subclass Tool."""
-    return {
-        tool
-        for toolset in map(tools_for_module, briefcase.integrations.__all__)
-        for tool in toolset.values()
-    }
-
-
-def tools_for_module(tool_module_name: str) -> Dict[str, Type[Tool]]:
-    """Return classes that subclass Tool in a module in
-    ``briefcase.integrations``, e.g. {"android_sdk": AndroidSDK}."""
-    return {
-        klass_name: klass
-        for klass_name, klass in inspect.getmembers(
-            sys.modules[f"briefcase.integrations.{tool_module_name}"],
-            lambda klass: (
-                inspect.isclass(klass)
-                and issubclass(klass, (Tool, ManagedTool))
-                and klass not in {Tool, ManagedTool}
-            ),
-        )
-    }
-
-
-def test_tool_registry(all_defined_tools, simple_tools):
-    """The Tool Registry must contain all defined Tools."""
-    # test uses subset since registry will contain dummy testing tools
-    assert all_defined_tools.issubset(tool_registry.values())
-
-
-def test_unique_tool_names(all_defined_tools):
-    """All tools must have a unique name."""
-    assert len(all_defined_tools) == len({t.name for t in all_defined_tools})
-
-
-def test_valid_tool_names(all_defined_tools):
-    """All tools must have a valid name."""
-    assert all(" " not in t.name for t in all_defined_tools)
+from .test_tool_registry import integrations_modules, tools_for_module
 
 
 def test_toolcache_typing():
     """Tool typing for ToolCache is correct."""
-    # Modules in ``briefcase.integrations`` that do not contain tools.
-    nontool_modules = {"base"}
     # Tools that are intentionally not annotated in ToolCache.
     tools_unannotated = {"cookiecutter"}
     # Tool names to exclude from the dynamic annotation checks; they are manually checked.
@@ -89,12 +39,7 @@ def test_toolcache_typing():
     }
 
     # Ensure all modules containing Tools are exported in ``briefcase.integrations``.
-    tool_modules = {
-        module.name
-        for module in pkgutil.iter_modules(briefcase.integrations.__path__)
-        if module.name not in nontool_modules
-    }
-    assert sorted(tool_modules) == sorted(briefcase.integrations.__all__)
+    assert sorted(integrations_modules()) == sorted(briefcase.integrations.__all__)
 
     # Ensure defined Tool modules/classes are annotated in ToolCache.
     for tool_module_name in briefcase.integrations.__all__:

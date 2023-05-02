@@ -1,3 +1,4 @@
+import sys
 from operator import attrgetter
 from typing import List, Set, Type
 
@@ -21,10 +22,10 @@ class UpgradeCommand(BaseCommand):
     def platform(self):
         """The upgrade command always reports as the local platform."""
         return {
-            "Darwin": "macOS",
-            "Linux": "linux",
-            "Windows": "windows",
-        }[self.tools.host_os]
+            "darwin": "macOS",
+            "linux": "linux",
+            "win32": "windows",
+        }[sys.platform]
 
     def bundle_path(self, app):
         """A placeholder; Upgrade command doesn't have a bundle path."""
@@ -61,7 +62,7 @@ class UpgradeCommand(BaseCommand):
         if tool_list:
             if invalid_tools := tool_list - set(tool_registry):
                 raise UpgradeToolError(
-                    f"Briefcase does not know how to manage {', '.join(invalid_tools)}."
+                    f"Briefcase does not know how to manage {', '.join(sorted(invalid_tools))}."
                 )
             upgrade_list = {
                 tool for name, tool in tool_registry.items() if name in tool_list
@@ -73,7 +74,7 @@ class UpgradeCommand(BaseCommand):
         for tool_klass in upgrade_list:
             if issubclass(tool_klass, ManagedTool):
                 try:
-                    tool = tool_klass.verify(self.tools, install=False)
+                    tool = tool_klass.verify(tools=self.tools, install=False)
                 except (BriefcaseCommandError, UnsupportedHostError):
                     pass
                 else:
@@ -83,7 +84,9 @@ class UpgradeCommand(BaseCommand):
         # Let the user know if any requested tools are not being managed
         if tool_list:
             if unmanaged_tools := tool_list - {tool.name for tool in tools_to_upgrade}:
-                error_msg = f"Briefcase is not managing {', '.join(unmanaged_tools)}."
+                error_msg = (
+                    f"Briefcase is not managing {', '.join(sorted(unmanaged_tools))}."
+                )
                 if not tools_to_upgrade:
                     raise UpgradeToolError(error_msg)
                 else:
@@ -98,9 +101,9 @@ class UpgradeCommand(BaseCommand):
         :param list_tools: Boolean to only list upgradeable tools (default False).
         """
         if tools_to_upgrade := self.get_tools_to_upgrade(set(tool_list)):
-            action = "is managing" if list_tools else "will upgrade"
             self.logger.info(
-                f"Briefcase {action} the following tools:", prefix=self.command
+                f"Briefcase {'is managing' if list_tools else 'will upgrade'} the following tools:",
+                prefix=self.command,
             )
             for tool in tools_to_upgrade:
                 self.logger.info(f" - {tool.full_name} ({tool.name})")

@@ -2,6 +2,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+import briefcase.platforms.linux.flatpak
 from briefcase.console import Console, Log
 from briefcase.exceptions import BriefcaseConfigError
 from briefcase.integrations.flatpak import Flatpak
@@ -125,13 +126,21 @@ def test_custom_runtime_sdk_only(create_command, first_app_config, tmp_path):
         create_command.flatpak_sdk(first_app_config)
 
 
-def test_verify_linux(create_command, tmp_path):
+def test_verify_linux(create_command, monkeypatch, tmp_path):
     """Verifying on Linux creates an SDK wrapper."""
     create_command.tools.host_os = "Linux"
     create_command.tools.subprocess = MagicMock(spec_set=Subprocess)
 
+    mock_flatpak_verify = MagicMock(wraps=Flatpak.verify)
+    monkeypatch.setattr(
+        briefcase.platforms.linux.flatpak.Flatpak,
+        "verify",
+        mock_flatpak_verify,
+    )
+
     # Verify the tools
     create_command.verify_tools()
 
-    # No error and an SDK wrapper is created
+    # Flatpak tool was verified
+    mock_flatpak_verify.assert_called_once_with(tools=create_command.tools)
     assert isinstance(create_command.tools.flatpak, Flatpak)

@@ -265,8 +265,8 @@ class AndroidSDK(ManagedTool):
         return True
 
     def uninstall(self):
-        """Uninstall the Android SDK."""
-        # TODO:PR: implement this
+        """The Android SDK is upgraded in-place instead of being reinstalled."""
+        pass
 
     def install(self):
         """Download and install the Android SDK."""

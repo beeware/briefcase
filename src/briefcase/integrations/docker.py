@@ -189,7 +189,7 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
         except subprocess.CalledProcessError:
             raise BriefcaseCommandError(cls.BUILDX_PLUGIN_MISSING)
 
-    def check_output(self, args: list[SubprocessArgT], image_tag: str):
+    def check_output(self, args: list[SubprocessArgT], image_tag: str) -> str:
         """Run a process inside a Docker container, capturing output.
 
         This is a bare Docker invocation; it's really only useful for running
@@ -470,7 +470,7 @@ class DockerAppContext(Tool):
         cwd: Path = None,
         mounts: dict[str | Path, str | Path] = None,
         **kwargs,
-    ):
+    ) -> str:
         """Run a process inside a Docker container, capturing output."""
         # Any exceptions from running the process are *not* caught.
         # This ensures that "docker.check_output()" behaves as closely to
