@@ -32,7 +32,7 @@ def test_unsupported_host_os(create_command, host_os):
 
     with pytest.raises(
         UnsupportedHostError,
-        match="Building and / or code signing a DMG requires running on macOS.",
+        match="macOS applications can only be built on macOS.",
     ):
         create_command()
 
