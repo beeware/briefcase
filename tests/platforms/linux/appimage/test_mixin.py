@@ -68,14 +68,16 @@ def test_docker_image_tag(create_command, first_app_config, manylinux, tag):
 
 
 def test_docker_image_tag_uppercase_name(
-    create_command, uppercase_app_config, tmp_path
+    create_command,
+    uppercase_app_config,
+    tmp_path,
 ):
     image_tag = create_command.docker_image_tag(uppercase_app_config)
 
     assert image_tag == "briefcase/com.example.first-app:appimage"
 
 
-def test_verify_linux_no_docker(create_command, tmp_path, first_app_config):
+def test_verify_linux_no_docker(create_command, first_app_config, tmp_path):
     """If Docker is disabled on Linux, the app_context is Subprocess."""
     create_command.tools.host_os = "Linux"
     create_command.use_docker = False
@@ -178,6 +180,6 @@ def test_clone_options(tmp_path):
 
     create_command = build_command.create_command
 
-    # Confirm the use_docker option has been cloned.
+    # Confirm the use_docker option has been cloned
     assert create_command.is_clone
     assert create_command.use_docker

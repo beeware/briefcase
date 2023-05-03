@@ -74,6 +74,8 @@ def test_build_app(build_command, first_app, tmp_path):
         os.stat(lib_dir / "app_packages" / "secondlib" / "second_a.so").st_mode & 0o777
         == 0o644
     )
+    # no perms change
+    assert os.stat(lib_dir / "app" / "support_same_perms.so").st_mode & 0o777 == 0o744
 
     # Strip has been invoked on the binary
     build_command.tools.subprocess.check_output.assert_called_once_with(
