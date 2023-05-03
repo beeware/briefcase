@@ -3,6 +3,7 @@ requires = ["setuptools>=60", "setuptools_scm[toml]>=7.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.coverage.run]
+plugins = ["coverage_conditional_plugin"]
 parallel = true
 branch = true
 relative_files = true
@@ -25,6 +26,37 @@ exclude_lines = [
     "NotImplementedError\\(\\)",
     "if TYPE_CHECKING:",
 ]
+
+[tool.coverage.coverage_conditional_plugin.rules]
+# Packages/Modules
+no-cover-if-missing-setuptools_scm = "not is_installed('setuptools_scm')"
+# Linux
+no-cover-if-is-linux = "sys_platform == 'linux' and os_environ.get('COV_EXCLUDE_PLATFORM') != 'disable'"
+no-cover-if-not-linux = "sys_platform != 'linux' and os_environ.get('COV_EXCLUDE_PLATFORM') != 'disable'"
+# macOS
+no-cover-if-is-macos = "sys_platform == 'darwin' and os_environ.get('COV_EXCLUDE_PLATFORM') != 'disable'"
+no-cover-if-not-macos = "sys_platform != 'darwin' and os_environ.get('COV_EXCLUDE_PLATFORM') != 'disable'"
+# Windows
+no-cover-if-is-windows = "sys_platform == 'win32' and os_environ.get('COV_EXCLUDE_PLATFORM') != 'disable'"
+no-cover-if-not-windows = "sys_platform != 'win32' and os_environ.get('COV_EXCLUDE_PLATFORM') != 'disable'"
+# Python 3.12
+no-cover-if-is-py312 = "python_version == '3.12' and os_environ.get('COV_EXCLUDE_PYTHON_VERSION') != 'disable'"
+no-cover-if-lt-py312 = "sys_version_info < (3, 12) and os_environ.get('COV_EXCLUDE_PYTHON_VERSION') != 'disable'"
+no-cover-if-gte-py312 = "sys_version_info > (3, 12) and os_environ.get('COV_EXCLUDE_PYTHON_VERSION') != 'disable'"
+# Python 3.11
+no-cover-if-is-py311 = "python_version == '3.11' and os_environ.get('COV_EXCLUDE_PYTHON_VERSION') != 'disable'"
+no-cover-if-lt-py311 = "sys_version_info < (3, 11) and os_environ.get('COV_EXCLUDE_PYTHON_VERSION') != 'disable'"
+no-cover-if-gte-py311 = "sys_version_info > (3, 11) and os_environ.get('COV_EXCLUDE_PYTHON_VERSION') != 'disable'"
+# Python 3.10
+no-cover-if-is-py310 = "python_version == '3.10' and os_environ.get('COV_EXCLUDE_PYTHON_VERSION') != 'disable'"
+no-cover-if-lt-py310 = "sys_version_info < (3, 10) and os_environ.get('COV_EXCLUDE_PYTHON_VERSION') != 'disable'"
+no-cover-if-gte-py310 = "sys_version_info > (3, 10) and os_environ.get('COV_EXCLUDE_PYTHON_VERSION') != 'disable'"
+# Python 3.9
+no-cover-if-is-py39 = "python_version == '3.9' and os_environ.get('COV_EXCLUDE_PYTHON_VERSION') != 'disable'"
+no-cover-if-lt-py39 = "sys_version_info < (3, 9) and os_environ.get('COV_EXCLUDE_PYTHON_VERSION') != 'disable'"
+no-cover-if-gte-py39 = "sys_version_info > (3, 9) and os_environ.get('COV_EXCLUDE_PYTHON_VERSION') != 'disable'"
+# Python 3.8
+no-cover-if-is-py38 = "python_version == '3.8' and os_environ.get('COV_EXCLUDE_PYTHON_VERSION') != 'disable'"
 
 [tool.isort]
 profile = "black"

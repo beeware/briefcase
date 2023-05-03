@@ -10,11 +10,11 @@ class OpenCommand(BaseCommand):
     description = "Open an app in the build tool for the target platform."
 
     def _open_app(self, app: BaseConfig):
-        if self.tools.host_os == "Windows":
+        if self.tools.host_os == "Windows":  # pragma: no-cover-if-not-windows
             self.tools.os.startfile(self.project_path(app))
-        elif self.tools.host_os == "Darwin":
+        elif self.tools.host_os == "Darwin":  # pragma: no-cover-if-not-macos
             self.tools.subprocess.Popen(["open", self.project_path(app)])
-        else:
+        else:  # pragma: no-cover-if-not-linux
             self.tools.subprocess.Popen(["xdg-open", self.project_path(app)])
 
     def open_app(self, app: BaseConfig, **options):

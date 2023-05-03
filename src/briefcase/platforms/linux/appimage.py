@@ -188,7 +188,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
         super().verify_tools()
         LinuxDeploy.verify(tools=self.tools)
 
-    def build_app(self, app: AppConfig, **kwargs):
+    def build_app(self, app: AppConfig, **kwargs):  # pragma: no-cover-if-is-windows
         """Build an application.
 
         :param app: The application to build

@@ -347,7 +347,7 @@ class DockerAppContext(Tool):
                         f"Error building Docker container image for {self.app.app_name}."
                     ) from e
 
-    def _dockerize_path(self, arg: str):
+    def _dockerize_path(self, arg: str):  # pragma: no-cover-if-is-windows
         """Relocate any local path into the equivalent location on the docker
         filesystem.
 
@@ -366,13 +366,20 @@ class DockerAppContext(Tool):
 
         return arg
 
-    def _dockerize_args(self, args, interactive=False, mounts=None, env=None, cwd=None):
+    def _dockerize_args(
+        self,
+        args,
+        interactive=False,
+        mounts=None,
+        env=None,
+        cwd=None,
+    ):  # pragma: no-cover-if-is-windows
         """Convert arguments and environment into a Docker-compatible form. Convert an
         argument and environment specification into a form that can be used as arguments
         to invoke Docker. This involves:
 
          * Configuring the Docker invocation to reference the
-           appropriate container image, and clean up afterwards
+           appropriate container image, and clean up afterward
          * Setting volume mounts for the container instance
          * Transforming any references to local paths into Docker path references.
 

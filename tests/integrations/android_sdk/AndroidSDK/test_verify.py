@@ -1,7 +1,6 @@
 import os
 import platform
 import shutil
-import sys
 from unittest.mock import MagicMock
 
 import pytest
@@ -9,6 +8,15 @@ import pytest
 from briefcase.exceptions import BriefcaseCommandError, MissingToolError, NetworkFailure
 from briefcase.integrations.android_sdk import AndroidSDK
 from briefcase.integrations.base import ToolCache
+
+
+def sdk_download_tag(host_platform: str) -> str:
+    """Maps ``platform.system()`` to the OS tag in the sdk download URL."""
+    return {
+        "Windows": "win",
+        "Darwin": "mac",
+        "Linux": "linux",
+    }[host_platform]
 
 
 @pytest.fixture
@@ -20,11 +28,7 @@ def mock_tools(mock_tools) -> ToolCache:
     mock_tools.os.X_OK = os.X_OK
 
     # Identify the host platform
-    mock_tools._test_download_tag = {
-        "Windows": "win",
-        "Darwin": "mac",
-        "Linux": "linux",
-    }[mock_tools.host_os]
+    mock_tools._test_download_tag = sdk_download_tag(mock_tools.host_os)
 
     # Use the original module rmtree implementation
     mock_tools.shutil.rmtree = shutil.rmtree
@@ -166,10 +170,21 @@ def test_invalid_user_provided_sdk(mock_tools, tmp_path):
     assert sdk.root_path == android_sdk_root_path
 
 
-def test_download_sdk(mock_tools, tmp_path):
+@pytest.mark.parametrize("mock_host_os", ["Darwin", "Linux", "Windows"])
+def test_download_sdk(mock_tools, mock_host_os, tmp_path):
     """If an SDK is not available, one will be downloaded."""
     android_sdk_root_path = tmp_path / "tools" / "android_sdk"
     cmdline_tools_base_path = android_sdk_root_path / "cmdline-tools"
+
+    # Mock the host os
+    mock_tools.host_os = mock_host_os
+
+    # Allow calls to `os.access()` on when the actual host is Windows
+    if platform.system() == "Windows":
+        mock_tools.os.access = MagicMock(
+            spec_set=os.access,
+            side_effect=[True, False, True],
+        )
 
     # The download will produce a cached file.
     cache_file = MagicMock()
@@ -187,7 +202,7 @@ def test_download_sdk(mock_tools, tmp_path):
     # Validate that the SDK was downloaded and unpacked
     url = (
         "https://dl.google.com/android/repository/"
-        f"commandlinetools-{mock_tools._test_download_tag}-8092744_latest.zip"
+        f"commandlinetools-{sdk_download_tag(mock_host_os)}-8092744_latest.zip"
     )
     mock_tools.download.file.assert_called_once_with(
         url=url,
@@ -210,11 +225,20 @@ def test_download_sdk(mock_tools, tmp_path):
     assert sdk.cmdline_tools_path.is_dir()
     assert sdk.cmdline_tools_version_path.is_file()
 
-    if platform.system() != "Windows":
-        # On non-Windows, ensure the unpacked binary was made executable
-        assert os.access(
-            cmdline_tools_base_path / "latest" / "bin" / "sdkmanager", os.X_OK
-        )
+    # Verify binaries marked executable for non-Windows
+    if mock_host_os != "Windows":
+        if platform.system() == "Windows":
+            # When the actual host is Windows, check the mock was called
+            mock_tools.os.access.assert_called_with(
+                cmdline_tools_base_path / "latest" / "bin" / "sdkmanager",
+                os.X_OK,
+            )
+        else:
+            # When the actual host is non-Windows, ensure the unpacked binary is executable
+            assert os.access(
+                cmdline_tools_base_path / "latest" / "bin" / "sdkmanager",
+                os.X_OK,
+            )
 
     # The license has been accepted
     assert (android_sdk_root_path / "licenses" / "android-sdk-license").exists()
@@ -306,10 +330,6 @@ def test_no_install(mock_tools, tmp_path):
     assert mock_tools.download.file.call_count == 0
 
 
-@pytest.mark.skipif(
-    sys.platform == "win32",
-    reason="executable permission doesn't make sense on Windows",
-)
 def test_download_sdk_if_sdkmanager_not_executable(mock_tools, tmp_path):
     """An SDK will be downloaded and unpacked if `tools/bin/sdkmanager` exists but does
     not have its permissions set properly."""
