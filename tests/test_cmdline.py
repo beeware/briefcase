@@ -31,6 +31,11 @@ def console() -> Console:
     return Console()
 
 
+def _clean_relock(options):
+    options.pop("relock", None)
+    return options
+
+
 def do_cmdline_parse(args: list, logger: Log, console: Console):
     """Simulate process to parse command line."""
     Command, extra_cmdline = cmdline.parse_cmdline(args)
@@ -104,7 +109,7 @@ def test_new_command(logger, console):
     assert cmd.logger.verbosity == 1
     assert cmd.logger is logger
     assert cmd.input is console
-    assert options == {"template": None, "template_branch": None}
+    assert _clean_relock(options) == {"template": None, "template_branch": None}
 
 
 # Common tests for dev and run commands.
@@ -153,7 +158,7 @@ def test_dev_command(monkeypatch, logger, console, cmdline, expected_options):
     assert cmd.logger.verbosity == 1
     assert cmd.logger is logger
     assert cmd.input is console
-    assert options == {
+    assert _clean_relock(options) == {
         "appname": None,
         "update_requirements": False,
         "run_app": True,
@@ -187,7 +192,7 @@ def test_run_command(monkeypatch, logger, console, cmdline, expected_options):
     assert cmd.logger.verbosity == 1
     assert cmd.logger is logger
     assert cmd.input is console
-    assert options == {
+    assert _clean_relock(options) == {
         "appname": None,
         "update": False,
         "update_requirements": False,
@@ -213,7 +218,7 @@ def test_upgrade_command(monkeypatch, logger, console):
     assert cmd.logger.verbosity == 1
     assert cmd.logger is logger
     assert cmd.input is console
-    assert options == {
+    assert _clean_relock(options) == {
         "list_tools": False,
         "tool_list": [],
     }

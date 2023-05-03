@@ -5,6 +5,7 @@ def test_update_app(update_command, first_app, tmp_path):
         update_requirements=False,
         update_resources=False,
         test_mode=False,
+        relock=False,
     )
 
     # The right sequence of things will be done
@@ -39,6 +40,7 @@ def test_update_non_existing_app(update_command, tmp_path):
         update_requirements=False,
         update_resources=False,
         test_mode=False,
+        relock=False,
     )
 
     # No app creation actions will be performed
@@ -60,6 +62,7 @@ def test_update_app_with_requirements(update_command, first_app, tmp_path):
         update_requirements=True,
         update_resources=False,
         test_mode=False,
+        relock=False,
     )
 
     # The right sequence of things will be done
@@ -94,6 +97,7 @@ def test_update_app_with_resources(update_command, first_app, tmp_path):
         update_requirements=False,
         update_resources=True,
         test_mode=False,
+        relock=False,
     )
 
     # The right sequence of things will be done
@@ -127,6 +131,7 @@ def test_update_app_test_mode(update_command, first_app, tmp_path):
     update_command.update_app(
         update_command.apps["first"],
         test_mode=True,
+        relock=False,
         update_requirements=False,
         update_resources=False,
     )
@@ -161,6 +166,7 @@ def test_update_app_test_mode_requirements(update_command, first_app, tmp_path):
     update_command.update_app(
         update_command.apps["first"],
         test_mode=True,
+        relock=False,
         update_requirements=True,
         update_resources=False,
     )
@@ -196,6 +202,7 @@ def test_update_app_test_mode_resources(update_command, first_app, tmp_path):
     update_command.update_app(
         update_command.apps["first"],
         test_mode=True,
+        relock=False,
         update_requirements=False,
         update_resources=True,
     )

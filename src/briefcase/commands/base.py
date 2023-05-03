@@ -674,6 +674,12 @@ a custom location for Briefcase's tools.
         )
 
         parser.add_argument(
+            "--relock",
+            action="store_true",
+            help=f"Recalculate locked requirements for the app{context_label}",
+        )
+
+        parser.add_argument(
             "--update-resources",
             action="store_true",
             help=f"Update app resources (icons, splash screens, etc){context_label}",
