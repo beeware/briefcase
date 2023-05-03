@@ -17,12 +17,12 @@ from platformdirs import PlatformDirs
 
 try:
     import importlib_metadata
-except ImportError:
+except ImportError:  # pragma: no-cover-if-lt-py310
     import importlib.metadata as importlib_metadata
 
 try:
     import tomllib
-except ModuleNotFoundError:
+except ModuleNotFoundError:  # pragma: no-cover-if-gte-py310
     import tomli as tomllib
 
 from briefcase import __version__
@@ -177,10 +177,10 @@ class BaseCommand(ABC):
                         "The path specified by BRIEFCASE_HOME does not exist."
                     )
             except KeyError:
-                if platform.system() == "Darwin":
+                if platform.system() == "Darwin":  # pragma: no-cover-if-not-macos
                     # macOS uses a bundle name, rather than just the app name
                     app_name = "org.beeware.briefcase"
-                else:
+                else:  # pragma: no-cover-if-is-macos
                     app_name = "briefcase"
 
                 data_path = PlatformDirs(
@@ -214,7 +214,7 @@ a custom location for Briefcase's tools.
                 # performed via ``cmd.exe`` in a different process. Once this
                 # directory exists in the "real" %LOCALAPPDATA%, Windows will
                 # allow normal interactions without attempting to sandbox them.
-                if platform.system() == "Windows":
+                if platform.system() == "Windows":  # pragma: no-cover-if-not-windows
                     subprocess.run(
                         ["mkdir", data_path],
                         shell=True,
@@ -222,7 +222,7 @@ a custom location for Briefcase's tools.
                         stdout=subprocess.DEVNULL,
                         stderr=subprocess.DEVNULL,
                     )
-                else:
+                else:  # pragma: no-cover-if-is-windows
                     os.makedirs(data_path, exist_ok=True)
             except (subprocess.CalledProcessError, OSError):
                 raise BriefcaseCommandError(

@@ -120,11 +120,11 @@ class LinuxSystemPassiveMixin(LinuxMixin):
 
     def platform_freedesktop_info(self, app):
         try:
-            if sys.version_info < (3, 10):
+            if sys.version_info < (3, 10):  # pragma: no-cover-if-gte-py310
                 # This reproduces the Python 3.10 platform.freedesktop_os_release() function.
                 with self.tools.ETC_OS_RELEASE.open(encoding="utf-8") as f:
                     freedesktop_info = parse_freedesktop_os_release(f.read())
-            else:
+            else:  # pragma: no-cover-if-lt-py310
                 freedesktop_info = self.tools.platform.freedesktop_os_release()
 
         except OSError as e:
@@ -684,7 +684,7 @@ with details about the release.
                 new_perms = user_perms | (world_perms << 3) | world_perms
 
                 # If there's been any change in permissions, apply them
-                if new_perms != old_perms:
+                if new_perms != old_perms:  # pragma: no-cover-if-is-windows
                     self.logger.info(
                         "Updating file permissions on "
                         f"{path.relative_to(self.bundle_path(app))} "
@@ -881,7 +881,7 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
                 self.distribution_path(app),
             )
 
-    def _package_rpm(self, app: AppConfig, **kwargs):
+    def _package_rpm(self, app: AppConfig, **kwargs):  # pragma: no-cover-if-is-windows
         self.logger.info("Building .rpm package...", prefix=app.app_name)
 
         # The long description *must* exist.
@@ -1040,7 +1040,7 @@ with details about the release.
             self.distribution_path(app),
         )
 
-    def _package_pkg(self, app: AppConfig, **kwargs):
+    def _package_pkg(self, app: AppConfig, **kwargs):  # pragma: no-cover-if-is-windows
         self.logger.info("Building .pkg.tar.zst package...", prefix=app.app_name)
 
         # The description *must* exist.

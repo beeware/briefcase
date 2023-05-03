@@ -11,7 +11,7 @@ from briefcase.console import Log
 
 try:
     import tomllib
-except ModuleNotFoundError:
+except ModuleNotFoundError:  # pragma: no-cover-if-gte-py310
     import tomli as tomllib
 
 import tomli_w

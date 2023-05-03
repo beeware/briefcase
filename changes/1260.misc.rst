@@ -1,0 +1,1 @@
+Coverage reporting for a specific versions of Python or a specific platform is now supported.

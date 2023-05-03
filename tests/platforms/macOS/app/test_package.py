@@ -5,6 +5,7 @@ from zipfile import ZipFile
 
 import pytest
 
+import briefcase.integrations.xcode
 from briefcase.console import Console, Log
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.platforms.macOS.app import macOSAppPackageCommand
@@ -834,14 +835,28 @@ def test_dmg_with_missing_installer_background(
     )
 
 
-def test_verify(package_command):
+def test_verify(package_command, monkeypatch):
     """If you're on macOS, you can verify tools."""
+    package_command.tools.host_os = "Darwin"
+
     # Mock the existence of the command line tools
-    package_command.tools.subprocess.check_output.side_effect = [
-        subprocess.CalledProcessError(cmd=["xcode-select", "--install"], returncode=1),
-        "clang 37.42",  # clang --version
-    ]
+    mock_ensure_command_line_tools_are_installed = mock.MagicMock()
+    monkeypatch.setattr(
+        briefcase.integrations.xcode,
+        "ensure_command_line_tools_are_installed",
+        mock_ensure_command_line_tools_are_installed,
+    )
+    mock_confirm_xcode_license_accepted = mock.MagicMock()
+    monkeypatch.setattr(
+        briefcase.integrations.xcode,
+        "confirm_xcode_license_accepted",
+        mock_confirm_xcode_license_accepted,
+    )
 
     package_command.verify_tools()
 
     assert package_command.tools.xcode_cli is not None
+    mock_ensure_command_line_tools_are_installed.assert_called_once_with(
+        package_command.tools
+    )
+    mock_confirm_xcode_license_accepted.assert_called_once_with(package_command.tools)
