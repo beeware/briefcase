@@ -772,10 +772,12 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                     # Attempt to update the repository
                     remote = repo.remote(name="origin")
                     remote.fetch()
-                except self.tools.git.exc.GitCommandError:
+                except self.tools.git.exc.GitCommandError as e:
                     # We are offline, or otherwise unable to contact
-                    # the origin git repo. It's OK to continue; but warn
-                    # the user that the template may be stale.
+                    # the origin git repo. It's OK to continue; but
+                    # capture the error in the log and warn the user
+                    # that the template may be stale.
+                    self.logger.debug(str(e))
                     self.logger.warning(
                         """
 *************************************************************************
@@ -789,6 +791,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
 *************************************************************************
 """
                     )
+
                 try:
                     # Check out the branch for the required version tag.
                     head = remote.refs[branch]
@@ -809,6 +812,10 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                 # Template cache path exists, but isn't a git repository
                 # Just use the template directly, rather than attempting an update.
                 cached_template = template
+            except ValueError as e:
+                raise BriefcaseCommandError(
+                    f"Git repository in a weird state, delete {cached_template} and try briefcase create again"
+                ) from e
         else:
             # If this isn't a repository URL, treat it as a local directory
             cached_template = template

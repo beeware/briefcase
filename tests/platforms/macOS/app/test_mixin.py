@@ -32,7 +32,7 @@ def test_unsupported_host_os(create_command, host_os):
 
     with pytest.raises(
         UnsupportedHostError,
-        match="Building and / or code signing a DMG requires running on macOS.",
+        match="macOS applications can only be built on macOS.",
     ):
         create_command()
 
@@ -50,6 +50,23 @@ def test_binary_path(create_command, first_app_config, tmp_path):
         / "First App.app"
     )
     assert binary_path == expected_path
+
+
+def test_project_path(create_command, first_app_config, tmp_path):
+    """The project path is the Contents directory."""
+    project_path = create_command.project_path(first_app_config)
+
+    expected_path = (
+        tmp_path
+        / "base_path"
+        / "build"
+        / "first-app"
+        / "macos"
+        / "app"
+        / "First App.app"
+        / "Contents"
+    )
+    assert expected_path == project_path
 
 
 def test_distribution_path_app(package_command, first_app_config, tmp_path):

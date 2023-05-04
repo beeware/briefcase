@@ -24,6 +24,7 @@ def full_context():
         "app_name": "my-app",
         "formal_name": "My App",
         "bundle": "com.example",
+        "bundle_identifier": "com.example.my-app",
         "version": "1.2.3",
         "description": "This is a simple app",
         "long_description": None,
@@ -248,7 +249,7 @@ def test_default_template_dev_explicit_invalid_branch(
 
 
 def test_explicit_branch(monkeypatch, create_command, myapp, full_context, tmp_path):
-    """user can choose which branch to take the template from."""
+    """User can choose which branch to take the template from."""
     # Set the Briefcase version
     monkeypatch.setattr(briefcase, "__version__", "37.42.7")
     full_context["briefcase_version"] = "37.42.7"

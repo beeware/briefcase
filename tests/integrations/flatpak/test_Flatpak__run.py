@@ -10,7 +10,7 @@ def test_run(flatpak):
 
     # Call run()
     result = flatpak.run(
-        bundle="com.example",
+        bundle_identifier="com.example.my-app",
         app_name="my-app",
     )
 
@@ -38,7 +38,7 @@ def test_run_with_args(flatpak):
 
     # Call run()
     result = flatpak.run(
-        bundle="com.example",
+        bundle_identifier="com.example.my-app",
         app_name="my-app",
         args=["foo", "bar"],
     )
@@ -69,7 +69,7 @@ def test_main_module_override(flatpak):
 
     # Call run()
     result = flatpak.run(
-        bundle="com.example",
+        bundle_identifier="com.example.my-app",
         app_name="my-app",
         main_module="org.beeware.test-case",
     )

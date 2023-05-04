@@ -1,0 +1,1 @@
+Running ``pytest`` via ``tox`` now depends on the ``pre-commit`` environment to avoid errors in ``pytest``, and will now use the oldest available version of Python for coverage checks.

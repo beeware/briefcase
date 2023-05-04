@@ -35,7 +35,7 @@ def test_run(run_command, first_app_config):
 
     # App is executed
     run_command.tools.flatpak.run.assert_called_once_with(
-        bundle="com.example",
+        bundle_identifier="com.example.first-app",
         app_name="first-app",
         args=[],
     )
@@ -64,7 +64,7 @@ def test_run_with_passthrough(run_command, first_app_config):
 
     # App is executed with args
     run_command.tools.flatpak.run.assert_called_once_with(
-        bundle="com.example",
+        bundle_identifier="com.example.first-app",
         app_name="first-app",
         args=["foo", "--bar"],
     )
@@ -87,7 +87,7 @@ def test_run_app_failed(run_command, first_app_config, tmp_path):
 
     # The run command was still invoked
     run_command.tools.flatpak.run.assert_called_once_with(
-        bundle="com.example",
+        bundle_identifier="com.example.first-app",
         app_name="first-app",
         args=[],
     )
@@ -107,7 +107,7 @@ def test_run_test_mode(run_command, first_app_config):
 
     # App is executed
     run_command.tools.flatpak.run.assert_called_once_with(
-        bundle="com.example",
+        bundle_identifier="com.example.first-app",
         app_name="first-app",
         args=[],
         main_module="tests.first_app",
@@ -137,7 +137,7 @@ def test_run_test_mode_with_args(run_command, first_app_config):
 
     # App is executed
     run_command.tools.flatpak.run.assert_called_once_with(
-        bundle="com.example",
+        bundle_identifier="com.example.first-app",
         app_name="first-app",
         args=["foo", "--bar"],
         main_module="tests.first_app",

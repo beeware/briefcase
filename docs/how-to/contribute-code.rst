@@ -21,7 +21,7 @@ and then install the development version of Briefcase and its dependencies:
 
   .. group-tab:: macOS
 
-    .. code-block:: bash
+    .. code-block:: console
 
       $ git clone https://github.com/beeware/briefcase.git
       $ cd briefcase
@@ -31,7 +31,7 @@ and then install the development version of Briefcase and its dependencies:
 
   .. group-tab:: Linux
 
-    .. code-block:: bash
+    .. code-block:: console
 
       $ git clone https://github.com/beeware/briefcase.git
       $ cd briefcase
@@ -49,7 +49,7 @@ and then install the development version of Briefcase and its dependencies:
       C:\...>venv\Scripts\activate
       (venv) C:\...>python3 -m pip install -Ue .[dev]
 
-Briefcase uses a tool called `Pre-Commit <https://pre-commit.com>`__ to identify
+Briefcase uses a tool called `pre-commit <https://pre-commit.com>`__ to identify
 simple issues and standardize code formatting. It does this by installing a git
 hook that automatically runs a series of code linters prior to finalizing any
 git commit. To enable pre-commit, run:
@@ -58,14 +58,14 @@ git commit. To enable pre-commit, run:
 
   .. group-tab:: macOS
 
-    .. code-block:: bash
+    .. code-block:: console
 
       (venv) $ pre-commit install
       pre-commit installed at .git/hooks/pre-commit
 
   .. group-tab:: Linux
 
-    .. code-block:: bash
+    .. code-block:: console
 
       (venv) $ pre-commit install
       pre-commit installed at .git/hooks/pre-commit
@@ -85,7 +85,7 @@ pre-commit will make the changes needed to correct the problems it has found:
 
   .. group-tab:: macOS
 
-    .. code-block:: bash
+    .. code-block:: console
 
       (venv) $ git add some/interesting_file.py
       (venv) $ git commit -m "Minor change"
@@ -111,7 +111,7 @@ pre-commit will make the changes needed to correct the problems it has found:
 
   .. group-tab:: Linux
 
-    .. code-block:: bash
+    .. code-block:: console
 
       (venv) $ git add some/interesting_file.py
       (venv) $ git commit -m "Minor change"
@@ -168,7 +168,7 @@ and re-commit the change.
 
   .. group-tab:: macOS
 
-    .. code-block:: bash
+    .. code-block:: console
 
       (venv) $ git add some/interesting_file.py
       (venv) $ git commit -m "Minor change"
@@ -188,7 +188,7 @@ and re-commit the change.
 
   .. group-tab:: Linux
 
-    .. code-block:: bash
+    .. code-block:: console
 
       (venv) $ git add some/interesting_file.py
       (venv) $ git commit -m "Minor change"
@@ -224,7 +224,7 @@ and re-commit the change.
       pyupgrade................................................................Passed
       docformatter.............................................................Passed
 
-Briefcase uses `PyTest <https://docs.pytest.org/en/latest>`__ for its own test
+Briefcase uses `pytest <https://docs.pytest.org/en/latest>`__ for its own test
 suite. It uses `tox <https://tox.wiki/en/latest/>`__ to manage the testing
 process. To set up a testing environment and run the full test suite:
 
@@ -232,44 +232,44 @@ process. To set up a testing environment and run the full test suite:
 
   .. group-tab:: macOS
 
-    .. code-block:: bash
+    .. code-block:: console
 
-      (venv) $ tox
+      (venv) $ tox p
 
   .. group-tab:: Linux
 
-    .. code-block:: bash
+    .. code-block:: console
 
-      (venv) $ tox
+      (venv) $ tox p
 
   .. group-tab:: Windows
 
     .. code-block:: doscon
 
-      (venv) C:\...>tox
+      (venv) C:\...>tox p
 
 By default this will run the test suite multiple times, once on each Python
 version supported by Briefcase, as well as running some pre-commit checks of
-code style and validity. This can take a while, so if you want to speed up
-the process while developing, you can run the tests on one Python version only:
+code style and validity. This can take a while, so if you want to speed up the
+process while developing, you can run the tests on one Python version only:
 
 .. tabs::
 
   .. group-tab:: macOS
 
-    .. code-block:: bash
+    .. code-block:: console
 
       (venv) $ tox -e py
 
   .. group-tab:: Linux
 
-    .. code-block:: bash
+    .. code-block:: console
 
       (venv) $ tox -e py
 
   .. group-tab:: Windows
 
-    .. code-block:: bash
+    .. code-block:: doscon
 
       (venv) C:\...>tox -e py
 
@@ -279,47 +279,93 @@ Or, you can run a single test file on a single version of Python:
 
   .. group-tab:: macOS
 
-    .. code-block:: bash
+    .. code-block:: console
 
       (venv) $ tox -e py -- tests/path_to_test_file/test_some_test.py
 
   .. group-tab:: Linux
 
-    .. code-block:: bash
+    .. code-block:: console
 
       (venv) $ tox -e py -- tests/path_to_test_file/test_some_test.py
 
   .. group-tab:: Windows
 
-    .. code-block:: bash
+    .. code-block:: doscon
 
       (venv) C:\...>tox -e py -- tests/path_to_test_file/test_some_test.py
 
-Or, to run using a specific version of Python, e.g. when you want to use Python 3.7:
+Or, to run using a specific version of Python, e.g. when you want to use Python 3.10:
 
 .. tabs::
 
   .. group-tab:: macOS
 
-    .. code-block:: bash
+    .. code-block:: console
 
-      (venv) $ tox -e py37
+      (venv) $ tox -e py310
 
   .. group-tab:: Linux
 
-    .. code-block:: bash
+    .. code-block:: console
 
-      (venv) $ tox -e py37
+      (venv) $ tox -e py310
 
   .. group-tab:: Windows
 
-    .. code-block:: bash
+    .. code-block:: doscon
 
-      (venv) C:\...>tox -e py37
+      (venv) C:\...>tox -e py310
 
-substituting the version number that you want to target. You can also specify
-the `towncrier-check`, `docs` or `package` targets to check release notes,
-documentation syntax and packaging metadata, respectively.
+substituting the version number that you want to target.
+
+If you just want to run pytest without generating coverage, then use ``py-fast``
+or ``py310-fast`` for the environment instead of ``py`` or ``py310``.
+
+You can also specify the ``towncrier-check``, ``docs`` or ``package`` targets
+to check release notes, documentation syntax and packaging metadata, respectively.
+
+Verify test coverage
+--------------------
+
+Briefcase maintains 100% branch coverage in its codebase. When you add or modify
+code in the project, you must add test code to ensure coverage of any
+changes you make.
+
+After running the test suite, generate a coverage report by running:
+
+.. tabs::
+
+  .. group-tab:: macOS
+
+    .. code-block:: console
+
+      (venv) $ tox -e coverage
+
+  .. group-tab:: Linux
+
+    .. code-block:: console
+
+      (venv) $ tox -e coverage
+
+  .. group-tab:: Windows
+
+    .. code-block:: doscon
+
+      (venv) C:\...>tox -e coverage
+
+You can run the test suite and coverage together by including the testing
+environment to run, e.g. ``py,coverage`` or ``py310,coverage``.
+
+Additionally, an HTML coverage report can be generated by using
+``py,coverage-html`` or ``py310,coverage-html``.
+
+Depending on your platform, it's possible that some lines required by other
+platforms will be skipped and shown as "missing" in the coverage report. You
+can safely ignore those lines. However, make sure that any lines of code that
+you added or modified do not appear in the report. If they do, you need to add
+new tests that will cover those lines. Otherwise, the coverage check will fail
+when you make a PR with your changes.
 
 Add change information for release notes
 ----------------------------------------

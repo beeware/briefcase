@@ -80,8 +80,8 @@ jobs:
         # See https://github.com/pypa/pip/issues/11982 for details
         python -m pip install --upgrade "pip!=23.1"
         python -m pip install --upgrade setuptools
-        # We don't actually want to install briefcase; we just want the dev
-        # extras so we have a known version of tox and coverage.
+        # We don't actually want to install briefcase; we just
+        # want the dev extras so we have a known version of tox.
         python -m pip install $(ls dist/briefcase-*.whl)[dev]
 
     - name: Test
@@ -95,9 +95,7 @@ jobs:
         if-no-files-found: ignore
 
     - name: Report platform coverage
-      run: |
-        python -m coverage combine
-        python -m coverage report
+      run: tox -e coverage
 
   coverage:
     name: Combine & check coverage.
@@ -111,7 +109,9 @@ jobs:
     - name: Setup Python
       uses: actions/setup-python@v4.6.0
       with:
-        python-version: "3.x"  # Use latest, so it understands all syntax.
+        # Use minimum version of python for coverage to avoid phantom branches
+        # https://github.com/nedbat/coveragepy/issues/1572#issuecomment-1522546425
+        python-version: "3.8"
 
     - name: Install dev dependencies
       run: |
@@ -119,8 +119,8 @@ jobs:
         # See https://github.com/pypa/pip/issues/11982 for details
         python -m pip install --upgrade "pip!=23.1"
         python -m pip install --upgrade setuptools
-        # We don't actually want to install briefcase;
-        # we just want the dev extras so that we have a known version of coverage
+        # We don't actually want to install briefcase; we just
+        # want the dev extras so we have a known version of tox.
         python -m pip install -e .[dev]
 
     - name: Retrieve coverage data
@@ -128,13 +128,8 @@ jobs:
       with:
         name: coverage-data
 
-    - name: Combine coverage
-      run: python -m coverage combine
-
     - name: Generate coverage report
-      run: |
-        python -m coverage html --skip-covered --skip-empty
-        python -m coverage report --fail-under=100
+      run: tox -e coverage-html-fail
 
     - name: Upload HTML report if check failed.
       if: ${{ failure() }}

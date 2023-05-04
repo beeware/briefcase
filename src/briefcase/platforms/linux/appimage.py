@@ -97,9 +97,9 @@ class LinuxAppImageMostlyPassiveMixin(LinuxAppImagePassiveMixin):
     def docker_image_tag(self, app):
         """The Docker image tag for an app."""
         try:
-            return f"briefcase/{app.bundle}.{app.app_name.lower()}:{app.manylinux}-appimage"
+            return f"briefcase/{app.bundle_identifier.lower()}:{app.manylinux}-appimage"
         except AttributeError:
-            return f"briefcase/{app.bundle}.{app.app_name.lower()}:appimage"
+            return f"briefcase/{app.bundle_identifier.lower()}:appimage"
 
     def verify_tools(self):
         """If we're using docker, verify that it is available."""
@@ -268,8 +268,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
                         os.fsdecode(self.appdir_path(app)),
                         "--desktop-file",
                         os.fsdecode(
-                            self.appdir_path(app)
-                            / f"{app.bundle}.{app.app_name}.desktop"
+                            self.appdir_path(app) / f"{app.bundle_identifier}.desktop"
                         ),
                         "--output",
                         "appimage",

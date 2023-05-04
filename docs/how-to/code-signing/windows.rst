@@ -48,9 +48,19 @@ commands to import certificates in to one of its certificate stores.
 For instance, this will a import PFX file in to the ``Personal`` certificate
 store of ``Current User``:
 
-.. code-block:: powershell
+.. tabs::
 
-    Import-PfxCertificate -FilePath .\cert.pfx -CertStoreLocation Cert:\CurrentUser\My -Password MySecretPassword
+  .. group-tab:: CMD
+
+    .. code-block:: doscon
+
+      C:\...>certutil.exe -user -importpfx -p MySecretPassword My .\cert.pfx
+
+  .. group-tab:: PowerShell
+
+    .. code-block:: pwsh-session
+
+      PS C:\...> Import-PfxCertificate -FilePath .\cert.pfx -CertStoreLocation Cert:\CurrentUser\My -Password MySecretPassword
 
 Refer to your Certificate Authority's documentation for specific instructions.
 
@@ -68,6 +78,6 @@ to, double-click it to access information about it. Near the bottom of the list
 on the Details tab, you'll find the ``Thumbprint`` field with the 40 character
 SHA-1 hash to use as the ``identity`` in the Briefcase package command.
 
-.. code-block:: powershell
+.. code-block:: doscon
 
-    briefcase package --identity <certificate thumbprint>
+    (venv) C:\...>briefcase package --identity <certificate thumbprint>

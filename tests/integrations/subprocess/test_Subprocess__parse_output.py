@@ -110,7 +110,7 @@ def test_call_with_parser_error(mock_sub, capsys, sub_check_output_kw):
     ],
 )
 def test_text_eq_true_default_overriding(mock_sub, in_kwargs, kwargs):
-    """if text or universal_newlines is explicitly provided, those should override
+    """If text or universal_newlines is explicitly provided, those should override
     text=true default."""
 
     mock_sub.parse_output(splitlines_parser, ["hello", "world"], **in_kwargs)

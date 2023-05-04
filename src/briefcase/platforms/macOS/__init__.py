@@ -20,9 +20,11 @@ from briefcase.integrations.xcode import (
 
 try:
     import dmgbuild
-except ImportError:
+except ImportError:  # pragma: no cover
     # On non-macOS platforms, dmgbuild won't be installed.
     # Allow the plugin to be loaded; raise an error when tools are verified.
+    # We don't need to worry about coverage of this branch because it's
+    # handled by the verification process.
     dmgbuild = None
 
 
@@ -69,9 +71,7 @@ def macOS_log_clean_filter(line):
 class macOSMixin:
     platform = "macOS"
     supported_host_os = {"Darwin"}
-    supported_host_os_reason = (
-        "Building and / or code signing a DMG requires running on macOS."
-    )
+    supported_host_os_reason = "macOS applications can only be built on macOS."
 
 
 class macOSRunMixin:

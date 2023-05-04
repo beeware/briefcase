@@ -17,6 +17,7 @@ def mock_tools(mock_tools) -> ToolCache:
     mock_tools.os.environ = {}
     mock_tools.os.fsdecode = os.fsdecode
     mock_tools.os.access = os.access
+    mock_tools.os.X_OK = os.X_OK
 
     # Identify the host platform
     mock_tools._test_download_tag = {

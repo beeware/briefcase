@@ -54,7 +54,7 @@ then for project-level settings.
 ``[tool.briefcase]``
 --------------------
 
-The base `[tool.briefcase]` section declares settings that project specific,
+The base ``[tool.briefcase]`` section declares settings that project specific,
 or are are common to all applications in this repository.
 
 ``[tool.briefcase.app.<app name>]``
@@ -103,7 +103,7 @@ Required values
 A reverse-domain name that can be used to identify resources for the
 application e.g., ``com.example``. The bundle identifier will be combined with
 the app name to produce a unique application identifier - e.g., if the bundle
-identifier is ``com.example`` and the app name is ``myapp`, the application
+identifier is ``com.example`` and the app name is ``myapp``, the application
 will be identified as ``com.example.myapp``.
 
 ``project_name``
@@ -165,7 +165,7 @@ A list of paths, relative to the ``pyproject.toml`` file, where source code for
 the application can be found. The contents of any named files or folders will be
 copied into the application bundle. Parent directories in any named path will
 not be included. For example, if you specify ``src/myapp`` as a source, the
-contents of the `myapp` folder will be copied into the application bundle; the
+contents of the ``myapp`` folder will be copied into the application bundle; the
 ``src`` directory will not be reproduced.
 
 Unlike most other keys in a configuration file, ``sources`` is a *cumulative*
@@ -378,11 +378,11 @@ this argument is ignored.
 
 Indicates that the platform is not supported. For example, if you know that
 the app cannot be deployed to Android for some reason, you can explicitly
-prevent deployment by setting `supported=False` in the Android section of the
-app configuration file.
+prevent deployment by setting ``supported=False`` in the Android section of
+the app configuration file.
 
-If `supported` is set to `false`, the create command will fail, advising the
-user of the limitation.
+If ``supported`` is set to ``false``, the create command will fail, advising
+the user of the limitation.
 
 ``template``
 ~~~~~~~~~~~~
@@ -399,10 +399,11 @@ the output format and Python version.
 
 The branch of the project template to use when generating the app. If the
 template is a local file, this attribute will be ignored. If not specified,
-Briefcase will use a branch matching the version of Briefcase that is being used
-(i.e., if you're using Briefcase 0.3.9, Briefcase will use the `v0.3.9` template
-branch when generating the app). If you're using a development version of
-Briefcase, Briefcase will use the `main` branch of the template.
+Briefcase will use a branch matching the version of Briefcase that is being
+used (i.e., if you're using Briefcase 0.3.9, Briefcase will use the
+``v0.3.9`` template branch when generating the app). If you're using a
+development version of Briefcase, Briefcase will use the ``main`` branch of the
+template.
 
 ``test_requires``
 ~~~~~~~~~~~~~~~~~
@@ -422,7 +423,7 @@ A list of paths, relative to the ``pyproject.toml`` file, where test code for
 the application can be found. The contents of any named files or folders will be
 copied into the application bundle. Parent directories in any named path will
 not be included. For example, if you specify ``src/myapp`` as a source, the
-contents of the `myapp` folder will be copied into the application bundle; the
+contents of the ``myapp`` folder will be copied into the application bundle; the
 ``src`` directory will not be reproduced.
 
 As with ``sources``, ``test_sources`` is a *cumulative* setting. If an
@@ -496,3 +497,30 @@ look for ``resource/round-icon-42.png``, ``resource/square-icon-42.png``,
 -------
 
 A URL for help related to the document format.
+
+PEP621 compatibility
+====================
+
+Many of the keys that exist in Briefcase's configuration have analogous settings
+in `PEP621 project metadata
+<https://packaging.python.org/en/latest/specifications/declaring-project-metadata>`__.
+If your ``pyproject.toml`` defines a ``[project]`` section, Briefcase will honor
+those settings as a top level definition. Any ``[tool.briefcase]`` definitions
+will override those in the ``[project]`` section.
+
+The following PEP621 project metadata keys will be used by Briefcase if they are
+available:
+
+* ``version`` maps to the same key in Briefcase.
+* ``authors`` The ``email`` and ``name`` keys of the first value in the
+  ``authors`` setting map to ``author`` and ``author_email``.
+* ``dependencies`` maps to the Briefcase ``requires`` setting. This is a
+  cumulative setting; any packages defined in the ``requires`` setting at the
+  ``[tool.briefcase]`` level will be appended to the packages defined with
+  ``dependencies`` at the ``[project]`` level.
+* ``description`` maps to the same key in Briefcase.
+* ``test`` in an ``[project.optional-dependencies]`` section maps to
+  ``test_requires``., As with ``dependencies``/``requires``, this is a
+  cumulative setting.
+* ``text`` in a ``[project.license]`` section will be mapped to ``license``.
+* ``homepage`` in a ``[project.urls]`` section will be mapped to ``url``.

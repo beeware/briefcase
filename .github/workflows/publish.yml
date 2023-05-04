@@ -7,8 +7,11 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      # This permission is required for trusted publishing.
+      id-token: write
     steps:
-      - uses: dsaltares/fetch-gh-release-asset@1.1.0
+      - uses: dsaltares/fetch-gh-release-asset@1.1.1
         with:
           version: tags/${{ github.event.release.tag_name }}
           file: ${{ github.event.repository.name }}.*
@@ -17,5 +20,3 @@ jobs:
 
       - name: Publish release to production PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          password: ${{ secrets.PYPI_PASSWORD }}
