@@ -62,6 +62,16 @@ If ``true`` the installer will attempt to install the app as a per-machine app,
 available to all users. If ``false``, the installer will install as a per-user
 app. If undefined the installer will ask the user for their preference.
 
+``use_full_install_path``
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Controls whether the app will be installed using a path which includes both the
+application name *and* the company or developer's name. If ``true`` (the
+default), the app will be installed to ``Program Files\<Author Name>\<Project
+Name>``. If ``false``, it will be installed to ``Program Files\<Project Name>``.
+Using the full path makes sense for larger companies with multiple applications,
+but less so for a solo developer.
+
 ``version_triple``
 ~~~~~~~~~~~~~~~~~~
 
