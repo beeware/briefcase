@@ -479,3 +479,29 @@ def test_sign_app(dummy_command, first_app_with_binaries, tmp_path):
         # Check parent of path is not in parents
         assert path.parent not in parents
         parents.add(path)
+
+
+def test_sign_app_with_failure(dummy_command, first_app_with_binaries, tmp_path):
+    """If signing a single file in the app fails, the error is surfaced."""
+
+    # Sign the app. Signing first_dylib.dylib will fail.
+    def _codesign(args, **kwargs):
+        if Path(args[1]).name == "first_dylib.dylib":
+            raise subprocess.CalledProcessError(
+                returncode=1, cmd=args, stderr=f"{args[1]}: Unknown error"
+            )
+
+    dummy_command.tools.subprocess.run.side_effect = _codesign
+
+    # The invocation will raise an error; however, we can't predict exactly which
+    # file will raise an error.
+    with pytest.raises(
+        BriefcaseCommandError, match=r"Unable to code sign .*first_dylib\.dylib"
+    ):
+        dummy_command.sign_app(
+            first_app_with_binaries, identity="Sekrit identity (DEADBEEF)"
+        )
+
+    # There has been at least 1 call to sign files. We can't know how many are
+    # actually signed, as threads are involved.
+    dummy_command.tools.subprocess.run.call_count > 0
