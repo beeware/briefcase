@@ -27,6 +27,7 @@ class BuildCommand(BaseCommand):
         update: bool,
         update_requirements: bool,
         update_resources: bool,
+        update_support: bool,
         no_update: bool,
         test_mode: bool,
         **options,
@@ -41,6 +42,7 @@ class BuildCommand(BaseCommand):
             updated before building?
         :param update_resources: Should the application resources be updated
             before building?
+        :param update_support: Should the application support be updated?
         :param no_update: Should automated updates be disabled?
         :param test_mode: Is the app being build in test mode?
         """
@@ -50,6 +52,7 @@ class BuildCommand(BaseCommand):
             update  # An explicit update has been requested
             or update_requirements  # An explicit update of requirements has been requested
             or update_resources  # An explicit update of resources has been requested
+            or update_support  # An explicit update of app support has been requested
             or (
                 test_mode and not no_update
             )  # Test mode, but updates have not been disabled
@@ -58,6 +61,7 @@ class BuildCommand(BaseCommand):
                 app,
                 update_requirements=update_requirements,
                 update_resources=update_resources,
+                update_support=update_support,
                 test_mode=test_mode,
                 **options,
             )
@@ -81,6 +85,7 @@ class BuildCommand(BaseCommand):
         update: bool = False,
         update_requirements: bool = False,
         update_resources: bool = False,
+        update_support: bool = False,
         no_update: bool = False,
         test_mode: bool = False,
         **options,
@@ -100,6 +105,10 @@ class BuildCommand(BaseCommand):
                 raise BriefcaseCommandError(
                     "Cannot specify both --update-resources and --no-update"
                 )
+            if update_support:
+                raise BriefcaseCommandError(
+                    "Cannot specify both --update-support and --no-update"
+                )
 
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
@@ -111,6 +120,7 @@ class BuildCommand(BaseCommand):
                 update=update,
                 update_requirements=update_requirements,
                 update_resources=update_resources,
+                update_support=update_support,
                 no_update=no_update,
                 test_mode=test_mode,
                 **options,
@@ -123,6 +133,7 @@ class BuildCommand(BaseCommand):
                     update=update,
                     update_requirements=update_requirements,
                     update_resources=update_resources,
+                    update_support=update_support,
                     no_update=no_update,
                     test_mode=test_mode,
                     **full_options(state, options),

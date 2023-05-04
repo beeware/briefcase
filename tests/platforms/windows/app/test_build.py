@@ -1,9 +1,11 @@
 import re
+import shutil
 import subprocess
 from pathlib import Path
 from unittest import mock
 
 import pytest
+import tomli_w
 
 import briefcase.platforms.windows.app
 from briefcase.console import Console, Log
@@ -12,6 +14,8 @@ from briefcase.integrations.rcedit import RCEdit
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.integrations.windows_sdk import WindowsSDK
 from briefcase.platforms.windows.app import WindowsAppBuildCommand
+
+from ....utils import create_file
 
 
 @pytest.fixture
@@ -23,6 +27,8 @@ def build_command(tmp_path):
         data_path=tmp_path / "briefcase",
     )
     command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
+    command.tools.shutil = mock.MagicMock(spec_set=shutil)
+    command.tools.download = mock.MagicMock()
     command.tools.rcedit = RCEdit(command.tools)
     return command
 
@@ -278,3 +284,87 @@ def test_build_app_failure(build_command, first_app_config, tmp_path):
         match=r"Unable to update details on stub app for first-app.",
     ):
         build_command.build_app(first_app_config)
+
+
+def test_build_app_with_support_package_update(
+    build_command,
+    first_app_config,
+    tmp_path,
+    windows_sdk,
+    capsys,
+):
+    """If a support package update is performed, the user is warned."""
+
+    # To trigger the app package update logic, we need to invoke the full build
+    # command, and fake being on a verified Windows install with a generated
+    # app.
+    build_command.tools.host_os = "Windows"
+    build_command.tools.windows_sdk = windows_sdk
+    build_command.bundle_path(first_app_config).mkdir(parents=True)
+
+    # Hard code a support revision so that the download support package is fixed
+    first_app_config.support_revision = "1"
+
+    # Fake the existence of some source files.
+    create_file(
+        tmp_path / "base_path" / "src" / "first_app" / "app.py",
+        "print('an app')",
+    )
+
+    # Mock the generated app template
+    (build_command.bundle_path(first_app_config) / "src").mkdir(parents=True)
+
+    # Populate a briefcase.toml that mirrors a real Windows app
+    with (build_command.bundle_path(first_app_config) / "briefcase.toml").open(
+        "wb"
+    ) as f:
+        index = {
+            "paths": {
+                "app_path": "src/app",
+                "app_package_path": "src/app_packages",
+                "support_path": "src",
+            }
+        }
+        tomli_w.dump(index, f)
+
+    # Build the app with a support package update
+    build_command(first_app_config, update_support=True)
+
+    # update the app binary resources
+    build_command.tools.subprocess.run.assert_called_once_with(
+        [
+            tmp_path / "briefcase" / "tools" / "rcedit-x64.exe",
+            Path("src/First App.exe"),
+            "--set-version-string",
+            "CompanyName",
+            "Megacorp",
+            "--set-version-string",
+            "FileDescription",
+            "First App",
+            "--set-version-string",
+            "FileVersion",
+            "0.0.1",
+            "--set-version-string",
+            "InternalName",
+            "first_app",
+            "--set-version-string",
+            "OriginalFilename",
+            "First App.exe",
+            "--set-version-string",
+            "ProductName",
+            "First App",
+            "--set-version-string",
+            "ProductVersion",
+            "0.0.1",
+            "--set-icon",
+            "icon.ico",
+        ],
+        check=True,
+        cwd=tmp_path / "base_path" / "build" / "first-app" / "windows" / "app",
+    )
+
+    # No attempt was made to clean up the support package.
+    build_command.tools.shutil.rmtree.assert_not_called()
+
+    # The user was warned that support package update may not work.
+    assert "WARNING: Support package update may be imperfect" in capsys.readouterr().out

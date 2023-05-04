@@ -597,6 +597,7 @@ def test_update_package_one_app(package_command, first_app, tmp_path):
                 "sign_app": True,
                 "update_requirements": True,
                 "update_resources": True,
+                "update_support": True,
             },
         ),
         (
@@ -665,6 +666,7 @@ def test_update_package_two_app(package_command, first_app, second_app, tmp_path
                 "sign_app": True,
                 "update_requirements": True,
                 "update_resources": True,
+                "update_support": True,
             },
         ),
         (
@@ -701,6 +703,7 @@ def test_update_package_two_app(package_command, first_app, second_app, tmp_path
                 "sign_app": True,
                 "update_requirements": True,
                 "update_resources": True,
+                "update_support": True,
                 # state of previous calls have been preserved.
                 "update_state": "first",
                 "build_state": "first",
