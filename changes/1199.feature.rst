@@ -1,0 +1,1 @@
+The company/author name in the installation path for Windows MSI installers is now optional.

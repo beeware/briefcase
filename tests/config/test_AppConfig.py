@@ -22,6 +22,8 @@ def test_minimal_AppConfig():
     assert config.requires is None
 
     # Derived properties have been set.
+    assert config.bundle_name == "myapp"
+    assert config.bundle_identifier == "org.beeware.myapp"
     assert config.formal_name == "myapp"
     assert config.class_name == "myapp"
     assert config.document_types == {}
@@ -251,6 +253,46 @@ def test_package_name(bundle, package_name):
     )
 
     assert config.package_name == package_name
+
+
+@pytest.mark.parametrize(
+    "app_name, bundle_name",
+    [
+        ("my-app", "my-app"),
+        ("my_app", "my-app"),
+    ],
+)
+def test_bundle_name(app_name, bundle_name):
+    config = AppConfig(
+        app_name=app_name,
+        version="1.2.3",
+        bundle="com.example",
+        description="A simple app",
+        sources=["src/my_app"],
+    )
+
+    assert config.bundle_name == bundle_name
+
+
+@pytest.mark.parametrize(
+    "app_name, bundle_name",
+    [
+        ("my-app", "my-app"),
+        ("my_app", "my-app"),
+    ],
+)
+def test_bundle_identifier(app_name, bundle_name):
+    bundle = "com.example"
+
+    config = AppConfig(
+        app_name=app_name,
+        version="1.2.3",
+        bundle=bundle,
+        description="A simple app",
+        sources=["src/my_app"],
+    )
+
+    assert config.bundle_identifier == f"{bundle}.{bundle_name}"
 
 
 @pytest.mark.parametrize(

@@ -1,5 +1,6 @@
 import os
 import subprocess
+from pathlib import Path
 from unittest import mock
 
 import pytest
@@ -473,5 +474,45 @@ def test_sign_app(dummy_command, first_app_with_binaries, tmp_path):
             sign_call(tmp_path, frameworks_path / "Extras.framework"),
             sign_call(tmp_path, app_path),
         ],
-        any_order=False,
+        any_order=True,
     )
+
+    # Also check that files are not signed after their parent directory has been
+    # signed. Reduce the files mentions in the calls to the dummy command
+    # to a list of path objects, then ensure that the call to sign any given file
+    # does not occur *after* it's parent directory.
+    sign_targets = [
+        Path(call.args[0][1]) for call in dummy_command.tools.subprocess.run.mock_calls
+    ]
+
+    parents = set()
+    for path in sign_targets:
+        # Check parent of path is not in parents
+        assert path.parent not in parents
+        parents.add(path)
+
+
+def test_sign_app_with_failure(dummy_command, first_app_with_binaries, tmp_path):
+    """If signing a single file in the app fails, the error is surfaced."""
+
+    # Sign the app. Signing first_dylib.dylib will fail.
+    def _codesign(args, **kwargs):
+        if Path(args[1]).name == "first_dylib.dylib":
+            raise subprocess.CalledProcessError(
+                returncode=1, cmd=args, stderr=f"{args[1]}: Unknown error"
+            )
+
+    dummy_command.tools.subprocess.run.side_effect = _codesign
+
+    # The invocation will raise an error; however, we can't predict exactly which
+    # file will raise an error.
+    with pytest.raises(
+        BriefcaseCommandError, match=r"Unable to code sign .*first_dylib\.dylib"
+    ):
+        dummy_command.sign_app(
+            first_app_with_binaries, identity="Sekrit identity (DEADBEEF)"
+        )
+
+    # There has been at least 1 call to sign files. We can't know how many are
+    # actually signed, as threads are involved.
+    dummy_command.tools.subprocess.run.call_count > 0

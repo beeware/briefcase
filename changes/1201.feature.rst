@@ -1,0 +1,1 @@
+macOS code signing is now multithreaded (and therefore much faster!)

@@ -173,6 +173,21 @@ perform container setup operations as ``root``, switch the container's user to
     USER brutus
     """
 
+Platform quirks
+===============
+
+Use caution with ``--update-support``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Care should be taken when using the ``--update-support`` option to the
+``update``, ``build`` or ``run`` commands. Support packages in Linux AppImages
+are overlaid with app content, so it isn't possible to remove all old support
+files before installing new ones.
+
+Briefcase will unpack the new support package without cleaning up existing
+support package content. This *should* work; however, ensure a reproducible
+release artefacts, it is advisable to perform a clean app build before release.
+
 Runtime issues with AppImages
 =============================
 

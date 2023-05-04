@@ -22,6 +22,7 @@ class UpdateCommand(CreateCommand):
         app: BaseConfig,
         update_requirements: bool,
         update_resources: bool,
+        update_support: bool,
         test_mode: bool,
         **options,
     ):
@@ -30,6 +31,7 @@ class UpdateCommand(CreateCommand):
         :param app: The config object for the app
         :param update_requirements: Should requirements be updated?
         :param update_resources: Should extra resources be updated?
+        :param update_support: Should app support be updated?
         :param test_mode: Should the app be updated in test mode?
         """
 
@@ -53,6 +55,11 @@ class UpdateCommand(CreateCommand):
             self.logger.info("Updating application resources...", prefix=app.app_name)
             self.install_app_resources(app=app)
 
+        if update_support:
+            self.logger.info("Updating application support...", prefix=app.app_name)
+            self.cleanup_app_support_package(app=app)
+            self.install_app_support_package(app=app)
+
         self.logger.info("Removing unneeded app content...", prefix=app.app_name)
         self.cleanup_app_content(app=app)
 
@@ -63,6 +70,7 @@ class UpdateCommand(CreateCommand):
         app: Optional[BaseConfig] = None,
         update_requirements: bool = False,
         update_resources: bool = False,
+        update_support: bool = False,
         test_mode: bool = False,
         **options,
     ):
@@ -75,6 +83,7 @@ class UpdateCommand(CreateCommand):
                 app,
                 update_requirements=update_requirements,
                 update_resources=update_resources,
+                update_support=update_support,
                 test_mode=test_mode,
                 **options,
             )
@@ -85,6 +94,7 @@ class UpdateCommand(CreateCommand):
                     app,
                     update_requirements=update_requirements,
                     update_resources=update_resources,
+                    update_support=update_support,
                     test_mode=test_mode,
                     **full_options(state, options),
                 )

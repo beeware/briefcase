@@ -28,7 +28,6 @@ def test_install_app_support_package(
     app_requirements_path_index,
 ):
     """A support package can be downloaded and unpacked where it is needed."""
-
     # Mock download.file to return a support package
     create_command.tools.download.file = mock.MagicMock(
         side_effect=mock_tgz_download(

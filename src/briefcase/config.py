@@ -11,162 +11,11 @@ except ModuleNotFoundError:
 
 from briefcase.platforms import get_output_formats, get_platforms
 
+from .constants import RESERVED_WORDS
 from .exceptions import BriefcaseConfigError
 
 # PEP508 provides a basic restriction on naming
 PEP508_NAME_RE = re.compile(r"^([A-Z0-9]|[A-Z0-9][A-Z0-9._-]*[A-Z0-9])$", re.IGNORECASE)
-
-# Javascript reserved keywords:
-# https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#reserved_keywords_as_of_ecmascript_2015
-JAVASCRIPT_RESERVED_WORDS = {
-    "break",
-    "case",
-    "catch",
-    "class",
-    "const",
-    "continue",
-    "debugger",
-    "default",
-    "delete",
-    "do",
-    "else",
-    "export",
-    "extends",
-    "finally",
-    "for",
-    "function",
-    "if",
-    "import",
-    "in",
-    "instanceof",
-    "new",
-    "return",
-    "super",
-    "switch",
-    "this",
-    "throw",
-    "try",
-    "typeof",
-    "var",
-    "void",
-    "while",
-    "with",
-    "yield",
-}
-
-# Java reserved keywords
-# https://en.wikipedia.org/wiki/List_of_Java_keywords
-JAVA_RESERVED_WORDS = {
-    # Keywords
-    "abstract",
-    "assert",
-    "boolean",
-    "break",
-    "byte",
-    "case",
-    "catch",
-    "char",
-    "class",
-    "const",
-    "continue",
-    "default",
-    "do",
-    "double",
-    "else",
-    "enum",
-    "extends",
-    "final",
-    "finally",
-    "float",
-    "for",
-    "goto",
-    "if",
-    "implements",
-    "import",
-    "instanceof",
-    "int",
-    "interface",
-    "long",
-    "native",
-    "new",
-    "package",
-    "private",
-    "protected",
-    "public",
-    "return",
-    "short",
-    "static",
-    "super",
-    "switch",
-    "synchronized",
-    "this",
-    "throw",
-    "throws",
-    "transient",
-    "try",
-    "void",
-    "volatile",
-    "while",
-    # Reserved Identifiers
-    "exports",
-    "module",
-    "non-sealed",
-    "open",
-    "opens",
-    "permits",
-    "provides",
-    "record",
-    "requires",
-    "sealed",
-    "to",
-    "transitive",
-    "uses",
-    "var",
-    "with",
-    "yield",
-    # Reserved Literals
-    "true",
-    "false",
-    "null",
-    # Unused, but reserved.
-    "strictfp",
-}
-
-
-# Names that are illegal as Windows filenames
-# https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file
-WINDOWS_RESERVED_WORDS = {
-    "con",
-    "prn",
-    "aux",
-    "nul",
-    "com1",
-    "com2",
-    "com3",
-    "com4",
-    "com5",
-    "com6",
-    "com7",
-    "com8",
-    "com9",
-    "com0",
-    "lpt1",
-    "lpt2",
-    "lpt3",
-    "lpt4",
-    "lpt5",
-    "lpt6",
-    "lpt7",
-    "lpt8",
-    "lpt9",
-    "lpt0",
-}
-
-NON_PYTHON_RESERVED_WORDS = set.union(
-    JAVASCRIPT_RESERVED_WORDS,
-    JAVA_RESERVED_WORDS,
-    WINDOWS_RESERVED_WORDS,
-)
 
 
 def is_valid_pep508_name(app_name):
@@ -176,10 +25,7 @@ def is_valid_pep508_name(app_name):
 
 def is_reserved_keyword(app_name):
     """Determine if the name is a reserved keyword."""
-    return (
-        keyword.iskeyword(app_name.lower())
-        or app_name.lower() in NON_PYTHON_RESERVED_WORDS
-    )
+    return keyword.iskeyword(app_name.lower()) or app_name.lower() in RESERVED_WORDS
 
 
 def is_valid_app_name(app_name):
@@ -419,7 +265,7 @@ class AppConfig(BaseConfig):
             )
 
     def __repr__(self):
-        return f"<{self.bundle}.{self.app_name} v{self.version} AppConfig>"
+        return f"<{self.bundle_identifier} v{self.version} AppConfig>"
 
     @property
     def module_name(self):
@@ -429,6 +275,23 @@ class AppConfig(BaseConfig):
         * all `-` have been replaced with `_`.
         """
         return self.app_name.replace("-", "_")
+
+    @property
+    def bundle_name(self):
+        """The bundle name for the app.
+
+        This is derived from the app name, but:
+        * all `_` have been replaced with `-`.
+        """
+        return self.app_name.replace("_", "-")
+
+    @property
+    def bundle_identifier(self):
+        """The bundle identifier for the app.
+
+        This is derived from the bundle and the bundle name, joined by a `.`.
+        """
+        return f"{self.bundle}.{self.bundle_name}"
 
     @property
     def class_name(self):
@@ -491,6 +354,60 @@ def merge_config(config, data):
     config.update(data)
 
 
+def merge_pep621_config(global_config, pep621_config):
+    """Merge a PEP621 configuration into a Briefcase configuration."""
+
+    def maybe_update(field, *project_fields):
+        # If there's an existing key in the Briefcase config, it takes priority.
+        if field in global_config:
+            return
+
+        # Traverse the fields in the pep621 config; if the config exists, set it
+        # in the Briefcase config.
+        datum = pep621_config
+        try:
+            for key in project_fields:
+                datum = datum[key]
+        except KeyError:
+            pass
+        else:
+            global_config[field] = datum
+
+    # Keys that map direclty
+    maybe_update("description", "description")
+    maybe_update("license", "license", "text")
+    maybe_update("url", "urls", "Homepage")
+    maybe_update("version", "version")
+
+    # Use the details of the first author as the Briefcase author.
+    if "author" not in global_config:
+        try:
+            global_config["author"] = pep621_config["authors"][0]["name"]
+        except (KeyError, IndexError):
+            pass
+    if "author_email" not in global_config:
+        try:
+            global_config["author_email"] = pep621_config["authors"][0]["email"]
+        except (KeyError, IndexError):
+            pass
+
+    # Briefcase requires is cumulative over PEP621 dependencies
+    try:
+        pep621_dependencies = pep621_config["dependencies"]
+        requires = global_config.get("requires", [])
+        global_config["requires"] = pep621_dependencies + requires
+    except KeyError:
+        pass
+
+    # Briefcase test_requires is cumulative over PEP621 optional test dependencies
+    try:
+        pep621_test_dependencies = pep621_config["optional-dependencies"]["test"]
+        test_requires = global_config.get("test_requires", [])
+        global_config["test_requires"] = pep621_test_dependencies + test_requires
+    except KeyError:
+        pass
+
+
 def parse_config(config_file, platform, output_format):
     """Parse the briefcase section of the pyproject.toml configuration file.
 
@@ -521,12 +438,19 @@ def parse_config(config_file, platform, output_format):
     """
     try:
         pyproject = tomllib.load(config_file)
-
-        global_config = pyproject["tool"]["briefcase"]
     except tomllib.TOMLDecodeError as e:
         raise BriefcaseConfigError(f"Invalid pyproject.toml: {e}") from e
+
+    try:
+        global_config = pyproject["tool"]["briefcase"]
     except KeyError as e:
         raise BriefcaseConfigError("No tool.briefcase section in pyproject.toml") from e
+
+    # Merge the PEP621 configuration (if it exists)
+    try:
+        merge_pep621_config(global_config, pyproject["project"])
+    except KeyError:
+        pass
 
     # For consistent results, sort the platforms and formats
     all_platforms = sorted(get_platforms().keys())

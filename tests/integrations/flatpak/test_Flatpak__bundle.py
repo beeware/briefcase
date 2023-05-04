@@ -10,7 +10,7 @@ def test_bundle(flatpak, tmp_path):
 
     flatpak.bundle(
         repo_url="https://example.com/flatpak",
-        bundle="com.example",
+        bundle_identifier="com.example.my-app",
         app_name="my-app",
         version="1.2.3",
         build_path=tmp_path / "build",
@@ -46,7 +46,7 @@ def test_bundle_fail(flatpak, tmp_path):
     ):
         flatpak.bundle(
             repo_url="https://example.com/flatpak",
-            bundle="com.example",
+            bundle_identifier="com.example.my-app",
             app_name="my-app",
             version="1.2.3",
             build_path=tmp_path / "build",

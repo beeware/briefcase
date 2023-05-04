@@ -534,3 +534,68 @@ def test_document_types():
             "value": 0,
         },
     }
+
+
+def test_pep621_defaults():
+    config_file = BytesIO(
+        b"""
+        [project]
+        name = "awesome"
+        version = "1.2.3"
+        authors = [{name = "Kim Park", email = "kim@example.com"}]
+        dependencies = ["numpy"]
+        description = "awesome project"
+
+        [project.urls]
+        Homepage = "https://example.com/awesome"
+
+        [project.optional-dependencies]
+        test = ["pytest"]
+
+        [project.license]
+        text = "You can use it while standing on one foot"
+
+        [tool.briefcase]
+        project_name = "Awesome app"
+        bundle = "com.example"
+
+        [tool.briefcase.app.awesome]
+        formal_name = "Awesome Application"
+        long_description = "The application is very awesome"
+        sources = [
+            "src",
+        ]
+        test_sources = [
+            "tests",
+        ]
+
+        [tool.briefcase.app.awesome.macOS]
+        requires = [
+            "toga-cocoa~=0.3.1",
+            "std-nslog~=1.0.0"
+        ]
+        """
+    )
+
+    global_options, apps = parse_config(
+        config_file, platform="macOS", output_format="app"
+    )
+
+    awesome = apps["awesome"]
+    assert awesome == {
+        "project_name": "Awesome app",
+        "bundle": "com.example",
+        "version": "1.2.3",
+        "license": "You can use it while standing on one foot",
+        "author": "Kim Park",
+        "author_email": "kim@example.com",
+        "url": "https://example.com/awesome",
+        "description": "awesome project",
+        "requires": ["numpy", "toga-cocoa~=0.3.1", "std-nslog~=1.0.0"],
+        "test_requires": ["pytest"],
+        "app_name": "awesome",
+        "sources": ["src"],
+        "test_sources": ["tests"],
+        "formal_name": "Awesome Application",
+        "long_description": "The application is very awesome",
+    }

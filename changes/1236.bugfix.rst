@@ -1,0 +1,1 @@
+Filenames and directories in rpm package definitions are quoted in order to include files with filenames that include whitespace.

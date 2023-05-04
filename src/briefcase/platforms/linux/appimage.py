@@ -97,9 +97,9 @@ class LinuxAppImageMostlyPassiveMixin(LinuxAppImagePassiveMixin):
     def docker_image_tag(self, app):
         """The Docker image tag for an app."""
         try:
-            return f"briefcase/{app.bundle}.{app.app_name.lower()}:{app.manylinux}-appimage"
+            return f"briefcase/{app.bundle_identifier.lower()}:{app.manylinux}-appimage"
         except AttributeError:
-            return f"briefcase/{app.bundle}.{app.app_name.lower()}:appimage"
+            return f"briefcase/{app.bundle_identifier.lower()}:appimage"
 
     def verify_tools(self):
         """If we're using docker, verify that it is available."""
@@ -168,6 +168,29 @@ class LinuxAppImageCreateCommand(
             pass
 
         return context
+
+    def _cleanup_app_support_package(self, support_path):
+        # On Windows, the support path is co-mingled with app content.
+        # This means updating the support package is imperfect.
+        # Warn the user that there could be problems.
+        self.logger.warning(
+            """
+*************************************************************************
+** WARNING: Support package update may be imperfect                    **
+*************************************************************************
+
+    Support packages in Linux AppImages are overlaid with app content,
+    so it isn't possible to remove all old support files before
+    installing new ones.
+
+    Briefcase will unpack the new support package without cleaning up
+    existing support package content. This *should* work; however,
+    ensure a reproducible release artefacts, it is advisable to
+    perform a clean app build before release.
+
+*************************************************************************
+"""
+        )
 
 
 class LinuxAppImageUpdateCommand(LinuxAppImageCreateCommand, UpdateCommand):
@@ -268,8 +291,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
                         os.fsdecode(self.appdir_path(app)),
                         "--desktop-file",
                         os.fsdecode(
-                            self.appdir_path(app)
-                            / f"{app.bundle}.{app.app_name}.desktop"
+                            self.appdir_path(app) / f"{app.bundle_identifier}.desktop"
                         ),
                         "--output",
                         "appimage",

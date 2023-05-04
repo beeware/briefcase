@@ -170,6 +170,7 @@ def test_dev_command(monkeypatch, logger, console, cmdline, expected_options):
         ("run -u", {"update": True}),
         ("run --update", {"update": True}),
         ("run --update-resources", {"update_resources": True}),
+        ("run --update-support", {"update_support": True}),
         ("run --no-update", {"no_update": True}),
     ],
 )
@@ -192,6 +193,7 @@ def test_run_command(monkeypatch, logger, console, cmdline, expected_options):
         "update": False,
         "update_requirements": False,
         "update_resources": False,
+        "update_support": False,
         "no_update": False,
         "test_mode": False,
         "passthrough": [],

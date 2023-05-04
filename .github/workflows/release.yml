@@ -24,6 +24,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      # This permission is required for trusted publishing.
+      id-token: write
     steps:
       - name: Set build variables
         run: |
@@ -62,4 +64,3 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           repository-url: https://test.pypi.org/legacy/
-          password: ${{ secrets.TEST_PYPI_PASSWORD }}

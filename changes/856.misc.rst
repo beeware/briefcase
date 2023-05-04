@@ -1,0 +1,1 @@
+Briefcase can now update the support package on an existing app.

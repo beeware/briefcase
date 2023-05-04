@@ -674,6 +674,12 @@ a custom location for Briefcase's tools.
         )
 
         parser.add_argument(
+            "--update-support",
+            action="store_true",
+            help=f"Update support package for the app{context_label}",
+        )
+
+        parser.add_argument(
             "--update-resources",
             action="store_true",
             help=f"Update app resources (icons, splash screens, etc){context_label}",
@@ -772,10 +778,12 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                     # Attempt to update the repository
                     remote = repo.remote(name="origin")
                     remote.fetch()
-                except self.tools.git.exc.GitCommandError:
+                except self.tools.git.exc.GitCommandError as e:
                     # We are offline, or otherwise unable to contact
-                    # the origin git repo. It's OK to continue; but warn
-                    # the user that the template may be stale.
+                    # the origin git repo. It's OK to continue; but
+                    # capture the error in the log and warn the user
+                    # that the template may be stale.
+                    self.logger.debug(str(e))
                     self.logger.warning(
                         """
 *************************************************************************
@@ -789,6 +797,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
 *************************************************************************
 """
                     )
+
                 try:
                     # Check out the branch for the required version tag.
                     head = remote.refs[branch]

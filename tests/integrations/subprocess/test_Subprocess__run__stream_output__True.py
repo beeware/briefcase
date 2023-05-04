@@ -10,7 +10,7 @@ from .conftest import CREATE_NEW_PROCESS_GROUP, CREATE_NO_WINDOW
 
 
 @pytest.mark.parametrize("platform", ["Linux", "Darwin", "Windows"])
-def test_call(mock_sub, capsys, platform, sub_stream_kw):
+def test_call(mock_sub, capsys, platform, sub_stream_kw, sleep_zero):
     """A simple call will be invoked."""
 
     mock_sub.tools.sys.platform = platform
@@ -27,7 +27,7 @@ def test_call(mock_sub, capsys, platform, sub_stream_kw):
     assert capsys.readouterr().out == expected_output
 
 
-def test_call_with_arg(mock_sub, capsys, sub_stream_kw):
+def test_call_with_arg(mock_sub, capsys, sub_stream_kw, sleep_zero):
     """Any extra keyword arguments are passed through as-is."""
 
     mock_sub.run(["hello", "world"], universal_newlines=True)
@@ -48,7 +48,7 @@ def test_call_with_arg(mock_sub, capsys, sub_stream_kw):
     assert capsys.readouterr().out == expected_output
 
 
-def test_call_with_path_arg(mock_sub, capsys, tmp_path, sub_stream_kw):
+def test_call_with_path_arg(mock_sub, capsys, tmp_path, sub_stream_kw, sleep_zero):
     """Path-based arguments are converted to strings and passed in as-is."""
 
     mock_sub.run(["hello", tmp_path / "location"], cwd=tmp_path / "cwd")
@@ -93,6 +93,7 @@ def test_call_with_start_new_session(
     start_new_session,
     run_kwargs,
     sub_stream_kw,
+    sleep_zero,
 ):
     """start_new_session is passed thru on Linux and macOS but converted for Windows."""
 
@@ -135,8 +136,9 @@ def test_call_windows_with_start_new_session_and_creationflags(
     capsys,
     creationflags,
     final_creationflags,
+    sleep_zero,
 ):
-    """creationflags used to simulate start_new_session=True should be merged with any
+    """Creationflags used to simulate start_new_session=True should be merged with any
     existing flags."""
 
     mock_sub.tools.host_os = "Windows"
@@ -153,7 +155,7 @@ def test_call_windows_with_start_new_session_and_creationflags(
         )
 
 
-def test_debug_call(mock_sub, capsys, sub_stream_kw):
+def test_debug_call(mock_sub, capsys, sub_stream_kw, sleep_zero):
     """If verbosity is turned up, there is output."""
     mock_sub.tools.logger.verbosity = 2
 
@@ -177,7 +179,7 @@ def test_debug_call(mock_sub, capsys, sub_stream_kw):
     assert capsys.readouterr().out == expected_output
 
 
-def test_debug_call_with_env(mock_sub, capsys, tmp_path, sub_stream_kw):
+def test_debug_call_with_env(mock_sub, capsys, tmp_path, sub_stream_kw, sleep_zero):
     """If verbosity is turned up, injected env vars are included output."""
     mock_sub.tools.logger.verbosity = 2
 
@@ -209,7 +211,7 @@ def test_debug_call_with_env(mock_sub, capsys, tmp_path, sub_stream_kw):
     assert capsys.readouterr().out == expected_output
 
 
-def test_calledprocesserror_exception_logging(mock_sub, capsys):
+def test_calledprocesserror_exception_logging(mock_sub, sleep_zero, capsys):
     mock_sub.tools.logger.verbosity = 2
 
     with pytest.raises(CalledProcessError):
@@ -244,7 +246,7 @@ def test_calledprocesserror_exception_logging(mock_sub, capsys):
         ),
     ],
 )
-def test_text_eq_true_default_overriding(mock_sub, in_kwargs, kwargs):
+def test_text_eq_true_default_overriding(mock_sub, in_kwargs, kwargs, sleep_zero):
     """If text or universal_newlines is explicitly provided, those should override
     text=true default."""
     mock_sub.run(["hello", "world"], **in_kwargs)

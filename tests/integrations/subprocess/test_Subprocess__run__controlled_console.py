@@ -6,7 +6,7 @@ from unittest.mock import ANY
 import pytest
 
 
-def test_call(mock_sub, capsys, sub_stream_kw):
+def test_call(mock_sub, sub_stream_kw, sleep_zero, capsys):
     """A simple call will be invoked."""
 
     with mock_sub.tools.input.wait_bar():
@@ -24,7 +24,7 @@ def test_call(mock_sub, capsys, sub_stream_kw):
     assert capsys.readouterr().out == expected_output
 
 
-def test_call_with_arg(mock_sub, capsys, sub_stream_kw):
+def test_call_with_arg(mock_sub, sub_stream_kw, sleep_zero, capsys):
     """Any extra keyword arguments are passed through as-is."""
 
     with mock_sub.tools.input.wait_bar():
@@ -47,7 +47,7 @@ def test_call_with_arg(mock_sub, capsys, sub_stream_kw):
     assert capsys.readouterr().out == expected_output
 
 
-def test_debug_call(mock_sub, capsys, sub_stream_kw):
+def test_debug_call(mock_sub, sub_stream_kw, sleep_zero, capsys):
     """If verbosity is turned up, there is debug output."""
     mock_sub.tools.logger.verbosity = 2
 
@@ -70,7 +70,7 @@ def test_debug_call(mock_sub, capsys, sub_stream_kw):
     assert capsys.readouterr().out == expected_output
 
 
-def test_debug_call_with_env(mock_sub, capsys, tmp_path, sub_stream_kw):
+def test_debug_call_with_env(mock_sub, sub_stream_kw, sleep_zero, capsys, tmp_path):
     """If verbosity is turned up, injected env vars are included in debug output."""
     mock_sub.tools.logger.verbosity = 2
 
@@ -133,8 +133,8 @@ def test_debug_call_with_env(mock_sub, capsys, tmp_path, sub_stream_kw):
         ),
     ],
 )
-def test_text_eq_true_default_overriding(mock_sub, in_kwargs, kwargs):
-    """if text or universal_newlines is explicitly provided, those should override
+def test_text_eq_true_default_overriding(mock_sub, in_kwargs, kwargs, sleep_zero):
+    """If text or universal_newlines is explicitly provided, those should override
     text=true default."""
     with mock_sub.tools.input.wait_bar():
         mock_sub.run(["hello", "world"], **in_kwargs)
@@ -147,7 +147,13 @@ def test_text_eq_true_default_overriding(mock_sub, in_kwargs, kwargs):
     )
 
 
-def test_stderr_is_redirected(mock_sub, streaming_process, sub_stream_kw, capsys):
+def test_stderr_is_redirected(
+    mock_sub,
+    streaming_process,
+    sub_stream_kw,
+    sleep_zero,
+    capsys,
+):
     """When stderr is redirected, it should be included in the result."""
     stderr_output = "stderr output\nline 2"
     streaming_process.stderr.read.return_value = stderr_output
@@ -176,7 +182,13 @@ def test_stderr_is_redirected(mock_sub, streaming_process, sub_stream_kw, capsys
     assert run_result.stderr == stderr_output
 
 
-def test_stderr_dev_null(mock_sub, streaming_process, capsys, sub_stream_kw):
+def test_stderr_dev_null(
+    mock_sub,
+    streaming_process,
+    sub_stream_kw,
+    sleep_zero,
+    capsys,
+):
     """When stderr is discarded, it should be None in the result."""
     streaming_process.stderr = None
 
@@ -204,7 +216,7 @@ def test_stderr_dev_null(mock_sub, streaming_process, capsys, sub_stream_kw):
     assert run_result.stderr is None
 
 
-def test_calledprocesserror(mock_sub, streaming_process, capsys):
+def test_calledprocesserror(mock_sub, streaming_process, sleep_zero, capsys):
     """CalledProcessError is raised with check=True and non-zero return value."""
     stderr_output = "stderr output\nline 2"
     streaming_process.stderr.read.return_value = stderr_output

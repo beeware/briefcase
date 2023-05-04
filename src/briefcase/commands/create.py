@@ -63,7 +63,7 @@ def write_dist_info(app: BaseConfig, dist_info_path: Path):
         f.write(f"Briefcase-Version: {briefcase.__version__}\n")
         f.write(f"Name: {app.app_name}\n")
         f.write(f"Formal-Name: {app.formal_name}\n")
-        f.write(f"App-ID: {app.bundle}.{app.app_name}\n")
+        f.write(f"App-ID: {app.bundle_identifier}\n")
         f.write(f"Version: {app.version}\n")
         if app.url:
             f.write(f"Home-page: {app.url}\n")
@@ -234,6 +234,7 @@ class CreateCommand(BaseCommand):
                 "class_name": app.class_name,
                 "module_name": app.module_name,
                 "package_name": app.package_name,
+                "bundle_identifier": app.bundle_identifier,
                 # Properties that are a function of the execution
                 "year": date.today().strftime("%Y"),
                 "month": date.today().strftime("%B"),
@@ -291,6 +292,31 @@ class CreateCommand(BaseCommand):
                 )
         except (shutil.ReadError, EOFError) as e:
             raise InvalidSupportPackage(support_file_path) from e
+
+    def _cleanup_app_support_package(self, support_path):
+        """The internal implementation of the app support cleanup method.
+
+        Guaranteed to only be invoked if the backend uses a support package,
+        and the support path exists.
+
+        :param support_path: The support path to clean up.
+        """
+        with self.input.wait_bar("Removing existing support package..."):
+            self.tools.shutil.rmtree(support_path)
+
+    def cleanup_app_support_package(self, app: BaseConfig):
+        """Clean up an existing application support package.
+
+        :param app: The config object for the app
+        """
+        try:
+            support_path = self.support_path(app)
+        except KeyError:
+            # No cleanup required.
+            pass
+        else:
+            if support_path.exists():
+                self._cleanup_app_support_package(support_path)
 
     def install_app_support_package(self, app: BaseConfig):
         """Install the application support package.

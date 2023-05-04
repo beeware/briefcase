@@ -31,7 +31,7 @@ def test_package(package_command, first_app_config, tmp_path):
     # A flatpak bundle is created
     package_command.tools.flatpak.bundle.assert_called_once_with(
         repo_url="https://example.com/flatpak/repo",
-        bundle="com.example",
+        bundle_identifier="com.example.first-app",
         app_name="first-app",
         version="0.0.1",
         build_path=tmp_path / "base_path" / "build" / "first-app" / "linux" / "flatpak",
