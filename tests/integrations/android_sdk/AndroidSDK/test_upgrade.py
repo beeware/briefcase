@@ -7,7 +7,7 @@ from briefcase.exceptions import BriefcaseCommandError
 
 
 def test_upgrade(mock_tools, android_sdk):
-    """sdkmanager can be used to upgrade the Android SDK."""
+    """Sdkmanager can be used to upgrade the Android SDK."""
     android_sdk.upgrade()
 
     mock_tools.subprocess.run.assert_called_once_with(

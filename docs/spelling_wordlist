@@ -11,10 +11,12 @@ BeeWare
 Bugfix
 Bugfixes
 checkmarks
+codebase
 cryptographic
 dev
 dialogs
 distributable
+Django
 dmg
 Dockerfile
 embeddable
@@ -30,6 +32,7 @@ gtk
 hoc
 hostname
 installable
+iOS
 jarsigner
 keychain
 Keychain

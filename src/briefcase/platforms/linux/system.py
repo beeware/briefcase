@@ -40,6 +40,21 @@ class LinuxSystemPassiveMixin(LinuxMixin):
     )
 
     @property
+    def use_docker(self):
+        # The passive mixing doesn't expose the `--target` option, as it can't use
+        # Docker. However, we need the use_docker property to exist so that the
+        # app config can be finalized in the general case.
+        return False
+
+    def parse_options(self, extra):
+        # The passive mixin doesn't expose the `--target` option, but if run infers
+        # build, we need target image to be defined.
+        options = super().parse_options(extra)
+        self.target_image = None
+
+        return options
+
+    @property
     def linux_arch(self):
         # Linux uses different architecture identifiers for some platforms
         return {
@@ -106,20 +121,9 @@ class LinuxSystemPassiveMixin(LinuxMixin):
     def platform_freedesktop_info(self, app):
         try:
             if sys.version_info < (3, 10):
-                # This reproduces the Python 3.10
-                # platform.freedesktop_os_release() function. Yes, this
-                # should use a context manager, rather than raw file
-                # open/close operations. If you can get the context manager
-                # form of this to pass coverage, you get a shiny penny. For
-                # some reason, coverage generated on Py3.9, but reported on
-                # Py3.10+, finds a missing branch from the `with` statement
-                # to the first line after the `except OSError` below.
-                # Since this is (a) a very simple file I/O sequence, and
-                # (b) will be removed once we're at a Python3.10 minimum,
-                # I can live with the Old Skool I/O calls.
-                f = self.tools.ETC_OS_RELEASE.open(encoding="utf-8")
-                freedesktop_info = parse_freedesktop_os_release(f.read())
-                f.close()
+                # This reproduces the Python 3.10 platform.freedesktop_os_release() function.
+                with self.tools.ETC_OS_RELEASE.open(encoding="utf-8") as f:
+                    freedesktop_info = parse_freedesktop_os_release(f.read())
             else:
                 freedesktop_info = self.tools.platform.freedesktop_os_release()
 
@@ -285,7 +289,7 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
 
     def docker_image_tag(self, app):
         """The Docker image tag for an app."""
-        return f"briefcase/{app.bundle}.{app.app_name.lower()}:{app.target_vendor}-{app.target_codename}"
+        return f"briefcase/{app.bundle_identifier.lower()}:{app.target_vendor}-{app.target_codename}"
 
     def verify_tools(self):
         """If we're using Docker, verify that it is available."""
@@ -981,9 +985,9 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
 
                     if filename.is_dir():
                         if app.app_name in path.parts:
-                            f.write(f"%dir /{path}\n")
+                            f.write(f'%dir "/{path}"\n')
                     else:
-                        f.write(f"/{path}\n")
+                        f.write(f'"/{path}"\n')
 
                 # Add the changelog content to the bottom of the spec file.
                 f.write("\n%changelog\n")

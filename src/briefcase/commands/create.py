@@ -63,7 +63,7 @@ def write_dist_info(app: BaseConfig, dist_info_path: Path):
         f.write(f"Briefcase-Version: {briefcase.__version__}\n")
         f.write(f"Name: {app.app_name}\n")
         f.write(f"Formal-Name: {app.formal_name}\n")
-        f.write(f"App-ID: {app.bundle}.{app.app_name}\n")
+        f.write(f"App-ID: {app.bundle_identifier}\n")
         f.write(f"Version: {app.version}\n")
         if app.url:
             f.write(f"Home-page: {app.url}\n")
@@ -234,6 +234,7 @@ class CreateCommand(BaseCommand):
                 "class_name": app.class_name,
                 "module_name": app.module_name,
                 "package_name": app.package_name,
+                "bundle_identifier": app.bundle_identifier,
                 # Properties that are a function of the execution
                 "year": date.today().strftime("%Y"),
                 "month": date.today().strftime("%B"),

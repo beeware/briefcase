@@ -41,9 +41,13 @@ def first_app(first_app_config, tmp_path):
     (lib_dir / "app_packages" / "secondlib").mkdir(parents=True, exist_ok=True)
 
     # Create some .so files
-    # An SO file with 775 permissions
+    # An SO file with different group and world permissions
     (lib_dir / "app" / "support.so").touch()
     (lib_dir / "app" / "support.so").chmod(0o775)
+
+    # An SO file with same group and world permissions
+    (lib_dir / "app" / "support_same_perms.so").touch()
+    (lib_dir / "app" / "support_same_perms.so").chmod(0o744)
 
     # A SO file with both .so and .so.1.0 forms
     (lib_dir / "app_packages" / "firstlib" / "first.so").touch()

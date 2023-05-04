@@ -8,7 +8,7 @@ from briefcase.exceptions import BriefcaseCommandError
 def test_build(flatpak, tmp_path):
     """A Flatpak project can be built."""
     flatpak.build(
-        bundle="com.example",
+        bundle_identifier="com.example.my-app",
         app_name="my-app",
         path=tmp_path,
     )
@@ -47,7 +47,7 @@ def test_build_fail(flatpak, tmp_path):
         match=r"Error while building app my-app.",
     ):
         flatpak.build(
-            bundle="com.example",
+            bundle_identifier="com.example.my-app",
             app_name="my-app",
             path=tmp_path / "bundle",
         )

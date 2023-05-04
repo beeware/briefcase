@@ -194,7 +194,7 @@ You must install both flatpak and flatpak-builder.
                 f"and SDK {sdk}/{self.tools.host_arch}/{runtime_version} from repo {repo_alias}."
             ) from e
 
-    def build(self, bundle, app_name, path):
+    def build(self, bundle_identifier, app_name, path):
         """Build a Flatpak manifest.
 
         On success, the app is installed into the user's local Flatpak install,
@@ -202,7 +202,7 @@ You must install both flatpak and flatpak-builder.
         shell file isn't really needed to start the app, but it serves as a
         marker for a successful build that Briefcase can use.
 
-        :param bundle: The bundle identifier for the app being built.
+        :param bundle_identifier: The bundle identifier for the app being built.
         :param app_name: The app name.
         :param path: The path to the folder containing the app's Flatpak
             manifest file.
@@ -229,23 +229,23 @@ You must install both flatpak and flatpak-builder.
             # For bonus points, the marker file also is executable
             # and is an alias for the command that would actually start
             # the flatpak.
-            bin_path = path / f"{bundle}.{app_name}"
+            bin_path = path / bundle_identifier
             with bin_path.open("w", encoding="utf-8") as f:
                 f.write(
                     f"""\
 #!/bin/sh
 # echo To run this flatpak, run:
-flatpak run {bundle}.{app_name}
+flatpak run {bundle_identifier}
 """
                 )
                 self.tools.os.chmod(bin_path, 0o755)
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(f"Error while building app {app_name}.") from e
 
-    def run(self, bundle, app_name, args=None, main_module=None):
+    def run(self, bundle_identifier, app_name, args=None, main_module=None):
         """Run a Flatpak in a way that allows for log streaming.
 
-        :param bundle: The bundle identifier for the app being built.
+        :param bundle_identifier: The bundle identifier for the app being built.
         :param app_name: The app name.
         :param args: (Optional) The list of arguments to pass to the app
         :param main_module: (Optional) The main module to run. Only required if you
@@ -267,7 +267,7 @@ flatpak run {bundle}.{app_name}
             [
                 "flatpak",
                 "run",
-                f"{bundle}.{app_name}",
+                bundle_identifier,
             ]
             + ([] if args is None else args),
             stdout=subprocess.PIPE,
@@ -276,7 +276,9 @@ flatpak run {bundle}.{app_name}
             **kwargs,
         )
 
-    def bundle(self, repo_url, bundle, app_name, version, build_path, output_path):
+    def bundle(
+        self, repo_url, bundle_identifier, app_name, version, build_path, output_path
+    ):
         """Bundle a Flatpak for distribution.
 
         Generates a standalone .flatpak file that can be installed into another user's
@@ -284,7 +286,7 @@ flatpak run {bundle}.{app_name}
 
         :param repo_url: The URL of the repository that contains the runtime
             used by the app.
-        :param bundle: The bundle identifier for the app being built.
+        :param bundle_identifier: The bundle identifier for the app being built.
         :param app_name: The app name.
         :param version: The version of the app being built.
         :param build_path: The path where the flatpak was built. This path will
@@ -303,7 +305,7 @@ flatpak run {bundle}.{app_name}
                     # "--gpg-sign", "..."
                     "repo",
                     output_path,
-                    f"{bundle}.{app_name}",
+                    bundle_identifier,
                     version,
                 ],
                 check=True,
