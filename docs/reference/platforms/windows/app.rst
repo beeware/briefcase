@@ -83,3 +83,18 @@ pre, post and dev version indicators), padding with zeros if necessary:
 However, if you need to override this default value, you can define
 ``version_triple`` in your app settings. If provided, this value will be used
 in the MSI configuration file instead of the auto-generated value.
+
+Platform quirks
+===============
+
+Use caution with ``--update-support``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Care should be taken when using the ``--update-support`` option to the
+``update``, ``build`` or ``run`` commands. Support packages in Windows apps are
+overlaid with app content, so it isn't possible to remove all old support files
+before installing new ones.
+
+Briefcase will unpack the new support package without cleaning up existing
+support package content. This *should* work; however, ensure a reproducible
+release artefacts, it is advisable to perform a clean app build before release.

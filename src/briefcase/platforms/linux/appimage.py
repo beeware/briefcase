@@ -180,13 +180,13 @@ class LinuxAppImageCreateCommand(
 *************************************************************************
 
     Support packages in Linux AppImages are overlaid with app content,
-    so it isn't possible to guarantee that a support package update
-    is completely clean.
+    so it isn't possible to remove all old support files before
+    installing new ones.
 
     Briefcase will unpack the new support package without cleaning up
-    existing support package content. This *should* work; but it may
-    be advisable to do a clean app build before producing a release
-    artefact.
+    existing support package content. This *should* work; however,
+    ensure a reproducible release artefacts, it is advisable to
+    perform a clean app build before release.
 
 *************************************************************************
 """

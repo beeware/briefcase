@@ -600,17 +600,16 @@ def test_build_appimage_with_support_package_update(
     capsys,
 ):
     """If a support package update is performed, the user is warned."""
+    # To trigger the app package update logic, we need to invoke the full build
+    # command, and fake being on a verified Linux install with a generated
+    # app.
+    build_command.tools.host_os = "Linux"
 
     # Mock shutil so we can check for folder deletion
     build_command.tools.shutil = mock.MagicMock(spec_set=shutil)
 
     # Mock downloads so we don't hit the network
     build_command.tools.download = mock.MagicMock()
-
-    # To trigger the app package update logic, we need to invoke the full build
-    # command, and fake being on a verified Linux install with a generated
-    # app.
-    build_command.tools.host_os = "Linux"
 
     # Hard code a support revision so that the download support package is fixed,
     # and no linuxdeploy plugins.
