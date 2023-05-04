@@ -293,19 +293,20 @@ class CreateCommand(BaseCommand):
         except (shutil.ReadError, EOFError) as e:
             raise InvalidSupportPackage(support_file_path) from e
 
-    def install_app_support_package(self, app: BaseConfig, update: bool = False):
+    def install_app_support_package(self, app: BaseConfig):
         """Install the application support package.
 
         :param app: The config object for the app
-        :param upsate: The force update the support package
         """
         try:
             support_path = self.support_path(app)
         except KeyError:
             self.logger.info("No support package required.")
         else:
-            if update and support_path.exists() and support_path.is_dir():
-                support_path.rmdir()
+            if support_path.exists():
+                with self.input.wait_bar("Removing existing support package..."):
+                    self.tools.shutil.rmtree(support_path)
+
             support_file_path = self._download_support_package(app)
             self._unpack_support_package(support_file_path, support_path)
 
@@ -760,7 +761,7 @@ class CreateCommand(BaseCommand):
         self.generate_app_template(app=app)
 
         self.logger.info("Installing support package...", prefix=app.app_name)
-        self.install_app_support_package(app=app, update=False)
+        self.install_app_support_package(app=app)
 
         # Verify tools for the app after the app template and support package
         # are in place since the app tools may be dependent on them.
