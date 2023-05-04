@@ -1,3 +1,4 @@
+import concurrent.futures
 import itertools
 import os
 import re
@@ -7,7 +8,7 @@ from contextlib import suppress
 from pathlib import Path
 from signal import SIGTERM
 from typing import List
-import concurrent.futures
+
 from briefcase.config import BaseConfig
 from briefcase.console import select_option
 from briefcase.exceptions import BriefcaseCommandError
@@ -359,11 +360,13 @@ or
         # Sign the bundle path itself
         sign_targets.append(bundle_path)
 
-        # Signs code objects in reversed lexicographic order to ensure nesting order is respected
-        # (objects must be signed from the inside out)
-        # Run signing through a ThreadPoolExecutor so that they run in parallel
-        # for every path in sign_targets, group by the lambda which returns the parent of the path. 
-        # Groups which have the same parent will be returned together in the iterator "names". Names is later cast to a list
+        # Run signing through a ThreadPoolExecutor so that they run in parallel.
+        # However, we need to ensure that objects are signed from the inside out
+        # (i.e., a folder must be signed *after* all it's contents has been signed).
+        # To do this, group all the signing targets by parent, sort those groups
+        # in reverse lexigraphic order, and sign all files in a group before sorting
+        # the next group. This ensures that longer paths are signed first, and all
+        # files in a folder are signed before the folder is signed.
         for _, names in itertools.groupby(sign_targets, lambda name: name.parent):
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 names = list(names)
@@ -372,15 +375,18 @@ or
                 task_id = progress_bar.add_task("Signing App", total=len(names))
                 with progress_bar:
                     for path in sorted(names, reverse=True):
-                        future = executor.submit(self.sign_file,
-                                                path,
-                                                entitlements=self.entitlements_path(app),
-                                                identity=identity)
+                        future = executor.submit(
+                            self.sign_file,
+                            path,
+                            entitlements=self.entitlements_path(app),
+                            identity=identity,
+                        )
                         futures.append(future)
                     for future in concurrent.futures.as_completed(futures):
                         progress_bar.update(task_id, advance=1)
                         if future.exception():
                             raise future.exception()
+
 
 class macOSPackageMixin(macOSSigningMixin):
     @property

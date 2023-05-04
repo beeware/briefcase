@@ -1,7 +1,7 @@
 import os
 import subprocess
-from unittest import mock
 from pathlib import Path
+from unittest import mock
 
 import pytest
 
@@ -465,20 +465,17 @@ def test_sign_app(dummy_command, first_app_with_binaries, tmp_path):
         ],
         any_order=True,
     )
-    '''
-    add extra check that files are not signed after their parent directory has been signed
-    https://docs.python.org/3/library/unittest.mock.html#calls-as-tuples
 
-    sample: 
-    call.args returns a tuple containing a list. e.g. (['codesign', '/private/var/folders/3m/jzzhfmb97kngyj4swg7wv83c0000gq/T/pytest-of-tomoe/pytest-10/test_sign_app0/base_path/build/first-app/macos/app/First App.app/Contents/Resources/special.binary', '--sign', 'Sekrit identity (DEADBEEF)', '--force', '--entitlements', '/private/var/folders/3m/jzzhfmb97kngyj4swg7wv83c0000gq/T/pytest-of-tomoe/pytest-10/test_sign_app0/base_path/build/first-app/macos/app/Entitlements.plist', '--options', 'runtime'],) 
-    '''
-    # Get filepath for each call in dummy_command, and convert it into a path object. 
-    sign_targets = [Path(call.args[0][1]) for call in dummy_command.tools.subprocess.run.mock_calls]
-    print(sign_targets[0])
-    # loop through sign_targets and check that a file is not signed AFTER its parent directory. 
+    # Also check that files are not signed after their parent directory has been
+    # signed. Reduce the files mentions in the calls to the dummy command
+    # to a list of path objects, then ensure that the call to sign any given file
+    # does not occur *after* it's parent directory.
+    sign_targets = [
+        Path(call.args[0][1]) for call in dummy_command.tools.subprocess.run.mock_calls
+    ]
+
     parents = set()
-    for path in sign_targets: 
+    for path in sign_targets:
         # Check parent of path is not in parents
         assert path.parent not in parents
         parents.add(path)
-
