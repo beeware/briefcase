@@ -139,6 +139,7 @@ def test_update_app_with_support_package(update_command, first_app, tmp_path):
     assert update_command.actions == [
         ("verify-app-tools", "first"),
         ("code", "first", False),
+        ("cleanup-support", "first"),
         ("support", "first"),
         ("cleanup", "first"),
     ]

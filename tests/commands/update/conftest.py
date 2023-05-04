@@ -58,9 +58,12 @@ class DummyUpdateCommand(UpdateCommand):
         self.actions.append(("resources", app.app_name))
         create_file(self.bundle_path(app) / "resources", "app resources")
 
-    def install_app_support_package(self, app, update=False):
+    def cleanup_app_support_package(self, app):
+        self.actions.append(("cleanup-support", app.app_name))
+
+    def install_app_support_package(self, app):
         self.actions.append(("support", app.app_name))
-        create_file(self.bundle_path(app) / "support", "app support")
+        create_file(self.bundle_path(app) / "support" / "content.txt", "app support")
 
     def cleanup_app_content(self, app):
         self.actions.append(("cleanup", app.app_name))

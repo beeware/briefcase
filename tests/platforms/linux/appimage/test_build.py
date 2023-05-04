@@ -1,9 +1,11 @@
 import os
+import shutil
 import subprocess
 import sys
 from unittest import mock
 
 import pytest
+import tomli_w
 
 from briefcase.console import Console, Log
 from briefcase.exceptions import (
@@ -14,6 +16,8 @@ from briefcase.exceptions import (
 from briefcase.integrations.docker import DockerAppContext
 from briefcase.integrations.linuxdeploy import LinuxDeploy
 from briefcase.platforms.linux.appimage import LinuxAppImageBuildCommand
+
+from ....utils import create_file
 
 
 @pytest.fixture
@@ -574,6 +578,107 @@ def test_build_appimage_with_plugins_in_docker(
         / "appimage"
         / "linuxdeploy-plugin-something.sh",
         0o755,
+    )
+    # Binary is marked executable
+    build_command.tools.os.chmod.assert_called_with(
+        tmp_path
+        / "base_path"
+        / "build"
+        / "first-app"
+        / "linux"
+        / "appimage"
+        / "First_App-0.0.1-wonky.AppImage",
+        0o755,
+    )
+
+
+def test_build_appimage_with_support_package_update(
+    build_command,
+    first_app,
+    tmp_path,
+    sub_stream_kw,
+    capsys,
+):
+    """If a support package update is performed, the user is warned."""
+
+    # Mock shutil so we can check for folder deletion
+    build_command.tools.shutil = mock.MagicMock(spec_set=shutil)
+
+    # Mock downloads so we don't hit the network
+    build_command.tools.download = mock.MagicMock()
+
+    # To trigger the app package update logic, we need to invoke the full build
+    # command, and fake being on a verified Linux install with a generated
+    # app.
+    build_command.tools.host_os = "Linux"
+
+    # Hard code a support revision so that the download support package is fixed,
+    # and no linuxdeploy plugins.
+    first_app.support_revision = "3.37.42+12345"
+    first_app.linuxdeploy_plugins = []
+
+    # Fake the existence of some source files.
+    create_file(
+        tmp_path / "base_path" / "src" / "first_app" / "app.py",
+        "print('an app')",
+    )
+
+    # Mock the generated app template
+    (build_command.bundle_path(first_app) / "src").mkdir(parents=True)
+
+    # Populate a briefcase.toml that mirrors a real Windows app
+    with (build_command.bundle_path(first_app) / "briefcase.toml").open("wb") as f:
+        index = {
+            "paths": {
+                "app_path": "First App.AppDir/usr/app",
+                "app_package_path": "First App.AppDir/usr/app_packages",
+                "support_path": "First App.AppDir/usr",
+            }
+        }
+        tomli_w.dump(index, f)
+
+    # Build the app with a support package update
+    build_command(first_app, update_support=True)
+
+    # linuxdeploy was invoked
+    app_dir = (
+        tmp_path
+        / "base_path"
+        / "build"
+        / "first-app"
+        / "linux"
+        / "appimage"
+        / "First App.AppDir"
+    )
+    build_command._subprocess.Popen.assert_called_with(
+        [
+            os.fsdecode(
+                tmp_path / "briefcase" / "tools" / "linuxdeploy-wonky.AppImage"
+            ),
+            "--appdir",
+            os.fsdecode(app_dir),
+            "--desktop-file",
+            os.fsdecode(app_dir / "com.example.first-app.desktop"),
+            "--output",
+            "appimage",
+            "--deploy-deps-only",
+            os.fsdecode(app_dir / "usr" / "app" / "support"),
+            "--deploy-deps-only",
+            os.fsdecode(app_dir / "usr" / "app_packages" / "firstlib"),
+            "--deploy-deps-only",
+            os.fsdecode(app_dir / "usr" / "app_packages" / "secondlib"),
+        ],
+        env={
+            "PATH": "/usr/local/bin:/usr/bin:/path/to/somewhere",
+            "VERSION": "0.0.1",
+            "DISABLE_COPYRIGHT_FILES_DEPLOYMENT": "1",
+            "APPIMAGE_EXTRACT_AND_RUN": "1",
+            "ARCH": "wonky",
+        },
+        cwd=os.fsdecode(
+            tmp_path / "base_path" / "build" / "first-app" / "linux" / "appimage"
+        ),
+        **sub_stream_kw,
     )
     # Binary is marked executable
     build_command.tools.os.chmod.assert_called_with(

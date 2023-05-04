@@ -293,6 +293,31 @@ class CreateCommand(BaseCommand):
         except (shutil.ReadError, EOFError) as e:
             raise InvalidSupportPackage(support_file_path) from e
 
+    def _cleanup_app_support_package(self, support_path):
+        """The internal implementation of the app support cleanup method.
+
+        Guaranteed to only be invoked if the backend uses a support package,
+        and the support path exists.
+
+        :param support_path: The support path to clean up.
+        """
+        with self.input.wait_bar("Removing existing support package..."):
+            self.tools.shutil.rmtree(support_path)
+
+    def cleanup_app_support_package(self, app: BaseConfig):
+        """Clean up an existing application support package.
+
+        :param app: The config object for the app
+        """
+        try:
+            support_path = self.support_path(app)
+        except KeyError:
+            # No cleanup required.
+            pass
+        else:
+            if support_path.exists():
+                self._cleanup_app_support_package(support_path)
+
     def install_app_support_package(self, app: BaseConfig):
         """Install the application support package.
 
@@ -303,10 +328,6 @@ class CreateCommand(BaseCommand):
         except KeyError:
             self.logger.info("No support package required.")
         else:
-            if support_path.exists():
-                with self.input.wait_bar("Removing existing support package..."):
-                    self.tools.shutil.rmtree(support_path)
-
             support_file_path = self._download_support_package(app)
             self._unpack_support_package(support_file_path, support_path)
 

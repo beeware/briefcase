@@ -145,11 +145,13 @@ def test_update_with_support(update_command, first_app, second_app):
         # Update the first app
         ("verify-app-tools", "first"),
         ("code", "first", False),
+        ("cleanup-support", "first"),
         ("support", "first"),
         ("cleanup", "first"),
         # Update the second app
         ("verify-app-tools", "second"),
         ("code", "second", False),
+        ("cleanup-support", "second"),
         ("support", "second"),
         ("cleanup", "second"),
     ]
