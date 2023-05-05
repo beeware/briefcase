@@ -38,8 +38,9 @@ jobs:
     runs-on: ${{ matrix.platform }}-latest
     continue-on-error: ${{ matrix.experimental }}
     strategy:
+      fail-fast: false
       matrix:
-        platform: [ "macOS", "Ubuntu", "Windows" ]
+        platform: [ "macos", "ubuntu", "windows" ]
         python-version: [ "3.8", "3.9", "3.10", "3.11", "3.12-dev" ]
         include:
         - experimental: false
@@ -47,8 +48,8 @@ jobs:
         - python-version: "3.12-dev"
           experimental: true
         # Run tests against the latest Windows Store Python
-        - platform: "Windows"
-          python-version: "winstore"
+        - platform: "windows"
+          python-version: "winstore3.11"
           experimental: false
     steps:
     - name: Checkout
@@ -63,8 +64,10 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - name: Install Windows Store Python
-      if: matrix.python-version == 'winstore'
+      if: startswith(matrix.python-version, 'winstore')
       uses: beeware/.github/.github/actions/install-win-store-python@main
+      with:
+        python-version: "3.11"
 
     - name: Get Packages
       uses: actions/download-artifact@v3.0.2
@@ -81,102 +84,36 @@ jobs:
         python -m pip install $(ls dist/briefcase-*.whl)[dev]
 
     - name: Test
+      id: test
       env:
         COVERAGE_FILE: ".coverage.${{ matrix.platform }}.${{ matrix.python-version }}"
       run: tox -e py --installpkg dist/briefcase-*.whl
 
     - name: Store Coverage Data
-      if: success() || failure()
+      if: always() && (steps.test.outcome == 'failure' || steps.test.outcome == 'success')
       uses: actions/upload-artifact@v3.1.2
       with:
         name: coverage-data
         path: ".coverage.*"
         if-no-files-found: ignore
 
-  coverage-platform:
-    name: Platform coverage - ${{ matrix.platform }}
-    runs-on: ${{ matrix.platform }}-latest
-    needs: unit-tests
-    strategy:
-      fail-fast: false
-      matrix:
-        platform: [ "macOS", "Ubuntu", "Windows" ]
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v3.5.2
-      with:
-        fetch-depth: 0
-
-    - name: Setup Python
-      uses: actions/setup-python@v4.6.0
-      with:
-        python-version: |
-          3.12-dev
-          3.11
-          3.10
-          3.9
-          3.8
-
-    - name: Install dev Dependencies
-      run: |
-        python -m pip install --upgrade pip
-        python -m pip install --upgrade setuptools
-        # We don't actually want to install briefcase; we just
-        # want the dev extras so we have a known version of tox.
-        python -m pip install -e .[dev]
-
-    - name: Retrieve Coverage Data
-      uses: actions/download-artifact@v3.0.2
-      with:
-        name: coverage-data
-
-    - name: ${{ matrix.platform }} Coverage Report
-      env:
-        COVERAGE_FILE: ".coverage.${{ matrix.platform }}"
-      run: tox -qe coverage-platform-html-keep
-
-    - name: Python 3.12 on ${{ matrix.platform }} Coverage Report
-      if: success() || failure()
-      continue-on-error: true
-      env:
-        COVERAGE_FILE: ".coverage.${{ matrix.platform }}.3.12-dev"
-      run: tox -qe coverage312-html-keep
-
-    - name: Python 3.11 on ${{ matrix.platform }} Coverage Report
-      if: success() || failure()
-      env:
-        COVERAGE_FILE: ".coverage.${{ matrix.platform }}.3.11"
-      run: tox -qe coverage311-html-keep
-
-    - name: Python 3.10 on ${{ matrix.platform }} Coverage Report
-      if: success() || failure()
-      env:
-        COVERAGE_FILE: ".coverage.${{ matrix.platform }}.3.10"
-      run: tox -qe coverage310-html-keep
-
-    - name: Python 3.9 on ${{ matrix.platform }} Coverage Report
-      if: success() || failure()
-      env:
-        COVERAGE_FILE: ".coverage.${{ matrix.platform }}.3.9"
-      run: tox -qe coverage39-html-keep
-
-    - name: Python 3.8 on ${{ matrix.platform }} Coverage Report
-      if: success() || failure()
-      env:
-        COVERAGE_FILE: ".coverage.${{ matrix.platform }}.3.8"
-      run: tox -qe coverage38-html-keep
+    - name: Report Platform Coverage
+      id: coverage
+      if: always() && (steps.test.outcome == 'failure' || steps.test.outcome == 'success')
+      run: tox -qe coverage$(echo '${{ matrix.python-version }}' | tr -dc '0-9')-html
 
     - name: Upload HTML Coverage Report
-      if: failure()
+      if: always() && steps.coverage.outcome == 'failure'
       uses: actions/upload-artifact@v3.1.2
       with:
-        name: html-platform-coverage-report-${{ matrix.platform }}
+        name: html-coverage-report-${{ matrix.platform }}-${{ matrix.python-version }}
         path: htmlcov
 
-  coverage-project:
+  coverage:
     name: Project coverage
     runs-on: ubuntu-latest
     needs: unit-tests
+    if: always() && (needs.unit-tests.result == 'success' || needs.unit-tests.result == 'failure')
     steps:
     - name: Checkout
       uses: actions/checkout@v3.5.2
@@ -203,31 +140,78 @@ jobs:
       with:
         name: coverage-data
 
-    - name: Project Coverage Report
-      run: tox -qe coverage-project-html
+    - name: Linux Coverage Report
+      id: linux-coverage
+      if: success() || failure()
+      env:
+        COVERAGE_FILE: ".coverage.ubuntu"
+        COVERAGE_PLATFORM: "linux"
+      run: tox -qe coverage-platform-html
 
-    - name: Upload HTML Coverage Report
-      if: failure()
+    - name: Upload Linux Coverage HTML Report
+      if: always() && steps.linux-coverage.outcome == 'failure'
       uses: actions/upload-artifact@v3.1.2
       with:
-        name: html-project-coverage-report
+        name: html-coverage-report-Linux
         path: htmlcov
 
-#  verify-apps:
-#    name: Build app
-#    needs: unit-tests
-#    uses: beeware/.github/.github/workflows/app-build-verify.yml@main
-#    with:
-#      # This *must* be the version of Python that is the system Python on the
-#      # Ubuntu version used to run Linux tests. We use a fixed ubuntu-22.04
-#      # rather than `-latest` because at some point, `-latest` will become
-#      # `-24.04`, but it will be a soft changeover, which will cause havoc with
-#      # the hard Python version requirement for local system packages.
-#      python-version: "3.10"
-#      runner-os: ${{ matrix.runner-os }}
-#      framework: ${{ matrix.framework }}
-#    strategy:
-#      fail-fast: false
-#      matrix:
-#        framework: [ "toga", "pyside2", "pyside6", "ppb", "pygame" ]
-#        runner-os: [ "macos-latest", "ubuntu-22.04", "windows-latest" ]
+    - name: macOS Coverage Report
+      id: macos-coverage
+      if: success() || failure()
+      env:
+        COVERAGE_FILE: ".coverage.macos"
+        COVERAGE_PLATFORM: "darwin"
+      run: tox -qe coverage-platform-html
+
+    - name: Upload macOS Coverage HTML Report
+      if: always() && steps.macos-coverage.outcome == 'failure'
+      uses: actions/upload-artifact@v3.1.2
+      with:
+        name: html-coverage-report-macOS
+        path: htmlcov
+
+    - name: Windows Coverage Report
+      id: windows-coverage
+      if: success() || failure()
+      env:
+        COVERAGE_FILE: ".coverage.windows"
+        COVERAGE_PLATFORM: "win32"
+      run: tox -qe coverage-platform-html
+
+    - name: Upload Windows Coverage HTML Report
+      if: always() && steps.windows-coverage.outcome == 'failure'
+      uses: actions/upload-artifact@v3.1.2
+      with:
+        name: html-coverage-report-Windows
+        path: htmlcov
+
+    - name: Project Coverage Report
+      id: project-coverage
+      if: success() || failure()
+      run: tox -qe coverage-project-html
+
+    - name: Upload Project Coverage HTML Report
+      if: always() && steps.project-coverage.outcome == 'failure'
+      uses: actions/upload-artifact@v3.1.2
+      with:
+        name: html-coverage-report-project
+        path: htmlcov
+
+  verify-apps:
+    name: Build app
+    needs: unit-tests
+    uses: beeware/.github/.github/workflows/app-build-verify.yml@main
+    with:
+      # This *must* be the version of Python that is the system Python on the
+      # Ubuntu version used to run Linux tests. We use a fixed ubuntu-22.04
+      # rather than `-latest` because at some point, `-latest` will become
+      # `-24.04`, but it will be a soft changeover, which will cause havoc with
+      # the hard Python version requirement for local system packages.
+      python-version: "3.10"
+      runner-os: ${{ matrix.runner-os }}
+      framework: ${{ matrix.framework }}
+    strategy:
+      fail-fast: false
+      matrix:
+        framework: [ "toga", "pyside2", "pyside6", "ppb", "pygame" ]
+        runner-os: [ "macos-latest", "ubuntu-22.04", "windows-latest" ]
