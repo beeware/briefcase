@@ -10,6 +10,9 @@ class PackageCommand(BaseCommand):
     command = "package"
     description = "Package an app for distribution."
 
+    ADHOC_SIGN_HELP = "Ignored; signing is not supported."
+    IDENTITY_HELP = "Ignored; signing is not supported."
+
     @property
     def packaging_formats(self):
         return [self.output_format]
@@ -117,20 +120,14 @@ class PackageCommand(BaseCommand):
         )
         parser.add_argument(
             "--adhoc-sign",
-            help=(
-                "Sign the app with ad-hoc identity. Note that this will result "
-                "in an app that will run, but cannot be re-distributed."
-            ),
+            help=self.ADHOC_SIGN_HELP,
             action="store_true",
         )
         parser.add_argument(
             "-i",
             "--identity",
             dest="identity",
-            help=(
-                "The code signing identity to use; either the 40-digit hex "
-                "checksum, or (on macOS) the full name of the identity."
-            ),
+            help=self.IDENTITY_HELP,
             required=False,
         )
 

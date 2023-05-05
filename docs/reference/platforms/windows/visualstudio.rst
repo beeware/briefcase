@@ -132,3 +132,11 @@ before installing new ones.
 Briefcase will unpack the new support package without cleaning up existing
 support package content. This *should* work; however, ensure a reproducible
 release artefacts, it is advisable to perform a clean app build before release.
+
+Packaging with ``--adhoc-sign``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Using the ``--adhoc-sign`` option on Windows results in no signing being
+performed on the packaged app. This will result in your application being
+flagged as coming from an unverified publisher. This may limit who can (or is
+willing to) install your app.

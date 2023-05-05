@@ -141,6 +141,13 @@ class WindowsRunCommand(RunCommand):
 
 
 class WindowsPackageCommand(PackageCommand):
+    ADHOC_SIGN_HELP = (
+        "Perform no signing on the app. "
+        "Your app will be reported as coming from an unverified publisher."
+    )
+
+    IDENTITY_HELP = "The 40-digit hex checksum of the code signing identity to use."
+
     @property
     def packaging_formats(self):
         return ["msi", "zip"]

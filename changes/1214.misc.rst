@@ -1,1 +1,1 @@
-Fix up macOS signing options for `beeware package`
+The ``--no-sign`` option for packaging was removed. All packaged apps are now be signed by default.

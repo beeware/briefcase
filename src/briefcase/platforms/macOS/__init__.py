@@ -249,10 +249,7 @@ class macOSSigningMixin:
                     ) from e
 
         self.input.prompt()
-        self.input.prompt(
-            "Select code signing identity to use. If your identity is not listed, please see "
-            "https://briefcase.readthedocs.io/en/stable/how-to/code-signing/macOS.html:"
-        )
+        self.input.prompt("Select code signing identity to use:")
         self.input.prompt()
         identity = select_option(identities, input=self.input)
         identity_name = identities[identity]
@@ -409,6 +406,15 @@ or
 
 
 class macOSPackageMixin(macOSSigningMixin):
+    ADHOC_SIGN_HELP = (
+        "Perform ad-hoc signing on the app. "
+        "The app will only run on this machine; it cannot be redistributed to others."
+    )
+    IDENTITY_HELP = (
+        "The code signing identity to use; either the 40-digit hex "
+        "checksum, or the full name of the identity."
+    )
+
     @property
     def packaging_formats(self):
         return ["app", "dmg"]
