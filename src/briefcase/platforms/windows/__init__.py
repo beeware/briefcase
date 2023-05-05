@@ -266,8 +266,8 @@ class WindowsPackageCommand(PackageCommand):
     def package_app(
         self,
         app: AppConfig,
-        sign_app: bool = True,
         identity: str = None,
+        adhoc_sign: bool = False,
         file_digest: str = None,
         use_local_machine: bool = False,
         cert_store: str = None,
@@ -281,8 +281,8 @@ class WindowsPackageCommand(PackageCommand):
         identity is not provided, then ``sign_app=False`` will be enforced.
 
         :param app: The application to package
-        :param sign_app: Should the application be signed? Default: ``True``
         :param identity: SHA-1 thumbprint of the certificate to use for code signing.
+        :param adhoc_sign: Should the application be signed? Default: ``True``
         :param file_digest: File hashing algorithm for code signing.
         :param use_local_machine: True to use cert stores for the Local Machine instead
             of the Current User; default to False for Current User.
@@ -292,8 +292,25 @@ class WindowsPackageCommand(PackageCommand):
         :param timestamp_digest: Hashing algorithm to request from the timestamp server.
         """
 
-        if sign_app and not identity:
+        if adhoc_sign:
             sign_app = False
+        elif identity:
+            sign_app = True
+        else:
+            sign_app = False
+            self.logger.warning(
+                """
+*************************************************************************
+** WARNING: No signing identity provided                               **
+*************************************************************************
+
+    Briefcase will not sign the app. To provide a signing identity,
+    use the `--identity` option; or, to explicitly disable signing,
+    use `--adhoc-sign`.
+
+*************************************************************************
+"""
+            )
 
         if sign_app:
             self.logger.info("Signing App...", prefix=app.app_name)

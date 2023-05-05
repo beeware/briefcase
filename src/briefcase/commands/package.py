@@ -118,12 +118,15 @@ class PackageCommand(BaseCommand):
             default=self.default_packaging_format,
             choices=self.packaging_formats,
         )
-        parser.add_argument(
+
+        # --adhoc-sign and --identity are mutually exclusive
+        signing_group = parser.add_mutually_exclusive_group()
+        signing_group.add_argument(
             "--adhoc-sign",
             help=self.ADHOC_SIGN_HELP,
             action="store_true",
         )
-        parser.add_argument(
+        signing_group.add_argument(
             "-i",
             "--identity",
             dest="identity",
