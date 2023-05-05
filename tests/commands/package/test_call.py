@@ -31,7 +31,6 @@ def test_no_args_package_one_app(package_command, first_app, tmp_path):
             {
                 "adhoc_sign": False,
                 "identity": None,
-                "sign_app": True,
             },
         ),
     ]
@@ -74,7 +73,6 @@ def test_package_one_explicit_app(package_command, first_app, second_app, tmp_pa
             {
                 "adhoc_sign": False,
                 "identity": None,
-                "sign_app": True,
             },
         ),
     ]
@@ -119,7 +117,6 @@ def test_no_args_package_two_app(package_command, first_app, second_app, tmp_pat
             {
                 "adhoc_sign": False,
                 "identity": None,
-                "sign_app": True,
             },
         ),
         # App tools are verified for second app
@@ -131,7 +128,6 @@ def test_no_args_package_two_app(package_command, first_app, second_app, tmp_pat
             {
                 "adhoc_sign": False,
                 "identity": None,
-                "sign_app": True,
                 # state of previous calls have been preserved.
                 "package_state": "first",
             },
@@ -141,48 +137,6 @@ def test_no_args_package_two_app(package_command, first_app, second_app, tmp_pat
     # Packaging format has been annotated on both apps
     assert first_app.packaging_format == "pkg"
     assert second_app.packaging_format == "pkg"
-
-    # The dist folder has been created.
-    assert tmp_path / "base_path" / "dist"
-
-
-def test_no_sign_package_one_app(package_command, first_app, tmp_path):
-    """If there is one app, and a --no-sign argument,package doesn't sign the app."""
-    # Add a single app
-    package_command.apps = {
-        "first": first_app,
-    }
-
-    # Configure a no-sign option
-    options = package_command.parse_options(["--no-sign"])
-
-    # Run the run command
-    package_command(**options)
-
-    # The right sequence of things will be done
-    assert package_command.actions == [
-        # Host OS is verified
-        ("verify-host",),
-        # Tools are verified
-        ("verify-tools",),
-        # App config has been finalized
-        ("finalize-app-config", "first"),
-        # App tools are verified for app
-        ("verify-app-tools", "first"),
-        # Package the first app
-        (
-            "package",
-            "first",
-            {
-                "adhoc_sign": False,
-                "identity": None,
-                "sign_app": False,
-            },
-        ),
-    ]
-
-    # Packaging format has been annotated on the app
-    assert first_app.packaging_format == "pkg"
 
     # The dist folder has been created.
     assert tmp_path / "base_path" / "dist"
@@ -219,7 +173,6 @@ def test_identity_arg_package_one_app(package_command, first_app, tmp_path):
             {
                 "adhoc_sign": False,
                 "identity": "test",
-                "sign_app": True,
             },
         ),
     ]
@@ -232,15 +185,15 @@ def test_identity_arg_package_one_app(package_command, first_app, tmp_path):
 
 
 def test_adhoc_sign_package_one_app(package_command, first_app, tmp_path):
-    """If there is one app,and an --adhoc argument, package signs the app using adhoc
+    """If there is one app,and an --adhoc argument, package signs the app using ad-hoc
     option."""
     # Add a single app
     package_command.apps = {
         "first": first_app,
     }
 
-    # Configure an adhoc signing option
-    options = package_command.parse_options(["--adhoc"])
+    # Configure an ad-hoc signing option
+    options = package_command.parse_options(["--adhoc-sign"])
 
     # Run the run command
     package_command(**options)
@@ -262,7 +215,6 @@ def test_adhoc_sign_package_one_app(package_command, first_app, tmp_path):
             {
                 "adhoc_sign": True,
                 "identity": None,
-                "sign_app": True,
             },
         ),
     ]
@@ -274,71 +226,11 @@ def test_adhoc_sign_package_one_app(package_command, first_app, tmp_path):
     assert tmp_path / "base_path" / "dist"
 
 
-def test_no_sign_args_package_two_app(package_command, first_app, second_app, tmp_path):
-    """If there are multiple apps, and a --no-sign argument,package doesn't sign all the
-    app."""
-    # Add a single app
-    package_command.apps = {
-        "first": first_app,
-        "second": second_app,
-    }
-
-    # Configure a no-sign option
-    options = package_command.parse_options(["--no-sign"])
-
-    # Run the run command
-    package_command(**options)
-
-    # The right sequence of things will be done
-    assert package_command.actions == [
-        # Host OS is verified
-        ("verify-host",),
-        # Tools are verified
-        ("verify-tools",),
-        # App configs have been finalized
-        ("finalize-app-config", "first"),
-        ("finalize-app-config", "second"),
-        # App tools are verified for first app
-        ("verify-app-tools", "first"),
-        # Package the first app
-        (
-            "package",
-            "first",
-            {
-                "adhoc_sign": False,
-                "identity": None,
-                "sign_app": False,
-            },
-        ),
-        # App tools are verified for second app
-        ("verify-app-tools", "second"),
-        # package the second app
-        (
-            "package",
-            "second",
-            {
-                "adhoc_sign": False,
-                "identity": None,
-                "sign_app": False,
-                # state of previous calls have been preserved.
-                "package_state": "first",
-            },
-        ),
-    ]
-
-    # Packaging format has been annotated on both apps
-    assert first_app.packaging_format == "pkg"
-    assert second_app.packaging_format == "pkg"
-
-    # The dist folder has been created.
-    assert tmp_path / "base_path" / "dist"
-
-
 def test_adhoc_sign_args_package_two_app(
     package_command, first_app, second_app, tmp_path
 ):
     """If there are multiple apps,and an --adhoc argument, package signs all apps using
-    adhoc option."""
+    ad-hoc identity."""
 
     package_command.apps = {
         # Add the first app
@@ -348,7 +240,7 @@ def test_adhoc_sign_args_package_two_app(
     }
 
     # Configure adhoc command line options
-    options = package_command.parse_options(["--adhoc"])
+    options = package_command.parse_options(["--adhoc-sign"])
 
     # Run the package command
     package_command(**options)
@@ -371,7 +263,6 @@ def test_adhoc_sign_args_package_two_app(
             {
                 "adhoc_sign": True,
                 "identity": None,
-                "sign_app": True,
             },
         ),
         # App tools are verified for second app
@@ -383,7 +274,6 @@ def test_adhoc_sign_args_package_two_app(
             {
                 "adhoc_sign": True,
                 "identity": None,
-                "sign_app": True,
                 # state of previous calls have been preserved.
                 "package_state": "first",
             },
@@ -433,7 +323,6 @@ def test_identity_sign_args_package_two_app(
             {
                 "adhoc_sign": False,
                 "identity": "test",
-                "sign_app": True,
             },
         ),
         # App tools are verified for second app
@@ -445,7 +334,6 @@ def test_identity_sign_args_package_two_app(
             {
                 "adhoc_sign": False,
                 "identity": "test",
-                "sign_app": True,
                 # state of previous calls have been preserved.
                 "package_state": "first",
             },
@@ -490,7 +378,6 @@ def test_package_alternate_format(package_command, first_app, tmp_path):
             {
                 "adhoc_sign": False,
                 "identity": None,
-                "sign_app": True,
             },
         ),
     ]
@@ -530,7 +417,6 @@ def test_create_before_package(package_command, first_app_config, tmp_path):
             {
                 "adhoc_sign": False,
                 "identity": None,
-                "sign_app": True,
             },
         ),
         (
@@ -540,7 +426,6 @@ def test_create_before_package(package_command, first_app_config, tmp_path):
                 "adhoc_sign": False,
                 "create_state": "first",
                 "identity": None,
-                "sign_app": True,
             },
         ),
         # App tools are verified for app
@@ -552,7 +437,6 @@ def test_create_before_package(package_command, first_app_config, tmp_path):
             {
                 "adhoc_sign": False,
                 "identity": None,
-                "sign_app": True,
                 "create_state": "first",
                 "build_state": "first",
             },
@@ -594,7 +478,6 @@ def test_update_package_one_app(package_command, first_app, tmp_path):
             {
                 "adhoc_sign": False,
                 "identity": None,
-                "sign_app": True,
                 "update_requirements": True,
                 "update_resources": True,
                 "update_support": True,
@@ -606,7 +489,6 @@ def test_update_package_one_app(package_command, first_app, tmp_path):
             {
                 "adhoc_sign": False,
                 "identity": None,
-                "sign_app": True,
                 "update_state": "first",
             },
         ),
@@ -619,7 +501,6 @@ def test_update_package_one_app(package_command, first_app, tmp_path):
             {
                 "adhoc_sign": False,
                 "identity": None,
-                "sign_app": True,
                 "update_state": "first",
                 "build_state": "first",
             },
@@ -663,7 +544,6 @@ def test_update_package_two_app(package_command, first_app, second_app, tmp_path
             {
                 "adhoc_sign": False,
                 "identity": None,
-                "sign_app": True,
                 "update_requirements": True,
                 "update_resources": True,
                 "update_support": True,
@@ -675,7 +555,6 @@ def test_update_package_two_app(package_command, first_app, second_app, tmp_path
             {
                 "adhoc_sign": False,
                 "identity": None,
-                "sign_app": True,
                 "update_state": "first",
             },
         ),
@@ -688,7 +567,6 @@ def test_update_package_two_app(package_command, first_app, second_app, tmp_path
             {
                 "adhoc_sign": False,
                 "identity": None,
-                "sign_app": True,
                 "update_state": "first",
                 "build_state": "first",
             },
@@ -700,7 +578,6 @@ def test_update_package_two_app(package_command, first_app, second_app, tmp_path
             {
                 "adhoc_sign": False,
                 "identity": None,
-                "sign_app": True,
                 "update_requirements": True,
                 "update_resources": True,
                 "update_support": True,
@@ -716,7 +593,6 @@ def test_update_package_two_app(package_command, first_app, second_app, tmp_path
             {
                 "adhoc_sign": False,
                 "identity": None,
-                "sign_app": True,
                 "update_state": "second",
                 # state of previous calls have been preserved.
                 "build_state": "first",
@@ -732,7 +608,6 @@ def test_update_package_two_app(package_command, first_app, second_app, tmp_path
             {
                 "adhoc_sign": False,
                 "identity": None,
-                "sign_app": True,
                 "update_state": "second",
                 "build_state": "second",
                 # state of previous calls have been preserved.
@@ -777,7 +652,6 @@ def test_build_before_package(package_command, first_app_unbuilt, tmp_path):
             {
                 "adhoc_sign": False,
                 "identity": None,
-                "sign_app": True,
             },
         ),
         # App tools are verified for app
@@ -789,7 +663,6 @@ def test_build_before_package(package_command, first_app_unbuilt, tmp_path):
             {
                 "adhoc_sign": False,
                 "identity": None,
-                "sign_app": True,
                 "build_state": "first",
             },
         ),
@@ -836,7 +709,6 @@ def test_already_packaged(package_command, first_app, tmp_path):
             {
                 "adhoc_sign": False,
                 "identity": None,
-                "sign_app": True,
             },
         ),
     ]

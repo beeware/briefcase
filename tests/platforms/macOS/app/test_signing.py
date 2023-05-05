@@ -167,37 +167,48 @@ def test_invalid_identity_name(dummy_command):
 
 
 def test_implied_identity(dummy_command):
-    """If there is only one identity, it is automatically picked."""
+    """If there is only one identity, it will still prompt with ad-hoc as a second
+    option."""
     # get_identities will return some options.
     dummy_command.get_identities.return_value = {
         "11E77FB58F13F6108B38110D5D92233C58ED38C5": "iPhone Developer: Jane Smith (BXAH5H869S)",
     }
 
+    # Return option 2
+    dummy_command.input.values = ["2"]
+
     result = dummy_command.select_identity()
 
-    # The identity will be the only option available.
     assert result == (
         "11E77FB58F13F6108B38110D5D92233C58ED38C5",
         "iPhone Developer: Jane Smith (BXAH5H869S)",
     )
 
-    # User input was not solicited
-    assert dummy_command.input.prompts == []
+    # User input was solicited
+    assert dummy_command.input.prompts
 
 
 def test_no_identities(dummy_command):
-    """If there are no identities an error is raised."""
+    """If there are no identities the user will be prompted to select with only ad-hoc
+    as an option."""
     # get_identities will return some options.
     dummy_command.get_identities.return_value = {}
 
-    with pytest.raises(
-        BriefcaseCommandError,
-        match=(
-            r"No code signing identities are available: see "
-            r"https://briefcase.readthedocs.io/en/stable/how-to/code-signing/macOS.html"
+    # Return option 1
+    dummy_command.input.values = ["1"]
+
+    result = dummy_command.select_identity()
+
+    assert result == (
+        "-",
+        (
+            "Ad-hoc identity. The resulting package will run but cannot be "
+            "re-distributed."
         ),
-    ):
-        dummy_command.select_identity()
+    )
+
+    # User input was solicited
+    assert dummy_command.input.prompts
 
 
 def test_selected_identity(dummy_command):
@@ -208,8 +219,8 @@ def test_selected_identity(dummy_command):
         "11E77FB58F13F6108B38110D5D92233C58ED38C5": "iPhone Developer: Jane Smith (BXAH5H869S)",
     }
 
-    # Return option 2
-    dummy_command.input.values = ["2"]
+    # Return option 3
+    dummy_command.input.values = ["3"]
 
     result = dummy_command.select_identity()
 
@@ -224,8 +235,8 @@ def test_selected_identity(dummy_command):
 
 
 def test_sign_file_adhoc_identity(dummy_command, tmp_path):
-    """If an adhoc identity is used, the runtime option isn't used."""
-    # Sign the file with an adhoc identity
+    """If an ad-hoc identity is used, the runtime option isn't used."""
+    # Sign the file with an ad-hoc identity
     dummy_command.sign_file(tmp_path / "base_path" / "random.file", identity="-")
 
     # An attempt to codesign was made without the runtime option
@@ -245,7 +256,7 @@ def test_sign_file_adhoc_identity(dummy_command, tmp_path):
 
 def test_sign_file_entitlements(dummy_command, tmp_path):
     """Entitlements can be included in a signing call."""
-    # Sign the file with an adhoc identity
+    # Sign the file with an ad-hoc identity
     dummy_command.sign_file(
         tmp_path / "base_path" / "random.file",
         identity="Sekrit identity (DEADBEEF)",
