@@ -1,3 +1,5 @@
+import concurrent.futures
+import itertools
 import os
 import re
 import subprocess
@@ -30,6 +32,10 @@ DEFAULT_OUTPUT_FORMAT = "app"
 MACOS_LOG_PREFIX_REGEX = re.compile(
     r"\d{4}-\d{2}-\d{2} (?P<timestamp>\d{2}:\d{2}:\d{2}.\d{3}) Df (.*?)\[.*?:.*?\]"
     r"(?P<subsystem>( \(libffi\.dylib\))|( \(_ctypes\.cpython-3\d{1,2}-.*?\.so\)))? (?P<content>.*)"
+)
+
+ADHOC_IDENTITY_NAME = (
+    "Ad-hoc identity. The resulting package will run but cannot be re-distributed."
 )
 
 
@@ -221,6 +227,7 @@ class macOSSigningMixin:
         """
         # Obtain the valid codesigning identities.
         identities = self.get_identities(self.tools, "codesigning")
+        identities["-"] = ADHOC_IDENTITY_NAME
 
         if identity:
             try:
@@ -236,22 +243,23 @@ class macOSSigningMixin:
                 except KeyError:
                     # Not found as an ID or name
                     raise BriefcaseCommandError(
-                        f"Invalid code signing identity {identity!r}"
+                        f"Invalid code signing identity {identity}"
                     ) from e
 
-        if len(identities) == 0:
-            raise BriefcaseCommandError(
-                "No code signing identities are available: see "
-                "https://briefcase.readthedocs.io/en/stable/how-to/code-signing/macOS.html"
+        self.input.prompt()
+        self.input.prompt("Select code signing identity to use:")
+        self.input.prompt()
+        identity = select_option(identities, input=self.input)
+        identity_name = identities[identity]
+        if identity == "-":
+            self.logger.info(
+                f"""
+In the future, you could specify this signing identity by running:
+
+    $ briefcase {self.command} macOS --adhoc-sign
+"""
             )
-        elif len(identities) == 1:
-            identity, identity_name = list(identities.items())[0]
         else:
-            self.input.prompt()
-            self.input.prompt("Select code signing identity to use:")
-            self.input.prompt()
-            identity = select_option(identities, input=self.input)
-            identity_name = identities[identity]
             self.logger.info(
                 f"""
 In the future, you could specify this signing identity by running:
@@ -356,21 +364,55 @@ or
         # Sign the bundle path itself
         sign_targets.append(bundle_path)
 
-        # Signs code objects in reversed lexicographic order to ensure nesting order is respected
-        # (objects must be signed from the inside out)
+        # Run signing through a ThreadPoolExecutor so that they run in parallel.
+        # However, we need to ensure that objects are signed from the inside out
+        # (i.e., a folder must be signed *after* all it's contents has been
+        # signed). To do this, we sort the list of signing targets in reverse
+        # lexigraphic order, and then group all the signing targets by parent.
+        # This sorts all the signable files into folders; and sign all files in
+        # a folder before sorting the next group. This ensures that longer paths
+        # are signed first, and all files in a folder are signed before the
+        # folder is signed.
+        #
+        # NOTE: We are relying on the fact that the final iteration order
+        # produced by groupby() reflects the order in which groups are found in
+        # the input data. The documentation for groupby() says that a new break
+        # is created every time a new group is found in the input data; sorting
+        # the input in reverse order ensures that only one group is found per folder,
+        # and that the deepest folder is found first.
         progress_bar = self.input.progress_bar()
         task_id = progress_bar.add_task("Signing App", total=len(sign_targets))
         with progress_bar:
-            for path in sorted(sign_targets, reverse=True):
-                self.sign_file(
-                    path,
-                    entitlements=self.entitlements_path(app),
-                    identity=identity,
-                )
-                progress_bar.update(task_id, advance=1)
+            for _, names in itertools.groupby(
+                sorted(sign_targets, reverse=True),
+                lambda name: name.parent,
+            ):
+                with concurrent.futures.ThreadPoolExecutor() as executor:
+                    futures = []
+                    for path in names:
+                        future = executor.submit(
+                            self.sign_file,
+                            path,
+                            entitlements=self.entitlements_path(app),
+                            identity=identity,
+                        )
+                        futures.append(future)
+                    for future in concurrent.futures.as_completed(futures):
+                        progress_bar.update(task_id, advance=1)
+                        if future.exception():
+                            raise future.exception()
 
 
 class macOSPackageMixin(macOSSigningMixin):
+    ADHOC_SIGN_HELP = (
+        "Perform ad-hoc signing on the app. "
+        "The app will only run on this machine; it cannot be redistributed to others."
+    )
+    IDENTITY_HELP = (
+        "The code signing identity to use; either the 40-digit hex "
+        "checksum, or the full name of the identity."
+    )
+
     @property
     def packaging_formats(self):
         return ["app", "dmg"]
@@ -389,8 +431,7 @@ class macOSPackageMixin(macOSSigningMixin):
         super().add_options(parser)
         # We use store_const:False rather than store_false so that the
         # "unspecified" value is None, rather than True, allowing for
-        # a "default behavior" interpretation with `--no-sign` or
-        # `--adhoc-sign` is specified
+        # a "default behavior" interpretation when `--adhoc-sign` is specified
         parser.add_argument(
             "--no-notarize",
             dest="notarize_app",
@@ -427,7 +468,7 @@ class macOSPackageMixin(macOSSigningMixin):
             return re.match(r".*\(([\dA-Z]*)\)", identity_name)[1]
         except TypeError:
             raise BriefcaseCommandError(
-                "Couldn't extract Team ID from signing identity {identity!r}"
+                f"Couldn't extract Team ID from signing identity {identity_name!r}"
             )
 
     def notarize(self, filename, team_id):
@@ -566,7 +607,6 @@ password:
     def package_app(
         self,
         app: BaseConfig,
-        sign_app=True,
         notarize_app=None,
         identity=None,
         adhoc_sign=False,
@@ -575,48 +615,52 @@ password:
         """Package an app bundle.
 
         :param app: The application to package
-        :param sign_app: Should the application be signed? Default: ``True``
         :param notarize_app: Should the app be notarized? Default: ``True`` if the
             app has been signed with a real identity; ``False`` if the app is
             unsigned, or an ad-hoc signing identity has been used.
         :param identity: The code signing identity to use. This can be either
             the 40-digit hex checksum, or the string name of the identity.
             If unspecified, the user will be prompted for a code signing
-            identity. Ignored if ``sign_app`` is ``False``.
-        :param adhoc_sign: If ``True``, code will be signed with adhoc identity of "-"
+            identity. Ignored if ``adhoc_sign`` is ``True``.
+        :param adhoc_sign: If ``True``, code will be signed with ad-hoc identity
+            of "-", and the resulting app will not be re-distributable.
         """
-        if sign_app:
-            if adhoc_sign:
-                if notarize_app:
-                    raise BriefcaseCommandError(
-                        "Can't notarize an app with an adhoc signing identity"
-                    )
-
-                identity = "-"
-                self.logger.info(
-                    "Signing app with adhoc identity...", prefix=app.app_name
-                )
-            else:
-                # If we're signing, and notarization isn't explicitly disabled,
-                # notarize by default.
-                if notarize_app is None:
-                    notarize_app = True
-
-                identity, identity_name = self.select_identity(identity=identity)
-
-                self.logger.info(
-                    f"Signing app with identity {identity_name}...", prefix=app.app_name
-                )
-
-                if notarize_app:
-                    team_id = self.team_id_from_identity(identity_name)
-
-            self.sign_app(app=app, identity=identity)
+        if adhoc_sign:
+            identity = "-"
+            identity_name = ADHOC_IDENTITY_NAME
         else:
+            identity, identity_name = self.select_identity(identity=identity)
+
+        if identity == "-":
             if notarize_app:
                 raise BriefcaseCommandError(
-                    "Can't notarize an app that hasn't been signed"
+                    "Can't notarize an app with an ad-hoc signing identity"
                 )
+            self.logger.info(
+                "Signing app with ad-hoc identity...",
+                prefix=app.app_name,
+            )
+            self.logger.warning(
+                (
+                    "Because you are signing with the ad-hoc identity, this "
+                    "app will run, but cannot be re-distributed."
+                ),
+                prefix=app.app_name,
+            )
+        else:
+            # If we're signing, and notarization isn't explicitly disabled,
+            # notarize by default.
+            if notarize_app is None:
+                notarize_app = True
+
+            self.logger.info(
+                f"Signing app with identity {identity_name}...", prefix=app.app_name
+            )
+
+            if notarize_app:
+                team_id = self.team_id_from_identity(identity_name)
+
+        self.sign_app(app=app, identity=identity)
 
         if app.packaging_format == "app":
             if notarize_app:
@@ -693,15 +737,14 @@ password:
                 settings=dmg_settings,
             )
 
-            if sign_app:
-                self.sign_file(
-                    dmg_path,
-                    identity=identity,
-                )
+            self.sign_file(
+                dmg_path,
+                identity=identity,
+            )
 
-                if notarize_app:
-                    self.logger.info(
-                        f"Notarizing DMG with team ID {team_id}...",
-                        prefix=app.app_name,
-                    )
-                    self.notarize(dmg_path, team_id=team_id)
+            if notarize_app:
+                self.logger.info(
+                    f"Notarizing DMG with team ID {team_id}...",
+                    prefix=app.app_name,
+                )
+                self.notarize(dmg_path, team_id=team_id)

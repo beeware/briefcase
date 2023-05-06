@@ -86,6 +86,16 @@ If ``true`` the installer will attempt to install the app as a per-machine app,
 available to all users. If ``false``, the installer will install as a per-user
 app. If undefined the installer will ask the user for their preference.
 
+``use_full_install_path``
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Controls whether the app will be installed using a path which includes both the
+application name *and* the company or developer's name. If ``true`` (the
+default), the app will be installed to ``Program Files\<Author Name>\<Project
+Name>``. If ``false``, it will be installed to ``Program Files\<Project Name>``.
+Using the full path makes sense for larger companies with multiple applications,
+but less so for a solo developer.
+
 ``version_triple``
 ~~~~~~~~~~~~~~~~~~
 
@@ -107,3 +117,26 @@ pre, post and dev version indicators), padding with zeros if necessary:
 However, if you need to override this default value, you can define
 ``version_triple`` in your app settings. If provided, this value will be used
 in the MSI configuration file instead of the auto-generated value.
+
+Platform quirks
+===============
+
+Use caution with ``--update-support``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Care should be taken when using the ``--update-support`` option to the
+``update``, ``build`` or ``run`` commands. Support packages in Windows apps are
+overlaid with app content, so it isn't possible to remove all old support files
+before installing new ones.
+
+Briefcase will unpack the new support package without cleaning up existing
+support package content. This *should* work; however, ensure a reproducible
+release artefacts, it is advisable to perform a clean app build before release.
+
+Packaging with ``--adhoc-sign``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Using the ``--adhoc-sign`` option on Windows results in no signing being
+performed on the packaged app. This will result in your application being
+flagged as coming from an unverified publisher. This may limit who can (or is
+willing to) install your app.

@@ -55,19 +55,20 @@ running:
 ``-p <format>``, ``--packaging-format <format>``
 ------------------------------------------------
 
-The format to use for packaging. The available packaging formats are platform dependent.
-
-``--no-sign``
--------------
-
-Don't perform code signing on the app.
+The format to use for packaging. The available packaging formats are platform
+dependent.
 
 ``--adhoc-sign``
 ----------------
 
-Sign app with adhoc identity.
+Perform the bare minimum signing that will result in a app that can run on your
+local machine. This may result in no signing, or signing with an ad-hoc signing
+identity. The ``--adhoc-sign`` option may be useful during development and
+testing. However, care should be taken using this option for release artefacts,
+as it may not be possible to distribute an ad-hoc signed app to others.
 
 ``-i <identity>`` / ``--identity <identity>``
 ---------------------------------------------
 
-The :doc:`code signing identity </how-to/code-signing/index>` to use when signing the app.
+The :doc:`code signing identity </how-to/code-signing/index>` to use when
+signing the app.
