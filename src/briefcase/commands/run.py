@@ -14,14 +14,12 @@ class LogFilter:
 
     def __init__(
         self,
-        log_popen,
         clean_filter,
         clean_output,
         exit_filter,
     ):
         """Create a filter for a log stream.
 
-        :param log_popen: The Popen object for the stream producing the logs.
         :param clean_filter: A function that will filter a line of logs,
             returning a "clean" line without any log system preamble.
         :param clean_output: Should the output displayed to the user be the
@@ -32,7 +30,6 @@ class LogFilter:
             condition has been detected, or None if the log stream should
             continue.
         """
-        self.log_popen = log_popen
         self.returncode = None
         self.clean_filter = clean_filter
         self.clean_output = clean_output
@@ -151,7 +148,6 @@ class RunAppMixin:
             )
 
             log_filter = LogFilter(
-                popen,
                 clean_filter=clean_filter,
                 clean_output=clean_output,
                 exit_filter=exit_filter,
