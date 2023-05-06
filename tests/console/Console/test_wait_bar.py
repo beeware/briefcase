@@ -115,3 +115,19 @@ def test_wait_bar_keyboard_interrupt_nested(
                 raise KeyboardInterrupt
 
     assert capsys.readouterr().out == output
+
+
+def test_wait_bar_always_interactive(interactive_console):
+    """Wait Bar is not disabled when console is interactive."""
+    with interactive_console.wait_bar():
+        assert interactive_console._wait_bar.disable is False
+        with interactive_console.wait_bar():
+            assert interactive_console._wait_bar.disable is False
+
+
+def test_wait_bar_non_interactive(non_interactive_console):
+    """Wait Bar is disabled when console is non-interactive."""
+    with non_interactive_console.wait_bar():
+        assert non_interactive_console._wait_bar.disable is True
+        with non_interactive_console.wait_bar():
+            assert non_interactive_console._wait_bar.disable is True
