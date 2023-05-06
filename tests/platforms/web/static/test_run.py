@@ -494,18 +494,18 @@ def test_log_requests_to_logger(monkeypatch):
     server.logger.info.assert_called_once_with("localhost - - [now] hello\\x1b")
 
 
-def test_test_mode(run_command, first_app_built):
-    """Test mode raises an error (at least for now)."""
-    # Run the app
-    with pytest.raises(
-        BriefcaseCommandError,
-        match=r"Briefcase can't run web apps in test mode.",
-    ):
-        run_command.run_app(
-            first_app_built,
-            test_mode=True,
-            passthrough=[],
-            host="localhost",
-            port=8080,
-            open_browser=True,
-        )
+# def test_test_mode(run_command, first_app_built):
+#     """Test mode raises an error (at least for now)."""
+#     # Run the app
+#     with pytest.raises(
+#         BriefcaseCommandError,
+#         match=r"Briefcase can't run web apps in test mode.",
+#     ):
+#         run_command.run_app(
+#             first_app_built,
+#             test_mode=True,
+#             passthrough=[],
+#             host="localhost",
+#             port=8080,
+#             open_browser=True,
+#         )

@@ -4,10 +4,9 @@ import sys
 import webbrowser
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from threading import Thread
 from typing import Any, List
 from zipfile import ZipFile
-
-from briefcase.console import Log
 
 try:
     import tomllib
@@ -15,6 +14,7 @@ except ModuleNotFoundError:  # pragma: no-cover-if-gte-py310
     import tomli as tomllib
 
 import tomli_w
+from playwright.sync_api import sync_playwright
 
 from briefcase.commands import (
     BuildCommand,
@@ -25,8 +25,15 @@ from briefcase.commands import (
     RunCommand,
     UpdateCommand,
 )
+from briefcase.commands.run import LogFilter
 from briefcase.config import AppConfig
-from briefcase.exceptions import BriefcaseCommandError, BriefcaseConfigError
+from briefcase.console import Log
+from briefcase.exceptions import (
+    BriefcaseCommandError,
+    BriefcaseConfigError,
+    BriefcaseTestSuiteFailure,
+)
+from briefcase.integrations.subprocess import StopStreaming
 
 
 class StaticWebMixin:
@@ -245,9 +252,10 @@ class HTTPHandler(SimpleHTTPRequestHandler):
 
     def log_message(self, format: str, *args: Any) -> None:
         message = (format % args).translate(self._control_char_table)
-        self.server.logger.info(
-            f"{self.address_string()} - - [{self.log_date_time_string()}] {message}"
-        )
+        if self.server.logger:
+            self.server.logger.info(
+                f"{self.address_string()} - - [{self.log_date_time_string()}] {message}"
+            )
 
 
 class LocalHTTPServer(ThreadingHTTPServer):
@@ -308,9 +316,6 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
         :param open_browser: Should a browser be opened on the newly started
             server.
         """
-        if test_mode:
-            raise BriefcaseCommandError("Briefcase can't run web apps in test mode.")
-
         self.logger.info("Starting web server...", prefix=app.app_name)
 
         # At least for now, there's no easy way to pass arguments to a web app.
@@ -319,12 +324,14 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
 
         httpd = None
         try:
-            # Create a local HTTP server
+            # Create a local HTTP server.
+            # Don't log the server if we're in test mode;
+            # otherwise, log server activity to the console
             httpd = LocalHTTPServer(
                 self.project_path(app),
                 host=host,
                 port=port,
-                logger=self.logger,
+                logger=None if test_mode else self.logger,
             )
 
             # Extract the host and port from the server. This is needed
@@ -332,19 +339,90 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
             host, port = httpd.socket.getsockname()
             url = f"http://{host}:{port}"
 
-            self.logger.info(f"Web server open on {url}")
-            # If requested, open a browser tab on the newly opened server.
-            if open_browser:
-                webbrowser.open_new_tab(url)
+            if test_mode:
+                # Ensure that the Chromium Playwright browser is installed
+                # This is a no-output, near no-op if the browser *is* installed;
+                # If it isn't, it shows a download progress bar.
+                self.tools.subprocess.run(
+                    ["playwright", "install", "chromium"],
+                    stream_output=False,
+                )
 
-            self.logger.info(
-                "Web server log output (type CTRL-C to stop log)...",
-                prefix=app.app_name,
-            )
-            self.logger.info("=" * 75)
+                # Start the web server in a background thread
+                server_thread = Thread(target=httpd.serve_forever)
+                server_thread.start()
 
-            # Run the server.
-            httpd.serve_forever()
+                self.logger.info("Running test suite...")
+                self.logger.info("=" * 75)
+
+                # Open a Playwright session
+                with sync_playwright() as playwright:
+                    browser = playwright.chromium.launch(headless=not open_browser)
+                    page = browser.new_page()
+
+                    # Install a handler that will capture every line of
+                    # log content in a buffer.
+                    buffer = []
+                    page.on("console", lambda msg: buffer.append(msg.text))
+
+                    # Load the test page.
+                    page.goto(url)
+
+                    # Build a log filter looking for test suite termination
+                    log_filter = LogFilter(
+                        clean_filter=None,
+                        clean_output=True,
+                        exit_filter=LogFilter.test_filter(
+                            getattr(app, "exit_regex", LogFilter.DEFAULT_EXIT_REGEX)
+                        ),
+                    )
+                    try:
+                        while True:
+                            # Process all the lines in the accumulated log buffer,
+                            # looking for the termination condition. Finding the
+                            # termination condition is what stops the
+                            for line in buffer:
+                                for filtered in log_filter(line):
+                                    self.logger.info(filtered)
+                            buffer = []
+
+                            # Insert a short pause so that Playwright can
+                            # generate the next batch of console logs
+                            page.wait_for_timeout(100)
+                    except StopStreaming:
+                        if log_filter.returncode == 0:
+                            self.logger.info("Test suite passed!", prefix=app.app_name)
+                        else:
+                            if log_filter.returncode is None:
+                                raise BriefcaseCommandError(
+                                    "Test suite didn't report a result."
+                                )
+                            else:
+                                self.logger.error(
+                                    "Test suite failed!", prefix=app.app_name
+                                )
+                                raise BriefcaseTestSuiteFailure()
+                    finally:
+                        # Close the Playwright browser, and shut down the web server
+                        browser.close()
+                        httpd.shutdown()
+            else:
+                # Normal execution mode
+                self.logger.info(f"Web server open on {url}")
+
+                # If requested, open a browser tab on the newly opened server.
+                if open_browser:
+                    webbrowser.open_new_tab(url)
+
+                self.logger.info(
+                    "Web server log output (type CTRL-C to stop log)...",
+                    prefix=app.app_name,
+                )
+                self.logger.info("=" * 75)
+
+                # Start the web server in blocking mode.
+                httpd.serve_forever()
+
         except PermissionError as e:
             if port < 1024:
                 raise BriefcaseCommandError(
