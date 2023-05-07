@@ -36,7 +36,8 @@ Web projects use a single 32px ``.png`` format icon as the site icon.
 Splash Image format
 ===================
 
-Web projects do not support splash screens or installer images.
+Web projects use a single ``.png`` image as the splash screen. The image can be
+any size; a size of approximately 250x200 px is recommended.
 
 Application configuration
 =========================
