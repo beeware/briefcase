@@ -10,14 +10,17 @@ on:
         description: "Name of the uploaded artifact; use for artifact retrieval."
         value: ${{ jobs.package.outputs.artifact-name }}
 
-defaults:
-  run:
-    shell: bash  # https://github.com/beeware/briefcase/pull/912
-
 # Cancel active CI runs for a PR before starting another run
 concurrency:
   group: ${{ github.ref }}
   cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash  # https://github.com/beeware/briefcase/pull/912
+
+env:
+  FORCE_COLOR: "1"
 
 jobs:
   pre-commit:
