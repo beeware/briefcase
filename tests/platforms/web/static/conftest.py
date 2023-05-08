@@ -17,7 +17,24 @@ app_requirements_path="requirements.txt"
     )
 
     # Create index.html
-    create_file(bundle_path / "www" / "index.html", "<html></html>")
+    create_file(
+        bundle_path / "www" / "index.html",
+        """
+<html>
+    <head>
+<!-----@ header:start @----->
+<!-----@ header:end @----->
+    </head>
+    <body>
+        <py-script>
+#####@ bootstrap:start @#####
+#####@ bootstrap:end @#####
+        </py-script>
+
+    </body>
+</html>
+""",
+    )
 
     # Create the initial briefcase.css
     create_file(
@@ -26,8 +43,8 @@ app_requirements_path="requirements.txt"
 #pyconsole {
   display: None;
 }
-/*******************************************************************
- ******************** Wheel contributed styles ********************/
+/*****@ CSS:start @*****/
+/*****@ CSS:end @*****/
 """,
     )
 

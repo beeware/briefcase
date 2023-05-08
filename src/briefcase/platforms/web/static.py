@@ -1,4 +1,5 @@
 import errno
+import re
 import subprocess
 import sys
 import webbrowser
@@ -46,8 +47,11 @@ class StaticWebMixin:
     def binary_path(self, app):
         return self.bundle_path(app) / "www" / "index.html"
 
+    def static_path(self, app):
+        return self.project_path(app) / "static"
+
     def wheel_path(self, app):
-        return self.project_path(app) / "static" / "wheels"
+        return self.static_path(app) / "wheels"
 
     def distribution_path(self, app):
         return self.dist_path / f"{app.formal_name}-{app.version}.web.zip"
@@ -74,61 +78,239 @@ class StaticWebOpenCommand(StaticWebMixin, OpenCommand):
 class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
     description = "Build a static web project."
 
-    def _trim_file(self, path, sentinel):
-        """Re-write a file to strip any content after a sentinel line.
-
-        The file is stored in-memory, so it shouldn't be used on files
-        with a *lot* of content before the sentinel.
-
-        :param path: The path to the file to be trimmed
-        :param sentinel: The content of the sentinel line. This will
-            become the last line in the trimmed file.
-        """
-        content = []
-        with path.open("r", encoding="utf-8") as f:
-            for line in f:
-                if line.rstrip("\n") == sentinel:
-                    content.append(line)
-                    break
-                else:
-                    content.append(line)
-
-        with path.open("w", encoding="utf-8") as f:
-            for line in content:
-                f.write(line)
-
-    def _process_wheel(self, wheelfile, css_file):
+    def _process_wheel(self, wheelfile, inserts, static_path):
         """Process a wheel, extracting any content that needs to be compiled into the
         final project.
 
+        Extracted content comes in two forms:
+        * inserts - pieces of content that will be inserted into existing files
+        * static - content that will be copied wholesale. Any content in a ``static``
+          folder inside the wheel will be copied as-is to the static folder,
+          namespaced by the package name of the wheel.
+
+        Any pre-existing static content for the wheel will be deleted.
+
         :param wheelfile: The path to the wheel file to be processed.
-        :param css_file: A file handle, opened for write/append, to which
-            any extracted CSS content will be appended.
+        :param inserts: The inserts collection for the app
+        :param static_path: The location where static content should be unpacked
         """
-        package = " ".join(wheelfile.name.split("-")[:2])
+        parts = wheelfile.name.split("-")
+        package_name = parts[0]
+        package_version = parts[1]
+        package_key = f"{package_name} {package_version}"
+
+        # Purge any existing extracted static files
+        if (static_path / package_name).exists():
+            self.tools.shutil.rmtree(static_path / package_name)
+
         with ZipFile(wheelfile) as wheel:
             for filename in wheel.namelist():
                 path = Path(filename)
-                # Any CSS file in a `static` folder is appended
-                if (
-                    len(path.parts) > 1
-                    and path.parts[1] == "static"
-                    and path.suffix == ".css"
-                ):
-                    self.logger.info(f"    Found {filename}")
-                    css_file.write(
-                        "\n/*******************************************************\n"
-                    )
-                    css_file.write(f" * {package}::{'/'.join(path.parts[2:])}\n")
-                    css_file.write(
-                        " *******************************************************/\n\n"
-                    )
-                    css_file.write(wheel.read(filename).decode("utf-8"))
+                if len(path.parts) > 1:
+                    if path.parts[1] == "inserts":
+                        source = str(Path(*path.parts[2:]))
+                        content = wheel.read(filename).decode("utf-8")
+                        if ":" in path.name:
+                            target, insert = source.split(":")
+                            self.logger.info(
+                                f"    {source}: Adding {insert} insert for {target}"
+                            )
+                        else:
+                            target = path.suffix[1:].upper()
+                            insert = source
+                            self.logger.info(f"    {source}: Adding {target} insert")
 
-    def build_app(self, app: AppConfig, **kwargs):
+                        inserts.setdefault(target, {}).setdefault(insert, {})[
+                            package_key
+                        ] = content
+
+                    elif path.parts[1] == "static":
+                        content = wheel.read(filename)
+                        outfilename = static_path / package_name / Path(*path.parts[2:])
+                        outfilename.parent.mkdir(parents=True, exist_ok=True)
+                        with outfilename.open("wb") as f:
+                            f.write(content)
+
+    def _write_pyscript_toml(self, app: AppConfig):
+        """Write the ``pyscript.toml`` file for the app.
+
+        :param app: The application whose ``pyscript.toml`` is being written.
+        """
+        with (self.project_path(app) / "pyscript.toml").open("wb") as f:
+            config = {
+                "name": app.formal_name,
+                "description": app.description,
+                "version": app.version,
+                "splashscreen": {"autoclose": True},
+                "terminal": False,
+                # Ensure that we're using Unix path separators, as the content
+                # will be parsed by pyscript in the browser.
+                "packages": [
+                    f'/{"/".join(wheel.relative_to(self.project_path(app)).parts)}'
+                    for wheel in sorted(self.wheel_path(app).glob("*.whl"))
+                ],
+            }
+            # Parse any additional pyscript.toml content, and merge it into
+            # the overall content
+            try:
+                extra = tomllib.loads(app.extra_pyscript_toml_content)
+                config.update(extra)
+            except tomllib.TOMLDecodeError as e:
+                raise BriefcaseConfigError(
+                    f"Extra pyscript.toml content isn't valid TOML: {e}"
+                ) from e
+            except AttributeError:
+                pass
+
+            # Write the final configuration.
+            tomli_w.dump(config, f)
+
+    def _base_inserts(self, app: AppConfig, test_mode: bool):
+        """Construct the initial runtime inserts for the app.
+
+        This adds:
+        * A bootstrap script for  ``index.html`` to start the app
+
+        :param app: The app whose base inserts we need.
+        :param test_mode: Boolean; Is the app running in test mode?
+        :returns: A dictionary containing the initial inserts
+        """
+        # Construct the bootstrap script.
+        bootstrap = [
+            "import runpy",
+            "",
+            f"# Run {app.formal_name}'s main module",
+            f'runpy.run_module("{app.module_name}", run_name="__main__", alter_sys=True)',
+        ]
+        if test_mode:
+            bootstrap.extend(
+                [
+                    "",
+                    f"# Run {app.formal_name}'s test module",
+                    f'runpy.run_module("tests.{app.module_name}", run_name="__main__", alter_sys=True)',
+                ]
+            )
+
+        return {
+            "index.html": {
+                "bootstrap": {
+                    "Briefcase": "\n".join(bootstrap),
+                }
+            }
+        }
+
+    def _merge_insert_content(self, inserts, key, path):
+        """Merge multi-file insert content into a single insert.
+
+        Rewrites the inserts, removing the entry for ``key``,
+        producing a merged entry for ``path`` that has a single
+        ``key`` insert.
+
+        This is used to merge multiple contributed CSS files into
+        a single CSS insert.
+
+        :param inserts: The full set of inserts
+        :param key: The key to merge
+        :param path: The path for the merged insert.
+        """
+        try:
+            original = inserts.pop(key)
+        except KeyError:
+            # Nothing to merge.
+            pass
+        else:
+            merged = {}
+            for filename, package_inserts in original.items():
+                for package, css in package_inserts.items():
+                    try:
+                        old_css = merged[package]
+                    except KeyError:
+                        old_css = ""
+
+                    full_css = f"{old_css}/********** {filename} **********/\n{css}\n"
+                    merged[package] = full_css
+
+            # Preserve the merged content as a single insert
+            inserts[path] = {key: merged}
+
+    def _write_inserts(self, app: AppConfig, filename: Path, inserts: dict):
+        """Write inserts into an existing file.
+
+        This looks for start and end markers in the named file, and replaces the
+        content inside those markers with the inserted content.
+
+        Multiple formats of insert marker are inspected, to accomodate HTML,
+        Python and CSS/JS comment conventions:
+        * HTML: ``<!-----@ insert:start @----->`` and ``<!-----@ insert:end @----->``
+        * Python: ``#####@ insert:start @#####\n`` and ``######@ insert:end @#####\n``
+        * CSS/JS: ``/*****@ insert:end @*****/`` and  ``/*****@ insert:end @*****/``
+
+        :param app: The application whose ``pyscript.toml`` is being written.
+        :param filename: The file whose insert is to be written.
+        :param inserts: The inserts for the file. A 2 level dictionary, keyed by
+            the name of the insert to add, and then package that contributed the
+            insert.
+        """
+        # Read the current content
+        with (self.project_path(app) / filename).open() as f:
+            content = f.read()
+
+        for insert, packages in inserts.items():
+            for comment, marker, replacement in [
+                # HTML
+                (
+                    (
+                        "<!--------------------------------------------------\n"
+                        " * {package}\n"
+                        " -------------------------------------------------->\n"
+                        "{content}"
+                    ),
+                    r"<!-----@ {insert}:start @----->.*?<!-----@ {insert}:end @----->",
+                    r"<!-----@ {insert}:start @----->\n{content}<!-----@ {insert}:end @----->",
+                ),
+                # CSS/JS
+                (
+                    (
+                        "/**************************************************\n"
+                        " * {package}\n"
+                        " *************************************************/\n"
+                        "{content}"
+                    ),
+                    r"/\*\*\*\*\*@ {insert}:start @\*\*\*\*\*/.*?/\*\*\*\*\*@ {insert}:end @\*\*\*\*\*/",
+                    r"/*****@ {insert}:start @*****/\n{content}/*****@ {insert}:end @*****/",
+                ),
+                # Python
+                (
+                    (
+                        "##################################################\n"
+                        "# {package}\n"
+                        "##################################################\n"
+                        "{content}"
+                    ),
+                    r"#####@ {insert}:start @#####\n.*?#####@ {insert}:end @#####",
+                    r"#####@ {insert}:start @#####\n{content}\n#####@ {insert}:end @#####",
+                ),
+            ]:
+                full_insert = "\n".join(
+                    comment.format(package=package, content=content)
+                    for package, content in packages.items()
+                )
+                content = re.sub(
+                    marker.format(insert=insert),
+                    replacement.format(insert=insert, content=full_insert),
+                    content,
+                    flags=re.MULTILINE | re.DOTALL,
+                )
+
+        # Write the new index.html
+        with (self.project_path(app) / filename).open("w") as f:
+            f.write(content)
+
+    def build_app(self, app: AppConfig, test_mode: bool = False, **kwargs):
         """Build the static web deployment for the application.
 
         :param app: The application to build
+        :param test_mode: Boolean; Is the app running in test mode?
         """
         self.logger.info("Building web project...", prefix=app.app_name)
 
@@ -180,51 +362,31 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 ) from e
 
         with self.input.wait_bar("Writing Pyscript configuration file..."):
-            with (self.project_path(app) / "pyscript.toml").open("wb") as f:
-                config = {
-                    "name": app.formal_name,
-                    "description": app.description,
-                    "version": app.version,
-                    "splashscreen": {"autoclose": True},
-                    "terminal": False,
-                    # Ensure that we're using Unix path separators, as the content
-                    # will be parsed by pyscript in the browser.
-                    "packages": [
-                        f'/{"/".join(wheel.relative_to(self.project_path(app)).parts)}'
-                        for wheel in sorted(self.wheel_path(app).glob("*.whl"))
-                    ],
-                }
-                # Parse any additional pyscript.toml content, and merge it into
-                # the overall content
-                try:
-                    extra = tomllib.loads(app.extra_pyscript_toml_content)
-                    config.update(extra)
-                except tomllib.TOMLDecodeError as e:
-                    raise BriefcaseConfigError(
-                        f"Extra pyscript.toml content isn't valid TOML: {e}"
-                    ) from e
-                except AttributeError:
-                    pass
+            self._write_pyscript_toml(app)
 
-                # Write the final configuration.
-                tomli_w.dump(config, f)
+        inserts = self._base_inserts(app, test_mode=test_mode)
 
-        self.logger.info("Compile static web content from wheels")
-        with self.input.wait_bar("Compiling static web content from wheels..."):
-            # Trim previously compiled content out of briefcase.css
-            briefcase_css_path = (
-                self.project_path(app) / "static" / "css" / "briefcase.css"
-            )
-            self._trim_file(
-                briefcase_css_path,
-                sentinel=" ******************* Wheel contributed styles **********************/",
-            )
-
-            # Extract static resources from packaged wheels
+        self.logger.info("Compile contributed content from wheels")
+        with self.input.wait_bar("Compiling contributed content from wheels..."):
+            # Extract insert and static resources from packaged wheels
             for wheelfile in sorted(self.wheel_path(app).glob("*.whl")):
                 self.logger.info(f"  Processing {wheelfile.name}...")
-                with briefcase_css_path.open("a", encoding="utf-8") as css_file:
-                    self._process_wheel(wheelfile, css_file=css_file)
+                self._process_wheel(
+                    wheelfile,
+                    inserts=inserts,
+                    static_path=self.static_path(app),
+                )
+
+        # Reorganize CSS content so that there's a single content insert
+        # for all contributed packages
+        self._merge_insert_content(inserts, "CSS", "static/css/briefcase.css")
+
+        # Add content inserts to the site content.
+        self.logger.info("Add content inserts")
+        with self.input.wait_bar("Adding content inserts..."):
+            for filename, file_inserts in inserts.items():
+                self.logger.info(f"  Processing {filename}...")
+                self._write_inserts(app, filename=filename, inserts=file_inserts)
 
         return {}
 

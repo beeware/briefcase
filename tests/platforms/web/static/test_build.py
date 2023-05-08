@@ -43,7 +43,12 @@ def test_build_app(build_command, first_app_generated, tmp_path):
                 bundle_path / "www" / "static" / "wheels",
                 "first_app",
                 extra_content=[
-                    ("dependency/static/style.css", "span { margin: 10px; }\n"),
+                    ("dependency/inserts/style.css", "span { margin: 10px; }\n"),
+                    ("dependency/inserts/main.css", "span { padding: 10px; }\n"),
+                    (
+                        "dependency/inserts/index.html:header",
+                        "<link>style.css</link>\n",
+                    ),
                 ],
             ),
         elif args[0][3] == "pip":
@@ -51,14 +56,14 @@ def test_build_app(build_command, first_app_generated, tmp_path):
                 bundle_path / "www" / "static" / "wheels",
                 "dependency",
                 extra_content=[
-                    ("dependency/static/style.css", "div { margin: 10px; }\n"),
+                    ("dependency/inserts/dependency.css", "div { margin: 20px; }\n"),
                 ],
             ),
             create_wheel(
                 bundle_path / "www" / "static" / "wheels",
                 "other",
                 extra_content=[
-                    ("other/static/style.css", "div { padding: 10px; }\n"),
+                    ("other/inserts/style.css", "div { padding: 30px; }\n"),
                 ],
             ),
         else:
@@ -125,7 +130,7 @@ def test_build_app(build_command, first_app_generated, tmp_path):
             ],
         }
 
-    # briefcase.css has been appended
+    # briefcase.css has been customized
     with (bundle_path / "www" / "static" / "css" / "briefcase.css").open(
         encoding="utf-8"
     ) as f:
@@ -137,29 +142,67 @@ def test_build_app(build_command, first_app_generated, tmp_path):
                     "#pyconsole {",
                     "  display: None;",
                     "}",
-                    "/*******************************************************************",
-                    " ******************** Wheel contributed styles ********************/",
+                    "/*****@ CSS:start @*****/",
+                    "/**************************************************",
+                    " * dependency 1.2.3",
+                    " *************************************************/",
+                    "/********** dependency.css **********/",
+                    "div { margin: 20px; }",
                     "",
-                    "/*******************************************************",
-                    " * dependency 1.2.3::style.css",
-                    " *******************************************************/",
                     "",
-                    "div { margin: 10px; }",
-                    "",
-                    "/*******************************************************",
-                    " * first_app 1.2.3::style.css",
-                    " *******************************************************/",
-                    "",
+                    "/**************************************************",
+                    " * first_app 1.2.3",
+                    " *************************************************/",
+                    "/********** style.css **********/",
                     "span { margin: 10px; }",
                     "",
-                    "/*******************************************************",
-                    " * other 1.2.3::style.css",
-                    " *******************************************************/",
+                    "/********** main.css **********/",
+                    "span { padding: 10px; }",
                     "",
-                    "div { padding: 10px; }",
+                    "",
+                    "/**************************************************",
+                    " * other 1.2.3",
+                    " *************************************************/",
+                    "/********** style.css **********/",
+                    "div { padding: 30px; }",
+                    "",
+                    "/*****@ CSS:end @*****/",
                 ]
             )
             + "\n"
+        )
+
+    # index.html has been customized
+    with (bundle_path / "www" / "index.html").open(encoding="utf-8") as f:
+        assert f.read() == "\n".join(
+            [
+                "",
+                "<html>",
+                "    <head>",
+                "<!-----@ header:start @----->",
+                "<!--------------------------------------------------",
+                " * first_app 1.2.3",
+                " -------------------------------------------------->",
+                "<link>style.css</link>",
+                "<!-----@ header:end @----->",
+                "    </head>",
+                "    <body>",
+                "        <py-script>",
+                "#####@ bootstrap:start @#####",
+                "##################################################",
+                "# Briefcase",
+                "##################################################",
+                "import runpy",
+                "",
+                "# Run First App's main module",
+                'runpy.run_module("first_app", run_name="__main__", alter_sys=True)',
+                "#####@ bootstrap:end @#####",
+                "        </py-script>",
+                "",
+                "    </body>",
+                "</html>",
+                "",
+            ]
         )
 
 
@@ -296,7 +339,7 @@ def test_build_app_no_requirements(build_command, first_app_generated, tmp_path)
                 bundle_path / "www" / "static" / "wheels",
                 "first_app",
                 extra_content=[
-                    ("dependency/static/style.css", "span { margin: 10px; }\n"),
+                    ("dependency/inserts/style.css", "span { margin: 10px; }\n"),
                 ],
             ),
         elif args[0][3] == "pip":
@@ -375,14 +418,14 @@ def test_build_app_no_requirements(build_command, first_app_generated, tmp_path)
                     "#pyconsole {",
                     "  display: None;",
                     "}",
-                    "/*******************************************************************",
-                    " ******************** Wheel contributed styles ********************/",
-                    "",
-                    "/*******************************************************",
-                    " * first_app 1.2.3::style.css",
-                    " *******************************************************/",
-                    "",
+                    "/*****@ CSS:start @*****/",
+                    "/**************************************************",
+                    " * first_app 1.2.3",
+                    " *************************************************/",
+                    "/********** style.css **********/",
                     "span { margin: 10px; }",
+                    "",
+                    "/*****@ CSS:end @*****/",
                 ]
             )
             + "\n"
