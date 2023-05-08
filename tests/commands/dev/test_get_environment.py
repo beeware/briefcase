@@ -1,27 +1,10 @@
 import sys
 from pathlib import Path
-from unittest.mock import PropertyMock
 
 import pytest
 
 PYTHONPATH = "PYTHONPATH"
 PYTHONMALLOC = "PYTHONMALLOC"
-
-
-@pytest.mark.parametrize("platform", ["windows", "darwin", "linux", "wonky"])
-def test_pythonmalloc_only_set_for_windows(
-    dev_command,
-    first_app,
-    platform,
-    monkeypatch,
-):
-    """PYTHONMALLOC env var is only set on Windows."""
-    monkeypatch.setattr(
-        type(dev_command), "platform", PropertyMock(return_value=platform)
-    )
-    env = dev_command.get_environment(first_app, test_mode=False)
-    expected = "default" if platform == "windows" else "missing"
-    assert env.get(PYTHONMALLOC, "missing") == expected
 
 
 @pytest.mark.skipif(sys.platform != "win32", reason="Relevant only for windows")
