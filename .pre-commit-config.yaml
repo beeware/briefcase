@@ -14,12 +14,12 @@ repos:
       - id: isort
         additional_dependencies: [toml]
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.3.2
+    rev: v3.4.0
     hooks:
       - id: pyupgrade
         args: [--py38-plus]
   - repo: https://github.com/PyCQA/docformatter
-    rev: v1.6.4
+    rev: v1.6.5
     hooks:
       - id: docformatter
         args: [--in-place, --wrap-descriptions=88, --wrap-summaries=88]
