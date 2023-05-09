@@ -209,7 +209,7 @@ def test_download_sdk(mock_tools, tmp_path):
     assert sdk.cmdline_tools_path.is_dir()
     assert sdk.cmdline_tools_version_path.is_file()
 
-    if platform.system() == "Windows":
+    if platform.system() != "Windows":
         # On non-Windows, ensure the unpacked binary was made executable
         assert os.access(
             cmdline_tools_base_path / "latest" / "bin" / "sdkmanager",

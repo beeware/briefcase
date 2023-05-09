@@ -93,7 +93,7 @@ jobs:
       run: tox -e py --installpkg dist/briefcase-*.whl
 
     - name: Store Coverage Data
-      if: always() && (steps.test.outcome == 'failure' || steps.test.outcome == 'success')
+      if: always() && contains('success,failure', steps.test.outcome)
       uses: actions/upload-artifact@v3.1.2
       with:
         name: coverage-data
@@ -102,21 +102,15 @@ jobs:
 
     - name: Report Platform Coverage
       id: coverage
-      if: always() && (steps.test.outcome == 'failure' || steps.test.outcome == 'success')
-      run: tox -qe coverage$(echo '${{ matrix.python-version }}' | tr -dc '0-9')-html
-
-    - name: Upload HTML Coverage Report
-      if: always() && steps.coverage.outcome == 'failure'
-      uses: actions/upload-artifact@v3.1.2
-      with:
-        name: html-coverage-report-${{ matrix.platform }}-${{ matrix.python-version }}
-        path: htmlcov
+      if: always() && contains('success,failure', steps.test.outcome)
+      # coverage reporting must use the same Python version used to produce coverage
+      run: tox -qe coverage$(echo '${{ matrix.python-version }}' | tr -dc '0-9')
 
   coverage:
     name: Project coverage
     runs-on: ubuntu-latest
     needs: unit-tests
-    if: always() && (needs.unit-tests.result == 'success' || needs.unit-tests.result == 'failure')
+    if: always() && contains('success,failure', needs.unit-tests.result)
     steps:
     - name: Checkout
       uses: actions/checkout@v3.5.2
@@ -143,55 +137,16 @@ jobs:
       with:
         name: coverage-data
 
-    - name: Linux Coverage Report
-      id: linux-coverage
-      if: success() || failure()
-      env:
-        COVERAGE_FILE: ".coverage.ubuntu"
-        COVERAGE_PLATFORM: "linux"
-      run: tox -qe coverage-platform-html
-
-    - name: Upload Linux Coverage HTML Report
-      if: always() && steps.linux-coverage.outcome == 'failure'
-      uses: actions/upload-artifact@v3.1.2
-      with:
-        name: html-coverage-report-Linux
-        path: htmlcov
-
-    - name: macOS Coverage Report
-      id: macos-coverage
-      if: success() || failure()
-      env:
-        COVERAGE_FILE: ".coverage.macos"
-        COVERAGE_PLATFORM: "darwin"
-      run: tox -qe coverage-platform-html
-
-    - name: Upload macOS Coverage HTML Report
-      if: always() && steps.macos-coverage.outcome == 'failure'
-      uses: actions/upload-artifact@v3.1.2
-      with:
-        name: html-coverage-report-macOS
-        path: htmlcov
-
-    - name: Windows Coverage Report
-      id: windows-coverage
-      if: success() || failure()
-      env:
-        COVERAGE_FILE: ".coverage.windows"
-        COVERAGE_PLATFORM: "win32"
-      run: tox -qe coverage-platform-html
-
-    - name: Upload Windows Coverage HTML Report
-      if: always() && steps.windows-coverage.outcome == 'failure'
-      uses: actions/upload-artifact@v3.1.2
-      with:
-        name: html-coverage-report-Windows
-        path: htmlcov
+    - name: Platform Coverage Reports
+      id: platform-coverage
+      run: >
+        tox p --parallel-no-spinner -qe
+        coverage-ci-platform-linux,coverage-ci-platform-macos,coverage-ci-platform-windows
 
     - name: Project Coverage Report
       id: project-coverage
-      if: success() || failure()
-      run: tox -qe coverage-project-html
+      if: always() || contains('success,failure', needs.platform-coverage.result)
+      run: tox -qe coverage-ci-project-html
 
     - name: Upload Project Coverage HTML Report
       if: always() && steps.project-coverage.outcome == 'failure'
