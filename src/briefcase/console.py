@@ -348,23 +348,29 @@ class Log:
 
 class Console:
     def __init__(self, printer=Printer(), enabled=True):
-        self.print = printer
-        self.input = printer.console.input
         self.enabled = enabled
+        self.print = printer
+        # Use Rich's input() to read from user
+        self.input = printer.console.input
         self._wait_bar: Progress = None
-        # Signal that Rich is dynamically controlling the console output.
-        # Therefore, all output must be printed to the screen by Rich to
-        # prevent corruption of dynamic elements like the Wait Bar.
+        # Signal that Rich is dynamically controlling the console output. Therefore,
+        # all output must be printed to the screen by Rich to prevent corruption of
+        # dynamic elements like the Wait Bar.
         self.is_console_controlled = False
 
-    def prompt(self, *values, markup=False, **kwargs):
-        """Print to the screen for soliciting user interaction.
+    @property
+    def is_interactive(self):
+        """Returns interactivity mode based on the presence of a tty for stdout.
 
-        :param values: strings to print as the user prompt
-        :param markup: True if prompt contains Rich markup
+        In a non-interactive session, Rich's dynamic elements like progress bars should
+        be disabled. By default, Rich will not render dynamic elements if a tty is not
+        available. However, environment variables like FORCE_COLOR can override this
+        behavior in Rich to not only show ANSI color and style but also dynamic
+        elements. In a CI environment with this configuration, a long-lived progress bar
+        can dramatically compromise the quality of logged output. So, dynamic elements
+        should be specifically disabled in non-interactive sessions.
         """
-        if self.enabled:
-            self.print(*values, markup=markup, stack_offset=4, **kwargs)
+        return sys.stdout.isatty()
 
     def progress_bar(self):
         """Returns a progress bar as a context manager."""
@@ -375,6 +381,7 @@ class Console:
             TextColumn("{task.percentage:>3.1f}%", style="default"),
             TextColumn("•", style="default"),
             TimeRemainingColumn(compact=True, elapsed_when_finished=True),
+            disable=not self.is_interactive,
             console=self.print.console,
         )
 
@@ -406,6 +413,7 @@ class Console:
                 BarColumn(bar_width=20, style="black", pulse_style="white"),
                 TextColumn("{task.fields[message]}"),
                 transient=True,
+                disable=not self.is_interactive,
                 console=self.print.console,
             )
             # start=False causes the progress bar to "pulse"
@@ -460,6 +468,15 @@ class Console:
             # Restore previous console state
             if is_wait_bar_running:
                 self._wait_bar.start()
+
+    def prompt(self, *values, markup=False, **kwargs):
+        """Print to the screen for soliciting user interaction.
+
+        :param values: strings to print as the user prompt
+        :param markup: True if prompt contains Rich markup
+        """
+        if self.enabled:
+            self.print(*values, markup=markup, stack_offset=4, **kwargs)
 
     def boolean_input(self, question, default=False):
         """Get a boolean input from user, in the form of y/n.
