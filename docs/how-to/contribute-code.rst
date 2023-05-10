@@ -17,6 +17,9 @@ The recommended way of setting up your development environment for Briefcase is
 to use a `virtual environment <https://docs.python.org/3/library/venv.html>`__,
 and then install the development version of Briefcase and its dependencies:
 
+Clone Briefcase and create virtual environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 .. tabs::
 
   .. group-tab:: macOS
@@ -49,6 +52,9 @@ and then install the development version of Briefcase and its dependencies:
       C:\...>venv\Scripts\activate
       (venv) C:\...>python3 -m pip install -Ue .[dev]
 
+Install pre-commit
+^^^^^^^^^^^^^^^^^^
+
 Briefcase uses a tool called `pre-commit <https://pre-commit.com>`__ to identify
 simple issues and standardize code formatting. It does this by installing a git
 hook that automatically runs a series of code linters prior to finalizing any
@@ -77,9 +83,14 @@ git commit. To enable pre-commit, run:
       (venv) C:\...>pre-commit install
       pre-commit installed at .git/hooks/pre-commit
 
-When you commit any change, pre-commit will run automatically. If there are any
-issues found with the commit, this will cause your commit to fail. Where possible,
-pre-commit will make the changes needed to correct the problems it has found:
+Pre-commit automatically runs during the commit
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+With pre-commit installed as a git hook for verifying commits, the pre-commit
+hooks configured in ``.pre-commit-config.yaml`` for Briefcase must all pass
+before the commit is successful. If there are any issues found with the commit,
+this will cause your commit to fail. Where possible, pre-commit will make the
+changes needed to correct the problems it has found:
 
 .. tabs::
 
@@ -89,6 +100,15 @@ pre-commit will make the changes needed to correct the problems it has found:
 
       (venv) $ git add some/interesting_file.py
       (venv) $ git commit -m "Minor change"
+      check toml...........................................(no files to check)Skipped
+      check yaml...........................................(no files to check)Skipped
+      check for case conflicts.................................................Passed
+      check docstring is first.................................................Passed
+      fix end of files.........................................................Passed
+      trim trailing whitespace.................................................Passed
+      isort....................................................................Passed
+      pyupgrade................................................................Passed
+      docformatter.............................................................Passed
       black....................................................................Failed
       - hook id: black
       - files were modified by this hook
@@ -99,15 +119,7 @@ pre-commit will make the changes needed to correct the problems it has found:
       1 file reformatted.
 
       flake8...................................................................Passed
-      check toml...........................................(no files to check)Skipped
-      check yaml...........................................(no files to check)Skipped
-      check for case conflicts.................................................Passed
-      check docstring is first.................................................Passed
-      fix end of files.........................................................Passed
-      trim trailing whitespace.................................................Passed
-      isort....................................................................Passed
-      pyupgrade................................................................Passed
-      docformatter.............................................................Passed
+
 
   .. group-tab:: Linux
 
@@ -115,6 +127,15 @@ pre-commit will make the changes needed to correct the problems it has found:
 
       (venv) $ git add some/interesting_file.py
       (venv) $ git commit -m "Minor change"
+      check toml...........................................(no files to check)Skipped
+      check yaml...........................................(no files to check)Skipped
+      check for case conflicts.................................................Passed
+      check docstring is first.................................................Passed
+      fix end of files.........................................................Passed
+      trim trailing whitespace.................................................Passed
+      isort....................................................................Passed
+      pyupgrade................................................................Passed
+      docformatter.............................................................Passed
       black....................................................................Failed
       - hook id: black
       - files were modified by this hook
@@ -125,15 +146,6 @@ pre-commit will make the changes needed to correct the problems it has found:
       1 file reformatted.
 
       flake8...................................................................Passed
-      check toml...........................................(no files to check)Skipped
-      check yaml...........................................(no files to check)Skipped
-      check for case conflicts.................................................Passed
-      check docstring is first.................................................Passed
-      fix end of files.........................................................Passed
-      trim trailing whitespace.................................................Passed
-      isort....................................................................Passed
-      pyupgrade................................................................Passed
-      docformatter.............................................................Passed
 
   .. group-tab:: Windows
 
@@ -141,16 +153,6 @@ pre-commit will make the changes needed to correct the problems it has found:
 
       (venv) C:\...>git add some/interesting_file.py
       (venv) C:\...>git commit -m "Minor change"
-      black....................................................................Failed
-      - hook id: black
-      - files were modified by this hook
-
-      reformatted some\interesting_file.py
-
-      All done! ✨ 🍰 ✨
-      1 file reformatted.
-
-      flake8...................................................................Passed
       check toml...........................................(no files to check)Skipped
       check yaml...........................................(no files to check)Skipped
       check for case conflicts.................................................Passed
@@ -160,6 +162,16 @@ pre-commit will make the changes needed to correct the problems it has found:
       isort....................................................................Passed
       pyupgrade................................................................Passed
       docformatter.............................................................Passed
+      black....................................................................Failed
+      - hook id: black
+      - files were modified by this hook
+
+      reformatted some/interesting_file.py
+
+      All done! ✨ 🍰 ✨
+      1 file reformatted.
+
+      flake8...................................................................Passed
 
 You can then re-add any files that were modified as a result of the pre-commit checks,
 and re-commit the change.
@@ -172,8 +184,6 @@ and re-commit the change.
 
       (venv) $ git add some/interesting_file.py
       (venv) $ git commit -m "Minor change"
-      black....................................................................Passed
-      flake8...................................................................Passed
       check toml...........................................(no files to check)Skipped
       check yaml...........................................(no files to check)Skipped
       check for case conflicts.................................................Passed
@@ -183,8 +193,11 @@ and re-commit the change.
       isort....................................................................Passed
       pyupgrade................................................................Passed
       docformatter.............................................................Passed
-      [bugfix e3e0f73] Minor change
-      1 file changed, 4 insertions(+), 2 deletions(-)
+      black....................................................................Passed
+      flake8...................................................................Passed
+      [bugfix daedd37a] Minor change
+       1 file changed, 2 insertions(+)
+       create mode 100644 some/interesting_file.py
 
   .. group-tab:: Linux
 
@@ -192,8 +205,6 @@ and re-commit the change.
 
       (venv) $ git add some/interesting_file.py
       (venv) $ git commit -m "Minor change"
-      black....................................................................Passed
-      flake8...................................................................Passed
       check toml...........................................(no files to check)Skipped
       check yaml...........................................(no files to check)Skipped
       check for case conflicts.................................................Passed
@@ -203,8 +214,11 @@ and re-commit the change.
       isort....................................................................Passed
       pyupgrade................................................................Passed
       docformatter.............................................................Passed
-      [bugfix e3e0f73] Minor change
-      1 file changed, 4 insertions(+), 2 deletions(-)
+      black....................................................................Passed
+      flake8...................................................................Passed
+      [bugfix daedd37a] Minor change
+       1 file changed, 2 insertions(+)
+       create mode 100644 some/interesting_file.py
 
   .. group-tab:: Windows
 
@@ -212,8 +226,6 @@ and re-commit the change.
 
       (venv) C:\...>git add some\interesting_file.py
       (venv) C:\...>git commit -m "Minor change"
-      black....................................................................Passed
-      flake8...................................................................Passed
       check toml...........................................(no files to check)Skipped
       check yaml...........................................(no files to check)Skipped
       check for case conflicts.................................................Passed
@@ -223,10 +235,31 @@ and re-commit the change.
       isort....................................................................Passed
       pyupgrade................................................................Passed
       docformatter.............................................................Passed
+      black....................................................................Passed
+      flake8...................................................................Passed
+      [bugfix daedd37a] Minor change
+       1 file changed, 2 insertions(+)
+       create mode 100644 some/interesting_file.py
 
-Briefcase uses `pytest <https://docs.pytest.org/en/latest>`__ for its own test
-suite. It uses `tox <https://tox.wiki/en/latest/>`__ to manage the testing
-process. To set up a testing environment and run the full test suite:
+Running tests and coverage
+--------------------------
+
+Briefcase uses `tox <https://tox.wiki/en/latest/>`__ to manage the testing
+process and `pytest <https://docs.pytest.org/en/latest>`__ for its own test
+suite.
+
+The default ``tox`` command includes running:
+ * pre-commit hooks
+ * towncrier release note check
+ * documentation linting
+ * test suite for available Python versions
+ * code coverage reporting
+
+.. note::
+
+    The argument of ``p`` for the ``tox`` command is short-hand for
+    ``run-parallel``. As that implies, tox runs the checks concurrently and
+    only shows the output/errors from checks that fail.
 
 .. tabs::
 
@@ -248,10 +281,19 @@ process. To set up a testing environment and run the full test suite:
 
       (venv) C:\...>tox p
 
-By default this will run the test suite multiple times, once on each Python
-version supported by Briefcase, as well as running some pre-commit checks of
-code style and validity. This can take a while, so if you want to speed up the
-process while developing, you can run the tests on one Python version only:
+Run tests for multiple versions of Python
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+By default, many of the ``tox`` commands will attempt to run the test suite
+multiple times, once for each Python version supported by Briefcase. To do
+this, though, each of the Python versions must be installed on your machine
+and available to tox's Python `discovery
+<https://virtualenv.pypa.io/en/latest/user_guide.html#python-discovery>`__
+process. In general, if a version of Python is available via ``PATH``, then
+tox should be able to find and use it.
+
+Run only the test suite
+^^^^^^^^^^^^^^^^^^^^^^^
 
 .. tabs::
 
@@ -273,7 +315,8 @@ process while developing, you can run the tests on one Python version only:
 
       (venv) C:\...>tox -e py
 
-Or, you can run a single test file on a single version of Python:
+Run the test suite for specific files
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. tabs::
 
@@ -281,21 +324,22 @@ Or, you can run a single test file on a single version of Python:
 
     .. code-block:: console
 
-      (venv) $ tox -e py -- tests/path_to_test_file/test_some_test.py
+      (venv) $ tox -e py -- tests/path/to/test_some_test.py
 
   .. group-tab:: Linux
 
     .. code-block:: console
 
-      (venv) $ tox -e py -- tests/path_to_test_file/test_some_test.py
+      (venv) $ tox -e py -- tests/path/to/test_some_test.py
 
   .. group-tab:: Windows
 
     .. code-block:: doscon
 
-      (venv) C:\...>tox -e py -- tests/path_to_test_file/test_some_test.py
+      (venv) C:\...>tox -e py -- tests/path/to/test_some_test.py
 
-Or, to run using a specific version of Python, e.g. when you want to use Python 3.10:
+Run the test suite for a specific Python version
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. tabs::
 
@@ -317,22 +361,52 @@ Or, to run using a specific version of Python, e.g. when you want to use Python 
 
       (venv) C:\...>tox -e py310
 
-substituting the version number that you want to target.
+Run the test suite without coverage (fast)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If you just want to run pytest without generating coverage, then use ``py-fast``
-or ``py310-fast`` for the environment instead of ``py`` or ``py310``.
+This will run the test suite in multiple processes and can be dramatically
+faster. This mode does not produce coverage files due to complexities in
+capturing coverage within spawned processes.
 
-You can also specify the ``towncrier-check``, ``docs`` or ``package`` targets
-to check release notes, documentation syntax and packaging metadata, respectively.
+.. tabs::
 
-Verify test coverage
---------------------
+  .. group-tab:: macOS
 
-Briefcase maintains 100% branch coverage in its codebase. When you add or modify
-code in the project, you must add test code to ensure coverage of any
+    .. code-block:: console
+
+      (venv) $ tox -e py-fast
+
+  .. group-tab:: Linux
+
+    .. code-block:: console
+
+      (venv) $ tox -e py-fast
+
+  .. group-tab:: Windows
+
+    .. code-block:: doscon
+
+      (venv) C:\...>tox -e py-fast
+
+Understanding conditional coverage
+----------------------------------
+
+Briefcase maintains 100% branch coverage in its codebase. When you add or
+modify code in the project, you must add test code to ensure coverage of any
 changes you make.
 
-After running the test suite, generate a coverage report by running:
+Given, though, that Briefcase targets macOS, Linux, and Windows, as well as
+multiple versions of Python, full coverage cannot be verified on a single
+platform. To accommodate this, several conditional coverage rules are defined
+in ``pyproject.toml``, such as ``no-cover-if-is-windows``, and used in the
+project to identify sections of code that are only covered on particular
+platforms.
+
+Coverage report for host platform and Python version
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+After running the test suite, you can generate a coverage report that ignores
+missing coverage for code for other platforms or version of Python by running:
 
 .. tabs::
 
@@ -354,18 +428,101 @@ After running the test suite, generate a coverage report by running:
 
       (venv) C:\...>tox -e coverage
 
-You can run the test suite and coverage together by including the testing
-environment to run, e.g. ``py,coverage`` or ``py310,coverage``.
+To run the test suite along with this coverage reporting, run:
 
-Additionally, an HTML coverage report can be generated by using
-``py,coverage-html`` or ``py310,coverage-html``.
+.. tabs::
 
-Depending on your platform, it's possible that some lines required by other
-platforms will be skipped and shown as "missing" in the coverage report. You
-can safely ignore those lines. However, make sure that any lines of code that
-you added or modified do not appear in the report. If they do, you need to add
-new tests that will cover those lines. Otherwise, the coverage check will fail
-when you make a PR with your changes.
+  .. group-tab:: macOS
+
+    .. code-block:: console
+
+      (venv) $ tox p -m test
+
+  .. group-tab:: Linux
+
+    .. code-block:: console
+
+      (venv) $ tox p -m test
+
+  .. group-tab:: Windows
+
+    .. code-block:: doscon
+
+      (venv) C:\...>tox p -m test
+
+Coverage report for host platform
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If all supported versions of Python are available to tox, then coverage for the
+host platform can be reported by running:
+
+.. tabs::
+
+  .. group-tab:: macOS
+
+    .. code-block:: console
+
+      (venv) $ tox -e coverage-platform
+
+  .. group-tab:: Linux
+
+    .. code-block:: console
+
+      (venv) $ tox -e coverage-platform
+
+  .. group-tab:: Windows
+
+    .. code-block:: doscon
+
+      (venv) C:\...>tox -e coverage-platform
+
+To run the test suite along with this coverage reporting, run:
+
+.. tabs::
+
+  .. group-tab:: macOS
+
+    .. code-block:: console
+
+      (venv) $ tox p -m test-platform
+
+  .. group-tab:: Linux
+
+    .. code-block:: console
+
+      (venv) $ tox p -m test-platform
+
+  .. group-tab:: Windows
+
+    .. code-block:: doscon
+
+      (venv) C:\...>tox p -m test-platform
+
+Coverage reporting in HTML
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Additionally, an HTML coverage report can be generated by appending ``-html``
+to any of the coverage tox environment names, for instance:
+
+.. tabs::
+
+  .. group-tab:: macOS
+
+    .. code-block:: console
+
+      (venv) $ tox -e coverage-platform-html
+
+  .. group-tab:: Linux
+
+    .. code-block:: console
+
+      (venv) $ tox -e coverage-platform-html
+
+  .. group-tab:: Windows
+
+    .. code-block:: doscon
+
+      (venv) C:\...>tox -e coverage-platform-html
 
 Add change information for release notes
 ----------------------------------------
@@ -384,5 +541,30 @@ See `News Fragments
 <https://towncrier.readthedocs.io/en/stable/tutorial.html#creating-news-fragments>`__
 for more details on the types of news fragments you can add. You can also see
 existing examples of news fragments in the ``changes/`` folder.
+
+Simulating GitHub CI checks locally
+-----------------------------------
+
+To run the same checks that run in CI for the platform, run:
+
+.. tabs::
+
+  .. group-tab:: macOS
+
+    .. code-block:: console
+
+      (venv) $ tox p -m ci
+
+  .. group-tab:: Linux
+
+    .. code-block:: console
+
+      (venv) $ tox p -m ci
+
+  .. group-tab:: Windows
+
+    .. code-block:: doscon
+
+      (venv) C:\...>tox p -m ci
 
 Now you are ready to start hacking! Have fun!
