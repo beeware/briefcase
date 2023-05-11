@@ -15,7 +15,12 @@ except ModuleNotFoundError:  # pragma: no-cover-if-gte-py310
     import tomli as tomllib
 
 import tomli_w
-from playwright.sync_api import sync_playwright
+
+try:
+    from playwright.sync_api import sync_playwright
+except ImportError:  # pragma: no-cover-if-lt-py312
+    # TODO: Playwright doesn't support Python 3.12 yet.
+    sync_playwright = None
 
 from briefcase.commands import (
     BuildCommand,
@@ -424,7 +429,13 @@ class LocalHTTPServer(ThreadingHTTPServer):
     """An HTTP server that serves local static content."""
 
     def __init__(
-        self, base_path, host, port, RequestHandlerClass=HTTPHandler, *, logger: Log
+        self,
+        base_path,
+        host,
+        port,
+        RequestHandlerClass=HTTPHandler,
+        *,
+        logger: Log,
     ):
         self.base_path = base_path
         self.logger = logger
@@ -433,6 +444,10 @@ class LocalHTTPServer(ThreadingHTTPServer):
 
 class StaticWebRunCommand(StaticWebMixin, RunCommand):
     description = "Run a static web project."
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.playwright = sync_playwright
 
     def add_options(self, parser):
         super().add_options(parser)
@@ -518,7 +533,7 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
                 self.logger.info("=" * 75)
 
                 # Open a Playwright session
-                with sync_playwright() as playwright:
+                with self.playwright() as playwright:
                     browser = playwright.chromium.launch(headless=not open_browser)
                     page = browser.new_page()
 
@@ -542,7 +557,7 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
                         while True:
                             # Process all the lines in the accumulated log buffer,
                             # looking for the termination condition. Finding the
-                            # termination condition is what stops the
+                            # termination condition is what stops the test suite.
                             for line in buffer:
                                 for filtered in log_filter(line):
                                     self.logger.info(filtered)

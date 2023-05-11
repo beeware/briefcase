@@ -1,12 +1,14 @@
 import errno
 import webbrowser
 from http.server import HTTPServer, SimpleHTTPRequestHandler
+from threading import Event
 from unittest import mock
 
 import pytest
 
 from briefcase.console import Console, Log
-from briefcase.exceptions import BriefcaseCommandError
+from briefcase.exceptions import BriefcaseCommandError, BriefcaseTestSuiteFailure
+from briefcase.integrations.subprocess import StopStreaming
 from briefcase.platforms.web.static import (
     HTTPHandler,
     LocalHTTPServer,
@@ -487,25 +489,322 @@ def test_log_requests_to_logger(monkeypatch):
     monkeypatch.setattr(
         SimpleHTTPRequestHandler, "handle", mock.Mock(return_value=None)
     )
+
+    # Mock a server
     server = mock.MagicMock()
+
     handler = HTTPHandler(mock.MagicMock(), ("localhost", 8080), server)
     handler.log_date_time_string = mock.Mock(return_value="now")
     handler.log_message("hello\033")
     server.logger.info.assert_called_once_with("localhost - - [now] hello\\x1b")
 
 
-# def test_test_mode(run_command, first_app_built):
-#     """Test mode raises an error (at least for now)."""
-#     # Run the app
-#     with pytest.raises(
-#         BriefcaseCommandError,
-#         match=r"Briefcase can't run web apps in test mode.",
-#     ):
-#         run_command.run_app(
-#             first_app_built,
-#             test_mode=True,
-#             passthrough=[],
-#             host="localhost",
-#             port=8080,
-#             open_browser=True,
-#         )
+def test_log_requests_without_logger(monkeypatch):
+    """If there's no logger, the request handler discards server log messages."""
+    monkeypatch.setattr(
+        SimpleHTTPRequestHandler, "handle", mock.Mock(return_value=None)
+    )
+
+    # Mock a server without a logger.
+    server = mock.MagicMock()
+    server.logger = None
+
+    handler = HTTPHandler(mock.MagicMock(), ("localhost", 8080), server)
+    handler.log_date_time_string = mock.Mock(return_value="now")
+    handler.log_message("hello\033")
+
+    # This is a no-op. There's nothing to verify; we just need to validate that
+    # we can call log_message when there's no logger set.
+
+
+def test_run_test_mode(monkeypatch, run_command, first_app_built):
+    """A static web app can be launched in test mode."""
+    # Mock server creation
+    mock_server_init = mock.MagicMock(spec_set=HTTPServer)
+    monkeypatch.setattr(HTTPServer, "__init__", mock_server_init)
+
+    # Mock the socket name returned by the server.
+    socket = mock.MagicMock()
+    socket.getsockname.return_value = ("127.0.0.1", "8080")
+    LocalHTTPServer.socket = socket
+
+    # Mock playwright
+    mock_playwright = mock.MagicMock()
+    run_command.playwright = mock_playwright
+
+    mock_playwright_instance = mock.MagicMock()
+    mock_playwright.return_value = mock_playwright_instance
+
+    mock_playwright_session = mock.MagicMock()
+    mock_playwright_instance.__enter__.return_value = mock_playwright_session
+
+    mock_browser = mock.MagicMock()
+    mock_playwright_session.chromium.launch.return_value = mock_browser
+
+    mock_page = mock.MagicMock()
+    mock_browser.new_page.return_value = mock_page
+
+    # Inject a single log line indicating test success into the mocked web
+    # console. This is done as a side effect of the `goto` call; we then inspect
+    # backwards to get the argument that was passed to the `page.on()` call to
+    # get the console logger. This has the effect of injecting content into
+    # the logger that will stop the loop after the first iteration.
+    def fill_buffer(url):
+        console = mock_page.on.mock_calls[-1].args[1]
+        msg = mock.Mock()
+        for i in range(1, 100):
+            msg.text = f"Test suite is running [{i}%]"
+            console(msg)
+
+        msg.text = ">>>>>>>>>> EXIT 0 <<<<<<<<<<"
+        console(msg)
+
+    mock_page.goto.side_effect = fill_buffer
+
+    # Mock subprocess
+    run_command.tools.subprocess = mock.MagicMock()
+
+    # Mock server execution, raising a user exit.
+    shutdown_event = Event()
+
+    mock_serve_forever = mock.MagicMock(
+        side_effect=lambda: shutdown_event.wait(timeout=2)
+    )
+    monkeypatch.setattr(HTTPServer, "serve_forever", mock_serve_forever)
+
+    # Mock shutdown
+    mock_shutdown = mock.MagicMock(side_effect=lambda: shutdown_event.set())
+    monkeypatch.setattr(HTTPServer, "shutdown", mock_shutdown)
+
+    # Mock server close
+    mock_server_close = mock.MagicMock()
+    monkeypatch.setattr(HTTPServer, "server_close", mock_server_close)
+
+    # Mock the webbrowser
+    mock_open_new_tab = mock.MagicMock()
+    monkeypatch.setattr(webbrowser, "open_new_tab", mock_open_new_tab)
+
+    # Run the app
+    run_command.run_app(
+        first_app_built,
+        test_mode=True,
+        passthrough=[],
+        host="localhost",
+        port=8080,
+        open_browser=True,
+    )
+
+    # The browser was *not* opened
+    mock_open_new_tab.assert_not_called()
+
+    # The server was started
+    mock_serve_forever.assert_called_once_with()
+
+    # The page was loaded in the playwright session
+    mock_page.goto.assert_called_once_with("http://127.0.0.1:8080")
+
+    # The suite passed immediately; no timeout was required
+    mock_page.wait_for_timeout.assert_not_called()
+
+    # The webserver was shutdown.
+    mock_shutdown.assert_called_once_with()
+
+    # The webserver was closed.
+    mock_server_close.assert_called_once_with()
+
+
+def test_run_test_mode_failure(monkeypatch, run_command, first_app_built):
+    """A static web app can fail a test suite."""
+    # Mock server creation
+    mock_server_init = mock.MagicMock(spec_set=HTTPServer)
+    monkeypatch.setattr(HTTPServer, "__init__", mock_server_init)
+
+    # Mock the socket name returned by the server.
+    socket = mock.MagicMock()
+    socket.getsockname.return_value = ("127.0.0.1", "8080")
+    LocalHTTPServer.socket = socket
+
+    # Mock playwright
+    mock_playwright = mock.MagicMock()
+    run_command.playwright = mock_playwright
+
+    mock_playwright_instance = mock.MagicMock()
+    mock_playwright.return_value = mock_playwright_instance
+
+    mock_playwright_session = mock.MagicMock()
+    mock_playwright_instance.__enter__.return_value = mock_playwright_session
+
+    mock_browser = mock.MagicMock()
+    mock_playwright_session.chromium.launch.return_value = mock_browser
+
+    mock_page = mock.MagicMock()
+    mock_browser.new_page.return_value = mock_page
+
+    # Inject a log lines indicating test failure into the mocked web
+    # console. This is done as a side effect of the `wait_for_timeout` call; we
+    # then inspect backwards to get the argument that was passed to the
+    # `page.on()` call to get the console logger. This has the effect of
+    # injecting content into the logger, but only *after* we've passed through
+    # once,
+    def fill_buffer(url):
+        console = mock_page.on.mock_calls[-1].args[1]
+        msg = mock.Mock()
+        for i in range(1, 100):
+            msg.text = f"Test suite is running [{i}%]"
+            console(msg)
+
+        msg.text = ">>>>>>>>>> EXIT 1 <<<<<<<<<<"
+        console(msg)
+
+    mock_page.wait_for_timeout.side_effect = fill_buffer
+
+    # Mock subprocess
+    run_command.tools.subprocess = mock.MagicMock()
+
+    # Mock server execution, raising a user exit.
+    shutdown_event = Event()
+
+    mock_serve_forever = mock.MagicMock(
+        side_effect=lambda: shutdown_event.wait(timeout=2)
+    )
+    monkeypatch.setattr(HTTPServer, "serve_forever", mock_serve_forever)
+
+    # Mock shutdown
+    mock_shutdown = mock.MagicMock(side_effect=lambda: shutdown_event.set())
+    monkeypatch.setattr(HTTPServer, "shutdown", mock_shutdown)
+
+    # Mock server close
+    mock_server_close = mock.MagicMock()
+    monkeypatch.setattr(HTTPServer, "server_close", mock_server_close)
+
+    # Mock the webbrowser
+    mock_open_new_tab = mock.MagicMock()
+    monkeypatch.setattr(webbrowser, "open_new_tab", mock_open_new_tab)
+
+    # Run the app
+    with pytest.raises(BriefcaseTestSuiteFailure):
+        run_command.run_app(
+            first_app_built,
+            test_mode=True,
+            passthrough=[],
+            host="localhost",
+            port=8080,
+            open_browser=True,
+        )
+
+    # The browser was *not* opened
+    mock_open_new_tab.assert_not_called()
+
+    # The server was started
+    mock_serve_forever.assert_called_once_with()
+
+    # The page was loaded in the playwright session
+    mock_page.goto.assert_called_once_with("http://127.0.0.1:8080")
+
+    # At least one call to wait for new console content was made.
+    mock_page.wait_for_timeout.assert_called_with(100)
+
+    # The webserver was shutdown.
+    mock_shutdown.assert_called_once_with()
+
+    # The webserver was closed.
+    mock_server_close.assert_called_once_with()
+
+
+def test_run_test_mode_no_status(monkeypatch, run_command, first_app_built):
+    """If a static web app doesn't report a status, an error is raised."""
+    # Mock server creation
+    mock_server_init = mock.MagicMock(spec_set=HTTPServer)
+    monkeypatch.setattr(HTTPServer, "__init__", mock_server_init)
+
+    # Mock the socket name returned by the server.
+    socket = mock.MagicMock()
+    socket.getsockname.return_value = ("127.0.0.1", "8080")
+    LocalHTTPServer.socket = socket
+
+    # Mock playwright
+    mock_playwright = mock.MagicMock()
+    run_command.playwright = mock_playwright
+
+    mock_playwright_instance = mock.MagicMock()
+    mock_playwright.return_value = mock_playwright_instance
+
+    mock_playwright_session = mock.MagicMock()
+    mock_playwright_instance.__enter__.return_value = mock_playwright_session
+
+    mock_browser = mock.MagicMock()
+    mock_playwright_session.chromium.launch.return_value = mock_browser
+
+    mock_page = mock.MagicMock()
+    mock_browser.new_page.return_value = mock_page
+
+    # Inject "normal operation" log lines, but no success/failure into the
+    # mocked web console.
+    def fill_buffer(url):
+        console = mock_page.on.mock_calls[-1].args[1]
+        for i in range(1, 100):
+            msg = mock.Mock()
+            msg.text = f"Test suite is running [{i}%]"
+            console(msg)
+
+    mock_page.goto.side_effect = fill_buffer
+
+    # When we hit wait_for_timeout, raise a streaming error.
+    # This is the closest we can get to mocking the log filter
+    # raising StopStreaming.
+    mock_page.wait_for_timeout.side_effect = StopStreaming
+
+    # Mock subprocess
+    run_command.tools.subprocess = mock.MagicMock()
+
+    # Mock server execution, raising a user exit.
+    shutdown_event = Event()
+
+    mock_serve_forever = mock.MagicMock(
+        side_effect=lambda: shutdown_event.wait(timeout=2)
+    )
+    monkeypatch.setattr(HTTPServer, "serve_forever", mock_serve_forever)
+
+    # Mock shutdown
+    mock_shutdown = mock.MagicMock(side_effect=lambda: shutdown_event.set())
+    monkeypatch.setattr(HTTPServer, "shutdown", mock_shutdown)
+
+    # Mock server close
+    mock_server_close = mock.MagicMock()
+    monkeypatch.setattr(HTTPServer, "server_close", mock_server_close)
+
+    # Mock the webbrowser
+    mock_open_new_tab = mock.MagicMock()
+    monkeypatch.setattr(webbrowser, "open_new_tab", mock_open_new_tab)
+
+    # Run the app
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Test suite didn't report a result",
+    ):
+        run_command.run_app(
+            first_app_built,
+            test_mode=True,
+            passthrough=[],
+            host="localhost",
+            port=8080,
+            open_browser=True,
+        )
+
+    # The browser was *not* opened
+    mock_open_new_tab.assert_not_called()
+
+    # The server was started
+    mock_serve_forever.assert_called_once_with()
+
+    # The page was loaded in the playwright session
+    mock_page.goto.assert_called_once_with("http://127.0.0.1:8080")
+
+    # At least one call to wait for new console content was made.
+    mock_page.wait_for_timeout.assert_called_with(100)
+
+    # The webserver was shutdown.
+    mock_shutdown.assert_called_once_with()
+
+    # The webserver was closed.
+    mock_server_close.assert_called_once_with()

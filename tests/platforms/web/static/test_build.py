@@ -206,6 +206,183 @@ def test_build_app(build_command, first_app_generated, tmp_path):
         )
 
 
+def test_build_app_test_mode(build_command, first_app_generated, tmp_path):
+    """An app can be built in test mode."""
+    bundle_path = tmp_path / "base_path" / "build" / "first-app" / "web" / "static"
+
+    # Invoking build will create wheels as a side effect.
+    def mock_run(*args, **kwargs):
+        if args[0][3] == "wheel":
+            create_wheel(
+                bundle_path / "www" / "static" / "wheels",
+                "first_app",
+                extra_content=[
+                    ("dependency/inserts/style.css", "span { margin: 10px; }\n"),
+                    ("dependency/inserts/main.css", "span { padding: 10px; }\n"),
+                    (
+                        "dependency/inserts/index.html:header",
+                        "<link>style.css</link>\n",
+                    ),
+                ],
+            ),
+        elif args[0][3] == "pip":
+            create_wheel(
+                bundle_path / "www" / "static" / "wheels",
+                "dependency",
+                extra_content=[
+                    ("dependency/inserts/dependency.css", "div { margin: 20px; }\n"),
+                ],
+            ),
+            create_wheel(
+                bundle_path / "www" / "static" / "wheels",
+                "other",
+                extra_content=[
+                    ("other/inserts/style.css", "div { padding: 30px; }\n"),
+                ],
+            ),
+        else:
+            raise ValueError("Unknown command")
+
+    build_command.tools.subprocess.run.side_effect = mock_run
+
+    # Mock the side effect of invoking shutil
+    build_command.tools.shutil.rmtree.side_effect = lambda *args: shutil.rmtree(
+        bundle_path / "www" / "static" / "wheels"
+    )
+
+    # Build the web app.
+    build_command.build_app(first_app_generated, test_mode=True)
+
+    # The old wheel folder was removed
+    build_command.tools.shutil.rmtree.assert_called_once_with(
+        bundle_path / "www" / "static" / "wheels"
+    )
+
+    # `wheel pack` and `pip wheel` was invoked
+    assert build_command.tools.subprocess.run.mock_calls == [
+        mock.call(
+            [
+                sys.executable,
+                "-u",
+                "-m",
+                "wheel",
+                "pack",
+                bundle_path / "app",
+                "--dest-dir",
+                bundle_path / "www" / "static" / "wheels",
+            ],
+            check=True,
+        ),
+        mock.call(
+            [
+                sys.executable,
+                "-u",
+                "-m",
+                "pip",
+                "wheel",
+                "--wheel-dir",
+                bundle_path / "www" / "static" / "wheels",
+                "-r",
+                bundle_path / "requirements.txt",
+            ],
+            check=True,
+        ),
+    ]
+
+    # Pyscript.toml has been written
+    with (bundle_path / "www" / "pyscript.toml").open("rb") as f:
+        assert tomllib.load(f) == {
+            "name": "First App",
+            "description": "The first simple app \\ demonstration",
+            "version": "0.0.1",
+            "splashscreen": {"autoclose": True},
+            "terminal": False,
+            "packages": [
+                "/static/wheels/dependency-1.2.3-py3-none-any.whl",
+                "/static/wheels/first_app-1.2.3-py3-none-any.whl",
+                "/static/wheels/other-1.2.3-py3-none-any.whl",
+            ],
+        }
+
+    # briefcase.css has been customized
+    with (bundle_path / "www" / "static" / "css" / "briefcase.css").open(
+        encoding="utf-8"
+    ) as f:
+        assert (
+            f.read()
+            == "\n".join(
+                [
+                    "",
+                    "#pyconsole {",
+                    "  display: None;",
+                    "}",
+                    "/*****@ CSS:start @*****/",
+                    "/**************************************************",
+                    " * dependency 1.2.3",
+                    " *************************************************/",
+                    "/********** dependency.css **********/",
+                    "div { margin: 20px; }",
+                    "",
+                    "",
+                    "/**************************************************",
+                    " * first_app 1.2.3",
+                    " *************************************************/",
+                    "/********** style.css **********/",
+                    "span { margin: 10px; }",
+                    "",
+                    "/********** main.css **********/",
+                    "span { padding: 10px; }",
+                    "",
+                    "",
+                    "/**************************************************",
+                    " * other 1.2.3",
+                    " *************************************************/",
+                    "/********** style.css **********/",
+                    "div { padding: 30px; }",
+                    "",
+                    "/*****@ CSS:end @*****/",
+                ]
+            )
+            + "\n"
+        )
+
+    # index.html has been customized
+    with (bundle_path / "www" / "index.html").open(encoding="utf-8") as f:
+        assert f.read() == "\n".join(
+            [
+                "",
+                "<html>",
+                "    <head>",
+                "<!-----@ header:start @----->",
+                "<!--------------------------------------------------",
+                " * first_app 1.2.3",
+                " -------------------------------------------------->",
+                "<link>style.css</link>",
+                "<!-----@ header:end @----->",
+                "    </head>",
+                "    <body>",
+                "        <py-script>",
+                "#####@ bootstrap:start @#####",
+                "##################################################",
+                "# Briefcase",
+                "##################################################",
+                "import runpy",
+                "",
+                "# Run First App's main module",
+                'runpy.run_module("first_app", run_name="__main__", alter_sys=True)',
+                "",
+                "# Run First App's test module",
+                'runpy.run_module("tests.first_app", run_name="__main__", alter_sys=True)',
+                "#####@ bootstrap:end @#####",
+                "        </py-script>",
+                "",
+                "    </body>",
+                "</html>",
+                "",
+            ]
+        )
+
+
 def test_build_app_custom_pyscript_toml(build_command, first_app_generated, tmp_path):
     """An app with extra pyscript.toml content can be written."""
     bundle_path = tmp_path / "base_path" / "build" / "first-app" / "web" / "static"
