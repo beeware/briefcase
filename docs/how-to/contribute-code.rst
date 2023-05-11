@@ -255,11 +255,7 @@ The default ``tox`` command includes running:
  * test suite for available Python versions
  * code coverage reporting
 
-.. note::
-
-    The argument of ``p`` for the ``tox`` command is short-hand for
-    ``run-parallel``. As that implies, tox runs the checks concurrently and
-    only shows the output/errors from checks that fail.
+To run the full test suite, run:
 
 .. tabs::
 
@@ -267,19 +263,25 @@ The default ``tox`` command includes running:
 
     .. code-block:: console
 
-      (venv) $ tox p
+      (venv) $ tox
 
   .. group-tab:: Linux
 
     .. code-block:: console
 
-      (venv) $ tox p
+      (venv) $ tox
 
   .. group-tab:: Windows
 
     .. code-block:: doscon
 
-      (venv) C:\...>tox p
+      (venv) C:\...>tox
+
+The full test suite can take a while to run. You can speed it up considerably by
+running tox in parallel, by running ``tox p`` (or ``tox run-parallel``). When
+you run the test suite in parallel, you'll get less feedback on the progress of
+the test suite as it runs, but you'll still get a summary of any problems found
+at the end of the test run.
 
 Run tests for multiple versions of Python
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -294,6 +296,9 @@ tox should be able to find and use it.
 
 Run only the test suite
 ^^^^^^^^^^^^^^^^^^^^^^^
+
+If you're rapidly iterating on a new feature, you don't need to run the full
+test suite; you can run *just* the unit tests. To do this, run:
 
 .. tabs::
 
@@ -315,8 +320,16 @@ Run only the test suite
 
       (venv) C:\...>tox -e py
 
-Run the test suite for specific files
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. _test-subset:
+
+Run a subset of tests
+^^^^^^^^^^^^^^^^^^^^^
+
+By default, tox will run all tests in the unit test suite. To restrict the test
+run to a subset of tests, you can pass in `any pytest specifier
+<https://docs.pytest.org/en/latest/how-to/usage.html#specifying-which-tests-to-run>`__
+as an argument to tox. For example, to run only the tests in a single file, run:
 
 .. tabs::
 
@@ -338,8 +351,15 @@ Run the test suite for specific files
 
       (venv) C:\...>tox -e py -- tests/path/to/test_some_test.py
 
+.. _test-py-version:
+
 Run the test suite for a specific Python version
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+By default ``tox -e py`` will run using whatever interpreter resolves as
+``python3`` on your machine. If you have multiple Python versions installed, and
+want to test a specific Python version, you can specify a specific python
+version to use. For example, to run the test suite on Python 3.10, run:
 
 .. tabs::
 
@@ -361,12 +381,16 @@ Run the test suite for a specific Python version
 
       (venv) C:\...>tox -e py310
 
+A :ref:`subset of tests <test-subset>` can be run by adding ``--`` and a test
+specification to the command line.
+
 Run the test suite without coverage (fast)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-This will run the test suite in multiple processes and can be dramatically
-faster. This mode does not produce coverage files due to complexities in
-capturing coverage within spawned processes.
+By default, tox will run the pytest suite in single threaded mode. You can speed
+up the execution of the test suite by running the test suite in parallel. This
+mode does not produce coverage files due to complexities in capturing coverage
+within spawned processes. To run a single python version in "fast" mode, run:
 
 .. tabs::
 
@@ -388,19 +412,25 @@ capturing coverage within spawned processes.
 
       (venv) C:\...>tox -e py-fast
 
-Understanding conditional coverage
-----------------------------------
+A :ref:`subset of tests <test-subset>` can be run by adding ``--`` and a test
+specification to the command line; a :ref:`specific Python version
+<test-py-version>` can be used by adding the version to the test target (e.g.,
+``py310-fast`` to run fast on Python 3.10).
+
+Code coverage
+-------------
 
 Briefcase maintains 100% branch coverage in its codebase. When you add or
 modify code in the project, you must add test code to ensure coverage of any
 changes you make.
 
-Given, though, that Briefcase targets macOS, Linux, and Windows, as well as
-multiple versions of Python, full coverage cannot be verified on a single
-platform. To accommodate this, several conditional coverage rules are defined
-in ``pyproject.toml``, such as ``no-cover-if-is-windows``, and used in the
-project to identify sections of code that are only covered on particular
-platforms.
+However, Briefcase targets macOS, Linux, and Windows, as well as multiple
+versions of Python, so full coverage cannot be verified on a single platform and
+Python version. To accommodate this, several conditional coverage rules are
+defined in the ``tool.coverage.coverage_conditional_plugin.rules`` section of
+``pyproject.toml`` (e.g., ``no-cover-if-is-windows``). These rules are used to
+identify sections of code that are only covered on particular platforms or
+Python versions.
 
 Coverage report for host platform and Python version
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -501,8 +531,8 @@ To run the test suite along with this coverage reporting, run:
 Coverage reporting in HTML
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Additionally, an HTML coverage report can be generated by appending ``-html``
-to any of the coverage tox environment names, for instance:
+A HTML coverage report can be generated by appending ``-html`` to any of the
+coverage tox environment names, for instance:
 
 .. tabs::
 
