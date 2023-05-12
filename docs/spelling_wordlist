@@ -19,6 +19,7 @@ distributable
 Django
 dmg
 Dockerfile
+dr
 embeddable
 executables
 Flathub
@@ -68,6 +69,7 @@ subdirectories
 subdirectory
 submodule
 subprocesses
+tl
 toml
 towncrier
 TTY

@@ -8,6 +8,68 @@ to contribute code, please `fork the code`_ and `submit a pull request`_.
 .. _fork the code: https://github.com/beeware/briefcase
 .. _submit a pull request: https://github.com/beeware/briefcase/pulls
 
+tl;dr
+-----
+
+Set up the dev environment by running:
+
+.. tabs::
+
+  .. group-tab:: macOS
+
+    .. code-block:: console
+
+      $ git clone https://github.com/beeware/briefcase.git
+      $ cd briefcase
+      $ python3 -m venv venv
+      $ . venv/bin/activate
+      (venv) $ python3 -m pip install -Ue ".[dev]"
+      (venv) $ pre-commit install
+
+  .. group-tab:: Linux
+
+    .. code-block:: console
+
+      $ git clone https://github.com/beeware/briefcase.git
+      $ cd briefcase
+      $ python3 -m venv venv
+      $ . venv/bin/activate
+      (venv) $ python3 -m pip install -Ue ".[dev]"
+      (venv) $ pre-commit install
+
+  .. group-tab:: Windows
+
+    .. code-block:: doscon
+
+      C:\...>git clone https://github.com/beeware/briefcase.git
+      C:\...>cd briefcase
+      C:\...>py -m venv venv
+      C:\...>venv\Scripts\activate
+      (venv) C:\...>python -m pip install -Ue .[dev]
+      (venv) C:\...>pre-commit install
+
+Invoke CI checks and tests by running:
+
+.. tabs::
+
+  .. group-tab:: macOS
+
+    .. code-block:: console
+
+      (venv) $ tox p -m ci
+
+  .. group-tab:: Linux
+
+    .. code-block:: console
+
+      (venv) $ tox p -m ci
+
+  .. group-tab:: Windows
+
+    .. code-block:: doscon
+
+      (venv) C:\...>tox p -m ci
+
 .. _setup-dev-environment:
 
 Setting up your development environment
@@ -50,7 +112,7 @@ Clone Briefcase and create virtual environment
       C:\...>cd briefcase
       C:\...>py -m venv venv
       C:\...>venv\Scripts\activate
-      (venv) C:\...>python3 -m pip install -Ue .[dev]
+      (venv) C:\...>python -m pip install -Ue .[dev]
 
 Install pre-commit
 ^^^^^^^^^^^^^^^^^^
@@ -240,6 +302,35 @@ and re-commit the change.
       [bugfix daedd37a] Minor change
        1 file changed, 2 insertions(+)
        create mode 100644 some/interesting_file.py
+
+Create a new branch in git
+--------------------------
+
+When you clone Briefcase, it will default to checking out the default branch,
+``main``. However, your changes should be committed to a new branch instead of
+being committed directly in to ``main``. The branch name should be succinct but
+relate to what's being changed; for instance, ``fix-dev-pip-error``. To create
+a new branch, run:
+
+.. tabs::
+
+  .. group-tab:: macOS
+
+    .. code-block:: console
+
+      (venv) $ git checkout -b fix-dev-pip-error
+
+  .. group-tab:: Linux
+
+    .. code-block:: console
+
+      (venv) $ git checkout -b fix-dev-pip-error
+
+  .. group-tab:: Windows
+
+    .. code-block:: doscon
+
+      (venv) C:\...>git checkout -b fix-dev-pip-error
 
 Running tests and coverage
 --------------------------
@@ -432,11 +523,17 @@ defined in the ``tool.coverage.coverage_conditional_plugin.rules`` section of
 identify sections of code that are only covered on particular platforms or
 Python versions.
 
+Of note, coverage reporting across Python versions can be a bit quirky. For
+instance, if coverage files are produced using one version of Python but
+coverage reporting is done on another, the report may include false positives
+for missed branches. Because of this, coverage reporting should always use the
+oldest version Python used to produce the coverage files.
+
 Coverage report for host platform and Python version
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-After running the test suite, you can generate a coverage report that ignores
-missing coverage for code for other platforms or version of Python by running:
+You can generate a coverage report for your platform and version of Python, for
+example Python 3.11, by running:
 
 .. tabs::
 
@@ -444,69 +541,25 @@ missing coverage for code for other platforms or version of Python by running:
 
     .. code-block:: console
 
-      (venv) $ tox -e coverage
+      (venv) $ tox -m test311
 
   .. group-tab:: Linux
 
     .. code-block:: console
 
-      (venv) $ tox -e coverage
+      (venv) $ tox -m test311
 
   .. group-tab:: Windows
 
     .. code-block:: doscon
 
-      (venv) C:\...>tox -e coverage
-
-To run the test suite along with this coverage reporting, run:
-
-.. tabs::
-
-  .. group-tab:: macOS
-
-    .. code-block:: console
-
-      (venv) $ tox p -m test
-
-  .. group-tab:: Linux
-
-    .. code-block:: console
-
-      (venv) $ tox p -m test
-
-  .. group-tab:: Windows
-
-    .. code-block:: doscon
-
-      (venv) C:\...>tox p -m test
+      (venv) C:\...>tox -m test311
 
 Coverage report for host platform
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If all supported versions of Python are available to tox, then coverage for the
 host platform can be reported by running:
-
-.. tabs::
-
-  .. group-tab:: macOS
-
-    .. code-block:: console
-
-      (venv) $ tox -e coverage-platform
-
-  .. group-tab:: Linux
-
-    .. code-block:: console
-
-      (venv) $ tox -e coverage-platform
-
-  .. group-tab:: Windows
-
-    .. code-block:: doscon
-
-      (venv) C:\...>tox -e coverage-platform
-
-To run the test suite along with this coverage reporting, run:
 
 .. tabs::
 
