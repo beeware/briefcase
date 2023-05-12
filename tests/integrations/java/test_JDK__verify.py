@@ -39,7 +39,7 @@ def test_macos_tool_java_home(mock_tools, capsys):
     # Mock 2 calls to check_output.
     mock_tools.subprocess.check_output.side_effect = [
         "/path/to/java",
-        "javac 1.8.0_144\n",
+        "javac 17.0.7\n",
     ]
 
     # Create a JDK wrapper by verification
@@ -102,7 +102,7 @@ def test_macos_provided_overrides_tool_java_home(mock_tools, capsys):
     mock_tools.os.environ = {"JAVA_HOME": "/path/to/java"}
 
     # Mock return value from javac. libexec won't be invoked.
-    mock_tools.subprocess.check_output.return_value = "javac 1.8.0_144\n"
+    mock_tools.subprocess.check_output.return_value = "javac 17.0.7\n"
 
     # Create a JDK wrapper by verification
     JDK.verify(mock_tools)
@@ -130,7 +130,7 @@ def test_valid_provided_java_home(mock_tools, capsys):
     mock_tools.os.environ = {"JAVA_HOME": "/path/to/java"}
 
     # Mock return value from javac.
-    mock_tools.subprocess.check_output.return_value = "javac 1.8.0_144\n"
+    mock_tools.subprocess.check_output.return_value = "javac 17.0.7\n"
 
     # Create a JDK wrapper by verification
     JDK.verify(mock_tools)
@@ -332,20 +332,20 @@ def test_unparseable_javac_version(mock_tools, host_os, java_home, tmp_path, cap
     [
         (
             "Darwin",
-            "https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/"
-            "jdk8u242-b08/OpenJDK8U-jdk_x64_mac_hotspot_8u242b08.tar.gz",
+            "https://github.com/adoptium/temurin17-binaries/releases/download/"
+            "jdk-17.0.7+7/OpenJDK17U-jdk_x64_mac_hotspot_17.0.7_7.tar.gz",
             "java/Contents/Home",
         ),
         (
             "Linux",
-            "https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/"
-            "jdk8u242-b08/OpenJDK8U-jdk_x64_linux_hotspot_8u242b08.tar.gz",
+            "https://github.com/adoptium/temurin17-binaries/releases/download/"
+            "jdk-17.0.7+7/OpenJDK17U-jdk_x64_linux_hotspot_17.0.7_7.tar.gz",
             "java",
         ),
         (
             "Windows",
-            "https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/"
-            "jdk8u242-b08/OpenJDK8U-jdk_x64_windows_hotspot_8u242b08.zip",
+            "https://github.com/adoptium/temurin17-binaries/releases/download/"
+            "jdk-17.0.7+7/OpenJDK17U-jdk_x64_windows_hotspot_17.0.7_7.zip",
             "java",
         ),
     ],
@@ -374,7 +374,7 @@ def test_successful_jdk_download(
     mock_tools.download.file.return_value = archive
 
     # Create a directory to make it look like Java was downloaded and unpacked.
-    (tmp_path / "tools" / "jdk8u242-b08").mkdir(parents=True)
+    (tmp_path / "tools" / "jdk-17.0.7+7").mkdir(parents=True)
 
     # Invoke the verify call
     JDK.verify(mock_tools)
@@ -384,13 +384,13 @@ def test_successful_jdk_download(
     # Console output contains a warning about the bad JDK location
     output = capsys.readouterr()
     assert output.err == ""
-    assert "** WARNING: JAVA_HOME does not point to a Java 8 JDK" in output.out
+    assert "** WARNING: JAVA_HOME does not point to a Java 17 JDK" in output.out
 
     # Download was invoked
     mock_tools.download.file.assert_called_with(
         url=jdk_url,
         download_path=tmp_path / "tools",
-        role="Java 8 JDK",
+        role="Java 17 JDK",
     )
     # The archive was unpacked
     # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
@@ -428,10 +428,10 @@ def test_jdk_download_failure(mock_tools, tmp_path):
 
     # That download was attempted
     mock_tools.download.file.assert_called_with(
-        url="https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/"
-        "jdk8u242-b08/OpenJDK8U-jdk_x64_linux_hotspot_8u242b08.tar.gz",
+        url="https://github.com/adoptium/temurin17-binaries/releases/download/"
+        "jdk-17.0.7+7/OpenJDK17U-jdk_x64_linux_hotspot_17.0.7_7.tar.gz",
         download_path=tmp_path / "tools",
-        role="Java 8 JDK",
+        role="Java 17 JDK",
     )
     # No attempt was made to unpack the archive
     assert mock_tools.shutil.unpack_archive.call_count == 0
@@ -457,15 +457,16 @@ def test_invalid_jdk_archive(mock_tools, tmp_path):
 
     # The download occurred
     mock_tools.download.file.assert_called_with(
-        url="https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/"
-        "jdk8u242-b08/OpenJDK8U-jdk_x64_linux_hotspot_8u242b08.tar.gz",
+        url="https://github.com/adoptium/temurin17-binaries/releases/download/"
+        "jdk-17.0.7+7/OpenJDK17U-jdk_x64_linux_hotspot_17.0.7_7.tar.gz",
         download_path=tmp_path / "tools",
-        role="Java 8 JDK",
+        role="Java 17 JDK",
     )
     # An attempt was made to unpack the archive.
     # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
     mock_tools.shutil.unpack_archive.assert_called_with(
-        "/path/to/download.zip", extract_dir=os.fsdecode(tmp_path / "tools")
+        "/path/to/download.zip",
+        extract_dir=os.fsdecode(tmp_path / "tools"),
     )
     # The original archive was not deleted
     assert archive.unlink.call_count == 0

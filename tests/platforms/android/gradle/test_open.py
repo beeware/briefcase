@@ -60,7 +60,7 @@ def open_command(tmp_path, first_app_config):
 def test_open_macOS(open_command, first_app_config, tmp_path):
     """On macOS, open uses Finder to open the project folder."""
     # Mock the call to verify the existence of java
-    open_command.tools.subprocess.check_output.return_value = "javac 1.8.0_144\n"
+    open_command.tools.subprocess.check_output.return_value = "javac 17.0.7\n"
 
     # Create the project folder to mock a created project.
     open_command.project_path(first_app_config).mkdir(parents=True)
