@@ -43,3 +43,14 @@ macOS apps.
 Do not submit the application for notarization. By default, apps will be
 submitted for notarization unless they have been signed with an ad-hoc
 signing identity.
+
+Platform quirks
+===============
+
+Packaging with ``--adhoc-sign``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Using the ``--adhoc-sign`` option on macOS produces an app that will be able
+to run on your own machine, but won't run on any other computer. In order to
+distribute your app to other users, you will need to sign the app with a full
+signing identity.

@@ -101,6 +101,17 @@ Equivalent to running:
     $ briefcase build
     $ briefcase run
 
+``--update-support``
+----------------------
+
+Update application support package before running. Equivalent to running:
+
+.. code-block:: console
+
+    $ briefcase update --update-resources
+    $ briefcase build
+    $ briefcase run
+
 ``--test``
 ----------
 

@@ -80,6 +80,29 @@ class WindowsCreateCommand(CreateCommand):
             "install_scope": install_scope,
         }
 
+    def _cleanup_app_support_package(self, support_path):
+        # On Windows, the support path is co-mingled with app content.
+        # This means updating the support package is imperfect.
+        # Warn the user that there could be problems.
+        self.logger.warning(
+            """
+*************************************************************************
+** WARNING: Support package update may be imperfect                    **
+*************************************************************************
+
+    Support packages in Windows apps are overlaid with app content,
+    so it isn't possible to remove all old support files before
+    installing new ones.
+
+    Briefcase will unpack the new support package without cleaning up
+    existing support package content. This *should* work; however,
+    ensure a reproducible release artefacts, it is advisable to
+    perform a clean app build before release.
+
+*************************************************************************
+"""
+        )
+
 
 class WindowsRunCommand(RunCommand):
     def run_app(
@@ -118,6 +141,13 @@ class WindowsRunCommand(RunCommand):
 
 
 class WindowsPackageCommand(PackageCommand):
+    ADHOC_SIGN_HELP = (
+        "Perform no signing on the app. "
+        "Your app will be reported as coming from an unverified publisher."
+    )
+
+    IDENTITY_HELP = "The 40-digit hex checksum of the code signing identity to use."
+
     @property
     def packaging_formats(self):
         return ["msi", "zip"]
@@ -236,8 +266,8 @@ class WindowsPackageCommand(PackageCommand):
     def package_app(
         self,
         app: AppConfig,
-        sign_app: bool = True,
         identity: str = None,
+        adhoc_sign: bool = False,
         file_digest: str = None,
         use_local_machine: bool = False,
         cert_store: str = None,
@@ -251,8 +281,8 @@ class WindowsPackageCommand(PackageCommand):
         identity is not provided, then ``sign_app=False`` will be enforced.
 
         :param app: The application to package
-        :param sign_app: Should the application be signed? Default: ``True``
         :param identity: SHA-1 thumbprint of the certificate to use for code signing.
+        :param adhoc_sign: Should the application be signed? Default: ``True``
         :param file_digest: File hashing algorithm for code signing.
         :param use_local_machine: True to use cert stores for the Local Machine instead
             of the Current User; default to False for Current User.
@@ -262,8 +292,25 @@ class WindowsPackageCommand(PackageCommand):
         :param timestamp_digest: Hashing algorithm to request from the timestamp server.
         """
 
-        if sign_app and not identity:
+        if adhoc_sign:
             sign_app = False
+        elif identity:
+            sign_app = True
+        else:
+            sign_app = False
+            self.logger.warning(
+                """
+*************************************************************************
+** WARNING: No signing identity provided                               **
+*************************************************************************
+
+    Briefcase will not sign the app. To provide a signing identity,
+    use the `--identity` option; or, to explicitly disable signing,
+    use `--adhoc-sign`.
+
+*************************************************************************
+"""
+            )
 
         if sign_app:
             self.logger.info("Signing App...", prefix=app.app_name)

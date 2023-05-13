@@ -373,7 +373,7 @@ class LinuxDeploy(LinuxDeployBase, ManagedTool):
                 if plugin_name.startswith(("https://", "http://")):
                     self.tools.logger.info(f"Using URL plugin {plugin_name}")
                     plugin = LinuxDeployURLPlugin.verify(self.tools, url=plugin_name)
-                else:
+                else:  # pragma: no-cover-if-is-windows
                     self.tools.logger.info(f"Using local file plugin {plugin_name}")
                     plugin = LinuxDeployLocalFilePlugin.verify(
                         self.tools,

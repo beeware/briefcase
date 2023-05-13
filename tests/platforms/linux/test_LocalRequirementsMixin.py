@@ -17,7 +17,8 @@ from ...utils import create_file, create_tgz_file, create_zip_file
 
 
 class DummyCreateCommand(LocalRequirementsMixin, CreateCommand):
-    # An command that provides the stubs required to satisfy LocalRequirementeMixin
+    """A command that provides the stubs required to satisfy LocalRequirementsMixin."""
+
     platform = "Tester"
     output_format = "Dummy"
 

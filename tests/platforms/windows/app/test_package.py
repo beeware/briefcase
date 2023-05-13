@@ -121,6 +121,7 @@ def test_verify_with_signing(package_command, monkeypatch):
     "cli_args, signing_options, is_sdk_needed",
     [
         ([], {}, False),
+        (["--adhoc-sign"], dict(adhoc_sign=True), False),
         (["--file-digest", "sha2000"], dict(file_digest="sha2000"), False),
         (["-i", "asdf"], dict(identity="asdf"), True),
         (["--identity", "asdf"], dict(identity="asdf"), True),
@@ -185,7 +186,6 @@ def test_parse_options(package_command, cli_args, signing_options, is_sdk_needed
         timestamp_digest="sha256",
         adhoc_sign=False,
         packaging_format="msi",
-        sign_app=True,
         update=False,
     )
     expected_options = {**default_options, **signing_options}
@@ -196,10 +196,17 @@ def test_parse_options(package_command, cli_args, signing_options, is_sdk_needed
     assert package_command._windows_sdk_needed is is_sdk_needed
 
 
-def test_package_msi(package_command, first_app_config, tmp_path):
+@pytest.mark.parametrize(
+    "kwargs",
+    [
+        dict(),  # Default behavior (adhoc signing)
+        {"adhoc_sign": True},  # Explicit adhoc signing
+    ],
+)
+def test_package_msi(package_command, first_app_config, kwargs, tmp_path):
     """A Windows app can be packaged as an MSI."""
 
-    package_command.package_app(first_app_config)
+    package_command.package_app(first_app_config, **kwargs)
 
     assert package_command.tools.subprocess.run.mock_calls == [
         # Collect manifest
@@ -266,11 +273,21 @@ def test_package_msi(package_command, first_app_config, tmp_path):
     ]
 
 
-def test_package_zip(package_command_with_files, first_app_config, tmp_path):
+@pytest.mark.parametrize(
+    "kwargs",
+    [
+        dict(),  # Default behavior (adhoc signing)
+        {"adhoc_sign": True},  # Explicit adhoc signing
+    ],
+)
+def test_package_zip(package_command_with_files, first_app_config, kwargs, tmp_path):
     """A Windows app can be packaged as a zip file."""
 
     first_app_config.packaging_format = "zip"
-    package_command_with_files.package_app(first_app_config)
+    package_command_with_files.package_app(first_app_config, **kwargs)
+
+    # No signing was performed
+    assert package_command_with_files.tools.subprocess.run.mock_calls == []
 
     archive_file = tmp_path / "base_path" / "dist" / "First App-0.0.1.zip"
     source_folders_and_files = (

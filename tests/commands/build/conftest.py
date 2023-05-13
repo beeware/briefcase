@@ -51,6 +51,7 @@ class DummyBuildCommand(BuildCommand):
         kwargs.pop("update", None)
         kwargs.pop("update_requirements", None)
         kwargs.pop("update_resources", None)
+        kwargs.pop("update_support", None)
         kwargs.pop("no_update", None)
         kwargs.pop("test_mode", None)
         return full_options({"build_state": app.app_name}, kwargs)
@@ -69,6 +70,7 @@ class DummyBuildCommand(BuildCommand):
         # Remove arguments consumed by the underlying call to update_app()
         kwargs.pop("update_requirements", None)
         kwargs.pop("update_resources", None)
+        kwargs.pop("update_support", None)
         kwargs.pop("test_mode", None)
         return full_options({"update_state": app.app_name}, kwargs)
 

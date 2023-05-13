@@ -194,11 +194,10 @@ def myapp():
 @pytest.fixture
 def bundle_path(myapp, tmp_path):
     # Return the bundle path for the app; however, as a side effect,
-    # ensure that the app, app_packages and support target directories
+    # ensure that the app, and app_packages target directories
     # exist, and the briefcase index file has been created.
     bundle_path = tmp_path / "base_path" / "build" / myapp.app_name / "tester" / "dummy"
     (bundle_path / "path" / "to" / "app").mkdir(parents=True, exist_ok=True)
-    (bundle_path / "path" / "to" / "support").mkdir(parents=True, exist_ok=True)
 
     return bundle_path
 

@@ -3,6 +3,7 @@ requires = ["setuptools>=60", "setuptools_scm[toml]>=7.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.coverage.run]
+plugins = ["coverage_conditional_plugin"]
 parallel = true
 branch = true
 relative_files = true
@@ -25,6 +26,17 @@ exclude_lines = [
     "NotImplementedError\\(\\)",
     "if TYPE_CHECKING:",
 ]
+
+[tool.coverage.coverage_conditional_plugin.rules]
+no-cover-if-missing-setuptools_scm = "not is_installed('setuptools_scm')"
+no-cover-if-not-linux = "'linux' != os_environ.get('COVERAGE_PLATFORM', sys_platform) and os_environ.get('COVERAGE_EXCLUDE_PLATFORM') != 'disable'"
+no-cover-if-is-macos = "'darwin' == os_environ.get('COVERAGE_PLATFORM', sys_platform) and os_environ.get('COVERAGE_EXCLUDE_PLATFORM') != 'disable'"
+no-cover-if-not-macos = "'darwin' != os_environ.get('COVERAGE_PLATFORM', sys_platform) and os_environ.get('COVERAGE_EXCLUDE_PLATFORM') != 'disable'"
+no-cover-if-is-windows = "'win32' == os_environ.get('COVERAGE_PLATFORM', sys_platform) and os_environ.get('COVERAGE_EXCLUDE_PLATFORM') != 'disable'"
+no-cover-if-not-windows = "'win32' != os_environ.get('COVERAGE_PLATFORM', sys_platform) and os_environ.get('COVERAGE_EXCLUDE_PLATFORM') != 'disable'"
+no-cover-if-is-py310 = "python_version == '3.10' and os_environ.get('COVERAGE_EXCLUDE_PYTHON_VERSION') != 'disable'"
+no-cover-if-lt-py310 = "sys_version_info < (3, 10) and os_environ.get('COVERAGE_EXCLUDE_PYTHON_VERSION') != 'disable'"
+no-cover-if-gte-py310 = "sys_version_info > (3, 10) and os_environ.get('COVERAGE_EXCLUDE_PYTHON_VERSION') != 'disable'"
 
 [tool.isort]
 profile = "black"

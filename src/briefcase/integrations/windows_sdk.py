@@ -7,7 +7,7 @@ from typing import Iterator
 # winreg can only be imported on Windows
 try:
     import winreg
-except ImportError:
+except ImportError:  # pragma: no-cover-if-is-windows
     winreg = None
 
 from briefcase.exceptions import BriefcaseCommandError

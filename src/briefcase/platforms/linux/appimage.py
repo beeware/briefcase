@@ -169,6 +169,29 @@ class LinuxAppImageCreateCommand(
 
         return context
 
+    def _cleanup_app_support_package(self, support_path):
+        # On Windows, the support path is co-mingled with app content.
+        # This means updating the support package is imperfect.
+        # Warn the user that there could be problems.
+        self.logger.warning(
+            """
+*************************************************************************
+** WARNING: Support package update may be imperfect                    **
+*************************************************************************
+
+    Support packages in Linux AppImages are overlaid with app content,
+    so it isn't possible to remove all old support files before
+    installing new ones.
+
+    Briefcase will unpack the new support package without cleaning up
+    existing support package content. This *should* work; however,
+    ensure a reproducible release artefacts, it is advisable to
+    perform a clean app build before release.
+
+*************************************************************************
+"""
+        )
+
 
 class LinuxAppImageUpdateCommand(LinuxAppImageCreateCommand, UpdateCommand):
     description = "Update an existing Linux AppImage."
@@ -188,7 +211,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
         super().verify_tools()
         LinuxDeploy.verify(tools=self.tools)
 
-    def build_app(self, app: AppConfig, **kwargs):
+    def build_app(self, app: AppConfig, **kwargs):  # pragma: no-cover-if-is-windows
         """Build an application.
 
         :param app: The application to build

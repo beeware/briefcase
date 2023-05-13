@@ -66,7 +66,18 @@ Update application requirements before building. Equivalent to running:
 ``--update-resources``
 ----------------------
 
-Update application resources (e.g., icons and splash screens) before building. Equivalent to running:
+Update application resources (e.g., icons and splash screens) before building.
+Equivalent to running:
+
+.. code-block:: console
+
+    $ briefcase update --update-resources
+    $ briefcase build
+
+``--update-support``
+----------------------
+
+Update application support package before building. Equivalent to running:
 
 .. code-block:: console
 
