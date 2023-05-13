@@ -2,7 +2,6 @@ import os
 import shutil
 import subprocess
 from pathlib import Path
-from subprocess import CalledProcessError
 from unittest import mock
 
 import pytest
@@ -11,11 +10,6 @@ from briefcase.exceptions import BriefcaseCommandError, MissingToolError, Networ
 from briefcase.integrations.java import JDK
 
 CALL_JAVA_HOME = mock.call(["/usr/libexec/java_home"])
-CALL_ROSETTA_CHECK = mock.call(["arch", "-x86_64", "true"])
-CALL_ROSETTA_INSTALL = mock.call(
-    ["softwareupdate", "--install-rosetta", "--agree-to-license"],
-    check=True,
-)
 
 
 def test_short_circuit(mock_tools):
@@ -32,9 +26,6 @@ def test_macos_tool_java_home(mock_tools, capsys):
     """On macOS, the /usr/libexec/java_home utility is checked."""
     # Mock being on macOS
     mock_tools.host_os = "Darwin"
-
-    # Prevent Rosetta check.
-    mock_tools.host_arch = "x86_64"
 
     # Mock 2 calls to check_output.
     mock_tools.subprocess.check_output.side_effect = [
@@ -65,9 +56,6 @@ def test_macos_tool_failure(mock_tools, tmp_path, capsys):
     # Mock being on macOS
     mock_tools.host_os = "Darwin"
 
-    # Prevent Rosetta check.
-    mock_tools.host_arch = "x86_64"
-
     # Mock a failed call on the libexec tool
     mock_tools.subprocess.check_output.side_effect = subprocess.CalledProcessError(
         returncode=1, cmd="/usr/libexec/java_home"
@@ -95,9 +83,6 @@ def test_macos_provided_overrides_tool_java_home(mock_tools, capsys):
     # Mock being on macOS
     mock_tools.host_os = "Darwin"
 
-    # Prevent Rosetta check.
-    mock_tools.host_arch = "x86_64"
-
     # Setup explicit JAVA_HOME
     mock_tools.os.environ = {"JAVA_HOME": "/path/to/java"}
 
@@ -123,8 +108,6 @@ def test_macos_provided_overrides_tool_java_home(mock_tools, capsys):
 
 def test_valid_provided_java_home(mock_tools, capsys):
     """If a valid JAVA_HOME is provided, it is used."""
-    # Prevent Rosetta check.
-    mock_tools.host_arch = "x86_64"
 
     # Setup explicit JAVA_HOME
     mock_tools.os.environ = {"JAVA_HOME": "/path/to/java"}
@@ -162,9 +145,6 @@ def test_invalid_jdk_version(mock_tools, host_os, java_home, tmp_path, capsys):
     used."""
     # Mock os
     mock_tools.host_os = host_os
-
-    # Prevent Rosetta check.
-    mock_tools.host_arch = "x86_64"
 
     # Setup explicit JAVA_HOME
     mock_tools.os.environ = {"JAVA_HOME": "/path/to/java"}
@@ -209,9 +189,6 @@ def test_no_javac(mock_tools, host_os, java_home, error_type, tmp_path, capsys):
     # Mock os
     mock_tools.host_os = host_os
 
-    # Prevent Rosetta check.
-    mock_tools.host_arch = "x86_64"
-
     # Setup explicit JAVA_HOME
     mock_tools.os.environ = {"JAVA_HOME": "/path/to/nowhere"}
 
@@ -254,9 +231,6 @@ def test_javac_error(mock_tools, host_os, java_home, tmp_path, capsys):
     # Mock os
     mock_tools.host_os = host_os
 
-    # Prevent Rosetta check.
-    mock_tools.host_arch = "x86_64"
-
     # Setup explicit JAVA_HOME
     mock_tools.os.environ = {"JAVA_HOME": "/path/to/nowhere"}
 
@@ -297,9 +271,6 @@ def test_unparseable_javac_version(mock_tools, host_os, java_home, tmp_path, cap
     """If the javac version can't be parsed, the briefcase JDK is used."""
     # Mock os
     mock_tools.host_os = host_os
-
-    # Prevent Rosetta check.
-    mock_tools.host_arch = "x86_64"
 
     # Setup explicit JAVA_HOME
     mock_tools.os.environ = {"JAVA_HOME": "/path/to/nowhere"}
@@ -470,97 +441,3 @@ def test_invalid_jdk_archive(mock_tools, tmp_path):
     )
     # The original archive was not deleted
     assert archive.unlink.call_count == 0
-
-
-def test_rosetta_host_os(mock_tools, tmp_path):
-    """On an OS other than macOS, the Rosetta check does not occur."""
-    mock_tools.host_os = "Linux"
-    mock_tools.host_arch = "arm64"
-
-    # Create a mock of a previously installed Java version.
-    (tmp_path / "tools" / "java17" / "bin").mkdir(parents=True)
-
-    JDK.verify(mock_tools)
-    mock_tools.subprocess.check_output.assert_not_called()
-    mock_tools.subprocess.run.assert_not_called()
-
-
-def test_rosetta_host_arch(mock_tools, tmp_path):
-    """On an architecture other than ARM64, the Rosetta check does not occur."""
-    mock_tools.host_os = "Darwin"
-    mock_tools.host_arch = "x86_64"
-
-    mock_tools.subprocess.check_output.side_effect = [
-        CalledProcessError(1, "java_home")
-    ]
-
-    # Create a mock of a previously installed Java version.
-    (tmp_path / "tools" / "java17" / "Contents" / "Home" / "bin").mkdir(parents=True)
-
-    JDK.verify(mock_tools)
-    assert mock_tools.subprocess.check_output.mock_calls == [CALL_JAVA_HOME]
-    mock_tools.subprocess.run.assert_not_called()
-
-
-def test_rosetta_already_installed(mock_tools, tmp_path):
-    """On an ARM Mac, the Rosetta check occurs before calling any other Java
-    commands."""
-    mock_tools.host_os = "Darwin"
-    mock_tools.host_arch = "arm64"
-
-    mock_tools.subprocess.check_output.side_effect = [
-        None,  # Rosetta check succeeds.
-        CalledProcessError(1, "java_home"),
-    ]
-
-    # Create a mock of a previously installed Java version.
-    (tmp_path / "tools" / "java17" / "Contents" / "Home" / "bin").mkdir(parents=True)
-
-    JDK.verify(mock_tools)
-    assert mock_tools.subprocess.check_output.mock_calls == [
-        CALL_ROSETTA_CHECK,
-        CALL_JAVA_HOME,
-    ]
-    mock_tools.subprocess.run.assert_not_called()
-
-
-def test_rosetta_install_success(mock_tools, tmp_path):
-    """Rosetta is installed if necessary."""
-    mock_tools.host_os = "Darwin"
-    mock_tools.host_arch = "arm64"
-
-    mock_tools.subprocess.check_output.side_effect = [
-        CalledProcessError(1, "arch"),
-        CalledProcessError(1, "java_home"),
-    ]
-
-    # Create a mock of a previously installed Java version.
-    (tmp_path / "tools" / "java17" / "Contents" / "Home" / "bin").mkdir(parents=True)
-
-    JDK.verify(mock_tools)
-    assert mock_tools.subprocess.check_output.mock_calls == [
-        CALL_ROSETTA_CHECK,
-        CALL_JAVA_HOME,
-    ]
-    assert mock_tools.subprocess.run.mock_calls == [CALL_ROSETTA_INSTALL]
-
-
-def test_rosetta_install_failure(mock_tools, tmp_path):
-    """If Rosetta install fails, no Java commands are called."""
-    mock_tools.host_os = "Darwin"
-    mock_tools.host_arch = "arm64"
-
-    mock_tools.subprocess.check_output.side_effect = [
-        CalledProcessError(1, "arch"),
-    ]
-    mock_tools.subprocess.run.side_effect = [
-        CalledProcessError(1, "softwareupdate"),
-    ]
-
-    # Create a mock of a previously installed Java version.
-    (tmp_path / "tools" / "java17" / "Contents" / "Home" / "bin").mkdir(parents=True)
-
-    with pytest.raises(BriefcaseCommandError, match="Failed to install Rosetta"):
-        JDK.verify(mock_tools)
-    assert mock_tools.subprocess.check_output.mock_calls == [CALL_ROSETTA_CHECK]
-    assert mock_tools.subprocess.run.mock_calls == [CALL_ROSETTA_INSTALL]

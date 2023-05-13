@@ -29,11 +29,11 @@ class JDK(Tool):
     @property
     def OpenJDK_download_url(self):
         arch = {
-            "AMD64": "x64",
-            "arm64": "aarch64",
-            "x86_64": "x64",
-            "aarch64": "aarch64",
-            "armv6l": "arm",
+            "x86_64": "x64",  # Linux\macOS x86-64
+            "aarch64": "aarch64",  # Linux arm64
+            "armv6l": "arm",  # Linux arm
+            "arm64": "aarch64",  # macOS arm64
+            "AMD64": "x64",  # Windows x86-64
         }.get(self.tools.host_arch)
 
         platform = {
@@ -78,10 +78,6 @@ class JDK(Tool):
         java = None
         java_home = tools.os.environ.get("JAVA_HOME", "")
         install_message = None
-
-        if tools.host_arch == "arm64" and tools.host_os == "Darwin":
-            # Java is not available for macOS on ARM64, so we will require Rosetta.
-            cls.verify_rosetta(tools)
 
         # macOS has a helpful system utility to determine JAVA_HOME. Try it.
         if not java_home and tools.host_os == "Darwin":
@@ -297,22 +293,3 @@ Delete {jdk_zip_path} and run briefcase again.
 
         self.uninstall()
         self.install()
-
-    @classmethod
-    def verify_rosetta(cls, tools):
-        try:
-            tools.subprocess.check_output(["arch", "-x86_64", "true"])
-        except subprocess.CalledProcessError:
-            tools.logger.info(
-                """\
-This command requires Rosetta, but it does not appear to be installed.
-Briefcase will attempt to install it now.
-"""
-            )
-            try:
-                tools.subprocess.run(
-                    ["softwareupdate", "--install-rosetta", "--agree-to-license"],
-                    check=True,
-                )
-            except subprocess.CalledProcessError as e:
-                raise BriefcaseCommandError("Failed to install Rosetta") from e
