@@ -253,14 +253,12 @@ flatpak run {bundle_identifier}
     def run(
         self,
         bundle_identifier: str,
-        app_name: str,
         args: list[SubprocessArgT] = None,
         main_module: str = None,
     ) -> subprocess.Popen[str]:
         """Run a Flatpak in a way that allows for log streaming.
 
         :param bundle_identifier: The bundle identifier for the app being built.
-        :param app_name: The app name.
         :param args: (Optional) The list of arguments to pass to the app
         :param main_module: (Optional) The main module to run. Only required if you
             want to override the default main module for the app.
