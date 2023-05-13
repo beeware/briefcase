@@ -58,7 +58,7 @@ class AndroidSDK(Tool):
         platform_name = self.tools.host_os.lower()
         if self.tools.host_os.lower() == "darwin":
             platform_name = "mac"
-        elif self.tools.host_os.lower() == "windows":
+        elif self.tools.host_os.lower() == "windows":  # pragma: no branch
             platform_name = "win"
 
         return f"https://dl.google.com/android/repository/commandlinetools-{platform_name}-{self.cmdline_tools_version}_latest.zip"  # noqa: E501
@@ -309,7 +309,9 @@ Delete {cmdline_tools_zip_path} and run briefcase again.
 
             # Python zip unpacking ignores permission metadata.
             # On non-Windows, we manually fix permissions.
-            if self.tools.host_os != "Windows":
+            if (  # pragma: no branch
+                self.tools.host_os != "Windows"
+            ):  # pragma: no-cover-if-is-windows
                 for binpath in (self.cmdline_tools_path / "bin").glob("*"):
                     if not self.tools.os.access(binpath, self.tools.os.X_OK):
                         binpath.chmod(0o755)

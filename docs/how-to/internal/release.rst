@@ -106,7 +106,7 @@ The procedure for cutting a new release is as follows:
    may need to correct the build configuration, roll back and re-tag the release.
 
 #. Edit the GitHub release to add release notes. You can use the text generated
-   by Towncrier, but you'll need to update the format to Markdown, rather than
+   by towncrier, but you'll need to update the format to Markdown, rather than
    ReST. If necessary, check the pre-release checkbox.
 
 #. Double check everything, then click Publish. This will trigger a

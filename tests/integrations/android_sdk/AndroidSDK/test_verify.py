@@ -1,7 +1,6 @@
 import os
 import platform
 import shutil
-import sys
 from unittest.mock import MagicMock
 
 import pytest
@@ -213,7 +212,8 @@ def test_download_sdk(mock_tools, tmp_path):
     if platform.system() != "Windows":
         # On non-Windows, ensure the unpacked binary was made executable
         assert os.access(
-            cmdline_tools_base_path / "latest" / "bin" / "sdkmanager", os.X_OK
+            cmdline_tools_base_path / "latest" / "bin" / "sdkmanager",
+            os.X_OK,
         )
 
     # The license has been accepted
@@ -306,10 +306,6 @@ def test_no_install(mock_tools, tmp_path):
     assert mock_tools.download.file.call_count == 0
 
 
-@pytest.mark.skipif(
-    sys.platform == "win32",
-    reason="executable permission doesn't make sense on Windows",
-)
 def test_download_sdk_if_sdkmanager_not_executable(mock_tools, tmp_path):
     """An SDK will be downloaded and unpacked if `tools/bin/sdkmanager` exists but does
     not have its permissions set properly."""

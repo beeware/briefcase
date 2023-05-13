@@ -112,7 +112,7 @@ class LinuxMixin:
         return vendor, codename, vendor_base
 
 
-class LocalRequirementsMixin:
+class LocalRequirementsMixin:  # pragma: no-cover-if-is-windows
     # A mixin that captures the process of compiling requirements that are specified
     # as local file references into sdists, and then installing those requirements
     # from the sdist.
@@ -209,7 +209,7 @@ class LocalRequirementsMixin:
         return final
 
 
-class DockerOpenCommand(OpenCommand):
+class DockerOpenCommand(OpenCommand):  # pragma: no-cover-if-is-windows
     # A command that redirects Open to an interactive shell in the container
     # if Docker is being used. Relies on the final command to provide
     # verification that Docker is available, and verify the app context.

@@ -6,7 +6,7 @@ from types import SimpleNamespace
 
 try:
     import tomllib
-except ModuleNotFoundError:
+except ModuleNotFoundError:  # pragma: no-cover-if-gte-py310
     import tomli as tomllib
 
 from briefcase.platforms import get_output_formats, get_platforms

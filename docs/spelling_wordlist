@@ -19,6 +19,7 @@ distributable
 Django
 dmg
 Dockerfile
+dr
 embeddable
 executables
 Flathub
@@ -68,9 +69,11 @@ subdirectories
 subdirectory
 submodule
 subprocesses
+tl
 toml
-Towncrier
+towncrier
 TTY
+tox
 tvOS
 untrusted
 VisualStudio

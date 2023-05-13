@@ -147,8 +147,8 @@ class DevCommand(RunAppMixin, BaseCommand):
         # On Windows, we need to disable the debug allocator because it
         # conflicts with Python.net. See
         # https://github.com/pythonnet/pythonnet/issues/1977 for details.
-        if self.platform == "windows":
-            env["PYTHONMALLOC"] = "default"
+        if self.platform == "windows":  # pragma: no branch
+            env["PYTHONMALLOC"] = "default"  # pragma: no-cover-if-not-windows
 
         return env
 

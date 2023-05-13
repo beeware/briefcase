@@ -20,11 +20,9 @@ from briefcase.integrations.xcode import (
 
 try:
     import dmgbuild
-except ImportError:  # pragma: no cover
+except ImportError:  # pragma: no-cover-if-is-macos
     # On non-macOS platforms, dmgbuild won't be installed.
     # Allow the plugin to be loaded; raise an error when tools are verified.
-    # We don't need to worry about coverage of this branch because it's
-    # handled by the verification process.
     dmgbuild = None
 
 
@@ -173,12 +171,12 @@ class macOSRunMixin:
             raise BriefcaseCommandError(f"Unable to start app {app.app_name}.")
         finally:
             # Ensure the App also terminates when exiting
-            if app_pid:
+            if app_pid:  # pragma: no-cover-if-is-py310
                 with suppress(ProcessLookupError):
                     self.tools.os.kill(app_pid, SIGTERM)
 
 
-def is_mach_o_binary(path):
+def is_mach_o_binary(path):  # pragma: no-cover-if-is-windows
     """Determine if the file at the given path is a Mach-O binary.
 
     :param path: The path to check

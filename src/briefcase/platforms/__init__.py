@@ -5,7 +5,7 @@ try:
     # Therefore, we try to import the compatibility shim first; and fall
     # back to the stdlib module if the shim isn't there.
     from importlib_metadata import entry_points
-except ImportError:
+except ImportError:  # pragma: no-cover-if-lt-py310
     from importlib.metadata import entry_points
 
 
