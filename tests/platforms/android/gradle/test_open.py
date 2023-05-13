@@ -85,7 +85,7 @@ def test_open_linux(open_command, first_app_config, tmp_path):
     open_command.project_path(first_app_config).mkdir(parents=True)
 
     # Create a stub java binary
-    create_file(tmp_path / "briefcase" / "tools" / "java" / "bin" / "java", "java")
+    create_file(tmp_path / "briefcase" / "tools" / "java17" / "bin" / "java", "java")
 
     # Create a stub sdkmanager
     create_sdk_manager(tmp_path)
@@ -107,7 +107,7 @@ def test_open_windows(open_command, first_app_config, tmp_path):
     open_command.project_path(first_app_config).mkdir(parents=True)
 
     # Create a stub java binary
-    create_file(tmp_path / "briefcase" / "tools" / "java" / "bin" / "java", "java")
+    create_file(tmp_path / "briefcase" / "tools" / "java17" / "bin" / "java", "java")
 
     # Create a stub sdkmanager
     create_sdk_manager(tmp_path, extension=".bat")

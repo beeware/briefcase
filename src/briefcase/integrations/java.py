@@ -20,6 +20,7 @@ class JDK(Tool):
     JDK_MAJOR_VER = "17"
     JDK_RELEASE = "17.0.7"
     JDK_BUILD = "7"
+    JDK_INSTALL_DIR_NAME = f"java{JDK_MAJOR_VER}"
 
     def __init__(self, tools: ToolCache, java_home: Path):
         self.tools = tools
@@ -204,7 +205,7 @@ class JDK(Tool):
         if java is None:
             # If we've reached this point, any user-provided JAVA_HOME is broken;
             # use the Briefcase one.
-            java_home = tools.base_path / "java"
+            java_home = tools.base_path / cls.JDK_INSTALL_DIR_NAME
 
             # The macOS download has a weird layout (inherited from the official Oracle
             # release). The actual JAVA_HOME is deeper inside the directory structure.
@@ -277,7 +278,7 @@ Delete {jdk_zip_path} and run briefcase again.
             java_unpack_path = (
                 self.tools.base_path / f"jdk-{self.JDK_RELEASE}+{self.JDK_BUILD}"
             )
-            java_unpack_path.rename(self.tools.base_path / "java")
+            java_unpack_path.rename(self.tools.base_path / self.JDK_INSTALL_DIR_NAME)
 
     def uninstall(self):
         """Uninstall a JDK."""

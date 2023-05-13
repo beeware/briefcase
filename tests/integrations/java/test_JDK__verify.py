@@ -74,13 +74,13 @@ def test_macos_tool_failure(mock_tools, tmp_path, capsys):
     )
 
     # Create a directory to make it look like the Briefcase Java already exists.
-    (tmp_path / "tools" / "java" / "Contents" / "Home" / "bin").mkdir(parents=True)
+    (tmp_path / "tools" / "java17" / "Contents" / "Home" / "bin").mkdir(parents=True)
 
     # Create a JDK wrapper by verification
     jdk = JDK.verify(mock_tools)
 
     # The JDK should have the briefcase JAVA_HOME
-    assert jdk.java_home == tmp_path / "tools" / "java" / "Contents" / "Home"
+    assert jdk.java_home == tmp_path / "tools" / "java17" / "Contents" / "Home"
 
     assert mock_tools.subprocess.check_output.mock_calls == [CALL_JAVA_HOME]
 
@@ -152,9 +152,9 @@ def test_valid_provided_java_home(mock_tools, capsys):
 @pytest.mark.parametrize(
     "host_os, java_home",
     [
-        ("Linux", Path("tools", "java")),
-        ("Windows", Path("tools", "java")),
-        ("Darwin", Path("tools", "java", "Contents", "Home")),
+        ("Linux", Path("tools", "java17")),
+        ("Windows", Path("tools", "java17")),
+        ("Darwin", Path("tools", "java17", "Contents", "Home")),
     ],
 )
 def test_invalid_jdk_version(mock_tools, host_os, java_home, tmp_path, capsys):
@@ -195,12 +195,12 @@ def test_invalid_jdk_version(mock_tools, host_os, java_home, tmp_path, capsys):
 @pytest.mark.parametrize(
     "host_os, java_home, error_type",
     [
-        ("Linux", Path("tools", "java"), FileNotFoundError),
-        ("Linux", Path("tools", "java"), NotADirectoryError),
-        ("Windows", Path("tools", "java"), FileNotFoundError),
-        ("Windows", Path("tools", "java"), NotADirectoryError),
-        ("Darwin", Path("tools", "java", "Contents", "Home"), FileNotFoundError),
-        ("Darwin", Path("tools", "java", "Contents", "Home"), NotADirectoryError),
+        ("Linux", Path("tools", "java17"), FileNotFoundError),
+        ("Linux", Path("tools", "java17"), NotADirectoryError),
+        ("Windows", Path("tools", "java17"), FileNotFoundError),
+        ("Windows", Path("tools", "java17"), NotADirectoryError),
+        ("Darwin", Path("tools", "java17", "Contents", "Home"), FileNotFoundError),
+        ("Darwin", Path("tools", "java17", "Contents", "Home"), NotADirectoryError),
     ],
 )
 def test_no_javac(mock_tools, host_os, java_home, error_type, tmp_path, capsys):
@@ -244,9 +244,9 @@ def test_no_javac(mock_tools, host_os, java_home, error_type, tmp_path, capsys):
 @pytest.mark.parametrize(
     "host_os, java_home",
     [
-        ("Linux", Path("tools", "java")),
-        ("Windows", Path("tools", "java")),
-        ("Darwin", Path("tools", "java", "Contents", "Home")),
+        ("Linux", Path("tools", "java17")),
+        ("Windows", Path("tools", "java17")),
+        ("Darwin", Path("tools", "java17", "Contents", "Home")),
     ],
 )
 def test_javac_error(mock_tools, host_os, java_home, tmp_path, capsys):
@@ -288,9 +288,9 @@ def test_javac_error(mock_tools, host_os, java_home, tmp_path, capsys):
 @pytest.mark.parametrize(
     "host_os, java_home",
     [
-        ("Linux", Path("tools", "java")),
-        ("Windows", Path("tools", "java")),
-        ("Darwin", Path("tools", "java", "Contents", "Home")),
+        ("Linux", Path("tools", "java17")),
+        ("Windows", Path("tools", "java17")),
+        ("Darwin", Path("tools", "java17", "Contents", "Home")),
     ],
 )
 def test_unparseable_javac_version(mock_tools, host_os, java_home, tmp_path, capsys):
@@ -334,19 +334,19 @@ def test_unparseable_javac_version(mock_tools, host_os, java_home, tmp_path, cap
             "Darwin",
             "https://github.com/adoptium/temurin17-binaries/releases/download/"
             "jdk-17.0.7+7/OpenJDK17U-jdk_x64_mac_hotspot_17.0.7_7.tar.gz",
-            "java/Contents/Home",
+            "java17/Contents/Home",
         ),
         (
             "Linux",
             "https://github.com/adoptium/temurin17-binaries/releases/download/"
             "jdk-17.0.7+7/OpenJDK17U-jdk_x64_linux_hotspot_17.0.7_7.tar.gz",
-            "java",
+            "java17",
         ),
         (
             "Windows",
             "https://github.com/adoptium/temurin17-binaries/releases/download/"
             "jdk-17.0.7+7/OpenJDK17U-jdk_x64_windows_hotspot_17.0.7_7.zip",
-            "java",
+            "java17",
         ),
     ],
 )
@@ -478,7 +478,7 @@ def test_rosetta_host_os(mock_tools, tmp_path):
     mock_tools.host_arch = "arm64"
 
     # Create a mock of a previously installed Java version.
-    (tmp_path / "tools" / "java" / "bin").mkdir(parents=True)
+    (tmp_path / "tools" / "java17" / "bin").mkdir(parents=True)
 
     JDK.verify(mock_tools)
     mock_tools.subprocess.check_output.assert_not_called()
@@ -495,7 +495,7 @@ def test_rosetta_host_arch(mock_tools, tmp_path):
     ]
 
     # Create a mock of a previously installed Java version.
-    (tmp_path / "tools" / "java" / "Contents" / "Home" / "bin").mkdir(parents=True)
+    (tmp_path / "tools" / "java17" / "Contents" / "Home" / "bin").mkdir(parents=True)
 
     JDK.verify(mock_tools)
     assert mock_tools.subprocess.check_output.mock_calls == [CALL_JAVA_HOME]
@@ -514,7 +514,7 @@ def test_rosetta_already_installed(mock_tools, tmp_path):
     ]
 
     # Create a mock of a previously installed Java version.
-    (tmp_path / "tools" / "java" / "Contents" / "Home" / "bin").mkdir(parents=True)
+    (tmp_path / "tools" / "java17" / "Contents" / "Home" / "bin").mkdir(parents=True)
 
     JDK.verify(mock_tools)
     assert mock_tools.subprocess.check_output.mock_calls == [
@@ -535,7 +535,7 @@ def test_rosetta_install_success(mock_tools, tmp_path):
     ]
 
     # Create a mock of a previously installed Java version.
-    (tmp_path / "tools" / "java" / "Contents" / "Home" / "bin").mkdir(parents=True)
+    (tmp_path / "tools" / "java17" / "Contents" / "Home" / "bin").mkdir(parents=True)
 
     JDK.verify(mock_tools)
     assert mock_tools.subprocess.check_output.mock_calls == [
@@ -558,7 +558,7 @@ def test_rosetta_install_failure(mock_tools, tmp_path):
     ]
 
     # Create a mock of a previously installed Java version.
-    (tmp_path / "tools" / "java" / "Contents" / "Home" / "bin").mkdir(parents=True)
+    (tmp_path / "tools" / "java17" / "Contents" / "Home" / "bin").mkdir(parents=True)
 
     with pytest.raises(BriefcaseCommandError, match="Failed to install Rosetta"):
         JDK.verify(mock_tools)
