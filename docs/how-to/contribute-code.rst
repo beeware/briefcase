@@ -23,7 +23,7 @@ Set up the dev environment by running:
       $ cd briefcase
       $ python3 -m venv venv
       $ . venv/bin/activate
-      (venv) $ python3 -m pip install -Ue ".[dev]"
+      (venv) $ python -m pip install -Ue ".[dev]"
       (venv) $ pre-commit install
 
   .. group-tab:: Linux
@@ -34,7 +34,7 @@ Set up the dev environment by running:
       $ cd briefcase
       $ python3 -m venv venv
       $ . venv/bin/activate
-      (venv) $ python3 -m pip install -Ue ".[dev]"
+      (venv) $ python -m pip install -Ue ".[dev]"
       (venv) $ pre-commit install
 
   .. group-tab:: Windows
@@ -92,7 +92,7 @@ Clone Briefcase and create virtual environment
       $ cd briefcase
       $ python3 -m venv venv
       $ . venv/bin/activate
-      (venv) $ python3 -m pip install -Ue ".[dev]"
+      (venv) $ python -m pip install -Ue ".[dev]"
 
   .. group-tab:: Linux
 
@@ -102,7 +102,7 @@ Clone Briefcase and create virtual environment
       $ cd briefcase
       $ python3 -m venv venv
       $ . venv/bin/activate
-      (venv) $ python3 -m pip install -Ue ".[dev]"
+      (venv) $ python -m pip install -Ue ".[dev]"
 
   .. group-tab:: Windows
 
@@ -309,8 +309,9 @@ Create a new branch in git
 When you clone Briefcase, it will default to checking out the default branch,
 ``main``. However, your changes should be committed to a new branch instead of
 being committed directly in to ``main``. The branch name should be succinct but
-relate to what's being changed; for instance, ``fix-dev-pip-error``. To create
-a new branch, run:
+relate to what's being changed; for instance, if you're fixing a bug in Windows
+code signing, you might use the branch name ``fix-windows-signing``. To create a
+new branch, run:
 
 .. tabs::
 
@@ -318,19 +319,19 @@ a new branch, run:
 
     .. code-block:: console
 
-      (venv) $ git checkout -b fix-dev-pip-error
+      (venv) $ git checkout -b fix-windows-signing
 
   .. group-tab:: Linux
 
     .. code-block:: console
 
-      (venv) $ git checkout -b fix-dev-pip-error
+      (venv) $ git checkout -b fix-windows-signing
 
   .. group-tab:: Windows
 
     .. code-block:: doscon
 
-      (venv) C:\...>git checkout -b fix-dev-pip-error
+      (venv) C:\...>git checkout -b fix-windows-signing
 
 Running tests and coverage
 --------------------------
@@ -519,9 +520,10 @@ However, Briefcase targets macOS, Linux, and Windows, as well as multiple
 versions of Python, so full coverage cannot be verified on a single platform and
 Python version. To accommodate this, several conditional coverage rules are
 defined in the ``tool.coverage.coverage_conditional_plugin.rules`` section of
-``pyproject.toml`` (e.g., ``no-cover-if-is-windows``). These rules are used to
-identify sections of code that are only covered on particular platforms or
-Python versions.
+``pyproject.toml`` (e.g., ``no-cover-if-is-windows`` can be used to flag a block
+of code that won't be executed when running the test suite on Windows). These
+rules are used to identify sections of code that are only covered on particular
+platforms or Python versions.
 
 Of note, coverage reporting across Python versions can be a bit quirky. For
 instance, if coverage files are produced using one version of Python but
@@ -532,8 +534,9 @@ oldest version Python used to produce the coverage files.
 Coverage report for host platform and Python version
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-You can generate a coverage report for your platform and version of Python, for
-example Python 3.11, by running:
+You can generate a coverage report for your platform and version of Python. For
+example, to run the test suite and generate a coverage report on Python3.11,
+run:
 
 .. tabs::
 
