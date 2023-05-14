@@ -1,0 +1,1 @@
+The version of the default Flatpak Freedesktop runtime and SDK was updated from 21.08 to 22.08.

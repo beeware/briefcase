@@ -86,7 +86,7 @@ def test_default_runtime_config(create_command, first_app_config, tmp_path):
     assert (
         create_command.flatpak_runtime(first_app_config) == "org.freedesktop.Platform"
     )
-    assert create_command.flatpak_runtime_version(first_app_config) == "21.08"
+    assert create_command.flatpak_runtime_version(first_app_config) == "22.08"
     assert create_command.flatpak_sdk(first_app_config) == "org.freedesktop.Sdk"
 
 

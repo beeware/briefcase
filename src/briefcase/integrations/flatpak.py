@@ -12,7 +12,7 @@ class Flatpak(Tool):
     DEFAULT_REPO_URL = "https://flathub.org/repo/flathub.flatpakrepo"
 
     DEFAULT_RUNTIME = "org.freedesktop.Platform"
-    DEFAULT_RUNTIME_VERSION = "21.08"
+    DEFAULT_RUNTIME_VERSION = "22.08"
     DEFAULT_SDK = "org.freedesktop.Sdk"
 
     def __init__(self, tools: ToolCache):
