@@ -112,7 +112,7 @@ class AndroidSDK(ManagedTool):
     def avd_path(self) -> Path:
         return self.dot_android_path / "avd"
 
-    def avd_config_filename(self, avd):
+    def avd_config_filename(self, avd: str) -> Path:
         return self.avd_path / f"{avd}.avd" / "config.ini"
 
     @property

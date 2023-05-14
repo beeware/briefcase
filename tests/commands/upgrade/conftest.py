@@ -103,10 +103,10 @@ class DummyManagedToolBase(ManagedTool):
         self.actions.append("exists")
         return True
 
-    def install(self, *args, **kwargs):
+    def install(self):
         self.actions.append("install")
 
-    def uninstall(self, *args, **kwargs):
+    def uninstall(self):
         self.actions.append("uninstall")
 
 

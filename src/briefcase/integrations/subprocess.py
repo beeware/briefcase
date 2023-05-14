@@ -23,7 +23,7 @@ from briefcase.integrations.base import Tool, ToolCache
 
 SubprocessArgT = Union[str, Path]
 SubprocessArgsT = Sequence[SubprocessArgT]
-JSON = Union[Mapping[str, "JSON"], Sequence["JSON"], str, int, float, bool, None]
+JsonT = Union[Mapping[str, "JsonT"], Sequence["JsonT"], str, int, float, bool, None]
 ParserOutputT = TypeVar("ParserOutputT")
 
 
@@ -36,7 +36,7 @@ def ensure_str(text: str | bytes) -> str:
     return text.decode() if isinstance(text, bytes) else str(text)
 
 
-def json_parser(json_output: str) -> JSON:
+def json_parser(json_output: str) -> JsonT:
     """Wrapper to parse command output as JSON via parse_output.
 
     :param json_output: command output to parse as JSON
@@ -672,7 +672,7 @@ class Subprocess(Tool):
                 # readline should always return at least a newline (ie \n) UNLESS
                 # the underlying process is exiting/gone; then "" is returned.
                 if output_line:
-                    if filter_func:
+                    if filter_func is not None:
                         try:
                             for filtered_output in filter_func(
                                 output_line.rstrip("\n")
@@ -713,13 +713,13 @@ class Subprocess(Tool):
             f"    {' '.join(shlex.quote(str(arg)) for arg in args)}"
         )
 
-    def _log_cwd(self, cwd: str | Path):
+    def _log_cwd(self, cwd: str | Path | None):
         """Log the working directory for the  command being executed."""
         effective_cwd = Path.cwd() if cwd is None else cwd
         self.tools.logger.debug("Working Directory:")
         self.tools.logger.debug(f"    {effective_cwd}")
 
-    def _log_environment(self, overrides: dict[str, str]):
+    def _log_environment(self, overrides: dict[str, str] | None):
         """Log the environment variables overrides prior to command execution.
 
         :param overrides: The explicit environment passed to the subprocess call;

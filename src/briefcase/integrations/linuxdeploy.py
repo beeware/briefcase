@@ -15,7 +15,6 @@ from briefcase.exceptions import (
 from briefcase.integrations.base import ManagedTool, Tool, ToolCache
 
 LinuxDeployT = TypeVar("LinuxDeployT", bound="LinuxDeployBase")
-LinuxDeployPluginT = TypeVar("LinuxDeployPluginT", bound="LinuxDeployPluginBase")
 
 ELF_HEADER_IDENT = bytes.fromhex("7F454C46")
 ELF_PATCH_OFFSET = 0x08
@@ -326,7 +325,7 @@ class LinuxDeploy(LinuxDeployBase, ManagedTool):
         )
 
     @property
-    def plugins(self) -> dict[str, type[LinuxDeployPluginT]]:
+    def plugins(self) -> dict[str, type[LinuxDeployPluginBase]]:
         """The known linuxdeploy plugins."""
         return {
             "gtk": LinuxDeployGtkPlugin,
@@ -337,7 +336,7 @@ class LinuxDeploy(LinuxDeployBase, ManagedTool):
         self,
         plugin_definitions: list[str],
         bundle_path: Path,
-    ) -> dict[str, LinuxDeployT]:
+    ) -> dict[str, LinuxDeployPluginBase]:
         """Verify that all the declared plugin dependencies are available.
 
         Each plugin definition is a string, and can be:

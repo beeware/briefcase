@@ -151,7 +151,6 @@ def ensure_xcode_is_installed(
     Raises an exception if XCode isn't installed, or if the version of Xcode
     that is installed doesn't meet the minimum requirement.
 
-
     :param tools: ToolCache of available tools
     :param min_version: The minimum allowed version of Xcode, specified as a
         tuple of integers (e.g., (11, 2, 1)). Default: ``None``, meaning there
@@ -388,7 +387,7 @@ def get_simulators(
     tools: ToolCache,
     os_name: str,
     simulator_location: str = "/Library/Developer/PrivateFrameworks/CoreSimulator.framework/",
-):
+) -> dict[str, str]:
     """Obtain the simulators available on this machine.
 
     The return value is a 2 level dictionary. The outer dictionary is
@@ -461,7 +460,7 @@ Press Return to continue: """
         raise BriefcaseCommandError("Unable to run xcrun simctl.") from e
 
 
-def get_device_state(tools: ToolCache, udid: str):
+def get_device_state(tools: ToolCache, udid: str) -> str:
     """Determine the state of an iOS simulator device.
 
     :param tools: ToolCache of available tools
@@ -496,7 +495,7 @@ def get_device_state(tools: ToolCache, udid: str):
 IDENTITY_RE = re.compile(r"\s*\d+\) ([0-9A-F]{40}) \"(.*)\"")
 
 
-def get_identities(tools: ToolCache, policy: str):
+def get_identities(tools: ToolCache, policy: str) -> dict[str, str]:
     """Obtain a set of valid identities for the given policy.
 
     :param tools: ToolCache of available tools

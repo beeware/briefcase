@@ -242,12 +242,12 @@ class DockerAppContext(Tool):
 
     def __init__(self, tools: ToolCache, app: AppConfig):
         super().__init__(tools=tools)
-        self.app = app
-        self.app_base_path = None
-        self.host_bundle_path = None
-        self.host_data_path = None
-        self.image_tag = None
-        self.python_version = None
+        self.app: AppConfig = app
+        self.app_base_path: Path
+        self.host_bundle_path: Path
+        self.host_data_path: Path
+        self.image_tag: str
+        self.python_version: str
 
     @property
     def docker_data_path(self) -> PurePosixPath:
@@ -350,10 +350,7 @@ class DockerAppContext(Tool):
                         f"Error building Docker container image for {self.app.app_name}."
                     ) from e
 
-    def _dockerize_path(
-        self,
-        arg: SubprocessArgT,
-    ) -> str:  # pragma: no-cover-if-is-windows
+    def _dockerize_path(self, arg: str) -> str:  # pragma: no-cover-if-is-windows
         """Relocate any local path into the equivalent location on the docker
         filesystem.
 
@@ -376,7 +373,7 @@ class DockerAppContext(Tool):
         self,
         args: SubprocessArgsT,
         interactive: bool = False,
-        mounts: dict[str | Path, str | Path] = None,
+        mounts: list[tuple[str | Path, str | Path]] = None,
         env: dict[str, str] = None,
         cwd: Path = None,
     ) -> list[str]:  # pragma: no-cover-if-is-windows
@@ -444,7 +441,7 @@ class DockerAppContext(Tool):
         env: dict[str, str] = None,
         cwd: Path = None,
         interactive: bool = False,
-        mounts: dict[str | Path, str | Path] = None,
+        mounts: list[tuple[str | Path, str | Path]] = None,
         **kwargs,
     ):
         """Run a process inside a Docker container."""
@@ -471,7 +468,7 @@ class DockerAppContext(Tool):
         args: SubprocessArgsT,
         env: dict[str, str] = None,
         cwd: Path = None,
-        mounts: dict[str | Path, str | Path] = None,
+        mounts: list[tuple[str | Path, str | Path]] = None,
         **kwargs,
     ) -> str:
         """Run a process inside a Docker container, capturing output."""

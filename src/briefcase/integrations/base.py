@@ -8,8 +8,7 @@ from abc import ABC, abstractmethod
 from collections import defaultdict
 from collections.abc import Mapping
 from pathlib import Path
-from types import ModuleType
-from typing import TYPE_CHECKING, DefaultDict, TypeVar, Union, overload
+from typing import TYPE_CHECKING, DefaultDict, TypeVar
 
 import requests
 from cookiecutter.main import cookiecutter
@@ -40,10 +39,11 @@ if TYPE_CHECKING:
     from briefcase.integrations.wix import WiX
     from briefcase.integrations.xcode import Xcode, XcodeCliTools
 
-ToolT = TypeVar("ToolT", bound=Union["Tool", ModuleType])
+ToolT = TypeVar("ToolT", bound="Tool")
+ManagedToolT = TypeVar("ManagedToolT", bound="ManagedTool")
 
 # Registry of all defined Tools
-tool_registry: dict[str, type[ToolT]] = dict()
+tool_registry: dict[str, type[Tool | ManagedTool]] = dict()
 
 
 class Tool(ABC):
@@ -60,16 +60,6 @@ class Tool(ABC):
         """Register each tool when it is defined."""
         if cls.name != "managed_tool_base":
             tool_registry[cls.name] = cls
-
-    @classmethod
-    @overload
-    def verify(cls: type[ToolT], tools: ToolCache, **kwargs) -> ToolT:
-        """Verify a tool that is not app-bound."""
-
-    @classmethod
-    @overload
-    def verify(cls: type[ToolT], tools: ToolCache, app: AppConfig, **kwargs) -> ToolT:
-        """Verify an app-bound tool."""
 
     @classmethod
     def verify(
@@ -108,35 +98,32 @@ class ManagedTool(Tool):
     name = "managed_tool_base"
 
     @classmethod
-    @overload
     def verify(
-        cls: type[ToolT],
+        cls: type[ManagedToolT],
         tools: ToolCache,
+        app: AppConfig = None,
         install: bool = True,
         **kwargs,
-    ) -> ToolT:
-        """Verify a Managed tool that is not app-bound."""
-
-    @classmethod
-    def verify(cls, tools, **kwargs):
-        return super().verify(tools=tools, **kwargs)
-
-    @property
-    def managed_install(self) -> bool:
-        """Is Briefcase managing the installation of this tool?"""
-        return True
+    ) -> ManagedToolT:
+        """Confirm the managed tool is installed and available."""
+        return super().verify(tools=tools, app=app, install=install, **kwargs)
 
     @abstractmethod
     def exists(self) -> bool:
         """Is the tool currently installed?"""
 
     @abstractmethod
-    def install(self, *args, **kwargs):
+    def install(self):
         """Install the tool as managed by Briefcase."""
 
     @abstractmethod
-    def uninstall(self, *args, **kwargs):
-        """Uninstall the tool."""
+    def uninstall(self):
+        """Uninstall a Briefcase managed tool."""
+
+    @property
+    def managed_install(self) -> bool:
+        """Is Briefcase managing the installation of this tool?"""
+        return True
 
     def upgrade(self):
         """Upgrade a managed tool."""

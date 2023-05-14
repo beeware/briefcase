@@ -49,7 +49,7 @@ class Download(Tool):
         :returns: The filename of the downloaded (or cached) file.
         """
         download_path.mkdir(parents=True, exist_ok=True)
-        filename = None
+        filename: Path = None
         try:
             response = self.tools.requests.get(url, stream=True)
             if response.status_code == 404:

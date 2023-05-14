@@ -24,7 +24,7 @@ class VisualStudio(Tool):
         self,
         tools: ToolCache,
         msbuild_path: Path,
-        install_metadata: dict[str, str] = None,
+        install_metadata: dict[str, str | int | bool] = None,
     ):
         super().__init__(tools=tools)
         self._msbuild_path = msbuild_path
@@ -36,7 +36,7 @@ class VisualStudio(Tool):
         return self._msbuild_path
 
     @property
-    def install_metadata(self) -> dict[str, str] | None:
+    def install_metadata(self) -> dict[str, str | int | bool] | None:
         """Metadata about the Visual Studio install.
 
         Will be ``None`` if MSBuild the path to MSBuild has been provided
@@ -79,7 +79,7 @@ class VisualStudio(Tool):
             # Look for an %MSBUILD% environment variable
             try:
                 msbuild_path = Path(tools.os.environ["MSBUILD"])
-                install_metadata = None
+                install_metadata: dict[str, str | int | bool] = None
 
                 if not msbuild_path.exists():
                     # The location referenced by %MSBUILD% doesn't exist
