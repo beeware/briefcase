@@ -1,7 +1,10 @@
+from unittest.mock import MagicMock
+
 import pytest
 
 from briefcase.console import Console, Log
-from briefcase.exceptions import UnsupportedHostError
+from briefcase.exceptions import BriefcaseConfigError, UnsupportedHostError
+from briefcase.integrations.flatpak import Flatpak
 from briefcase.platforms.linux.flatpak import LinuxFlatpakCreateCommand
 
 
@@ -27,7 +30,7 @@ def test_unsupported_host_os(create_command, host_os):
         create_command()
 
 
-def test_output_format_template_context(create_command, first_app_config, tmp_path):
+def test_output_format_template_context(create_command, first_app_config):
     """The template context is provided flatpak details."""
     first_app_config.flatpak_runtime = "org.beeware.Platform"
     first_app_config.flatpak_runtime_version = "37.42"
@@ -38,3 +41,14 @@ def test_output_format_template_context(create_command, first_app_config, tmp_pa
         "flatpak_runtime_version": "37.42",
         "flatpak_sdk": "org.beeware.SDK",
     }
+
+
+def test_missing_runtime_config(create_command, first_app_config):
+    """The app creation errors is a Flatpak runtime is not defined."""
+    create_command.tools.flatpak = MagicMock(spec_set=Flatpak)
+
+    with pytest.raises(
+        BriefcaseConfigError,
+        match="Briefcase configuration error: The App does not specify the Flatpak runtime to use",
+    ):
+        create_command.output_format_template_context(first_app_config)

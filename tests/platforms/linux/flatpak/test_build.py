@@ -1,8 +1,9 @@
-from unittest import mock
+from unittest.mock import MagicMock
 
 import pytest
 
 from briefcase.console import Console, Log
+from briefcase.exceptions import BriefcaseConfigError
 from briefcase.integrations.flatpak import Flatpak
 from briefcase.platforms.linux.flatpak import LinuxFlatpakBuildCommand
 
@@ -19,7 +20,7 @@ def build_command(tmp_path):
 
 def test_build(build_command, first_app_config, tmp_path):
     """A flatpak can be built."""
-    build_command.tools.flatpak = mock.MagicMock(spec_set=Flatpak)
+    build_command.tools.flatpak = MagicMock(spec_set=Flatpak)
 
     first_app_config.flatpak_runtime_repo_url = "https://example.com/flatpak/repo"
     first_app_config.flatpak_runtime_repo_alias = "custom-repo"
@@ -50,3 +51,14 @@ def test_build(build_command, first_app_config, tmp_path):
         app_name="first-app",
         path=tmp_path / "base_path" / "build" / "first-app" / "linux" / "flatpak",
     )
+
+
+def test_missing_runtime_config(build_command, first_app_config):
+    """The app build errors is a Flatpak runtime is not defined."""
+    build_command.tools.flatpak = MagicMock(spec_set=Flatpak)
+
+    with pytest.raises(
+        BriefcaseConfigError,
+        match="Briefcase configuration error: The App does not specify the Flatpak runtime to use",
+    ):
+        build_command.build_app(first_app_config)

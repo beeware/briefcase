@@ -54,13 +54,13 @@ def test_distribution_path(create_command, first_app_config, tmp_path):
     assert distribution_path == expected_path
 
 
-def test_default_runtime_repo(create_command, first_app_config, tmp_path):
+def test_default_runtime_repo(create_command, first_app_config):
     """The flathub repository is the default runtime repository."""
     expected_repo = ("flathub", "https://flathub.org/repo/flathub.flatpakrepo")
     assert create_command.flatpak_runtime_repo(first_app_config) == expected_repo
 
 
-def test_custom_runtime_repo(create_command, first_app_config, tmp_path):
+def test_custom_runtime_repo(create_command, first_app_config):
     """A custom runtime repo can be specified."""
     first_app_config.flatpak_runtime_repo_alias = "custom_repo"
     first_app_config.flatpak_runtime_repo_url = "https://example.com/flatpak/runtime"
@@ -69,7 +69,7 @@ def test_custom_runtime_repo(create_command, first_app_config, tmp_path):
     assert create_command.flatpak_runtime_repo(first_app_config) == expected_repo
 
 
-def test_custom_runtime_repo_no_alias(create_command, first_app_config, tmp_path):
+def test_custom_runtime_repo_no_alias(create_command, first_app_config):
     """If a custom runtime repo URL is specified, an alias must be specified as well."""
     first_app_config.flatpak_runtime_repo_url = "https://example.com/flatpak/runtime"
 
@@ -80,17 +80,7 @@ def test_custom_runtime_repo_no_alias(create_command, first_app_config, tmp_path
         create_command.flatpak_runtime_repo(first_app_config)
 
 
-def test_default_runtime_config(create_command, first_app_config, tmp_path):
-    """Flatpak apps use a default runtime configuration."""
-
-    assert (
-        create_command.flatpak_runtime(first_app_config) == "org.freedesktop.Platform"
-    )
-    assert create_command.flatpak_runtime_version(first_app_config) == "22.08"
-    assert create_command.flatpak_sdk(first_app_config) == "org.freedesktop.Sdk"
-
-
-def test_custom_runtime(create_command, first_app_config, tmp_path):
+def test_custom_runtime(create_command, first_app_config):
     """A custom runtime can be specified."""
     first_app_config.flatpak_runtime = "org.beeware.Platform"
     first_app_config.flatpak_runtime_version = "37.42"
@@ -101,31 +91,43 @@ def test_custom_runtime(create_command, first_app_config, tmp_path):
     assert create_command.flatpak_sdk(first_app_config) == "org.beeware.SDK"
 
 
-def test_custom_runtime_runtime_only(create_command, first_app_config, tmp_path):
-    """If the user only defines a runtime, accessing the SDK raises an error."""
-    first_app_config.flatpak_runtime = "org.beeware.Platform"
-    first_app_config.flatpak_runtime_version = "37.42"
-
-    with pytest.raises(
-        BriefcaseConfigError,
-        match=r"If you specify a custom Flatpak runtime, you must also specify a corresponding Flatpak SDK.",
-    ):
-        create_command.flatpak_runtime(first_app_config)
-
-
-def test_custom_runtime_sdk_only(create_command, first_app_config, tmp_path):
-    """If the user only defines an SDK, accessing the runtime raises an error."""
+def test_missing_runtime(create_command, first_app_config):
+    """Error if App config is missing the runtime."""
     first_app_config.flatpak_runtime_version = "37.42"
     first_app_config.flatpak_sdk = "org.beeware.SDK"
 
     with pytest.raises(
         BriefcaseConfigError,
-        match=r"If you specify a custom Flatpak SDK, you must also specify a corresponding Flatpak runtime.",
+        match="Briefcase configuration error: The App does not specify the Flatpak runtime to use",
+    ):
+        create_command.flatpak_runtime(first_app_config)
+
+
+def test_missing_sdk(create_command, first_app_config):
+    """Error if App config is missing the SDK."""
+    first_app_config.flatpak_runtime = "org.beeware.Platform"
+    first_app_config.flatpak_runtime_version = "37.42"
+
+    with pytest.raises(
+        BriefcaseConfigError,
+        match="Briefcase configuration error: The App does not specify the Flatpak SDK to use",
     ):
         create_command.flatpak_sdk(first_app_config)
 
 
-def test_verify_linux(create_command, tmp_path):
+def test_missing_runtime_version(create_command, first_app_config):
+    """Error if App config is missing the runtime version."""
+    first_app_config.flatpak_runtime = "org.beeware.Platform"
+    first_app_config.flatpak_sdk = "org.beeware.SDK"
+
+    with pytest.raises(
+        BriefcaseConfigError,
+        match="Briefcase configuration error: The App does not specify the version of the Flatpak runtime to use",
+    ):
+        create_command.flatpak_runtime_version(first_app_config)
+
+
+def test_verify_linux(create_command):
     """Verifying on Linux creates an SDK wrapper."""
     create_command.tools.host_os = "Linux"
     create_command.tools.subprocess = MagicMock(spec_set=Subprocess)

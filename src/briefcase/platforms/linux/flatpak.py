@@ -61,35 +61,49 @@ class LinuxFlatpakMixin(LinuxMixin):
         return repo_alias, repo_url
 
     def flatpak_runtime(self, app):
-        # Verify that either both or neither of runtime *and* sdk are specified
         try:
-            runtime = app.flatpak_runtime
-            if hasattr(app, "flatpak_sdk"):
-                return runtime
-            else:
-                raise BriefcaseConfigError(
-                    "If you specify a custom Flatpak runtime, "
-                    "you must also specify a corresponding Flatpak SDK."
-                )
-        except AttributeError:
-            return Flatpak.DEFAULT_RUNTIME
+            return app.flatpak_runtime
+        except AttributeError as e:
+            raise BriefcaseConfigError(
+                """\
+The App does not specify the Flatpak runtime to use.
+
+This can set via the `flatpak_runtime` key in the App configuration.
+
+Additionally, the Flatpak SDK (`flatpak_sdk`) and the corresponding version
+(`flatpak_runtime_version`) must be set.
+"""
+            ) from e
 
     def flatpak_runtime_version(self, app):
-        return getattr(app, "flatpak_runtime_version", Flatpak.DEFAULT_RUNTIME_VERSION)
+        try:
+            return app.flatpak_runtime_version
+        except AttributeError as e:
+            raise BriefcaseConfigError(
+                """\
+The App does not specify the version of the Flatpak runtime to use.
+
+This can set via the `flatpak_runtime_version` key in the App configuration.
+
+Additionally, the Flatpak runtime (`flatpak_runtime`) and the Flatpak SDK
+(`flatpak_sdk`) must be set.
+"""
+            ) from e
 
     def flatpak_sdk(self, app):
-        # Verify that either both or neither of runtime *and* sdk are specified
         try:
-            sdk = app.flatpak_sdk
-            if hasattr(app, "flatpak_runtime"):
-                return sdk
-            else:
-                raise BriefcaseConfigError(
-                    "If you specify a custom Flatpak SDK, "
-                    "you must also specify a corresponding Flatpak runtime."
-                )
-        except AttributeError:
-            return Flatpak.DEFAULT_SDK
+            return app.flatpak_sdk
+        except AttributeError as e:
+            raise BriefcaseConfigError(
+                """\
+The App does not specify the Flatpak SDK to use.
+
+This can set via the `flatpak_sdk` key in the App configuration.
+
+Additionally, the Flatpak runtime (`flatpak_runtime`) and the corresponding
+version (`flatpak_runtime_version`) must be set.
+"""
+            ) from e
 
 
 class LinuxFlatpakCreateCommand(LinuxFlatpakMixin, CreateCommand):
