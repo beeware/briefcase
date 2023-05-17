@@ -68,10 +68,8 @@ class LinuxFlatpakMixin(LinuxMixin):
                 """\
 The App does not specify the Flatpak runtime to use.
 
-This can set via the `flatpak_runtime` key in the App configuration.
-
-Additionally, the Flatpak SDK (`flatpak_sdk`) and the corresponding version
-(`flatpak_runtime_version`) must be set.
+Your application configuration must provide values for
+`flatpak_sdk`, `flatpak_runtime`, and `flatpak_runtime_version`.
 """
             ) from e
 
@@ -83,10 +81,8 @@ Additionally, the Flatpak SDK (`flatpak_sdk`) and the corresponding version
                 """\
 The App does not specify the version of the Flatpak runtime to use.
 
-This can set via the `flatpak_runtime_version` key in the App configuration.
-
-Additionally, the Flatpak runtime (`flatpak_runtime`) and the Flatpak SDK
-(`flatpak_sdk`) must be set.
+Your application configuration must provide values for
+`flatpak_sdk`, `flatpak_runtime`, and `flatpak_runtime_version`.
 """
             ) from e
 
@@ -98,10 +94,8 @@ Additionally, the Flatpak runtime (`flatpak_runtime`) and the Flatpak SDK
                 """\
 The App does not specify the Flatpak SDK to use.
 
-This can set via the `flatpak_sdk` key in the App configuration.
-
-Additionally, the Flatpak runtime (`flatpak_runtime`) and the corresponding
-version (`flatpak_runtime_version`) must be set.
+Your application configuration must provide values for
+`flatpak_sdk`, `flatpak_runtime`, and `flatpak_runtime_version`.
 """
             ) from e
 
