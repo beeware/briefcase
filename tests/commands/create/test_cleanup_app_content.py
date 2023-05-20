@@ -130,8 +130,8 @@ def test_deep_glob_cleanup(create_command, myapp_unrolled, support_path):
 def test_template_glob_cleanup(create_command, myapp_unrolled, support_path):
     """A glob of files specified in the template will be added to the cleanup list."""
     # Define a cleanup_paths in the template *and* on the app
-    create_command._path_index = {
-        myapp_unrolled: {
+    create_command._briefcase_toml[myapp_unrolled] = {
+        "paths": {
             "cleanup_paths": ["path/to/support/dir1/a_*.*"],
         }
     }

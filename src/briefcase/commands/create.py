@@ -11,7 +11,7 @@ from typing import List, Optional
 from packaging.version import Version
 
 import briefcase
-from briefcase.config import BaseConfig
+from briefcase.config import AppConfig, BaseConfig
 from briefcase.exceptions import (
     BriefcaseCommandError,
     InvalidSupportPackage,
@@ -103,25 +103,19 @@ class CreateCommand(BaseCommand):
             + self.support_package_filename(support_revision)
         )
 
-    def icon_targets(self, app: BaseConfig):
+    def icon_targets(self, app: AppConfig):
         """Obtain the dictionary of icon targets that the template requires.
 
         :param app: The config object for the app
         :return: A dictionary of icons that the template supports. The keys
             of the dictionary are the size of the icons.
         """
-        # If the index file hasn't been loaded for this app, load it.
-        try:
-            path_index = self._path_index[app]
-        except KeyError:
-            path_index = self._load_path_index(app)
-
         # If the template specifies no icons, return an empty dictionary.
         # If the template specifies a single icon without a size specification,
         #   return a dictionary with a single ``None`` key.
         # Otherwise, return the full size-keyed dictionary.
         try:
-            icon_targets = path_index["icon"]
+            icon_targets = self.path_index(app, "icon")
             # Convert string-specified icons into an "unknown size" icon form
             if isinstance(icon_targets, str):
                 icon_targets = {None: icon_targets}
@@ -130,25 +124,19 @@ class CreateCommand(BaseCommand):
 
         return icon_targets
 
-    def splash_image_targets(self, app: BaseConfig):
+    def splash_image_targets(self, app: AppConfig):
         """Obtain the dictionary of splash image targets that the template requires.
 
         :param app: The config object for the app
         :return: A dictionary of splash images that the template supports. The keys
             of the dictionary are the size of the splash images.
         """
-        # If the index file hasn't been loaded for this app, load it.
-        try:
-            path_index = self._path_index[app]
-        except KeyError:
-            path_index = self._load_path_index(app)
-
         # If the template specifies no splash images, return an empty dictionary.
         # If the template specifies a single splash image without a size specification,
         #   return a dictionary with a single ``None`` key.
         # Otherwise, return the full size-keyed dictionary.
         try:
-            splash_targets = path_index["splash"]
+            splash_targets = self.path_index(app, "splash")
             # Convert string-specified splash images into an "unknown size" icon form
             if isinstance(splash_targets, str):
                 splash_targets = {None: splash_targets}
@@ -157,7 +145,7 @@ class CreateCommand(BaseCommand):
 
         return splash_targets
 
-    def document_type_icon_targets(self, app: BaseConfig):
+    def document_type_icon_targets(self, app: AppConfig):
         """Obtain the dictionary of document type icon targets that the template
         requires.
 
@@ -167,20 +155,15 @@ class CreateCommand(BaseCommand):
             describes the path fragments (relative to the bundle path) for the images
             that are required; the keys are the size of the splash images.
         """
-        # If the index file hasn't been loaded for this app, load it.
-        try:
-            path_index = self._path_index[app]
-        except KeyError:
-            path_index = self._load_path_index(app)
-
         # If the template specifies no document types, return an empty dictionary.
         # Then, for each document type; If the template specifies a single icon
         #   without a size specification, return a dictionary with a single
         #   ``None`` key. Otherwise, return the full size-keyed dictionary.
         try:
+            icon_targets = self.path_index(app, "document_type_icon")
             return {
                 extension: {None: targets} if isinstance(targets, str) else targets
-                for extension, targets in path_index["document_type_icon"].items()
+                for extension, targets in icon_targets.items()
             }
 
         except KeyError:

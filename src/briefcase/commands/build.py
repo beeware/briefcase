@@ -1,6 +1,9 @@
 from typing import Optional
 
-from briefcase.config import BaseConfig
+from packaging.version import Version
+
+import briefcase
+from briefcase.config import AppConfig, BaseConfig
 from briefcase.exceptions import BriefcaseCommandError
 
 from .base import BaseCommand, full_options
@@ -14,16 +17,66 @@ class BuildCommand(BaseCommand):
         self._add_update_options(parser, context_label=" before building")
         self._add_test_options(parser, context_label="Build")
 
-    def build_app(self, app: BaseConfig, **options):
+    def build_app(self, app: AppConfig, **options):
         """Build an application.
 
         :param app: The application to build
         """
         # Default implementation; nothing to build.
 
+    def verify_template(self, app: AppConfig):
+        """Verify the template satisfies the Command's requirements."""
+        self.logger.info("Checking template compatability...", prefix=app.app_name)
+
+        with self.input.wait_bar("Verifying Briefcase support..."):
+            # check against the "release" for each Version since versions
+            # such as "0.3.15.dev123" are considered older than "0.3.15"
+
+            if template_target := self.briefcase_target_version(app=app):
+                template_target = Version(template_target).release
+
+            if platform_target := self.oldest_compatible_briefcase:
+                platform_target = Version(platform_target).release
+
+            if platform_target and not template_target:
+                raise BriefcaseCommandError(
+                    f"""\
+The app template must declare a target version of Briefcase to confirm it is
+compatible with this version of Briefcase.
+
+The template's target Briefcase version must be {'.'.join(map(str, platform_target))} or later.
+
+Once the template is updated, run the create command:
+
+    $ briefcase create {self.platform} {self.output_format}
+"""
+                )
+
+            current_version = Version(briefcase.__version__).release
+            if (platform_target and platform_target > template_target) or (
+                template_target and template_target > current_version
+            ):
+                minimum_version = ".".join(map(str, platform_target or current_version))
+                raise BriefcaseCommandError(
+                    f"""\
+The app template is not compatible with this version of Briefcase since it is
+targeting version {'.'.join(map(str, template_target))}.
+
+If you are using BeeWare's default template, then running the create command
+to update the app using a compatible version of the app template.
+
+If a custom template is being used, it must be updated to be compatible with
+Briefcase version {minimum_version} before re-running the create command.
+
+To run the create command:
+
+    $ briefcase create {self.platform} {self.output_format}
+"""
+                )
+
     def _build_app(
         self,
-        app: BaseConfig,
+        app: AppConfig,
         update: bool,
         update_requirements: bool,
         update_resources: bool,
@@ -68,6 +121,7 @@ class BuildCommand(BaseCommand):
         else:
             state = None
 
+        self.verify_template(app)
         self.verify_app_tools(app)
 
         state = self.build_app(app, test_mode=test_mode, **full_options(state, options))

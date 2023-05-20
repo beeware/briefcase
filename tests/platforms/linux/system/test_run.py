@@ -79,6 +79,9 @@ def test_supported_host_os(monkeypatch, run_command, first_app, tmp_path):
         create_file(tmp_path / "os-release", os_release)
         run_command.tools.ETC_OS_RELEASE = tmp_path / "os-release"
 
+    # create an empty briefcase.toml for the transitive build command
+    create_file(run_command.bundle_path(first_app) / "briefcase.toml", "")
+
     # Mock the glibc version
     run_command.target_glibc_version = mock.MagicMock(return_value="2.42")
 

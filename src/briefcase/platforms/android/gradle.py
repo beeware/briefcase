@@ -62,6 +62,7 @@ def android_log_clean_filter(line):
 class GradleMixin:
     output_format = "gradle"
     platform = "android"
+    oldest_compatible_briefcase = "0.3.15"
 
     @property
     def packaging_formats(self):
@@ -176,12 +177,7 @@ class GradleBuildCommand(GradleMixin, BuildCommand):
     description = "Build an Android debug APK."
 
     def metadata_resource_path(self, app: BaseConfig):
-        # If the index file hasn't been loaded for this app, load it.
-        try:
-            path_index = self._path_index[app]
-        except KeyError:
-            path_index = self._load_path_index(app)
-        return self.bundle_path(app) / path_index["metadata_resource_path"]
+        return self.bundle_path(app) / self.path_index(app, "metadata_resource_path")
 
     def update_app_metadata(self, app: BaseConfig, test_mode: bool):
         with self.input.wait_bar("Setting main module..."):

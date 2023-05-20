@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import argparse
 import importlib
 import inspect
@@ -9,7 +11,6 @@ import textwrap
 from abc import ABC, abstractmethod
 from argparse import RawDescriptionHelpFormatter
 from pathlib import Path
-from typing import Optional
 
 from cookiecutter import exceptions as cookiecutter_exceptions
 from cookiecutter.repository import is_repo_url
@@ -26,7 +27,7 @@ except ModuleNotFoundError:  # pragma: no-cover-if-gte-py310
     import tomli as tomllib
 
 from briefcase import __version__
-from briefcase.config import AppConfig, BaseConfig, GlobalConfig, parse_config
+from briefcase.config import AppConfig, GlobalConfig, parse_config
 from briefcase.console import Console, Log
 from briefcase.exceptions import (
     BriefcaseCommandError,
@@ -108,6 +109,9 @@ class BaseCommand(ABC):
     GLOBAL_CONFIG_CLASS = GlobalConfig
     APP_CONFIG_CLASS = AppConfig
     allows_passthrough = False
+    # if specified for a platform, then any template for that
+    # platform must declare compatibility with that version or later.
+    oldest_compatible_briefcase: str | None = None
 
     def __init__(
         self,
@@ -149,7 +153,7 @@ class BaseCommand(ABC):
         Download.verify(tools=self.tools)
 
         self.global_config = None
-        self._path_index = {}
+        self._briefcase_toml: dict[AppConfig, dict[str, ...]] = {}
 
     @property
     def logger(self):
@@ -324,50 +328,61 @@ a custom location for Briefcase's tools.
 
         :param app: The app config
         """
-        ...
 
-    def _load_path_index(self, app: BaseConfig):
-        """Load the path index from the index file provided by the app template.
+    def briefcase_toml(self, app: AppConfig) -> dict[str, ...]:
+        """Load the ``briefcase.toml`` file provided by the app template.
 
         :param app: The config object for the app
-        :return: The contents of the application path index.
+        :return: The contents of ``briefcase.toml``
         """
         try:
-            with (self.bundle_path(app) / "briefcase.toml").open("rb") as f:
-                self._path_index[app] = tomllib.load(f)["paths"]
-        except OSError as e:
-            raise BriefcaseCommandError(
-                f"Unable to find '{self.bundle_path(app) / 'briefcase.toml'}'"
-            ) from e
-        return self._path_index[app]
+            return self._briefcase_toml[app]
+        except KeyError:
+            try:
+                with (self.bundle_path(app) / "briefcase.toml").open("rb") as f:
+                    self._briefcase_toml[app] = tomllib.load(f)
+            except OSError as e:
+                raise BriefcaseCommandError(
+                    f"Unable to find '{self.bundle_path(app) / 'briefcase.toml'}'"
+                ) from e
+            else:
+                return self._briefcase_toml[app]
 
-    def support_path(self, app: BaseConfig):
+    def path_index(self, app: AppConfig, path_name: str) -> str | dict | list:
+        """Return a path from the path index provided by the app template.
+
+        Raises KeyError if ``path_name`` is not defined in the index.
+
+        :param app: The config object for the app
+        :param path_name: Name of the filepath to retrieve
+        :return: filepath for requested path
+        """
+        return self.briefcase_toml(app=app)["paths"][path_name]
+
+    def briefcase_target_version(self, app: AppConfig) -> str | None:
+        """The list of requirements to build an app from ``briefcase.toml``."""
+        try:
+            return self.briefcase_toml(app)["briefcase"]["target_version"]
+        except KeyError:
+            return None
+
+    def support_path(self, app: AppConfig) -> Path:
         """Obtain the path into which the support package should be unpacked.
 
         :param app: The config object for the app
         :return: The full path where the support package should be unpacked.
         """
-        # If the index file hasn't been loaded for this app, load it.
-        try:
-            path_index = self._path_index[app]
-        except KeyError:
-            path_index = self._load_path_index(app)
-        return self.bundle_path(app) / path_index["support_path"]
+        return self.bundle_path(app) / self.path_index(app, "support_path")
 
-    def support_revision(self, app: BaseConfig):
+    def support_revision(self, app: AppConfig) -> str:
         """Obtain the support package revision that the template requires.
 
         :param app: The config object for the app
         :return: The support revision required by the template.
         """
-        # If the index file hasn't been loaded for this app, load it.
-        try:
-            path_index = self._path_index[app]
-        except KeyError:
-            path_index = self._load_path_index(app)
-        return path_index["support_revision"]
+        return self.path_index(app, "support_revision")
 
-    def cleanup_paths(self, app: BaseConfig):
+    def cleanup_paths(self, app: AppConfig) -> list[str]:
         """Obtain the paths generated by the app template that should be cleaned up
         prior to release.
 
@@ -375,53 +390,33 @@ a custom location for Briefcase's tools.
         :return: The list of path globs inside the app template that should
             be cleaned up.
         """
-        # If the index file hasn't been loaded for this app, load it.
-        try:
-            path_index = self._path_index[app]
-        except KeyError:
-            path_index = self._load_path_index(app)
-        return path_index["cleanup_paths"]
+        return self.path_index(app, "cleanup_paths")
 
-    def app_requirements_path(self, app: BaseConfig):
+    def app_requirements_path(self, app: AppConfig) -> Path:
         """Obtain the path into which a requirements.txt file should be written.
 
         :param app: The config object for the app
         :return: The full path where the requirements.txt file should be written
         """
-        # If the index file hasn't been loaded for this app, load it.
-        try:
-            path_index = self._path_index[app]
-        except KeyError:
-            path_index = self._load_path_index(app)
-        return self.bundle_path(app) / path_index["app_requirements_path"]
+        return self.bundle_path(app) / self.path_index(app, "app_requirements_path")
 
-    def app_packages_path(self, app: BaseConfig):
+    def app_packages_path(self, app: AppConfig) -> Path:
         """Obtain the path into which requirements should be installed.
 
         :param app: The config object for the app
         :return: The full path where application requirements should be installed.
         """
-        # If the index file hasn't been loaded for this app, load it.
-        try:
-            path_index = self._path_index[app]
-        except KeyError:
-            path_index = self._load_path_index(app)
-        return self.bundle_path(app) / path_index["app_packages_path"]
+        return self.bundle_path(app) / self.path_index(app, "app_packages_path")
 
-    def app_path(self, app: BaseConfig):
+    def app_path(self, app: AppConfig) -> Path:
         """Obtain the path into which the application should be installed.
 
         :param app: The config object for the app
         :return: The full path where application code should be installed.
         """
-        # If the index file hasn't been loaded for this app, load it.
-        try:
-            path_index = self._path_index[app]
-        except KeyError:
-            path_index = self._load_path_index(app)
-        return self.bundle_path(app) / path_index["app_path"]
+        return self.bundle_path(app) / self.path_index(app, "app_path")
 
-    def app_module_path(self, app):
+    def app_module_path(self, app: AppConfig) -> Path:
         """Find the path for the application module for an app.
 
         :param app: The config object for the app
@@ -484,7 +479,7 @@ a custom location for Briefcase's tools.
         """
         pass
 
-    def finalize_app_config(self, app: BaseConfig):
+    def finalize_app_config(self, app: AppConfig):
         """Finalize the application config.
 
         Some app configurations (notably, Linux system packages like .deb) have
@@ -502,7 +497,7 @@ a custom location for Briefcase's tools.
         """
         pass
 
-    def finalize(self, app: Optional[BaseConfig] = None):
+    def finalize(self, app: AppConfig | None = None):
         """Finalize Briefcase configuration.
 
         This will:
@@ -529,7 +524,7 @@ a custom location for Briefcase's tools.
                 self.finalize_app_config(app)
                 delattr(app, "__draft__")
 
-    def verify_app_tools(self, app: BaseConfig):
+    def verify_app_tools(self, app: AppConfig):
         """Verify that tools needed to run the command for this app exist."""
         pass
 

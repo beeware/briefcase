@@ -29,6 +29,13 @@ class DummyBuildCommand(BuildCommand):
     def binary_path(self, app):
         return self.bundle_path(app) / f"{app.app_name}.dummy.bin"
 
+    def briefcase_toml(self, app):
+        return self._briefcase_toml.get(app, {})
+
+    def verify_template(self, app):
+        super().verify_template(app=app)
+        self.actions.append(("verify-template", app.app_name))
+
     def verify_host(self):
         super().verify_host()
         self.actions.append(("verify-host",))

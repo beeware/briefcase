@@ -16,8 +16,7 @@ class DefaultCreateCommand(CreateCommand):
     # An instance of CreateCommand that inherits the default
     # behavior of create handling.
 
-    # Two methods that are required by the interface, but are not needed
-    # for these tests.
+    # method is required by the interface, but are not needed for these tests.
     def binary_path(self, app):
         return NotImplementedError()
 

@@ -158,7 +158,9 @@ def test_app_packages_valid_requires_no_support_package(
     myapp.requires = ["first", "second==1.2.3", "third>=3.2.1"]
 
     # Override the cache of paths to specify an app packages path, but no support package path
-    create_command._path_index = {myapp: {"app_packages_path": "path/to/app_packages"}}
+    create_command._briefcase_toml[myapp] = {
+        "paths": {"app_packages_path": "path/to/app_packages"}
+    }
 
     create_command.install_app_requirements(myapp, test_mode=False)
 
