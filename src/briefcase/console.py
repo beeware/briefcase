@@ -82,16 +82,16 @@ class Printer:
     def __call__(cls, *messages, stack_offset=5, show=True, **kwargs):
         """Entry point for all printing to the console and the log.
 
-        The log records all content that is printed whether it is shown in
-        the console or not (e.g. debug output). When execution completes,
-        the log is conditionally exported and saved to a file.
+        The log records all content that is printed whether it is shown in the console
+        or not (e.g. debug output). When execution completes, the log is conditionally
+        exported and saved to a file.
 
         :param messages: content to print and/or log
         :param show: True (default) to print and log messages; False to only log.
         :param stack_offset: number of levels up the stack where logging was invoked.
-            This tells Rich the number of levels to recurse up the stack to find
-            the filename to put in the right column of the Rich log.
-            Defaults to 5 since most uses are 5 levels deep from the actual logging.
+                This tells Rich the number of levels to recurse up the stack to find
+                the filename to put in the right column of the Rich log.
+                Defaults to 5 since most uses are 5 levels deep from the actual logging.
         """
         if show:
             cls.to_console(*messages, **kwargs)
@@ -143,13 +143,12 @@ class Log:
     def context(self, context):
         """Wrap a collection of output in a logging context.
 
-        A logging context is a prefix on every logging line. It is used when a
-        set of commands (and output) is being run in a very specific way that
-        needs to be highlighted, such as running a command in a Docker
-        container.
+        A logging context is a prefix on every logging line. It is used when a set of
+        commands (and output) is being run in a very specific way that needs to be
+        highlighted, such as running a command in a Docker container.
 
         :param context: The name of the context to enter. This *must* be
-            simple text, with no markup or other special characters.
+                simple text, with no markup or other special characters.
         """
         try:
             self.info()
@@ -176,14 +175,14 @@ class Log:
         """Funnel to log all messages.
 
         :param preface: value to be printed on the far left of the message and
-            symbolic of the type of message being printed.
+                symbolic of the type of message being printed.
         :param prefix: text prepended to the message wrapped in brackets and will
-            be presented as dimmer compared to the styling of the message text.
+                be presented as dimmer compared to the styling of the message text.
         :param message: text to log; can contain Rich tags if markup=True.
         :param show: True to print message to console; False to not print it.
-            This is to allow logs to be saved to a file without printing them.
+                This is to allow logs to be saved to a file without printing them.
         :param markup: whether to interpret Rich markup in the prefix, preface,
-            and message; if True, all text must already be escaped; defaults False.
+                and message; if True, all text must already be escaped; defaults False.
         :param style: Rich style to apply to everything printed for message.
         """
         if not message:
@@ -235,7 +234,7 @@ class Log:
         """Preserve Rich stacktrace from exception while in except block.
 
         :param label: An identifying label for the thread that has raised the
-            stacktrace. Defaults to the main thread.
+                stacktrace. Defaults to the main thread.
         """
         exc_info = sys.exc_info()
         try:
@@ -397,15 +396,16 @@ class Console:
         """Activates the Wait Bar as a context manager.
 
         If the Wait Bar is already active, then its message is updated for the new
-        context. Once the new context is complete, the previous Wait Bar message
-        is restored.
+        context. Once the new context is complete, the previous Wait Bar message is
+        restored.
 
         :param message: text explaining what is being awaited; should end in '...'
         :param done_message: text appended to the message after exiting
         :param transient: if True, remove bar and message from screen after exiting;
-            if False (default), the message will remain on the screen without pulsing bar.
+                if False (default), the message will remain on the screen without
+                pulsing bar.
         :param markup: whether to interpret Rich styling markup in the message; if True,
-            the message must already be escaped; defaults False.
+                the message must already be escaped; defaults False.
         """
         if self._wait_bar is None:
             self._wait_bar = Progress(
@@ -481,9 +481,9 @@ class Console:
     def boolean_input(self, question, default=False):
         """Get a boolean input from user, in the form of y/n.
 
-        The user might press "y" for true or "n" for false.
-        If input is disabled, returns default. If input is disabled and default
-        is *not* defined, InputDisabled is raised.
+        The user might press "y" for true or "n" for false. If input is disabled,
+        returns default. If input is disabled and default is *not* defined,
+        InputDisabled is raised.
 
         :param question: A string message specifying the question to be
             answered by the user.
@@ -529,7 +529,7 @@ class Console:
         :param default: The default choice to select. If None,
         :param error_message: The error message to display to the user.
         :param transform: The text transform to apply to any user input before
-            performing any validity checks.
+                performing any validity checks.
         """
         while True:
             result = self.text_input(prompt, default)
@@ -548,8 +548,8 @@ class Console:
 
         If no default is specified, the input will be returned as entered.
 
-        The default will also be returned if input is disabled. If input is
-        disabled, and there is no default, InputDisabled will be raised.
+        The default will also be returned if input is disabled. If input is disabled,
+        and there is no default, InputDisabled will be raised.
 
         :param prompt: The prompt to display to the user.
         :param default: (optional) The response to return if the user provides
@@ -583,21 +583,19 @@ class Console:
 def select_option(options, input, prompt="> ", error="Invalid selection"):
     """Prompt the user for a choice from a list of options.
 
-    The options are provided as a dictionary; the values are the
-    human-readable options, and the keys are the values that will
-    be returned as the selection. The human-readable options
-    will be sorted before display to the user.
+    The options are provided as a dictionary; the values are the human-readable options,
+    and the keys are the values that will be returned as the selection. The human-
+    readable options will be sorted before display to the user.
 
-    This method does *not* print a question or any leading text;
-    it only prints the list of options, and prompts the user
-    for their choice. If the user chooses an invalid selection (either
-    provides non-integer input, or an invalid integer), it prints an
+    This method does *not* print a question or any leading text; it only prints the list
+    of options, and prompts the user for their choice. If the user chooses an invalid
+    selection (either provides non-integer input, or an invalid integer), it prints an
     error message and prompts the user again.
 
     :param options: A dictionary, or list of tuples, of options to present to
         the user.
-    :param input: The function to use to retrieve the user's input. This
-        exists so that the user's input can be easily mocked during testing.
+    :param input: The function to use to retrieve the user's input. This exists so that
+        the user's input can be easily mocked during testing.
     :param prompt: The prompt to display to the user.
     :param error: The error message to display when the user provides invalid
         input.
