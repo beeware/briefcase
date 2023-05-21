@@ -16,8 +16,10 @@ def test_list_tools(upgrade_command, mock_tool_registry, capsys):
     """The tools for upgrade can be listed."""
     upgrade_command(tool_list=[], list_tools=True)
 
+    # Tools that are *not* relevant to this upgrade call are not verified
     DummyTool.verify.assert_not_called()
 
+    # Tools that *are* relevant to this upgrade call are verified
     DummyUnManagedManagedTool.verify.assert_called_once_with(
         tools=upgrade_command.tools, install=False
     )
@@ -47,11 +49,13 @@ def test_list_specific_tools(upgrade_command, mock_tool_registry, capsys):
     """If a list of tools is provided, only those are listed."""
     upgrade_command(tool_list=["managed_1", "managed_2"], list_tools=True)
 
+    # Tools that are *not* relevant to this upgrade call are not verified
     DummyTool.verify.assert_not_called()
     DummyUnManagedManagedTool.verify.assert_not_called()
     DummyNotInstalledManagedTool.verify.assert_not_called()
     DummyManagedTool3.verify.assert_not_called()
 
+    # Tools that *are* relevant to this upgrade call are verified
     DummyManagedTool1.verify.assert_called_once_with(
         tools=upgrade_command.tools, install=False
     )
@@ -71,8 +75,10 @@ def test_upgrade_tools(upgrade_command, mock_tool_registry, capsys):
     """All managed tools can be upgraded."""
     upgrade_command(tool_list=[])
 
+    # Tools that are *not* relevant to this upgrade call are not verified
     DummyTool.verify.assert_not_called()
 
+    # Tools that *are* relevant to this upgrade call are verified
     DummyUnManagedManagedTool.verify.assert_called_once_with(
         tools=upgrade_command.tools, install=False
     )
@@ -89,8 +95,10 @@ def test_upgrade_tools(upgrade_command, mock_tool_registry, capsys):
         tools=upgrade_command.tools, install=False
     )
 
+    # Tools that are *not* relevant to this upgrade call are not upgraded
     assert upgrade_command.tools.unmanaged_managed.actions == []
 
+    # Tools that *are* relevant to this upgrade call are upgraded
     assert upgrade_command.tools.managed_1.actions == [
         "exists",
         "uninstall",
@@ -126,11 +134,13 @@ def test_upgrade_specific_tools(upgrade_command, mock_tool_registry, capsys):
     """If a list of tools is provided, only those are listed."""
     upgrade_command(tool_list=["managed_1", "managed_2"])
 
+    # Tools that are *not* relevant to this upgrade call are not verified
     DummyTool.verify.assert_not_called()
     DummyUnManagedManagedTool.verify.assert_not_called()
     DummyNotInstalledManagedTool.verify.assert_not_called()
     DummyManagedTool3.verify.assert_not_called()
 
+    # Tools that *are* relevant to this upgrade call are verified
     DummyManagedTool1.verify.assert_called_once_with(
         tools=upgrade_command.tools, install=False
     )
@@ -138,6 +148,7 @@ def test_upgrade_specific_tools(upgrade_command, mock_tool_registry, capsys):
         tools=upgrade_command.tools, install=False
     )
 
+    # Tools that *are* relevant to this upgrade call are upgraded
     assert upgrade_command.tools.managed_1.actions == [
         "exists",
         "uninstall",
@@ -165,8 +176,10 @@ def test_upgrade_no_tools(upgrade_command, mock_no_managed_tool_registry, capsys
     """If no tools are being managed, a message is returned."""
     upgrade_command(tool_list=[])
 
+    # Tools that are *not* relevant to this upgrade call are not verified
     DummyTool.verify.assert_not_called()
 
+    # Tools that *are* relevant to this upgrade call are verified
     DummyUnManagedManagedTool.verify.assert_called_once_with(
         tools=upgrade_command.tools, install=False
     )
@@ -185,11 +198,13 @@ def test_upgrade_unmanaged_tools(upgrade_command, mock_tool_registry, capsys):
     ):
         upgrade_command(tool_list=["unmanaged", "unmanaged_managed", "not_installed"])
 
+    # Tools that are *not* relevant to this upgrade call are not verified
     DummyTool.verify.assert_not_called()
     DummyManagedTool1.verify.assert_not_called()
     DummyManagedTool2.verify.assert_not_called()
     DummyManagedTool3.verify.assert_not_called()
 
+    # Tools that *are* relevant to this upgrade call are verified
     DummyUnManagedManagedTool.verify.assert_called_once_with(
         tools=upgrade_command.tools, install=False
     )
@@ -213,9 +228,11 @@ def test_upgrade_mixed_tools(upgrade_command, mock_tool_registry, capsys):
         ]
     )
 
+    # Tools that are *not* relevant to this upgrade call are not verified
     DummyTool.verify.assert_not_called()
     DummyManagedTool3.verify.assert_not_called()
 
+    # Tools that *are* relevant to this upgrade call are verified
     DummyUnManagedManagedTool.verify.assert_called_once_with(
         tools=upgrade_command.tools, install=False
     )
@@ -223,7 +240,10 @@ def test_upgrade_mixed_tools(upgrade_command, mock_tool_registry, capsys):
         tools=upgrade_command.tools, install=False
     )
 
+    # Tools that are *not* relevant to this upgrade call are not upgraded
     assert upgrade_command.tools.unmanaged_managed.actions == []
+
+    # Tools that *are* relevant to this upgrade call are upgraded
     assert upgrade_command.tools.managed_1.actions == [
         "exists",
         "uninstall",
@@ -249,15 +269,15 @@ def test_upgrade_mixed_tools(upgrade_command, mock_tool_registry, capsys):
 
 
 def test_unknown_tool(upgrade_command, mock_tool_registry, capsys):
-    """If a list of tools is provided, only those are listed."""
+    """An upgrade attempt for an unknown tool raises an error."""
 
-    # Requesting an unknown tool raises an error
     with pytest.raises(
         UpgradeToolError,
         match="Briefcase does not know how to manage unknown_tool_1, unknown_tool_2.",
     ):
         upgrade_command(tool_list=["managed_1", "unknown_tool_1", "unknown_tool_2"])
 
+    # Tools that are *not* relevant to this upgrade call are not verified
     DummyTool.verify.assert_not_called()
     DummyManagedTool1.verify.assert_not_called()
     DummyManagedTool2.verify.assert_not_called()

@@ -32,11 +32,13 @@ def unmanaged_tool(mock_tools) -> DummyTool:
 )
 def test_tool_verify(mock_tools, klass, kwargs, monkeypatch):
     """Tool verification checks host OS and tool install."""
+    # Wrap verify calls to confirm they were called
     mock_verify_host = MagicMock(wraps=klass.verify_host)
-    mock_verify_install = MagicMock(wraps=klass.verify_install)
     monkeypatch.setattr(klass, "verify_host", mock_verify_host)
+    mock_verify_install = MagicMock(wraps=klass.verify_install)
     monkeypatch.setattr(klass, "verify_install", mock_verify_install)
 
+    # Mock the dummy tool's supported OS
     mock_tools.host_os = "wonky"
 
     tool = klass.verify(tools=mock_tools, **kwargs)
@@ -55,11 +57,13 @@ def test_tool_verify(mock_tools, klass, kwargs, monkeypatch):
 )
 def test_tool_verify_with_app(mock_tools, first_app_config, klass, kwargs, monkeypatch):
     """App-bound Tool verification checks host OS and tool install."""
+    # Wrap verify calls to confirm they were called
     mock_verify_host = MagicMock(wraps=klass.verify_host)
-    mock_verify_install = MagicMock(wraps=klass.verify_install)
     monkeypatch.setattr(klass, "verify_host", mock_verify_host)
+    mock_verify_install = MagicMock(wraps=klass.verify_install)
     monkeypatch.setattr(klass, "verify_install", mock_verify_install)
 
+    # Mock the dummy tool's supported OS
     mock_tools.host_os = "wonky"
 
     tool = klass.verify(tools=mock_tools, app=first_app_config, **kwargs)

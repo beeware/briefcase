@@ -36,9 +36,30 @@ class DummyManagedTool(ManagedTool):
         self.actions.append("uninstall")
 
 
+class NonExistsManagedTool(DummyManagedTool):
+    def exists(self) -> bool:
+        return False
+
+
+class NonManagedManagedTool(DummyManagedTool):
+    @property
+    def managed_install(self) -> bool:
+        return False
+
+
 @pytest.fixture
 def managed_tool(mock_tools) -> DummyManagedTool:
     return DummyManagedTool(tools=mock_tools)
+
+
+@pytest.fixture
+def nonexistent_managed_tool(mock_tools) -> NonExistsManagedTool:
+    return NonExistsManagedTool(tools=mock_tools)
+
+
+@pytest.fixture
+def nonmanaged_managed_tool(mock_tools) -> NonManagedManagedTool:
+    return NonManagedManagedTool(tools=mock_tools)
 
 
 @pytest.mark.parametrize(
@@ -50,11 +71,13 @@ def managed_tool(mock_tools) -> DummyManagedTool:
 )
 def test_tool_verify(mock_tools, klass, kwargs, monkeypatch):
     """Tool verification checks host OS and tool install."""
+    # Wrap verify calls to confirm they were called
     mock_verify_host = MagicMock(wraps=klass.verify_host)
-    mock_verify_install = MagicMock(wraps=klass.verify_install)
     monkeypatch.setattr(klass, "verify_host", mock_verify_host)
+    mock_verify_install = MagicMock(wraps=klass.verify_install)
     monkeypatch.setattr(klass, "verify_install", mock_verify_install)
 
+    # Mock the dummy tool's supported OS
     mock_tools.host_os = "wonky"
 
     tool = klass.verify(tools=mock_tools, **kwargs)
@@ -75,11 +98,13 @@ def test_tool_verify(mock_tools, klass, kwargs, monkeypatch):
 )
 def test_tool_verify_with_app(mock_tools, first_app_config, klass, kwargs, monkeypatch):
     """App-bound Tool verification checks host OS and tool install."""
+    # Wrap verify calls to confirm they were called
     mock_verify_host = MagicMock(wraps=klass.verify_host)
-    mock_verify_install = MagicMock(wraps=klass.verify_install)
     monkeypatch.setattr(klass, "verify_host", mock_verify_host)
+    mock_verify_install = MagicMock(wraps=klass.verify_install)
     monkeypatch.setattr(klass, "verify_install", mock_verify_install)
 
+    # Mock the dummy tool's supported OS
     mock_tools.host_os = "wonky"
 
     tool = klass.verify(tools=mock_tools, app=first_app_config, **kwargs)
@@ -117,24 +142,13 @@ def test_managed_upgrade(managed_tool):
     assert managed_tool.actions == ["exists", "uninstall", "install"]
 
 
-def test_managed_raises_if_unmanaged(mock_tools):
+def test_managed_raises_if_unmanaged(mock_tools, nonmanaged_managed_tool):
     """If a ManagedTool is unmanaged, upgrade raises."""
-
-    class NonManagedManagedTool(DummyManagedTool):
-        @property
-        def managed_install(self) -> bool:
-            return False
-
     with pytest.raises(NonManagedToolError):
-        NonManagedManagedTool(tools=mock_tools).upgrade()
+        nonmanaged_managed_tool.upgrade()
 
 
-def test_managed_raises_if_not_exists(mock_tools):
+def test_managed_raises_if_not_exists(mock_tools, nonexistent_managed_tool):
     """If a ManagedTool doesn't exist, upgrade raises."""
-
-    class NonExistsManagedTool(DummyManagedTool):
-        def exists(self) -> bool:
-            return False
-
     with pytest.raises(MissingToolError):
-        NonExistsManagedTool(tools=mock_tools).upgrade()
+        nonexistent_managed_tool.upgrade()
