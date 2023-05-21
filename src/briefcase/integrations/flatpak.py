@@ -16,10 +16,6 @@ class Flatpak(Tool):
     DEFAULT_REPO_ALIAS = "flathub"
     DEFAULT_REPO_URL = "https://flathub.org/repo/flathub.flatpakrepo"
 
-    DEFAULT_RUNTIME = "org.freedesktop.Platform"
-    DEFAULT_RUNTIME_VERSION = "21.08"
-    DEFAULT_SDK = "org.freedesktop.Sdk"
-
     @classmethod
     def verify_install(cls, tools: ToolCache, **kwargs) -> Flatpak:
         """Verify that the Flatpak toolchain is available.
