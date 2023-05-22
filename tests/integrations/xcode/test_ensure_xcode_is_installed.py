@@ -5,7 +5,7 @@ from unittest import mock
 import pytest
 
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.integrations.xcode import ensure_xcode_is_installed
+from briefcase.integrations.xcode import Xcode
 
 
 @pytest.fixture
@@ -29,7 +29,7 @@ def test_not_installed(tmp_path, mock_tools):
 
     # Test a location where Xcode *won't* be installed
     with pytest.raises(BriefcaseCommandError):
-        ensure_xcode_is_installed(mock_tools)
+        Xcode.ensure_xcode_is_installed(mock_tools)
 
     # subprocess was invoked as expected
     mock_tools.subprocess.check_output.assert_has_calls(
@@ -49,7 +49,10 @@ def test_custom_install_location(default_xcode_install_path, tmp_path, mock_tool
         "Xcode 13.3.1\nBuild version 11B500\n",  # xcodebuild -version
     ]
 
-    ensure_xcode_is_installed(mock_tools, xcode_location=default_xcode_install_path)
+    Xcode.ensure_xcode_is_installed(
+        mock_tools,
+        xcode_location=default_xcode_install_path,
+    )
 
     # subprocess was invoked as expected
     mock_tools.subprocess.check_output.assert_has_calls(
@@ -78,7 +81,10 @@ def test_command_line_tools_only(default_xcode_install_path, mock_tools):
         BriefcaseCommandError,
         match=r"You have the Xcode command line tools installed",
     ):
-        ensure_xcode_is_installed(mock_tools, xcode_location=default_xcode_install_path)
+        Xcode.ensure_xcode_is_installed(
+            mock_tools,
+            xcode_location=default_xcode_install_path,
+        )
 
     # subprocess was invoked as expected
     mock_tools.subprocess.check_output.assert_has_calls(
@@ -111,7 +117,10 @@ def test_installed_but_command_line_tools_selected(
         BriefcaseCommandError,
         match=r"Xcode appears to be installed, but the active developer directory ",
     ):
-        ensure_xcode_is_installed(mock_tools, xcode_location=default_xcode_install_path)
+        Xcode.ensure_xcode_is_installed(
+            mock_tools,
+            xcode_location=default_xcode_install_path,
+        )
 
     # subprocess was invoked as expected
     mock_tools.subprocess.check_output.assert_has_calls(
@@ -149,7 +158,10 @@ def test_custom_install_with_command_line_tools(
         BriefcaseCommandError,
         match=r"You have the Xcode command line tools installed",
     ):
-        ensure_xcode_is_installed(mock_tools, xcode_location=default_xcode_install_path)
+        Xcode.ensure_xcode_is_installed(
+            mock_tools,
+            xcode_location=default_xcode_install_path,
+        )
 
     # subprocess was invoked as expected
     mock_tools.subprocess.check_output.assert_has_calls(
@@ -175,7 +187,7 @@ def test_installed_but_corrupted(xcode, mock_tools):
     with pytest.raises(
         BriefcaseCommandError, match=r"should return the current Xcode version"
     ):
-        ensure_xcode_is_installed(mock_tools, xcode_location=xcode)
+        Xcode.ensure_xcode_is_installed(mock_tools, xcode_location=xcode)
 
     # subprocess was invoked as expected
     mock_tools.subprocess.check_output.assert_has_calls(
@@ -195,7 +207,7 @@ def test_installed_no_minimum_version(xcode, mock_tools):
     ]
 
     # Check passes without an error.
-    ensure_xcode_is_installed(mock_tools, xcode_location=xcode)
+    Xcode.ensure_xcode_is_installed(mock_tools, xcode_location=xcode)
 
     # subprocess was invoked as expected
     mock_tools.subprocess.check_output.assert_has_calls(
@@ -223,7 +235,11 @@ def test_installed_extra_output(capsys, xcode, mock_tools):
     ]
 
     # Check passes without an error.
-    ensure_xcode_is_installed(mock_tools, xcode_location=xcode, min_version=(11, 1))
+    Xcode.ensure_xcode_is_installed(
+        mock_tools,
+        xcode_location=xcode,
+        min_version=(11, 1),
+    )
 
     # subprocess was invoked as expected
     mock_tools.subprocess.check_output.assert_has_calls(
@@ -291,7 +307,7 @@ def test_installed_with_minimum_version_success(
     mock_tools.subprocess.check_output.side_effect = check_output_mock
 
     # Check passes without an error.
-    ensure_xcode_is_installed(
+    Xcode.ensure_xcode_is_installed(
         mock_tools,
         min_version=min_version,
     )
@@ -335,7 +351,7 @@ def test_installed_with_minimum_version_failure(
 
     # Check raises an error.
     with pytest.raises(BriefcaseCommandError):
-        ensure_xcode_is_installed(
+        Xcode.ensure_xcode_is_installed(
             mock_tools,
             min_version=min_version,
             xcode_location=xcode,
@@ -359,7 +375,7 @@ def test_unexpected_version_output(capsys, xcode, mock_tools):
     ]
 
     # Check passes without an error...
-    ensure_xcode_is_installed(
+    Xcode.ensure_xcode_is_installed(
         mock_tools,
         min_version=(11, 2, 1),
         xcode_location=xcode,

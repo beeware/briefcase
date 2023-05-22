@@ -26,19 +26,19 @@ def test_verify(package_command, monkeypatch):
 
     mock_ensure_xcode_is_installed = mock.MagicMock()
     monkeypatch.setattr(
-        briefcase.integrations.xcode,
+        briefcase.integrations.xcode.Xcode,
         "ensure_xcode_is_installed",
         mock_ensure_xcode_is_installed,
     )
     mock_ensure_command_line_tools_are_installed = mock.MagicMock()
     monkeypatch.setattr(
-        briefcase.integrations.xcode,
+        briefcase.integrations.xcode.XcodeCliTools,
         "ensure_command_line_tools_are_installed",
         mock_ensure_command_line_tools_are_installed,
     )
     mock_confirm_xcode_license_accepted = mock.MagicMock()
     monkeypatch.setattr(
-        briefcase.integrations.xcode,
+        briefcase.integrations.xcode.XcodeCliTools,
         "confirm_xcode_license_accepted",
         mock_confirm_xcode_license_accepted,
     )
