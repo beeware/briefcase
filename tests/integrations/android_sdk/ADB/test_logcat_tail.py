@@ -24,6 +24,7 @@ def test_logcat_tail(mock_tools):
             "-s",
             "exampleDevice",
             "logcat",
+            "--format=tag",
             "-t",
             "11-10 09:08:07.000000",
             "-s",
