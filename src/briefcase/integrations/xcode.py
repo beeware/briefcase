@@ -26,7 +26,7 @@ class Xcode(Tool):
     def verify_install(
         cls,
         tools: ToolCache,
-        min_version: tuple[int, int, int] = None,
+        min_version: tuple[int, int, int] | None = None,
         **kwargs,
     ) -> Xcode:
         """Verify that Xcode and the command line developer tools are installed and
@@ -142,7 +142,7 @@ to continue, and re-run Briefcase once that installation is complete.
 
 def ensure_xcode_is_installed(
     tools: ToolCache,
-    min_version: tuple[int, int, int] = None,
+    min_version: tuple[int, int, int] | None = None,
     xcode_location: str = "/Applications/Xcode.app",
 ):
     """Determine if Xcode is installed; and if so, that it meets minimum version

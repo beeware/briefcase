@@ -65,7 +65,7 @@ class Tool(ABC):
     def verify(
         cls: type[ToolT],
         tools: ToolCache,
-        app: AppConfig = None,
+        app: AppConfig | None = None,
         **kwargs,
     ) -> ToolT:
         """Confirm the tool is available and usable on the host platform."""
@@ -101,7 +101,7 @@ class ManagedTool(Tool):
     def verify(
         cls: type[ManagedToolT],
         tools: ToolCache,
-        app: AppConfig = None,
+        app: AppConfig | None = None,
         install: bool = True,
         **kwargs,
     ) -> ManagedToolT:
@@ -172,7 +172,7 @@ class ToolCache(Mapping):
         logger: Log,
         console: Console,
         base_path: Path,
-        home_path: Path = None,
+        home_path: Path | None = None,
     ):
         """Cache for managing tool access and verification.
 
@@ -189,7 +189,9 @@ class ToolCache(Mapping):
         self.logger = logger
         self.input = console
         self.base_path = Path(base_path)
-        self.home_path = Path(os.path.expanduser(home_path or Path.home()))
+        self.home_path = Path(
+            os.path.expanduser(home_path if home_path else Path.home())
+        )
 
         self.host_arch = self.platform.machine()
         self.host_os = self.platform.system()

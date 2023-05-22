@@ -18,7 +18,7 @@ class WiX(ManagedTool):
     def __init__(
         self,
         tools: ToolCache,
-        wix_home: Path = None,
+        wix_home: Path | None = None,
         bin_install: bool = False,
     ):
         """Create a wrapper around a WiX install.

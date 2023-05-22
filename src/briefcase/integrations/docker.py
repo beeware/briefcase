@@ -373,9 +373,9 @@ class DockerAppContext(Tool):
         self,
         args: SubprocessArgsT,
         interactive: bool = False,
-        mounts: list[tuple[str | Path, str | Path]] = None,
-        env: dict[str, str] = None,
-        cwd: Path = None,
+        mounts: list[tuple[str | Path, str | Path]] | None = None,
+        env: dict[str, str] | None = None,
+        cwd: Path | None = None,
     ) -> list[str]:  # pragma: no-cover-if-is-windows
         """Convert arguments and environment into a Docker-compatible form. Convert an
         argument and environment specification into a form that can be used as arguments
@@ -438,10 +438,10 @@ class DockerAppContext(Tool):
     def run(
         self,
         args: SubprocessArgsT,
-        env: dict[str, str] = None,
-        cwd: Path = None,
+        env: dict[str, str] | None = None,
+        cwd: Path | None = None,
         interactive: bool = False,
-        mounts: list[tuple[str | Path, str | Path]] = None,
+        mounts: list[tuple[str | Path, str | Path]] | None = None,
         **kwargs,
     ):
         """Run a process inside a Docker container."""
@@ -466,9 +466,9 @@ class DockerAppContext(Tool):
     def check_output(
         self,
         args: SubprocessArgsT,
-        env: dict[str, str] = None,
-        cwd: Path = None,
-        mounts: list[tuple[str | Path, str | Path]] = None,
+        env: dict[str, str] | None = None,
+        cwd: Path | None = None,
+        mounts: list[tuple[str | Path, str | Path]] | None = None,
         **kwargs,
     ) -> str:
         """Run a process inside a Docker container, capturing output."""

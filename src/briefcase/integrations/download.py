@@ -32,7 +32,7 @@ class Download(Tool):
         tools.download = Download(tools=tools)
         return tools.download
 
-    def file(self, url: str, download_path: Path, role: str = None) -> Path:
+    def file(self, url: str, download_path: Path, role: str | None = None) -> Path:
         """Download a given URL, caching it. If it has already been downloaded, return
         the value that has been cached.
 

@@ -249,8 +249,8 @@ flatpak run {bundle_identifier}
     def run(
         self,
         bundle_identifier: str,
-        args: list[SubprocessArgT] = None,
-        main_module: str = None,
+        args: list[SubprocessArgT] | None = None,
+        main_module: str | None = None,
     ) -> subprocess.Popen[str]:
         """Run a Flatpak in a way that allows for log streaming.
 

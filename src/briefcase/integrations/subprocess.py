@@ -62,9 +62,9 @@ def is_process_dead(pid: int) -> bool:
 
 
 def get_process_id_by_command(
-    command_list: list[str] = None,
+    command_list: list[str] | None = None,
     command: str = "",
-    logger: Log = None,
+    logger: Log | None = None,
 ) -> int | None:
     """Find a Process ID (PID) a by its command. If multiple processes are found, then
     the most recently created process ID is returned.
@@ -595,7 +595,7 @@ class Subprocess(Tool):
         label: str,
         popen_process: subprocess.Popen,
         stop_func: Callable[[], bool] = lambda: False,
-        filter_func: Callable[[str], Iterator[str]] = None,
+        filter_func: Callable[[str], Iterator[str]] | None = None,
     ):
         """Stream the output of a Popen process until the process exits. If the user
         sends CTRL+C, the process will be terminated.
@@ -730,7 +730,7 @@ class Subprocess(Tool):
             for env_var, value in overrides.items():
                 self.tools.logger.debug(f"    {env_var}={value}")
 
-    def _log_output(self, output: str, stderr: str = None):
+    def _log_output(self, output: str, stderr: str | None = None):
         """Log the output of the executed command."""
         if output:
             self.tools.logger.debug("Command Output:")

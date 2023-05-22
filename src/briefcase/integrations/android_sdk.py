@@ -961,9 +961,9 @@ In future, you can specify this device by running:
     def _create_emulator(
         self,
         avd: str,
-        device_type: str = None,
-        skin: str = None,
-        system_image: str = None,
+        device_type: str | None = None,
+        skin: str | None = None,
+        system_image: str | None = None,
     ):
         """Internal method that does the actual work of creating the emulator.
 
@@ -1065,7 +1065,11 @@ In future, you can specify this device by running:
             for key, value in avd_config.items():
                 f.write(f"{key}={value}\n")
 
-    def start_emulator(self, avd: str, extra_args: list[str] = None) -> tuple[str, str]:
+    def start_emulator(
+        self,
+        avd: str,
+        extra_args: list[str] | None = None,
+    ) -> tuple[str, str]:
         """Start an existing Android emulator.
 
         Returns when the emulator is booted and ready to accept apps.
@@ -1270,7 +1274,7 @@ class ADB:
                 raise InvalidDeviceError("device id", self.device) from e
             raise
 
-    def install_apk(self, apk_path: SubprocessArgT):
+    def install_apk(self, apk_path: str | Path):
         """Install an APK file on an Android device.
 
         :param apk_path: The path of the Android APK file to install.

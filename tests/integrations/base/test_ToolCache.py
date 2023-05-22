@@ -44,8 +44,8 @@ def test_toolcache_typing():
     # Ensure defined Tool modules/classes are annotated in ToolCache.
     for tool_module_name in briefcase.integrations.__all__:
         if tool_module_name not in tools_unannotated:
-            assert tool_module_name in ToolCache.__annotations__.keys()
-        for tool_name in tools_for_module(tool_module_name).keys():
+            assert tool_module_name in ToolCache.__annotations__
+        for tool_name in tools_for_module(tool_module_name):
             if tool_name not in tool_klasses_skip_dynamic_checks:
                 assert tool_name in ToolCache.__annotations__.values()
 
@@ -53,7 +53,7 @@ def test_toolcache_typing():
     for tool_name, tool_klass_name in ToolCache.__annotations__.items():
         if tool_name not in tool_names_skip_dynamic_check:
             assert tool_name in briefcase.integrations.__all__
-            assert tool_klass_name in tools_for_module(tool_name).keys()
+            assert tool_klass_name in tools_for_module(tool_name)
             tool_klass = getattr(
                 importlib.import_module(f"briefcase.integrations.{tool_name}"),
                 tool_klass_name,
