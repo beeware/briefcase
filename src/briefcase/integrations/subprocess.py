@@ -12,7 +12,7 @@ from collections.abc import Callable
 from functools import wraps
 from pathlib import Path
 from subprocess import CompletedProcess
-from typing import Any, Iterator, Mapping, Sequence, TypeVar, Union
+from typing import Iterator, Mapping, Sequence, TypeVar, Union
 
 import psutil
 
@@ -110,20 +110,18 @@ def ensure_console_is_safe(sub_method):
     """
 
     @wraps(sub_method)
-    def inner(*args: SubprocessArgsT, **kwargs):
+    def inner(sub: Subprocess, sub_args: SubprocessArgsT, *args, **kwargs):
         """Evaluate whether conditions are met to remove any dynamic elements in the
         console before returning control to Subprocess.
 
+        :param sub: Bound Subprocess object
+        :param sub_args: command line to run in subprocess
         :param args: list of implicit strings that will be run as subprocess command
         :return: the return value for the Subprocess method
         """
-        sub: Subprocess = args[0]
-        sub_args: SubprocessArgsT = args[1]
-        pos_args: Sequence[Any] = args[2:]
-
         # Just run the command if no dynamic elements are active
         if not sub.tools.input.is_console_controlled:
-            return sub_method(sub, sub_args, *pos_args, **kwargs)
+            return sub_method(sub, sub_args, *args, **kwargs)
 
         remove_dynamic_elements = False
 
@@ -141,9 +139,9 @@ def ensure_console_is_safe(sub_method):
         # Run subprocess command with or without console control
         if remove_dynamic_elements:
             with sub.tools.input.release_console_control():
-                return sub_method(sub, sub_args, *pos_args, **kwargs)
+                return sub_method(sub, sub_args, *args, **kwargs)
         else:
-            return sub_method(sub, sub_args, *pos_args, **kwargs)
+            return sub_method(sub, sub_args, *args, **kwargs)
 
     return inner
 
