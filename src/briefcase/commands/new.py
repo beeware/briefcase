@@ -414,6 +414,8 @@ What GUI toolkit do you want to use for this project?""",
                 "PySide6 (does not support iOS/Android deployment)",
                 "PursuedPyBear (does not support iOS/Android deployment)",
                 "Pygame (does not support iOS/Android deployment)",
+                "PositronDjango (Positron with Django Webapp)",
+                "PositronStatic (Positron with Static Webapp)",
                 "None",
             ],
         )
