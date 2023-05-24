@@ -3,8 +3,9 @@ include README.rst
 include AUTHORS
 include LICENSE
 include docs/spelling_wordlist
-include tests/integrations/xcode/simctl/README
+include install_requirement.py
 include pyproject.toml
+include tests/integrations/xcode/simctl/README
 include tox.ini
 include .git-blame-ignore-revs
 include .pre-commit-config.yaml
