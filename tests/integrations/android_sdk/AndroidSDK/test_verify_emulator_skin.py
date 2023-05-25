@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 from unittest.mock import MagicMock
 
@@ -40,6 +41,7 @@ def test_new_skin(mock_tools, android_sdk):
     mock_tools.shutil.unpack_archive.assert_called_once_with(
         skin_tgz_path,
         extract_dir=android_sdk.root_path / "skins" / "pixel_X",
+        **({"filter": "data"} if sys.version_info >= (3, 12) else {}),
     )
 
     # Original file was deleted.
@@ -102,6 +104,7 @@ def test_unpack_failure(mock_tools, android_sdk, tmp_path):
     mock_tools.shutil.unpack_archive.assert_called_once_with(
         skin_tgz_path,
         extract_dir=android_sdk.root_path / "skins" / "pixel_X",
+        **({"filter": "data"} if sys.version_info >= (3, 12) else {}),
     )
 
     # Original file wasn't deleted.
