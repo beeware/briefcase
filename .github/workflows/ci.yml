@@ -83,7 +83,7 @@ jobs:
         python -m pip install --upgrade pip
         python -m pip install --upgrade setuptools build wheel
         # Utility script installs tox as defined in pyproject.toml
-        python install_requirement.py tox --extra dev
+        python -m install_requirement --extra dev tox
 
     - name: Test
       id: test
@@ -128,7 +128,7 @@ jobs:
         python -m pip install --upgrade pip
         python -m pip install --upgrade setuptools build wheel
         # Utility script installs tox as defined in pyproject.toml
-        python install_requirement.py tox --extra dev
+        python -m install_requirement --extra dev tox
 
     - name: Retrieve Coverage Data
       uses: actions/download-artifact@v3.0.2

@@ -111,9 +111,9 @@ def gather_requirements(
     project_root = Path(project_root).resolve()
     project_metadata = project_wheel_metadata(project_root, isolated=False)
     project_requirements = [
-        req
-        for req in map(Requirement, project_metadata.get_all("Requires-Dist"))
-        if not req.marker or req.marker.evaluate(environment={"extra": extra_name})
+        requirement
+        for requirement in map(Requirement, project_metadata.get_all("Requires-Dist"))
+        if not requirement.marker or requirement.marker.evaluate({"extra": extra_name})
     ]
 
     matching_requirements = [
@@ -124,7 +124,8 @@ def gather_requirements(
 
     if not matching_requirements:
         raise NoRequirementsFound(
-            f"No requirements matched requested requirements: {', '.join(requested_requirements)}.\n\n"
+            f"No requirements matched requested requirements: "
+            f"{', '.join(requested_requirements)}.\n\n"
             f"The requirements below were evaluated for matching:\n "
             f"{f'{chr(10)} '.join(req.name for req in project_requirements)}",
             error_no=1,
@@ -149,8 +150,6 @@ def install_requirements(requirements: list[Requirement]):
             ],
             check=True,
         )
-
-    return 0
 
 
 def main():
