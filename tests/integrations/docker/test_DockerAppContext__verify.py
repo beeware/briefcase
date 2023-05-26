@@ -25,7 +25,9 @@ def test_short_circuit(mock_tools, first_app_config, verify_kwargs):
     """Tool is not created if already cached."""
     mock_tools[first_app_config].app_context = "tool"
 
-    app_context = DockerAppContext.verify(mock_tools, first_app_config, **verify_kwargs)
+    app_context = DockerAppContext.verify(
+        mock_tools, app=first_app_config, **verify_kwargs
+    )
 
     assert app_context == "tool"
     assert app_context == mock_tools[first_app_config].app_context
@@ -39,7 +41,7 @@ def test_unsupported_os(mock_tools, first_app_config, verify_kwargs):
         UnsupportedHostError,
         match=f"{DockerAppContext.name} is not supported on wonky",
     ):
-        DockerAppContext.verify(mock_tools, first_app_config, **verify_kwargs)
+        DockerAppContext.verify(mock_tools, app=first_app_config, **verify_kwargs)
 
 
 def test_success(mock_tools, first_app_config, verify_kwargs):
@@ -52,7 +54,7 @@ def test_success(mock_tools, first_app_config, verify_kwargs):
         "github.com/docker/buildx v0.10.2 00ed17d\n",
     ]
 
-    DockerAppContext.verify(mock_tools, first_app_config, **verify_kwargs)
+    DockerAppContext.verify(mock_tools, app=first_app_config, **verify_kwargs)
 
     assert isinstance(mock_tools[first_app_config].app_context, DockerAppContext)
 
@@ -86,7 +88,7 @@ def test_docker_verify_fail(mock_tools, first_app_config, verify_kwargs):
     mock_tools.subprocess.check_output.side_effect = FileNotFoundError
 
     with pytest.raises(BriefcaseCommandError, match="Briefcase requires Docker"):
-        DockerAppContext.verify(mock_tools, first_app_config, **verify_kwargs)
+        DockerAppContext.verify(mock_tools, app=first_app_config, **verify_kwargs)
 
 
 def test_docker_image_build_fail(mock_tools, first_app_config, verify_kwargs):
@@ -107,4 +109,4 @@ def test_docker_image_build_fail(mock_tools, first_app_config, verify_kwargs):
         BriefcaseCommandError,
         match="Error building Docker container image for first-app",
     ):
-        DockerAppContext.verify(mock_tools, first_app_config, **verify_kwargs)
+        DockerAppContext.verify(mock_tools, app=first_app_config, **verify_kwargs)

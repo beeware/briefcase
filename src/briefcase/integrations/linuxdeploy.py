@@ -4,7 +4,7 @@ import hashlib
 import shlex
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import TypeVar
+from typing import Protocol, TypeVar, cast
 from urllib.parse import urlparse
 
 from briefcase.exceptions import (
@@ -15,6 +15,7 @@ from briefcase.exceptions import (
 from briefcase.integrations.base import ManagedTool, Tool, ToolCache
 
 LinuxDeployT = TypeVar("LinuxDeployT", bound="LinuxDeployBase")
+T = TypeVar("T")
 
 ELF_HEADER_IDENT = bytes.fromhex("7F454C46")
 ELF_PATCH_OFFSET = 0x08
@@ -22,11 +23,24 @@ ELF_PATCH_ORIGINAL_BYTES = bytes.fromhex("414902")
 ELF_PATCH_PATCHED_BYTES = bytes.fromhex("000000")
 
 
-class LinuxDeployBase(ABC):
+class LinuxDeployProt(Protocol):
     name: str
     full_name: str
     install_msg: str
     tools: ToolCache
+
+    # @classmethod
+    # def verify(cls, tools: ToolCache, install: bool = True, **kwargs): ...
+    # @classmethod
+    # def verify_install(cls, tools: ToolCache, install: bool = True, **kwargs): ...
+    def exists(self) -> bool:
+        ...
+
+    def install(self):
+        ...
+
+
+class LinuxDeployBase(ABC):
     supported_host_os = {"Linux"}
 
     @property
@@ -70,11 +84,8 @@ class LinuxDeployBase(ABC):
 
     @classmethod
     def verify_install(
-        cls: type[LinuxDeployT],
-        tools: ToolCache,
-        install: bool = True,
-        **kwargs,
-    ) -> LinuxDeployT:
+        cls: type[LinuxDeployProt], tools: ToolCache, install: bool = False, **kwargs
+    ) -> LinuxDeployProt:
         """Verify that linuxdeploy tool or plugin is available.
 
         :param tools: ToolCache of available tools
@@ -88,9 +99,9 @@ class LinuxDeployBase(ABC):
 
         # short circuit since already verified and available
         if not is_plugin and hasattr(tools, "linuxdeploy"):
-            return tools.linuxdeploy
+            return cast(LinuxDeployProt, tools.linuxdeploy)
 
-        tool: LinuxDeployT = cls(tools=tools, **kwargs)
+        tool: LinuxDeployProt = cls(tools=tools, **kwargs)
         if not tool.exists():
             if install:
                 tools.logger.info(
@@ -102,9 +113,9 @@ class LinuxDeployBase(ABC):
                 raise MissingToolError(cls.name)
 
         if not is_plugin:
-            tools.linuxdeploy = tool
+            tools.linuxdeploy = cast(LinuxDeploy, tool)
 
-        return tool
+        return cast(LinuxDeployProt, tool)
 
     def uninstall(self):
         """Uninstall tool."""
@@ -161,14 +172,14 @@ class LinuxDeployBase(ABC):
                 raise CorruptToolError(self.name)
 
 
-class LinuxDeployPluginBase(LinuxDeployBase, ABC):
+class LinuxDeployPluginBase(LinuxDeployBase, LinuxDeployProt):
     """Base class for linuxdeploy plugins."""
 
     install_msg = "{full_name} was not found; downloading and installing..."
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.env = {}
+    def __init__(self, tools: ToolCache, **kwargs):
+        super().__init__(tools=tools, **kwargs)
+        self.env: dict[str, str] = {}
 
         if not self.file_name.startswith("linuxdeploy-plugin-"):
             raise BriefcaseCommandError(f"{self.file_name} is not a linuxdeploy plugin")

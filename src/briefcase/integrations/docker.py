@@ -4,6 +4,7 @@ import os
 import subprocess
 import sys
 from pathlib import Path, PurePosixPath
+from typing import cast
 
 from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseCommandError
@@ -256,16 +257,7 @@ class DockerAppContext(Tool):
 
     @classmethod
     def verify_install(
-        cls,
-        tools: ToolCache,
-        app: AppConfig,
-        image_tag: str,
-        dockerfile_path: Path,
-        app_base_path: Path,
-        host_bundle_path: Path,
-        host_data_path: Path,
-        python_version: str,
-        **kwargs,
+        cls, tools: ToolCache, *, app: AppConfig, **kwargs
     ) -> DockerAppContext:
         """Verify that docker is available as an app-bound tool.
 
@@ -284,20 +276,20 @@ class DockerAppContext(Tool):
         """
         # short circuit since already verified and available
         if hasattr(tools[app], "app_context"):
-            return tools[app].app_context
+            return cast(DockerAppContext, tools[app].app_context)
 
         Docker.verify(tools=tools)
 
         tools[app].app_context = DockerAppContext(tools=tools, app=app)
         tools[app].app_context.prepare(
-            image_tag=image_tag,
-            dockerfile_path=dockerfile_path,
-            app_base_path=app_base_path,
-            host_bundle_path=host_bundle_path,
-            host_data_path=host_data_path,
-            python_version=python_version,
+            image_tag=kwargs.pop("image_tag"),
+            dockerfile_path=kwargs.pop("dockerfile_path"),
+            app_base_path=kwargs.pop("app_base_path"),
+            host_bundle_path=kwargs.pop("host_bundle_path"),
+            host_data_path=kwargs.pop("host_data_path"),
+            python_version=kwargs.pop("python_version"),
         )
-        return tools[app].app_context
+        return cast(DockerAppContext, tools[app].app_context)
 
     def prepare(
         self,
@@ -355,7 +347,7 @@ class DockerAppContext(Tool):
         filesystem.
 
         Converts:
-        * any reference to sys.executable into the python executable in the docker container
+        * any reference to ``sys.executable`` into the python executable in the docker container
         * any path in <build path> into the equivalent stemming from /app
         * any path in <data path> into the equivalent in ~/.cache/briefcase
 

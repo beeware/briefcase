@@ -8,7 +8,8 @@ from typing import Iterator
 try:
     import winreg
 except ImportError:  # pragma: no-cover-if-is-windows
-    winreg = None
+    winreg = None  # type: ignore
+
 
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.base import Tool, ToolCache
@@ -104,29 +105,29 @@ WindowsSDKVersion: {environ_sdk_version}
         # subkey for a 64-bit Windows installation.
         access_right_precedence = [
             # 32-bit process sees 32-bit registry; 64-bit process sees 64-bit registry
-            winreg.KEY_READ,
+            winreg.KEY_READ,  # type: ignore
             # 32-bit process sees 32-bit registry; 64-bit process sees 32-bit registry
-            winreg.KEY_READ | winreg.KEY_WOW64_32KEY,
+            winreg.KEY_READ | winreg.KEY_WOW64_32KEY,  # type: ignore
             # 32-bit process sees 64-bit registry; 64-bit process sees 64-bit registry
-            winreg.KEY_READ | winreg.KEY_WOW64_64KEY,
+            winreg.KEY_READ | winreg.KEY_WOW64_64KEY,  # type: ignore
         ]
 
         registry_tree_order = (
             (hkey, access)
-            for hkey in [winreg.HKEY_LOCAL_MACHINE, winreg.HKEY_CURRENT_USER]
+            for hkey in [winreg.HKEY_LOCAL_MACHINE, winreg.HKEY_CURRENT_USER]  # type: ignore
             for access in access_right_precedence
         )
 
         for hkey, access in registry_tree_order:
             try:
-                with winreg.OpenKeyEx(hkey, cls.SDK_KEY, access=access) as key:
-                    if not (sdk_dir := winreg.QueryValueEx(key, cls.SDK_DIR_KEY)[0]):
+                with winreg.OpenKeyEx(hkey, cls.SDK_KEY, access=access) as key:  # type: ignore
+                    if not (sdk_dir := winreg.QueryValueEx(key, cls.SDK_DIR_KEY)[0]):  # type: ignore
                         continue
                     if not (sdk_dir := Path(tools.os.fsdecode(sdk_dir))).is_dir():
                         continue
 
                     # Return the "latest" installed SDK first
-                    if reg_version := winreg.QueryValueEx(key, cls.SDK_VERSION_KEY)[0]:
+                    if reg_version := winreg.QueryValueEx(key, cls.SDK_VERSION_KEY)[0]:  # type: ignore
                         # Append missing "servicing" revision to registry version
                         reg_version = f"{reg_version}.0"
                         tools.logger.debug(

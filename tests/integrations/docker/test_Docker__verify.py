@@ -30,7 +30,7 @@ def test_short_circuit(mock_tools):
     assert tool == mock_tools.docker
 
 
-def test_unsupported_os(mock_tools):
+def test_unsupported_os(mock_tools, first_app_config):
     """When host OS is not supported, an error is raised."""
     mock_tools.host_os = "wonky"
 
@@ -38,7 +38,7 @@ def test_unsupported_os(mock_tools):
         UnsupportedHostError,
         match=f"{Docker.name} is not supported on wonky",
     ):
-        Docker.verify(mock_tools)
+        Docker.verify(mock_tools, app=first_app_config)
 
 
 @pytest.mark.parametrize("host_os", ["Windows", "Linux", "Darwin"])

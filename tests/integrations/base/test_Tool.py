@@ -44,7 +44,9 @@ def test_tool_verify(mock_tools, klass, kwargs, monkeypatch):
     tool = klass.verify(tools=mock_tools, **kwargs)
 
     mock_verify_host.assert_called_once_with(tools=mock_tools)
-    mock_verify_install.assert_called_once_with(tools=mock_tools, app=None, **kwargs)
+    mock_verify_install.assert_called_once_with(
+        tools=mock_tools, app=None, install=True, **kwargs
+    )
     assert tool == f"i'm a {klass.name}"
 
 
@@ -72,6 +74,7 @@ def test_tool_verify_with_app(mock_tools, first_app_config, klass, kwargs, monke
     mock_verify_install.assert_called_once_with(
         tools=mock_tools,
         app=first_app_config,
+        install=True,
         **kwargs,
     )
     assert tool == "i'm a UnmanagedDummyTool"
