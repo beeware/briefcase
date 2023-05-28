@@ -70,12 +70,12 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
     def _trim_file(self, path, sentinel):
         """Re-write a file to strip any content after a sentinel line.
 
-        The file is stored in-memory, so it shouldn't be used on files
-        with a *lot* of content before the sentinel.
+        The file is stored in-memory, so it shouldn't be used on files with a *lot* of
+        content before the sentinel.
 
         :param path: The path to the file to be trimmed
-        :param sentinel: The content of the sentinel line. This will
-            become the last line in the trimmed file.
+        :param sentinel: The content of the sentinel line. This will             become
+                the last line in the trimmed file.
         """
         content = []
         with path.open("r", encoding="utf-8") as f:
@@ -94,9 +94,11 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         """Process a wheel, extracting any content that needs to be compiled into the
         final project.
 
+        :param wheelfile: The path to the wheel file to be processed. :param css_
+        file:
         :param wheelfile: The path to the wheel file to be processed.
         :param css_file: A file handle, opened for write/append, to which
-            any extracted CSS content will be appended.
+                any extracted CSS content will be appended.
         """
         package = " ".join(wheelfile.name.split("-")[:2])
         with ZipFile(wheelfile) as wheel:

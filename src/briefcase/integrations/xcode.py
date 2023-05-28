@@ -47,9 +47,9 @@ def verify_xcode_install(tools: ToolCache, min_version: tuple = None):
 def verify_command_line_tools_install(tools: ToolCache):
     """Verify that command line developer tools are installed and ready for use.
 
-    A completely clean machine will have neither Xcode *nor* the Command Line
-    Tools. However, it's possible to install Xcode and *not* install the command
-    line tools, and vice versa.
+    A completely clean machine will have neither Xcode *nor* the Command Line Tools.
+    However, it's possible to install Xcode and *not* install the command line tools,
+    and vice versa.
 
     Lastly, there is a license that needs to be accepted.
 
@@ -67,8 +67,8 @@ def verify_command_line_tools_install(tools: ToolCache):
 def ensure_command_line_tools_are_installed(tools: ToolCache):
     """Determine if the Xcode command line tools are installed.
 
-    If they are not installed, an exception is raised; in addition, an OS dialog
-    will be displayed prompting the user to install Xcode.
+    If they are not installed, an exception is raised; in addition, an OS dialog will be
+    displayed prompting the user to install Xcode.
 
     :param tools: ToolCache of available tools
     """
@@ -369,9 +369,9 @@ def get_simulators(
 ):
     """Obtain the simulators available on this machine.
 
-    The return value is a 2 level dictionary. The outer dictionary is
-    keyed by OS version; the inner dictionary for each OS version
-    contains the details of the available simulators, keyed by UDID.
+    The return value is a 2 level dictionary. The outer dictionary is keyed by OS
+    version; the inner dictionary for each OS version contains the details of the
+    available simulators, keyed by UDID.
 
     :param tools: ToolCache of available tools
     :param os_name: The OS that we want to simulate.

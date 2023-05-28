@@ -108,7 +108,7 @@ class CreateCommand(BaseCommand):
 
         :param app: The config object for the app
         :return: A dictionary of icons that the template supports. The keys
-            of the dictionary are the size of the icons.
+                of the dictionary are the size of the icons.
         """
         # If the index file hasn't been loaded for this app, load it.
         try:
@@ -135,7 +135,7 @@ class CreateCommand(BaseCommand):
 
         :param app: The config object for the app
         :return: A dictionary of splash images that the template supports. The keys
-            of the dictionary are the size of the splash images.
+                of the dictionary are the size of the splash images.
         """
         # If the index file hasn't been loaded for this app, load it.
         try:
@@ -163,9 +163,10 @@ class CreateCommand(BaseCommand):
 
         :param app: The config object for the app
         :return: A dictionary of document types, with the values being dictionaries
-            describing the icon sizes that the template supports. The inner dictionary
-            describes the path fragments (relative to the bundle path) for the images
-            that are required; the keys are the size of the splash images.
+                describing the icon sizes that the template supports. The inner
+                dictionary             describes the path fragments (relative to the
+                bundle path) for the images             that are required; the keys are
+                the size of the splash images.
         """
         # If the index file hasn't been loaded for this app, load it.
         try:
@@ -296,8 +297,8 @@ class CreateCommand(BaseCommand):
     def _cleanup_app_support_package(self, support_path):
         """The internal implementation of the app support cleanup method.
 
-        Guaranteed to only be invoked if the backend uses a support package,
-        and the support path exists.
+        Guaranteed to only be invoked if the backend uses a support package, and the
+        support path exists.
 
         :param support_path: The support path to clean up.
         """
@@ -481,7 +482,7 @@ class CreateCommand(BaseCommand):
         :param app: The app configuration
         :param requires: The list of requirements to install
         :param app_packages_path: The full path of the app_packages folder into which
-            requirements should be installed.
+                requirements should be installed.
         """
         # Clear existing dependency directory
         if app_packages_path.is_dir():

@@ -22,10 +22,10 @@ class WiX(Tool):
         :param tools: ToolCache of available tools.
         :param wix_home: The path of the WiX installation.
         :param bin_install: Is the install a binaries-only install? A full
-            MSI install of WiX has a `/bin` folder in the paths; a
-            binaries-only install does not.
+                MSI install of WiX has a `/bin` folder in the paths; a
+                binaries-only install does not.
         :returns: A valid WiX SDK wrapper. If WiX is not available, and was
-            not installed, raises MissingToolError.
+                not installed, raises MissingToolError.
         """
         self.tools = tools
         if wix_home:
@@ -59,11 +59,11 @@ class WiX(Tool):
     def verify(cls, tools: ToolCache, install=True):
         """Verify that there is a WiX install available.
 
-        If the WIX environment variable is set, that location will be checked
-        for a valid WiX installation.
+        If the WIX environment variable is set, that location will be checked for a
+        valid WiX installation.
 
-        If the location provided doesn't contain an SDK, or no location is provided,
-        an SDK is downloaded.
+        If the location provided doesn't contain an SDK, or no location is provided, an
+        SDK is downloaded.
 
         :param tools: ToolCache of available tools
         :param install: Should WiX be installed if it is not found?

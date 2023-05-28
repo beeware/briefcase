@@ -49,7 +49,7 @@ class VisualStudio(Tool):
 
         :param tools: ToolCache of available tools
         :returns: A Visual Studio tool wrapper. Raises an exception if
-            Visual Studio is not available.
+                Visual Studio is not available.
         """
         # short circuit since already verified and available
         if hasattr(tools, "visualstudio"):

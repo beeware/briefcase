@@ -91,9 +91,9 @@ def sign_call(
 def mock_codesign(results):
     """A utility method for generating codesign side effects.
 
-    :param results: A single error string; or a list of error strings to be returned
-        on successive calls. If `None` is included in the list of results, no
-        error will be raised for that invocation.
+    :param results: A single error string; or a list of error strings to be returned on
+        successive calls. If `None` is included in the list of results, no error will be
+        raised for that invocation.
     """
 
     def _codesign(args, **kwargs):

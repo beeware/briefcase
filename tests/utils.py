@@ -23,14 +23,13 @@ class DummyConsole(Console):
 def create_file(filepath, content, mode="w", chmod=None):
     """A test utility to create a file with known content.
 
-    Ensures that the directory for the file exists, and writes a file with
-    specific content.
+    Ensures that the directory for the file exists, and writes a file with specific
+    content.
 
     :param filepath: The path for the file to create
     :param content: A string containing the content to write.
-    :param mode: The mode to open the file. This is `w` by default;
-        use `wb` and provide content as a bitstring if you need to
-        write a binary file.
+    :param mode: The mode to open the file. This is `w` by default; use `wb` and provide
+        content as a bitstring if you need to write a binary file.
     :param chmod: file permissions to apply
     :returns: The path to the file that was created.
     """
@@ -64,12 +63,12 @@ def create_plist_file(plistpath, content):
 def create_zip_file(zippath, content):
     """A test utility to create a .zip file with known content.
 
-    Ensures that the directory for the file exists, and writes a file with
-    specific content.
+    Ensures that the directory for the file exists, and writes a file with specific
+    content.
 
     :param zippath: The path for the ZIP file to create
-    :param content: A list of pairs; each pair is (path, data) describing
-        an item to be added to the zip file.
+    :param content: A list of pairs; each pair is (path, data) describing an item to be
+        added to the zip file.
     :returns: The path to the file that was created.
     """
     zippath.parent.mkdir(parents=True, exist_ok=True)
@@ -83,12 +82,12 @@ def create_zip_file(zippath, content):
 def create_tgz_file(tgzpath, content):
     """A test utility to create a .tar.gz file with known content.
 
-    Ensures that the directory for the file exists, and writes a file with
-    specific content.
+    Ensures that the directory for the file exists, and writes a file with specific
+    content.
 
     :param tgzpath: The path for the ZIP file to create
-    :param content: A list of pairs; each pair is (path, data) describing
-        an item to be added to the zip file.
+    :param content: A list of pairs; each pair is (path, data) describing an item to be
+        added to the zip file.
     :returns: The path to the file that was created.
     """
     tgzpath.parent.mkdir(parents=True, exist_ok=True)

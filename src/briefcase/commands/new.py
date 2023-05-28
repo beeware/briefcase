@@ -114,7 +114,7 @@ class NewCommand(BaseCommand):
 
         :param candidate: The candidate name
         :returns: True. If there are any validation problems, raises ValueError
-            with a diagnostic message.
+                with a diagnostic message.
         """
         if not is_valid_app_name(candidate):
             raise ValueError(
@@ -146,7 +146,7 @@ class NewCommand(BaseCommand):
 
         :param candidate: The candidate bundle identifier
         :returns: True. If there are any validation problems, raises ValueError
-            with a diagnostic message.
+                with a diagnostic message.
         """
         if not is_valid_bundle_identifier(candidate):
             raise ValueError(
@@ -172,11 +172,11 @@ class NewCommand(BaseCommand):
         identifier.
 
         The candidate is based on the assumption that the author's name is in
-        "first/last" format, or it a corporate name; the "first" part is split
-        off, and prepended to the domain extracted from the bundle.
+        "first/last" format, or it a corporate name; the "first" part is split off, and
+        prepended to the domain extracted from the bundle.
 
-        It's not a perfect system, but it's better than putting up
-        "me@example.com" as a candidate default value.
+        It's not a perfect system, but it's better than putting up "me@example.com" as a
+        candidate default value.
 
         :param author: The authors name.
         :param bundle: The bundle identifier.
@@ -189,7 +189,7 @@ class NewCommand(BaseCommand):
 
         :param candidate: The candidate email address
         :returns: True. If there are any validation problems, raises ValueError
-            with a diagnostic message.
+                with a diagnostic message.
         """
         if parseaddr(candidate)[1] != candidate:
             raise ValueError("Not a valid email address")
@@ -198,8 +198,8 @@ class NewCommand(BaseCommand):
     def make_project_url(self, bundle, app_name):
         """Construct a candidate project URL from the bundle and app name.
 
-        It's not a perfect guess, but it's better than having
-        "https://example.com".
+        It's not a perfect guess, but it's better than having "
+        https://example.com".
 
         :param bundle: The bundle identifier.
         :param app_name: The app name.
@@ -212,7 +212,7 @@ class NewCommand(BaseCommand):
 
         :param candidate: The candidate URL
         :returns: True. If there are any validation problems, raises ValueError
-            with a diagnostic message.
+                with a diagnostic message.
         """
         result = urlparse(candidate)
         if not all([result.scheme, result.netloc]):
@@ -294,7 +294,7 @@ Select one of the following:
         """Ask the user for details about the app to be created.
 
         :returns: A context dictionary to be used in the cookiecutter project
-            template.
+                template.
         """
         formal_name = self.input_text(
             intro="""
