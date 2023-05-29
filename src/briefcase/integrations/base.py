@@ -8,10 +8,10 @@ from abc import ABC, abstractmethod
 from collections import defaultdict
 from collections.abc import Mapping
 from pathlib import Path
-from typing import TYPE_CHECKING, DefaultDict, TypeVar, overload
+from typing import TYPE_CHECKING, DefaultDict, TypeVar
 
 import requests
-from cookiecutter.main import cookiecutter  # type: ignore
+from cookiecutter.main import cookiecutter
 
 from briefcase.config import AppConfig
 from briefcase.console import Console, Log
@@ -62,27 +62,16 @@ class Tool(ABC):
             tool_registry[cls.name] = cls
 
     @classmethod
-    @overload
-    def verify(cls: type[ToolT], tools: ToolCache) -> ToolT:
-        ...
-
-    @classmethod
-    @overload
     def verify(
         cls: type[ToolT],
         tools: ToolCache,
-        *,
-        app: AppConfig,
-        install: bool = True,
+        app: AppConfig | None = None,
         **kwargs,
     ) -> ToolT:
-        ...
-
-    @classmethod
-    def verify(cls, tools, *, app=None, install=True, **kwargs):
         """Confirm the tool is available and usable on the host platform."""
         cls.verify_host(tools=tools)
-        return cls.verify_install(tools=tools, app=app, install=install, **kwargs)
+        tool = cls.verify_install(tools=tools, app=app, **kwargs)
+        return tool
 
     @classmethod
     def verify_host(cls, tools: ToolCache):
@@ -94,26 +83,7 @@ class Tool(ABC):
 
     @classmethod
     @abstractmethod
-    @overload
-    def verify_install(cls: type[ToolT], tools: ToolCache) -> ToolT:
-        ...
-
-    @classmethod
-    @abstractmethod
-    @overload
-    def verify_install(
-        cls: type[ToolT],
-        tools: ToolCache,
-        *,
-        app: AppConfig,
-        install: bool = False,
-        **kwargs,
-    ) -> ToolT:
-        ...
-
-    @classmethod
-    @abstractmethod
-    def verify_install(cls, tools, *, app=None, install=False, **kwargs):
+    def verify_install(cls: type[ToolT], tools: ToolCache, **kwargs) -> ToolT:
         """Confirm the tool is installed and available."""
 
     @property
@@ -122,53 +92,21 @@ class Tool(ABC):
         return False
 
 
-class ManagedTool(Tool, ABC):
+class ManagedTool(Tool):
     """Tool that can be managed by Briefcase."""
 
     name = "managed_tool_base"
 
     @classmethod
-    @overload
-    def verify(cls: type[ManagedToolT], tools: ToolCache) -> ManagedToolT:
-        ...
-
-    @classmethod
-    @overload
     def verify(
         cls: type[ManagedToolT],
         tools: ToolCache,
-        **kwargs,
-    ) -> ManagedToolT:
-        ...
-
-    @classmethod
-    def verify(cls, tools, *, app=None, install=True, **kwargs):
-        """Confirm the managed tool is installed and available."""
-        return super().verify(tools=tools, app=app, install=install, **kwargs)
-
-    @classmethod
-    @abstractmethod
-    @overload
-    def verify_install(cls: type[ManagedToolT], tools: ToolCache) -> ManagedToolT:
-        ...
-
-    @classmethod
-    @abstractmethod
-    @overload
-    def verify_install(
-        cls: type[ManagedToolT],
-        tools: ToolCache,
-        *,
-        app: AppConfig,
+        app: AppConfig | None = None,
         install: bool = True,
         **kwargs,
     ) -> ManagedToolT:
-        ...
-
-    @classmethod
-    @abstractmethod
-    def verify_install(cls, tools, *, app=None, install=True, **kwargs):
-        ...
+        """Confirm the managed tool is installed and available."""
+        return super().verify(tools=tools, app=app, install=install, **kwargs)
 
     @abstractmethod
     def exists(self) -> bool:
@@ -208,7 +146,7 @@ class ToolCache(Mapping):
     docker: Docker
     download: Download
     flatpak: Flatpak
-    git: git_  # type: ignore
+    git: git_
     java: JDK
     linuxdeploy: LinuxDeploy
     rcedit: RCEdit

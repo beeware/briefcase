@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import subprocess
 from pathlib import Path
-from typing import Union, cast
 
 from briefcase.exceptions import BriefcaseCommandError, CommandOutputParseError
 from briefcase.integrations.base import Tool, ToolCache
@@ -25,7 +24,7 @@ class VisualStudio(Tool):
         self,
         tools: ToolCache,
         msbuild_path: Path,
-        install_metadata: dict[str, str | int | bool] | None = None,
+        install_metadata: dict[str, str | int | bool] = None,
     ):
         super().__init__(tools=tools)
         self._msbuild_path = msbuild_path
@@ -80,7 +79,7 @@ class VisualStudio(Tool):
             # Look for an %MSBUILD% environment variable
             try:
                 msbuild_path = Path(tools.os.environ["MSBUILD"])
-                install_metadata = None
+                install_metadata: dict[str, str | int | bool] = None
 
                 if not msbuild_path.exists():
                     # The location referenced by %MSBUILD% doesn't exist
@@ -127,19 +126,16 @@ installation.
 
                 # Retrieve metadata for Visual Studio install
                 try:
-                    install_metadata = cast(
-                        list[dict[str, Union[str, int, bool]]],
-                        tools.subprocess.parse_output(
-                            json_parser,
-                            [
-                                vswhere_path,
-                                "-latest",
-                                "-prerelease",
-                                "-format",
-                                "json",
-                            ],
-                            stderr=subprocess.STDOUT,
-                        ),
+                    install_metadata = tools.subprocess.parse_output(
+                        json_parser,
+                        [
+                            vswhere_path,
+                            "-latest",
+                            "-prerelease",
+                            "-format",
+                            "json",
+                        ],
+                        stderr=subprocess.STDOUT,
                     )[0]
                 except (
                     IndexError,
@@ -165,7 +161,7 @@ from the command prompt.
                     ) from e
 
                 msbuild_path = (
-                    Path(cast(str, install_metadata["installationPath"]))
+                    Path(install_metadata["installationPath"])
                     / "MSBuild"
                     / "Current"
                     / "Bin"

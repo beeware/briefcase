@@ -49,7 +49,7 @@ class Download(Tool):
         :returns: The filename of the downloaded (or cached) file.
         """
         download_path.mkdir(parents=True, exist_ok=True)
-        filepath = None
+        filename: Path = None
         try:
             response = self.tools.requests.get(url, stream=True)
             if response.status_code == 404:
@@ -77,21 +77,21 @@ class Download(Tool):
                 if filename:
                     cache_full_name = filename
             cache_name = cache_full_name.split("/")[-1]
-            filepath = download_path / cache_name
+            filename = download_path / cache_name
 
-            if filepath.exists():
+            if filename.exists():
                 self.tools.logger.info(f"{cache_name} already downloaded")
             else:
                 self.tools.logger.info(f"Downloading {cache_name}...")
-                self._fetch_and_write_content(response, filepath)
+                self._fetch_and_write_content(response, filename)
         except requests_exceptions.ConnectionError as e:
             if role:
                 description = role
             else:
-                description = filepath.name if filepath else url
+                description = filename.name if filename else url
             raise NetworkFailure(f"download {description}") from e
 
-        return filepath
+        return filename
 
     def _fetch_and_write_content(self, response: Response, filename: Path):
         """Write the content from the requests Response to file.

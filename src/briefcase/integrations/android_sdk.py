@@ -10,7 +10,6 @@ import time
 from contextlib import suppress
 from datetime import datetime
 from pathlib import Path
-from typing import cast
 
 from briefcase.config import PEP508_NAME_RE
 from briefcase.console import InputDisabled, select_option
@@ -267,6 +266,7 @@ class AndroidSDK(ManagedTool):
 
     def uninstall(self):
         """The Android SDK is upgraded in-place instead of being reinstalled."""
+        pass
 
     def install(self):
         """Download and install the Android SDK."""
@@ -652,7 +652,7 @@ connection.
             # Process the output of `adb devices -l`.
             # The first line is header information.
             # Each subsequent line is a single device descriptor.
-            devices: dict[str, dict[str, str | bool]] = {}
+            devices = {}
             header_found = False
             for line in output.split("\n"):
                 if line == "List of devices attached":
@@ -709,9 +709,6 @@ connection.
             be provided if an emulator with that AVD is not currently running.
             If ``device`` is None, a new emulator should be created.
         """
-        device: str | None
-        avd: str | None
-        name: str | None
         # If the device_or_avd starts with "{", it's a definition for a new
         # emulator to be created.
         if device_or_avd and device_or_avd.startswith("{"):
@@ -741,7 +738,7 @@ connection.
         # Choices is an ordered list of options that can be shown to the user.
         # Each device should appear only once, and be keyed by AVD only if
         # a device ID isn't available.
-        choices: list[tuple[str | None, str]] = []
+        choices = []
         # Device choices is the full lookup list. Devices can be looked up
         # by any valid key - ID *or* AVD.
         device_choices = {}
@@ -752,7 +749,7 @@ connection.
         # Keep a log of all running AVDs
         running_avds = {}
         for d, details in sorted(running_devices.items(), key=lambda d: d[1]["name"]):
-            name = cast(str, details["name"])
+            name = details["name"]
             avd = self.adb(d).avd_name()
             if avd:
                 # It's a running emulator
@@ -799,7 +796,7 @@ connection.
                     device = device_or_avd
 
                 details = running_devices[device]
-                avd = cast(str, details.get("avd"))
+                avd = details.get("avd")
                 if details["authorized"]:
                     # An authorized, running device (emulator or physical)
                     return device, name, avd
@@ -822,7 +819,7 @@ connection.
         self.tools.input.prompt("Select device:")
         self.tools.input.prompt()
         try:
-            choice: str | None = select_option(choices, input=self.tools.input)
+            choice = select_option(choices, input=self.tools.input)
         except InputDisabled as e:
             # If input is disabled, and there's only one actual simulator,
             # select it. If there are no simulators, select "Create simulator"
@@ -862,7 +859,7 @@ Use the -d/--device option to explicitly specify the device to use.
             # Return the device ID and name.
             device = choice
             name = device_choices[choice]
-            avd = cast(str, details.get("avd"))
+            avd = details.get("avd")
 
         if avd:
             self.tools.logger.info(
@@ -1105,7 +1102,7 @@ In future, you can specify this device by running:
         # wrap AVD name in quotes since '@' is a special char in PowerShell
         emulator_command = " ".join(
             f'"{arg}"' if arg.startswith("@") else arg
-            for arg in map(str, cast(list[str], emulator_popen.args))
+            for arg in map(str, emulator_popen.args)
         )
 
         error_msg = (

@@ -124,9 +124,10 @@ you can re-run Briefcase.
                     ) + (0, 0)
 
                     if version < min_version:
+                        min_version = ".".join(str(v) for v in min_version)
+                        version = ".".join(str(v) for v in version)
                         raise BriefcaseCommandError(
-                            f"Xcode {'.'.join(str(v) for v in min_version)} is required; "
-                            f"{'.'.join(str(v) for v in version)} is installed. Please update Xcode."
+                            f"Xcode {min_version} is required; {version} is installed. Please update Xcode."
                         )
                     else:
                         # Version number is acceptable
@@ -416,6 +417,7 @@ and install the simulator.
 
 Press Return to continue: """
         )
+
     try:
         simctl_data = tools.subprocess.parse_output(
             json_parser,
