@@ -73,9 +73,10 @@ def parse_args():
         type=str,
         nargs="*",
         help=(
-            "List of project requirements to install. Any project requirements that "
-            "start with any of these values will be installed. For instance, including "
-            "'pytest' in this list would install both pytest and pytest-xdist."
+            "List of project requirements to install. If the project defines extras for "
+            "a requirement, do not include them in this list; they will be included "
+            "automatically when the requirement is installed. For instance, if "
+            "coverage[toml] is a project requirement, just include coverage in this list."
         ),
     )
     parser.add_argument(
@@ -119,13 +120,13 @@ def gather_requirements(
     matching_requirements = [
         requirement
         for requirement in project_requirements
-        if any(requirement.name.startswith(req) for req in requested_requirements)
+        if requirement.name in requested_requirements
     ]
 
     if not matching_requirements:
         raise NoRequirementsFound(
             f"No requirements matched requested requirements: "
-            f"{', '.join(requested_requirements)}.\n\n"
+            f"{', '.join(requested_requirements)}\n\n"
             f"The requirements below were evaluated for matching:\n "
             f"{f'{chr(10)} '.join(req.name for req in project_requirements)}",
             error_no=1,
@@ -137,7 +138,8 @@ def gather_requirements(
 def install_requirements(requirements: list[Requirement]):
     """Install requirements from PyPI."""
     for requirement in requirements:
-        requirement_str = f"{requirement.name}{requirement.specifier}"
+        extras = f"[{','.join(requirement.extras)}]" if requirement.extras else ""
+        requirement_str = f"{requirement.name}{extras}{requirement.specifier}"
         print(f"Installing {requirement_str}...")
         subprocess.run(
             [
