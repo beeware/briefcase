@@ -26,7 +26,10 @@ def test_platform_target_without_template_target(
 
     with pytest.raises(
         BriefcaseCommandError,
-        match="The app template must declare a target version of Briefcase",
+        match=(
+            "Briefcase requires that the app template explicitly declare that it is compatible\n"
+            "with Briefcase 0.1.42 or later"
+        ),
     ):
         build_command(first_app_config)
 
@@ -48,8 +51,8 @@ def test_platform_target_with_incompatible_template_target(
     with pytest.raises(
         BriefcaseCommandError,
         match=(
-            "The app template is not compatible with this version "
-            f"of Briefcase since it is\ntargeting version {template_target}."
+            "The app template used to generate this app is not compatible with this version\n"
+            "of Briefcase. Briefcase requires a template that is compatible with version 0.1.42"
         ),
     ):
         build_command(first_app_config)
@@ -106,8 +109,8 @@ def test_current_version_with_compatible_template_target(
     with pytest.raises(
         BriefcaseCommandError,
         match=(
-            "The app template is not compatible with this version "
-            f"of Briefcase since it is\ntargeting version {template_target}."
+            "The app template used to generate this app is not compatible with this version\n"
+            "of Briefcase. Briefcase requires a template that is compatible with version 1.5.2"
         ),
     ):
         build_command(first_app_config)

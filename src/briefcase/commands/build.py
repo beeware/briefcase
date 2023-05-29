@@ -26,53 +26,58 @@ class BuildCommand(BaseCommand):
 
     def verify_template(self, app: AppConfig):
         """Verify the template satisfies the Command's requirements."""
-        self.logger.info("Checking template compatability...", prefix=app.app_name)
+        # check against the "release" for each Version since versions
+        # such as "0.3.15.dev123" are considered older than "0.3.15"
 
-        with self.input.wait_bar("Verifying Briefcase support..."):
-            # check against the "release" for each Version since versions
-            # such as "0.3.15.dev123" are considered older than "0.3.15"
+        if template_target := self.briefcase_target_version(app=app):
+            template_target = Version(template_target).release
 
-            if template_target := self.briefcase_target_version(app=app):
-                template_target = Version(template_target).release
+        if platform_target := self.oldest_compatible_briefcase:
+            platform_target = Version(platform_target).release
 
-            if platform_target := self.oldest_compatible_briefcase:
-                platform_target = Version(platform_target).release
+        if platform_target and not template_target:
+            platform_version = ".".join(map(str, platform_target))
+            raise BriefcaseCommandError(
+                f"""\
+Briefcase requires that the app template explicitly declare that it is compatible
+with Briefcase {platform_version} or later. However, the generated app's `briefcase.toml`
+has no `target_version` declaration.
 
-            if platform_target and not template_target:
-                raise BriefcaseCommandError(
-                    f"""\
-The app template must declare a target version of Briefcase to confirm it is
-compatible with this version of Briefcase.
+If the app was generated with an earlier version of Briefcase using the default
+Briefcase template, you can run:
 
-The template's target Briefcase version must be {'.'.join(map(str, platform_target))} or later.
+     $ briefcase create {self.platform} {self.output_format}
 
-Once the template is updated, run the create command:
+to re-generate your app.
 
-    $ briefcase create {self.platform} {self.output_format}
+If you are using a custom template, you'll need to update the template to correct
+any compatibility problems, and then add the compatibility declaration.
 """
-                )
+            )
 
-            current_version = Version(briefcase.__version__).release
-            if (platform_target and platform_target > template_target) or (
-                template_target and template_target > current_version
-            ):
-                minimum_version = ".".join(map(str, platform_target or current_version))
-                raise BriefcaseCommandError(
-                    f"""\
-The app template is not compatible with this version of Briefcase since it is
-targeting version {'.'.join(map(str, template_target))}.
+        current_version = Version(briefcase.__version__).release
+        if (platform_target and platform_target > template_target) or (
+            template_target and template_target > current_version
+        ):
+            minimum_ver = ".".join(map(str, platform_target or current_version))
+            template_ver = ".".join(map(str, template_target))
+            raise BriefcaseCommandError(
+                f"""\
+The app template used to generate this app is not compatible with this version
+of Briefcase. Briefcase requires a template that is compatible with version {minimum_ver};
+the template used to generate this app is compatible with version {template_ver}.
 
-If you are using BeeWare's default template, then running the create command
-to update the app using a compatible version of the app template.
+If the app was generated with an earlier version of Briefcase using the default
+Briefcase template, you can run:
 
-If a custom template is being used, it must be updated to be compatible with
-Briefcase version {minimum_version} before re-running the create command.
+     $ briefcase create {self.platform} {self.output_format}
 
-To run the create command:
+to re-generate your app.
 
-    $ briefcase create {self.platform} {self.output_format}
+If you are using a custom template, you'll need to update the template to correct
+any compatibility problems, and then add the compatibility declaration.
 """
-                )
+            )
 
     def _build_app(
         self,
