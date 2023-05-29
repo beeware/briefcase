@@ -22,10 +22,10 @@ def test_toolcache_typing():
     tools_unannotated = {"cookiecutter"}
     # Tool names to exclude from the dynamic annotation checks; they are manually checked.
     tool_names_skip_dynamic_check = {
-        "app_context",
-        "git",
-        "xcode_cli",
-        "ETC_OS_RELEASE",
+        "app_context",  # Tested by the Docker module
+        "git",  # An external API, not a Briefcase Tool
+        "xcode_cli",  # Tested by the Xcode module
+        "ETC_OS_RELEASE",  # A constant, not a tool
     }
     # Tool classes to exclude from dynamic annotation checks.
     tool_klasses_skip_dynamic_checks = {
