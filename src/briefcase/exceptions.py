@@ -70,8 +70,8 @@ class UnsupportedHostError(BriefcaseError):
 
 
 class BriefcaseCommandError(BriefcaseError):
-    def __init__(self, msg):
-        super().__init__(error_code=200)
+    def __init__(self, msg, skip_logfile=False):
+        super().__init__(error_code=200, skip_logfile=skip_logfile)
         self.msg = msg
 
     def __str__(self):
@@ -107,6 +107,11 @@ class NonManagedToolError(BriefcaseCommandError):
     def __init__(self, tool):
         self.tool = tool
         super().__init__(msg=f"{tool!r} is using an install that is user managed.")
+
+
+class UpgradeToolError(BriefcaseCommandError):
+    def __init__(self, error_msg):
+        super().__init__(msg=error_msg, skip_logfile=True)
 
 
 class TemplateUnsupportedVersion(BriefcaseCommandError):

@@ -1,0 +1,1 @@
+Android logs no longer include timestamp and PID, making them easier to read on narrow screens.

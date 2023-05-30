@@ -78,6 +78,7 @@ def test_new_app(
             # default template and branch
             "template": "https://github.com/beeware/briefcase-template",
             "branch": expected_branch,
+            "briefcase_version": briefcase_version,
         },
     )
 
@@ -130,6 +131,7 @@ def test_new_app_missing_template(monkeypatch, new_command, tmp_path):
             # default template and branch
             "template": "https://github.com/beeware/briefcase-template",
             "branch": "v37.42.7",
+            "briefcase_version": "37.42.7",
         },
     )
 
@@ -196,6 +198,7 @@ def test_new_app_dev(monkeypatch, new_command, tmp_path, briefcase_version):
                     # default template and branch
                     "template": "https://github.com/beeware/briefcase-template",
                     "branch": "v37.42.7",
+                    "briefcase_version": briefcase_version,
                 },
             ),
             mock.call(
@@ -212,6 +215,7 @@ def test_new_app_dev(monkeypatch, new_command, tmp_path, briefcase_version):
                     # default template and branch
                     "template": "https://github.com/beeware/briefcase-template",
                     "branch": "v37.42.7",
+                    "briefcase_version": briefcase_version,
                 },
             ),
         ]
@@ -259,6 +263,7 @@ def test_new_app_with_template(monkeypatch, new_command, tmp_path):
             # template and branch
             "template": "https://example.com/other.git",
             "branch": "v37.42.7",
+            "briefcase_version": "37.42.7",
         },
     )
 
@@ -310,6 +315,7 @@ def test_new_app_with_invalid_template(monkeypatch, new_command, tmp_path):
             # template and branch
             "template": "https://example.com/other.git",
             "branch": "v37.42.7",
+            "briefcase_version": "37.42.7",
         },
     )
 
@@ -364,6 +370,7 @@ def test_new_app_with_invalid_template_branch(monkeypatch, new_command, tmp_path
             # template and branch
             "template": "https://example.com/other.git",
             "branch": "v37.42.7",
+            "briefcase_version": "37.42.7",
         },
     )
 
@@ -409,6 +416,7 @@ def test_new_app_with_branch(monkeypatch, new_command, tmp_path):
             # template and branch
             "template": "https://github.com/beeware/briefcase-template",
             "branch": "experimental",
+            "briefcase_version": "37.42.7",
         },
     )
 

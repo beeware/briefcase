@@ -84,29 +84,26 @@ runtime repository.
 ``flatpak_runtime``
 ~~~~~~~~~~~~~~~~~~~
 
-A string, identifying the runtime to use as a base for the Flatpak app. By
-default, Flatpaks build with Briefcase will use the ``org.freedesktop.Platform``
-runtime.
+A string, identifying the `runtime
+<https://docs.flatpak.org/en/latest/available-runtimes.html>`__ to use as a
+base for the Flatpak app.
 
-The Flatpak runtime and SDK are paired; so if you define ``flatpak_runtime``,
-you *must* also define ``flatpak_sdk``.
+The Flatpak runtime and SDK are paired; so, both a ``flatpak_runtime`` and a
+corresponding ``flatpak_sdk`` must be defined.
 
 ``flatpak_runtime_version``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A string, identifying the version of the Flatpak runtime that should be used.
-Flatpaks built with Briefcase will use version ``21.08`` of the FreeDesktop
-platform runtime.
 
 ``flatpak_sdk``
 ~~~~~~~~~~~~~~~
 
 A string, identifying the SDK associated with the platform that will be used to
-build the Flatpak app. By default, Flatpaks build with Briefcase will use the
-``org.freedesktop.Sdk`` SDK. The SDK will use the same version as the runtime.
+build the Flatpak app.
 
-The Flatpak runtime and SDK are paired; so if you define ``flatpak_sdk``,
-you *must* also define ``flatpak_runtime``.
+The Flatpak runtime and SDK are paired; so, both a ``flatpak_runtime`` and a
+corresponding ``flatpak_sdk`` must be defined.
 
 Compilation issues with Flatpak
 ===============================

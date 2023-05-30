@@ -33,9 +33,7 @@ def safe_formal_name(name):
     return re.sub(r"\s+", " ", re.sub(r'[!/\\:<>"\?\*\|]', "", name)).strip()
 
 
-ANDROID_LOG_PREFIX_REGEX = re.compile(
-    r"\d{2}-\d{2} (?P<timestamp>\d{2}:\d{2}:\d{2}.\d{3})\s+\d+\s+\d+ [A-Z] (?P<component>.*?): (?P<content>.*)"
-)
+ANDROID_LOG_PREFIX_REGEX = re.compile(r"[A-Z]/(?P<tag>.*?): (?P<content>.*)")
 
 
 def android_log_clean_filter(line):
@@ -53,7 +51,7 @@ def android_log_clean_filter(line):
     match = ANDROID_LOG_PREFIX_REGEX.match(line)
     if match:
         groups = match.groupdict()
-        include = groups["component"] in {"python.stdout", "python.stderr"}
+        include = groups["tag"] in {"python.stdout", "python.stderr"}
         return groups["content"], include
 
     return line, False

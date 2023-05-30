@@ -5,11 +5,13 @@ import pytest
 
 from briefcase.integrations.base import ToolCache
 from briefcase.integrations.download import Download
+from briefcase.integrations.linuxdeploy import LinuxDeploy
 from briefcase.integrations.subprocess import Subprocess
 
 
 @pytest.fixture
 def mock_tools(tmp_path, mock_tools) -> ToolCache:
+    mock_tools.host_os = "Linux"
     mock_tools.host_arch = "wonky"
 
     # Mock default tools
@@ -23,3 +25,8 @@ def mock_tools(tmp_path, mock_tools) -> ToolCache:
     (tmp_path / "bundle").mkdir()
 
     return mock_tools
+
+
+@pytest.fixture
+def linuxdeploy(mock_tools):
+    return LinuxDeploy(mock_tools)

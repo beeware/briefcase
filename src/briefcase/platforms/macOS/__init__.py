@@ -13,10 +13,7 @@ from briefcase.config import BaseConfig
 from briefcase.console import select_option
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.subprocess import get_process_id_by_command, is_process_dead
-from briefcase.integrations.xcode import (
-    get_identities,
-    verify_command_line_tools_install,
-)
+from briefcase.integrations.xcode import XcodeCliTools, get_identities
 
 try:
     import dmgbuild
@@ -437,7 +434,7 @@ class macOSPackageMixin(macOSSigningMixin):
 
     def verify_tools(self):
         # Require the XCode command line tools.
-        verify_command_line_tools_install(self.tools)
+        XcodeCliTools.verify(tools=self.tools)
 
         # Verify superclass tools *after* xcode. This ensures we get the
         # git check *after* the xcode check.

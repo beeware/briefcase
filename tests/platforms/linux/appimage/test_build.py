@@ -14,7 +14,7 @@ from briefcase.exceptions import (
     UnsupportedHostError,
 )
 from briefcase.integrations.docker import DockerAppContext
-from briefcase.integrations.linuxdeploy import LinuxDeploy
+from briefcase.integrations.linuxdeploy import LinuxDeploy, LinuxDeployBase
 from briefcase.platforms.linux.appimage import LinuxAppImageBuildCommand
 
 from ....utils import create_file
@@ -463,6 +463,7 @@ def test_build_appimage_with_plugins_in_docker(
     first_app,
     tmp_path,
     sub_stream_kw,
+    monkeypatch,
 ):
     """A Linux app can be packaged as an AppImage with plugins in a Docker container."""
     # Mock the existence of some plugins
@@ -491,6 +492,7 @@ def test_build_appimage_with_plugins_in_docker(
 
     # Enable docker, and move to a non-Linux OS.
     build_command.tools.host_os = "TestOS"
+    monkeypatch.setattr(LinuxDeployBase, "supported_host_os", {"TestOS"})
     build_command.use_docker = True
 
     # Provide Docker app context

@@ -1,17 +1,15 @@
+from __future__ import annotations
+
 import os
 import shutil
 import subprocess
 from pathlib import Path
 
-from briefcase.exceptions import (
-    BriefcaseCommandError,
-    MissingToolError,
-    NonManagedToolError,
-)
-from briefcase.integrations.base import Tool, ToolCache
+from briefcase.exceptions import BriefcaseCommandError, MissingToolError
+from briefcase.integrations.base import ManagedTool, ToolCache
 
 
-class JDK(Tool):
+class JDK(ManagedTool):
     name = "java"
     full_name = "Java JDK"
 
@@ -23,7 +21,7 @@ class JDK(Tool):
     JDK_INSTALL_DIR_NAME = f"java{JDK_MAJOR_VER}"
 
     def __init__(self, tools: ToolCache, java_home: Path):
-        self.tools = tools
+        super().__init__(tools=tools)
         self.java_home = java_home
 
     @property
@@ -54,7 +52,7 @@ class JDK(Tool):
         )
 
     @classmethod
-    def verify(cls, tools: ToolCache, install=True):
+    def verify_install(cls, tools: ToolCache, install: bool = True, **kwargs) -> JDK:
         """Verify that a Java JDK exists.
 
         If ``JAVA_HOME`` is set, try that version. If it is a JRE, or its *not*
@@ -208,7 +206,7 @@ class JDK(Tool):
             if tools.host_os == "Darwin":
                 java_home = java_home / "Contents" / "Home"
 
-            java = JDK(tools, java_home=java_home)
+            java = JDK(tools=tools, java_home=java_home)
 
             if not java.exists():
                 if install:
@@ -227,11 +225,11 @@ class JDK(Tool):
         tools.java = java
         return java
 
-    def exists(self):
+    def exists(self) -> bool:
         return (self.java_home / "bin").exists()
 
     @property
-    def managed_install(self):
+    def managed_install(self) -> bool:
         try:
             # Determine if java_home is relative to the briefcase data directory.
             # If java_home isn't inside this directory, this will raise a ValueError,
@@ -283,13 +281,3 @@ Delete {jdk_zip_path} and run briefcase again.
                 self.tools.shutil.rmtree(self.java_home.parent.parent)
             else:
                 self.tools.shutil.rmtree(self.java_home)
-
-    def upgrade(self):
-        """Upgrade an existing JDK install."""
-        if not self.managed_install:
-            raise NonManagedToolError("Java")
-        if not self.exists():
-            raise MissingToolError("Java")
-
-        self.uninstall()
-        self.install()

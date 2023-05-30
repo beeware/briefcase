@@ -1,9 +1,25 @@
 import pytest
 
-from briefcase.exceptions import BriefcaseCommandError, NetworkFailure
+from briefcase.exceptions import (
+    BriefcaseCommandError,
+    NetworkFailure,
+    UnsupportedHostError,
+)
 from briefcase.integrations.linuxdeploy import LinuxDeployURLPlugin
 
 from .utils import side_effect_create_mock_appimage
+
+
+@pytest.mark.parametrize("host_os", ["Darwin", "Windows", "wonky"])
+def test_unsupported_os(mock_tools, host_os):
+    """When host OS is not supported, an error is raised."""
+    mock_tools.host_os = host_os
+
+    with pytest.raises(
+        UnsupportedHostError,
+        match=f"{LinuxDeployURLPlugin.name} is not supported on {host_os}",
+    ):
+        LinuxDeployURLPlugin.verify(mock_tools)
 
 
 def test_verify(mock_tools, tmp_path):

@@ -24,6 +24,7 @@ def test_logcat(mock_tools):
             "-s",
             "exampleDevice",
             "logcat",
+            "--format=tag",
             "--pid",
             "1234",
             "EGL_emulation:S",

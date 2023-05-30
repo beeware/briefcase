@@ -13,7 +13,7 @@ from briefcase.config import (
     make_class_name,
 )
 from briefcase.exceptions import BriefcaseCommandError, TemplateUnsupportedVersion
-from briefcase.integrations import git
+from briefcase.integrations.git import Git
 
 from .base import BaseCommand
 
@@ -467,10 +467,15 @@ What GUI toolkit do you want to use for this project?""",
                 f"A directory named '{context['app_name']}' already exists."
             )
 
-        # This is to have briefcase template file
-        # mentioning extra context on which template/branch
-        # the project was generated from.
-        context.update({"template": template, "branch": branch})
+        # Additional context for the Briefcase template pyproject.toml header to
+        # include the version of Briefcase as well as the source of the template.
+        context.update(
+            {
+                "template": template,
+                "branch": branch,
+                "briefcase_version": briefcase.__version__,
+            }
+        )
 
         try:
             self.logger.info(f"Using app template: {template}, branch {branch}")
@@ -514,7 +519,7 @@ Application '{context['formal_name']}' has been generated. To run your applicati
         Raises MissingToolException if a required system tool is missing.
         """
         super().verify_tools()
-        git.verify_git_is_installed(tools=self.tools)
+        Git.verify(tools=self.tools)
 
     def __call__(
         self,

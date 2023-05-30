@@ -3,13 +3,13 @@ import subprocess
 import pytest
 
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.integrations.xcode import ensure_command_line_tools_are_installed
+from briefcase.integrations.xcode import XcodeCliTools
 
 
 def test_not_installed(mock_tools):
     """If cmdline dev tools are not installed, raise an error."""
     with pytest.raises(BriefcaseCommandError):
-        ensure_command_line_tools_are_installed(mock_tools)
+        XcodeCliTools.ensure_command_line_tools_are_installed(mock_tools)
 
     # xcode-select was invoked
     mock_tools.subprocess.check_output.assert_called_once_with(
@@ -25,7 +25,7 @@ def test_installed(capsys, mock_tools):
     )
 
     # Check passes without an error...
-    ensure_command_line_tools_are_installed(mock_tools)
+    XcodeCliTools.ensure_command_line_tools_are_installed(mock_tools)
 
     # ... xcode-select was invoked
     mock_tools.subprocess.check_output.assert_called_once_with(
@@ -45,7 +45,7 @@ def test_unsure_if_installed(capsys, mock_tools):
     )
 
     # Check passes without an error...
-    ensure_command_line_tools_are_installed(mock_tools)
+    XcodeCliTools.ensure_command_line_tools_are_installed(mock_tools)
 
     # ... xcode-select was invoked
     mock_tools.subprocess.check_output.assert_called_once_with(

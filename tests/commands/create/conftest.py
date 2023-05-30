@@ -7,9 +7,20 @@ from cookiecutter.main import cookiecutter
 from briefcase.commands import CreateCommand
 from briefcase.config import AppConfig
 from briefcase.console import Console, Log
+from briefcase.integrations.base import Tool
 from briefcase.integrations.subprocess import Subprocess
 
 from ...utils import DummyConsole, create_file
+
+
+@pytest.fixture
+def monkeypatch_tool_host_os(monkeypatch):
+    """Add testing host OS as supported for tools that support all platforms."""
+    monkeypatch.setattr(
+        Tool,
+        "supported_host_os",
+        Tool.supported_host_os.union({"c64"}),
+    )
 
 
 class DefaultCreateCommand(CreateCommand):
@@ -139,7 +150,7 @@ class TrackingCreateCommand(DummyCreateCommand):
 
 
 @pytest.fixture
-def create_command(tmp_path, mock_git):
+def create_command(tmp_path, mock_git, monkeypatch_tool_host_os):
     return DummyCreateCommand(
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "data",
@@ -149,7 +160,7 @@ def create_command(tmp_path, mock_git):
 
 
 @pytest.fixture
-def tracking_create_command(tmp_path, mock_git):
+def tracking_create_command(tmp_path, mock_git, monkeypatch_tool_host_os):
     return TrackingCreateCommand(
         git=mock_git,
         base_path=tmp_path / "base_path",

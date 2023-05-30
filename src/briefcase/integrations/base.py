@@ -4,17 +4,22 @@ import os
 import platform
 import shutil
 import sys
-from abc import ABC
+from abc import ABC, abstractmethod
 from collections import defaultdict
 from collections.abc import Mapping
 from pathlib import Path
-from typing import TYPE_CHECKING, DefaultDict
+from typing import TYPE_CHECKING, DefaultDict, TypeVar
 
 import requests
 from cookiecutter.main import cookiecutter
 
 from briefcase.config import AppConfig
 from briefcase.console import Console, Log
+from briefcase.exceptions import (
+    MissingToolError,
+    NonManagedToolError,
+    UnsupportedHostError,
+)
 
 if TYPE_CHECKING:
     # Tools are imported only for type checking
@@ -32,11 +37,103 @@ if TYPE_CHECKING:
     from briefcase.integrations.visualstudio import VisualStudio
     from briefcase.integrations.windows_sdk import WindowsSDK
     from briefcase.integrations.wix import WiX
+    from briefcase.integrations.xcode import Xcode, XcodeCliTools
+
+ToolT = TypeVar("ToolT", bound="Tool")
+ManagedToolT = TypeVar("ManagedToolT", bound="ManagedTool")
+
+# Registry of all defined Tools
+tool_registry: dict[str, type[Tool | ManagedTool]] = dict()
 
 
-# TODO: Implement Tool base class
 class Tool(ABC):
-    """Tool Base."""  # pragma: no cover
+    """Tool Base."""
+
+    name: str
+    full_name: str
+    supported_host_os: set[str] = {"Darwin", "Linux", "Windows"}
+
+    def __init__(self, tools: ToolCache, **kwargs):
+        self.tools = tools
+
+    def __init_subclass__(cls, **kwargs):
+        """Register each tool when it is defined."""
+        if cls.name != "managed_tool_base":
+            tool_registry[cls.name] = cls
+
+    @classmethod
+    def verify(
+        cls: type[ToolT],
+        tools: ToolCache,
+        app: AppConfig | None = None,
+        **kwargs,
+    ) -> ToolT:
+        """Confirm the tool is available and usable on the host platform."""
+        cls.verify_host(tools=tools)
+        tool = cls.verify_install(tools=tools, app=app, **kwargs)
+        return tool
+
+    @classmethod
+    def verify_host(cls, tools: ToolCache):
+        """Confirm the tool is supported on the platform."""
+        if tools.host_os not in cls.supported_host_os:
+            raise UnsupportedHostError(
+                f"{cls.name} is not supported on {tools.host_os}"
+            )
+
+    @classmethod
+    @abstractmethod
+    def verify_install(cls: type[ToolT], tools: ToolCache, **kwargs) -> ToolT:
+        """Confirm the tool is installed and available."""
+
+    @property
+    def managed_install(self) -> bool:
+        """Is Briefcase managing the installation of this tool?"""
+        return False
+
+
+class ManagedTool(Tool):
+    """Tool that can be managed by Briefcase."""
+
+    name = "managed_tool_base"
+
+    @classmethod
+    def verify(
+        cls: type[ManagedToolT],
+        tools: ToolCache,
+        app: AppConfig | None = None,
+        install: bool = True,
+        **kwargs,
+    ) -> ManagedToolT:
+        """Confirm the managed tool is installed and available."""
+        return super().verify(tools=tools, app=app, install=install, **kwargs)
+
+    @abstractmethod
+    def exists(self) -> bool:
+        """Is the tool currently installed?"""
+
+    @abstractmethod
+    def install(self):
+        """Install the tool as managed by Briefcase."""
+
+    @abstractmethod
+    def uninstall(self):
+        """Uninstall a Briefcase managed tool."""
+
+    @property
+    def managed_install(self) -> bool:
+        """Is Briefcase managing the installation of this tool?"""
+        return True
+
+    def upgrade(self):
+        """Upgrade a managed tool."""
+        if self.managed_install:
+            if not self.exists():
+                raise MissingToolError(self.full_name)
+            self.uninstall()
+            self.install()
+        else:
+            raise NonManagedToolError(self.full_name)
 
 
 class ToolCache(Mapping):
@@ -57,8 +154,8 @@ class ToolCache(Mapping):
     visualstudio: VisualStudio
     windows_sdk: WindowsSDK
     wix: WiX
-    xcode: bool
-    xcode_cli: bool
+    xcode: Xcode
+    xcode_cli: XcodeCliTools
 
     # Python stdlib tools
     platform = platform
@@ -75,7 +172,7 @@ class ToolCache(Mapping):
         logger: Log,
         console: Console,
         base_path: Path,
-        home_path: Path = None,
+        home_path: Path | None = None,
     ):
         """Cache for managing tool access and verification.
 

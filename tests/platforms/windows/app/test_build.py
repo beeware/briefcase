@@ -26,6 +26,7 @@ def build_command(tmp_path):
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
     )
+    command.tools.host_os = "Windows"
     command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
     command.tools.shutil = mock.MagicMock(spec_set=shutil)
     command.tools.download = mock.MagicMock()
@@ -49,22 +50,47 @@ def test_verify_without_windows_sdk(build_command, monkeypatch):
     monkeypatch.setattr(briefcase.platforms.windows.app, "WindowsSDK", mock_sdk)
     mock_sdk.verify.side_effect = BriefcaseCommandError("Windows SDK")
 
+    mock_rcedit_verify = mock.MagicMock(wraps=RCEdit.verify)
+    monkeypatch.setattr(
+        briefcase.platforms.windows.app.RCEdit,
+        "verify",
+        mock_rcedit_verify,
+    )
+
     build_command.verify_tools()
 
-    # No error and an SDK wrapper is created
+    # RCEdit tool was verified
+    mock_rcedit_verify.assert_called_once_with(tools=build_command.tools)
     assert isinstance(build_command.tools.rcedit, RCEdit)
     # Windows SDK tool not created
     assert not hasattr(build_command.tools, "windows_sdk")
 
 
-def test_verify_with_windows_sdk(build_command, windows_sdk, tmp_path):
+def test_verify_with_windows_sdk(build_command, windows_sdk, monkeypatch, tmp_path):
     """Verifying on Windows creates an RCEdit and Windows SDK wrapper."""
     build_command.tools.windows_sdk = windows_sdk
 
+    mock_windows_sdk_verify = mock.MagicMock(wraps=WindowsSDK.verify)
+    monkeypatch.setattr(
+        briefcase.platforms.windows.app.WindowsSDK,
+        "verify",
+        mock_windows_sdk_verify,
+    )
+
+    mock_rcedit_verify = mock.MagicMock(wraps=RCEdit.verify)
+    monkeypatch.setattr(
+        briefcase.platforms.windows.app.RCEdit,
+        "verify",
+        mock_rcedit_verify,
+    )
+
     build_command.verify_tools()
 
-    # No error and SDK wrappers are created
+    # RCEdit tool was verified
+    mock_rcedit_verify.assert_called_once_with(tools=build_command.tools)
     assert isinstance(build_command.tools.rcedit, RCEdit)
+    # WindowsSDK tool was verified
+    mock_windows_sdk_verify.assert_called_once_with(tools=build_command.tools)
     assert isinstance(build_command.tools.windows_sdk, WindowsSDK)
 
 

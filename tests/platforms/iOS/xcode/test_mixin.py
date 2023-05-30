@@ -48,19 +48,19 @@ def test_verify(create_command, monkeypatch):
 
     mock_ensure_xcode_is_installed = MagicMock()
     monkeypatch.setattr(
-        briefcase.integrations.xcode,
+        briefcase.integrations.xcode.Xcode,
         "ensure_xcode_is_installed",
         mock_ensure_xcode_is_installed,
     )
     mock_ensure_command_line_tools_are_installed = MagicMock()
     monkeypatch.setattr(
-        briefcase.integrations.xcode,
+        briefcase.integrations.xcode.XcodeCliTools,
         "ensure_command_line_tools_are_installed",
         mock_ensure_command_line_tools_are_installed,
     )
     mock_confirm_xcode_license_accepted = MagicMock()
     monkeypatch.setattr(
-        briefcase.integrations.xcode,
+        briefcase.integrations.xcode.XcodeCliTools,
         "confirm_xcode_license_accepted",
         mock_confirm_xcode_license_accepted,
     )
@@ -69,10 +69,12 @@ def test_verify(create_command, monkeypatch):
 
     assert create_command.tools.xcode_cli is not None
     mock_ensure_xcode_is_installed.assert_called_once_with(
-        create_command.tools,
-        min_version=(10, 0, 0),
+        tools=create_command.tools,
+        min_version=(13, 0, 0),
     )
     mock_ensure_command_line_tools_are_installed.assert_called_once_with(
-        create_command.tools
+        tools=create_command.tools
     )
-    mock_confirm_xcode_license_accepted.assert_called_once_with(create_command.tools)
+    mock_confirm_xcode_license_accepted.assert_called_once_with(
+        tools=create_command.tools
+    )

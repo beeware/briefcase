@@ -42,7 +42,7 @@ def test_verify(build_command, monkeypatch):
     build_command.verify_tools()
 
     # VisualStudio tool was verified
-    mock_visualstudio_verify.assert_called_once_with(build_command.tools)
+    mock_visualstudio_verify.assert_called_once_with(tools=build_command.tools)
     assert isinstance(build_command.tools.visualstudio, VisualStudio)
 
 
