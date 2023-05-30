@@ -5,7 +5,6 @@ from unittest.mock import MagicMock
 import pytest
 
 from briefcase.integrations.linuxdeploy import (
-    LinuxDeploy,
     LinuxDeployGtkPlugin,
     LinuxDeployLocalFilePlugin,
     LinuxDeployQtPlugin,
@@ -17,11 +16,6 @@ from .utils import (
     side_effect_create_mock_appimage,
     side_effect_create_mock_tool,
 )
-
-
-@pytest.fixture
-def linuxdeploy(mock_tools):
-    return LinuxDeploy(mock_tools)
 
 
 def test_no_plugins(linuxdeploy, mock_tools, tmp_path):

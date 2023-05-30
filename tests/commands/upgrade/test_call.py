@@ -1,200 +1,288 @@
 import pytest
 
-from briefcase.exceptions import BriefcaseCommandError
+from briefcase.exceptions import UpgradeToolError
+
+from .conftest import (
+    DummyManagedTool1,
+    DummyManagedTool2,
+    DummyManagedTool3,
+    DummyNotInstalledManagedTool,
+    DummyTool,
+    DummyUnManagedManagedTool,
+)
 
 
-def test_list_tools(
-    upgrade_command,
-    ManagedSDK1,
-    ManagedSDK2,
-    ManagedSDK2Plugin1,
-    ManagedSDK2Plugin2,
-    ManagedSDK2Plugin3,
-    NonManagedSDK,
-    NonInstalledSDK,
-    capsys,
-):
+def test_list_tools(upgrade_command, mock_tool_registry, capsys):
     """The tools for upgrade can be listed."""
-
     upgrade_command(tool_list=[], list_tools=True)
 
-    # The tools are all verified
-    ManagedSDK1.verify.assert_called_with(upgrade_command.tools, install=False)
-    ManagedSDK2.verify.assert_called_with(upgrade_command.tools, install=False)
-    ManagedSDK2Plugin1.verify.assert_called_with(upgrade_command.tools, install=False)
-    ManagedSDK2Plugin2.verify.assert_called_with(upgrade_command.tools, install=False)
-    ManagedSDK2Plugin3.verify.assert_called_with(upgrade_command.tools, install=False)
-    NonManagedSDK.verify.assert_called_with(upgrade_command.tools, install=False)
-    NonInstalledSDK.verify.assert_called_with(upgrade_command.tools, install=False)
+    # Tools that are *not* relevant to this upgrade call are not verified
+    DummyTool.verify.assert_not_called()
 
-    # The console contains the lines we expect, but not the non-managed and
-    # non-installed tools.
-    out = capsys.readouterr().out
-    assert " - managed-1" in out
-    assert " - managed-2" in out
-    assert " - managed-2-plugin-1" in out
-    assert " - managed-2-plugin-2" in out
-    assert " - managed-2-plugin-3" not in out
-    assert " - non-managed" not in out
-    assert " - non-installed" not in out
-
-
-def test_list_specific_tools(
-    upgrade_command,
-    ManagedSDK1,
-    ManagedSDK2,
-    NonManagedSDK,
-    NonInstalledSDK,
-    capsys,
-):
-    """If a list of tools is provided, only those are listed."""
-
-    upgrade_command(
-        tool_list=["managed-1", "non-managed", "non-installed"], list_tools=True
+    # Tools that *are* relevant to this upgrade call are verified
+    DummyUnManagedManagedTool.verify.assert_called_once_with(
+        tools=upgrade_command.tools, install=False
+    )
+    DummyNotInstalledManagedTool.verify.assert_called_once_with(
+        tools=upgrade_command.tools, install=False
+    )
+    DummyManagedTool1.verify.assert_called_once_with(
+        tools=upgrade_command.tools, install=False
+    )
+    DummyManagedTool2.verify.assert_called_once_with(
+        tools=upgrade_command.tools, install=False
+    )
+    DummyManagedTool3.verify.assert_called_once_with(
+        tools=upgrade_command.tools, install=False
     )
 
-    # All tools are verified
-    ManagedSDK1.verify.assert_called_with(upgrade_command.tools, install=False)
-    ManagedSDK2.verify.assert_called_with(upgrade_command.tools, install=False)
-    NonManagedSDK.verify.assert_called_with(upgrade_command.tools, install=False)
-    NonInstalledSDK.verify.assert_called_with(upgrade_command.tools, install=False)
-
-    # The console contains the lines we expect, but not the non-requested,
-    # non-managed, and non-installed tools.
-    out = capsys.readouterr().out
-    assert " - managed-1" in out
-    assert " - managed-2" not in out
-    assert " - non-managed" not in out
-    assert " - non-installed" not in out
+    assert capsys.readouterr().out == (
+        "\n"
+        "[upgrade] Briefcase is managing the following tools:\n"
+        " - Managed Dummy Tool 1 (managed_1)\n"
+        " - Managed Dummy Tool 2 (managed_2)\n"
+        " - Managed Dummy Tool 3 (managed_3)\n"
+    )
 
 
-def test_upgrade_tools(
-    upgrade_command,
-    ManagedSDK1,
-    ManagedSDK2,
-    NonManagedSDK,
-    NonInstalledSDK,
-    capsys,
-):
+def test_list_specific_tools(upgrade_command, mock_tool_registry, capsys):
+    """If a list of tools is provided, only those are listed."""
+    upgrade_command(tool_list=["managed_1", "managed_2"], list_tools=True)
+
+    # Tools that are *not* relevant to this upgrade call are not verified
+    DummyTool.verify.assert_not_called()
+    DummyUnManagedManagedTool.verify.assert_not_called()
+    DummyNotInstalledManagedTool.verify.assert_not_called()
+    DummyManagedTool3.verify.assert_not_called()
+
+    # Tools that *are* relevant to this upgrade call are verified
+    DummyManagedTool1.verify.assert_called_once_with(
+        tools=upgrade_command.tools, install=False
+    )
+    DummyManagedTool2.verify.assert_called_once_with(
+        tools=upgrade_command.tools, install=False
+    )
+
+    assert capsys.readouterr().out == (
+        "\n"
+        "[upgrade] Briefcase is managing the following tools:\n"
+        " - Managed Dummy Tool 1 (managed_1)\n"
+        " - Managed Dummy Tool 2 (managed_2)\n"
+    )
+
+
+def test_upgrade_tools(upgrade_command, mock_tool_registry, capsys):
     """All managed tools can be upgraded."""
     upgrade_command(tool_list=[])
 
-    # All tools are verified
-    ManagedSDK1.verify.assert_called_with(upgrade_command.tools, install=False)
-    ManagedSDK2.verify.assert_called_with(upgrade_command.tools, install=False)
-    NonManagedSDK.verify.assert_called_with(upgrade_command.tools, install=False)
-    NonInstalledSDK.verify.assert_called_with(upgrade_command.tools, install=False)
+    # Tools that are *not* relevant to this upgrade call are not verified
+    DummyTool.verify.assert_not_called()
 
-    # The console contains the lines we expect, but not the non-managed and
-    # non-installed tools.
-    out = capsys.readouterr().out
-    assert " - managed-1" in out
-    assert " - managed-2" in out
-    assert " - non-managed" not in out
-    assert " - non-installed" not in out
-
-    # There is also an upgrade message for each tool
-    assert "[managed-1] Upgrading Managed 1..." in out
-    assert "[managed-2] Upgrading Managed 2..." in out
-
-    # The managed tools are upgraded
-    ManagedSDK1.upgrade.assert_called_with()
-    ManagedSDK2.upgrade.assert_called_with()
-    assert NonManagedSDK.upgrade.call_count == 0
-    assert NonInstalledSDK.upgrade.call_count == 0
-
-
-def test_upgrade_specific_tools(
-    upgrade_command,
-    ManagedSDK1,
-    ManagedSDK2,
-    NonManagedSDK,
-    NonInstalledSDK,
-    capsys,
-):
-    """If a list of tools is provided, only those are listed."""
-
-    upgrade_command(
-        tool_list=["managed-1", "non-managed", "non-installed"],
+    # Tools that *are* relevant to this upgrade call are verified
+    DummyUnManagedManagedTool.verify.assert_called_once_with(
+        tools=upgrade_command.tools, install=False
+    )
+    DummyNotInstalledManagedTool.verify.assert_called_once_with(
+        tools=upgrade_command.tools, install=False
+    )
+    DummyManagedTool1.verify.assert_called_once_with(
+        tools=upgrade_command.tools, install=False
+    )
+    DummyManagedTool2.verify.assert_called_once_with(
+        tools=upgrade_command.tools, install=False
+    )
+    DummyManagedTool3.verify.assert_called_once_with(
+        tools=upgrade_command.tools, install=False
     )
 
-    # All tools are verified
-    ManagedSDK1.verify.assert_called_with(upgrade_command.tools, install=False)
-    ManagedSDK2.verify.assert_called_with(upgrade_command.tools, install=False)
-    NonManagedSDK.verify.assert_called_with(upgrade_command.tools, install=False)
-    NonInstalledSDK.verify.assert_called_with(upgrade_command.tools, install=False)
+    # Tools that are *not* relevant to this upgrade call are not upgraded
+    assert upgrade_command.tools.unmanaged_managed.actions == []
 
-    # The console contains the lines we expect, but not the non-requested,
-    # non-managed, and non-installed tools.
-    out = capsys.readouterr().out
-    assert " - managed-1" in out
-    assert " - managed-2" not in out
-    assert " - non-managed" not in out
-    assert " - non-installed" not in out
+    # Tools that *are* relevant to this upgrade call are upgraded
+    assert upgrade_command.tools.managed_1.actions == [
+        "exists",
+        "uninstall",
+        "install",
+    ]
+    assert upgrade_command.tools.managed_2.actions == [
+        "exists",
+        "uninstall",
+        "install",
+    ]
+    assert upgrade_command.tools.managed_3.actions == [
+        "exists",
+        "uninstall",
+        "install",
+    ]
 
-    # There is also an upgrade message for each tool
-    assert "[managed-1] Upgrading Managed 1..." in out
-
-    # The requested managed tools are upgraded
-    ManagedSDK1.upgrade.assert_called_with()
-    assert ManagedSDK2.upgrade.call_count == 0
-    assert NonManagedSDK.upgrade.call_count == 0
-    assert NonInstalledSDK.upgrade.call_count == 0
-
-
-def test_upgrade_no__tools(
-    upgrade_command,
-    ManagedSDK1,
-    ManagedSDK2,
-    NonManagedSDK,
-    NonInstalledSDK,
-    capsys,
-):
-    """If there is nothing up upgrade, a message is returned."""
-
-    upgrade_command(
-        tool_list=["non-managed", "non-installed"],
+    assert capsys.readouterr().out == (
+        "\n"
+        "[upgrade] Briefcase will upgrade the following tools:\n"
+        " - Managed Dummy Tool 1 (managed_1)\n"
+        " - Managed Dummy Tool 2 (managed_2)\n"
+        " - Managed Dummy Tool 3 (managed_3)\n"
+        "\n"
+        "[managed_1] Upgrading Managed Dummy Tool 1...\n"
+        "\n"
+        "[managed_2] Upgrading Managed Dummy Tool 2...\n"
+        "\n"
+        "[managed_3] Upgrading Managed Dummy Tool 3...\n"
     )
 
-    # All tools are verified
-    ManagedSDK1.verify.assert_called_with(upgrade_command.tools, install=False)
-    ManagedSDK2.verify.assert_called_with(upgrade_command.tools, install=False)
-    NonManagedSDK.verify.assert_called_with(upgrade_command.tools, install=False)
-    NonInstalledSDK.verify.assert_called_with(upgrade_command.tools, install=False)
 
-    # The console contains no mention of tools...
-    out = capsys.readouterr().out
-    assert " - managed-1" not in out
-    assert " - managed-2" not in out
-    assert " - non-managed" not in out
-    assert " - non-installed" not in out
-
-    # ...but it *does* say there's nothing being managed.
-    assert "Briefcase is not managing any tools." in out
-
-    # Nothing is upgraded
-    assert ManagedSDK1.upgrade.call_count == 0
-    assert ManagedSDK2.upgrade.call_count == 0
-    assert NonManagedSDK.upgrade.call_count == 0
-    assert NonInstalledSDK.upgrade.call_count == 0
-
-
-def test_unknown_tool(
-    upgrade_command,
-    ManagedSDK1,
-    ManagedSDK2,
-    NonManagedSDK,
-    NonInstalledSDK,
-    capsys,
-):
+def test_upgrade_specific_tools(upgrade_command, mock_tool_registry, capsys):
     """If a list of tools is provided, only those are listed."""
+    upgrade_command(tool_list=["managed_1", "managed_2"])
 
-    # Requesting an unknown tool raises an error
-    with pytest.raises(BriefcaseCommandError):
-        upgrade_command(tool_list=["managed-1", "unknown-tool"])
+    # Tools that are *not* relevant to this upgrade call are not verified
+    DummyTool.verify.assert_not_called()
+    DummyUnManagedManagedTool.verify.assert_not_called()
+    DummyNotInstalledManagedTool.verify.assert_not_called()
+    DummyManagedTool3.verify.assert_not_called()
 
-    # All tools are still verified
-    ManagedSDK1.verify.assert_called_with(upgrade_command.tools, install=False)
-    ManagedSDK2.verify.assert_called_with(upgrade_command.tools, install=False)
-    NonManagedSDK.verify.assert_called_with(upgrade_command.tools, install=False)
-    NonInstalledSDK.verify.assert_called_with(upgrade_command.tools, install=False)
+    # Tools that *are* relevant to this upgrade call are verified
+    DummyManagedTool1.verify.assert_called_once_with(
+        tools=upgrade_command.tools, install=False
+    )
+    DummyManagedTool2.verify.assert_called_once_with(
+        tools=upgrade_command.tools, install=False
+    )
+
+    # Tools that *are* relevant to this upgrade call are upgraded
+    assert upgrade_command.tools.managed_1.actions == [
+        "exists",
+        "uninstall",
+        "install",
+    ]
+    assert upgrade_command.tools.managed_2.actions == [
+        "exists",
+        "uninstall",
+        "install",
+    ]
+
+    assert capsys.readouterr().out == (
+        "\n"
+        "[upgrade] Briefcase will upgrade the following tools:\n"
+        " - Managed Dummy Tool 1 (managed_1)\n"
+        " - Managed Dummy Tool 2 (managed_2)\n"
+        "\n"
+        "[managed_1] Upgrading Managed Dummy Tool 1...\n"
+        "\n"
+        "[managed_2] Upgrading Managed Dummy Tool 2...\n"
+    )
+
+
+def test_upgrade_no_tools(upgrade_command, mock_no_managed_tool_registry, capsys):
+    """If no tools are being managed, a message is returned."""
+    upgrade_command(tool_list=[])
+
+    # Tools that are *not* relevant to this upgrade call are not verified
+    DummyTool.verify.assert_not_called()
+
+    # Tools that *are* relevant to this upgrade call are verified
+    DummyUnManagedManagedTool.verify.assert_called_once_with(
+        tools=upgrade_command.tools, install=False
+    )
+    DummyNotInstalledManagedTool.verify.assert_called_once_with(
+        tools=upgrade_command.tools, install=False
+    )
+
+    assert capsys.readouterr().out == "Briefcase is not managing any tools.\n"
+
+
+def test_upgrade_unmanaged_tools(upgrade_command, mock_tool_registry, capsys):
+    """If only unmanaged tools are requested to upgrade, error is raised."""
+    with pytest.raises(
+        UpgradeToolError,
+        match="Briefcase is not managing not_installed, unmanaged, unmanaged_managed.",
+    ):
+        upgrade_command(tool_list=["unmanaged", "unmanaged_managed", "not_installed"])
+
+    # Tools that are *not* relevant to this upgrade call are not verified
+    DummyTool.verify.assert_not_called()
+    DummyManagedTool1.verify.assert_not_called()
+    DummyManagedTool2.verify.assert_not_called()
+    DummyManagedTool3.verify.assert_not_called()
+
+    # Tools that *are* relevant to this upgrade call are verified
+    DummyUnManagedManagedTool.verify.assert_called_once_with(
+        tools=upgrade_command.tools, install=False
+    )
+    DummyNotInstalledManagedTool.verify.assert_called_once_with(
+        tools=upgrade_command.tools, install=False
+    )
+
+    assert capsys.readouterr().out == ""
+
+
+def test_upgrade_mixed_tools(upgrade_command, mock_tool_registry, capsys):
+    """If managed and unmanaged tools are requested to upgrade, a warning is shown and
+    the upgrade continues."""
+    upgrade_command(
+        tool_list=[
+            "managed_1",
+            "managed_2",
+            "unmanaged",
+            "unmanaged_managed",
+            "not_installed",
+        ]
+    )
+
+    # Tools that are *not* relevant to this upgrade call are not verified
+    DummyTool.verify.assert_not_called()
+    DummyManagedTool3.verify.assert_not_called()
+
+    # Tools that *are* relevant to this upgrade call are verified
+    DummyUnManagedManagedTool.verify.assert_called_once_with(
+        tools=upgrade_command.tools, install=False
+    )
+    DummyNotInstalledManagedTool.verify.assert_called_once_with(
+        tools=upgrade_command.tools, install=False
+    )
+
+    # Tools that are *not* relevant to this upgrade call are not upgraded
+    assert upgrade_command.tools.unmanaged_managed.actions == []
+
+    # Tools that *are* relevant to this upgrade call are upgraded
+    assert upgrade_command.tools.managed_1.actions == [
+        "exists",
+        "uninstall",
+        "install",
+    ]
+    assert upgrade_command.tools.managed_2.actions == [
+        "exists",
+        "uninstall",
+        "install",
+    ]
+
+    assert capsys.readouterr().out == (
+        "Briefcase is not managing not_installed, unmanaged, unmanaged_managed.\n"
+        "\n"
+        "[upgrade] Briefcase will upgrade the following tools:\n"
+        " - Managed Dummy Tool 1 (managed_1)\n"
+        " - Managed Dummy Tool 2 (managed_2)\n"
+        "\n"
+        "[managed_1] Upgrading Managed Dummy Tool 1...\n"
+        "\n"
+        "[managed_2] Upgrading Managed Dummy Tool 2...\n"
+    )
+
+
+def test_unknown_tool(upgrade_command, mock_tool_registry, capsys):
+    """An upgrade attempt for an unknown tool raises an error."""
+
+    with pytest.raises(
+        UpgradeToolError,
+        match="Briefcase does not know how to manage unknown_tool_1, unknown_tool_2.",
+    ):
+        upgrade_command(tool_list=["managed_1", "unknown_tool_1", "unknown_tool_2"])
+
+    # Tools that are *not* relevant to this upgrade call are not verified
+    DummyTool.verify.assert_not_called()
+    DummyManagedTool1.verify.assert_not_called()
+    DummyManagedTool2.verify.assert_not_called()
+    DummyManagedTool3.verify.assert_not_called()
+    DummyUnManagedManagedTool.verify.assert_not_called()
+    DummyNotInstalledManagedTool.verify.assert_not_called()
+
+    assert capsys.readouterr().out == ""

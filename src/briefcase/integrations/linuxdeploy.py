@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 import hashlib
 import shlex
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from pathlib import Path
+from typing import TypeVar
 from urllib.parse import urlparse
 
 from briefcase.exceptions import (
@@ -9,7 +12,9 @@ from briefcase.exceptions import (
     CorruptToolError,
     MissingToolError,
 )
-from briefcase.integrations.base import Tool, ToolCache
+from briefcase.integrations.base import ManagedTool, Tool, ToolCache
+
+LinuxDeployT = TypeVar("LinuxDeployT", bound="LinuxDeployBase")
 
 ELF_HEADER_IDENT = bytes.fromhex("7F454C46")
 ELF_PATCH_OFFSET = 0x08
@@ -17,34 +22,30 @@ ELF_PATCH_ORIGINAL_BYTES = bytes.fromhex("414902")
 ELF_PATCH_PATCHED_BYTES = bytes.fromhex("000000")
 
 
-class LinuxDeployBase:
+class LinuxDeployBase(ABC):
     name: str
     full_name: str
     install_msg: str
-
-    def __init__(self, tools: ToolCache, **kwargs):
-        self.tools = tools
+    tools: ToolCache
+    supported_host_os = {"Linux"}
 
     @property
     @abstractmethod
-    def file_name(self):
+    def file_name(self) -> str:
         """The name of the executable file for the tool/plugin, excluding the path."""
-        ...
 
     @property
     @abstractmethod
-    def download_url(self):
+    def download_url(self) -> str:
         """The URL where the tool/plugin can be downloaded."""
-        ...
 
     @property
     @abstractmethod
-    def file_path(self):
+    def file_path(self) -> Path:
         """The folder on the local filesystem that contains the file_name."""
-        ...
 
-    def exists(self):
-        return (self.file_path / self.file_name).exists()
+    def exists(self) -> bool:
+        return (self.file_path / self.file_name).is_file()
 
     def install(self):
         """Download and install linuxdeploy or plugin."""
@@ -53,7 +54,6 @@ class LinuxDeployBase:
             download_path=self.file_path,
             role=self.full_name,
         )
-
         self.prepare_executable()
 
     def prepare_executable(self):
@@ -69,7 +69,12 @@ class LinuxDeployBase:
                 self.patch_elf_header()
 
     @classmethod
-    def verify(cls, tools: ToolCache, install=True, **kwargs):
+    def verify_install(
+        cls: type[LinuxDeployT],
+        tools: ToolCache,
+        install: bool = True,
+        **kwargs,
+    ) -> LinuxDeployT:
         """Verify that linuxdeploy tool or plugin is available.
 
         :param tools: ToolCache of available tools
@@ -85,7 +90,7 @@ class LinuxDeployBase:
         if not is_plugin and hasattr(tools, "linuxdeploy"):
             return tools.linuxdeploy
 
-        tool = cls(tools, **kwargs)
+        tool: LinuxDeployT = cls(tools=tools, **kwargs)
         if not tool.exists():
             if install:
                 tools.logger.info(
@@ -106,15 +111,7 @@ class LinuxDeployBase:
         with self.tools.input.wait_bar(f"Removing old {self.full_name} install..."):
             (self.file_path / self.file_name).unlink()
 
-    def upgrade(self):
-        """Upgrade an existing linuxdeploy install."""
-        if not self.exists():
-            raise MissingToolError(self.name)
-
-        self.uninstall()
-        self.install()
-
-    def is_elf_file(self):
+    def is_elf_file(self) -> bool:
         """Returns True if the file is an ELF object file.
 
         The header for an ELF object file always starts with 0x7F454C46; this is 0x7fELF
@@ -164,7 +161,7 @@ class LinuxDeployBase:
                 raise CorruptToolError(self.name)
 
 
-class LinuxDeployPluginBase(LinuxDeployBase):
+class LinuxDeployPluginBase(LinuxDeployBase, ABC):
     """Base class for linuxdeploy plugins."""
 
     install_msg = "{full_name} was not found; downloading and installing..."
@@ -177,66 +174,75 @@ class LinuxDeployPluginBase(LinuxDeployBase):
             raise BriefcaseCommandError(f"{self.file_name} is not a linuxdeploy plugin")
 
     @property
-    def plugin_id(self):
+    def plugin_id(self) -> str:
         return self.file_name.split(".")[0].split("-")[2]
 
     @property
-    def file_path(self):
+    def file_path(self) -> Path:
         return self.tools.base_path / "linuxdeploy_plugins" / self.plugin_id
 
 
-class LinuxDeployGtkPlugin(LinuxDeployPluginBase):
+class LinuxDeployGtkPlugin(LinuxDeployPluginBase, ManagedTool):
+    name = "linuxdeploy_gtk_plugin"
     full_name = "linuxdeploy GTK plugin"
 
     @property
-    def file_name(self):
+    def file_name(self) -> str:
         return "linuxdeploy-plugin-gtk.sh"
 
     @property
-    def download_url(self):
+    def download_url(self) -> str:
         return (
             "https://raw.githubusercontent.com/linuxdeploy/linuxdeploy-plugin-gtk/"
             f"master/{self.file_name}"
         )
 
 
-class LinuxDeployQtPlugin(LinuxDeployPluginBase):
+class LinuxDeployQtPlugin(LinuxDeployPluginBase, ManagedTool):
+    name = "linuxdeploy_qt_plugin"
     full_name = "linuxdeploy Qt plugin"
 
     @property
-    def file_name(self):
+    def file_name(self) -> str:
         return f"linuxdeploy-plugin-qt-{self.tools.host_arch}.AppImage"
 
     @property
-    def download_url(self):
+    def download_url(self) -> str:
         return (
             "https://github.com/linuxdeploy/linuxdeploy-plugin-qt/"
             f"releases/download/continuous/{self.file_name}"
         )
 
 
-class LinuxDeployLocalFilePlugin(LinuxDeployPluginBase):
+class LinuxDeployLocalFilePlugin(LinuxDeployPluginBase, Tool):
+    name = "linuxdeploy_user_file_plugin"
     full_name = "user-provided linuxdeploy plugin from local file"
     install_msg = "Copying user-provided plugin into project"
 
-    def __init__(self, tools, plugin_path, bundle_path):
+    def __init__(
+        self,
+        tools: ToolCache,
+        plugin_path: Path,
+        bundle_path: Path,
+        **kwargs,
+    ):
         self._file_name = plugin_path.name
         self.local_path = plugin_path.parent
         self._file_path = bundle_path
 
         # Call the super last to ensure validation of the filename
-        super().__init__(tools)
+        super().__init__(tools=tools)
 
     @property
-    def file_name(self):
+    def file_name(self) -> str:
         return self._file_name
 
     @property
-    def file_path(self):
+    def file_path(self) -> Path:
         return self._file_path
 
     @property
-    def download_url(self):
+    def download_url(self) -> str:
         raise RuntimeError("Shouldn't be trying to download a local file plugin")
 
     def install(self):
@@ -257,10 +263,11 @@ class LinuxDeployLocalFilePlugin(LinuxDeployPluginBase):
         self.prepare_executable()
 
 
-class LinuxDeployURLPlugin(LinuxDeployPluginBase):
+class LinuxDeployURLPlugin(LinuxDeployPluginBase, Tool):
+    name = "linuxdeploy_user_url_plugin"
     full_name = "user-provided linuxdeploy plugin from URL"
 
-    def __init__(self, tools, url):
+    def __init__(self, tools: ToolCache, url: str, **kwargs):
         self._download_url = url
 
         url_parts = urlparse(url)
@@ -277,14 +284,14 @@ class LinuxDeployURLPlugin(LinuxDeployPluginBase):
         self.hash = hashlib.sha256(url.encode("utf-8"))
 
         # Call the super last to ensure validation of the filename
-        super().__init__(tools)
+        super().__init__(tools=tools)
 
     @property
-    def file_name(self):
+    def file_name(self) -> str:
         return self._file_name
 
     @property
-    def file_path(self):
+    def file_path(self) -> Path:
         return (
             self.tools.base_path
             / "linuxdeploy_plugins"
@@ -293,43 +300,43 @@ class LinuxDeployURLPlugin(LinuxDeployPluginBase):
         )
 
     @property
-    def download_url(self):
+    def download_url(self) -> str:
         return self._download_url
 
 
-class LinuxDeploy(LinuxDeployBase, Tool):
+class LinuxDeploy(LinuxDeployBase, ManagedTool):
     name = "linuxdeploy"
     full_name = "linuxdeploy"
     install_msg = "linuxdeploy was not found; downloading and installing..."
 
     @property
-    def managed_install(self):
-        return True
-
-    @property
-    def file_path(self):
+    def file_path(self) -> Path:
         return self.tools.base_path
 
     @property
-    def file_name(self):
+    def file_name(self) -> str:
         return f"linuxdeploy-{self.tools.host_arch}.AppImage"
 
     @property
-    def download_url(self):
+    def download_url(self) -> str:
         return (
             "https://github.com/linuxdeploy/linuxdeploy/"
             f"releases/download/continuous/{self.file_name}"
         )
 
     @property
-    def plugins(self):
+    def plugins(self) -> dict[str, type[LinuxDeployPluginBase]]:
         """The known linuxdeploy plugins."""
         return {
             "gtk": LinuxDeployGtkPlugin,
             "qt": LinuxDeployQtPlugin,
         }
 
-    def verify_plugins(self, plugin_definitions, bundle_path):
+    def verify_plugins(
+        self,
+        plugin_definitions: list[str],
+        bundle_path: Path,
+    ) -> dict[str, LinuxDeployPluginBase]:
         """Verify that all the declared plugin dependencies are available.
 
         Each plugin definition is a string, and can be:
@@ -346,10 +353,8 @@ class LinuxDeploy(LinuxDeployBase, Tool):
         `FOO` in the environment. The definition will be split the same way as
         shell arguments, so spaces should be escaped.
 
-        :param plugin_definitions: A list of strings defining the required
-            plugins.
-        :param bundle_path: The location of the app bundle that requires the
-            plugins.
+        :param plugin_definitions: A list of strings defining the required plugins.
+        :param bundle_path: The location of the app bundle that requires the plugins.
         :returns: A dictionary of plugin ID->instantiated plugin instances.
         """
         plugins = {}
@@ -362,7 +367,6 @@ class LinuxDeploy(LinuxDeployBase, Tool):
             try:
                 plugin_klass = self.plugins[plugin_name]
                 self.tools.logger.info(f"Using default {plugin_name} plugin")
-
                 plugin = plugin_klass.verify(self.tools)
             except KeyError:
                 if plugin_name.startswith(("https://", "http://")):

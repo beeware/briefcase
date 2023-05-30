@@ -1,37 +1,14 @@
 import pytest
 
 from briefcase.exceptions import MissingToolError, NetworkFailure
-from briefcase.integrations.linuxdeploy import LinuxDeployBase
 from tests.integrations.linuxdeploy.utils import side_effect_create_mock_appimage
-
-
-@pytest.fixture
-def linuxdeploy(mock_tools, tmp_path):
-    class LinuxDeployDummy(LinuxDeployBase):
-        name = "dummy-plugin"
-        full_name = "Dummy plugin"
-
-        @property
-        def file_name(self):
-            return "linuxdeploy-dummy-wonky.AppImage"
-
-        @property
-        def download_url(self):
-            return "https://example.com/path/to/linuxdeploy-dummy-wonky.AppImage"
-
-        @property
-        def file_path(self):
-            return tmp_path / "plugin"
-
-    return LinuxDeployDummy(mock_tools)
 
 
 def test_upgrade_exists(linuxdeploy, mock_tools, tmp_path):
     """If linuxdeploy already exists, upgrading deletes first."""
-    appimage_path = tmp_path / "plugin" / "linuxdeploy-dummy-wonky.AppImage"
+    appimage_path = tmp_path / "tools" / "linuxdeploy-wonky.AppImage"
 
     # Mock the existence of an install
-    appimage_path.parent.mkdir(parents=True)
     appimage_path.touch()
 
     # Mock a successful download
@@ -47,9 +24,9 @@ def test_upgrade_exists(linuxdeploy, mock_tools, tmp_path):
 
     # A download is invoked
     mock_tools.download.file.assert_called_with(
-        url="https://example.com/path/to/linuxdeploy-dummy-wonky.AppImage",
-        download_path=tmp_path / "plugin",
-        role="Dummy plugin",
+        url="https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-wonky.AppImage",
+        download_path=tmp_path / "tools",
+        role="linuxdeploy",
     )
     # The downloaded file will be made executable
     mock_tools.os.chmod.assert_called_with(appimage_path, 0o755)
@@ -68,9 +45,9 @@ def test_upgrade_does_not_exist(linuxdeploy, mock_tools):
 def test_upgrade_linuxdeploy_download_failure(linuxdeploy, mock_tools, tmp_path):
     """If linuxdeploy doesn't exist, but a download failure occurs, an error is
     raised."""
+    appimage_path = tmp_path / "tools" / "linuxdeploy-wonky.AppImage"
+
     # Mock the existence of an install
-    appimage_path = tmp_path / "plugin" / "linuxdeploy-dummy-wonky.AppImage"
-    appimage_path.parent.mkdir(parents=True)
     appimage_path.touch()
 
     mock_tools.download.file.side_effect = NetworkFailure("mock")
@@ -84,7 +61,7 @@ def test_upgrade_linuxdeploy_download_failure(linuxdeploy, mock_tools, tmp_path)
 
     # A download was invoked
     mock_tools.download.file.assert_called_with(
-        url="https://example.com/path/to/linuxdeploy-dummy-wonky.AppImage",
-        download_path=tmp_path / "plugin",
-        role="Dummy plugin",
+        url="https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-wonky.AppImage",
+        download_path=tmp_path / "tools",
+        role="linuxdeploy",
     )

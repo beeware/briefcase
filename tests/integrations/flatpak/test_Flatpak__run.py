@@ -9,10 +9,7 @@ def test_run(flatpak):
     flatpak.tools.subprocess.Popen.return_value = log_popen
 
     # Call run()
-    result = flatpak.run(
-        bundle_identifier="com.example.my-app",
-        app_name="my-app",
-    )
+    result = flatpak.run(bundle_identifier="com.example.my-app")
 
     # The expected call was made
     flatpak.tools.subprocess.Popen.assert_called_once_with(
@@ -39,7 +36,6 @@ def test_run_with_args(flatpak):
     # Call run()
     result = flatpak.run(
         bundle_identifier="com.example.my-app",
-        app_name="my-app",
         args=["foo", "bar"],
     )
 
@@ -70,7 +66,6 @@ def test_main_module_override(flatpak):
     # Call run()
     result = flatpak.run(
         bundle_identifier="com.example.my-app",
-        app_name="my-app",
         main_module="org.beeware.test-case",
     )
 

@@ -3,7 +3,7 @@ from unittest import mock
 
 import pytest
 
-from briefcase.exceptions import BriefcaseCommandError
+from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
 from briefcase.integrations.flatpak import Flatpak
 
 
@@ -15,6 +15,18 @@ def test_short_circuit(mock_tools):
 
     assert tool == "tool"
     assert tool == mock_tools.flatpak
+
+
+@pytest.mark.parametrize("host_os", ["Darwin", "Windows", "wonky"])
+def test_unsupported_os(mock_tools, host_os):
+    """When host OS is not supported, an error is raised."""
+    mock_tools.host_os = host_os
+
+    with pytest.raises(
+        UnsupportedHostError,
+        match=f"{Flatpak.name} is not supported on {host_os}",
+    ):
+        Flatpak.verify(mock_tools)
 
 
 def test_flatpak_not_installed(mock_tools):

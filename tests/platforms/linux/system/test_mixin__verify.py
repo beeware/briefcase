@@ -1,5 +1,6 @@
 from unittest.mock import MagicMock
 
+import briefcase.platforms.linux.system
 from briefcase.integrations.docker import Docker, DockerAppContext
 from briefcase.integrations.subprocess import Subprocess
 
@@ -48,8 +49,30 @@ def test_linux_docker(create_command, tmp_path, first_app_config, monkeypatch):
     first_app_config.python_version_tag = "3"
 
     # Mock Docker tool verification
-    Docker.verify = MagicMock()
-    DockerAppContext.verify = MagicMock()
+    mock__version_compat = MagicMock(spec=Docker._version_compat)
+    mock__user_access = MagicMock(spec=Docker._user_access)
+    mock__buildx_installed = MagicMock(spec=Docker._buildx_installed)
+    monkeypatch.setattr(
+        briefcase.platforms.linux.system.Docker,
+        "_version_compat",
+        mock__version_compat,
+    )
+    monkeypatch.setattr(
+        briefcase.platforms.linux.system.Docker,
+        "_user_access",
+        mock__user_access,
+    )
+    monkeypatch.setattr(
+        briefcase.platforms.linux.system.Docker,
+        "_buildx_installed",
+        mock__buildx_installed,
+    )
+    mock_docker_app_context_verify = MagicMock(spec=DockerAppContext.verify)
+    monkeypatch.setattr(
+        briefcase.platforms.linux.system.DockerAppContext,
+        "verify",
+        mock_docker_app_context_verify,
+    )
     create_command.verify_python = MagicMock()
 
     # Verify the tools
@@ -57,8 +80,11 @@ def test_linux_docker(create_command, tmp_path, first_app_config, monkeypatch):
     create_command.verify_app_tools(app=first_app_config)
 
     # Docker and Docker app context are verified
-    Docker.verify.assert_called_with(tools=create_command.tools)
-    DockerAppContext.verify.assert_called_with(
+    mock__version_compat.assert_called_with(tools=create_command.tools)
+    mock__user_access.assert_called_with(tools=create_command.tools)
+    mock__buildx_installed.assert_called_with(tools=create_command.tools)
+    assert isinstance(create_command.tools.docker, Docker)
+    mock_docker_app_context_verify.assert_called_with(
         tools=create_command.tools,
         app=first_app_config,
         image_tag="briefcase/com.example.first-app:somevendor-surprising",
@@ -91,7 +117,7 @@ def test_linux_docker(create_command, tmp_path, first_app_config, monkeypatch):
     create_command.verify_python.assert_not_called()
 
 
-def test_non_linux_docker(create_command, tmp_path, first_app_config):
+def test_non_linux_docker(create_command, first_app_config, monkeypatch, tmp_path):
     """If Docker is enabled on non-Linux, the Docker alias is set."""
     create_command.tools.host_os = "Darwin"
     create_command.target_image = "somevendor:surprising"
@@ -103,8 +129,30 @@ def test_non_linux_docker(create_command, tmp_path, first_app_config):
     first_app_config.python_version_tag = "3"
 
     # Mock Docker tool verification
-    Docker.verify = MagicMock()
-    DockerAppContext.verify = MagicMock()
+    mock__version_compat = MagicMock(spec=Docker._version_compat)
+    mock__user_access = MagicMock(spec=Docker._user_access)
+    mock__buildx_installed = MagicMock(spec=Docker._buildx_installed)
+    monkeypatch.setattr(
+        briefcase.platforms.linux.system.Docker,
+        "_version_compat",
+        mock__version_compat,
+    )
+    monkeypatch.setattr(
+        briefcase.platforms.linux.system.Docker,
+        "_user_access",
+        mock__user_access,
+    )
+    monkeypatch.setattr(
+        briefcase.platforms.linux.system.Docker,
+        "_buildx_installed",
+        mock__buildx_installed,
+    )
+    mock_docker_app_context_verify = MagicMock(spec=DockerAppContext.verify)
+    monkeypatch.setattr(
+        briefcase.platforms.linux.system.DockerAppContext,
+        "verify",
+        mock_docker_app_context_verify,
+    )
     create_command.verify_python = MagicMock()
 
     # Verify the tools
@@ -112,8 +160,11 @@ def test_non_linux_docker(create_command, tmp_path, first_app_config):
     create_command.verify_app_tools(app=first_app_config)
 
     # Docker and Docker app context are verified
-    Docker.verify.assert_called_with(tools=create_command.tools)
-    DockerAppContext.verify.assert_called_with(
+    mock__version_compat.assert_called_with(tools=create_command.tools)
+    mock__user_access.assert_called_with(tools=create_command.tools)
+    mock__buildx_installed.assert_called_with(tools=create_command.tools)
+    assert isinstance(create_command.tools.docker, Docker)
+    mock_docker_app_context_verify.assert_called_with(
         tools=create_command.tools,
         app=first_app_config,
         image_tag="briefcase/com.example.first-app:somevendor-surprising",
