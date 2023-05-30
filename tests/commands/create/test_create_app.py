@@ -15,6 +15,7 @@ def test_create_app(tracking_create_command, tmp_path):
     assert tracking_create_command.actions == [
         ("generate", "first"),
         ("support", "first"),
+        ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
         ("requirements", "first", False),
@@ -50,6 +51,7 @@ def test_create_existing_app_overwrite(tracking_create_command, tmp_path):
     assert tracking_create_command.actions == [
         ("generate", "first"),
         ("support", "first"),
+        ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
         ("requirements", "first", False),

@@ -1,5 +1,6 @@
 import os
 import sys
+from collections import defaultdict
 from unittest.mock import MagicMock
 
 import pytest
@@ -25,6 +26,9 @@ def open_command(tmp_path):
     # Store the underlying subprocess instance
     command._subprocess = MagicMock(spec_set=Subprocess)
     command.tools.subprocess = command._subprocess
+
+    # default any app to an empty `briefcase.toml`
+    command._briefcase_toml = defaultdict(dict)
 
     return command
 

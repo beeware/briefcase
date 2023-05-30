@@ -103,15 +103,23 @@ def split_passthrough(args):
 
 
 class BaseCommand(ABC):
+    GLOBAL_CONFIG_CLASS = GlobalConfig
+    APP_CONFIG_CLASS = AppConfig
+
     cmd_line = "briefcase {command} {platform} {output_format}"
     supported_host_os = {"Darwin", "Linux", "Windows"}
     supported_host_os_reason = f"This command is not supported on {platform.system()}."
-    GLOBAL_CONFIG_CLASS = GlobalConfig
-    APP_CONFIG_CLASS = AppConfig
+    # defined by platform-specific subclasses
+    command: str
+    description: str
+    platform: str
+    output_format: str
+    # supports passing extra command line arguments to subprocess
     allows_passthrough = False
-    # if specified for a platform, then any template for that
-    # platform must declare compatibility with that version or later.
-    oldest_compatible_briefcase: str | None = None
+    # if specified for a platform, then any template for that platform must declare
+    # compatibility with that version epoch. An epoch begins when a breaking change is
+    # introduced for a platform such that older versions of a template are incompatible
+    platform_target_epoch: str | None = None
 
     def __init__(
         self,
@@ -357,12 +365,12 @@ a custom location for Briefcase's tools.
         :param path_name: Name of the filepath to retrieve
         :return: filepath for requested path
         """
-        return self.briefcase_toml(app=app)["paths"][path_name]
+        return self.briefcase_toml(app)["paths"][path_name]
 
-    def briefcase_target_version(self, app: AppConfig) -> str | None:
-        """The list of requirements to build an app from ``briefcase.toml``."""
+    def template_target_epoch(self, app: AppConfig) -> str | None:
+        """The target epoch version of Briefcase for the app from ``briefcase.toml``."""
         try:
-            return self.briefcase_toml(app)["briefcase"]["target_version"]
+            return self.briefcase_toml(app)["briefcase"]["target_epoch"]
         except KeyError:
             return None
 
@@ -477,7 +485,6 @@ a custom location for Briefcase's tools.
 
         Raises MissingToolException if a required system tool is missing.
         """
-        pass
 
     def finalize_app_config(self, app: AppConfig):
         """Finalize the application config.
@@ -495,7 +502,6 @@ a custom location for Briefcase's tools.
 
         :param app: The app configuration to finalize.
         """
-        pass
 
     def finalize(self, app: AppConfig | None = None):
         """Finalize Briefcase configuration.
@@ -524,9 +530,45 @@ a custom location for Briefcase's tools.
                 self.finalize_app_config(app)
                 delattr(app, "__draft__")
 
+    def verify_app(self, app: AppConfig):
+        """Verify the app is compatible and the app tools are available.
+
+        This is the last step of verification for a Command before running the
+        Command's business logic. It runs _after_ pre-requisite Commands have been
+        verified and run.
+
+        :param app: app configuration
+        """
+        self.verify_app_template(app)
+        self.verify_app_tools(app)
+
     def verify_app_tools(self, app: AppConfig):
         """Verify that tools needed to run the command for this app exist."""
-        pass
+
+    def verify_app_template(self, app: AppConfig):
+        """Verify the template targets the same Briefcase epoch as the Command."""
+
+        # Only verify the template if one has been rolled out
+        if not self.bundle_path(app).exists():
+            return
+
+        if self.platform_target_epoch != self.template_target_epoch(app):
+            raise BriefcaseCommandError(
+                f"""\
+The app template used to generate this app is not compatible with this version
+of Briefcase.
+
+If the app was generated with an earlier version of Briefcase using the default
+Briefcase template, you can run:
+
+     $ briefcase create {self.platform} {self.output_format}
+
+to re-generate your app with a compatible version of the template.
+
+If you are using a custom template, you'll need to update the template to correct
+any compatibility problems, and then add the compatibility declaration.
+"""
+            )
 
     def parse_options(self, extra):
         """Parse the command line arguments for the Command.
@@ -606,7 +648,6 @@ a custom location for Briefcase's tools.
 
         :param command: The command whose options are to be cloned
         """
-        pass
 
     def add_default_options(self, parser):
         """Add the default options that exist on *all* commands.
@@ -706,7 +747,6 @@ a custom location for Briefcase's tools.
 
         :param parser: a stub argparse parser for the command.
         """
-        pass
 
     def parse_config(self, filename):
         try:
@@ -766,12 +806,13 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
             # try to update it using git. If no cache exists, or if the cache
             # directory isn't a git directory, or git fails for some reason,
             # fall back to using the specified template directly.
+            cached_template = cookiecutter_cache_path(template)
             try:
-                cached_template = cookiecutter_cache_path(template)
                 repo = self.tools.git.Repo(cached_template)
+                # Raises ValueError if "origin" isn't a valid remote
+                remote = repo.remote(name="origin")
                 try:
                     # Attempt to update the repository
-                    remote = repo.remote(name="origin")
                     remote.fetch()
                 except self.tools.git.exc.GitCommandError as e:
                     # We are offline, or otherwise unable to contact

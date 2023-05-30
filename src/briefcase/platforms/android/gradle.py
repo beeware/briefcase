@@ -62,7 +62,7 @@ def android_log_clean_filter(line):
 class GradleMixin:
     output_format = "gradle"
     platform = "android"
-    oldest_compatible_briefcase = "0.3.15"
+    platform_target_epoch = "0.3.15"
 
     @property
     def packaging_formats(self):

@@ -14,10 +14,15 @@ def test_open(open_command, first_app, second_app):
         # App configs have been finalized
         ("finalize-app-config", "first"),
         ("finalize-app-config", "second"),
+        # App template is verified
+        ("verify-app-template", "first"),
         # App tools are verified
         ("verify-app-tools", "first"),
         # open the first app
         ("open", "first"),
+        # App template is verified
+        ("verify-app-template", "second"),
+        # App tools are verified
         ("verify-app-tools", "second"),
         # open the second app
         ("open", "second"),
@@ -39,6 +44,8 @@ def test_open_single(open_command, first_app):
         ("verify-tools",),
         # App config has been finalized
         ("finalize-app-config", "first"),
+        # App template is verified
+        ("verify-app-template", "first"),
         # App tools are verified
         ("verify-app-tools", "first"),
         # open the first app
@@ -63,6 +70,8 @@ def test_create_before_open(open_command, tmp_path):
         ("finalize-app-config", "first"),
         # create, then open the first app
         ("create", "first", {}),
+        # App template is verified
+        ("verify-app-template", "first"),
         # App tools are verified
         ("verify-app-tools", "first"),
         ("open", "first"),

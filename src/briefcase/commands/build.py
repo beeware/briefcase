@@ -1,9 +1,6 @@
-from typing import Optional
+from __future__ import annotations
 
-from packaging.version import Version
-
-import briefcase
-from briefcase.config import AppConfig, BaseConfig
+from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseCommandError
 
 from .base import BaseCommand, full_options
@@ -24,61 +21,6 @@ class BuildCommand(BaseCommand):
         """
         # Default implementation; nothing to build.
 
-    def verify_template(self, app: AppConfig):
-        """Verify the template satisfies the Command's requirements."""
-        # check against the "release" for each Version since versions
-        # such as "0.3.15.dev123" are considered older than "0.3.15"
-
-        if template_target := self.briefcase_target_version(app=app):
-            template_target = Version(template_target).release
-
-        if platform_target := self.oldest_compatible_briefcase:
-            platform_target = Version(platform_target).release
-
-        if platform_target and not template_target:
-            platform_version = ".".join(map(str, platform_target))
-            raise BriefcaseCommandError(
-                f"""\
-Briefcase requires that the app template explicitly declare that it is compatible
-with Briefcase {platform_version} or later. However, the generated app's `briefcase.toml`
-has no `target_version` declaration.
-
-If the app was generated with an earlier version of Briefcase using the default
-Briefcase template, you can run:
-
-     $ briefcase create {self.platform} {self.output_format}
-
-to re-generate your app.
-
-If you are using a custom template, you'll need to update the template to correct
-any compatibility problems, and then add the compatibility declaration.
-"""
-            )
-
-        current_version = Version(briefcase.__version__).release
-        if (platform_target and platform_target > template_target) or (
-            template_target and template_target > current_version
-        ):
-            minimum_ver = ".".join(map(str, platform_target or current_version))
-            template_ver = ".".join(map(str, template_target))
-            raise BriefcaseCommandError(
-                f"""\
-The app template used to generate this app is not compatible with this version
-of Briefcase. Briefcase requires a template that is compatible with version {minimum_ver};
-the template used to generate this app is compatible with version {template_ver}.
-
-If the app was generated with an earlier version of Briefcase using the default
-Briefcase template, you can run:
-
-     $ briefcase create {self.platform} {self.output_format}
-
-to re-generate your app.
-
-If you are using a custom template, you'll need to update the template to correct
-any compatibility problems, and then add the compatibility declaration.
-"""
-            )
-
     def _build_app(
         self,
         app: AppConfig,
@@ -89,7 +31,7 @@ any compatibility problems, and then add the compatibility declaration.
         no_update: bool,
         test_mode: bool,
         **options,
-    ):
+    ) -> dict | None:
         """Internal method to invoke a build on a single app. Ensures the app exists,
         and has been updated (if requested) before attempting to issue the actual build
         command.
@@ -126,8 +68,7 @@ any compatibility problems, and then add the compatibility declaration.
         else:
             state = None
 
-        self.verify_template(app)
-        self.verify_app_tools(app)
+        self.verify_app(app)
 
         state = self.build_app(app, test_mode=test_mode, **full_options(state, options))
 
@@ -140,7 +81,7 @@ any compatibility problems, and then add the compatibility declaration.
 
     def __call__(
         self,
-        app: Optional[BaseConfig] = None,
+        app: AppConfig | None = None,
         update: bool = False,
         update_requirements: bool = False,
         update_resources: bool = False,
@@ -148,7 +89,7 @@ any compatibility problems, and then add the compatibility declaration.
         no_update: bool = False,
         test_mode: bool = False,
         **options,
-    ):
+    ) -> dict | None:
         # Has the user requested an invalid set of options?
         # This can't be done with argparse, because it isn't a simple mutually exclusive group.
         if no_update:

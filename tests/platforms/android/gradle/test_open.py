@@ -1,5 +1,6 @@
 import os
 import sys
+from collections import defaultdict
 from unittest.mock import MagicMock
 
 import pytest
@@ -37,6 +38,11 @@ def open_command(tmp_path, first_app_config):
     command.tools.os = MagicMock(spec_set=os)
     command.tools.subprocess = MagicMock(spec_set=Subprocess)
     command.tools.download = MagicMock(spec_set=Download)
+
+    # Mock all apps as targeting version 0.3.15
+    command._briefcase_toml = defaultdict(
+        lambda: {"briefcase": {"target_epoch": "0.3.15"}}
+    )
 
     # Mock some OS calls needed to make the tools appear to exist
     command.tools.os.environ = {}

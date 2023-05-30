@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import List, Optional
 
 from briefcase.commands.run import RunAppMixin
-from briefcase.config import BaseConfig
+from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseCommandError, RequirementsInstallError
 
 from .base import BaseCommand
@@ -26,10 +26,6 @@ class DevCommand(RunAppMixin, BaseCommand):
             "linux": "linux",
             "win32": "windows",
         }[sys.platform]
-
-    def bundle_path(self, app):
-        """A placeholder; Dev command doesn't have a bundle path."""
-        raise NotImplementedError()
 
     def binary_path(self, app):
         """A placeholder; Dev command doesn't have a binary path."""
@@ -57,7 +53,7 @@ class DevCommand(RunAppMixin, BaseCommand):
             help="Run the app in test mode",
         )
 
-    def install_dev_requirements(self, app: BaseConfig, **options):
+    def install_dev_requirements(self, app: AppConfig, **options):
         """Install the requirements for the app dev.
 
         This will always include test requirements, if specified.
@@ -90,7 +86,7 @@ class DevCommand(RunAppMixin, BaseCommand):
 
     def run_dev_app(
         self,
-        app: BaseConfig,
+        app: AppConfig,
         env: dict,
         test_mode: bool,
         passthrough: List[str],
@@ -182,7 +178,7 @@ class DevCommand(RunAppMixin, BaseCommand):
         # and that the app configuration is finalized.
         self.finalize(app)
 
-        self.verify_app_tools(app)
+        self.verify_app(app)
 
         # Look for the existence of a dist-info file.
         # If one exists, assume that the requirements have already been

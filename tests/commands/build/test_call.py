@@ -26,7 +26,7 @@ def test_specific_app(build_command, first_app, second_app):
         # App config has been finalized
         ("finalize-app-config", "first"),
         # App template is verified
-        ("verify-template", "first"),
+        ("verify-app-template", "first"),
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Build the first app; no state
@@ -58,13 +58,13 @@ def test_multiple_apps(build_command, first_app, second_app):
         ("finalize-app-config", "first"),
         ("finalize-app-config", "second"),
         # App template is verified for first app
-        ("verify-template", "first"),
+        ("verify-app-template", "first"),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
         # Build the first app; no state
         ("build", "first", {"test_mode": False}),
         # App template is verified for second app
-        ("verify-template", "second"),
+        ("verify-app-template", "second"),
         # App tools are verified for second app
         ("verify-app-tools", "second"),
         # Build the second apps; state from previous build.
@@ -98,12 +98,12 @@ def test_non_existent(build_command, first_app_config, second_app):
         # First App doesn't exist, so it will be created, then built
         ("create", "first", {"test_mode": False}),
         # App template is verified for first app
-        ("verify-template", "first"),
+        ("verify-app-template", "first"),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
         ("build", "first", {"create_state": "first", "test_mode": False}),
         # App template is verified for second app
-        ("verify-template", "second"),
+        ("verify-app-template", "second"),
         # App tools are verified for second app
         ("verify-app-tools", "second"),
         # Second app *does* exist, so it only be built
@@ -140,13 +140,13 @@ def test_unbuilt(build_command, first_app_unbuilt, second_app):
         ("finalize-app-config", "first"),
         ("finalize-app-config", "second"),
         # App template is verified for first app
-        ("verify-template", "first"),
+        ("verify-app-template", "first"),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
         # First App exists, but hasn't been built; it will be built.
         ("build", "first", {"test_mode": False}),
         # App template is verified for second app
-        ("verify-template", "second"),
+        ("verify-app-template", "second"),
         # App tools are verified for second app
         ("verify-app-tools", "second"),
         # Second app has been built before; it will be built again.
@@ -189,7 +189,7 @@ def test_update_app(build_command, first_app, second_app):
             },
         ),
         # App template is verified for first app
-        ("verify-template", "first"),
+        ("verify-app-template", "first"),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
         ("build", "first", {"update_state": "first", "test_mode": False}),
@@ -207,7 +207,7 @@ def test_update_app(build_command, first_app, second_app):
             },
         ),
         # App template is verified for second app
-        ("verify-template", "second"),
+        ("verify-app-template", "second"),
         # App tools are verified for second app
         ("verify-app-tools", "second"),
         (
@@ -253,7 +253,7 @@ def test_update_app_requirements(build_command, first_app, second_app):
             },
         ),
         # App template is verified for first app
-        ("verify-template", "first"),
+        ("verify-app-template", "first"),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
         ("build", "first", {"update_state": "first", "test_mode": False}),
@@ -271,7 +271,7 @@ def test_update_app_requirements(build_command, first_app, second_app):
             },
         ),
         # App template is verified for second app
-        ("verify-template", "second"),
+        ("verify-app-template", "second"),
         # App tools are verified for second app
         ("verify-app-tools", "second"),
         (
@@ -317,7 +317,7 @@ def test_update_app_resources(build_command, first_app, second_app):
             },
         ),
         # App template is verified for first app
-        ("verify-template", "first"),
+        ("verify-app-template", "first"),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
         ("build", "first", {"update_state": "first", "test_mode": False}),
@@ -335,7 +335,7 @@ def test_update_app_resources(build_command, first_app, second_app):
             },
         ),
         # App template is verified for second app
-        ("verify-template", "second"),
+        ("verify-app-template", "second"),
         # App tools are verified for second app
         ("verify-app-tools", "second"),
         (
@@ -372,7 +372,7 @@ def test_update_non_existent(build_command, first_app_config, second_app):
         # First App doesn't exist, so it will be created, then built
         ("create", "first", {"test_mode": False}),
         # App template is verified for first app
-        ("verify-template", "first"),
+        ("verify-app-template", "first"),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
         ("build", "first", {"create_state": "first", "test_mode": False}),
@@ -390,7 +390,7 @@ def test_update_non_existent(build_command, first_app_config, second_app):
             },
         ),
         # App template is verified for second app
-        ("verify-template", "second"),
+        ("verify-app-template", "second"),
         # App tools are verified for second app
         ("verify-app-tools", "second"),
         (
@@ -441,7 +441,7 @@ def test_update_unbuilt(build_command, first_app_unbuilt, second_app):
             },
         ),
         # App template is verified for first app
-        ("verify-template", "first"),
+        ("verify-app-template", "first"),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
         ("build", "first", {"update_state": "first", "test_mode": False}),
@@ -459,7 +459,7 @@ def test_update_unbuilt(build_command, first_app_unbuilt, second_app):
             },
         ),
         # App template is verified for second app
-        ("verify-template", "second"),
+        ("verify-app-template", "second"),
         # App tools are verified for second app
         ("verify-app-tools", "second"),
         (
@@ -505,7 +505,7 @@ def test_build_test(build_command, first_app, second_app):
             },
         ),
         # App template is verified for first app
-        ("verify-template", "first"),
+        ("verify-app-template", "first"),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
         ("build", "first", {"update_state": "first", "test_mode": True}),
@@ -523,7 +523,7 @@ def test_build_test(build_command, first_app, second_app):
             },
         ),
         # App template is verified for second app
-        ("verify-template", "second"),
+        ("verify-app-template", "second"),
         # App tools are verified for second app
         ("verify-app-tools", "second"),
         (
@@ -560,13 +560,13 @@ def test_build_test_no_update(build_command, first_app, second_app):
         ("finalize-app-config", "second"),
         # No update of the first app
         # App template is verified for first app
-        ("verify-template", "first"),
+        ("verify-app-template", "first"),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
         ("build", "first", {"test_mode": True}),
         # No update of the second app
         # App template is verified for second app
-        ("verify-template", "second"),
+        ("verify-app-template", "second"),
         # App tools are verified for second app
         ("verify-app-tools", "second"),
         (
@@ -613,7 +613,7 @@ def test_build_test_update_dependencies(build_command, first_app, second_app):
             },
         ),
         # App template is verified for first app
-        ("verify-template", "first"),
+        ("verify-app-template", "first"),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
         ("build", "first", {"update_state": "first", "test_mode": True}),
@@ -631,7 +631,7 @@ def test_build_test_update_dependencies(build_command, first_app, second_app):
             },
         ),
         # App template is verified for second app
-        ("verify-template", "second"),
+        ("verify-app-template", "second"),
         # App tools are verified for second app
         ("verify-app-tools", "second"),
         (
@@ -678,7 +678,7 @@ def test_build_test_update_resources(build_command, first_app, second_app):
             },
         ),
         # App template is verified for first app
-        ("verify-template", "first"),
+        ("verify-app-template", "first"),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
         ("build", "first", {"update_state": "first", "test_mode": True}),
@@ -696,7 +696,7 @@ def test_build_test_update_resources(build_command, first_app, second_app):
             },
         ),
         # App template is verified for second app
-        ("verify-template", "second"),
+        ("verify-app-template", "second"),
         # App tools are verified for second app
         ("verify-app-tools", "second"),
         (
@@ -812,7 +812,7 @@ def test_test_app_non_existent(build_command, first_app_config, second_app):
         # First App doesn't exist, so it will be created, then built
         ("create", "first", {"test_mode": True}),
         # App template is verified for first app
-        ("verify-template", "first"),
+        ("verify-app-template", "first"),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
         ("build", "first", {"create_state": "first", "test_mode": True}),
@@ -830,7 +830,7 @@ def test_test_app_non_existent(build_command, first_app_config, second_app):
             },
         ),
         # App template is verified for second app
-        ("verify-template", "second"),
+        ("verify-app-template", "second"),
         # App tools are verified for second app
         ("verify-app-tools", "second"),
         (
@@ -882,7 +882,7 @@ def test_test_app_unbuilt(build_command, first_app_unbuilt, second_app):
             },
         ),
         # App template is verified for first app
-        ("verify-template", "first"),
+        ("verify-app-template", "first"),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
         (
@@ -904,7 +904,7 @@ def test_test_app_unbuilt(build_command, first_app_unbuilt, second_app):
             },
         ),
         # App template is verified for second app
-        ("verify-template", "second"),
+        ("verify-app-template", "second"),
         # App tools are verified for second app
         ("verify-app-tools", "second"),
         (

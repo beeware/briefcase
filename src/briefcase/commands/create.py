@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import hashlib
 import os
 import platform
@@ -6,12 +8,11 @@ import subprocess
 import sys
 from datetime import date
 from pathlib import Path
-from typing import List, Optional
 
 from packaging.version import Version
 
 import briefcase
-from briefcase.config import AppConfig, BaseConfig
+from briefcase.config import AppConfig
 from briefcase.exceptions import (
     BriefcaseCommandError,
     InvalidSupportPackage,
@@ -43,7 +44,7 @@ def cookiecutter_cache_path(template):
     return Path.home() / ".cookiecutters" / cache_name
 
 
-def write_dist_info(app: BaseConfig, dist_info_path: Path):
+def write_dist_info(app: AppConfig, dist_info_path: Path):
     """Install the dist-info folder for the application.
 
     :param app: The config object for the app
@@ -82,10 +83,6 @@ def write_dist_info(app: BaseConfig, dist_info_path: Path):
 class CreateCommand(BaseCommand):
     command = "create"
     description = "Create a new app for a target platform."
-
-    def __init__(self, *args, **options):
-        super().__init__(*args, **options)
-        self._s3 = None
 
     @property
     def app_template_url(self):
@@ -169,14 +166,14 @@ class CreateCommand(BaseCommand):
         except KeyError:
             return {}
 
-    def output_format_template_context(self, app: BaseConfig):
+    def output_format_template_context(self, app: AppConfig):
         """Additional template context required by the output format.
 
         :param app: The config object for the app
         """
         return {}
 
-    def generate_app_template(self, app: BaseConfig):
+    def generate_app_template(self, app: AppConfig):
         """Create an application bundle.
 
         :param app: The config object for the app
@@ -287,7 +284,7 @@ class CreateCommand(BaseCommand):
         with self.input.wait_bar("Removing existing support package..."):
             self.tools.shutil.rmtree(support_path)
 
-    def cleanup_app_support_package(self, app: BaseConfig):
+    def cleanup_app_support_package(self, app: AppConfig):
         """Clean up an existing application support package.
 
         :param app: The config object for the app
@@ -301,7 +298,7 @@ class CreateCommand(BaseCommand):
             if support_path.exists():
                 self._cleanup_app_support_package(support_path)
 
-    def install_app_support_package(self, app: BaseConfig):
+    def install_app_support_package(self, app: AppConfig):
         """Install the application support package.
 
         :param app: The config object for the app
@@ -314,7 +311,7 @@ class CreateCommand(BaseCommand):
             support_file_path = self._download_support_package(app)
             self._unpack_support_package(support_file_path, support_path)
 
-    def _download_support_package(self, app):
+    def _download_support_package(self, app: AppConfig):
         try:
             # Work out if the app defines a custom override for
             # the support package URL.
@@ -391,8 +388,8 @@ class CreateCommand(BaseCommand):
 
     def _write_requirements_file(
         self,
-        app: BaseConfig,
-        requires: List[str],
+        app: AppConfig,
+        requires: list[str],
         requirements_path: Path,
     ):
         """Configure application requirements by writing a requirements.txt file.
@@ -416,7 +413,7 @@ class CreateCommand(BaseCommand):
                             requirement = os.path.abspath(self.base_path / requirement)
                         f.write(f"{requirement}\n")
 
-    def _pip_requires(self, app: BaseConfig, requires: List[str]):
+    def _pip_requires(self, app: AppConfig, requires: list[str]):
         """Convert the list of requirements to be passed to pip into its final form.
 
         :param app: The app configuration
@@ -425,7 +422,7 @@ class CreateCommand(BaseCommand):
         """
         return requires
 
-    def _extra_pip_args(self, app: BaseConfig):
+    def _extra_pip_args(self, app: AppConfig):
         """Any additional arguments that must be passed to pip when installing packages.
 
         :param app: The app configuration
@@ -433,7 +430,7 @@ class CreateCommand(BaseCommand):
         """
         return []
 
-    def _pip_kwargs(self, app: BaseConfig):
+    def _pip_kwargs(self, app: AppConfig):
         """Generate the kwargs to pass when invoking pip.
 
         :param app: The app configuration
@@ -455,8 +452,8 @@ class CreateCommand(BaseCommand):
 
     def _install_app_requirements(
         self,
-        app: BaseConfig,
-        requires: List[str],
+        app: AppConfig,
+        requires: list[str],
         app_packages_path: Path,
     ):
         """Install requirements for the app with pip.
@@ -496,7 +493,7 @@ class CreateCommand(BaseCommand):
         else:
             self.logger.info("No application requirements.")
 
-    def install_app_requirements(self, app: BaseConfig, test_mode: bool):
+    def install_app_requirements(self, app: AppConfig, test_mode: bool):
         """Handle requirements for the app.
 
         This will result in either (in preferential order):
@@ -530,7 +527,7 @@ class CreateCommand(BaseCommand):
                     "`app_requirements_path` or `app_packages_path`"
                 ) from e
 
-    def install_app_code(self, app: BaseConfig, test_mode: bool):
+    def install_app_code(self, app: AppConfig, test_mode: bool):
         """Install the application code into the bundle.
 
         :param app: The config object for the app
@@ -642,7 +639,7 @@ class CreateCommand(BaseCommand):
                     f"Unable to find {source_filename} for {full_role}; using default"
                 )
 
-    def install_app_resources(self, app: BaseConfig):
+    def install_app_resources(self, app: AppConfig):
         """Install the application resources (such as icons and splash screens) into the
         bundle.
 
@@ -702,7 +699,7 @@ class CreateCommand(BaseCommand):
                     target=self.bundle_path(app) / target,
                 )
 
-    def cleanup_app_content(self, app: BaseConfig):
+    def cleanup_app_content(self, app: AppConfig):
         """Remove any content not needed by the final app bundle.
 
         :param app: The config object for the app
@@ -738,7 +735,7 @@ class CreateCommand(BaseCommand):
                         self.logger.info(f"Removing {relative_path}")
                         path.unlink()
 
-    def create_app(self, app: BaseConfig, test_mode: bool = False, **options):
+    def create_app(self, app: AppConfig, test_mode: bool = False, **options):
         """Create an application bundle.
 
         :param app: The config object for the app
@@ -767,9 +764,9 @@ class CreateCommand(BaseCommand):
         self.logger.info("Installing support package...", prefix=app.app_name)
         self.install_app_support_package(app=app)
 
-        # Verify tools for the app after the app template and support package
+        # Verify the app after the app template and support package
         # are in place since the app tools may be dependent on them.
-        self.verify_app_tools(app)
+        self.verify_app(app)
 
         self.logger.info("Installing application code...", prefix=app.app_name)
         self.install_app_code(app=app, test_mode=test_mode)
@@ -796,12 +793,12 @@ class CreateCommand(BaseCommand):
         super().verify_tools()
         git.verify_git_is_installed(tools=self.tools)
 
-    def verify_app_tools(self, app: BaseConfig):
+    def verify_app_tools(self, app: AppConfig):
         """Verify that tools needed to run the command for this app exist."""
         super().verify_app_tools(app)
         NativeAppContext.verify(tools=self.tools, app=app)
 
-    def __call__(self, app: Optional[BaseConfig] = None, **options):
+    def __call__(self, app: AppConfig | None = None, **options) -> dict | None:
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
         self.finalize(app)
