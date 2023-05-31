@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from briefcase.exceptions import BriefcaseCommandError
+from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
 from briefcase.integrations import windows_sdk
 from briefcase.integrations.windows_sdk import WindowsSDK
 
@@ -65,10 +65,29 @@ def test_short_circuit(mock_tools):
     assert tool == mock_tools.windows_sdk
 
 
+@pytest.mark.parametrize("host_os", ["Darwin", "Linux", "wonky"])
+def test_unsupported_os(mock_tools, host_os):
+    """When host OS is not supported, an error is raised."""
+    mock_tools.host_os = host_os
+
+    with pytest.raises(
+        UnsupportedHostError,
+        match=f"{WindowsSDK.name} is not supported on {host_os}",
+    ):
+        WindowsSDK.verify(mock_tools)
+
+
 @pytest.mark.parametrize(
     "host_arch, sdk_arch", [("AMD64", "x64"), ("ARM64", "arm64"), ("gothic", "gothic")]
 )
-def test_winsdk_arch(mock_tools, host_arch, sdk_arch, tmp_path, monkeypatch):
+def test_winsdk_arch(
+    mock_tools,
+    mock_winreg,
+    host_arch,
+    sdk_arch,
+    tmp_path,
+    monkeypatch,
+):
     """The architecture of the host machine is respected."""
     # Mock the environment for a Windows SDK install
     sdk_path, sdk_ver = setup_winsdk_install(tmp_path, "1.1.1", sdk_arch)
@@ -93,7 +112,7 @@ def test_winsdk_arch(mock_tools, host_arch, sdk_arch, tmp_path, monkeypatch):
     assert win_sdk.signtool_exe == signtool_path
 
 
-def test_winsdk_valid_env_vars(mock_tools, tmp_path, monkeypatch):
+def test_winsdk_valid_env_vars(mock_tools, mock_winreg, tmp_path, monkeypatch):
     """If the WindowsSDKDir and WindowsSDKVersion env vars point to a suitable Windows
     SDK install, the validator succeeds."""
     # Mock the environment for a Windows SDK install
@@ -117,7 +136,7 @@ def test_winsdk_valid_env_vars(mock_tools, tmp_path, monkeypatch):
     assert win_sdk.signtool_exe == signtool_path
 
 
-def test_winsdk_invalid_env_vars(mock_tools, tmp_path, monkeypatch):
+def test_winsdk_invalid_env_vars(mock_tools, mock_winreg, tmp_path, monkeypatch):
     """If the WindowsSDKDir and WindowsSDKVersion env vars point to an invalid Windows
     SDK install, the validator fails."""
     # Mock the environment for a Windows SDK install

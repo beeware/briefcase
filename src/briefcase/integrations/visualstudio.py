@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import subprocess
 from pathlib import Path
 
@@ -9,6 +11,7 @@ from briefcase.integrations.subprocess import json_parser
 class VisualStudio(Tool):
     name = "visualstudio"
     full_name = "Visual Studio"
+    supported_host_os = {"Windows"}
     VSCODE_REQUIRED_COMPONENTS = """
     * .NET Desktop Development
       - Default packages
@@ -21,19 +24,19 @@ class VisualStudio(Tool):
         self,
         tools: ToolCache,
         msbuild_path: Path,
-        install_metadata: dict = None,
+        install_metadata: dict[str, str | int | bool] = None,
     ):
-        self.tools = tools
+        super().__init__(tools=tools)
         self._msbuild_path = msbuild_path
         self._install_metadata = install_metadata
 
     @property
-    def msbuild_path(self):
+    def msbuild_path(self) -> Path:
         """The path to the MSBuild executable."""
         return self._msbuild_path
 
     @property
-    def install_metadata(self):
+    def install_metadata(self) -> dict[str, str | int | bool] | None:
         """Metadata about the Visual Studio install.
 
         Will be ``None`` if MSBuild the path to MSBuild has been provided
@@ -44,7 +47,7 @@ class VisualStudio(Tool):
         return self._install_metadata
 
     @classmethod
-    def verify(cls, tools: ToolCache):
+    def verify_install(cls, tools: ToolCache, **kwargs) -> VisualStudio:
         """Verify that Visual Studio is available.
 
         :param tools: ToolCache of available tools
@@ -57,12 +60,9 @@ class VisualStudio(Tool):
 
         visualstudio = None
 
-        # Try running MSBuild, assuming it is on the PATH.
         try:
+            # Try running MSBuild, assuming it is on the PATH.
             tools.subprocess.check_output(["MSBuild.exe", "--version"])
-
-            # Create an explicit VisualStudio, with no install metadata
-            visualstudio = VisualStudio(tools, msbuild_path=Path("MSBuild.exe"))
         except FileNotFoundError:
             # MSBuild isn't on the path
             pass
@@ -70,13 +70,16 @@ class VisualStudio(Tool):
             raise BriefcaseCommandError(
                 "MSBuild is on the path, but Briefcase cannot start it."
             ) from e
+        else:
+            # Create an explicit VisualStudio, with no install metadata
+            visualstudio = VisualStudio(tools=tools, msbuild_path=Path("MSBuild.exe"))
 
         # try to find Visual Studio
         if visualstudio is None:
             # Look for an %MSBUILD% environment variable
             try:
                 msbuild_path = Path(tools.os.environ["MSBUILD"])
-                install_metadata = None
+                install_metadata: dict[str, str | int | bool] = None
 
                 if not msbuild_path.exists():
                     # The location referenced by %MSBUILD% doesn't exist
@@ -94,13 +97,15 @@ or unset the environment variable; then re-run Briefcase.
 
             except KeyError:
                 # No %MSBUILD% environment variable. Look for vswhere.exe
-                vswhere_path = (
-                    Path(tools.os.environ["ProgramFiles(x86)"])
-                    / "Microsoft Visual Studio"
-                    / "Installer"
-                    / "vswhere.exe"
-                )
-                if not vswhere_path.exists():
+                vswhere_path = None
+                if program_files := tools.os.environ.get("ProgramFiles(x86)"):
+                    vswhere_path = (
+                        Path(program_files)
+                        / "Microsoft Visual Studio"
+                        / "Installer"
+                        / "vswhere.exe"
+                    )
+                if vswhere_path is None or not vswhere_path.exists():
                     raise BriefcaseCommandError(
                         f"""\
 Visual Studio does not appear to be installed. Visual Studio 2022 Community
@@ -181,14 +186,10 @@ Then restart Briefcase.
                 )
 
             visualstudio = VisualStudio(
-                tools,
+                tools=tools,
                 msbuild_path=msbuild_path,
                 install_metadata=install_metadata,
             )
 
         tools.visualstudio = visualstudio
         return visualstudio
-
-    @property
-    def managed_install(self):
-        return False

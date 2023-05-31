@@ -6,7 +6,7 @@ from unittest.mock import call
 
 import pytest
 
-from briefcase.exceptions import BriefcaseCommandError
+from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
 from briefcase.integrations.visualstudio import VisualStudio
 
 MSBUILD_OUTPUT = """Microsoft (R) Build Engine version 17.2.1+52cd2da31 for .NET Framework
@@ -66,6 +66,18 @@ def test_short_circuit(mock_tools):
 
     assert tool == "tool"
     assert tool == mock_tools.visualstudio
+
+
+@pytest.mark.parametrize("host_os", ["Darwin", "Linux", "wonky"])
+def test_unsupported_os(mock_tools, host_os):
+    """When host OS is not supported, an error is raised."""
+    mock_tools.host_os = host_os
+
+    with pytest.raises(
+        UnsupportedHostError,
+        match=f"{VisualStudio.name} is not supported on {host_os}",
+    ):
+        VisualStudio.verify(mock_tools)
 
 
 def test_msbuild_on_path(mock_tools):
@@ -197,6 +209,30 @@ def test_vswhere_does_not_exist(mock_tools):
     """If VSWhere does not exist, an error is raised."""
     # MSBuild is not on the path
     mock_tools.subprocess.check_output.side_effect = FileNotFoundError
+
+    # Verify the installation
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Visual Studio does not appear to be installed.",
+    ):
+        VisualStudio.verify(mock_tools)
+
+    # Verification calls are as expected
+    mock_tools.subprocess.check_output.assert_has_calls(
+        [
+            call(["MSBuild.exe", "--version"]),
+        ],
+        any_order=False,
+    )
+
+
+def test_programfiles_envvar_does_not_exist(mock_tools):
+    """If ProgramFiles(x86) env var is not set, an error is raised."""
+    # MSBuild is not on the path
+    mock_tools.subprocess.check_output.side_effect = FileNotFoundError
+
+    # ProgramFiles(x86) env var is not set
+    mock_tools.os.environ.pop("ProgramFiles(x86)", None)
 
     # Verify the installation
     with pytest.raises(

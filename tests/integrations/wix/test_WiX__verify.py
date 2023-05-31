@@ -3,7 +3,12 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from briefcase.exceptions import BriefcaseCommandError, MissingToolError, NetworkFailure
+from briefcase.exceptions import (
+    BriefcaseCommandError,
+    MissingToolError,
+    NetworkFailure,
+    UnsupportedHostError,
+)
 from briefcase.integrations.wix import WIX_DOWNLOAD_URL, WiX
 
 
@@ -15,6 +20,18 @@ def test_short_circuit(mock_tools):
 
     assert tool == "tool"
     assert tool == mock_tools.wix
+
+
+@pytest.mark.parametrize("host_os", ["Darwin", "Linux", "wonky"])
+def test_unsupported_os(mock_tools, host_os):
+    """When host OS is not supported, an error is raised."""
+    mock_tools.host_os = host_os
+
+    with pytest.raises(
+        UnsupportedHostError,
+        match=f"{WiX.name} is not supported on {host_os}",
+    ):
+        WiX.verify(mock_tools)
 
 
 def test_valid_wix_envvar(mock_tools, tmp_path):

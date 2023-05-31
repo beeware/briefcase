@@ -4,17 +4,17 @@ from briefcase.integrations.linuxdeploy import LinuxDeployURLPlugin
 
 
 @pytest.fixture
-def linuxdeploy_plugin(mock_tools):
+def linuxdeploy_url_plugin(mock_tools):
     return LinuxDeployURLPlugin(
         mock_tools,
         url="https://example.com/path/to/linuxdeploy-plugin-foobar.sh",
     )
 
 
-def test_file_path(mock_tools, linuxdeploy_plugin):
+def test_file_path(mock_tools, linuxdeploy_url_plugin):
     """Custom URL plugins are in the linuxdeploy plugins folder, behind a hash."""
     assert (
-        linuxdeploy_plugin.file_path
+        linuxdeploy_url_plugin.file_path
         == mock_tools.base_path
         / "linuxdeploy_plugins"
         / "foobar"
@@ -22,18 +22,18 @@ def test_file_path(mock_tools, linuxdeploy_plugin):
     )
 
 
-def test_file_name(linuxdeploy_plugin):
+def test_file_name(linuxdeploy_url_plugin):
     """Custom URL plugin filenames come from the URL."""
-    assert linuxdeploy_plugin.file_name == "linuxdeploy-plugin-foobar.sh"
+    assert linuxdeploy_url_plugin.file_name == "linuxdeploy-plugin-foobar.sh"
 
 
-def test_plugin_id(linuxdeploy_plugin):
+def test_plugin_id(linuxdeploy_url_plugin):
     """The Custom URL plugin ID can be determined from the filename."""
-    assert linuxdeploy_plugin.plugin_id == "foobar"
+    assert linuxdeploy_url_plugin.plugin_id == "foobar"
 
 
-def test_download_url(linuxdeploy_plugin):
+def test_download_url(linuxdeploy_url_plugin):
     """The download URL for the plugin is as-provided."""
-    assert linuxdeploy_plugin.download_url == (
+    assert linuxdeploy_url_plugin.download_url == (
         "https://example.com/path/to/linuxdeploy-plugin-foobar.sh"
     )

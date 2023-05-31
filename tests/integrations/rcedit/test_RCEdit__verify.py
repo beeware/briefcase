@@ -1,6 +1,6 @@
 import pytest
 
-from briefcase.exceptions import MissingToolError, NetworkFailure
+from briefcase.exceptions import MissingToolError, NetworkFailure, UnsupportedHostError
 from briefcase.integrations.rcedit import RCEdit
 
 
@@ -12,6 +12,18 @@ def test_short_circuit(mock_tools):
 
     assert tool == "tool"
     assert tool == mock_tools.rcedit
+
+
+@pytest.mark.parametrize("host_os", ["Darwin", "Linux", "wonky"])
+def test_unsupported_os(mock_tools, host_os):
+    """When host OS is not supported, an error is raised."""
+    mock_tools.host_os = host_os
+
+    with pytest.raises(
+        UnsupportedHostError,
+        match=f"{RCEdit.name} is not supported on {host_os}",
+    ):
+        RCEdit.verify(mock_tools)
 
 
 def test_verify_exists(mock_tools, tmp_path):

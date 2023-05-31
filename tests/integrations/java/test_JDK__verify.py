@@ -7,7 +7,12 @@ from unittest import mock
 
 import pytest
 
-from briefcase.exceptions import BriefcaseCommandError, MissingToolError, NetworkFailure
+from briefcase.exceptions import (
+    BriefcaseCommandError,
+    MissingToolError,
+    NetworkFailure,
+    UnsupportedHostError,
+)
 from briefcase.integrations.java import JDK
 
 CALL_JAVA_HOME = mock.call(["/usr/libexec/java_home"])
@@ -26,6 +31,17 @@ def test_short_circuit(mock_tools):
 
     assert tool == "tool"
     assert tool == mock_tools.java
+
+
+def test_unsupported_os(mock_tools):
+    """When host OS is not supported, an error is raised."""
+    mock_tools.host_os = "wonky"
+
+    with pytest.raises(
+        UnsupportedHostError,
+        match=f"{JDK.name} is not supported on wonky",
+    ):
+        JDK.verify(mock_tools)
 
 
 def test_macos_tool_java_home(mock_tools, capsys):

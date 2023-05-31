@@ -37,7 +37,7 @@ def test_valid_python3(monkeypatch, create_command):
 )
 def test_bad_python3(monkeypatch, create_command, resolved_path, expected_error):
     """If the system Python3 isn't obviously a Python3, an error is raised."""
-    # Mock a Python3 symlink that isn'tthe existence of a valid non-docker system Python
+    # Mock a Python3 symlink that isn't the existence of a valid non-docker system Python
     # with the same major/minor as the current Python
     python3 = MagicMock()
     python3.resolve.return_value = Path(resolved_path)

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import subprocess
 from pathlib import Path
-from typing import Generator
+from typing import Iterator
 
 # winreg can only be imported on Windows
 try:
@@ -17,6 +17,8 @@ from briefcase.integrations.base import Tool, ToolCache
 class WindowsSDK(Tool):
     name = "windows_sdk"
     full_name = "Windows SDK"
+    supported_host_os = {"Windows"}
+
     SDK_VERSION = "10.0"
     # Oldest supported SDK version is 10.0.15063.0
     SDK_MIN_VERSION = 15063
@@ -47,7 +49,7 @@ class WindowsSDK(Tool):
         :param version: Full SDK version, e.g. 10.0.22621.0
         :param arch: Host architecture for SDK, e.g. x64, arm64, etc
         """
-        self.tools = tools
+        super().__init__(tools=tools)
         self.root_path = root_path
         self.version = version
         self.arch = arch
@@ -69,7 +71,7 @@ class WindowsSDK(Tool):
         return [d.name for d in version_dirs]
 
     @classmethod
-    def _windows_sdks(cls, tools: ToolCache) -> Generator[tuple[Path, str], None, None]:
+    def _windows_sdks(cls, tools: ToolCache) -> Iterator[tuple[Path, str]]:
         """Generator of (path, version) for instances of Windows SDK.
 
         All instances of Windows SDK should reside in the same base directory; this is
@@ -180,7 +182,7 @@ WindowsSDKVersion: {environ_sdk_version}
         return True
 
     @classmethod
-    def verify(cls, tools: ToolCache):
+    def verify_install(cls, tools: ToolCache, **kwargs) -> WindowsSDK:
         """Verify the Windows SDK is installed with needed components.
 
         :param tools: ToolCache of available tools
@@ -192,8 +194,13 @@ WindowsSDKVersion: {environ_sdk_version}
         arch = {"AMD64": "x64", "ARM64": "arm64"}.get(tools.host_arch, tools.host_arch)
 
         sdk = None
-        for sdk_dir, sdk_version in cls._windows_sdks(tools):
-            sdk = WindowsSDK(tools, root_path=sdk_dir, version=sdk_version, arch=arch)
+        for sdk_dir, sdk_version in cls._windows_sdks(tools=tools):
+            sdk = WindowsSDK(
+                tools=tools,
+                root_path=sdk_dir,
+                version=sdk_version,
+                arch=arch,
+            )
 
             if not cls._is_supported_version(sdk):
                 sdk = None
@@ -219,7 +226,3 @@ See https://developer.microsoft.com/en-us/windows/downloads/windows-sdk/ to inst
         tools.logger.debug(f"Using Windows SDK v{sdk.version} at {sdk.root_path}")
         tools.windows_sdk = sdk
         return sdk
-
-    @property
-    def managed_install(self):
-        return False

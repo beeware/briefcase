@@ -3,13 +3,13 @@ import subprocess
 import pytest
 
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.integrations.xcode import confirm_xcode_license_accepted
+from briefcase.integrations.xcode import XcodeCliTools
 
 
 def test_license_accepted(capsys, mock_tools):
     """If the Xcode license has been accepted, pass without comment."""
     # Check passes without an error...
-    confirm_xcode_license_accepted(mock_tools)
+    XcodeCliTools.confirm_xcode_license_accepted(mock_tools)
 
     # ... clang was invoked ...
     mock_tools.subprocess.check_output.assert_called_once_with(
@@ -29,7 +29,7 @@ def test_unknown_error(capsys, mock_tools):
     )
 
     # Check passes without an error...
-    confirm_xcode_license_accepted(mock_tools)
+    XcodeCliTools.confirm_xcode_license_accepted(mock_tools)
 
     # ... clang was invoked ...
     mock_tools.subprocess.check_output.assert_called_once_with(
@@ -49,7 +49,7 @@ def test_accept_license(mock_tools):
     )
 
     # Check passes without an error...
-    confirm_xcode_license_accepted(mock_tools)
+    XcodeCliTools.confirm_xcode_license_accepted(mock_tools)
 
     # ... clang *and* xcodebuild were invoked ...
     mock_tools.subprocess.check_output.assert_called_once_with(
@@ -78,7 +78,7 @@ def test_sudo_fail(mock_tools):
         BriefcaseCommandError,
         match=r"Briefcase was unable to run the Xcode licensing tool.",
     ):
-        confirm_xcode_license_accepted(mock_tools)
+        XcodeCliTools.confirm_xcode_license_accepted(mock_tools)
 
     # ... clang *and* xcodebuild were invoked ...
     mock_tools.subprocess.check_output.assert_called_once_with(
@@ -106,7 +106,7 @@ def test_license_not_accepted(mock_tools):
     with pytest.raises(
         BriefcaseCommandError, match=r"Xcode license has not been accepted."
     ):
-        confirm_xcode_license_accepted(mock_tools)
+        XcodeCliTools.confirm_xcode_license_accepted(mock_tools)
 
     # ... clang *and* xcodebuild were invoked ...
     mock_tools.subprocess.check_output.assert_called_once_with(
@@ -131,7 +131,7 @@ def test_license_status_unknown(capsys, mock_tools):
     )
 
     # Check passes without error...
-    confirm_xcode_license_accepted(mock_tools)
+    XcodeCliTools.confirm_xcode_license_accepted(mock_tools)
 
     # ... clang *and* xcodebuild were invoked ...
     mock_tools.subprocess.check_output.assert_called_once_with(

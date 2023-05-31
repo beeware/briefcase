@@ -1,7 +1,5 @@
 import importlib
-import inspect
 import os
-import pkgutil
 import platform
 import shutil
 import sys
@@ -13,61 +11,40 @@ from cookiecutter.main import cookiecutter
 
 import briefcase.integrations
 from briefcase.console import Console, Log
-from briefcase.integrations.base import Tool, ToolCache
+from briefcase.integrations.base import ToolCache
 
-
-@pytest.fixture
-def simple_tools(tmp_path):
-    return ToolCache(
-        logger=Log(),
-        console=Console(),
-        base_path=tmp_path,
-    )
-
-
-def tools_for_module(tool_module_name: str) -> set:
-    """Return names of classes that subclass Tool in a module in
-    ``briefcase.integrations``, e.g. "android_sdk"."""
-    return {
-        klass_name
-        for klass_name, _ in inspect.getmembers(
-            sys.modules[f"briefcase.integrations.{tool_module_name}"],
-            lambda klass: (
-                inspect.isclass(klass) and issubclass(klass, Tool) and klass is not Tool
-            ),
-        )
-    }
+from .test_tool_registry import integrations_modules, tools_for_module
 
 
 def test_toolcache_typing():
     """Tool typing for ToolCache is correct."""
-    # Modules in ``briefcase.integrations`` that do not contain tools.
-    nontool_modules = {"base"}
     # Tools that are intentionally not annotated in ToolCache.
     tools_unannotated = {"cookiecutter"}
     # Tool names to exclude from the dynamic annotation checks; they are manually checked.
     tool_names_skip_dynamic_check = {
-        "app_context",
-        "git",
-        "xcode",
-        "xcode_cli",
-        "ETC_OS_RELEASE",
+        "app_context",  # Tested by the Docker module
+        "git",  # An external API, not a Briefcase Tool
+        "xcode_cli",  # Tested by the Xcode module
+        "ETC_OS_RELEASE",  # A constant, not a tool
     }
     # Tool classes to exclude from dynamic annotation checks.
-    tool_klasses_skip_dynamic_checks = {"DockerAppContext", "NativeAppContext"}
+    tool_klasses_skip_dynamic_checks = {
+        "Git",
+        "DockerAppContext",
+        "NativeAppContext",
+        "LinuxDeployQtPlugin",
+        "LinuxDeployGtkPlugin",
+        "LinuxDeployURLPlugin",
+        "LinuxDeployLocalFilePlugin",
+    }
 
     # Ensure all modules containing Tools are exported in ``briefcase.integrations``.
-    tool_modules = {
-        module.name
-        for module in pkgutil.iter_modules(briefcase.integrations.__path__)
-        if module.name not in nontool_modules
-    }
-    assert sorted(tool_modules) == sorted(briefcase.integrations.__all__)
+    assert sorted(integrations_modules()) == sorted(briefcase.integrations.__all__)
 
     # Ensure defined Tool modules/classes are annotated in ToolCache.
     for tool_module_name in briefcase.integrations.__all__:
         if tool_module_name not in tools_unannotated:
-            assert tool_module_name in ToolCache.__annotations__.keys()
+            assert tool_module_name in ToolCache.__annotations__
         for tool_name in tools_for_module(tool_module_name):
             if tool_name not in tool_klasses_skip_dynamic_checks:
                 assert tool_name in ToolCache.__annotations__.values()
@@ -91,11 +68,8 @@ def test_toolcache_typing():
     app_context_annotated = ToolCache.__annotations__["app_context"].split(" | ")
     assert sorted(app_context_klasses) == sorted(app_context_annotated)
 
-    assert ToolCache.__annotations__["xcode"] == "bool"
-    assert ToolCache.__annotations__["xcode_cli"] == "bool"
-
     assert ToolCache.__annotations__["git"] == "git_"
-
+    assert ToolCache.__annotations__["xcode_cli"] == "XcodeCliTools"
     assert ToolCache.__annotations__["ETC_OS_RELEASE"] == "Path"
 
 

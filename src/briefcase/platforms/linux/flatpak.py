@@ -187,7 +187,6 @@ class LinuxFlatpakRunCommand(LinuxFlatpakMixin, RunCommand):
         # Start the app in a way that lets us stream the logs
         app_popen = self.tools.flatpak.run(
             bundle_identifier=app.bundle_identifier,
-            app_name=app.app_name,
             args=passthrough,
             **kwargs,
         )
