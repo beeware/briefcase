@@ -5,35 +5,35 @@ from briefcase.exceptions import BriefcaseCommandError
 from ...utils import create_file
 
 
-def test_no_target_epochs(base_command, my_app):
-    """Verification succeeds if no target epochs are declared."""
-    base_command.platform_target_epoch = None
+def test_no_target_versions(base_command, my_app):
+    """Verification succeeds if no target versions are declared."""
+    base_command.platform_target_version = None
 
     create_file(base_command.bundle_path(my_app) / "briefcase.toml", content="")
 
     base_command.verify_app_template(my_app)
 
 
-def test_platform_epoch_compatible(base_command, my_app):
-    """Verification succeeds when template epoch matches platform epoch."""
-    base_command.platform_target_epoch = "42.42"
+def test_platform_version_compatible(base_command, my_app):
+    """Verification succeeds when template version matches platform version."""
+    base_command.platform_target_version = "42.42"
 
     create_file(
         base_command.bundle_path(my_app) / "briefcase.toml",
-        content="[briefcase]\ntarget_epoch = '42.42'",
+        content="[briefcase]\ntarget_version = '42.42'",
     )
 
     base_command.verify_app_template(my_app)
 
 
-@pytest.mark.parametrize("template_epoch", ["", "32.32", "52.52"])
-def test_platform_epoch_incompatible(base_command, my_app, template_epoch):
-    """Verification fails when template epoch doesn't match platform epoch."""
-    base_command.platform_target_epoch = "42.42"
+@pytest.mark.parametrize("template_version", ["", "32.32", "52.52"])
+def test_platform_version_incompatible(base_command, my_app, template_version):
+    """Verification fails when template version doesn't match platform version."""
+    base_command.platform_target_version = "42.42"
 
     create_file(
         base_command.bundle_path(my_app) / "briefcase.toml",
-        content=f"[briefcase]\ntarget_epoch = '{template_epoch}'",
+        content=f"[briefcase]\ntarget_version = '{template_version}'",
     )
 
     with pytest.raises(

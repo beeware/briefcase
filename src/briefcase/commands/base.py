@@ -119,7 +119,7 @@ class BaseCommand(ABC):
     # if specified for a platform, then any template for that platform must declare
     # compatibility with that version epoch. An epoch begins when a breaking change is
     # introduced for a platform such that older versions of a template are incompatible
-    platform_target_epoch: str | None = None
+    platform_target_version: str | None = None
 
     def __init__(
         self,
@@ -299,7 +299,7 @@ a custom location for Briefcase's tools.
         """Publish Command factory for the same platform and format."""
         return self._command_factory("publish")
 
-    def build_path(self, app):
+    def build_path(self, app) -> Path:
         """The path in which all platform artefacts for the app will be built.
 
         :param app: The app config
@@ -307,11 +307,11 @@ a custom location for Briefcase's tools.
         return self.base_path / "build" / app.app_name / self.platform.lower()
 
     @property
-    def dist_path(self):
+    def dist_path(self) -> Path:
         """The path for all applications for this command's platform."""
         return self.base_path / "dist"
 
-    def bundle_path(self, app):
+    def bundle_path(self, app) -> Path:
         """The path to the bundle for the app in the output format.
 
         The bundle is the template-generated source form of the app.
@@ -325,7 +325,7 @@ a custom location for Briefcase's tools.
         return self.build_path(app) / self.output_format.lower()
 
     @abstractmethod
-    def binary_path(self, app):
+    def binary_path(self, app) -> Path:
         """The path to the executable artefact for the app in the output format.
 
         This may be a binary file produced by compilation; however, if
@@ -367,10 +367,19 @@ a custom location for Briefcase's tools.
         """
         return self.briefcase_toml(app)["paths"][path_name]
 
-    def template_target_epoch(self, app: AppConfig) -> str | None:
-        """The target epoch version of Briefcase for the app from ``briefcase.toml``."""
+    def template_target_version(self, app: AppConfig) -> str | None:
+        """The target version of Briefcase for the app from ``briefcase.toml``.
+
+        This value represents a version epoch specific to the platform. An epoch
+        begins when a breaking change is introduced. Therefore, this value would
+        remain the version of Briefcase that introduced a breaking change for a
+        template until another such change requires a new epoch.
+
+        :param app: The config object for the app
+        :return: target version or None if one isn't specified
+        """
         try:
-            return self.briefcase_toml(app)["briefcase"]["target_epoch"]
+            return self.briefcase_toml(app)["briefcase"]["target_version"]
         except KeyError:
             return None
 
@@ -546,13 +555,16 @@ a custom location for Briefcase's tools.
         """Verify that tools needed to run the command for this app exist."""
 
     def verify_app_template(self, app: AppConfig):
-        """Verify the template targets the same Briefcase epoch as the Command."""
+        """Verify the template targets the same Briefcase version as the Command.
+
+        :param app: app configuration
+        """
 
         # Only verify the template if one has been rolled out
         if not self.bundle_path(app).exists():
             return
 
-        if self.platform_target_epoch != self.template_target_epoch(app):
+        if self.platform_target_version != self.template_target_version(app):
             raise BriefcaseCommandError(
                 f"""\
 The app template used to generate this app is not compatible with this version

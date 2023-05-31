@@ -41,7 +41,7 @@ def open_command(tmp_path, first_app_config):
 
     # Mock all apps as targeting version 0.3.15
     command._briefcase_toml = defaultdict(
-        lambda: {"briefcase": {"target_epoch": "0.3.15"}}
+        lambda: {"briefcase": {"target_version": "0.3.15"}}
     )
 
     # Mock some OS calls needed to make the tools appear to exist
