@@ -1,6 +1,5 @@
 import os
 import sys
-from collections import defaultdict
 from unittest.mock import MagicMock
 
 import pytest
@@ -30,9 +29,6 @@ def open_command(tmp_path, first_app_config):
         # flatpak-builder --version
         "1.2.3",
     ]
-
-    # default any app to an empty `briefcase.toml`
-    command._briefcase_toml = defaultdict(dict)
 
     return command
 
