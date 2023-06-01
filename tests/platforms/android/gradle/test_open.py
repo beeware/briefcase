@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from briefcase.console import Console, Log
+from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.download import Download
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.android.gradle import GradleOpenCommand
@@ -60,6 +61,26 @@ def open_command(tmp_path, first_app_config):
     )
 
     return command
+
+
+def test_unsupported_template_version(open_command, first_app_generated, tmp_path):
+    """Error raised if template's target version is not supported."""
+    # Skip tool verification
+    open_command.verify_tools = MagicMock()
+
+    open_command.verify_app = MagicMock(wraps=open_command.verify_app)
+
+    open_command._briefcase_toml.update(
+        {first_app_generated: {"briefcase": {"target_epoch": "0.3.16"}}}
+    )
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match="The app template used to generate this app is not compatible",
+    ):
+        open_command(first_app_generated)
+
+    open_command.verify_app.assert_called_once_with(first_app_generated)
 
 
 @pytest.mark.skipif(sys.platform != "darwin", reason="macOS specific test")

@@ -147,6 +147,11 @@ class InvalidSupportPackage(BriefcaseCommandError):
         super().__init__(f"Unable to unpack support package {filename!r}")
 
 
+class MissingAppMetadata(BriefcaseCommandError):
+    def __init__(self, app_bundle_path):
+        super().__init__(f"Unable to find '{app_bundle_path / 'briefcase.toml'}'")
+
+
 class MissingSupportPackage(BriefcaseCommandError):
     def __init__(self, python_version_tag, platform, host_arch):
         self.python_version_tag = python_version_tag

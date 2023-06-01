@@ -27,6 +27,10 @@ class DevCommand(RunAppMixin, BaseCommand):
             "win32": "windows",
         }[sys.platform]
 
+    def bundle_path(self, app):
+        """A placeholder; Dev command doesn't have a bundle path."""
+        raise NotImplementedError()
+
     def binary_path(self, app):
         """A placeholder; Dev command doesn't have a binary path."""
         raise NotImplementedError()

@@ -33,6 +33,7 @@ from briefcase.exceptions import (
     BriefcaseCommandError,
     BriefcaseConfigError,
     InvalidTemplateRepository,
+    MissingAppMetadata,
     NetworkFailure,
     TemplateUnsupportedVersion,
     UnsupportedHostError,
@@ -350,9 +351,7 @@ a custom location for Briefcase's tools.
                 with (self.bundle_path(app) / "briefcase.toml").open("rb") as f:
                     self._briefcase_toml[app] = tomllib.load(f)
             except OSError as e:
-                raise BriefcaseCommandError(
-                    f"Unable to find '{self.bundle_path(app) / 'briefcase.toml'}'"
-                ) from e
+                raise MissingAppMetadata(self.bundle_path(app)) from e
             else:
                 return self._briefcase_toml[app]
 
@@ -560,11 +559,14 @@ a custom location for Briefcase's tools.
         :param app: app configuration
         """
 
-        # Only verify the template if one has been rolled out
-        if not self.bundle_path(app).exists():
+        # Skip this check if the template isn't rolled out
+        # or if the command doesn't support templates
+        try:
+            template_target_version = self.template_target_version(app)
+        except (MissingAppMetadata, NotImplementedError):
             return
 
-        if self.platform_target_version != self.template_target_version(app):
+        if self.platform_target_version != template_target_version:
             raise BriefcaseCommandError(
                 f"""\
 The app template used to generate this app is not compatible with this version

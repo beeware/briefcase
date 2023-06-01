@@ -20,6 +20,8 @@ from briefcase.platforms.android.gradle import (
     android_log_clean_filter,
 )
 
+from ....utils import create_file
+
 
 @pytest.fixture
 def jdk():
@@ -133,6 +135,31 @@ def test_shutdown_on_exit_option(run_command):
         "extra_emulator_args": None,
         "shutdown_on_exit": True,
     }
+
+
+def test_unsupported_template_version(run_command, first_app_generated):
+    """Error raised if template's target version is not supported."""
+    run_command.apps = {"first-app": first_app_generated}
+
+    # Skip verifying tools
+    run_command.verify_tools = mock.MagicMock()
+
+    # Mock the build command previously called
+    create_file(run_command.binary_path(first_app_generated), content="")
+
+    run_command.verify_app = mock.MagicMock(wraps=run_command.verify_app)
+
+    run_command._briefcase_toml.update(
+        {first_app_generated: {"briefcase": {"target_epoch": "0.3.16"}}}
+    )
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match="The app template used to generate this app is not compatible",
+    ):
+        run_command(first_app_generated.app_name)
+
+    run_command.verify_app.assert_called_once_with(first_app_generated)
 
 
 def test_run_existing_device(run_command, first_app_config):
