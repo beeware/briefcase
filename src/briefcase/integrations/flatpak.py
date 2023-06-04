@@ -201,10 +201,10 @@ You must install both flatpak and flatpak-builder.
     def build(self, bundle_identifier: str, app_name: str, path: Path):
         """Build a Flatpak manifest.
 
-        On success, the app is installed into the user's local Flatpak install,
-        and a shell script is created that can be used to start the app. The
-        shell file isn't really needed to start the app, but it serves as a
-        marker for a successful build that Briefcase can use.
+        On success, the app is installed into the user's local Flatpak install, and a
+        shell script is created that can be used to start the app. The shell file isn't
+        really needed to start the app, but it serves as a marker for a successful build
+        that Briefcase can use.
 
         :param bundle_identifier: The bundle identifier for the app being built.
         :param app_name: The app name.
@@ -257,7 +257,7 @@ flatpak run {bundle_identifier}
         :param bundle_identifier: The bundle identifier for the app being built.
         :param args: (Optional) The list of arguments to pass to the app
         :param main_module: (Optional) The main module to run. Only required if you
-            want to override the default main module for the app.
+                want to override the default main module for the app.
         :returns: A Popen object for the running app.
         """
         if main_module:
@@ -304,7 +304,7 @@ flatpak run {bundle_identifier}
         :param app_name: The app name.
         :param version: The version of the app being built.
         :param build_path: The path where the flatpak was built. This path will
-            contain the repo where the built flatpak was exported.
+                contain the repo where the built flatpak was exported.
         :param output_path: The path of the output file to create as an export.
         """
         try:

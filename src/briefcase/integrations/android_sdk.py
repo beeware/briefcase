@@ -156,16 +156,16 @@ class AndroidSDK(ManagedTool):
     ) -> AndroidSDK:
         """Verify an Android SDK is available.
 
-        If the ANDROID_SDK_ROOT environment variable is set, that location will
-        be checked for a valid SDK.
+        If the ANDROID_SDK_ROOT environment variable is set, that location will be
+        checked for a valid SDK.
 
-        If the location provided doesn't contain an SDK, or no location is provided,
-        an SDK is downloaded.
+        If the location provided doesn't contain an SDK, or no location is provided, an
+        SDK is downloaded.
 
         :param tools: ToolCache of available tools
         :param install: Should the tool be installed if it is not found?
         :returns: A valid Android SDK wrapper. If Android SDK is not
-            available, and was not installed, raises MissingToolError.
+                available, and was not installed, raises MissingToolError.
         """
         # short circuit since already verified and available
         if hasattr(tools, "android_sdk"):
@@ -525,8 +525,8 @@ connection.
     def verify_system_image(self, system_image: str):
         """Verify that the required system image is installed.
 
-        :param system_image: The SDKManager identifier for the system
-            image (e.g., ``"system-images;android-31;default;x86_64"``)
+        :param system_image: The SDKManager identifier for the system             image
+                (e.g., ``"system-images;android-31;default;x86_64"``)
         """
         # Look for the directory named as a system image.
         # If it exists, we already have the system image.
@@ -967,14 +967,14 @@ In future, you can specify this device by running:
     ):
         """Internal method that does the actual work of creating the emulator.
 
-        AVD is the only required argument; all other arguments will assume
-        reasonable defaults.
+        AVD is the only required argument; all other arguments will assume reasonable
+        defaults.
 
         :param avd: The AVD for the new emulator
         :param device_type: The device type for the new emulator (e.g., "pixel")
         :param skin: The skin for the new emulator to use (e.g., "pixel_3a")
         :param system_image: The system image to use on the new emulator.
-            (e.g., "system-images;android-31;default;arm64-v8a")
+                (e.g., "system-images;android-31;default;arm64-v8a")
         """
         if device_type is None:
             device_type = self.DEFAULT_DEVICE_TYPE
@@ -1052,8 +1052,8 @@ In future, you can specify this device by running:
         """Update the AVD configuration with specific values.
 
         :params avd: The AVD whose config will be updated
-        :params updates: A dictionary containing the new key-value to
-            add to the device configuration.
+        :params updates: A dictionary containing the new key-value to             add to
+                the device configuration.
         """
         avd_config = self.avd_config(avd)
 
@@ -1076,7 +1076,7 @@ In future, you can specify this device by running:
 
         :param avd: The AVD of the device.
         :param extra_args: Additional command line arguments to pass when
-            starting the emulator.
+                starting the emulator.
         """
         if avd not in set(self.emulators()):
             raise InvalidDeviceError("emulator AVD", avd)
@@ -1244,11 +1244,11 @@ class ADB:
 
         :param arguments: List of strings to pass to `adb` as arguments.
         :param quiet: Should the invocation of this command be silent, and
-            *not* appear in the logs? This should almost always be False;
-            however, for some calls (most notably, calls that are called
-            frequently to evaluate the status of another process), logging can
-            be turned off so that log output isn't corrupted by thousands of
-            polling calls.
+                *not* appear in the logs? This should almost always be False;
+                however, for some calls (most notably, calls that are called
+                frequently to evaluate the status of another process), logging can
+                be turned off so that log output isn't corrupted by thousands of
+                polling calls.
         :returns: `adb` output on success; raises an exception on failure.
         """
         # The ADB integration operates on the basis of running commands before
@@ -1277,9 +1277,8 @@ class ADB:
     def install_apk(self, apk_path: str | Path):
         """Install an APK file on an Android device.
 
-        :param apk_path: The path of the Android APK file to install.
-
-        Returns `None` on success; raises an exception on failure.
+        :param apk_path: The path of the Android APK file to install.          Returns
+                `None` on success; raises an exception on failure.
         """
         try:
             self.run("install", "-r", apk_path)
@@ -1292,8 +1291,7 @@ class ADB:
         """Force-stop an app, specified as a package name.
 
         :param package: The name of the Android package, e.g., com.username.myapp.
-
-        Returns `None` on success; raises an exception on failure.
+                Returns `None` on success; raises an exception on failure.
         """
         # In my testing, `force-stop` exits with status code 0 (success) so long
         # as you pass a package name, even if the package does not exist, or the
@@ -1310,13 +1308,11 @@ class ADB:
 
         :param package: The name of the Android package, e.g., com.username.myapp.
         :param activity: The activity of the APK to start.
-        :param passthrough: Arguments to pass to the app.
-
-        Returns `None` on success; raises an exception on failure.
-
-        If you have an APK file, and you are not sure of the package or activity
-        name, you can find it using `aapt dump badging filename.apk` and looking
-        for "package" and "launchable-activity" in the output.
+        :param passthrough: Arguments to pass to the app.          Returns `None` on
+                success; raises an exception on failure.          If you have an APK
+                file, and you are not sure of the package or activity         name, you
+                can find it using `aapt dump badging filename.apk` and looking
+                for "package" and "launchable-activity" in the output.
         """
         try:
             # `am start` also accepts string array extras, but we pass the arguments as a

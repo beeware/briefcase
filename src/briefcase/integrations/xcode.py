@@ -211,9 +211,9 @@ class XcodeCliTools(Tool):
     def verify_install(cls, tools: ToolCache, **kwargs) -> XcodeCliTools:
         """Verify that command line developer tools are installed and ready for use.
 
-        A completely clean machine will have neither Xcode *nor* the Command Line
-        Tools. However, it's possible to install Xcode and *not* install the command
-        line tools, and vice versa.
+        A completely clean machine will have neither Xcode *nor* the Command Line Tools.
+        However, it's possible to install Xcode and *not* install the command line
+        tools, and vice versa.
 
         Lastly, there is a license that needs to be accepted.
 
@@ -393,9 +393,9 @@ def get_simulators(
 ) -> dict[str, str]:
     """Obtain the simulators available on this machine.
 
-    The return value is a 2 level dictionary. The outer dictionary is
-    keyed by OS version; the inner dictionary for each OS version
-    contains the details of the available simulators, keyed by UDID.
+    The return value is a 2 level dictionary. The outer dictionary is keyed by OS
+    version; the inner dictionary for each OS version contains the details of the
+    available simulators, keyed by UDID.
 
     :param tools: ToolCache of available tools
     :param os_name: The OS that we want to simulate.

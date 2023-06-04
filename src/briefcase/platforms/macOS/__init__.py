@@ -216,10 +216,10 @@ class macOSSigningMixin:
     def select_identity(self, identity=None):
         """Get the codesigning identity to use.
 
-        :param identity: A pre-specified identity (either the 40-digit
-            hex checksum, or the string name of the identity). If provided, it
-            will be validated against the list of available identities to
-            confirm that it is a valid codesigning identity.
+        :param identity: A pre-specified identity (either the 40-digit             hex
+                checksum, or the string name of the identity). If provided, it
+                will be validated against the list of available identities to
+                confirm that it is a valid codesigning identity.
         :returns: The final identity to use
         """
         # Obtain the valid codesigning identities.
@@ -276,7 +276,7 @@ or
 
         :param path: The path to the file to sign.
         :param identity: The code signing identity to use. Either the 40-digit
-            hex checksum, or the string name of the identity.
+                hex checksum, or the string name of the identity.
         :param entitlements: The path to the entitlements file to use.
         """
         options = "runtime" if identity != "-" else None

@@ -40,8 +40,8 @@ def setup_winsdk_install(
     """Create a mock Windows SDK for the version and arch.
 
     :param base_path: base path to create the SDK in; should be pytest's tmp_path.
-    :param version: SDK version triple, e.g. 1.2.3. The created directory path will include
-        a servicing version of 0, e.g. base_path/win_sdk/1.2.3.0.
+    :param version: SDK version triple, e.g. 1.2.3. The created directory path will
+        include a servicing version of 0, e.g. base_path/win_sdk/1.2.3.0.
     :param arch: The architecture for the SDK, e.g. amd64 or arm64.
     :param skip_bins: Do not create mock binaries in `bin` directory.
     :returns: tuple of path to base of SDK install and version triple
