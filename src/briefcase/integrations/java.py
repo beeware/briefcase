@@ -215,7 +215,7 @@ class JDK(ManagedTool):
                     if install_message:
                         tools.logger.warning(install_message)
                     tools.logger.info(
-                        "The Java JDK was not found; downloading and installing...",
+                        f"A Java {cls.JDK_MAJOR_VER} JDK was not found; downloading and installing...",
                         prefix=cls.name,
                     )
                     java.install()
