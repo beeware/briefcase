@@ -58,8 +58,8 @@ def build_command(tmp_path, first_app_config):
     command.tools.host_os = "Linux"
     command.tools.host_arch = "wonky"
     command.use_docker = False
-    command._path_index = {
-        first_app_config: {
+    command._briefcase_toml[first_app_config] = {
+        "paths": {
             "app_path": "First App.AppDir/usr/app",
             "app_packages_path": "First App.AppDir/usr/app_packages",
         }

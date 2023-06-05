@@ -13,18 +13,27 @@ class JDK(ManagedTool):
     name = "java"
     full_name = "Java JDK"
 
+    # As of 12 May 2023, 17.0.7+7 is the current OpenJDK
+    # https://adoptium.net/temurin/releases/
+    JDK_MAJOR_VER = "17"
+    JDK_RELEASE = "17.0.7"
+    JDK_BUILD = "7"
+    JDK_INSTALL_DIR_NAME = f"java{JDK_MAJOR_VER}"
+
     def __init__(self, tools: ToolCache, java_home: Path):
         super().__init__(tools=tools)
-
-        # As of April 10 2020, 8u242-b08 is the current AdoptOpenJDK
-        # https://adoptopenjdk.net/releases.html
-        self.release = "8u242"
-        self.build = "b08"
-
         self.java_home = java_home
 
     @property
-    def adoptOpenJDK_download_url(self) -> str:
+    def OpenJDK_download_url(self):
+        arch = {
+            "x86_64": "x64",  # Linux\macOS x86-64
+            "aarch64": "aarch64",  # Linux arm64
+            "armv6l": "arm",  # Linux arm
+            "arm64": "aarch64",  # macOS arm64
+            "AMD64": "x64",  # Windows x86-64
+        }.get(self.tools.host_arch)
+
         platform = {
             "Darwin": "mac",
             "Windows": "windows",
@@ -36,22 +45,23 @@ class JDK(ManagedTool):
         }.get(self.tools.host_os, "tar.gz")
 
         return (
-            "https://github.com/AdoptOpenJDK/openjdk8-binaries/"
-            f"releases/download/jdk{self.release}-{self.build}/"
-            f"OpenJDK8U-jdk_x64_{platform}_hotspot_{self.release}{self.build}.{extension}"
+            f"https://github.com/adoptium/temurin{self.JDK_MAJOR_VER}-binaries/"
+            f"releases/download/jdk-{self.JDK_RELEASE}+{self.JDK_BUILD}/"
+            f"OpenJDK{self.JDK_MAJOR_VER}U-jdk_{arch}_{platform}_hotspot_"
+            f"{self.JDK_RELEASE}_{self.JDK_BUILD}.{extension}"
         )
 
     @classmethod
     def verify_install(cls, tools: ToolCache, install: bool = True, **kwargs) -> JDK:
-        """Verify that a Java 8 JDK exists.
+        """Verify that a Java JDK exists.
 
         If ``JAVA_HOME`` is set, try that version. If it is a JRE, or its *not*
-        a Java 8 JDK, download one.
+        a Java JDK, download one.
 
         On macOS, also try invoking /usr/libexec/java_home. If that location
-        points to a Java 8 JDK, use it.
+        points to a Java JDK, use it.
 
-        Otherwise, download a JDK from AdoptOpenJDK and unpack it into the
+        Otherwise, download a JDK from OpenJDK and unpack it into the
         briefcase data directory.
 
         :param tools: ToolCache of available tools
@@ -66,10 +76,6 @@ class JDK(ManagedTool):
         java = None
         java_home = tools.os.environ.get("JAVA_HOME", "")
         install_message = None
-
-        if tools.host_arch == "arm64" and tools.host_os == "Darwin":
-            # Java 8 is not available for macOS on ARM64, so we will require Rosetta.
-            cls.verify_rosetta(tools=tools)
 
         # macOS has a helpful system utility to determine JAVA_HOME. Try it.
         if not java_home and tools.host_os == "Darwin":
@@ -93,25 +99,24 @@ class JDK(ManagedTool):
                         "-version",
                     ],
                 )
-                # This should be a string of the form "javac 1.8.0_144\n"
+                # This should be a string of the form "javac 17.0.7\n"
                 version_str = output.strip("\n").split(" ")[1]
-                vparts = version_str.split(".")
-                if len(vparts) == 3 and vparts[:2] == ["1", "8"]:
-                    # It appears to be a Java 8 JDK.
-                    java = JDK(tools=tools, java_home=Path(java_home))
+                if version_str == cls.JDK_RELEASE:
+                    # It appears to be a Java JDK
+                    java = JDK(tools, java_home=Path(java_home))
                 else:
-                    # It's not a Java 8 JDK.
+                    # It's not a Java JDK.
                     install_message = f"""
 *************************************************************************
-** WARNING: JAVA_HOME does not point to a Java 8 JDK                   **
+** WARNING: JAVA_HOME does not point to a Java {cls.JDK_MAJOR_VER} JDK                  **
 *************************************************************************
 
-    Android requires a Java 8 JDK, but the location pointed to by the
+    Android requires a Java {cls.JDK_MAJOR_VER} JDK, but the location pointed to by the
     JAVA_HOME environment variable:
 
     {java_home}
 
-    isn't a Java 8 JDK (it appears to be Java {version_str}).
+    isn't a Java {cls.JDK_MAJOR_VER} JDK (it appears to be Java {version_str}).
 
     Briefcase will use its own JDK instance.
 
@@ -194,7 +199,7 @@ class JDK(ManagedTool):
         if java is None:
             # If we've reached this point, any user-provided JAVA_HOME is broken;
             # use the Briefcase one.
-            java_home = tools.base_path / "java"
+            java_home = tools.base_path / cls.JDK_INSTALL_DIR_NAME
 
             # The macOS download has a weird layout (inherited from the official Oracle
             # release). The actual JAVA_HOME is deeper inside the directory structure.
@@ -210,7 +215,7 @@ class JDK(ManagedTool):
                     if install_message:
                         tools.logger.warning(install_message)
                     tools.logger.info(
-                        "The Java JDK was not found; downloading and installing...",
+                        f"A Java {cls.JDK_MAJOR_VER} JDK was not found; downloading and installing...",
                         prefix=cls.name,
                     )
                     java.install()
@@ -237,12 +242,12 @@ class JDK(ManagedTool):
     def install(self):
         """Download and install a JDK."""
         jdk_zip_path = self.tools.download.file(
-            url=self.adoptOpenJDK_download_url,
+            url=self.OpenJDK_download_url,
             download_path=self.tools.base_path,
-            role="Java 8 JDK",
+            role=f"Java {self.JDK_MAJOR_VER} JDK",
         )
 
-        with self.tools.input.wait_bar("Installing AdoptOpenJDK..."):
+        with self.tools.input.wait_bar("Installing OpenJDK..."):
             try:
                 # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
                 self.tools.shutil.unpack_archive(
@@ -252,7 +257,7 @@ class JDK(ManagedTool):
             except (shutil.ReadError, EOFError) as e:
                 raise BriefcaseCommandError(
                     f"""\
-Unable to unpack AdoptOpenJDK ZIP file. The download may have been interrupted
+Unable to unpack OpenJDK ZIP file. The download may have been interrupted
 or corrupted.
 
 Delete {jdk_zip_path} and run briefcase again.
@@ -261,11 +266,13 @@ Delete {jdk_zip_path} and run briefcase again.
 
             jdk_zip_path.unlink()  # Zip file no longer needed once unpacked.
 
-            # The tarball will unpack into <briefcase data dir>/tools/jdk8u242-b08
+            # The tarball will unpack into <briefcase data dir>/tools/jdk-17.0.7+7
             # (or whatever name matches the current release).
             # We turn this into <briefcase data dir>/tools/java so we have a consistent name.
-            java_unpack_path = self.tools.base_path / f"jdk{self.release}-{self.build}"
-            java_unpack_path.rename(self.tools.base_path / "java")
+            java_unpack_path = (
+                self.tools.base_path / f"jdk-{self.JDK_RELEASE}+{self.JDK_BUILD}"
+            )
+            java_unpack_path.rename(self.tools.base_path / self.JDK_INSTALL_DIR_NAME)
 
     def uninstall(self):
         """Uninstall a JDK."""
@@ -274,22 +281,3 @@ Delete {jdk_zip_path} and run briefcase again.
                 self.tools.shutil.rmtree(self.java_home.parent.parent)
             else:
                 self.tools.shutil.rmtree(self.java_home)
-
-    @classmethod
-    def verify_rosetta(cls, tools: ToolCache):
-        try:
-            tools.subprocess.check_output(["arch", "-x86_64", "true"])
-        except subprocess.CalledProcessError:
-            tools.logger.info(
-                """\
-This command requires Rosetta, but it does not appear to be installed.
-Briefcase will attempt to install it now.
-"""
-            )
-            try:
-                tools.subprocess.run(
-                    ["softwareupdate", "--install-rosetta", "--agree-to-license"],
-                    check=True,
-                )
-            except subprocess.CalledProcessError as e:
-                raise BriefcaseCommandError("Failed to install Rosetta") from e

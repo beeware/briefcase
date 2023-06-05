@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import argparse
 import importlib
 import inspect
@@ -9,7 +11,6 @@ import textwrap
 from abc import ABC, abstractmethod
 from argparse import RawDescriptionHelpFormatter
 from pathlib import Path
-from typing import Optional
 
 from cookiecutter import exceptions as cookiecutter_exceptions
 from cookiecutter.repository import is_repo_url
@@ -26,12 +27,13 @@ except ModuleNotFoundError:  # pragma: no-cover-if-gte-py310
     import tomli as tomllib
 
 from briefcase import __version__
-from briefcase.config import AppConfig, BaseConfig, GlobalConfig, parse_config
+from briefcase.config import AppConfig, GlobalConfig, parse_config
 from briefcase.console import Console, Log
 from briefcase.exceptions import (
     BriefcaseCommandError,
     BriefcaseConfigError,
     InvalidTemplateRepository,
+    MissingAppMetadata,
     NetworkFailure,
     TemplateUnsupportedVersion,
     UnsupportedHostError,
@@ -105,9 +107,17 @@ class BaseCommand(ABC):
     cmd_line = "briefcase {command} {platform} {output_format}"
     supported_host_os = {"Darwin", "Linux", "Windows"}
     supported_host_os_reason = f"This command is not supported on {platform.system()}."
-    GLOBAL_CONFIG_CLASS = GlobalConfig
-    APP_CONFIG_CLASS = AppConfig
+    # defined by platform-specific subclasses
+    command: str
+    description: str
+    platform: str
+    output_format: str
+    # supports passing extra command line arguments to subprocess
     allows_passthrough = False
+    # if specified for a platform, then any template for that platform must declare
+    # compatibility with that version epoch. An epoch begins when a breaking change is
+    # introduced for a platform such that older versions of a template are incompatible
+    platform_target_version: str | None = None
 
     def __init__(
         self,
@@ -149,7 +159,7 @@ class BaseCommand(ABC):
         Download.verify(tools=self.tools)
 
         self.global_config = None
-        self._path_index = {}
+        self._briefcase_toml: dict[AppConfig, dict[str, ...]] = {}
 
     @property
     def logger(self):
@@ -287,7 +297,7 @@ a custom location for Briefcase's tools.
         """Publish Command factory for the same platform and format."""
         return self._command_factory("publish")
 
-    def build_path(self, app):
+    def build_path(self, app) -> Path:
         """The path in which all platform artefacts for the app will be built.
 
         :param app: The app config
@@ -295,11 +305,11 @@ a custom location for Briefcase's tools.
         return self.base_path / "build" / app.app_name / self.platform.lower()
 
     @property
-    def dist_path(self):
+    def dist_path(self) -> Path:
         """The path for all applications for this command's platform."""
         return self.base_path / "dist"
 
-    def bundle_path(self, app):
+    def bundle_path(self, app) -> Path:
         """The path to the bundle for the app in the output format.
 
         The bundle is the template-generated source form of the app.
@@ -313,7 +323,7 @@ a custom location for Briefcase's tools.
         return self.build_path(app) / self.output_format.lower()
 
     @abstractmethod
-    def binary_path(self, app):
+    def binary_path(self, app) -> Path:
         """The path to the executable artefact for the app in the output format.
 
         This may be a binary file produced by compilation; however, if
@@ -324,50 +334,68 @@ a custom location for Briefcase's tools.
 
         :param app: The app config
         """
-        ...
 
-    def _load_path_index(self, app: BaseConfig):
-        """Load the path index from the index file provided by the app template.
+    def briefcase_toml(self, app: AppConfig) -> dict[str, ...]:
+        """Load the ``briefcase.toml`` file provided by the app template.
 
         :param app: The config object for the app
-        :return: The contents of the application path index.
+        :return: The contents of ``briefcase.toml``
         """
         try:
-            with (self.bundle_path(app) / "briefcase.toml").open("rb") as f:
-                self._path_index[app] = tomllib.load(f)["paths"]
-        except OSError as e:
-            raise BriefcaseCommandError(
-                f"Unable to find '{self.bundle_path(app) / 'briefcase.toml'}'"
-            ) from e
-        return self._path_index[app]
+            return self._briefcase_toml[app]
+        except KeyError:
+            try:
+                with (self.bundle_path(app) / "briefcase.toml").open("rb") as f:
+                    self._briefcase_toml[app] = tomllib.load(f)
+            except OSError as e:
+                raise MissingAppMetadata(self.bundle_path(app)) from e
+            else:
+                return self._briefcase_toml[app]
 
-    def support_path(self, app: BaseConfig):
+    def path_index(self, app: AppConfig, path_name: str) -> str | dict | list:
+        """Return a path from the path index provided by the app template.
+
+        Raises KeyError if ``path_name`` is not defined in the index.
+
+        :param app: The config object for the app
+        :param path_name: Name of the filepath to retrieve
+        :return: filepath for requested path
+        """
+        return self.briefcase_toml(app)["paths"][path_name]
+
+    def template_target_version(self, app: AppConfig) -> str | None:
+        """The target version of Briefcase for the app from ``briefcase.toml``.
+
+        This value represents a version epoch specific to the platform. An epoch
+        begins when a breaking change is introduced. Therefore, this value would
+        remain the version of Briefcase that introduced a breaking change for a
+        template until another such change requires a new epoch.
+
+        :param app: The config object for the app
+        :return: target version or None if one isn't specified
+        """
+        try:
+            return self.briefcase_toml(app)["briefcase"]["target_version"]
+        except KeyError:
+            return None
+
+    def support_path(self, app: AppConfig) -> Path:
         """Obtain the path into which the support package should be unpacked.
 
         :param app: The config object for the app
         :return: The full path where the support package should be unpacked.
         """
-        # If the index file hasn't been loaded for this app, load it.
-        try:
-            path_index = self._path_index[app]
-        except KeyError:
-            path_index = self._load_path_index(app)
-        return self.bundle_path(app) / path_index["support_path"]
+        return self.bundle_path(app) / self.path_index(app, "support_path")
 
-    def support_revision(self, app: BaseConfig):
+    def support_revision(self, app: AppConfig) -> str:
         """Obtain the support package revision that the template requires.
 
         :param app: The config object for the app
         :return: The support revision required by the template.
         """
-        # If the index file hasn't been loaded for this app, load it.
-        try:
-            path_index = self._path_index[app]
-        except KeyError:
-            path_index = self._load_path_index(app)
-        return path_index["support_revision"]
+        return self.path_index(app, "support_revision")
 
-    def cleanup_paths(self, app: BaseConfig):
+    def cleanup_paths(self, app: AppConfig) -> list[str]:
         """Obtain the paths generated by the app template that should be cleaned up
         prior to release.
 
@@ -375,53 +403,33 @@ a custom location for Briefcase's tools.
         :return: The list of path globs inside the app template that should
             be cleaned up.
         """
-        # If the index file hasn't been loaded for this app, load it.
-        try:
-            path_index = self._path_index[app]
-        except KeyError:
-            path_index = self._load_path_index(app)
-        return path_index["cleanup_paths"]
+        return self.path_index(app, "cleanup_paths")
 
-    def app_requirements_path(self, app: BaseConfig):
+    def app_requirements_path(self, app: AppConfig) -> Path:
         """Obtain the path into which a requirements.txt file should be written.
 
         :param app: The config object for the app
         :return: The full path where the requirements.txt file should be written
         """
-        # If the index file hasn't been loaded for this app, load it.
-        try:
-            path_index = self._path_index[app]
-        except KeyError:
-            path_index = self._load_path_index(app)
-        return self.bundle_path(app) / path_index["app_requirements_path"]
+        return self.bundle_path(app) / self.path_index(app, "app_requirements_path")
 
-    def app_packages_path(self, app: BaseConfig):
+    def app_packages_path(self, app: AppConfig) -> Path:
         """Obtain the path into which requirements should be installed.
 
         :param app: The config object for the app
         :return: The full path where application requirements should be installed.
         """
-        # If the index file hasn't been loaded for this app, load it.
-        try:
-            path_index = self._path_index[app]
-        except KeyError:
-            path_index = self._load_path_index(app)
-        return self.bundle_path(app) / path_index["app_packages_path"]
+        return self.bundle_path(app) / self.path_index(app, "app_packages_path")
 
-    def app_path(self, app: BaseConfig):
+    def app_path(self, app: AppConfig) -> Path:
         """Obtain the path into which the application should be installed.
 
         :param app: The config object for the app
         :return: The full path where application code should be installed.
         """
-        # If the index file hasn't been loaded for this app, load it.
-        try:
-            path_index = self._path_index[app]
-        except KeyError:
-            path_index = self._load_path_index(app)
-        return self.bundle_path(app) / path_index["app_path"]
+        return self.bundle_path(app) / self.path_index(app, "app_path")
 
-    def app_module_path(self, app):
+    def app_module_path(self, app: AppConfig) -> Path:
         """Find the path for the application module for an app.
 
         :param app: The config object for the app
@@ -482,9 +490,8 @@ a custom location for Briefcase's tools.
 
         Raises MissingToolException if a required system tool is missing.
         """
-        pass
 
-    def finalize_app_config(self, app: BaseConfig):
+    def finalize_app_config(self, app: AppConfig):
         """Finalize the application config.
 
         Some app configurations (notably, Linux system packages like .deb) have
@@ -500,9 +507,8 @@ a custom location for Briefcase's tools.
 
         :param app: The app configuration to finalize.
         """
-        pass
 
-    def finalize(self, app: Optional[BaseConfig] = None):
+    def finalize(self, app: AppConfig | None = None):
         """Finalize Briefcase configuration.
 
         This will:
@@ -529,9 +535,51 @@ a custom location for Briefcase's tools.
                 self.finalize_app_config(app)
                 delattr(app, "__draft__")
 
-    def verify_app_tools(self, app: BaseConfig):
+    def verify_app(self, app: AppConfig):
+        """Verify the app is compatible and the app tools are available.
+
+        This is the last step of verification for a Command before running the
+        Command's business logic. It runs _after_ pre-requisite Commands have been
+        verified and run.
+
+        :param app: app configuration
+        """
+        self.verify_app_template(app)
+        self.verify_app_tools(app)
+
+    def verify_app_tools(self, app: AppConfig):
         """Verify that tools needed to run the command for this app exist."""
-        pass
+
+    def verify_app_template(self, app: AppConfig):
+        """Verify the template targets the same Briefcase version as the Command.
+
+        :param app: app configuration
+        """
+
+        # Skip this check if the template isn't rolled out
+        # or if the command doesn't support templates
+        try:
+            template_target_version = self.template_target_version(app)
+        except (MissingAppMetadata, NotImplementedError):
+            return
+
+        if self.platform_target_version != template_target_version:
+            raise BriefcaseCommandError(
+                f"""\
+The app template used to generate this app is not compatible with this version
+of Briefcase.
+
+If the app was generated with an earlier version of Briefcase using the default
+Briefcase template, you can run:
+
+     $ briefcase create {self.platform} {self.output_format}
+
+to re-generate your app with a compatible version of the template.
+
+If you are using a custom template, you'll need to update the template to correct
+any compatibility problems, and then add the compatibility declaration.
+"""
+            )
 
     def parse_options(self, extra):
         """Parse the command line arguments for the Command.
@@ -611,7 +659,6 @@ a custom location for Briefcase's tools.
 
         :param command: The command whose options are to be cloned
         """
-        pass
 
     def add_default_options(self, parser):
         """Add the default options that exist on *all* commands.
@@ -711,7 +758,6 @@ a custom location for Briefcase's tools.
 
         :param parser: a stub argparse parser for the command.
         """
-        pass
 
     def parse_config(self, filename):
         try:
@@ -726,7 +772,7 @@ a custom location for Briefcase's tools.
                 )
 
                 self.global_config = create_config(
-                    klass=self.GLOBAL_CONFIG_CLASS,
+                    klass=GlobalConfig,
                     config=global_config,
                     msg="Global configuration",
                 )
@@ -735,7 +781,7 @@ a custom location for Briefcase's tools.
                     # Construct an AppConfig object with the final set of
                     # configuration options for the app.
                     self.apps[app_name] = create_config(
-                        klass=self.APP_CONFIG_CLASS,
+                        klass=AppConfig,
                         config=app_config,
                         msg=f"Configuration for '{app_name}'",
                     )
@@ -771,12 +817,13 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
             # try to update it using git. If no cache exists, or if the cache
             # directory isn't a git directory, or git fails for some reason,
             # fall back to using the specified template directly.
+            cached_template = cookiecutter_cache_path(template)
             try:
-                cached_template = cookiecutter_cache_path(template)
                 repo = self.tools.git.Repo(cached_template)
+                # Raises ValueError if "origin" isn't a valid remote
+                remote = repo.remote(name="origin")
                 try:
                     # Attempt to update the repository
-                    remote = repo.remote(name="origin")
                     remote.fetch()
                 except self.tools.git.exc.GitCommandError as e:
                     # We are offline, or otherwise unable to contact

@@ -206,12 +206,7 @@ class macOSSigningMixin:
         self.get_identities = get_identities
 
     def entitlements_path(self, app: BaseConfig):
-        # If the index file hasn't been loaded for this app, load it.
-        try:
-            path_index = self._path_index[app]
-        except KeyError:
-            path_index = self._load_path_index(app)
-        return self.bundle_path(app) / path_index["entitlements_path"]
+        return self.bundle_path(app) / self.path_index(app, "entitlements_path")
 
     def select_identity(self, identity=None):
         """Get the codesigning identity to use.

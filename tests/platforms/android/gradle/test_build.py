@@ -30,6 +30,23 @@ def build_command(tmp_path, first_app_generated):
     return command
 
 
+def test_unsupported_template_version(build_command, first_app_generated):
+    """Error raised if template's target version is not supported."""
+    build_command.verify_app = MagicMock(wraps=build_command.verify_app)
+
+    build_command._briefcase_toml.update(
+        {first_app_generated: {"briefcase": {"target_epoch": "0.3.16"}}}
+    )
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match="The app template used to generate this app is not compatible",
+    ):
+        build_command(first_app_generated)
+
+    build_command.verify_app.assert_called_once_with(first_app_generated)
+
+
 @pytest.mark.parametrize(
     "host_os, gradlew_name",
     [("Windows", "gradlew.bat"), ("NonWindows", "gradlew")],

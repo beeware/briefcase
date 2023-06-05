@@ -2,7 +2,6 @@ import os
 import shutil
 import subprocess
 from pathlib import Path
-from subprocess import CalledProcessError
 from unittest import mock
 
 import pytest
@@ -16,11 +15,6 @@ from briefcase.exceptions import (
 from briefcase.integrations.java import JDK
 
 CALL_JAVA_HOME = mock.call(["/usr/libexec/java_home"])
-CALL_ROSETTA_CHECK = mock.call(["arch", "-x86_64", "true"])
-CALL_ROSETTA_INSTALL = mock.call(
-    ["softwareupdate", "--install-rosetta", "--agree-to-license"],
-    check=True,
-)
 
 
 def test_short_circuit(mock_tools):
@@ -49,13 +43,10 @@ def test_macos_tool_java_home(mock_tools, capsys):
     # Mock being on macOS
     mock_tools.host_os = "Darwin"
 
-    # Prevent Rosetta check.
-    mock_tools.host_arch = "x86_64"
-
     # Mock 2 calls to check_output.
     mock_tools.subprocess.check_output.side_effect = [
         "/path/to/java",
-        "javac 1.8.0_144\n",
+        "javac 17.0.7\n",
     ]
 
     # Create a JDK wrapper by verification
@@ -81,22 +72,19 @@ def test_macos_tool_failure(mock_tools, tmp_path, capsys):
     # Mock being on macOS
     mock_tools.host_os = "Darwin"
 
-    # Prevent Rosetta check.
-    mock_tools.host_arch = "x86_64"
-
     # Mock a failed call on the libexec tool
     mock_tools.subprocess.check_output.side_effect = subprocess.CalledProcessError(
         returncode=1, cmd="/usr/libexec/java_home"
     )
 
     # Create a directory to make it look like the Briefcase Java already exists.
-    (tmp_path / "tools" / "java" / "Contents" / "Home" / "bin").mkdir(parents=True)
+    (tmp_path / "tools" / "java17" / "Contents" / "Home" / "bin").mkdir(parents=True)
 
     # Create a JDK wrapper by verification
     jdk = JDK.verify(mock_tools)
 
     # The JDK should have the briefcase JAVA_HOME
-    assert jdk.java_home == tmp_path / "tools" / "java" / "Contents" / "Home"
+    assert jdk.java_home == tmp_path / "tools" / "java17" / "Contents" / "Home"
 
     assert mock_tools.subprocess.check_output.mock_calls == [CALL_JAVA_HOME]
 
@@ -111,14 +99,11 @@ def test_macos_provided_overrides_tool_java_home(mock_tools, capsys):
     # Mock being on macOS
     mock_tools.host_os = "Darwin"
 
-    # Prevent Rosetta check.
-    mock_tools.host_arch = "x86_64"
-
     # Setup explicit JAVA_HOME
     mock_tools.os.environ = {"JAVA_HOME": "/path/to/java"}
 
     # Mock return value from javac. libexec won't be invoked.
-    mock_tools.subprocess.check_output.return_value = "javac 1.8.0_144\n"
+    mock_tools.subprocess.check_output.return_value = "javac 17.0.7\n"
 
     # Create a JDK wrapper by verification
     JDK.verify(mock_tools)
@@ -139,14 +124,12 @@ def test_macos_provided_overrides_tool_java_home(mock_tools, capsys):
 
 def test_valid_provided_java_home(mock_tools, capsys):
     """If a valid JAVA_HOME is provided, it is used."""
-    # Prevent Rosetta check.
-    mock_tools.host_arch = "x86_64"
 
     # Setup explicit JAVA_HOME
     mock_tools.os.environ = {"JAVA_HOME": "/path/to/java"}
 
     # Mock return value from javac.
-    mock_tools.subprocess.check_output.return_value = "javac 1.8.0_144\n"
+    mock_tools.subprocess.check_output.return_value = "javac 17.0.7\n"
 
     # Create a JDK wrapper by verification
     JDK.verify(mock_tools)
@@ -168,9 +151,9 @@ def test_valid_provided_java_home(mock_tools, capsys):
 @pytest.mark.parametrize(
     "host_os, java_home",
     [
-        ("Linux", Path("tools", "java")),
-        ("Windows", Path("tools", "java")),
-        ("Darwin", Path("tools", "java", "Contents", "Home")),
+        ("Linux", Path("tools", "java17")),
+        ("Windows", Path("tools", "java17")),
+        ("Darwin", Path("tools", "java17", "Contents", "Home")),
     ],
 )
 def test_invalid_jdk_version(mock_tools, host_os, java_home, tmp_path, capsys):
@@ -178,9 +161,6 @@ def test_invalid_jdk_version(mock_tools, host_os, java_home, tmp_path, capsys):
     used."""
     # Mock os
     mock_tools.host_os = host_os
-
-    # Prevent Rosetta check.
-    mock_tools.host_arch = "x86_64"
 
     # Setup explicit JAVA_HOME
     mock_tools.os.environ = {"JAVA_HOME": "/path/to/java"}
@@ -211,12 +191,12 @@ def test_invalid_jdk_version(mock_tools, host_os, java_home, tmp_path, capsys):
 @pytest.mark.parametrize(
     "host_os, java_home, error_type",
     [
-        ("Linux", Path("tools", "java"), FileNotFoundError),
-        ("Linux", Path("tools", "java"), NotADirectoryError),
-        ("Windows", Path("tools", "java"), FileNotFoundError),
-        ("Windows", Path("tools", "java"), NotADirectoryError),
-        ("Darwin", Path("tools", "java", "Contents", "Home"), FileNotFoundError),
-        ("Darwin", Path("tools", "java", "Contents", "Home"), NotADirectoryError),
+        ("Linux", Path("tools", "java17"), FileNotFoundError),
+        ("Linux", Path("tools", "java17"), NotADirectoryError),
+        ("Windows", Path("tools", "java17"), FileNotFoundError),
+        ("Windows", Path("tools", "java17"), NotADirectoryError),
+        ("Darwin", Path("tools", "java17", "Contents", "Home"), FileNotFoundError),
+        ("Darwin", Path("tools", "java17", "Contents", "Home"), NotADirectoryError),
     ],
 )
 def test_no_javac(mock_tools, host_os, java_home, error_type, tmp_path, capsys):
@@ -224,9 +204,6 @@ def test_no_javac(mock_tools, host_os, java_home, error_type, tmp_path, capsys):
     is used."""
     # Mock os
     mock_tools.host_os = host_os
-
-    # Prevent Rosetta check.
-    mock_tools.host_arch = "x86_64"
 
     # Setup explicit JAVA_HOME
     mock_tools.os.environ = {"JAVA_HOME": "/path/to/nowhere"}
@@ -260,18 +237,15 @@ def test_no_javac(mock_tools, host_os, java_home, error_type, tmp_path, capsys):
 @pytest.mark.parametrize(
     "host_os, java_home",
     [
-        ("Linux", Path("tools", "java")),
-        ("Windows", Path("tools", "java")),
-        ("Darwin", Path("tools", "java", "Contents", "Home")),
+        ("Linux", Path("tools", "java17")),
+        ("Windows", Path("tools", "java17")),
+        ("Darwin", Path("tools", "java17", "Contents", "Home")),
     ],
 )
 def test_javac_error(mock_tools, host_os, java_home, tmp_path, capsys):
     """If javac can't be executed, the briefcase JDK is used."""
     # Mock os
     mock_tools.host_os = host_os
-
-    # Prevent Rosetta check.
-    mock_tools.host_arch = "x86_64"
 
     # Setup explicit JAVA_HOME
     mock_tools.os.environ = {"JAVA_HOME": "/path/to/nowhere"}
@@ -304,18 +278,15 @@ def test_javac_error(mock_tools, host_os, java_home, tmp_path, capsys):
 @pytest.mark.parametrize(
     "host_os, java_home",
     [
-        ("Linux", Path("tools", "java")),
-        ("Windows", Path("tools", "java")),
-        ("Darwin", Path("tools", "java", "Contents", "Home")),
+        ("Linux", Path("tools", "java17")),
+        ("Windows", Path("tools", "java17")),
+        ("Darwin", Path("tools", "java17", "Contents", "Home")),
     ],
 )
 def test_unparseable_javac_version(mock_tools, host_os, java_home, tmp_path, capsys):
     """If the javac version can't be parsed, the briefcase JDK is used."""
     # Mock os
     mock_tools.host_os = host_os
-
-    # Prevent Rosetta check.
-    mock_tools.host_arch = "x86_64"
 
     # Setup explicit JAVA_HOME
     mock_tools.os.environ = {"JAVA_HOME": "/path/to/nowhere"}
@@ -344,25 +315,49 @@ def test_unparseable_javac_version(mock_tools, host_os, java_home, tmp_path, cap
 
 
 @pytest.mark.parametrize(
-    "host_os, jdk_url, jhome",
+    "host_os, host_arch, jdk_url, jhome",
     [
         (
             "Darwin",
-            "https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/"
-            "jdk8u242-b08/OpenJDK8U-jdk_x64_mac_hotspot_8u242b08.tar.gz",
-            "java/Contents/Home",
+            "x86_64",
+            "https://github.com/adoptium/temurin17-binaries/releases/download/"
+            "jdk-17.0.7+7/OpenJDK17U-jdk_x64_mac_hotspot_17.0.7_7.tar.gz",
+            "java17/Contents/Home",
+        ),
+        (
+            "Darwin",
+            "aarch64",
+            "https://github.com/adoptium/temurin17-binaries/releases/download/"
+            "jdk-17.0.7+7/OpenJDK17U-jdk_aarch64_mac_hotspot_17.0.7_7.tar.gz",
+            "java17/Contents/Home",
         ),
         (
             "Linux",
-            "https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/"
-            "jdk8u242-b08/OpenJDK8U-jdk_x64_linux_hotspot_8u242b08.tar.gz",
-            "java",
+            "x86_64",
+            "https://github.com/adoptium/temurin17-binaries/releases/download/"
+            "jdk-17.0.7+7/OpenJDK17U-jdk_x64_linux_hotspot_17.0.7_7.tar.gz",
+            "java17",
+        ),
+        (
+            "Linux",
+            "aarch64",
+            "https://github.com/adoptium/temurin17-binaries/releases/download/"
+            "jdk-17.0.7+7/OpenJDK17U-jdk_aarch64_linux_hotspot_17.0.7_7.tar.gz",
+            "java17",
+        ),
+        (
+            "Linux",
+            "armv6l",
+            "https://github.com/adoptium/temurin17-binaries/releases/download/"
+            "jdk-17.0.7+7/OpenJDK17U-jdk_arm_linux_hotspot_17.0.7_7.tar.gz",
+            "java17",
         ),
         (
             "Windows",
-            "https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/"
-            "jdk8u242-b08/OpenJDK8U-jdk_x64_windows_hotspot_8u242b08.zip",
-            "java",
+            "AMD64",
+            "https://github.com/adoptium/temurin17-binaries/releases/download/"
+            "jdk-17.0.7+7/OpenJDK17U-jdk_x64_windows_hotspot_17.0.7_7.zip",
+            "java17",
         ),
     ],
 )
@@ -371,12 +366,14 @@ def test_successful_jdk_download(
     tmp_path,
     capsys,
     host_os,
+    host_arch,
     jdk_url,
     jhome,
 ):
     """If needed, a JDK can be downloaded."""
-    # Mock host OS
+    # Mock host OS and arch
     mock_tools.host_os = host_os
+    mock_tools.host_arch = host_arch
 
     # Mock a JAVA_HOME that won't exist
     # This is only needed to make macOS *not* run /usr/libexec/java_home
@@ -390,7 +387,7 @@ def test_successful_jdk_download(
     mock_tools.download.file.return_value = archive
 
     # Create a directory to make it look like Java was downloaded and unpacked.
-    (tmp_path / "tools" / "jdk8u242-b08").mkdir(parents=True)
+    (tmp_path / "tools" / "jdk-17.0.7+7").mkdir(parents=True)
 
     # Invoke the verify call
     JDK.verify(mock_tools)
@@ -400,13 +397,13 @@ def test_successful_jdk_download(
     # Console output contains a warning about the bad JDK location
     output = capsys.readouterr()
     assert output.err == ""
-    assert "** WARNING: JAVA_HOME does not point to a Java 8 JDK" in output.out
+    assert "** WARNING: JAVA_HOME does not point to a Java 17 JDK" in output.out
 
     # Download was invoked
     mock_tools.download.file.assert_called_with(
         url=jdk_url,
         download_path=tmp_path / "tools",
-        role="Java 8 JDK",
+        role="Java 17 JDK",
     )
     # The archive was unpacked
     # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
@@ -432,8 +429,9 @@ def test_not_installed(mock_tools, tmp_path):
 
 def test_jdk_download_failure(mock_tools, tmp_path):
     """If an error occurs downloading the JDK, an error is raised."""
-    # Mock Linux as the host
+    # Mock Linux x86_64 as the host
     mock_tools.host_os = "Linux"
+    mock_tools.host_arch = "x86_64"
 
     # Mock a failure on download
     mock_tools.download.file.side_effect = NetworkFailure("mock")
@@ -444,10 +442,10 @@ def test_jdk_download_failure(mock_tools, tmp_path):
 
     # That download was attempted
     mock_tools.download.file.assert_called_with(
-        url="https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/"
-        "jdk8u242-b08/OpenJDK8U-jdk_x64_linux_hotspot_8u242b08.tar.gz",
+        url="https://github.com/adoptium/temurin17-binaries/releases/download/"
+        "jdk-17.0.7+7/OpenJDK17U-jdk_x64_linux_hotspot_17.0.7_7.tar.gz",
         download_path=tmp_path / "tools",
-        role="Java 8 JDK",
+        role="Java 17 JDK",
     )
     # No attempt was made to unpack the archive
     assert mock_tools.shutil.unpack_archive.call_count == 0
@@ -455,8 +453,9 @@ def test_jdk_download_failure(mock_tools, tmp_path):
 
 def test_invalid_jdk_archive(mock_tools, tmp_path):
     """If the JDK download isn't a valid archive, raise an error."""
-    # Mock Linux as the host
+    # Mock Linux x86_64 as the host
     mock_tools.host_os = "Linux"
+    mock_tools.host_arch = "x86_64"
 
     # Mock the cached download path
     # Consider to remove if block when we drop py3.7 support, only keep statements from else.
@@ -473,109 +472,16 @@ def test_invalid_jdk_archive(mock_tools, tmp_path):
 
     # The download occurred
     mock_tools.download.file.assert_called_with(
-        url="https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/"
-        "jdk8u242-b08/OpenJDK8U-jdk_x64_linux_hotspot_8u242b08.tar.gz",
+        url="https://github.com/adoptium/temurin17-binaries/releases/download/"
+        "jdk-17.0.7+7/OpenJDK17U-jdk_x64_linux_hotspot_17.0.7_7.tar.gz",
         download_path=tmp_path / "tools",
-        role="Java 8 JDK",
+        role="Java 17 JDK",
     )
     # An attempt was made to unpack the archive.
     # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
     mock_tools.shutil.unpack_archive.assert_called_with(
-        "/path/to/download.zip", extract_dir=os.fsdecode(tmp_path / "tools")
+        "/path/to/download.zip",
+        extract_dir=os.fsdecode(tmp_path / "tools"),
     )
     # The original archive was not deleted
     assert archive.unlink.call_count == 0
-
-
-def test_rosetta_host_os(mock_tools, tmp_path):
-    """On an OS other than macOS, the Rosetta check does not occur."""
-    mock_tools.host_os = "Linux"
-    mock_tools.host_arch = "arm64"
-
-    # Create a mock of a previously installed Java version.
-    (tmp_path / "tools" / "java" / "bin").mkdir(parents=True)
-
-    JDK.verify(mock_tools)
-    mock_tools.subprocess.check_output.assert_not_called()
-    mock_tools.subprocess.run.assert_not_called()
-
-
-def test_rosetta_host_arch(mock_tools, tmp_path):
-    """On an architecture other than ARM64, the Rosetta check does not occur."""
-    mock_tools.host_os = "Darwin"
-    mock_tools.host_arch = "x86_64"
-
-    mock_tools.subprocess.check_output.side_effect = [
-        CalledProcessError(1, "java_home")
-    ]
-
-    # Create a mock of a previously installed Java version.
-    (tmp_path / "tools" / "java" / "Contents" / "Home" / "bin").mkdir(parents=True)
-
-    JDK.verify(mock_tools)
-    assert mock_tools.subprocess.check_output.mock_calls == [CALL_JAVA_HOME]
-    mock_tools.subprocess.run.assert_not_called()
-
-
-def test_rosetta_already_installed(mock_tools, tmp_path):
-    """On an ARM Mac, the Rosetta check occurs before calling any other Java
-    commands."""
-    mock_tools.host_os = "Darwin"
-    mock_tools.host_arch = "arm64"
-
-    mock_tools.subprocess.check_output.side_effect = [
-        None,  # Rosetta check succeeds.
-        CalledProcessError(1, "java_home"),
-    ]
-
-    # Create a mock of a previously installed Java version.
-    (tmp_path / "tools" / "java" / "Contents" / "Home" / "bin").mkdir(parents=True)
-
-    JDK.verify(mock_tools)
-    assert mock_tools.subprocess.check_output.mock_calls == [
-        CALL_ROSETTA_CHECK,
-        CALL_JAVA_HOME,
-    ]
-    mock_tools.subprocess.run.assert_not_called()
-
-
-def test_rosetta_install_success(mock_tools, tmp_path):
-    """Rosetta is installed if necessary."""
-    mock_tools.host_os = "Darwin"
-    mock_tools.host_arch = "arm64"
-
-    mock_tools.subprocess.check_output.side_effect = [
-        CalledProcessError(1, "arch"),
-        CalledProcessError(1, "java_home"),
-    ]
-
-    # Create a mock of a previously installed Java version.
-    (tmp_path / "tools" / "java" / "Contents" / "Home" / "bin").mkdir(parents=True)
-
-    JDK.verify(mock_tools)
-    assert mock_tools.subprocess.check_output.mock_calls == [
-        CALL_ROSETTA_CHECK,
-        CALL_JAVA_HOME,
-    ]
-    assert mock_tools.subprocess.run.mock_calls == [CALL_ROSETTA_INSTALL]
-
-
-def test_rosetta_install_failure(mock_tools, tmp_path):
-    """If Rosetta install fails, no Java commands are called."""
-    mock_tools.host_os = "Darwin"
-    mock_tools.host_arch = "arm64"
-
-    mock_tools.subprocess.check_output.side_effect = [
-        CalledProcessError(1, "arch"),
-    ]
-    mock_tools.subprocess.run.side_effect = [
-        CalledProcessError(1, "softwareupdate"),
-    ]
-
-    # Create a mock of a previously installed Java version.
-    (tmp_path / "tools" / "java" / "Contents" / "Home" / "bin").mkdir(parents=True)
-
-    with pytest.raises(BriefcaseCommandError, match="Failed to install Rosetta"):
-        JDK.verify(mock_tools)
-    assert mock_tools.subprocess.check_output.mock_calls == [CALL_ROSETTA_CHECK]
-    assert mock_tools.subprocess.run.mock_calls == [CALL_ROSETTA_INSTALL]

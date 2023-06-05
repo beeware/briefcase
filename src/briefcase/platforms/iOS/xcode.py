@@ -282,12 +282,7 @@ class iOSXcodeBuildCommand(iOSXcodePassiveMixin, BuildCommand):
         :param app: The config object for the app
         :return: The full path of the application's plist file.
         """
-        # If the index file hasn't been loaded for this app, load it.
-        try:
-            path_index = self._path_index[app]
-        except KeyError:
-            path_index = self._load_path_index(app)
-        return self.bundle_path(app) / path_index["info_plist_path"]
+        return self.bundle_path(app) / self.path_index(app, "info_plist_path")
 
     def update_app_metadata(self, app: BaseConfig, test_mode: bool):
         with self.input.wait_bar("Setting main module..."):

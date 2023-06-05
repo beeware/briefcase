@@ -1,10 +1,12 @@
 import os
 import sys
+from collections import defaultdict
 from unittest.mock import MagicMock
 
 import pytest
 
 from briefcase.console import Console, Log
+from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.download import Download
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.android.gradle import GradleOpenCommand
@@ -38,6 +40,11 @@ def open_command(tmp_path, first_app_config):
     command.tools.subprocess = MagicMock(spec_set=Subprocess)
     command.tools.download = MagicMock(spec_set=Download)
 
+    # Mock all apps as targeting version 0.3.15
+    command._briefcase_toml = defaultdict(
+        lambda: {"briefcase": {"target_version": "0.3.15"}}
+    )
+
     # Mock some OS calls needed to make the tools appear to exist
     command.tools.os.environ = {}
     command.tools.os.access.return_value = True
@@ -56,11 +63,31 @@ def open_command(tmp_path, first_app_config):
     return command
 
 
+def test_unsupported_template_version(open_command, first_app_generated, tmp_path):
+    """Error raised if template's target version is not supported."""
+    # Skip tool verification
+    open_command.verify_tools = MagicMock()
+
+    open_command.verify_app = MagicMock(wraps=open_command.verify_app)
+
+    open_command._briefcase_toml.update(
+        {first_app_generated: {"briefcase": {"target_epoch": "0.3.16"}}}
+    )
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match="The app template used to generate this app is not compatible",
+    ):
+        open_command(first_app_generated)
+
+    open_command.verify_app.assert_called_once_with(first_app_generated)
+
+
 @pytest.mark.skipif(sys.platform != "darwin", reason="macOS specific test")
 def test_open_macOS(open_command, first_app_config, tmp_path):
     """On macOS, open uses Finder to open the project folder."""
     # Mock the call to verify the existence of java
-    open_command.tools.subprocess.check_output.return_value = "javac 1.8.0_144\n"
+    open_command.tools.subprocess.check_output.return_value = "javac 17.0.7\n"
 
     # Create the project folder to mock a created project.
     open_command.project_path(first_app_config).mkdir(parents=True)
@@ -85,7 +112,7 @@ def test_open_linux(open_command, first_app_config, tmp_path):
     open_command.project_path(first_app_config).mkdir(parents=True)
 
     # Create a stub java binary
-    create_file(tmp_path / "briefcase" / "tools" / "java" / "bin" / "java", "java")
+    create_file(tmp_path / "briefcase" / "tools" / "java17" / "bin" / "java", "java")
 
     # Create a stub sdkmanager
     create_sdk_manager(tmp_path)
@@ -107,7 +134,7 @@ def test_open_windows(open_command, first_app_config, tmp_path):
     open_command.project_path(first_app_config).mkdir(parents=True)
 
     # Create a stub java binary
-    create_file(tmp_path / "briefcase" / "tools" / "java" / "bin" / "java", "java")
+    create_file(tmp_path / "briefcase" / "tools" / "java17" / "bin" / "java", "java")
 
     # Create a stub sdkmanager
     create_sdk_manager(tmp_path, extension=".bat")
