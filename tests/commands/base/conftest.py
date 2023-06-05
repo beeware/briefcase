@@ -1,7 +1,7 @@
 import pytest
 
 from briefcase.commands.base import BaseCommand
-from briefcase.config import AppConfig, BaseConfig
+from briefcase.config import AppConfig
 from briefcase.console import Console, Log
 
 
@@ -87,36 +87,7 @@ package = DummyPackageCommand
 publish = DummyPublishCommand
 
 
-# Define a command that defines a custom config class, and has no options.
-class CustomGlobalConfig(BaseConfig):
-    def __init__(self, foo, **kwargs):
-        super().__init__(**kwargs)
-        self.foo = foo
-
-    def __repr__(self):
-        return f"<Custom GlobalConfig {self.foo}>"
-
-
-class CustomAppConfig(AppConfig):
-    def __init__(self, foo, bar, **kwargs):
-        super().__init__(
-            app_name="custom",
-            bundle="com.example",
-            description="Custom app",
-            version="37.42",
-            sources=["src/custom"],
-        )
-        self.foo = foo
-        self.bar = bar
-
-    def __repr__(self):
-        return f"<Custom AppConfig {self.foo}, {self.bar}>"
-
-
 class OtherDummyCommand(BaseCommand):
-    GLOBAL_CONFIG_CLASS = CustomGlobalConfig
-    APP_CONFIG_CLASS = CustomAppConfig
-
     command = ("other",)
     platform = "tester"
     output_format = "dumdum"

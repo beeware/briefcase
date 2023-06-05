@@ -104,9 +104,6 @@ def split_passthrough(args):
 
 
 class BaseCommand(ABC):
-    GLOBAL_CONFIG_CLASS = GlobalConfig
-    APP_CONFIG_CLASS = AppConfig
-
     cmd_line = "briefcase {command} {platform} {output_format}"
     supported_host_os = {"Darwin", "Linux", "Windows"}
     supported_host_os_reason = f"This command is not supported on {platform.system()}."
@@ -775,7 +772,7 @@ any compatibility problems, and then add the compatibility declaration.
                 )
 
                 self.global_config = create_config(
-                    klass=self.GLOBAL_CONFIG_CLASS,
+                    klass=GlobalConfig,
                     config=global_config,
                     msg="Global configuration",
                 )
@@ -784,7 +781,7 @@ any compatibility problems, and then add the compatibility declaration.
                     # Construct an AppConfig object with the final set of
                     # configuration options for the app.
                     self.apps[app_name] = create_config(
-                        klass=self.APP_CONFIG_CLASS,
+                        klass=AppConfig,
                         config=app_config,
                         msg=f"Configuration for '{app_name}'",
                     )
