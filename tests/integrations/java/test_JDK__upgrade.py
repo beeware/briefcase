@@ -17,6 +17,7 @@ from briefcase.integrations.java import JDK
 @pytest.fixture
 def mock_tools(mock_tools) -> ToolCache:
     mock_tools.host_os = "Linux"
+    mock_tools.host_arch = "x86_64"
     return mock_tools
 
 

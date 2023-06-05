@@ -315,22 +315,46 @@ def test_unparseable_javac_version(mock_tools, host_os, java_home, tmp_path, cap
 
 
 @pytest.mark.parametrize(
-    "host_os, jdk_url, jhome",
+    "host_os, host_arch, jdk_url, jhome",
     [
         (
             "Darwin",
+            "x86_64",
             "https://github.com/adoptium/temurin17-binaries/releases/download/"
             "jdk-17.0.7+7/OpenJDK17U-jdk_x64_mac_hotspot_17.0.7_7.tar.gz",
             "java17/Contents/Home",
         ),
         (
+            "Darwin",
+            "aarch64",
+            "https://github.com/adoptium/temurin17-binaries/releases/download/"
+            "jdk-17.0.7+7/OpenJDK17U-jdk_aarch64_mac_hotspot_17.0.7_7.tar.gz",
+            "java17/Contents/Home",
+        ),
+        (
             "Linux",
+            "x86_64",
             "https://github.com/adoptium/temurin17-binaries/releases/download/"
             "jdk-17.0.7+7/OpenJDK17U-jdk_x64_linux_hotspot_17.0.7_7.tar.gz",
             "java17",
         ),
         (
+            "Linux",
+            "aarch64",
+            "https://github.com/adoptium/temurin17-binaries/releases/download/"
+            "jdk-17.0.7+7/OpenJDK17U-jdk_aarch64_linux_hotspot_17.0.7_7.tar.gz",
+            "java17",
+        ),
+        (
+            "Linux",
+            "armv6l",
+            "https://github.com/adoptium/temurin17-binaries/releases/download/"
+            "jdk-17.0.7+7/OpenJDK17U-jdk_arm_linux_hotspot_17.0.7_7.tar.gz",
+            "java17",
+        ),
+        (
             "Windows",
+            "AMD64",
             "https://github.com/adoptium/temurin17-binaries/releases/download/"
             "jdk-17.0.7+7/OpenJDK17U-jdk_x64_windows_hotspot_17.0.7_7.zip",
             "java17",
@@ -342,12 +366,14 @@ def test_successful_jdk_download(
     tmp_path,
     capsys,
     host_os,
+    host_arch,
     jdk_url,
     jhome,
 ):
     """If needed, a JDK can be downloaded."""
-    # Mock host OS
+    # Mock host OS and arch
     mock_tools.host_os = host_os
+    mock_tools.host_arch = host_arch
 
     # Mock a JAVA_HOME that won't exist
     # This is only needed to make macOS *not* run /usr/libexec/java_home
@@ -403,8 +429,9 @@ def test_not_installed(mock_tools, tmp_path):
 
 def test_jdk_download_failure(mock_tools, tmp_path):
     """If an error occurs downloading the JDK, an error is raised."""
-    # Mock Linux as the host
+    # Mock Linux x86_64 as the host
     mock_tools.host_os = "Linux"
+    mock_tools.host_arch = "x86_64"
 
     # Mock a failure on download
     mock_tools.download.file.side_effect = NetworkFailure("mock")
@@ -426,8 +453,9 @@ def test_jdk_download_failure(mock_tools, tmp_path):
 
 def test_invalid_jdk_archive(mock_tools, tmp_path):
     """If the JDK download isn't a valid archive, raise an error."""
-    # Mock Linux as the host
+    # Mock Linux x86_64 as the host
     mock_tools.host_os = "Linux"
+    mock_tools.host_arch = "x86_64"
 
     # Mock the cached download path
     # Consider to remove if block when we drop py3.7 support, only keep statements from else.
