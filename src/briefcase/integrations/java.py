@@ -121,7 +121,6 @@ class JDK(ManagedTool):
     Briefcase will use its own JDK instance.
 
 *************************************************************************
-
 """
 
             except OSError:
@@ -139,7 +138,6 @@ class JDK(ManagedTool):
     Briefcase will use its own JDK instance.
 
 *************************************************************************
-
 """
 
             except subprocess.CalledProcessError:
@@ -166,7 +164,6 @@ class JDK(ManagedTool):
     from the command prompt.
 
 *************************************************************************
-
 """
 
             except IndexError:
@@ -193,7 +190,6 @@ class JDK(ManagedTool):
     from the command prompt.
 
 *************************************************************************
-
 """
 
         # macOS has a helpful system utility to determine JAVA_HOME. Try it.
@@ -215,8 +211,11 @@ class JDK(ManagedTool):
                     pass  # do not alert user if macOS found an unqualified JDK
 
         if java is None:
-            # If we've reached this point, any user-provided JAVA_HOME is broken;
-            # use the Briefcase one.
+            # Inform the user if the user-specified JDK wasn't valid
+            if install_message:
+                tools.logger.warning(install_message)
+
+            # Use the Briefcase JDK install
             java_home = tools.base_path / cls.JDK_INSTALL_DIR_NAME
 
             # The macOS download has a weird layout (inherited from the official Oracle
@@ -228,10 +227,6 @@ class JDK(ManagedTool):
 
             if not java.exists():
                 if install:
-                    # We only display the warning messages on the pass where we actually
-                    # install the JDK.
-                    if install_message:
-                        tools.logger.warning(install_message)
                     tools.logger.info(
                         f"A Java {cls.JDK_MAJOR_VER} JDK was not found; downloading and installing...",
                         prefix=cls.name,

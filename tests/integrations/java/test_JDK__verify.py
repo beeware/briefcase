@@ -246,9 +246,10 @@ def test_invalid_jdk_version(mock_tools, host_os, java_home, tmp_path, capsys):
         [os.fsdecode(Path("/path/to/java/bin/javac")), "-version"],
     )
 
-    # No console output (because Briefcase JDK exists)
+    # Warning is shown for invalid JAVA_HOME
     output = capsys.readouterr()
-    assert output.out == ""
+    assert "WARNING: JAVA_HOME does not point to a Java 17 JDK" in output.out
+    assert output.out.endswith("****\n")
     assert output.err == ""
 
 
@@ -292,9 +293,10 @@ def test_no_javac(mock_tools, host_os, java_home, error_type, tmp_path, capsys):
         [os.fsdecode(Path("/path/to/nowhere/bin/javac")), "-version"],
     ),
 
-    # No console output (because Briefcase JDK exists)
+    # Warning is shown for invalid JAVA_HOME
     output = capsys.readouterr()
-    assert output.out == ""
+    assert "WARNING: JAVA_HOME does not point to a JDK" in output.out
+    assert output.out.endswith("****\n")
     assert output.err == ""
 
 
@@ -333,9 +335,10 @@ def test_javac_error(mock_tools, host_os, java_home, tmp_path, capsys):
         [os.fsdecode(Path("/path/to/nowhere/bin/javac")), "-version"],
     ),
 
-    # No console output (because Briefcase JDK exists)
+    # Warning is shown for invalid JAVA_HOME
     output = capsys.readouterr()
-    assert output.out == ""
+    assert "WARNING: Unable to invoke the Java compiler" in output.out
+    assert output.out.endswith("****\n")
     assert output.err == ""
 
 
@@ -374,7 +377,11 @@ def test_unparseable_javac_version(mock_tools, host_os, java_home, tmp_path, cap
 
     # No console output (because Briefcase JDK exists)
     output = capsys.readouterr()
-    assert output.out == ""
+    assert (
+        "WARNING: Unable to determine the version of Java that is installed"
+        in output.out
+    )
+    assert output.out.endswith("****\n")
     assert output.err == ""
 
 
