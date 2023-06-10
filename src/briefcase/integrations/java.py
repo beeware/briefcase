@@ -52,8 +52,8 @@ class JDK(ManagedTool):
         )
 
     @classmethod
-    def jdk_version_from_path(cls, tools: ToolCache, java_path: str | Path) -> bool:
-        """Return JDK version from a path by running ``<java_path>/bin/javac``.
+    def version_from_path(cls, tools: ToolCache, java_path: str | Path) -> str:
+        """Return a JDK's version from a path by running ``<java_path>/bin/javac``.
 
         This will fail if the path contains a JRE instead of a JDK.
 
@@ -61,6 +61,10 @@ class JDK(ManagedTool):
          - OSError - the ``javac`` executable doesn't exist
          - CalledProcessError - ``javac`` returned a non-zero value
          - IndexError - unparsable version value from ``javac``
+
+        :param tools: ToolCache of available tools
+        :param java_path: File path to a candidate JDK install
+        :return: JDK release version; e.g. "17.0.7"
         """
         output = tools.subprocess.check_output(
             [
@@ -98,8 +102,8 @@ class JDK(ManagedTool):
 
         if java_home := tools.os.environ.get("JAVA_HOME", ""):
             try:
-                version_str = cls.jdk_version_from_path(tools, java_home)
-                if version_str == cls.JDK_RELEASE:
+                version_str = cls.version_from_path(tools, java_home)
+                if version_str.split(".")[0] == cls.JDK_MAJOR_VER:
                     java = JDK(tools, java_home=Path(java_home))
                 else:
                     install_message = f"""
@@ -204,10 +208,11 @@ class JDK(ManagedTool):
                 pass  # No java on this machine
             else:
                 try:
-                    if cls.jdk_version_from_path(tools, java_home) == cls.JDK_RELEASE:
+                    version_str = cls.version_from_path(tools, java_home)
+                    if version_str.split(".")[0] == cls.JDK_MAJOR_VER:
                         java = JDK(tools, java_home=Path(java_home))
                 except (OSError, subprocess.CalledProcessError, IndexError):
-                    pass  # do not alert user if macOS found unqualifying JDK
+                    pass  # do not alert user if macOS found an unqualified JDK
 
         if java is None:
             # If we've reached this point, any user-provided JAVA_HOME is broken;
