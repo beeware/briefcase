@@ -94,6 +94,70 @@ def test_macos_tool_failure(mock_tools, tmp_path, capsys):
     assert output.err == ""
 
 
+def test_macos_wrong_jdk_version(mock_tools, tmp_path, capsys):
+    """On macOS, if the libexec tool returns an unqualified JDK, the Briefcase JDK is
+    used."""
+    # Mock being on macOS
+    mock_tools.host_os = "Darwin"
+
+    # Mock 2 calls to check_output.
+    mock_tools.subprocess.check_output.side_effect = [
+        "/path/to/java",
+        "java 1.8.0_352\n",
+    ]
+
+    # Create a directory to make it look like the Briefcase Java already exists.
+    (tmp_path / "tools" / "java17" / "Contents" / "Home" / "bin").mkdir(parents=True)
+
+    # Create a JDK wrapper by verification
+    jdk = JDK.verify(mock_tools)
+
+    # The JDK should have the briefcase JAVA_HOME
+    assert jdk.java_home == tmp_path / "tools" / "java17" / "Contents" / "Home"
+
+    assert mock_tools.subprocess.check_output.mock_calls == [
+        CALL_JAVA_HOME,
+        mock.call([os.fsdecode(Path("/path/to/java/bin/javac")), "-version"]),
+    ]
+
+    # No console output
+    output = capsys.readouterr()
+    assert output.out == ""
+    assert output.err == ""
+
+
+def test_macos_invalid_jdk_path(mock_tools, tmp_path, capsys):
+    """On macOS, if the libexec tool points to non-JDK path, the Briefcase JDK is
+    used."""
+    # Mock being on macOS
+    mock_tools.host_os = "Darwin"
+
+    # Mock 2 calls to check_output.
+    mock_tools.subprocess.check_output.side_effect = [
+        "/path/to/java",
+        IndexError,
+    ]
+
+    # Create a directory to make it look like the Briefcase Java already exists.
+    (tmp_path / "tools" / "java17" / "Contents" / "Home" / "bin").mkdir(parents=True)
+
+    # Create a JDK wrapper by verification
+    jdk = JDK.verify(mock_tools)
+
+    # The JDK should have the briefcase JAVA_HOME
+    assert jdk.java_home == tmp_path / "tools" / "java17" / "Contents" / "Home"
+
+    assert mock_tools.subprocess.check_output.mock_calls == [
+        CALL_JAVA_HOME,
+        mock.call([os.fsdecode(Path("/path/to/java/bin/javac")), "-version"]),
+    ]
+
+    # No console output
+    output = capsys.readouterr()
+    assert output.out == ""
+    assert output.err == ""
+
+
 def test_macos_provided_overrides_tool_java_home(mock_tools, capsys):
     """On macOS, an explicit JAVA_HOME overrides /usr/libexec/java_home."""
     # Mock being on macOS
