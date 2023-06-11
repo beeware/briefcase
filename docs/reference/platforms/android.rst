@@ -4,6 +4,21 @@ Android
 
 When generating an Android project, Briefcase produces a Gradle project.
 
+Gradle requires an installation of the Android SDK and a Java JDK.
+
+An existing installation of the Android SDK will be used by Briefcase if its
+file path is specified in the ``ANDROID_HOME`` environment variable.
+The environment variable ``ANDROID_SDK_ROOT`` can also specify the file path to
+the SDK but it is considered deprecated by Android.
+
+An existing Java JDK will be used by Briefcase if its file path is specified in
+the ``JAVA_HOME`` environment variable. Briefcase requires the JDK to be
+version 17. On macOS, Briefcase will use the ``/usr/libexec/java_home`` tool to
+actively find an existing JDK installation for use if ``JAVA_HOME`` is not set.
+
+If the above methods fail to find an Android SDK or Java JDK, Briefcase will
+install an isolated copy in its data directory.
+
 Icon format
 ===========
 
