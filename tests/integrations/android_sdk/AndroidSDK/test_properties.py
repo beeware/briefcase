@@ -89,6 +89,7 @@ def test_simple_env(mock_tools, android_sdk, tmp_path):
     """The SDK Environment can be constructed."""
     assert android_sdk.env == {
         "JAVA_HOME": os.fsdecode(Path("/path/to/jdk")),
+        "ANDROID_HOME": os.fsdecode(tmp_path / "sdk"),
         "ANDROID_SDK_ROOT": os.fsdecode(tmp_path / "sdk"),
     }
 
