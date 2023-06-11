@@ -72,7 +72,7 @@ class JDK(ManagedTool):
                 "-version",
             ],
         )
-        # This should be a string of the form "javac 17.0.7\n"
+        # javac's output should look like "javac 17.0.7\n"
         return output.strip("\n").split(" ")[1]
 
     @classmethod
