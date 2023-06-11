@@ -173,16 +173,17 @@ class AndroidSDK(ManagedTool):
 *************************************************************************
 
     The ANDROID_HOME and ANDROID_SDK_ROOT environment variables are set
-    to different file paths:
+    to different paths:
 
         ANDROID_HOME:     {android_home}
         ANDROID_SDK_ROOT: {android_sdk_root}
 
-    Briefcase will ignore ANDROID_SDK_ROOT and only use the SDK file path
+    Briefcase will ignore ANDROID_SDK_ROOT and only use the path
     specified by ANDROID_HOME.
 
-    Update your environment configuration to not set ANDROID_SDK_ROOT or
-    set both environment variables to the same SDK file path.
+    You should update your environment configuration to either not set
+    ANDROID_SDK_ROOT, or set both environment variables to the same
+    path.
 
 *************************************************************************
 """
@@ -241,8 +242,8 @@ class AndroidSDK(ManagedTool):
     Briefcase is using the Android SDK specified by the ANDROID_SDK_ROOT
     environment variable.
 
-    Android has replaced this configuration with the ANDROID_HOME
-    environment variable and deprecated ANDROID_SDK_ROOT.
+    Android has deprecated ANDROID_SDK_ROOT in favor of the
+    ANDROID_HOME environment variable.
 
     Update your environment configuration to set ANDROID_HOME instead of
     ANDROID_SDK_ROOT to ensure future compatibility.
