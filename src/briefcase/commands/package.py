@@ -26,13 +26,12 @@ class PackageCommand(BaseCommand):
     def distribution_path(self, app):
         """The path to the distributable artefact for the app.
 
-        Requires that the packaging format has been annotated onto
-        the application definition
+        Requires that the packaging format has been annotated onto the application
+        definition
 
-        This is the single file that should be uploaded for distribution.
-        This may be the binary (if the binary is a self-contained executable);
-        however, if the output format produces an installer, it will be the
-        path to the installer.
+        This is the single file that should be uploaded for distribution. This may be
+        the binary (if the binary is a self-contained executable); however, if the
+        output format produces an installer, it will be the path to the installer.
 
         :param app: The app config
         """

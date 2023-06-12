@@ -110,8 +110,8 @@ class LinuxAppImageMostlyPassiveMixin(LinuxAppImagePassiveMixin):
     def verify_app_tools(self, app: AppConfig):
         """Verify App environment is prepared and available.
 
-        When Docker is used, create or update a Docker image for the App.
-        Without Docker, the host machine will be used as the App environment.
+        When Docker is used, create or update a Docker image for the App. Without
+        Docker, the host machine will be used as the App environment.
 
         :param app: The application being built
         """

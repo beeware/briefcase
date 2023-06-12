@@ -216,8 +216,8 @@ class AndroidSDK(ManagedTool):
 
         :param tools: ToolCache of available tools
         :param install: Should the tool be installed if it is not found?
-        :returns: A valid Android SDK wrapper. If Android SDK is not
-            available, and was not installed, raises MissingToolError.
+        :returns: A valid Android SDK wrapper. If Android SDK is not available, and was
+            not installed, raises MissingToolError.
         """
         # short circuit since already verified and available
         if hasattr(tools, "android_sdk"):
@@ -597,8 +597,8 @@ connection.
     def verify_system_image(self, system_image: str):
         """Verify that the required system image is installed.
 
-        :param system_image: The SDKManager identifier for the system
-            image (e.g., ``"system-images;android-31;default;x86_64"``)
+        :param system_image: The SDKManager identifier for the system image (e.g.,
+            ``"system-images;android-31;default;x86_64"``)
         """
         # Look for the directory named as a system image.
         # If it exists, we already have the system image.
@@ -1039,14 +1039,14 @@ In future, you can specify this device by running:
     ):
         """Internal method that does the actual work of creating the emulator.
 
-        AVD is the only required argument; all other arguments will assume
-        reasonable defaults.
+        AVD is the only required argument; all other arguments will assume reasonable
+        defaults.
 
         :param avd: The AVD for the new emulator
         :param device_type: The device type for the new emulator (e.g., "pixel")
         :param skin: The skin for the new emulator to use (e.g., "pixel_3a")
-        :param system_image: The system image to use on the new emulator.
-            (e.g., "system-images;android-31;default;arm64-v8a")
+        :param system_image: The system image to use on the new emulator. (e.g.,
+            "system-images;android-31;default;arm64-v8a")
         """
         if device_type is None:
             device_type = self.DEFAULT_DEVICE_TYPE
@@ -1124,8 +1124,8 @@ In future, you can specify this device by running:
         """Update the AVD configuration with specific values.
 
         :params avd: The AVD whose config will be updated
-        :params updates: A dictionary containing the new key-value to
-            add to the device configuration.
+        :params updates: A dictionary containing the new key-value to add to the device
+            configuration.
         """
         avd_config = self.avd_config(avd)
 
@@ -1147,8 +1147,8 @@ In future, you can specify this device by running:
         Returns when the emulator is booted and ready to accept apps.
 
         :param avd: The AVD of the device.
-        :param extra_args: Additional command line arguments to pass when
-            starting the emulator.
+        :param extra_args: Additional command line arguments to pass when starting the
+            emulator.
         """
         if avd not in set(self.emulators()):
             raise InvalidDeviceError("emulator AVD", avd)
@@ -1270,8 +1270,7 @@ class ADB:
         """An API integration for the Android Debug Bridge (ADB).
 
         :param tools: ToolCache of available tools
-        :param device: The ID of the device to target (in a format usable by
-            `adb -s`)
+        :param device: The ID of the device to target (in a format usable by `adb -s`)
         """
         self.tools = tools
         self.device = device

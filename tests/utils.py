@@ -51,7 +51,8 @@ def create_plist_file(plistpath, content):
     specific content.
 
     :param plistpath: The path for the plist file to create.
-    :param content: A dictionary of content that plistlib can use to create the plist file.
+    :param content: A dictionary of content that plistlib can use to create the plist
+        file.
     :returns: The path to the file that was created.
     """
     plistpath.parent.mkdir(parents=True, exist_ok=True)
@@ -64,12 +65,12 @@ def create_plist_file(plistpath, content):
 def create_zip_file(zippath, content):
     """A test utility to create a .zip file with known content.
 
-    Ensures that the directory for the file exists, and writes a file with
-    specific content.
+    Ensures that the directory for the file exists, and writes a file with specific
+    content.
 
     :param zippath: The path for the ZIP file to create
-    :param content: A list of pairs; each pair is (path, data) describing
-        an item to be added to the zip file.
+    :param content: A list of pairs; each pair is (path, data) describing an item to be
+        added to the zip file.
     :returns: The path to the file that was created.
     """
     zippath.parent.mkdir(parents=True, exist_ok=True)
@@ -83,12 +84,12 @@ def create_zip_file(zippath, content):
 def create_tgz_file(tgzpath, content):
     """A test utility to create a .tar.gz file with known content.
 
-    Ensures that the directory for the file exists, and writes a file with
-    specific content.
+    Ensures that the directory for the file exists, and writes a file with specific
+    content.
 
     :param tgzpath: The path for the ZIP file to create
-    :param content: A list of pairs; each pair is (path, data) describing
-        an item to be added to the zip file.
+    :param content: A list of pairs; each pair is (path, data) describing an item to be
+        added to the zip file.
     :returns: The path to the file that was created.
     """
     tgzpath.parent.mkdir(parents=True, exist_ok=True)

@@ -192,10 +192,9 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
     def check_output(self, args: list[SubprocessArgT], image_tag: str) -> str:
         """Run a process inside a Docker container, capturing output.
 
-        This is a bare Docker invocation; it's really only useful for running
-        simple commands on an image, ensuring that the container is destroyed
-        afterward. In most cases, you'll want to use an app context, rather
-        than this.
+        This is a bare Docker invocation; it's really only useful for running simple
+        commands on an image, ensuring that the container is destroyed afterward. In
+        most cases, you'll want to use an app context, rather than this.
 
         :param args: The list of arguments to pass to the Docker instance.
         :param image_tag: The Docker image to run
@@ -216,8 +215,8 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
     def prepare(self, image_tag: str):
         """Ensure that the given image exists, and is cached locally.
 
-        This is achieved by trying to run a no-op command (echo) on the image;
-        if it succeeds, the image exists locally.
+        This is achieved by trying to run a no-op command (echo) on the image; if it
+        succeeds, the image exists locally.
 
         A pull is forced, so you can be certain that the image is up-to-date.
 
@@ -269,8 +268,8 @@ class DockerAppContext(Tool):
     ) -> DockerAppContext:
         """Verify that docker is available as an app-bound tool.
 
-        Creates or updates the Docker image for the app to run
-        commands in a context for the App.
+        Creates or updates the Docker image for the app to run commands in a context for
+        the App.
 
         :param tools: ToolCache of available tools
         :param app: Current Appconfig

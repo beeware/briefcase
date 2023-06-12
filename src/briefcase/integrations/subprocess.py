@@ -50,10 +50,9 @@ def json_parser(json_output: str) -> JsonT:
 def is_process_dead(pid: int) -> bool:
     """Returns True if a PID is not assigned to a process.
 
-    Checking if a PID exists is only a semi-safe proxy to determine
-    if a process is dead since PIDs can be re-used. Therefore, this
-    function should only be used via constant monitoring of a PID
-    to identify when the process goes from existing to not existing.
+    Checking if a PID exists is only a semi-safe proxy to determine if a process is dead
+    since PIDs can be re-used. Therefore, this function should only be used via constant
+    monitoring of a PID to identify when the process goes from existing to not existing.
 
     :param pid: integer value to be checked if assigned as a PID.
     :return: True if PID does not exist; False otherwise.
@@ -536,17 +535,15 @@ class Subprocess(Tool):
         """A wrapper for check_output() where the command output is processed through
         the supplied parser function.
 
-        If the parser fails, CommandOutputParseError is raised.
-        The parsing function should take one string argument and should
-        raise ParseError for failure modes.
+        If the parser fails, CommandOutputParseError is raised. The parsing function
+        should take one string argument and should raise ParseError for failure modes.
 
-        :param output_parser: a function that takes str input and returns
-            parsed content, or raises ParseError in the case of a parsing
-            problem.
+        :param output_parser: a function that takes str input and returns parsed
+            content, or raises ParseError in the case of a parsing problem.
         :param args: The arguments to pass to the subprocess
         :param kwargs: The keyword arguments to pass to the subprocess
-        :returns: Parsed data read from the subprocess output; the exact
-            structure of that data is dependent on the output parser used.
+        :returns: Parsed data read from the subprocess output; the exact structure of
+            that data is dependent on the output parser used.
         """
         cmd_output = self.check_output(args, **kwargs)
 
@@ -598,20 +595,20 @@ class Subprocess(Tool):
         """Stream the output of a Popen process until the process exits. If the user
         sends CTRL+C, the process will be terminated.
 
-        This is useful for starting a process via Popen such as tailing a
-        log file, then initiating a non-blocking process that populates that
-        log, and finally streaming the original process's output here.
+        This is useful for starting a process via Popen such as tailing a log file, then
+        initiating a non-blocking process that populates that log, and finally streaming
+        the original process's output here.
 
-        :param label: A description of the content being streamed; used for
-            to provide context in logging messages.
+        :param label: A description of the content being streamed; used for to provide
+            context in logging messages.
         :param popen_process: a running Popen process with output to print
-        :param stop_func: a Callable that returns True when output streaming
-            should stop and the popen_process should be terminated.
-        :param filter_func: a callable that will be invoked on every line
-            of output that is streamed. The function accepts the "raw" line
-            of input (stripped of any trailing newline); it returns a generator
-            that yields the filtered output that should be displayed to the user.
-            Can raise StopStreaming to terminate the output stream.
+        :param stop_func: a Callable that returns True when output streaming should stop
+            and the popen_process should be terminated.
+        :param filter_func: a callable that will be invoked on every line of output that
+            is streamed. The function accepts the "raw" line of input (stripped of any
+            trailing newline); it returns a generator that yields the filtered output
+            that should be displayed to the user. Can raise StopStreaming to terminate
+            the output stream.
         """
         output_streamer = threading.Thread(
             name=f"{label} output streamer",
@@ -692,8 +689,8 @@ class Subprocess(Tool):
         """Clean up after a Popen process, gracefully terminating if possible; forcibly
         if not.
 
-        :param label: A description of the content being streamed; used for
-            to provide context in logging messages.
+        :param label: A description of the content being streamed; used for to provide
+            context in logging messages.
         :param popen_process: The Popen instance to clean up.
         """
         popen_process.terminate()
